@@ -1,14 +1,5 @@
 [
   {
-    "id": "test-drama-admin-form",
-    "title": "Test Drama Admin Form",
-    "category": "Romance",
-    "episodes": 1,
-    "views": "1.0K",
-    "synopsis": "Test entry, akan dihapus",
-    "gradient": "from-emerald-600 via-teal-800 to-slate-900"
-  },
-  {
     "id": "tak-ada-yang-bisa-mendekati-sang-ceo-sampai-gadis-ini-datang",
     "title": "Tak Ada yang Bisa Mendekati Sang CEO, Sampai Gadis Ini Datang!",
     "category": "Romance",

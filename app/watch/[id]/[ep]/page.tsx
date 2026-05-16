@@ -25,10 +25,16 @@ export default async function WatchPage(props: PageProps<"/watch/[id]/[ep]">) {
   const prevEp = epNum > 1 ? epNum - 1 : null;
   const nextEp = epNum < drama.episodes ? epNum + 1 : null;
 
+  const baseUrl = process.env.NEXT_PUBLIC_VIDEO_BASE_URL;
+  const videoSrc = baseUrl
+    ? `${baseUrl}/${id}/${epNum}.mp4`
+    : `/videos/${id}/${epNum}.mp4`;
+
   return (
     <div className="relative flex h-[100dvh] w-full flex-col bg-black">
       <div className="relative flex flex-1 items-center justify-center overflow-hidden">
-        <VideoPlayer src={`/videos/${id}/${epNum}.mp4`} />
+        <VideoPlayer src={videoSrc} />
+
 
         <Link
           href={`/drama/${drama.id}`}

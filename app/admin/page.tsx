@@ -32,6 +32,16 @@ function formatViews(n: number): string {
   return String(n);
 }
 
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
+}
+
 const CATEGORY_COLORS: Record<string, string> = {
   Romance: "bg-rose-500",
   Tycoon: "bg-amber-500",
@@ -42,19 +52,31 @@ const CATEGORY_COLORS: Record<string, string> = {
   Fantasy: "bg-emerald-500",
 };
 
+type ScanResult = {
+  count: number;
+  min: number;
+  max: number;
+  missing: number[];
+  folderUrl: string;
+};
+
 export default function AdminPage() {
   const router = useRouter();
   const [authUser, setAuthUser] = useState<User | null>(null);
   const [authChecked, setAuthChecked] = useState(false);
+
+  const [id, setId] = useState("");
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState<string>("Romance");
   const [synopsis, setSynopsis] = useState("");
   const [views, setViews] = useState("");
-  const [video, setVideo] = useState<File | null>(null);
-  const [episodeNumber, setEpisodeNumber] = useState(1);
-  const [poster, setPoster] = useState<File | null>(null);
+  const [episodes, setEpisodes] = useState<number>(1);
+  const [posterImage, setPosterImage] = useState("");
+
+  const [scanning, setScanning] = useState(false);
+  const [scanResult, setScanResult] = useState<ScanResult | null>(null);
+
   const [submitting, setSubmitting] = useState(false);
-  const [progress, setProgress] = useState<number | null>(null);
   const [message, setMessage] = useState<{
     type: "ok" | "error";
     text: string;
@@ -71,6 +93,8 @@ export default function AdminPage() {
     type: "ok" | "error";
     text: string;
   } | null>(null);
+
+  const effectiveId = id.trim() || (title.trim() ? slugify(title) : "");
 
   const refreshAdmins = () => {
     fetch("/api/admins")
@@ -171,84 +195,127 @@ export default function AdminPage() {
     return { totalEpisode, totalViews, withPoster, byCategory };
   }, [dramas]);
 
-  const onSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!video) {
-      setMessage({ type: "error", text: "Pilih file video dulu." });
+  const onScan = async () => {
+    setMessage(null);
+    setScanResult(null);
+    if (!effectiveId) {
+      setMessage({
+        type: "error",
+        text: "Isi 'ID slug' atau 'Judul' dulu — saya butuh tahu folder mana yang di-scan.",
+      });
       return;
     }
+    if (!authUser) return;
+    setScanning(true);
+    try {
+      const res = await fetch(
+        `/api/admin/scan?id=${encodeURIComponent(effectiveId)}`,
+        { headers: { "x-admin-email": authUser.email } },
+      );
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        setMessage({
+          type: "error",
+          text: data.error ?? `Scan gagal (HTTP ${res.status})`,
+        });
+        return;
+      }
+      const result: ScanResult = {
+        count: data.count,
+        min: data.min,
+        max: data.max,
+        missing: data.missing ?? [],
+        folderUrl: data.folderUrl,
+      };
+      setScanResult(result);
+      setEpisodes(result.max);
+    } catch (err) {
+      const m = err instanceof Error ? err.message : "Scan gagal";
+      setMessage({ type: "error", text: m });
+    } finally {
+      setScanning(false);
+    }
+  };
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!title.trim()) {
       setMessage({ type: "error", text: "Judul wajib diisi." });
       return;
     }
+    if (!authUser) return;
 
     setSubmitting(true);
     setMessage(null);
-    setProgress(0);
 
-    const fd = new FormData();
-    fd.append("title", title);
-    fd.append("category", category);
-    fd.append("synopsis", synopsis);
-    if (views.trim()) fd.append("views", views.trim());
-    fd.append("video", video);
-    fd.append("episode", String(episodeNumber));
-    if (poster) fd.append("poster", poster);
-
-    const xhr = new XMLHttpRequest();
-    xhr.open("POST", "/api/admin/upload");
-    xhr.upload.onprogress = (ev) => {
-      if (ev.lengthComputable) {
-        setProgress(Math.round((ev.loaded / ev.total) * 100));
+    try {
+      const res = await fetch("/api/admin/drama", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-admin-email": authUser.email,
+        },
+        body: JSON.stringify({
+          id: effectiveId,
+          title: title.trim(),
+          category,
+          synopsis: synopsis.trim(),
+          views: views.trim(),
+          episodes,
+          posterImage: posterImage.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        setMessage({
+          type: "error",
+          text: data.error ?? `Gagal simpan (HTTP ${res.status})`,
+        });
+        return;
       }
-    };
-    xhr.onload = () => {
+      setMessage({
+        type: "ok",
+        text: `Drama "${data.drama.title}" berhasil ${data.action === "updated" ? "diperbarui" : "ditambahkan"}. Vercel auto-deploy ~1-2 menit, lalu refresh halaman ini.`,
+      });
+      setId("");
+      setTitle("");
+      setSynopsis("");
+      setViews("");
+      setEpisodes(1);
+      setPosterImage("");
+      setScanResult(null);
+      formRef.current?.reset();
+      refreshList();
+    } catch (err) {
+      const m = err instanceof Error ? err.message : "Koneksi gagal";
+      setMessage({ type: "error", text: m });
+    } finally {
       setSubmitting(false);
-      setProgress(null);
-      try {
-        const res = JSON.parse(xhr.responseText);
-        if (xhr.status >= 200 && xhr.status < 300 && res.ok) {
-          setMessage({
-            type: "ok",
-            text: `Drama "${res.drama.title}" berhasil ${res.action === "updated" ? "diperbarui" : "ditambahkan"}.`,
-          });
-          setTitle("");
-          setSynopsis("");
-          setViews("");
-          setVideo(null);
-          setPoster(null);
-          setEpisodeNumber(1);
-          formRef.current?.reset();
-          refreshList();
-        } else {
-          setMessage({
-            type: "error",
-            text: res.error ?? "Upload gagal",
-          });
-        }
-      } catch {
-        setMessage({ type: "error", text: "Respon server tidak valid." });
-      }
-    };
-    xhr.onerror = () => {
-      setSubmitting(false);
-      setProgress(null);
-      setMessage({ type: "error", text: "Koneksi gagal." });
-    };
-    xhr.send(fd);
+    }
   };
 
-  const onDelete = async (id: string, title: string) => {
-    if (!confirm(`Hapus drama "${title}"? File video & poster ikut terhapus.`))
+  const onDelete = async (dramaId: string, dramaTitle: string) => {
+    if (
+      !confirm(
+        `Hapus drama "${dramaTitle}" dari daftar? Catatan: file video di PC backup TIDAK ikut terhapus — kamu bisa tambahkan lagi entry-nya kapan saja.`,
+      )
+    )
       return;
-    const res = await fetch("/api/admin/upload", {
+    if (!authUser) return;
+    const res = await fetch("/api/admin/drama", {
       method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id }),
+      headers: {
+        "Content-Type": "application/json",
+        "x-admin-email": authUser.email,
+      },
+      body: JSON.stringify({ id: dramaId }),
     });
     const data = await res.json();
     if (res.ok && data.ok) {
-      setMessage({ type: "ok", text: `Drama "${title}" terhapus.` });
+      setMessage({
+        type: "ok",
+        text: `Drama "${dramaTitle}" dihapus dari daftar. File video di PC backup tetap utuh.`,
+      });
       refreshList();
     } else {
       setMessage({ type: "error", text: data.error ?? "Hapus gagal" });
@@ -398,6 +465,15 @@ export default function AdminPage() {
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-lg font-bold text-white">Tambah / Update Drama</h2>
           </div>
+          <div className="mb-3 rounded-xl border border-amber-700/60 bg-amber-900/15 px-4 py-3 text-xs text-amber-200">
+            <p className="font-semibold">📋 Workflow self-hosted:</p>
+            <ol className="mt-1 list-decimal space-y-0.5 pl-5">
+              <li>Taruh file video di PC backup, folder <code className="text-amber-100">{`<drama-id>`}</code>, file <code className="text-amber-100">1.mp4, 2.mp4, ...</code></li>
+              <li>Isi form di bawah — judul, kategori, sinopsis</li>
+              <li>Klik <strong>Scan</strong> → auto-deteksi jumlah episode dari PC backup</li>
+              <li>Klik <strong>Simpan drama</strong> → commit ke GitHub → Vercel auto-deploy ~1-2 menit</li>
+            </ol>
+          </div>
           <form
             ref={formRef}
             onSubmit={onSubmit}
@@ -429,7 +505,28 @@ export default function AdminPage() {
 
             <label className="mt-4 block">
               <span className="text-sm text-zinc-300">
-                Sinopsis <span className="text-zinc-500">(opsional · isi saat bikin drama baru, kosongkan saat upload episode tambahan)</span>
+                ID slug <span className="text-zinc-500">(opsional — auto-generate dari judul kalau kosong; harus sama dengan nama folder di PC backup)</span>
+              </span>
+              <input
+                value={id}
+                onChange={(e) => setId(e.target.value)}
+                placeholder={
+                  title.trim()
+                    ? `auto: ${slugify(title)}`
+                    : "contoh: istri-tersembunyi-sang-ceo"
+                }
+                className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white outline-none focus:border-amber-400 font-mono"
+              />
+              {effectiveId && (
+                <p className="mt-1 text-xs text-zinc-500">
+                  Final id yang dipakai: <code className="text-amber-300">{effectiveId}</code>
+                </p>
+              )}
+            </label>
+
+            <label className="mt-4 block">
+              <span className="text-sm text-zinc-300">
+                Sinopsis <span className="text-zinc-500">(opsional)</span>
               </span>
               <textarea
                 value={synopsis}
@@ -440,59 +537,70 @@ export default function AdminPage() {
               />
             </label>
 
-            <label className="mt-4 block max-w-xs">
-              <span className="text-sm text-zinc-300">Jumlah ditonton (opsional)</span>
-              <input
-                value={views}
-                onChange={(e) => setViews(e.target.value)}
-                placeholder="contoh: 1.2M atau 500K"
-                className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white outline-none focus:border-amber-400"
-              />
-            </label>
-
-            <div className="mt-5 grid gap-4 md:grid-cols-2">
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
               <label className="block">
-                <span className="flex items-center gap-2 text-sm text-zinc-300">
-                  📁 Video episode
+                <span className="text-sm text-zinc-300">Jumlah ditonton (opsional)</span>
+                <input
+                  value={views}
+                  onChange={(e) => setViews(e.target.value)}
+                  placeholder="contoh: 1.2M atau 500K"
+                  className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white outline-none focus:border-amber-400"
+                />
+              </label>
+
+              <label className="block">
+                <span className="text-sm text-zinc-300">URL poster (opsional)</span>
+                <input
+                  value={posterImage}
+                  onChange={(e) => setPosterImage(e.target.value)}
+                  placeholder="/posters/istri-tersembunyi-sang-ceo.png"
+                  className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white outline-none focus:border-amber-400 font-mono"
+                />
+              </label>
+            </div>
+
+            <div className="mt-5 rounded-xl border border-zinc-800 bg-zinc-950/50 p-4">
+              <div className="flex flex-wrap items-end gap-3">
+                <label className="block">
+                  <span className="text-sm text-zinc-300">Jumlah episode *</span>
                   <input
                     type="number"
                     min={1}
                     max={999}
-                    value={episodeNumber}
+                    value={episodes}
                     onChange={(e) =>
-                      setEpisodeNumber(Math.max(1, Number(e.target.value) || 1))
+                      setEpisodes(Math.max(1, Number(e.target.value) || 1))
                     }
-                    className="w-16 rounded-md border border-zinc-700 bg-zinc-900 px-2 py-0.5 text-center text-sm text-white outline-none focus:border-amber-400"
+                    className="mt-1 w-32 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white outline-none focus:border-amber-400"
                   />
-                  <span className="text-zinc-500">*</span>
-                </span>
-                <input
-                  type="file"
-                  accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.webm,.m4v"
-                  onChange={(e) => setVideo(e.target.files?.[0] ?? null)}
-                  className="mt-1 block w-full text-sm text-zinc-300 file:mr-3 file:rounded-md file:border-0 file:bg-amber-400 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-black hover:file:bg-amber-300"
-                />
-                {video && (
-                  <p className="mt-1 text-xs text-zinc-500">
-                    Akan disimpan sebagai <code className="text-amber-300">{episodeNumber}.mp4</code> · {video.name} · {(video.size / 1024 / 1024).toFixed(1)} MB
-                  </p>
+                </label>
+                <button
+                  type="button"
+                  onClick={onScan}
+                  disabled={scanning || !effectiveId}
+                  className="rounded-lg border border-amber-400/60 bg-amber-400/10 px-4 py-2 text-sm font-semibold text-amber-300 hover:bg-amber-400/20 disabled:cursor-not-allowed disabled:opacity-40"
+                  title={
+                    !effectiveId
+                      ? "Isi Judul atau ID slug dulu"
+                      : "Auto-deteksi jumlah episode dari folder PC backup"
+                  }
+                >
+                  {scanning ? "Scanning..." : "🔍 Scan PC backup"}
+                </button>
+                {scanResult && (
+                  <div className="text-xs text-zinc-400">
+                    Ditemukan <strong className="text-emerald-300">{scanResult.count}</strong> file (ep 1-{scanResult.max})
+                    {scanResult.missing.length > 0 && (
+                      <span className="ml-2 text-amber-300">
+                        ⚠️ ada gap: ep {scanResult.missing.join(", ")} tidak ada
+                      </span>
+                    )}
+                  </div>
                 )}
-              </label>
-
-              <label className="block">
-                <span className="text-sm text-zinc-300">🖼️ Gambar poster (opsional)</span>
-                <input
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp,.png,.jpg,.jpeg,.webp"
-                  onChange={(e) => setPoster(e.target.files?.[0] ?? null)}
-                  className="mt-1 block w-full text-sm text-zinc-300 file:mr-3 file:rounded-md file:border-0 file:bg-zinc-700 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-white hover:file:bg-zinc-600"
-                />
-                {poster && (
-                  <p className="mt-1 text-xs text-zinc-500">
-                    {poster.name} · {(poster.size / 1024).toFixed(0)} KB
-                  </p>
-                )}
-              </label>
+              </div>
+              <p className="mt-2 text-xs text-zinc-500">
+                Scan akan fetch <code className="text-zinc-400">{`<tunnel-url>/${effectiveId || "<drama-id>"}/`}</code> dan hitung file pattern <code className="text-zinc-400">N.mp4</code>.
+              </p>
             </div>
 
             <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -501,20 +609,11 @@ export default function AdminPage() {
                 disabled={submitting}
                 className="rounded-full bg-amber-400 px-6 py-2.5 text-sm font-semibold text-black disabled:opacity-50"
               >
-                {submitting
-                  ? progress !== null
-                    ? `Mengupload... ${progress}%`
-                    : "Memproses..."
-                  : "Simpan drama"}
+                {submitting ? "Menyimpan ke GitHub..." : "Simpan drama"}
               </button>
-              {progress !== null && (
-                <div className="h-2 flex-1 min-w-[120px] overflow-hidden rounded-full bg-zinc-800">
-                  <div
-                    className="h-full bg-amber-400 transition-all"
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
-              )}
+              <span className="text-xs text-zinc-500">
+                Commit ke <code>data/dramas.json</code> → Vercel auto-deploy ~1-2 menit
+              </span>
             </div>
 
             {message && (

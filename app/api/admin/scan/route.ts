@@ -58,7 +58,8 @@ export async function GET(req: NextRequest) {
       );
     }
     const html = await res.text();
-    const matches = [...html.matchAll(/href="(\d+)\.mp4"/g)];
+    const matches = [...html.matchAll(/href="(?:\.\/)?(\d+)\.mp4"/g)];
+
     const epNums = matches
       .map((m) => parseInt(m[1], 10))
       .filter((n) => Number.isFinite(n));

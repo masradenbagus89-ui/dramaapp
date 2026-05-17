@@ -1,0 +1,29 @@
+# Caddyfile untuk dramaapp PC backup
+# Serve video files + reverse-proxy /_agent/* ke local hardlink-agent
+#
+# Cara run:
+#   caddy run --config Caddyfile
+#
+# Atau jalankan di background (nanti):
+#   caddy start --config Caddyfile
+
+:8088 {
+	# Reverse-proxy /_agent/* ke hardlink-agent Node.js di port 8089
+	# /_agent/hardlink -> http://127.0.0.1:8089/hardlink
+	handle_path /_agent/* {
+		reverse_proxy 127.0.0.1:8089
+	}
+
+	# Default: serve video files dari folder lokal
+	handle {
+		root * C:\Users\USER\Downloads\video
+		file_server browse
+	}
+
+	# CORS header buat case admin form fetch langsung (opsional, defensive)
+	header {
+		Access-Control-Allow-Origin "*"
+		Access-Control-Allow-Methods "GET, POST, OPTIONS"
+		Access-Control-Allow-Headers "Content-Type, x-agent-secret"
+	}
+}

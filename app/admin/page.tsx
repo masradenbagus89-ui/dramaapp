@@ -195,6 +195,59 @@ export default function AdminPage() {
     return { totalEpisode, totalViews, withPoster, byCategory };
   }, [dramas]);
 
+  const doScanOnly = async (
+    id: string,
+  ): Promise<
+    { ok: true; result: ScanResult } | { ok: false; status: number; error: string }
+  > => {
+    if (!authUser) return { ok: false, status: 0, error: "Not logged in" };
+    const res = await fetch(`/api/admin/scan?id=${encodeURIComponent(id)}`, {
+      headers: { "x-admin-email": authUser.email },
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) {
+      return {
+        ok: false,
+        status: res.status,
+        error: data.error ?? `HTTP ${res.status}`,
+      };
+    }
+    return {
+      ok: true,
+      result: {
+        count: data.count,
+        min: data.min,
+        max: data.max,
+        missing: data.missing ?? [],
+        folderUrl: data.folderUrl,
+      },
+    };
+  };
+
+  const doHardlink = async (
+    id: string,
+  ): Promise<{ ok: boolean; message?: string; error?: string }> => {
+    if (!authUser) return { ok: false, error: "Not logged in" };
+    const res = await fetch(`/api/admin/hardlink`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-admin-email": authUser.email,
+      },
+      body: JSON.stringify({ dramaId: id }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) {
+      return {
+        ok: false,
+        error:
+          data.error ??
+          `Hardlink gagal (HTTP ${res.status}). Pastikan agent jalan di PC backup.`,
+      };
+    }
+    return { ok: true, message: data.message };
+  };
+
   const onScan = async () => {
     setMessage(null);
     setScanResult(null);
@@ -208,27 +261,48 @@ export default function AdminPage() {
     if (!authUser) return;
     setScanning(true);
     try {
-      const res = await fetch(
-        `/api/admin/scan?id=${encodeURIComponent(effectiveId)}`,
-        { headers: { "x-admin-email": authUser.email } },
-      );
-      const data = await res.json();
-      if (!res.ok || !data.ok) {
+      // Step 1: scan first
+      const scanRes = await doScanOnly(effectiveId);
+      if (scanRes.ok) {
+        setScanResult(scanRes.result);
+        setEpisodes(scanRes.result.max);
+        return;
+      }
+
+      // Step 2: scan failed. If 404 (no N.mp4 files), try auto-hardlink + re-scan
+      if (scanRes.status === 404) {
         setMessage({
-          type: "error",
-          text: data.error ?? `Scan gagal (HTTP ${res.status})`,
+          type: "ok",
+          text: `Folder belum siap (file masih raw atau folder kosong). Mencoba auto-hardlink di PC backup...`,
+        });
+        const hlRes = await doHardlink(effectiveId);
+        if (!hlRes.ok) {
+          setMessage({
+            type: "error",
+            text: `Auto-hardlink gagal: ${hlRes.error}`,
+          });
+          return;
+        }
+        // Re-scan after hardlink
+        const scan2 = await doScanOnly(effectiveId);
+        if (!scan2.ok) {
+          setMessage({
+            type: "error",
+            text: `Hardlink berhasil (${hlRes.message ?? "ok"}) tapi re-scan masih gagal: ${scan2.error}`,
+          });
+          return;
+        }
+        setScanResult(scan2.result);
+        setEpisodes(scan2.result.max);
+        setMessage({
+          type: "ok",
+          text: `Auto-hardlink berhasil: ${hlRes.message ?? "ok"}. Folder siap dipakai.`,
         });
         return;
       }
-      const result: ScanResult = {
-        count: data.count,
-        min: data.min,
-        max: data.max,
-        missing: data.missing ?? [],
-        folderUrl: data.folderUrl,
-      };
-      setScanResult(result);
-      setEpisodes(result.max);
+
+      // Other scan errors (e.g., tunnel down)
+      setMessage({ type: "error", text: scanRes.error });
     } catch (err) {
       const m = err instanceof Error ? err.message : "Scan gagal";
       setMessage({ type: "error", text: m });
@@ -468,10 +542,10 @@ export default function AdminPage() {
           <div className="mb-3 rounded-xl border border-amber-700/60 bg-amber-900/15 px-4 py-3 text-xs text-amber-200">
             <p className="font-semibold">📋 Workflow self-hosted:</p>
             <ol className="mt-1 list-decimal space-y-0.5 pl-5">
-              <li>Taruh file video di PC backup, folder <code className="text-amber-100">{`<drama-id>`}</code>, file <code className="text-amber-100">1.mp4, 2.mp4, ...</code></li>
-              <li>Isi form di bawah — judul, kategori, sinopsis</li>
-              <li>Klik <strong>Scan</strong> → auto-deteksi jumlah episode dari PC backup</li>
-              <li>Klik <strong>Simpan drama</strong> → commit ke GitHub → Vercel auto-deploy ~1-2 menit</li>
+              <li>Taruh file video di PC backup, folder <code className="text-amber-100">{`<drama-id>`}</code>. Nama file <strong>bebas</strong> (raw): mis. <code className="text-amber-100">ep01.mp4</code>, <code className="text-amber-100">Video 1.mp4</code>, dst.</li>
+              <li>Isi form di bawah — judul, kategori, sinopsis.</li>
+              <li>Klik <strong>🪄 Scan & auto-hardlink</strong> → agent di PC backup auto-rename (kalau perlu) ke <code className="text-amber-100">1.mp4 2.mp4 ...</code> + scan jumlah episode.</li>
+              <li>Klik <strong>Simpan drama</strong> → commit ke GitHub → Vercel auto-deploy ~1-2 menit.</li>
             </ol>
           </div>
           <form
@@ -582,10 +656,10 @@ export default function AdminPage() {
                   title={
                     !effectiveId
                       ? "Isi Judul atau ID slug dulu"
-                      : "Auto-deteksi jumlah episode dari folder PC backup"
+                      : "Auto-hardlink (kalau perlu) + scan folder PC backup"
                   }
                 >
-                  {scanning ? "Scanning..." : "🔍 Scan PC backup"}
+                  {scanning ? "Memproses..." : "🪄 Scan & auto-hardlink"}
                 </button>
                 {scanResult && (
                   <div className="text-xs text-zinc-400">
@@ -599,7 +673,7 @@ export default function AdminPage() {
                 )}
               </div>
               <p className="mt-2 text-xs text-zinc-500">
-                Scan akan fetch <code className="text-zinc-400">{`<tunnel-url>/${effectiveId || "<drama-id>"}/`}</code> dan hitung file pattern <code className="text-zinc-400">N.mp4</code>.
+                Cek folder <code className="text-zinc-400">{`<tunnel-url>/${effectiveId || "<drama-id>"}/`}</code>. Kalau file masih raw (mis. <code className="text-zinc-400">Video PM 1.mp4</code>), agent di PC backup auto-bikin hardlink <code className="text-zinc-400">N.mp4</code> dulu, baru hitung.
               </p>
             </div>
 

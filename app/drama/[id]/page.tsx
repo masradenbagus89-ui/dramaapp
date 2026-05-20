@@ -27,12 +27,11 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={drama.posterImage}
-              alt=""
-              aria-hidden="true"
-              className="absolute inset-0 h-full w-full scale-125 object-cover blur-2xl"
+              alt={drama.title}
+              className="absolute inset-0 h-full w-full object-cover object-top"
             />
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/55 to-black/10" />
         </div>
         <Link
           href="/"

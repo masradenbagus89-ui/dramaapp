@@ -141,3 +141,28 @@ if (-not $envVar) {
 
 $patchBody = @{ value = $tunnelUrl; target = $envVar.target } | ConvertTo-Json
 try {
+  Invoke-RestMethod -Uri "https://api.vercel.com/v9/projects/$VERCEL_PROJECT/env/$($envVar.id)$teamQ" -Headers $headers -Method Patch -Body $patchBody -ContentType "application/json" -TimeoutSec 30 | Out-Null
+} catch {
+  Fail "Gagal update env var. Error: $($_.Exception.Message)"
+}
+Write-Host "    Env var ke-update ke URL baru." -ForegroundColor Green
+
+# --- 6. Trigger redeploy via Deploy Hook ---
+Write-Host "[6/6] Trigger Vercel redeploy..." -ForegroundColor Yellow
+try {
+  Invoke-RestMethod -Uri $DEPLOY_HOOK_URL -Method Post -TimeoutSec 30 | Out-Null
+} catch {
+  Fail "Gagal trigger redeploy. Cek DEPLOY_HOOK_URL. Error: $($_.Exception.Message)"
+}
+Write-Host "    Redeploy triggered." -ForegroundColor Green
+
+# --- Selesai ---
+Write-Host ""
+Write-Host "=== SELESAI ===" -ForegroundColor Cyan
+Write-Host "URL tunnel : $tunnelUrl"
+Write-Host "Vercel sedang build ulang (~1-2 menit). Setelah Ready, drama hidup."
+Write-Host ""
+Write-Host "Service jalan: agent + Caddy (ada window-nya), cloudflared (background/hidden)." -ForegroundColor Yellow
+Write-Host "JANGAN tutup window agent & Caddy. cloudflared jalan di background." -ForegroundColor Yellow
+Write-Host "Window ini boleh ditutup."
+Read-Host "Tekan Enter untuk menutup window ini"

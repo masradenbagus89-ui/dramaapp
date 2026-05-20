@@ -22,11 +22,13 @@ export default function Poster({ drama, className = "", showBadge = true }: Prop
       {!drama.posterImage && (
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.15),transparent_60%)]" />
       )}
-      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-3 pt-10">
-        <div className="title-gold text-lg leading-tight">
-          {drama.title}
+      {!drama.posterImage && (
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-3 pt-10">
+          <div className="title-gold line-clamp-4 text-sm leading-snug">
+            {drama.title}
+          </div>
         </div>
-      </div>
+      )}
       {showBadge && drama.exclusive && (
         <div className="absolute right-2 top-2 rounded bg-black/70 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white">
           Exclusive

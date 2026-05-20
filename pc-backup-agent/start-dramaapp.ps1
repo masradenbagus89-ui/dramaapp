@@ -77,7 +77,7 @@ Start-Sleep -Seconds 4
 Write-Host "[4/6] Start cloudflared + tunggu URL tunnel..." -ForegroundColor Yellow
 $cfLog = "$env:TEMP\cloudflared-dramaapp.log"
 if (Test-Path $cfLog) { Remove-Item $cfLog -Force -ErrorAction SilentlyContinue }
-$cfCmd = "& '$CLOUDFLARED' tunnel --url http://localhost:8088 2>&1 | Tee-Object -FilePath '$cfLog'"
+$cfCmd = "& '$CLOUDFLARED' --logfile '$cfLog' tunnel --url http://localhost:8088"
 Start-Process powershell -ArgumentList "-NoExit", "-Command", $cfCmd
 
 $tunnelUrl = $null

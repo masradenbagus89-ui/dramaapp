@@ -11,11 +11,11 @@
 #    5. Update Vercel env var NEXT_PUBLIC_VIDEO_BASE_URL via API
 #    6. Trigger Vercel redeploy via Deploy Hook
 #
-#  Cara run: klik kanan file ini > Run with PowerShell
-#  Atau di PowerShell:  .\start-dramaapp.ps1
+#  Cara run:
+#    powershell -ExecutionPolicy Bypass -File start-dramaapp.ps1
 # ============================================================
 
-# ====== CONFIG — ISI SEKALI DENGAN NILAI ASLI ======
+# ====== CONFIG - ISI SEKALI DENGAN NILAI ASLI ======
 # PENTING: file ini berisi token rahasia setelah diisi.
 # JANGAN upload / commit file ini ke GitHub atau share ke siapapun.
 
@@ -25,7 +25,7 @@ $AGENT_SECRET    = "ISI_HARDLINK_AGENT_SECRET_DISINI"
 
 # Biasanya tidak perlu diubah:
 $VERCEL_PROJECT  = "dramaapp"
-$VERCEL_TEAM_ID  = ""                                  # kosongkan kalau akun personal
+$VERCEL_TEAM_ID  = ""
 $ENV_VAR_KEY     = "NEXT_PUBLIC_VIDEO_BASE_URL"
 $VIDEO_ROOT      = "C:\Users\USER\Downloads\video"
 $AGENT_DIR       = "C:\Users\USER\pc-backup-agent"
@@ -40,7 +40,7 @@ function Fail($msg) {
   exit 1
 }
 
-Write-Host "=== dramaapp PC backup — auto startup ===" -ForegroundColor Cyan
+Write-Host "=== dramaapp PC backup auto startup ===" -ForegroundColor Cyan
 
 # --- Validasi config ---
 if ($VERCEL_TOKEN -like "ISI_*") { Fail "VERCEL_TOKEN belum diisi di bagian CONFIG." }
@@ -100,9 +100,10 @@ if (-not $tunnelUrl) {
 Write-Host "    URL tunnel baru: $tunnelUrl" -ForegroundColor Green
 
 # --- 5. Update Vercel env var ---
-Write-Host "[5/6] Update Vercel env var '$ENV_VAR_KEY'..." -ForegroundColor Yellow
+Write-Host "[5/6] Update Vercel env var $ENV_VAR_KEY ..." -ForegroundColor Yellow
 $headers = @{ Authorization = "Bearer $VERCEL_TOKEN" }
-$teamQ = if ($VERCEL_TEAM_ID) { "?teamId=$VERCEL_TEAM_ID" } else { "" }
+$teamQ = ""
+if ($VERCEL_TEAM_ID) { $teamQ = "?teamId=$VERCEL_TEAM_ID" }
 
 try {
   $envList = Invoke-RestMethod -Uri "https://api.vercel.com/v9/projects/$VERCEL_PROJECT/env$teamQ" -Headers $headers -Method Get
@@ -111,13 +112,12 @@ try {
 }
 $envVar = $envList.envs | Where-Object { $_.key -eq $ENV_VAR_KEY } | Select-Object -First 1
 if (-not $envVar) {
-  Fail "Env var '$ENV_VAR_KEY' tidak ditemukan di project Vercel '$VERCEL_PROJECT'."
+  Fail "Env var $ENV_VAR_KEY tidak ditemukan di project Vercel $VERCEL_PROJECT."
 }
 
 $patchBody = @{ value = $tunnelUrl; target = $envVar.target } | ConvertTo-Json
 try {
-  Invoke-RestMethod -Uri "https://api.vercel.com/v9/projects/$VERCEL_PROJECT/env/$($envVar.id)$teamQ" `
-    -Headers $headers -Method Patch -Body $patchBody -ContentType "application/json" | Out-Null
+  Invoke-RestMethod -Uri "https://api.vercel.com/v9/projects/$VERCEL_PROJECT/env/$($envVar.id)$teamQ" -Headers $headers -Method Patch -Body $patchBody -ContentType "application/json" | Out-Null
 } catch {
   Fail "Gagal update env var. Error: $($_.Exception.Message)"
 }
@@ -138,6 +138,6 @@ Write-Host "=== SELESAI ===" -ForegroundColor Cyan
 Write-Host "URL tunnel : $tunnelUrl"
 Write-Host "Vercel sedang build ulang (~1-2 menit). Setelah Ready, drama hidup."
 Write-Host ""
-Write-Host "3 window sudah jalan (agent, Caddy, cloudflared) — JANGAN ditutup." -ForegroundColor Yellow
+Write-Host "3 window sudah jalan (agent, Caddy, cloudflared). JANGAN ditutup." -ForegroundColor Yellow
 Write-Host "Window ini boleh ditutup."
 Read-Host "Tekan Enter untuk menutup window ini"

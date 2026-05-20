@@ -40,6 +40,10 @@ function Fail($msg) {
   exit 1
 }
 
+# Fix quirk networking PowerShell 5.1 untuk API call ke Vercel
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+[Net.ServicePointManager]::Expect100Continue = $false
+
 Write-Host "=== dramaapp PC backup auto startup ===" -ForegroundColor Cyan
 
 # --- Validasi config ---
@@ -126,7 +130,7 @@ $teamQ = ""
 if ($VERCEL_TEAM_ID) { $teamQ = "?teamId=$VERCEL_TEAM_ID" }
 
 try {
-  $envList = Invoke-RestMethod -Uri "https://api.vercel.com/v9/projects/$VERCEL_PROJECT/env$teamQ" -Headers $headers -Method Get
+  $envList = Invoke-RestMethod -Uri "https://api.vercel.com/v9/projects/$VERCEL_PROJECT/env$teamQ" -Headers $headers -Method Get -TimeoutSec 30
 } catch {
   Fail "Gagal ambil env list dari Vercel. Cek VERCEL_TOKEN valid. Error: $($_.Exception.Message)"
 }
@@ -137,7 +141,3 @@ if (-not $envVar) {
 
 $patchBody = @{ value = $tunnelUrl; target = $envVar.target } | ConvertTo-Json
 try {
-  Invoke-RestMethod -Uri "https://api.vercel.com/v9/projects/$VERCEL_PROJECT/env/$($envVar.id)$teamQ" -Headers $headers -Method Patch -Body $patchBody -ContentType "application/json" | Out-Null
-} catch {
-  Fail "Gagal update env var. Error: $($_.Exception.Message)"
-}

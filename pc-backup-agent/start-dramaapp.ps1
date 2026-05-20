@@ -76,26 +76,46 @@ Start-Sleep -Seconds 4
 # --- 4. Start cloudflared + tangkap URL ---
 Write-Host "[4/6] Start cloudflared + tunggu URL tunnel..." -ForegroundColor Yellow
 $cfLog = "$env:TEMP\cloudflared-dramaapp.log"
-if (Test-Path $cfLog) { Remove-Item $cfLog -Force -ErrorAction SilentlyContinue }
-$cfCmd = "& '$CLOUDFLARED' --logfile '$cfLog' tunnel --url http://localhost:8088"
-Start-Process powershell -ArgumentList "-NoExit", "-Command", $cfCmd
+$cfOut = "$env:TEMP\cloudflared-dramaapp-out.log"
+foreach ($f in $cfLog, $cfOut) {
+  if (Test-Path $f) { Remove-Item $f -Force -ErrorAction SilentlyContinue }
+}
+
+Start-Process -FilePath $CLOUDFLARED `
+  -ArgumentList "tunnel", "--url", "http://localhost:8088" `
+  -RedirectStandardError $cfLog `
+  -RedirectStandardOutput $cfOut `
+  -WindowStyle Hidden
+
+function Read-FileShared($path) {
+  try {
+    $fs = [System.IO.File]::Open($path, [System.IO.FileMode]::Open, [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite)
+    $sr = New-Object System.IO.StreamReader($fs)
+    $text = $sr.ReadToEnd()
+    $sr.Close()
+    $fs.Close()
+    return $text
+  } catch {
+    return ""
+  }
+}
 
 $tunnelUrl = $null
 $elapsed = 0
-while (-not $tunnelUrl -and $elapsed -lt 70) {
+while (-not $tunnelUrl -and $elapsed -lt 80) {
   Start-Sleep -Seconds 2
   $elapsed += 2
-  if (Test-Path $cfLog) {
-    try {
-      $content = [System.IO.File]::ReadAllText($cfLog)
-      if ($content -match 'https://[a-z0-9-]+\.trycloudflare\.com') {
+  foreach ($f in $cfLog, $cfOut) {
+    if ((-not $tunnelUrl) -and (Test-Path $f)) {
+      $text = Read-FileShared $f
+      if ($text -match 'https://[a-z0-9-]+\.trycloudflare\.com') {
         $tunnelUrl = $matches[0]
       }
-    } catch {}
+    }
   }
 }
 if (-not $tunnelUrl) {
-  Fail "cloudflared tidak kasih URL dalam 70 detik. Cek window cloudflared yang baru kebuka."
+  Fail "cloudflared tidak kasih URL dalam 80 detik. Buka file ini untuk cek error: $cfLog"
 }
 Write-Host "    URL tunnel baru: $tunnelUrl" -ForegroundColor Green
 
@@ -121,23 +141,3 @@ try {
 } catch {
   Fail "Gagal update env var. Error: $($_.Exception.Message)"
 }
-Write-Host "    Env var ke-update ke URL baru." -ForegroundColor Green
-
-# --- 6. Trigger redeploy via Deploy Hook ---
-Write-Host "[6/6] Trigger Vercel redeploy..." -ForegroundColor Yellow
-try {
-  Invoke-RestMethod -Uri $DEPLOY_HOOK_URL -Method Post | Out-Null
-} catch {
-  Fail "Gagal trigger redeploy. Cek DEPLOY_HOOK_URL. Error: $($_.Exception.Message)"
-}
-Write-Host "    Redeploy triggered." -ForegroundColor Green
-
-# --- Selesai ---
-Write-Host ""
-Write-Host "=== SELESAI ===" -ForegroundColor Cyan
-Write-Host "URL tunnel : $tunnelUrl"
-Write-Host "Vercel sedang build ulang (~1-2 menit). Setelah Ready, drama hidup."
-Write-Host ""
-Write-Host "3 window sudah jalan (agent, Caddy, cloudflared). JANGAN ditutup." -ForegroundColor Yellow
-Write-Host "Window ini boleh ditutup."
-Read-Host "Tekan Enter untuk menutup window ini"

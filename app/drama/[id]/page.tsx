@@ -23,12 +23,12 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
     <div className="mx-auto max-w-7xl pb-10 md:px-6">
       <div className="relative">
         <div className={`relative aspect-[16/10] w-full overflow-hidden bg-gradient-to-br md:aspect-[21/8] md:rounded-2xl ${drama.gradient}`}>
-          {drama.posterImage && (
+          {(drama.heroImage || drama.posterImage) && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={drama.posterImage}
+              src={drama.heroImage || drama.posterImage}
               alt={drama.title}
-              className="absolute inset-0 h-full w-full object-cover object-top"
+              className={`absolute inset-0 h-full w-full object-cover ${drama.heroImage ? "object-center" : "object-top"}`}
             />
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/55 to-black/10" />

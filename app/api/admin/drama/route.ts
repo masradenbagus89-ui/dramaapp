@@ -133,6 +133,7 @@ export async function POST(req: NextRequest) {
       views: string;
       episodes: number;
       posterImage: string;
+      heroImage: string;
       gradient: string;
       exclusive: boolean;
     }>;
@@ -168,6 +169,7 @@ export async function POST(req: NextRequest) {
         synopsis: body.synopsis?.trim() || "",
         gradient: body.gradient?.trim() || pickRandomGradient(),
         ...(body.posterImage?.trim() ? { posterImage: body.posterImage.trim() } : {}),
+        ...(body.heroImage?.trim() ? { heroImage: body.heroImage.trim() } : {}),
         ...(body.exclusive ? { exclusive: true } : {}),
       };
       dramas.unshift(drama);
@@ -182,6 +184,7 @@ export async function POST(req: NextRequest) {
         ...(body.synopsis?.trim() ? { synopsis: body.synopsis.trim() } : {}),
         ...(body.gradient?.trim() ? { gradient: body.gradient.trim() } : {}),
         ...(body.posterImage?.trim() ? { posterImage: body.posterImage.trim() } : {}),
+        ...(body.heroImage?.trim() ? { heroImage: body.heroImage.trim() } : {}),
         ...(typeof body.exclusive === "boolean" ? { exclusive: body.exclusive } : {}),
       };
       dramas[existingIdx] = drama;

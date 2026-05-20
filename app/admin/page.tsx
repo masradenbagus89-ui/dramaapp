@@ -72,6 +72,7 @@ export default function AdminPage() {
   const [views, setViews] = useState("");
   const [episodes, setEpisodes] = useState<number>(1);
   const [posterImage, setPosterImage] = useState("");
+  const [heroImage, setHeroImage] = useState("");
 
   const [scanning, setScanning] = useState(false);
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
@@ -337,6 +338,7 @@ export default function AdminPage() {
           views: views.trim(),
           episodes,
           posterImage: posterImage.trim(),
+          heroImage: heroImage.trim(),
         }),
       });
       const data = await res.json();
@@ -357,6 +359,7 @@ export default function AdminPage() {
       setViews("");
       setEpisodes(1);
       setPosterImage("");
+      setHeroImage("");
       setScanResult(null);
       formRef.current?.reset();
       refreshList();
@@ -624,10 +627,22 @@ export default function AdminPage() {
 
               <label className="block">
                 <span className="text-sm text-zinc-300">URL poster (opsional)</span>
+                <span className="block text-xs text-zinc-500">Gambar tegak/portrait buat card</span>
                 <input
                   value={posterImage}
                   onChange={(e) => setPosterImage(e.target.value)}
                   placeholder="/posters/istri-tersembunyi-sang-ceo.png"
+                  className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white outline-none focus:border-amber-400 font-mono"
+                />
+              </label>
+
+              <label className="block md:col-span-2">
+                <span className="text-sm text-zinc-300">URL hero / banner (opsional)</span>
+                <span className="block text-xs text-zinc-500">Gambar lebar/landscape buat banner besar di halaman detail. Kalau kosong, pakai poster.</span>
+                <input
+                  value={heroImage}
+                  onChange={(e) => setHeroImage(e.target.value)}
+                  placeholder="https://i.imgur.com/xxxxxxx.png"
                   className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white outline-none focus:border-amber-400 font-mono"
                 />
               </label>

@@ -399,6 +399,25 @@ export default function AdminPage() {
     }
   };
 
+  const loadDramaToForm = (d: Drama) => {
+    setId(d.id);
+    setTitle(d.title);
+    setCategory(d.category);
+    setSynopsis(d.synopsis);
+    setViews(d.views);
+    setEpisodes(d.episodes);
+    setPosterImage(d.posterImage ?? "");
+    setHeroImage(d.heroImage ?? "");
+    setScanResult(null);
+    setMessage({
+      type: "ok",
+      text: `Form terisi data "${d.title}". Ubah field yang perlu (mis. URL hero), lalu klik Simpan drama.`,
+    });
+    if (typeof document !== "undefined") {
+      document.getElementById("tambah")?.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   const maxCategoryCount = stats.byCategory[0]?.[1] ?? 1;
 
   if (!authChecked) {
@@ -747,6 +766,12 @@ export default function AdminPage() {
                   >
                     Lihat
                   </Link>
+                  <button
+                    onClick={() => loadDramaToForm(d)}
+                    className="rounded-md border border-amber-700 px-3 py-1 text-xs text-amber-300 hover:border-amber-400 hover:bg-amber-950/40 hover:text-amber-200"
+                  >
+                    Edit
+                  </button>
                   <button
                     onClick={() => onDelete(d.id, d.title)}
                     className="rounded-md border border-red-900 px-3 py-1 text-xs text-red-400 hover:border-red-500 hover:bg-red-950 hover:text-red-300"

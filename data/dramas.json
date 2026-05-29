@@ -223,16 +223,6 @@
     "posterImage": "/posters/no-pain-no-gain.png"
   },
   {
-    "id": "the-hitchhiker-s-guide-to-the-galaxy",
-    "title": "The Hitchhiker's Guide to the Galaxy",
-    "category": "Romance",
-    "episodes": 1,
-    "views": "1.0K",
-    "synopsis": "Pagi yang buruk bisa terjadi pada siapa saja, tapi bagi Arthur Dent, hari ini adalah yang terburuk dalam hidupnya. Saat Bumi dihancurkan untuk pembangunan jalan raya antargalaksi.",
-    "gradient": "from-pink-600 via-rose-700 to-red-900",
-    "posterImage": "/posters/the-hitchhiker-s-guide-to-the-galaxy.png"
-  },
-  {
     "id": "the-legend-of-aang",
     "title": "The Legend of Aang",
     "category": "Romance",

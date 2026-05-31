@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { writeUser, fetchUserRole } from "@/lib/auth";
+import { writeUser } from "@/lib/auth";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -28,17 +28,22 @@ export default function LoginPage() {
 
     setSubmitting(true);
     try {
-      const role = await fetchUserRole(email.trim());
-      const namePart = email.split("@")[0].replace(/[._-]/g, " ");
-      writeUser({
-        name: namePart.charAt(0).toUpperCase() + namePart.slice(1),
-        email: email.trim(),
-        role,
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), password }),
       });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        setSubmitting(false);
+        setError(data.error ?? "Login gagal. Coba lagi.");
+        return;
+      }
+      writeUser({ name: data.name, email: data.email, role: data.role });
       router.push("/beranda");
     } catch {
       setSubmitting(false);
-      setError("Gagal cek role. Coba lagi.");
+      setError("Koneksi gagal. Coba lagi.");
     }
   };
 
@@ -144,8 +149,8 @@ export default function LoginPage() {
           </p>
 
           <p className="mt-6 text-center text-[11px] text-zinc-600">
-            ⚠️ Versi prototype — login menggunakan local storage browser, bukan
-            akun sungguhan.
+            Admin wajib memasukkan password yang benar. Akun penonton bersifat
+            ringan (tanpa password tersimpan).
           </p>
         </div>
       </div>

@@ -8,7 +8,7 @@ import {
   writeAllDramas,
   type Drama,
 } from "@/lib/dramas";
-import { isAdminEmail } from "@/lib/store";
+import { isAdminRequest } from "@/lib/session";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -22,7 +22,7 @@ const IMAGE_EXT_RE = /\.(png|jpe?g|webp)$/i;
 
 export async function POST(req: NextRequest) {
   try {
-    if (!(await isAdminEmail(req.headers.get("x-admin-email")))) {
+    if (!(await isAdminRequest(req))) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     const form = await req.formData();
@@ -120,7 +120,7 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    if (!(await isAdminEmail(req.headers.get("x-admin-email")))) {
+    if (!(await isAdminRequest(req))) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     const { id } = (await req.json()) as { id?: string };

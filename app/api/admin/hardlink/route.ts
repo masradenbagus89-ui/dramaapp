@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { isAdminEmail } from "@/lib/store";
+import { isAdminRequest } from "@/lib/session";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   try {
-    const requesterEmail = req.headers.get("x-admin-email");
-    if (!(await isAdminEmail(requesterEmail))) {
+    if (!(await isAdminRequest(req))) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

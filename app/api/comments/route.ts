@@ -5,6 +5,7 @@ import {
   setCommentsFor,
   type Comment,
 } from "@/lib/store";
+import { isAdminRequest } from "@/lib/session";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,7 +31,10 @@ export async function POST(req: NextRequest) {
     const dramaId = String(body.dramaId ?? "").trim();
     const user = String(body.user ?? "").trim();
     const email = String(body.email ?? "").trim();
-    const role: "admin" | "viewer" = body.role === "admin" ? "admin" : "viewer";
+    // Badge "admin" hanya diberikan kalau request benar-benar membawa sesi admin
+    // yang valid — bukan sekadar klaim dari body (anti-spoof).
+    const role: "admin" | "viewer" =
+      body.role === "admin" && (await isAdminRequest(req)) ? "admin" : "viewer";
     const text = String(body.text ?? "").trim();
 
     if (!dramaId || !user || !text) {
@@ -64,13 +68,11 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const { dramaId, commentId, requesterEmail, requesterRole } =
-      (await req.json()) as {
-        dramaId?: string;
-        commentId?: string;
-        requesterEmail?: string;
-        requesterRole?: "admin" | "viewer";
-      };
+    const { dramaId, commentId, requesterEmail } = (await req.json()) as {
+      dramaId?: string;
+      commentId?: string;
+      requesterEmail?: string;
+    };
     if (!dramaId || !commentId) {
       return NextResponse.json(
         { error: "dramaId & commentId wajib." },
@@ -83,7 +85,7 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: "Komentar tidak ditemukan." }, { status: 404 });
     }
     const isAuthor = target.email === requesterEmail;
-    const isAdmin = requesterRole === "admin";
+    const isAdmin = await isAdminRequest(req); // diverifikasi dari sesi, bukan body
     if (!isAuthor && !isAdmin) {
       return NextResponse.json(
         { error: "Hanya penulis komentar atau admin yang bisa menghapus." },

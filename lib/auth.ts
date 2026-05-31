@@ -51,6 +51,8 @@ export function writeUser(user: User): void {
 export function clearUser(): void {
   if (typeof window === "undefined") return;
   window.localStorage.removeItem(KEY);
+  // Hapus juga cookie sesi admin di server (fire-and-forget).
+  void fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
   window.dispatchEvent(new Event("dramaku:auth-changed"));
 }
 

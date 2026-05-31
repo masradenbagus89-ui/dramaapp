@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  getAdmins,
-  setAdmins,
-  isAdminEmail,
-  type AdminsFile,
-} from "@/lib/store";
+import { getAdmins, setAdmins, type AdminsFile } from "@/lib/store";
+import { getAdminEmail } from "@/lib/session";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,26 +13,23 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const body = (await req.json()) as {
-      email?: string;
-      name?: string;
-      requesterEmail?: string;
-    };
+    const requester = await getAdminEmail(req);
+    if (!requester) {
+      return NextResponse.json(
+        { error: "Hanya admin yang sudah ada yang bisa menambah admin baru." },
+        { status: 403 },
+      );
+    }
+
+    const body = (await req.json()) as { email?: string; name?: string };
     const email = String(body.email ?? "").trim().toLowerCase();
     const name = String(body.name ?? "").trim() || email.split("@")[0];
-    const requester = String(body.requesterEmail ?? "").trim().toLowerCase();
 
     if (!email || !email.includes("@")) {
       return NextResponse.json({ error: "Email tidak valid." }, { status: 400 });
     }
 
     const file: AdminsFile = await getAdmins();
-    if (!(await isAdminEmail(requester))) {
-      return NextResponse.json(
-        { error: "Hanya admin yang sudah ada yang bisa menambah admin baru." },
-        { status: 403 },
-      );
-    }
 
     const exists = file.admins.some(
       (a) => a.email.trim().toLowerCase() === email,
@@ -61,21 +54,22 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const body = (await req.json()) as { email?: string; requesterEmail?: string };
+    const requester = await getAdminEmail(req);
+    if (!requester) {
+      return NextResponse.json(
+        { error: "Hanya admin yang bisa menghapus admin." },
+        { status: 403 },
+      );
+    }
+
+    const body = (await req.json()) as { email?: string };
     const email = String(body.email ?? "").trim().toLowerCase();
-    const requester = String(body.requesterEmail ?? "").trim().toLowerCase();
 
     if (!email) {
       return NextResponse.json({ error: "Email wajib diisi." }, { status: 400 });
     }
 
     const file: AdminsFile = await getAdmins();
-    if (!(await isAdminEmail(requester))) {
-      return NextResponse.json(
-        { error: "Hanya admin yang bisa menghapus admin." },
-        { status: 403 },
-      );
-    }
     if (email === requester) {
       return NextResponse.json(
         { error: "Tidak bisa menghapus akun admin Anda sendiri." },

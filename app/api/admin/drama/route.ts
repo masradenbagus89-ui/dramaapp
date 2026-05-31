@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
 import type { Drama } from "@/lib/types";
+import { isAdminEmail } from "@/lib/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -31,20 +30,6 @@ function slugify(text: string): string {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 60);
-}
-
-function isRequesterAdmin(email: string | null): boolean {
-  if (!email) return false;
-  try {
-    const path = join(process.cwd(), "data", "admins.json");
-    const raw = readFileSync(path, "utf-8");
-    const data = JSON.parse(raw) as { admins?: { email: string }[] };
-    return (data.admins ?? []).some(
-      (a) => a.email.trim().toLowerCase() === email.trim().toLowerCase(),
-    );
-  } catch {
-    return false;
-  }
 }
 
 function githubEnv() {
@@ -121,7 +106,7 @@ async function writeDramasToGithub(
 export async function POST(req: NextRequest) {
   try {
     const requesterEmail = req.headers.get("x-admin-email");
-    if (!isRequesterAdmin(requesterEmail)) {
+    if (!(await isAdminEmail(requesterEmail))) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -204,7 +189,7 @@ export async function POST(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   try {
     const requesterEmail = req.headers.get("x-admin-email");
-    if (!isRequesterAdmin(requesterEmail)) {
+    if (!(await isAdminEmail(requesterEmail))) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

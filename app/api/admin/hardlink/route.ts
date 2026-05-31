@@ -1,28 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { isAdminEmail } from "@/lib/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-function isRequesterAdmin(email: string | null): boolean {
-  if (!email) return false;
-  try {
-    const path = join(process.cwd(), "data", "admins.json");
-    const raw = readFileSync(path, "utf-8");
-    const data = JSON.parse(raw) as { admins?: { email: string }[] };
-    return (data.admins ?? []).some(
-      (a) => a.email.trim().toLowerCase() === email.trim().toLowerCase(),
-    );
-  } catch {
-    return false;
-  }
-}
-
 export async function POST(req: NextRequest) {
   try {
     const requesterEmail = req.headers.get("x-admin-email");
-    if (!isRequesterAdmin(requesterEmail)) {
+    if (!(await isAdminEmail(requesterEmail))) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

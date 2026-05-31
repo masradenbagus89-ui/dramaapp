@@ -8,15 +8,23 @@ import {
   writeAllDramas,
   type Drama,
 } from "@/lib/dramas";
+import { isAdminEmail } from "@/lib/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+
+// Catatan: route ini menulis berkas ke disk (public/videos, public/posters) +
+// data/dramas.json, jadi hanya berfungsi di lingkungan LOKAL (filesystem Vercel
+// read-only). UI live memakai /api/admin/drama (berbasis GitHub API).
 
 const VIDEO_EXT_RE = /\.(mp4|mov|webm|m4v)$/i;
 const IMAGE_EXT_RE = /\.(png|jpe?g|webp)$/i;
 
 export async function POST(req: NextRequest) {
   try {
+    if (!(await isAdminEmail(req.headers.get("x-admin-email")))) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const form = await req.formData();
     const title = String(form.get("title") ?? "").trim();
     const category = String(form.get("category") ?? "Romance").trim();
@@ -112,6 +120,9 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
+    if (!(await isAdminEmail(req.headers.get("x-admin-email")))) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     const { id } = (await req.json()) as { id?: string };
     if (!id) {
       return NextResponse.json({ error: "ID wajib diisi." }, { status: 400 });

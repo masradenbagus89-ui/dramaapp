@@ -1,45 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
-import { join } from "node:path";
+import {
+  getCommentsFor,
+  addComment,
+  setCommentsFor,
+  type Comment,
+} from "@/lib/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type Comment = {
-  id: string;
-  user: string;
-  email: string;
-  role: "admin" | "viewer";
-  text: string;
-  time: string;
-};
-
-type CommentsFile = { comments: Record<string, Comment[]> };
-
-const DATA_FILE = join(process.cwd(), "data", "comments.json");
-
-function readComments(): CommentsFile {
-  if (!existsSync(DATA_FILE)) return { comments: {} };
-  try {
-    const raw = readFileSync(DATA_FILE, "utf-8");
-    const data = JSON.parse(raw);
-    return { comments: data?.comments ?? {} };
-  } catch {
-    return { comments: {} };
-  }
-}
-
-function writeComments(data: CommentsFile): void {
-  writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), "utf-8");
-}
-
 export async function GET(req: NextRequest) {
   const dramaId = req.nextUrl.searchParams.get("dramaId");
-  const data = readComments();
   if (dramaId) {
-    return NextResponse.json({ comments: data.comments[dramaId] ?? [] });
+    return NextResponse.json({ comments: await getCommentsFor(dramaId) });
   }
-  return NextResponse.json(data);
+  // GET tanpa dramaId tidak dipakai UI; kembalikan kosong agar tetap kompatibel.
+  return NextResponse.json({ comments: {} });
 }
 
 export async function POST(req: NextRequest) {
@@ -70,8 +46,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const data = readComments();
-    if (!data.comments[dramaId]) data.comments[dramaId] = [];
     const comment: Comment = {
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       user,
@@ -80,8 +54,7 @@ export async function POST(req: NextRequest) {
       text,
       time: new Date().toISOString(),
     };
-    data.comments[dramaId].unshift(comment);
-    writeComments(data);
+    await addComment(dramaId, comment);
     return NextResponse.json({ ok: true, comment });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Tambah komentar gagal";
@@ -104,8 +77,7 @@ export async function DELETE(req: NextRequest) {
         { status: 400 },
       );
     }
-    const data = readComments();
-    const list = data.comments[dramaId] ?? [];
+    const list = await getCommentsFor(dramaId);
     const target = list.find((c) => c.id === commentId);
     if (!target) {
       return NextResponse.json({ error: "Komentar tidak ditemukan." }, { status: 404 });
@@ -118,8 +90,10 @@ export async function DELETE(req: NextRequest) {
         { status: 403 },
       );
     }
-    data.comments[dramaId] = list.filter((c) => c.id !== commentId);
-    writeComments(data);
+    await setCommentsFor(
+      dramaId,
+      list.filter((c) => c.id !== commentId),
+    );
     return NextResponse.json({ ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Hapus komentar gagal";

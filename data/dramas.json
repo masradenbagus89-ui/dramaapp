@@ -215,16 +215,6 @@
     "posterImage": "/posters/girl.png"
   },
   {
-    "id": "rj-decker",
-    "title": "RJ Decker",
-    "category": "Action",
-    "episodes": 3,
-    "views": "1.0K",
-    "synopsis": "seorang mantan narapidana yang kini bekerja sebagai fotografer, memulai karir barunya sebagai penyelidik swasta di South Florida. Dengan bantuan mantan kekasihnya yang kini sudah menikah dengan seorang polisi, serta seorang wanita misterius dari masa lalunya, RJ menyelidiki kasus-kasus aneh dan berbahaya.",
-    "gradient": "from-yellow-500 via-amber-700 to-orange-900",
-    "posterImage": "/posters/rj-decker.png"
-  },
-  {
     "id": "sold-out-on-you",
     "title": "Sold Out on You",
     "category": "Comedy",

@@ -58,9 +58,8 @@ export default function TopNav() {
     <header className="sticky top-0 z-30 border-b border-zinc-800 bg-black/95 backdrop-blur">
       <div className="mx-auto flex h-14 max-w-7xl items-center gap-4 px-4 md:px-6">
         <Link href="/beranda" className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-md bg-amber-400 font-serif text-base font-bold text-black">
-            D
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo-mark.png" alt="DramaKu" width={36} height={36} className="h-9 w-9 object-contain" />
           <span className="hidden text-lg font-bold text-white sm:inline">DramaKu</span>
         </Link>
 

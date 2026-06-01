@@ -52,9 +52,8 @@ export default function LoginPage() {
       <header className="border-b border-zinc-900">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-6">
           <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-amber-400 font-serif text-base font-bold text-black">
-              D
-            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-mark.png" alt="DramaKu" width={36} height={36} className="h-9 w-9 object-contain" />
             <span className="text-lg font-bold text-white">DramaKu</span>
           </Link>
           <Link href="/" className="text-sm text-zinc-400 hover:text-white">
@@ -66,6 +65,8 @@ export default function LoginPage() {
       <div className="flex min-h-[calc(100vh-64px)] items-center justify-center px-4 py-10">
         <div className="w-full max-w-md">
           <div className="mb-6 text-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo.png" alt="DramaKu" className="mx-auto mb-4 h-28 w-auto" />
             <h1 className="title-gold text-3xl leading-tight md:text-4xl">
               Selamat datang
             </h1>

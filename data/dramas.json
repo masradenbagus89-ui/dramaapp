@@ -235,16 +235,6 @@
     "posterImage": "/posters/no-pain-no-gain.png"
   },
   {
-    "id": "the-legend-of-aang",
-    "title": "The Legend of Aang",
-    "category": "Romance",
-    "episodes": 1,
-    "views": "1.0K",
-    "synopsis": "seorang Airbender terakhir di dunia, menemukan kekuatan kuno yang dapat menyelamatkan budayanya dari kepunahan. Dengan bantuan teman-temannya, Aang memulai petualangan global untuk menemukan kekuatan itu sebelum jatuh ke tangan yang salah. Petualangan penuh aksi dan fantasi ini akan membawa Anda ke dalam dunia yang penuh dengan misteri dan keajaiban.",
-    "gradient": "from-indigo-700 via-purple-800 to-slate-900",
-    "posterImage": "/posters/the-legend-of-aang.png"
-  },
-  {
     "id": "naomi",
     "title": "Naomi",
     "category": "Romance",

@@ -235,16 +235,6 @@
     "posterImage": "/posters/no-pain-no-gain.png"
   },
   {
-    "id": "naomi",
-    "title": "Naomi",
-    "category": "Romance",
-    "episodes": 5,
-    "views": "1.0K",
-    "synopsis": "Sebuah petualangan epik yang penuh aksi dan drama mengikuti perjalanan seorang wanita muda yang bertransformasi menjadi pahlawan tak terduga.",
-    "gradient": "from-emerald-600 via-teal-800 to-slate-900",
-    "posterImage": "/posters/naomi.png"
-  },
-  {
     "id": "the-bondsman",
     "title": "The Bondsman",
     "category": "Romance",

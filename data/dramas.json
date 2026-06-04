@@ -245,16 +245,6 @@
     "posterImage": "/posters/the-bondsman.png"
   },
   {
-    "id": "boneka",
-    "title": "Boneka",
-    "category": "Romance",
-    "episodes": 5,
-    "views": "1.0K",
-    "synopsis": "Sepasang pasangan muda pindah ke sebuah bungalow misterius, tempat batas antara kehangatan dan kendali mulai kabur di bawah pengawasan Nona yang penuh teka-teki",
-    "gradient": "from-emerald-600 via-teal-800 to-slate-900",
-    "posterImage": "/posters/boneka.png"
-  },
-  {
     "id": "the-boys",
     "title": "The Boys",
     "category": "Romance",

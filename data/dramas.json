@@ -235,16 +235,6 @@
     "posterImage": "/posters/no-pain-no-gain.png"
   },
   {
-    "id": "the-boys",
-    "title": "The Boys",
-    "category": "Romance",
-    "episodes": 3,
-    "views": "1.0K",
-    "synopsis": "Di dunia di mana para pahlawan super dimiliki oleh korporasi raksasa Vought International, mereka lebih mirip selebritas korup daripada penyelamat. The Boys, sekelompok vigilante dipimpin oleh Billy B...",
-    "gradient": "from-yellow-500 via-amber-700 to-orange-900",
-    "posterImage": "/posters/the-boys.png"
-  },
-  {
     "id": "love-in-between",
     "title": "Love in Between",
     "category": "Romance",

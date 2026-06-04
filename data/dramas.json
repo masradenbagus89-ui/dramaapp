@@ -235,16 +235,6 @@
     "posterImage": "/posters/no-pain-no-gain.png"
   },
   {
-    "id": "the-bondsman",
-    "title": "The Bondsman",
-    "category": "Romance",
-    "episodes": 4,
-    "views": "1.0K",
-    "synopsis": "The Bondsman mengisahkan seorang pemburu buronan keras kepala bernama Jack Mercer yang hidup dari menangkap penjahat demi uang jaminan.",
-    "gradient": "from-rose-500 via-pink-700 to-purple-900",
-    "posterImage": "/posters/the-bondsman.png"
-  },
-  {
     "id": "the-boys",
     "title": "The Boys",
     "category": "Romance",

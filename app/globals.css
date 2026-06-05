@@ -43,3 +43,25 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* Animasi menu bawah (BottomNav) */
+@keyframes nav-pop {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  45% {
+    transform: translateY(-7px) scale(1.28);
+  }
+  100% {
+    transform: translateY(-4px) scale(1.12);
+  }
+}
+@keyframes nav-glow {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}

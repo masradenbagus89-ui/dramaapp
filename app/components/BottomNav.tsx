@@ -57,27 +57,61 @@ const PUBLIC_PATHS = ["/", "/login", "/daftar"];
 
 export default function BottomNav() {
   const pathname = usePathname() ?? "/";
-  if (pathname.startsWith("/watch")) return null;
+  if (pathname.startsWith("/watch") || pathname.startsWith("/feed")) return null;
   if (PUBLIC_PATHS.includes(pathname)) return null;
+
+  const activeIndex = TABS.findIndex((t) => t.match(pathname));
+  const tabWidth = 100 / TABS.length;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-30 border-t border-zinc-800 bg-black/95 backdrop-blur md:hidden">
-      <div className="mx-auto grid max-w-md grid-cols-4">
-        {TABS.map((tab) => {
-          const active = tab.match(pathname);
-          return (
-            <Link
-              key={tab.href}
-              href={tab.href}
-              className="flex flex-col items-center gap-1 py-2.5"
-            >
-              {tab.icon(active)}
-              <span className={`text-[11px] ${active ? "text-amber-400" : "text-zinc-400"}`}>
-                {tab.label}
-              </span>
-            </Link>
-          );
-        })}
+      <div className="relative mx-auto max-w-md">
+        {/* Bulatan/garis menyala yang meluncur mengikuti menu aktif */}
+        {activeIndex >= 0 && (
+          <div
+            className="pointer-events-none absolute top-0 transition-transform duration-300 ease-out"
+            style={{ width: `${tabWidth}%`, transform: `translateX(${activeIndex * 100}%)` }}
+          >
+            <div className="mx-auto h-1 w-10 rounded-full bg-amber-400 shadow-[0_0_14px_3px_rgba(251,191,36,0.65)] animate-[nav-glow_1.8s_ease-in-out_infinite]" />
+          </div>
+        )}
+
+        <div className="grid grid-cols-4">
+          {TABS.map((tab) => {
+            const active = tab.match(pathname);
+            return (
+              <Link
+                key={tab.href}
+                href={tab.href}
+                className="relative flex select-none flex-col items-center gap-1 py-2.5 transition-transform duration-150 active:scale-90"
+              >
+                {/* Lingkaran cahaya lembut di belakang ikon aktif */}
+                <span
+                  className={`pointer-events-none absolute top-1 h-9 w-9 rounded-full bg-amber-400/20 blur-[6px] transition-opacity duration-300 ${
+                    active ? "opacity-100" : "opacity-0"
+                  }`}
+                />
+                <span
+                  key={active ? "on" : "off"}
+                  className={
+                    active
+                      ? "relative animate-[nav-pop_0.35s_ease-out_forwards]"
+                      : "relative transition-transform duration-300"
+                  }
+                >
+                  {tab.icon(active)}
+                </span>
+                <span
+                  className={`text-[11px] transition-all duration-300 ${
+                    active ? "font-semibold text-amber-400" : "text-zinc-400"
+                  }`}
+                >
+                  {tab.label}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
       </div>
     </nav>
   );

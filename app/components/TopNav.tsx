@@ -31,7 +31,7 @@ export default function TopNav() {
     return () => window.removeEventListener("dramaku:auth-changed", handler);
   }, []);
 
-  if (pathname.startsWith("/watch")) return null;
+  if (pathname.startsWith("/watch") || pathname.startsWith("/feed")) return null;
   if (PUBLIC_PATHS.includes(pathname)) return null;
 
   const isActive = (href: string) => {

@@ -1,0 +1,28 @@
+import { notFound } from "next/navigation";
+import { getDrama } from "@/lib/dramas";
+import FeedPlayer from "@/app/components/FeedPlayer";
+
+export const dynamic = "force-dynamic";
+
+export default async function FeedPage(props: PageProps<"/feed/[id]">) {
+  const { id } = await props.params;
+  const sp = await props.searchParams;
+  const drama = getDrama(id);
+  if (!drama) notFound();
+
+  const rawEp = Array.isArray(sp?.ep) ? sp.ep[0] : sp?.ep;
+  const epNum = Number(rawEp);
+  const startEp =
+    Number.isFinite(epNum) && epNum >= 1 && epNum <= drama.episodes ? epNum : 1;
+
+  return (
+    <FeedPlayer
+      dramaId={drama.id}
+      title={drama.title}
+      episodes={drama.episodes}
+      baseUrl={process.env.NEXT_PUBLIC_VIDEO_BASE_URL ?? ""}
+      startEp={startEp}
+      posterImage={drama.posterImage}
+    />
+  );
+}

@@ -60,7 +60,7 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
       <div className="mt-20 px-4 md:mt-24 md:px-8 md:max-w-3xl">
         <div className="flex flex-col gap-2 sm:flex-row">
           <Link
-            href={`/watch/${drama.id}/1`}
+            href={`/feed/${drama.id}`}
             className="flex flex-1 items-center justify-center gap-2 rounded-full bg-amber-400 py-3 text-sm font-semibold text-black"
           >
             <svg viewBox="0 0 24 24" className="h-4 w-4 fill-black">
@@ -88,7 +88,7 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
               {episodes.map((ep) => (
                 <Link
                   key={ep}
-                  href={`/watch/${drama.id}/${ep}`}
+                  href={`/feed/${drama.id}?ep=${ep}`}
                   className="flex h-10 items-center justify-center rounded-md border border-zinc-800 bg-zinc-900 text-sm text-zinc-200 hover:border-amber-400 hover:text-amber-400"
                 >
                   {ep}

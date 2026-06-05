@@ -18,7 +18,7 @@ export default function ShortsPage() {
         {trending.map((drama, idx) => (
           <Link
             key={drama.id}
-            href={`/watch/${drama.id}/1`}
+            href={`/feed/${drama.id}`}
             className="flex gap-3 rounded-xl border border-zinc-800 bg-zinc-900/50 p-2"
           >
             <div className="w-20 shrink-0">

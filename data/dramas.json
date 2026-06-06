@@ -195,16 +195,6 @@
     "posterImage": "/posters/filing-for-love.png"
   },
   {
-    "id": "girl",
-    "title": "Girl",
-    "category": "Tycoon",
-    "episodes": 1,
-    "views": "1.0K",
-    "synopsis": "sebuah drama yang mengharukan, Lin Xiaoli hidup dalam kesuraman di Pelabuhan Keelung pada 1988. Ia merindukan kebebasan hingga bertemu Li Lili, gadis yang tak kenal takut dan bebas. Pertemuan itu membuka mata Lin Xiaoli pada warna-warna dunia, membawa harapan baru dan petualangan yang mengubah hidupnya.",
-    "gradient": "from-fuchsia-700 via-rose-800 to-stone-900",
-    "posterImage": "/posters/girl.png"
-  },
-  {
     "id": "sold-out-on-you",
     "title": "Sold Out on You",
     "category": "Comedy",

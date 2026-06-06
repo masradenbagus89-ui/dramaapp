@@ -175,16 +175,6 @@
     "posterImage": "/posters/the-potato-lab.png"
   },
   {
-    "id": "the-practical-guide-to-love",
-    "title": "The Practical Guide to Love",
-    "category": "Comedy",
-    "episodes": 5,
-    "views": "1.0K",
-    "synopsis": "Lee Ui Yeong, seorang wanita karier yang sukses, memutuskan untuk mencari cinta. Ia mengikuti kencan buta dan bertemu dengan dua pria yang sangat berbeda. Pertemuan ini membawanya pada petualangan menemukan makna sebenarnya dari cinta. Apakah Ui Yeong akan menemukan cinta sejatinya?",
-    "gradient": "from-indigo-700 via-purple-800 to-slate-900",
-    "posterImage": "/posters/the-practical-guide-to-love.png"
-  },
-  {
     "id": "love-in-between",
     "title": "Love in Between",
     "category": "Romance",

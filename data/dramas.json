@@ -185,16 +185,6 @@
     "posterImage": "/posters/the-practical-guide-to-love.png"
   },
   {
-    "id": "no-pain-no-gain",
-    "title": "No Pain No Gain",
-    "category": "Comedy",
-    "episodes": 3,
-    "views": "1.0K",
-    "synopsis": "Qian Pei, seorang pekerja pabrik, secara tidak terduga menerima dana startup sebesar jutaan dolar setelah dipecat. Namun, dengan syarat ia hanya menerima gaji bulanan 5.000 yuan jika perusahaan mendapat untung, dan bonus jika perusahaan rugi. Qian Pei pun memutuskan untuk memulai bisnis di industri game, dengan harapan perusahaan segera bangkrut.",
-    "gradient": "from-emerald-600 via-teal-800 to-slate-900",
-    "posterImage": "/posters/no-pain-no-gain.png"
-  },
-  {
     "id": "love-in-between",
     "title": "Love in Between",
     "category": "Romance",

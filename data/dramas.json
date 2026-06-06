@@ -185,16 +185,6 @@
     "posterImage": "/posters/the-practical-guide-to-love.png"
   },
   {
-    "id": "sold-out-on-you",
-    "title": "Sold Out on You",
-    "category": "Comedy",
-    "episodes": 3,
-    "views": "1.0K",
-    "synopsis": "seorang petani multitasking dan pembawa acara TV yang menderita insomnia hidup berputar-putar. Mereka terus-menerus bertemu karena jadwal yang berlawanan, menciptakan situasi kocak dan romantis.",
-    "gradient": "from-stone-600 via-zinc-800 to-black",
-    "posterImage": "/posters/sold-out-on-you.png"
-  },
-  {
     "id": "no-pain-no-gain",
     "title": "No Pain No Gain",
     "category": "Comedy",

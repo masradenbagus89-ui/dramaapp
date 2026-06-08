@@ -24,12 +24,23 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
       <div className="relative">
         <div className={`relative aspect-[16/9] w-full overflow-hidden bg-gradient-to-br md:rounded-2xl ${drama.gradient}`}>
           {(drama.heroImage || drama.posterImage) && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={drama.heroImage || drama.posterImage}
-              alt={drama.title}
-              className={`absolute inset-0 h-full w-full object-cover ${drama.heroImage ? "object-center" : "object-top"}`}
-            />
+            <>
+              {/* Latar blur dari gambar yang sama -> mengisi ruang kosong tanpa memotong gambar */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={drama.heroImage || drama.posterImage}
+                alt=""
+                aria-hidden
+                className="absolute inset-0 h-full w-full scale-110 object-cover opacity-60 blur-2xl"
+              />
+              {/* Gambar utama tampil UTUH (tidak terpotong) */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={drama.heroImage || drama.posterImage}
+                alt={drama.title}
+                className="absolute inset-0 h-full w-full object-contain"
+              />
+            </>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/55 to-black/10" />
         </div>

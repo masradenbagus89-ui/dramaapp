@@ -18,6 +18,7 @@ export type Drama = {
   gradient: string;
   posterImage?: string;
   heroImage?: string;
+  heroDim?: boolean;
   exclusive?: boolean;
 };
 

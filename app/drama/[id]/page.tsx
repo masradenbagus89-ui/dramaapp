@@ -38,11 +38,11 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
               <img
                 src={drama.heroImage || drama.posterImage}
                 alt={drama.title}
-                className="absolute inset-0 h-full w-full object-contain brightness-110"
+                className={`absolute inset-0 h-full w-full object-contain ${drama.heroDim ? "brightness-90" : "brightness-110"}`}
               />
             </>
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
+          <div className={`absolute inset-0 bg-gradient-to-t ${drama.heroDim ? "from-black via-black/45 to-black/15" : "from-black/75 via-black/10 to-transparent"}`} />
         </div>
         <Link
           href="/"

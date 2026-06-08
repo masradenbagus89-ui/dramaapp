@@ -195,16 +195,6 @@
     "posterImage": "/posters/istri-tersembunyi-sang-ceo.png"
   },
   {
-    "id": "pilihan-sang-sekretaris",
-    "title": "Pilihan Sang Sekretaris",
-    "category": "Romance",
-    "episodes": 1,
-    "views": "1.0K",
-    "synopsis": "Pilihan Sang Sekretaris menceritakan Naila, seorang sekretaris cerdas dan setia yang selalu berada di sisi direktur muda pemilik perusahaan besar.",
-    "gradient": "from-yellow-500 via-amber-700 to-orange-900",
-    "posterImage": "/posters/pilihan-sang-sekretaris.png"
-  },
-  {
     "id": "from-nobody-to-business-legend",
     "title": "Putry Ajaib Yang Diadopsi",
     "category": "Fantasy",

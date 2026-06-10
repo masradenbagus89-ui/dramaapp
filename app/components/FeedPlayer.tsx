@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import ActionRail from "./ActionRail";
+import Comments from "./Comments";
 import { setProgress } from "@/lib/progress";
 import { setLiked } from "@/lib/myLikes";
 import { subtitleLabel } from "@/lib/types";
@@ -63,6 +64,7 @@ export default function FeedPlayer({
   const [speed, setSpeed] = useState(1);
   const [curTime, setCurTime] = useState(0);
   const [dur, setDur] = useState(0);
+  const [commentsOpen, setCommentsOpen] = useState(false);
 
   // --- Koin / paywall ---
   const [email, setEmail] = useState("");
@@ -386,7 +388,12 @@ export default function FeedPlayer({
         </p>
       </div>
 
-      <ActionRail dramaId={dramaId} title={title} posterImage={posterImage} />
+      <ActionRail
+        dramaId={dramaId}
+        title={title}
+        posterImage={posterImage}
+        onComment={() => setCommentsOpen(true)}
+      />
 
       {/* Control bar video — diangkat dari tepi bawah supaya gampang diklik
           (tidak ketutup taskbar) + ada seek bar & pengatur kecepatan. */}
@@ -520,6 +527,32 @@ export default function FeedPlayer({
         onClose={() => setAdOpen(false)}
         onRewarded={(b) => setBalance(b)}
       />
+
+      {/* Drawer komentar — buka di dalam feed tanpa meninggalkan video */}
+      {commentsOpen && (
+        <div className="absolute inset-0 z-50 flex flex-col justify-end">
+          <button
+            className="absolute inset-0 bg-black/50"
+            aria-label="Tutup komentar"
+            onClick={() => setCommentsOpen(false)}
+          />
+          <div className="relative max-h-[78vh] overflow-y-auto rounded-t-2xl border-t border-zinc-800 bg-zinc-950 px-4 pb-8 pt-3 text-left">
+            <div className="sticky top-0 z-10 -mx-4 flex items-center justify-between bg-zinc-950/95 px-4 pb-2 backdrop-blur">
+              <span className="mx-auto h-1 w-10 rounded-full bg-zinc-700" />
+              <button
+                onClick={() => setCommentsOpen(false)}
+                aria-label="Tutup"
+                className="absolute right-3 top-0 rounded-full p-1 text-zinc-400 hover:text-white"
+              >
+                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M6 6l12 12M18 6L6 18" />
+                </svg>
+              </button>
+            </div>
+            <Comments dramaId={dramaId} />
+          </div>
+        </div>
+      )}
 
       {heart && (
         <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center">

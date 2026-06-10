@@ -44,7 +44,7 @@ export default function MyListPage() {
           </svg>
           <p className="mt-3 text-sm text-zinc-500">Daftar Anda masih kosong.</p>
           <Link
-            href="/"
+            href="/discover"
             className="mt-4 rounded-full bg-amber-400 px-5 py-2 text-sm font-semibold text-black"
           >
             Jelajahi drama

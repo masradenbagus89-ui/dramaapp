@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getAllDramas } from "@/lib/dramas";
+import RedirectIfAuthed from "@/app/components/RedirectIfAuthed";
 
 export const dynamic = "force-dynamic";
 
@@ -48,6 +49,7 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-black">
+      <RedirectIfAuthed />
       {/* Header */}
       <header className="relative z-20 border-b border-zinc-900">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-6">

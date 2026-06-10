@@ -118,7 +118,7 @@ export default function Comments({ dramaId }: { dramaId: string }) {
   };
 
   return (
-    <div className="mt-8">
+    <div id="komentar" className="mt-8 scroll-mt-20">
       <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-300">
         Komentar {comments.length > 0 && <span className="text-zinc-500">· {comments.length}</span>}
       </h2>

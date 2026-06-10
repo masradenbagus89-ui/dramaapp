@@ -11,10 +11,12 @@ export default function ActionRail({
   dramaId,
   title,
   posterImage,
+  onComment,
 }: {
   dramaId: string;
   title: string;
   posterImage?: string;
+  onComment?: () => void;
 }) {
   const [liked, setLikedState] = useState(false);
   const [saved, setSavedState] = useState(false);
@@ -108,11 +110,11 @@ export default function ActionRail({
         </svg>
       </RailButton>
 
-      <RailButtonLink label="Komen" href={`/drama/${dramaId}#komentar`}>
+      <RailButton label="Komen" onClick={() => onComment?.()}>
         <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
           <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" />
         </svg>
-      </RailButtonLink>
+      </RailButton>
 
       <RailButton label={saved ? "Tersimpan" : "Simpan"} onClick={onSave} active={saved} activeColor="text-amber-400">
         <svg viewBox="0 0 24 24" className="h-7 w-7" fill={saved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
@@ -150,19 +152,3 @@ function RailButton({
   );
 }
 
-function RailButtonLink({
-  children,
-  label,
-  href,
-}: {
-  children: React.ReactNode;
-  label: string;
-  href: string;
-}) {
-  return (
-    <Link href={href} className="flex flex-col items-center gap-1">
-      <span className="text-white drop-shadow-lg">{children}</span>
-      <span className="text-[11px] font-medium text-white drop-shadow-lg">{label}</span>
-    </Link>
-  );
-}

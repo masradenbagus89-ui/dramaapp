@@ -46,7 +46,7 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
           <div className={`absolute inset-0 bg-gradient-to-t ${drama.heroDim ? "from-black via-black/45 to-black/15" : "from-black/75 via-black/10 to-transparent"}`} />
         </div>
         <Link
-          href="/"
+          href="/beranda"
           className="absolute left-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white md:hidden"
           aria-label="Kembali"
         >

@@ -88,7 +88,7 @@ export default function ActionRail({
   };
 
   return (
-    <div className="pointer-events-auto absolute bottom-24 right-2 z-20 flex flex-col items-center gap-5">
+    <div className="pointer-events-auto absolute bottom-32 right-2 z-20 flex flex-col items-center gap-5">
       <Link
         href={`/drama/${dramaId}`}
         className="h-11 w-11 overflow-hidden rounded-full border-2 border-white/80 bg-zinc-800"

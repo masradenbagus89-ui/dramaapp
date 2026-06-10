@@ -24,6 +24,14 @@ import {
 import RewardedAdModal from "./RewardedAdModal";
 
 const FALLBACK = "/sample.mp4";
+const SPEEDS = [1, 1.25, 1.5, 2];
+
+function fmtTime(s: number): string {
+  if (!Number.isFinite(s) || s < 0) return "0:00";
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return `${m}:${String(sec).padStart(2, "0")}`;
+}
 
 // Feed vertikal ala Melolo: tiap episode = 1 slide full-screen, geser ke atas =
 // episode berikutnya, autoplay saat slide terlihat, video habis = auto lanjut.
@@ -52,6 +60,9 @@ export default function FeedPlayer({
   const [heart, setHeart] = useState(false);
   const [subLang, setSubLang] = useState(OFF);
   const [subMenu, setSubMenu] = useState(false);
+  const [speed, setSpeed] = useState(1);
+  const [curTime, setCurTime] = useState(0);
+  const [dur, setDur] = useState(0);
 
   // --- Koin / paywall ---
   const [email, setEmail] = useState("");
@@ -160,10 +171,18 @@ export default function FeedPlayer({
     return () => obs.disconnect();
   }, [episodes]);
 
+  // Terapkan kecepatan ke video aktif (juga tiap pindah episode).
+  useEffect(() => {
+    const v = videoRefs.current[active];
+    if (v) v.playbackRate = speed;
+  }, [active, speed]);
+
   // Saat active berubah: mainkan yang aktif (kecuali terkunci), pause sisanya.
   useEffect(() => {
     setPaused(false);
     setPayMsg(null);
+    setCurTime(0);
+    setDur(0);
     setProgress(dramaId, active + 1);
     const locked = isLocked(active + 1);
     for (const [k, v] of Object.entries(videoRefs.current)) {
@@ -195,6 +214,25 @@ export default function FeedPlayer({
       v.pause();
       setPaused(true);
     }
+  };
+
+  // Ganti kecepatan putar (1x → 1.25x → 1.5x → 2x → balik).
+  const cycleSpeed = () => {
+    const next = SPEEDS[(SPEEDS.indexOf(speed) + 1) % SPEEDS.length];
+    setSpeed(next);
+    const v = videoRefs.current[active];
+    if (v) v.playbackRate = next;
+  };
+
+  // Klik di seek bar → loncat ke posisi itu.
+  const onSeek = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (lockedActive) return;
+    const v = videoRefs.current[active];
+    if (!v || !v.duration) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const ratio = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
+    v.currentTime = ratio * v.duration;
+    setCurTime(v.currentTime);
   };
 
   // 1x tap = play/pause, 2x tap = like (dengan animasi hati).
@@ -241,6 +279,16 @@ export default function FeedPlayer({
                   playsInline
                   preload={idx === active ? "auto" : "metadata"}
                   onEnded={() => idx === active && goNext()}
+                  onTimeUpdate={(e) => {
+                    if (idx !== active) return;
+                    setCurTime(e.currentTarget.currentTime);
+                    setDur(e.currentTarget.duration || 0);
+                  }}
+                  onLoadedMetadata={(e) => {
+                    if (idx !== active) return;
+                    setDur(e.currentTarget.duration || 0);
+                    e.currentTarget.playbackRate = speed;
+                  }}
                   onError={(e) => {
                     const v = e.currentTarget;
                     if (!v.dataset.fb) {
@@ -331,7 +379,7 @@ export default function FeedPlayer({
         </div>
       )}
 
-      <div className="pointer-events-none absolute bottom-24 left-3 right-20 z-10">
+      <div className="pointer-events-none absolute bottom-36 left-3 right-20 z-10">
         <h1 className="text-base font-semibold text-white drop-shadow-lg">{title}</h1>
         <p className="text-xs text-zinc-300 drop-shadow-lg">
           Episode {active + 1} / {episodes}
@@ -340,13 +388,55 @@ export default function FeedPlayer({
 
       <ActionRail dramaId={dramaId} title={title} posterImage={posterImage} />
 
-      {/* Bar progress episode tipis di bawah */}
-      <div className="pointer-events-none absolute bottom-0 left-0 right-0 z-10 h-1 bg-white/15">
-        <div
-          className="h-full bg-amber-400 transition-all"
-          style={{ width: `${((active + 1) / episodes) * 100}%` }}
-        />
-      </div>
+      {/* Control bar video — diangkat dari tepi bawah supaya gampang diklik
+          (tidak ketutup taskbar) + ada seek bar & pengatur kecepatan. */}
+      {!lockedActive && (
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30 bg-gradient-to-t from-black/85 via-black/40 to-transparent px-4 pb-10 pt-12">
+          {/* Seek bar — klik untuk loncat ke posisi */}
+          <div
+            onClick={onSeek}
+            role="slider"
+            aria-label="Posisi video"
+            aria-valuenow={Math.round(curTime)}
+            className="pointer-events-auto mb-3 flex h-4 cursor-pointer items-center"
+          >
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/25">
+              <div
+                className="h-full rounded-full bg-amber-400"
+                style={{ width: dur ? `${(curTime / dur) * 100}%` : "0%" }}
+              />
+            </div>
+          </div>
+
+          <div className="pointer-events-auto flex items-center gap-4">
+            <button
+              onClick={togglePlay}
+              aria-label={paused ? "Putar" : "Jeda"}
+              className="text-white transition-transform active:scale-90"
+            >
+              {paused ? (
+                <svg viewBox="0 0 24 24" className="h-7 w-7 fill-white">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" className="h-7 w-7 fill-white">
+                  <path d="M6 5h4v14H6zM14 5h4v14h-4z" />
+                </svg>
+              )}
+            </button>
+            <span className="text-xs tabular-nums text-white/80">
+              {fmtTime(curTime)} / {fmtTime(dur)}
+            </span>
+            <button
+              onClick={cycleSpeed}
+              aria-label="Kecepatan putar"
+              className="ml-auto rounded-full bg-white/15 px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-white/25"
+            >
+              {speed}×
+            </button>
+          </div>
+        </div>
+      )}
 
       {paused && !lockedActive && (
         <button
@@ -440,7 +530,7 @@ export default function FeedPlayer({
       )}
 
       {active === 0 && (
-        <div className="pointer-events-none absolute bottom-10 left-1/2 z-10 -translate-x-1/2 text-center text-[11px] text-white/70">
+        <div className="pointer-events-none absolute bottom-32 left-1/2 z-10 -translate-x-1/2 text-center text-[11px] text-white/70">
           Geser ke atas untuk episode berikutnya ↑
         </div>
       )}

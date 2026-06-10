@@ -23,6 +23,7 @@ export default async function FeedPage(props: PageProps<"/feed/[id]">) {
       baseUrl={process.env.NEXT_PUBLIC_VIDEO_BASE_URL ?? ""}
       startEp={startEp}
       posterImage={drama.posterImage}
+      subtitles={drama.subtitles ?? []}
     />
   );
 }

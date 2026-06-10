@@ -6,6 +6,9 @@ build/
 .env*.local
 *.log
 .DS_Store
+
+# Rahasia 2FA admin — JANGAN pernah commit (repo publik).
+data/twofa.json
 public/videos/
 public/audio/
 public/episodes/

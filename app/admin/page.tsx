@@ -4,7 +4,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Drama } from "@/lib/types";
+import { SUBTITLE_LANGS } from "@/lib/types";
 import { readUser, type User } from "@/lib/auth";
+import TwoFactorSettings from "@/app/components/TwoFactorSettings";
 
 const CATEGORY_OPTIONS = [
   "Romance",
@@ -73,6 +75,7 @@ export default function AdminPage() {
   const [episodes, setEpisodes] = useState<number>(1);
   const [posterImage, setPosterImage] = useState("");
   const [heroImage, setHeroImage] = useState("");
+  const [subtitles, setSubtitles] = useState<string[]>([]);
 
   const [scanning, setScanning] = useState(false);
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
@@ -339,6 +342,7 @@ export default function AdminPage() {
           episodes,
           posterImage: posterImage.trim(),
           heroImage: heroImage.trim(),
+          subtitles,
         }),
       });
       const data = await res.json();
@@ -360,6 +364,7 @@ export default function AdminPage() {
       setEpisodes(1);
       setPosterImage("");
       setHeroImage("");
+      setSubtitles([]);
       setScanResult(null);
       formRef.current?.reset();
       refreshList();
@@ -408,6 +413,7 @@ export default function AdminPage() {
     setEpisodes(d.episodes);
     setPosterImage(d.posterImage ?? "");
     setHeroImage(d.heroImage ?? "");
+    setSubtitles(d.subtitles ?? []);
     setScanResult(null);
     setMessage({
       type: "ok",
@@ -463,6 +469,7 @@ export default function AdminPage() {
             { href: "#tambah", label: "Tambah Drama", icon: "M12 4v16m-8-8h16" },
             { href: "#daftar", label: "Daftar Drama", icon: "M4 6h16M4 12h16M4 18h16" },
             { href: "#kelola-admin", label: "Kelola Admin", icon: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" },
+            { href: "#keamanan", label: "Keamanan (2FA)", icon: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" },
             { href: "/", label: "← Kembali ke web", icon: "M10 19l-7-7m0 0l7-7m-7 7h18" },
           ].map((item) => (
             <a
@@ -665,6 +672,40 @@ export default function AdminPage() {
                   className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white outline-none focus:border-amber-400 font-mono"
                 />
               </label>
+            </div>
+
+            <div className="mt-4 rounded-xl border border-zinc-800 bg-zinc-950/50 p-4">
+              <span className="text-sm text-zinc-300">Subtitle / bahasa tersedia</span>
+              <span className="block text-xs text-zinc-500">
+                Centang bahasa yang file <code className="text-zinc-400">.vtt</code>-nya sudah kamu taruh di folder PC backup.
+                Pola nama: <code className="text-zinc-400">{`<ep>.<kode>.vtt`}</code> — mis. <code className="text-zinc-400">1.id.vtt</code>, <code className="text-zinc-400">1.en.vtt</code>.
+              </span>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {SUBTITLE_LANGS.map((l) => {
+                  const on = subtitles.includes(l.code);
+                  return (
+                    <button
+                      key={l.code}
+                      type="button"
+                      onClick={() =>
+                        setSubtitles((prev) =>
+                          prev.includes(l.code)
+                            ? prev.filter((c) => c !== l.code)
+                            : [...prev, l.code],
+                        )
+                      }
+                      className={`rounded-full border px-3 py-1.5 text-xs font-medium ${
+                        on
+                          ? "border-amber-400 bg-amber-400/15 text-amber-300"
+                          : "border-zinc-700 bg-zinc-900 text-zinc-400 hover:border-zinc-500"
+                      }`}
+                    >
+                      {on ? "✓ " : ""}
+                      {l.label} <span className="opacity-60">({l.code})</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             <div className="mt-5 rounded-xl border border-zinc-800 bg-zinc-950/50 p-4">
@@ -883,6 +924,8 @@ export default function AdminPage() {
             </div>
           </div>
         </section>
+
+        <TwoFactorSettings />
       </div>
     </div>
   );

@@ -11,6 +11,7 @@ import {
   writeUser,
   type User,
 } from "@/lib/auth";
+import CoinWallet from "@/app/components/CoinWallet";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -261,6 +262,8 @@ export default function ProfilePage() {
           </Link>
         </div>
       )}
+
+      <CoinWallet />
 
       <div className="mt-6 overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/50">
         {menuItems.map((item, i) => {

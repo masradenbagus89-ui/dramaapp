@@ -261,5 +261,174 @@ export async function setCommentsFor(
   writeLocal("comments.json", data);
 }
 
+// =====================  WALLET / KOIN  =====================================
+// - wallets : Redis HASH "wallets" (field email -> saldo)  → HINCRBY atomik.
+// - unlocks : Redis SET "unlocks:<email>" berisi token "<dramaId>:<ep>".
+// - meta    : JSON "coinmeta:<email>" → catatan check-in & kuota iklan harian.
+// Mode lokal: semua disatukan di data/wallets.json (proses tunggal = aman).
+
+const WALLET_HASH = "wallets";
+
+export type CoinMeta = {
+  lastCheckin?: string; // "YYYY-MM-DD"
+  adDate?: string; // tanggal kuota iklan berjalan
+  adCount?: number; // iklan yang sudah diklaim pada adDate
+};
+
+type WalletFile = {
+  wallets: Record<string, number>;
+  unlocks: Record<string, string[]>;
+  meta: Record<string, CoinMeta>;
+};
+
+const EMPTY_WALLET: WalletFile = { wallets: {}, unlocks: {}, meta: {} };
+
+function normEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+function unlocksKey(email: string): string {
+  return `unlocks:${normEmail(email)}`;
+}
+function metaKey(email: string): string {
+  return `coinmeta:${normEmail(email)}`;
+}
+
+export async function getBalance(email: string): Promise<number> {
+  const e = normEmail(email);
+  if (!e) return 0;
+  if (useKV) {
+    const v = await kvCommand(["HGET", WALLET_HASH, e]);
+    return Number(v) || 0;
+  }
+  return readLocal<WalletFile>("wallets.json", EMPTY_WALLET).wallets[e] ?? 0;
+}
+
+/** Tambah (atau kurang, delta negatif) saldo; tak pernah di bawah 0. */
+export async function addCoins(email: string, delta: number): Promise<number> {
+  const e = normEmail(email);
+  if (!e) return 0;
+  const d = Math.trunc(delta);
+  if (useKV) {
+    let n = Number(await kvCommand(["HINCRBY", WALLET_HASH, e, d]));
+    if (n < 0) {
+      await kvCommand(["HSET", WALLET_HASH, e, 0]);
+      n = 0;
+    }
+    return n;
+  }
+  const data = readLocal<WalletFile>("wallets.json", EMPTY_WALLET);
+  const next = Math.max(0, (data.wallets[e] ?? 0) + d);
+  data.wallets[e] = next;
+  writeLocal("wallets.json", data);
+  return next;
+}
+
+export async function getUnlocks(email: string): Promise<string[]> {
+  const e = normEmail(email);
+  if (!e) return [];
+  if (useKV) {
+    const v = await kvCommand(["SMEMBERS", unlocksKey(e)]);
+    return Array.isArray(v) ? v.map(String) : [];
+  }
+  return readLocal<WalletFile>("wallets.json", EMPTY_WALLET).unlocks[e] ?? [];
+}
+
+async function isUnlocked(email: string, token: string): Promise<boolean> {
+  const e = normEmail(email);
+  if (useKV) {
+    return Number(await kvCommand(["SISMEMBER", unlocksKey(e), token])) === 1;
+  }
+  return (
+    readLocal<WalletFile>("wallets.json", EMPTY_WALLET).unlocks[e]?.includes(
+      token,
+    ) ?? false
+  );
+}
+
+/**
+ * Belanjakan koin untuk membuka 1 episode. Idempoten (kalau sudah terbuka,
+ * tidak menarik koin lagi). Memotong saldo dulu lalu cek (>=0) agar atomik.
+ */
+export async function spendUnlock(
+  email: string,
+  token: string,
+  cost: number,
+): Promise<{ ok: boolean; balance: number; reason?: "insufficient" }> {
+  const e = normEmail(email);
+  if (await isUnlocked(e, token)) {
+    return { ok: true, balance: await getBalance(e) };
+  }
+  if (useKV) {
+    const after = Number(await kvCommand(["HINCRBY", WALLET_HASH, e, -cost]));
+    if (after < 0) {
+      const restored = Number(await kvCommand(["HINCRBY", WALLET_HASH, e, cost]));
+      return { ok: false, balance: Math.max(0, restored), reason: "insufficient" };
+    }
+    await kvCommand(["SADD", unlocksKey(e), token]);
+    return { ok: true, balance: after };
+  }
+  const data = readLocal<WalletFile>("wallets.json", EMPTY_WALLET);
+  const bal = data.wallets[e] ?? 0;
+  if (bal < cost) return { ok: false, balance: bal, reason: "insufficient" };
+  data.wallets[e] = bal - cost;
+  data.unlocks[e] = Array.from(new Set([...(data.unlocks[e] ?? []), token]));
+  writeLocal("wallets.json", data);
+  return { ok: true, balance: data.wallets[e] };
+}
+
+export async function getCoinMeta(email: string): Promise<CoinMeta> {
+  const e = normEmail(email);
+  if (useKV) return (await kvGet<CoinMeta>(metaKey(e))) ?? {};
+  return readLocal<WalletFile>("wallets.json", EMPTY_WALLET).meta[e] ?? {};
+}
+
+export async function setCoinMeta(email: string, meta: CoinMeta): Promise<void> {
+  const e = normEmail(email);
+  if (useKV) {
+    await kvSet(metaKey(e), meta);
+    return;
+  }
+  const data = readLocal<WalletFile>("wallets.json", EMPTY_WALLET);
+  data.meta[e] = meta;
+  writeLocal("wallets.json", data);
+}
+
+// =====================  2FA / TOTP (admin)  ================================
+// Disimpan TERPISAH dari admins.json karena admins.json ikut ke repo publik.
+// File lokal data/twofa.json sudah masuk .gitignore; di Vercel pakai KV.
+
+export type TwoFA = {
+  secret?: string; // aktif (terverifikasi)
+  enabled?: boolean;
+  pending?: string; // hasil setup, belum diverifikasi
+};
+
+type TwoFAFile = { twofa: Record<string, TwoFA> };
+
+function twofaKey(email: string): string {
+  return `twofa:${normEmail(email)}`;
+}
+
+export async function getTwoFA(email: string): Promise<TwoFA> {
+  const e = normEmail(email);
+  if (useKV) return (await kvGet<TwoFA>(twofaKey(e))) ?? {};
+  return readLocal<TwoFAFile>("twofa.json", { twofa: {} }).twofa[e] ?? {};
+}
+
+export async function setTwoFA(email: string, data: TwoFA): Promise<void> {
+  const e = normEmail(email);
+  if (useKV) {
+    await kvSet(twofaKey(e), data);
+    return;
+  }
+  const file = readLocal<TwoFAFile>("twofa.json", { twofa: {} });
+  file.twofa[e] = data;
+  writeLocal("twofa.json", file);
+}
+
+export async function isTwoFAEnabled(email: string): Promise<boolean> {
+  return Boolean((await getTwoFA(email)).enabled);
+}
+
 /** Mode penyimpanan aktif — berguna untuk debugging/health check. */
 export const storageMode = useKV ? "kv" : "file";

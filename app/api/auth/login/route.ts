@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "node:crypto";
-import { isAdminEmail } from "@/lib/store";
+import { isAdminEmail, getTwoFA } from "@/lib/store";
+import { verifyTotp } from "@/lib/totp";
 import {
   signAdminSession,
   adminAuthConfigured,
@@ -26,9 +27,10 @@ function displayName(email: string): string {
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, password } = (await req.json()) as {
+    const { email, password, token } = (await req.json()) as {
       email?: string;
       password?: string;
+      token?: string;
     };
     const e = String(email ?? "").trim();
     if (!e.includes("@")) {
@@ -53,6 +55,23 @@ export async function POST(req: NextRequest) {
       if (!password || !safeEqual(password, expected)) {
         return NextResponse.json({ error: "Password admin salah." }, { status: 401 });
       }
+
+      // Lapis kedua: kalau admin ini sudah mengaktifkan 2FA, wajib kode TOTP.
+      const tf = await getTwoFA(e);
+      if (tf.enabled && tf.secret) {
+        const t = String(token ?? "").trim();
+        if (!t) {
+          // Password benar, tapi butuh kode 2FA → minta klien menampilkan input.
+          return NextResponse.json({ ok: false, need2fa: true });
+        }
+        if (!verifyTotp(tf.secret, t)) {
+          return NextResponse.json(
+            { error: "Kode 2FA salah atau kedaluwarsa.", need2fa: true },
+            { status: 401 },
+          );
+        }
+      }
+
       const res = NextResponse.json({ ok: true, role: "admin", email: e, name });
       res.cookies.set(
         ADMIN_COOKIE,

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getDrama, getAllDramas } from "@/lib/dramas";
+import { subtitleLabel } from "@/lib/types";
 import Poster from "@/app/components/Poster";
 import SaveButton from "@/app/components/SaveButton";
 import LikeButton from "@/app/components/LikeButton";
@@ -84,6 +85,26 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
             <LikeButton dramaId={drama.id} />
           </div>
         </div>
+
+        {drama.subtitles && drama.subtitles.length > 0 && (
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1 rounded-full bg-zinc-800 px-2.5 py-1 text-[11px] font-semibold text-zinc-300">
+              <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="3" y="5" width="18" height="14" rx="2" />
+                <path d="M7 13h3M14 13h3M7 10h2M13 10h4" strokeLinecap="round" />
+              </svg>
+              Subtitle
+            </span>
+            {drama.subtitles.map((code) => (
+              <span
+                key={code}
+                className="rounded-full border border-zinc-700 px-2.5 py-1 text-[11px] text-zinc-300"
+              >
+                {subtitleLabel(code)}
+              </span>
+            ))}
+          </div>
+        )}
 
         <h2 className="mt-6 text-sm font-semibold uppercase tracking-wider text-zinc-300">
           Sinopsis

@@ -120,6 +120,7 @@ export async function POST(req: NextRequest) {
       heroImage: string;
       gradient: string;
       exclusive: boolean;
+      subtitles: string[];
     }>;
 
     if (!body.title?.trim()) {
@@ -142,6 +143,19 @@ export async function POST(req: NextRequest) {
     const existingIdx = dramas.findIndex((d) => d.id === id);
     const isNew = existingIdx === -1;
 
+    // Subtitle: terima array kode bahasa, buang yang tidak valid/duplikat.
+    // Kalau field dikirim (array) → dianggap sumber kebenaran (boleh dikosongkan).
+    const subtitlesProvided = Array.isArray(body.subtitles);
+    const subtitles = subtitlesProvided
+      ? Array.from(
+          new Set(
+            body
+              .subtitles!.map((c) => String(c).trim().toLowerCase())
+              .filter((c) => /^[a-z]{2,5}$/.test(c)),
+          ),
+        )
+      : [];
+
     let drama: Drama;
     if (isNew) {
       drama = {
@@ -155,6 +169,7 @@ export async function POST(req: NextRequest) {
         ...(body.posterImage?.trim() ? { posterImage: body.posterImage.trim() } : {}),
         ...(body.heroImage?.trim() ? { heroImage: body.heroImage.trim() } : {}),
         ...(body.exclusive ? { exclusive: true } : {}),
+        ...(subtitles.length ? { subtitles } : {}),
       };
       dramas.unshift(drama);
     } else {
@@ -171,6 +186,11 @@ export async function POST(req: NextRequest) {
         ...(body.heroImage?.trim() ? { heroImage: body.heroImage.trim() } : {}),
         ...(typeof body.exclusive === "boolean" ? { exclusive: body.exclusive } : {}),
       };
+      // Field dikirim → timpa (termasuk pengosongan: hapus key kalau jadi kosong).
+      if (subtitlesProvided) {
+        if (subtitles.length) drama.subtitles = subtitles;
+        else delete drama.subtitles;
+      }
       dramas[existingIdx] = drama;
     }
 

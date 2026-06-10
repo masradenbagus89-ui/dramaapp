@@ -12,6 +12,8 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [need2fa, setNeed2fa] = useState(false);
+  const [token, setToken] = useState("");
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,15 +27,32 @@ export default function LoginPage() {
       setError("Format email tidak valid.");
       return;
     }
+    if (need2fa && token.trim().length < 6) {
+      setError("Masukkan 6 digit kode dari aplikasi authenticator.");
+      return;
+    }
 
     setSubmitting(true);
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), password }),
+        body: JSON.stringify({
+          email: email.trim(),
+          password,
+          token: need2fa ? token.trim() : undefined,
+        }),
       });
       const data = await res.json();
+
+      // Password benar tapi akun admin ini pakai 2FA → minta kode.
+      if (data.need2fa) {
+        setSubmitting(false);
+        setNeed2fa(true);
+        setError(data.error ?? null); // error terisi hanya kalau kode tadi salah
+        return;
+      }
+
       if (!res.ok || !data.ok) {
         setSubmitting(false);
         setError(data.error ?? "Login gagal. Coba lagi.");
@@ -127,6 +146,29 @@ export default function LoginPage() {
               </div>
             </label>
 
+            {need2fa && (
+              <label className="mt-4 block">
+                <span className="text-sm font-medium text-zinc-300">
+                  Kode 2FA (6 digit)
+                </span>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  autoFocus
+                  value={token}
+                  onChange={(e) =>
+                    setToken(e.target.value.replace(/\D/g, "").slice(0, 6))
+                  }
+                  placeholder="123456"
+                  className="mt-1 w-full rounded-lg border border-amber-700 bg-zinc-900 px-3 py-2.5 text-center text-lg tracking-[0.4em] text-white outline-none focus:border-amber-400"
+                />
+                <span className="mt-1 block text-xs text-zinc-500">
+                  Buka aplikasi authenticator (Google Authenticator / Authy) dan masukkan kode untuk DramaKu.
+                </span>
+              </label>
+            )}
+
             {error && (
               <div className="mt-4 rounded-lg border border-red-700 bg-red-900/30 px-3 py-2 text-sm text-red-300">
                 {error}
@@ -138,7 +180,11 @@ export default function LoginPage() {
               disabled={submitting}
               className="mt-5 w-full rounded-full bg-amber-400 py-3 text-sm font-bold text-black hover:bg-amber-300 disabled:opacity-50"
             >
-              {submitting ? "Memproses..." : "Masuk"}
+              {submitting
+                ? "Memproses..."
+                : need2fa
+                  ? "Verifikasi & Masuk"
+                  : "Masuk"}
             </button>
           </form>
 

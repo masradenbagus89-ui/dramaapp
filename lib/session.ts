@@ -90,6 +90,24 @@ export async function isAdminRequest(req: Request): Promise<boolean> {
   return (await getAdminEmail(req)) !== null;
 }
 
+/**
+ * Identitas user untuk fitur wallet/koin.
+ * - Admin: email diambil dari cookie sesi yang tertanda-tangan (tepercaya).
+ * - Viewer: belum ada sesi aman, jadi email di-assert dari klien (model sama
+ *   seperti komentar). Akan diperketat saat akun viewer pakai password + 2FA.
+ * Mengembalikan { email, isAdmin } atau null bila tidak ada identitas valid.
+ */
+export async function resolveUserEmail(
+  req: Request,
+  fallbackEmail?: string | null,
+): Promise<{ email: string; isAdmin: boolean } | null> {
+  const adminEmail = await getAdminEmail(req);
+  if (adminEmail) return { email: adminEmail, isAdmin: true };
+  const e = (fallbackEmail ?? "").trim().toLowerCase();
+  if (e && e.includes("@")) return { email: e, isAdmin: false };
+  return null;
+}
+
 /** Opsi cookie untuk Set-Cookie (NextResponse.cookies.set). */
 export function adminCookieOptions(maxAge: number) {
   return {

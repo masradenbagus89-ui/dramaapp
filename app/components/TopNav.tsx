@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { clearUser, getAvatarClass, readUser, type User } from "@/lib/auth";
+import CoinChip from "./CoinChip";
 
 const LINKS = [
   { href: "/beranda", label: "Beranda", adminOnly: false },
@@ -132,6 +133,7 @@ export default function TopNav() {
         <div className="flex items-center gap-2">
           {mounted && user ? (
             <div className="flex items-center gap-2">
+              <CoinChip />
               <div className="hidden items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900 px-3 py-1 sm:flex">
                 <div className={`flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br text-xs font-bold text-black ${getAvatarClass(user)}`}>
                   {user.name.charAt(0).toUpperCase()}

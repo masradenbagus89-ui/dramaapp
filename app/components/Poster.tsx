@@ -1,4 +1,5 @@
 import type { Drama } from "@/lib/types";
+import { PAYWALL_ENABLED } from "@/lib/coins";
 
 type Props = {
   drama: Drama;
@@ -29,7 +30,12 @@ export default function Poster({ drama, className = "", showBadge = true }: Prop
           </div>
         </div>
       )}
-      {showBadge && drama.exclusive && (
+      {showBadge && PAYWALL_ENABLED && drama.premium && (
+        <div className="absolute right-2 top-2 flex items-center gap-0.5 rounded-full bg-amber-400 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-black shadow">
+          🪙 Premium
+        </div>
+      )}
+      {showBadge && !drama.premium && drama.exclusive && (
         <div className="absolute right-2 top-2 rounded bg-black/70 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white">
           Exclusive
         </div>

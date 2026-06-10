@@ -121,6 +121,7 @@ export async function POST(req: NextRequest) {
       gradient: string;
       exclusive: boolean;
       subtitles: string[];
+      premium: boolean;
     }>;
 
     if (!body.title?.trim()) {
@@ -170,6 +171,7 @@ export async function POST(req: NextRequest) {
         ...(body.heroImage?.trim() ? { heroImage: body.heroImage.trim() } : {}),
         ...(body.exclusive ? { exclusive: true } : {}),
         ...(subtitles.length ? { subtitles } : {}),
+        ...(body.premium ? { premium: true } : {}),
       };
       dramas.unshift(drama);
     } else {
@@ -190,6 +192,10 @@ export async function POST(req: NextRequest) {
       if (subtitlesProvided) {
         if (subtitles.length) drama.subtitles = subtitles;
         else delete drama.subtitles;
+      }
+      if (typeof body.premium === "boolean") {
+        if (body.premium) drama.premium = true;
+        else delete drama.premium;
       }
       dramas[existingIdx] = drama;
     }

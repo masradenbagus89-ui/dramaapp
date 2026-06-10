@@ -18,6 +18,38 @@ import {
 } from "@/lib/coins";
 import RewardedAdModal from "./RewardedAdModal";
 
+type SnapCallbacks = {
+  onSuccess?: () => void;
+  onPending?: () => void;
+  onError?: () => void;
+  onClose?: () => void;
+};
+type SnapApi = { pay: (token: string, cb?: SnapCallbacks) => void };
+
+// Muat snap.js sekali. URL & client key datang dari server (sandbox/prod).
+function loadSnap(url: string, clientKey: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (typeof window === "undefined") return reject(new Error("no window"));
+    const w = window as unknown as { snap?: SnapApi };
+    if (w.snap) return resolve();
+    const existing = document.getElementById(
+      "midtrans-snap",
+    ) as HTMLScriptElement | null;
+    if (existing) {
+      existing.addEventListener("load", () => resolve());
+      existing.addEventListener("error", () => reject(new Error("load error")));
+      return;
+    }
+    const s = document.createElement("script");
+    s.id = "midtrans-snap";
+    s.src = url;
+    s.setAttribute("data-client-key", clientKey);
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error("load error"));
+    document.body.appendChild(s);
+  });
+}
+
 export default function CoinWallet() {
   const [mounted, setMounted] = useState(false);
   const [email, setEmail] = useState("");
@@ -54,10 +86,49 @@ export default function CoinWallet() {
     setBusy(false);
   };
 
+  const refreshBalance = () => {
+    fetchWallet().then((w) => setBalance(w.balance ?? 0)).catch(() => {});
+    // Koin masuk lewat webhook yang bisa telat sedikit → cek ulang.
+    window.setTimeout(
+      () => fetchWallet().then((w) => setBalance(w.balance ?? 0)).catch(() => {}),
+      4000,
+    );
+  };
+
   const onTopup = async (packId: string) => {
     setBusy(true);
     setMsg(null);
     const { data } = await topup(packId);
+
+    // Jalur Midtrans: buka popup pembayaran.
+    if (data.mode === "midtrans" && data.token) {
+      try {
+        await loadSnap(data.snapUrl ?? "", data.clientKey ?? "");
+      } catch {
+        setMsg({ type: "error", text: "Gagal memuat pembayaran Midtrans." });
+        setBusy(false);
+        return;
+      }
+      const snap = (window as unknown as { snap?: SnapApi }).snap;
+      if (!snap) {
+        setMsg({ type: "error", text: "Midtrans belum siap. Coba lagi." });
+        setBusy(false);
+        return;
+      }
+      snap.pay(data.token, {
+        onSuccess: () => {
+          setMsg({ type: "ok", text: "Pembayaran berhasil! Koin masuk sebentar lagi." });
+          refreshBalance();
+        },
+        onPending: () => setMsg({ type: "ok", text: "Menunggu pembayaran kamu…" }),
+        onError: () => setMsg({ type: "error", text: "Pembayaran gagal." }),
+        onClose: () => setMsg({ type: "error", text: "Pembayaran dibatalkan." }),
+      });
+      setBusy(false);
+      return;
+    }
+
+    // Jalur demo (tanpa Midtrans).
     if (data.ok) {
       setMsg({
         type: "ok",

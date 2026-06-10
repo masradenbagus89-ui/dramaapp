@@ -24,6 +24,7 @@ export default async function FeedPage(props: PageProps<"/feed/[id]">) {
       startEp={startEp}
       posterImage={drama.posterImage}
       subtitles={drama.subtitles ?? []}
+      premium={drama.premium ?? false}
     />
   );
 }

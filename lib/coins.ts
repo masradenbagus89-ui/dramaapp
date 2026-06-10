@@ -7,12 +7,11 @@
 
 /**
  * SAKLAR UTAMA MONETISASI.
- * false = semua episode GRATIS, paywall & toko koin disembunyikan (kondisi
- *         sekarang — payment gateway belum dipasang).
- * true  = aktifkan paywall koin. Flip ke true SETELAH Midtrans/Xendit siap.
- * Cukup ubah baris ini saja untuk menyalakan/mematikan seluruh paywall.
+ * true  = toko koin tampil & paywall aktif — TAPI hanya untuk drama yang
+ *         ditandai `premium`. Drama lama (tanpa flag) tetap gratis.
+ * false = semua episode gratis, toko koin disembunyikan total.
  */
-export const PAYWALL_ENABLED = false;
+export const PAYWALL_ENABLED = true;
 
 /** Episode 1..FREE_EPISODES gratis tanpa koin (berlaku saat PAYWALL_ENABLED). */
 export const FREE_EPISODES = 3;

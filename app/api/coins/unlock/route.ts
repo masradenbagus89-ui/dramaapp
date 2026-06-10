@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getBalance, spendUnlock } from "@/lib/store";
 import { resolveUserEmail } from "@/lib/session";
+import { getDrama } from "@/lib/dramas";
 import { COIN_PER_EPISODE, isFreeEpisode, unlockToken } from "@/lib/coins";
 
 export const runtime = "nodejs";
@@ -33,8 +34,9 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // Admin nonton gratis; episode awal juga gratis.
-  if (id.isAdmin || isFreeEpisode(ep)) {
+  // Admin nonton gratis; episode awal gratis; drama non-premium SELALU gratis.
+  const drama = getDrama(dramaId);
+  if (id.isAdmin || !drama?.premium || isFreeEpisode(ep)) {
     return NextResponse.json({
       ok: true,
       unlocked: true,

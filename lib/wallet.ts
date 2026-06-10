@@ -52,6 +52,12 @@ type MutationResult = {
   remaining?: number;
   needed?: number;
   already?: boolean;
+  // Midtrans (top-up)
+  mode?: "midtrans" | "demo";
+  token?: string;
+  clientKey?: string;
+  snapUrl?: string;
+  orderId?: string;
 };
 
 async function post(path: string, extra: Record<string, unknown> = {}) {

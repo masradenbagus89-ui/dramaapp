@@ -430,5 +430,42 @@ export async function isTwoFAEnabled(email: string): Promise<boolean> {
   return Boolean((await getTwoFA(email)).enabled);
 }
 
+// =====================  ORDER KOIN (top-up Midtrans)  ======================
+// Disimpan agar webhook bisa: (a) tahu order ini milik siapa & berapa koin,
+// (b) idempoten — koin hanya dikredit sekali walau webhook dikirim berkali-kali.
+
+export type CoinOrder = {
+  email: string;
+  coins: number;
+  packId: string;
+  amount: number;
+  status: "pending" | "paid";
+  createdAt: string;
+};
+
+type OrdersFile = { orders: Record<string, CoinOrder> };
+
+function orderKey(orderId: string): string {
+  return `order:${orderId}`;
+}
+
+export async function getOrder(orderId: string): Promise<CoinOrder | null> {
+  if (useKV) return kvGet<CoinOrder>(orderKey(orderId));
+  return readLocal<OrdersFile>("orders.json", { orders: {} }).orders[orderId] ?? null;
+}
+
+export async function setOrder(
+  orderId: string,
+  order: CoinOrder,
+): Promise<void> {
+  if (useKV) {
+    await kvSet(orderKey(orderId), order);
+    return;
+  }
+  const file = readLocal<OrdersFile>("orders.json", { orders: {} });
+  file.orders[orderId] = order;
+  writeLocal("orders.json", file);
+}
+
 /** Mode penyimpanan aktif — berguna untuk debugging/health check. */
 export const storageMode = useKV ? "kv" : "file";

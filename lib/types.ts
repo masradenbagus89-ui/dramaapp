@@ -22,6 +22,12 @@ export type Drama = {
   exclusive?: boolean;
   /** Kode bahasa subtitle yang tersedia untuk drama ini, mis. ["id", "en"]. */
   subtitles?: string[];
+  /**
+   * true = drama berbayar (pakai koin untuk buka episode di atas gratis).
+   * Drama lama tanpa field ini = GRATIS. Biasanya hanya drama BARU yang di-set
+   * premium, supaya koleksi lama tetap bisa ditonton gratis.
+   */
+  premium?: boolean;
 };
 
 // --- Subtitle / multi-bahasa ---------------------------------------------

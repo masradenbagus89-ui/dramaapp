@@ -35,6 +35,7 @@ export default function FeedPlayer({
   startEp,
   posterImage,
   subtitles = [],
+  premium = false,
 }: {
   dramaId: string;
   title: string;
@@ -43,6 +44,7 @@ export default function FeedPlayer({
   startEp: number;
   posterImage?: string;
   subtitles?: string[];
+  premium?: boolean;
 }) {
   const eps = Array.from({ length: episodes }, (_, i) => i + 1);
   const [active, setActive] = useState(startEp - 1);
@@ -70,8 +72,12 @@ export default function FeedPlayer({
   // Episode terkunci? Ep awal gratis; admin bebas; sisanya butuh sudah-dibuka.
   const isLocked = useCallback(
     (ep: number) =>
-      PAYWALL_ENABLED && !isAdmin && ep > FREE_EPISODES && !unlocked.has(ep),
-    [isAdmin, unlocked],
+      PAYWALL_ENABLED &&
+      premium &&
+      !isAdmin &&
+      ep > FREE_EPISODES &&
+      !unlocked.has(ep),
+    [premium, isAdmin, unlocked],
   );
   const lockedActive = isLocked(active + 1);
 

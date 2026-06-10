@@ -60,7 +60,14 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
             <Poster drama={drama} showBadge={false} />
           </div>
           <div className="flex flex-col justify-end pb-2 md:pb-4">
-            <h1 className="title-gold text-2xl leading-tight md:text-4xl">{drama.title}</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="title-gold text-2xl leading-tight md:text-4xl">{drama.title}</h1>
+              {drama.premium && (
+                <span className="shrink-0 rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-bold text-black">
+                  🪙 PREMIUM
+                </span>
+              )}
+            </div>
             <p className="mt-1 text-xs text-zinc-400 md:text-sm">
               {drama.category}
               {drama.episodes > 1 && ` · ${drama.episodes} episode`} · {drama.views} ditonton

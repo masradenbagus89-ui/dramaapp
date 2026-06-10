@@ -76,6 +76,7 @@ export default function AdminPage() {
   const [posterImage, setPosterImage] = useState("");
   const [heroImage, setHeroImage] = useState("");
   const [subtitles, setSubtitles] = useState<string[]>([]);
+  const [premium, setPremium] = useState(true); // drama baru default berbayar
 
   const [scanning, setScanning] = useState(false);
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
@@ -343,6 +344,7 @@ export default function AdminPage() {
           posterImage: posterImage.trim(),
           heroImage: heroImage.trim(),
           subtitles,
+          premium,
         }),
       });
       const data = await res.json();
@@ -365,6 +367,7 @@ export default function AdminPage() {
       setPosterImage("");
       setHeroImage("");
       setSubtitles([]);
+      setPremium(true);
       setScanResult(null);
       formRef.current?.reset();
       refreshList();
@@ -414,6 +417,7 @@ export default function AdminPage() {
     setPosterImage(d.posterImage ?? "");
     setHeroImage(d.heroImage ?? "");
     setSubtitles(d.subtitles ?? []);
+    setPremium(d.premium ?? false);
     setScanResult(null);
     setMessage({
       type: "ok",
@@ -706,6 +710,26 @@ export default function AdminPage() {
                   );
                 })}
               </div>
+            </div>
+
+            <div className="mt-4 rounded-xl border border-zinc-800 bg-zinc-950/50 p-4">
+              <label className="flex cursor-pointer items-start gap-3">
+                <input
+                  type="checkbox"
+                  checked={premium}
+                  onChange={(e) => setPremium(e.target.checked)}
+                  className="mt-0.5 h-5 w-5 accent-amber-400"
+                />
+                <span>
+                  <span className="text-sm font-semibold text-white">
+                    Drama berbayar (pakai koin)
+                  </span>
+                  <span className="block text-xs text-zinc-500">
+                    Centang = episode di atas {/* free */}batas gratis dikunci, penonton buka pakai koin.
+                    Kosongkan = drama 100% gratis. <strong className="text-amber-300/80">Drama baru default berbayar</strong>; koleksi lama biarkan kosong agar tetap gratis.
+                  </span>
+                </span>
+              </label>
             </div>
 
             <div className="mt-5 rounded-xl border border-zinc-800 bg-zinc-950/50 p-4">

@@ -166,16 +166,6 @@
     "heroImage": "https://i.imgur.com/RIsNMXG.png"
   },
   {
-    "id": "the-potato-lab",
-    "title": "The Potato Lab",
-    "category": "Tycoon",
-    "episodes": 2,
-    "views": "1.0K",
-    "synopsis": "Dunia Mi-kyung yang berfokus pada kentang berubah ketika dia bertemu Baek-ho. Komedi romantis tentang penyembuhan dan pertumbuhan, apa yang akan terjadi?",
-    "gradient": "from-emerald-600 via-teal-800 to-slate-900",
-    "posterImage": "/posters/the-potato-lab.png"
-  },
-  {
     "id": "love-in-between",
     "title": "Love in Between",
     "category": "Romance",

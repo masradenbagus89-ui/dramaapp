@@ -186,15 +186,6 @@
     "posterImage": "/posters/from-nobody-to-business-legend.png"
   },
   {
-    "id": "kungfu-delivery-boy",
-    "title": "Kurir Pengantar Master Kungfu",
-    "category": "Action",
-    "episodes": 65,
-    "views": "920K",
-    "synopsis": "Kurir pengantar makanan ternyata adalah master kungfu yang sedang sembunyi dari musuh-musuh masa lalunya.",
-    "gradient": "from-stone-600 via-zinc-800 to-black"
-  },
-  {
     "id": "back-to-fix-my-marriage",
     "title": "Kembali Memperbaiki Pernikahanku",
     "category": "Time Travel",

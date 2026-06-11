@@ -166,16 +166,6 @@
     "heroImage": "https://i.imgur.com/RIsNMXG.png"
   },
   {
-    "id": "love-in-between",
-    "title": "Love in Between",
-    "category": "Romance",
-    "episodes": 5,
-    "views": "1.0K",
-    "synopsis": "Dalam dunia seni bela diri yang gelap dan penuh petualangan, seorang pemuda bernama Zuo Qingci mencari harta karun kerajaan yang hilang. Ia bertemu dengan bandit misterius Fei Kouer yang menyembunyikan identitasnya.",
-    "gradient": "from-stone-600 via-zinc-800 to-black",
-    "posterImage": "/posters/love-in-between.png"
-  },
-  {
     "id": "istri-tersembunyi-sang-ceo",
     "title": "Istri Tersembunyi Sang CEO",
     "category": "Romance",

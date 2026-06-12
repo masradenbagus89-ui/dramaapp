@@ -7,6 +7,7 @@ import type { Drama } from "@/lib/types";
 import { SUBTITLE_LANGS } from "@/lib/types";
 import { readUser, type User } from "@/lib/auth";
 import TwoFactorSettings from "@/app/components/TwoFactorSettings";
+import SponsorAdsManager from "@/app/components/SponsorAdsManager";
 
 const CATEGORY_OPTIONS = [
   "Romance",
@@ -474,6 +475,7 @@ export default function AdminPage() {
             { href: "#daftar", label: "Daftar Drama", icon: "M4 6h16M4 12h16M4 18h16" },
             { href: "#kelola-admin", label: "Kelola Admin", icon: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" },
             { href: "#keamanan", label: "Keamanan (2FA)", icon: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" },
+            { href: "#iklan", label: "Iklan Sponsor", icon: "M3 11l18-5v12L3 14v-3zM11.6 16.8a3 3 0 11-5.8-1.6" },
             { href: "/", label: "← Kembali ke web", icon: "M10 19l-7-7m0 0l7-7m-7 7h18" },
           ].map((item) => (
             <a
@@ -950,6 +952,8 @@ export default function AdminPage() {
         </section>
 
         <TwoFactorSettings />
+
+        <SponsorAdsManager />
       </div>
     </div>
   );

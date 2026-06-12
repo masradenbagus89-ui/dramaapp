@@ -4,10 +4,17 @@ import { useEffect, useRef, useState } from "react";
 import { claimReward } from "@/lib/wallet";
 import { REWARD_PER_AD } from "@/lib/coins";
 
-// Iklan berhadiah (rewarded ad). Versi ini SIMULASI: hitung mundur beberapa
-// detik lalu beri koin. Untuk pendapatan nyata, ganti blok <SlotIklan/> dengan
-// SDK ad network (mis. Google AdSense rewarded, atau jaringan video-ad seperti
-// AdGate/Pollfish). Panggil onAdCompleted() saat callback "reward" dari SDK.
+// Iklan berhadiah pakai IKLAN SPONSOR SENDIRI (house ad). Admin pasang gambar +
+// link di /admin; modal ini ambil acak dari /api/ads, hitung view/klik, lalu
+// kasih koin setelah hitung mundur. Pendapatan = deal langsung/affiliate di link.
+// Kalau belum ada iklan, fallback ke promo DramaKu (house default).
+
+type SponsorAd = {
+  id: string;
+  title?: string;
+  imageUrl: string;
+  linkUrl: string;
+};
 
 const AD_SECONDS = 5;
 
@@ -25,7 +32,33 @@ export default function RewardedAdModal({
     "playing",
   );
   const [msg, setMsg] = useState("");
+  const [ad, setAd] = useState<SponsorAd | null>(null);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // Ambil iklan sponsor acak saat modal dibuka + catat impresi (view).
+  useEffect(() => {
+    if (!open) return;
+    setAd(null);
+    let alive = true;
+    fetch("/api/ads", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { ads?: SponsorAd[] } | null) => {
+        if (!alive) return;
+        const list = d?.ads ?? [];
+        if (!list.length) return;
+        const picked = list[Math.floor(Math.random() * list.length)];
+        setAd(picked);
+        fetch("/api/ads/event", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: picked.id, type: "view" }),
+        }).catch(() => {});
+      })
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -59,23 +92,57 @@ export default function RewardedAdModal({
     }
   };
 
+  const onAdClick = () => {
+    if (!ad) return;
+    fetch("/api/ads/event", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: ad.id, type: "click" }),
+    }).catch(() => {});
+  };
+
   if (!open) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4">
       <div className="w-full max-w-sm overflow-hidden rounded-2xl border border-zinc-700 bg-zinc-900 text-center">
-        {/* === SlotIklan: ganti dengan SDK iklan nyata di produksi === */}
-        <div className="flex aspect-video items-center justify-center bg-gradient-to-br from-indigo-700 via-purple-800 to-zinc-900">
-          <div className="text-center">
-            <p className="text-[10px] uppercase tracking-widest text-white/60">
+        {/* Slot iklan — iklan sponsor yang dikelola admin, atau promo default */}
+        {ad ? (
+          <a
+            href={ad.linkUrl}
+            target="_blank"
+            rel="noopener sponsored"
+            onClick={onAdClick}
+            className="relative block aspect-video"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={ad.imageUrl}
+              alt={ad.title ?? "Iklan"}
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+            <span className="absolute left-2 top-2 rounded bg-black/60 px-1.5 py-0.5 text-[9px] uppercase tracking-widest text-white/80">
               Iklan
-            </p>
-            <p className="mt-1 text-2xl font-black text-white">DramaKu+</p>
-            <p className="mt-1 text-xs text-white/70">
-              Tonton iklan, dapat koin gratis
-            </p>
+            </span>
+            {ad.title && (
+              <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2 text-left text-sm font-semibold text-white">
+                {ad.title}
+              </span>
+            )}
+          </a>
+        ) : (
+          <div className="flex aspect-video items-center justify-center bg-gradient-to-br from-indigo-700 via-purple-800 to-zinc-900">
+            <div className="text-center">
+              <p className="text-[10px] uppercase tracking-widest text-white/60">
+                Iklan
+              </p>
+              <p className="mt-1 text-2xl font-black text-white">DramaKu+</p>
+              <p className="mt-1 text-xs text-white/70">
+                Tonton iklan, dapat koin gratis
+              </p>
+            </div>
           </div>
-        </div>
+        )}
 
         <div className="p-4">
           {phase === "playing" && left > 0 && (

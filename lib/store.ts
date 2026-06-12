@@ -467,5 +467,71 @@ export async function setOrder(
   writeLocal("orders.json", file);
 }
 
+// =====================  IKLAN SPONSOR (house ads)  =========================
+// Iklan yang dikelola sendiri oleh admin (bukan network). Ditampilkan di modal
+// "nonton iklan". Pendapatan datang dari deal langsung / affiliate yang kamu
+// pasang di linkUrl. views/clicks untuk bukti performa ke calon pengiklan.
+
+export type SponsorAd = {
+  id: string;
+  title?: string;
+  imageUrl: string;
+  linkUrl: string;
+  views: number;
+  clicks: number;
+  addedAt: string;
+};
+
+const ADS_KEY = "ads";
+type AdsFile = { ads: SponsorAd[] };
+
+export async function getAds(): Promise<SponsorAd[]> {
+  if (useKV) return (await kvGet<SponsorAd[]>(ADS_KEY)) ?? [];
+  return readLocal<AdsFile>("ads.json", { ads: [] }).ads;
+}
+
+async function saveAds(ads: SponsorAd[]): Promise<void> {
+  if (useKV) {
+    await kvSet(ADS_KEY, ads);
+    return;
+  }
+  writeLocal("ads.json", { ads });
+}
+
+export async function addAd(input: {
+  title?: string;
+  imageUrl: string;
+  linkUrl: string;
+}): Promise<SponsorAd> {
+  const ads = await getAds();
+  const ad: SponsorAd = {
+    id: `ad-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    title: input.title?.trim() || undefined,
+    imageUrl: input.imageUrl.trim(),
+    linkUrl: input.linkUrl.trim(),
+    views: 0,
+    clicks: 0,
+    addedAt: new Date().toISOString().slice(0, 10),
+  };
+  ads.unshift(ad);
+  await saveAds(ads);
+  return ad;
+}
+
+export async function removeAd(id: string): Promise<void> {
+  await saveAds((await getAds()).filter((a) => a.id !== id));
+}
+
+export async function incrementAdStat(
+  id: string,
+  type: "views" | "clicks",
+): Promise<void> {
+  const ads = await getAds();
+  const ad = ads.find((a) => a.id === id);
+  if (!ad) return;
+  ad[type] = (ad[type] ?? 0) + 1;
+  await saveAds(ads);
+}
+
 /** Mode penyimpanan aktif — berguna untuk debugging/health check. */
 export const storageMode = useKV ? "kv" : "file";

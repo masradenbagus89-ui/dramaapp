@@ -300,13 +300,12 @@ export default function FeedPlayer({
     return () => document.removeEventListener("fullscreenchange", onFs);
   }, []);
 
-  // Unduh episode yang sedang aktif (file asli .mp4 dari PC backup).
+  // Unduh episode aktif lewat proxy same-origin (/api/download) yang memaksa
+  // unduh via Content-Disposition — berfungsi di HP & lintas-origin.
   const onDownload = () => {
     const a = document.createElement("a");
-    a.href = srcFor(active + 1);
+    a.href = `/api/download?id=${encodeURIComponent(dramaId)}&ep=${active + 1}`;
     a.download = `${dramaId}-ep${active + 1}.mp4`;
-    a.target = "_blank";
-    a.rel = "noopener";
     document.body.appendChild(a);
     a.click();
     a.remove();

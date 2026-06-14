@@ -9,7 +9,6 @@ import { setLiked } from "@/lib/myLikes";
 import { subtitleLabel } from "@/lib/types";
 import {
   OFF,
-  applySubtitle,
   initialSubtitle,
   subtitleUrl,
   writeSubtitlePref,
@@ -70,6 +69,7 @@ export default function FeedPlayer({
   const [heart, setHeart] = useState(false);
   const [subLang, setSubLang] = useState(OFF);
   const [subMenu, setSubMenu] = useState(false);
+  const [cueText, setCueText] = useState("");
   const [speed, setSpeed] = useState(1);
   const [curTime, setCurTime] = useState(0);
   const [dur, setDur] = useState(0);
@@ -158,16 +158,46 @@ export default function FeedPlayer({
     if (subtitles.length) setSubLang(initialSubtitle(subtitles));
   }, [subtitles]);
 
-  // Terapkan pilihan subtitle ke video yang sedang aktif tiap kali berubah.
+  // Render subtitle SENDIRI: track di-set "hidden" (tidak digambar browser, tapi
+  // cue tetap aktif) lalu teks cue aktif ditampilkan di elemen kita sendiri —
+  // jadi posisinya terkontrol & tidak menumpuk dengan judul/kontrol.
   useEffect(() => {
-    applySubtitle(videoRefs.current[active], subLang);
+    const v = videoRefs.current[active];
+    setCueText("");
+    if (!v) return;
+    const tracks = Array.from(v.textTracks);
+    let activeTrack: TextTrack | null = null;
+    for (const t of tracks) {
+      if (subLang !== OFF && t.language === subLang) {
+        t.mode = "hidden";
+        activeTrack = t;
+      } else {
+        t.mode = "disabled";
+      }
+    }
+    if (!activeTrack) return;
+    const onCue = () => {
+      const cues = activeTrack?.activeCues;
+      if (cues && cues.length) {
+        setCueText(
+          Array.from(cues)
+            .map((c) => (c as VTTCue).text ?? "")
+            .join("\n")
+            .replace(/<[^>]+>/g, ""),
+        );
+      } else {
+        setCueText("");
+      }
+    };
+    activeTrack.addEventListener("cuechange", onCue);
+    onCue();
+    return () => activeTrack?.removeEventListener("cuechange", onCue);
   }, [active, subLang]);
 
   const chooseSub = (code: string) => {
     setSubLang(code);
     writeSubtitlePref(code);
     setSubMenu(false);
-    applySubtitle(videoRefs.current[active], code);
   };
 
   // Loncat ke episode awal saat pertama kali render.
@@ -402,12 +432,21 @@ export default function FeedPlayer({
         </svg>
       </Link>
 
-      <div className="pointer-events-none absolute bottom-36 left-3 right-20 z-10">
+      <div className="pointer-events-none absolute bottom-44 left-3 right-20 z-10">
         <h1 className="text-base font-semibold text-white drop-shadow-lg">{title}</h1>
         <p className="text-xs text-zinc-300 drop-shadow-lg">
           Episode {active + 1} / {episodes}
         </p>
       </div>
+
+      {/* Subtitle dirender sendiri — selalu di atas control bar, tidak menumpuk judul */}
+      {cueText && (
+        <div className="pointer-events-none absolute bottom-28 left-2 right-16 z-20 flex justify-center">
+          <span className="whitespace-pre-line rounded bg-black/65 px-2.5 py-1 text-center text-sm font-medium leading-snug text-white sm:text-base">
+            {cueText}
+          </span>
+        </div>
+      )}
 
       <ActionRail
         dramaId={dramaId}
@@ -691,8 +730,8 @@ export default function FeedPlayer({
         </div>
       )}
 
-      {active === 0 && (
-        <div className="pointer-events-none absolute bottom-32 left-1/2 z-10 -translate-x-1/2 text-center text-[11px] text-white/70">
+      {active === 0 && !cueText && (
+        <div className="pointer-events-none absolute bottom-60 left-1/2 z-10 -translate-x-1/2 text-center text-[11px] text-white/70">
           Geser ke atas untuk episode berikutnya ↑
         </div>
       )}

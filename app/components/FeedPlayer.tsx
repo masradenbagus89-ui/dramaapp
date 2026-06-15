@@ -442,24 +442,23 @@ export default function FeedPlayer({
           kolom flex sehingga tidak pernah saling menumpuk (rapi seperti app
           sejenis). Dulu masing-masing absolute dgn bottom tebak-tebakan →
           subtitle jatuh ke area control bar & judul panjang membludak. */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30 flex flex-col bg-gradient-to-t from-black/90 via-black/45 to-transparent pb-8 pt-16">
-        {/* Judul + episode — rata kiri, maks 2 baris, beri ruang utk rail kanan */}
-        <div className="px-4 pr-24">
-          <h1 className="line-clamp-2 text-[17px] font-bold leading-snug text-white drop-shadow-lg">
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30 flex flex-col bg-gradient-to-t from-black/85 via-black/35 to-transparent pb-7 pt-10">
+        {/* Judul + episode — kecil & rapi ala PineDrama: rata kiri, maks 2 baris,
+            beri ruang utk rail ikon di kanan. Sengaja kecil (13px) supaya tidak
+            membludak di HP layar kecil & video tetap jadi fokus. */}
+        <div className="px-3 pr-20">
+          <h1 className="line-clamp-2 text-[13px] font-semibold leading-tight text-white/95 drop-shadow-md">
             {title}
           </h1>
-          <div className="mt-1.5 flex items-center gap-2">
-            <span className="rounded bg-white/20 px-1.5 py-0.5 text-[11px] font-bold tracking-wide text-white">
-              EP {active + 1}
-            </span>
-            <span className="text-xs text-white/70">dari {episodes} episode</span>
-          </div>
+          <p className="mt-1 text-[11px] font-medium text-white/55">
+            Eps {active + 1} · {episodes} episode
+          </p>
         </div>
 
         {/* Subtitle — baris tersendiri di tengah, tak menumpuk judul/kontrol */}
         {cueText && (
-          <div className="mt-3 flex justify-center px-4 pr-24">
-            <span className="whitespace-pre-line rounded bg-black/65 px-2.5 py-1 text-center text-sm font-medium leading-snug text-white sm:text-base">
+          <div className="mt-2 flex justify-center px-3 pr-20">
+            <span className="whitespace-pre-line rounded bg-black/60 px-2 py-0.5 text-center text-[13px] font-medium leading-snug text-white sm:text-sm">
               {cueText}
             </span>
           </div>
@@ -467,7 +466,7 @@ export default function FeedPlayer({
 
         {/* Control bar video — seek bar + tombol kontrol */}
         {!lockedActive && (
-          <div className="mt-4 px-4">
+          <div className="mt-3 px-3">
           {/* Seek bar — klik untuk loncat ke posisi */}
           <div
             onClick={onSeek}

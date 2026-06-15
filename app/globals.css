@@ -44,6 +44,17 @@ body {
   scrollbar-width: none;
 }
 
+/* Subtitle di FeedPlayer dirender sendiri (state cueText) supaya posisinya
+   terkontrol & tidak menumpuk judul/kontrol. Matikan render cue bawaan browser
+   agar tidak ada teks subtitle ganda yang menimpa judul di HP. */
+video::cue {
+  background: transparent;
+  color: transparent;
+}
+video::-webkit-media-text-track-container {
+  display: none !important;
+}
+
 /* Animasi menu bawah (BottomNav) */
 @keyframes nav-pop {
   0% {

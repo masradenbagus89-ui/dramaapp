@@ -69,14 +69,15 @@ export default function FeedPlayer({
   const [paused, setPaused] = useState(false);
   const [heart, setHeart] = useState(false);
   const [subLang, setSubLang] = useState(OFF);
-  const [subMenu, setSubMenu] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [cueText, setCueText] = useState("");
   const [speed, setSpeed] = useState(1);
   const [curTime, setCurTime] = useState(0);
   const [dur, setDur] = useState(0);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [resolution, setResolution] = useState("");
-  const [resMenu, setResMenu] = useState(false);
+  const [controlsVisible, setControlsVisible] = useState(true);
+  const [tick, setTick] = useState(0); // bump utk reset timer auto-hide kontrol
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [episodesOpen, setEpisodesOpen] = useState(false);
   const [seeking, setSeeking] = useState(false);
@@ -201,7 +202,6 @@ export default function FeedPlayer({
   const chooseSub = (code: string) => {
     setSubLang(code);
     writeSubtitlePref(code);
-    setSubMenu(false);
   };
 
   // Loncat ke episode awal saat pertama kali render.
@@ -234,6 +234,7 @@ export default function FeedPlayer({
   // Saat active berubah: mainkan yang aktif (kecuali terkunci), pause sisanya.
   useEffect(() => {
     setPaused(false);
+    setControlsVisible(true);
     setPayMsg(null);
     setCurTime(0);
     setDur(0);
@@ -280,12 +281,11 @@ export default function FeedPlayer({
     }
   };
 
-  // Ganti kecepatan putar (1x → 1.25x → 1.5x → 2x → balik).
-  const cycleSpeed = () => {
-    const next = SPEEDS[(SPEEDS.indexOf(speed) + 1) % SPEEDS.length];
-    setSpeed(next);
+  // Set kecepatan putar langsung dari menu pengaturan.
+  const setSpeedTo = (s: number) => {
+    setSpeed(s);
     const v = videoRefs.current[active];
-    if (v) v.playbackRate = next;
+    if (v) v.playbackRate = s;
   };
 
   // Ganti resolusi — simpan posisi & status main dulu, lalu restore saat reload.
@@ -294,7 +294,6 @@ export default function FeedPlayer({
     pendingSeek.current = v ? v.currentTime : 0;
     wasPlaying.current = v ? !v.paused : true;
     setResolution(code);
-    setResMenu(false);
   };
 
   // Fullscreen pada container player.
@@ -313,6 +312,22 @@ export default function FeedPlayer({
     document.addEventListener("fullscreenchange", onFs);
     return () => document.removeEventListener("fullscreenchange", onFs);
   }, []);
+
+  // Auto-hide kontrol biar video jadi fokus; sentuh layar utk memunculkan lagi.
+  const revealControls = useCallback(() => {
+    setControlsVisible(true);
+    setTick((t) => t + 1);
+  }, []);
+
+  useEffect(() => {
+    // Jangan sembunyikan saat jeda / menu kebuka / overlay aktif.
+    if (paused || lockedActive || settingsOpen || commentsOpen || episodesOpen || adOpen) {
+      setControlsVisible(true);
+      return;
+    }
+    const t = window.setTimeout(() => setControlsVisible(false), 3500);
+    return () => window.clearTimeout(t);
+  }, [paused, lockedActive, settingsOpen, commentsOpen, episodesOpen, adOpen, active, tick]);
 
   // Unduh episode aktif lewat proxy same-origin (/api/download) yang memaksa
   // unduh via Content-Disposition — berfungsi di HP & lintas-origin.
@@ -352,7 +367,8 @@ export default function FeedPlayer({
     e.currentTarget.releasePointerCapture?.(e.pointerId);
   };
 
-  // 1x tap = play/pause, 2x tap = like (dengan animasi hati).
+  // 1x tap: kalau kontrol tersembunyi → munculkan saja; kalau sudah tampil →
+  // play/pause. 2x tap = like (dengan animasi hati).
   const onTap = () => {
     const now = Date.now();
     if (now - lastTap.current < 280) {
@@ -367,8 +383,10 @@ export default function FeedPlayer({
       window.setTimeout(() => setHeart(false), 700);
     } else {
       lastTap.current = now;
+      const wasHidden = !controlsVisible;
+      revealControls();
       window.setTimeout(() => {
-        if (lastTap.current === now) togglePlay();
+        if (lastTap.current === now && !wasHidden) togglePlay();
       }, 280);
     }
   };
@@ -516,9 +534,14 @@ export default function FeedPlayer({
           </div>
         )}
 
-        {/* Control bar video — seek bar + tombol kontrol */}
+        {/* Control bar video — seek bar + tombol kontrol. Auto-sembunyi saat
+            nonton biar video jadi fokus; sentuh layar utk memunculkan lagi. */}
         {!lockedActive && (
-          <div className="mt-3 px-3">
+          <div
+            className={`mt-3 px-3 transition-opacity duration-300 ${
+              controlsVisible ? "opacity-100" : "pointer-events-none opacity-0"
+            }`}
+          >
           {/* Seek bar — bisa DIGESER (touch & mouse) utk maju/mundur di HP */}
           <div
             ref={seekRef}
@@ -543,7 +566,7 @@ export default function FeedPlayer({
             </div>
           </div>
 
-          <div className="pointer-events-auto flex flex-wrap items-center gap-x-3 gap-y-2">
+          <div className="pointer-events-auto flex items-center gap-3">
             <button
               onClick={togglePlay}
               aria-label={paused ? "Putar" : "Jeda"}
@@ -577,119 +600,107 @@ export default function FeedPlayer({
               Episode
             </button>
 
-            <div className="ml-auto flex items-center gap-1.5">
-              {/* Subtitle (CC) */}
-              {subtitles.length > 0 && (
-                <div className="relative">
-                  <button
-                    onClick={() => {
-                      setSubMenu((v) => !v);
-                      setResMenu(false);
-                    }}
-                    aria-label="Subtitle"
-                    className={`flex h-8 items-center gap-1 rounded-full px-2.5 text-xs font-bold ${
-                      subLang !== OFF
-                        ? "bg-amber-400 text-black"
-                        : "bg-white/15 text-white hover:bg-white/25"
-                    }`}
-                  >
-                    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2">
-                      <rect x="3" y="5" width="18" height="14" rx="2" />
-                      <path d="M7 13h3M14 13h3M7 10h2M13 10h4" strokeLinecap="round" />
-                    </svg>
-                    {subLang === OFF ? "CC" : subLang.toUpperCase()}
-                  </button>
-                  {subMenu && (
-                    <div className="absolute bottom-full right-0 mb-2 w-36 overflow-hidden rounded-xl border border-zinc-700 bg-zinc-900/95 py-1 shadow-xl backdrop-blur">
-                      <p className="px-3 pb-1 pt-1 text-[10px] uppercase tracking-wider text-zinc-500">Subtitle</p>
-                      <button
-                        onClick={() => chooseSub(OFF)}
-                        className={`flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-zinc-800 ${subLang === OFF ? "text-amber-400" : "text-zinc-200"}`}
-                      >
-                        Mati {subLang === OFF && <span>✓</span>}
-                      </button>
-                      {subtitles.map((code) => (
-                        <button
-                          key={code}
-                          onClick={() => chooseSub(code)}
-                          className={`flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-zinc-800 ${subLang === code ? "text-amber-400" : "text-zinc-200"}`}
-                        >
-                          {subtitleLabel(code)} {subLang === code && <span>✓</span>}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              )}
+            {/* Pengaturan — gabung resolusi, kecepatan, subtitle, unduh,
+                layar penuh ke SATU tombol biar layar tidak penuh tombol. */}
+            <div className="relative ml-auto">
+              <button
+                onClick={() => setSettingsOpen((v) => !v)}
+                aria-label="Pengaturan"
+                className={`flex h-8 w-8 items-center justify-center rounded-full ${
+                  settingsOpen ? "bg-amber-400 text-black" : "bg-white/15 text-white hover:bg-white/25"
+                }`}
+              >
+                <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z" />
+                </svg>
+              </button>
 
-              {/* Resolusi */}
-              <div className="relative">
-                <button
-                  onClick={() => {
-                    setResMenu((v) => !v);
-                    setSubMenu(false);
-                  }}
-                  aria-label="Resolusi"
-                  className="flex h-8 items-center gap-1 rounded-full bg-white/15 px-2.5 text-xs font-bold text-white hover:bg-white/25"
-                >
-                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="3" />
-                    <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z" />
-                  </svg>
-                  {resolution || "HD"}
-                </button>
-                {resMenu && (
-                  <div className="absolute bottom-full right-0 mb-2 w-36 overflow-hidden rounded-xl border border-zinc-700 bg-zinc-900/95 py-1 shadow-xl backdrop-blur">
-                    <p className="px-3 pb-1 pt-1 text-[10px] uppercase tracking-wider text-zinc-500">Resolusi</p>
+              {settingsOpen && (
+                <div className="absolute bottom-full right-0 mb-2 w-60 rounded-xl border border-zinc-700 bg-zinc-900/95 p-3 shadow-xl backdrop-blur">
+                  {/* Kecepatan */}
+                  <p className="mb-1.5 text-[10px] uppercase tracking-wider text-zinc-500">Kecepatan</p>
+                  <div className="mb-3 flex gap-1.5">
+                    {SPEEDS.map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => setSpeedTo(s)}
+                        className={`flex-1 rounded-lg py-1.5 text-xs font-bold ${
+                          speed === s ? "bg-amber-400 text-black" : "bg-zinc-800 text-zinc-200 hover:bg-zinc-700"
+                        }`}
+                      >
+                        {s}×
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Resolusi */}
+                  <p className="mb-1.5 text-[10px] uppercase tracking-wider text-zinc-500">Resolusi</p>
+                  <div className="mb-3 flex gap-1.5">
                     {RESOLUTIONS.map((r) => (
                       <button
                         key={r.code}
                         onClick={() => chooseRes(r.code)}
-                        className={`flex w-full items-center justify-between px-3 py-2 text-left text-sm hover:bg-zinc-800 ${resolution === r.code ? "text-amber-400" : "text-zinc-200"}`}
+                        className={`flex-1 rounded-lg py-1.5 text-xs font-bold ${
+                          resolution === r.code ? "bg-amber-400 text-black" : "bg-zinc-800 text-zinc-200 hover:bg-zinc-700"
+                        }`}
                       >
-                        {r.label} {resolution === r.code && <span>✓</span>}
+                        {r.label}
                       </button>
                     ))}
                   </div>
-                )}
-              </div>
 
-              {/* Kecepatan */}
-              <button
-                onClick={cycleSpeed}
-                aria-label="Kecepatan putar"
-                className="h-8 rounded-full bg-white/15 px-2.5 text-xs font-bold text-white hover:bg-white/25"
-              >
-                {speed}×
-              </button>
+                  {/* Subtitle (kalau ada) */}
+                  {subtitles.length > 0 && (
+                    <>
+                      <p className="mb-1.5 text-[10px] uppercase tracking-wider text-zinc-500">Subtitle</p>
+                      <div className="mb-3 flex flex-wrap gap-1.5">
+                        <button
+                          onClick={() => chooseSub(OFF)}
+                          className={`rounded-lg px-2.5 py-1.5 text-xs font-bold ${
+                            subLang === OFF ? "bg-amber-400 text-black" : "bg-zinc-800 text-zinc-200 hover:bg-zinc-700"
+                          }`}
+                        >
+                          Mati
+                        </button>
+                        {subtitles.map((code) => (
+                          <button
+                            key={code}
+                            onClick={() => chooseSub(code)}
+                            className={`rounded-lg px-2.5 py-1.5 text-xs font-bold ${
+                              subLang === code ? "bg-amber-400 text-black" : "bg-zinc-800 text-zinc-200 hover:bg-zinc-700"
+                            }`}
+                          >
+                            {subtitleLabel(code)}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
 
-              {/* Unduh */}
-              <button
-                onClick={onDownload}
-                aria-label="Unduh episode"
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25"
-              >
-                <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 3v12m0 0l-4-4m4 4l4-4M5 19h14" />
-                </svg>
-              </button>
-
-              {/* Fullscreen */}
-              <button
-                onClick={toggleFullscreen}
-                aria-label={isFullscreen ? "Keluar layar penuh" : "Layar penuh"}
-                className="flex h-8 w-8 items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25"
-              >
-                {isFullscreen ? (
-                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M9 9H5m4 0V5m0 4L4 4m11 5h4m-4 0V5m0 4l5-5M9 15H5m4 0v4m0-4l-5 5m11-5h4m-4 0v4m0-4l5 5" />
-                  </svg>
-                ) : (
-                  <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M4 9V5a1 1 0 011-1h4M20 9V5a1 1 0 00-1-1h-4M4 15v4a1 1 0 001 1h4M20 15v4a1 1 0 01-1 1h-4" />
-                  </svg>
-                )}
-              </button>
+                  {/* Aksi: unduh + layar penuh */}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={onDownload}
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-zinc-800 py-2 text-xs font-bold text-zinc-100 hover:bg-zinc-700"
+                    >
+                      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 3v12m0 0l-4-4m4 4l4-4M5 19h14" />
+                      </svg>
+                      Unduh
+                    </button>
+                    <button
+                      onClick={toggleFullscreen}
+                      className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-zinc-800 py-2 text-xs font-bold text-zinc-100 hover:bg-zinc-700"
+                    >
+                      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M4 9V5a1 1 0 011-1h4M20 9V5a1 1 0 00-1-1h-4M4 15v4a1 1 0 001 1h4M20 15v4a1 1 0 01-1 1h-4" />
+                      </svg>
+                      {isFullscreen ? "Keluar" : "Layar penuh"}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           </div>
@@ -821,7 +832,7 @@ export default function FeedPlayer({
         </div>
       )}
 
-      {active === 0 && !cueText && (
+      {active === 0 && !cueText && controlsVisible && (
         <div className="pointer-events-none absolute bottom-60 left-1/2 z-10 -translate-x-1/2 text-center text-[11px] text-white/70">
           Geser ke atas untuk episode berikutnya ↑
         </div>

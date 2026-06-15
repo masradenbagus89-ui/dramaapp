@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import ActionRail from "./ActionRail";
 import Comments from "./Comments";
+import EpisodeSheet from "./EpisodeSheet";
 import { setProgress } from "@/lib/progress";
 import { setLiked } from "@/lib/myLikes";
 import { subtitleLabel } from "@/lib/types";
@@ -77,10 +78,13 @@ export default function FeedPlayer({
   const [resolution, setResolution] = useState("");
   const [resMenu, setResMenu] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [episodesOpen, setEpisodesOpen] = useState(false);
+  const [seeking, setSeeking] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const pendingSeek = useRef<number | null>(null); // simpan posisi saat ganti resolusi
   const wasPlaying = useRef(true);
+  const seekRef = useRef<HTMLDivElement>(null);
 
   // --- Koin / paywall ---
   const [email, setEmail] = useState("");
@@ -253,6 +257,16 @@ export default function FeedPlayer({
     slideRefs.current[active + 1]?.scrollIntoView({ behavior: "smooth" });
   }, [active]);
 
+  // Lompat ke episode tertentu dari daftar episode (loncatan jauh = instan).
+  const goTo = useCallback(
+    (ep: number) => {
+      const idx = Math.min(Math.max(0, ep - 1), episodes - 1);
+      slideRefs.current[idx]?.scrollIntoView({ behavior: "auto" });
+      setEpisodesOpen(false);
+    },
+    [episodes],
+  );
+
   const togglePlay = () => {
     if (lockedActive) return; // terkunci → paywall yang menangani, bukan play
     const v = videoRefs.current[active];
@@ -311,15 +325,31 @@ export default function FeedPlayer({
     a.remove();
   };
 
-  // Klik di seek bar → loncat ke posisi itu.
-  const onSeek = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (lockedActive) return;
+  // Seek bar yang bisa DIGESER (touch & mouse) — biar gampang maju/mundur di HP.
+  const seekToClientX = (clientX: number) => {
     const v = videoRefs.current[active];
-    if (!v || !v.duration) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const ratio = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
-    v.currentTime = ratio * v.duration;
-    setCurTime(v.currentTime);
+    const bar = seekRef.current;
+    if (!v || !bar || !v.duration) return;
+    const rect = bar.getBoundingClientRect();
+    const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+    const t = ratio * v.duration;
+    v.currentTime = t;
+    setCurTime(t);
+  };
+  const onSeekDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (lockedActive) return;
+    setSeeking(true);
+    e.currentTarget.setPointerCapture?.(e.pointerId);
+    seekToClientX(e.clientX);
+  };
+  const onSeekMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!seeking) return;
+    seekToClientX(e.clientX);
+  };
+  const onSeekUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!seeking) return;
+    setSeeking(false);
+    e.currentTarget.releasePointerCapture?.(e.pointerId);
   };
 
   // 1x tap = play/pause, 2x tap = like (dengan animasi hati).
@@ -366,8 +396,18 @@ export default function FeedPlayer({
                   playsInline
                   preload={idx === active ? "auto" : "metadata"}
                   onEnded={() => idx === active && goNext()}
+                  onPlay={(e) => {
+                    // HP kadang reset playbackRate saat mulai play → set ulang
+                    // supaya kontrol kecepatan benar-benar berfungsi di mobile.
+                    e.currentTarget.playbackRate = speed;
+                  }}
+                  onRateChange={(e) => {
+                    if (idx === active && e.currentTarget.playbackRate !== speed) {
+                      e.currentTarget.playbackRate = speed;
+                    }
+                  }}
                   onTimeUpdate={(e) => {
-                    if (idx !== active) return;
+                    if (idx !== active || seeking) return;
                     setCurTime(e.currentTarget.currentTime);
                     setDur(e.currentTarget.duration || 0);
                   }}
@@ -450,9 +490,21 @@ export default function FeedPlayer({
           <h1 className="line-clamp-2 text-[13px] font-semibold leading-tight text-white/95 drop-shadow-md">
             {title}
           </h1>
-          <p className="mt-1 text-[11px] font-medium text-white/55">
-            Eps {active + 1} · {episodes} episode
-          </p>
+          <button
+            onClick={() => setEpisodesOpen(true)}
+            className="pointer-events-auto mt-1 flex items-center gap-1 text-[11px] font-medium text-white/70 active:text-white"
+          >
+            <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="7" height="7" rx="1" />
+              <rect x="14" y="3" width="7" height="7" rx="1" />
+              <rect x="3" y="14" width="7" height="7" rx="1" />
+              <rect x="14" y="14" width="7" height="7" rx="1" />
+            </svg>
+            Eps {active + 1} / {episodes}
+            <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 6l6 6-6 6" />
+            </svg>
+          </button>
         </div>
 
         {/* Subtitle — baris tersendiri di tengah, tak menumpuk judul/kontrol */}
@@ -467,18 +519,26 @@ export default function FeedPlayer({
         {/* Control bar video — seek bar + tombol kontrol */}
         {!lockedActive && (
           <div className="mt-3 px-3">
-          {/* Seek bar — klik untuk loncat ke posisi */}
+          {/* Seek bar — bisa DIGESER (touch & mouse) utk maju/mundur di HP */}
           <div
-            onClick={onSeek}
+            ref={seekRef}
+            onPointerDown={onSeekDown}
+            onPointerMove={onSeekMove}
+            onPointerUp={onSeekUp}
+            onPointerCancel={onSeekUp}
             role="slider"
             aria-label="Posisi video"
             aria-valuenow={Math.round(curTime)}
-            className="pointer-events-auto mb-3 flex h-4 cursor-pointer items-center"
+            className="pointer-events-auto mb-3 flex h-6 cursor-pointer touch-none select-none items-center"
           >
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/25">
+            <div className="relative h-1.5 w-full rounded-full bg-white/25">
               <div
-                className="h-full rounded-full bg-amber-400"
+                className="absolute inset-y-0 left-0 rounded-full bg-amber-400"
                 style={{ width: dur ? `${(curTime / dur) * 100}%` : "0%" }}
+              />
+              <div
+                className="absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-400 shadow"
+                style={{ left: dur ? `${(curTime / dur) * 100}%` : "0%" }}
               />
             </div>
           </div>
@@ -502,6 +562,20 @@ export default function FeedPlayer({
             <span className="text-xs tabular-nums text-white/80">
               {fmtTime(curTime)} / {fmtTime(dur)}
             </span>
+
+            <button
+              onClick={() => setEpisodesOpen(true)}
+              aria-label="Daftar episode"
+              className="flex h-8 items-center gap-1 rounded-full bg-white/15 px-2.5 text-xs font-bold text-white hover:bg-white/25"
+            >
+              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="7" height="7" rx="1" />
+                <rect x="14" y="3" width="7" height="7" rx="1" />
+                <rect x="3" y="14" width="7" height="7" rx="1" />
+                <rect x="14" y="14" width="7" height="7" rx="1" />
+              </svg>
+              Episode
+            </button>
 
             <div className="ml-auto flex items-center gap-1.5">
               {/* Subtitle (CC) */}
@@ -703,6 +777,14 @@ export default function FeedPlayer({
         open={adOpen}
         onClose={() => setAdOpen(false)}
         onRewarded={(b) => setBalance(b)}
+      />
+
+      <EpisodeSheet
+        open={episodesOpen}
+        onClose={() => setEpisodesOpen(false)}
+        total={episodes}
+        current={active + 1}
+        onPick={goTo}
       />
 
       {/* Drawer komentar — buka di dalam feed tanpa meninggalkan video */}

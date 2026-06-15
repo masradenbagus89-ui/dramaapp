@@ -431,22 +431,6 @@ export default function FeedPlayer({
         </svg>
       </Link>
 
-      <div className="pointer-events-none absolute bottom-44 left-3 right-20 z-10">
-        <h1 className="text-base font-semibold text-white drop-shadow-lg">{title}</h1>
-        <p className="text-xs text-zinc-300 drop-shadow-lg">
-          Episode {active + 1} / {episodes}
-        </p>
-      </div>
-
-      {/* Subtitle dirender sendiri — selalu di atas control bar, tidak menumpuk judul */}
-      {cueText && (
-        <div className="pointer-events-none absolute bottom-28 left-2 right-16 z-20 flex justify-center">
-          <span className="whitespace-pre-line rounded bg-black/65 px-2.5 py-1 text-center text-sm font-medium leading-snug text-white sm:text-base">
-            {cueText}
-          </span>
-        </div>
-      )}
-
       <ActionRail
         dramaId={dramaId}
         title={title}
@@ -454,10 +438,36 @@ export default function FeedPlayer({
         onComment={() => setCommentsOpen(true)}
       />
 
-      {/* Control bar video — diangkat dari tepi bawah supaya gampang diklik
-          (tidak ketutup taskbar) + ada seek bar & pengatur kecepatan. */}
-      {!lockedActive && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30 bg-gradient-to-t from-black/85 via-black/40 to-transparent px-4 pb-10 pt-12">
+      {/* Panel bawah: judul, episode, subtitle, kontrol disusun dalam SATU
+          kolom flex sehingga tidak pernah saling menumpuk (rapi seperti app
+          sejenis). Dulu masing-masing absolute dgn bottom tebak-tebakan →
+          subtitle jatuh ke area control bar & judul panjang membludak. */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30 flex flex-col bg-gradient-to-t from-black/90 via-black/45 to-transparent pb-8 pt-16">
+        {/* Judul + episode — rata kiri, maks 2 baris, beri ruang utk rail kanan */}
+        <div className="px-4 pr-24">
+          <h1 className="line-clamp-2 text-[17px] font-bold leading-snug text-white drop-shadow-lg">
+            {title}
+          </h1>
+          <div className="mt-1.5 flex items-center gap-2">
+            <span className="rounded bg-white/20 px-1.5 py-0.5 text-[11px] font-bold tracking-wide text-white">
+              EP {active + 1}
+            </span>
+            <span className="text-xs text-white/70">dari {episodes} episode</span>
+          </div>
+        </div>
+
+        {/* Subtitle — baris tersendiri di tengah, tak menumpuk judul/kontrol */}
+        {cueText && (
+          <div className="mt-3 flex justify-center px-4 pr-24">
+            <span className="whitespace-pre-line rounded bg-black/65 px-2.5 py-1 text-center text-sm font-medium leading-snug text-white sm:text-base">
+              {cueText}
+            </span>
+          </div>
+        )}
+
+        {/* Control bar video — seek bar + tombol kontrol */}
+        {!lockedActive && (
+          <div className="mt-4 px-4">
           {/* Seek bar — klik untuk loncat ke posisi */}
           <div
             onClick={onSeek}
@@ -609,8 +619,9 @@ export default function FeedPlayer({
               </button>
             </div>
           </div>
-        </div>
-      )}
+          </div>
+        )}
+      </div>
 
       {paused && !lockedActive && (
         <button

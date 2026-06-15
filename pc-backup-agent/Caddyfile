@@ -14,7 +14,17 @@
 		reverse_proxy 127.0.0.1:8089
 	}
 
-	# Default: serve video files dari folder lokal
+	# Unduh PAKSA: kalau URL ada ?dl=1, kirim Content-Disposition: attachment
+	# supaya HP/browser MENGUNDUH file (bukan memutar di tab), langsung dari
+	# tunnel tanpa batas waktu Vercel. Dipakai tombol Unduh di player.
+	@dl query dl=1
+	handle @dl {
+		root * C:\Users\USER\Downloads\video
+		header Content-Disposition "attachment"
+		file_server
+	}
+
+	# Default: serve video files dari folder lokal (streaming inline utk player)
 	handle {
 		root * C:\Users\USER\Downloads\video
 		file_server browse

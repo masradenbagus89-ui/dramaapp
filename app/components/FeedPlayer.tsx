@@ -329,12 +329,21 @@ export default function FeedPlayer({
     return () => window.clearTimeout(t);
   }, [paused, lockedActive, settingsOpen, commentsOpen, episodesOpen, adOpen, active, tick]);
 
-  // Unduh episode aktif lewat proxy same-origin (/api/download) yang memaksa
-  // unduh via Content-Disposition — berfungsi di HP & lintas-origin.
+  // Unduh episode aktif. Kalau ada tunnel (NEXT_PUBLIC_VIDEO_BASE_URL): unduh
+  // LANGSUNG dari tunnel dgn ?dl=1 → Caddy kirim Content-Disposition: attachment
+  // sehingga HP mengunduh sampai TUNTAS (tanpa batas waktu 60s fungsi Vercel
+  // yang dulu memutus unduhan file besar di tengah jalan). Tanpa tunnel (dev)
+  // pakai proxy /api/download.
   const onDownload = () => {
+    const ep = active + 1;
     const a = document.createElement("a");
-    a.href = `/api/download?id=${encodeURIComponent(dramaId)}&ep=${active + 1}`;
-    a.download = `${dramaId}-ep${active + 1}.mp4`;
+    if (baseUrl) {
+      a.href = `${baseUrl.replace(/\/$/, "")}/${dramaId}/${ep}.mp4?dl=1`;
+    } else {
+      a.href = `/api/download?id=${encodeURIComponent(dramaId)}&ep=${ep}`;
+    }
+    a.download = `${dramaId}-ep${ep}.mp4`; // dihormati saat same-origin (dev)
+    a.rel = "noopener";
     document.body.appendChild(a);
     a.click();
     a.remove();

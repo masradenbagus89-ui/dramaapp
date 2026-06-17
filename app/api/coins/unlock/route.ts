@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Admin nonton gratis; episode awal gratis; drama non-premium SELALU gratis.
-  const drama = getDrama(dramaId);
+  const drama = await getDrama(dramaId);
   if (id.isAdmin || !drama?.premium || isFreeEpisode(ep)) {
     return NextResponse.json({
       ok: true,

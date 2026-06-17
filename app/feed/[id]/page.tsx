@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 export default async function FeedPage(props: PageProps<"/feed/[id]">) {
   const { id } = await props.params;
   const sp = await props.searchParams;
-  const drama = getDrama(id);
+  const drama = await getDrama(id);
   if (!drama) notFound();
 
   const rawEp = Array.isArray(sp?.ep) ? sp.ep[0] : sp?.ep;

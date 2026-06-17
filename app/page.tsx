@@ -43,8 +43,8 @@ const FITUR = [
   },
 ] as const;
 
-export default function LandingPage() {
-  const dramas = getAllDramas();
+export default async function LandingPage() {
+  const dramas = await getAllDramas();
   const heroDramas = dramas.slice(0, 6);
 
   return (
@@ -372,7 +372,7 @@ function FilmStripPattern() {
   );
 }
 
-type DramaForCollage = ReturnType<typeof getAllDramas>[number];
+type DramaForCollage = Awaited<ReturnType<typeof getAllDramas>>[number];
 
 function PosterCollage({ dramas }: { dramas: DramaForCollage[] }) {
   if (dramas.length === 0) return null;

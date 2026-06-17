@@ -1,22 +1,35 @@
 // -------------------------------------------------------------------------
 // Penyimpanan data dual-mode:
-//   - DI VERCEL  : pakai Upstash Redis / Vercel KV (filesystem read-only).
-//   - DI LOKAL   : tetap pakai file JSON di folder data/ (seperti semula).
+//   - DENGAN SUPABASE : kalau env SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY ada
+//                       -> pakai Supabase (PostgreSQL via PostgREST REST API).
+//   - TANPA (lokal/dev): pakai file JSON di folder data/ (seperti semula).
 //
-// Saklarnya otomatis: kalau env var KV ada -> pakai KV, kalau tidak -> file.
-// Tidak ada dependency tambahan; akses KV lewat REST API bawaan (fetch).
+// Saklarnya otomatis lewat `useSupabase` di lib/supabase.ts.
 //
-// Catatan konkurensi:
-//   - likes    : pakai Redis HASH + HINCRBY (atomik) -> tidak ada hitungan hilang.
-//   - comments : disimpan per-drama (key "comments:<id>") -> komentar antar-drama
-//                tidak saling menimpa. (Dua komentar pada drama YANG SAMA dalam
-//                ~puluhan ms bersamaan masih bisa balapan; sangat jarang & sama
-//                seperti perilaku versi file lama.)
-//   - admins   : objek tunggal; penambahan admin sangat jarang -> last-writer-wins
-//                dapat diterima.
+// Pemetaan data di Supabase:
+//   - Dokumen JSON  -> tabel `app_data` (key -> value jsonb):
+//       "admins", "comments:<id>", "ads", "coinmeta:<email>",
+//       "twofa:<email>", "order:<orderId>".
+//   - Counter atomik -> tabel + RPC:
+//       likes   (RPC like_change), wallets (RPC coin_add/coin_spend_unlock),
+//       unlocks (tabel SET email+token).
+//
+// Konkurensi:
+//   - likes & saldo koin : atomik via fungsi Postgres (tidak ada hitungan hilang).
+//   - unlock episode     : INSERT ... ON CONFLICT DO NOTHING (idempoten).
+//   - comments/admins    : dokumen per-key; balapan antar tulisan ke key YANG
+//                          SAMA dalam ~ms masih mungkin (sangat jarang, sama
+//                          seperti versi sebelumnya).
 // -------------------------------------------------------------------------
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
+import {
+  useSupabase,
+  sbSelect,
+  sbUpsert,
+  sbRpc,
+  eq,
+} from "./supabase";
 
 export type Admin = { email: string; name: string; addedAt: string };
 export type AdminsFile = { admins: Admin[] };
@@ -33,48 +46,7 @@ export type CommentsFile = { comments: Record<string, Comment[]> };
 
 export type InteractionsFile = { likes: Record<string, number> };
 
-// Vercel KV maupun Upstash menyuntikkan salah satu pasangan env var ini.
-const KV_URL =
-  process.env.KV_REST_API_URL ?? process.env.UPSTASH_REDIS_REST_URL ?? "";
-const KV_TOKEN =
-  process.env.KV_REST_API_TOKEN ?? process.env.UPSTASH_REDIS_REST_TOKEN ?? "";
-const useKV = Boolean(KV_URL && KV_TOKEN);
-
-// --- Klien KV minimal (Upstash REST: POST body berisi array perintah) -------
-// Mengembalikan field `result` mentah dari respons (bisa string, number, array).
-async function kvCommand(cmd: (string | number)[]): Promise<unknown> {
-  const res = await fetch(KV_URL, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${KV_TOKEN}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(cmd.map(String)),
-    cache: "no-store",
-  });
-  if (!res.ok) {
-    throw new Error(`KV error ${res.status}: ${await res.text()}`);
-  }
-  const data = (await res.json()) as { result?: unknown; error?: string };
-  if (data.error) throw new Error(`KV error: ${data.error}`);
-  return data.result ?? null;
-}
-
-async function kvGet<T>(key: string): Promise<T | null> {
-  const result = await kvCommand(["GET", key]);
-  if (result == null) return null;
-  try {
-    return JSON.parse(result as string) as T;
-  } catch {
-    return null;
-  }
-}
-
-async function kvSet<T>(key: string, value: T): Promise<void> {
-  await kvCommand(["SET", key, JSON.stringify(value)]);
-}
-
-// --- Akses file lokal (dipakai saat dev / KV belum di-set) ------------------
+// --- Akses file lokal (dipakai saat dev / Supabase belum di-set) ------------
 function localPath(file: string): string {
   return join(process.cwd(), "data", file);
 }
@@ -95,44 +67,56 @@ function writeLocal<T>(file: string, value: T): void {
   writeFileSync(p, JSON.stringify(value, null, 2), "utf-8");
 }
 
-// --- Pembungkus generik objek-penuh: KV bila tersedia, kalau tidak file -----
-async function readData<T>(key: string, file: string, fallback: T): Promise<T> {
-  if (useKV) {
-    const fromKV = await kvGet<T>(key);
-    if (fromKV !== null) return fromKV;
-    // Belum ada di KV: ambil dari file JSON bawaan (read-only di Vercel = OK),
-    // simpan sebagai seed awal, lalu kembalikan.
-    const seed = readLocal<T>(file, fallback);
-    try {
-      await kvSet(key, seed);
-    } catch {
-      /* abaikan kegagalan seed; tetap kembalikan datanya */
-    }
-    return seed;
-  }
-  return readLocal<T>(file, fallback);
+// --- Dokumen JSON di Supabase (tabel app_data: key -> value jsonb) ----------
+async function sbDocGet<T>(key: string): Promise<T | null> {
+  const rows = await sbSelect<{ value: T }>(
+    `app_data?key=${eq(key)}&select=value&limit=1`,
+  );
+  return rows.length ? rows[0].value : null;
 }
 
-async function writeData<T>(key: string, file: string, value: T): Promise<void> {
-  if (useKV) {
-    await kvSet(key, value);
-    return;
-  }
-  writeLocal<T>(file, value);
+async function sbDocSet<T>(key: string, value: T): Promise<void> {
+  await sbUpsert("app_data", { key, value }, "key");
 }
 
-// =====================  ADMINS (objek tunggal)  =============================
+/**
+ * Baca dokumen; kalau belum ada di Supabase, seed sekali dari file JSON bawaan
+ * (file/ ikut ke deploy = read-only di Vercel, jadi aman dipakai sbg seed awal).
+ */
+async function sbDocGetOrSeed<T>(key: string, seed: () => T): Promise<T> {
+  const v = await sbDocGet<T>(key);
+  if (v !== null) return v;
+  const seeded = seed();
+  try {
+    await sbDocSet(key, seeded);
+  } catch {
+    /* abaikan kegagalan seed; tetap kembalikan datanya */
+  }
+  return seeded;
+}
+
+// =====================  ADMINS (dokumen tunggal)  ==========================
 const DEFAULT_ADMINS: AdminsFile = {
   admins: [
     { email: "admin@dramaku.com", name: "Admin Utama", addedAt: "2026-05-06" },
   ],
 };
 
-export function getAdmins(): Promise<AdminsFile> {
-  return readData<AdminsFile>("admins", "admins.json", DEFAULT_ADMINS);
+export async function getAdmins(): Promise<AdminsFile> {
+  if (useSupabase) {
+    return sbDocGetOrSeed<AdminsFile>("admins", () =>
+      readLocal<AdminsFile>("admins.json", DEFAULT_ADMINS),
+    );
+  }
+  return readLocal<AdminsFile>("admins.json", DEFAULT_ADMINS);
 }
-export function setAdmins(data: AdminsFile): Promise<void> {
-  return writeData("admins", "admins.json", data);
+
+export async function setAdmins(data: AdminsFile): Promise<void> {
+  if (useSupabase) {
+    await sbDocSet("admins", data);
+    return;
+  }
+  writeLocal("admins.json", data);
 }
 
 /** True jika email termasuk admin terdaftar (sumber sama dengan getAdmins). */
@@ -145,30 +129,27 @@ export async function isAdminEmail(
   return admins.some((a) => a.email.trim().toLowerCase() === e);
 }
 
-// =====================  LIKES (Redis HASH, atomik)  =========================
-const LIKES_HASH = "likes";
-
-/** Semua jumlah like: { dramaId: count }. */
+// =====================  LIKES (tabel + RPC atomik)  =========================
 export async function getLikes(): Promise<Record<string, number>> {
-  if (useKV) {
-    const flat = (await kvCommand(["HGETALL", LIKES_HASH])) as unknown[] | null;
+  if (useSupabase) {
+    const rows = await sbSelect<{ drama_id: string; count: number }>(
+      "likes?select=drama_id,count",
+    );
     const map: Record<string, number> = {};
-    if (Array.isArray(flat)) {
-      for (let i = 0; i + 1 < flat.length; i += 2) {
-        map[String(flat[i])] = Number(flat[i + 1]) || 0;
-      }
-    }
-    // Seed sekali dari file lama kalau hash masih kosong.
-    if (Object.keys(map).length === 0) {
+    for (const r of rows) map[r.drama_id] = Number(r.count) || 0;
+    // Seed sekali dari file lama kalau tabel masih kosong.
+    if (rows.length === 0) {
       const seed = readLocal<InteractionsFile>("interactions.json", {
         likes: {},
       }).likes;
       const entries = Object.entries(seed);
       if (entries.length) {
         try {
-          for (const [id, count] of entries) {
-            await kvCommand(["HSET", LIKES_HASH, id, count]);
-          }
+          await sbUpsert(
+            "likes",
+            entries.map(([drama_id, count]) => ({ drama_id, count })),
+            "drama_id",
+          );
         } catch {
           /* abaikan kegagalan seed */
         }
@@ -185,18 +166,11 @@ export async function changeLike(
   dramaId: string,
   action: "like" | "unlike",
 ): Promise<number> {
-  if (useKV) {
-    if (action === "unlike") {
-      let n = Number(
-        await kvCommand(["HINCRBY", LIKES_HASH, dramaId, -1]),
-      );
-      if (n < 0) {
-        await kvCommand(["HSET", LIKES_HASH, dramaId, 0]);
-        n = 0;
-      }
-      return n;
-    }
-    return Number(await kvCommand(["HINCRBY", LIKES_HASH, dramaId, 1]));
+  if (useSupabase) {
+    return sbRpc<number>("like_change", {
+      p_drama_id: dramaId,
+      p_delta: action === "unlike" ? -1 : 1,
+    });
   }
   // Mode lokal: read-modify-write file (proses tunggal, aman).
   const data = readLocal<InteractionsFile>("interactions.json", { likes: {} });
@@ -206,15 +180,15 @@ export async function changeLike(
   return data.likes[dramaId];
 }
 
-// =====================  COMMENTS (per-drama)  ===============================
+// =====================  COMMENTS (dokumen per-drama)  =======================
 function commentsKey(dramaId: string): string {
   return `comments:${dramaId}`;
 }
 
 /** Komentar untuk satu drama (terbaru di depan). */
 export async function getCommentsFor(dramaId: string): Promise<Comment[]> {
-  if (useKV) {
-    const v = await kvGet<Comment[]>(commentsKey(dramaId));
+  if (useSupabase) {
+    const v = await sbDocGet<Comment[]>(commentsKey(dramaId));
     if (v !== null) return v;
     // Seed sekali dari file lama (kalau ada komentar untuk drama ini).
     const seed =
@@ -223,7 +197,7 @@ export async function getCommentsFor(dramaId: string): Promise<Comment[]> {
       ] ?? [];
     if (seed.length) {
       try {
-        await kvSet(commentsKey(dramaId), seed);
+        await sbDocSet(commentsKey(dramaId), seed);
       } catch {
         /* abaikan kegagalan seed */
       }
@@ -252,8 +226,8 @@ export async function setCommentsFor(
   dramaId: string,
   list: Comment[],
 ): Promise<void> {
-  if (useKV) {
-    await kvSet(commentsKey(dramaId), list);
+  if (useSupabase) {
+    await sbDocSet(commentsKey(dramaId), list);
     return;
   }
   const data = readLocal<CommentsFile>("comments.json", { comments: {} });
@@ -262,12 +236,10 @@ export async function setCommentsFor(
 }
 
 // =====================  WALLET / KOIN  =====================================
-// - wallets : Redis HASH "wallets" (field email -> saldo)  → HINCRBY atomik.
-// - unlocks : Redis SET "unlocks:<email>" berisi token "<dramaId>:<ep>".
-// - meta    : JSON "coinmeta:<email>" → catatan check-in & kuota iklan harian.
+// - wallets : tabel "wallets" (email -> balance)  -> RPC coin_add (atomik).
+// - unlocks : tabel "unlocks" (email, token).
+// - meta    : dokumen app_data "coinmeta:<email>" -> check-in & kuota iklan.
 // Mode lokal: semua disatukan di data/wallets.json (proses tunggal = aman).
-
-const WALLET_HASH = "wallets";
 
 export type CoinMeta = {
   lastCheckin?: string; // "YYYY-MM-DD"
@@ -286,9 +258,6 @@ const EMPTY_WALLET: WalletFile = { wallets: {}, unlocks: {}, meta: {} };
 function normEmail(email: string): string {
   return email.trim().toLowerCase();
 }
-function unlocksKey(email: string): string {
-  return `unlocks:${normEmail(email)}`;
-}
 function metaKey(email: string): string {
   return `coinmeta:${normEmail(email)}`;
 }
@@ -296,9 +265,11 @@ function metaKey(email: string): string {
 export async function getBalance(email: string): Promise<number> {
   const e = normEmail(email);
   if (!e) return 0;
-  if (useKV) {
-    const v = await kvCommand(["HGET", WALLET_HASH, e]);
-    return Number(v) || 0;
+  if (useSupabase) {
+    const rows = await sbSelect<{ balance: number }>(
+      `wallets?email=${eq(e)}&select=balance&limit=1`,
+    );
+    return rows.length ? Number(rows[0].balance) || 0 : 0;
   }
   return readLocal<WalletFile>("wallets.json", EMPTY_WALLET).wallets[e] ?? 0;
 }
@@ -308,13 +279,8 @@ export async function addCoins(email: string, delta: number): Promise<number> {
   const e = normEmail(email);
   if (!e) return 0;
   const d = Math.trunc(delta);
-  if (useKV) {
-    let n = Number(await kvCommand(["HINCRBY", WALLET_HASH, e, d]));
-    if (n < 0) {
-      await kvCommand(["HSET", WALLET_HASH, e, 0]);
-      n = 0;
-    }
-    return n;
+  if (useSupabase) {
+    return sbRpc<number>("coin_add", { p_email: e, p_delta: d });
   }
   const data = readLocal<WalletFile>("wallets.json", EMPTY_WALLET);
   const next = Math.max(0, (data.wallets[e] ?? 0) + d);
@@ -326,28 +292,18 @@ export async function addCoins(email: string, delta: number): Promise<number> {
 export async function getUnlocks(email: string): Promise<string[]> {
   const e = normEmail(email);
   if (!e) return [];
-  if (useKV) {
-    const v = await kvCommand(["SMEMBERS", unlocksKey(e)]);
-    return Array.isArray(v) ? v.map(String) : [];
+  if (useSupabase) {
+    const rows = await sbSelect<{ token: string }>(
+      `unlocks?email=${eq(e)}&select=token`,
+    );
+    return rows.map((r) => r.token);
   }
   return readLocal<WalletFile>("wallets.json", EMPTY_WALLET).unlocks[e] ?? [];
 }
 
-async function isUnlocked(email: string, token: string): Promise<boolean> {
-  const e = normEmail(email);
-  if (useKV) {
-    return Number(await kvCommand(["SISMEMBER", unlocksKey(e), token])) === 1;
-  }
-  return (
-    readLocal<WalletFile>("wallets.json", EMPTY_WALLET).unlocks[e]?.includes(
-      token,
-    ) ?? false
-  );
-}
-
 /**
  * Belanjakan koin untuk membuka 1 episode. Idempoten (kalau sudah terbuka,
- * tidak menarik koin lagi). Memotong saldo dulu lalu cek (>=0) agar atomik.
+ * tidak menarik koin lagi). Atomik lewat RPC coin_spend_unlock.
  */
 export async function spendUnlock(
   email: string,
@@ -355,19 +311,21 @@ export async function spendUnlock(
   cost: number,
 ): Promise<{ ok: boolean; balance: number; reason?: "insufficient" }> {
   const e = normEmail(email);
-  if (await isUnlocked(e, token)) {
-    return { ok: true, balance: await getBalance(e) };
+  if (useSupabase) {
+    const rows = await sbRpc<{ ok: boolean; balance: number }[]>(
+      "coin_spend_unlock",
+      { p_email: e, p_token: token, p_cost: cost },
+    );
+    const r = rows[0] ?? { ok: false, balance: 0 };
+    return r.ok
+      ? { ok: true, balance: r.balance }
+      : { ok: false, balance: r.balance, reason: "insufficient" };
   }
-  if (useKV) {
-    const after = Number(await kvCommand(["HINCRBY", WALLET_HASH, e, -cost]));
-    if (after < 0) {
-      const restored = Number(await kvCommand(["HINCRBY", WALLET_HASH, e, cost]));
-      return { ok: false, balance: Math.max(0, restored), reason: "insufficient" };
-    }
-    await kvCommand(["SADD", unlocksKey(e), token]);
-    return { ok: true, balance: after };
-  }
+  // Mode lokal.
   const data = readLocal<WalletFile>("wallets.json", EMPTY_WALLET);
+  if (data.unlocks[e]?.includes(token)) {
+    return { ok: true, balance: data.wallets[e] ?? 0 };
+  }
   const bal = data.wallets[e] ?? 0;
   if (bal < cost) return { ok: false, balance: bal, reason: "insufficient" };
   data.wallets[e] = bal - cost;
@@ -378,14 +336,14 @@ export async function spendUnlock(
 
 export async function getCoinMeta(email: string): Promise<CoinMeta> {
   const e = normEmail(email);
-  if (useKV) return (await kvGet<CoinMeta>(metaKey(e))) ?? {};
+  if (useSupabase) return (await sbDocGet<CoinMeta>(metaKey(e))) ?? {};
   return readLocal<WalletFile>("wallets.json", EMPTY_WALLET).meta[e] ?? {};
 }
 
 export async function setCoinMeta(email: string, meta: CoinMeta): Promise<void> {
   const e = normEmail(email);
-  if (useKV) {
-    await kvSet(metaKey(e), meta);
+  if (useSupabase) {
+    await sbDocSet(metaKey(e), meta);
     return;
   }
   const data = readLocal<WalletFile>("wallets.json", EMPTY_WALLET);
@@ -394,8 +352,7 @@ export async function setCoinMeta(email: string, meta: CoinMeta): Promise<void> 
 }
 
 // =====================  2FA / TOTP (admin)  ================================
-// Disimpan TERPISAH dari admins.json karena admins.json ikut ke repo publik.
-// File lokal data/twofa.json sudah masuk .gitignore; di Vercel pakai KV.
+// Dokumen app_data "twofa:<email>". (Lokal: data/twofa.json, sudah .gitignore.)
 
 export type TwoFA = {
   secret?: string; // aktif (terverifikasi)
@@ -411,14 +368,14 @@ function twofaKey(email: string): string {
 
 export async function getTwoFA(email: string): Promise<TwoFA> {
   const e = normEmail(email);
-  if (useKV) return (await kvGet<TwoFA>(twofaKey(e))) ?? {};
+  if (useSupabase) return (await sbDocGet<TwoFA>(twofaKey(e))) ?? {};
   return readLocal<TwoFAFile>("twofa.json", { twofa: {} }).twofa[e] ?? {};
 }
 
 export async function setTwoFA(email: string, data: TwoFA): Promise<void> {
   const e = normEmail(email);
-  if (useKV) {
-    await kvSet(twofaKey(e), data);
+  if (useSupabase) {
+    await sbDocSet(twofaKey(e), data);
     return;
   }
   const file = readLocal<TwoFAFile>("twofa.json", { twofa: {} });
@@ -431,8 +388,7 @@ export async function isTwoFAEnabled(email: string): Promise<boolean> {
 }
 
 // =====================  ORDER KOIN (top-up Midtrans)  ======================
-// Disimpan agar webhook bisa: (a) tahu order ini milik siapa & berapa koin,
-// (b) idempoten — koin hanya dikredit sekali walau webhook dikirim berkali-kali.
+// Dokumen app_data "order:<orderId>". Idempoten: koin dikredit sekali per order.
 
 export type CoinOrder = {
   email: string;
@@ -450,7 +406,7 @@ function orderKey(orderId: string): string {
 }
 
 export async function getOrder(orderId: string): Promise<CoinOrder | null> {
-  if (useKV) return kvGet<CoinOrder>(orderKey(orderId));
+  if (useSupabase) return sbDocGet<CoinOrder>(orderKey(orderId));
   return readLocal<OrdersFile>("orders.json", { orders: {} }).orders[orderId] ?? null;
 }
 
@@ -458,8 +414,8 @@ export async function setOrder(
   orderId: string,
   order: CoinOrder,
 ): Promise<void> {
-  if (useKV) {
-    await kvSet(orderKey(orderId), order);
+  if (useSupabase) {
+    await sbDocSet(orderKey(orderId), order);
     return;
   }
   const file = readLocal<OrdersFile>("orders.json", { orders: {} });
@@ -468,9 +424,8 @@ export async function setOrder(
 }
 
 // =====================  IKLAN SPONSOR (house ads)  =========================
-// Iklan yang dikelola sendiri oleh admin (bukan network). Ditampilkan di modal
-// "nonton iklan". Pendapatan datang dari deal langsung / affiliate yang kamu
-// pasang di linkUrl. views/clicks untuk bukti performa ke calon pengiklan.
+// Dokumen app_data "ads" (array SponsorAd). views/clicks read-modify-write
+// (jumlah iklan kecil & taruhannya rendah -> cukup).
 
 export type SponsorAd = {
   id: string;
@@ -486,13 +441,13 @@ const ADS_KEY = "ads";
 type AdsFile = { ads: SponsorAd[] };
 
 export async function getAds(): Promise<SponsorAd[]> {
-  if (useKV) return (await kvGet<SponsorAd[]>(ADS_KEY)) ?? [];
+  if (useSupabase) return (await sbDocGet<SponsorAd[]>(ADS_KEY)) ?? [];
   return readLocal<AdsFile>("ads.json", { ads: [] }).ads;
 }
 
 async function saveAds(ads: SponsorAd[]): Promise<void> {
-  if (useKV) {
-    await kvSet(ADS_KEY, ads);
+  if (useSupabase) {
+    await sbDocSet(ADS_KEY, ads);
     return;
   }
   writeLocal("ads.json", { ads });
@@ -534,4 +489,4 @@ export async function incrementAdStat(
 }
 
 /** Mode penyimpanan aktif — berguna untuk debugging/health check. */
-export const storageMode = useKV ? "kv" : "file";
+export const storageMode = useSupabase ? "supabase" : "file";

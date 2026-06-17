@@ -9,13 +9,13 @@ import Comments from "@/app/components/Comments";
 
 export const dynamic = "force-dynamic";
 
-export function generateStaticParams() {
-  return getAllDramas().map((d) => ({ id: d.id }));
+export async function generateStaticParams() {
+  return (await getAllDramas()).map((d) => ({ id: d.id }));
 }
 
 export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
   const { id } = await props.params;
-  const drama = getDrama(id);
+  const drama = await getDrama(id);
   if (!drama) notFound();
 
   const episodes = Array.from({ length: drama.episodes }, (_, i) => i + 1);

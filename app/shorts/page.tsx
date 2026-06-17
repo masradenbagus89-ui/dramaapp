@@ -4,8 +4,8 @@ import Poster from "@/app/components/Poster";
 
 export const dynamic = "force-dynamic";
 
-export default function ShortsPage() {
-  const trending = getAllDramas().slice(0, 6);
+export default async function ShortsPage() {
+  const trending = (await getAllDramas()).slice(0, 6);
 
   return (
     <div className="mx-auto max-w-5xl px-4 pb-10 pt-6 md:px-6">

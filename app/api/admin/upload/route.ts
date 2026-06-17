@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const all = getAllDramas();
+    const all = await getAllDramas();
     const cwd = process.cwd();
 
     const titleLower = title.toLowerCase();
@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
       all[existingIdx] = drama;
       action = "updated";
     }
-    writeAllDramas(all);
+    await writeAllDramas(all);
 
     return NextResponse.json({ ok: true, id, action, episode, drama });
   } catch (err) {
@@ -127,7 +127,7 @@ export async function DELETE(req: NextRequest) {
     if (!id) {
       return NextResponse.json({ error: "ID wajib diisi." }, { status: 400 });
     }
-    const all = getAllDramas();
+    const all = await getAllDramas();
     const idx = all.findIndex((d) => d.id === id);
     if (idx === -1) {
       return NextResponse.json({ error: "Drama tidak ditemukan." }, { status: 404 });
@@ -138,7 +138,7 @@ export async function DELETE(req: NextRequest) {
       await rm(join(cwd, "public", "posters", `${id}${ext}`), { force: true });
     }
     all.splice(idx, 1);
-    writeAllDramas(all);
+    await writeAllDramas(all);
     return NextResponse.json({ ok: true });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Hapus gagal";

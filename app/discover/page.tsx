@@ -4,8 +4,8 @@ import DramaBrowser from "../components/DramaBrowser";
 
 export const dynamic = "force-dynamic";
 
-export default function HomePage() {
-  const dramas = getAllDramas();
+export default async function HomePage() {
+  const dramas = await getAllDramas();
   const featured = dramas[0];
 
   return (

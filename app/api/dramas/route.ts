@@ -4,5 +4,5 @@ import { getAllDramas } from "@/lib/dramas";
 export const dynamic = "force-dynamic";
 
 export async function GET() {
-  return NextResponse.json(getAllDramas());
+  return NextResponse.json(await getAllDramas());
 }

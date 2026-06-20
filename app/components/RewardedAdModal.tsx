@@ -113,13 +113,22 @@ export default function RewardedAdModal({
             target="_blank"
             rel="noopener sponsored"
             onClick={onAdClick}
-            className="relative block aspect-video"
+            className="relative block aspect-video overflow-hidden"
           >
+            {/* Latar blur dari gambar yang sama → isi area kosong saat object-contain. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={ad.imageUrl}
+              alt=""
+              aria-hidden
+              className="absolute inset-0 h-full w-full scale-110 object-cover opacity-40 blur-xl"
+            />
+            {/* Gambar utama: tampil UTUH tanpa terpotong. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={ad.imageUrl}
               alt={ad.title ?? "Iklan"}
-              className="absolute inset-0 h-full w-full object-cover"
+              className="absolute inset-0 h-full w-full object-contain"
             />
             <span className="absolute left-2 top-2 rounded bg-black/60 px-1.5 py-0.5 text-[9px] uppercase tracking-widest text-white/80">
               Iklan

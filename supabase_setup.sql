@@ -118,7 +118,7 @@ begin
     return;
   end if;
 
-  update public.wallets set balance = balance - p_cost where email = p_email;
+  update public.wallets w set balance = w.balance - p_cost where w.email = p_email;
   insert into public.unlocks (email, token) values (p_email, p_token)
     on conflict (email, token) do nothing;
   return query select true, cur - p_cost;

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getAllDramas } from "@/lib/dramas";
 import BerandaRows from "../components/BerandaRows";
+import AdBanner from "../components/AdBanner";
 
 export const dynamic = "force-dynamic";
 
@@ -92,6 +93,11 @@ export default async function BerandaPage() {
           </div>
         </div>
       </section>
+
+      {/* SLOT IKLAN OTOMATIS — passive income; fallback ke iklan manual/promo. */}
+      <div className="px-4 pt-5 md:px-6">
+        <AdBanner />
+      </div>
 
       {/* BARIS KONTEN */}
       <div className="md:px-6">

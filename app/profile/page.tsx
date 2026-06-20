@@ -12,6 +12,7 @@ import {
   type User,
 } from "@/lib/auth";
 import CoinWallet from "@/app/components/CoinWallet";
+import AdBanner from "@/app/components/AdBanner";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -264,6 +265,9 @@ export default function ProfilePage() {
       )}
 
       <CoinWallet />
+
+      {/* Slot iklan otomatis — passive income; fallback iklan manual/promo. */}
+      <AdBanner className="mt-6" />
 
       <div className="mt-6 overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-900/50">
         {menuItems.map((item, i) => {

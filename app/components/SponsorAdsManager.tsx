@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { REWARD_PER_AD } from "@/lib/coins";
+import AdCreative from "./AdCreative";
 
 type SponsorAd = {
   id: string;
@@ -87,7 +88,7 @@ export default function SponsorAdsManager() {
           <div className="grid gap-3 md:grid-cols-2">
             <label className="block">
               <span className="text-sm text-zinc-300">URL gambar iklan *</span>
-              <span className="block text-xs text-zinc-500">Landscape 16:9 paling pas (mis. i.imgur.com/xxx.png)</span>
+              <span className="block text-xs text-zinc-500">Bentuk apa pun bisa — gambar tampil utuh di kartu dengan latar blur. Landscape (mis. 1200×300) paling rapi. Lihat pratinjau di bawah.</span>
               <input
                 value={imageUrl}
                 onChange={(e) => setImageUrl(e.target.value)}
@@ -115,6 +116,20 @@ export default function SponsorAdsManager() {
               className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white outline-none focus:border-amber-400"
             />
           </label>
+          {imageUrl.trim() && (
+            <div>
+              <p className="text-xs text-zinc-500">
+                Pratinjau banner (persis seperti di beranda):
+              </p>
+              <div className="mt-1 overflow-hidden rounded-2xl border border-zinc-800">
+                <AdCreative src={imageUrl} />
+              </div>
+              <p className="mt-1 text-[11px] text-zinc-600">
+                Tampil persis seperti ini di beranda. Gambar landscape (mis. 1200×300) jadi banner penuh; gambar tegak jadi kartu sinematik.
+              </p>
+            </div>
+          )}
+
           <div>
             <button
               type="submit"

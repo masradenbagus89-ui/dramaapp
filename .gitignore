@@ -23,3 +23,16 @@ _dubbing/
 *.mov
 *.avi
 *.webm
+
+
+# === lintasAI patterns (v1.5.8+ auto-appended by setup-pola-b.ps1) ===
+# Cegah leak: kit secrets, per-staff identity, backup folders.
+.claude-kit/.audit-log
+.claude-kit/.manifest-secret
+.claude-kit/.install-manifest.json
+.git-identity-*
+.staff-profile.md
+.claude-kit.backup-*/
+*.backup-*
+*.bak
+*.bak.*

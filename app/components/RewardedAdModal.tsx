@@ -3,18 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import { claimReward } from "@/lib/wallet";
 import { REWARD_PER_AD } from "@/lib/coins";
+import type { SponsorAd } from "@/lib/store";
 
 // Iklan berhadiah pakai IKLAN SPONSOR SENDIRI (house ad). Admin pasang gambar +
 // link di /admin; modal ini ambil acak dari /api/ads, hitung view/klik, lalu
 // kasih koin setelah hitung mundur. Pendapatan = deal langsung/affiliate di link.
 // Kalau belum ada iklan, fallback ke promo DramaKu (house default).
-
-type SponsorAd = {
-  id: string;
-  title?: string;
-  imageUrl: string;
-  linkUrl: string;
-};
 
 const AD_SECONDS = 5;
 

@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { readUser, type User } from "@/lib/auth";
 
+const MAX_COMMENT_LENGTH = 500;
+
 type Comment = {
   id: string;
   user: string;
@@ -67,8 +69,8 @@ export default function Comments({ dramaId }: { dramaId: string }) {
       return;
     }
     if (!text.trim()) return;
-    if (text.length > 500) {
-      setError("Maksimal 500 karakter.");
+    if (text.length > MAX_COMMENT_LENGTH) {
+      setError(`Maksimal ${MAX_COMMENT_LENGTH} karakter.`);
       return;
     }
 
@@ -133,14 +135,14 @@ export default function Comments({ dramaId }: { dramaId: string }) {
               <textarea
                 value={text}
                 onChange={(e) => setText(e.target.value)}
-                placeholder="Tulis komentarmu... (maks 500 karakter)"
+                placeholder={`Tulis komentarmu... (maks ${MAX_COMMENT_LENGTH} karakter)`}
                 rows={2}
-                maxLength={500}
+                maxLength={MAX_COMMENT_LENGTH}
                 className="w-full resize-y rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white outline-none focus:border-amber-400"
               />
               <div className="mt-2 flex items-center justify-between">
                 <span className="text-[11px] text-zinc-500">
-                  {text.length}/500 · sebagai <strong className="text-zinc-300">{user.name}</strong>
+                  {text.length}/{MAX_COMMENT_LENGTH} · sebagai <strong className="text-zinc-300">{user.name}</strong>
                 </span>
                 <button
                   type="submit"

@@ -1,18 +1,10 @@
 import Link from "next/link";
 import { getAllDramas } from "@/lib/dramas";
+import { parseViews } from "@/lib/format";
 import BerandaRows from "../components/BerandaRows";
 import AdBanner from "../components/AdBanner";
 
 export const dynamic = "force-dynamic";
-
-function parseViews(s: string): number {
-  const m = s.trim().match(/^([0-9.]+)\s*([kKmMbB]?)$/);
-  if (!m) return Number(s) || 0;
-  const num = parseFloat(m[1]);
-  const u = m[2].toLowerCase();
-  const mult = u === "b" ? 1e9 : u === "m" ? 1e6 : u === "k" ? 1e3 : 1;
-  return num * mult;
-}
 
 export default async function BerandaPage() {
   const dramas = await getAllDramas();

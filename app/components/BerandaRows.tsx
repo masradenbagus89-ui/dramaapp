@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { Drama } from "@/lib/types";
 import { readMyList } from "@/lib/myList";
+import { parseViews } from "@/lib/format";
 import ContentRow from "./ContentRow";
 
 // Urutan kategori yang ditampilkan sebagai baris (yang ada isinya saja).
@@ -18,15 +19,6 @@ const CATEGORY_ORDER = [
 ] as const;
 
 const PROGRESS_KEY = "dramaku:progress";
-
-function parseViews(s: string): number {
-  const m = s.trim().match(/^([0-9.]+)\s*([kKmMbB]?)$/);
-  if (!m) return Number(s) || 0;
-  const num = parseFloat(m[1]);
-  const u = m[2].toLowerCase();
-  const mult = u === "b" ? 1e9 : u === "m" ? 1e6 : u === "k" ? 1e3 : 1;
-  return num * mult;
-}
 
 // Semua baris konten Beranda. Baris personalisasi (Lanjut Nonton, Daftar Saya)
 // dibaca dari localStorage → hanya muncul setelah mount agar SSR tidak bentrok.

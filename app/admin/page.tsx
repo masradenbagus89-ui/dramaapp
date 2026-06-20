@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import type { Drama } from "@/lib/types";
 import { SUBTITLE_LANGS } from "@/lib/types";
 import { readUser, type User } from "@/lib/auth";
+import { slugify } from "@/lib/dramas";
+import { parseViews, formatViews } from "@/lib/format";
 import TwoFactorSettings from "@/app/components/TwoFactorSettings";
 import SponsorAdsManager from "@/app/components/SponsorAdsManager";
 
@@ -18,32 +20,6 @@ const CATEGORY_OPTIONS = [
   "Comedy",
   "Fantasy",
 ] as const;
-
-function parseViews(s: string): number {
-  const m = s.trim().match(/^([0-9.]+)\s*([kKmMbB]?)$/);
-  if (!m) return Number(s) || 0;
-  const num = parseFloat(m[1]);
-  const mult =
-    m[2].toLowerCase() === "m" ? 1_000_000 : m[2].toLowerCase() === "k" ? 1_000 : m[2].toLowerCase() === "b" ? 1_000_000_000 : 1;
-  return num * mult;
-}
-
-function formatViews(n: number): string {
-  if (n >= 1_000_000_000) return (n / 1_000_000_000).toFixed(1) + "B";
-  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
-  if (n >= 1_000) return (n / 1_000).toFixed(1) + "K";
-  return String(n);
-}
-
-function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 60);
-}
 
 const CATEGORY_COLORS: Record<string, string> = {
   Romance: "bg-rose-500",

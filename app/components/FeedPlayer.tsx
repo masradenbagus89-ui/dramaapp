@@ -26,6 +26,9 @@ import RewardedAdModal from "./RewardedAdModal";
 
 const FALLBACK = "/sample.mp4";
 const SPEEDS = [1, 1.25, 1.5, 2];
+const DOUBLE_TAP_MS = 280; // ambang ketuk-ganda (double tap) untuk like
+const CONTROLS_AUTO_HIDE_MS = 3500; // sembunyikan kontrol setelah diam beberapa detik
+const HEART_ANIM_MS = 700; // durasi animasi hati saat like
 
 // Resolusi: butuh file varian di PC backup dgn pola <ep>.<res>.mp4
 // (mis. 1.720p.mp4). "" = file asli <ep>.mp4. Kalau varian tak ada → balik Asli.
@@ -325,7 +328,7 @@ export default function FeedPlayer({
       setControlsVisible(true);
       return;
     }
-    const t = window.setTimeout(() => setControlsVisible(false), 3500);
+    const t = window.setTimeout(() => setControlsVisible(false), CONTROLS_AUTO_HIDE_MS);
     return () => window.clearTimeout(t);
   }, [paused, lockedActive, settingsOpen, commentsOpen, episodesOpen, adOpen, active, tick]);
 
@@ -380,7 +383,7 @@ export default function FeedPlayer({
   // play/pause. 2x tap = like (dengan animasi hati).
   const onTap = () => {
     const now = Date.now();
-    if (now - lastTap.current < 280) {
+    if (now - lastTap.current < DOUBLE_TAP_MS) {
       lastTap.current = 0;
       setLiked(dramaId, true);
       fetch("/api/likes", {
@@ -389,14 +392,14 @@ export default function FeedPlayer({
         body: JSON.stringify({ dramaId, action: "like" }),
       }).catch(() => {});
       setHeart(true);
-      window.setTimeout(() => setHeart(false), 700);
+      window.setTimeout(() => setHeart(false), HEART_ANIM_MS);
     } else {
       lastTap.current = now;
       const wasHidden = !controlsVisible;
       revealControls();
       window.setTimeout(() => {
         if (lastTap.current === now && !wasHidden) togglePlay();
-      }, 280);
+      }, DOUBLE_TAP_MS);
     }
   };
 

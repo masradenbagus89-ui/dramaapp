@@ -6,8 +6,7 @@ import { useRouter } from "next/navigation";
 import type { Drama } from "@/lib/types";
 import { SUBTITLE_LANGS } from "@/lib/types";
 import { readUser, type User } from "@/lib/auth";
-import { slugify } from "@/lib/dramas";
-import { parseViews, formatViews } from "@/lib/format";
+import { parseViews, formatViews, slugify } from "@/lib/format";
 import TwoFactorSettings from "@/app/components/TwoFactorSettings";
 import SponsorAdsManager from "@/app/components/SponsorAdsManager";
 

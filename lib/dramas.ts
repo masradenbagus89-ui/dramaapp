@@ -9,6 +9,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import type { Drama } from "./types";
 import { useSupabase, sbSelect, sbUpsert, sbDelete, eq } from "./supabase";
+import { slugify } from "./format";
 
 const DATA_FILE = join(process.cwd(), "data", "dramas.json");
 
@@ -205,15 +206,7 @@ export async function removeDrama(id: string): Promise<boolean> {
 }
 
 // =====================  HELPER (sinkron, murni)  ===========================
-export function slugify(text: string): string {
-  return text
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .slice(0, 60);
-}
+export { slugify };
 
 export function generateUniqueId(title: string, existing: Drama[]): string {
   const base = slugify(title) || "drama";

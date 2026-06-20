@@ -42,16 +42,3 @@ export function subtitleUrl(dramaId: string, ep: number, code: string): string {
   const qs = new URLSearchParams({ id: dramaId, ep: String(ep), lang: code });
   return `/api/subtitle?${qs.toString()}`;
 }
-
-/**
- * Set track mana yang tampil pada sebuah elemen <video>.
- * Cocokkan berdasarkan language (srcLang). "off" → semua dimatikan.
- */
-export function applySubtitle(video: HTMLVideoElement | null, code: string): void {
-  if (!video) return;
-  const tracks = video.textTracks;
-  for (let i = 0; i < tracks.length; i++) {
-    const t = tracks[i];
-    t.mode = code !== OFF && t.language === code ? "showing" : "hidden";
-  }
-}

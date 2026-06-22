@@ -7,6 +7,7 @@ import type { Drama } from "@/lib/types";
 import { SUBTITLE_LANGS } from "@/lib/types";
 import { readUser, type User } from "@/lib/auth";
 import { slugify } from "@/lib/format";
+import { scanDrama, hardlinkDrama, type ScanResult } from "@/lib/admin-api";
 import { CATEGORY_OPTIONS } from "./constants";
 import TwoFactorSettings from "@/app/components/TwoFactorSettings";
 import SponsorAdsManager from "@/app/components/SponsorAdsManager";
@@ -14,14 +15,6 @@ import AdminManager from "@/app/components/admin/AdminManager";
 import AdminDashboard from "@/app/components/admin/AdminDashboard";
 import AdminSidebar from "@/app/components/admin/AdminSidebar";
 import DramaList from "@/app/components/admin/DramaList";
-
-type ScanResult = {
-  count: number;
-  min: number;
-  max: number;
-  missing: number[];
-  folderUrl: string;
-};
 
 export default function AdminPage() {
   const router = useRouter();
@@ -74,59 +67,6 @@ export default function AdminPage() {
 
   useEffect(refreshList, []);
 
-  const doScanOnly = async (
-    id: string,
-  ): Promise<
-    { ok: true; result: ScanResult } | { ok: false; status: number; error: string }
-  > => {
-    if (!authUser) return { ok: false, status: 0, error: "Not logged in" };
-    const res = await fetch(`/api/admin/scan?id=${encodeURIComponent(id)}`, {
-      headers: { "x-admin-email": authUser.email },
-    });
-    const data = await res.json();
-    if (!res.ok || !data.ok) {
-      return {
-        ok: false,
-        status: res.status,
-        error: data.error ?? `HTTP ${res.status}`,
-      };
-    }
-    return {
-      ok: true,
-      result: {
-        count: data.count,
-        min: data.min,
-        max: data.max,
-        missing: data.missing ?? [],
-        folderUrl: data.folderUrl,
-      },
-    };
-  };
-
-  const doHardlink = async (
-    id: string,
-  ): Promise<{ ok: boolean; message?: string; error?: string }> => {
-    if (!authUser) return { ok: false, error: "Not logged in" };
-    const res = await fetch(`/api/admin/hardlink`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-admin-email": authUser.email,
-      },
-      body: JSON.stringify({ dramaId: id }),
-    });
-    const data = await res.json();
-    if (!res.ok || !data.ok) {
-      return {
-        ok: false,
-        error:
-          data.error ??
-          `Hardlink gagal (HTTP ${res.status}). Pastikan agent jalan di PC backup.`,
-      };
-    }
-    return { ok: true, message: data.message };
-  };
-
   const onScan = async () => {
     setMessage(null);
     setScanResult(null);
@@ -141,7 +81,7 @@ export default function AdminPage() {
     setScanning(true);
     try {
       // Step 1: scan first
-      const scanRes = await doScanOnly(effectiveId);
+      const scanRes = await scanDrama(effectiveId, authUser.email);
       if (scanRes.ok) {
         setScanResult(scanRes.result);
         setEpisodes(scanRes.result.max);
@@ -154,7 +94,7 @@ export default function AdminPage() {
           type: "ok",
           text: `Folder belum siap (file masih raw atau folder kosong). Mencoba auto-hardlink di PC backup...`,
         });
-        const hlRes = await doHardlink(effectiveId);
+        const hlRes = await hardlinkDrama(effectiveId, authUser.email);
         if (!hlRes.ok) {
           setMessage({
             type: "error",
@@ -163,7 +103,7 @@ export default function AdminPage() {
           return;
         }
         // Re-scan after hardlink
-        const scan2 = await doScanOnly(effectiveId);
+        const scan2 = await scanDrama(effectiveId, authUser.email);
         if (!scan2.ok) {
           setMessage({
             type: "error",

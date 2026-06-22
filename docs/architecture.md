@@ -1,5 +1,5 @@
 # docs/architecture.md - Peta Proyek `dramaapp`
-> Versi 2 · `2026-06-20`
+> Versi 3 · `2026-06-22`
 
 ## Pengantar
 File ini adalah **peta proyek 1-halaman**. Dibaca sekali di awal sesi (oleh AI atau dev baru) untuk paham struktur tanpa harus jelajah repo. Update **tiap kali** ada perubahan signifikan: tambah modul, ganti stack, ubah ENV, atau ubah konvensi. Bukan dokumentasi mendalam - detail teknis tetap di file `.md` masing-masing fitur di folder `docs/`.
@@ -33,13 +33,15 @@ dramaapp/
 ├── lib/                 // logika inti (auth, koin, dompet, data, pembayaran)
 ├── docs/                // dokumentasi (peta ini + catatan per-fitur)
 ├── scripts/             // skrip QA + perbaikan (Python/SQL)
+├── tests/               // tes otomatis (Vitest) untuk fungsi murni di lib/
 ├── public/              // aset statis (favicon, ikon, ads.txt)
 ├── .github/             // workflow robot tim (review, backup, secret-guard)
 ├── .claude-kit/         // kit aturan tim lintasAI (read-only)
 ├── *.sql                // skema & migrasi DB (supabase_setup.sql, migrasi-*.sql)
+├── vitest.config.ts     // pengaturan alat tes
 └── package.json
 ```
-> Catatan: TIDAK ada folder `prisma/` (skema DB berupa file `.sql` mentah) maupun `tests/` (belum ada tes otomatis — lihat audit).
+> Catatan: TIDAK ada folder `prisma/` (skema DB berupa file `.sql` mentah). Folder `tests/` ditambahkan 2026-06-22 (Vitest) — masih awal, baru mencakup helper murni di `lib/` (belum mencakup komponen UI / endpoint API).
 
 ---
 
@@ -94,7 +96,9 @@ dramaapp/
 - `npm run dev` - server dev (hot reload) di port 3000
 - `npm run build` - build production
 - `npm run start` - jalankan hasil build
-- ⚠️ **Belum ada** `npm run test` maupun `npm run lint` (tidak ada framework tes/lint di `package.json`) — lihat `docs/decisions/2026-06-20-audit-findings.md`.
+- `npm test` - jalankan seluruh tes otomatis sekali (Vitest, mode `run`)
+- `npm run test:watch` - tes mode "tongkrongin" (jalan ulang otomatis saat kode berubah)
+- ⚠️ **Belum ada** `npm run lint` (tidak ada framework lint di `package.json`) — lihat `docs/decisions/2026-06-20-audit-findings.md`.
 - **SQL**: jalankan `supabase_setup.sql` / `migrasi-schema.sql` / `migrasi-full.sql` di Supabase SQL editor. Perbaikan RPC produksi: `scripts/fix_coin_spend_unlock_prod.sql`.
 
 ---
@@ -151,8 +155,10 @@ Vercel auto-deploy versi sebelumnya 2-5 menit.
 ---
 
 ## Testing & Quality Gates
-- **Framework test**: **BELUM ADA** (tidak ada `test` di `package.json`) — temuan audit GENTING.
-- **Coverage minimum**: 0% (belum ada tes). Prioritas pasang tes untuk `lib/auth.ts`, `session.ts`, `totp.ts`, `wallet.ts`, `coins.ts`.
+- **Framework test**: **Vitest** (+ jsdom), dipasang 2026-06-22. Jalankan: `npm test`. Tes ada di folder `tests/`.
+- **Cakupan saat ini**: fungsi murni di `lib/` — `format.ts` (parseViews/formatViews/slugify), `dramas.ts` (generateUniqueId), `types.ts` (subtitleLabel), `subtitles.ts` (URL + preferensi bahasa). Total **27 tes**, semuanya tes "pengunci perilaku" (characterization test).
+- **Belum tercakup (prioritas berikutnya)**: `lib/auth.ts`, `session.ts`, `totp.ts`, `wallet.ts`, `coins.ts` (logika sensitif), serta komponen UI besar (`FeedPlayer.tsx`, `admin/page.tsx`) yang akan ditulis tesnya saat dipecah (refactor 🟡).
+- **Gerbang verifikasi pra-rilis**: `npm test` (tes) + `npm run build` (cek-rakit). Keduanya HIJAU per 2026-06-22.
 - **Lint / format**: belum ada ESLint/Prettier aktif.
 - **Pre-push check**: belum ada.
 
@@ -189,3 +195,4 @@ File lain di folder `docs/` yang melengkapi INDEX ini:
 |---|---|---|---|
 | 1 | `2026-06-20` | `setup` | Inisialisasi architecture.md (template) |
 | 2 | `2026-06-20` | `lintasAI` | Isi peta dari struktur nyata (semua `[TBD]` diganti) saat setup lintasAI |
+| 3 | `2026-06-22` | `lintasAI` | Pondasi tes: pasang Vitest + folder `tests/` (27 tes helper murni `lib/`); perbarui bagian Testing, Skrip, Struktur Folder |

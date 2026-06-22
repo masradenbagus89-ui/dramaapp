@@ -30,3 +30,11 @@ export function slugify(text: string): string {
     .replace(/^-+|-+$/g, "")
     .slice(0, 60);
 }
+
+/** Ubah detik jadi waktu tampilan "m:ss" (mis. 83 -> "1:23"). Negatif/NaN -> "0:00". */
+export function fmtTime(s: number): string {
+  if (!Number.isFinite(s) || s < 0) return "0:00";
+  const m = Math.floor(s / 60);
+  const sec = Math.floor(s % 60);
+  return `${m}:${String(sec).padStart(2, "0")}`;
+}

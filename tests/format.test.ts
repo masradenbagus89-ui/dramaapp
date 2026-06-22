@@ -3,7 +3,7 @@
 // supaya kalau nanti kode dipecah/dirapikan dan perilakunya berubah tanpa
 // sengaja, tes ini langsung gagal (jadi rem darurat otomatis).
 import { describe, it, expect } from "vitest";
-import { parseViews, formatViews, slugify } from "../lib/format";
+import { parseViews, formatViews, slugify, fmtTime } from "../lib/format";
 
 describe("parseViews — ubah teks views jadi angka", () => {
   it("membaca satuan K/M/B (huruf besar)", () => {
@@ -74,5 +74,29 @@ describe("slugify — judul jadi potongan URL aman", () => {
   it("dipotong maksimal 60 karakter", () => {
     const panjang = "a".repeat(100);
     expect(slugify(panjang).length).toBeLessThanOrEqual(60);
+  });
+});
+
+describe("fmtTime — detik jadi waktu tampilan m:ss", () => {
+  it("memformat menit:detik dengan detik 2 digit", () => {
+    expect(fmtTime(83)).toBe("1:23");
+    expect(fmtTime(5)).toBe("0:05");
+    expect(fmtTime(60)).toBe("1:00");
+    expect(fmtTime(125)).toBe("2:05");
+  });
+
+  it("membuang pecahan detik (dibulatkan ke bawah)", () => {
+    expect(fmtTime(9.9)).toBe("0:09");
+  });
+
+  it("tidak menggulung ke jam (menit boleh lebih dari 60)", () => {
+    expect(fmtTime(3661)).toBe("61:01");
+  });
+
+  it("nilai tak wajar (negatif/NaN/tak hingga) jadi 0:00", () => {
+    expect(fmtTime(0)).toBe("0:00");
+    expect(fmtTime(-3)).toBe("0:00");
+    expect(fmtTime(NaN)).toBe("0:00");
+    expect(fmtTime(Infinity)).toBe("0:00");
   });
 });

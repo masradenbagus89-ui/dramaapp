@@ -15,6 +15,7 @@ import {
   writeSubtitlePref,
 } from "@/lib/subtitles";
 import { readUser } from "@/lib/auth";
+import { fmtTime } from "@/lib/format";
 import { fetchWallet, unlockEpisode } from "@/lib/wallet";
 import {
   COIN_PER_EPISODE,
@@ -38,13 +39,6 @@ const RESOLUTIONS: { code: string; label: string }[] = [
   { code: "480p", label: "480p" },
   { code: "360p", label: "360p" },
 ];
-
-function fmtTime(s: number): string {
-  if (!Number.isFinite(s) || s < 0) return "0:00";
-  const m = Math.floor(s / 60);
-  const sec = Math.floor(s % 60);
-  return `${m}:${String(sec).padStart(2, "0")}`;
-}
 
 // Feed vertikal ala Melolo: tiap episode = 1 slide full-screen, geser ke atas =
 // episode berikutnya, autoplay saat slide terlihat, video habis = auto lanjut.

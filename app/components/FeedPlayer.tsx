@@ -16,6 +16,7 @@ import {
 } from "@/lib/subtitles";
 import { readUser } from "@/lib/auth";
 import { fmtTime } from "@/lib/format";
+import { videoSrc } from "@/lib/video";
 import { fetchWallet, unlockEpisode } from "@/lib/wallet";
 import {
   COIN_PER_EPISODE,
@@ -97,10 +98,7 @@ export default function FeedPlayer({
   const videoRefs = useRef<Record<number, HTMLVideoElement | null>>({});
   const lastTap = useRef(0);
 
-  const srcFor = (ep: number) => {
-    const dir = baseUrl ? `${baseUrl}/${dramaId}` : `/videos/${dramaId}`;
-    return resolution ? `${dir}/${ep}.${resolution}.mp4` : `${dir}/${ep}.mp4`;
-  };
+  const srcFor = (ep: number) => videoSrc(baseUrl, dramaId, ep, resolution);
 
   // Episode terkunci? Ep awal gratis; admin bebas; sisanya butuh sudah-dibuka.
   const isLocked = useCallback(

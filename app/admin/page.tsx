@@ -7,11 +7,13 @@ import type { Drama } from "@/lib/types";
 import { SUBTITLE_LANGS } from "@/lib/types";
 import { readUser, type User } from "@/lib/auth";
 import { slugify } from "@/lib/format";
-import { CATEGORY_OPTIONS, CATEGORY_COLORS } from "./constants";
+import { CATEGORY_OPTIONS } from "./constants";
 import TwoFactorSettings from "@/app/components/TwoFactorSettings";
 import SponsorAdsManager from "@/app/components/SponsorAdsManager";
 import AdminManager from "@/app/components/admin/AdminManager";
 import AdminDashboard from "@/app/components/admin/AdminDashboard";
+import AdminSidebar from "@/app/components/admin/AdminSidebar";
+import DramaList from "@/app/components/admin/DramaList";
 
 type ScanResult = {
   count: number;
@@ -332,42 +334,7 @@ export default function AdminPage() {
 
   return (
     <div className="mx-auto max-w-7xl gap-6 px-4 pb-10 pt-6 md:grid md:grid-cols-[220px_1fr] md:px-6">
-      <aside className="hidden self-start rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4 md:sticky md:top-20 md:block">
-        <div className="mb-4 px-2">
-          <p className="text-xs uppercase tracking-wider text-zinc-500">Admin Panel</p>
-          <p className="mt-1 text-base font-bold text-white">DramaKu</p>
-        </div>
-        <nav className="flex flex-col gap-1 text-sm">
-          {[
-            { href: "#dashboard", label: "Dashboard", icon: "M3 12l9-9 9 9M5 10v10h14V10" },
-            { href: "#tambah", label: "Tambah Drama", icon: "M12 4v16m-8-8h16" },
-            { href: "#daftar", label: "Daftar Drama", icon: "M4 6h16M4 12h16M4 18h16" },
-            { href: "#kelola-admin", label: "Kelola Admin", icon: "M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" },
-            { href: "#keamanan", label: "Keamanan (2FA)", icon: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" },
-            { href: "#iklan", label: "Iklan Sponsor", icon: "M3 11l18-5v12L3 14v-3zM11.6 16.8a3 3 0 11-5.8-1.6" },
-            { href: "/", label: "← Kembali ke web", icon: "M10 19l-7-7m0 0l7-7m-7 7h18" },
-          ].map((item) => (
-            <a
-              key={item.href}
-              href={item.href}
-              className="flex items-center gap-2 rounded-lg px-3 py-2 text-zinc-300 hover:bg-zinc-800 hover:text-white"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                className="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d={item.icon} />
-              </svg>
-              {item.label}
-            </a>
-          ))}
-        </nav>
-      </aside>
+      <AdminSidebar />
 
       <div className="space-y-6">
         <AdminDashboard dramas={dramas} />
@@ -607,56 +574,11 @@ export default function AdminPage() {
           </form>
         </section>
 
-        <section id="daftar">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-lg font-bold text-white">Daftar Drama</h2>
-            <span className="text-xs text-zinc-500">{dramas.length} total</span>
-          </div>
-          <div className="overflow-hidden rounded-2xl border border-zinc-800">
-            <div className="divide-y divide-zinc-800">
-              {dramas.map((d) => (
-                <div key={d.id} className="flex items-center gap-3 bg-zinc-900/40 p-3 hover:bg-zinc-900/70">
-                  <div className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-md bg-gradient-to-br ${d.gradient}`}>
-                    {d.posterImage && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={d.posterImage} alt="" className="absolute inset-0 h-full w-full object-cover" />
-                    )}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-semibold text-white">{d.title}</div>
-                    <div className="text-xs text-zinc-500">
-                      <span className={`mr-2 inline-block h-2 w-2 rounded-full align-middle ${CATEGORY_COLORS[d.category] ?? "bg-zinc-500"}`} />
-                      {d.category} · {d.episodes} eps · {d.views}
-                    </div>
-                  </div>
-                  <Link
-                    href={`/drama/${d.id}`}
-                    className="hidden rounded-md border border-zinc-700 px-3 py-1 text-xs text-zinc-300 hover:border-amber-400 hover:text-amber-400 sm:inline-block"
-                  >
-                    Lihat
-                  </Link>
-                  <button
-                    onClick={() => loadDramaToForm(d)}
-                    className="rounded-md border border-amber-700 px-3 py-1 text-xs text-amber-300 hover:border-amber-400 hover:bg-amber-950/40 hover:text-amber-200"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => onDelete(d.id, d.title)}
-                    className="rounded-md border border-red-900 px-3 py-1 text-xs text-red-400 hover:border-red-500 hover:bg-red-950 hover:text-red-300"
-                  >
-                    Hapus
-                  </button>
-                </div>
-              ))}
-              {dramas.length === 0 && (
-                <div className="p-6 text-center text-sm text-zinc-500">
-                  Belum ada drama. Tambahkan dari form di atas.
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
+        <DramaList
+          dramas={dramas}
+          onEdit={loadDramaToForm}
+          onDelete={onDelete}
+        />
 
         <AdminManager currentAdminEmail={authUser.email} />
 

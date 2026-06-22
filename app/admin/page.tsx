@@ -6,9 +6,11 @@ import { useRouter } from "next/navigation";
 import type { Drama } from "@/lib/types";
 import { SUBTITLE_LANGS } from "@/lib/types";
 import { readUser, type User } from "@/lib/auth";
-import { parseViews, formatViews, slugify } from "@/lib/format";
+import { formatViews, slugify } from "@/lib/format";
+import { computeAdminStats } from "@/lib/admin-stats";
 import TwoFactorSettings from "@/app/components/TwoFactorSettings";
 import SponsorAdsManager from "@/app/components/SponsorAdsManager";
+import StatCard from "@/app/components/admin/StatCard";
 
 const CATEGORY_OPTIONS = [
   "Romance",
@@ -166,15 +168,7 @@ export default function AdminPage() {
     }
   };
 
-  const stats = useMemo(() => {
-    const totalEpisode = dramas.reduce((a, d) => a + d.episodes, 0);
-    const totalViews = dramas.reduce((a, d) => a + parseViews(d.views), 0);
-    const withPoster = dramas.filter((d) => d.posterImage).length;
-    const counts = new Map<string, number>();
-    for (const d of dramas) counts.set(d.category, (counts.get(d.category) ?? 0) + 1);
-    const byCategory = [...counts.entries()].sort((a, b) => b[1] - a[1]);
-    return { totalEpisode, totalViews, withPoster, byCategory };
-  }, [dramas]);
+  const stats = useMemo(() => computeAdminStats(dramas), [dramas]);
 
   const doScanOnly = async (
     id: string,
@@ -930,30 +924,6 @@ export default function AdminPage() {
 
         <SponsorAdsManager />
       </div>
-    </div>
-  );
-}
-
-function StatCard({
-  label,
-  value,
-  accent,
-  icon,
-}: {
-  label: string;
-  value: string;
-  accent: string;
-  icon: string;
-}) {
-  return (
-    <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4">
-      <div className={`mb-3 inline-flex h-9 w-9 items-center justify-center rounded-lg ${accent}`}>
-        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d={icon} />
-        </svg>
-      </div>
-      <p className="text-xs uppercase tracking-wider text-zinc-500">{label}</p>
-      <p className="mt-1 text-2xl font-bold text-white">{value}</p>
     </div>
   );
 }

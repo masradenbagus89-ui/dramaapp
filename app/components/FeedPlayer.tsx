@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import ActionRail from "./ActionRail";
-import Comments from "./Comments";
 import EpisodeSheet from "./EpisodeSheet";
 import { setProgress } from "@/lib/progress";
 import { setLiked } from "@/lib/myLikes";
@@ -21,6 +20,7 @@ import { fetchWallet, unlockEpisode } from "@/lib/wallet";
 import { FREE_EPISODES, PAYWALL_ENABLED } from "@/lib/coins";
 import RewardedAdModal from "./RewardedAdModal";
 import EpisodePaywall from "./player/EpisodePaywall";
+import CommentsDrawer from "./player/CommentsDrawer";
 
 const FALLBACK = "/sample.mp4";
 const SPEEDS = [1, 1.25, 1.5, 2];
@@ -749,30 +749,11 @@ export default function FeedPlayer({
       />
 
       {/* Drawer komentar — buka di dalam feed tanpa meninggalkan video */}
-      {commentsOpen && (
-        <div className="absolute inset-0 z-50 flex flex-col justify-end">
-          <button
-            className="absolute inset-0 bg-black/50"
-            aria-label="Tutup komentar"
-            onClick={() => setCommentsOpen(false)}
-          />
-          <div className="relative max-h-[78vh] overflow-y-auto rounded-t-2xl border-t border-zinc-800 bg-zinc-950 px-4 pb-8 pt-3 text-left">
-            <div className="sticky top-0 z-10 -mx-4 flex items-center justify-between bg-zinc-950/95 px-4 pb-2 backdrop-blur">
-              <span className="mx-auto h-1 w-10 rounded-full bg-zinc-700" />
-              <button
-                onClick={() => setCommentsOpen(false)}
-                aria-label="Tutup"
-                className="absolute right-3 top-0 rounded-full p-1 text-zinc-400 hover:text-white"
-              >
-                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                  <path d="M6 6l12 12M18 6L6 18" />
-                </svg>
-              </button>
-            </div>
-            <Comments dramaId={dramaId} />
-          </div>
-        </div>
-      )}
+      <CommentsDrawer
+        open={commentsOpen}
+        dramaId={dramaId}
+        onClose={() => setCommentsOpen(false)}
+      />
 
       {heart && (
         <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center">

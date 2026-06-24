@@ -14,14 +14,13 @@ import {
   writeSubtitlePref,
 } from "@/lib/subtitles";
 import { readUser } from "@/lib/auth";
-import { fmtTime } from "@/lib/format";
 import { videoSrc } from "@/lib/video";
 import { fetchWallet, unlockEpisode } from "@/lib/wallet";
 import { isEpisodeLocked } from "@/lib/coins";
 import RewardedAdModal from "./RewardedAdModal";
 import EpisodePaywall from "./player/EpisodePaywall";
 import CommentsDrawer from "./player/CommentsDrawer";
-import PlayerSettings from "./player/PlayerSettings";
+import PlayerControls from "./player/PlayerControls";
 
 const FALLBACK = "/sample.mp4";
 const DOUBLE_TAP_MS = 280; // ambang ketuk-ganda (double tap) untuk like
@@ -482,130 +481,39 @@ export default function FeedPlayer({
         onComment={() => setCommentsOpen(true)}
       />
 
-      {/* Panel bawah: judul, episode, subtitle, kontrol disusun dalam SATU
-          kolom flex sehingga tidak pernah saling menumpuk (rapi seperti app
-          sejenis). Dulu masing-masing absolute dgn bottom tebak-tebakan →
-          subtitle jatuh ke area control bar & judul panjang membludak. */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30 flex flex-col bg-gradient-to-t from-black/85 via-black/35 to-transparent pb-7 pt-10">
-        {/* Judul + episode — kecil & rapi ala PineDrama: rata kiri, maks 2 baris,
-            beri ruang utk rail ikon di kanan. Sengaja kecil (13px) supaya tidak
-            membludak di HP layar kecil & video tetap jadi fokus. */}
-        <div className="px-3 pr-20">
-          <h1 className="line-clamp-2 text-[13px] font-semibold leading-tight text-white/95 drop-shadow-md">
-            {title}
-          </h1>
-          <button
-            onClick={() => setEpisodesOpen(true)}
-            className="pointer-events-auto mt-1 flex items-center gap-1 text-[11px] font-medium text-white/70 active:text-white"
-          >
-            <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="3" width="7" height="7" rx="1" />
-              <rect x="14" y="3" width="7" height="7" rx="1" />
-              <rect x="3" y="14" width="7" height="7" rx="1" />
-              <rect x="14" y="14" width="7" height="7" rx="1" />
-            </svg>
-            Eps {active + 1} / {episodes}
-            <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 6l6 6-6 6" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Subtitle — baris tersendiri di tengah, tak menumpuk judul/kontrol */}
-        {cueText && (
-          <div className="mt-2 flex justify-center px-3 pr-20">
-            <span className="whitespace-pre-line rounded bg-black/60 px-2 py-0.5 text-center text-[13px] font-medium leading-snug text-white sm:text-sm">
-              {cueText}
-            </span>
-          </div>
-        )}
-
-        {/* Control bar video — seek bar + tombol kontrol. Auto-sembunyi saat
-            nonton biar video jadi fokus; sentuh layar utk memunculkan lagi. */}
-        {!lockedActive && (
-          <div
-            className={`mt-3 px-3 transition-opacity duration-300 ${
-              controlsVisible ? "opacity-100" : "pointer-events-none opacity-0"
-            }`}
-          >
-          {/* Seek bar — bisa DIGESER (touch & mouse) utk maju/mundur di HP */}
-          <div
-            ref={seekRef}
-            onPointerDown={onSeekDown}
-            onPointerMove={onSeekMove}
-            onPointerUp={onSeekUp}
-            onPointerCancel={onSeekUp}
-            role="slider"
-            aria-label="Posisi video"
-            aria-valuenow={Math.round(curTime)}
-            className="pointer-events-auto mb-3 flex h-6 cursor-pointer touch-none select-none items-center"
-          >
-            <div className="relative h-1.5 w-full rounded-full bg-white/25">
-              <div
-                className="absolute inset-y-0 left-0 rounded-full bg-amber-400"
-                style={{ width: dur ? `${(curTime / dur) * 100}%` : "0%" }}
-              />
-              <div
-                className="absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-400 shadow"
-                style={{ left: dur ? `${(curTime / dur) * 100}%` : "0%" }}
-              />
-            </div>
-          </div>
-
-          <div className="pointer-events-auto flex items-center gap-3">
-            <button
-              onClick={togglePlay}
-              aria-label={paused ? "Putar" : "Jeda"}
-              className="text-white transition-transform active:scale-90"
-            >
-              {paused ? (
-                <svg viewBox="0 0 24 24" className="h-7 w-7 fill-white">
-                  <path d="M8 5v14l11-7z" />
-                </svg>
-              ) : (
-                <svg viewBox="0 0 24 24" className="h-7 w-7 fill-white">
-                  <path d="M6 5h4v14H6zM14 5h4v14h-4z" />
-                </svg>
-              )}
-            </button>
-            <span className="text-xs tabular-nums text-white/80">
-              {fmtTime(curTime)} / {fmtTime(dur)}
-            </span>
-
-            <button
-              onClick={() => setEpisodesOpen(true)}
-              aria-label="Daftar episode"
-              className="flex h-8 items-center gap-1 rounded-full bg-white/15 px-2.5 text-xs font-bold text-white hover:bg-white/25"
-            >
-              <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="7" height="7" rx="1" />
-                <rect x="14" y="3" width="7" height="7" rx="1" />
-                <rect x="3" y="14" width="7" height="7" rx="1" />
-                <rect x="14" y="14" width="7" height="7" rx="1" />
-              </svg>
-              Episode
-            </button>
-
-            {/* Pengaturan — gabung resolusi, kecepatan, subtitle, unduh,
-                layar penuh ke SATU tombol biar layar tidak penuh tombol. */}
-            <PlayerSettings
-              open={settingsOpen}
-              speed={speed}
-              resolution={resolution}
-              subtitles={subtitles}
-              subLang={subLang}
-              isFullscreen={isFullscreen}
-              onToggle={() => setSettingsOpen((v) => !v)}
-              onSpeed={setSpeedTo}
-              onResolution={chooseRes}
-              onSubtitle={chooseSub}
-              onDownload={onDownload}
-              onToggleFullscreen={toggleFullscreen}
-            />
-          </div>
-          </div>
-        )}
-      </div>
+      {/* Panel bawah: judul, episode, subtitle, kontrol — komponen sendiri
+          (PlayerControls). Semua data + aksi disuplai dari sini lewat prop. */}
+      <PlayerControls
+        title={title}
+        currentEp={active + 1}
+        episodes={episodes}
+        cueText={cueText}
+        lockedActive={lockedActive}
+        controlsVisible={controlsVisible}
+        paused={paused}
+        curTime={curTime}
+        dur={dur}
+        seekBarRef={seekRef}
+        onSeekDown={onSeekDown}
+        onSeekMove={onSeekMove}
+        onSeekUp={onSeekUp}
+        onTogglePlay={togglePlay}
+        onOpenEpisodes={() => setEpisodesOpen(true)}
+        settings={{
+          open: settingsOpen,
+          speed,
+          resolution,
+          subtitles,
+          subLang,
+          isFullscreen,
+          onToggle: () => setSettingsOpen((v) => !v),
+          onSpeed: setSpeedTo,
+          onResolution: chooseRes,
+          onSubtitle: chooseSub,
+          onDownload,
+          onToggleFullscreen: toggleFullscreen,
+        }}
+      />
 
       {paused && !lockedActive && (
         <button

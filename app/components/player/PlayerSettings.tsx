@@ -20,6 +20,21 @@ const RESOLUTIONS: { code: string; label: string }[] = [
 // Dipecah dari FeedPlayer (rapikan kode). Data (status, pilihan aktif) + aksi
 // (ganti kecepatan/resolusi/subtitle, unduh, layar penuh) disuplai induk lewat
 // prop; konstanta opsi diimpor sendiri. Tampilan & perilaku sama persis.
+export type PlayerSettingsProps = {
+  open: boolean;
+  speed: number;
+  resolution: string;
+  subtitles: string[];
+  subLang: string;
+  isFullscreen: boolean;
+  onToggle: () => void;
+  onSpeed: (s: number) => void;
+  onResolution: (code: string) => void;
+  onSubtitle: (code: string) => void;
+  onDownload: () => void;
+  onToggleFullscreen: () => void;
+};
+
 export default function PlayerSettings({
   open,
   speed,
@@ -33,20 +48,7 @@ export default function PlayerSettings({
   onSubtitle,
   onDownload,
   onToggleFullscreen,
-}: {
-  open: boolean;
-  speed: number;
-  resolution: string;
-  subtitles: string[];
-  subLang: string;
-  isFullscreen: boolean;
-  onToggle: () => void;
-  onSpeed: (s: number) => void;
-  onResolution: (code: string) => void;
-  onSubtitle: (code: string) => void;
-  onDownload: () => void;
-  onToggleFullscreen: () => void;
-}) {
+}: PlayerSettingsProps) {
   return (
     <div className="relative ml-auto">
       <button

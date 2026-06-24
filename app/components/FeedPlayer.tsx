@@ -17,7 +17,7 @@ import { readUser } from "@/lib/auth";
 import { fmtTime } from "@/lib/format";
 import { videoSrc } from "@/lib/video";
 import { fetchWallet, unlockEpisode } from "@/lib/wallet";
-import { FREE_EPISODES, PAYWALL_ENABLED } from "@/lib/coins";
+import { isEpisodeLocked } from "@/lib/coins";
 import RewardedAdModal from "./RewardedAdModal";
 import EpisodePaywall from "./player/EpisodePaywall";
 import CommentsDrawer from "./player/CommentsDrawer";
@@ -89,12 +89,7 @@ export default function FeedPlayer({
 
   // Episode terkunci? Ep awal gratis; admin bebas; sisanya butuh sudah-dibuka.
   const isLocked = useCallback(
-    (ep: number) =>
-      PAYWALL_ENABLED &&
-      premium &&
-      !isAdmin &&
-      ep > FREE_EPISODES &&
-      !unlocked.has(ep),
+    (ep: number) => isEpisodeLocked(ep, { premium, isAdmin, unlocked }),
     [premium, isAdmin, unlocked],
   );
   const lockedActive = isLocked(active + 1);

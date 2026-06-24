@@ -51,6 +51,33 @@ export function isFreeEpisode(ep: number): boolean {
   return ep <= FREE_EPISODES;
 }
 
+/**
+ * Apakah episode `ep` TERKUNCI (perlu dibuka/bayar) untuk user ini?
+ * Aturan sama persis dengan gerbang paywall di FeedPlayer:
+ *   - paywall global menyala (PAYWALL_ENABLED), DAN
+ *   - drama ini ditandai `premium`, DAN
+ *   - user BUKAN admin (admin bebas), DAN
+ *   - episode di luar jatah gratis (ep > FREE_EPISODES), DAN
+ *   - episode itu belum dibuka.
+ * Fungsi MURNI (tanpa react/node) → bisa dites & dipakai ulang di client/server.
+ */
+export function isEpisodeLocked(
+  ep: number,
+  opts: {
+    premium: boolean;
+    isAdmin: boolean;
+    unlocked: ReadonlySet<number>;
+  },
+): boolean {
+  return (
+    PAYWALL_ENABLED &&
+    opts.premium &&
+    !opts.isAdmin &&
+    ep > FREE_EPISODES &&
+    !opts.unlocked.has(ep)
+  );
+}
+
 /** Token unik untuk 1 episode milik 1 user di penyimpanan unlock. */
 export function unlockToken(dramaId: string, ep: number): string {
   return `${dramaId}:${ep}`;

@@ -93,7 +93,7 @@ export default function AdminManager({
       </div>
       <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
         <p className="mb-3 text-sm text-zinc-400">
-          Tambah email kolega yang mau Anda jadikan admin. Mereka login pakai email itu (password apa saja) dan otomatis dapat role admin.
+          Tambah email kolega yang mau Anda jadikan admin. Mereka login pakai email itu + password admin, lalu otomatis dapat role admin. Tiap admin bisa memasang password sendiri lewat panel &quot;Ubah Password Pribadi&quot; di bawah.
         </p>
         <form
           onSubmit={onAddAdmin}

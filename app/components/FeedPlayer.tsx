@@ -15,6 +15,7 @@ import {
 } from "@/lib/subtitles";
 import { readUser } from "@/lib/auth";
 import { videoSrc } from "@/lib/video";
+import { seekTime } from "@/lib/seek";
 import { fetchWallet, unlockEpisode } from "@/lib/wallet";
 import { isEpisodeLocked } from "@/lib/coins";
 import RewardedAdModal from "./RewardedAdModal";
@@ -331,8 +332,7 @@ export default function FeedPlayer({
     const bar = seekRef.current;
     if (!v || !bar || !v.duration) return;
     const rect = bar.getBoundingClientRect();
-    const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
-    const t = ratio * v.duration;
+    const t = seekTime(clientX, rect.left, rect.width, v.duration);
     v.currentTime = t;
     setCurTime(t);
   };

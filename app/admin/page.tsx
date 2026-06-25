@@ -14,6 +14,7 @@ import AdminDashboard from "@/app/components/admin/AdminDashboard";
 import AdminSidebar from "@/app/components/admin/AdminSidebar";
 import DramaList from "@/app/components/admin/DramaList";
 import DramaForm from "@/app/components/admin/DramaForm";
+import AdminPasswordSettings from "@/app/components/admin/AdminPasswordSettings";
 
 export default function AdminPage() {
   const router = useRouter();
@@ -316,6 +317,8 @@ export default function AdminPage() {
         />
 
         <AdminManager currentAdminEmail={authUser.email} />
+
+        <AdminPasswordSettings />
 
         <TwoFactorSettings />
 

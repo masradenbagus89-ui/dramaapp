@@ -387,6 +387,59 @@ export async function isTwoFAEnabled(email: string): Promise<boolean> {
   return Boolean((await getTwoFA(email)).enabled);
 }
 
+// =====================  PASSWORD ADMIN PER-AKUN  ===========================
+// Dokumen app_data "adminpass:<email>" -> { hash, salt } (scrypt, lihat
+// lib/admin-password.ts). Kalau admin BELUM punya record (atau record kosong),
+// getAdminPassword balas null -> login jatuh ke ADMIN_PASSWORD bersama
+// (jaring pengaman: tak ada admin yang terkunci). Lokal: data/adminpass.json.
+
+export type AdminPasswordRecord = { hash: string; salt: string };
+type AdminPassFile = { passwords: Record<string, AdminPasswordRecord> };
+
+function adminPassKey(email: string): string {
+  return `adminpass:${normEmail(email)}`;
+}
+
+/** Record password per-akun, atau null kalau belum di-set (pakai bersama). */
+export async function getAdminPassword(
+  email: string,
+): Promise<AdminPasswordRecord | null> {
+  const e = normEmail(email);
+  if (!e) return null;
+  const rec = useSupabase
+    ? await sbDocGet<AdminPasswordRecord>(adminPassKey(e))
+    : (readLocal<AdminPassFile>("adminpass.json", { passwords: {} }).passwords[e] ??
+      null);
+  // record kosong (hasil "clear") dianggap tidak ada -> fallback ke bersama.
+  return rec && rec.hash && rec.salt ? rec : null;
+}
+
+export async function setAdminPassword(
+  email: string,
+  rec: AdminPasswordRecord,
+): Promise<void> {
+  const e = normEmail(email);
+  if (useSupabase) {
+    await sbDocSet(adminPassKey(e), rec);
+    return;
+  }
+  const file = readLocal<AdminPassFile>("adminpass.json", { passwords: {} });
+  file.passwords[e] = rec;
+  writeLocal("adminpass.json", file);
+}
+
+/** Hapus password per-akun -> admin kembali memakai ADMIN_PASSWORD bersama. */
+export async function clearAdminPassword(email: string): Promise<void> {
+  const e = normEmail(email);
+  if (useSupabase) {
+    await sbDocSet(adminPassKey(e), { hash: "", salt: "" }); // dibaca sbg "tidak ada"
+    return;
+  }
+  const file = readLocal<AdminPassFile>("adminpass.json", { passwords: {} });
+  delete file.passwords[e];
+  writeLocal("adminpass.json", file);
+}
+
 // =====================  ORDER KOIN (top-up Midtrans)  ======================
 // Dokumen app_data "order:<orderId>". Idempoten: koin dikredit sekali per order.
 

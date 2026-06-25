@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "node:crypto";
-import { isAdminEmail, getTwoFA } from "@/lib/store";
+import { isAdminEmail, getTwoFA, getAdminPassword } from "@/lib/store";
+import { verifyPassword } from "@/lib/admin-password";
 import { verifyTotp } from "@/lib/totp";
 import {
   signAdminSession,
@@ -51,8 +52,14 @@ export async function POST(req: NextRequest) {
           { status: 500 },
         );
       }
-      const expected = process.env.ADMIN_PASSWORD ?? "";
-      if (!password || !safeEqual(password, expected)) {
+      // Password: pakai password PER-AKUN kalau admin ini sudah memasangnya;
+      // kalau belum, jatuh ke ADMIN_PASSWORD bersama (jaring pengaman — tak ada
+      // admin yang terkunci saat fitur ini baru dipasang).
+      const perAccount = await getAdminPassword(e);
+      const passOk = perAccount
+        ? verifyPassword(password ?? "", perAccount)
+        : Boolean(password) && safeEqual(password as string, process.env.ADMIN_PASSWORD ?? "");
+      if (!passOk) {
         return NextResponse.json({ error: "Password admin salah." }, { status: 401 });
       }
 

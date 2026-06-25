@@ -14,7 +14,7 @@ import {
   writeSubtitlePref,
 } from "@/lib/subtitles";
 import { readUser } from "@/lib/auth";
-import { videoSrc } from "@/lib/video";
+import { videoSrc, downloadUrl } from "@/lib/video";
 import { seekTime } from "@/lib/seek";
 import { fetchWallet, unlockEpisode } from "@/lib/wallet";
 import { isEpisodeLocked } from "@/lib/coins";
@@ -306,19 +306,12 @@ export default function FeedPlayer({
     return () => window.clearTimeout(t);
   }, [paused, lockedActive, settingsOpen, commentsOpen, episodesOpen, adOpen, active, tick]);
 
-  // Unduh episode aktif. Kalau ada tunnel (NEXT_PUBLIC_VIDEO_BASE_URL): unduh
-  // LANGSUNG dari tunnel dgn ?dl=1 → Caddy kirim Content-Disposition: attachment
-  // sehingga HP mengunduh sampai TUNTAS (tanpa batas waktu 60s fungsi Vercel
-  // yang dulu memutus unduhan file besar di tengah jalan). Tanpa tunnel (dev)
-  // pakai proxy /api/download.
+  // Unduh episode aktif: bikin <a> tak-terlihat lalu klik otomatis. Aturan
+  // alamat unduh (tunnel ?dl=1 vs proxy /api/download) ada di downloadUrl().
   const onDownload = () => {
     const ep = active + 1;
     const a = document.createElement("a");
-    if (baseUrl) {
-      a.href = `${baseUrl.replace(/\/$/, "")}/${dramaId}/${ep}.mp4?dl=1`;
-    } else {
-      a.href = `/api/download?id=${encodeURIComponent(dramaId)}&ep=${ep}`;
-    }
+    a.href = downloadUrl(baseUrl, dramaId, ep);
     a.download = `${dramaId}-ep${ep}.mp4`; // dihormati saat same-origin (dev)
     a.rel = "noopener";
     document.body.appendChild(a);

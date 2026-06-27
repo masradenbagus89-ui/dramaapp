@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { addCoins, getBalance, getCoinMeta, setCoinMeta } from "@/lib/store";
 import { resolveUserEmail } from "@/lib/session";
 import { DAILY_AD_LIMIT, REWARD_PER_AD } from "@/lib/coins";
+import { guardMutation } from "@/lib/request-guard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,6 +14,13 @@ function today(): string {
 // POST /api/coins/reward  { email? }
 // Dipanggil setelah user menyelesaikan 1 iklan berhadiah. Ada kuota harian.
 export async function POST(req: NextRequest) {
+  const blocked = guardMutation(req, {
+    bucket: "coins:reward",
+    limit: 20,
+    windowMs: 60_000,
+  });
+  if (blocked) return blocked;
+
   let body: { email?: string };
   try {
     body = await req.json();

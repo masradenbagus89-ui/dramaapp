@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { addCoins, getBalance, getCoinMeta, setCoinMeta } from "@/lib/store";
 import { resolveUserEmail } from "@/lib/session";
 import { CHECKIN_BONUS } from "@/lib/coins";
+import { guardMutation } from "@/lib/request-guard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,6 +14,13 @@ function today(): string {
 // POST /api/coins/checkin  { email? }
 // Bonus koin sekali per hari (mendorong user kembali tiap hari).
 export async function POST(req: NextRequest) {
+  const blocked = guardMutation(req, {
+    bucket: "coins:checkin",
+    limit: 10,
+    windowMs: 60_000,
+  });
+  if (blocked) return blocked;
+
   let body: { email?: string };
   try {
     body = await req.json();

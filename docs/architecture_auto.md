@@ -37,6 +37,7 @@ Contoh:
 - [payments.md](payments.md) - Top-up koin via Midtrans Snap + webhook (belum aktif, balas 501)
 - [data-layer.md](data-layer.md) - Lapisan data: Supabase REST vs file JSON + RPC + CRUD drama
 - [glossary.md](glossary.md) - Kamus istilah domain (koin, unlock, premium, check-in, viewer/admin)
+- [request-guard.md](request-guard.md) - Penjaga endpoint koin: anti-CSRF (Origin) + pembatas laju per-IP
 
 ### Catatan keputusan (ADR)
 - [decisions/2026-06-20-audit-findings.md](decisions/2026-06-20-audit-findings.md) - Hasil audit 11 sudut: 73 temuan + rencana pengerjaan bertahap
@@ -69,5 +70,6 @@ Contoh:
 |---|---|---|
 | 2026-05-31 | Inisialisasi | Skeleton (registry TOC kosong, AI auto-update saat ada `.md` baru). |
 | 2026-06-20 | Tambah 6 catatan + 1 ADR | Setup lintasAI: db/auth/wallet/payments/data-layer/glossary + audit-findings. |
+| 2026-06-27 | Tambah 1 catatan | request-guard.md: penjaga koin anti-CSRF + pembatas laju (mitigasi IDOR/CSRF audit). |
 
 <!-- AI tambah baris baru tiap update registry (file baru / rename / hapus). -->

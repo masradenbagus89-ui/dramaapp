@@ -3,6 +3,7 @@ import { getBalance, spendUnlock } from "@/lib/store";
 import { resolveUserEmail } from "@/lib/session";
 import { getDrama } from "@/lib/dramas";
 import { COIN_PER_EPISODE, isFreeEpisode, unlockToken } from "@/lib/coins";
+import { guardMutation } from "@/lib/request-guard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -10,6 +11,13 @@ export const dynamic = "force-dynamic";
 // POST /api/coins/unlock  { email?, dramaId, ep }
 // Buka 1 episode terkunci dengan koin. Idempoten & atomik.
 export async function POST(req: NextRequest) {
+  const blocked = guardMutation(req, {
+    bucket: "coins:unlock",
+    limit: 30,
+    windowMs: 60_000,
+  });
+  if (blocked) return blocked;
+
   let body: { email?: string; dramaId?: string; ep?: number };
   try {
     body = await req.json();

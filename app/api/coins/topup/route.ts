@@ -9,6 +9,7 @@ import {
   midtransConfigured,
   snapJsUrl,
 } from "@/lib/midtrans";
+import { guardMutation } from "@/lib/request-guard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,6 +25,13 @@ export const dynamic = "force-dynamic";
 //
 // Kalau Midtrans belum di-set tapi ENABLE_DEMO_TOPUP=1 → kredit instan (uji coba).
 export async function POST(req: NextRequest) {
+  const blocked = guardMutation(req, {
+    bucket: "coins:topup",
+    limit: 10,
+    windowMs: 60_000,
+  });
+  if (blocked) return blocked;
+
   let body: { email?: string; packId?: string };
   try {
     body = await req.json();

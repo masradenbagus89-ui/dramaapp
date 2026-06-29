@@ -171,7 +171,7 @@ export default function AdminPage() {
       }
       setMessage({
         type: "ok",
-        text: `Drama "${data.drama.title}" berhasil ${data.action === "updated" ? "diperbarui" : "ditambahkan"}. Vercel auto-deploy ~1-2 menit, lalu refresh halaman ini.`,
+        text: `Drama "${data.drama.title}" berhasil ${data.action === "updated" ? "diperbarui" : "ditambahkan"}. Tersimpan langsung ke database — daftar di bawah sudah diperbarui.`,
       });
       setId("");
       setTitle("");

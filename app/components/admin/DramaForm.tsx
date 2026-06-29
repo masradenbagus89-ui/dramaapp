@@ -83,7 +83,7 @@ export default function DramaForm({
           <li>Taruh file video di PC backup, folder <code className="text-amber-100">{`<drama-id>`}</code>. Nama file <strong>bebas</strong> (raw): mis. <code className="text-amber-100">ep01.mp4</code>, <code className="text-amber-100">Video 1.mp4</code>, dst.</li>
           <li>Isi form di bawah — judul, kategori, sinopsis.</li>
           <li>Klik <strong>🪄 Scan & auto-hardlink</strong> → agent di PC backup auto-rename (kalau perlu) ke <code className="text-amber-100">1.mp4 2.mp4 ...</code> + scan jumlah episode.</li>
-          <li>Klik <strong>Simpan drama</strong> → commit ke GitHub → Vercel auto-deploy ~1-2 menit.</li>
+          <li>Klik <strong>Simpan drama</strong> → tersimpan langsung ke database, tampil seketika (tanpa redeploy).</li>
         </ol>
       </div>
       <form
@@ -287,10 +287,10 @@ export default function DramaForm({
             disabled={submitting}
             className="rounded-full bg-amber-400 px-6 py-2.5 text-sm font-semibold text-black disabled:opacity-50"
           >
-            {submitting ? "Menyimpan ke GitHub..." : "Simpan drama"}
+            {submitting ? "Menyimpan..." : "Simpan drama"}
           </button>
           <span className="text-xs text-zinc-500">
-            Commit ke <code>data/dramas.json</code> → Vercel auto-deploy ~1-2 menit
+            Tersimpan langsung ke database (Supabase) — instan, tanpa redeploy
           </span>
         </div>
 

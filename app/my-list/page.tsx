@@ -5,6 +5,9 @@ import { useEffect, useState } from "react";
 import type { Drama } from "@/lib/types";
 import { readMyList } from "@/lib/myList";
 import DramaCard from "@/app/components/DramaCard";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Bookmark } from "lucide-react";
 
 export default function MyListPage() {
   const [ids, setIds] = useState<string[] | null>(null);
@@ -38,18 +41,20 @@ export default function MyListPage() {
       {ids === null ? (
         <div className="mt-12 text-center text-sm text-zinc-500">Memuat...</div>
       ) : dramas.length === 0 ? (
-        <div className="mt-16 flex flex-col items-center text-center">
-          <svg viewBox="0 0 24 24" className="h-16 w-16 fill-zinc-700">
-            <path d="M6 2h12a2 2 0 012 2v18l-8-4-8 4V4a2 2 0 012-2z" />
-          </svg>
-          <p className="mt-3 text-sm text-zinc-500">Daftar Anda masih kosong.</p>
-          <Link
-            href="/discover"
-            className="mt-4 rounded-full bg-amber-400 px-5 py-2 text-sm font-semibold text-black"
-          >
-            Jelajahi drama
-          </Link>
-        </div>
+        <Card className="mt-16 border-zinc-800 bg-zinc-900/40">
+          <CardContent className="flex flex-col items-center text-center">
+            <Bookmark className="h-16 w-16 fill-zinc-700 text-zinc-700" />
+            <p className="mt-3 text-sm text-zinc-500">
+              Daftar Anda masih kosong.
+            </p>
+            <Button
+              asChild
+              className="mt-4 rounded-full bg-amber-400 px-5 text-sm font-semibold text-black hover:bg-amber-300"
+            >
+              <Link href="/discover">Jelajahi drama</Link>
+            </Button>
+          </CardContent>
+        </Card>
       ) : (
         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 md:gap-5 lg:grid-cols-5 xl:grid-cols-6">
           {dramas.map((drama) => (

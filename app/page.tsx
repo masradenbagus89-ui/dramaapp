@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { getAllDramas } from "@/lib/dramas";
 import RedirectIfAuthed from "@/app/components/RedirectIfAuthed";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { Check, Lock } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -60,18 +64,19 @@ export default async function LandingPage() {
             <span className="text-lg font-bold text-white">DramaKu</span>
           </Link>
           <div className="flex items-center gap-2">
-            <Link
-              href="/login"
-              className="rounded-full border border-zinc-700 px-4 py-1.5 text-sm font-semibold text-white hover:border-amber-400 hover:text-amber-400"
+            <Button
+              asChild
+              variant="outline"
+              className="rounded-full border-zinc-700 px-4 py-1.5 text-sm font-semibold text-white hover:border-amber-400 hover:text-amber-400"
             >
-              Masuk
-            </Link>
-            <Link
-              href="/daftar"
+              <Link href="/login">Masuk</Link>
+            </Button>
+            <Button
+              asChild
               className="rounded-full bg-amber-400 px-4 py-1.5 text-sm font-bold text-black hover:bg-amber-300"
             >
-              Daftar
-            </Link>
+              <Link href="/daftar">Daftar</Link>
+            </Button>
           </div>
         </div>
       </header>
@@ -86,9 +91,9 @@ export default async function LandingPage() {
 
         <div className="relative mx-auto grid max-w-7xl gap-8 px-4 py-16 md:grid-cols-[1.1fr_1fr] md:items-center md:px-6 md:py-20">
           <div className="flex flex-col gap-6">
-            <span className="self-start rounded-full border border-amber-400/40 bg-amber-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-amber-300">
+            <Badge className="self-start rounded-full border border-amber-400/40 bg-amber-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-amber-300">
               Drama China Pendek · Bahasa Indonesia
-            </span>
+            </Badge>
             <h1 className="title-gold text-4xl leading-[1.05] sm:text-5xl md:text-6xl">
               Cerita pendek, <br />
               <span className="text-white not-italic">emosi panjang.</span>
@@ -97,18 +102,21 @@ export default async function LandingPage() {
               DramaKu adalah platform menonton drama China pendek. Daftar gratis, login, lalu nikmati ratusan judul drama tanpa langganan.
             </p>
             <div className="flex flex-wrap gap-3">
-              <Link
-                href="/daftar"
+              <Button
+                asChild
+                size="lg"
                 className="rounded-full bg-amber-400 px-6 py-3 text-sm font-bold text-black hover:bg-amber-300"
               >
-                Daftar Gratis
-              </Link>
-              <Link
-                href="/login"
-                className="rounded-full border border-zinc-600 bg-black/40 px-6 py-3 text-sm font-semibold text-white hover:border-amber-400 hover:text-amber-400"
+                <Link href="/daftar">Daftar Gratis</Link>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                size="lg"
+                className="rounded-full border-zinc-600 bg-black/40 px-6 py-3 text-sm font-semibold text-white hover:border-amber-400 hover:text-amber-400"
               >
-                Sudah punya akun? Masuk
-              </Link>
+                <Link href="/login">Sudah punya akun? Masuk</Link>
+              </Button>
             </div>
             <div className="flex flex-wrap gap-6">
               <Stat label="Drama tersedia" value={String(dramas.length)} />
@@ -157,9 +165,9 @@ export default async function LandingPage() {
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {FITUR.map((f) => (
-            <div
+            <Card
               key={f.title}
-              className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 transition-colors hover:border-zinc-700"
+              className="gap-0 rounded-2xl border-zinc-800 bg-zinc-900/40 p-5 py-5 shadow-none transition-colors hover:border-zinc-700"
             >
               <div className={`mb-3 inline-flex h-10 w-10 items-center justify-center rounded-lg ${f.color}`}>
                 <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -168,7 +176,7 @@ export default async function LandingPage() {
               </div>
               <h3 className="text-base font-semibold text-white">{f.title}</h3>
               <p className="mt-1 text-sm text-zinc-400">{f.desc}</p>
-            </div>
+            </Card>
           ))}
         </div>
       </section>
@@ -207,9 +215,13 @@ export default async function LandingPage() {
                     <p className="line-clamp-2 text-xs font-semibold text-white">{d.title}</p>
                     <p className="mt-0.5 text-[10px] text-zinc-400">{d.category}</p>
                   </div>
-                  <div className="absolute right-2 top-2 rounded bg-black/70 px-1.5 py-0.5 text-[9px] font-semibold text-amber-300">
-                    🔒 Login
-                  </div>
+                  <Badge
+                    variant="secondary"
+                    className="absolute right-2 top-2 gap-0.5 rounded bg-black/70 px-1.5 py-0.5 text-[9px] font-semibold text-amber-300"
+                  >
+                    <Lock className="size-2.5" />
+                    Login
+                  </Badge>
                 </div>
               </Link>
             ))}
@@ -232,22 +244,23 @@ export default async function LandingPage() {
               { n: "2", title: "Login", desc: "Masuk dengan akun yang baru kamu buat. Hanya hitungan detik." },
               { n: "3", title: "Nonton Drama", desc: "Pilih drama favoritmu di halaman beranda dan langsung tonton." },
             ].map((s) => (
-              <div key={s.n} className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 text-center backdrop-blur">
+              <Card key={s.n} className="gap-0 rounded-2xl border-zinc-800 bg-zinc-900/60 p-5 py-5 text-center shadow-none backdrop-blur">
                 <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-amber-400 text-base font-bold text-black">
                   {s.n}
                 </div>
                 <h3 className="mt-3 text-base font-semibold text-white">{s.title}</h3>
                 <p className="mt-1 text-sm text-zinc-400">{s.desc}</p>
-              </div>
+              </Card>
             ))}
           </div>
           <div className="mt-8 text-center">
-            <Link
-              href="/daftar"
-              className="inline-block rounded-full bg-amber-400 px-8 py-3 text-sm font-bold text-black hover:bg-amber-300"
+            <Button
+              asChild
+              size="lg"
+              className="rounded-full bg-amber-400 px-8 py-3 text-sm font-bold text-black hover:bg-amber-300"
             >
-              Daftar Sekarang →
-            </Link>
+              <Link href="/daftar">Daftar Sekarang →</Link>
+            </Button>
           </div>
         </div>
       </section>
@@ -293,9 +306,7 @@ export default async function LandingPage() {
               ].map((p) => (
                 <div key={p} className="flex items-start gap-3">
                   <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
-                    <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M5 13l4 4L19 7" />
-                    </svg>
+                    <Check className="size-3" strokeWidth={3} />
                   </div>
                   <p className="text-sm text-zinc-300">{p}</p>
                 </div>
@@ -316,18 +327,21 @@ export default async function LandingPage() {
             Daftar gratis sekarang dan dapatkan akses penuh ke semua drama.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <Link
-              href="/daftar"
+            <Button
+              asChild
+              size="lg"
               className="rounded-full bg-amber-400 px-8 py-3 text-sm font-bold text-black hover:bg-amber-300"
             >
-              Daftar Gratis
-            </Link>
-            <Link
-              href="/login"
-              className="rounded-full border border-zinc-600 bg-black/40 px-8 py-3 text-sm font-semibold text-white hover:border-amber-400 hover:text-amber-400"
+              <Link href="/daftar">Daftar Gratis</Link>
+            </Button>
+            <Button
+              asChild
+              variant="outline"
+              size="lg"
+              className="rounded-full border-zinc-600 bg-black/40 px-8 py-3 text-sm font-semibold text-white hover:border-amber-400 hover:text-amber-400"
             >
-              Masuk
-            </Link>
+              <Link href="/login">Masuk</Link>
+            </Button>
           </div>
         </div>
       </section>

@@ -6,6 +6,9 @@ import Poster from "@/app/components/Poster";
 import SaveButton from "@/app/components/SaveButton";
 import LikeButton from "@/app/components/LikeButton";
 import Comments from "@/app/components/Comments";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ChevronLeft, Play, Captions } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -45,15 +48,16 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
           )}
           <div className={`absolute inset-0 bg-gradient-to-t ${drama.heroDim ? "from-black via-black/45 to-black/15" : "from-black/75 via-black/10 to-transparent"}`} />
         </div>
-        <Link
-          href="/beranda"
-          className="absolute left-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-black/60 text-white md:hidden"
+        <Button
+          asChild
+          size="icon"
+          className="absolute left-3 top-3 rounded-full bg-black/60 text-white hover:bg-black/60 md:hidden"
           aria-label="Kembali"
         >
-          <svg viewBox="0 0 24 24" className="h-5 w-5 fill-white">
-            <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
-          </svg>
-        </Link>
+          <Link href="/beranda">
+            <ChevronLeft className="h-5 w-5" />
+          </Link>
+        </Button>
 
         <div className="absolute -bottom-16 left-4 right-4 flex gap-3 md:left-8 md:right-8 md:-bottom-20 md:gap-6">
           <div className="w-28 shrink-0 md:w-44">
@@ -63,9 +67,9 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
             <div className="flex items-center gap-2">
               <h1 className="title-gold text-2xl leading-tight md:text-4xl">{drama.title}</h1>
               {drama.premium && (
-                <span className="shrink-0 rounded-full bg-amber-400 px-2 py-0.5 text-[10px] font-bold text-black">
+                <Badge className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold">
                   🪙 PREMIUM
-                </span>
+                </Badge>
               )}
             </div>
             <p className="mt-1 text-xs text-zinc-400 md:text-sm">
@@ -78,15 +82,15 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
 
       <div className="mt-20 px-4 md:mt-24 md:px-8 md:max-w-3xl">
         <div className="flex flex-col gap-2 sm:flex-row">
-          <Link
-            href={`/feed/${drama.id}`}
-            className="flex flex-1 items-center justify-center gap-2 rounded-full bg-amber-400 py-3 text-sm font-semibold text-black"
+          <Button
+            asChild
+            className="h-auto flex-1 rounded-full py-3 text-sm font-semibold"
           >
-            <svg viewBox="0 0 24 24" className="h-4 w-4 fill-black">
-              <path d="M8 5v14l11-7z" />
-            </svg>
-            Tonton Eps 1
-          </Link>
+            <Link href={`/feed/${drama.id}`}>
+              <Play className="h-4 w-4 fill-current" />
+              Tonton Eps 1
+            </Link>
+          </Button>
           <div className="flex flex-1 gap-2">
             <SaveButton id={drama.id} />
             <LikeButton dramaId={drama.id} />
@@ -95,20 +99,18 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
 
         {drama.subtitles && drama.subtitles.length > 0 && (
           <div className="mt-4 flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1 rounded-full bg-zinc-800 px-2.5 py-1 text-[11px] font-semibold text-zinc-300">
-              <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="3" y="5" width="18" height="14" rx="2" />
-                <path d="M7 13h3M14 13h3M7 10h2M13 10h4" strokeLinecap="round" />
-              </svg>
+            <Badge className="gap-1 rounded-full bg-zinc-800 px-2.5 py-1 text-[11px] font-semibold text-zinc-300">
+              <Captions className="h-3.5 w-3.5" />
               Subtitle
-            </span>
+            </Badge>
             {drama.subtitles.map((code) => (
-              <span
+              <Badge
                 key={code}
-                className="rounded-full border border-zinc-700 px-2.5 py-1 text-[11px] text-zinc-300"
+                variant="outline"
+                className="rounded-full border-zinc-700 px-2.5 py-1 text-[11px] text-zinc-300"
               >
                 {subtitleLabel(code)}
-              </span>
+              </Badge>
             ))}
           </div>
         )}
@@ -125,13 +127,14 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
             </h2>
             <div className="mt-3 grid grid-cols-5 gap-2">
               {episodes.map((ep) => (
-                <Link
+                <Button
                   key={ep}
-                  href={`/feed/${drama.id}?ep=${ep}`}
-                  className="flex h-10 items-center justify-center rounded-md border border-zinc-800 bg-zinc-900 text-sm text-zinc-200 hover:border-amber-400 hover:text-amber-400"
+                  asChild
+                  variant="outline"
+                  className="h-10 rounded-md border-zinc-800 bg-zinc-900 text-sm text-zinc-200 hover:border-amber-400 hover:bg-zinc-900 hover:text-amber-400"
                 >
-                  {ep}
-                </Link>
+                  <Link href={`/feed/${drama.id}?ep=${ep}`}>{ep}</Link>
+                </Button>
               ))}
             </div>
           </>

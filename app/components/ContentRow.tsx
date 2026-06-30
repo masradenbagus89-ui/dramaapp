@@ -4,6 +4,8 @@ import { useRef } from "react";
 import Link from "next/link";
 import type { Drama } from "@/lib/types";
 import Poster from "./Poster";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight, Play } from "lucide-react";
 
 type Props = {
   title: string;
@@ -53,24 +55,26 @@ export default function ContentRow({
 
       <div className="relative">
         {/* Tombol panah (desktop, muncul saat hover baris) */}
-        <button
+        <Button
+          type="button"
+          variant="secondary"
+          size="icon"
           onClick={() => scroll(-1)}
           aria-label="Geser kiri"
-          className="absolute left-0 top-[42%] z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/70 text-white opacity-0 shadow-lg transition-opacity hover:bg-black md:flex md:group-hover/row:opacity-100"
+          className="absolute left-0 top-[42%] z-10 hidden h-10 w-10 -translate-y-1/2 rounded-full bg-black/70 text-white opacity-0 shadow-lg hover:bg-black md:flex md:group-hover/row:opacity-100"
         >
-          <svg viewBox="0 0 24 24" className="h-6 w-6 fill-white">
-            <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
-          </svg>
-        </button>
-        <button
+          <ChevronLeft className="size-6" />
+        </Button>
+        <Button
+          type="button"
+          variant="secondary"
+          size="icon"
           onClick={() => scroll(1)}
           aria-label="Geser kanan"
-          className="absolute right-0 top-[42%] z-10 hidden h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-black/70 text-white opacity-0 shadow-lg transition-opacity hover:bg-black md:flex md:group-hover/row:opacity-100"
+          className="absolute right-0 top-[42%] z-10 hidden h-10 w-10 -translate-y-1/2 rounded-full bg-black/70 text-white opacity-0 shadow-lg hover:bg-black md:flex md:group-hover/row:opacity-100"
         >
-          <svg viewBox="0 0 24 24" className="h-6 w-6 fill-white">
-            <path d="M8.59 16.59L10 18l6-6-6-6-1.41 1.41L13.17 12z" />
-          </svg>
-        </button>
+          <ChevronRight className="size-6" />
+        </Button>
 
         <div
           ref={scroller}
@@ -91,9 +95,7 @@ export default function ContentRow({
                 </h3>
                 {ep ? (
                   <p className="flex items-center gap-1 text-[11px] font-medium text-amber-400">
-                    <svg viewBox="0 0 24 24" className="h-3 w-3 fill-amber-400">
-                      <path d="M8 5v14l11-7z" />
-                    </svg>
+                    <Play className="size-3 fill-amber-400 text-amber-400" />
                     Lanjut Eps {ep}
                   </p>
                 ) : (

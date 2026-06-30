@@ -3,6 +3,9 @@ import { getAllDramas } from "@/lib/dramas";
 import { parseViews } from "@/lib/format";
 import BerandaRows from "../components/BerandaRows";
 import AdBanner from "../components/AdBanner";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Play } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -51,9 +54,9 @@ export default async function BerandaPage() {
 
           {/* Teks: dasar (HP) / kiri-bawah dibatasi lebar (desktop). */}
           <div className="absolute inset-x-0 bottom-0 p-4 md:inset-y-0 md:right-auto md:flex md:max-w-[60%] md:flex-col md:justify-end md:p-8 lg:max-w-xl">
-            <span className="inline-flex w-fit items-center gap-1 rounded-full bg-amber-400/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-300 ring-1 ring-amber-400/40">
+            <Badge className="w-fit gap-1 rounded-full bg-amber-400/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-300 ring-1 ring-amber-400/40">
               🔥 Trending
-            </span>
+            </Badge>
             <h1 className="title-gold mt-2 text-2xl leading-tight md:mt-3 md:text-4xl">
               {hero.title}
             </h1>
@@ -66,21 +69,22 @@ export default async function BerandaPage() {
               {hero.synopsis}
             </p>
             <div className="mt-3 flex gap-2 md:mt-4">
-              <Link
-                href={`/feed/${hero.id}`}
-                className="inline-flex items-center gap-2 rounded-full bg-amber-400 px-5 py-2.5 text-sm font-bold text-black hover:bg-amber-300"
+              <Button
+                asChild
+                className="rounded-full bg-amber-400 px-5 py-2.5 text-sm font-bold text-black hover:bg-amber-300"
               >
-                <svg viewBox="0 0 24 24" className="h-4 w-4 fill-black">
-                  <path d="M8 5v14l11-7z" />
-                </svg>
-                Tonton
-              </Link>
-              <Link
-                href={`/drama/${hero.id}`}
-                className="inline-flex items-center gap-2 rounded-full border border-zinc-600 bg-black/40 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur hover:border-amber-400 hover:text-amber-400"
+                <Link href={`/feed/${hero.id}`}>
+                  <Play className="size-4 fill-black text-black" />
+                  Tonton
+                </Link>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                className="rounded-full border-zinc-600 bg-black/40 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur hover:border-amber-400 hover:text-amber-400"
               >
-                Detail
-              </Link>
+                <Link href={`/drama/${hero.id}`}>Detail</Link>
+              </Button>
             </div>
           </div>
         </div>

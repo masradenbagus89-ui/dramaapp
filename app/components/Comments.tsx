@@ -3,6 +3,11 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { readUser, type User } from "@/lib/auth";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
 
 const MAX_COMMENT_LENGTH = 500;
 
@@ -126,48 +131,54 @@ export default function Comments({ dramaId }: { dramaId: string }) {
       </h2>
 
       {user ? (
-        <form onSubmit={onSubmit} className="mt-3 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-3">
-          <div className="flex items-start gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-rose-500 text-sm font-bold text-black">
-              {user.name.charAt(0).toUpperCase()}
-            </div>
-            <div className="flex-1">
-              <textarea
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-                placeholder={`Tulis komentarmu... (maks ${MAX_COMMENT_LENGTH} karakter)`}
-                rows={2}
-                maxLength={MAX_COMMENT_LENGTH}
-                className="w-full resize-y rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white outline-none focus:border-amber-400"
-              />
-              <div className="mt-2 flex items-center justify-between">
-                <span className="text-[11px] text-zinc-500">
-                  {text.length}/{MAX_COMMENT_LENGTH} · sebagai <strong className="text-zinc-300">{user.name}</strong>
-                </span>
-                <button
-                  type="submit"
-                  disabled={submitting || !text.trim()}
-                  className="rounded-full bg-amber-400 px-4 py-1.5 text-xs font-bold text-black hover:bg-amber-300 disabled:opacity-50"
-                >
-                  {submitting ? "Mengirim..." : "Kirim"}
-                </button>
+        <Card className="mt-3 gap-0 rounded-2xl border-zinc-800 bg-zinc-900/40 py-0 p-3 shadow-none">
+          <form onSubmit={onSubmit}>
+            <div className="flex items-start gap-3">
+              <Avatar className="size-9 shrink-0">
+                <AvatarFallback className="bg-gradient-to-br from-amber-400 to-rose-500 text-sm font-bold text-black">
+                  {user.name.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <textarea
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  placeholder={`Tulis komentarmu... (maks ${MAX_COMMENT_LENGTH} karakter)`}
+                  rows={2}
+                  maxLength={MAX_COMMENT_LENGTH}
+                  className="w-full resize-y rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white outline-none focus:border-amber-400"
+                />
+                <div className="mt-2 flex items-center justify-between">
+                  <span className="text-[11px] text-zinc-500">
+                    {text.length}/{MAX_COMMENT_LENGTH} · sebagai <strong className="text-zinc-300">{user.name}</strong>
+                  </span>
+                  <Button
+                    type="submit"
+                    size="sm"
+                    disabled={submitting || !text.trim()}
+                    className="rounded-full px-4 py-1.5 text-xs font-bold hover:bg-amber-300 disabled:opacity-50"
+                  >
+                    {submitting ? "Mengirim..." : "Kirim"}
+                  </Button>
+                </div>
               </div>
             </div>
-          </div>
-          {error && (
-            <p className="mt-2 text-xs text-red-400">{error}</p>
-          )}
-        </form>
+            {error && (
+              <p className="mt-2 text-xs text-red-400">{error}</p>
+            )}
+          </form>
+        </Card>
       ) : (
-        <div className="mt-3 flex items-center justify-between rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4">
+        <Card className="mt-3 flex flex-row items-center justify-between gap-3 rounded-2xl border-zinc-800 bg-zinc-900/40 py-0 p-4 shadow-none">
           <p className="text-sm text-zinc-400">Login dulu untuk bisa berkomentar.</p>
-          <Link
-            href="/login"
-            className="rounded-full bg-amber-400 px-4 py-1.5 text-xs font-bold text-black hover:bg-amber-300"
+          <Button
+            asChild
+            size="sm"
+            className="rounded-full px-4 py-1.5 text-xs font-bold hover:bg-amber-300"
           >
-            Masuk
-          </Link>
-        </div>
+            <Link href="/login">Masuk</Link>
+          </Button>
+        </Card>
       )}
 
       <div className="mt-4 space-y-3">
@@ -180,32 +191,40 @@ export default function Comments({ dramaId }: { dramaId: string }) {
             const canDelete =
               user && (user.email === c.email || user.role === "admin");
             return (
-              <div key={c.id} className="flex items-start gap-3 rounded-xl border border-zinc-800 bg-zinc-900/30 p-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-amber-400 to-rose-500 text-sm font-bold text-black">
-                  {c.user.charAt(0).toUpperCase()}
-                </div>
+              <Card
+                key={c.id}
+                className="flex flex-row items-start gap-3 rounded-xl border-zinc-800 bg-zinc-900/30 py-0 p-3 shadow-none"
+              >
+                <Avatar className="size-9 shrink-0">
+                  <AvatarFallback className="bg-gradient-to-br from-amber-400 to-rose-500 text-sm font-bold text-black">
+                    {c.user.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="truncate text-sm font-semibold text-white">{c.user}</span>
                     {c.role === "admin" && (
-                      <span className="rounded bg-amber-400/20 px-1.5 py-0.5 text-[9px] font-bold uppercase text-amber-300">
+                      <Badge className="rounded bg-amber-400/20 px-1.5 py-0.5 text-[9px] font-bold uppercase text-amber-300">
                         Admin
-                      </span>
+                      </Badge>
                     )}
                     <span className="text-[11px] text-zinc-500">· {timeAgo(c.time)}</span>
                   </div>
                   <p className="mt-1 whitespace-pre-wrap break-words text-sm text-zinc-300">{c.text}</p>
                 </div>
                 {canDelete && (
-                  <button
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
                     onClick={() => onDelete(c.id)}
-                    className="text-xs text-zinc-500 hover:text-red-400"
+                    className="h-auto p-0 text-xs text-zinc-500 hover:bg-transparent hover:text-red-400"
                     title="Hapus komentar"
                   >
                     Hapus
-                  </button>
+                  </Button>
                 )}
-              </div>
+              </Card>
             );
           })
         )}

@@ -17,6 +17,15 @@ import {
   formatIDR,
 } from "@/lib/coins";
 import RewardedAdModal from "./RewardedAdModal";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 type SnapCallbacks = {
   onSuccess?: () => void;
@@ -149,91 +158,103 @@ export default function CoinWallet() {
 
   if (!email) {
     return (
-      <div id="koin" className="mt-6 rounded-2xl border border-zinc-800 bg-zinc-900/50 p-4">
-        <h2 className="text-base font-semibold text-white">Koin Saya</h2>
-        <p className="mt-1 text-sm text-zinc-400">
-          Masuk untuk mengumpulkan koin & membuka episode premium.
-        </p>
-        <Link
-          href="/login"
-          className="mt-3 inline-block rounded-full bg-amber-400 px-5 py-2 text-sm font-bold text-black hover:bg-amber-300"
-        >
-          Masuk
-        </Link>
-      </div>
+      <Card id="koin" className="mt-6 gap-3 border-zinc-800 bg-zinc-900/50 py-4">
+        <CardHeader className="px-4">
+          <CardTitle className="text-base text-white">Koin Saya</CardTitle>
+        </CardHeader>
+        <CardContent className="px-4">
+          <p className="text-sm text-zinc-400">
+            Masuk untuk mengumpulkan koin & membuka episode premium.
+          </p>
+          <Button
+            asChild
+            className="mt-3 rounded-full bg-amber-400 font-bold text-black hover:bg-amber-300"
+          >
+            <Link href="/login">Masuk</Link>
+          </Button>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div id="koin" className="mt-6 rounded-2xl border border-zinc-800 bg-zinc-900/50 p-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-base font-semibold text-white">Koin Saya</h2>
-        <span className="flex items-center gap-1.5 rounded-full bg-amber-400/15 px-3 py-1 text-sm font-bold text-amber-300">
+    <Card id="koin" className="mt-6 gap-3 border-zinc-800 bg-zinc-900/50 py-4">
+      <CardHeader className="flex-row items-center justify-between px-4">
+        <CardTitle className="text-base text-white">Koin Saya</CardTitle>
+        <Badge className="gap-1.5 rounded-full bg-amber-400/15 px-3 py-1 text-sm font-bold text-amber-300">
           <span className="text-base">🪙</span> {balance}
-        </span>
-      </div>
-
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        <button
-          onClick={onCheckin}
-          disabled={busy}
-          className="rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-3 text-left hover:border-amber-400 disabled:opacity-50"
-        >
-          <div className="text-sm font-semibold text-white">Check-in harian</div>
-          <div className="text-xs text-amber-300">+{CHECKIN_BONUS} koin</div>
-        </button>
-        <button
-          onClick={() => setAdOpen(true)}
-          disabled={busy}
-          className="rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-3 text-left hover:border-amber-400 disabled:opacity-50"
-        >
-          <div className="text-sm font-semibold text-white">Nonton iklan</div>
-          <div className="text-xs text-amber-300">+{REWARD_PER_AD} koin / iklan</div>
-        </button>
-      </div>
-
-      <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-zinc-500">
-        Beli koin
-      </p>
-      <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
-        {COIN_PACKS.map((p) => (
-          <button
-            key={p.id}
-            onClick={() => onTopup(p.id)}
+        </Badge>
+      </CardHeader>
+      <CardContent className="px-4">
+        <div className="grid grid-cols-2 gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCheckin}
             disabled={busy}
-            className="relative rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-3 text-center hover:border-amber-400 disabled:opacity-50"
+            className="h-auto flex-col items-start gap-0 rounded-xl border-zinc-700 bg-zinc-900 px-3 py-3 text-left hover:border-amber-400 hover:bg-zinc-900"
           >
-            {p.badge && (
-              <span className="absolute -top-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-amber-400 px-2 py-0.5 text-[9px] font-bold text-black">
-                {p.badge}
-              </span>
-            )}
-            <div className="text-lg font-black text-amber-300">{p.coins}</div>
-            <div className="text-[10px] text-zinc-500">koin</div>
-            <div className="mt-1 text-xs font-semibold text-white">
-              {formatIDR(p.priceIDR)}
-            </div>
-          </button>
-        ))}
-      </div>
-
-      {msg && (
-        <div
-          className={`mt-3 rounded-lg border px-3 py-2 text-sm ${
-            msg.type === "ok"
-              ? "border-emerald-700 bg-emerald-900/30 text-emerald-300"
-              : "border-red-700 bg-red-900/30 text-red-300"
-          }`}
-        >
-          {msg.text}
+            <div className="text-sm font-semibold text-white">Check-in harian</div>
+            <div className="text-xs text-amber-300">+{CHECKIN_BONUS} koin</div>
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setAdOpen(true)}
+            disabled={busy}
+            className="h-auto flex-col items-start gap-0 rounded-xl border-zinc-700 bg-zinc-900 px-3 py-3 text-left hover:border-amber-400 hover:bg-zinc-900"
+          >
+            <div className="text-sm font-semibold text-white">Nonton iklan</div>
+            <div className="text-xs text-amber-300">+{REWARD_PER_AD} koin / iklan</div>
+          </Button>
         </div>
-      )}
 
-      <RewardedAdModal
-        open={adOpen}
-        onClose={() => setAdOpen(false)}
-        onRewarded={(b) => setBalance(b)}
-      />
-    </div>
+        <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-zinc-500">
+          Beli koin
+        </p>
+        <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {COIN_PACKS.map((p) => (
+            <Button
+              key={p.id}
+              type="button"
+              variant="outline"
+              onClick={() => onTopup(p.id)}
+              disabled={busy}
+              className="relative h-auto flex-col gap-0 overflow-visible rounded-xl border-zinc-700 bg-zinc-900 px-3 py-3 text-center hover:border-amber-400 hover:bg-zinc-900"
+            >
+              {p.badge && (
+                <Badge className="absolute -top-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-amber-400 px-2 py-0.5 text-[9px] font-bold text-black">
+                  {p.badge}
+                </Badge>
+              )}
+              <div className="text-lg font-black text-amber-300">{p.coins}</div>
+              <div className="text-[10px] text-zinc-500">koin</div>
+              <div className="mt-1 text-xs font-semibold text-white">
+                {formatIDR(p.priceIDR)}
+              </div>
+            </Button>
+          ))}
+        </div>
+
+        {msg && (
+          <div
+            className={cn(
+              "mt-3 rounded-lg border px-3 py-2 text-sm",
+              msg.type === "ok"
+                ? "border-emerald-700 bg-emerald-900/30 text-emerald-300"
+                : "border-red-700 bg-red-900/30 text-red-300",
+            )}
+          >
+            {msg.text}
+          </div>
+        )}
+
+        <RewardedAdModal
+          open={adOpen}
+          onClose={() => setAdOpen(false)}
+          onRewarded={(b) => setBalance(b)}
+        />
+      </CardContent>
+    </Card>
   );
 }

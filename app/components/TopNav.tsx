@@ -5,6 +5,12 @@ import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { clearUser, getAvatarClass, readUser, type User } from "@/lib/auth";
 import CoinChip from "./CoinChip";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
+import { LogOut, Search } from "lucide-react";
 
 const LINKS = [
   { href: "/beranda", label: "Beranda", adminOnly: false },
@@ -77,10 +83,21 @@ export default function TopNav() {
   return (
     <header className="sticky top-0 z-30 border-b border-zinc-800 bg-black/95 backdrop-blur">
       <div className="mx-auto flex h-14 max-w-7xl items-center gap-4 px-4 md:px-6">
-        <Link href="/beranda" className="flex items-center gap-2 transition-transform duration-200 hover:scale-105">
+        <Link
+          href="/beranda"
+          className="flex items-center gap-2 transition-transform duration-200 hover:scale-105"
+        >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/logo-mark.png" alt="DramaKu" width={36} height={36} className="h-9 w-9 object-contain" />
-          <span className="hidden text-lg font-bold text-white sm:inline">DramaKu</span>
+          <img
+            src="/logo-mark.png"
+            alt="DramaKu"
+            width={36}
+            height={36}
+            className="h-9 w-9 object-contain"
+          />
+          <span className="hidden text-lg font-bold text-white sm:inline">
+            DramaKu
+          </span>
         </Link>
 
         <nav className="relative hidden items-center gap-1 md:flex">
@@ -91,41 +108,42 @@ export default function TopNav() {
               style={{ left: pill.left, width: pill.width }}
             />
           )}
-          {LINKS.filter((l) => !l.adminOnly || user?.role === "admin").map((link) => {
-            const active = isActive(link.href);
-            return (
-              <Link
-                key={link.href}
-                href={link.href}
-                ref={(el) => {
-                  linkRefs.current[link.href] = el;
-                }}
-                className={`relative z-10 rounded-md px-3 py-1.5 text-sm transition-all duration-200 ${
-                  active
-                    ? "font-semibold text-black"
-                    : "text-zinc-300 hover:-translate-y-0.5 hover:text-white"
-                }`}
-              >
-                {link.label}
-              </Link>
-            );
-          })}
+          {LINKS.filter((l) => !l.adminOnly || user?.role === "admin").map(
+            (link) => {
+              const active = isActive(link.href);
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  ref={(el) => {
+                    linkRefs.current[link.href] = el;
+                  }}
+                  className={cn(
+                    "relative z-10 rounded-md px-3 py-1.5 text-sm transition-all duration-200",
+                    active
+                      ? "font-semibold text-black"
+                      : "text-zinc-300 hover:-translate-y-0.5 hover:text-white",
+                  )}
+                >
+                  {link.label}
+                </Link>
+              );
+            },
+          )}
         </nav>
 
-        <form onSubmit={onSearch} className="ml-auto hidden flex-1 max-w-xs md:flex">
+        <form
+          onSubmit={onSearch}
+          className="ml-auto hidden max-w-xs flex-1 md:flex"
+        >
           <div className="relative w-full">
-            <svg
-              viewBox="0 0 24 24"
-              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 fill-zinc-500"
-            >
-              <path d="M10 2a8 8 0 105.29 14.04l4.33 4.34 1.42-1.42-4.34-4.33A8 8 0 0010 2zm0 2a6 6 0 110 12 6 6 0 010-12z" />
-            </svg>
-            <input
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
+            <Input
               type="search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Cari drama, kategori..."
-              className="w-full rounded-full border border-zinc-800 bg-zinc-900 py-1.5 pl-9 pr-3 text-sm text-white placeholder-zinc-500 outline-none transition-colors focus:border-amber-400"
+              className="rounded-full border-zinc-800 bg-zinc-900 pl-9 text-sm text-white placeholder:text-zinc-500 focus-visible:border-amber-400 focus-visible:ring-0"
             />
           </div>
         </form>
@@ -135,41 +153,56 @@ export default function TopNav() {
             <div className="flex items-center gap-2">
               <CoinChip />
               <div className="hidden items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900 px-3 py-1 sm:flex">
-                <div className={`flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-br text-xs font-bold text-black ${getAvatarClass(user)}`}>
-                  {user.name.charAt(0).toUpperCase()}
-                </div>
+                <Avatar size="sm">
+                  <AvatarFallback
+                    className={cn(
+                      "bg-gradient-to-br text-xs font-bold text-black",
+                      getAvatarClass(user),
+                    )}
+                  >
+                    {user.name.charAt(0).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
                 <span className="text-xs text-zinc-300">{user.name}</span>
-                <span
-                  className={`rounded px-1.5 py-0.5 text-[9px] font-bold uppercase ${
+                <Badge
+                  className={cn(
+                    "rounded px-1.5 py-0.5 text-[9px] font-bold uppercase",
                     user.role === "admin"
                       ? "bg-amber-400/20 text-amber-300"
-                      : "bg-zinc-700 text-zinc-300"
-                  }`}
+                      : "bg-zinc-700 text-zinc-300",
+                  )}
                 >
                   {user.role}
-                </span>
+                </Badge>
               </div>
-              <button
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
                 onClick={onLogout}
-                className="rounded-full border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 transition-colors hover:border-red-500 hover:text-red-400"
+                className="rounded-full border-zinc-700 bg-transparent text-xs text-zinc-300 hover:border-red-500 hover:text-red-400"
               >
+                <LogOut className="size-3.5" />
                 Keluar
-              </button>
+              </Button>
             </div>
           ) : mounted ? (
             <div className="flex items-center gap-2">
-              <Link
-                href="/login"
-                className="rounded-full border border-zinc-700 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:border-amber-400 hover:text-amber-400"
+              <Button
+                asChild
+                variant="outline"
+                size="sm"
+                className="rounded-full border-zinc-700 bg-transparent text-xs font-semibold text-white hover:border-amber-400 hover:text-amber-400"
               >
-                Masuk
-              </Link>
-              <Link
-                href="/daftar"
-                className="rounded-full bg-amber-400 px-3 py-1.5 text-xs font-bold text-black transition-transform hover:scale-105 hover:bg-amber-300"
+                <Link href="/login">Masuk</Link>
+              </Button>
+              <Button
+                asChild
+                size="sm"
+                className="rounded-full text-xs font-bold transition-transform hover:scale-105"
               >
-                Daftar
-              </Link>
+                <Link href="/daftar">Daftar</Link>
+              </Button>
             </div>
           ) : null}
         </div>

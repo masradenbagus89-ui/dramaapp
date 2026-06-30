@@ -6,6 +6,7 @@ import type { Drama } from "@/lib/types";
 import { readMyList } from "@/lib/myList";
 import { parseViews } from "@/lib/format";
 import ContentRow from "./ContentRow";
+import { Badge } from "@/components/ui/badge";
 
 // Urutan kategori yang ditampilkan sebagai baris (yang ada isinya saja).
 const CATEGORY_ORDER = [
@@ -99,20 +100,22 @@ export default function BerandaRows({ dramas }: { dramas: Drama[] }) {
     <div className="space-y-7 pt-4 md:space-y-9 md:pt-6">
       {/* Chip kategori cepat */}
       <div className="no-scrollbar flex gap-2 overflow-x-auto px-4 md:px-0">
-        <Link
-          href="/discover"
-          className="shrink-0 rounded-full bg-zinc-800 px-3.5 py-1.5 text-xs font-semibold text-zinc-200 hover:bg-zinc-700"
+        <Badge
+          asChild
+          variant="secondary"
+          className="shrink-0 bg-zinc-800 px-3.5 py-1.5 text-xs font-semibold text-zinc-200 hover:bg-zinc-700"
         >
-          Semua
-        </Link>
+          <Link href="/discover">Semua</Link>
+        </Badge>
         {presentCats.map((c) => (
-          <Link
+          <Badge
             key={c}
-            href={`/discover?q=${encodeURIComponent(c)}`}
-            className="shrink-0 rounded-full bg-zinc-800 px-3.5 py-1.5 text-xs font-semibold text-zinc-200 hover:bg-zinc-700"
+            asChild
+            variant="secondary"
+            className="shrink-0 bg-zinc-800 px-3.5 py-1.5 text-xs font-semibold text-zinc-200 hover:bg-zinc-700"
           >
-            {c}
-          </Link>
+            <Link href={`/discover?q=${encodeURIComponent(c)}`}>{c}</Link>
+          </Badge>
         ))}
       </div>
 

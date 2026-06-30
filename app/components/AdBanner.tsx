@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import AdCreative from "./AdCreative";
+import { Badge } from "@/components/ui/badge";
 
 // =====================================================================
 // Banner IKLAN OTOMATIS (auto ads). Beda dari RewardedAdModal (iklan koin
@@ -120,9 +121,12 @@ export default function AdBanner({
   if (mode === "raw") {
     return (
       <div className={shell}>
-        <span className="absolute left-2 top-2 z-10 rounded bg-black/60 px-1.5 py-0.5 text-[9px] uppercase tracking-widest text-white/70">
+        <Badge
+          variant="secondary"
+          className="absolute left-2 top-2 z-10 rounded bg-black/60 px-1.5 py-0.5 text-[9px] uppercase tracking-widest text-white/70"
+        >
           Iklan
-        </span>
+        </Badge>
         <div ref={rawRef} className="flex min-h-[90px] items-center justify-center" />
       </div>
     );
@@ -131,9 +135,12 @@ export default function AdBanner({
   if (mode === "adsense") {
     return (
       <div className={shell}>
-        <span className="absolute left-2 top-2 z-10 rounded bg-black/60 px-1.5 py-0.5 text-[9px] uppercase tracking-widest text-white/70">
+        <Badge
+          variant="secondary"
+          className="absolute left-2 top-2 z-10 rounded bg-black/60 px-1.5 py-0.5 text-[9px] uppercase tracking-widest text-white/70"
+        >
           Iklan
-        </span>
+        </Badge>
         <ins
           className="adsbygoogle"
           style={{ display: "block", minHeight: 90 }}
@@ -159,9 +166,12 @@ export default function AdBanner({
         className={`group block ${shell}`}
       >
         <AdCreative src={ad.imageUrl} alt={ad.title ?? "Iklan"} hover />
-        <span className="absolute left-2 top-2 rounded bg-black/60 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-widest text-white/80 backdrop-blur-sm">
+        <Badge
+          variant="secondary"
+          className="absolute left-2 top-2 rounded bg-black/60 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-widest text-white/80 backdrop-blur-sm"
+        >
           Iklan
-        </span>
+        </Badge>
       </a>
     );
   }
@@ -172,16 +182,19 @@ export default function AdBanner({
       href="/beranda"
       className={`flex h-24 items-center justify-between bg-gradient-to-br from-indigo-700 via-purple-800 to-zinc-900 px-5 sm:h-28 ${shell}`}
     >
-      <span className="absolute left-2 top-2 rounded bg-black/40 px-1.5 py-0.5 text-[9px] uppercase tracking-widest text-white/60">
+      <Badge
+        variant="secondary"
+        className="absolute left-2 top-2 rounded bg-black/40 px-1.5 py-0.5 text-[9px] uppercase tracking-widest text-white/60"
+      >
         Iklan
-      </span>
+      </Badge>
       <div>
         <p className="text-lg font-black text-white sm:text-xl">DramaKu+</p>
         <p className="text-xs text-white/70">Nonton ratusan drama China, gratis.</p>
       </div>
-      <span className="shrink-0 rounded-full bg-amber-400 px-4 py-2 text-xs font-bold text-black">
+      <Badge className="shrink-0 rounded-full bg-amber-400 px-4 py-2 text-xs font-bold text-black">
         Tonton →
-      </span>
+      </Badge>
     </Link>
   );
 }

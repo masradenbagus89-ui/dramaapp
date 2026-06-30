@@ -1,6 +1,10 @@
 import { Suspense } from "react";
+import Link from "next/link";
 import { getAllDramas } from "@/lib/dramas";
 import DramaBrowser from "../components/DramaBrowser";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Play } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -23,24 +27,24 @@ export default async function HomePage() {
             )}
             <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent" />
             <div className="absolute bottom-0 left-0 max-w-xl p-8">
-              <span className="rounded bg-amber-400 px-2 py-0.5 text-xs font-bold uppercase text-black">
+              <Badge className="rounded px-2 py-0.5 text-xs font-bold uppercase">
                 Sedang Trending
-              </span>
+              </Badge>
               <h2 className="mt-3 text-3xl font-bold leading-tight text-white">
                 {featured.title}
               </h2>
               <p className="mt-2 line-clamp-3 text-sm text-zinc-300">
                 {featured.synopsis}
               </p>
-              <a
-                href={`/drama/${featured.id}`}
-                className="mt-4 inline-flex items-center gap-2 rounded-full bg-amber-400 px-5 py-2 text-sm font-semibold text-black"
+              <Button
+                asChild
+                className="mt-4 rounded-full px-5 font-semibold"
               >
-                <svg viewBox="0 0 24 24" className="h-4 w-4 fill-black">
-                  <path d="M8 5v14l11-7z" />
-                </svg>
-                Tonton sekarang
-              </a>
+                <Link href={`/drama/${featured.id}`}>
+                  <Play className="size-4 fill-current" />
+                  Tonton sekarang
+                </Link>
+              </Button>
             </div>
           </div>
         </section>

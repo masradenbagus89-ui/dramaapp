@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Gift, Coins, Loader2, CheckCircle2, AlertCircle, X } from "lucide-react";
 import { claimReward } from "@/lib/wallet";
 import { REWARD_PER_AD } from "@/lib/coins";
 import type { SponsorAd } from "@/lib/store";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 // Iklan berhadiah pakai IKLAN SPONSOR SENDIRI (house ad). Admin pasang gambar +
 // link di /admin; modal ini ambil acak dari /api/ads, hitung view/klik, lalu
@@ -124,9 +127,12 @@ export default function RewardedAdModal({
               alt={ad.title ?? "Iklan"}
               className="absolute inset-0 h-full w-full object-contain"
             />
-            <span className="absolute left-2 top-2 rounded bg-black/60 px-1.5 py-0.5 text-[9px] uppercase tracking-widest text-white/80">
+            <Badge
+              variant="secondary"
+              className="absolute left-2 top-2 rounded bg-black/60 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-widest text-white/80 backdrop-blur-sm"
+            >
               Iklan
-            </span>
+            </Badge>
             {ad.title && (
               <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2 text-left text-sm font-semibold text-white">
                 {ad.title}
@@ -134,13 +140,17 @@ export default function RewardedAdModal({
             )}
           </a>
         ) : (
-          <div className="flex aspect-video items-center justify-center bg-gradient-to-br from-indigo-700 via-purple-800 to-zinc-900">
+          <div className="relative flex aspect-video items-center justify-center bg-gradient-to-br from-indigo-700 via-purple-800 to-zinc-900">
+            <Badge
+              variant="secondary"
+              className="absolute left-2 top-2 rounded bg-black/40 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-widest text-white/60 backdrop-blur-sm"
+            >
+              Iklan
+            </Badge>
             <div className="text-center">
-              <p className="text-[10px] uppercase tracking-widest text-white/60">
-                Iklan
-              </p>
-              <p className="mt-1 text-2xl font-black text-white">DramaKu+</p>
-              <p className="mt-1 text-xs text-white/70">
+              <p className="text-2xl font-black text-white">DramaKu+</p>
+              <p className="mt-1 flex items-center justify-center gap-1 text-xs text-white/70">
+                <Coins className="size-3.5 text-amber-400" />
                 Tonton iklan, dapat koin gratis
               </p>
             </div>
@@ -149,40 +159,53 @@ export default function RewardedAdModal({
 
         <div className="p-4">
           {phase === "playing" && left > 0 && (
-            <p className="text-sm text-zinc-300">
-              Iklan berakhir dalam{" "}
-              <span className="font-bold text-amber-400">{left}s</span>…
+            <p className="flex items-center justify-center gap-2 text-sm text-zinc-300">
+              Iklan berakhir dalam
+              <Badge className="rounded-full bg-amber-400/15 px-2 py-0.5 font-bold text-amber-400 tabular-nums">
+                {left}s
+              </Badge>
             </p>
           )}
 
           {phase === "playing" && left === 0 && (
-            <button
+            <Button
               onClick={onClaim}
               className="w-full rounded-full bg-amber-400 py-2.5 text-sm font-bold text-black hover:bg-amber-300"
             >
-              🎁 Klaim +{REWARD_PER_AD} koin
-            </button>
+              <Gift className="size-4" />
+              Klaim +{REWARD_PER_AD} koin
+            </Button>
           )}
 
           {phase === "claiming" && (
-            <p className="text-sm text-zinc-400">Memberi koin…</p>
+            <p className="flex items-center justify-center gap-2 text-sm text-zinc-400">
+              <Loader2 className="size-4 animate-spin" />
+              Memberi koin…
+            </p>
           )}
 
           {(phase === "done" || phase === "error") && (
             <p
-              className={`text-sm ${phase === "done" ? "text-emerald-400" : "text-red-400"}`}
+              className={`flex items-center justify-center gap-2 text-sm ${phase === "done" ? "text-emerald-400" : "text-red-400"}`}
             >
+              {phase === "done" ? (
+                <CheckCircle2 className="size-4 shrink-0" />
+              ) : (
+                <AlertCircle className="size-4 shrink-0" />
+              )}
               {msg}
             </p>
           )}
 
-          <button
+          <Button
             onClick={onClose}
             disabled={phase === "claiming"}
-            className="mt-3 w-full rounded-full border border-zinc-700 py-2 text-xs font-semibold text-zinc-300 hover:border-zinc-500 disabled:opacity-40"
+            variant="outline"
+            className="mt-3 w-full rounded-full border-zinc-700 bg-transparent py-2 text-xs font-semibold text-zinc-300 hover:border-zinc-500 hover:bg-transparent hover:text-zinc-100 disabled:opacity-40 dark:bg-transparent dark:hover:bg-transparent"
           >
+            <X className="size-3.5" />
             {phase === "done" ? "Tutup & lanjut nonton" : "Tutup"}
-          </button>
+          </Button>
 
           {phase === "playing" && (
             <p className="mt-2 text-[10px] text-zinc-600">

@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 const GROUP = 30; // jumlah episode per tab (kalau drama panjang)
 
@@ -42,19 +45,21 @@ export default function EpisodeSheet({
       />
       <div className="relative max-h-[72vh] overflow-y-auto rounded-t-2xl border-t border-zinc-800 bg-zinc-950 px-4 pb-8 pt-3">
         <div className="sticky top-0 z-10 -mx-4 mb-3 flex items-center justify-between border-b border-zinc-800 bg-zinc-950/95 px-4 pb-3 backdrop-blur">
-          <h3 className="text-sm font-bold text-white">
+          <h3 className="flex items-center gap-2 text-sm font-bold text-white">
+            <span className="h-4 w-1 rounded-full bg-amber-400" aria-hidden="true" />
             Pilih Episode{" "}
             <span className="font-normal text-zinc-500">({total} eps)</span>
           </h3>
-          <button
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
             onClick={onClose}
             aria-label="Tutup"
-            className="rounded-full p-1 text-zinc-400 hover:text-white"
+            className="rounded-full text-zinc-400 hover:bg-zinc-800 hover:text-white"
           >
-            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <path d="M6 6l12 12M18 6L6 18" />
-            </svg>
-          </button>
+            <X className="h-5 w-5" />
+          </Button>
         </div>
 
         {groups > 1 && (
@@ -63,17 +68,20 @@ export default function EpisodeSheet({
               const s = g * GROUP + 1;
               const e = Math.min(total, (g + 1) * GROUP);
               return (
-                <button
+                <Button
                   key={g}
+                  type="button"
+                  size="sm"
                   onClick={() => setTab(g)}
-                  className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold ${
+                  className={cn(
+                    "shrink-0 rounded-full px-3 text-xs font-semibold",
                     g === tab
-                      ? "bg-amber-400 text-black"
-                      : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
-                  }`}
+                      ? "bg-amber-400 text-black hover:bg-amber-300"
+                      : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700 hover:text-white",
+                  )}
                 >
                   {s}-{e}
-                </button>
+                </Button>
               );
             })}
           </div>
@@ -83,17 +91,20 @@ export default function EpisodeSheet({
           {eps.map((ep) => {
             const isCur = ep === current;
             return (
-              <button
+              <Button
                 key={ep}
+                type="button"
                 onClick={() => onPick(ep)}
-                className={`flex h-11 items-center justify-center rounded-lg text-sm font-semibold transition-colors ${
+                aria-current={isCur ? "true" : undefined}
+                className={cn(
+                  "h-11 w-full rounded-lg text-sm font-semibold transition-colors",
                   isCur
-                    ? "bg-amber-400 text-black"
-                    : "bg-zinc-800 text-zinc-200 hover:bg-zinc-700"
-                }`}
+                    ? "bg-amber-400 text-black shadow-md shadow-amber-500/20 ring-2 ring-amber-300/50 hover:bg-amber-300"
+                    : "bg-zinc-800 text-zinc-200 hover:bg-zinc-700 hover:text-white",
+                )}
               >
                 {ep}
-              </button>
+              </Button>
             );
           })}
         </div>

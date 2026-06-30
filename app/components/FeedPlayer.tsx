@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 import ActionRail from "./ActionRail";
 import EpisodeSheet from "./EpisodeSheet";
 import { setProgress } from "@/lib/progress";
@@ -462,9 +463,7 @@ export default function FeedPlayer({
         className="absolute left-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-white"
         aria-label="Kembali"
       >
-        <svg viewBox="0 0 24 24" className="h-5 w-5 fill-white">
-          <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
-        </svg>
+        <ChevronLeft className="h-5 w-5" />
       </Link>
 
       <ActionRail

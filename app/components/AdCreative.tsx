@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 // Penyaji creative iklan yang ADAPTIF terhadap bentuk gambar:
 //   • Gambar LANDSCAPE (rasio ≥ ~2.4, mis. 1200×300) → tampil edge-to-edge,
@@ -40,9 +41,10 @@ export default function AdCreative({
         src={src}
         alt={alt}
         onLoad={onLoad}
-        className={`block h-auto w-full ${
-          hover ? "transition-transform duration-300 group-hover:scale-[1.01]" : ""
-        }`}
+        className={cn(
+          "block h-auto w-full",
+          hover && "transition-transform duration-300 group-hover:scale-[1.01]",
+        )}
       />
     );
   }
@@ -65,9 +67,10 @@ export default function AdCreative({
       <img
         src={src}
         alt={alt}
-        className={`relative mx-auto h-full w-auto max-w-full object-contain shadow-2xl shadow-black/50 ${
-          hover ? "transition-transform duration-300 group-hover:scale-[1.02]" : ""
-        }`}
+        className={cn(
+          "relative mx-auto h-full w-auto max-w-full object-contain shadow-2xl shadow-black/50",
+          hover && "transition-transform duration-300 group-hover:scale-[1.02]",
+        )}
       />
     </div>
   );

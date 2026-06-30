@@ -2,8 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Heart, MessageCircle, Bookmark, Share2, Clapperboard } from "lucide-react";
 import { isLiked, setLiked } from "@/lib/myLikes";
 import { isSaved, toggleSaved } from "@/lib/myList";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 // Rail ikon vertikal ala Melolo/TikTok yang menempel di sisi kanan feed.
 // Pakai ulang store like (/api/likes) + myList (simpan) yang sudah ada.
@@ -93,39 +96,38 @@ export default function ActionRail({
     <div className="pointer-events-auto absolute bottom-32 right-2 z-20 flex flex-col items-center gap-5">
       <Link
         href={`/drama/${dramaId}`}
-        className="h-11 w-11 overflow-hidden rounded-full border-2 border-white/80 bg-zinc-800"
+        className="h-11 w-11 overflow-hidden rounded-full border-2 border-amber-400/80 bg-zinc-800 shadow-lg ring-2 ring-black/20 transition-transform hover:scale-105"
         aria-label="Detail drama"
       >
         {posterImage ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={posterImage} alt={title} className="h-full w-full object-cover" />
         ) : (
-          <span className="flex h-full w-full items-center justify-center text-lg">🎬</span>
+          <span className="flex h-full w-full items-center justify-center text-amber-400">
+            <Clapperboard className="h-5 w-5" />
+          </span>
         )}
       </Link>
 
-      <RailButton label={count && count > 0 ? String(count) : "Suka"} onClick={onLike} active={liked}>
-        <svg viewBox="0 0 24 24" className="h-7 w-7" fill={liked ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
-          <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
-        </svg>
+      <RailButton
+        label={count && count > 0 ? String(count) : "Suka"}
+        onClick={onLike}
+        active={liked}
+        activeColor="text-rose-500"
+      >
+        <Heart className="h-7 w-7" fill={liked ? "currentColor" : "none"} />
       </RailButton>
 
       <RailButton label="Komen" onClick={() => onComment?.()}>
-        <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
-          <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" />
-        </svg>
+        <MessageCircle className="h-7 w-7" />
       </RailButton>
 
       <RailButton label={saved ? "Tersimpan" : "Simpan"} onClick={onSave} active={saved} activeColor="text-amber-400">
-        <svg viewBox="0 0 24 24" className="h-7 w-7" fill={saved ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
-          <path d="M6 2h12a2 2 0 012 2v18l-8-4-8 4V4a2 2 0 012-2z" />
-        </svg>
+        <Bookmark className="h-7 w-7" fill={saved ? "currentColor" : "none"} />
       </RailButton>
 
       <RailButton label="Bagikan" onClick={onShare}>
-        <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
-          <path d="M4 12v7a2 2 0 002 2h12a2 2 0 002-2v-7M16 6l-4-4-4 4M12 2v14" />
-        </svg>
+        <Share2 className="h-7 w-7" />
       </RailButton>
     </div>
   );
@@ -145,10 +147,23 @@ function RailButton({
   activeColor?: string;
 }) {
   return (
-    <button onClick={onClick} className="flex flex-col items-center gap-1" aria-pressed={active}>
-      <span className={active ? activeColor : "text-white drop-shadow-lg"}>{children}</span>
+    <div className="flex flex-col items-center gap-1">
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        onClick={onClick}
+        aria-pressed={active}
+        aria-label={label}
+        className={cn(
+          "h-12 w-12 rounded-full bg-black/30 backdrop-blur-sm transition-transform hover:scale-110 hover:bg-black/45 active:scale-95 [&_svg:not([class*='size-'])]:size-7",
+          active ? activeColor : "text-white drop-shadow-lg",
+        )}
+      >
+        {children}
+      </Button>
       <span className="text-[11px] font-medium text-white drop-shadow-lg">{label}</span>
-    </button>
+    </div>
   );
 }
 

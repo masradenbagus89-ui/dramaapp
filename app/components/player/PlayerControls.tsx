@@ -1,6 +1,8 @@
 "use client";
 
 import { fmtTime } from "@/lib/format";
+import { Button } from "@/components/ui/button";
+import { Play, Pause, LayoutGrid, ChevronRight } from "lucide-react";
 import PlayerSettings, { type PlayerSettingsProps } from "./PlayerSettings";
 
 // Panel kontrol bawah pemutar — judul + episode, subtitle, seek bar, tombol
@@ -57,16 +59,9 @@ export default function PlayerControls({
           onClick={onOpenEpisodes}
           className="pointer-events-auto mt-1 flex items-center gap-1 text-[11px] font-medium text-white/70 active:text-white"
         >
-          <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="3" y="3" width="7" height="7" rx="1" />
-            <rect x="14" y="3" width="7" height="7" rx="1" />
-            <rect x="3" y="14" width="7" height="7" rx="1" />
-            <rect x="14" y="14" width="7" height="7" rx="1" />
-          </svg>
+          <LayoutGrid className="h-3.5 w-3.5" />
           Eps {currentEp} / {episodes}
-          <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M9 6l6 6-6 6" />
-          </svg>
+          <ChevronRight className="h-3 w-3" strokeWidth={2.5} />
         </button>
       </div>
 
@@ -112,38 +107,35 @@ export default function PlayerControls({
         </div>
 
         <div className="pointer-events-auto flex items-center gap-3">
-          <button
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
             onClick={onTogglePlay}
             aria-label={paused ? "Putar" : "Jeda"}
-            className="text-white transition-transform active:scale-90"
+            className="size-9 text-white transition-transform hover:bg-white/15 hover:text-white active:scale-90"
           >
             {paused ? (
-              <svg viewBox="0 0 24 24" className="h-7 w-7 fill-white">
-                <path d="M8 5v14l11-7z" />
-              </svg>
+              <Play className="size-7 fill-white" strokeWidth={0} />
             ) : (
-              <svg viewBox="0 0 24 24" className="h-7 w-7 fill-white">
-                <path d="M6 5h4v14H6zM14 5h4v14h-4z" />
-              </svg>
+              <Pause className="size-7 fill-white" strokeWidth={0} />
             )}
-          </button>
+          </Button>
           <span className="text-xs tabular-nums text-white/80">
             {fmtTime(curTime)} / {fmtTime(dur)}
           </span>
 
-          <button
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
             onClick={onOpenEpisodes}
             aria-label="Daftar episode"
-            className="flex h-8 items-center gap-1 rounded-full bg-white/15 px-2.5 text-xs font-bold text-white hover:bg-white/25"
+            className="h-8 gap-1 rounded-full bg-white/15 px-2.5 text-xs font-bold text-white hover:bg-white/25 hover:text-white"
           >
-            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="3" width="7" height="7" rx="1" />
-              <rect x="14" y="3" width="7" height="7" rx="1" />
-              <rect x="3" y="14" width="7" height="7" rx="1" />
-              <rect x="14" y="14" width="7" height="7" rx="1" />
-            </svg>
+            <LayoutGrid className="size-4" />
             Episode
-          </button>
+          </Button>
 
           {/* Pengaturan — gabung resolusi, kecepatan, subtitle, unduh,
               layar penuh ke SATU tombol biar layar tidak penuh tombol. */}

@@ -3,10 +3,21 @@
 // Bagian "Daftar Drama" di halaman admin: daftar semua drama + tombol
 // Lihat/Edit/Hapus. Dipisah dari app/admin/page.tsx. Datanya + aksi tombol
 // disuplai induk lewat prop (dramas, onEdit, onDelete) supaya komponen ini
-// murni menampilkan. Tampilan & perilaku sama persis.
+// murni menampilkan. Tampilan dirombak ke shadcn/ui (Table, Button, Badge) —
+// perilaku & aksi tetap sama persis.
 import Link from "next/link";
 import type { Drama } from "@/lib/types";
 import { CATEGORY_COLORS } from "@/app/admin/constants";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export default function DramaList({
   dramas,
@@ -24,48 +35,81 @@ export default function DramaList({
         <span className="text-xs text-zinc-500">{dramas.length} total</span>
       </div>
       <div className="overflow-hidden rounded-2xl border border-zinc-800">
-        <div className="divide-y divide-zinc-800">
-          {dramas.map((d) => (
-            <div key={d.id} className="flex items-center gap-3 bg-zinc-900/40 p-3 hover:bg-zinc-900/70">
-              <div className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-md bg-gradient-to-br ${d.gradient}`}>
-                {d.posterImage && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={d.posterImage} alt="" className="absolute inset-0 h-full w-full object-cover" />
-                )}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-semibold text-white">{d.title}</div>
-                <div className="text-xs text-zinc-500">
-                  <span className={`mr-2 inline-block h-2 w-2 rounded-full align-middle ${CATEGORY_COLORS[d.category] ?? "bg-zinc-500"}`} />
-                  {d.category} · {d.episodes} eps · {d.views}
-                </div>
-              </div>
-              <Link
-                href={`/drama/${d.id}`}
-                className="hidden rounded-md border border-zinc-700 px-3 py-1 text-xs text-zinc-300 hover:border-amber-400 hover:text-amber-400 sm:inline-block"
+        <Table>
+          <TableHeader>
+            <TableRow className="border-zinc-800 hover:bg-transparent">
+              <TableHead className="text-zinc-400">Drama</TableHead>
+              <TableHead className="text-zinc-400">Kategori</TableHead>
+              <TableHead className="text-right text-zinc-400">Aksi</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {dramas.map((d) => (
+              <TableRow
+                key={d.id}
+                className="border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900/70"
               >
-                Lihat
-              </Link>
-              <button
-                onClick={() => onEdit(d)}
-                className="rounded-md border border-amber-700 px-3 py-1 text-xs text-amber-300 hover:border-amber-400 hover:bg-amber-950/40 hover:text-amber-200"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => onDelete(d.id, d.title)}
-                className="rounded-md border border-red-900 px-3 py-1 text-xs text-red-400 hover:border-red-500 hover:bg-red-950 hover:text-red-300"
-              >
-                Hapus
-              </button>
-            </div>
-          ))}
-          {dramas.length === 0 && (
-            <div className="p-6 text-center text-sm text-zinc-500">
-              Belum ada drama. Tambahkan dari form di atas.
-            </div>
-          )}
-        </div>
+                <TableCell>
+                  <div className="flex items-center gap-3">
+                    <div className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-md bg-gradient-to-br ${d.gradient}`}>
+                      {d.posterImage && (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={d.posterImage} alt="" className="absolute inset-0 h-full w-full object-cover" />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-semibold text-white">{d.title}</div>
+                      <div className="text-xs text-zinc-500">
+                        {d.episodes} eps · {d.views}
+                      </div>
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <Badge variant="outline" className="border-zinc-700 text-zinc-300">
+                    <span className={`mr-0.5 inline-block h-2 w-2 rounded-full ${CATEGORY_COLORS[d.category] ?? "bg-zinc-500"}`} />
+                    {d.category}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex items-center justify-end gap-2">
+                    <Button
+                      asChild
+                      variant="outline"
+                      size="sm"
+                      className="hidden rounded-md border-zinc-700 text-zinc-300 hover:border-amber-400 hover:text-amber-400 sm:inline-flex"
+                    >
+                      <Link href={`/drama/${d.id}`}>Lihat</Link>
+                    </Button>
+                    <Button
+                      onClick={() => onEdit(d)}
+                      variant="outline"
+                      size="sm"
+                      className="rounded-md border-amber-700 text-amber-300 hover:border-amber-400 hover:bg-amber-950/40 hover:text-amber-200"
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      onClick={() => onDelete(d.id, d.title)}
+                      variant="outline"
+                      size="sm"
+                      className="rounded-md border-red-900 text-red-400 hover:border-red-500 hover:bg-red-950 hover:text-red-300"
+                    >
+                      Hapus
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+            {dramas.length === 0 && (
+              <TableRow className="border-zinc-800 hover:bg-transparent">
+                <TableCell colSpan={3} className="p-6 text-center text-sm text-zinc-500">
+                  Belum ada drama. Tambahkan dari form di atas.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
       </div>
     </section>
   );

@@ -15,6 +15,8 @@ import AdminSidebar from "@/app/components/admin/AdminSidebar";
 import DramaList from "@/app/components/admin/DramaList";
 import DramaForm from "@/app/components/admin/DramaForm";
 import AdminPasswordSettings from "@/app/components/admin/AdminPasswordSettings";
+import { Button } from "@/components/ui/button";
+import { Lock } from "lucide-react";
 
 export default function AdminPage() {
   const router = useRouter();
@@ -254,20 +256,18 @@ export default function AdminPage() {
     return (
       <div className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center gap-3 px-4 text-center">
         <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-500/15 text-red-400">
-          <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-          </svg>
+          <Lock className="h-7 w-7" />
         </div>
         <h1 className="text-xl font-bold text-white">Akses ditolak</h1>
         <p className="text-sm text-zinc-400">
           Halaman ini hanya untuk admin. Login dengan email yang sudah terdaftar di daftar admin DramaKu untuk mengakses.
         </p>
-        <Link
-          href="/beranda"
-          className="mt-2 rounded-full bg-amber-400 px-5 py-2 text-sm font-bold text-black hover:bg-amber-300"
+        <Button
+          asChild
+          className="mt-2 rounded-full bg-amber-400 px-5 text-sm font-bold text-black hover:bg-amber-300"
         >
-          ← Kembali ke Beranda
-        </Link>
+          <Link href="/beranda">← Kembali ke Beranda</Link>
+        </Button>
       </div>
     );
   }

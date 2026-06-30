@@ -11,6 +11,8 @@ import { computeAdminStats } from "@/lib/admin-stats";
 import { formatViews } from "@/lib/format";
 import { CATEGORY_COLORS } from "@/app/admin/constants";
 import StatCard from "@/app/components/admin/StatCard";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 export default function AdminDashboard({ dramas }: { dramas: Drama[] }) {
   const stats = useMemo(() => computeAdminStats(dramas), [dramas]);
@@ -62,12 +64,19 @@ export default function AdminDashboard({ dramas }: { dramas: Drama[] }) {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
-        <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold text-white">Distribusi Kategori</h2>
-          <span className="text-xs text-zinc-500">{stats.byCategory.length} kategori aktif</span>
-        </div>
-        <div className="mt-4 space-y-2.5">
+      <Card className="rounded-2xl border-zinc-800 bg-zinc-900/40">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <CardTitle className="text-base font-semibold text-white">
+            Distribusi Kategori
+          </CardTitle>
+          <Badge
+            variant="secondary"
+            className="bg-zinc-800 text-xs font-normal text-zinc-400"
+          >
+            {stats.byCategory.length} kategori aktif
+          </Badge>
+        </CardHeader>
+        <CardContent className="space-y-2.5">
           {stats.byCategory.length === 0 ? (
             <p className="text-sm text-zinc-500">Belum ada drama.</p>
           ) : (
@@ -84,8 +93,8 @@ export default function AdminDashboard({ dramas }: { dramas: Drama[] }) {
               </div>
             ))
           )}
-        </div>
-      </section>
+        </CardContent>
+      </Card>
     </>
   );
 }

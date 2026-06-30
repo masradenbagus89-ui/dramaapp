@@ -5,13 +5,26 @@
 // Dipisah dari app/admin/page.tsx (rapikan kode). SEMUA data field + status +
 // aksi disuplai induk lewat prop, jadi komponen ini murni menampilkan — state
 // tetap tinggal di halaman, sehingga tombol Edit di "Daftar Drama" tetap bisa
-// mengisi form ini lewat setter yang sama TANPA perubahan. Tampilan & perilaku
-// sama persis (JSX dipindah byte-identik).
+// mengisi form ini lewat setter yang sama TANPA perubahan. Tampilan dirombak ke
+// shadcn/ui (Card, Input, Label, Textarea, Select, Checkbox, Button) — perilaku
+// & logika tetap sama persis.
 import type { Dispatch, SetStateAction, RefObject, FormEvent } from "react";
 import { slugify } from "@/lib/format";
 import { SUBTITLE_LANGS } from "@/lib/types";
 import { CATEGORY_OPTIONS } from "@/app/admin/constants";
 import type { ScanResult } from "@/lib/admin-api";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function DramaForm({
   id,
@@ -92,34 +105,44 @@ export default function DramaForm({
         className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5 md:p-6"
       >
         <div className="grid gap-4 md:grid-cols-2">
-          <label className="block">
-            <span className="text-sm text-zinc-300">Judul drama *</span>
-            <input
+          <div className="space-y-1.5">
+            <Label htmlFor="drama-title" className="text-sm text-zinc-300">
+              Judul drama *
+            </Label>
+            <Input
+              id="drama-title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Misal: Putri Ajaib Yang Hilang"
-              className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white outline-none focus:border-amber-400"
+              className="rounded-lg border-zinc-700 bg-zinc-900 text-white focus-visible:border-amber-400 focus-visible:ring-0"
             />
-          </label>
-          <label className="block">
-            <span className="text-sm text-zinc-300">Kategori *</span>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white outline-none focus:border-amber-400"
-            >
-              {CATEGORY_OPTIONS.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-          </label>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="drama-category" className="text-sm text-zinc-300">
+              Kategori *
+            </Label>
+            <Select value={category} onValueChange={setCategory}>
+              <SelectTrigger
+                id="drama-category"
+                className="w-full rounded-lg border-zinc-700 bg-zinc-900 text-white focus-visible:border-amber-400 focus-visible:ring-0"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {CATEGORY_OPTIONS.map((c) => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        <label className="mt-4 block">
-          <span className="text-sm text-zinc-300">
+        <div className="mt-4 space-y-1.5">
+          <Label htmlFor="drama-id" className="text-sm text-zinc-300">
             ID slug <span className="text-zinc-500">(opsional — auto-generate dari judul kalau kosong; harus sama dengan nama folder di PC backup)</span>
-          </span>
-          <input
+          </Label>
+          <Input
+            id="drama-id"
             value={id}
             onChange={(e) => setId(e.target.value)}
             placeholder={
@@ -127,60 +150,70 @@ export default function DramaForm({
                 ? `auto: ${slugify(title)}`
                 : "contoh: istri-tersembunyi-sang-ceo"
             }
-            className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white outline-none focus:border-amber-400 font-mono"
+            className="rounded-lg border-zinc-700 bg-zinc-900 font-mono text-white focus-visible:border-amber-400 focus-visible:ring-0"
           />
           {effectiveId && (
-            <p className="mt-1 text-xs text-zinc-500">
+            <p className="text-xs text-zinc-500">
               Final id yang dipakai: <code className="text-amber-300">{effectiveId}</code>
             </p>
           )}
-        </label>
+        </div>
 
-        <label className="mt-4 block">
-          <span className="text-sm text-zinc-300">
+        <div className="mt-4 space-y-1.5">
+          <Label htmlFor="drama-synopsis" className="text-sm text-zinc-300">
             Sinopsis <span className="text-zinc-500">(opsional)</span>
-          </span>
-          <textarea
+          </Label>
+          <Textarea
+            id="drama-synopsis"
             value={synopsis}
             onChange={(e) => setSynopsis(e.target.value)}
             rows={3}
             placeholder="Cerita pendek tentang drama ini..."
-            className="mt-1 w-full resize-y rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white outline-none focus:border-amber-400"
+            className="resize-y rounded-lg border-zinc-700 bg-zinc-900 text-white focus-visible:border-amber-400 focus-visible:ring-0"
           />
-        </label>
+        </div>
 
         <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <label className="block">
-            <span className="text-sm text-zinc-300">Jumlah ditonton (opsional)</span>
-            <input
+          <div className="space-y-1.5">
+            <Label htmlFor="drama-views" className="text-sm text-zinc-300">
+              Jumlah ditonton (opsional)
+            </Label>
+            <Input
+              id="drama-views"
               value={views}
               onChange={(e) => setViews(e.target.value)}
               placeholder="contoh: 1.2M atau 500K"
-              className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white outline-none focus:border-amber-400"
+              className="rounded-lg border-zinc-700 bg-zinc-900 text-white focus-visible:border-amber-400 focus-visible:ring-0"
             />
-          </label>
+          </div>
 
-          <label className="block">
-            <span className="text-sm text-zinc-300">URL poster (opsional)</span>
+          <div className="space-y-1.5">
+            <Label htmlFor="drama-poster" className="text-sm text-zinc-300">
+              URL poster (opsional)
+            </Label>
             <span className="block text-xs text-zinc-500">Gambar tegak/portrait buat card</span>
-            <input
+            <Input
+              id="drama-poster"
               value={posterImage}
               onChange={(e) => setPosterImage(e.target.value)}
               placeholder="/posters/istri-tersembunyi-sang-ceo.png"
-              className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white outline-none focus:border-amber-400 font-mono"
+              className="rounded-lg border-zinc-700 bg-zinc-900 font-mono text-white focus-visible:border-amber-400 focus-visible:ring-0"
             />
-          </label>
+          </div>
 
-          <label className="block md:col-span-2">
-            <span className="text-sm text-zinc-300">URL hero / banner (opsional)</span>
+          <div className="space-y-1.5 md:col-span-2">
+            <Label htmlFor="drama-hero" className="text-sm text-zinc-300">
+              URL hero / banner (opsional)
+            </Label>
             <span className="block text-xs text-zinc-500">Gambar lebar/landscape buat banner besar di halaman detail. Kalau kosong, pakai poster.</span>
-            <input
+            <Input
+              id="drama-hero"
               value={heroImage}
               onChange={(e) => setHeroImage(e.target.value)}
               placeholder="https://i.imgur.com/xxxxxxx.png"
-              className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white outline-none focus:border-amber-400 font-mono"
+              className="rounded-lg border-zinc-700 bg-zinc-900 font-mono text-white focus-visible:border-amber-400 focus-visible:ring-0"
             />
-          </label>
+          </div>
         </div>
 
         <div className="mt-4 rounded-xl border border-zinc-800 bg-zinc-950/50 p-4">
@@ -189,59 +222,65 @@ export default function DramaForm({
             Centang bahasa yang file <code className="text-zinc-400">.vtt</code>-nya sudah kamu taruh di folder PC backup.
             Pola nama: <code className="text-zinc-400">{`<ep>.<kode>.vtt`}</code> — mis. <code className="text-zinc-400">1.id.vtt</code>, <code className="text-zinc-400">1.en.vtt</code>.
           </span>
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="mt-3 flex flex-wrap gap-x-5 gap-y-3">
             {SUBTITLE_LANGS.map((l) => {
               const on = subtitles.includes(l.code);
               return (
-                <button
-                  key={l.code}
-                  type="button"
-                  onClick={() =>
-                    setSubtitles((prev) =>
-                      prev.includes(l.code)
-                        ? prev.filter((c) => c !== l.code)
-                        : [...prev, l.code],
-                    )
-                  }
-                  className={`rounded-full border px-3 py-1.5 text-xs font-medium ${
-                    on
-                      ? "border-amber-400 bg-amber-400/15 text-amber-300"
-                      : "border-zinc-700 bg-zinc-900 text-zinc-400 hover:border-zinc-500"
-                  }`}
-                >
-                  {on ? "✓ " : ""}
-                  {l.label} <span className="opacity-60">({l.code})</span>
-                </button>
+                <div key={l.code} className="flex items-center gap-2">
+                  <Checkbox
+                    id={`subtitle-${l.code}`}
+                    checked={on}
+                    onCheckedChange={() =>
+                      setSubtitles((prev) =>
+                        prev.includes(l.code)
+                          ? prev.filter((c) => c !== l.code)
+                          : [...prev, l.code],
+                      )
+                    }
+                    className="border-zinc-700 data-[state=checked]:border-amber-400 data-[state=checked]:bg-amber-400 data-[state=checked]:text-black"
+                  />
+                  <Label
+                    htmlFor={`subtitle-${l.code}`}
+                    className="cursor-pointer text-xs font-medium text-zinc-300"
+                  >
+                    {l.label} <span className="opacity-60">({l.code})</span>
+                  </Label>
+                </div>
               );
             })}
           </div>
         </div>
 
         <div className="mt-4 rounded-xl border border-zinc-800 bg-zinc-950/50 p-4">
-          <label className="flex cursor-pointer items-start gap-3">
-            <input
-              type="checkbox"
+          <div className="flex items-start gap-3">
+            <Checkbox
+              id="drama-premium"
               checked={premium}
-              onChange={(e) => setPremium(e.target.checked)}
-              className="mt-0.5 h-5 w-5 accent-amber-400"
+              onCheckedChange={(checked) => setPremium(checked === true)}
+              className="mt-0.5 size-5 border-zinc-700 data-[state=checked]:border-amber-400 data-[state=checked]:bg-amber-400 data-[state=checked]:text-black"
             />
-            <span>
-              <span className="text-sm font-semibold text-white">
-                Drama berbayar (pakai koin)
+            <Label htmlFor="drama-premium" className="cursor-pointer items-start">
+              <span>
+                <span className="text-sm font-semibold text-white">
+                  Drama berbayar (pakai koin)
+                </span>
+                <span className="block text-xs font-normal text-zinc-500">
+                  Centang = episode di atas {/* free */}batas gratis dikunci, penonton buka pakai koin.
+                  Kosongkan = drama 100% gratis. <strong className="text-amber-300/80">Drama baru default berbayar</strong>; koleksi lama biarkan kosong agar tetap gratis.
+                </span>
               </span>
-              <span className="block text-xs text-zinc-500">
-                Centang = episode di atas {/* free */}batas gratis dikunci, penonton buka pakai koin.
-                Kosongkan = drama 100% gratis. <strong className="text-amber-300/80">Drama baru default berbayar</strong>; koleksi lama biarkan kosong agar tetap gratis.
-              </span>
-            </span>
-          </label>
+            </Label>
+          </div>
         </div>
 
         <div className="mt-5 rounded-xl border border-zinc-800 bg-zinc-950/50 p-4">
           <div className="flex flex-wrap items-end gap-3">
-            <label className="block">
-              <span className="text-sm text-zinc-300">Jumlah episode *</span>
-              <input
+            <div className="space-y-1.5">
+              <Label htmlFor="drama-episodes" className="text-sm text-zinc-300">
+                Jumlah episode *
+              </Label>
+              <Input
+                id="drama-episodes"
                 type="number"
                 min={1}
                 max={999}
@@ -249,14 +288,15 @@ export default function DramaForm({
                 onChange={(e) =>
                   setEpisodes(Math.max(1, Number(e.target.value) || 1))
                 }
-                className="mt-1 w-32 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white outline-none focus:border-amber-400"
+                className="w-32 rounded-lg border-zinc-700 bg-zinc-900 text-white focus-visible:border-amber-400 focus-visible:ring-0"
               />
-            </label>
-            <button
+            </div>
+            <Button
               type="button"
               onClick={onScan}
               disabled={scanning || !effectiveId}
-              className="rounded-lg border border-amber-400/60 bg-amber-400/10 px-4 py-2 text-sm font-semibold text-amber-300 hover:bg-amber-400/20 disabled:cursor-not-allowed disabled:opacity-40"
+              variant="outline"
+              className="rounded-lg border-amber-400/60 bg-amber-400/10 font-semibold text-amber-300 hover:bg-amber-400/20 hover:text-amber-200"
               title={
                 !effectiveId
                   ? "Isi Judul atau ID slug dulu"
@@ -264,7 +304,7 @@ export default function DramaForm({
               }
             >
               {scanning ? "Memproses..." : "🪄 Scan & auto-hardlink"}
-            </button>
+            </Button>
             {scanResult && (
               <div className="text-xs text-zinc-400">
                 Ditemukan <strong className="text-emerald-300">{scanResult.count}</strong> file (ep 1-{scanResult.max})
@@ -282,13 +322,13 @@ export default function DramaForm({
         </div>
 
         <div className="mt-6 flex flex-wrap items-center gap-3">
-          <button
+          <Button
             type="submit"
             disabled={submitting}
-            className="rounded-full bg-amber-400 px-6 py-2.5 text-sm font-semibold text-black disabled:opacity-50"
+            className="rounded-full bg-amber-400 px-6 py-2.5 font-semibold text-black hover:bg-amber-300"
           >
             {submitting ? "Menyimpan..." : "Simpan drama"}
-          </button>
+          </Button>
           <span className="text-xs text-zinc-500">
             Tersimpan langsung ke database (Supabase) — instan, tanpa redeploy
           </span>

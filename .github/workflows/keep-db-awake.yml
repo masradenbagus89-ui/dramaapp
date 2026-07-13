@@ -1,0 +1,72 @@
+# .github/workflows/keep-db-awake.yml
+# PENJAGA ANTI-TIDUR — cegah database Supabase (paket gratis) tertidur sendiri.
+#
+# MASALAH YANG DICEGAH (kejadian nyata 13 Juli 2026):
+#   Supabase paket gratis menidurkan project yang menganggur ~7 hari. Begitu
+#   tertidur, alamat internetnya dicabut → seluruh situs MATI (login gagal
+#   "fetch failed", halaman balas error 500) tanpa ada peringatan apa pun.
+#
+# CARA KERJA:
+#   Tiap hari robot ini menyapa /api/dramas di situs live. Alamat itu ber-mode
+#   `force-dynamic` (lihat app/api/dramas/route.ts:4) = TIDAK PERNAH di-cache,
+#   jadi tiap sapaan benar-benar membaca tabel `dramas` di Supabase. Database
+#   merasa "masih dipakai" → tidak ditidurkan.
+#
+# BONUS — ini juga ALARM:
+#   Kalau situs/database bermasalah, langkah di bawah GAGAL dan GitHub otomatis
+#   mengirim email ke pemilik repo. Jadi kamu tahu situs sakit dari email, bukan
+#   dari komplain penonton.
+#
+# TIDAK BUTUH PASSWORD/KUNCI RAHASIA apa pun — cuma membuka halaman publik.
+#
+# JALANKAN MANUAL: tab "Actions" → "Penjaga Anti-Tidur Database" → "Run workflow".
+
+name: Penjaga Anti-Tidur Database
+
+on:
+  schedule:
+    # Tiap hari 02:00 UTC = 09:00 WIB. Harian = jauh di dalam ambang 7 hari,
+    # jadi tetap aman walau GitHub sesekali menunda/melewatkan satu jadwal.
+    - cron: "0 2 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  sapa-database:
+    name: Sapa database supaya tidak tertidur
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Panggil endpoint yang membaca database
+        env:
+          # Ganti kalau domain situs berubah.
+          SITE: https://dramaapp.vercel.app
+        run: |
+          set -euo pipefail
+          # Query param acak = pemutus cache, jaring pengaman kalau suatu saat
+          # ada lapisan cache baru di depan situs.
+          URL="${SITE}/api/dramas?keepalive=$(date +%s)"
+          echo "Menyapa: ${URL}"
+
+          CODE=$(curl -sS -o resp.json -w "%{http_code}" \
+                   --max-time 30 --retry 3 --retry-delay 15 --retry-all-errors \
+                   "${URL}")
+          echo "Kode balasan HTTP: ${CODE}"
+
+          if [ "${CODE}" != "200" ]; then
+            echo "::error::Situs/database TIDAK sehat (HTTP ${CODE}). Cek apakah project Supabase tertidur: https://supabase.com/dashboard"
+            exit 1
+          fi
+
+          # Halaman balas 200 belum tentu datanya mengalir — pastikan isinya nyata.
+          COUNT=$(jq 'if type == "array" then length else 0 end' resp.json)
+          echo "Jumlah drama yang terbaca dari database: ${COUNT}"
+
+          if [ "${COUNT}" -lt 1 ]; then
+            echo "::error::Database membalas KOSONG. Situs hidup tapi data tidak terbaca — perlu diperiksa."
+            exit 1
+          fi
+
+          echo "OK — database tersentuh & membalas ${COUNT} drama. Tidak akan ditidurkan."

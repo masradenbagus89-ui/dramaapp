@@ -1,0 +1,170 @@
+# app-cicd.yml.example — Pipeline CI/CD CONTOH untuk PROJECT staff (test -> build -> deploy).
+#
+# Serapan dari ECC (skill deployment-patterns), MIT (c) Affaan Mustafa — DITULIS-ULANG +
+# di-perbarui-versi untuk lintasAI (bukan salinan mentah).
+#
+# ==========================================================================================
+# APA INI (untuk semua orang)
+# ------------------------------------------------------------------------------------------
+# 👨‍💻 Programmer: workflow GitHub Actions 3-tahap. `test` jalan di SEMUA push + PR (lint,
+#    typecheck, unit test + coverage). `build` & `deploy` HANYA di branch `main` — bangun
+#    image Docker, kirim ke GitHub Container Registry (ghcr.io), lalu tayangkan ke produksi.
+# 🙂 Non-Programmer: ini "ban berjalan otomatis" di pabrik kode. Tiap kali kode dikirim ke
+#    GitHub: (1) diperiksa mutunya, (2) dikemas jadi "paket siap-kirim" (image Docker),
+#    (3) dikirim ke server yang dilihat pengguna. Kalau ada yang gagal di tengah jalan,
+#    ban berhenti — kode bermasalah TIDAK ikut tayang.
+#
+# ISTILAH SINGKAT:
+#   • CI/CD = otomatis-uji (Continuous Integration) + otomatis-kirim (Continuous Delivery).
+#   • image Docker = "paket beku" berisi app + semua kebutuhannya, jalan sama di mana pun.
+#   • ghcr.io = gudang image milik GitHub (GitHub Container Registry).
+#   • coverage = seberapa banyak kode yang ikut teruji tes (%).
+#
+# ==========================================================================================
+# CARA PASANG (opt-in — TIDAK aktif otomatis)
+# ------------------------------------------------------------------------------------------
+#   1. Salin berkas ini ke:  .github/workflows/app-cicd.yml   (buang akhiran ".example").
+#   2. Sesuaikan langkah `deploy` dengan platform kamu (Railway / Vercel / Kubernetes).
+#   3. Kalau app kamu BUKAN Docker (mis. Vercel murni), buang job `build` + `deploy`,
+#      sisakan job `test` saja + deploy lewat integrasi Vercel/GitHub bawaan.
+# ⚠️ PRASYARAT (kalau tidak dipenuhi, job `test` MERAH "Missing script"): package.json kamu HARUS
+#    punya script `lint`, `typecheck`, dan `test`. Project Next.js baru biasanya BELUM punya
+#    `typecheck`/`test` — tambahkan dulu (mis. "typecheck": "tsc --noEmit") ATAU hapus langkah
+#    yang tak dipakai di job `test` di bawah.
+# CARA MATIKAN: hapus berkas .github/workflows/app-cicd.yml.
+#
+# ==========================================================================================
+# VERSI ACTION — SADAR-VERSI (WAJIB dibaca sebelum pakai)
+# ------------------------------------------------------------------------------------------
+# Nomor versi di bawah di-pin ke MAJOR TERBARU yang sudah diverifikasi ke halaman rilis
+# resmi pada 2026-07-11. Framework CI berubah cepat — sebelum pakai, cek sekilas rilis
+# terbaru; kalau runner kamu lama / self-hosted, versi @v4 lama umumnya masih jalan.
+#   • actions/checkout      -> github.com/actions/checkout/releases        (terbaru: v7)
+#   • actions/setup-node    -> github.com/actions/setup-node/releases      (terbaru: v6)
+#   • actions/upload-artifact -> github.com/actions/upload-artifact/releases (terbaru: v7)
+#   • docker/setup-buildx-action -> github.com/docker/setup-buildx-action/releases (v4)
+#   • docker/login-action   -> github.com/docker/login-action/releases     (terbaru: v4)
+#   • docker/build-push-action -> github.com/docker/build-push-action/releases (terbaru: v7)
+# TIPS keamanan (opsional, lebih ketat): pin action ke commit SHA + pakai Dependabot/Renovate
+# untuk update otomatis. Untuk tim non-programmer, pin major-tag di bawah sudah memadai.
+#
+# ==========================================================================================
+# TAHAPAN (kapan apa jalan)
+# ------------------------------------------------------------------------------------------
+#   Buka / update PR ke main : lint -> typecheck -> test              (belum tayang)
+#   Merge ke main            : lint -> typecheck -> test -> build image -> deploy produksi
+# ==========================================================================================
+
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Default-deny (least-privilege, selaras prinsip §8 kit): SELURUH job hanya BOLEH BACA repo,
+# kecuali di-override per-job (job `build` di bawah menaikkan sendiri ke packages: write).
+# Mencegah GITHUB_TOKEN ber-write bocor ke kode PR tak-tepercaya saat job `test` jalankan
+# npm ci / npm test (skrip lifecycle package.json PR bisa mengeksekusi apa saja).
+permissions:
+  contents: read
+
+# Batalkan run lama HANYA untuk PR (PR tak men-deploy). Di `main` biarkan run tuntas
+# supaya job `deploy` tak terpotong di tengah = rilis setengah-jadi.
+concurrency:
+  group: cicd-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  # ----- 1) TEST: jalan di SEMUA push + PR (gerbang mutu) -----
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ambil kode
+        uses: actions/checkout@v7
+
+      - name: Siapkan Node.js
+        uses: actions/setup-node@v6
+        with:
+          # Samakan dengan runtime project kamu (package.json "engines" / .nvmrc).
+          node-version: "24"
+          # Tulis eksplisit biar cache PASTI aktif lintas package-manager — nilai: "npm" | "yarn" | "pnpm".
+          # (Di setup-node v6 auto-cache HANYA npm & HANYA jika package.json punya field
+          # "packageManager"; yarn/pnpm tak lagi auto. pnpm butuh langkah pnpm/action-setup DULU.)
+          cache: "npm"
+
+      - name: Pasang dependency (persis lockfile)
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Cek tipe (typecheck)
+        run: npm run typecheck
+
+      - name: Tes + coverage
+        run: npm test -- --coverage
+
+      - name: Simpan laporan coverage
+        uses: actions/upload-artifact@v7
+        if: always() # simpan walau tes gagal — biar bisa diperiksa penyebabnya
+        with:
+          name: coverage
+          path: coverage/
+
+  # ----- 2) BUILD: HANYA di main -> bangun image Docker + kirim ke ghcr.io -----
+  build:
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      # Least-privilege (hak seperlunya): cukup baca repo + tulis package.
+      contents: read
+      packages: write
+    steps:
+      - name: Ambil kode
+        uses: actions/checkout@v7
+
+      - name: Siapkan Buildx (mesin build Docker + cache)
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login ke ghcr.io
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          # Token bawaan GitHub — JANGAN bikin secret manual untuk ini.
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Bangun & kirim image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: true
+          # Tag = SHA commit (unik + bisa dilacak persis ke kode mana yang tayang).
+          tags: ghcr.io/${{ github.repository }}:${{ github.sha }}
+          # Cache lintas-run lewat GitHub Actions (mempercepat build berikutnya).
+          # mode=max = cache semua layer termasuk perantara. Butuh Buildx (langkah di atas).
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ----- 3) DEPLOY: HANYA di main -> tayangkan ke produksi -----
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    # "environment: production" = pintu persetujuan. Di Settings repo kamu bisa wajibkan
+    # klik "approve" sebelum deploy jalan (rem tangan untuk rilis penting).
+    environment: production
+    steps:
+      - name: Kirim ke produksi (SESUAIKAN dengan platform kamu)
+        run: |
+          # Pilih SATU sesuai platform — hapus yang lain:
+          #   Railway : railway up
+          #   Vercel  : vercel --prod --token=${{ secrets.VERCEL_TOKEN }}
+          #   K8s     : kubectl set image deployment/app app=ghcr.io/${{ github.repository }}:${{ github.sha }}
+          echo "Deploy commit ${{ github.sha }} ke produksi"
+      # RENCANA BALIK (rollback) 1-baris — WAJIB dipikirkan sebelum rilis:
+      #   Railway: railway up --commit <sha-sebelumnya> | Vercel: vercel rollback
+      #   K8s:     kubectl rollout undo deployment/app

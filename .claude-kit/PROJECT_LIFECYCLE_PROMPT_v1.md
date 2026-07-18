@@ -25,7 +25,7 @@ AI yang baca prompt ini: auto-detect stage dari first user message, atau tanya k
 > v1 · 2026-05-30 · pasangan CLAUDE.md universal
 
 ## Peran kamu
-Kamu BUKAN satu engineer - kamu **9 divisi sekaligus** dalam satu otak: **Backend, Frontend, FullStack, DevOps, Security, DBA, UX/Web, SEO, Owner (bisnis)**. Tiap keputusan ditimbang dari ke-9 sudut pandang itu; kalau satu divisi menang sambil merusak divisi lain, itu solusi gagal. Sebutkan singkat trade-off lintas-divisi saat keputusan kamu non-obvious.
+Kamu BUKAN satu engineer - kamu **9 peran lintas-divisi sekaligus** dalam satu otak: **Backend, Frontend, FullStack, DevOps, Security, DBA, UX/Web, SEO, Owner (bisnis)** (ini "Peran AI" §1). *(Catatan: ini PERAN — beda dari **8 skill divisi WAJIB** §4.13 yang jadi lantai kerja; jangan campurkan kedua daftar.)* Tiap keputusan ditimbang dari ke-9 sudut pandang itu; kalau satu sudut menang sambil merusak yang lain, itu solusi gagal. Sebutkan singkat trade-off lintas-divisi saat keputusan kamu non-obvious.
 
 ## Sumber aturan
 Aturan kerja inti ada di SALAH SATU dari ini (cek dulu mana yang aktif):
@@ -96,7 +96,7 @@ Konfirmasi kamu sudah baca `CLAUDE.md`/`AGENTS.md` di proyek ini, lalu mulai tas
 
 # Stage 2 — Bikin Catatan Proyek (Bootstrap Docs)
 > v2.3 · 2026-06-01 · **BULK-GENERATE TOOL** untuk `.md` pendamping
-> 2 cara invoke: (A) **on-demand manual** - user paste prompt ini; (B) **auto-triggered dari JALANKAN_KIT.md** - Popup #1 di Step 8, pilih [1] Full (atau Enter/default) -> auto bulk-bootstrap docs + schema scan, AI jalankan workflow ini internally. Mode FASE 5 default "approve all per kategori" (efisien) - user boleh switch ke per-file approval kalau butuh review ketat.
+> 2 cara invoke: (A) **on-demand manual** - user paste prompt ini; (B) **auto-triggered dari JALANKAN_KIT.md** - Popup #1 di Step 8, pilih **[1] LENGKAP (rekomendasi)** (atau Enter/default) -> auto bulk-bootstrap docs + schema scan, AI jalankan workflow ini internally. Mode FASE 5 default "approve all per kategori" (efisien) - user boleh switch ke per-file approval kalau butuh review ketat.
 
 ## Kapan pakai prompt ini?
 
@@ -106,22 +106,21 @@ Paste prompt ini di sesi AI **HANYA KALAU** (manual invocation):
 - ✅ Migration dari proyek lain - banyak file CRITICAL pre-existing tanpa dokumentasi.
 
 Atau, **otomatis di-trigger** saat user paste `JALANKAN_KIT.md` dan:
-- ✅ User di Popup #1 Step 8 JALANKAN_KIT pilih [1] Full (atau Enter/default) -> auto bulk-bootstrap docs + schema scan. AI jalankan workflow ini internally dengan universal exhaustive scan (no cap) + auto-subfolder grouping.
+- ✅ User memilih **[1] LENGKAP** di Popup #1 (lihat header Stage 2 di atas) -> AI jalankan workflow ini internally dengan universal exhaustive scan (no cap) + auto-subfolder grouping.
 
 **JANGAN paste prompt ini kalau**:
 - ❌ Proyek baru / kosong (cukup paste `PROJECT_LIFECYCLE_PROMPT_v1.md` Stage 1: Kickoff).
-- ❌ Cuma 1-2 file CRITICAL yang baru dibuat (biar LAZY-GENERATE per-file handle).
-- ❌ Tidak yakin file CRITICAL apa saja (biar AI deteksi LAZY saat user kerja per-file).
+- ❌ Cuma 1-2 file CRITICAL yang baru dibuat (cukup dibuat on-demand per-file).
+- ❌ Tidak yakin file CRITICAL apa saja (biar dibuat on-demand saat user kerja per-file).
 
-> **Kenapa default LAZY (bukan bulk)?** Bulk-generate boros token (10 file × ~50 baris × tokens = mahal), dan banyak file mungkin tidak relevan ke task user. LAZY = pay-as-you-use. Detail: `CLAUDE_universal_v1.md` seksi 7.2 LAZY-GENERATE.
-> **Pengecualian**: kalau di-trigger dari JALANKAN_KIT → user sudah eksplisit pilih [1] Full (atau Enter/default) di Popup #1 Step 8 -> auto bulk-bootstrap docs + schema scan = consent untuk bulk. FASE 5 default approve-all per kategori untuk efisiensi (per-file mode tetap available kalau user explicit minta).
+> **Kenapa default on-demand (bukan bulk)?** Bulk-generate boros token (10 file × ~50 baris × tokens = mahal), dan banyak file mungkin tidak relevan ke task user. On-demand = pay-as-you-use.
+> **Pengecualian**: kalau di-trigger dari JALANKAN_KIT → user sudah eksplisit pilih **[1] LENGKAP** di Popup #1 (lihat header Stage 2) = consent untuk bulk. FASE 5 default approve-all per kategori untuk efisiensi (per-file mode tetap available kalau user explicit minta).
 
 ## Tujuan prompt ini
 1. **Auto-detect tech stack** (lewat manifest: `package.json` / `pyproject.toml` / `go.mod` / `composer.json` / dll)
 2. **Audit `docs/`** existing - apa yang sudah ada, apa yang missing
 3. **Detect file CRITICAL** lewat universal pattern (auth, db, security, router, entry points)
 4. **Bulk-generate `.md` pendamping** untuk file CRITICAL - dengan **konfirmasi user sebelum write** (interactive).
-5. **Update `docs/architecture_auto.md`** registry setelah selesai.
 
 ---
 
@@ -143,7 +142,7 @@ Kamu adalah **Senior Tech Writer + Architect**. Tujuanmu: bikin dokumentasi yang
 
 #### FASE 0 - Sanity check: proyek kosong atau bukan?
 - **Repo nyaris kosong?** Kalau cuma `.git` + 1-2 file, STOP. Sarankan user paste `PROJECT_LIFECYCLE_PROMPT_v1.md` Stage 1: Kickoff (skenario proyek baru) - stage bootstrap ini cocok untuk proyek yang sudah ada code substansial.
-- **Punya `docs/architecture_auto.md`?** Baca dulu untuk tahu `.md` apa saja yang sudah ada (anti-overwrite).
+- **Cek isi `docs/` dulu** (list/`Grep`) untuk tahu `.md` apa saja yang sudah ada (anti-overwrite).
 
 #### FASE 1 - Auto-detect tech stack (universal)
 Baca manifest yang ada:
@@ -198,7 +197,7 @@ Glob recursive di SEMUA folder source umum (`src/`, `app/`, `lib/`, `internal/`,
 
 **Adaptive grouping per project structure**: kalau project punya folder `inbox/`, `users/`, `payment/` di source, AI auto-bikin `docs/inbox/`, `docs/users/`, `docs/payment/` mengikuti struktur.
 
-Total kandidat di-display ke user (per kategori + per subfolder). Saat di-trigger via JALANKAN_KIT, bulk-bootstrap sudah disetujui lewat Popup #1 Step 8 [1] Full (atau Enter/default) - atau eksplisit di prompt manual.
+Total kandidat di-display ke user (per kategori + per subfolder). Saat di-trigger via JALANKAN_KIT, bulk-bootstrap sudah disetujui lewat Popup #1 **[1] LENGKAP** (lihat header Stage 2) - atau eksplisit di prompt manual.
 
 #### FASE 4 - Generate `docs/<basename>.md` pendamping
 Untuk tiap CRITICAL file yang lolos prioritas:
@@ -207,33 +206,7 @@ Untuk tiap CRITICAL file yang lolos prioritas:
 2. **Baca source file** (max 300 baris pertama).
 3. **Generate `docs/<basename>.md`** dengan format standar (lihat `./.claude-kit/templates/_EXAMPLE.md` sebagai reference).
 
-**Format wajib (5 section)** - sama dengan `CLAUDE_universal_v1.md` seksi 7.5:
-```markdown
-# <basename>.md - <deskripsi singkat>
-
-> Versi 1 · <YYYY-MM-DD> · auto-generated
-
-## Tujuan
-[1-3 kalimat berbasis observasi source: apa modul ini lakukan + masalah yang diselesaikan]
-
-## Cara Pakai
-[Contoh pemanggilan singkat. Sebut "Dipakai di `<file>:<line>`" kalau ada]
-
-## Input / Output
-- Input: [parameter, tipe data]
-- Output: [return value, side effects, error yang bisa di-throw]
-
-## Dependensi
-- Library: [import signifikan]
-- Env: [env var yang dibaca]
-- File terkait: [file lain yang depend / dipakai]
-
-## Catatan
-- [Edge case dari source]
-- [Keputusan penting / non-obvious behavior]
-- [Gotcha]
-- Source code: [`<path>:<line>`]
-```
+**Format wajib (5 section)** - sama dengan `CLAUDE_universal_v1.md` seksi 7.5: header `# <basename>.md - <deskripsi>` + baris `> Versi 1 · <YYYY-MM-DD> · auto-generated`, lalu section **Tujuan / Cara Pakai / Input-Output / Dependensi / Catatan** (edge case + keputusan penting + `Source code: <path>:<line>`). Contoh terisi persis: `./.claude-kit/templates/_EXAMPLE.md` (pola: `templates/_PATTERNS.md`) — ikuti format itu, jangan karang format baru.
 
 **Aturan auto-generate:**
 - Bahasa Indonesia, junior-friendly
@@ -254,21 +227,11 @@ Aman karena anti-overwrite mencegah destruct existing user docs.
 
 > Catatan: IDE permission prompt (Edit / Write YES-NO) di luar kontrol prompt ini - itu IDE-level. User tinggal centang "Always allow" di IDE-nya sendiri kalau mau bypass.
 
-#### FASE 6 - Update `docs/architecture_auto.md` (registry)
-
-Setelah write semua `.md` baru:
-1. Baca `docs/architecture_auto.md` existing (kalau ada).
-2. Append entri baru - 1 baris per file dengan summary singkat (max 80 char).
-3. Group by subfolder kalau scale > 30 file (format hierarchical).
-4. Format wajib lihat `CLAUDE_universal_v1.md` seksi 7.4.
-
-#### Setelah write - REMINDER 4 aturan aktif
+#### Setelah write - REMINDER 3 aturan aktif
 Setelah selesai, **WAJIB umumkan ke user**:
-> "Pembuatan catatan massal (bulk-bootstrap) selesai. **4 aturan dokumentasi tim profesional aktif** (`CLAUDE_universal_v1.md` seksi 7):
-> - **7.1 AUTO-SYNC**: tiap edit code yang punya `docs/<basename>.md`, AI WAJIB update `.md` di sesi yang sama.
-> - **7.2 LAZY-GENERATE**: tiap buat/edit file kode penting (CRITICAL — mis. login, database, keamanan) yang belum ada `.md`, AI tawarkan bikin catatannya satu per satu (tanya dulu).
-> - **7.3 READ-MINIMAL**: AI baca `docs/architecture.md` + `docs/architecture_auto.md` DULU, lalu pilih hanya file `.md` yang relevan dengan tugas (tidak baca semua).
-> - **7.4 ARCHITECTURE REGISTRY**: `docs/architecture.md` = peta makro proyek (kamu edit) + `docs/architecture_auto.md` = daftar isi otomatis (aku yang rawat).
+> "Pembuatan catatan massal (bulk-bootstrap) selesai. **Aturan baca dokumen tim aktif** (`CLAUDE_universal_v1.md` §7.3):
+> - **7.3 READ-MINIMAL**: AI baca `docs/architecture.md` DULU, lalu pakai `Grep` untuk pilih hanya file `.md` yang relevan dengan tugas (tidak baca semua).
+> - Catatan `.md` pendamping dibuat/diperbarui **on-demand saat memang perlu**, bukan otomatis tiap edit.
 >
 > Kalau catatan sudah basi dan mau diperbarui banyak sekaligus: paste `PROJECT_LIFECYCLE_PROMPT_v1.md` Stage 3: Perbarui Catatan."
 
@@ -280,7 +243,6 @@ Pesan commit (ikut style `git log --oneline -10`):
 docs: bulk-bootstrap project documentation
 
 - tambah .md pendamping untuk N file CRITICAL: <list>
-- update docs/architecture_auto.md registry
 ```
 
 ---
@@ -290,7 +252,7 @@ Mulai dari FASE 0 sekarang. Kalau ragu, tanya - jangan menebak. **Mode interacti
 ## Stage 3: Perbarui Catatan (dokumentasi lama)
 
 # Stage 3 — Perbarui Catatan (Update Docs): Audit & Refresh `.md` Pendamping
-> v1.5 · 2026-06-01 · komplement 4 aturan dokumentasi di `CLAUDE_universal_v1.md` seksi 7.1-7.4 (AUTO-SYNC, LAZY-GENERATE, READ-MINIMAL, ARCHITECTURE REGISTRY)
+> v1.5 · 2026-06-01 · komplement aturan baca dokumen `CLAUDE_universal_v1.md` §7.3 READ-MINIMAL
 
 ## Tujuan
 Paste prompt ini di Claude Code kalau **`.md` pendamping di `docs/` tertinggal jauh dari code** (mis. lupa update lewat banyak commit, atau migrasi besar baru selesai). AI akan:
@@ -298,7 +260,7 @@ Paste prompt ini di Claude Code kalau **`.md` pendamping di `docs/` tertinggal j
 2. **Refresh `.md` pendamping** sesuai state code terbaru
 3. **Suggest bikin baru** untuk file CRITICAL yang belum punya docs
 
-Beda dari aturan **Auto-sync** (di `CLAUDE_universal_v1.md` seksi 7.1): aturan auto-sync berlaku per-edit (AI WAJIB sync `.md` setiap kali edit code). Prompt ini untuk **bulk refresh** kalau backlog menumpuk.
+Prompt ini untuk **bulk refresh** `.md` pendamping kalau backlog menumpuk (mis. banyak commit lupa memperbarui dokumen).
 
 ---
 
@@ -371,16 +333,7 @@ docs: refresh .md pendamping (bulk update <N> file)
 
 ## Mode invocation
 
-### Mode standar (paste prompt ini)
-User paste di sesi Claude Code. AI default: Mode A (git diff 5 commit terakhir).
-
-### Mode targeted
-User paste prompt + tambah baris terakhir: *"Focus: docs/auth.md saja"* atau *"Focus: file yang di-edit di branch ini"*. AI jalankan Mode C.
-
-### Mode timestamp audit
-User paste prompt + tambah: *"Pakai Mode B - timestamp audit"*. AI scan semua docs/*.md vs source.
-
----
+Paste polos = **Mode A** (default, git diff 5 commit terakhir) · tambah baris *"Focus: docs/auth.md saja"* / *"Focus: file yang di-edit di branch ini"* = **Mode C** (targeted) · tambah *"Pakai Mode B - timestamp audit"* = **Mode B** (scan semua docs/*.md vs source).
 
 Mulai dari Mode A sekarang (kecuali user spesify mode lain). Kalau git log kosong / repo baru / tidak ada perubahan → lapor "Tidak ada pembaruan diperlukan, semua catatan sudah sesuai kode terbaru."
 
@@ -454,7 +407,7 @@ Tampilkan ringkasan audit ke user dalam bentuk **tabel ASCII**:
 Status: ✅ lulus / ⚠️ sebagian / ❌ belum ada.
 Prioritas: **Quick Wins** (<30 menit, tanpa risiko) / **Bertahap** (dicicil tiap kali usulan perubahan/PR menyentuh area itu) / **Strategi Besar** (butuh diskusi tim).
 
-**Tunggu konfirmasi user via popup mouse-click** (`Show-LintasChoicePopup` dari `lib/popup-helpers.ps1` ATAU `AskUserQuestion` native Claude Code - **JANGAN minta typing**). Options:
+**Tunggu konfirmasi user via popup mouse-click** (`AskUserQuestion` native Claude Code - **JANGAN minta typing**). Options:
 - [1] Stop, owner review dulu (rekomendasi, default) — paling aman, tidak ada satu pun file yang diubah
 - [2] Lanjut bikin rencana migrasi bertahap (migration plan) + simpan ke `docs/MIGRATION_TO_STANDARD.md`
 
@@ -507,7 +460,7 @@ Code lama yang masih jalan tidak diganggu kecuali ada alasan kuat.
 ```
 
 ### Langkah 4 - EKSEKUSI QUICK WINS (dengan konfirmasi)
-Setelah plan disimpan, tanya user **via popup `Show-LintasChoicePopup`** (atau `AskUserQuestion` - JANGAN typing). Options:
+Setelah plan disimpan, tanya user **via popup `AskUserQuestion`** (JANGAN typing). Options:
 - [1] Stop, owner review dulu (rekomendasi, default) — paling aman, belum ada file yang ditulis sebelum kamu setuju
 - [2] Eksekusi Quick Wins sekarang (1-2 item dengan konfirmasi per langkah)
 
@@ -519,7 +472,7 @@ Kalau user pilih [2] (Eksekusi Quick Wins sekarang):
 3. Tunggu konfirmasi user.
 4. Tulis file.
 5. Update `MIGRATION_TO_STANDARD.md` - centang item itu + tambah baris di "Riwayat Eksekusi".
-6. Tanya **via popup `Show-LintasChoicePopup`** (JANGAN minta typing). Options dinamis dari daftar Quick Wins yang belum di-eksekusi:
+6. Tanya **via popup `AskUserQuestion`** (JANGAN minta typing). Options dinamis dari daftar Quick Wins yang belum di-eksekusi:
 
    Pilihan (item Quick Wins berikutnya untuk eksekusi):
      [1] `<Quick Wins item berikutnya - judul singkat>`
@@ -540,13 +493,13 @@ Kalau user pilih [2] (Eksekusi Quick Wins sekarang):
 - **JANGAN ngamuk ribut style kecil** (trailing comma, indent, semicolon) yang bukan tema task - tegur sekali, lanjut kerja.
 - **SELALU update `MIGRATION_TO_STANDARD.md`** tiap selesai 1 item - checkmark + baris riwayat.
 - **SELALU konfirmasi sebelum tulis file** - tampilkan ringkasan + diff dulu.
-- **WAJIB popup mouse-click, bukan typing**: semua konfirmasi user (Lanjut/Stop/Pilih item) pakai `Show-LintasChoicePopup` (`lib/popup-helpers.ps1`) ATAU `AskUserQuestion` (Claude Code native), konsisten dengan UX v1.3.2 (lihat `AUDIT_POST_SETUP_PROMPT_v1.md` Popup #2 sebagai referensi pola). Default action selalu "Stop, owner review dulu" untuk safety. JANGAN minta user ketik "stop" / nomor / yes-no.
+- **WAJIB popup mouse-click, bukan typing**: semua konfirmasi user (Lanjut/Stop/Pilih item) pakai `AskUserQuestion` (Claude Code native), konsisten dengan UX v1.3.2 (lihat `AUDIT_POST_SETUP_PROMPT_v1.md` Popup #2 sebagai referensi pola). Default action selalu "Stop, owner review dulu" untuk safety. JANGAN minta user ketik "stop" / nomor / yes-no.
 
 ### Resume sesi berikutnya
 Kalau `docs/MIGRATION_TO_STANDARD.md` sudah ada saat user paste prompt ini lagi:
 1. Skip audit penuh (Langkah 1).
 2. Baca file, tampilkan ringkasan progres: "Sudah selesai X dari Y item. Quick Wins: a/b, Bertahap: c/d, Strategi Besar: e/f."
-3. Tanya **via popup `Show-LintasChoicePopup`** (atau `AskUserQuestion` - JANGAN typing). Options:
+3. Tanya **via popup `AskUserQuestion`** (JANGAN typing). Options:
    - [1] Stop, owner review dulu (rekomendasi, default) — paling aman, tidak ada yang diubah, kamu kontrol kapan lanjut
    - [2] Eksekusi item Quick Wins berikutnya yang belum selesai
    - [3] Audit ulang celah (gap) baru vs standar tim
@@ -560,8 +513,4 @@ Kalau `docs/MIGRATION_TO_STANDARD.md` sudah ada saat user paste prompt ini lagi:
 Paste seluruh isi di atas ke sesi Claude Code di folder proyek setengah jadi. AI akan mulai audit read-only, gak refactor apa-apa tanpa konfirmasi kamu.
 
 ## Catatan deprecation
-File entry-point lama berikut sudah merged ke prompt ini (single canonical source):
-- Stage 1: Proyek Baru (dulu "Stage A / Kickoff") - sebelumnya entry terpisah
-- Stage 2: Bikin Catatan Proyek (dulu "Stage B / Bootstrap Docs") - sebelumnya entry terpisah
-- Stage 3: Perbarui Catatan (dulu "Stage C / Update Docs") - sebelumnya entry terpisah
-- Stage 4: Rapikan ke Standar Tim (dulu "Stage D / Migration") - sebelumnya entry terpisah
+4 entry-point lama (Stage A/B/C/D = Kickoff / Bootstrap Docs / Update Docs / Migration) sudah **merged** ke prompt ini (single canonical source) — sebelumnya berkas terpisah. Pemetaan nama lama→baru: lihat "Catatan penamaan" di atas.

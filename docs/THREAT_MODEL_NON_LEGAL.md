@@ -1,6 +1,6 @@
 # THREAT_MODEL_NON_LEGAL — Peta Ancaman untuk Tim Tanpa Jalur Hukum
 
-> Versi 1 · 2026-06-14 · untuk owner/lead non-programmer · 1 halaman, baca sekali
+> Versi 1.1 · 2026-07-14 · untuk owner/lead non-programmer · 1 halaman, baca sekali · v1.1: + peta kedua STRIDE (ancaman aplikasi per-fitur)
 
 ## Tujuan
 
@@ -60,6 +60,27 @@ Untuk tim seperti ini, ancaman terbesar **BUKAN** peretas asing di film. Yang re
 - ❌ **Tidak** mendeteksi 100% kebocoran. Penjaga otomatis menahan yang **kasar & jelas** (file `.env`, kunci asli); yang canggih bisa lolos. Karena itu **seleksi orang** tetap nomor satu.
 
 > 🎯 **Garis bawah:** untuk tim tanpa jalur hukum, urutan kekuatan pertahanan = **(1) sedikitkan orang yang pegang gudang emas → (2) pisahkan rahasia dari etalase → (3) siap telusuri jejak.** Peta ini bantu kamu fokus ke ketiga itu, bukan sibuk di hal yang dampaknya kecil.
+
+---
+
+## Peta KEDUA — ancaman APLIKASI per-fitur: checklist STRIDE
+
+> Peta di atas menjaga **kode & kunci** dari orang-dalam. Peta kedua ini menjaga **aplikasi yang kamu bangun** dari penyerang — dipakai **per-fitur**. Baseline §8 sudah mewajibkan threat-model 3-baris (aset / penyerang / mitigasi); untuk fitur BERISIKO (login, pembayaran, data pribadi, upload, halaman publik, skema DB) naikkan kelas pakai STRIDE.
+
+**STRIDE** = daftar-periksa 6 jenis ancaman baku (buatan Microsoft, dipakai luas — rujukan: OWASP Threat Modeling Cheat Sheet, dicek 2026-07). Per fitur, tanya: "bisakah penyerang ..."
+
+| Huruf | Modus | Sifat yang dilanggar | Contoh nyata | Penangkal utama (sudah di kit) |
+|---|---|---|---|---|
+| **S** — *Spoofing* (menyamar) | mengaku sebagai orang lain | Autentikasi | curi token/sesi → login sebagai korban | auth kuat + regenerasi sesi + 2FA (`cap/auth.md`) |
+| **T** — *Tampering* (mengubah) | mengubah data/permintaan diam-diam | Integritas | ubah harga di body request | validasi server + constraint DB + query parameterized (§8/§9) |
+| **R** — *Repudiation* (menyangkal) | menyangkal pernah beraksi | Jejak audit | "bukan saya yang hapus" — dan memang tak ada bukti | audit log who/what/when (§8) + Pilar 4 `OBSERVABILITY_PRODUKSI.md` |
+| **I** — *Information disclosure* (mengintip) | membaca data yang bukan haknya | Kerahasiaan | IDOR / RLS bolong → data user lain terbaca | otorisasi per-resource + RLS (§8 / stack §4.14-2) |
+| **D** — *Denial of service* (melumpuhkan) | membuat layanan mati/mahal | Ketersediaan | banjir request, ReDoS, denial-of-wallet | rate-limit + batas payload (§8) + stack §4.14-4 |
+| **E** — *Elevation of privilege* (panjat hak) | user biasa jadi admin | Otorisasi | mass-assignment `is_admin=true`; utak-atik role di JWT | cek role server-side + allowlist field (stack §4.14-5) |
+
+**Cara pakai (±10 menit per fitur berisiko):** gambar alur datanya (dari mana masuk → diproses di mana → disimpan di mana) → jalankan 6 pertanyaan STRIDE di TIAP panah & tempat-simpan → temuan ditulis jadi threat-model 3-baris yang lebih tajam di `docs/<fitur>.md`. Payungnya 4 pertanyaan (Threat Modeling Manifesto via OWASP): *kerjakan apa? apa yang bisa salah? apa penangkalnya? sudah cukup baik?*
+
+- 🙂 **Non-programmer:** STRIDE = daftar-periksa **6 modus maling** yang baku — menyamar, mengubah barang, menyangkal, mengintip, melumpuhkan, naik pangkat ilegal. Satpam profesional memeriksa keenam modus satu per satu untuk tiap pintu baru, bukan mengandalkan firasat.
 
 ---
 

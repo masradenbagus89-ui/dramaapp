@@ -36,3 +36,11 @@ _dubbing/
 *.backup-*
 *.bak
 *.bak.*
+
+# Catatan pembelajaran lintasAI (berkas belajar, BUKAN berkas proyek — jangan ikut ter-commit)
+docs/pelajaran-lintasai/
+
+
+# === pola lintasAI (ditambah otomatis pemasang) ===
+# Cegah kebocoran: rahasia kit, identitas per-staff, folder cadangan. .kimi-code/AGENTS.md = artefak generated (regenerate tiap update).
+.kimi-code/AGENTS.md

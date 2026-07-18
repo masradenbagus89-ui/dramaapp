@@ -1,6 +1,6 @@
 ﻿# 19 Tools Setup Guide untuk Split Repo
 
-> Setup tools yang memudahkan non-programmer + AI Claude Code di multi-repo architecture.
+> Setup tools yang memudahkan non-programmer + AI Claude Code di arsitektur multi-repo / microservice (varian shared-database).
 > Audience: Owner saat setup awal split repo.
 
 ---
@@ -374,15 +374,4 @@ Deploy ke Vercel. URL: docs.<project>.id
 
 Tools premium (Sentry Pro, Renovate Pro) start ~$25/bln, optional saat tim grow.
 
----
-
-## Cost Total Updated
-
-Ringkasan biaya berdasarkan tier baru (post-elevation Playwright + DevContainer):
-
-- **All Tier 1 + Tier 2 (sections 1-11)**: **$0**
-  - Catatan: DevContainer (section 11) butuh disk space untuk Docker images (~5GB) di laptop owner & staff, tapi tidak ada subscription cost
-- **Tier 3 optional (sections 12-15)**: **~$25/bulan** kalau pakai Sentry Pro atau Renovate Pro; **$0** kalau cukup dengan free tier
-- **Bonus tools (sections 16-19)**: **$0** untuk free tier semua tools (Loom 5min, Vercel hosting, dll). Optional, tidak wajib.
-
-**Bottom line:** tim bisa start dengan **$0/bulan** sampai scale ke ~5+ staff atau ~5K+ errors/bulan, baru perlu pertimbangkan premium tier.
+**Bottom line:** tim bisa start **$0/bulan** (Tier 1-2 sections 1-11 + bonus free-tier; DevContainer butuh ~5GB disk untuk Docker images, tanpa subscription) sampai scale ~5+ staff atau ~5K+ errors/bulan, baru pertimbangkan premium (~$25/bln Sentry/Renovate Pro).

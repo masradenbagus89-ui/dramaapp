@@ -1,6 +1,6 @@
 ﻿# templates/RLS_SETUP_PROMPT.md - Setup Row-Level Security per Schema
 
-> Versi 1 · 2026-06-01
+> Versi 1.1 · 2026-07-14
 > Untuk staff IT / developer schema-scoped yang akses Supabase pakai role `dev_<dev>.<project-ref>`.
 
 ---
@@ -75,8 +75,7 @@ LANGKAH:
    g. Test anon access - pakai publishable_key, harus 401/403 atau empty.
 4. Setelah SEMUA tabel selesai:
    a. Bikin docs/db-rls.md ringkas: per tabel, role apa yang boleh apa.
-   b. Update docs/architecture_auto.md dengan entry [db-rls.md](db-rls.md).
-   c. Commit ke git: `chore(db): setup RLS for schema {{SCHEMA}}`.
+   b. Commit ke git: `chore(db): setup RLS for schema {{SCHEMA}}`.
 
 PENTING:
 - Kerjakan tabel per tabel, HATI-HATI, tes setiap selesai sekelompok (3-5 tabel).
@@ -100,6 +99,7 @@ Setelah staff IT selesai, owner verify dengan checklist ini:
 - [ ] Test curl dengan publishable_key ke endpoint tabel sensitif → 401/403.
 - [ ] Test login sebagai role app yang valid → semua fitur jalan.
 - [ ] `docs/db-rls.md` ada di repo dengan ringkasan per tabel.
+- [ ] **Jalankan Security Advisor Supabase** (pemindai keamanan RESMI yang otomatis mendeteksi tabel RLS-mati, policy bermasalah, view SECURITY DEFINER, function `search_path` mutable) → **0 temuan security**. Jalur: **Supabase Dashboard → Advisors → Security** (pasti ada untuk semua project); bonus kalau pakai Supabase MCP: tool `mcp__supabase__get_advisors` type=`security`. Pemindai ini menangkap tabel yang LUPA di-ENABLE RLS — pengecekan manual `pg_class`/`pg_policies` di atas mudah kelewat kalau tabel banyak.
 
 ---
 
@@ -139,6 +139,15 @@ SELECT * FROM pbn.posts;  -- jalan, padahal RLS aktif
 ALTER TABLE rtp.bets ENABLE ROW LEVEL SECURITY;
 ```
 **Yang benar**: hanya sentuh schema sendiri (`pbn` kalau kamu dev_a di tim PBN).
+
+### 4.5. 🚨 `service_role` key bocor ke client = bypass TOTAL RLS (kesalahan #1)
+`service_role` (kunci layanan Supabase) sengaja **melewati SELURUH policy RLS** — ia untuk kode server tepercaya. Kalau bocor ke browser, semua kerja RLS di atas jadi sia-sia: penyerang bisa baca/tulis SEMUA tabel semua tenant.
+```ts
+// SALAH - kunci bypass-RLS ikut terkirim ke browser pengunjung
+NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY=eyJ...   // prefix NEXT_PUBLIC_ = TERBUKA ke publik!
+const supabase = createClient(url, process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY) // di Client Component
+```
+**Yang benar**: `service_role` HANYA di server (Server Action / route handler / Edge Function), TANPA prefix `NEXT_PUBLIC_`. Di browser pakai `anon`/publishable key (yang memang publik + tunduk RLS). (🙂 `service_role` = kunci master gedung; menaruhnya di etalase toko = semua brankas terbuka, sekalipun tiap pintu sudah dikunci RLS.)
 
 ---
 

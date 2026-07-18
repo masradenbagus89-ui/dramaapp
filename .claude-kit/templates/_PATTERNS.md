@@ -37,13 +37,11 @@ File kode dengan kondisi DI BAWAH ini WAJIB punya `docs/<basename>.md`:
 - File pendamping: nama persis = basename file kode → `src/lib/auth.ts` → `docs/auth.md`.
 - File sistem (kit-managed): prefix `_` → `_PATTERNS.md`, `_EXAMPLE.md`.
 - File peta proyek (user-managed): `architecture.md` + `glossary.md`.
-- Registry TOC (AI-managed): `architecture_auto.md`.
 
 **Scaling rule (kalau `docs/` > 30 file)**: pakai subfolder grouping.
 ```
 docs/
 ├── architecture.md          (peta makro proyek, user-edit)
-├── architecture_auto.md     (registry TOC, AI auto-maintain)
 ├── glossary.md              (kamus istilah)
 ├── _PATTERNS.md             (file ini)
 ├── _EXAMPLE.md              (contoh format `.md` pendamping)
@@ -58,7 +56,7 @@ docs/
     ├── invoices.md
     └── reports.md
 ```
-- AI baca `architecture_auto.md` dulu (lihat aturan READ-MINIMAL di seksi 4), tahu lokasi subfolder, baru cherry-pick file relevan.
+- AI baca `architecture.md` dulu + `Grep` (lihat aturan READ-MINIMAL di seksi 4), tahu lokasi subfolder, baru cherry-pick file relevan.
 
 ---
 
@@ -108,38 +106,18 @@ Contoh konkret 1 file `.md` siap-pakai ada di `_EXAMPLE.md`.
 
 ---
 
-## 4. Aturan AI behavior (4 aturan inti dari CLAUDE_universal_v1.md seksi 7)
+## 4. Aturan baca dokumen (CLAUDE_universal_v1.md §7.3 READ-MINIMAL)
 
-**4.1 AUTO-SYNC** (seksi 7.1)
-- Tiap edit code yang sudah ada `docs/<basename>.md` → AI WAJIB update `.md` di sesi yang sama (kalau perubahan substansial: signature publik, behavior, dependency, edge case baru).
-- Update `architecture_auto.md` kalau ada `.md` baru/rename/hapus.
-
-**4.2 LAZY-GENERATE** (seksi 7.2)
-- Tiap buat/edit file kode CRITICAL (sesuai pattern di seksi 1 di atas) yang BELUM ada `.md` → AI **sugest** generate per-file, **tanya user dulu**. JANGAN bulk-auto.
-- Default: per-file approval. Bulk-generate manual = paste `PROJECT_LIFECYCLE_PROMPT_v1.md` (Stage 2 (Bikin Catatan Proyek): Bootstrap Docs) (on-demand tool).
-
-**4.3 READ-MINIMAL** (seksi 7.3)
-- Saat AI menerima task, baca `docs/architecture.md` DULU (peta makro), lalu `docs/architecture_auto.md` (registry TOC), baru cherry-pick `.md` relevan task.
+**4.1 READ-MINIMAL** (§7.3)
+- Saat AI menerima task, baca SATU peta DULU (`project.lintas.jsonc` bila ada, atau `docs/architecture.md`), lalu cherry-pick `.md` relevan task pakai `Grep`.
 - LARANGAN: jangan baca semua `docs/*.md` di awal sesi (boros token kalau folder besar).
-
-**4.4 ARCHITECTURE REGISTRY** (seksi 7.4)
-- `docs/architecture.md` = peta makro proyek, user-edited.
-- `docs/architecture_auto.md` = registry TOC semua `.md` pendamping, AI auto-maintain (1 baris per file).
-- Pisah supaya user-edit tidak konflik dengan AI auto-maintain.
+- Dokumen `.md` pendamping dibuat/diperbarui **on-demand saat memang perlu**, bukan otomatis tiap edit.
 
 ---
 
 ## 5. Workflow update docs
 
-**Saat AI edit code:**
-1. Cek apakah ada `docs/<basename>.md` → kalau ada DAN perubahan substansial → update.
-2. Commit code + `.md` bareng-bareng (1 commit boleh include keduanya).
-3. Update `docs/architecture_auto.md` kalau ada perubahan struktur (file baru, rename, hapus).
-
-**Saat AI buat file kode CRITICAL baru:**
-1. Tanya user: "File `<basename>` kena pattern CRITICAL + belum ada `docs/<basename>.md` - generate sekarang? (y/n)"
-2. Kalau "y" → generate pakai format seksi 3.
-3. Kalau "n" → opsional catat di `architecture_auto.md` section "Pending docs".
+Saat AI edit code yang sudah punya `docs/<basename>.md`, perbarui `.md`-nya di commit yang sama kalau perubahan substansial (signature publik, behavior, dependency, edge case baru). Dokumen untuk file baru dibuat on-demand saat memang berguna, bukan bulk otomatis.
 
 **Saat user paste `PROJECT_LIFECYCLE_PROMPT_v1.md` (Stage 3 (Perbarui Catatan): Update Docs):**
 - Bulk audit semua `.md` vs git log → lapor mana yang outdated → user pilih per-file refresh.
@@ -154,7 +132,6 @@ Contoh konkret 1 file `.md` siap-pakai ada di `_EXAMPLE.md`.
 - ❌ Bulk auto-generate banyak `.md` sekaligus tanpa per-file approval (kecuali user paste BOOTSTRAP prompt).
 - ❌ Baca semua `docs/*.md` di awal sesi tanpa filter.
 - ❌ Overwrite `.md` existing tanpa user explicit minta.
-- ❌ Skip update `architecture_auto.md` saat tambah/hapus `.md`.
 - ❌ Karang isi `.md` tanpa baca source code (selalu traceable ke `<path>:<line>`).
 - ❌ Tulis `.md` dalam Bahasa Inggris (kecuali override khusus proyek di `AGENTS.md`).
 - ❌ Embed secret/credential plain di `.md` (selalu mask).
@@ -166,7 +143,6 @@ Contoh konkret 1 file `.md` siap-pakai ada di `_EXAMPLE.md`.
 Aktifkan di `AGENTS.md` proyek section "Override khusus proyek":
 
 - **Pre-commit hook** - git hook yang block commit kalau edit `src/lib/*.ts` tanpa edit `docs/*.md` pendamping. Tool: husky, pre-commit, lefthook. Tambah di `package.json` scripts.
-- **CI lint** - workflow GitHub Actions yang fail kalau `architecture_auto.md` outdated vs `docs/` actual files.
 - **Auto-versioning header** - script `docs:bump` yang naikkan `Versi X · <tanggal>` di header `.md` saat update.
 
 Default kit: **tidak aktif** - friction setup tinggi untuk solo/junior. Aktifkan kalau tim sudah disiplin.

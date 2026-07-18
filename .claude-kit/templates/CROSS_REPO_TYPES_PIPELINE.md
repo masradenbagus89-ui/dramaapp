@@ -299,14 +299,14 @@ Jangan auto-merge SEMUA (berisiko: perubahan besar langsung kena frontend). Paka
 **PRASYARAT** — "gabung-otomatis" GitHub hanya aktif kalau repo sudah dinyalakan
 **kunci pengaman gabung** (branch protection) + minimal 1 cek otomatis wajib. Jalankan sekali per repo:
 
-```powershell
+```bash
 # SIMULASI dulu (cuma lihat, tidak mengubah):
-.\.github\scripts\setup-branch-protection.ps1 -Repo "owner/project-frontend"
+npx lintasai protect-main --repo "owner/project-frontend"
 # Benar-benar nyalakan:
-.\.github\scripts\setup-branch-protection.ps1 -Repo "owner/project-frontend" -RequiredCheck "ci" -Apply
+npx lintasai protect-main --repo "owner/project-frontend" --required-check "ci" --apply
 ```
 
-**File template**: `.claude-kit/templates/github/scripts/setup-branch-protection.ps1`.
+**Robot**: `lib/branch-protect.mjs` (dipanggil `npx lintasai protect-main`).
 
 > Catatan: penomoran versi pintar (besar vs kecil) dijamin oleh `PUBLISH_SHARED_WORKFLOW.yml` v1.6.1
 > yang membaca pesan commit (BREAKING/feat!: = besar). Jadi label "besar" akurat, bukan tebakan.

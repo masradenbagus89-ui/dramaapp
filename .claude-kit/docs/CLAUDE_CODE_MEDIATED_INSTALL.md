@@ -52,7 +52,7 @@ Staff buka VS Code → Source Control → Clone Repository → paste URL.
 File → Open Folder → pilih folder project hasil clone.
 Claude Code panel terbuka (kalau extension aktif).
 
-> **Catatan tentang popup**: kalau **AI yang menjalankan** pemasangan (cara di dokumen ini), kamu menemui **Popup Tipe A** — kotak pilihan **DI DALAM chat** (#1/#2/#3 di `JALANKAN_KIT.md`; kalau fitur klik tak tersedia, tampil sebagai teks ketik-angka). **Popup Tipe B** (jendela Windows terpisah, klik tombol mouse) **hanya** muncul kalau kamu menjalankan perintah pasang **sendiri di terminal**. Definisi lengkap: `JALANKAN_KIT.md` > section "Klarifikasi Terminologi Popup".
+> **Catatan tentang popup**: semua interaksi = **Popup Tipe A** — kotak pilihan **DI DALAM chat** (#1/#2/#3 di `JALANKAN_KIT.md`; kalau fitur klik tak tersedia, tampil sebagai teks ketik-angka). Sejak kit 100% Node, pemasang berjalan otomatis penuh **tanpa jendela Windows** (baik lewat chat maupun terminal). Definisi lengkap: `JALANKAN_KIT.md` > section "Klarifikasi Terminologi Popup".
 
 ### Step 3: Chat ke AI
 
@@ -64,7 +64,7 @@ AI akan respond:
 
 1. Detect kamu staff baru → **AI yang menjalankan** `npm create lintasai` (izin OK karena settings.local.json).
 2. Karena **AI yang menjalankan** (bukan kamu ketik manual di terminal), installer masuk **mode otomatis**: SEMUA popup jendela Windows (pilihan AGENTS.md, email, buka VS Code, tip) **dilewati otomatis pakai nilai aman** — kamu **tidak** perlu klik popup jendela Windows apa pun.
-3. AI langsung lanjut ke **popup pemandu DI DALAM chat** (Fase B): #1 cara pasang → #2 audit menyeluruh (kalau project sudah ada kodenya) → #3 ukuran tim + bentuk kode (tetap 1 tempat & rapikan / pecah 3 repo / multi-repo) → catatan kode 2-versi di akhir. Ini popup yang kamu KLIK di chat, bukan jendela Windows.
+3. AI langsung lanjut ke **popup pemandu DI DALAM chat** (Fase B): #1 cara pasang → #2 audit menyeluruh (kalau project sudah ada kodenya) → #3 ukuran tim + bentuk kode (tetap 1 tempat & rapikan / pecah 3 repo / microservice shared-DB) → catatan kode 2-versi di akhir. Ini popup yang kamu KLIK di chat, bukan jendela Windows.
 4. AI auto-trigger Guided onboarding 6-tahap (untuk staff baru).
 
 ### Yang Staff Lakukan:
@@ -109,5 +109,5 @@ Aman, kit detect existing → AGENTS.md skip default → settings.local.json ide
 | Cara | Friction Staff | Recommend? |
 |------|----------------|------------|
 | Claude-Code-mediated (AI yang jalankan) | 1 chat + beberapa klik popup **di chat** (tanpa popup jendela Windows) | 🟢 RECOMMENDED untuk non-programmer |
-| PowerShell manual (jalankan sendiri) | 1 paste perintah + beberapa **popup jendela Windows** | 🟡 OK kalau staff terbiasa terminal |
+| PowerShell/terminal manual (jalankan sendiri) | 1 paste perintah (otomatis penuh, **tanpa popup jendela Windows**) — pilihan via chat sesudahnya | 🟡 OK kalau staff terbiasa terminal |
 | Git clone | 5+ langkah + GitHub auth | 🔴 TIDAK - repo private |

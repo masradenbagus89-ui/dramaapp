@@ -22,15 +22,15 @@ tapi baca daftar tetap. Resep ini daftar tetap itu untuk kode.
 
 Satu perintah, hitungan detik, biaya token ~nol (skrip, bukan AI baca-baca berkas):
 
-```powershell
-pwsh .claude-kit/lib/consistency-check.ps1 -RepoRoot . -ChecksFile docs/consistency-map.psd1
+```bash
+npx lintasai consistency-check --repo-root . --checks-file docs/consistency-map.jsonc
 ```
 
 - ✅ "BERSIH" = semua deklarasi nilai-saat-ini cocok dengan sumber kebenaran.
 - ❌ "[TAK COCOK]/[HILANG]" = ada yang basi (robot sebut berkasnya) → perbaiki.
 
-**Setup sekali (5 menit):** salin `.claude-kit/templates/consistency-map.example.psd1` →
-`docs/consistency-map.psd1`, lalu isi fakta-berulang project kamu. Tidak paham? Minta AI:
+**Setup sekali (5 menit):** salin `.claude-kit/templates/consistency-map.example.jsonc` →
+`docs/consistency-map.jsonc`, lalu isi fakta-berulang project kamu. Tidak paham? Minta AI:
 *"isi peta-konsistensi untuk project ini"* — AI akan scan + melengkapi (lalu kamu cek).
 
 > Belum bikin peta? Robot tetap jalan dengan acuan bawaan (versi `package.json`), tapi
@@ -47,7 +47,7 @@ Semua tempat yang membawa nomor versi disetel ke versi baru: `package.json` (sum
 
 ### 2. Tambah / ubah FITUR
 - berkas kode yang diubah
-- `docs/<basename>.md` pendamping — AUTO-SYNC kalau perubahan substansial
+- `docs/<basename>.md` pendamping — perbarui kalau perubahan substansial
 - minimal 1 test happy-path
 - `CHANGELOG.md` + naikkan versi
 - dokumen ringkasan fitur/keunggulan (kalau ada)
@@ -56,7 +56,7 @@ Semua tempat yang membawa nomor versi disetel ke versi baru: `package.json` (sum
 - `.env.example` (+ `.env` lokal) — tambah/ubah key
 - kode yang membaca env itu + validasi di pintu masuk (boundary)
 - dokumen setup yang menyebut env itu
-- ➡️ kalau nilai ini dipakai di >1 berkas, **masukkan ke `docs/consistency-map.psd1`** biar robot menjaganya.
+- ➡️ kalau nilai ini dipakai di >1 berkas, **masukkan ke `docs/consistency-map.jsonc`** biar robot menjaganya.
 
 ### 4. Ubah ANGKA/JUMLAH yang tersebar (mis. jumlah item, batas, harga)
 - cari (Grep) angka itu di seluruh project → update **semua**, atau pusatkan di 1 berkas.

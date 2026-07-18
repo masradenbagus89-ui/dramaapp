@@ -6,7 +6,7 @@
 
 Kamu **baru menyalakan robot** lintas-repo lintasAI (untuk tim split-repo 20-30 orang):
 - **Robot gabung-otomatis** (`auto-merge-shared.yml`) — gabung update KECIL sendiri, tahan yang BESAR.
-- **Kunci pengaman gabung** (`setup-branch-protection.ps1`) — syarat wajib sebelum boleh gabung.
+- **Kunci pengaman gabung** (`npx lintasai protect-main`) — syarat wajib sebelum boleh gabung.
 - **Robot terbit + terima paket bersama** (`PUBLISH_SHARED_WORKFLOW.yml` + `RECEIVE_BACKEND_UPDATE.yml`).
 
 Panduan ini = **cara menguji robot dulu sebelum dipercaya** + **cara memulihkan kalau robot salah**. Wajib dibaca penanggung jawab (lead) tiap repo sebelum tim pakai untuk kerja beneran.
@@ -35,7 +35,7 @@ Lakukan di **1 pasang repo uji kecil** (1 backend + 1 frontend kosong), BUKAN la
 ### Cek 3 — Kunci pengaman aktif (tak bisa tulis langsung) ✅
 1. Coba tulis langsung ke jalur utama (main) repo frontend uji tanpa lewat permintaan-gabung.
 - ✅ LULUS kalau: **DITOLAK** GitHub ("protected branch").
-- ❌ GAGAL kalau: berhasil tulis langsung → kunci pengaman belum nyala, jalankan `setup-branch-protection.ps1 -Apply`.
+- ❌ GAGAL kalau: berhasil tulis langsung → kunci pengaman belum nyala, jalankan `npx lintasai protect-main --apply`.
 
 ### Cek 4 — Persetujuan penanggung jawab diminta ✅
 1. Buka permintaan-gabung apa pun → lihat apakah GitHub **otomatis minta review** ke penanggung jawab (sesuai daftar `.github/CODEOWNERS`).
@@ -45,7 +45,7 @@ Lakukan di **1 pasang repo uji kecil** (1 backend + 1 frontend kosong), BUKAN la
 ### Cek 5 — Timpa-paksa ditolak ✅
 1. Coba timpa-paksa (force-push) ke jalur utama repo uji.
 - ✅ LULUS kalau: **DITOLAK**.
-- ❌ GAGAL kalau: berhasil → kunci pengaman belum lengkap, ulangi `setup-branch-protection.ps1 -Apply`.
+- ❌ GAGAL kalau: berhasil → kunci pengaman belum lengkap, ulangi `npx lintasai protect-main --apply`.
 
 > **Hanya kalau 5 cek LULUS** → robot aman dipakai di repo tim sebenarnya. Kalau ada yang gagal, perbaiki dulu — jangan dipakai untuk tim 30 orang dalam keadaan setengah jalan.
 
@@ -74,7 +74,7 @@ Lakukan di **1 pasang repo uji kecil** (1 backend + 1 frontend kosong), BUKAN la
 1. Buka tab **"Actions"** → klik baris merah → baca langkah yang gagal. 3 penyebab tersering:
    - **"Guard tipe rahasia" gagal** → ini BAGUS, robot mencegah data rahasia bocor. Perbaiki: keluarkan tipe rahasia dari paket bersama.
    - **"Publish gagal"** → kunci-akses paket (token) belum dipasang / kedaluwarsa. Perbaiki setelan.
-   - **"Gabung-otomatis gagal (merah)"** → kunci pengaman gabung belum nyala. Jalankan `setup-branch-protection.ps1 -Apply`.
+   - **"Gabung-otomatis gagal (merah)"** → kunci pengaman gabung belum nyala. Jalankan `npx lintasai protect-main --apply`.
 2. **Selama robot mogok:** kerja tidak berhenti — **gabung manual** seperti biasa (klik "Merge" sendiri setelah cek hijau). Robot mogok ≠ tim berhenti.
 
 ---
@@ -108,4 +108,4 @@ Tiap repo punya tab **"Actions"** (di bar atas, sebelah "Pull requests") = papan
 
 - Robot CI = **lapisan terpisah di atas project**. Kalau robot error, **aplikasi tim TETAP jalan** — paling buruk gabung manual seperti dulu. Tidak ada user kena.
 - Uji di repo kecil dulu (Bagian 1) = **wajib** sebelum gelar ke tim 20-30 orang.
-- File terkait: `templates/github/AUTO_MERGE_SHARED_WORKFLOW.yml`, `templates/github/scripts/setup-branch-protection.ps1`, `templates/CROSS_REPO_TYPES_PIPELINE.md`, `SECURITY_INCIDENT_PLAYBOOK.md` (kalau yang bocor = rahasia/token, bukan sekadar robot error).
+- File terkait: `templates/github/AUTO_MERGE_SHARED_WORKFLOW.yml`, `lib/branch-protect.mjs` (`npx lintasai protect-main`), `templates/CROSS_REPO_TYPES_PIPELINE.md`, `SECURITY_INCIDENT_PLAYBOOK.md` (kalau yang bocor = rahasia/token, bukan sekadar robot error).

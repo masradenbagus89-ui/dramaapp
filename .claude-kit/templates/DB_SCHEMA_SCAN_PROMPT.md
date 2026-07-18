@@ -73,7 +73,7 @@ Format wajib:
 # docs/db-schema.md - Schema database <NAMA_PROYEK>
 
 > Versi 1 · <YYYY-MM-DD> · auto-generated dari <SCHEMA_SOURCE>
-> Update: tiap schema berubah (lihat aturan AUTO-SYNC 7.1)
+> Update: tiap schema berubah, perbarui berkas ini di sesi yang sama.
 
 ## Pengantar
 [1-2 kalimat: stack DB (PostgreSQL via Supabase / MySQL / dll) + ORM (Prisma / Drizzle / raw) + scope (multi-tenant schema / single-tenant)]
@@ -160,17 +160,16 @@ erDiagram
 - `src/lib/prisma.ts` - Prisma client singleton ([prisma.md](lib/prisma.md))
 ```
 
-#### FASE 4 - Update registry + cross-refs
+#### FASE 4 - Update peta + cross-refs
 
-1. **Update `docs/architecture_auto.md`**: tambah entry `[db-schema.md](db-schema.md) - Schema database (X model, Y relasi)`.
-2. **Update `docs/architecture.md`** (peta makro proyek) - kalau belum ada section "Database", tambah link ke `db-schema.md`.
-3. **Cross-link**: untuk tiap model yang di-list di `db-schema.md`, cari `.md` lain yang sebut model tersebut → tambah link bi-directional.
+1. **Update `docs/architecture.md`** (peta makro proyek) - kalau belum ada section "Database", tambah link ke `db-schema.md`.
+2. **Cross-link**: untuk tiap model yang di-list di `db-schema.md`, cari `.md` lain yang sebut model tersebut → tambah link bi-directional.
 
 ---
 
 ## Aturan setelah generate
 
-- **AUTO-SYNC (7.1)**: setiap kali schema berubah (file Prisma/Drizzle/dll edited) → AI WAJIB re-generate `docs/db-schema.md` di sesi yang sama. Tidak boleh dibiarkan stale.
+- **Jaga sinkron**: setiap kali schema berubah (file Prisma/Drizzle/dll edited) → perbarui `docs/db-schema.md` di sesi yang sama. Jangan biarkan stale.
 - **Version bump**: kalau ada breaking change (rename model, drop field), bump versi di header `> Versi 2 · ...`.
 - **Cross-check sebelum commit**: pastikan field name di `.md` MATCH dengan source schema persis.
 

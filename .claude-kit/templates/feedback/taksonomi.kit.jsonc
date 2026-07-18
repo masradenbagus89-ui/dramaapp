@@ -1,0 +1,69 @@
+{
+  // taksonomi.kit.jsonc — daftar kode masalah + divisi + tingkat untuk "Rekam Pelajaran lintasAI".
+  // Mesin-baca (dipakai robot feedback FASE berikutnya) + acuan AI saat mencatat pelajaran frontier.
+  // SUMBER TUNGGAL kode masalah — JANGAN salin-tempel daftar ini ke berkas lain (anti-drift, lihat
+  // docs/BUKU_PELAJARAN.md LP-001/LP-003). Berkas operasional yang memakainya: templates/feedback/rekam-pelajaran.md.
+  // Versi SKEMA dipisah dari ISI: "skema_versi" jarang naik; "taksonomi_versi" naik saat owner menambah kode.
+  "skema": "TAKSONOMI_PELAJARAN/v1",
+  "skema_versi": 1,
+  "taksonomi_versi": 1,
+  "tanggal": "2026-07-17",
+
+  // Tingkat keseriusan = KATA awam, BUKAN skor angka / P0-P1 (aturan §2.1 #7 + §8.2 3b).
+  "tingkat": ["GENTING", "PENTING", "RAPIKAN"],
+
+  // 8 divisi baseline (§4.13) + lensa yang paling sering terlewat.
+  "divisi": [
+    "Keamanan", "Database", "Backend", "Frontend", "UI/UX+a11y",
+    "SEO", "QA", "DevOps", "Ketahanan/Dependency", "Privasi"
+  ],
+
+  // Status pelajaran terhadap kit: BELUM-DIJAGA (aturan belum ada) / PENJAGA-BOBOL (aturan ada, kode tetap salah).
+  "status_kit": ["BELUM-DIJAGA", "PENJAGA-BOBOL"],
+
+  // Kode masalah baku. Pilih yang PALING cocok; tak ada yang pas → OTHER (jelaskan generik).
+  // Deskripsi sengaja GENERIK (pola standar IT), tanpa contoh ber-nama-bisnis.
+  "kode": {
+    "SEC-IDOR": "Objek diakses pakai ID dari request tanpa cek pemilik (Insecure Direct Object Reference).",
+    "SEC-NO-AUTHZ": "Endpoint/aksi sensitif tanpa pengecekan otorisasi server-side.",
+    "SEC-CLIENT-SECRET": "Secret/kunci-API terkirim ke sisi client (bundle/HTML/env publik).",
+    "SEC-XSS": "Konten user dirender sebagai markup tanpa escape → skrip bisa jalan (XSS).",
+    "SEC-INJECTION": "Query/perintah dirakit dari input user tanpa parameterisasi (SQL/shell/dll).",
+    "SEC-NO-RATELIMIT": "Endpoint sensitif/mahal tanpa batas laju + batas payload (login/signup/search/upload).",
+    "SEC-UNSAFE-UPLOAD": "Upload tanpa validasi tipe/ukuran/nama + tanpa signed URL / key acak server.",
+    "SEC-WEAK-CRYPTO": "Kripto/hash buatan sendiri atau lemah, bukan library standar teruji.",
+    "DB-NO-TX": "Operasi multi-write tanpa transaction (bisa setengah jadi = data tak konsisten).",
+    "DB-NO-CONSTRAINT": "Aturan data cuma di aplikasi, tanpa constraint DB (NOT NULL/UNIQUE/FK/CHECK).",
+    "DB-N-PLUS-1": "Query berulang di dalam loop (N+1) — lambat di skala.",
+    "DB-NO-INDEX": "Kolom sering dipakai WHERE/JOIN/ORDER BY tanpa index.",
+    "DB-RLS-OFF": "Row Level Security mati / policy longgar di data multi-tenant.",
+    "DB-UNSAFE-MIGRATION": "Migrasi destruktif tanpa expand-then-contract / tanpa rollback / tanpa snapshot.",
+    "BE-NO-BOUNDARY-VALIDATION": "Data dari luar tak divalidasi di pintu masuk (handler/route/queue/file).",
+    "BE-SWALLOWED-ERROR": "Error ditelan diam-diam (catch kosong) — kegagalan tak terlihat.",
+    "BE-NO-IDEMPOTENCY": "Operasi retry-able / webhook tanpa idempotency-key (diulang → dobel efek).",
+    "BE-NO-CONTRACT": "Endpoint/fungsi publik tanpa kontrak jelas (input/output/error/status).",
+    "FE-MISSING-UI-STATES": "UI fetch tanpa 4 state (loading/empty/error/success).",
+    "FE-RACE-CONDITION": "Dua aksi bareng bikin hasil kacau (mis. klik-dobel, state balapan).",
+    "FE-NO-LIST-VIRT": "List >50 item tanpa virtualisasi/paginasi.",
+    "WD-HARDCODED-TOKENS": "Warna/spacing/font/radius di-hardcode, bukan design token.",
+    "WD-NOT-RESPONSIVE": "Layout tak responsif / pecah di lebar kecil (~360px).",
+    "UX-BAD-MICROCOPY": "Microcopy jargon/panjang/pasif (bukan suara aktif ringkas).",
+    "A11Y-WCAG-MISS": "Langgar aksesibilitas WCAG (label/kontras/focus/keyboard/target tap).",
+    "OPS-SECRET-IN-REPO": "Secret ter-commit ke repo/log/console.log.",
+    "OPS-NO-ROLLBACK": "Rilis dampak-tinggi tanpa jalur rollback tertulis.",
+    "OPS-ENV-DRIFT": "Kunci .env beda antara contoh vs nyata / antar-lingkungan.",
+    "OBS-NO-MONITORING": "Tanpa error-tracking + log terstruktur + healthcheck sebelum online.",
+    "OBS-LOG-LEAK": "Log memuat secret/PII mentah.",
+    "RES-NO-RETRY-BREAKER": "Panggil API luar tanpa retry berjeda + circuit breaker (rapuh saat luar mati).",
+    "PERF-NO-LIMIT": "Query/list/ekspor tanpa batas (bisa tarik data raksasa).",
+    "PERF-WEIGHT-BUDGET": "Halaman publik lampaui anggaran berat / Core Web Vitals jeblok (LCP/INP/CLS).",
+    "SEO-NOINDEX-PROD": "Halaman produksi ter-noindex tak sengaja (bocor dari staging).",
+    "SEO-META-MISSING": "Halaman publik tanpa title unik/deskripsi/canonical/sitemap/robots.",
+    "PRIV-PII-EXPOSURE": "Data pribadi terekspos (tanpa minimisasi/masking/retensi).",
+    "DEP-VULN-UNPINNED": "Dependency tak di-pin di produksi / CVE belum di-audit.",
+    "QA-NO-TEST": "Alur kritis tanpa satu pun tes happy-path.",
+    "DOC-BUS-FACTOR": "Berkas CRITICAL tanpa dokumen/komentar WHY (cuma 1 orang paham).",
+    "API-BREAKING-CHANGE": "Ubah kontrak API/skema/format tanpa versioning + rencana migrasi.",
+    "OTHER": "Tak ada kode yang cocok — jelaskan pola generik di Gejala-teknis."
+  }
+}

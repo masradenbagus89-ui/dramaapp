@@ -1,20 +1,20 @@
-# ANALOGI_LIBRARY — Kamus jargon teknis → analogi 3-lapis untuk non-programmer
+# ANALOGI_LIBRARY — Kamus jargon teknis → bahan analogi (opsional) untuk non-programmer
 
-> Versi 2 · 2026-06-08 · **STATUS: AKTIF (berisi 32 entri)** — auto-deploy via `setup-pola-b.ps1` ke `docs/ANALOGI_LIBRARY.md`.
+> Versi 4 · 2026-07-10 · **STATUS: AKTIF (berisi 35 entri)** — auto-deploy via `setup-pola-b.mjs` ke `docs/ANALOGI_LIBRARY.md`.
 
 ## Tujuan
 
-Saat AI menyebut istilah teknis, dia menerjemahkannya pakai **3 lapis analogi** supaya staf non-programmer paham tanpa harus jago coding:
+Saat AI menyebut istilah teknis, dia menjelaskannya dengan **bahasa awam** (1 kalimat yang mudah dipahami) supaya staf non-programmer paham tanpa harus jago coding. **Kalau mau menyertakan analogi** (opsional — tidak wajib 3-lapis), berikut bahannya:
 
 1. **🏢 Sehari-hari** — analogi kantor/rumah/dapur, tanpa perlu tahu tools apa pun.
 2. **📱 Tools digital populer** — analogi pakai aplikasi familiar (Tokopedia, Gojek, WhatsApp, BCA mobile, Excel, Google Drive, Notion, iPhone, dll.).
 3. **🎯 Contoh konkret** — kapan situasi ini muncul di proyek.
 
-> Library ini adalah **rujukan baku**. Untuk istilah baru di luar tabel, AI generate analogi 3-lapis on-demand lalu suggest tambah ke sini via LAZY-GENERATE. Lihat aturan di `CLAUDE_universal_v1.md` §2.1 (poin 5).
+> Library ini = **sumber analogi OPSIONAL** (dipakai kalau mau menyertakan 1 analogi; analogi tidak wajib 3-lapis). Untuk istilah baru di luar tabel, AI cukup jelaskan dengan bahasa awam lalu boleh menawarkan menambahkannya ke sini. Lihat aturan di `CLAUDE_universal_v1.md` §2.1 (poin 1+5).
 
 ---
 
-## Tabel analogi (32 jargon paling sering muncul)
+## Tabel analogi (35 jargon paling sering muncul)
 
 | Jargon | 🏢 Sehari-hari | 📱 Tools digital | 🎯 Contoh di proyek |
 |---|---|---|---|
@@ -50,10 +50,13 @@ Saat AI menyebut istilah teknis, dia menerjemahkannya pakai **3 lapis analogi** 
 | **Rate limit** | Satpam batasi 10 tamu per menit biar tidak rusuh | BCA mobile batasi 3x salah PIN lalu blokir | Batasi 5x percobaan login per menit |
 | **Cache** | Taruh barang sering dipakai di laci meja, bukan di gudang | "Tonton lagi nanti" YouTube biar tak loading ulang | Simpan hasil yang sering diakses biar cepat |
 | **Feature flag** | Saklar lampu per-ruangan: nyalakan fitur bertahap | Fitur baru Instagram yang muncul ke sebagian user dulu | Nyalakan fitur baru ke 10% user dulu (POST-LAUNCH) |
+| **God Component** | Staff serabutan urus semua (kasir + telepon + gudang + laporan) | **Excel** 1 workbook isi stok+gaji+absensi+pivot semua tumpuk | 1 file 800 baris urus login+bayar+laporan — pecah per tugas |
+| **Memory leak** | Staf dapur ambil piring kotor tak pernah cuci, dapur penuh | **WhatsApp** foto/video chat tak dihapus, storage penuh | App makin lama makin lambat karena data lama tak pernah dilepas |
+| **Tahan Penggabungan (HOLD MERGE)** | Laporan rapi tapi belum boleh masuk arsip sebelum bos cap | **BCA mobile** transfer di atas limit → tunggu OTP dulu | Perubahan berisiko ditahan dulu sampai owner setuju gabung |
 
 ---
 
 ## Catatan
 
-- Kalau muncul jargon yang **belum ada** di tabel ini, AI akan bikin analogi 3-lapis baru lalu menawarkan menambahkannya ke sini (LAZY-GENERATE).
+- Kalau muncul jargon yang **belum ada** di tabel ini, AI cukup jelaskan dengan bahasa awam (analogi singkat opsional) lalu boleh menawarkan menambahkannya ke sini.
 - Library ini melengkapi `docs/GLOSSARY_NON_PROGRAMMER.md` (kamus istilah lebih lengkap). Library analogi ini fokus ke **jargon yang butuh analogi cepat** saat AI bicara.

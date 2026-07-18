@@ -4,45 +4,46 @@
 
 ## Untuk Owner
 
-### Install pre-commit hook (1x setup, 30 detik)
+### Cek cepat kapan saja (jalur Node)
 
-```powershell
-pwsh -File ./.claude-kit/tests/install-pre-commit.ps1
+```bash
+node .claude-kit/tests/smoke-portable.mjs
 ```
 
-### Manual run anytime
+Atau gerbang lengkap sebelum rilis:
 
-```powershell
-pwsh -File ./.claude-kit/tests/smoke-fast.ps1
+```bash
+npm run preflight
 ```
+
+> v2.0.0: kit 100% Node. Smoke = `tests/smoke-portable.mjs` (Node); gerbang penuh = `npm run preflight`. Tak ada lagi smoke/Pester PowerShell.
 
 ## Tier Pyramid (Speed vs Coverage)
 
 | Tier | Duration | When | What |
 |------|----------|------|------|
-| **INSTANT** (<1 sec) | Pre-commit hook (auto on `git commit`) | Smart chars (staged PS1) + FAST smoke. Deteksi secret = GitHub Push Protection + AI Reviewer (bukan hook lokal) |
-| **FAST** (<5 sec) | tests/smoke-fast.ps1 (every commit + CI first job) | Parse, critical files, orphans, JSON |
-| **MEDIUM** (<30 sec) | tests/lib-*.Tests.ps1 (Pester unit) + PSSA Error severity (CI per-PR) | Behavior + lint Error |
-| **SLOW** (1-3 min) | Full Pester + PSSA Warning + real install (CI nightly + pre-release) | Complete behavior + cross-platform |
+| **FAST** (<5 sec) | `tests/smoke-portable.mjs` (every commit + CI first job `fast-smoke`) | Syntax .mjs, critical files, manifest integrity, orphans, JSON |
+| **MEDIUM** (<30 sec) | `npm test` (node --test) + ESLint (CI per-PR) | Behavior + lint |
+| **FULL** (gerbang rilis) | `npm run preflight:strict` (semua pemeriksa + kelengkapan rilis) | Complete behavior + release readiness |
 
 ## Untuk AI Workflow
 
-### Sebelum apply edit, run fast smoke baseline
+### Sebelum apply edit, run fast smoke baseline (jalur Node)
 
 ```
-Bash: pwsh -File tests/smoke-fast.ps1 > /tmp/baseline.txt
+Bash: node tests/smoke-portable.mjs > /tmp/baseline.txt
 ```
 
 ### Setelah apply edits, run smoke comparison
 
 ```
-Bash: pwsh -File tests/smoke-fast.ps1 > /tmp/after.txt
+Bash: node tests/smoke-portable.mjs > /tmp/after.txt
 Bash: diff /tmp/baseline.txt /tmp/after.txt
 ```
 
-### Skip Tier 3 (Pester + PSSA) kalau Tier 2 fail
+### Fail fast: kalau smoke FAST gagal, jangan lanjut
 
-Fail fast: kalau parse error / critical file missing / orphan refs > 0, tidak perlu run Pester + PSSA. Save 60-180 sec per workflow.
+Kalau parse error / critical file missing / orphan refs > 0 di `smoke-portable.mjs`, perbaiki dulu sebelum jalankan `npm test` + preflight penuh. Hemat waktu per workflow.
 
 ## Analogi Non-Programmer
 

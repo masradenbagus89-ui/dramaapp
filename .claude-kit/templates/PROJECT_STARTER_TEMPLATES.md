@@ -47,9 +47,15 @@ Kalau ragu: tanya diri sendiri "kalau saya buang struktur project sekarang dan p
 
 ## Available Templates
 
+> ⚠️ **STATUS JUJUR — baca dulu sebelum `git clone`:** repo starter `lintasai-starter-*` di bawah **BELUM diterbitkan** (masih rencana — lihat [Roadmap](#roadmap)). Perintah `git clone https://github.com/ojokesusu/lintasai-starter-...` akan **GAGAL** dengan pesan `repository not found`. **Jangan clone repo starter itu untuk sekarang.**
+>
+> **Cara yang PASTI JALAN hari ini** (hasil akhirnya sama — pondasi cepat + lintasAI tertanam): pakai perintah **resmi framework** untuk pondasi (mis. `npx create-next-app`), lalu jalankan **`npm create lintasai`** untuk menanam aturan + pengaman lintasAI di project itu. Langkah lengkap ada di [How to Use Template → Skenario A](#skenario-a-bikin-project-baru-fresh). Daftar "What's included" di bawah = **rencana isi** tiap starter (untuk acuan, bukan repo yang sudah ada).
+>
+> 🏢 Analogi: anggap ini **brosur menu yang menunya belum dijual** — resepnya benar & berguna sebagai acuan, tapi untuk makan sekarang kamu masak sendiri pakai bahan yang tersedia (create-next-app) lalu bumbui dengan lintasAI.
+
 ### Template 1: lintasai-starter-nextjs-prisma-supabase
 
-Status: Recommended untuk SaaS dengan database
+Status: 🚧 Rencana (repo belum tersedia) — untuk SaaS dengan database. Cara jalan hari ini: pakai blok "Cara pakai" di bawah.
 
 Stack:
 
@@ -73,22 +79,26 @@ What's included:
 - Discord webhook template untuk notif deploy
 - `.env.example` lengkap dengan komentar
 
-Setup time: ~30 menit dari clone sampai `npm run dev` jalan
+Setup time: ~30 menit sampai `npm run dev` jalan
 
-Cara pakai:
+Cara pakai (PASTI JALAN hari ini — repo starter belum terbit, jadi pakai pondasi resmi + tanam lintasAI):
 
 ```bash
-git clone https://github.com/ojokesusu/lintasai-starter-nextjs-prisma-supabase my-new-app
+# 1) Pondasi Next.js resmi (mengganti 'git clone' repo starter yang belum ada)
+npx create-next-app@latest my-new-app --typescript --tailwind --app
 cd my-new-app
-npm install
-cp .env.example .env.local
-# Edit .env.local: isi DATABASE_URL, NEXTAUTH_SECRET, dst
+# 2) Tambah Prisma + Supabase (ikuti STACK_GUIDE.md bagian "Next.js + Supabase")
+npm install prisma @prisma/client && npx prisma init
+# 3) Tanam aturan + pengaman lintasAI ke project ini
+npm create lintasai
+# 4) Isi rahasia lalu jalankan
+cp .env.example .env.local 2>/dev/null || true   # edit DATABASE_URL, NEXTAUTH_SECRET, dst
 npm run dev
 ```
 
 ### Template 2: lintasai-starter-nextjs-shadcn-tailwind
 
-Status: Recommended untuk UI-focused project
+Status: 🚧 Rencana (repo belum tersedia) — untuk project fokus UI. Cara jalan hari ini: `npx create-next-app` + `npm create lintasai` (lihat Skenario A).
 
 Stack:
 
@@ -112,7 +122,7 @@ Setup time: ~15 menit (no DB = lebih cepat)
 
 ### Template 3: lintasai-starter-monorepo-turborepo
 
-Status: Recommended untuk team 5+ yang mau monorepo dari awal
+Status: 🚧 Rencana (repo belum tersedia) — untuk team 5+ yang mau monorepo dari awal. Cara jalan hari ini: `npx create-turbo@latest` + `npm create lintasai` (lihat Skenario A).
 
 Stack:
 
@@ -152,30 +162,29 @@ Stack:
 
 ### Skenario A: Bikin Project Baru (Fresh)
 
+> Repo starter `lintasai-starter-*` belum terbit. Pakai pondasi resmi framework lalu tanam lintasAI — hasil akhirnya sama.
+
 ```bash
-# Step 1: Clone template
-git clone https://github.com/ojokesusu/lintasai-starter-<NAME> <project-baru>
+# Step 1: Bikin pondasi project pakai perintah resmi framework
+#         (Next.js contoh; untuk monorepo pakai `npx create-turbo@latest`)
+npx create-next-app@latest <project-baru> --typescript --tailwind --app
 cd <project-baru>
+# (create-next-app sudah `git init` otomatis — tak perlu reset)
 
-# Step 2: Reset git history (mulai bersih, bukan fork)
-rm -rf .git
-git init
-git add .
-git commit -m "initial commit from lintasai-starter-<NAME>"
-
-# Step 3: Bikin repo baru di GitHub
+# Step 2: Bikin repo baru di GitHub
 gh repo create ojokesusu/<project-baru> --private --source=. --remote=origin --push
 
+# Step 3: Tanam aturan + pengaman lintasAI ke project ini
+npm create lintasai
+# Ini yang memuat .claude-kit/ + memandu setup (Fase B). Tak perlu git clone manual.
+
 # Step 4: Setup env
-cp .env.example .env.local
+cp .env.example .env.local 2>/dev/null || true
 # Edit .env.local: isi DATABASE_URL, NEXTAUTH_SECRET, API keys
 
 # Step 5: Install + dev
 npm install
 npm run dev
-
-# Step 6: Pakai lintasAI workflow
-# Buka .claude-kit/JALANKAN_KIT.md, paste ke Claude Code
 ```
 
 ### Skenario B: Project Sudah Ada (Setengah Jadi)
@@ -184,8 +193,8 @@ JANGAN pakai starter template. Langsung adapt lintasAI:
 
 ```bash
 cd <existing-project>
-git clone https://github.com/ojokesusu/lintasAI.git .claude-kit
-.claude-kit/setup-pola-b.ps1
+npm create lintasai@latest
+# Ini memuat .claude-kit/ + memandu setup (Fase B). Tak perlu git clone / akun GitHub.
 ```
 
 LintasAI akan auto-detect stack (via `STACK_DETECTION_PATTERN.md`) dan customize setup berdasarkan project existing.
@@ -205,7 +214,7 @@ Owner (lintasAI maintainer) update template tiap kit version baru:
 User yang sudah clone template TIDAK otomatis update. Mereka manual sync `.claude-kit/` via:
 
 ```bash
-.claude-kit/kit.ps1 update
+npx lintasai update
 ```
 
 Sample code (auth flow, dashboard, dst) TIDAK auto-sync. User cherry-pick manual kalau mau adopt pattern baru.

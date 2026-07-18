@@ -1,6 +1,6 @@
 # templates/STACK_MIGRATION_GUIDE.md - Panduan Migrasi Stack (Advanced)
 
-> Versi 1 · 2026-06-03
+> Versi 2 · 2026-07-11
 > **POST-LAUNCH ADVANCED.** Default tim pakai Vercel - file ini cuma untuk fase migrasi spesifik (cost Vercel over-budget, butuh background worker persistent, atau butuh WebSocket long-lived).
 
 ---
@@ -48,28 +48,125 @@ NEXT_PUBLIC_SITE_URL = https://akses.up.railway.app
 ### 2.3. Dockerfile vs Nixpacks
 
 - **Nixpacks** (default) - auto-detect Next.js, no config. Pilih ini dulu.
-- **Dockerfile** - kalau butuh dependency native (ImageMagick, FFmpeg, Chromium).
+- **Dockerfile** - kalau butuh dependency native (ImageMagick, FFmpeg, Chromium) atau mau kontrol penuh image produksi.
 
-Contoh Dockerfile Next.js minimal:
+#### Dockerfile produksi Next.js (multi-stage, non-root, HEALTHCHECK)
+
+> 👨‍💻 **Programmer:** 3 tahap (deps → builder → runner) untuk image kecil + aman. Kunci: (1) `COPY` file dependency DULU sebelum kode → *layer cache* (lapisan hasil build yang dipakai-ulang) tak bobol saat cuma kode berubah; (2) jalan sebagai **user non-root** — kalau image dibobol, penyerang tak langsung jadi admin; (3) `HEALTHCHECK` supaya Docker/orchestrator tahu container sehat/tidak (nembak `/api/health` — endpoint-nya di §2.5 di bawah, atau §health di `workflows/stack/4.14-4-deploy.md`); (4) **pin versi** base image (JANGAN `:latest` — bisa loncat ke versi belum-LTS). Butuh `output: 'standalone'` di `next.config.js`.
+> 🙂 **Non-Programmer:** kemas app jadi "paket beku" yang dibangun bertahap biar cepat, dijalankan "pegawai biasa" bukan "admin" (lebih aman kalau dibobol), dan punya "lampu indikator sehat/rusak". Pakai "suku cadang" (Node) versi yang masih didukung, bukan yang sudah ditarik dari pasaran.
 
 ```dockerfile
-FROM node:20-alpine AS builder
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-COPY . .
-RUN npm run build
+# node:24-alpine = LTS "Active" per 2026-07 (node:20 sudah EOL/habis-dukungan → tanpa patch
+# keamanan; JANGAN :latest). Samakan angka ini dgn runtime project (package.json "engines"/.nvmrc).
 
-FROM node:20-alpine AS runner
+# --- Tahap 1: deps (cache layer dependency) ---
+FROM node:24-alpine AS deps
 WORKDIR /app
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/public ./public
+# npm: package-lock.json + `npm ci` (di bawah). Pengguna pnpm/yarn SESUAIKAN — lockfile + installer beda
+# (samakan dgn app-cicd.yml.example):
+#   pnpm → COPY pnpm-lock.yaml ./ ; RUN corepack enable && pnpm i --frozen-lockfile
+#   yarn → COPY yarn.lock ./       ; RUN yarn install --frozen-lockfile
+COPY package.json package-lock.json ./   # file dependency DULU → cache tak bobol saat cuma kode berubah
+RUN npm ci
+
+# --- Tahap 2: builder ---
+FROM node:24-alpine AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+RUN npm run build                        # butuh output: 'standalone' di next.config.js
+
+# --- Tahap 3: runner (image produksi minimal, non-root) ---
+FROM node:24-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+ENV HOSTNAME="0.0.0.0"                    # WAJIB: paksa server dengar SEMUA alamat jaringan. Tanpa ini
+ENV PORT=3000                             # sebagian versi Next bind ke localhost → app tak terjangkau
+                                          # dari LUAR container (healthcheck lokal tetap lolos = rusak tersamar).
+RUN addgroup -g 1001 -S nodejs && adduser -S nextjs -u 1001
+USER nextjs                              # JANGAN jalan sebagai root
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 EXPOSE 3000
+# wget di node:*-alpine = BusyBox (versi mini): HANYA kenal -q & --spider (BUKAN --no-verbose/--tries).
+# Flag salah → healthcheck selalu error → container ditandai "unhealthy" walau app sebenarnya sehat.
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD wget -q --spider http://localhost:3000/api/health || exit 1
 CMD ["node", "server.js"]
 ```
 
-Note: aktifkan `output: 'standalone'` di `next.config.js`.
+**`.dockerignore` (WAJIB — image kecil + rahasia tak ikut terkemas):**
+
+```
+node_modules
+.next/cache
+.git
+.env
+.env.*
+coverage
+*.log
+Dockerfile*
+docker-compose*.yml
+README.md
+```
+
+#### Varian Python (FastAPI / Django)
+
+> ⚠️ Django & FastAPI beda "jenis mesin": **Django = WSGI**, **FastAPI = ASGI**. Tahap `builder` sama, tapi **baris `CMD` (perintah menjalankan app) BEDA** — pilih yang benar di bawah, jangan tertukar (kalau tertukar, container gagal nyala).
+
+```dockerfile
+FROM python:3.12-slim AS builder
+WORKDIR /app
+RUN pip install --no-cache-dir uv
+COPY requirements.txt .
+RUN uv pip install --system --no-cache -r requirements.txt
+
+FROM python:3.12-slim AS runner
+WORKDIR /app
+RUN useradd -r -u 1001 appuser
+USER appuser                             # non-root
+COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
+COPY . .
+ENV PYTHONUNBUFFERED=1
+EXPOSE 8000
+# Healthcheck: Django default pakai trailing-slash (/health/); FastAPI biasanya /health (tanpa slash) — sesuaikan.
+# --start-period=15s: beri jeda saat boot (Django migrasi otomatis = start lambat) sebelum dinilai — tanpa ini
+# container keburu ditandai "unhealthy" lalu masuk restart-loop. --retries=3: butuh 3 gagal beruntun (anti false-positive).
+HEALTHCHECK --interval=30s --timeout=3s --start-period=15s --retries=3 \
+  CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health/')" || exit 1
+# --- Pilih SATU CMD sesuai framework (hapus yang lain) ---
+# Django (WSGI): entry point `config.wsgi`, gunicorn worker sync bawaan sudah cukup.
+CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "4"]
+# FastAPI (ASGI — BUKAN WSGI): WAJIB worker uvicorn; app umumnya `main:app`, TAK punya `config.wsgi`.
+# Worker class dari paket TERPISAH `uvicorn-worker` (tambahkan `uvicorn-worker` ke requirements.txt agar ikut
+# ke-install di tahap builder). Modul lama `uvicorn.workers.UvicornWorker` USANG sejak uvicorn 0.30 (masih jalan
+# tapi keluar DeprecationWarning, akan dihapus). Cek versi terpasang: `pip show uvicorn` — kalau < 0.30, paket
+# `uvicorn-worker` belum ada, tetap pakai `-k uvicorn.workers.UvicornWorker`.
+# CMD ["gunicorn", "main:app", "-k", "uvicorn_worker.UvicornWorker", "--bind", "0.0.0.0:8000", "--workers", "4"]
+```
+
+#### Hardening docker-compose (produksi)
+
+```yaml
+services:
+  app:
+    security_opt: ["no-new-privileges:true"]  # proses tak bisa naik-hak diam-diam
+    read_only: true                           # sistem file image cuma-baca (anti-tamper)
+    # Next.js ISR/revalidate & cache runtime menulis ke /app/.next/cache → WAJIB di-tmpfs.
+    # Tanpa ini: error EROFS di PRODUKSI (lolos di dev/CI yang tak read-only). App tanpa
+    # penulisan runtime (SSR murni / static export) boleh sisakan /tmp saja.
+    tmpfs: [/tmp, /app/.next/cache]           # folder tulis SEMENTARA yang diizinkan
+    # PENTING kalau app menulis ke folder LAIN saat jalan — jangan asal masukkan ke tmpfs:
+    #   • tulis SEMENTARA (cache/temp) → tambahkan ke tmpfs di atas. Ingat: tmpfs = RAM,
+    #     HILANG tiap restart & TIDAK berbagi antar-replica.
+    #   • data yang HARUS bertahan (mis. upload user) → pakai `volumes:` (named volume),
+    #     JANGAN tmpfs (kalau tmpfs, file upload lenyap tiap container restart).
+    cap_drop: [ALL]                           # buang semua "izin super" Linux; tambah seperlunya saja
+```
+
+> *Sumber: ECC docker-patterns + deployment-patterns (MIT © Affaan Mustafa) — ditulis-ulang; base image dinaikkan node:20 (EOL) → node:24-alpine, worker uvicorn dimodernkan ke paket `uvicorn-worker` (uvicorn ≥ 0.30) (verifikasi 2026-07-11).*
 
 ### 2.4. Background Worker + Cron Native
 

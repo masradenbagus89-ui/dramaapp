@@ -4,7 +4,7 @@
 
 Panduan ini ditujukan untuk **staff IT non-programmer** yang mau memasang lintasAI Kit ke project pakai **npm** (lebih cepat dari `git clone`, tidak perlu paham git, dan otomatis dapat versi terbaru).
 
-> **Satu cara saja:** kit ini distandarkan ke **satu** perintah pasang — `npm create lintasai`. Tidak perlu memilih antara `npm` atau `npx` lagi. Setelah terpasang, semua hal lain (cek, update, balikin versi) cukup **minta ke AI di chat** atau jalankan lewat `.\.claude-kit\kit.ps1`.
+> **Satu cara saja:** kit ini distandarkan ke **satu** perintah pasang — `npm create lintasai`. Tidak perlu memilih antara `npm` atau `npx` lagi. Setelah terpasang, semua hal lain (cek, update, balikin versi) cukup **minta ke AI di chat** atau jalankan lewat `npx lintasai <perintah>`.
 
 Kalau kamu sudah familiar dengan terminal & PowerShell, cukup 1 perintah, kit langsung terpasang di folder project.
 
@@ -19,7 +19,7 @@ Kalau kamu sudah familiar dengan terminal & PowerShell, cukup 1 perintah, kit la
    ```
    npm create lintasai
    ```
-3. Biarkan **AI yang menjalankan**. Karena AI yang menjalankan (bukan kamu ketik manual di terminal), installer masuk **mode otomatis**: semua popup jendela Windows **dilewati otomatis pakai nilai aman** — kamu **langsung** masuk ke popup pemandu di dalam chat (Fase B).
+3. Biarkan **AI yang menjalankan**. Pemasang versi Node berjalan **otomatis penuh** (tanpa popup jendela Windows) — kamu **langsung** masuk ke popup pemandu di dalam chat (Fase B).
 
 Setelah selesai, folder `.claude-kit/` + `AGENTS.md` otomatis dibuat di project root, dan AI lanjut memandu langkah demi langkah di chat.
 
@@ -40,37 +40,26 @@ Kalau kamu memang mau jalankan sendiri di terminal:
    ```
 4. Tunggu sampai install selesai. Biasanya 30 detik - 2 menit tergantung koneksi.
 
-> **Beda dengan cara utama:** karena kamu yang menjalankan langsung di terminal, akan muncul beberapa **popup jendela Windows** (mis. pilihan AGENTS.md, email, buka VS Code) yang harus kamu klik. Lewat chat (cara utama) popup-popup itu tidak muncul.
+> **Catatan:** sejak pemasang versi Node, pemasangan **otomatis penuh** — **tidak ada popup jendela Windows** yang perlu diklik, baik dijalankan AI di chat maupun kamu sendiri di terminal. Pilihan (AGENTS.md, email, buka VS Code) **diatur lewat AI di chat** sesudah pemasangan. Jadi kalau jalankan sendiri di terminal, **jangan menunggu kotak Windows muncul** — langsung lanjut ke pemandu di chat.
 
 > **Catatan:** `npm create lintasai` selalu memasang versi lintasAI **terbaru** (tidak perlu menyebut nomor versi). Di belakang layar npm mengurus pengunduhan; kamu cukup mengetik 1 baris di atas.
 
 ---
 
-## Mode Popup (Claude Code-First UX)
+## Mode Pemasangan (Claude Code-First UX)
 
-Ada **2 alur**, tergantung **siapa yang menjalankan** perintah pasang.
+Sejak **pemasang versi Node**, pemasangan **otomatis penuh** — **tidak ada popup jendela Windows** yang perlu diklik, **siapa pun** yang menjalankan (`npm create lintasai` lewat AI di chat **maupun** kamu sendiri di terminal). Semua "pertanyaan" saat pasang dijawab otomatis pakai **nilai paling aman**; pilihan sebenarnya (cara pasang, audit, ukuran tim, AGENTS.md, buka VS Code) kamu lakukan lewat **popup yang DIKLIK DI CHAT** (Fase B) sesudah pemasangan.
 
-### Alur A (disarankan): AI yang menjalankan → tanpa popup jendela Windows
+### Yang terjadi saat pasang (sama untuk semua orang)
 
-Staff non-programmer **TIDAK perlu buka PowerShell/CMD manual** — cukup minta AI lewat chat (lihat `docs/CLAUDE_CODE_MEDIATED_INSTALL.md`).
-
-1. Staff ketik 1 kalimat ke Claude Code chat, mis: *"halo aku staff baru, install lintasAI dong"* (atau paste `npm create lintasai`).
-2. **AI yang menjalankan** perintahnya → installer masuk mode otomatis → semua popup jendela Windows **dilewati** pakai nilai aman.
-3. Staff **langsung** masuk ke popup pemandu **DI DALAM chat** (Fase B): #1 cara pasang → #2 audit menyeluruh (kalau project sudah ada kodenya) → #3 ukuran tim + bentuk kode (tetap 1 tempat & rapikan / pecah 3 repo / multi-repo) → catatan kode 2-versi di akhir. Ini popup yang di-KLIK di chat, bukan jendela Windows.
+1. Jalankan `npm create lintasai` (lewat AI di chat **atau** di terminal sendiri).
+2. Pemasang berjalan otomatis: folder `.claude-kit/` + `AGENTS.md` dibuat di project root, catatan-pasang ditulis, daftar izin & file tim disiapkan — **tanpa kotak Windows, tanpa menggantung**.
+3. Kamu **langsung** masuk ke popup pemandu **DI DALAM chat** (Fase B): #1 cara pasang → #2 audit menyeluruh (kalau project sudah ada kodenya) → #3 ukuran tim + bentuk kode (tetap 1 tempat & rapikan / pecah 3 repo / microservice shared-DB) → catatan kode 2-versi di akhir. Ini popup yang **diklik di chat**, bukan jendela Windows.
 4. Untuk staff baru, AI lanjut ke pemanduan 6-tahap (onboarding).
 
-Yang staff lakukan: **1x ketik chat + beberapa klik popup di chat**. Tidak ada jendela Windows yang perlu di-klik.
+Yang kamu lakukan: **1x ketik chat + beberapa klik popup di chat**. Tidak ada jendela Windows yang perlu diklik.
 
-### Alur B: staff/owner menjalankan sendiri di PowerShell → ada popup jendela Windows
-
-1. Owner DM 1-line command: `cd <project>; npm create lintasai`
-2. Staff paste → Enter (1x mengetik)
-3. Popup jendela Windows [AGENTS.md] - `[1] Skip RECOMMENDED` default, tekan Enter (cuma muncul kalau AGENTS.md sudah ada)
-4. Popup [Email kamu?] - ketik email work (1x seumur hidup)
-5. Popup [Buka VS Code?] - klik [Yes]
-6. VS Code auto-buka, starter prompt sudah di papan-tempel (clipboard)
-7. Popup [Tip Ctrl+V] - klik [OK], lalu Ctrl+V + Enter di Claude Code chat
-8. Lanjut ke popup pemandu di chat (Fase B) + onboarding di Claude Code
+> **Catatan jalur lama:** versi kit lebih lama memakai pemasang **PowerShell** yang memunculkan beberapa popup jendela Windows saat dijalankan manual. Sejak pemasang **Node** (kit 100% Node di v2.0.0), popup jendela itu **dihilangkan** (diganti pemanduan di chat) dan seluruh pemasang PowerShell sudah **dihapus**.
 
 ### Headless / Server Core / SSH / otomatis (AI/CI)
 
@@ -82,7 +71,7 @@ Tidak perlu flag khusus: saat sesi **tidak punya layar/keyboard** (headless) **a
 
 Cek status kit (jalankan **di dalam folder project**):
 ```powershell
-.\.claude-kit\kit.ps1 status
+npx lintasai status
 ```
 
 Output yang **benar** harus menampilkan:
@@ -168,6 +157,16 @@ Kalau masih gagal, coba registry mirror: `npm config set registry https://regist
    npm create lintasai
    ```
 
+### Pemasang versi Node gagal / crash saat `npm create lintasai`
+
+**Penyebab**: pemasang versi **Node** (jalur baku sejak `init` pindah ke Node) bermasalah di mesin tertentu (jarang).
+
+**Jalan cadangan (jalankan pemasang Node langsung)**: kalau folder `.claude-kit\` sudah terbentuk, jalankan dari **dalam project**:
+```powershell
+node .\.claude-kit\setup-pola-b.mjs
+```
+Atau cukup minta AI di chat: *"pasang manual pakai setup-pola-b.mjs"* — AI yang jalankan + jelaskan hasilnya. (Kalau `.claude-kit\` belum terbentuk sama sekali, ulangi dulu `npm create lintasai`.)
+
 ### Error: "Root proyek" salah deteksi (npm cache path)
 
 **Penyebab**: Bug di versi kit **lama** - kit salah deteksi root project ke folder npm cache, bukan ke folder project user.
@@ -176,8 +175,8 @@ Kalau masih gagal, coba registry mirror: `npm config set registry https://regist
 
 **Fix**:
 1. Hapus install yang salah (dari dalam project):
-   ```powershell
-   .\.claude-kit\kit.ps1 uninstall
+   ```bash
+   npx lintasai uninstall --yes
    ```
 2. Pasang ulang versi terbaru:
    ```powershell
@@ -193,7 +192,7 @@ Kalau update terbaru bermasalah, paling mudah **minta AI**: "rollback dong" (AI 
 
 Manual, dari dalam project:
 ```powershell
-.\.claude-kit\kit.ps1 rollback
+npx lintasai rollback
 ```
 
 > Catatan: untuk balik **seluruh folder kit** ke versi sebelum update (mis. update baru bikin kit rusak), AI akan mengembalikan folder cadangan `.claude-kit.backup-<tanggal>` yang dibuat otomatis saat update. Tinggal bilang "rollback dong".
@@ -204,16 +203,19 @@ Manual, dari dalam project:
 
 Hapus kit dari project secara aman (sambil keep file user-custom), jalankan dari dalam project:
 
-```powershell
-.\.claude-kit\kit.ps1 uninstall
+```bash
+# 1) Lihat dulu apa yang akan dihapus (aman, tidak menghapus apa pun):
+npx lintasai uninstall
+# 2) Kalau sudah yakin, hapus beneran:
+npx lintasai uninstall --yes
 ```
 
 Perintah ini akan:
 - Hapus folder `.claude-kit/`.
-- Hapus `AGENTS.md` (kalau belum dimodifikasi user).
+- Hapus `AGENTS.md` (kalau belum dimodifikasi user; pakai `--delete-agents` kalau memang mau ikut hapus).
 - **TIDAK** hapus `docs/`, `src/`, atau file project user lain.
 
-Kalau `AGENTS.md` sudah dimodifikasi, kit akan tanya konfirmasi sebelum hapus.
+Langkah pertama (tanpa `--yes`) cuma menampilkan rencana lalu berhenti aman — kamu selalu bisa lihat apa yang akan dihapus sebelum benar-benar menghapus.
 
 ---
 
@@ -223,7 +225,7 @@ Cara termudah untuk staff non-programmer: **minta AI di chat** — "tolong updat
 
 Manual, dari dalam project:
 ```powershell
-.\.claude-kit\kit.ps1 update
+npx lintasai update
 ```
 
 Perintah ini akan:
@@ -238,12 +240,12 @@ Perintah ini akan:
 
 Cek status + versi (dari dalam project):
 ```powershell
-.\.claude-kit\kit.ps1 status
+npx lintasai status
 ```
 
 Lihat file yang berubah dari versi original:
 ```powershell
-.\.claude-kit\kit.ps1 diff
+npx lintasai diff
 ```
 
 Output `diff` akan tampilkan:
@@ -267,6 +269,6 @@ Bandingkan dengan `Kit version` di output `status`. Kalau beda, minta AI "tolong
 - **Bug report**: buka issue di GitHub repo `lintasai` (link di npm page).
 
 Untuk error yang **tidak** ada di troubleshooting di atas:
-1. Jalankan `.\.claude-kit\kit.ps1 status` (output status kit).
+1. Jalankan `npx lintasai status` (output status kit).
 2. Screenshot output + share di Discord channel.
 3. Jangan paste output yang berisi password / API key - mask dulu.

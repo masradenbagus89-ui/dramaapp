@@ -1,12 +1,14 @@
 ﻿# TEMPLATE: `<project>-backend/AGENTS.md`
 
 > Template ini di-deploy oleh AI saat split repo migration.
-> Customization: replace `<project>` dengan nama project user.
+> Customization: replace `<project>` dengan nama project user + SESUAIKAN jumlah/peran staff di bawah
+> (angka "2 orang"/"4 orang" = CONTOH ilustratif dari satu kasus nyata; tim-mu bisa beda — lihat POLA_REPO_AMAN.md).
 
 ```markdown
 # AGENTS.md - <project>-backend
 
 > Repo ini: Backend API + Business Logic + Database.
+> Mode microservice (varian shared-DB): backend juga = AGGREGATOR / Backend-for-Frontend — baca banyak schema engine (`engine_*`) lalu gabung jadi 1 jawaban untuk dashboard (lihat POLA_REPO_AMAN.md bagian "Backend = aggregator").
 > Audience AI: Claude Code untuk Backend Staff (2 orang yang akses semua 3 repo: `<project>-frontend`, `<project>-backend`, `<project>-shared`) + owner.
 > PRIVATE - 4 Frontend Staff TIDAK punya akses ke repo ini.
 >
@@ -82,6 +84,8 @@ Saat owner/delegate prompt kamu untuk fitur baru:
 - Tambahan: logging pakai `pino` (structured JSON), bukan `console.log`
 
 ## Auto-Publish @<project>/shared (Trigger Rule)
+
+> ⚠️ **POLA CONTOH — belum tentu terpasang di project-mu (jujur untuk staff non-programmer).** Alur di bawah (Step 5: `push → .github/workflows/publish-shared.yml` auto-publish ke GitHub Packages + Discord notify) mengandaikan "pabrik otomatis" yang **lintasAI TIDAK pasang otomatis** — `publish-shared.yml` tidak ikut terpasang kit (owner buat dulu). **AI WAJIB cek dulu apakah workflow/registry-nya benar-benar ADA sebelum menjanjikannya ke user, dan DILARANG bilang "auto-publish akan jalan setelah push" kalau pipeline-nya belum terbukti ada** — itu rasa-aman-palsu (§8.2 "no quote = no claim"). Belum dipasang → terbitkan paket bersama secara manual + sebut jujur "auto-publish belum aktif". 🏢 Analogi: jangan janji "paket otomatis terkirim" kalau mesin pengirimnya belum dibeli.
 
 Saat AI Claude Code execute task yang touching:
 - Prisma schema (prisma/schema.prisma)

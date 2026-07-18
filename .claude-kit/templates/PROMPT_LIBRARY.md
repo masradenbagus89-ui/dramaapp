@@ -1,7 +1,7 @@
 ﻿# PROMPT_LIBRARY.md - Koleksi Prompt Siap-Pakai Tim AI-First
 
 > Versi 1 · 2026-06-01
-> 22 prompt pattern teruji untuk kasus umum sehari-hari (1-10 generic + 11-15 chat-driven workflow + 16-22 audit/update/split/onboarding/anti-halusinasi)
+> 23 prompt pattern teruji untuk kasus umum sehari-hari (1-10 generic + 11-15 chat-driven workflow + 16-23 audit/update/split/onboarding/anti-halusinasi/aplikasi-utuh)
 > Format: nama → kapan pakai → template → tips
 >
 > CATATAN: Staff non-programmer TIDAK perlu baca file ini langsung. AI auto-apply pattern dari natural language brief (lihat `CLAUDE_universal_v1.md` section 4.2 Pattern-Driven Workflow). File ini reference untuk AI + owner.
@@ -37,6 +37,14 @@ Placeholder format: `<NAMA_FIELD>` artinya wajib diisi. `[OPTIONAL]` artinya bol
 13. Lapor owner setelah PR siap review
 14. Owner brief Claude untuk rollback cepat (emergency)
 15. Activate Feature Flag Mode (post-launch per project)
+16. Audit Komprehensif Pasca-Setup (dengan Analogi Non-Programmer)
+17. Update Kit dengan Auto-Classify Tier (Pattern-Driven)
+18. Split Repo Migration (🧪 BETA)
+19. AGENTS.md Deploy per Repo
+20. Non-Programmer Cheatsheet Print
+21. Adversarial Verify Claim (Anti-Halusinasi untuk Klaim Kritis)
+22. Staff Onboarding Day 0 (End-to-End)
+23. Discovery Aplikasi-Utuh (Peta Aplikasi dari prompt natural)
 
 ---
 
@@ -455,11 +463,11 @@ Saya kerja task ini: <paste isi prompt task dari chat>
 
 Tolong:
   1. Sync main lokal: git checkout main && git pull
-  2. Baca docs/architecture_auto.md + docs relevan
+  2. Baca docs/architecture.md + Grep untuk temukan docs relevan
   3. Cek docs/feature-flags-decision-tree.md - task ini perlu flag atau tidak?
   4. Buat branch: feat/<deskripsi-singkat>
   5. Implement task sesuai acceptance criteria
-  6. Update docs/<basename>.md pendamping (rule 7.1 AUTO-SYNC)
+  6. Update docs/<basename>.md pendamping kalau code berubah
   7. Commit pakai Conventional Commits format
   8. Push + buat PR: gh pr create --fill
 
@@ -610,8 +618,8 @@ Lapor diff dulu, tunggu approval.
 Tolong jalankan AUDIT KOMPREHENSIF di proyek ini, READ-ONLY, dengan ANALOGI NON-PROGRAMMER di setiap finding.
 
 Workflow:
-1. Pre-audit verify: AGENTS.md ada, docs/architecture_auto.md ada, .claude-kit/ ada.
-2. Read landscape: docs/architecture.md + docs/architecture_auto.md + memory project-*.
+1. Pre-audit verify: AGENTS.md ada, .claude-kit/ ada.
+2. Read landscape: docs/architecture.md + Grep + memory project-*.
 3. Workflow tool 8 paralel auditor (refactor / security / qa-test / database / devops / performance / docs-gap / onboarding).
 4. Adversarial verify per finding (default is_real=false kalau tidak 100% yakin).
 5. Synthesize ranked 3 tier (low → high risk_of_introducing_bug).
@@ -683,16 +691,16 @@ Isi lengkap ada di `./.claude-kit/UPDATE_KIT_PROMPT_v1.md`. Singkatnya AI jalani
    - Label `[SCAN-REQUIRED]` → **Tier 4**.
 3. **Compose summary** ke staff: ringkasan + analogi tools populer + action item yang dibutuhin.
 4. **Konfirmasi** (skip kalau user mode auto-confirm Y/N - lihat `feedback_auto_confirm.md`).
-5. **Eksekusi** via `./.claude-kit/kit.ps1 update` (yang internal manggil `update-kit.ps1`).
+5. **Eksekusi** via `npx lintasai update` (menjalankan `update-kit.mjs`).
 6. **Post-update**: kalau Tier 4 → minta staff paste `JALANKAN_KIT.md` ulang. Kalau Tier 3 → AI baca section "Migration Steps" inline di CHANGELOG dan eksekusi. Kalau Tier 1/2 → done.
 
 ### Tips
 
 - **Staff non-programmer**: chat natural cukup ("update kit dong"). AI auto-route ke pattern ini. Staff nggak perlu tau apa itu PowerShell, sha256, atau manifest.
-- **Power user** (dev kit-aware): bisa skip AI orchestration, langsung `./.claude-kit/kit.ps1 update` di terminal. Output structured + tier label langsung muncul.
-- **CI/automation**: `kit.ps1 update --json` (atau bash wrapper di repo) buat ngehasilin exit code + JSON report. Cocok buat GitHub Actions cek drift kit antar proyek tim.
+- **Power user** (dev kit-aware): bisa skip AI orchestration, langsung `npx lintasai update` di terminal. Output structured + tier label langsung muncul.
+- **CI/automation**: `npx lintasai update` (atau bash wrapper di repo) buat ngehasilin exit code + report. Cocok buat GitHub Actions cek drift kit antar proyek tim.
 - **Customization preservation**: staff sering takut "update bakal hapus AGENTS.md yang udah gue isi". Tenangin pakai analogi: "Kayak update WhatsApp - chat lo nggak ilang, cuma app-nya yang di-refresh." Mekanisme aslinya = manifest sha256 diff (file yang lo modif diketahuin AI lewat hash, otomatis di-skip dari overwrite).
-- **Rollback ada safety net**: `update-kit.ps1` taro backup di `./.claude-kit.backup-<timestamp>/`. Auto-cleanup file `.bak` > 30 hari + simpan max 3 backup terakhir. Analogi: kayak Google Drive version history - bisa balik ke versi sebelumnya, tapi nggak nyimpen 100 versi (boros disk).
+- **Rollback ada safety net**: `update-kit.mjs` taro backup di `./.claude-kit.backup-<timestamp>/`. Auto-cleanup file `.bak` > 30 hari + simpan max 3 backup terakhir. Analogi: kayak Google Drive version history - bisa balik ke versi sebelumnya, tapi nggak nyimpen 100 versi (boros disk).
 
 ### Mapping intent → sub-pattern
 
@@ -714,12 +722,12 @@ AI (setelah fetch CHANGELOG + classify):
 >
 > **Tier 2** (kayak iPhone iOS 17.3 → 17.4 minor - fitur baru aktif setelah restart, nggak butuh migration paksa).
 >
-> **File berubah**: `setup-pola-b.ps1`, `CLAUDE_universal_v1.md`, `ANALOGI_LIBRARY.md`
+> **File berubah**: `setup-pola-b.mjs`, `CLAUDE_universal_v1.md`, `ANALOGI_LIBRARY.md`
 > **File preserved** (anti-overwrite via sha256 manifest): `AGENTS.md` + 77 docs companion lo.
 >
 > **Action setelah update**: TIDAK ADA. AI sesi berikutnya auto-pakai aturan baru (analogi: kayak Tokopedia ngubah algoritma pencarian - lo nggak perlu ngapa-ngapain, next time buka app udah pake versi baru).
 >
-> Lanjut update sekarang? (auto-yes karena mode auto-confirm aktif → eksekusi `kit.ps1 update`...)
+> Lanjut update sekarang? (auto-yes karena mode auto-confirm aktif → eksekusi `npx lintasai update`...)
 
 ### Cross-reference
 
@@ -727,8 +735,8 @@ AI (setelah fetch CHANGELOG + classify):
 - **Aturan AI route intent → pattern**: `./.claude-kit/CLAUDE_universal_v1.md` section 4.5
 - **Audit post-setup pattern** (referensi tier classification origin): `./.claude-kit/CLAUDE_universal_v1.md` section 4.4
 - **Analogi library** (kalau butuh nambah analogi tools populer di summary): `./.claude-kit/templates/ANALOGI_LIBRARY.md`
-- **Backup retention policy detail**: `./.claude-kit/update-kit.ps1` (header comment)
-- **Manifest sha256 logic** (preservation file user-modified): `./.claude-kit/uninstall.ps1` (shared dengan update flow)
+- **Backup retention policy detail**: `./.claude-kit/update-kit.mjs` (header comment)
+- **Manifest sha256 logic** (preservation file user-modified): `./.claude-kit/uninstall.mjs` (shared dengan update flow)
 
 ---
 
@@ -768,7 +776,7 @@ Ingat: **prompt yang baik = konteks yang lengkap + instruksi yang jelas + constr
 
 ## Prompt 18: Split Repo Migration
 
-Untuk owner yang mau migrate monorepo -> 3 repo split (default) atau 4 repo (opt-in untuk tools):
+Untuk owner yang mau migrate monorepo → split multi-repo (🧪 **BETA — belum teruji end-to-end di GitHub nyata**). Catatan: produk baru **default = 2 repo** (+ Supabase schema-per-domain); split ke 3+ repo hanya saat ada **pemicu nyata** (SSOT: `docs/plans/POLA_REPO_AMAN.md`) — bukan angka default:
 
 Trigger: paste isi SPLIT_REPO_MIGRATION_PROMPT_v1.md
 Output: AI analyze + propose plan + execute step-by-step
@@ -894,16 +902,16 @@ PHASE 0 — Environment Sanity Check (v1.5.6 hardening)
   0.1  Verify Claude Code DESKTOP (bukan Web) — kalau Web, kasih link
        https://claude.ai/download dan STOP.
   0.2  Verify platform = Windows (lintasAI v1.x Windows-only).
-  0.3  Verify stack project = Node.js via Get-StackType di
-       .claude-kit/lib/project-detect.ps1. Kalau bukan Node (Python/Go/Rust/Ruby/PHP),
+  0.3  Verify stack project = Node.js via getStackType di
+       .claude-kit/lib/project-detect.mjs. Kalau bukan Node (Python/Go/Rust/Ruby/PHP),
        STOP dengan pesan jelas + link issue cross-stack.
   0.4  Verify project sudah `git init` (cek .git/ folder). Kalau belum,
        tawarkan pre-flight Fix #1: [1] auto init / [2] skip + global identity /
        [3] cancel.
-  0.5  Detect package manager via Get-PackageManager — tampilkan ke staff:
+  0.5  Detect package manager via getPackageManager — tampilkan ke staff:
        "Install pakai: <pnpm install / yarn install / bun install / npm install>"
        supaya tidak salah ketik.
-  0.6  Detect branch protection via Test-MainBranchProtected (setup-pola-b.ps1) — kalau main
+  0.6  Detect branch protection via testMainBranchProtected (setup-pola-b.mjs) — kalau main
        protected, surface "pakai pattern branch + PR" sejak awal.
 
 PHASE 1 — Foundation Verification (auto, ~30 detik)
@@ -923,15 +931,15 @@ PHASE 2 — Pre-Work Reading (Day 0, sekali pakai)
        (c) Apa itu Risk Level Low/Medium/High dari section 7b CLAUDE_TEAM_GUIDE?
 
 PHASE 3 — Project Context Loading (auto, ~30 detik)
-  Baca AGENTS.md + docs/architecture.md + docs/architecture_auto.md +
-  docs/glossary.md. Briefing 3-5 kalimat ke staff: stack, domain, status
+  Baca AGENTS.md + docs/architecture.md + docs/glossary.md.
+  Briefing 3-5 kalimat ke staff: stack, domain, status
   progress, focus minggu ini, package manager terdeteksi, branch protection
   status.
 
 PHASE 4 — Environment Setup (stack-aware)
   4.1  Konfirmasi owner sudah DM password DB + .env values.
   4.2  Run install pakai package manager DETECTED (BUKAN hardcode `npm install` —
-       pakai output Get-PackageManager.InstallCmd).
+       pakai package manager terdeteksi via `getPackageManager` di lib/project-detect.mjs / baca lockfile).
   4.3  Setup .env.local dari .env.example (WAJIB cek extension bukan .env.local.txt).
   4.4  npx prisma generate (skip kalau bukan Prisma project — detect via
        prisma/schema.prisma exists).
@@ -978,14 +986,52 @@ Mulai dari Phase 0.1 sekarang.
 
 - `CLAUDE_universal_v1.md` section 4.3 (Guided Step-by-Step Pattern)
 - `JALANKAN_KIT.md` Klarifikasi Terminologi Popup (Fix #6 v1.5.6)
-- `lib/project-detect.ps1` Get-StackType + Get-PackageManager
-- `setup-pola-b.ps1` Test-MainBranchProtected (branch protection check)
-- `setup-pola-b.ps1` pre-flight .git check (Fix #1 v1.5.6)
+- `lib/project-detect.mjs` getStackType + getPackageManager
+- `setup-pola-b.mjs` testMainBranchProtected (branch protection check)
+- `setup-pola-b.mjs` pre-flight .git check (Fix #1 v1.5.6)
 - `bin/lintasai.js` Desktop/Web detection (Fix #4 v1.5.6)
 
 ### Risk Level
 
 Low — read-only orchestration. AI cuma read file + spawn user-approved commands. Tidak modify project state tanpa per-step confirm.
+
+---
+
+## Prompt 23 — Discovery Aplikasi-Utuh (Peta Aplikasi dari prompt natural)
+
+> Pattern: staff non-programmer minta bikin APLIKASI/SISTEM UTUH ("bikin aplikasi kasir", "bikin toko online dari nol"), bukan 1 fitur. AI jalankan alur `workflows/4.2c-aplikasi-utuh.md`: konfirmasi-lingkup → Peta Aplikasi (irisan vertikal) → pancing kebutuhan per-domain → bangun per irisan (§4.16). Otak Claude yang menilai "utuh atau sepotong" (ADR-009); ini cuma perlengkapan.
+
+### Trigger (kapan pakai)
+- Staff: "bikin aplikasi/sistem/website <X>", "aku mau bikin <produk> dari awal".
+- BUKAN untuk 1 fitur ("tambah tombol/halaman") → itu Prompt 1.
+
+### Prompt template (copy-paste ke Claude Code chat)
+```
+Aku mau bikin <APLIKASI X, mis. "aplikasi kasir untuk toko sepatu">.
+
+Tolong pakai alur Aplikasi-Utuh (workflows/4.2c-aplikasi-utuh.md):
+1. Tampilkan KONFIRMASI LINGKUP dulu (yang akan dibangun / kriteria sukses /
+   yang TIDAK dibangun / risiko-asumsi) + popup, JANGAN langsung koding.
+2. Buat PETA APLIKASI: pecah jadi irisan yang tiap tahap bisa dipakai,
+   tandai aspek tiap irisan (Frontend/Backend/DB/Keamanan/SEO/DevOps).
+3. Pancing kebutuhan yang sering terlupa dari checklist domain
+   (templates/CHECKLIST_KEBUTUHAN_DOMAIN.md) + tanya "ada kebutuhan lain?".
+4. Setelah aku konfirmasi, bangun irisan pertama pakai urutan §4.16
+   (kontrak → logika → tampilan → tes), pakai stack-pack + capability pack
+   yang relevan (reuse-first), lalu lapor + tanya lanjut.
+
+Bahasa Indonesia non-programmer. Tugas sepele jangan dibebani upacara ini.
+```
+
+### Output yang diharapkan
+- AI TIDAK langsung menulis kode; menampilkan konfirmasi-lingkup + Peta Aplikasi + pertanyaan domain dulu.
+- Setelah konfirmasi: bangun per irisan (fondasi→atas), 8 aspek nyala otomatis, tutup "✅ SELESAI + rekap" / "Selesai sebagian".
+
+### Cross-reference
+- `workflows/4.2c-aplikasi-utuh.md` (alur inti) · `templates/CHECKLIST_KEBUTUHAN_DOMAIN.md` (pemantik) · `workflows/4.16-build-sequence.md` (urutan) · `workflows/cap/*` (capability pack) · `docs/decisions/ADR-009` (otak=Claude).
+
+### Risk Level
+Low — planning + read-only sampai user konfirmasi lingkup. Tak ada perubahan tanpa persetujuan bertahap.
 
 ---
 

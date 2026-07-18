@@ -1,92 +1,71 @@
 # AGENTS.md - Aturan Proyek dramaapp
 
-> v1 · 2026-06-20 · ikut standar tim IT (Pola B)
+> v1 · 2026-07-18 · ikut standar tim IT (Pola B)
 
-<!-- Header di atas auto-isi oleh setup-pola-b.ps1 (nama proyek dari folder root, tanggal dari sistem). Kalau setup manual, isi sendiri. -->
+<!-- Header auto-isi setup-pola-b.mjs. Berkas ini termuat tiap sesi (hemat baris!); frasa "Pola B" di atas + 5 placeholder = penanda mesin, jangan dihapus. -->
 
----
+Aturan utama tim (cara coding, dokumentasi, larangan) ada di **`./.claude-kit/CLAUDE_universal_v1.md`** — dimuat **OTOMATIS** tiap sesi lewat `CLAUDE.md` di root (yang `@import` berkas aturan itu + berkas ini). Berkas ini hanya berisi **override khusus proyek**.
 
-## Pengantar
+## Path resolution (instruksi untuk AI)
 
-Proyek ini ikut **standar kerja tim IT** (kit terpasang di `./.claude-kit/`).
-Aturan utama (cara coding, dokumentasi, larangan) ada di **`./.claude-kit/CLAUDE_universal_v1.md`**, dan dimuat **OTOMATIS** lewat `CLAUDE.md` di root proyek (yang `@import` file aturan itu + file `AGENTS.md` ini). Claude Code meng-auto-load `CLAUDE.md`, jadi aturan benar-benar masuk konteks tiap sesi — bukan sekadar "ditunjuk" lewat tulisan.
-File `AGENTS.md` ini cuma berisi **override khusus proyek** + instruksi resolusi path; ikut di-`@import` oleh `CLAUDE.md`.
-
----
-
-## Path resolution (PENTING - instruksi untuk AI)
-
-Kit ini di-embed di subfolder `./.claude-kit/` (bukan di `%USERPROFILE%\.claude\`).
-Saat baca/merujuk file kit, **kamu (AI) wajib mengganti** path lama jadi path lokal:
-
-- `%USERPROFILE%\.claude\<NAMA_FILE>` → `./.claude-kit/<NAMA_FILE>`
-- `~/.claude/<NAMA_FILE>` → `./.claude-kit/<NAMA_FILE>`
-
+Kit di-embed di `./.claude-kit/`. Saat merujuk berkas kit, ganti path lama:
+`%USERPROFILE%\.claude\<NAMA_FILE>` / `~/.claude/<NAMA_FILE>` → `./.claude-kit/<NAMA_FILE>`.
 Kalau install global **dan** `./.claude-kit/` sama-sama ada → **`./.claude-kit/` menang** (version-locked per proyek).
-
----
 
 ## Versi kit aktif
 
-- Versi kit di `./.claude-kit/`: **v1.57.1** <!-- di-update 2026-06-20 via npm (updater bawaan gagal: repo GitHub privat). Kit lama dicadangkan: .claude-kit.backup-20260620-181204 -->
-- Sumber kit (repo standar tim): **belum-ada (solo project)** <!-- ISI: URL repo git tempat kit dirilis. -->
-
----
+- Versi aktif: cek **baris teratas `./.claude-kit/CHANGELOG.md`** (jangan salin angkanya ke sini — jadi basi setelah update).
+- Sumber kit (repo standar tim): **belum-ada (solo project)**
 
 ## Override khusus proyek
 
-Centang `[x]` cuma yang **beda dari default kit**. Yang tidak dicentang = ikut default.
-Contoh: `- [x] Bahasa docs: EN (override dari default ID karena klien minta)`.
+Centang `[x]` hanya yang **beda dari default kit**; yang tidak dicentang = ikut default.
 
 - [ ] Bahasa docs: <!-- default ID -->
 - [ ] Format commit: <!-- default Conventional Commits -->
-- [ ] Folder `docs/`: <!-- default ikut `./.claude-kit/templates/architecture.md` -->
-- [x] Tech stack: Next.js 16 (App Router) + React 19 + Tailwind 4 + Supabase (Postgres) + TypeScript. **Tanpa shadcn.** <!-- override dari default: pakai Supabase sebagai backend data, bukan shadcn -->
+- [ ] Tech stack: <!-- default React/Next.js + Tailwind + shadcn -->
 - [ ] Branch utama: <!-- default `main` -->
-- [ ] Pakai GitHub Issue: <!-- default Tidak - pakai chat. Ubah ke `Ya` kalau ada klien eksternal yang tracking via Issue. -->
-- [ ] Channel chat task: <!-- link Slack/Discord/Telegram/WhatsApp tempat staff posting task -->
+- [ ] Pakai GitHub Issue: <!-- default Tidak (chat-driven); "Ya" kalau ada klien eksternal tracking via Issue -->
+- [ ] Channel chat task: <!-- link Slack/Discord/Telegram/WhatsApp -->
 - [ ] Lain-lain:
 
----
+Workflow chat-driven + Risk Level + rollback playbook: `./.claude-kit/templates/CLAUDE_TEAM_GUIDE.md` (section 5b/7b/13b); format prompt task: `./.claude-kit/templates/PROMPT_LIBRARY.md`.
 
-## Workflow & Komunikasi Task
+## Opt-in — mode & ide opsional (default semua MATI)
 
-Tim ini pakai workflow chat-driven (tanpa GitHub Issue by default). Detail di `./.claude-kit/templates/CLAUDE_TEAM_GUIDE.md` section 5b.
+Centang `[x]` yang mau diaktifkan di proyek ini. Detail tiap mode: `./.claude-kit/CLAUDE_universal_v1.md` §15 (+ `./.claude-kit/workflows/15-ide-opsional.md`).
 
-- **Channel chat task**: <!-- ISI: link Slack/Discord/Telegram/WhatsApp -->
-- **Pakai GitHub Issue?** Tidak (default tim). Ubah ke "Ya" kalau proyek punya klien eksternal yang tracking via Issue.
-- **Format prompt task**: lihat `./.claude-kit/templates/PROMPT_LIBRARY.md` section "Prompts untuk Workflow Chat-Driven Task".
-- **Risk Level decision tree**: lihat `./.claude-kit/templates/CLAUDE_TEAM_GUIDE.md` section 7b (Low/Medium/High klasifikasi task).
-- **Rollback playbook**: lihat `./.claude-kit/templates/CLAUDE_TEAM_GUIDE.md` section 13b (git revert <5 menit).
-- **Feature flag** = advanced/post-launch (kit early-stage default = staging-only). Lihat `./.claude-kit/templates/feature-flags-advanced.md` kalau butuh.
+- [ ] **Mode Hemat (Lean Mode)** — task rutin dikerjakan cepat + irit token (skip blok 2-versi & Tinjauan Divisi saat sepele, docs on-demand, narasi padat). Pagar wajib TETAP nyala: keamanan, anti-ngarang, Bahasa Indonesia non-programmer, gerbang QA/QC. Cocok kalau tim sudah paham teknis + mau jawaban langsung-ke-inti.
+- [ ] **Mode Auto-Confirm** — lewati konfirmasi Y/N sederhana (aksi merusak TETAP wajib konfirmasi).
+- [ ] **Mode Co-Pilot Berpagar** — AI proaktif kerjakan yang aman, berhenti di pagar (commit/push/PR/merge = manusia).
+- [ ] Ide opsional lain (UTM/tracking, i18n, feature flag, performance budget, secret scanner, dll — lihat §15).
 
----
+## Rekam Pelajaran lintasAI — bantu kit makin pintar (default: NYALA-lokal)
+
+AI otomatis mencatat **pelajaran TEKNIS** (pola standar IT yang belum dijaga kit) ke berkas LOKAL `docs/pelajaran-lintasai/` (ter-redaksi, gitignored, **bukan** kode/data bisnismu). **Tidak dikirim ke mana pun otomatis** — mengirim ke owner standar tim akhir minggu = pilihanmu. Detail: `./.claude-kit/workflows/6.5-rekam-pelajaran-frontier.md`.
+
+- [x] **Rekam Pelajaran nyala** (default). Hapus `[x]` (atau bilang "matikan rekam pelajaran") untuk mematikan di proyek ini.
 
 ## Skenario adopsi (AI WAJIB tanya popup di sesi pertama setelah setup)
 
-> ✅ **SUDAH DIPILIH (sesi 2026-06-20).** Project terdeteksi **setengah-jadi** (sudah berisi banyak kode: ~36 layar/komponen, 24 alamat data/API, 5 tabel database + 3 fungsi RPC). User memilih **[3] Proyek setengah jadi → Rapikan ke Standar Tim** (`./.claude-kit/PROJECT_LIFECYCLE_PROMPT_v1.md` Stage 4 (Rapikan ke Standar Tim)).
+> **AI: kalau 4 opsi di bawah masih lengkap = user belum pilih → WAJIB tampilkan popup klik (`AskUserQuestion`, ikut §14.1) per `./.claude-kit/POST_SETUP_CHECKLIST_PROMPT_v1.md`. Rekomendasi (posisi [1] saat dirender) = hasil AUTO-DETEKSI kondisi project, bukan dipatok statis: sudah ada kode / setengah-jadi → rekomendasikan [3]; benar-benar kosong → [1]. JANGAN auto-pick — tunggu user pilih, lalu HAPUS 3 opsi sisanya + jalankan Stage yang sesuai di `./.claude-kit/PROJECT_LIFECYCLE_PROMPT_v1.md`.**
 
-### Pilihan setup Phase 5b (terkunci sesi 2026-06-20)
-- **Cara pasang (Setup Mode):** LENGKAP — peta proyek + denah database dibuat lengkap; catatan kode dibuat di langkah akhir (sesudah audit + rapikan) supaya cocok dengan kode final.
-- **Periksa kode (Audit):** YA — audit menyeluruh 11 sudut dijalankan di sesi ini (mode aman cuma-baca, hasil disimpan di `docs/decisions/`).
-- **Ukuran tim + bentuk kode:** SENDIRI / kecil → **tetap 1 tempat (monorepo) + rapikan kode bertingkat** (🟢 ringan → 🟡 sedang → 🔴 berat). Tidak pecah-repo. File tim `.github/` terpasang tapi "tidur" — aktif kapan saja saat rekrut staf (alur ganti ukuran tim: chat "ubah ukuran tim jadi TIM KECIL/BESAR").
-
----
+- **[1] Proyek baru / from scratch** → Stage 1 (Kickoff)
+- **[2] Proyek lama tanpa docs** → Stage 2 (Bikin Catatan Proyek)
+- **[3] Proyek setengah jadi** → Stage 4 (Rapikan ke Standar Tim)
+- **[4] Sudah siap kerja task biasa** → langsung pakai
 
 ## Catatan tim
 
-<!-- Kosongkan section ini kalau proyek solo. -->
+<!-- Kosongkan kalau proyek solo. -->
 
 - Owner standar tim: <!-- nama + email/handle PIC kit -->
 - Channel diskusi: <!-- link Slack/Discord/Telegram -->
 
----
-
 ## Riwayat update kit di proyek ini
 
-| Versi kit | Tanggal update     | Siapa update | Catatan              |
-|-----------|--------------------|--------------|----------------------|
-| v1.45.0 | 2026-06-20 | user18  | Setup awal Pola B    |
-| v1.57.1 | 2026-06-20 | lintasAI (npm) | Update via `npm pack` (updater bawaan gagal: repo GitHub privat). Kit lama → `.claude-kit.backup-20260620-181204`. Catatan/docs/AGENTS keputusan dipertahankan. |
+| Versi kit | Tanggal update | Siapa update | Catatan |
+|---|---|---|---|
+| v2.9.0 | 2026-07-18 | user18 | Setup awal Pola B |
 
-<!-- Tambah baris baru tiap update isi `./.claude-kit/` ke versi lebih baru. -->
+<!-- Tambah baris tiap update `./.claude-kit/` ke versi lebih baru. -->

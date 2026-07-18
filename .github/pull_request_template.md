@@ -36,7 +36,7 @@
 
 ## Checklist
 - [ ] Commit pakai **Conventional Commits** (`feat:`, `fix:`, `chore:`, `docs:`, dll.)
-- [ ] File `.md` terkait di `docs/` sudah diupdate (sesuai aturan AUTO-SYNC kit)
+- [ ] File `.md` terkait di `docs/` sudah diupdate kalau code-nya berubah
 - [ ] Edge case sudah dipikirkan (input kosong, null, error network, race)
 - [ ] Sudah manual test di **preview URL** / lokal (sertakan link kalau ada)
 - [ ] Kalau ada perubahan UI: **screenshot before/after** dilampirkan di bawah

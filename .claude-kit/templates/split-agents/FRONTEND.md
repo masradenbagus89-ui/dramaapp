@@ -1,7 +1,8 @@
 ﻿# TEMPLATE: `<project>-frontend/AGENTS.md`
 
 > Template ini di-deploy oleh AI saat split repo migration.
-> Customization: replace `<project>` dengan nama project user.
+> Customization: replace `<project>` dengan nama project user + SESUAIKAN jumlah/peran staff di bawah
+> (angka "4 orang" = CONTOH ilustratif dari satu kasus nyata; tim-mu bisa beda — lihat POLA_REPO_AMAN.md).
 
 ```markdown
 # AGENTS.md - <project>-frontend
@@ -25,6 +26,7 @@ Kamu di repo `<project>-frontend`. Kamu BOLEH:
 Kamu TIDAK BOLEH:
 - Bikin endpoint API (itu di `<project>-backend`, kamu tidak akses)
 - Direct database query (Prisma) - termasuk dilarang DDL apapun
+- **Query/tulis DB langsung pakai Supabase client (`createClient` / `@supabase/supabase-js`) dari frontend** — walau cuma pakai `anon key` publik (BUKAN `DATABASE_URL`). `createClient` di browser = akses database langsung yang HANYA dijaga RLS (Row Level Security — gampang salah-konfigurasi), MELEWATI validasi + otorisasi backend. SEMUA akses data WAJIB lewat API backend (`NEXT_PUBLIC_API_URL`). Kalau butuh data, panggil endpoint backend; jangan colok Supabase langsung.
 - Modify `@<project>/shared` (cuma owner / Backend staff yang publish version baru)
 - Implement business logic (validation, calculation, workflow rules)
 - Akses `.env` yang berisi `DATABASE_URL` atau API SECRET
@@ -82,6 +84,8 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001'
 <!-- Contoh: design tokens, brand color, accessibility level, dst. -->
 
 ## Session Start Auto-Check (Anti-Stale Context)
+
+> ⚠️ **POLA CONTOH — belum tentu terpasang di project-mu (jujur untuk staff non-programmer).** Cek di bawah (versi `@<project>/shared` dari GitHub Packages, Swagger di `api-staging.<project>.id`, channel Discord) mengandaikan "pabrik otomatis" yang **lintasAI TIDAK pasang otomatis** — pipeline `publish-shared.yml`, registry paket, endpoint Swagger, dan Discord itu harus owner siapkan dulu. **AI WAJIB cek dulu apakah infrastrukturnya benar-benar ADA sebelum menjalankan, dan DILARANG mencetak status palsu** (mis. "Swagger API: 47 endpoints cached ✅") kalau berkas/alamatnya tidak terbukti ada — itu rasa-aman-palsu yang berbahaya bagi staff non-programmer (§8.2 "no quote = no claim"). Belum dipasang → lewati bagian ini + sebut jujur "belum aktif". 🏢 Analogi: ini brosur fitur, bukan tombol yang sudah tersambung — jangan lapor "lampu menyala" kalau kabelnya belum dipasang.
 
 Saat AI Claude Code session pertama tiap hari di repo ini, AI WAJIB execute pre-flight check:
 

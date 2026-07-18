@@ -30,13 +30,14 @@
  * ANTI ALARM-PALSU: hanya pola benar-benar berisiko yang dijaga. `deleteMany({ where })`,
  * `DELETE ... WHERE`, `prisma migrate deploy`, `rm berkas.txt` = AMAN -> lolos.
  *
- * Default OPT-IN (sec. 4.12: mode baru = default mati); nyalakan via .claude/settings.json
- * (lihat docs/risk-gate.md). Robot TIDAK auto-memperbaiki/menjalankan apa pun - cuma menilai lalu
+ * Default NYALA sejak v1.61.0 (ADR-002): setup-pola-b memasang hook ini otomatis tiap init/update;
+ * matikan = hapus blok PreToolUse risk-gate di .claude/settings.json (lihat docs/risk-gate.md).
+ * Robot TIDAK auto-memperbaiki/menjalankan apa pun - cuma menilai lalu
  * meneruskan keputusan ke USER.
  *
  * Versi  : 2.0.0 (1.0.0 = versi PowerShell lama; 2.0.0 = port Node)
  * Tanggal: 2026-06-20
- * Diuji  : tests/risk-gate.Tests.ps1 (Pester spawn node, skip jika node absen).
+ * Diuji  : tests/risk-gate.test.mjs (node:test).
  */
 'use strict';
 
@@ -94,12 +95,12 @@ function decide(obj) {
     // (2) SQL merusak: DROP/TRUNCATE
     if (/\b(DROP\s+(TABLE|DATABASE|SCHEMA)|TRUNCATE\s+TABLE?)\b/is.test(cmd)) {
       return { decision: 'ask', category: 'SQL_DESTRUKTIF',
-        reason: 'Perintah database ini bisa menghapus seluruh tabel/struktur data (DROP/TRUNCATE) - data bisa hilang permanen. Setujui hanya kalau kamu yakin.' };
+        reason: 'Perintah database ini bisa menghapus seluruh tabel/struktur data (DROP/TRUNCATE) - data bisa hilang permanen. Setujui hanya kalau kamu yakin. Kalau ini DB PRODUKSI, AI wajib minta kamu MENGETIK frasa konfirmasi (sec. 8.2 Aturan 5), bukan cuma klik.' };
     }
     // (2b) DELETE FROM tanpa WHERE
     if (/\bDELETE\s+FROM\b/is.test(cmd) && !/\bWHERE\b/i.test(cmd)) {
       return { decision: 'ask', category: 'SQL_DELETE_ALL',
-        reason: 'Perintah ini menghapus SELURUH baris tabel (DELETE tanpa syarat WHERE). Setujui hanya kalau memang itu maksudnya.' };
+        reason: 'Perintah ini menghapus SELURUH baris tabel (DELETE tanpa syarat WHERE). Setujui hanya kalau memang itu maksudnya. Kalau ini DB PRODUKSI, AI wajib minta kamu MENGETIK frasa konfirmasi (sec. 8.2 Aturan 5), bukan cuma klik.' };
     }
     // (3) Prisma migrate dev
     if (/prisma\s+migrate\s+dev\b/i.test(cmd)) {
@@ -109,7 +110,7 @@ function decide(obj) {
     // (3b) deleteMany/updateMany tanpa where
     if ((/\bdeleteMany\s*\(/i.test(cmd) || /\bupdateMany\s*\(/i.test(cmd)) && !/where/i.test(cmd)) {
       return { decision: 'ask', category: 'PRISMA_BULK_NO_WHERE',
-        reason: "'deleteMany/updateMany' tanpa syarat (where) mengubah/menghapus SELURUH baris tabel. Setujui hanya kalau memang itu maksudnya." };
+        reason: "'deleteMany/updateMany' tanpa syarat (where) mengubah/menghapus SELURUH baris tabel. Setujui hanya kalau memang itu maksudnya. Kalau ini DB PRODUKSI, AI wajib minta kamu MENGETIK frasa konfirmasi (sec. 8.2 Aturan 5), bukan cuma klik." };
     }
     // (4) Git berbahaya
     if (/\bgit\b/i.test(cmd) && (

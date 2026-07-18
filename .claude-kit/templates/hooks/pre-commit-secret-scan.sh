@@ -8,7 +8,7 @@
 # deteksi SENGAJA disamakan supaya konsisten.
 #
 # Pasang (opt-in): salin berkas ini ke .git/hooks/pre-commit lalu beri izin jalan --
-#   atau cukup minta AI: "pasang penjaga rahasia pre-commit" (AI jalankan install-secret-hook.ps1).
+#   atau cukup minta AI: "pasang penjaga rahasia pre-commit" (AI jalankan node lib/install-secret-hook.mjs).
 #
 # Darurat / alarm-palsu: lewati 1x dengan  git commit --no-verify
 #

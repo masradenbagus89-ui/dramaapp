@@ -22,6 +22,19 @@ Tanpa lintasAI, tiap orang kerja dengan cara sendiri-sendiri - pusing waktu mau 
 
 ---
 
+## Yang DIJAMIN otomatis vs yang DITAWARKAN (penting dibaca!)
+
+Ada **2 hal yang otomatis kamu dapat tiap kali minta sesuatu ke AI** - tanpa kamu ketik apa pun:
+
+1. **8 ahli IT selalu menemani.** Tiap kamu minta sesuatu, ada 8 "ahli tetap" yang ikut menjaga mutu pekerjaan: ahli **backend** (mesin di belakang layar), **frontend** (tampilan), **database** (penyimpanan data), **webdesain**, **kenyamanan-pakai**, **pengiriman ke server**, **keamanan**, dan **biar-ketemu-di-Google** (SEO). 🏢 Seperti 8 satpam tetap di tiap cabang toko - selalu ada, tak bisa dipecat, dan kamu boleh nambah ahli baru sesuai kebutuhan.
+2. **Pagar keselamatan selalu nyala:** AI tak akan membocorkan rahasia, tak akan mengarang fakta, dan selalu pakai bahasa yang kamu mengerti.
+
+**Selebihnya cuma DITAWARKAN, bukan wajib.** Hal-hal lain (audit, rapikan kode, aturan gaya penulisan, checklist, dll) = AI cuma **menyarankan** - kamu yang pilih mau pakai atau tidak. Jadi jangan merasa "harus ikut semua aturan"; ambil yang kamu butuh, sisanya bisa bertumbuh pelan-pelan di project kamu.
+
+**Kamu akan makin paham sendiri.** Tiap jawaban AI ditulis **2 versi** dengan label profesi sesuai topik: satu untuk yang sedang **belajar** (👨‍🎓 mis. Junior-Backend, Junior-SEO), satu **bahasa sehari-hari** (🙂). Jawaban yang berisi juga ditutup mini-pelajaran **"📚 Belajar dari task ini"**: arti awam, kenapa penting, jebakan umum, sampai 🚀 jalan ke senior (1 langkah kecil yang bisa langsung kamu coba). Ini sengaja - supaya dari waktu ke waktu kamu naik kelas, dari "sama sekali bukan programmer" pelan-pelan jadi junior lalu senior di bidang itu. Bukan biar kamu selamanya bergantung ke AI.
+
+---
+
 ## 4 Hal yang Kamu Perlu Tau
 
 ### 1. AI Claude Code = "Asisten Kerja" Kamu
@@ -118,7 +131,7 @@ Kenapa jelek: AI bingung - kolom apa? Data dari mana? Style gimana? Hasilnya pas
 ### Q2. Kalau saya salah prompt, bahaya tidak?
 **A**: 90% aman. AI selalu nanya konfirmasi sebelum hal berbahaya (hapus file, kirim ke production, ubah database). Yang berbahaya: kamu klik "Yes" tanpa baca. **Aturan**: kalau muncul popup konfirmasi dan kamu ragu - STOP, tanya owner Discord dulu.
 
-> **Popup di kit ada 2 tipe**: **Tipe A** = pertanyaan dari AI di chat — biasanya muncul **kotak pilihan yang bisa kamu KLIK**; kalau yang muncul justru teks `[1]/[2]/[3]`, balas dengan ketik angka (itu mode cadangan). **Tipe B** = jendela Windows terpisah yang muncul di layar (mirip kotak "Save As" di Word) — klik tombolnya pakai mouse. Bingung bedanya? Tanya AI di chat: *"jelaskan 2 tipe popup"*. Ragu = STOP, tanya owner Discord.
+> **Popup di kit = Tipe A saja**: pertanyaan dari AI **di dalam chat** — biasanya muncul **kotak pilihan yang bisa kamu KLIK**; kalau yang muncul justru teks `[1]/[2]/[3]`, balas dengan ketik angka (itu mode cadangan). **PENTING:** lintasAI **TIDAK** memunculkan jendela Windows terpisah (sejak v2.0.0 semua lewat chat). Kalau ada jendela "Save As"-style muncul di layar, itu **BUKAN dari lintasAI** — jangan menunggunya, dan jangan klik kalau tak yakin. Ragu = STOP, tanya owner Discord.
 
 ### Q3. Saya stuck, tanya siapa?
 **A**: Urutan:

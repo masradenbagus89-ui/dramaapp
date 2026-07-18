@@ -99,7 +99,6 @@ await softDeleteUser("user_123", { actorId: currentUser.id });
 3. **Update `Versi` + tanggal** sesuai kenyataan.
 4. **Source code path WAJIB nyata** - jangan biarkan `src/lib/users.ts:1` kalau file aktual beda.
 5. **Pastikan max ~80 baris** (file ini contoh = lebih panjang karena ada explanation, tapi `.md` pendamping aktual cukup ringkas).
-6. **Update `architecture_auto.md`** setelah create - tambah 1 baris baru.
 
 ---
 

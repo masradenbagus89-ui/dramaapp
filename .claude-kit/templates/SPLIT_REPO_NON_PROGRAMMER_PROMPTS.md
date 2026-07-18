@@ -1,6 +1,8 @@
 ﻿# Non-Programmer Prompt Cheatsheet - Split Repo Workflow
 
 > Print this. Tempel di monitor kamu. Tools digital populer = referensi cara berkomunikasi dengan AI.
+>
+> ⚠️ Angka orang di judul ("4 Orang" / "2 Orang") = **CONTOH ilustratif** dari satu kasus nyata; tim-mu bisa beda (tim ini 40-50 orang). SESUAIKAN — jangan dibaca sebagai aturan baku struktur tim.
 
 ---
 

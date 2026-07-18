@@ -55,7 +55,7 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           # (Opsional) Ganti model review tanpa ubah kode: set repo Variable REVIEW_MODEL di Settings > Variables.
-          # Kosong = pakai default Opus (claude-opus-4-8) di ai-review.js. Contoh isi alternatif: claude-sonnet-4-6 (lebih hemat).
+          # Kosong = pakai default Opus (claude-opus-4-8) di ai-review.cjs. Contoh isi alternatif: claude-sonnet-4-6 (lebih hemat).
           REVIEW_MODEL: ${{ vars.REVIEW_MODEL }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
@@ -63,4 +63,4 @@ jobs:
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_BODY: ${{ github.event.pull_request.body }}
           DIFF_PATH: /tmp/pr.diff
-        run: node .github/scripts/ai-review.js
+        run: node .github/scripts/ai-review.cjs

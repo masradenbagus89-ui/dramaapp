@@ -1,8 +1,6 @@
 {
   "permissions": {
     "allow": [
-      "Bash(./.claude-kit/kit.ps1:*)",
-      "Bash(./.claude-kit/setup-pola-b.ps1:*)",
       "Bash(git add:*)",
       "Bash(git branch:*)",
       "Bash(git checkout:*)",
@@ -32,10 +30,7 @@
       "Bash(pnpm dev:*)",
       "Bash(pnpm install:*)",
       "Bash(pnpm lint:*)",
-      "Bash(pnpm test:*)",
-      "Bash(pwsh -File ./.claude-kit/kit.ps1:*)",
-      "Bash(pwsh ./.claude-kit/kit.ps1:*)",
-      "Bash(pwsh ./.claude-kit/setup-pola-b.ps1:*)"
+      "Bash(pnpm test:*)"
     ]
   }
 }

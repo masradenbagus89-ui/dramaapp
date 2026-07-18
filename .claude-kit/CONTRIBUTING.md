@@ -8,6 +8,21 @@ Kit ini standar tim IT. Anggota tim **dianjurkan** usul perubahan kalau ketemu m
 
 ---
 
+## 🗺️ Peta-baca untuk DEVELOPER BARU (yang mengembangkan kit ini)
+
+Baru bergabung mengembangkan lintasAI? Baca **berurutan** ini dulu supaya paham konteks sebelum menyentuh kode — biar tak cuma 1 orang yang paham (bus-factor sehat):
+
+1. [`README.md`](README.md) — apa itu lintasAI + cara pasang/pakai.
+2. [`docs/architecture.md`](docs/architecture.md) — **peta makro** kit (struktur folder, modul inti, entry point). Cari dokumen `.md` relevan pakai `Grep` + peta ini.
+3. [`docs/decisions/`](docs/decisions/) (ADR-001..006) — **KENAPA** keputusan arsitektur besar diambil + alternatif yang ditolak. Ini sumber konteks utama "kenapa begini, bukan begitu".
+4. [`docs/plans/`](docs/plans/) — rencana/fitur yang sedang berjalan. Tiap fitur berjalan biasanya punya berkas **`STATUS_*.md`** sebagai titik-masuk (mis. [`docs/plans/STATUS_SISTEM_FEEDBACK.md`](docs/plans/STATUS_SISTEM_FEEDBACK.md) untuk sistem feedback pembelajaran).
+5. [`CLAUDE_universal_v1.md`](CLAUDE_universal_v1.md) — **aturan kerja AI + developer** (otak kit; auto-baca tiap sesi Claude Code di repo ini).
+6. [`.claude-kit/CHANGELOG.md`](.claude-kit/CHANGELOG.md) / `CHANGELOG.md` — riwayat rilis.
+
+**Alur kontribusi kode (wajib):** branch → ubah → `npm run preflight` (gerbang pra-rilis, harus HIJAU) → PR → approve `CODEOWNERS` → merge. **Jangan push langsung ke `main`.** Konteks sesi-AI yang lebih dalam tersimpan sebagai dokumen di repo (ADR/plans/STATUS), **bukan** di memory pribadi tiap mesin (memory lokal tidak ikut repo).
+
+---
+
 ## Siapa boleh usul?
 **Semua anggota tim.** Junior atau senior, sama saja - ide bagus bisa datang dari mana saja. Owner standar (1 orang) yang approve final.
 
@@ -81,15 +96,15 @@ Contoh konkret aturan baru:
 ### Aturan disiplin rilis (cegah CHANGELOG membengkak)
 - **Jangan tag rilis baru hanya untuk typo / ganti heading / rapikan kalimat.** Kumpulkan perubahan editorial seperti itu, baru ikutkan saat ada rilis fungsi berikutnya. (Akar masalah CHANGELOG 100KB+ adalah tiap editan kecil jadi rilis tersendiri.)
 - **CHANGELOG = "apa yang berubah untuk user", bukan jurnal refleksi.** Catatan post-mortem internal ("Mistake #1/#2", "root cause") taruh di commit message / git history, bukan di CHANGELOG yang dibaca staf.
-- **Saat bump versi, pakai 1 perintah: `.\kit.ps1 bump <versi>`** (mis. `.\kit.ps1 bump 1.42.0`). Ini otomatis mengecap nomor versi baru ke SEMUA berkas yang membawanya + menambah kerangka entri CHANGELOG + menjalankan robot pemeriksa kecocokan. Kamu tinggal **menulis deskripsi entri CHANGELOG** (ganti placeholder). Menghapus kelas-bug "lupa ganti satu berkas".
+- **Saat bump versi, pakai 1 perintah: `node kit.mjs bump <versi>`** (mis. `node kit.mjs bump 1.42.0`). Ini otomatis mengecap nomor versi baru ke SEMUA berkas yang membawanya + menambah kerangka entri CHANGELOG + menjalankan robot pemeriksa kecocokan. Kamu tinggal **menulis deskripsi entri CHANGELOG** (ganti placeholder). Menghapus kelas-bug "lupa ganti satu berkas".
 
-  6 berkas yang dicap otomatis (referensi / fallback manual): `package.json` (sumber kebenaran), `CHANGELOG.md` (entri baru di atas), `README.md` ("Versi stabil sekarang"), `CLAUDE_universal_v1.md` (header "> Versi ..."), `KEUNGGULAN_LINTASAI.md` ("Terakhir diselaraskan"), `templates/INDEX.md` (judul). Robot `lib/consistency-check.ps1` menjaga keenamnya sinkron + memverifikasi cocok dengan git tag. (Kejadian nyata 2x: README pernah beda versi dari git; 2026-06-12 README nyangkut di v1.7.8 selama 5 rilis — `kit.ps1 bump` mencegah ini.)
+  5 berkas yang dicap otomatis (referensi / fallback manual): `package.json` (sumber kebenaran), `CHANGELOG.md` (entri baru di atas), `README.md` ("Versi stabil sekarang"), `CLAUDE_universal_v1.md` (header "> Versi ..."), `templates/INDEX.md` (judul). Robot `lib/consistency-check.mjs` menjaga kelimanya sinkron + memverifikasi cocok dengan git tag. (Kejadian nyata 2x: README pernah beda versi dari git; 2026-06-12 README nyangkut di v1.7.8 selama 5 rilis — `bump` mencegah ini.)
 
 ### Runbook terbit ke npm (TERVERIFIKASI 2026-06-12 — jangan menebak, ikuti ini)
 
 Resep lengkap dari naikkan versi sampai paket tayang di npm. Tiap langkah sudah terbukti jalan:
 
-1. **Naikkan versi: `.\kit.ps1 bump X.Y.Z`** (cap otomatis 6 berkas + kerangka CHANGELOG, lihat di atas) → tulis deskripsi CHANGELOG → jalankan `tests/Run-Tests.ps1` — wajib semua lulus.
+1. **Naikkan versi: `node kit.mjs bump X.Y.Z`** (cap otomatis 5 berkas + kerangka CHANGELOG, lihat di atas) → tulis deskripsi CHANGELOG → jalankan `npm run preflight` — wajib semua lulus.
 2. **Commit → push branch → gabung ke `main` → push** (pola fast-forward biasa).
 3. **Buat penanda versi (git tag) di commit yang versinya cocok**, lalu kirim:
    ```powershell
@@ -99,7 +114,7 @@ Resep lengkap dari naikkan versi sampai paket tayang di npm. Tiap langkah sudah 
 4. **Robot penerbit jalan otomatis** (`.github/workflows/publish-npm.yml`): dia memverifikasi tag == `package.json` (beda = robot menolak, ini pengaman), lalu menerbitkan pakai kunci `NPM_TOKEN` yang tersimpan di brankas GitHub (Settings → Secrets → Actions). **Tidak butuh login/OTP siapa pun.**
 5. **Verifikasi (±1-2 menit) — WAJIB tunggu HIJAU sebelum mengumumkan ke staff**: buka tab **Actions** GitHub, pastikan workflow *Publish to NPM* SELESAI HIJAU, lalu `npm view lintasai version` → harus menunjukkan versi baru.
 
-> ⚠️ **Kenapa wajib tunggu hijau (anti beda-versi):** penanda versi (git tag) langsung publik begitu di-push, dan jalur **update kit** (`kit.ps1 update`) membaca versi terbaru dari **git tag** — sedangkan **pasang baru** (`npm create lintasai`) membaca dari **npm**, yang baru terisi SETELAH robot penerbit selesai. Kalau robot **gagal** (mis. `NPM_TOKEN` kedaluwarsa) tapi tag terlanjur dikirim, staff yang *update* dapat versi BARU sementara staff yang *pasang-baru* dapat versi LAMA = tim beda-versi. Jadi: kalau robot **merah**, perbaiki + jalankan ulang (*Run workflow* / `workflow_dispatch`) **SEBELUM** mengumumkan rilis ke staff.
+> ⚠️ **Kenapa wajib tunggu hijau:** sejak v2.8.0 **update DAN pasang-baru sama-sama membaca dari npm**, jadi keduanya baru melihat versi baru SETELAH robot penerbit selesai. Kalau robot **gagal** (mis. OIDC/izin bermasalah) tapi tag terlanjur dikirim, staff **tak dapat apa-apa** — mereka tetap di versi lama, dan `doctor` tak akan menyebut ada versi baru. Itu lebih aman daripada dulu (saat update membaca dari git tag → staff yang *update* dapat versi baru sementara yang *pasang-baru* dapat versi lama = tim beda-versi), tapi tetap: kalau robot **merah**, perbaiki + jalankan ulang (*Run workflow* / `workflow_dispatch`) **SEBELUM** mengumumkan rilis ke staff — kalau tidak, pengumumanmu menunjuk versi yang tak bisa mereka ambil.
 
 **LARANGAN & jebakan yang sudah terbukti:**
 - ❌ **JANGAN `npm publish` dari komputer.** npm menolak dengan error E403 — kebijakan npm mewajibkan pengaman 2-lapis ATAU kunci khusus untuk menerbitkan; `npm login` biasa TIDAK cukup, siapa pun akunnya. Jalur resmi repo ini = robot (langkah 3-4).

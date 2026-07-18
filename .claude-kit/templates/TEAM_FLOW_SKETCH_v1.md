@@ -90,7 +90,7 @@ Saat backend senior selesai, frontend/UI tau lewat **3 bagian** yang saling leng
 
 **Kenapa 3 bagian (bukan cuma chat)**: kalau pesan chat ke-skip, **kebenaran tetap di repo + PR** → orang berikutnya tinggal buka repo, AI-nya langsung paham. Tak ada yang hilang di chat.
 
-> **PENTING**: AI tiap orang itu **TERPISAH**, tidak saling ingat. AI frontend belajar konteks dari **REPO** (`@project/shared` + `docs/architecture_auto.md`), **bukan** dari chat AI backend. Maka: kontrak penting **WAJIB di-commit ke repo**, jangan cuma diomongin di chat.
+> **PENTING**: AI tiap orang itu **TERPISAH**, tidak saling ingat. AI frontend belajar konteks dari **REPO** (`@project/shared` + `docs/architecture.md`), **bukan** dari chat AI backend. Maka: kontrak penting **WAJIB di-commit ke repo**, jangan cuma diomongin di chat.
 
 ---
 
@@ -157,7 +157,7 @@ Staff cukup bilang *"cek bug dulu"* / *"smoke test alur login"* → AI eksekusi 
 A: **Tidak manual.** Pipeline auto-bikin PR update di repo frontend (~4 menit), dan AI frontend auto-`npm install` latest saat sesi mulai. Staff cuma **approve PR** (1 klik) — git-nya ditangani CI + AI. Staff tak pernah ketik `git pull`/`npm install` sendiri.
 
 **Q: AI frontend tau API backend dari mana?**
-A: Dari **repo** — paket `@project/shared` (tipe yang backend publish) + `docs/architecture_auto.md`. BUKAN dari chat AI backend (sesi terpisah).
+A: Dari **repo** — paket `@project/shared` (tipe yang backend publish) + `docs/architecture.md`. BUKAN dari chat AI backend (sesi terpisah).
 
 **Q: Kalau frontend salah pakai kontrak (mis. lupa parameter)?**
 A: Langsung **error saat build** — ketahuan otomatis, bukan nunggu rusak di production.

@@ -93,7 +93,9 @@ Standar tim AI-first:
 - Service_role_key = full superuser → tidak bisa di-scope per-orang.
 - Audit trail terbatas (semua query muncul atas nama service_role).
 
-**Pakai `@modelcontextprotocol/server-postgres`** dengan **PostgreSQL role per-user** + **schema isolation**. Tiap dev cuma bisa akses schema yang relevan dengan kerjaannya.
+**Pakai klien MCP PostgreSQL** dengan **PostgreSQL role per-user** + **schema isolation**. Tiap dev cuma bisa akses schema yang relevan dengan kerjaannya.
+
+> ⚠️ **CATATAN PAKET (dicek 2026-07-17 ke npm registry):** paket `@modelcontextprotocol/server-postgres` yang dulu jadi default kit ini sudah **DITINGGALKAN pembuatnya** ("Package no longer supported", versi terakhir 0.6.2 · Des 2024). Ia **masih jalan** tapi tak lagi dapat perbaikan keamanan. **Sebelum dipakai 40-50 orang, owner pilih klien MCP PostgreSQL yang MASIH dirawat** (cek langsung di npmjs.com — jangan asal, §8.2). **Yang penting:** keamanan isolasi kit ini bertumpu pada lapisan DB (`CREATE ROLE <orang> LOGIN` per-user + schema isolation + RLS), **bukan** pada paket npm-nya — jadi ganti klien = aman, model keamanannya tidak berubah.
 
 ### Aturan #0 (WAJIB, berlaku SEMUA option): 1 login = 1 orang. Schema bersama ≠ password bersama.
 
@@ -445,6 +447,12 @@ Step 4: Run SQL → role terbentuk
 
 Step 5: Owner buat connection string lengkap:
         DATABASE_URL=postgresql://dev_a.<project-ref>:aB9$xY2!mN7@kQ4...@aws-1-ap-southeast-1.pooler.supabase.com:6543/postgres
+
+        ⚠️ PENTING — kalau password punya SIMBOL KHUSUS (@ : / # ? %), WAJIB "percent-encode"
+        (sandikan) di dalam alamat DB, kalau tidak sambungan salah-baca → gagal konek.
+        Contoh: @ → %40 · : → %3A · / → %2F · # → %23 · ? → %3F · % → %25.
+        (Password 'aB9$xY2!mN7@kQ4' → bagian '@' jadi '%40'.) Prisma/psql/node-postgres
+        mewajibkan ini. Kalau ragu, bikin password TANPA @ : / # ? % biar tak perlu disandikan.
 
 Step 6: Owner DM ke staff via Signal/Telegram (encrypted):
         "Connection string DB kamu (jangan share ke siapapun):
@@ -1162,6 +1170,8 @@ Tolak. Kasih PostgreSQL MCP (Section 2) + schema-scoped role mereka. Kalau merek
 4. Copy token, simpan di password manager. **JANGAN** commit ke repo.
 
 ### 4.2. MCP Config
+
+> ⚠️ **CATATAN PAKET (dicek 2026-07-17 ke npm registry):** `@modelcontextprotocol/server-github` sudah **DITINGGALKAN** (versi terakhir 2025.4.8 · Apr 2025); README paketnya sendiri mengarahkan ke penerus resmi **`github/github-mcp-server`** (server MCP GitHub resmi — bisa remote-hosted maupun lokal). **Pakai penerus resmi itu** — buka README-nya untuk cara pasang terkini; config `npx` di bawah = jalur lama yang tak lagi didukung.
 
 ```json
 {

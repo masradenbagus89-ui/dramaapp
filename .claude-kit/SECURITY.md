@@ -77,8 +77,9 @@ bukan minta tambalan untuk versi lama.
 
 ## 📦 Cakupan
 
-**Termasuk:** kode kit (`*.ps1`, `lib/`, `bin/`), paket npm `lintasai` / `create-lintasai`,
-serta robot & workflow CI bawaan kit.
+**Termasuk:** kode kit — orkestrator akar (`*.mjs`), `lib/`, `bin/` — paket npm
+`lintasai` / `create-lintasai`, serta robot & workflow CI bawaan kit. (Sejak v2.0.0 kit
+**100% Node**; satu-satunya `.ps1` tersisa = `setup-pola-b.ps1` = jaring darurat, bukan jalur resmi.)
 
 **Di luar cakupan:** kode/aplikasi yang **kamu** bangun memakai lintasAI (itu tanggung
 jawab project-mu sendiri); kerentanan di dependency pihak-ketiga (laporkan ke pihak terkait);
@@ -91,11 +92,17 @@ penyalahgunaan dengan kredensial yang sudah bocor dari sisi pengguna.
 - **Rilis terverifikasi:** sebelum terbit ke npm, versi tag wajib cocok dengan `package.json`
   (`.github/workflows/publish-npm.yml`) + seluruh tes lulus.
 - **Integritas pemasangan:** manifest ber-tanda-tangan **HMAC** (mendeteksi berkas yang
-  diubah/rusak) + update **atomik dengan auto-balik** (gagal di tengah → kembali utuh).
+  diubah/rusak — diverifikasi saat `doctor`) + update **atomik dengan auto-balik** (gagal di
+  tengah → kembali ke versi lama yang utuh).
 - **Aturan AI bawaan:** anti prompt-injection (aturan §8.1), anti-halusinasi / wajib-kutip-sumber
   (§8.2), penjaga bocor-rahasia (`secret-guard.yml` di CI + pemindai pre-commit opsional).
-- **Rujukan standar profesional:** prinsip **OWASP** (validasi & anti-injeksi di pintu masuk data)
-  + **supply-chain / SLSA** (integritas rilis).
+- **Rujukan standar profesional:** prinsip **OWASP** (validasi & anti-injeksi di pintu masuk data).
+- **Integritas rilis (status jujur):** rilis ke npm memakai **OIDC Trusted Publishing** (terbit dari
+  GitHub Actions **tanpa token** yang bisa dicuri) + **gerbang tes wajib** sebelum terbit
+  (`publish-npm.yml`) + **HTTPS+TLS + proteksi-branch GitHub**. **npm provenance** (bukti-pabrik
+  Sigstore) **belum aktif** karena hanya didukung untuk repo **PUBLIK**, sedangkan repo ini
+  **private** (`publishConfig.provenance: false`) — bisa dinyalakan kalau repo dijadikan publik.
+  Penandatanganan tag **GPG** masih **RENCANA** (lihat `docs/SIGNED_RELEASE.md`). Belum mengklaim **SLSA**.
 
 ---
 

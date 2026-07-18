@@ -28,9 +28,9 @@ Kamu adalah **Documentation Refactor Specialist**. Tujuan: migrasi `docs/` dari 
 - **Akurasi > speed**. Lebih baik 1 batch kecil + verify daripada bulk yang break links.
 - **Pakai `git mv`** (bukan delete + create) supaya git history preserved.
 - **Update SEMUA cross-reference** setelah move.
-- **JANGAN touch file tim panduan** (`CLAUDE_TEAM_GUIDE.md`, `PROMPT_LIBRARY.md`, `ONBOARDING.md`, `STACK_GUIDE.md`, `MCP_SETUP.md`, `_PATTERNS.md`, `_EXAMPLE.md`, `architecture.md`, `glossary.md`, `architecture_auto.md`) - file ini stay di root docs/.
+- **JANGAN touch file tim panduan** (`CLAUDE_TEAM_GUIDE.md`, `PROMPT_LIBRARY.md`, `ONBOARDING.md`, `STACK_GUIDE.md`, `MCP_SETUP.md`, `_PATTERNS.md`, `_EXAMPLE.md`, `architecture.md`, `glossary.md`) - file ini stay di root docs/.
 
-### Workflow 5 fase
+### Workflow 4 fase
 
 #### FASE 1 - Audit current state
 
@@ -105,65 +105,7 @@ Ulangi per kategori (security, lib, api, features):
 
 5. **Lanjut batch berikutnya** atau pause kalau user request.
 
-#### FASE 4 - Update architecture_auto.md
-
-Setelah semua migrasi selesai:
-
-1. Re-generate `docs/architecture_auto.md` dengan struktur baru:
-
-```markdown
-# docs/architecture_auto.md - Registry semua file .md pendamping (TOC)
-
-> Auto-maintained oleh AI
-
-## Top-level (file tim panduan, preserve)
-- [architecture.md](architecture.md) - peta makro proyek
-- [glossary.md](glossary.md) - kamus istilah
-- [_PATTERNS.md](_PATTERNS.md) - aturan dokumentasi tim
-- [_EXAMPLE.md](_EXAMPLE.md) - contoh format
-- [CLAUDE_TEAM_GUIDE.md](CLAUDE_TEAM_GUIDE.md) - panduan tim
-- [PROMPT_LIBRARY.md](PROMPT_LIBRARY.md) - 22 prompt siap-pakai
-- [ONBOARDING.md](ONBOARDING.md) - playbook dev baru
-- [STACK_GUIDE.md](STACK_GUIDE.md) - stack guide
-- [MCP_SETUP.md](MCP_SETUP.md) - MCP setup
-- [RLS_SETUP_PROMPT.md](RLS_SETUP_PROMPT.md) - RLS prompt
-- [DB_SCHEMA_SCAN_PROMPT.md](DB_SCHEMA_SCAN_PROMPT.md) - schema scan prompt
-- [db-schema.md](db-schema.md) - DB schema (kalau ada)
-
-## Security (docs/security/)
-- [security/auth.md](security/auth.md) - NextAuth credentials + session
-- [security/encryption.md](security/encryption.md) - AES-256-GCM vault
-- [security/permissions.md](security/permissions.md) - RBAC matrix
-- [security/rate-limit.md](security/rate-limit.md) - sliding-window limiter
-
-## Library (docs/lib/)
-- [lib/prisma.md](lib/prisma.md) - Prisma client singleton
-- ...
-
-## API routes (docs/api/)
-### Auth
-- [api/auth/nextauth.md](api/auth/nextauth.md) - NextAuth handler mount
-- [api/auth/captcha.md](api/auth/captcha.md) - captcha endpoint
-...
-
-### Vault
-- [api/vault/index.md](api/vault/index.md) - GET/POST vault
-- [api/vault/reveal.md](api/vault/reveal.md) - decrypt password
-...
-
-## Features (docs/features/)
-[Per feature folder kalau ada]
-
-## ADR (docs/decisions/)
-[Auto-link ADR files]
-
-## Riwayat migrasi
-| Tanggal | Aksi | Catatan |
-|---|---|---|
-| 2026-06-01 | Migrate flat -> subfolder | Total <N> file di-restructure |
-```
-
-#### FASE 5 - Commit + verify
+#### FASE 4 - Commit + verify
 
 1. **Commit** dengan message jelas:
    ```bash
@@ -173,7 +115,6 @@ Setelah semua migrasi selesai:
 
 2. **Verify**:
    - Klik random 5 cross-ref di markdown editor - semua link work.
-   - Cek `docs/architecture_auto.md` - entry up-to-date.
    - Test render markdown di GitHub / IDE preview.
 
 3. **Lapor ke user**:
@@ -183,17 +124,15 @@ Setelah semua migrasi selesai:
    - Subfolder dibuat: <K> (security/, lib/, api/, features/)
    - Cross-reference di-update: <C> baris di <F> file
    - Commit: <hash>
-   
-   Verifikasi: docs/architecture_auto.md sudah refresh dengan struktur baru.
    ```
 
 ---
 
 ## Aturan SETELAH migrasi
 
-- **LAZY-GENERATE 7.2b** aktif: docs baru otomatis ke subfolder yang relevan (kalau folder source punya >= 3 file CRITICAL).
-- **AUTO-SYNC 7.1**: tiap edit code yang ada `.md` pendamping di subfolder, AI WAJIB update `.md` di lokasi yang benar (bukan root).
-- **READ-MINIMAL 7.3**: AI baca `architecture_auto.md` dulu → tahu struktur subfolder → cherry-pick relevant.
+- **Docs baru** boleh langsung diletakkan di subfolder domain yang relevan (kalau folder source punya >= 3 file CRITICAL).
+- **Jaga sinkron**: tiap edit code yang punya `.md` pendamping di subfolder, perbarui `.md` di lokasi yang benar (bukan root).
+- **READ-MINIMAL (§7.3)**: AI baca `architecture.md` dulu + `Grep` → tahu struktur subfolder → cherry-pick relevant.
 
 ---
 
@@ -215,6 +154,5 @@ Setelah semua migrasi selesai:
 ---
 
 ## Referensi
-- Aturan 7.2b Folder auto-detect grouping: `./.claude-kit/CLAUDE_universal_v1.md` seksi 7.2b
 - Aturan 7.4 ARCHITECTURE REGISTRY format: seksi 7.4
 - Bootstrap workflow: `./.claude-kit/PROJECT_LIFECYCLE_PROMPT_v1.md` (Stage 2 (Bikin Catatan Proyek): Bootstrap Docs)

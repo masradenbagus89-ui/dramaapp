@@ -54,7 +54,7 @@ Ini bagian yang **hanya bisa kamu (owner/pemilik repo) lakukan** lewat browser �
 
 🏢 Analogi: ini seperti **memasang kunci + buku tamu di pintu brankas**. Setelah dikunci, siapa pun (termasuk kamu) yang mau masuk wajib lewat prosedur: isi buku tamu (PR), minta tanda tangan penjaga (review CODEOWNERS), alarm aman (cek otomatis hijau). 📱 Mirip **transfer BCA di atas limit** yang wajib OTP — sengaja dibikin tidak bisa "asal klik".
 
-> **Cara cepat alternatif (kalau kamu nyaman jalankan skrip):** ada skrip siap-pakai `.github/scripts/setup-branch-protection.ps1`. Jalankan dulu **mode SIMULASI** (lihat-lihat, tidak mengubah apa pun), baru tambah `-Apply` kalau sudah yakin. Tapi cara klik di atas tetap paling aman untuk non-programmer karena kamu lihat sendiri tiap centang.
+> **Cara cepat alternatif (kalau kamu nyaman jalankan perintah):** ada perintah siap-pakai `npx lintasai protect-main`. Jalankan dulu **mode SIMULASI** (tanpa `--apply` = lihat-lihat, tidak mengubah apa pun), baru tambah `--apply` kalau sudah yakin. Tapi cara klik di atas tetap paling aman untuk non-programmer karena kamu lihat sendiri tiap centang.
 
 ---
 
@@ -93,4 +93,4 @@ Saat seseorang membuka PR, GitHub otomatis menampilkan isian dari `.github/pull_
 - [ ] Undang anggota tim sebagai collaborator di GitHub (sesuai akses berjenjang `ACCESS_CONTROL_NREPO_v1.md`).
 - [ ] Beri tahu tim: buka `KERJA_KELOMPOK.md` ini dulu sebelum mulai.
 
-> 💡 Mau menyiapkan/menyegarkan berkas kerja-kelompok kapan saja? Jalankan di dalam folder project ini: `.\.claude-kit\kit.ps1 team-setup`
+> 💡 Mau menyiapkan/menyegarkan berkas kerja-kelompok kapan saja? Jalankan di dalam folder project ini: `npx lintasai team-setup`

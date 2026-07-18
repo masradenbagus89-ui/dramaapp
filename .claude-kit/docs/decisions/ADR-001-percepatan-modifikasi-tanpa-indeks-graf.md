@@ -28,7 +28,7 @@ berbukti `berkas:baris`. Hasil menjawab tantangan owner dengan tegas.
 - Kit ditulis dengan **PowerShell (.ps1)**, tapi project klien default = **Next.js/TypeScript/Supabase**
   (`lib/project-detect.ps1:445` "lintasAI v1.x cuma support Node"; Python/Go/PHP `Supported=$false`).
 - DNA kit (`CLAUDE_universal_v1.md` §6.3): robot deterministik HANYA untuk fakta **sumber-tunggal +
-  pola TAK-AMBIGU** (nomor versi, jumlah 31 file tim). Fakta ambigu (jumlah jargon/prompt) **SENGAJA
+  pola TAK-AMBIGU** (nomor versi, jumlah file tim). Fakta ambigu (jumlah jargon/prompt) **SENGAJA
   ditolak** karena alarm palsu (lihat `lib/consistency-check.ps1` + memory `fast-default-deterministic-robot`).
 - Pola keputusan kit = **insiden-driven** (audit→fix, keluhan→aturan), bukan membangun infrastruktur
   proaktif tanpa pemicu nyata.
@@ -134,3 +134,4 @@ konsekuensi 3 hal yang **membenarkan** ketiadaannya:
 | Tanggal    | Status   | Oleh         | Catatan      |
 |------------|----------|--------------|--------------|
 | 2026-06-19 | Accepted | Tim lintasAI | Draft + keputusan awal (delegasi owner) |
+| 2026-07-15 | Accepted | owner | Cross-ref ADR-013: robot `plan-scout` selaras ADR ini — STATELESS (jalan segar tiap panggil, tanpa indeks/graf tersimpan, tanpa nomor baris); hint import-count = penghitungan sesaat, bukan graf ketergantungan. Alasan privasi (kode tak keluar mesin) memperkuat pilihan agentic-search. |

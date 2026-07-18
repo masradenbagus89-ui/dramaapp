@@ -8,7 +8,7 @@ Ini panduan **menegakkan kontrol-akses** lintas banyak repo: supaya **cuma 3-5 o
 
 > 🏢 **Analogi:** kayak **kartu akses gedung**. Karyawan biasa cuma bisa buka lantai kerjanya; ruang server + brankas cuma untuk 3-5 orang berkartu khusus. Yang tak berkartu, pintunya **tidak terbuka** — bukan "diingatkan jangan masuk", tapi benar-benar terkunci.
 
-> ⚠️ Sumber datanya = **Buku Induk** (`lintasai-portfolio.yml`). Isi dulu Buku Induk (lihat `PORTFOLIO_REGISTRY_v1.md`) sebelum jalankan panduan ini.
+> ⚠️ Sumber datanya = **Buku Induk** (`lintasai-portfolio.yml`). Isi dulu Buku Induk sebelum jalankan panduan ini — paling mudah lewat **wizard**: ketik *"buatkan Buku Induk akses"* (AI mewawancarai + menulis untukmu, lihat `WIZARD_BUKU_INDUK_v1.md`), atau isi manual ikut `PORTFOLIO_REGISTRY_v1.md`.
 
 ---
 
@@ -110,7 +110,9 @@ Prinsip: orang baru mulai **TANPA akses apa pun**, ditambah **hanya** repo yang 
 
 Akses gampang "set sekali lalu lupa". Cek **tiap bulan** memastikan kenyataan di GitHub masih cocok dengan Buku Induk. Supaya tidak lupa, kit memasang **robot pengingat** (`audit-access.yml`) yang otomatis membuka satu "Issue" tiap awal bulan: *"waktunya cek-akses"*. Robot itu cuma **mengingatkan** — pemeriksaannya tetap kamu jalankan (lewat AI, baca-saja). Sengaja TIDAK ada pencabutan otomatis, supaya tak ada akses yang ke-cabut keliru.
 
-Minta AI:
+**Cara cepat (robot):** jalankan `npx lintasai access-verify` (atau `node .claude-kit/lib/access-verify.mjs`) — robot otomatis baca Buku Induk + tanya GitHub (read-only) + cetak SELISIH tim per repo + catat ke `.audit-log`. Butuh `gh` login + **organisasi** GitHub (bukan akun pribadi). Kalau `gh` tak tersedia/gagal, robot **BERHENTI + lapor** (tak pernah diam-diam bilang "aman"). Tetap READ-ONLY — pencabutan akses = kamu klik manual.
+
+**Atau minta AI** (manual):
 > *"Bandingkan siapa yang SEKARANG punya akses tiap repo (baca dari GitHub) dengan `lintasai-portfolio.yml`. Cetak SELISIH-nya: siapa punya akses yang TIDAK ada di Buku Induk, atau sebaliknya. Mode baca-saja, jangan ubah apa pun."*
 
 AI akan menandai mis. *"⚠️ staff-X masih punya akses `bigseo-backend` padahal sudah pindah ke feature-staff"* → kamu cabut manual. Membaca daftar akses = aman (tidak mengubah apa pun).

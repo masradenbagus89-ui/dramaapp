@@ -1,6 +1,6 @@
 > ## INI FILE BUAT AI BACA — JALUR `npm create lintasai` (TIPIS, MERUJUK SUMBER TUNGGAL)
 >
-> File ini dipanggil otomatis oleh `setup-pola-b.ps1` closing message (v1.5.7+) untuk **paksa AI lanjut workflow** setelah install kit selesai.
+> File ini dipanggil otomatis oleh pemasang (`setup-pola-b.mjs`) closing message untuk **paksa AI lanjut workflow** setelah install kit selesai.
 >
 > **v1.6.2 — popup disatukan**: file ini **TIDAK lagi mendefinisikan popup sendiri**.
 > Definisi popup (Setup Mode, Audit, Ukuran Tim + Bentuk Kode, Pending Action Items) =
@@ -16,7 +16,7 @@
 
 # POST_SETUP_CHECKLIST_PROMPT_v1 — Auto-Trigger Phase 6+ Setelah Install Kit
 
-> v1.6.2 · 2026-06-10 · WAJIB AI eksekusi setelah `setup-pola-b.ps1` / `npm create lintasai` selesai.
+> v1.6.2 · 2026-06-10 · WAJIB AI eksekusi setelah `setup-pola-b.mjs` / `npm create lintasai` selesai.
 >
 > Per `CLAUDE_universal_v1.md` Section 4.3b Phase 5b (Auto-Trigger Post-Setup Checklist) + Section 4.4 (Audit Post-Setup Pattern auto-trigger condition #1).
 
@@ -34,16 +34,17 @@ Fix v1.6.2: file ini **tidak lagi punya popup sendiri** — dulu definisinya bed
 
 ### [0] WAJIB PRE-SEND CHECKLIST tiap response substantive
 
-SEBELUM AI tutup tiap response di sesi ini (bukan cuma final laporan, TAPI tiap response substantive — code change, ship/release, audit findings, multi-phase workflow), AI WAJIB run PRE-SEND CHECKLIST 4 kategori:
+SEBELUM AI tutup tiap response di sesi ini (bukan cuma final laporan, TAPI tiap response substantive — code change, ship/release, audit findings, multi-phase workflow), AI WAJIB run PRE-SEND CHECKLIST 5 kategori:
 
-1. **Inline narasi antar tool call** — translate jargon ke 3-layer analogi
+1. **Inline narasi antar tool call** — jelaskan jargon dengan bahasa awam (analogi singkat opsional)
 2. **Update Todos** — label content + activeForm bebas jargon mentah
-3. **Body final response** — jargon di kemunculan pertama WAJIB ada analogi 3-layer
-4. **Tinjauan lintasAI Divisi (programmer + non-programmer)** — tiap cell WAJIB 2 sudut pandang: 👨‍💻 Programmer (teknis akurat) + 🙂 Non-Programmer (3-layer analogi: sehari-hari + tools digital populer Indonesia + contoh konkret). Heading literal **tanpa angka divisi**: "🎯 Tinjauan lintasAI Divisi"
+3. **Body final response** — jargon di kemunculan pertama WAJIB dijelaskan dengan bahasa awam (analogi opsional). Output substantif → tutup dengan blok "📚 Belajar dari task ini" (5 baris, `CLAUDE_universal_v1.md` §4.1b)
+4. **Tinjauan lintasAI Divisi (Junior-<profesi> + Non-<profesi>)** — tiap divisi WAJIB 2 sudut pandang dengan label DINAMIS ikut profesi divisinya: 👨‍🎓 Junior-<profesi> (mis. Junior-Backend; teknis, jargon dijelaskan singkat) + 🙂 Non-<profesi> (mis. Non-Backend; penjelasan bahasa awam 1 kalimat; analogi singkat opsional — tidak wajib 3-lapis). Heading literal **tanpa angka divisi**: "🎯 Tinjauan lintasAI Divisi"
+5. **Popup/pilihan** — opsi rekomendasi di posisi [1] + label "(rekomendasi)" + alasan awam di description; aksi merusak → opsi aman di [1]
 
 Detail PRE-SEND CHECKLIST: lihat `CLAUDE_universal_v1.md` Section 2.1.1 + Reference Card translasi jargon di Section 2.1.
 
-**Indicator violation**: kalau output punya >3 jargon teknis tanpa analogi → STOP, rewrite SEMUA, baru kirim.
+**Indicator violation**: kalau output punya >3 jargon teknis yang dibiarkan mentah tanpa penjelasan awam → STOP, rewrite SEMUA, baru kirim.
 
 ### [1] Auto-detect: project setengah-jadi vs fresh
 
@@ -59,7 +60,7 @@ Cara deteksi (tool-agnostik, jalan di Windows & non-Windows):
 
 Vonis **MATURE (setengah-jadi)** kalau **SALAH SATU (OR)** kriteria step 10 `JALANKAN_KIT.md` terpenuhi (folder dashboard 3+ subfolder · ATAU 5+ model/tabel DB · ATAU `src/lib/` 10+ file · ATAU 5+ route API · ATAU aset merek custom · ATAU jelas banyak file kode nyata berfitur). **JANGAN pakai ambang kaku** (step 10 melarangnya — bikin project ukuran sedang kelewat audit).
 
-> **FAIL-SAFE (WAJIB):** kalau scan GALAT atau hasilnya 0 yang mencurigakan untuk project yang seharusnya ada isinya → **JANGAN simpulkan "kosong".** Pakai kriteria OR + kalau ragu **TANYA user**. Default = **MENAWARKAN audit, bukan melewati** (selaras `JALANKAN_KIT.md` Bagian 3 baris 176-177 "JANGAN lewati diam-diam").
+> **FAIL-SAFE (WAJIB):** kalau scan GALAT atau hasilnya 0 yang mencurigakan untuk project yang seharusnya ada isinya → **JANGAN simpulkan "kosong".** Pakai kriteria OR + kalau ragu **TANYA user**. Default = **MENAWARKAN audit, bukan melewati** (selaras `JALANKAN_KIT.md` Bagian 3, aturan "JANGAN lewati diam-diam" — cari teksnya, jangan andalkan nomor baris yang bisa bergeser).
 
 Lapor ke user: *"Sepertinya project-mu **sudah jalan separuh** (ada N berkas kode, M tabel database). Jadi aku akan jelaskan agak lengkap dulu."* (atau "project masih kosong/baru" kalau tanda-tandanya minimal). Hasil deteksi ini dipakai untuk default popup di Bagian 2/3 `JALANKAN_KIT.md` + menentukan apakah menawarkan Stage 4 Rapikan (kalau ada code existing) atau Stage 1 Kickoff (kalau benar-benar kosong).
 
@@ -69,7 +70,7 @@ Lapor ke user: *"Sepertinya project-mu **sudah jalan separuh** (ada N berkas kod
 >
 > - **Bagian 2 — Popup #1 Setup Mode** (LENGKAP / CEPAT / PILIH SENDIRI).
 > - **Bagian 3 — Popup #2 Audit menyeluruh** (conditional, cuma muncul kalau project SUDAH ADA kodenya; denah + catatan ditunda ke akhir biar tak 2x — v1.43.0).
-> - **Bagian 4 — Popup #3 Ukuran Tim + Bentuk Kode** (gabungan — v1.43.0; **default & posisi [1] = tetap 1 tempat + rapikan / TIM KECIL**). Versi PENUH (project berkode + monorepo): [1] tetap 1 tempat+rapikan / [2] pecah 3 repo / [3] multi-repo 6-10. Versi RINGKAS (kosong / sudah terpecah): cuma ukuran tim. Skenario adopsi DIDETEKSI OTOMATIS (setengah jadi → tawaran Rapikan tergabung di opsi [1]; kosong → Stage 1 Kickoff).
+> - **Bagian 4 — Popup #3 Ukuran Tim + Bentuk Kode** (gabungan — v1.43.0; **default & posisi [1] = tetap 1 tempat + rapikan / TIM KECIL**). Versi PENUH (project berkode + monorepo): [1] tetap 1 tempat+rapikan / [2] pecah 3 repo / [3] microservice 6-10 (varian shared-database). Versi RINGKAS (kosong / sudah terpecah): cuma ukuran tim. Skenario adopsi DIDETEKSI OTOMATIS (setengah jadi → tawaran Rapikan tergabung di opsi [1]; kosong → Stage 1 Kickoff).
 > - **Bagian 5 / 5c — eksekusi rapikan / pecah-repo** (derive dari pilihan Popup #3, kalau ada kode).
 >
 > Tampilkan tiap popup sebagai **popup klik** (tool `AskUserQuestion` — kotak pilihan bisa diklik) kalau tool tersedia; opsi rekomendasi di posisi PERTAMA + "(rekomendasi)". Fallback HANYA kalau tool tak ada: chat-text numbered list (user balas ketik angka). Aturan lengkap: `JALANKAN_KIT.md` > "Cara Tampil Popup". Baris "Default (Enter/kosong) → [N]" hanya berlaku di mode teks — mode klik tidak punya Enter, opsi default dipindah ke posisi pertama "(rekomendasi)".
@@ -80,7 +81,7 @@ Mapping eksekusi (Setup Mode × Audit × Ukuran Tim + Bentuk Kode) **sudah didef
 
 ### [4] WAJIB tawarkan Audit Post-Setup (Section 4.4 #1)
 
-Audit ditawarkan via `JALANKAN_KIT.md` Bagian 3 (Popup #2). Kalau user pilih "ya" → execute `AUDIT_POST_SETUP_PROMPT_v1.md` (mode aman cuma-baca, scan multi-dimensi, output diurut risiko rendah→tinggi dengan analogi non-programmer 3-layer).
+Audit ditawarkan via `JALANKAN_KIT.md` Bagian 3 (Popup #2). Kalau user pilih "ya" → execute `AUDIT_POST_SETUP_PROMPT_v1.md` (mode aman cuma-baca, scan multi-dimensi, output diurut risiko rendah→tinggi dengan penjelasan bahasa awam non-programmer).
 
 ### [5] WAJIB lapor Pending Action Items
 

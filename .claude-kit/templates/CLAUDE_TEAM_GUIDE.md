@@ -1,7 +1,7 @@
 ﻿# CLAUDE_TEAM_GUIDE.md - Panduan Kerja Tim AI-First
 
 > Versi 1 · 2026-06-01
-> Bahasa Indonesia · junior-friendly · untuk tim 5-15 dev AI-first
+> Bahasa Indonesia · junior-friendly · untuk tim AI-first (ukuran per-channel/proyek 5-15 dev; tim lebih besar seperti 40-50 orang = banyak channel/proyek → lihat "Kapan TETAP pakai GitHub Issues" di bawah)
 > File ini SISTEM (managed by kit). Jangan dihapus. Edit hati-hati - kalau mau ubah pattern tim, PR ke repo kit `lintasAI`.
 
 ---
@@ -230,10 +230,7 @@ Tiap task punya **Risk Level**. Owner WAJIB klasifikasi di awal supaya tim tahu 
 ### Format declare di prompt task
 
 ```
-[Risk Level] <Low / Medium / High>
-   * Low = UI minor, copy edit, refactor internal
-   * Medium = fitur baru self-contained, tidak sentuh auth/billing/data sensitif
-   * High = sentuh auth/billing/schema-user-visible/destruktif/eksperimental - owner WAJIB hold merge sampai yakin
+[Risk Level] <Low / Medium / High>    (kriteria lengkap: lihat tabel §7b di atas)
 ```
 
 ### Contoh konkret

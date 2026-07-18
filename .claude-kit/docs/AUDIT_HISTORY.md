@@ -1,5 +1,7 @@
 ﻿# Audit History - lintasAI
 
+> 🧊 **ARSIP HISTORIS BEKU (era v1.1.x–v1.2.x).** Isi di bawah = catatan audit LAMA + rencana/advisori PowerShell yang **sudah usang**: "Roadmap v2.0.0 (target Q4 2026: Cross-platform)" **sudah TERCAPAI/berubah** — v2.0.0 rilis 2026-07-10 sebagai "hapus total PowerShell", dan kit kini **v2.8.0**. SEC advisory di bawah menunjuk `update-kit.ps1`/`kit.ps1` yang **sudah dihapus**. Baca sebagai riwayat, **bukan** status keamanan aktif. Advisori/audit AKTIF = `docs/BUKU_PELAJARAN.md` + `SECURITY.md`.
+
 File ini menyimpan record audit komprehensif yang sudah dilakukan terhadap kit. Tujuan:
 - AI sesi baru dapat continuity (jangan re-run scan yang mahal)
 - Human (owner, Tier C delegates, future maintainers) tau konteks decisions

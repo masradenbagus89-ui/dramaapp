@@ -236,14 +236,6 @@ Tim pakai emoji untuk status:
 - ✅ DONE (sudah merged)
 - ⛔ BLOCKED (stuck)
 
-### **LAZY-GENERATE**
-Aturan tim: AI tidak generate semua docs di awal. Hanya generate `.md` saat staff sentuh file CRITICAL pertama kali.
-- **Analogi**: penerjemah buku - terjemahin halaman 1 dulu pas kamu baca halaman 1, tidak terjemahin seluruh buku duluan.
-
-### **AUTO-SYNC**
-Aturan: kalau kode berubah, `.md` pendamping WAJIB ikut update di sesi yang sama.
-- **Analogi**: kalau kamu rename produk di Excel, label di brosur HARUS ikut diubah - tidak boleh inkonsisten.
-
 ---
 
 ## 🎯 Bagian 6 - Soal Tim

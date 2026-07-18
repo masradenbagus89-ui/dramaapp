@@ -1,6 +1,6 @@
 # ONBOARDING.md - Lini Masa (Timeline) Hari 0-14 untuk Staf Dev Baru
 
-> Versi 2 · 2026-06-03
+> Versi 3 · 2026-06-26
 > File ini adalah **checklist linier 14 hari**. Detail workflow, branching, escalation ada di `CLAUDE_TEAM_GUIDE.md` - jangan duplikat di sini.
 
 ---
@@ -29,14 +29,16 @@ Buka **`docs/SECURITY_INCIDENT_PLAYBOOK.md`** - step-by-step kalau detect **toke
 
 ## Day 0 - Setup tools & akses (3-5 jam, dipandu Owner/IT)
 
-**Baseline**: Windows 10/11 / macOS 12+ / Ubuntu 22+, RAM ≥8GB (16GB disarankan), disk ≥10GB kosong. Spec di bawah ini → lapor owner dulu.
+**Baseline**: **Windows 10/11** (WAJIB), RAM ≥8GB (16GB disarankan), disk ≥10GB kosong. Spec di bawah ini → lapor owner dulu.
+
+> 🚨 **Cuma Windows.** Kit **menolak jalan** di macOS/Linux — bukan jalan-tapi-error, tapi berhenti langsung dengan pesan (`package.json` `"os": ["win32"]`). Sebagian jalur masih mengasumsikan konvensi Windows (`C:\`, `%USERPROFILE%`). **Laptop Mac/Linux? Lapor owner SEBELUM setup apa pun** — jangan mulai lalu mentok. Jalan keluar sementara: (1) Windows VM (VirtualBox/VMware/Hyper-V) + Windows 10+; (2) WSL2 hanya untuk Claude Code, **project tetap di sisi Windows** (`/mnt/c/`).
 
 > **Penting**: kamu (staff baru) **tidak perlu menjalankan perintah terminal asing sendirian**. Semua langkah ber-tanda **🔧 (Owner/IT)** di bawah ini **dilakukan oleh Owner/IT** — entah di-setup-kan sebelum laptop diserahkan, atau dikerjakan **bareng kamu sambil dipandu** (screen-share / duduk berdua). Tugas kamu di Day 0: ikut perhatikan, pastikan tiap langkah sukses, dan **dapat akses** (poin "Dapat ...").
 
 - [ ] 🔧 (Owner/IT) Install **Claude Code** (https://docs.claude.com)
 - [ ] 🔧 (Owner/IT) Install **Git**, tes: `git --version`
 - [ ] 🔧 (Owner/IT) Install **Node.js LTS** (20+), tes: `node --version`
-- [ ] 🔧 (Owner/IT) Install **pnpm** (`npm install -g pnpm`)
+- [ ] 🔧 (Owner/IT) Alat paket Node: **npm sudah ikut Node.js** — cukup itu untuk kebanyakan project. Project yang memakai pnpm/yarn punya penanda sendiri (`pnpm-lock.yaml`/`yarn.lock`); pasang alatnya HANYA kalau penandanya ada. **Jangan pasang/pakai alat yang tak dipakai project** — bisa merusak lockfile (aturan sama: `JALANKAN_KIT.md` §303).
 - [ ] 🔧 (Owner/IT) Install **GitHub CLI** (`gh`), login: `gh auth login`
 - [ ] 🔧 (Owner/IT) Install **VS Code** (optional: extension Claude Code)
 - [ ] Dapat **akses repo proyek** dari owner (GitHub org invitation)
@@ -44,10 +46,10 @@ Buka **`docs/SECURITY_INCIDENT_PLAYBOOK.md`** - step-by-step kalau detect **toke
 - [ ] Dapat **akses tools tim** sesuai role (Vercel, Supabase, dll)
 - [ ] 🔧 (Owner/IT) **Clone repo**: `git clone <URL>` ke `~/projects/<nama>`
 - [ ] Baca **`README.md`** proyek, cari section setup
-- [ ] 🔧 (Owner/IT) **Install dependencies**: `pnpm install`
+- [ ] 🔧 (Owner/IT) **Install dependencies**: `npm install` (default) — pakai `pnpm install`/`yarn` HANYA kalau ada penandanya (`pnpm-lock.yaml`/`yarn.lock`), sesuai aturan baris di atas
 - [ ] 🔧 (Owner/IT) **Copy `.env.example` → `.env.local`**, isi nilai env dari owner/senior via **DM** (JANGAN channel publik)
 - [ ] 🔧 (Owner/IT) **Generate Prisma client** (kalau proyek pakai Prisma): brief Claude `Tolong jalankan npx prisma generate`. Tanpa ini, dev server crash. Skip kalau tidak pakai Prisma (cek `package.json`)
-- [ ] 🔧 (Owner/IT) **Jalankan dev server**: `pnpm dev`, buka `localhost:3000`, pastikan load
+- [ ] 🔧 (Owner/IT) **Jalankan dev server**: `npm run dev` (atau `pnpm dev` kalau project pakai pnpm), buka `localhost:3000`, pastikan load
 - [ ] Buka Claude Code: `claude` di terminal folder proyek
 - [ ] Paste **`JALANKAN_KIT.md`** ke Claude (file di `./.claude-kit/JALANKAN_KIT.md`)
 - [ ] **Verifikasi**: tanya Claude "baca `docs/architecture.md` dan jelaskan proyek ini dalam 5 kalimat". Jawaban masuk akal → setup OK
@@ -165,6 +167,38 @@ Tujuan: kamu jadi **DRI** (Directly Responsible Individual = penanggung jawab ut
 6. **2 minggu pertama itu lambat - normal**. Jangan banding-bandingin sama senior 2 tahun.
 
 > Anti-pattern detail (vibe code accept, mega prompt, skip docs, branch panjang umur, dll): `docs/GLOSSARY_NON_PROGRAMMER.md` §8.
+
+---
+
+## 🪄 Kalimat Ajaib untuk AI (frasa pemicu — fitur paling kuat, tinggal ketik)
+
+Banyak kemampuan terkuat lintasAI terbuka cukup dengan **mengetik kalimat ke Claude** — tak perlu hafal perintah teknis. Simpan daftar ini, ketik apa adanya ke AI:
+
+| Ketik ke AI | Yang terjadi |
+|---|---|
+| **`lintasAI skill`** | AI memindai proyek menyeluruh (keamanan, mutu, anti-ngarang) lalu lapor bertahap — seperti tombol "Cek Kesehatan Akun" di BCA mobile. |
+| **`audit`** atau *"cek apa yang bisa diperbaiki"* | AI memeriksa cuma-baca + mengurutkan temuan dari risiko rendah ke tinggi (tak mengubah apa pun tanpa izinmu). |
+| **`refactor bertingkat`** | AI merapikan kode **bertahap dari yang paling aman dulu**, minta izin tiap naik tingkat. |
+| **`compaction`** | AI merapikan berkas catatan yang membengkak (aman: isi tak dibuang, dicadangkan dulu). |
+| **`skill SEO`** (atau bidang lain) | AI fokus pakai keahlian itu; kamu juga bisa **bikin skill sendiri** cukup dengan menjelaskannya sekali. |
+| **`cek SEO`** atau *"audit SEO halaman"* | AI mengaudit SEO dasar (title/meta/preview share/heading) sesuai framework-mu, lalu lapor + saran (cuma-baca). |
+| **`cek ukuran halaman`** (sesudah `npm run build`) | AI hitung perkiraan berat JS tiap halaman vs anggaran (Next.js) + sarankan yang perlu diramping. |
+| **`update kit`** atau *"ada versi lintasAI baru?"* | AI cek versi baru + jelaskan perubahannya sebelum memasang. |
+| **`mode co-pilot`** | AI kerja lebih otomatis untuk hal aman, tapi tetap berhenti minta izin di langkah berbahaya (default mati). |
+| **`lanjutkan setup lintasAI`** | Kalau popup pemandu setup tak muncul sendiri, kalimat ini memunculkannya. |
+| **`cek lingkungan`** atau *"kenapa di komputerku beda/error padahal di tempat lain jalan"* | AI memotret versi Node/OS/Git (`npx lintasai doctor`) untuk cari sumber beda-antar-komputer (cuma-baca, tanpa data pribadi). |
+| **`build error`** atau *"gagal build"* | AI menelusuri penyebab gagal-build bertahap, memperbaiki, lalu memverifikasi. |
+| **`cek tes`** atau *"coverage"* | AI memetakan bagian yang belum teruji + membuatkan tes yang kurang + menjalankannya. |
+| **`cek keamanan AI/MCP`** | AI memindai izin sambungan MCP + hook Claude Code (cuma-baca) — pastikan tak ada pintu berbahaya terbuka. |
+| **`uji tampilan situs`** | AI membuka situs + mengklik seperti pengguna asli untuk cek tampilan/alur (mode aman). |
+
+**Menyalakan penjaga yang masih "BELUM"** (lihat panel *STATUS PENJAGA* yang muncul saat pasang kit):
+- *"aktifkan pencegah-drift"* — AI **memindai project + menuliskan sendiri** peta "angka mana yang harus selalu sama di banyak berkas", lalu robot menjaganya (tangkap "diubah di satu berkas, lupa di berkas lain"). Naskah AI: `.claude-kit/templates/WIZARD_PENCEGAH_DRIFT_v1.md`.
+- *"nyalakan Palang Rem risk-gate"* — minta konfirmasi sebelum aksi berbahaya (hapus data, terobos pengaman).
+- *"buatkan Buku Induk akses"* — AI **mewawancaraimu pakai bahasa biasa lalu menuliskan sendiri** catatan siapa boleh akses repo mana (kamu tak perlu menyentuh format teknisnya). Untuk tim pisah-repo. Naskah AI: `.claude-kit/templates/WIZARD_BUKU_INDUK_v1.md`.
+- *"cek akses tim"* — AI membandingkan siapa yang **benar-benar** bisa membuka tiap repo di GitHub vs catatan Buku Induk, lalu menunjukkan selisihnya (cuma-baca; butuh `gh` + organisasi GitHub). Tindakan cabut/undang tetap kamu yang lakukan. Untuk tim pisah-repo.
+
+> Tak yakin frasa mana? Cukup jelaskan maksudmu pakai bahasa biasa — AI akan menebak yang tepat.
 
 ---
 

@@ -1,7 +1,7 @@
 ﻿# TEAM_ROLLOUT_GUIDE_v1.md - Cara Bikin Kit Ini Jadi Standar Tim
 > v1.1 · 2026-06-17 · untuk pemimpin tim IT (3-10 orang)
 
-> ⚡ **Cara pasang & update termudah (lintasAI sudah di npm):** staff cukup jalankan **`npm create lintasai`** di folder project untuk memasang kit (1 perintah, otomatis versi terbaru). Untuk update, staff cukup **minta AI di chat: "tolong update kit"**. Panduan di bawah (repo standar tim + tata kelola) tetap berlaku untuk hal yang TIDAK ada di kit npm (aturan khusus tim, exception, proposal). Untuk distribusi kit-nya sendiri, **utamakan `npm create lintasai`** dibanding clone manual / `install-windows.ps1`.
+> ⚡ **Cara pasang & update termudah (lintasAI sudah di npm):** staff cukup jalankan **`npm create lintasai`** di folder project untuk memasang kit (1 perintah, otomatis versi terbaru). Untuk update, staff cukup **minta AI di chat: "tolong update kit"**. Panduan di bawah (repo standar tim + tata kelola) tetap berlaku untuk hal yang TIDAK ada di kit npm (aturan khusus tim, exception, proposal). Untuk distribusi kit-nya sendiri, **utamakan `npm create lintasai`** dibanding clone manual / `npx lintasai install-windows`.
 
 ## Tujuan & Filosofi
 Kit aturan AI ini jadi **sumber kebenaran tunggal** untuk gaya kerja AI-assisted di tim. Tujuan: konsisten lintas-anggota & lintas-proyek, perbaikan bertahap (bukan paksa rewrite), fokus pada workflow yang AI bisa enforce sendiri (DoD, docs, naming, commit). Standar ini **bukan alat control**, tapi **alat hemat energi** - biar tim gak debat ulang aturan yang sama tiap proyek.
@@ -25,7 +25,7 @@ claude-team-standard/
 ├── CLAUDE_universal_v1.md                 ← aturan utama
 ├── PROJECT_LIFECYCLE_PROMPT_v1.md         ← unified: Stage 1 Kickoff / 2 Bootstrap / 3 Update / 4 Migration
 ├── TEAM_ROLLOUT_GUIDE_v1.md               ← file ini, baca owner standar
-├── install-windows.ps1
+├── install-windows.mjs
 ├── templates/
 │   ├── architecture.md
 │   └── glossary.md

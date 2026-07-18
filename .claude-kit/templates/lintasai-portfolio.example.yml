@@ -5,8 +5,10 @@
 # APA INI: 1 berkas tempat kamu MENCATAT SEMUA repo proyekmu + siapa boleh akses masing-masing.
 # Kamu cukup mencatat keputusan di 1 tempat ini; langkah kelola-banyak-repo (atur izin akses,
 # pasang/update kit, kirim tipe-bersama) kamu/AI kerjakan dengan MERUJUK catatan ini.
-# CATATAN JUJUR: penegakannya MANUAL — belum ada skrip yang membaca berkas ini lalu menerapkan
-# izin GitHub otomatis (lihat ACCESS_CONTROL_NREPO_v1.md: AI cetak rencana, manusia yang klik).
+# CATATAN JUJUR: ADA pembaca-ringkasan otomatis (mode aman cuma-baca) yang menampilkan isi berkas
+# ini sebagai ringkasan/papan repo (lib/portfolio-read.mjs) — TAPI itu
+# cuma MENAMPILKAN. Penerapan izin GitHub TETAP MANUAL: tak ada skrip yang membaca berkas ini
+# lalu mengeset izin otomatis (lihat ACCESS_CONTROL_NREPO_v1.md: AI cetak rencana, manusia yang klik).
 #
 # 🏢 Analogi: kayak "daftar tamu + denah ruangan" di resepsionis kantor — tertulis resmi
 #    siapa boleh masuk ruang mana, bukan "kira-kira" / "etika doang".

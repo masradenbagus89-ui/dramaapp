@@ -1,9 +1,9 @@
 ﻿# Split Repo Migration Prompt - lintasAI v1.10.0 (🧪 BETA - belum diuji end-to-end di GitHub nyata)
 
-> **Ini Tangga Refactor TINGKAT 3 (Repository Split / Polyrepo)** — tingkat paling berat. Default kit = **Tingkat 1 (Refactoring di tempat)**; naik ke sini **bertahap** (pola Strangler Fig), hanya saat modul sudah matang + butuh tim/akses(IP) terpisah. Lihat "Tangga Refactor 3-Tingkat" di `LINTASAI_WORKFLOWS_v1.md` §4.2.
+> **Ini Tangga Refactor TINGKAT 3 (Repository Split / Polyrepo)** — tingkat paling berat. Default kit = **Tingkat 1 (Refactoring di tempat)**; naik ke sini **bertahap** (pola Strangler Fig), hanya saat modul sudah matang + butuh tim/akses(IP) terpisah. Lihat "Tangga Refactor 3-Tingkat" di `workflows/4.2-pattern-driven.md`.
 >
 > **Paste ke Claude Code di project monolithic kamu** untuk migrate jadi multi-repo.
-> Ada **2 bentuk split** — pilih dulu di "Mode Selector" di bawah: **[1] per-Lapisan (3 repo)** atau **[2] per-Kapabilitas (5/6/7 repo)**.
+> Ada **2 bentuk split** — pilih dulu di "Mode Selector" di bawah: **[1] per-Lapisan (2-3 repo)** atau **[2] per-Kapabilitas (jumlah ikut wilayah rahasia + tim)**. **Jumlah repo = ikut kebutuhan, BUKAN angka tetap** — sumber tunggal keputusan topologi: `docs/plans/POLA_REPO_AMAN.md` (jangan salin angka dari sini).
 > Goal: TRUE READ isolation untuk business logic, foundation untuk scale 3-30+ staff.
 > Effort: 4-6 minggu owner (otomatis dengan AI).
 >
@@ -18,12 +18,12 @@ Heavy-refactor / split repo punya **2 bentuk**. AI WAJIB tampilkan pilihan ini d
 ```
 Mau memecah (split) project jadi beberapa repo — tempat simpan kode terpisah di GitHub — dengan bentuk yang mana?
 
-  [1] Split per-Lapisan (3 repo) — "layered / per-tier split"     ⭐ DEFAULT (rekomendasi — paling murah dirawat, pola kebanyakan tim)
-      Bagi per LAPISAN teknis: <base>-frontend (tampilan) / <base>-backend (logika+data) / <base>-shared (tipe bersama).
-      Cocok: 1 aplikasi yang mau dipisah tampilan / logika+data / tipe bersama.
+  [1] Split per-Lapisan (2-3 repo) — "layered / per-tier split"   ⭐ DEFAULT (rekomendasi — paling murah dirawat, pola kebanyakan tim)
+      Bagi per LAPISAN teknis: <base>-frontend (tampilan) / <base>-backend (logika+data) + <base>-shared (tipe bersama, OPSIONAL — boleh skip jadi 2 repo; lihat POLA_REPO_AMAN Model 1).
+      Cocok: 1 aplikasi yang mau dipisah tampilan / logika+data.
       Paling murah dirawat. Ini pola kebanyakan tim.
 
-  [2] Split per-Kapabilitas (5/6/7 repo) — "capability split" (istilah teknis: bounded-context dari DDD / Domain-Driven Design — membagi per wilayah bisnis yang berdiri sendiri)
+  [2] Split per-Kapabilitas (jumlah repo IKUT wilayah rahasia + tim, bukan angka tetap) — "capability split" (istilah teknis: bounded-context dari DDD / Domain-Driven Design — membagi per wilayah bisnis yang berdiri sendiri)
       Bagi by KAPABILITAS BISNIS: <base>-dashboard / <base>-shared / <base>-core /
       <base>-<kapabilitas> x N (mis. bigseo-data-domain, bigseo-seo-intel, bigseo-pbn).
       Cocok: PLATFORM dengan beberapa kapabilitas berbeda yang JELAS + mau isolasi
@@ -34,14 +34,14 @@ Default (Enter/kosong) -> [1] Split per-Lapisan
 
 ### Aturan keras (berlaku walau pilih [2])
 - **[1] adalah default.** Pilih **[2] HANYA kalau** ADA bounded context yang jelas **sekarang** (kapabilitas bisnis yang benar-benar beda) **DAN** butuh isolasi tim/IP per-kapabilitas. **Ragu → [1].** (Lihat "Berapa repo cukup" di bawah — lebih banyak repo TIDAK otomatis lebih aman.)
-- **[2] BUKAN microservice.** Ini "beberapa layanan kasar" (coarse-grained): tiap repo = 1 kapabilitas + laci-data (schema) sendiri + loket API. Tetap **multi-repo + multi-schema**, BUKAN event-bus / service-mesh / saga. (Faktor ribet microservice = bagian terpisah di bawah.)
+- **[2] = microservice VARIAN SHARED-DATABASE (coarse-grained), BUKAN microservice MURNI.** Ini "beberapa layanan kasar": tiap repo = 1 kapabilitas + laci-data (schema) sendiri + loket API. Tetap **multi-repo + multi-schema (1 DB bersama)**, BUKAN event-bus / service-mesh / saga / database-per-service. (Faktor ribet microservice murni = bagian terpisah di bawah.)
 - **Isolasi IP sama untuk dua mode**: repo PRIVATE + akses per-staf seminimal mungkin + logika rahasia di backend. Mode [2] **tidak** lebih aman karena jumlah repo — ia cuma memetakan repo ke kapabilitas + tim.
 - **Mulai kecil tetap berlaku.** Walau pilih [2], BOLEH mulai dengan `core + shared + dashboard` + tiap kapabilitas sebagai **FOLDER** (laci-data sudah dipisah sejak awal), lalu **"lepas" jadi repo** saat trigger menyala (backend kapabilitas itu **>500 file** ATAU **>50 model** — lihat "Further-Split Triggers"). Schema dipisah dari awal → pelepasan nanti = **pindah kode, bukan pindah data**.
 
 ### Penamaan standar (professional)
 | Bentuk | Istilah standar | Pola nama repo |
 |---|---|---|
-| **[1] per-Lapisan** | *layered split / per-tier (n-tier)* | `<base>-frontend`, `<base>-backend`, `<base>-shared` |
+| **[1] per-Lapisan** | *layered split / per-tier (n-tier)* | `<base>-frontend`, `<base>-backend` (+ `<base>-shared` opsional → boleh 2 repo) |
 | **[2] per-Kapabilitas** | *capability split / bounded-context polyrepo (DDD)* | `<base>-dashboard`, `<base>-shared`, `<base>-core`, `<base>-<kapabilitas>` (mis. `bigseo-data-domain`) |
 
 ### Kalau pilih [2] — peta pola (ringkas)
@@ -49,11 +49,12 @@ Default (Enter/kosong) -> [1] Split per-Lapisan
 - **`<base>-core`** = layanan auth + users + accounts (laci-data `core`). Satu-satunya yang MEMUTUSKAN login.
 - **`<base>-dashboard`** = 1 layar terpadu + lapisan penghubung (BFF) yang memanggil loket tiap layanan. BFF dibatasi owner/lead (CODEOWNERS).
 - **`<base>-<kapabilitas>`** (×N) = tiap kapabilitas bisnis = 1 repo backend + laci-data sendiri + loket API berbentuk seragam. Resep rahasia tinggal di sini, tidak pernah keluar loket (kirim "daftar putih" kolom saja).
-- Selebihnya (idempotency guard, marker `.split-state`, triggers, langkah migrasi di bawah) **berlaku untuk DUA mode** — cuma jumlah & nama repo yang beda.
+- **Peta lengkap topologi + tabel kartu-akses database (siapa boleh baca/tulis schema mana) = `docs/plans/POLA_REPO_AMAN.md`** — AI **WAJIB membacanya** sebelum eksekusi Mode [2], supaya pembagian schema benar (engine rahasia tidak numpuk di 1 repo).
+- Selebihnya (idempotency guard, marker `.split-state`, triggers, langkah migrasi di bawah) **berlaku untuk DUA mode** — tapi yang BEDA **bukan cuma jumlah & nama repo, melainkan juga letak schema database**: Mode [1] menaruh seluruh `prisma/` di `shared`; Mode [2] **memisah schema per-kapabilitas** (tiap engine simpan schema-nya sendiri; `shared` TANPA schema; dashboard/frontend NOL DB). Lihat Step 0.4 "Letak schema database — TERGANTUNG MODE".
 
 ## Berapa repo cukup + melindungi bisnis (IP) dari duplikasi
 
-**3 repo (backend / frontend / shared) CUKUP untuk hampir semua kasus.** JANGAN tambah repo cuma "biar aman" — lebih banyak repo **TIDAK melindungi bisnis**, malah nambah ongkos (sinkron versi, koordinasi, lebih banyak tempat yang harus diamankan). Tambah repo HANYA kalau ada kebutuhan nyata (mis. layanan benar-benar terpisah + tim sangat besar).
+**2-3 repo (backend + frontend, `shared` opsional) CUKUP untuk hampir semua kasus.** JANGAN tambah repo cuma "biar aman" — lebih banyak repo **TIDAK melindungi bisnis**, malah nambah ongkos (sinkron versi, koordinasi, lebih banyak tempat yang harus diamankan). Tambah repo HANYA kalau ada kebutuhan nyata (mis. layanan benar-benar terpisah + tim sangat besar).
 
 **Takut bisnis diduplikasi/dicopy? Lebih banyak repo BUKAN jawabannya.** Copy itu soal **siapa punya AKSES**, bukan jumlah repo. Yang benar-benar melindungi:
 
@@ -76,7 +77,7 @@ Konsisten dengan poin di atas: yang melindungi = **siapa punya AKSES**, bukan ju
 
 ## Idempotency guard - Post-Split Detection (WAJIB di awal)
 
-Sebelum analyze atau propose, AI WAJIB run `Test-PostSplitState -ProjectRoot $PWD` (dari `lib/project-detect.ps1`) untuk cek apakah project sudah pernah split:
+Sebelum analyze atau propose, AI WAJIB cek apakah project sudah pernah split (deteksi 3-lapis di bawah; robot Node: `testPostSplitState` di `lib/project-detect.mjs`):
 
 - **Layer 1 (paling reliable)**: marker file `.claude-kit/.split-state` exist → IsPostSplit = true.
 - **Layer 2**: `AGENTS.md` mention "post-split" / "multi-repo coordination" / "sister repo:" / "cross-repo types pipeline" → IsPostSplit = true.
@@ -213,7 +214,9 @@ Tambahan opsional yang membantu (boleh skip kalau belum tahu):
 
 > v1.5.13 owner directive 2026-06-08: "file nya tidak akan bisa di push ke [project]-backend, [project]-frontend, [project]-shared, aku maunya file tersebut telah di persiapkan atau di pisah2kan filenya, sehingga kalau sudah di pisahkan maka tinggal push ke github repo nya terpisah2 itu"
 
-**Stage 0 = LITE version yang AI execute dalam 1 sesi** (bukan full 4-6 minggu workflow). Output: 3 sibling folder siap push ke 3 GitHub repo terpisah. Monolith original di-preserve sebagai fallback (COPY, bukan MOVE).
+**Stage 0 = LITE version yang AI execute dalam 1 sesi** (bukan full 4-6 minggu workflow). Output: **sibling folder siap push ke GitHub repo terpisah** (Mode [1] = 3 folder; Mode [2] = N folder per-kapabilitas — lihat Step 0.3). Monolith original di-preserve sebagai fallback (COPY, bukan MOVE).
+
+> **Catatan mode (penting):** langkah Step 0.x di bawah ditulis dengan **Mode [1] (3-repo per-Lapisan) sebagai contoh default**. Perbedaan untuk **Mode [2] (per-Kapabilitas / microservice varian shared-DB)** ditandai inline di **Step 0.3** (set folder), **Step 0.4** (letak schema — paling kritis untuk keamanan engine rahasia), dan **Step 0.4b** (denah DB). Kalau owner pilih Mode [2], AI **WAJIB baca `docs/plans/POLA_REPO_AMAN.md` dulu** + ikuti cabang Mode [2] di tiap step (jangan default ke "semua `prisma/` → shared").
 
 ### Stage 0 Workflow (~30-60 menit AI execute)
 
@@ -253,22 +256,35 @@ Tambahan opsional yang membantu (boleh skip kalau belum tahu):
 - **3 cek lulus** → lanjut Step 0.3. **Ada yang gagal** → JANGAN pecah; lapor owner apa yang perlu dibereskan dulu.
 - **Kalau Step 0.2b di-skip** (owner pilih [2]/[skip] tanpa refactor): tetap jalankan minimal cek #1 + #3 (tes-asap + sambungan). Kalau sambungan nyampur parah → WAJIB lapor owner risikonya SEBELUM pecah, jangan diam-diam lanjut.
 
-**Step 0.3 — Bikin 3 sibling folder** (di parent directory):
+**Step 0.3 — Bikin sibling folder** (di parent directory) — **jumlah & isi TERGANTUNG MODE** (Mode Selector di atas):
+
+**Mode [1] (per-Lapisan, default) — 3 folder:**
 - `<parent>/<project>-backend/` — API routes + server-only code
 - `<parent>/<project>-frontend/` — components + dashboard + pages
 - `<parent>/<project>-shared/` — Prisma schema + cross-cutting types + auth utilities
+
+**Mode [2] (per-Kapabilitas / microservice varian shared-DB) — N folder** (WAJIB rujuk `docs/plans/POLA_REPO_AMAN.md` "2 model" + tabel kartu-akses):
+- `<parent>/<project>-core/` — auth + users + accounts (schema `core` sendiri)
+- `<parent>/<project>-shared/` — HANYA tipe/kontrak + helper murni, **TANPA `prisma/`** (beda dari Mode [1])
+- `<parent>/<project>-dashboard/` — 1 layar terpadu + penghubung (BFF) ke loket tiap layanan
+- `<parent>/<project>-<kapabilitas>/` ×N — tiap engine/kapabilitas = 1 repo backend + **schema-nya sendiri** (mis. `<project>-data-domain` → schema `engine_data_domain`). Nama `<kapabilitas>` AUTO-DETEKSI dari fitur project (engine SEO → `-seoanalysis`; data domain → `-data-domain`).
 
 **Step 0.4 — Distribute files via copy** (BUKAN move — monolith tetap utuh):
 - Pakai `Copy-Item -Recurse` (PowerShell) atau `cp -r` (bash)
 - Backend folder dapat: `src/app/api/`, `src/lib/<server-only>.ts`, server-side scripts
 - Frontend folder dapat: `src/app/{dashboard,login,page.tsx,*}.{tsx,css}`, `src/components/`
-- Shared folder dapat: `prisma/`, `src/lib/{auth,prisma,types,*-crypto}.ts`, `src/lib/security/`
+- **Letak schema database (`prisma/`) — TERGANTUNG MODE:**
+  - **Mode [1] (per-Lapisan):** seluruh `prisma/` → folder **shared**, + `src/lib/{auth,prisma,types,*-crypto}.ts`, `src/lib/security/`. (Aman: 1 aplikasi 1 schema; shared dibaca tim inti.)
+  - **Mode [2] (per-Kapabilitas / microservice) — 🚨 JANGAN taruh seluruh `prisma/` di shared.** Itu membocorkan struktur schema **SEMUA engine rahasia** ke 1 repo yang dibaca staff luas (langgar pelindung POLA_REPO_AMAN "frontend/staff luas NOL akses struktur DB"). Sebagai gantinya **pisah schema per kapabilitas**: tiap repo `<project>-<kapabilitas>` dapat HANYA potongan schema-nya sendiri (mis. `engine_data_domain` → repo data-domain saja); `-core` dapat schema `core`/auth; `-shared` dapat **tipe/kontrak saja (TANPA `prisma/`)**; `-dashboard`/frontend dapat **NOL schema + NOL `DATABASE_URL`** (ambil data lewat loket/API). Backend-aggregator membaca beberapa schema lewat **role database per-schema** (POLA_REPO_AMAN tabel "kartu akses" + "Backend = aggregator"), BUKAN dengan menyalin semua berkas schema ke 1 repo. Detail: `docs/plans/POLA_REPO_AMAN.md`.
 
 **Step 0.4b — Distribusi `docs/` (catatan) ke tiap folder (v1.7.2 NEW — supaya owner TIDAK pindah manual)**:
 - **Prinsip**: catatan ikut OTOMATIS ke repo yang benar. Owner non-programmer tidak memindah satu file pun manual.
 - **Catatan kode per-bagian** (`docs/<modul>.md` companion) → ikut kodenya ke repo yang dapat kode itu. (Untuk jalur [1] LENGKAP project matang: catatan ini **dibuat ULANG per repo** di JALANKAN_KIT Bagian 6b — tidak perlu disalin.)
-- **Denah database** (`docs/db-schema.md`) → ke repo **shared** (schema tinggal di shared) + salinan ke **backend** (pemakai DB). **JANGAN ke frontend** (frontend tak boleh tahu struktur DB — sejalan pengaman `.env`).
-- **Peta besar + kamus istilah** (`docs/architecture.md`, `docs/architecture_auto.md`, `docs/glossary.md`) → tiap repo dapat **versinya SENDIRI** (dibuat-ulang/disesuaikan agar cuma menjelaskan repo itu — fokus + AI baca lebih sedikit + tidak ada yang basi). **BUKAN** 1 file induk disalin sama ke 3 (itu cepat basi + bikin staff frontend lihat isi backend yang bukan urusannya).
+- **Denah database** (`docs/db-schema.md`) — **TERGANTUNG MODE** (sejalan Step 0.4):
+  - **Mode [1]:** → repo **shared** (schema tinggal di shared) + salinan ke **backend** (pemakai DB).
+  - **Mode [2]:** → tiap repo kapabilitas dapat **denah schema-NYA SENDIRI saja** (bukan denah semua engine); backend-aggregator dapat denah gabungan (read-only) seperlunya untuk menyajikan; **dashboard NOL denah DB**. (Jangan kumpulkan denah semua engine rahasia di 1 repo yang dibaca luas.)
+  - **JANGAN ke frontend** (frontend tak boleh tahu struktur DB — sejalan pengaman `.env`).
+- **Peta besar + kamus istilah** (`docs/architecture.md`, `docs/glossary.md`) → tiap repo dapat **versinya SENDIRI** (dibuat-ulang/disesuaikan agar cuma menjelaskan repo itu — fokus + AI baca lebih sedikit + tidak ada yang basi). **BUKAN** 1 file induk disalin sama ke 3 (itu cepat basi + bikin staff frontend lihat isi backend yang bukan urusannya).
 - **Catatan keputusan** (`docs/decisions/`) → keputusan yang relevan ikut repo terkait; keputusan "pecah-repo" disalin ke **KETIGA** repo (jejak audit).
 - **PLUS bikin `docs/cross-repo-overview.md`** (peta hubungan 3-repo, **SINGKAT**: backend = API + logika DB; frontend = tampilan; shared = tipe data + denah DB sebagai paket npm; siapa depend ke siapa) → salin ke **KETIGA** repo. Singkat + stabil (topologi jarang berubah) → aman diduplikasi, dan staff non-programmer lihat gambaran besar **tanpa loncat ke repo lain**.
 
@@ -280,7 +296,7 @@ Tambahan opsional yang membantu (boleh skip kalau belum tahu):
 - `tsconfig.json` per folder (path mapping ke `@shared/*` kalau pakai package npm private)
 - `README.md` per folder (1-pager: "this is the [backend|frontend|shared] repo for <project>")
 - `.gitignore` per folder (relevan: node_modules, .env*, build artifacts)
-- `AGENTS.md` per folder (paste dari `templates/split-agents/{BACKEND,FRONTEND,SHARED}.md`)
+- `AGENTS.md` per folder. **Mode [1]:** paste dari `templates/split-agents/{BACKEND,FRONTEND,SHARED}.md`. **Mode [2] (microservice):** `BACKEND.md` (untuk `-core`/aggregator) + `SHARED.md` + `DASHBOARD.md` (ganti FRONTEND — NOL akses DB/engine) + `ENGINE.md` untuk TIAP repo `-<kapabilitas>` (algoritma rahasia + schema sendiri, DILARANG bicara langsung ke dashboard)
 
 **Step 0.5b — Pre-provision lintasAI + `.env` aman ke tiap folder** (v1.6.0 NEW — Tahap A):
 - **WAJIB ikuti `templates/SPLIT_REPO_PREPROVISION_v1.md`** untuk MASING-MASING folder: salin `.claude-kit/` lengkap (KECUALI penanda per-install: `.install-manifest.json`, `.git-identity-*`, `.split-state`, `.manifest-secret`, `.audit-log`) + bikin `CLAUDE.md` loader (`@./.claude-kit/CLAUDE_universal_v1.md` + `@./AGENTS.md`) + isi placeholder `AGENTS.md` (jangan biarkan `<NAMA_PROYEK>` mentah) + bikin `.env.example` per peran.
@@ -294,12 +310,16 @@ Tambahan opsional yang membantu (boleh skip kalau belum tahu):
 - Alternative: git submodule (lebih kompleks, skip default)
 
 **Step 0.7 — Verify standalone**:
+- **WAJIB jalankan robot penjaga anti-bocor per folder DULU** (deterministik, bukan cek-mata):
+  `node .claude-kit/lib/split-guard.mjs --repo-root <folder>` (peran/tier auto dari `.split-state`;
+  paksa dengan `--tier sensitive`/`--role frontend` kalau perlu). **Keluar-kode > 0 (GENTING) → STOP,
+  jangan lapor "siap push".** Robot tak pernah mencetak nilai rahasia. Detail: `docs/split-guard.md`.
 - Per folder, smoke check (checklist lengkap di `SPLIT_REPO_PREPROVISION_v1.md` > "Validasi per folder"):
   - `package.json` parse valid
   - `tsconfig.json` parse valid
   - File count masuk akal (no leftover monolith path refs)
   - **lintasAI terpasang**: `.claude-kit/CLAUDE_universal_v1.md` + `CLAUDE.md` loader ada + `AGENTS.md` placeholder terisi
-  - **Frontend `.env.example` BEBAS secret** (tidak ada `DATABASE_URL`/kunci rahasia)
+  - **Frontend `.env.example` BEBAS secret** (tidak ada `DATABASE_URL`/kunci rahasia) — **ditegakkan robot `split-guard` di atas**, bukan cek-mata
   - **Catatan ter-distribusi (Step 0.4b)**: tiap repo punya `docs/architecture.md` sendiri + `docs/cross-repo-overview.md`; denah database (`db-schema.md`) ada di **shared + backend**, dan **TIDAK** di frontend
   - Tidak ada penanda per-install monolith yang ikut tersalin
 - Tulis marker `.claude-kit/.split-state` di MASING-MASING folder hasil pecah dengan role (backend/frontend/shared), **DAN tulis penanda ringan di monolith INDUK** (`.claude-kit/.split-state` role:source / `split_done`) supaya guard idempotency (`Test-PostSplitState` Layer 1 yang membaca `$PWD` = monolith) benar-benar menyala kalau di-run ulang dari dalam monolith — jangan cuma andalkan deteksi nama folder sibling (Layer 3) yang mudah berubah saat folder di-rename.
@@ -423,7 +443,7 @@ Kelebihan:
 Kekurangan:
 - Sedikit dobel (alamat loket/route ditulis di 2 tempat)
 
-> 🔒 **WAJIB (cegah IDOR = ganti ID di URL untuk curi data orang lain):** validasi input + otorisasi per-resource SELALU di **backend** (handler asli `handleOrdersList` dst, pakai identitas server-side terverifikasi) — shell wrapper frontend HANYA meneruskan, JANGAN PERNAH menaruh keputusan akses di frontend. Kalau tidak, permintaan user A bisa membuka data user B. Selaras `LINTASAI_WORKFLOWS_v1.md` §4.13 Backend + §8.
+> 🔒 **WAJIB (cegah IDOR = ganti ID di URL untuk curi data orang lain):** validasi input + otorisasi per-resource SELALU di **backend** (handler asli `handleOrdersList` dst, pakai identitas server-side terverifikasi) — shell wrapper frontend HANYA meneruskan, JANGAN PERNAH menaruh keputusan akses di frontend. Kalau tidak, permintaan user A bisa membuka data user B. Selaras `workflows/4.13-skill-divisi.md` Backend + §8.
 
 ---
 
@@ -622,7 +642,7 @@ Kalau setelah migration berasa tidak suit:
 A: Tidak. Pakai monorepo + CODEOWNERS sudah cukup. Split repo make sense untuk 3+ staff + mau privacy code business logic.
 
 **Q: Bisakah skip beberapa step?**
-A: Migration tools (Swagger, Storybook) bisa skip awal, tambah belakangan. Tapi 3 repo setup wajib (frontend + backend + shared). Tools/scripts ops default ke `backend/scripts/` - naik ke repo terpisah cuma kalau team >20 staff atau compliance audit.
+A: Migration tools (Swagger, Storybook) bisa skip awal, tambah belakangan. Minimal **2 repo (frontend + backend)**; repo **shared OPSIONAL** — boleh skip jadi 2 repo dulu (lihat Mode Selector + "Berapa repo cukup" di atas; SSOT `docs/plans/POLA_REPO_AMAN.md`: mulai sekecil mungkin, naik saat pemicu nyata). Tools/scripts ops default ke `backend/scripts/` - naik ke repo terpisah cuma kalau team >20 staff atau compliance audit.
 
 **Q: Apa kalau gagal di tengah?**
 A: Tag `pre-split-backup` masih ada. Rollback dengan `git reset` + delete 3 repo baru (atau archive). Tidak ada damage permanent ke production karena DB shared.
@@ -668,7 +688,7 @@ A: Auth provider biasanya stay di backend (token issued by backend, frontend han
 | Swagger doc out-of-sync dengan implementasi | Medium | High | Auto-generate dari decorator/annotation, CI validate |
 | Shared package version drift | Medium | Medium | Lockfile + auto-bump via Renovate/Dependabot |
 | Vercel build longer karena 2 project | Low | Low | Build paralel, total time tetap sama |
-| Secrets leak ke frontend repo accidentally | Low | Critical | `.env` di `.gitignore` + frontend `.env.example` WAJIB tanpa `DATABASE_URL`/secret (dicek manual saat verify, Step 0.5b). Penguatan opsional (BELUM otomatis): salin `.github/workflows/secret-guard.yml` ke tiap repo, atau aktifkan GitHub push protection. |
+| Secrets leak ke frontend repo accidentally | Low | Critical | **Ditegakkan robot deterministik** `node .claude-kit/lib/split-guard.mjs --repo-root <folder>` (Step 0.7 — GENTING > 0 → STOP; `docs/split-guard.md`): cek `.gitignore` menutup `.env` + `.env.example` repo non-rahasia bebas `DATABASE_URL`/secret + tak ada nilai rahasia asli + frontend NOL struktur DB. Tak lagi "cek manual". Penguatan tambahan opsional: salin `.github/workflows/secret-guard.yml` ke tiap repo, atau aktifkan GitHub push protection. |
 | Owner kelelahan 4-6 minggu | Medium | High | Weekly checkpoint, skip-able tools, rollback option |
 
 ---
@@ -745,9 +765,11 @@ Setelah saya analyze project kamu, saya akan present plan dengan format:
 
 Tanya saja kalau ada konteks tambahan owner mau saya tahu (misal: ada module legacy, ada constraint compliance, ada deadline rilis fitur, dst).
 
+> 📊 **Setelah migrasi selesai:** pantau semua repo dari 1 layar dengan `npx lintasai board` (cuma-baca) — kelihatan repo mana yang tertinggal commit / punya perubahan berkas rahasia `.env` yang belum aman (ditandai GENTING). AI juga menawarkannya otomatis di akhir alur pecah-repo (`JALANKAN_KIT.md` 19b-ii).
+
 ---
 
-**Versi prompt:** v1.10.0 (sync dengan lintasAI v1.43.0)
+**Versi prompt:** v1.10.0 (sync dengan lintasAI v1.58.0)
 **Audience:** Owner project, NOT staff
 **Estimated AI execution time:** 4-6 minggu (paralel dengan owner kerja normal)
 **Reversibility:** Full rollback support sampai Week 6

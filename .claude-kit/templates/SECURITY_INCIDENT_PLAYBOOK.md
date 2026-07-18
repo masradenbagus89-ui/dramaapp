@@ -12,7 +12,7 @@ Pakai langkah di bawah kalau kamu lihat **salah satu** signal berikut:
 | Signal | Sumber | Contoh |
 |---|---|---|
 | 🚨 Email "Secret Detected" | GitHub | *"GitGuardian detected token in commit abc123 by @bagus"* |
-| 🚨 AI Reviewer warning di PR | `.github/scripts/ai-review.js` | Comment: *"⚠️ Possible token leak at line 42: pattern matches `sk-ant-`"* |
+| 🚨 AI Reviewer warning di PR | `.github/scripts/ai-review.cjs` | Comment: *"⚠️ Possible token leak at line 42: pattern matches `sk-ant-`"* |
 | 🚨 Email anomaly | Vercel / Supabase / Anthropic | *"Unusual usage spike detected: 5000 requests in last hour from IP X"* |
 | 🚨 File `.env.local` muncul di `git status` | Terminal lokal | `git status` show `.env.local: untracked` - tapi seharusnya di `.gitignore` |
 | 🚨 Token ter-paste tidak sengaja | Channel chat tim, screenshot | Tanpa sengaja kamu/teman paste isi `.env.local` di Slack/Discord |
@@ -33,8 +33,8 @@ kunci API - **sebelum** terkirim ke server (saat itu rahasia belum bocor ke mana
 
 Pasang sekali per project: minta AI **"pasang penjaga rahasia pre-commit"**, atau jalankan:
 
-```powershell
-.\.claude-kit\templates\hooks\install-secret-hook.ps1
+```bash
+node .claude-kit/lib/install-secret-hook.mjs
 ```
 
 Setelah aktif: kalau kamu tak sengaja `git commit` file `.env`, commit **otomatis ditolak** +
@@ -173,7 +173,7 @@ Setup ini sekali, otomatis protect kedepan:
 | GitHub Secret Scanning | Settings → Code security & analysis | Enable "Secret scanning" + "Push protection" (block push kalau detect secret) |
 | GitGuardian (alternatif) | gitguardian.com → connect GitHub | Auto-scan tiap commit, lebih banyak pattern |
 | Pre-commit hook (cek otomatis Git sebelum commit) | `.husky/pre-commit` | Check `.env*` not staged: `git diff --cached --name-only \| grep -E '^\.env' && exit 1` |
-| AI Reviewer custom rules | `.github/scripts/ai-review.js` | Tambah pattern: `sk-ant-`, `eyJ\\w+`, `xoxb-`, `ghp_`, `postgres://.*:.*@` |
+| AI Reviewer custom rules | `.github/scripts/ai-review.cjs` | Tambah pattern: `sk-ant-`, `eyJ\\w+`, `xoxb-`, `ghp_`, `postgres://.*:.*@` |
 | Vercel anomaly alert | Vercel Settings → Notifications | Enable usage spike notification |
 | Supabase activity log | Supabase Dashboard → Logs | Review weekly untuk unusual queries |
 

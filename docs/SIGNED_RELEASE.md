@@ -2,7 +2,7 @@
 
 Dokumen ini menjelaskan bagaimana rilis lintasAI **bisa** ditandatangani dengan GPG, dan bagaimana owner serta staff memakainya supaya yakin tag yang di-clone benar-benar dari pemilik repo, bukan hasil tampering.
 
-> ⚠️ **STATUS SAAT INI (2026-06-17): penandatanganan tag GPG BELUM aktif.** Penanda versi rilis (mis. `v1.33.0`) saat ini **belum** ditandatangani, dan berkas kunci publik `.github/owner-pubkey.asc` **belum** ada di repo. Jadi dokumen ini = **panduan MENGAKTIFKAN** (rencana), bukan deskripsi keadaan sekarang. Untuk repo resmi `ojokesusu/lintasAI`, keaslian saat ini bersandar pada **HTTPS + proteksi branch GitHub**. (Catatan: **provenance npm** sempat dicoba tapi npm hanya mendukungnya untuk repo **PUBLIK** — repo ini private, jadi `publishConfig.provenance: false`; bisa diaktifkan kalau repo dijadikan publik.) Alat update (`update-kit.ps1`) memang **melewati** cek GPG untuk repo resmi (daftar `TrustedRepos`), jadi tag-belum-ditandatangani TIDAK memblokir update staff. **Untuk benar-benar mengaktifkan tanda tangan**, owner ikuti langkah di bawah (butuh kunci GPG milik owner) lalu hapus catatan STATUS ini.
+> ⚠️ **STATUS SAAT INI (2026-06-17): penandatanganan tag GPG BELUM aktif.** Penanda versi rilis (mis. `v1.33.0`) saat ini **belum** ditandatangani, dan berkas kunci publik `.github/owner-pubkey.asc` **belum** ada di repo. Jadi dokumen ini = **panduan MENGAKTIFKAN** (rencana), bukan deskripsi keadaan sekarang. Untuk repo resmi `ojokesusu/lintasAI`, keaslian saat ini bersandar pada **HTTPS + proteksi branch GitHub**. (Catatan: alur rilis kini memakai **OIDC Trusted Publishing** — terbit ke npm **tanpa token** yang bisa dicuri. **provenance npm** TETAP **dimatikan** (`publishConfig.provenance: false`) karena npm hanya mendukungnya untuk repo **PUBLIK**, sedangkan repo ini **private**; bisa dinyalakan kalau repo dijadikan publik.) Alat update (`update-kit.mjs`) memang **melewati** cek GPG untuk repo resmi (daftar `TrustedRepos`), jadi tag-belum-ditandatangani TIDAK memblokir update staff. **Untuk benar-benar mengaktifkan tanda tangan**, owner ikuti langkah di bawah (butuh kunci GPG milik owner) lalu hapus catatan STATUS ini.
 
 ## Kenapa perlu? (3-layer analogi)
 
@@ -98,9 +98,9 @@ Interpretasi output:
 
 Kalau muncul BAD signature atau anomaly lain: **STOP, jangan install**, lapor owner via Telegram/Signal (jalur out-of-band, bukan via GitHub issue karena issue-nya bisa juga dipalsu).
 
-## Integrasi dengan kit.ps1 (opsional)
+## Integrasi dengan updater (otomatis)
 
-`update-kit.ps1` bisa auto-verify tag sebelum apply update:
+`update-kit.mjs` (`npx lintasai update`) sudah auto-verify GPG tag untuk repo di luar daftar-putih sebelum apply update (lihat `workflows/8.3-trusted-repo.md`). Setara manual di terminal:
 
 ```powershell
 git fetch --tags

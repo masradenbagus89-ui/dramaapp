@@ -8,7 +8,7 @@ Ini panduan mengisi **Buku Induk repo** (`lintasai-portfolio.yml`) — 1 berkas 
 
 > 🏢 **Analogi:** kayak **buku tamu + denah ruangan** di resepsionis kantor. Ditulis resmi siapa boleh masuk ruang mana — bukan "etika" yang gampang dilanggar. Semua langkah lain (atur izin, pasang kit, dst) tinggal **baca buku ini**, jadi kamu cukup mengisi **1 tempat**.
 
-> 💡 **Bingung di satu bagian?** Buka Claude Code, ketik *"tolong pandu aku isi Buku Induk lintasAI, aku non-programmer"* — AI menuntun pelan-pelan + bisa mengisikan dari daftar repo yang kamu sebutkan.
+> 💡 **Tak mau isi manual?** Buka Claude Code, ketik *"buatkan Buku Induk akses"* (atau *"pandu aku isi Buku Induk lintasAI"*) — AI **mewawancaraimu pakai bahasa biasa lalu menuliskan sendiri** berkasnya, kamu tak perlu menyentuh format teknis. Naskah yang AI ikuti: `WIZARD_BUKU_INDUK_v1.md`.
 
 ---
 

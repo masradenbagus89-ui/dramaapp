@@ -38,6 +38,7 @@ Contoh:
 - [data-layer.md](data-layer.md) - Lapisan data: Supabase REST vs file JSON + RPC + CRUD drama
 - [glossary.md](glossary.md) - Kamus istilah domain (koin, unlock, premium, check-in, viewer/admin)
 - [request-guard.md](request-guard.md) - Penjaga endpoint koin: anti-CSRF (Origin) + pembatas laju per-IP
+- [ROADMAP_PARITAS_KOMPETITOR_v1.md](ROADMAP_PARITAS_KOMPETITOR_v1.md) - Roadmap tutup gap vs Melolo/Pine: PWA, Midtrans, CDN, akun+sync
 
 ### Catatan keputusan (ADR)
 - [decisions/2026-06-20-audit-findings.md](decisions/2026-06-20-audit-findings.md) - Hasil audit 11 sudut: 73 temuan + rencana pengerjaan bertahap

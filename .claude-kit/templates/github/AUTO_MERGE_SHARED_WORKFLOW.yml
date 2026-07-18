@@ -18,7 +18,7 @@
 # PRASYARAT PENTING:
 #   "Gabung-otomatis" GitHub hanya AKTIF kalau repo ini sudah dinyalakan
 #   "kunci pengaman gabung" (branch protection) + minimal 1 cek otomatis wajib.
-#   Jalankan dulu: .github/scripts/setup-branch-protection.ps1 (sekali per repo).
+#   Jalankan dulu: npx lintasai protect-main --apply (sekali per repo).
 #   Tanpa itu, GitHub tidak punya "syarat tunggu" sehingga --auto tidak menahan.
 #
 # CARA PASANG:
@@ -118,10 +118,10 @@ jobs:
             echo "Gabung-otomatis dinyalakan. Akan tergabung sendiri begitu semua cek wajib hijau."
           else
             rc=$?
-            gh pr comment "$PR_NUMBER" --body "ℹ️ Gabung-otomatis belum bisa dinyalakan. Penyebab paling umum: 'kunci pengaman gabung' (branch protection) belum aktif di repo ini. Minta owner/lead jalankan setup-branch-protection.ps1 sekali. Sementara itu, gabung manual aman setelah cek hijau." || true
+            gh pr comment "$PR_NUMBER" --body "ℹ️ Gabung-otomatis belum bisa dinyalakan. Penyebab paling umum: 'kunci pengaman gabung' (branch protection) belum aktif di repo ini. Minta owner/lead jalankan 'npx lintasai protect-main --apply' sekali. Sementara itu, gabung manual aman setelah cek hijau." || true
             # JUJUR: tandai job GAGAL (merah) supaya owner/lead TAHU gabung tidak jadi -
             # jangan diam-diam hijau padahal PR tak ter-merge (bug v1.6.2 yang di-fix v1.6.3).
-            echo "::error::Gagal menyalakan gabung-otomatis (rc=$rc). Kemungkinan kunci pengaman gabung (branch protection) belum aktif. Jalankan .github/scripts/setup-branch-protection.ps1 dulu."
+            echo "::error::Gagal menyalakan gabung-otomatis (rc=$rc). Kemungkinan kunci pengaman gabung (branch protection) belum aktif. Jalankan 'npx lintasai protect-main --apply' dulu."
             exit "$rc"
           fi
 

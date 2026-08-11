@@ -1,10 +1,25 @@
 # Lanjutan Sesi Drama-App
 
-**Terakhir update:** 2026-08-07 (sesi wiring fitur IMDb generator)
+**Terakhir update:** 2026-08-11 (aturan dual-push GitHub)
 
 > Berkas ini = JEMBATAN antar-sesi AI. Baca pertama di awal sesi baru supaya
 > langsung nyambung tanpa mencari ulang. Perbarui di akhir sesi kalau ada
 > progres/keputusan penting. Tanda ❓ = belum diverifikasi ulang.
+
+## WAJIB — Commit + Push dual remote (owner, 2026-08-11)
+
+Setiap ada perubahan kode/docs yang layak disimpan, AI **WAJIB**:
+1. **Commit** (aman: jangan sertakan `.env*`, `cookies.txt`, zip migrasi, artefak build).
+2. **Push ke KEDUA** remote ini:
+   - `https://github.com/ojokesusu/dramaku` → remote git: `dramaku`
+   - `https://github.com/masradenbagus89-ui/dramaapp` → remote git: `origin`
+
+Perintah tipikal setelah commit: `git push dramaku main` lalu `git push origin main`. Jangan anggap selesai kalau hanya satu remote yang ter-push.
+
+## Kondisi terkini (✅ terverifikasi 2026-08-11)
+
+- Dual remote aktif: `dramaku` = ojokesusu/dramaku · `origin` = masradenbagus89-ui/dramaapp.
+- Push ke `dramaku` (2026-08-11) berhasil; samakan `origin` saat commit berikutnya.
 
 ## Kondisi terkini (✅ terverifikasi 2026-07-23)
 

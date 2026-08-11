@@ -63,6 +63,7 @@ AI otomatis mencatat **pelajaran TEKNIS** (pola standar IT yang belum dijaga kit
 - Owner standar tim: <!-- nama + email/handle PIC kit -->
 - Channel diskusi: <!-- link Slack/Discord/Telegram -->
 - **Jembatan sesi (untuk AI):** baca `NEXT-SESSION.md` tepat setelah berkas ini di awal sesi — isinya ringkasan kondisi terkini project + yang terakhir dikerjakan, supaya sesi baru langsung nyambung tanpa meraba. Perbarui berkas itu di akhir sesi kalau ada progres/keputusan penting.
+- **Dual push (WAJIB, owner 2026-08-11):** tiap ada perubahan yang di-commit → push ke **kedua** repo: `https://github.com/ojokesusu/dramaku` (remote `dramaku`) **dan** `https://github.com/masradenbagus89-ui/dramaapp` (remote `origin`). Detail di `NEXT-SESSION.md`.
 
 ## Riwayat update kit di proyek ini
 

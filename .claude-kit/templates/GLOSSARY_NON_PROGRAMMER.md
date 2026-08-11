@@ -101,10 +101,6 @@ Robot di GitHub yang otomatis test + deploy tiap kamu push kode.
 - **Analogi B (Zapier/IFTTT)**: kayak workflow di Zapier atau IFTTT - kalau X terjadi, otomatis lakukan Y. Push kode → otomatis test → otomatis deploy.
 - **Analogi C (Tokopedia)**: kayak auto-fulfillment Tokopedia - kalau ada pesanan masuk, sistem otomatis cek stok + kirim notifikasi kurir + update status.
 
-### **AI Reviewer (.github/workflows/ai-review.yml)**
-Robot Claude yang otomatis review PR kamu, kasih komentar di GitHub.
-- **Analogi**: editor digital di redaksi koran - baca tulisan kamu, kasih komentar typo/inkonsistensi sebelum editor manusia review.
-
 ### **Rollback**
 Aksi balikin production ke versi sebelumnya saat ada bug.
 - **Analogi**: editor koran ketauan salah cetak, segera tarik edisi yang sudah disebar, ganti dengan edisi lama.
@@ -343,9 +339,7 @@ Perintah SQL yang **hapus seluruh tabel database + semua datanya** permanen.
 ## 📖 Lanjutan
 
 Setelah baca glossary ini, lanjut ke:
-1. `ONBOARDING.md` - jadwal 14 hari pertama
-2. `CLAUDE_TEAM_GUIDE.md` - workflow harian + aturan tim
-3. `PROMPT_LIBRARY.md` - template prompt siap-pakai
+1. `STACK_GUIDE.md` - panduan stack + keamanan project
 
 Kalau ketemu istilah baru yang tidak ada di sini → tanya Claude (sesi terpisah, tanpa konteks proyek):
 > *"Jelasin istilah `<istilah>` dengan bahasa awam + analogi sehari-hari. Saya non-programmer."*

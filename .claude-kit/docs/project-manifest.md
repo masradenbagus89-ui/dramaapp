@@ -1,7 +1,7 @@
 # project-manifest.md — Kartu Identitas Project (`project.lintas.jsonc`)
 
-> Versi 4 · 2026-07-10 · Pendamping `lib/project-manifest.mjs` + catatan keputusan desain. v4: kit 100% Node — kartu = `.jsonc` (kit era-v1 `.psd1` dimigrasi via `npx lintasai migrate-project-card`).
-> v3: cek `schema_version` sisi Node kini dibanding ke **peta versi-diharapkan** `lib/expected-schema.mjs` (Mesin 1 rencana `plans/STRATEGI_UPDATE_v2.md` — bukan lagi angka mati `>= 1`), penulis kartu menulis angka dari peta yang sama.
+> Versi 4 · 2026-07-10 · Pendamping `engine/project-manifest.mjs` + catatan keputusan desain. v4: kit 100% Node — kartu = `.jsonc` (kit era-v1 `.psd1`: migrator dicabut pasca-3.0.0, lihat UPGRADING.md).
+> v3: cek `schema_version` sisi Node kini dibanding ke **peta versi-diharapkan** `engine/expected-schema.mjs` (Mesin 1 rencana internal STRATEGI_UPDATE_v2 — bukan lagi angka mati `>= 1`), penulis kartu menulis angka dari peta yang sama.
 > v2: tambah bagian **"Cara Isi untuk staff non-programmer"** (panduan 3-lapis analogi — supaya kartu jadi pengetahuan bersama AI + staff, bukan artefak AI-saja).
 
 ## Tujuan
@@ -18,9 +18,10 @@ Berbeda dari `docs/architecture.md` (narasi **prosa** untuk manusia, gampang bas
 > Project kecil/solo tanpa banyak modul **boleh tanpa kartu ini** — `architecture.md` prosa sudah cukup.
 
 > **Format (v2.0.0, kit 100% Node):** pemasang Node (`npx lintasai init`) menulis kartu sebagai
-> **`project.lintas.jsonc`** (JSONC = JSON + komentar) yang dibaca robot `lib/project-manifest.mjs`.
-> Kit era-v1 memakai **`project.lintas.psd1`** — kalau kartu itu masih ada, jalankan
-> `npx lintasai migrate-project-card` untuk mengonversinya ke `.jsonc`.
+> **`project.lintas.jsonc`** (JSONC = JSON + komentar) yang dibaca robot `engine/project-manifest.mjs`.
+> Kit era-v1 memakai **`project.lintas.psd1`** — kalau kartu itu masih ada, migrator otomatisnya
+> sudah dicabut pasca-3.0.0: migrasikan lewat kit versi lama (2.9.0) atau tulis `.jsonc` baru manual
+> dari `templates/project.lintas.example.jsonc` — langkah lengkapnya di UPGRADING.md.
 
 ## Cara Pakai
 
@@ -29,13 +30,13 @@ Berbeda dari `docs/architecture.md` (narasi **prosa** untuk manusia, gampang bas
   otomatis dari `package.json`; `intent` ditandai `'pending'`. **Idempoten**: kalau sudah ada, tak ditimpa.
 - **AI isi `intent` di sesi pertama** (ganti `'pending'`) + **perbarui `modules`** tiap struktur berubah.
 - **Robot pemeriksa** (di Gerbang Pra-Rilis §4.6, atau manual):
-  `node .claude-kit/lib/project-manifest.mjs --repo-root .`
+  `node .claude-kit/engine/project-manifest.mjs --repo-root .`
 
 ## Field (skema v1)
 
 | Field | Jenis sumber | Arti |
 |---|---|---|
-| `schema_version` | declared | Versi skema kartu (mulai 1). Angka yang **diharapkan kit versi ini** dideklarasikan di peta `lib/expected-schema.mjs` (sumber tunggal penulis + pemeriksa Node); kartu ber-versi **di bawah** angka peta divonis TAK COCOK = perlu migrasi (rencana `plans/STRATEGI_UPDATE_v2.md` Langkah 2). |
+| `schema_version` | declared | Versi skema kartu (mulai 1). Angka yang **diharapkan kit versi ini** dideklarasikan di peta `engine/expected-schema.mjs` (sumber tunggal penulis + pemeriksa Node); kartu ber-versi **di bawah** angka peta divonis TAK COCOK = perlu migrasi (rencana internal STRATEGI_UPDATE_v2 Langkah 2). |
 | `intent.purpose` / `intent.domain` | **declared** | Tujuan project + domain bisnis. Non-derivable → AI isi sesi pertama. |
 | `stack.{type,package_manager,frameworks}` | **derive** | Diturunkan dari `package.json` + lockfile. **Jangan salin daftar dependency** — ringkasan saja. Robot cek cocok (DeriveMatch). |
 | `environment.{recorded_node,recorded_node_major,recorded_os}` | **derive** | "Cap lingkungan" runtime saat pasang (versi Node + platform). Pembanding dev vs client — dibaca `kit doctor --env` ([env-check.md](env-check.md)). Bebas-rahasia (versi saja, bukan hostname/user). |
@@ -66,9 +67,9 @@ Robot pemeriksa otomatis mengecek `path`-nya **benar-benar ada** di disk; kalau 
 
 ## Robot anti-basi (kenapa kartu ini ≠ catatan mati)
 
-`lib/project-manifest.mjs` memeriksa kartu vs **kenyataan**, deterministik (~detik, ~0 token):
+`engine/project-manifest.mjs` memeriksa kartu vs **kenyataan**, deterministik (~detik, ~0 token):
 - **PARSE-OK** — berkas bisa dibaca (tidak rusak) + punya `schema_version`. Membanding
-  `schema_version` ke **peta versi-diharapkan** (`lib/expected-schema.mjs`, Mesin 1): kartu
+  `schema_version` ke **peta versi-diharapkan** (`engine/expected-schema.mjs`, Mesin 1): kartu
   format-lama di bawah kit yang butuh format-baru → TAK COCOK (bukan "OK" palsu selamanya). Selisih
   dijaga tes pengunci `tests/expected-schema.test.mjs`.
 - **PathExists** — tiap `modules[].path` + `refs[]` yang dideklarasikan **ada di disk**.
@@ -91,8 +92,8 @@ Tanpa robot ini, kartu cuma "niat" yang akan basi diam-diam — persis nasib `po
 
 ## Dependensi
 
-- `lib/project-manifest.mjs` — pembaca + robot + penulis bootstrap. Sumber: `lib/project-manifest.mjs:1`.
-- `setup-pola-b.mjs` — menulis kartu saat pasang. Migrator kartu era-v1: `lib/project-card-migrate.mjs`.
+- `engine/project-manifest.mjs` — pembaca + robot + penulis bootstrap. Sumber: `engine/project-manifest.mjs:1`.
+- `setup-pola-b.mjs` — menulis kartu saat pasang.
 - Contoh terisi: `templates/project.lintas.example.jsonc`.
 - Tes: `tests/project-manifest.test.mjs` + `tests/project-manifest-registry.test.mjs`.
 

@@ -1,6 +1,6 @@
 # REFACTOR_STANDARD.md — Standar Merapikan Kode (Refactor) Lintas-Divisi
 
-> Versi 3 · 2026-06-10 · auto-generated (lintasAI) · netral profesional, lintas-stack + lintas-divisi (v3: tambah tingkat USAHA ringan/sedang/berat + tes-asap pasca-refactor + gate refactor BERAT/split)
+> Versi 5 · 2026-07-18 · auto-generated (lintasAI) · netral profesional, lintas-stack + lintas-divisi (v3: tingkat USAHA + tes-asap + gate refactor BERAT/split · v4: kunci kontrak tak-terlihat + red→green + anti-over-split + metrik-sukses ≠ jumlah-baris · v5: tiap yang ter-deploy wajib punya jalur pemanggil + pointer/anchor ikut pindah saat berkas pindah)
 
 ## Tujuan
 
@@ -57,6 +57,8 @@ Masalah yang diselesaikan: **kapan** kode perlu dirapikan (refactor), **kapan JA
 
 > **Kenapa ini PENTING khusus tim AI-first (staff non-programmer yang andalkan AI)**: file raksasa + kode dobel = AI harus baca banyak → **lambat + boros token + lebih mudah ngarang (halusinasi)**. Membersihkannya **langsung** menaikkan: AI gampang menganalisa, hemat token, anti-halusinasi, minim bug, clean code, gampang dikerjakan tim. Jadi refactor di sini **bukan kosmetik** — investasi langsung ke kualitas + biaya.
 
+> ⚖️ **Ukuran SUKSES refactor ≠ jumlah baris.** Jumlah baris = **sinyal untuk mulai melihat** (>300 baris → periksa), **BUKAN** nilai sukses. Refactor yang benar **kadang MENAMBAH baris** (komentar-alasan + pembungkus fungsi kecil yang bisa diuji terpisah) tapi tetap sukses. Sukses = (a) lebih **mudah dianalisa/diubah**, (b) bagian **terisolasi → lebih mudah dites**, (c) **keluaran/kontrak terkunci tes**. Jangan kejar "baris berkurang". 🏢 Gudang rapi bukan yang barangnya paling sedikit, tapi yang paling **gampang dicari + jarang salah ambil**. *(Istilah profesional: jumlah baris = metrik yang menyesatkan; yang dinilai = maintainability.)*
+
 ## Refactor lintas-divisi (apa yang dirapikan per peran)
 
 Refactor profesional menyentuh **banyak divisi** sekaligus. AI WAJIB cek tiap sudut ini (baca-saja dulu), lapor temuan berlabel 🔴🟡🟢:
@@ -73,7 +75,7 @@ Refactor profesional menyentuh **banyak divisi** sekaligus. AI WAJIB cek tiap su
 | ✅ **QA/Test** | Tak ada cek otomatis, bagian terlalu besar untuk dites | Pecah jadi bagian kecil yang gampang dites; tambah cek otomatis jalur utama + kasus pinggir |
 | 📈 **SEO/Performa** | Halaman berat, gambar belum dioptimasi, file kode kebesaran | Muat bagian berat hanya saat perlu; kecilkan gambar; pangkas ukuran file |
 | 🤖 **ML/AI** | Perintah ke AI panjang & berulang, tak ada batas biaya, data mentah | Satukan template perintah; pasang batas token; bersihkan data sebelum dikirim ke AI |
-| 📦 **Arsitektur/Shared** | Tipe data ditebak di banyak tempat, dependency lama, batas antar-modul kabur | Tulis tipe data di 1 sumber; kunci & audit versi dependency; perjelas batas tiap modul |
+| 📦 **Arsitektur/Shared** | Tipe data ditebak di banyak tempat, **fakta/daftar tersalin ke banyak berkas tanpa penjaga sinkron**, dependency lama, batas antar-modul kabur | Tulis tipe data di 1 sumber; **fakta yang terpaksa tersalin → pasang tes-sinkron (guard test)**; kunci & audit versi dependency; perjelas batas tiap modul |
 
 > Tidak semua divisi relevan tiap project. AI isi yang **terbukti ada gejalanya** (force citation — baca kode dulu), sisanya tulis "—". Jangan paksa isi semua.
 
@@ -91,6 +93,7 @@ Refactor itu **bukan asal rapi-rapi** — dilakukan saat ada **gejala** nyata:
 8. **Kode mati** (tidak pernah dipakai) → buang. — 🟩 RINGAN.
 9. **Nama membingungkan** (variabel `x`, `data2`, `tmp`) → ganti nama yang jelas. — 🟩 RINGAN.
 10. **Database lambat** karena query berulang (N+1) → satukan / kasih index. — 🟨 SEDANG (menyentuh database, perlu diukur dulu pakai `EXPLAIN`).
+11. **Fakta/daftar tersalin** (enum, daftar route, konstanta, roster, ambang) ada di >1 berkas dan **tak bisa disatukan ke 1 sumber** → pasang **tes-sinkron** (guard test): ganti 1 tempat, tes langsung menunjuk salinan yang terlewat. — 🟩 RINGAN (cukup 1 tes struktural). — Beda dari #1: #1 = kode salin-tempel yang HARUSNYA disatukan; #11 = fakta yang memang perlu ada di banyak tempat, jadi dijaga tes, bukan dihapus.
 
 ## Kapan JANGAN refactor (sama pentingnya)
 
@@ -99,14 +102,18 @@ Refactor itu **bukan asal rapi-rapi** — dilakukan saat ada **gejala** nyata:
 - ❌ **Mepet deadline** → refactor besar di waktu genting = main api.
 - ❌ **Tanpa cek otomatis (test)** → refactor tanpa test = judi; tidak ada jaring kalau ada yang rusak.
 - ❌ **Mencampur refactor besar dengan fitur/fix** dalam 1 commit → pisahkan (1 commit = 1 tujuan).
+- ❌ **Memaksa pisah kode yang menempel erat** → bagian yang **berpasangan / berbagi state / terkopling ke inti** sebaiknya **TETAP menyatu**. Pisah-buta menambah "kabel penghubung" (indirection = perantara berlapis) → lebih rumit dibaca, bukan lebih rapi. **Pecah yang berdiri sendiri; gabungkan yang berpasangan.** Ini penyeimbang gejala #1/#2 ("pecah file gemuk") — seni refactor = tahu MANA yang dipisah **dan** mana yang disatukan. *(Istilah profesional: high cohesion / low coupling + AHA "Avoid Hasty Abstractions" — duplikasi masih lebih murah daripada abstraksi yang salah.)*
 
-## Cara AMAN refactor (5 langkah — AI WAJIB ikuti)
+> 💡 Menunda itu sah — tapi **catat** di Buku Utang Teknis (`docs/BUKU_UTANG_TEKNIS.md`, salin dari `templates/BUKU_UTANG_TEKNIS.example.md`) biar terlihat + tak busuk diam-diam.
 
-1. **Baca dulu** — pahami kode + catatan `docs/` terkait. Jangan kerja buta.
-2. **Rencana + label** — tulis apa yang dirapikan, kasih label 🔴🟡🟢, perkiraan dampak, cara balik (rollback).
-3. **Konfirmasi owner** — tampilkan ringkasan + **tunggu izin**. JANGAN auto-refactor.
-4. **Langkah kecil** — kerjakan **1 item**, tampilkan bedanya (diff), jalankan cek otomatis, **baru lanjut** item berikutnya. Bukan rombak semua sekaligus.
-5. **Verify** — cek otomatis (test) + tes asap alur utama lulus sebelum bilang "selesai".
+## Cara AMAN refactor (6 langkah — AI WAJIB ikuti)
+
+1. **Baca dulu + inventaris cakupan tes** — pahami kode + catatan `docs/` terkait (jangan kerja buta). Lalu **petakan DULU: perilaku/keluaran mana yang SUDAH dijaga tes vs BELUM.** "Banyak tes" ≠ "bagian INI terjaga" — tutup celah tes-nya **sebelum** mengubah, bukan sesudah.
+2. **Kunci "kontrak tak-terlihat" dulu** — kalau kode yang dirapikan menghasilkan keluaran yang dibaca **mesin / AI / sistem lain** — bentuk **JSON API / Route Handler**, perilaku **RLS** database (siapa boleh lihat baris apa), isi **webhook** bayar/auth, **format log** yang di-parse alat lain, **markup + metadata SEO**, string penanda — **rekam keluaran itu dulu dengan tes karakterisasi** (*characterization / golden test*: potret keluaran SEKARANG) → buktikan perpindahan **tidak mengubah** keluaran. Ini titik-bocor paling **berbahaya** (integrasi/klien/mesin-pencari diam-diam rusak) + paling **tak-kelihatan** di review mata.
+3. **Rencana + label** — tulis apa yang dirapikan, kasih label 🔴🟡🟢, perkiraan dampak, cara balik (rollback).
+4. **Konfirmasi owner** — tampilkan ringkasan + **tunggu izin**. JANGAN auto-refactor.
+5. **Langkah kecil** — kerjakan **1 item**, tampilkan bedanya (diff), jalankan cek otomatis, **baru lanjut** item berikutnya. Bukan rombak semua sekaligus.
+6. **Verify** — cek otomatis (test) + tes asap alur utama lulus sebelum bilang "selesai". **Untuk tes-pengunci: buktikan ia MERAH dulu** (jalankan di kode LAMA sebelum diubah, atau rusakkan sengaja sesaat lalu balikkan) baru percaya HIJAU-nya — **penjaga yang tak pernah terbukti merah = rasa-aman-palsu** (bisa lolos tanpa benar-benar menjaga apa pun). *(Istilah profesional: characterization test = Michael Feathers; buktikan-merah-dulu = inti TDD red→green.)*
 
 > 🏢 Analogi langkah kecil: kayak **renovasi rumah sambil ditinggali** — perbaiki 1 kamar dulu, pastikan masih bisa ditinggali, baru lanjut kamar berikutnya. Bukan bongkar semua dinding sekaligus lalu kehujanan.
 
@@ -144,8 +151,21 @@ Refactor yang benar = **tampilan + cara kerja ke user TETAP sama**. Cara membukt
 - **JANGAN rename/hapus langsung** — pakai pola tambah-baru → pindah → hapus-lama (expand-then-contract), supaya tidak memutus yang sedang jalan.
 - **Selalu ada cara balik** — `git revert` sebagai jaring pengaman. Aksi yang tidak bisa di-undo = konfirmasi keras dulu.
 - **Test dulu sebelum refactor besar** — tanpa test, jangan rombak.
+- **Tiap yang ikut ter-deploy WAJIB punya jalur pemanggil.** Sebelum menyatakan sebuah fitur/pengaman
+  "sudah ada", telusuri **rutenya sungguhan**: endpoint terdaftar di router? tombolnya benar-benar
+  dirender? perintahnya terdaftar? modulnya di-import kode yang jalan? Berkas yang ada di repo tapi nol
+  jalur pemanggil = **kode mati yang menyamar jadi pengaman** — dan itu lebih berbahaya daripada tak ada
+  sama sekali, karena orang mengira sudah terlindungi. Kelas ini paling sering muncul pada feature flag,
+  middleware, dan skrip perkakas. (Kode masalah: `OPS-DEAD-SHIPPED`.)
+- **Berkas pindah = pointer & anchor ikut pindah.** Saat memecah/memindah/mengganti nama berkas, sapu
+  dokumen + komentar yang menunjuknya. ⚠️ Yang paling berbahaya BUKAN pointer putus (langsung ketahuan),
+  tapi pointer yang **mendarat di tempat salah** — pembaca yakin sudah membaca yang benar padahal bukan.
+  Karena itu jangan puas karena pencarianmu "ada hasilnya"; pastikan judul/anchor tujuan memang yang
+  dimaksud. (Kode masalah: `DOC-POINTER-ROT`.)
 
-## Checklist cepat "perlu refactor atau tidak?" (12 cek saat baca struktur)
+## Checklist cepat "perlu refactor atau tidak?" (14 cek saat baca struktur)
+
+> 🤖 **Robot pendamping (cuma-baca):** `npx lintasai complexity-budget` menandai otomatis **berkas gemuk** (>300-500 baris) + **fungsi panjang** (2 cek pertama di bawah) tanpa kamu baca kode — file auto-generate (Prisma/Supabase) sudah dibuang biar tak jadi alarm-palsu. Sisanya tetap dinilai AI.
 
 - [ ] Ada kode salin-tempel di >2 tempat?
 - [ ] Ada file >300 baris / mengurus >1 peran?
@@ -158,7 +178,10 @@ Refactor yang benar = **tampilan + cara kerja ke user TETAP sama**. Cara membukt
 - [ ] Ada query database berulang (N+1) tanpa index?
 - [ ] Ada `innerHTML`/render mentah tanpa sanitasi (celah XSS)?
 - [ ] Ada nilai hardcode (warna/spacing/URL) yang harusnya jadi token/env?
+- [ ] Ada fakta/daftar/angka (enum, route, konstanta, roster) tersalin ke banyak berkas tanpa tes-sinkron (rawan drift saat 1 diubah)?
 - [ ] Apakah ada cek otomatis (test) yang melindungi area ini sebelum dirapikan?
+- [ ] Kalau kode ini menghasilkan keluaran yang dibaca **mesin/AI/sistem lain** (JSON API, RLS, webhook, log, markup SEO, string penanda) — sudah ada tes yang **mengunci bentuk/isinya** sebelum dipindah? (*characterization test*)
+- [ ] Sudah **dipetakan perilaku mana yang SUDAH di-assert tes vs BELUM** sebelum menyentuh? (jumlah tes banyak ≠ bagian INI terjaga)
 
 ## Input / Output
 

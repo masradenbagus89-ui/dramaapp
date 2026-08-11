@@ -8,7 +8,7 @@
 # deteksi SENGAJA disamakan supaya konsisten.
 #
 # Pasang (opt-in): salin berkas ini ke .git/hooks/pre-commit lalu beri izin jalan --
-#   atau cukup minta AI: "pasang penjaga rahasia pre-commit" (AI jalankan node lib/install-secret-hook.mjs).
+#   atau cukup minta AI: "pasang penjaga rahasia pre-commit" (AI jalankan node engine/install-secret-hook.mjs).
 #
 # Darurat / alarm-palsu: lewati 1x dengan  git commit --no-verify
 #
@@ -36,7 +36,16 @@ fi
 # Cuma cetak NAMA berkas (grep -l), TIDAK pernah nilai rahasianya. Pola disamakan dgn
 # secret-guard.yml: kunci AI/AWS/GitHub/Slack/GitLab + token JWT + URL DB ber-password.
 patterns='sk-ant-[A-Za-z0-9_-]{20}|AKIA[0-9A-Z]{16}|gh[posu]_[A-Za-z0-9]{36}|xox[baprs]-[A-Za-z0-9-]{10}|glpat-[A-Za-z0-9_-]{20}|eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}|(postgres|postgresql|mysql|mongodb(\+srv)?)://[^:@/ ]+:[^@/ ]+@'
-scan=$(printf '%s\n' "$staged" | grep -vE '^\.github/' | grep -vE '\.env\.(examples?|samples?|templates?|dist|demo)$' | grep -vE '(^|/)(package-lock\.json|pnpm-lock\.yaml|yarn\.lock)$' || true)
+# `.claude-kit/` DIKECUALIKAN (2026-07-19). Itu kit lintasAI yang dipasang otomatis, bukan kode
+# tulisan tim: di dalamnya ada berkas TES yang sengaja memuat kunci PALSU untuk menguji pendeteksi
+# rahasia (mis. tests/secret-precommit.test.mjs berisi "AKIA...", dokumen panduan berisi contoh
+# token). Tanpa pengecualian ini, TIAP update kit memicu alarm palsu -- dan pesan hook sendiri
+# menyarankan `--no-verify`, jadi orang terlatih membiasakan MEMATIKAN penjaga ini. Penjaga yang rutin
+# salah-alarm lebih berbahaya daripada tak ada penjaga: ia mengajarkan kebiasaan menerobos, yang lalu
+# terbawa saat rahasia ASLI benar-benar terdeteksi.
+# ⚠️ Yang TIDAK ikut dikecualikan: TOLAK-KERAS `.env` di Bagian 1 di atas tetap memindai SELURUH berkas
+# ter-stage termasuk di dalam `.claude-kit/`. Jadi `.env` asli tetap mustahil lolos lewat celah ini.
+scan=$(printf '%s\n' "$staged" | grep -vE '^\.github/' | grep -vE '(^|/)\.claude-kit/' | grep -vE '\.env\.(examples?|samples?|templates?|dist|demo)$' | grep -vE '(^|/)(package-lock\.json|pnpm-lock\.yaml|yarn\.lock)$' || true)
 keyfiles=""
 while IFS= read -r f; do
   [ -z "$f" ] && continue

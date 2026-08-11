@@ -297,7 +297,7 @@ Variabel `NEXT_PUBLIC_*` = ter-expose ke browser (jangan taruh secret di sini). 
 
 File `middleware.ts` di root → otomatis jalan di Edge Runtime (cepat, deploy global).
 
-> ⚠️ **Sadar-versi (Next.js 16+):** sejak Next.js 16, berkas ini **berganti nama jadi `proxy.ts`** (fungsi ekspor juga `proxy`, bukan `middleware`) dan jalan di **runtime Node.js**. `middleware.ts` masih bisa dipakai untuk Edge tetapi **sudah usang (deprecated)** dan akan dihapus. Ada codemod resmi untuk migrasi. Larangan salah-koreksi + detail ada di `workflows/stack/4.14-1-nextjs.md`. **Cek angka `next` di `package.json` sebelum menyentuh berkas ini** (§8.2 Aturan 1) — contoh di bawah pakai gaya pra-16.
+> ⚠️ **Sadar-versi (Next.js 16+):** sejak Next.js 16, berkas ini **berganti nama jadi `proxy.ts`** (fungsi ekspor juga `proxy`, bukan `middleware`) dan jalan di **runtime Node.js**. `middleware.ts` masih bisa dipakai untuk Edge tetapi **sudah usang (deprecated)** dan akan dihapus. Ada codemod resmi untuk migrasi. Larangan salah-koreksi + detail ada di `skills/nextjs/SKILL.md`. **Cek angka `next` di `package.json` sebelum menyentuh berkas ini** (§8.2 Aturan 1) — contoh di bawah pakai gaya pra-16.
 
 ```ts
 // middleware.ts - proteksi route /dashboard
@@ -378,7 +378,7 @@ Migrasi ke Railway atau Render = **operasi advanced** yang baru relevan kalau sa
 
 ## 5. Database (Supabase / PostgreSQL)
 
-> Supabase = PostgreSQL managed. Bagian ini = rujukan cepat index + audit + tipe data. Pola Prisma/RLS lebih dalam ada di `workflows/stack/4.14-2-supabase-prisma.md` (dibaca otomatis saat stack DB terdeteksi).
+> Supabase = PostgreSQL managed. Bagian ini = rujukan cepat index + audit + tipe data. Pola Prisma/RLS lebih dalam ada di `skills/supabase-prisma/SKILL.md` (dibaca otomatis saat stack DB terdeteksi).
 
 ### 5.1. Index: pilih tipe & urutan kolom yang benar
 
@@ -447,7 +447,7 @@ ORDER BY n_dead_tup DESC;
 ```sql
 REVOKE ALL ON SCHEMA public FROM public;  -- cabut hak "siapa saja boleh bikin objek di schema public"
 ```
-> Sadar-versi: sejak Postgres 15, hak `CREATE` di schema `public` sudah dicabut dari PUBLIC secara bawaan — perintah di atas aman dijalankan tapi jangan diklaim "perbaikan" kalau sudah PG15+. Query #2 butuh `CREATE EXTENSION IF NOT EXISTS pg_stat_statements;` dulu (di Supabase umumnya sudah aktif — cek via `list_extensions`). Kontrol-akses REVOKE per-developer yang lebih dalam ada di `MCP_SETUP.md` §2.6b.
+> Sadar-versi: sejak Postgres 15, hak `CREATE` di schema `public` sudah dicabut dari PUBLIC secara bawaan — perintah di atas aman dijalankan tapi jangan diklaim "perbaikan" kalau sudah PG15+. Query #2 butuh `CREATE EXTENSION IF NOT EXISTS pg_stat_statements;` dulu (di Supabase umumnya sudah aktif — cek via `list_extensions`). Kontrol-akses REVOKE per-developer yang lebih dalam: minta AI susun SQL `GRANT`/`REVOKE` per schema (role tiering §9).
 
 - 🙂 Non-Programmer: tiga query pertama = "cek kesehatan" gudang data — mana rak tanpa label (foreign key tak ter-index → pencarian lambat), transaksi paling lelet, dan laci penuh sampah yang belum dibuang. Perintah terakhir = "kunci pintu gudang secara default" supaya tak sembarang akun bisa menaruh barang di dalamnya.
 
@@ -480,7 +480,7 @@ REVOKE ALL ON SCHEMA public FROM public;  -- cabut hak "siapa saja boleh bikin o
   -- `authenticator` = role koneksi/pool (juga default service_role) + batas transaksi nganggur:
   ALTER ROLE authenticator SET idle_in_transaction_session_timeout = '30s';
   ```
-  Ini timeout **LAPISAN DB** — BEDA dari timeout Prisma `$transaction` (default 5 detik, lihat `workflows/stack/4.14-2-supabase-prisma.md`) dan `pool_timeout` di `DATABASE_URL`. Tiga rem beda lapisan; jangan anggap satu menutup yang lain. (Cara termudah tanpa SQL: Dashboard → Database → Settings.)
+  Ini timeout **LAPISAN DB** — BEDA dari timeout Prisma `$transaction` (default 5 detik, lihat `skills/supabase-prisma/SKILL.md`) dan `pool_timeout` di `DATABASE_URL`. Tiga rem beda lapisan; jangan anggap satu menutup yang lain. (Cara termudah tanpa SQL: Dashboard → Database → Settings.)
 - 🙂 Non-Programmer: kasir yang kalau melayani 1 pelanggan lebih dari 30 detik otomatis "dilewati" supaya antrean tak macet total.
 
 > ⚠️ **Supabase-managed — jangan salin gaya self-hosted.** Perintah `ALTER SYSTEM SET …` + `SELECT pg_reload_conf();` (lazim di tutorial Postgres self-host/superuser) TIDAK jalan di sini (kita bukan superuser). Untuk guardrail per-role/per-db pakai `ALTER ROLE … SET` / `ALTER DATABASE … SET` seperti di atas, atau Dashboard → Database → Settings. `max_connections` ditentukan tier compute (add-on), bukan `ALTER SYSTEM`.
@@ -645,10 +645,10 @@ module.exports = {
 
 **Tingkat 2 — CSP ketat ber-nonce (untuk data sensitif / tuntutan kepatuhan).** **Nonce** = kode acak sekali-pakai per request; hanya skrip yang membawa nonce itu yang boleh jalan — penyusup harus menebak kode yang berganti tiap request:
 
-- Dipasang lewat berkas "satpam pintu masuk" — 🚨 **SADAR-VERSI**: `proxy.ts` (fungsi `proxy`) di Next 16+, `middleware.ts` di versi sebelumnya. Lihat peringatan di `workflows/stack/4.14-1-nextjs.md` + contoh UTUH di dok resmi: `nextjs.org/docs/app/guides/content-security-policy` (jangan tulis dari ingatan — header `x-nonce`, `'strict-dynamic'`, dan matcher pengecualian `_next/static` semuanya ada di sana).
+- Dipasang lewat berkas "satpam pintu masuk" — 🚨 **SADAR-VERSI**: `proxy.ts` (fungsi `proxy`) di Next 16+, `middleware.ts` di versi sebelumnya. Lihat peringatan di `skills/nextjs/SKILL.md` + contoh UTUH di dok resmi: `nextjs.org/docs/app/guides/content-security-policy` (jangan tulis dari ingatan — header `x-nonce`, `'strict-dynamic'`, dan matcher pengecualian `_next/static` semuanya ada di sana).
 - ⚠️ **Trade-off resmi**: nonce MEWAJIBKAN dynamic rendering (halaman dirakit ulang tiap request) → halaman statik/ISR/cache CDN mati → lebih lambat + server lebih sibuk + biaya naik. Pakai hanya kalau memang butuh ketat; kombinasi umum: nonce untuk halaman ber-data-sensitif, Tingkat 1 untuk halaman publik.
 
-> Sumber: dok resmi Next.js (guide CSP, dicek 2026-07) + pola nonce diserap dari ECC `rules/web/security.md` (MIT © Affaan Mustafa). Header cross-origin (COOP/CORP/COEP) diverifikasi ke MDN + OWASP HTTP Headers Cheat Sheet (dicek 2026-07). Versi Next.js naik? Cek ulang dok resmi versi terpasang.
+> Sumber: dok resmi Next.js (guide CSP, dicek 2026-07) + pola nonce diserap dari ECC `web/security.md` (MIT © Affaan Mustafa). Header cross-origin (COOP/CORP/COEP) diverifikasi ke MDN + OWASP HTTP Headers Cheat Sheet (dicek 2026-07). Versi Next.js naik? Cek ulang dok resmi versi terpasang.
 
 ### 7.5. Pengerasan Auth Supabase pra-launch (checklist Dashboard — nyaris tanpa koding, item DoD "mau online")
 
@@ -701,7 +701,7 @@ export default [
 
 ## 8. Feature Flag Pattern (ADVANCED - Post-Launch Only)
 
-> ⚠️ **Default workflow tim TIDAK pakai feature flag.** Untuk early-stage project (belum launch / progress <50%), staging via **Vercel Preview Deploy per PR** sudah cukup. Lihat `CLAUDE_TEAM_GUIDE.md` section 7b (Risk Level Decision Tree) untuk default workflow.
+> ⚠️ **Default workflow tim TIDAK pakai feature flag.** Untuk early-stage project (belum launch / progress <50%), staging via **Vercel Preview Deploy per PR** sudah cukup.
 >
 > Feature flag = advanced operation yang butuh owner familiar dengan Vercel env vars + redeploy cycle. **Tambahkan post-launch** kalau project sudah punya user aktif dan butuh:
 > - Kill switch instant untuk fitur kritis (mis. payment toggle saat Black Friday)
@@ -710,7 +710,7 @@ export default [
 
 Detail implementasi lengkap (decision tree, naming convention, cleanup ritual, testing pattern, per-user hash) di **`./.claude-kit/templates/feature-flags-advanced.md`** - file terpisah supaya tidak ngebebanin kit default workflow.
 
-**Untuk early-stage <project> (progress ~5%)**: skip section ini, pakai Risk Level (CLAUDE_TEAM_GUIDE.md 7b) + staging-only.
+**Untuk early-stage <project> (progress ~5%)**: skip section ini, pakai staging-only.
 
 ---
 
@@ -752,7 +752,7 @@ Sebelum announce launch produksi:
 - [ ] Rollback plan dipahami (section 3.8).
 - [ ] Backup DB Supabase aktif (Settings → Database → Backups).
 - [ ] Error monitoring (Sentry / Vercel logs) aktif.
-- [ ] Healthcheck endpoint `/api/health` ada (untuk uptime monitor). Butuh cek lebih dalam (DB) + validasi env fail-fast? Lihat `workflows/stack/4.14-4-deploy.md` §health.
+- [ ] Healthcheck endpoint `/api/health` ada (untuk uptime monitor). Butuh cek lebih dalam (DB) + validasi env fail-fast? Lihat `skills/deploy/SKILL.md` §health.
 - [ ] (Opsional, kalau pakai Docker/CI) Pipeline CI/CD otomatis — template `templates/github/workflows/app-cicd.yml.example`.
 - [ ] Robots & sitemap di-submit ke Google Search Console.
 - [ ] Feature flag default = stable path (rollout fitur baru bertahap).

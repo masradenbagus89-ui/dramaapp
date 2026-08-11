@@ -142,10 +142,10 @@ Mode ini dipakai kalau:
 ## 5. Skenario sehari-hari - kapan tiap tier muncul
 
 **Skenario A: Tier 1 - Hari Senin pagi**
-> Owner kit fix typo "ANALAGI" → "ANALOGI" di `ANALOGI_LIBRARY.md`. Kamu chat "update", AI bilang "cuma typo, aman 100%, update otomatis". Kamu lanjut kerja. Tidak ada yang berubah di workflow kamu.
+> Owner kit fix typo "ANALAGI" → "ANALOGI" di `ANALOGY_LIBRARY.md`. Kamu chat "update", AI bilang "cuma typo, aman 100%, update otomatis". Kamu lanjut kerja. Tidak ada yang berubah di workflow kamu.
 
 **Skenario B: Tier 2 - Hari Rabu sore**
-> Owner kit tambah 5 prompt baru di `PROMPT_LIBRARY.md` untuk handle task "code review". Kamu update. Sesi AI besok pagi, kamu tanya "review PR ini", AI auto-pakai prompt baru tanpa kamu sadar. Mirip **Excel kasih function baru `XLOOKUP`** - formula lama (`VLOOKUP`) tetap jalan, function baru tinggal dipakai kalau mau.
+> Owner kit tambah pola kerja baru di aturan kit untuk handle task "code review". Kamu update. Sesi AI besok pagi, kamu tanya "review PR ini", AI auto-pakai pola baru tanpa kamu sadar. Mirip **Excel kasih function baru `XLOOKUP`** - formula lama (`VLOOKUP`) tetap jalan, function baru tinggal dipakai kalau mau.
 
 **Skenario C: Tier 3 [BREAKING] - Hari Jumat siang**
 > Owner kit rename `CLAUDE_universal_v1.md` → `LINTAS_AI_RULES.md`. CHANGELOG kasih Migration Steps:
@@ -313,7 +313,7 @@ Perlu. Owner kit terus improve aturan, prompt, dan analogi. Update = AI kamu mak
 
 ## 11. Cross-reference
 
-- **Istilah teknis** (mis. "sha256", "manifest", "atomic re-clone") → buka `./.claude-kit/templates/ANALOGI_LIBRARY.md` untuk analogi sehari-hari.
+- **Istilah teknis** (mis. "sha256", "manifest", "atomic re-clone") → buka `./.claude-kit/templates/ANALOGY_LIBRARY.md` untuk analogi sehari-hari.
 - **Detail per versi** (apa berubah di v1.2.0 vs v1.3.0) → buka `./.claude-kit/CHANGELOG.md`.
 - **Audit setelah update besar** → ikuti pattern di `./.claude-kit/CLAUDE_universal_v1.md` section 4.4 "Audit Post-Setup".
 - **Aturan umum kerja AI-first** → `./.claude-kit/CLAUDE_universal_v1.md` (wajib baca tiap sesi).

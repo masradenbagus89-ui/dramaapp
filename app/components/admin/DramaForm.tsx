@@ -8,7 +8,7 @@
 // mengisi form ini lewat setter yang sama TANPA perubahan. Tampilan dirombak ke
 // shadcn/ui (Card, Input, Label, Textarea, Select, Checkbox, Button) — perilaku
 // & logika tetap sama persis.
-import type { Dispatch, SetStateAction, RefObject, FormEvent } from "react";
+import { useState, type Dispatch, type SetStateAction, type RefObject, type FormEvent } from "react";
 import { slugify } from "@/lib/format";
 import { SUBTITLE_LANGS } from "@/lib/types";
 import { CATEGORY_OPTIONS } from "@/app/admin/constants";
@@ -25,6 +25,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+type ImdbDraftPreview = {
+  imdbId: string;
+  slug: string;
+  title: string;
+  year: string;
+  synopsis: string;
+  posterImage: string | null;
+  genre: string;
+  actors: string;
+  director: string;
+  suggestedCategory: string | null;
+};
 
 export default function DramaForm({
   id,
@@ -85,6 +98,57 @@ export default function DramaForm({
   onScan: () => void;
   onSubmit: (e: FormEvent) => void;
 }) {
+  const [imdbId, setImdbId] = useState("");
+  const [imdbLoading, setImdbLoading] = useState(false);
+  const [imdbError, setImdbError] = useState<string | null>(null);
+  const [imdbDraft, setImdbDraft] = useState<ImdbDraftPreview | null>(null);
+
+  const fetchImdbDraft = async () => {
+    setImdbError(null);
+    setImdbDraft(null);
+    const id = imdbId.trim();
+    if (!id) return;
+    setImdbLoading(true);
+    try {
+      const res = await fetch(
+        `/api/generate-from-imdb?imdbId=${encodeURIComponent(id)}`,
+      );
+      const data = (await res.json()) as {
+        ok?: boolean;
+        draft?: ImdbDraftPreview;
+        error?: string;
+      };
+      if (!res.ok || !data.ok) {
+        setImdbError(data.error ?? `Gagal mengambil draft (HTTP ${res.status})`);
+        return;
+      }
+      if (data.draft) setImdbDraft(data.draft);
+    } catch (err) {
+      setImdbError(err instanceof Error ? err.message : "Koneksi gagal");
+    } finally {
+      setImdbLoading(false);
+    }
+  };
+
+  const applyImdbDraft = () => {
+    if (!imdbDraft) return;
+    setTitle(imdbDraft.title);
+    setId(imdbDraft.slug);
+    setSynopsis(imdbDraft.synopsis);
+    if (imdbDraft.posterImage) {
+      setPosterImage(imdbDraft.posterImage);
+      setHeroImage(imdbDraft.posterImage);
+    }
+    if (
+      imdbDraft.suggestedCategory &&
+      (CATEGORY_OPTIONS as readonly string[]).includes(imdbDraft.suggestedCategory)
+    ) {
+      setCategory(imdbDraft.suggestedCategory);
+    }
+    setImdbDraft(null);
+    setImdbError(null);
+  };
+
   return (
     <section id="tambah">
       <div className="mb-3 flex items-center justify-between">
@@ -99,6 +163,97 @@ export default function DramaForm({
           <li>Klik <strong>Simpan drama</strong> → tersimpan langsung ke database, tampil seketika (tanpa redeploy).</li>
         </ol>
       </div>
+
+      <div className="mb-5 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4 md:p-5">
+        <h3 className="mb-1 text-sm font-semibold text-white">
+          ✨ Isi otomatis dari IMDb
+        </h3>
+        <p className="mb-3 text-xs text-zinc-500">
+          Masukkan ID IMDb (contoh: tt19869990) — data judul, sinopsis, poster,
+          dan kategori akan diambil dari OMDb.
+        </p>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+          <div className="flex-1 space-y-1.5">
+            <Label htmlFor="imdb-id" className="text-sm text-zinc-300">
+              ID IMDb
+            </Label>
+            <Input
+              id="imdb-id"
+              value={imdbId}
+              onChange={(e) => setImdbId(e.target.value)}
+              placeholder="tt19869990"
+              className="rounded-lg border-zinc-700 bg-zinc-900 font-mono text-white focus-visible:border-amber-400 focus-visible:ring-0"
+            />
+          </div>
+          <Button
+            type="button"
+            onClick={fetchImdbDraft}
+            disabled={imdbLoading || !imdbId.trim()}
+            variant="outline"
+            className="rounded-lg border-indigo-400/60 bg-indigo-400/10 font-semibold text-indigo-300 hover:bg-indigo-400/20 hover:text-indigo-200"
+          >
+            {imdbLoading ? "Mengambil..." : "Ambil draft"}
+          </Button>
+        </div>
+
+        {imdbError && (
+          <div className="mt-3 rounded-lg border border-red-700 bg-red-900/30 px-3 py-2 text-xs text-red-300">
+            {imdbError}
+          </div>
+        )}
+
+        {imdbDraft && (
+          <div className="mt-4 rounded-xl border border-zinc-700 bg-zinc-950/60 p-3">
+            <div className="flex gap-3">
+              {imdbDraft.posterImage ? (
+                <img
+                  src={imdbDraft.posterImage}
+                  alt={`Poster ${imdbDraft.title}`}
+                  className="h-28 w-20 shrink-0 rounded-md object-cover"
+                />
+              ) : (
+                <div className="flex h-28 w-20 shrink-0 items-center justify-center rounded-md bg-zinc-800 text-xs text-zinc-500">
+                  tanpa poster
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-semibold text-white">
+                  {imdbDraft.title}
+                </p>
+                <p className="text-xs text-zinc-400">
+                  {imdbDraft.year} · {imdbDraft.genre}
+                </p>
+                <p className="mt-1 line-clamp-3 text-xs text-zinc-500">
+                  {imdbDraft.synopsis}
+                </p>
+                {imdbDraft.suggestedCategory && (
+                  <p className="mt-1 text-xs text-emerald-400">
+                    Kategori cocok: {imdbDraft.suggestedCategory}
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Button
+                type="button"
+                onClick={applyImdbDraft}
+                className="rounded-lg bg-amber-400 px-4 font-semibold text-black hover:bg-amber-300"
+              >
+                Isi form ini
+              </Button>
+              <Button
+                type="button"
+                onClick={() => setImdbDraft(null)}
+                variant="outline"
+                className="rounded-lg border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white"
+              >
+                Batal
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+
       <form
         ref={formRef}
         onSubmit={onSubmit}

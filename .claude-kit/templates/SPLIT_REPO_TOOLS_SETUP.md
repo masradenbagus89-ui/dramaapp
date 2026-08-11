@@ -58,11 +58,10 @@ Build:
 npx tsup src/index.ts --format esm,cjs --dts
 ```
 
-Publish (GitHub Packages):
+Publish (GitHub Packages, manual oleh backend lead):
 ```bash
-git tag v1.0.0
-git push origin main --tags
-# GitHub Actions auto-publish ke GitHub Packages
+npm publish
+# butuh login sekali ke registry (lihat blok .npmrc di bawah)
 ```
 
 **Setup di frontend + backend:**

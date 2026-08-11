@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 // update-kit.mjs - Perbarui kit lintasAI di sebuah project ke versi terbaru (versi Node), via ambil-ulang bersih.
 //
-// Padanan update-kit.ps1. Alur atomic (tanpa setengah-jadi):
-//   1. Cadangkan .claude-kit/ lama -> .claude-kit.backup-<cap-waktu>
-//   2. Ambil (clone) versi baru dari GitHub ke .claude-kit/ baru
-//   3. Hapus .git/ internal supaya tak bentrok dengan git project kamu
-//   4. Jalankan ulang pemasang (-Force) supaya docs/ kamu TIDAK ditimpa
+// Alur atomic (tanpa setengah-jadi), sumber = paket npm yang SUDAH diunduh+diverifikasi npx:
+//   A. Siapkan (stage) kit baru di folder sementara (kit lama belum disentuh)
+//   B. Periksa kelengkapan kit baru sebelum menukar
+//   C. Tukar (2 rename = milidetik) + simpan cadangan .claude-kit.backup-<cap-waktu>
+//   4. Jalankan ulang pemasang (--force) supaya docs/ kamu TIDAK ditimpa
 //   5. Tampilkan beda CHANGELOG lama vs baru + langkah lanjut + peringatan keamanan
 //
 // ===========================================================================================
@@ -21,28 +21,25 @@
 //     - Gagal hubungi server saat cek versi     -> BATAL aman (tak memaksa update buta).
 //   AI mengonfirmasi ke staff di chat dulu, baru menjalankan dengan bendera yang sesuai.
 //
-// PENGGANTI POWERSHELL YANG DIPAKAI (suku cadang Node yang sudah ada):
-//   - removeGitMetadata (git-helpers.mjs)  -> hapus .git/ internal (Langkah 3).
-//   - addLintasAuditEntry (audit-helpers.mjs) -> catat keputusan keamanan GPG (lewati/lolos/bypass/gagal).
-//   v2.0.0: kit 100% Node. Langkah pasang-ulang (4) memanggil pemasang Node (setup-pola-b.mjs);
-//   Langkah cek-kesehatan (6) memanggil 'node kit.mjs doctor --skip-migrasi'. Tak ada lagi jalur .ps1.
+// MEKANISME salin: stageFromDirectory + validateKitContents + swapInKit (engine/kit-staging.mjs) +
+//   shouldCopyKitEntry (setup-pola-b.mjs) - identik dengan yang dipakai `npm create lintasai@latest`.
+//   Kit 100% Node. Langkah pasang-ulang (4) memanggil pemasang Node (setup-pola-b.mjs);
+//   Langkah cek-kesehatan (6) memanggil 'node kit.mjs doctor --skip-migrasi'. Tak ada lagi jalur .ps1/GPG.
 //
-// BATAS JUJUR (§4.6): operasi NYATA (ambil dari internet + GPG + pasang-ulang + doctor) hanya bisa
-//   diuji penuh saat owner RILIS + uji di mesin staff baru. Yang terverifikasi DI SINI = (a) semua
-//   fungsi-logika murni (CHANGELOG/tier/repo-tepercaya/bersih-cadangan) uji-banding identik vs PS,
-//   (b) jalur SIMULASI + cek-saja (tanpa jaringan) terstruktur benar. Real-run = uji lapangan owner.
+// BATAS JUJUR (§4.6): jalur update npm (siapkan->periksa->tukar + pasang-ulang + doctor) diuji
+//   end-to-end di tests/update-e2e.test.mjs (hermetik, tanpa jaringan). Fungsi-logika murni
+//   (CHANGELOG/tier/keputusan-update-npm/bersih-cadangan) diuji tersendiri. Real-run = uji lapangan owner.
 // ===========================================================================================
 import fs from 'node:fs'
 import path from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
-import { removeGitMetadata } from './lib/git-helpers.mjs'
-import { addLintasAuditEntry } from './lib/audit-helpers.mjs'
-import { stripBom, eqCI, backupStamp } from './lib/fs-text.mjs'
-import { getKitVersionFromChangelog } from './lib/version-detect.mjs'
-import { getLatestNpmVersion } from './lib/npm-query.mjs'
-import { stageFromDirectory, validateKitContents, discardStaging, swapInKit, findOrphanBackups } from './lib/kit-staging.mjs'
-import { acquireUpdateLock, pesanKunciDitolak } from './lib/update-lock.mjs'
+import { stripBom, eqCI, backupStamp } from './engine/fs-text.mjs'
+import { getKitVersionFromChangelog } from './engine/version-detect.mjs'
+import { getLatestNpmVersion } from './engine/npm-query.mjs'
+import { stageFromDirectory, validateKitContents, discardStaging, swapInKit, findOrphanBackups } from './engine/kit-staging.mjs'
+import { acquireUpdateLock, pesanKunciDitolak } from './engine/update-lock.mjs'
+import { invokeMigrateClientStructure } from './engine/migrate-client-struktur.mjs'
 import { shouldCopyKitEntry } from './setup-pola-b.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -50,38 +47,17 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 // ---- Konstanta (cermin update-kit.ps1) ----
 const DEFAULT_REPO_URL = 'https://github.com/ojokesusu/lintasAI.git'
 
-// Daftar repo TEPERCAYA (auto-lewati cek GPG untuk repo owner resmi). Filosofi: GPG = bukti SIAPA
-// (penanda-tangan tag); daftar-putih repo = bukti DARI MANA (sumber clone). Untuk repo owner resmi,
-// HTTPS+TLS + proteksi-branch GitHub sudah jamin integritas; GPG jadi lapis ke-3 yang boleh dilewati.
-export const DEFAULT_TRUSTED_REPOS = [
-  'https://github.com/ojokesusu/lintasAI.git',
-  'https://github.com/ojokesusu/lintasAI',
-  'git@github.com:ojokesusu/lintasAI.git',
-]
-
-// Daftar-putih URL untuk pra-cek anti-rantai-pasok (lebih ketat dari TrustedRepos: hanya .git resmi).
-const ALLOWED_REPO_URLS = ['https://github.com/ojokesusu/lintasAI.git']
-
 // Kata kunci Tier 2 (fitur/aturan baru) - spesifik supaya tak salah-vonis.
 const TIER2_KEYWORDS = [
   'tambah section', 'fitur baru', 'aturan AI', 'aturan baru', 'panduan baru',
   'section baru', 'rule baru', 'tambah fitur', 'tambah aturan', 'tambah panduan',
 ]
 
-// ---- Util kecil ---- (stripBom dari sumber bersama lib/fs-text.mjs, impor di atas)
+// ---- Util kecil ---- (stripBom dari sumber bersama engine/fs-text.mjs, impor di atas)
 function escapeRegex(s) { return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') }
-// eqCI -> sumber bersama lib/fs-text.mjs (impor di atas).
+// eqCI -> sumber bersama engine/fs-text.mjs (impor di atas).
 
-// Cap-waktu cadangan -> backupStamp (sumber bersama lib/fs-text.mjs).
-
-// Normalisasi URL repo (cermin Test-LintasTrustedRepo PS): trim spasi -> buang semua '/' di akhir ->
-// huruf-kecil -> buang akhiran '.git'. Supaya 'x/y.git' = 'x/y/' = 'x/y'.
-function normalizeRepoUrl(u) {
-  if (u == null) return null
-  let n = String(u).trim().replace(/\/+$/, '').toLowerCase()
-  if (n.endsWith('.git')) n = n.slice(0, -4)
-  return n
-}
+// Cap-waktu cadangan -> backupStamp (sumber bersama engine/fs-text.mjs).
 
 // Urai versi gaya .NET [version] untuk X.Y.Z (2-4 komponen numerik). Return array angka panjang-4
 // (komponen absen = -1, cermin .NET) atau null kalau gagal. JANGAN buang 'v' di sini (pemanggil yang buang).
@@ -201,35 +177,6 @@ export function decideNpmUpdate({
   }
 }
 
-// Bangun daftar repo tepercaya = bawaan + tambahan dari env LINTASAI_TRUSTED_REPOS (pisah koma).
-export function getTrustedRepos(env = process.env) {
-  const list = [...DEFAULT_TRUSTED_REPOS]
-  if (env && env.LINTASAI_TRUSTED_REPOS) {
-    const extra = String(env.LINTASAI_TRUSTED_REPOS).split(',').map((s) => s.trim()).filter(Boolean)
-    list.push(...extra)
-  }
-  return list
-}
-
-// Tiruan Test-LintasTrustedRepo: cek apakah repoUrl cocok daftar tepercaya (sesudah normalisasi).
-export function testTrustedRepo(repoUrl, trustedRepos = getTrustedRepos()) {
-  if (repoUrl == null || String(repoUrl).trim() === '') return false
-  const normalized = normalizeRepoUrl(repoUrl)
-  for (const trusted of trustedRepos) {
-    if (trusted == null || String(trusted).trim() === '') continue
-    if (normalized === normalizeRepoUrl(trusted)) return true
-  }
-  return false
-}
-
-// Pra-cek daftar-putih URL (anti-rantai-pasok). Cermin PS `$RepoUrl -in $allowedRepoUrls`: banding
-// PERSIS (TANPA normalisasi seperti testTrustedRepo) tapi TAK-peka huruf-besar-kecil (PS -in default
-// case-insensitive). Diperbaiki via cek-silang 06-22: dulu pakai .includes() (peka huruf) -> URL resmi
-// ber-huruf-besar salah-divonis "asing". Beda dari testTrustedRepo (yang utk lewati GPG + dinormalisasi).
-export function isAllowedRepoUrl(repoUrl) {
-  return ALLOWED_REPO_URLS.some((u) => eqCI(u, repoUrl))
-}
-
 // Tiruan Get-LatestChangelogEntry: ambil entri versi PALING ATAS (= terbaru) dari CHANGELOG.
 // Pola heading FLEKSIBEL (cermin PS): "## [1.2.3]" (Keep-a-Changelog) / "## v1.2.3" (gaya lama).
 // Return { version: '1.2.3' (tanpa 'v'), body: '...' } atau null. (Catatan: PS pakai \s* bukan \s+.)
@@ -284,20 +231,6 @@ export function getChangelogRangeBody(changelogPath, fromVersionExclusive, toVer
   } catch { return '' }
 }
 function cmpArr(a, b) { for (let i = 0; i < 4; i++) { if (a[i] !== b[i]) return a[i] < b[i] ? -1 : 1 } return 0 }
-
-// Pesan panduan AWAM saat gagal hubungi repo standar tim (ls-remote / clone). Penyebab tersering di
-// lapangan = (a) repo TIM bersifat PRIVAT & kamu belum diundang/login Git, atau (b) Git belum
-// terpasang. Pesan git mentah ("could not read Username for https://github.com") tak dimengerti staff
-// non-programmer -> terjemahkan + beri langkah konkret. (Bukan selalu "jaringan" -> jangan menyesatkan.)
-function printRepoAccessHint(repoUrl) {
-  console.log('')
-  console.log('Kemungkinan penyebab (cek dari atas ke bawah):')
-  console.log('  1. Repo standar tim bersifat PRIVAT + kamu belum punya akses. Minta owner UNDANG akun')
-  console.log("     GitHub-mu ke repo, lalu login Git sekali (Git Credential Manager / 'gh auth login').")
-  console.log('  2. Git belum terpasang di komputer ini. Pasang dari https://git-scm.com/ lalu buka terminal baru.')
-  console.log('  3. Sedang offline / jaringan kantor memblokir GitHub.')
-  console.log(`  Repo yang dicoba: ${repoUrl}`)
-}
 
 // Tiruan Test-LintasChangelogLabel: deteksi label [SECURITY]/[BREAKING]/[SCAN-REQUIRED] di POSISI
 // KONVENSIONAL awal baris. Dua pola (cermin update-kit.ps1):
@@ -377,6 +310,96 @@ export function formatUpdateSummary(tier, entry) {
   else lines.push(body)
   lines.push('============================================================')
   return lines.join('\n') + '\n' // tiap AppendLine PS tambah akhir-baris (termasuk yang terakhir)
+}
+
+// Laporan "Langkah 5" update-kit: deteksi versi baru dari CHANGELOG kit BARU + pindai label penting +
+// susun kotak PERHATIAN + saran langkah lanjut. Diiris dari badan orkestrator runUpdateInner (refactor
+// hemat-token) mengikuti pola return-lines idiomatik repo (buildGuardStatusLines/buildCommitGuidance/
+// formatUpdateSummary): fungsi MURNI (cuma baca CHANGELOG, tak menulis apa pun, tak process.exit) ->
+// mudah diuji unit tanpa spawn (tests/update-report-lock.test.mjs). Pemanggil (runUpdateInner) mencetak
+// tiap baris apa adanya -> keluaran byte-identik dengan versi inline lama. Return string[].
+export function buildPostUpdateReportLines({ kitDir, currentVersion }) {
+  const lines = []
+  const newChangelog = path.join(kitDir, 'CHANGELOG.md')
+  let newVersion = 'unknown'
+  let newEntry = null
+  if (fs.existsSync(newChangelog)) {
+    newEntry = getLatestChangelogEntry(newChangelog)
+    if (newEntry && newEntry.version) newVersion = String(newEntry.version).replace(/^v/, '').trim()
+  }
+
+  lines.push('')
+  lines.push('=== Update selesai ===')
+  lines.push(`Versi lama   : v${currentVersion}`)
+  lines.push(`Versi baru   : v${newVersion}`)
+
+  if (currentVersion !== newVersion && newVersion !== 'unknown') {
+    lines.push('')
+    lines.push(`Update v${currentVersion} -> v${newVersion} sukses!`)
+
+    let breakingFound = false, scanRequiredFound = false, securityFound = false
+    if (newEntry && newEntry.body) {
+      let entryText = newEntry.body
+      // Pindai SELURUH rentang (versi-lama, versi-baru] supaya label di versi-tengah yang dilewati kebaca.
+      if (currentVersion && currentVersion !== 'unknown') {
+        const rangeBody = getChangelogRangeBody(newChangelog, currentVersion, newVersion)
+        if (rangeBody && rangeBody.trim() !== '') entryText = rangeBody
+      }
+      if (testChangelogLabel(entryText, 'BREAKING')) breakingFound = true
+      if (testChangelogLabel(entryText, 'SCAN-REQUIRED')) scanRequiredFound = true
+      if (testChangelogLabel(entryText, 'SECURITY')) securityFound = true
+    }
+
+    if (breakingFound || scanRequiredFound || securityFound) {
+      lines.push('')
+      lines.push('================================================================')
+      lines.push('  PERHATIAN: VERSI INI ADA PERUBAHAN PENTING')
+      lines.push('================================================================')
+      // Penanda mesin-baca untuk AI (Keranjang 1 "eager" - rules/4.5-update-strategy.md).
+      // Perintah ini skrip terminal; ia TAK bisa memunculkan popup sendiri - yang memunculkan popup
+      // adalah AI yang membaca keluaran ini. Penanda dibuat eksplisit supaya AI tak perlu menebak dari
+      // prosa: ADA penanda -> WAJIB tawarkan popup perbaiki; TAK ada -> DIAM (Tier 1/2 tak boleh
+      // mengganggu kerja klien). Label dipisah koma supaya mudah dibaca mesin maupun manusia.
+      const labelPenting = [securityFound && 'SECURITY', breakingFound && 'BREAKING', scanRequiredFound && 'SCAN-REQUIRED'].filter(Boolean)
+      lines.push(`  [LINTASAI:PERLU-TINDAKAN] ${labelPenting.join(', ')}`)
+      lines.push('  (AI: ini Keranjang 1 - WAJIB tawarkan popup perbaiki ke user, jangan diam.)')
+      if (securityFound) {
+        lines.push('  [SECURITY] Perbaikan KEAMANAN - pasang SEGERA, jangan tunda.')
+        lines.push('             (Walau update kecil, ini menambal lubang keamanan.)')
+      }
+      if (breakingFound) {
+        lines.push('  [BREAKING] Ada perubahan yang tidak backward-compatible.')
+        lines.push(`             Baca CHANGELOG entri v${newVersion} sebelum lanjut kerja.`)
+      }
+      if (scanRequiredFound) {
+        lines.push('  [SCAN-REQUIRED] Wajib regenerate docs/ supaya kompatibel.')
+        lines.push('                  Re-paste isi .claude-kit\\PROJECT_LIFECYCLE_PROMPT_v1.md (Stage 2: Bikin Catatan Proyek)')
+        lines.push('                  ke Claude Code untuk regenerate docs lama.')
+      }
+      lines.push('================================================================')
+    }
+
+    lines.push('')
+    lines.push('Langkah lanjut yang disarankan:')
+    lines.push(`  1. Baca CHANGELOG entri [v${newVersion}]:`)
+    lines.push(`     ${newChangelog}`)
+    lines.push('  2. Verifikasi berkas baru di docs/ + .github/ (kalau ada di catatan rilis).')
+    lines.push('  3. Versi kit dibaca OTOMATIS dari baris atas .claude-kit/CHANGELOG.md (kini')
+    lines.push(`     v${newVersion}) - TIDAK perlu edit AGENTS.md manual. Kalau AGENTS.md-mu masih`)
+    lines.push("     punya baris lama 'Versi kit di .claude-kit/: vX.Y.Z', itu tak dipakai lagi (boleh dihapus).")
+    if (!breakingFound && !scanRequiredFound && !securityFound) {
+      lines.push('  4. Tidak ada label [BREAKING]/[SCAN-REQUIRED]/[SECURITY] - docs/ kamu AMAN, tak perlu scan ulang.')
+      lines.push('  5. Kalau CHANGELOG sebut perubahan alur di JALANKAN_KIT.md:')
+      lines.push('     Re-paste isi .claude-kit\\JALANKAN_KIT.md ke Claude Code.')
+    } else {
+      lines.push('  4. WAJIB ikuti instruksi PERHATIAN di atas sebelum kerja lanjut.')
+    }
+  } else if (currentVersion === newVersion) {
+    lines.push('')
+    lines.push(`Tidak ada perubahan versi (v${currentVersion}). Update mungkin cuma perbaikan kecil.`)
+    lines.push('Cek CHANGELOG untuk detail.')
+  }
+  return lines
 }
 
 // Tiruan Invoke-BackupCleanup: bersihkan berkas cadangan (*.bak / *.backup-*) di akar project +
@@ -493,10 +516,6 @@ export function parseArgs(argv) {
     yesDeleteNoBackup: false,
     projectRoot: null,
     noGui: false,
-    // Sumber bahan update. Default (false) = paket npm yang SUDAH diunduh+diverifikasi npx -> jalan
-    // untuk SEMUA klien tanpa akses repo privat. --from-repo = jalur lama (git clone + GPG), untuk
-    // owner/tim yang diundang ke repo (uji pra-rilis). Lihat lib/kit-staging.mjs + lib/npm-query.mjs.
-    fromRepo: false,
     // Izinkan TURUN versi (TUF anti-rollback default menolaknya). Sengaja tanpa alias singkat: ini
     // pintu darurat sadar, bukan bendera harian.
     allowDowngrade: false,
@@ -514,7 +533,6 @@ export function parseArgs(argv) {
     else if (t === '--cleanup-backups' || t === '--cleanupbackups') a.cleanupBackups = true
     else if (t === '--yes-delete-no-backup' || t === '--yesdeletenobackup') a.yesDeleteNoBackup = true
     else if (t === '--no-gui' || t === '--nogui') a.noGui = true
-    else if (t === '--from-repo' || t === '--fromrepo') a.fromRepo = true
     else if (t === '--allow-downgrade' || t === '--allowdowngrade') a.allowDowngrade = true
     else if (t === '--project-root' || t === '--projectroot') a.projectRoot = argv[++i] ?? null
   }
@@ -524,32 +542,6 @@ export function parseArgs(argv) {
 // ============================================================================================
 // ORKESTRATOR UTAMA
 // ============================================================================================
-// Pembungkus git tipis (cermin '& git ...'). Tak melempar; pemanggil cek .status.
-function runGit(args, opts = {}) {
-  const r = spawnSync('git', args, { cwd: opts.cwd, encoding: 'utf8', timeout: opts.timeout || 120000 })
-  return { status: r.status, stdout: r.stdout || '', stderr: r.stderr || '', error: r.error }
-}
-
-// Urutkan daftar tag 'vX.Y.Z' versi-menurun (terbaru dulu); buang duplikat. Return array.
-function sortTagsDesc(tags) {
-  const uniq = [...new Set(tags)]
-  return uniq.sort((a, b) => {
-    const c = compareDotNetVersion(String(a).replace(/^v/, ''), String(b).replace(/^v/, ''))
-    return c === null ? 0 : -c // menurun
-  })
-}
-
-// Parse output 'git ls-remote --tags' jadi daftar tag 'vX.Y.Z' (urut menurun).
-function parseRemoteTags(stdout) {
-  const re = /refs\/tags\/(v\d+\.\d+\.\d+)(?:\^\{\})?$/
-  const tags = []
-  for (const line of String(stdout).split(/\r\n|\r|\n/)) {
-    const m = line.match(re)
-    if (m) tags.push(m[1])
-  }
-  return sortTagsDesc(tags)
-}
-
 // Pembungkus: pegang kunci "cuma 1 update per project" selama kerja yang MENGUBAH berkas.
 // Kenapa dibungkus (bukan disisipkan ke dalam): runUpdateInner punya belasan titik `return`; try/finally
 // di sini menjamin kunci SELALU dilepas tanpa harus menaruh release() di tiap cabang (satu cabang lupa =
@@ -605,16 +597,6 @@ function runUpdateInner(argv) {
     catch { console.log(`ERROR: --project-root tidak ditemukan: ${args.projectRoot}`); return 1 }
   }
   console.log(`Root proyek   : ${projectRoot}`)
-
-  // ---- -Force = alias usang untuk --allow-untrusted-repo (peringatan, lalu set) ----
-  if (args.force) {
-    console.log('')
-    console.log('[USANG] Bendera --force. Pakai --allow-untrusted-repo.')
-    console.log('        --force masih bekerja sebagai alias lewati-daftar-putih-URL, tapi akan dihapus nanti.')
-    console.log('        Untuk lewati GPG, pakai --allow-unsigned-tag (bukan --force).')
-    console.log('')
-    if (!args.allowUntrustedRepo) args.allowUntrustedRepo = true
-  }
 
   // ---- Resolusi path (cermin: kalau --project-root eksplisit, kit = projectRoot/.claude-kit) ----
   const kitDir = projectRootExplicit ? path.join(projectRoot, '.claude-kit') : __dirname
@@ -673,34 +655,10 @@ function runUpdateInner(argv) {
   // `npx lintasai@latest update` itu = paket npm resmi yang baru diunduh & diverifikasi npm. Tapi kalau
   // dijalankan langsung dari repo-dev (`node update-kit.mjs ...`), yang tersalin = repo-dev itu - termasuk
   // kerjaan yang belum di-commit. Menyebutnya "paket npm resmi" tanpa syarat = klaim yang bisa keliru.
-  console.log(`Sumber        : ${args.fromRepo ? `repo tim (${args.repoUrl}, branch ${args.branch})` : `paket lintasAI yang sedang berjalan (${__dirname})`}`)
+  console.log(`Sumber        : paket lintasAI yang sedang berjalan (${__dirname})`)
   console.log(`Backup        : ${args.noBackup ? 'DIMATIKAN (--no-backup)' : backupDir}`)
   if (args.dryRun) console.log('Mode          : SIMULASI (tidak ada perubahan berkas)')
   console.log('')
-
-  // ---- Pra-cek: git terpasang (HANYA jalur repo - jalur npm tak butuh git sama sekali) ----
-  if (args.fromRepo) {
-    const gitVer = runGit(['--version'])
-    if (gitVer.error || gitVer.status !== 0) {
-      console.log('ERROR: git tidak terpasang atau tidak di PATH.')
-      console.log('       Pasang dari https://git-scm.com/ lalu buka terminal baru.')
-      return 1
-    }
-    console.log(`OK    Git terdeteksi: ${(gitVer.stdout || '').trim()}`)
-  }
-
-  // ---- Pra-cek: daftar-putih URL (anti-rantai-pasok) - hanya relevan kalau bahan diambil dari repo ----
-  if (args.fromRepo && !args.checkOnly && !isAllowedRepoUrl(args.repoUrl)) {
-    console.log(`PERINGATAN: Repo URL '${args.repoUrl}' BUKAN di daftar-putih. Default: github.com/ojokesusu/lintasAI.`)
-    console.log('PERINGATAN: Detail setup repo tepercaya: docs/SIGNED_RELEASE.md')
-    if (!args.allowUntrustedRepo) {
-      // Non-interaktif: default-AMAN = BATAL. Untuk lanjut, pakai --allow-untrusted-repo (atau --force).
-      console.log('BATAL: repo di luar daftar-putih. Kalau yakin sumbernya tepercaya, ulangi dengan --allow-untrusted-repo.')
-      console.log('       (Verifikasi dulu URL-nya ke owner lewat jalur aman sebelum memaksa.)')
-      return 1
-    }
-    console.log('--allow-untrusted-repo aktif: lewati cek daftar-putih (TIDAK AMAN).')
-  }
 
   // ---- Pra-cek: deteksi versi kit sekarang (dari .install-manifest.json) ----
   const manifestPath = path.join(kitDir, '.install-manifest.json')
@@ -729,56 +687,6 @@ function runUpdateInner(argv) {
     currentVersion = 'unknown'
   }
 
-  // ---- Pra-cek: tanya tag terbaru di remote (cuma kalau ada baseline + bukan SIMULASI) ----
-  // HANYA jalur repo: `git ls-remote` ke repo PRIVAT = persis yang gagal di komputer klien.
-  let latestVersion = null
-  if (args.fromRepo && canCheckRemote && !args.dryRun) {
-    console.log('')
-    console.log('Cek versi terbaru di remote...')
-    let lsRemoteOk = false
-    const ls = runGit(['ls-remote', '--tags', args.repoUrl])
-    if (ls.status === 0 && ls.stdout) {
-      lsRemoteOk = true
-      const tags = parseRemoteTags(ls.stdout)
-      if (tags.length > 0) latestVersion = tags[0]
-    }
-
-    if (!lsRemoteOk) {
-      console.log('WARN  Gagal mengambil daftar versi dari repo standar tim.')
-      printRepoAccessHint(args.repoUrl)
-      if (args.checkOnly) {
-        console.log('')
-        console.log('[i] Mode cek-saja: belum bisa banding versi. Beresin akses di atas lalu coba lagi.')
-        return 0
-      }
-      // Non-interaktif: tak memaksa update buta -> BATAL aman (kit lama TIDAK diubah).
-      console.log('')
-      console.log('Dibatalkan (aman): kit lama TIDAK diubah. Beresin akses di atas lalu jalankan update lagi.')
-      console.log('')
-      console.log('Catatan: kalau kamu memang tak punya akses ke repo tim, JANGAN pakai --from-repo -')
-      console.log("         jalankan 'npx lintasai@latest update' (sumber npm, tak butuh akun GitHub).")
-      // Kode-keluar WAJIB bukan 0: update TIDAK terjadi. Manusia paham dari pesan di atas, tapi
-      // skrip/CI/AI hanya melihat kode-keluar - `return 0` di sini pernah membuat mereka menyimpulkan
-      // "update sukses" padahal tak ada apa pun yang berubah (audit 2026-07-15).
-      return 1
-    } else if (latestVersion == null || String(latestVersion).trim() === '') {
-      console.log('WARN  Tag remote tak ditemukan/terbaca - lanjut update dengan peringatan.')
-    } else {
-      const currentNorm = String(currentVersion).replace(/^v/, '').trim()
-      const latestNorm = String(latestVersion).replace(/^v/, '').trim()
-      if (currentNorm === latestNorm) {
-        console.log(`[OK] Sudah versi terbaru (${currentVersion}). Tidak ada update.`)
-        return 0
-      }
-      const cmp = compareDotNetVersion(currentNorm, latestNorm)
-      if (cmp !== null && cmp >= 0) {
-        console.log(`[OK] Versi lokal (${currentVersion}) >= remote terbaru (${latestVersion}). Tidak ada update.`)
-        return 0
-      }
-      console.log(`[INFO] Update tersedia: ${currentVersion} -> ${latestVersion}`)
-    }
-  }
-
   // ---- JALUR npm (DEFAULT): bahan = paket lintasai yang SUDAH diunduh & diverifikasi npx ----
   // Kenapa bukan mengunduh sendiri: saat klien mengetik `npx lintasai@latest update`, npm SUDAH menarik
   // + memverifikasi integritas (sha512) paket ini untuk bisa menjalankan perintah ini. Paketnya sudah
@@ -786,7 +694,7 @@ function runUpdateInner(argv) {
   // .npmrc, auth, verifikasi) yang semuanya sudah beres di npm = permukaan bug baru tanpa manfaat.
   // Mekanisme salinnya pun bukan barang baru: identik dengan yang dipakai `npm create lintasai@latest`
   // tiap hari (setup-pola-b.mjs mode npx: cpSync + shouldCopyKitEntry).
-  if (!args.fromRepo) {
+  {
     const selfKitDir = __dirname
     const selfVersion = getKitVersionFromChangelog(path.join(selfKitDir, 'CHANGELOG.md'))
     console.log('')
@@ -885,212 +793,19 @@ function runUpdateInner(argv) {
     console.log('         editan itu akan diganti versi baru; versi lamamu tetap aman di folder cadangan.')
   }
 
-  // Pulihkan folder cadangan kit lama (fail-closed). Dipakai saat clone gagal ATAU verifikasi GPG
-  // gagal/tak-bisa-diikat -> JANGAN biarkan kit BARU yang belum lolos pemeriksaan tetap aktif;
-  // kembalikan kit lama (yang sudah terverifikasi). Audit P2 2026-06-23: dulu jalur abort-GPG
-  // `return 1` TANPA pulihkan cadangan -> kit tak-terverifikasi malah jadi aktif (fail-closed TERBALIK).
-  function restoreBackupOrWarn() {
-    if (!args.noBackup && fs.existsSync(backupDir)) {
-      console.log('')
-      console.log('PEMULIHAN: kembalikan folder cadangan (kit lama yang sudah terverifikasi)...')
-      try {
-        if (fs.existsSync(kitDir)) { try { fs.rmSync(kitDir, { recursive: true, force: true }) } catch { /* best-effort */ } }
-        fs.renameSync(backupDir, kitDir)
-        console.log(`OK    Cadangan dipulihkan. Kit lama aktif lagi di ${kitDir}`)
-      } catch (e) {
-        console.log(`GAGAL pulihkan: ${e.message}`)
-        console.log(`       Pulihkan manual: pindahkan '${backupDir}' ke '${kitDir}'`)
-      }
-    } else {
-      console.log('TIDAK ada cadangan untuk dipulihkan (--no-backup aktif atau folder cadangan tak ada).')
-    }
-  }
-
-  // ---- Langkah 1: Cadangkan .claude-kit/ lama ----
-  // Jalur npm sudah melakukannya di Langkah A-C (siapkan -> periksa -> tukar), jadi Langkah 1-3
-  // (cadangkan/clone/hapus .git) TIDAK berlaku di sana. Langkah 2b + 3 punya penjaga `.git` sendiri
-  // sehingga otomatis melewati diri; hanya Langkah 1 & 2 yang perlu dijaga eksplisit di sini.
-  if (!args.fromRepo) {
-    // (tanpa keluaran: laporan cadangan sudah tercetak di Langkah C)
-  } else if (!args.noBackup) {
-    if (args.dryRun) {
-      console.log(`[SIMULASI] Akan cadangkan: ${kitDir} -> ${backupDir}`)
-    } else {
-      console.log('')
-      console.log('Langkah 1: Cadangkan .claude-kit/ lama...')
-      try {
-        fs.renameSync(kitDir, backupDir)
-        console.log(`OK    Cadangan: ${backupDir}`)
-      } catch (e) {
-        console.log(`ERROR: Cadangan gagal: ${e.message}`)
-        console.log('       Mungkin ada berkas terkunci (editor terbuka, antivirus scan).')
-        return 1
-      }
-    }
-  } else {
-    console.log('Langkah 1: Lewati cadangan (--no-backup aktif)')
-    // Tanpa cadangan = hapus PERMANEN (tak bisa dibalik). Non-interaktif: WAJIB --yes-delete-no-backup.
-    if (!args.dryRun) {
-      if (!args.yesDeleteNoBackup) {
-        console.log('BATAL: --no-backup akan HAPUS PERMANEN kit lama tanpa cadangan.')
-        console.log('       Kalau yakin, ulangi dengan --yes-delete-no-backup (atau jalankan TANPA --no-backup supaya aman).')
-        return 1
-      }
-      try {
-        fs.rmSync(kitDir, { recursive: true, force: true })
-        console.log('OK    Kit lama dihapus.')
-      } catch (e) {
-        console.log(`ERROR: Gagal hapus kit lama: ${e.message}`)
-        return 1
-      }
-    }
-  }
-
-  // ---- Langkah 2: Ambil (clone) versi baru ke .claude-kit/ baru (HANYA jalur repo) ----
-  if (args.fromRepo) {
-    console.log('')
-    console.log('Langkah 2: Ambil versi baru dari repo tim...')
-    // Pin ke TAG RILIS (bukan branch 'main' yang berjalan) supaya mendarat di kode sama dgn pasang-baru npm.
-    let cloneRef = args.branch
-    if (args.branch === 'main' && latestVersion != null && String(latestVersion).trim() !== '') {
-      cloneRef = latestVersion
-      console.log(`  Pin ke versi rilis: ${cloneRef} (bukan 'main' yang bisa berisi kerjaan belum-rilis)`)
-    }
-
-    // PAGAR (audit 2026-07-15): kalau pin-ke-tag GAGAL, cloneRef diam-diam tetap 'main' = memasang
-    // kerjaan BELUM-RILIS ke project - persis yang komentar di atas bersumpah dihindari. Jalur gagalnya
-    // nyata: catatan-pasang hilang (ia di-gitignore, jadi tak pernah ikut ter-clone; dan Langkah 4 yang
-    // menulisnya bisa gagal) -> cek versi dilewati -> latestVersion null -> cloneRef 'main'. Sekarang
-    // BERHENTI kecuali diminta eksplisit `--branch main`.
-    if (cloneRef === 'main' && !args.dryRun) {
-      const brancHEksplisit = argv.some((t) => String(t).toLowerCase() === '--branch')
-      if (!brancHEksplisit) {
-        console.log('')
-        console.log("BERHENTI: tak bisa memastikan versi rilis, jadi update akan mengambil branch 'main'")
-        console.log('          yang bisa berisi kerjaan BELUM dirilis. Itu tidak aman untuk dipasang.')
-        console.log('          Kit kamu TIDAK diubah.')
-        console.log("          Kalau memang sengaja mau 'main', ulangi dengan: --branch main")
-        restoreBackupOrWarn()
-        return 1
-      }
-      console.log("PERINGATAN: memasang dari branch 'main' atas permintaan eksplisit (bisa berisi kerjaan belum-rilis).")
-    }
-
-    if (args.dryRun) {
-      console.log(`[SIMULASI] git clone --depth 1 -b ${cloneRef} ${args.repoUrl} '${kitDir}'`)
-      console.log(`           (real run: pin ke tag rilis terbaru; '${cloneRef}' di SIMULASI = fallback karena cek-versi dilewati)`)
-    } else {
-      let cloneOk = false
-      let cloneErrorMsg = ''
-      const clone = runGit(['clone', '--depth', '1', '-b', cloneRef, args.repoUrl, '.claude-kit'], { cwd: projectRoot })
-      if (clone.error) {
-        cloneErrorMsg = `git clone gagal dijalankan: ${clone.error.message}`
-      } else if (clone.status === 0) {
-        cloneOk = true
-        console.log('OK    Ambil selesai.')
-      } else {
-        cloneErrorMsg = `git clone kode-keluar: ${clone.status}. ${(clone.stderr || '').trim()}`
-      }
-
-      if (!cloneOk) {
-        console.log('')
-        console.log(`ERROR: ${cloneErrorMsg}`)
-        printRepoAccessHint(args.repoUrl)
-        // Pulihkan cadangan (WAJIB jalan kalau clone gagal).
-        restoreBackupOrWarn()
-        return 1
-      }
-    }
-  }
-
-  // ---- Langkah 2b: Verifikasi tanda tangan tag (GPG) sebelum hapus .git/ ----
-  // FAIL-CLOSED: kalau verifikasi gagal -> BATAL, kecuali --allow-unsigned-tag.
-  if (!args.dryRun && fs.existsSync(path.join(kitDir, '.git'))) {
-    console.log('')
-    console.log('Langkah 2b: Verifikasi tanda tangan tag (GPG)...')
-
-    if (testTrustedRepo(args.repoUrl)) {
-      console.log(`[OK] Repo URL: ${args.repoUrl} (repo owner tepercaya, cek GPG dilewati)`)
-      addLintasAuditEntry({ source: 'update-kit.mjs', action: 'gpg-check-skipped', detail: `repo=${args.repoUrl} branch=${args.branch} reason=trusted-repo-whitelist`, auditDir: kitDir })
-    } else {
-      // Resolusi nama tag yang menunjuk HEAD hasil clone.
-      let resolvedTag = null
-      const describe = runGit(['-C', kitDir, 'describe', '--exact-match', '--tags', 'HEAD'])
-      if (describe.status === 0 && describe.stdout) {
-        resolvedTag = String(describe.stdout).split(/\r\n|\r|\n/)[0].trim() || null
-        if (resolvedTag) console.log(`  Tag di HEAD (describe --exact-match): ${resolvedTag}`)
-      }
-      // Fallback: tag terbaru dari ls-remote (kalau HEAD bukan commit ber-tag).
-      if (!resolvedTag) {
-        console.log('  HEAD bukan tag tepat - fallback ke tag terbaru via ls-remote...')
-        const lsTags = runGit(['ls-remote', '--tags', args.repoUrl])
-        if (lsTags.status === 0 && lsTags.stdout) {
-          const tags = parseRemoteTags(lsTags.stdout)
-          if (tags.length > 0) {
-            resolvedTag = tags[0]
-            console.log(`  Tag terbaru remote: ${resolvedTag}`)
-            // Ambil object tag spesifik supaya verify-tag bisa membacanya.
-            runGit(['-C', kitDir, 'fetch', '--depth', '1', 'origin', `refs/tags/${resolvedTag}:refs/tags/${resolvedTag}`])
-          }
-        }
-      }
-
-      if (!resolvedTag) {
-        if (args.allowUnsignedTag) {
-          console.log('PERINGATAN: Tak ada tag GPG yang bisa di-resolve, tapi --allow-unsigned-tag aktif. Lewati verifikasi (TIDAK AMAN).')
-        } else {
-          console.log('BATAL: tak ada tag yang bisa di-resolve dari HEAD maupun ls-remote (rilis belum di-tag?).')
-          console.log('       Pakai --allow-unsigned-tag untuk lewati (TIDAK AMAN). Setup kunci publik: docs/SIGNED_RELEASE.md')
-          restoreBackupOrWarn() // fail-closed: jangan biarkan kit baru tak-terverifikasi aktif (audit P2).
-          return 1
-        }
-      } else {
-        const verify = runGit(['-C', kitDir, 'verify-tag', resolvedTag])
-        if (verify.status === 0) {
-          console.log(`[OK] Tanda tangan GPG tag ${resolvedTag} terverifikasi`)
-          addLintasAuditEntry({ source: 'update-kit.mjs', action: 'gpg-check-passed', detail: `repo=${args.repoUrl} tag=${resolvedTag}`, auditDir: kitDir })
-          // P1 (audit 2026-06-23): IKAT isi yang dipasang ke commit tag terverifikasi. verify-tag
-          // HANYA memeriksa tanda tangan TAG, bukan menjamin isi yang di-clone (HEAD 'main' yang
-          // bergerak, atau clone yang mendarat di branch) SAMA dengan commit bertanda-tangan itu.
-          // checkout mengikat isi terpasang = isi terverifikasi (pola docs/SIGNED_RELEASE.md:111).
-          // Gagal mengikat -> perlakukan sebagai gagal verifikasi (fail-closed: pulihkan kit lama).
-          const bind = runGit(['-C', kitDir, 'checkout', '--quiet', `refs/tags/${resolvedTag}`])
-          if (bind.status !== 0) {
-            const bindDetail = `${(bind.stdout || '').trim()} ${(bind.stderr || '').trim()}`.trim()
-            console.log(`[GAGAL] Tak bisa mengikat isi ke commit tag terverifikasi ${resolvedTag}${bindDetail ? ' (' + bindDetail + ')' : ''}.`)
-            addLintasAuditEntry({ source: 'update-kit.mjs', action: 'gpg-bind-failed', detail: `repo=${args.repoUrl} tag=${resolvedTag} aborted=true`, auditDir: kitDir })
-            console.log('BATAL: isi terpasang tak bisa dipastikan = isi yang terverifikasi.')
-            restoreBackupOrWarn() // fail-closed: kembalikan kit lama terverifikasi (audit P1).
-            return 1
-          }
-          console.log(`[OK] Isi terpasang diikat ke commit tag ${resolvedTag} (yang dipasang = yang terverifikasi).`)
-        } else {
-          console.log(`[GAGAL] Tag ${resolvedTag} bukan GPG-signed valid (atau kunci publik owner belum di-import)`)
-          const detail = `${(verify.stdout || '').trim()} ${(verify.stderr || '').trim()}`.trim()
-          if (detail) console.log(`Detail: ${detail}`)
-          console.log('Setup kunci publik owner: docs/SIGNED_RELEASE.md')
-          if (args.allowUnsignedTag) {
-            console.log('PERINGATAN: Bypass via --allow-unsigned-tag aktif: lanjut tanpa verifikasi (TIDAK AMAN).')
-            addLintasAuditEntry({ source: 'update-kit.mjs', action: 'gpg-check-bypassed', detail: `repo=${args.repoUrl} tag=${resolvedTag} reason=AllowUnsignedTag-flag UNSAFE=true`, auditDir: kitDir })
-          } else {
-            addLintasAuditEntry({ source: 'update-kit.mjs', action: 'gpg-check-failed', detail: `repo=${args.repoUrl} tag=${resolvedTag} aborted=true`, auditDir: kitDir })
-            console.log(`BATAL: verify-tag ${resolvedTag} gagal. Pakai --allow-unsigned-tag untuk lewati (TIDAK AMAN).`)
-            restoreBackupOrWarn() // fail-closed: kembalikan kit lama terverifikasi (audit P2).
-            return 1
-          }
-        }
-      }
-    }
-  }
-
-  // ---- Langkah 3: Hapus .git/ internal (pakai suku cadang Node removeGitMetadata) ----
+  // ---- Langkah 3b: Migrasi STRUKTUR artefak klien (ADR-027 v3.0.0 - lib/->engine/, workflows/->rules/) ----
+  // Klien v1/v2 punya command hook di .claude/settings.json yang masih menunjuk `.claude-kit/lib/*`.
+  // Kit baru (engine/) sudah terpasang -> path lib/ itu basi (folder lib/ ikut pindah ke cadangan) ->
+  // hook mati diam-diam. Betulkan DI SINI, SEBELUM Langkah 4: kalau ditaruh SESUDAH setup-pola-b,
+  // ensure-*-hook keburu menganggap hook "sudah ada" (penandanya nama-berkas, BUTA segmen path) ->
+  // path lib/ basi tak pernah dibetulkan. IDEMPOTEN: klien yang sudah v3 (tak ada pola lama) = no-op.
   console.log('')
-  console.log('Langkah 3: Hapus .git/ internal supaya tak bentrok dengan git proyek...')
-  if (args.dryRun) {
-    console.log(`[SIMULASI] hapus folder ${path.join(kitDir, '.git')}`)
-  } else if (fs.existsSync(path.join(kitDir, '.git'))) {
-    if (removeGitMetadata(kitDir)) console.log('OK    .git/ internal dihapus.')
-    else console.log(`WARN  Gagal hapus .git/. Hapus manual folder: ${path.join(kitDir, '.git')}`)
+  console.log('Langkah 3b: Migrasi struktur artefak klien (settings.json: path lib/->engine/, workflows/->rules/)...')
+  try {
+    invokeMigrateClientStructure(projectRoot, { dryRun: args.dryRun })
+  } catch (e) {
+    console.log(`WARN  Migrasi struktur klien bermasalah: ${e.message}`)
+    console.log('      Kit sudah terpasang; betulkan referensi path lama di .claude/settings.json manual bila perlu.')
   }
 
   // ---- Langkah 4: Jalankan ulang pemasang (-Force, anti-timpa docs/) ----
@@ -1114,85 +829,9 @@ function runUpdateInner(argv) {
 
   // ---- Langkah 5: Deteksi versi baru + beda CHANGELOG + peringatan label ----
   if (!args.dryRun) {
-    const newChangelog = path.join(kitDir, 'CHANGELOG.md')
-    let newVersion = 'unknown'
-    let newEntry = null
-    if (fs.existsSync(newChangelog)) {
-      newEntry = getLatestChangelogEntry(newChangelog)
-      if (newEntry && newEntry.version) newVersion = String(newEntry.version).replace(/^v/, '').trim()
-    }
-
-    console.log('')
-    console.log('=== Update selesai ===')
-    console.log(`Versi lama   : v${currentVersion}`)
-    console.log(`Versi baru   : v${newVersion}`)
-
-    if (currentVersion !== newVersion && newVersion !== 'unknown') {
-      console.log('')
-      console.log(`Update v${currentVersion} -> v${newVersion} sukses!`)
-
-      let breakingFound = false, scanRequiredFound = false, securityFound = false
-      if (newEntry && newEntry.body) {
-        let entryText = newEntry.body
-        // Pindai SELURUH rentang (versi-lama, versi-baru] supaya label di versi-tengah yang dilewati kebaca.
-        if (currentVersion && currentVersion !== 'unknown') {
-          const rangeBody = getChangelogRangeBody(newChangelog, currentVersion, newVersion)
-          if (rangeBody && rangeBody.trim() !== '') entryText = rangeBody
-        }
-        if (testChangelogLabel(entryText, 'BREAKING')) breakingFound = true
-        if (testChangelogLabel(entryText, 'SCAN-REQUIRED')) scanRequiredFound = true
-        if (testChangelogLabel(entryText, 'SECURITY')) securityFound = true
-      }
-
-      if (breakingFound || scanRequiredFound || securityFound) {
-        console.log('')
-        console.log('================================================================')
-        console.log('  PERHATIAN: VERSI INI ADA PERUBAHAN PENTING')
-        console.log('================================================================')
-        // Penanda mesin-baca untuk AI (Keranjang 1 "eager" - workflows/4.5-update-strategy.md).
-        // Perintah ini skrip terminal; ia TAK bisa memunculkan popup sendiri - yang memunculkan popup
-        // adalah AI yang membaca keluaran ini. Penanda dibuat eksplisit supaya AI tak perlu menebak dari
-        // prosa: ADA penanda -> WAJIB tawarkan popup perbaiki; TAK ada -> DIAM (Tier 1/2 tak boleh
-        // mengganggu kerja klien). Label dipisah koma supaya mudah dibaca mesin maupun manusia.
-        const labelPenting = [securityFound && 'SECURITY', breakingFound && 'BREAKING', scanRequiredFound && 'SCAN-REQUIRED'].filter(Boolean)
-        console.log(`  [LINTASAI:PERLU-TINDAKAN] ${labelPenting.join(', ')}`)
-        console.log('  (AI: ini Keranjang 1 - WAJIB tawarkan popup perbaiki ke user, jangan diam.)')
-        if (securityFound) {
-          console.log('  [SECURITY] Perbaikan KEAMANAN - pasang SEGERA, jangan tunda.')
-          console.log('             (Walau update kecil, ini menambal lubang keamanan.)')
-        }
-        if (breakingFound) {
-          console.log('  [BREAKING] Ada perubahan yang tidak backward-compatible.')
-          console.log(`             Baca CHANGELOG entri v${newVersion} sebelum lanjut kerja.`)
-        }
-        if (scanRequiredFound) {
-          console.log('  [SCAN-REQUIRED] Wajib regenerate docs/ supaya kompatibel.')
-          console.log('                  Re-paste isi .claude-kit\\PROJECT_LIFECYCLE_PROMPT_v1.md (Stage 2: Bikin Catatan Proyek)')
-          console.log('                  ke Claude Code untuk regenerate docs lama.')
-        }
-        console.log('================================================================')
-      }
-
-      console.log('')
-      console.log('Langkah lanjut yang disarankan:')
-      console.log(`  1. Baca CHANGELOG entri [v${newVersion}]:`)
-      console.log(`     ${newChangelog}`)
-      console.log('  2. Verifikasi berkas baru di docs/ + .github/ (kalau ada di catatan rilis).')
-      console.log('  3. Versi kit dibaca OTOMATIS dari baris atas .claude-kit/CHANGELOG.md (kini')
-      console.log(`     v${newVersion}) - TIDAK perlu edit AGENTS.md manual. Kalau AGENTS.md-mu masih`)
-      console.log("     punya baris lama 'Versi kit di .claude-kit/: vX.Y.Z', itu tak dipakai lagi (boleh dihapus).")
-      if (!breakingFound && !scanRequiredFound && !securityFound) {
-        console.log('  4. Tidak ada label [BREAKING]/[SCAN-REQUIRED]/[SECURITY] - docs/ kamu AMAN, tak perlu scan ulang.')
-        console.log('  5. Kalau CHANGELOG sebut perubahan alur di JALANKAN_KIT.md:')
-        console.log('     Re-paste isi .claude-kit\\JALANKAN_KIT.md ke Claude Code.')
-      } else {
-        console.log('  4. WAJIB ikuti instruksi PERHATIAN di atas sebelum kerja lanjut.')
-      }
-    } else if (currentVersion === newVersion) {
-      console.log('')
-      console.log(`Tidak ada perubahan versi (v${currentVersion}). Update mungkin cuma perbaikan kecil.`)
-      console.log('Cek CHANGELOG untuk detail.')
-    }
+    // Laporan Langkah-5 diiris ke buildPostUpdateReportLines (fungsi murni, return-lines; string byte-identik,
+    // dikunci tests/update-report-lock.test.mjs). Pemanggil cuma mencetak tiap baris apa adanya.
+    for (const line of buildPostUpdateReportLines({ kitDir, currentVersion })) console.log(line)
 
     // ---- Langkah 6: Cek kesehatan kit baru (doctor) ----
     const newKitMjs = path.join(kitDir, 'kit.mjs')
@@ -1233,13 +872,13 @@ function runUpdateInner(argv) {
     // Jalankan robot MILIK KIT BARU (proses anak, bukan import dari kit lama yang sedang berjalan) -
     // yang dibanding = peta versi-diharapkan kit BARU. Non-fatal untuk update (kit sudah terpasang
     // benar); hasil "Selesai sebagian" = pekerjaan lanjutan di berkas project, BUKAN alasan rollback.
-    const migrationRobot = path.join(kitDir, 'lib', 'migration-state.mjs')
+    const migrationRobot = path.join(kitDir, 'engine', 'migration-state.mjs')
     if (fs.existsSync(migrationRobot)) {
       console.log('')
       console.log('Langkah 7: Banding artefak klien vs versi yang diharapkan kit BARU (laporan migrasi)...')
       // Tangkap keluaran supaya bisa BEDAKAN "robot crash" vs "robot melapor artefak tertinggal"
       // (dua-duanya exit !=0). Pembeda: baris penanda laporan (kontrak string dgn
-      // lib/migration-state.mjs - cermin kit.mjs doctor 2c). Crash -> saran perbaiki kit, BUKAN
+      // engine/migration-state.mjs - cermin kit.mjs doctor 2c). Crash -> saran perbaiki kit, BUKAN
       // saran migrasi CHANGELOG yang salah arah. stderr sengaja tak ditampilkan (jejak-error
       // mentah bisa memuat path komputer; jalankan manual kalau butuh detail).
       const rm = spawnSync(process.execPath, [migrationRobot, '--project-root', projectRoot, '--kit-dir', kitDir], { encoding: 'utf8', timeout: 60000 })
@@ -1249,7 +888,7 @@ function runUpdateInner(argv) {
       if (rm.error || rm.status == null || (rm.status !== 0 && !reportPrinted)) {
         console.log('WARN  Robot laporan-migrasi gagal dijalankan / berhenti sebelum melapor - salinan kit baru mungkin')
         console.log('      tidak lengkap. Jalankan doctor untuk cek: node .claude-kit/kit.mjs doctor')
-        console.log('      (detail error robot: jalankan manual node .claude-kit/lib/migration-state.mjs)')
+        console.log('      (detail error robot: jalankan manual node .claude-kit/engine/migration-state.mjs)')
       } else if (rm.status !== 0) {
         console.log('')
         console.log('CATATAN: "Selesai sebagian" di atas BUKAN kegagalan update - berkas kit sendiri sudah baru semua.')
@@ -1258,7 +897,7 @@ function runUpdateInner(argv) {
       }
     } else {
       console.log('')
-      console.log('INFO  Laporan migrasi dilewati: kit baru belum punya robotnya (lib/migration-state.mjs).')
+      console.log('INFO  Laporan migrasi dilewati: kit baru belum punya robotnya (engine/migration-state.mjs).')
     }
 
     if (!args.noBackup && fs.existsSync(backupDir)) {

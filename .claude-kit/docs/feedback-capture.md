@@ -1,7 +1,7 @@
 # feedback-capture — Pengingat "Rekam Pelajaran" otomatis (Stop hook)
 
-> Versi 1 · 2026-07-17 · Pendamping `lib/feedback-capture.mjs` + `lib/ensure-feedback-capture-hook.mjs`.
-> Latar keputusan: [ADR-006](decisions/ADR-006-sistem-feedback-pembelajaran-lintas-client.md) + [ADR-008](decisions/ADR-008-hook-penegak-checklist-penyelesaian.md) (addendum). Aturan perilaku AI = [workflows/6.5-rekam-pelajaran-frontier.md](../workflows/6.5-rekam-pelajaran-frontier.md).
+> Versi 1 · 2026-07-17 · Pendamping `engine/feedback-capture.mjs` + `engine/ensure-feedback-capture-hook.mjs`.
+> Latar keputusan: [ADR-006](decisions/ADR-006-sistem-feedback-pembelajaran-lintas-client.md) + [ADR-008](decisions/ADR-008-hook-penegak-checklist-penyelesaian.md) (addendum). Aturan perilaku AI = [rules/6.5-frontier-lessons.md](../rules/6.5-frontier-lessons.md).
 
 ## Tujuan
 
@@ -27,13 +27,13 @@ Membuat kemampuan "Rekam Pelajaran" (§6.5) **lebih andal**. Aturan §6.5 sudah 
 
 - `git` di PATH (kalau tak ada → hook diam, fail-open).
 - Node.js ≥18 (engines kit).
-- `lib/ensure-feedback-capture-hook.mjs` untuk wiring; `templates/hooks/feedback-capture.settings.example.json` = SSOT bentuk hook (matcher `''` + command + timeout 10).
+- `engine/ensure-feedback-capture-hook.mjs` untuk wiring; `templates/hooks/feedback-capture.settings.example.json` = SSOT bentuk hook (matcher `''` + command + timeout 10).
 
 ## Catatan (edge case + keputusan)
 
 - **Kenapa `Stop`, bukan `SessionEnd`/`PostToolUse`** (diverifikasi ke dokumentasi resmi Claude Code 2026-07-17): `Stop` jalan di akhir giliran + bisa menyuntik `additionalContext`; `SessionEnd` sesi sudah tutup (tak bisa menyuntik); `PostToolUse` reaktif per-tool (koreksi ADR-008 PostToolUse→Stop).
-- **Anti-loop:** kalau harness menandai `stop_hook_active: true` → hook DIAM (`decide()` di `lib/feedback-capture.mjs`). Ini menutup risiko lanjutan-berulang.
+- **Anti-loop:** kalau harness menandai `stop_hook_active: true` → hook DIAM (`decide()` di `engine/feedback-capture.mjs`). Ini menutup risiko lanjutan-berulang.
 - **De-dup "sekali per tugas":** BUKAN tugas hook — hook cuma menepuk pundak tiap Stop saat ada kerja. Yang menyaring "catat SEKALI per tugas" = aturan §6.5 yang dijalankan AI. Simetris filosofi `lang-reminder` (jalan tiap giliran; AI yang menyaring). Kalau pengingat terasa berisik saat piloting, opsi masa depan = penanda per-sesi (belum dibangun).
 - **HANYA menepuk pundak (pagar §6.4 anti-self-evolve):** hook TIDAK menulis berkas, TIDAK menilai, TIDAK menskor. Keputusan mencatat di AI (aturan §6.5); yang menimbang jadi standar kit = OWNER.
 - **Bus factor ≥2:** logika keputusan diisolasi di fungsi murni `decide()` + `gitHasWork()` + diuji unit di `tests/ensure-feedback-capture-hook.test.mjs` — perawat berikutnya bisa memahami tanpa menjalankan harness nyata.
-- **Source:** `lib/feedback-capture.mjs:1` (skrip hook), `lib/ensure-feedback-capture-hook.mjs:1` (wiring).
+- **Source:** `engine/feedback-capture.mjs:1` (skrip hook), `engine/ensure-feedback-capture-hook.mjs:1` (wiring).

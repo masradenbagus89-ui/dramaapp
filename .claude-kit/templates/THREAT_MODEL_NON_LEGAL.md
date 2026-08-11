@@ -44,10 +44,10 @@ Untuk tim seperti ini, ancaman terbesar **BUKAN** peretas asing di film. Yang re
 
 | Lapis | Apa | Status di kit |
 |---|---|---|
-| 🔒 **Izin clone GitHub** (`allowed_teams` di Buku Induk) | Yang tak diundang **tidak bisa download** repo (dapat 403). Lapis utama. | `ACCESS_CONTROL_NREPO_v1.md` |
+| 🔒 **Izin clone GitHub** | Yang tak diundang **tidak bisa download** repo (dapat 403). Lapis utama. | undangan collaborator per-repo (Settings → Collaborators and teams) |
 | 🔑 **Pemisahan rahasia per tingkat** | Repo fitur **tidak punya** kunci DB → walau dilihat, tak ada yang berharga. | `SPLIT_REPO_PREPROVISION_v1.md` (tier-driven) |
-| 🚫 **Tolak-default saat onboarding** | Staf baru mulai **tanpa akses**, ditambah hanya repo yang dia kerjakan. | checklist `ACCESS_CONTROL_NREPO_v1.md` |
-| 📅 **Cek-akses bulanan** | Pastikan tak ada akses "ketinggalan" (mis. staf sudah pindah tapi masih bisa backend). | robot pengingat `audit-access.yml` |
+| 🚫 **Tolak-default saat onboarding** | Staf baru mulai **tanpa akses**, ditambah hanya repo yang dia kerjakan. | disiplin owner (default = tolak, tambah seperlunya) |
+| 📅 **Cek-akses bulanan** | Pastikan tak ada akses "ketinggalan" (mis. staf sudah pindah tapi masih bisa backend). | agenda bulanan owner: cek GitHub Settings → Collaborators |
 | 🔎 **Penjaga kebocoran otomatis** | Robot menolak commit yang berisi file `.env` asli / kunci asli. | robot `secret-guard.yml` |
 | 🧭 **Siap forensik** | Kalau ada staf keluar tidak baik-baik → bisa telusuri "siapa pegang apa, kapan". | `SECURITY_INCIDENT_PLAYBOOK.md` bagian forensik |
 
@@ -71,9 +71,9 @@ Untuk tim seperti ini, ancaman terbesar **BUKAN** peretas asing di film. Yang re
 
 | Huruf | Modus | Sifat yang dilanggar | Contoh nyata | Penangkal utama (sudah di kit) |
 |---|---|---|---|---|
-| **S** — *Spoofing* (menyamar) | mengaku sebagai orang lain | Autentikasi | curi token/sesi → login sebagai korban | auth kuat + regenerasi sesi + 2FA (`cap/auth.md`) |
+| **S** — *Spoofing* (menyamar) | mengaku sebagai orang lain | Autentikasi | curi token/sesi → login sebagai korban | auth kuat + regenerasi sesi + 2FA (`skills/auth/SKILL.md`) |
 | **T** — *Tampering* (mengubah) | mengubah data/permintaan diam-diam | Integritas | ubah harga di body request | validasi server + constraint DB + query parameterized (§8/§9) |
-| **R** — *Repudiation* (menyangkal) | menyangkal pernah beraksi | Jejak audit | "bukan saya yang hapus" — dan memang tak ada bukti | audit log who/what/when (§8) + Pilar 4 `OBSERVABILITY_PRODUKSI.md` |
+| **R** — *Repudiation* (menyangkal) | menyangkal pernah beraksi | Jejak audit | "bukan saya yang hapus" — dan memang tak ada bukti | audit log who/what/when (§8) + Pilar 4 `PRODUCTION_OBSERVABILITY.md` |
 | **I** — *Information disclosure* (mengintip) | membaca data yang bukan haknya | Kerahasiaan | IDOR / RLS bolong → data user lain terbaca | otorisasi per-resource + RLS (§8 / stack §4.14-2) |
 | **D** — *Denial of service* (melumpuhkan) | membuat layanan mati/mahal | Ketersediaan | banjir request, ReDoS, denial-of-wallet | rate-limit + batas payload (§8) + stack §4.14-4 |
 | **E** — *Elevation of privilege* (panjat hak) | user biasa jadi admin | Otorisasi | mass-assignment `is_admin=true`; utak-atik role di JWT | cek role server-side + allowlist field (stack §4.14-5) |
@@ -86,12 +86,11 @@ Untuk tim seperti ini, ancaman terbesar **BUKAN** peretas asing di film. Yang re
 
 ## Input / Output
 
-- **Input:** kondisi tim (tanpa jalur hukum, ~40 staf, 3-5 inti) + Buku Induk (`lintasai-portfolio.yml`).
+- **Input:** kondisi tim (tanpa jalur hukum, ~40 staf, 3-5 inti) + daftar repo dan siapa boleh akses masing-masing.
 - **Output:** kejelasan **di mana ketat, di mana longgar** + rujukan ke lapis-lapis mitigasi konkret.
 
 ## Dependensi
 
-- `ACCESS_CONTROL_NREPO_v1.md` (izin clone — lapis utama).
 - `SPLIT_REPO_PREPROVISION_v1.md` (pemisahan rahasia per tingkat).
 - `SECURITY_INCIDENT_PLAYBOOK.md` (langkah saat ada insiden + forensik staf-keluar).
 

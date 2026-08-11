@@ -16,10 +16,7 @@ Ini daftar tugas **sekali pasang** yang harus dikerjakan **owner atau 1 orang le
 
 - [ ] **A1. Siapkan komputer tiap staff** — pasang Claude Code + Node.js + Git. Ini fondasi; tanpa ini AI tidak bisa jalan. *(Kayak pasang aplikasi + internet sebelum bisa pakai HP.)*
 - [ ] **A2. Pasang kit** — di folder project, jalankan `npm create lintasai` (atau tempel isi `JALANKAN_KIT.md` ke Claude Code). AI lanjutkan sisanya otomatis.
-- [ ] **A3. Isi penanggung jawab** — buka `.github/CODEOWNERS`, ganti tulisan `<...>` dengan username GitHub staff asli. Ini menentukan siapa diminta cek tiap ada perubahan. *(Kayak isi daftar "siapa approve cuti" di kantor.)*
-- [ ] **A4. Isi daftar staff** — buka `.github/staff-roster.yml`, ganti placeholder owner dengan data staff sebenarnya.
 - [ ] **A5. Atur akses Git sekali** — login Git/GitHub di komputer staff supaya Claude Code boleh mengirim hasil kerja. *(Kayak login sekali di aplikasi, setelah itu auto.)*
-- [ ] **A6. (Kalau pakai AI reviewer robot)** — pasang `ANTHROPIC_API_KEY` di GitHub Secrets repo. Ini "kunci" supaya robot pemeriksa AI (`ai-review.yml`) bisa jalan. *(Kayak masukin kode OTP sekali biar fitur aktif.)*
 - [ ] **A7. Kirim file `.env` (kunci rahasia) ke staff dengan AMAN** — repo **sengaja TIDAK berisi kunci asli** (demi keamanan); yang ada cuma contoh (`.env.example`). Tiap staff butuh `.env` asli supaya app bisa jalan. **JANGAN kirim lewat WhatsApp/email biasa** (gampang bocor + nempel selamanya). Pakai **pengelola sandi bersama** (1Password / Bitwarden) atau **env di platform deploy** (Vercel/Railway). *(Kayak bagi kunci brankas — diserahkan terkunci, bukan ditempel di grup WA.)* **Nuansa per peran**: staff **frontend** cuma butuh nilai `NEXT_PUBLIC_*` (tidak sensitif); staff **backend** butuh `DATABASE_URL` dll (sensitif — WAJIB jalur aman).
 
 ---
@@ -27,19 +24,18 @@ Ini daftar tugas **sekali pasang** yang harus dikerjakan **owner atau 1 orang le
 ## Bagian B — KALAU pakai split-repo (robot lintas-repo). Skip kalau masih 1 repo.
 
 - [ ] **B1. Buat repo GitHub** — backend, frontend, shared (paket bersama). Detail: `SPLIT_REPO_MIGRATION_PROMPT_v1.md`.
-- [ ] **B2. Pasang penerbitan paket bersama** — setel token paket supaya backend bisa "menerbitkan" bentuk-data ke frontend. Detail: `CROSS_REPO_TYPES_PIPELINE.md`.
-- [ ] **B3. Pasang kunci penghubung antar-repo** — token supaya update backend otomatis bikin permintaan-gabung di frontend.
-- [ ] **B4. Nyalakan kunci pengaman gabung** — jalankan `npx lintasai protect-main` per repo. **Coba SIMULASI dulu** (tanpa `--apply` = cuma lihat), baru `--apply` kalau yakin. *(Ini yang bikin staff non-programmer tidak bisa "tidak sengaja" merusak versi utama.)*
-- [ ] **B5. (Opsional)** — Renovate cadangan + notifikasi Discord. Detail di `CROSS_REPO_TYPES_PIPELINE.md`.
-- [ ] **B6. UJI robot dulu sebelum tim pakai** — ikuti `ROBOT_CI_TESTING_PLAYBOOK.md` (5 cek di repo kecil). **Jangan lewati** — ini memastikan robot benar sebelum 30 orang bergantung padanya.
-- [ ] **B7. Atur akses "paket bersama" di komputer tiap staff** — supaya `npm install` di frontend/backend bisa mengunduh paket bersama `@<project>/shared`, tiap komputer staff perlu "login" sekali ke tempat paket (private registry / GitHub Packages) lewat file `.npmrc`. **Tanpa ini, `npm install` GAGAL** → app tidak bisa jalan. Detail: `SPLIT_REPO_TOOLS_SETUP.md`. *(Kayak kartu anggota perpustakaan — sekali daftar, baru boleh pinjam buku bersama.)*
-- [ ] **B8. (Kalau kelola BANYAK repo + mau atur akses per-repo)** — isi **Buku Induk** `lintasai-portfolio.yml` (panduan: `PORTFOLIO_REGISTRY_v1.md`), lalu minta AI **cetak rencana akses** + terapkan izin clone GitHub per repo (panduan: `ACCESS_CONTROL_NREPO_v1.md`). Inilah yang bikin cuma **3-5 orang** bisa download backend+DB, ~40 staff cuma repo fitur. **Default = tolak**, tambah seperlunya. *(Kayak kartu akses gedung — ruang server cuma untuk yang berkartu khusus.)*
+- [ ] **B2. Pasang penerbitan paket bersama** — setel token paket supaya backend bisa "menerbitkan" bentuk-data ke frontend. Detail: `SPLIT_REPO_TOOLS_SETUP.md` §2.
+- [ ] **B3. Nyalakan kunci pengaman gabung** — kunci branch utama tiap repo manual di GitHub: **Settings → Branches → Add branch protection rule** untuk `main` (wajib lewat PR + minimal 1 approval + larang force-push). *(Ini yang bikin staff non-programmer tidak bisa "tidak sengaja" merusak versi utama.)*
+- [ ] **B4. (Opsional)** — Renovate/Dependabot (robot pemantau update dependency). Detail: `SPLIT_REPO_TOOLS_SETUP.md` §14.
+- [ ] **B5. UJI robot dulu sebelum tim pakai** — ikuti `ROBOT_CI_TESTING_PLAYBOOK.md` (5 cek di repo kecil). **Jangan lewati** — ini memastikan robot benar sebelum 30 orang bergantung padanya.
+- [ ] **B6. Atur akses "paket bersama" di komputer tiap staff** — supaya `npm install` di frontend/backend bisa mengunduh paket bersama `@<project>/shared`, tiap komputer staff perlu "login" sekali ke tempat paket (private registry / GitHub Packages) lewat file `.npmrc`. **Tanpa ini, `npm install` GAGAL** → app tidak bisa jalan. Detail: `SPLIT_REPO_TOOLS_SETUP.md`. *(Kayak kartu anggota perpustakaan — sekali daftar, baru boleh pinjam buku bersama.)*
+- [ ] **B7. (Kalau kelola BANYAK repo)** — atur izin clone GitHub per repo lewat undangan collaborator (Settings → Collaborators and teams). Inilah yang bikin cuma **3-5 orang** bisa download backend+DB, ~40 staff cuma repo fitur. **Default = tolak**, tambah seperlunya. *(Kayak kartu akses gedung — ruang server cuma untuk yang berkartu khusus.)*
 
 ---
 
 ## Bagian C — KALAU pakai database. Skip kalau tidak.
 
-- [ ] **C1. Atur jenjang akses database** — siapa boleh ubah STRUKTUR (senior) vs cuma ISI data (junior). Detail + SQL siap-tempel: `MCP_SETUP.md`. *(Kayak beda akses: manajer boleh ubah denah toko, kasir cuma boleh input transaksi.)*
+- [ ] **C1. Atur jenjang akses database** — siapa boleh ubah STRUKTUR (senior) vs cuma ISI data (junior). Minta AI susun SQL `GRANT`/`REVOKE` per schema (role tiering §9). *(Kayak beda akses: manajer boleh ubah denah toko, kasir cuma boleh input transaksi.)*
 - [ ] **C2. (Kalau Supabase + banyak penyewa)** — atur RLS (aturan siapa boleh baca/tulis baris mana). **Risiko tinggi** — jalankan di lingkungan uji dulu, bukan langsung produksi. Detail: `RLS_SETUP_PROMPT.md`.
 
 ---

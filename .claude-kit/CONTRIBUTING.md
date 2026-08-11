@@ -2,9 +2,9 @@
 
 Kit ini standar tim IT. Anggota tim **dianjurkan** usul perubahan kalau ketemu masalah, ide bagus, atau aturan yang sudah tidak relevan. File ini menjelaskan cara usul yang efisien.
 
-> Panduan lengkap governance ada di [`TEAM_ROLLOUT_GUIDE_v1.md`](TEAM_ROLLOUT_GUIDE_v1.md). File ini fokus pada **cara anggota tim berkontribusi**.
+> File ini fokus pada **cara anggota tim berkontribusi**.
 >
-> **Alur git harian (branch → PR → review → gabung) + langkah klik mengunci `main` di GitHub:** lihat [`templates/KERJA_KELOMPOK.md`](templates/KERJA_KELOMPOK.md) Bagian 3. Repo ini sudah punya `.github/CODEOWNERS` (approver wajib) + template PR — semua perubahan lewat branch + PR, **tidak** push langsung ke `main`.
+> **Alur git harian (branch → PR → review → gabung):** repo ini punya `.github/CODEOWNERS` (approver wajib) + template PR — semua perubahan lewat branch + PR, **tidak** push langsung ke `main`. Kunci `main` diatur di GitHub: Settings → Branches.
 
 ---
 
@@ -14,8 +14,8 @@ Baru bergabung mengembangkan lintasAI? Baca **berurutan** ini dulu supaya paham 
 
 1. [`README.md`](README.md) — apa itu lintasAI + cara pasang/pakai.
 2. [`docs/architecture.md`](docs/architecture.md) — **peta makro** kit (struktur folder, modul inti, entry point). Cari dokumen `.md` relevan pakai `Grep` + peta ini.
-3. [`docs/decisions/`](docs/decisions/) (ADR-001..006) — **KENAPA** keputusan arsitektur besar diambil + alternatif yang ditolak. Ini sumber konteks utama "kenapa begini, bukan begitu".
-4. [`docs/plans/`](docs/plans/) — rencana/fitur yang sedang berjalan. Tiap fitur berjalan biasanya punya berkas **`STATUS_*.md`** sebagai titik-masuk (mis. [`docs/plans/STATUS_SISTEM_FEEDBACK.md`](docs/plans/STATUS_SISTEM_FEEDBACK.md) untuk sistem feedback pembelajaran).
+3. [`docs/decisions/`](docs/decisions/) (ADR-001..006) — **KENAPA** keputusan arsitektur besar diambil + alternatif yang ditolak. Ini sumber konteks utama "kenapa begini, bukan begitu". Untuk konteks tim & 16 kondisi tetap kit ini (siapa tim, stack, "otak asli" AI), baca juga (ADR-018).
+4. [`docs/plans/`](docs/plans/) — rencana/cetak-biru fitur yang masih relevan (rencana yang sudah tuntas dihapus; riwayatnya ada di git).
 5. [`CLAUDE_universal_v1.md`](CLAUDE_universal_v1.md) — **aturan kerja AI + developer** (otak kit; auto-baca tiap sesi Claude Code di repo ini).
 6. [`.claude-kit/CHANGELOG.md`](.claude-kit/CHANGELOG.md) / `CHANGELOG.md` — riwayat rilis.
 
@@ -98,7 +98,7 @@ Contoh konkret aturan baru:
 - **CHANGELOG = "apa yang berubah untuk user", bukan jurnal refleksi.** Catatan post-mortem internal ("Mistake #1/#2", "root cause") taruh di commit message / git history, bukan di CHANGELOG yang dibaca staf.
 - **Saat bump versi, pakai 1 perintah: `node kit.mjs bump <versi>`** (mis. `node kit.mjs bump 1.42.0`). Ini otomatis mengecap nomor versi baru ke SEMUA berkas yang membawanya + menambah kerangka entri CHANGELOG + menjalankan robot pemeriksa kecocokan. Kamu tinggal **menulis deskripsi entri CHANGELOG** (ganti placeholder). Menghapus kelas-bug "lupa ganti satu berkas".
 
-  5 berkas yang dicap otomatis (referensi / fallback manual): `package.json` (sumber kebenaran), `CHANGELOG.md` (entri baru di atas), `README.md` ("Versi stabil sekarang"), `CLAUDE_universal_v1.md` (header "> Versi ..."), `templates/INDEX.md` (judul). Robot `lib/consistency-check.mjs` menjaga kelimanya sinkron + memverifikasi cocok dengan git tag. (Kejadian nyata 2x: README pernah beda versi dari git; 2026-06-12 README nyangkut di v1.7.8 selama 5 rilis — `bump` mencegah ini.)
+  5 berkas yang dicap otomatis (referensi / fallback manual): `package.json` (sumber kebenaran), `CHANGELOG.md` (entri baru di atas), `README.md` ("Versi stabil sekarang"), `CLAUDE_universal_v1.md` (header "> Versi ..."), `templates/INDEX.md` (judul). Robot `engine/consistency-check.mjs` menjaga kelimanya sinkron + memverifikasi cocok dengan git tag. (Kejadian nyata 2x: README pernah beda versi dari git; 2026-06-12 README nyangkut di v1.7.8 selama 5 rilis — `bump` mencegah ini.)
 
 ### Runbook terbit ke npm (TERVERIFIKASI 2026-06-12 — jangan menebak, ikuti ini)
 
@@ -128,7 +128,7 @@ Resep lengkap dari naikkan versi sampai paket tayang di npm. Tiap langkah sudah 
 ## Yang dihindari saat berkontribusi
 
 - **Modif kit di lokal diam-diam** - anggota tim lain gak tahu, standar tim pecah. Selalu usul resmi.
-- **Modif aturan untuk 1 proyek doang** - pakai mekanisme **exception** (lihat `TEAM_ROLLOUT_GUIDE_v1.md` seksi "Exception management"), bukan ubah kit global.
+- **Modif aturan untuk 1 proyek doang** - pakai mekanisme **exception** (catat di `exceptions.md` repo standar + sunset date), bukan ubah kit global.
 - **Usul tanpa alasan konkret** - "rasanya lebih bagus" gak cukup. Sertakan masalah nyata yang pernah ketemu.
 - **Argumen pakai authority** ("X di [perusahaan besar] pakai begini") - kasih konteks kenapa relevan untuk tim **kita**.
 - **Debat di DM owner satu-satu** - diskusi di channel/issue supaya semua anggota bisa belajar dari pertimbangan.
@@ -145,4 +145,4 @@ Resep lengkap dari naikkan versi sampai paket tayang di npm. Tiap langkah sudah 
 ---
 
 ## Pertanyaan?
-Buka di channel `#it-standard` atau DM owner standar (lihat `TEAM_ROLLOUT_GUIDE_v1.md` untuk siapa owner saat ini).
+Buka di channel `#it-standard` atau DM owner standar.

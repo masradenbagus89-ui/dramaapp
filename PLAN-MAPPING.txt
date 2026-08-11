@@ -1,0 +1,61 @@
+==================================================================
+              PLAN MAPPING  -  DRAMA-APP / DramaKu
+           Aplikasi streaming drama China pendek
+           App live: https://dramaapp.vercel.app/
+==================================================================
+
+  KETERANGAN:   [V] = Selesai      [>] = Dikerjakan berikutnya
+                [ ] = Rencana nanti
+
+
+   (MULAI)  DRAMA-APP
+       |
+       |
+   [V] 1. SETUP PROJECT
+       |    |
+       |    +--> cabang: Ambil code dari GitHub,
+       |    |            dijalankan di laptop
+       |
+   [V] 2. ONLINE DI VERCEL
+       |    |
+       |    +--> cabang: App bisa dibuka siapa saja
+       |    |            -> dramaapp.vercel.app
+       |
+   [V] 3. VIDEO BISA DIPUTAR
+       |    |
+       |    +--> cabang: Video disimpan di PC backup,
+       |    |            disalurkan ke app lewat tunnel
+       |
+   [V] 4. ADMIN FORM OTOMATIS
+       |    |
+       |    +--> cabang: Tambah drama lewat form,
+       |    |            tidak perlu edit file manual
+       |
+   [V] 5. AUTO-HARDLINK
+       |    |
+       |    +--> cabang: Tambah drama baru cukup 3 klik
+       |    |            (sekitar 2 menit per drama)
+       |
+   [V] 6. SCRIPT OTOMATIS
+       |    |
+       |    +--> cabang: 1 command start semua service +
+       |    |            auto-update Vercel
+       |
+   [>] 7. NAMED TUNNEL          <=====  BERIKUTNYA
+       |    |
+       |    +--> cabang: URL video jadi stabil selamanya,
+       |    |            tidak ganti-ganti lagi
+       |
+   [ ] 8. PERBAIKAN AKHIR
+            |
+            +--> cabang: Fix bug judul drama panjang +
+                         perkuat keamanan login admin
+
+
+==================================================================
+  POSISI SEKARANG
+==================================================================
+   - App live & jalan normal di dramaapp.vercel.app
+   - Tahap 1 sampai 6  =  SELESAI
+   - Langkah berikutnya =  Tahap 7 (Named Tunnel)
+==================================================================

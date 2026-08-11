@@ -98,20 +98,12 @@ Interpretasi output:
 
 Kalau muncul BAD signature atau anomaly lain: **STOP, jangan install**, lapor owner via Telegram/Signal (jalur out-of-band, bukan via GitHub issue karena issue-nya bisa juga dipalsu).
 
-## Integrasi dengan updater (otomatis)
+## Integrasi dengan updater
 
-`update-kit.mjs` (`npx lintasai update`) sudah auto-verify GPG tag untuk repo di luar daftar-putih sebelum apply update (lihat `workflows/8.3-trusted-repo.md`). Setara manual di terminal:
-
-```powershell
-git fetch --tags
-git tag --verify v1.x.y
-if ($LASTEXITCODE -ne 0) {
-    throw "Tag signature invalid, aborting update"
-}
-git checkout v1.x.y
-```
-
-Manfaat: staff tidak perlu inget jalankan verify manual, kit sendiri yang enforce.
+Sejak v4, update kit **hanya lewat npm** (`npx lintasai@latest update`) — integritas paket dijamin
+registry npm (sha512), bukan verifikasi GPG di sisi updater. Jalur update lama `--from-repo` (git
+clone + verify-tag GPG) sudah dibuang. Penandatanganan GPG di dokumen ini tetap relevan untuk
+**verifikasi rilis manual owner** (mis. saat mengunduh tarball rilis dari GitHub Releases untuk audit).
 
 ## Fallback: kalau GPG belum disetup
 

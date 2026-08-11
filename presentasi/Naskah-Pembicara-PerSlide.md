@@ -1,0 +1,242 @@
+# Naskah Pembicara - DramaApp (per slide)
+
+> Versi teks dari catatan pembicara (Notes) di PowerPoint.
+> Buka file ini di aplikasi APA PUN (Notepad, Word, VS Code, browser) kalau tombol Notes tidak bisa diklik.
+
+**Presentasi: Selasa, 2 Juni 2026** - https://dramaapp.vercel.app/
+
+---
+
+## Slide 01 - Pembuka
+
+PEMBUKA. Perkenalkan diri lalu sampaikan kalimat ini:
+"DramaApp (brand: DramaKu) adalah platform streaming drama China pendek yang
+saya bangun dari nol — sudah ONLINE dan bisa diakses siapa saja di
+dramaapp.vercel.app. Saya akan jelaskan dari dua sisi: sisi teknis aplikasinya,
+dan sistem yang saya pakai selama membangunnya."
+TIPS: kalau memungkinkan, buka dramaapp.vercel.app langsung sebagai demo singkat
+sebelum lanjut — bukti app benar-benar jalan paling meyakinkan.
+Teknologi inti: Next.js 16, React 19, TypeScript, Tailwind 4. Biaya hosting Rp 0.
+
+---
+
+## Slide 02 - Daftar Isi (Agenda)
+
+AGENDA. "Presentasi dibagi 4 bagian: (1) gambaran produk & fitur, (2) tech stack
+dan arsitektur, (3) routing, API, dan data, (4) admin, video, deployment — plus
+arsitektur hybrid, perjalanan pembuatan, dan tanya-jawab di akhir."
+Tidak perlu dibaca satu-satu; cukup sebut empat bagian besar lalu lanjut.
+
+---
+
+## Slide 03 - Apa itu DramaApp?
+
+APA ITU DRAMAAPP. Inti: aplikasi web streaming drama China pendek, GRATIS,
+dirancang mobile-first (utamanya untuk HP). Konsepnya gabungan Netflix (katalog
+rapi per kategori + halaman detail) dan TikTok (feed Shorts vertikal).
+Kenapa dibuat: tren short drama sedang naik, butuh platform ringan & cepat,
+tanpa perlu instal aplikasi — cukup buka browser.
+Angka untuk diingat: 33 judul drama, 7 kategori genre, ~25 poster, 11 halaman.
+
+---
+
+## Slide 04 - Fitur Utama Aplikasi
+
+FITUR UTAMA. Enam fitur inti dari sisi pengguna:
+1. Katalog & Discover — jelajah, filter per kategori.
+2. Streaming per episode — player khusus tiap episode, navigasi prev/next.
+3. Feed Shorts — scroll vertikal ala TikTok.
+4. Akun & profil — login/daftar, role admin & viewer, avatar warna.
+5. Interaksi sosial — like, komentar, simpan ke My List.
+6. Panel admin — kelola judul, episode, poster, video.
+Detail menarik: VideoPlayer punya fallback otomatis — kalau video asli belum
+ada, tampil video sample + label, jadi app tetap jalan.
+
+---
+
+## Slide 05 - Tech Stack
+
+TECH STACK. Jelaskan per kelompok:
+- FRONTEND: Next.js 16 (framework React, App Router), React 19, TypeScript 5
+  (tipe statis = lebih aman dari error).
+- STYLING: Tailwind CSS 4 (desain cepat & responsive), next/font, mobile-first.
+- BUILD/RUNTIME: Turbopack (bundler super cepat), Node.js 24, Route Handlers
+  (API bawaan Next.js — backend & frontend satu kerangka).
+- DELIVERY: Vercel (hosting + deploy otomatis dari GitHub), GitHub (repo publik),
+  Cloudflare R2 untuk penyimpanan video (rencana).
+Pesan kunci: ini FULL-STACK dalam satu codebase, teknologinya modern & standar
+industri.
+
+---
+
+## Slide 06 - Arsitektur Aplikasi
+
+ARSITEKTUR APLIKASI. Satu codebase Next.js berisi frontend + backend.
+- Server Components: halaman dirender di server (cepat, ringan di HP).
+- Client Components ("use client"): bagian interaktif — player video, tombol like,
+  komentar.
+- Route Handlers (app/api/*): endpoint backend untuk baca & simpan data.
+- Penyimpanan berbasis file: data sebagai JSON, dibaca/tulis via Node fs — TANPA
+  database.
+- State di klien: status login, like, My List disimpan di localStorage browser.
+Diagram kanan menunjukkan alur lapisan: Klien → Rendering → API → Data.
+
+---
+
+## Slide 07 - Struktur Halaman & Routing
+
+STRUKTUR HALAMAN & ROUTING. Next.js App Router: nama folder = nama URL.
+Ada 11 rute. Untuk viewer: /, /login, /daftar, /beranda, /discover, /shorts,
+/drama/[id], /watch/[id]/[ep], /my-list, /profile. Untuk admin: /admin.
+Poin penting: [id] dan [ep] = segmen DINAMIS — satu file melayani banyak URL
+(mis. semua drama pakai satu file /drama/[id]/page.tsx).
+
+---
+
+## Slide 08 - API & Lapisan Backend
+
+API & BACKEND. Endpoint ada di app/api/* — sebagian publik, sebagian admin.
+PUBLIK: GET /api/dramas (daftar drama), /api/comments (komentar),
+/api/likes (like), /api/admins (daftar email admin).
+ADMIN (terproteksi): /api/admin/drama (CRUD drama), /api/admin/scan (pindai
+video), /api/admin/upload (poster/aset), /api/admin/hardlink (tautkan video).
+KEAMANAN: tiap request admin membawa header x-admin-email yang dicocokkan ke
+admins.json; kalau tak cocok → ditolak 401. Validasi di SERVER, bukan tampilan.
+
+---
+
+## Slide 09 - Model Data
+
+MODEL DATA. Tanpa database — semua data sebagai berkas JSON di folder data/:
+dramas.json (33 drama: judul, kategori, episode, sinopsis), comments.json
+(komentar per drama), interactions.json (like/interaksi), admins.json (email
+admin). Tipe Drama didefinisikan di lib/types.ts; field ber-"?" = opsional.
+ID drama dibuat OTOMATIS dari judul (slugify) saat ditambahkan.
+7 kategori: Romance, Tycoon, Harem, Time Travel, Action, Comedy, Fantasy.
+Kalau ditanya kenapa tanpa DB → lihat slide Tantangan: cukup untuk skala awal,
+mudah di-upgrade ke database nanti.
+
+---
+
+## Slide 10 - Panel Admin
+
+PANEL ADMIN. Halaman /admin = kelola konten TANPA menyentuh kode.
+Empat fungsi: Kelola drama (CRUD), Pindai video (deteksi file tersedia tiap
+drama), Unggah aset (poster/gambar), Tautkan video (hardlink file besar agar
+siap diputar). Bawah: pengingat keamanan — header x-admin-email dicocokkan ke
+admins.json, kalau gagal 401.
+Cerita evolusi (bisa diceritakan di sini): dulu tambah drama = edit file JSON +
+copy video manual; sekarang lewat form jadi praktis. Detail "3 klik" ada di
+slide Perjalanan Pembuatan.
+
+---
+
+## Slide 11 - Video Streaming
+
+VIDEO STREAMING. Cara kerja player:
+- Komponen VideoPlayer pakai elemen HTML5 <video> bawaan browser.
+- Sumber video dirakit dinamis: {BASE}/{id-drama}/{episode}.mp4.
+- Fallback otomatis: kalau video gagal dimuat, beralih ke /sample.mp4 + label
+  "Video sample — file asli belum diupload". App tetap jalan.
+- Navigasi episode prev/next di halaman watch.
+Env var NEXT_PUBLIC_VIDEO_BASE_URL menunjuk lokasi video. PENTING: file video
+TIDAK ada di repo Git (batas GitHub 100 MB/file) — slide berikutnya menjelaskan
+SISTEM penyimpanan video yang sebenarnya dipakai.
+
+---
+
+## Slide 12 - Arsitektur Hybrid (Vercel + PC Backup + Tunnel)
+
+ARSITEKTUR HYBRID — INI BAGIAN PALING MENARIK, TONJOLKAN.
+Alur: Pengunjung → buka app. App (halaman, katalog, API) jalan di Vercel. Untuk
+VIDEO, app mengarah ke PC backup yang menyimpan file asli & menyalurkannya lewat
+Caddy + tunnel.
+KENAPA begini? File video besar, GitHub batasi 100 MB/file dan hosting gratis tak
+muat. Solusi: pisahkan — app ringan di Vercel (gratis), video di PC sendiri.
+Hasilnya biaya hosting Rp 0.
+Komponen di folder pc-backup-agent/: Caddyfile (server video), hardlink-agent.js
+(siapkan video otomatis saat admin tambah drama), start-dramaapp.ps1 (1 perintah
+start semua + auto-update Vercel).
+Kelemahan jujur yang bisa disebut: URL video sekarang berubah tiap PC restart —
+itu yang akan diperbaiki dengan Named Tunnel (lihat slide Perjalanan & Roadmap).
+
+---
+
+## Slide 13 - Deployment & DevOps
+
+DEPLOYMENT & DEVOPS. Alur rilis otomatis: (1) Kode di GitHub (repo publik
+masradenbagus89-ui/dramaapp) -> (2) Vercel auto-deteksi Next.js, build & deploy
+otomatis tiap ada perubahan -> (3) Online di URL .vercel.app, siap diakses.
+OTOMASI: skrip start-dramaapp.ps1 menjalankan seluruh lingkungan dev + sinkron
+otomatis ke Vercel dengan satu perintah.
+KONFIGURASI: 5 environment variable di dashboard Vercel (termasuk URL basis video).
+Pesan: cukup push ke GitHub -> otomatis online, tanpa langkah manual.
+
+---
+
+## Slide 14 - Perjalanan Pembuatan Project (8 Tahap)
+
+PERJALANAN PEMBUATAN. Ceritakan ini sebagai "SISTEM yang dipakai selama membangun".
+8 tahap, 6 SELESAI: (1) Setup project dari GitHub, (2) Online di Vercel,
+(3) Video bisa diputar lewat PC backup + tunnel, (4) Admin form otomatis (tak
+perlu edit file manual), (5) Auto-hardlink (tambah drama cukup ~3 klik / 2 menit),
+(6) Script otomatis (1 command start semua + auto-update Vercel).
+2 BERIKUTNYA: (7) Named Tunnel — biar URL video stabil selamanya, berhenti
+ganti-ganti tiap PC restart; (8) Perbaikan akhir — fix bug judul drama panjang
+(slug terpotong) + perkuat keamanan login admin.
+Pesan: tunjukkan progres nyata & produktivitas yang makin meningkat tiap tahap.
+
+---
+
+## Slide 15 - Tantangan Teknis & Solusi
+
+TANTANGAN & SOLUSI. Cerita problem nyata -> solusi (bikin presentasi hidup):
+1. Jaringan server terkunci — firewall blokir port masuk, proxy blokir tunnel
+   (ngrok, cloudflared, localtunnel semua gagal). Solusi: deploy ke Vercel,
+   diakses lewat URL publik tanpa bergantung jaringan server.
+2. Video terlalu besar — lewat batas 100 MB GitHub. Solusi: pisahkan video ke
+   penyimpanan eksternal/PC backup; path diatur lewat env var.
+3. Tanpa database — belum ada server DB. Solusi: pakai file JSON, sederhana,
+   cukup untuk skala awal, mudah di-upgrade ke database nanti.
+Pesan: menghadapi kendala teknis nyata dan menyelesaikannya dengan keputusan
+arsitektur yang tepat.
+
+---
+
+## Slide 16 - Roadmap Pengembangan
+
+ROADMAP PENGEMBANGAN. JANGKA PENDEK: unggah video ke Cloudflare R2 & perbarui
+path, uji seluruh halaman setelah deploy, perbaiki bug satu per satu.
+JANGKA PANJANG: upgrade dari JSON store ke database, autentikasi lebih kuat
+(kini berbasis localStorage), fitur pencarian & rekomendasi, optimasi performa &
+infinite scroll Shorts.
+Status sekarang: aplikasi fungsional & ter-deploy — fokus berikutnya memutar
+video dari CDN dan stabilisasi (Named Tunnel).
+
+---
+
+## Slide 17 - Antisipasi Tanya-Jawab
+
+ANTISIPASI TANYA-JAWAB. Hafalkan jawaban singkat 4 pertanyaan ini:
+1. Kenapa tanpa database? -> JSON cukup untuk skala ini, ringan, gratis; mudah
+   migrasi ke DB nanti tanpa ubah tampilan.
+2. Berapa biaya? -> Rp 0: Vercel free tier + PC sendiri + tool open-source.
+3. Aman? -> Role admin diverifikasi di server tiap endpoint; video terpisah.
+4. Bisa di HP? -> Bisa, responsive + bottom-nav mobile, jalan di browser HP apa pun.
+Jawab tenang dan singkat. Kalau tak tahu, jujur "itu masuk rencana pengembangan".
+
+---
+
+## Slide 18 - Penutup / Ringkasan
+
+PENUTUP. Kalimat penutup:
+"Singkatnya, DramaApp adalah aplikasi streaming yang sudah online, dibangun
+dengan teknologi modern (Next.js, TypeScript, Vercel), memakai arsitektur hybrid
+yang hemat biaya untuk menangani video besar, dan punya sistem admin yang membuat
+penambahan konten jadi sangat cepat. Dari 8 tahap rencana, 6 sudah selesai dan
+aplikasinya sudah bisa dipakai sekarang."
+Lalu buka sesi tanya-jawab & tawarkan demo aplikasi langsung.
+Angka penutup: 33 judul, 7 kategori, 6/8 tahap selesai, biaya Rp 0,
+URL dramaapp.vercel.app.
+
+---

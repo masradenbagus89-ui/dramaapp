@@ -1,0 +1,687 @@
+{
+  "versi": 1,
+  "skills": [
+    {
+      "nama": "admin-panel",
+      "deskripsi": "Panel admin/back-office kelas-industri — otorisasi per-baris & per-aksi (anti-IDOR admin), audit-trail tiap aksi, paginasi keyset, konfirmasi destruktif, data sensitif di-masking, 2FA admin.",
+      "divisi": "backend",
+      "pemicu": [
+        "admin-panel",
+        "panel-admin",
+        "dashboard-admin",
+        "backoffice",
+        "back-office",
+        "cms",
+        "kelola-data",
+        "manajemen-data",
+        "tabel-transaksi",
+        "daftar-transaksi",
+        "data-table",
+        "datatable"
+      ],
+      "rawan_keamanan": true,
+      "menggantikan": [],
+      "path": "skills/admin-panel/SKILL.md"
+    },
+    {
+      "nama": "analytics",
+      "deskripsi": "Analytics (lacak kunjungan/konversi/event) kelas-industri — consent-first, tanpa PII ke pihak ketiga, event kritis diukur di server.",
+      "divisi": "product",
+      "pemicu": [
+        "analytics",
+        "analitik",
+        "lacak",
+        "tracking",
+        "kunjungan",
+        "statistik pengunjung"
+      ],
+      "rawan_keamanan": false,
+      "menggantikan": [],
+      "path": "skills/analytics/SKILL.md"
+    },
+    {
+      "nama": "anti-fraud",
+      "deskripsi": "Deteksi kecurangan judi/fintech kelas-industri — sinyal server-side (device/IP/velocity/graph), skor risiko → aksi bertingkat (allow/challenge/hold-review/block), reason-code ter-audit, seimbang anti false-positive, privasi & anti-bias.",
+      "divisi": "keamanan",
+      "pemicu": [
+        "anti-fraud",
+        "antifraud",
+        "fraud",
+        "penipuan",
+        "kecurangan",
+        "curang",
+        "multi-akun",
+        "akun-ganda",
+        "bonus-abuse",
+        "collusion",
+        "kolusi",
+        "chargeback",
+        "device-fingerprint",
+        "velocity-check",
+        "risk-score",
+        "skor-risiko",
+        "deteksi-kecurangan"
+      ],
+      "rawan_keamanan": true,
+      "menggantikan": [],
+      "path": "skills/anti-fraud/SKILL.md"
+    },
+    {
+      "nama": "auth",
+      "deskripsi": "Login, sesi, dan hak-akses kelas industri — autentikasi (membuktikan SIAPA) + otorisasi (boleh APA) yang aman by-default.",
+      "divisi": "keamanan",
+      "pemicu": [
+        "login",
+        "masuk",
+        "daftar",
+        "sign-up",
+        "sign-in",
+        "akun",
+        "auth",
+        "oauth",
+        "sso",
+        "sesi",
+        "session",
+        "peran",
+        "role",
+        "hak-akses",
+        "rbac",
+        "password",
+        "otentikasi",
+        "otorisasi"
+      ],
+      "rawan_keamanan": true,
+      "menggantikan": [
+        "login/akun"
+      ],
+      "path": "skills/auth/SKILL.md"
+    },
+    {
+      "nama": "backend",
+      "deskripsi": "Logika & API sisi-server kelas industri — kontrak dulu, validasi di boundary, otorisasi per-resource (anti-IDOR), status code benar, error tak ditelan.",
+      "divisi": "backend",
+      "pemicu": [
+        "endpoint",
+        "backend",
+        "rest-api",
+        "server-action",
+        "controller",
+        "handler",
+        "route-handler",
+        "crud"
+      ],
+      "rawan_keamanan": true,
+      "menggantikan": [],
+      "path": "skills/backend/SKILL.md"
+    },
+    {
+      "nama": "background-job",
+      "deskripsi": "Pekerjaan latar & antrean kelas-industri — tahan-restart, idempoten, gagalnya tercatat (bukan hilang diam-diam).",
+      "divisi": "backend",
+      "pemicu": [
+        "antrean",
+        "antrian",
+        "queue",
+        "cron",
+        "terjadwal",
+        "schedule",
+        "background",
+        "job",
+        "worker",
+        "batch"
+      ],
+      "rawan_keamanan": false,
+      "menggantikan": [],
+      "path": "skills/background-job/SKILL.md"
+    },
+    {
+      "nama": "caching",
+      "deskripsi": "Simpan-sementara (cache) kelas-industri — cepatkan baca yang mahal TANPA menyajikan data basi/bocor; TTL + invalidasi + anti cache-stampede + key per-identitas (jangan bocor antar-user).",
+      "divisi": "backend",
+      "pemicu": [
+        "cache",
+        "caching",
+        "cached",
+        "cache-aside",
+        "stale-while-revalidate",
+        "cache-invalidation",
+        "invalidasi-cache",
+        "thundering-herd",
+        "cache-stampede",
+        "memcached",
+        "simpan-sementara"
+      ],
+      "rawan_keamanan": false,
+      "menggantikan": [],
+      "path": "skills/caching/SKILL.md"
+    },
+    {
+      "nama": "cakupan-tes",
+      "deskripsi": "Cakupan tes kelas-QA — bikinkan tes yang kurang (pola AAA + nama menjelaskan perilaku), kejar \"tak boleh kambuh\" lewat tes regresi, bukan angka coverage.",
+      "divisi": "qa",
+      "pemicu": [
+        "tes",
+        "test",
+        "testing",
+        "coverage",
+        "cakupan-tes",
+        "unit-test"
+      ],
+      "rawan_keamanan": false,
+      "menggantikan": [],
+      "path": "skills/cakupan-tes/SKILL.md"
+    },
+    {
+      "nama": "chrome-extension",
+      "deskripsi": "Extension Chrome (Manifest V3) kelas industri — izin seminimal mungkin, pesan aman antar-konteks, service worker, CSP.",
+      "divisi": "stack",
+      "pemicu": [
+        "chrome-extension",
+        "manifest-v3",
+        "content-script",
+        "extension-service-worker"
+      ],
+      "rawan_keamanan": false,
+      "menggantikan": [],
+      "path": "skills/chrome-extension/SKILL.md"
+    },
+    {
+      "nama": "cloudflare",
+      "deskripsi": "Cloudflare Workers/Pages kelas industri — batas runtime edge, binding rahasia, KV/D1/R2, cache.",
+      "divisi": "stack",
+      "pemicu": [
+        "cloudflare",
+        "wrangler",
+        "cloudflare-workers",
+        "durable-object"
+      ],
+      "rawan_keamanan": false,
+      "menggantikan": [],
+      "path": "skills/cloudflare/SKILL.md"
+    },
+    {
+      "nama": "database",
+      "deskripsi": "Struktur data & migrasi aman kelas industri — constraint di level DB, migrasi ter-version & reversible, RLS multi-penyewa, parameterized query, index kolom panas.",
+      "divisi": "database",
+      "pemicu": [
+        "migrasi",
+        "migration",
+        "skema",
+        "schema",
+        "tabel-baru",
+        "kolom-baru",
+        "prisma",
+        "supabase",
+        "rls",
+        "database",
+        "basis-data",
+        "index-database",
+        "constraint"
+      ],
+      "rawan_keamanan": true,
+      "menggantikan": [],
+      "path": "skills/database/SKILL.md"
+    },
+    {
+      "nama": "deploy",
+      "deskripsi": "Deploy platform (Vercel/Railway/Render) kelas industri — env & rahasia, healthcheck, rollback, region & runtime cocok.",
+      "divisi": "stack",
+      "pemicu": [
+        "vercel",
+        "railway",
+        "fly-io",
+        "render.yaml",
+        "deploy-platform"
+      ],
+      "rawan_keamanan": false,
+      "menggantikan": [],
+      "path": "skills/deploy/SKILL.md"
+    },
+    {
+      "nama": "devops",
+      "deskripsi": "Rilis & operasi produksi kelas industri — commit jelas, semver benar, smoke test + rollback tiap deploy, observability (error-tracking/log/healthcheck) sebelum online, secret hanya di env.",
+      "divisi": "devops",
+      "pemicu": [
+        "deploy",
+        "rilis",
+        "release",
+        "produksi",
+        "production",
+        "mau-online",
+        "go-live",
+        "docker",
+        "dockerfile",
+        "nginx",
+        "pipeline",
+        "rollback",
+        "observability",
+        "monitoring"
+      ],
+      "rawan_keamanan": false,
+      "menggantikan": [],
+      "path": "skills/devops/SKILL.md"
+    },
+    {
+      "nama": "ekspor-laporan",
+      "deskripsi": "Ekspor & laporan (CSV/Excel/PDF/terjadwal) kelas-industri — anti CSV-injection, otorisasi per-baris server-side, ekspor besar via latar + streaming.",
+      "divisi": "backend",
+      "pemicu": [
+        "ekspor",
+        "export",
+        "unduh",
+        "download",
+        "csv",
+        "excel",
+        "laporan",
+        "report",
+        "rekap"
+      ],
+      "rawan_keamanan": false,
+      "menggantikan": [],
+      "path": "skills/ekspor-laporan/SKILL.md"
+    },
+    {
+      "nama": "email-notifikasi",
+      "deskripsi": "Kirim email/OTP/notifikasi kelas-industri — sampai ke inbox (SPF/DKIM/DMARC), OTP aman (hash/expiry/sekali-pakai), tak jadi corong spammer.",
+      "divisi": "backend",
+      "pemicu": [
+        "email",
+        "surel",
+        "otp",
+        "kode verifikasi",
+        "notifikasi",
+        "notification",
+        "kirim pesan"
+      ],
+      "rawan_keamanan": false,
+      "menggantikan": [],
+      "path": "skills/email-notifikasi/SKILL.md"
+    },
+    {
+      "nama": "frontend-lanjutan",
+      "deskripsi": "Frontend React lanjutan — tes komponen (RTL), race useEffect/fetch, animasi Motion yang hemat & aksesibel.",
+      "divisi": "stack",
+      "pemicu": [
+        "react-testing-library",
+        "react-useeffect",
+        "framer-motion",
+        "react-animasi"
+      ],
+      "rawan_keamanan": false,
+      "menggantikan": [],
+      "path": "skills/frontend-lanjutan/SKILL.md"
+    },
+    {
+      "nama": "galeri-folder",
+      "deskripsi": "Galeri struktur folder project — contoh tata-letak berkas per jenis project (rumah yang benar untuk berkas baru).",
+      "divisi": "stack",
+      "pemicu": [
+        "struktur-folder",
+        "galeri-folder",
+        "layout-project"
+      ],
+      "rawan_keamanan": false,
+      "menggantikan": [],
+      "path": "skills/galeri-folder/SKILL.md"
+    },
+    {
+      "nama": "github-actions",
+      "deskripsi": "GitHub Actions/CI kelas industri — rahasia via secrets, izin token minimal, pin action ber-SHA, cache, gerbang mutu.",
+      "divisi": "stack",
+      "pemicu": [
+        "github-actions",
+        "ci-workflow",
+        "actions-yaml"
+      ],
+      "rawan_keamanan": false,
+      "menggantikan": [],
+      "path": "skills/github-actions/SKILL.md"
+    },
+    {
+      "nama": "go",
+      "deskripsi": "Backend Go/Golang kelas industri — tiap err diperiksa, tiap panggilan keluar ber-timeout, connection pool dibatasi, berhenti dengan rapi (graceful shutdown).",
+      "divisi": "stack",
+      "pemicu": [
+        "golang",
+        "goroutine",
+        "go-module",
+        "errgroup",
+        "graceful-shutdown"
+      ],
+      "rawan_keamanan": false,
+      "menggantikan": [],
+      "path": "skills/go/SKILL.md"
+    },
+    {
+      "nama": "kepatuhan-teregulasi",
+      "deskripsi": "Produk industri teregulasi yang SAH (judi/gaming, fintech berizin) — geo-block server-side + KYC + AML + audit-trail, dengan batas keras hukum.",
+      "divisi": "keamanan",
+      "pemicu": [
+        "judi",
+        "gambling",
+        "fintech",
+        "kyc",
+        "aml",
+        "lisensi",
+        "regulator",
+        "kepatuhan"
+      ],
+      "rawan_keamanan": true,
+      "menggantikan": [],
+      "path": "skills/kepatuhan-teregulasi/SKILL.md"
+    },
+    {
+      "nama": "nextjs",
+      "deskripsi": "Next.js/React kelas industri — batas Server/Client jelas, data di server, performa (LCP/hydration), a11y.",
+      "divisi": "stack",
+      "pemicu": [
+        "next.js",
+        "nextjs",
+        "app-router",
+        "server-component",
+        "use-client"
+      ],
+      "rawan_keamanan": false,
+      "menggantikan": [],
+      "path": "skills/nextjs/SKILL.md"
+    },
+    {
+      "nama": "owasp",
+      "deskripsi": "Keamanan web OWASP kelas industri — XSS/CSRF/SSRF, rate-limit, CORS, upload aman, header keamanan, cek CVE.",
+      "divisi": "stack",
+      "pemicu": [
+        "owasp",
+        "xss",
+        "csrf",
+        "ssrf",
+        "rate-limit"
+      ],
+      "rawan_keamanan": true,
+      "menggantikan": [],
+      "path": "skills/owasp/SKILL.md"
+    },
+    {
+      "nama": "pembayaran",
+      "deskripsi": "Checkout & webhook anti bayar-dobel kelas-industri — idempoten, harga dihitung di server, status hanya dari webhook terverifikasi.",
+      "divisi": "keamanan",
+      "pemicu": [
+        "bayar",
+        "pembayaran",
+        "payment",
+        "checkout",
+        "invoice",
+        "faktur",
+        "tagihan",
+        "langganan",
+        "subscription",
+        "midtrans",
+        "xendit",
+        "stripe"
+      ],
+      "rawan_keamanan": true,
+      "menggantikan": [],
+      "path": "skills/pembayaran/SKILL.md"
+    },
+    {
+      "nama": "perbaiki-error",
+      "deskripsi": "Perbaiki error build/run bertahap — baca error ASLI, 1 akar per iterasi, verifikasi nyata (bukan \"passed\" palsu).",
+      "divisi": "devops",
+      "pemicu": [
+        "error",
+        "crash",
+        "gagal-build",
+        "build-gagal",
+        "tidak-jalan",
+        "merah",
+        "rusak"
+      ],
+      "rawan_keamanan": false,
+      "menggantikan": [],
+      "path": "skills/perbaiki-error/SKILL.md"
+    },
+    {
+      "nama": "permukaan-ai",
+      "deskripsi": "Pindai Permukaan-AI — audit konfigurasi MCP/izin/hook AI (robot ai-config-check deterministik dulu, mode cuma-baca), lalu AI menafsir ke bahasa awam.",
+      "divisi": "security",
+      "pemicu": [
+        "permukaan ai",
+        "audit keamanan ai",
+        "mcp",
+        "ai-config",
+        "izin tool",
+        "keamanan skill"
+      ],
+      "rawan_keamanan": false,
+      "menggantikan": [],
+      "path": "skills/permukaan-ai/SKILL.md"
+    },
+    {
+      "nama": "php",
+      "deskripsi": "PHP/Laravel kelas industri — Eloquent aman (anti N+1/mass-assignment), validasi request, antrean, phpstan/pint.",
+      "divisi": "stack",
+      "pemicu": [
+        "php",
+        "laravel",
+        "phpstan",
+        "laravel-pint"
+      ],
+      "rawan_keamanan": false,
+      "menggantikan": [],
+      "path": "skills/php/SKILL.md"
+    },
+    {
+      "nama": "python",
+      "deskripsi": "Python (FastAPI/Django) kelas industri — validasi Pydantic di boundary, async aman, ruff/mypy/bandit, dependensi terkunci.",
+      "divisi": "stack",
+      "pemicu": [
+        "python",
+        "fastapi",
+        "django",
+        "pydantic",
+        "ruff"
+      ],
+      "rawan_keamanan": false,
+      "menggantikan": [],
+      "path": "skills/python/SKILL.md"
+    },
+    {
+      "nama": "rate-limiting",
+      "deskripsi": "Batasi laju permintaan kelas-industri — token-bucket atomik di penyimpanan terbagi, per-identitas yang tepat, balas 429 + Retry-After, lindungi login/OTP/tarik-dana dari brute-force & abuse.",
+      "divisi": "keamanan",
+      "pemicu": [
+        "rate-limit",
+        "rate-limiting",
+        "throttle",
+        "throttling",
+        "brute-force",
+        "too-many-requests",
+        "batasi-laju",
+        "anti-spam",
+        "flood-request"
+      ],
+      "rawan_keamanan": true,
+      "menggantikan": [],
+      "path": "skills/rate-limiting/SKILL.md"
+    },
+    {
+      "nama": "realtime",
+      "deskripsi": "Pembaruan langsung (chat/notif/live update) kelas-industri — otorisasi per-kanal di server (anti-nguping & anti-CSWSH), filter per-penerima, tahan-putus (reconnect+resync), hosting koneksi-panjang yang tepat.",
+      "divisi": "backend",
+      "pemicu": [
+        "realtime",
+        "real-time",
+        "websocket",
+        "socket.io",
+        "sse",
+        "server-sent-events",
+        "live-update",
+        "update-langsung",
+        "live-chat",
+        "typing-indicator",
+        "supabase-realtime",
+        "pusher",
+        "ably",
+        "presence-online"
+      ],
+      "rawan_keamanan": true,
+      "menggantikan": [],
+      "path": "skills/realtime/SKILL.md"
+    },
+    {
+      "nama": "seo",
+      "deskripsi": "SEO teknis kelas-industri — tiap halaman publik bisa ditemukan mesin pencari, cepat dibuka, dan link lama tak pernah mati saat URL berubah.",
+      "divisi": "marketing",
+      "pemicu": [
+        "seo",
+        "sitemap",
+        "robots",
+        "meta-tag",
+        "meta-deskripsi",
+        "kata-kunci",
+        "backlink",
+        "core-web-vitals"
+      ],
+      "rawan_keamanan": false,
+      "menggantikan": [],
+      "path": "skills/seo/SKILL.md"
+    },
+    {
+      "nama": "supabase-prisma",
+      "deskripsi": "Supabase/Postgres+Prisma kelas industri — RLS multi-penyewa, migrasi aman, transaksi & antrean DB, anti bocor kolom.",
+      "divisi": "stack",
+      "pemicu": [
+        "supabase",
+        "prisma",
+        "drizzle",
+        "rls-policy"
+      ],
+      "rawan_keamanan": true,
+      "menggantikan": [],
+      "path": "skills/supabase-prisma/SKILL.md"
+    },
+    {
+      "nama": "tahan-gagal",
+      "deskripsi": "Panggilan layanan luar yang tahan-banting — coba-ulang berjeda (retry+backoff+jitter) + saklar-pemutus (circuit breaker), supaya 1 layanan rewel tak menyeret seluruh sistem.",
+      "divisi": "backend",
+      "pemicu": [
+        "retry",
+        "coba-ulang",
+        "coba-lagi",
+        "timeout",
+        "circuit-breaker",
+        "saklar-pemutus",
+        "backoff",
+        "api-eksternal",
+        "api-pihak-ketiga",
+        "layanan-luar",
+        "tahan-gagal",
+        "resilience"
+      ],
+      "rawan_keamanan": false,
+      "menggantikan": [],
+      "path": "skills/tahan-gagal/SKILL.md"
+    },
+    {
+      "nama": "uiux",
+      "deskripsi": "Alur pakai & aksesibilitas kelas WCAG 2.2 AA — bisa dipakai semua orang (keyboard, pembaca layar, kontras cukup) dengan microcopy jelas dan 4 state UI.",
+      "divisi": "frontend",
+      "pemicu": [
+        "aksesibilitas",
+        "a11y",
+        "wcag",
+        "disabilitas",
+        "difabel",
+        "tunanetra",
+        "buta-warna",
+        "pembaca-layar",
+        "screen-reader",
+        "kontras"
+      ],
+      "rawan_keamanan": false,
+      "menggantikan": [],
+      "path": "skills/uiux/SKILL.md"
+    },
+    {
+      "nama": "upload-storage",
+      "deskripsi": "Unggah berkas/foto/avatar/dokumen kelas-industri — private + signed URL berjangka, validasi magic-bytes, key acak server-side, anti-IDOR & path-traversal.",
+      "divisi": "backend",
+      "pemicu": [
+        "unggah",
+        "upload",
+        "foto",
+        "gambar",
+        "avatar",
+        "lampiran",
+        "attachment",
+        "berkas masuk",
+        "file upload"
+      ],
+      "rawan_keamanan": true,
+      "menggantikan": [],
+      "path": "skills/upload-storage/SKILL.md"
+    },
+    {
+      "nama": "vps",
+      "deskripsi": "Server VPS kelas industri — nginx/Caddy reverse-proxy, systemd/PM2, firewall, TLS, backup, hardening SSH.",
+      "divisi": "stack",
+      "pemicu": [
+        "vps",
+        "nginx",
+        "systemd",
+        "pm2",
+        "server-sewaan"
+      ],
+      "rawan_keamanan": false,
+      "menggantikan": [],
+      "path": "skills/vps/SKILL.md"
+    },
+    {
+      "nama": "wallet-ledger",
+      "deskripsi": "Buku besar saldo internal (wallet/ledger) kelas-industri untuk judi/fintech — double-entry append-only, saldo = turunan bukti (bukan kolom bebas-edit), atomik + anti saldo-minus + anti-race + idempoten, alur penarikan ber-state + rekonsiliasi.",
+      "divisi": "keamanan",
+      "pemicu": [
+        "wallet",
+        "dompet-digital",
+        "saldo",
+        "ledger",
+        "buku-besar",
+        "double-entry",
+        "mutasi-saldo",
+        "top-up",
+        "deposit",
+        "penarikan",
+        "withdraw",
+        "withdrawal",
+        "payout",
+        "tarik-dana",
+        "rekonsiliasi"
+      ],
+      "rawan_keamanan": true,
+      "menggantikan": [],
+      "path": "skills/wallet-ledger/SKILL.md"
+    },
+    {
+      "nama": "webdesign",
+      "deskripsi": "Kualitas visual & merek — anti-template-generik, tetapkan arah desain dulu, hierarki + state hover/focus yang dirancang.",
+      "divisi": "frontend",
+      "pemicu": [
+        "desain",
+        "design",
+        "tata-letak",
+        "layout",
+        "antarmuka",
+        "landing",
+        "hero",
+        "mockup",
+        "branding",
+        "tipografi",
+        "font",
+        "palet",
+        "tema-warna"
+      ],
+      "rawan_keamanan": false,
+      "menggantikan": [],
+      "path": "skills/webdesign/SKILL.md"
+    }
+  ]
+}

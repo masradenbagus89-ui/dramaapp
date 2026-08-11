@@ -1,11 +1,11 @@
 ﻿# README - Kit Aturan AI Kerja Profesional
-> · 2026-07-15 · Windows-only · standar tim IT · Senior AI Reviewer + Schema Isolation + 33 file panduan tim
+> · 2026-07-15 · Windows-only · standar tim IT · 21 file tim panduan
 > [Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md) · [License: MIT](LICENSE)
 > Repo: [github.com/ojokesusu/lintasAI](https://github.com/ojokesusu/lintasAI) (privat — repo standar tim) · paket npm: [lintasai](https://www.npmjs.com/package/lintasai) (publik)
 
 ---
 
-## 🌟 Versi stabil sekarang: **v2.9.0** (2026-07-15)
+## 🌟 Versi stabil sekarang: **v3.0.0** (2026-07-19)
 
 > Ringkasan ini = "pinned message" untuk staff IT non-programmer. Detail lengkap per versi ada di [CHANGELOG.md](CHANGELOG.md).
 
@@ -29,9 +29,10 @@ Kit akan otomatis memasang aturan AI tim + menyalin dokumentasi + mengatur izin 
 ### Janji inti — yang DIJAMIN vs yang DITAWARKAN
 
 > 🎚️ Sebelum daftar fitur di bawah, ini **inti** kit lintasAI:
-> - ✅ **WAJIB & otomatis (tak bisa dimatikan):** **8 ahli IT profesional** — backend, frontend, database, webdesain, kenyamanan-pakai (UI/UX), pengiriman-ke-server (DevOps), keamanan, biar-ketemu-di-Google (SEO) — ikut menjaga mutu **tiap kali kamu prompt**, tanpa kamu mengetik apa pun. Ditambah **pagar keselamatan** (anti-bocor rahasia, anti-ngarang, bahasa awam). 🏢 Seperti 8 satpam tetap di tiap cabang — boleh kamu tambah, tak bisa dipecat.
+> - ✅ **WAJIB & tak bisa dimatikan — 4 pagar keselamatan:** anti-bocor rahasia & keamanan dasar · anti-ngarang (tiap klaim wajib berbukti) · bahasa Indonesia yang dimengerti orang non-teknis · gerbang "belum boleh bilang selesai sebelum terbukti". Ini yang tak bisa dibujuk lewat.
+> - 🧰 **Standar profesional ikut otomatis, tanpa kamu mengetik apa pun:** keamanan, database, tampilan & desain (termasuk larangan mengirim tampilan template mentah), kenyamanan-pakai + aksesibilitas WCAG 2.2, pengiriman-ke-server, dan biar-ketemu-di-Google (SEO) — semuanya sudah tertanam di aturan yang dibaca AI tiap sesi, plus perpustakaan rujukan yang dibuka saat topiknya nyambung. 🏢 Seperti perpustakaan teknik kelas dunia di kantormu: selalu tersedia, dan AI yang tahu buku mana yang relevan hari ini. *(Dulu ini berupa "8 divisi wajib dicentang tiap prompt"; ritual itu dicabut 2026-07-19 karena uji buta menunjukkan justru bikin AI berhenti menggali lebih awal — standarnya tetap, cara kerjanya yang diperbaiki.)*
 > - 🎛️ **Sisanya = REKOMENDASI yang DITAWARKAN (bukan keharusan):** semua fitur di tabel bawah + standar kode/dokumentasi/proses = AI **menyarankan & menjalankan default**, tapi **kamu yang pilih** — boleh pakai/lewati/matikan per project.
-> - 📈 **Kamu tumbuh sendiri:** tiap jawaban AI ditulis **2 versi** dengan label profesi mengikuti topik (👨‍🎓 Junior-Backend / Junior-SEO / … untuk yang sedang belajar + 🙂 bahasa sehari-hari), dan tiap jawaban berisi ditutup mini-pelajaran **"📚 Belajar dari task ini"** (arti awam · kenapa penting · jebakan umum · 🚀 jalan ke senior) — sengaja, supaya kamu naik kelas dari waktu ke waktu (non-programmer → junior-profesi → senior-profesi), bukan selamanya bergantung.
+> - 📈 **Kamu tumbuh sendiri:** tiap jawaban AI ditulis **2 versi** dengan label profesi mengikuti topik (👨‍🎓 Junior-Backend / Junior-SEO / … untuk yang sedang belajar + 🙂 bahasa sehari-hari), dan istilah programming dibiarkan **asli lalu dijelaskan** untuk junior + non-programmer — sengaja, supaya kamu naik kelas dari waktu ke waktu (non-programmer → junior-profesi → senior-profesi), bukan selamanya bergantung.
 
 ### Apa yang kit kasih (10 highlight versi stabil)
 
@@ -50,11 +51,7 @@ Kit akan otomatis memasang aturan AI tim + menyalin dokumentasi + mengatur izin 
 
 ### Untuk staff IT non-programmer (Day 0)
 
-Baca dulu: [MULAI_DI_SINI.md](MULAI_DI_SINI.md) (bahasa awam, 1 halaman). Skip rest of README — itu dev reference.
-
-### Untuk owner / tim lead
-
-Baca: [TEAM_ROLLOUT_GUIDE_v1.md](TEAM_ROLLOUT_GUIDE_v1.md) (panduan rollout ke staff).
+Cukup jalankan `npm create lintasai` di folder project (atau minta AI-mu menjalankannya) — sisanya AI yang memandu. Skip rest of README — itu dev reference.
 
 ### Peta Keputusan — "Mau apa → buka/paste file ini"
 
@@ -63,7 +60,6 @@ Bingung mulai dari mana? Cari niatmu di kolom kiri, lalu buka/paste file di kolo
 | Kamu mau... | Buka / paste file ini |
 |---|---|
 | 🚀 Pasang kit pertama kali | `npm create lintasai` (atau paste `JALANKAN_KIT.md`) |
-| 📍 Di mana menyimpan kit + cara pasang aman (anti salah-taruh) | `PANDUAN_PASANG_AMAN.md` |
 | 📄 Bikin / refresh dokumentasi proyek | `PROJECT_LIFECYCLE_PROMPT_v1.md` |
 | 🔍 Audit / cek kesehatan proyek | `AUDIT_POST_SETUP_PROMPT_v1.md` |
 | ⬆️ Update kit ke versi baru | chat "update kit" (atau paste `UPDATE_KIT_PROMPT_v1.md`) |
@@ -78,7 +74,7 @@ Bingung mulai dari mana? Cari niatmu di kolom kiri, lalu buka/paste file di kolo
 - **Penyempurnaan kecil berkelanjutan** — perbaikan perilaku AI + dokumen + tes. Tidak merusak yang sudah jalan; staff cukup minta AI "update kit" (atau jalankan `npx lintasai@latest update`).
 - **Dukungan lintas-platform (target ke depan)** — macOS + Linux. Ditandai perubahan-besar karena sekarang khusus Windows.
 
-> Catatan: **v2.0.0** (kit 100% Node, seluruh alat PowerShell dihapus) sudah **RILIS** (2026-07-10) — bukan lagi rencana. Versi stabil sekarang v2.9.0 (lihat atas).
+> Catatan: **v2.0.0** (kit 100% Node, seluruh alat PowerShell dihapus) sudah **RILIS** (2026-07-10) — bukan lagi rencana. Versi stabil sekarang (lihat atas).
 
 ---
 
@@ -89,20 +85,18 @@ claude-ai-rules-kit/
 ├── CHANGELOG.md                           ← log perubahan per versi
 ├── CONTRIBUTING.md                        ← panduan usul perubahan aturan
 ├── LICENSE                                ← MIT (bebas pakai/modif/distribusi)
-├── CLAUDE_universal_v1.md                 ← aturan utama (auto-load tiap sesi, Pola A)
-├── LINTASAI_WORKFLOWS_v1.md               ← PENGALIH tipis (v2.4.0: isi pindah ke workflows/)
-├── workflows/                             ← rak rujukan on-demand pecah-per-seksi (1 seksi = 1 berkas; INDEX.md = daftar isi)
+├── CLAUDE_universal_v1.md                 ← aturan utama (auto-load tiap sesi)
+├── LINTASAI_WORKFLOWS_v1.md               ← PENGALIH tipis (v2.4.0: isi pindah ke rules/)
+├── rules/                             ← rak rujukan on-demand pecah-per-seksi (1 seksi = 1 berkas; INDEX.md = daftar isi)
 ├── PROJECT_LIFECYCLE_PROMPT_v1.md         ← prompt 4-stage (Kickoff / Bootstrap / Update Docs / Migration) - AI auto-route
 ├── UPDATE_KIT_PROMPT_v1.md                ← prompt update kit ke versi baru (AI auto-classify tier)
 ├── AUDIT_POST_SETUP_PROMPT_v1.md          ← prompt audit komprehensif setelah setup awal
 ├── SPLIT_REPO_MIGRATION_PROMPT_v1.md      ← prompt pecah-repo (jumlah ikut kebutuhan; lihat POLA_REPO_AMAN)
-├── TEAM_ROLLOUT_GUIDE_v1.md               ← panduan owner standar tim (kamu)
 ├── AGENTS.md.template                     ← template AGENTS.md untuk root proyek (Pola B)
-├── JALANKAN_KIT.md                        ← prompt SINGLE-PASTE Pola B (Popup #1 Setup Mode: LENGKAP/CEPAT/PILIH SENDIRI) + verifikasi setup
+├── JALANKAN_KIT.md                        ← prompt SINGLE-PASTE Pola B (aktivasi SENYAP: 0 popup wajib + Laporan Penutup + kapabilitas on-demand)
 ├── bin/lintasai.js                        ← ENTRY-POINT RESMI: dispatcher Node (`npm create lintasai` / `npx lintasai`)
 ├── lib/                                   ← helper engine (Node `*.mjs`)
-├── install-windows.mjs                    ← installer Pola A global (Node)
-├── setup-pola-b.mjs                       ← auto-setup Pola B (5 skeleton docs + auto-copy 33 file tim) (Node)
+├── setup-pola-b.mjs                       ← auto-setup Pola B (5 skeleton docs + auto-copy 21 file tim) (Node)
 ├── update-kit.mjs                         ← auto-update kit (re-clone + backup + setup, rollback-safe) (Node)
 ├── uninstall.mjs                          ← safe uninstall via manifest sha256 diff (Node)
 ├── kit.mjs                                ← router perintah kit (doctor/scan/version/help) (Node)
@@ -111,28 +105,19 @@ claude-ai-rules-kit/
     ├── glossary.md                        ← template kamus istilah domain
     ├── _PATTERNS.md                       ← aturan dokumentasi tim profesional generic
     ├── _EXAMPLE.md                        ← contoh format .md pendamping siap-copy
-    ├── CLAUDE_TEAM_GUIDE.md               ← panduan tim AI-first (workflow harian, branching, review)
-    ├── PROMPT_LIBRARY.md                  ← 22 prompt pattern siap-pakai (tambah fitur, fix bug, SEO, deploy + chat-driven workflow)
-    ├── ONBOARDING.md                      ← playbook dev baru hire (Day 0 - Day 14)
     ├── STACK_GUIDE.md                     ← Next.js + Vercel + SEO + security + Feature Flag
-    ├── MCP_SETUP.md                       ← MCP setup + PostgreSQL schema isolation (CyberSecurity)
     ├── GLOSSARY_NON_PROGRAMMER.md         ← kamus istilah AI/coding untuk non-programmer (WAJIB baca dulu)
     ├── SECURITY_INCIDENT_PLAYBOOK.md      ← playbook respon insiden keamanan (~5 menit baca)
     ├── RLS_SETUP_PROMPT.md                ← prompt setup Row Level Security Supabase
     ├── DB_SCHEMA_SCAN_PROMPT.md           ← prompt audit schema DB
     ├── feature-flags-advanced.md         ← panduan feature flag advanced (POST-LAUNCH ref)
     ├── STACK_MIGRATION_GUIDE.md          ← panduan migrasi Vercel -> Railway/Render (ADVANCED)
-    ├── TEAM_FLOW_SKETCH_v1.md            ← flow kerja tim end-to-end (siapa ngapain, staging→prod, deploy aman)
-    ├── CROSS_REPO_TYPES_PIPELINE.md      ← pipeline auto-generate types lintas-repo (backend → shared → frontend)
     ├── decisions/                         ← ADR (Architecture Decision Record) folder
     │   ├── _TEMPLATE.md                   ← template ADR ringkas
     │   └── README.md                      ← panduan kapan tulis ADR
-    └── github/                            ← template GitHub Actions/PR/CODEOWNERS (di-copy ke proyek .github/)
-        ├── workflows/ai-review.yml        ← Senior AI Reviewer GitHub Action
+    └── github/                            ← template GitHub Actions (di-copy ke proyek .github/)
         ├── workflows/backup-schemas.yml   ← auto-backup schema DB ke artifact
-        ├── scripts/ai-review.cjs           ← Script reviewer Claude API
-        ├── CODEOWNERS.template            ← auto-assign reviewer per folder
-        └── pull_request_template.md       ← PR template tim
+        └── workflows/secret-guard.yml     ← penjaga rahasia (blok commit .env/kunci)
 ```
 
 ## Halo!
@@ -143,26 +128,22 @@ Hai, bro/sis! Paket ini isinya **aturan kerja AI** yang aku pakai sehari-hari bi
 > *Claude Code* = CLI (Command Line Interface) resmi Anthropic buat ngobrol sama AI Claude langsung dari terminal. Mirip ChatGPT tapi bisa baca/tulis file di komputer kamu.
 
 ## Apa isi paket ini?
-"Pola A install" = ke-copy ke `%USERPROFILE%\.claude\` saat jalanin `npx lintasai install-windows`. "Pola B kit-only" = stay di folder kit (untuk embed `.claude-kit/` di proyek). "Meta" = file pengantar, tidak ke-copy ke `~/.claude/` tapi penting di kit folder.
+"Kit" = ikut terpasang ke `.claude-kit/` di project saat `npm create lintasai`. "Meta" = file pengantar repo (tidak dibaca AI tiap sesi).
 
 | File | Fungsi singkat | Kategori |
 |---|---|:-:|
-| `CLAUDE_universal_v1.md` | Aturan utama - AI baca otomatis tiap sesi (bahasa ID, anti-bug, wajib docs) | Pola A install |
-| `PROJECT_LIFECYCLE_PROMPT_v1.md` | Prompt **4-stage lifecycle** (Stage 1 (Proyek Baru): Kickoff proyek baru / Stage 2 (Bikin Catatan Proyek): Bootstrap docs proyek lama / Stage 3 (Perbarui Catatan): Update Docs refresh `.md` / Stage 4 (Rapikan ke Standar Tim): Migration proyek setengah jadi) - AI auto-route ke stage yang tepat | Pola A install |
-| `UPDATE_KIT_PROMPT_v1.md` | Prompt **update kit ke versi baru** - AI auto-classify tier perubahan & action items | Pola A install |
-| `AUDIT_POST_SETUP_PROMPT_v1.md` | Prompt **audit komprehensif setelah setup awal** - verifikasi kit, gap, & rekomendasi | Pola A install |
-| `SPLIT_REPO_MIGRATION_PROMPT_v1.md` | Prompt **migrate ke split-repo** (per-Lapisan 2-3 repo: frontend + backend, shared opsional — atau microservice per-kapabilitas; jumlah ikut wilayah rahasia, sumber `docs/plans/POLA_REPO_AMAN.md`) | Pola A install |
-| `TEAM_ROLLOUT_GUIDE_v1.md` | Panduan **pemimpin tim** (kamu) buat rollout kit ini jadi standar tim | Pola A install |
-| `templates/architecture.md` | Template peta isi folder `docs/` proyek | Pola A install |
-| `templates/glossary.md` | Template kamus istilah proyek | Pola A install |
-| `templates/_PATTERNS.md` | **Standar dokumentasi tim profesional** (kapan wajib ada `.md`, format, anti-pattern) | Pola A install |
-| `templates/_EXAMPLE.md` | Contoh konkret 1 file `.md` pendamping siap-copy (reference format) | Pola A install |
-| `templates/TEAM_FLOW_SKETCH_v1.md` | Flow kerja tim end-to-end (siapa ngapain, serah-terima, staging→prod, deploy aman) - bahasa non-programmer | Pola A install |
-| `templates/CROSS_REPO_TYPES_PIPELINE.md` | Pipeline auto-generate types lintas-repo (backend ubah schema → shared publish → frontend auto-PR) | Pola A install |
-| `AGENTS.md.template` | Template `AGENTS.md` untuk dicopy ke root proyek (Pola B) | Pola B kit-only |
-| `JALANKAN_KIT.md` | Prompt **SINGLE-PASTE** Pola B - AI tanya cara pasang (LENGKAP/CEPAT/PILIH-SENDIRI) + audit + ukuran tim & bentuk kode + setup + 4 aturan + 33 file tim profesional + verifikasi | Pola B kit-only |
-| `setup-pola-b.mjs` | Script auto-setup Pola B di root proyek (copy AGENTS.md + 5 skeleton docs/) | Pola B kit-only |
-| `install-windows.mjs` | Script auto-install Windows untuk Pola A (global) | Meta |
+| `CLAUDE_universal_v1.md` | Aturan utama - AI baca otomatis tiap sesi (bahasa ID, anti-bug, wajib docs) | Kit |
+| `PROJECT_LIFECYCLE_PROMPT_v1.md` | Prompt **4-stage lifecycle** (Stage 1 (Proyek Baru): Kickoff proyek baru / Stage 2 (Bikin Catatan Proyek): Bootstrap docs proyek lama / Stage 3 (Perbarui Catatan): Update Docs refresh `.md` / Stage 4 (Rapikan ke Standar Tim): Migration proyek setengah jadi) - AI auto-route ke stage yang tepat | Kit |
+| `UPDATE_KIT_PROMPT_v1.md` | Prompt **update kit ke versi baru** - AI auto-classify tier perubahan & action items | Kit |
+| `AUDIT_POST_SETUP_PROMPT_v1.md` | Prompt **audit komprehensif setelah setup awal** - verifikasi kit, gap, & rekomendasi | Kit |
+| `SPLIT_REPO_MIGRATION_PROMPT_v1.md` | Prompt **migrate ke split-repo** (per-Lapisan 2-3 repo: frontend + backend, shared opsional — atau microservice per-kapabilitas; jumlah ikut wilayah rahasia, sumber `docs/plans/POLA_REPO_AMAN.md`) | Kit |
+| `templates/architecture.md` | Template peta isi folder `docs/` proyek | Kit |
+| `templates/glossary.md` | Template kamus istilah proyek | Kit |
+| `templates/_PATTERNS.md` | **Standar dokumentasi tim profesional** (kapan wajib ada `.md`, format, anti-pattern) | Kit |
+| `templates/_EXAMPLE.md` | Contoh konkret 1 file `.md` pendamping siap-copy (reference format) | Kit |
+| `AGENTS.md.template` | Template `AGENTS.md` untuk dicopy ke root proyek (Pola B) | Kit |
+| `JALANKAN_KIT.md` | Prompt **SINGLE-PASTE** Pola B - AI tanya cara pasang (LENGKAP/CEPAT/PILIH-SENDIRI) + audit + ukuran tim & bentuk kode + setup + 4 aturan + 21 file tim profesional + verifikasi | Kit |
+| `setup-pola-b.mjs` | Script auto-setup Pola B di root proyek (copy AGENTS.md + 5 skeleton docs/) | Kit |
 | `README.md` | File ini - baca dulu | Meta |
 | `CHANGELOG.md` | Log perubahan per versi | Meta |
 | `CONTRIBUTING.md` | Panduan anggota tim untuk usul perubahan aturan | Meta |
@@ -178,17 +159,16 @@ Hai, bro/sis! Paket ini isinya **aturan kerja AI** yang aku pakai sehari-hari bi
 
 ## Cara Install (Recommended untuk Staff)
 
-> 🧭 **Bingung pilih yang mana? Tidak perlu.** Untuk hampir semua orang cukup **1 perintah: `npm create lintasai`** (Cara 1 di bawah). Cara/Opsi lain di halaman ini = **alternatif untuk situasi khusus** (owner, advanced, atau komputer tanpa npm) — staff non-programmer **abaikan saja**.
+> 🧭 **Tidak perlu bingung pilih cara.** Untuk semua orang cukup **1 perintah: `npm create lintasai`** (di bawah).
 >
 > | Kondisi kamu | Pakai ini |
 > |---|---|
-> | Staff biasa / paling umum | **`npm create lintasai`** (Cara 1) |
+> | Staff biasa / paling umum | **`npm create lintasai`** |
 > | Owner / butuh perintah lanjutan (update, doctor, rollback) | `npx lintasai <perintah>` |
-> | Komputer tanpa npm / terisolasi / owner advanced | Git clone + `JALANKAN_KIT.md` (lihat **"Distribusi via GitHub repo"**) |
 >
-> Ketiganya berujung ke pemasang yang **sama** — bukan 3 hal berbeda yang bersaing.
+> Keduanya berujung ke pemasang yang **sama**.
 
-### Cara 1: lewat Claude Code chat (1 perintah, paling cepat — disarankan)
+### Cara pasang: lewat Claude Code chat (1 perintah, paling cepat — disarankan)
 
 Buka **Claude Code chat** di folder project kamu, lalu ketik/paste:
 
@@ -205,54 +185,6 @@ Untuk update, cukup minta AI di chat: **"tolong update kit"** (AI yang jalankan)
 npx lintasai@latest update
 ```
 
-### Cara 2: Git Clone (untuk owner / advanced)
-
-Lihat section **"Distribusi via GitHub repo"** di bawah untuk detail git clone, degit, atau prompt-driven setup.
-
----
-
-## Cara Install Manual (Advanced)
-
-> Section ini untuk owner / advanced user yang ingin install global (Pola A) atau setup manual tanpa NPM. Staff IT non-programmer disarankan pakai **Cara 1 (NPM)** di atas.
-
-### Cara 3: Otomatis post-clone (cepat, ~10 detik)
-
-Buka terminal di folder paket ini, jalanin (jalur Node — tak perlu ExecutionPolicy):
-```bash
-npx lintasai install-windows
-```
-Script otomatis menangani Mark-of-the-Web (buka-blokir berkas kalau zip didownload dari internet). Mau cek tanpa nimpa apapun? Tambah flag `--dry-run`.
-
-Kalau di folder profil udah ada `CLAUDE.md`, **script otomatis backup** ke `CLAUDE.md.backup-YYYYMMDD-HHMMSS` sebelum nimpa - jadi file lamamu aman.
-
-### Cara 4: Manual copy post-clone
-
-Tujuan: copy file paket ke folder profil Claude kamu - `%USERPROFILE%\.claude\` (= `C:\Users\<NamaKamu>\.claude\`).
-
-Mapping file:
-
-| Dari (paket) | Ke (folder profil) |
-|---|---|
-| `CLAUDE_universal_v1.md` | `%USERPROFILE%\.claude\CLAUDE.md` *(rename!)* |
-| `LINTASAI_WORKFLOWS_v1.md` *(pengalih)* | `%USERPROFILE%\.claude\LINTASAI_WORKFLOWS_v1.md` |
-| `workflows\` *(rak rujukan per-seksi)* | `%USERPROFILE%\.claude\workflows\` |
-| `PROJECT_LIFECYCLE_PROMPT_v1.md` | `%USERPROFILE%\.claude\PROJECT_LIFECYCLE_PROMPT_v1.md` |
-| `TEAM_ROLLOUT_GUIDE_v1.md` | `%USERPROFILE%\.claude\TEAM_ROLLOUT_GUIDE_v1.md` |
-| `templates\architecture.md` | `%USERPROFILE%\.claude\templates\architecture.md` |
-| `templates\glossary.md` | `%USERPROFILE%\.claude\templates\glossary.md` |
-| `templates\_PATTERNS.md` | `%USERPROFILE%\.claude\templates\_PATTERNS.md` |
-| `templates\_EXAMPLE.md` | `%USERPROFILE%\.claude\templates\_EXAMPLE.md` |
-
-> WARNING: Kalau folder profil udah ada `CLAUDE.md`, **backup dulu manual** (rename jadi `CLAUDE.md.backup-20260530-093000` - pakai timestamp sekarang) sebelum nimpa. Format ini sama persis dengan yang dipakai script otomatis, biar konsisten.
-
-## Verifikasi install
-Di PowerShell:
-```powershell
-Get-ChildItem $env:USERPROFILE\.claude\
-Get-Content $env:USERPROFILE\.claude\CLAUDE.md -TotalCount 3
-```
-Harus kelihatan: `CLAUDE.md`, 3 file panduan (`LINTASAI_WORKFLOWS_v1.md`, `PROJECT_LIFECYCLE_PROMPT_v1.md`, `TEAM_ROLLOUT_GUIDE_v1.md`), folder `workflows\` (rak rujukan per-seksi), dan folder `templates\`. Baris pertama `CLAUDE.md` harus nampilin header versi (mis. `v1 · 2026-05-30`) - itu tandanya file bener-bener ke-copy. Mau yakin AI baca aturannya? Buka Claude Code, lalu tanya: *"Kamu baca aturan dari file apa? Sebutin versi di header."* Kalau dia jawab `%USERPROFILE%\.claude\CLAUDE.md` + versi yang sama, sukses.
-
 ## Pakai sehari-hari - 1 prompt, 4 stage
 
 Sejak v1.5+, **3 skenario lama (KICKOFF / BOOTSTRAP / MIGRATION) + UPDATE_DOCS** sudah digabung jadi **1 prompt single-entry**: `PROJECT_LIFECYCLE_PROMPT_v1.md`. Kamu cukup paste prompt yang sama di semua skenario - AI **auto-route ke Stage 1/2/3/4** berdasarkan kondisi proyek.
@@ -262,7 +194,7 @@ Sejak v1.5+, **3 skenario lama (KICKOFF / BOOTSTRAP / MIGRATION) + UPDATE_DOCS**
 cd C:\path\ke\proyek    # atau mkdir proyek-baru; cd proyek-baru; git init
 claude
 ```
-Di sesi Claude, **paste isi `%USERPROFILE%\.claude\PROJECT_LIFECYCLE_PROMPT_v1.md`**. AI akan auto-detect kondisi & route:
+Di sesi Claude, **paste isi `.\.claude-kit\PROJECT_LIFECYCLE_PROMPT_v1.md`**. AI akan auto-detect kondisi & route:
 
 - **Stage 1 (Proyek Baru) - Kickoff** → proyek BARU dari nol (folder kosong / cuma `.git`). AI nanyain stack, bikin struktur folder, setup `docs/` otomatis.
 - **Stage 2 (Bikin Catatan Proyek) - Bootstrap Docs** → proyek LAMA punya code tapi belum punya `.md` pendamping. AI baca code lalu auto-fill semua `.md` di `docs/`.
@@ -272,7 +204,7 @@ Di sesi Claude, **paste isi `%USERPROFILE%\.claude\PROJECT_LIFECYCLE_PROMPT_v1.m
 Filosofi tetap sama untuk semua stage: **bentrok OK**, perbaikan bertahap (boy scout rule), no paksa rewrite besar. Sesi berikutnya: paste prompt yang sama → AI baca state file → lanjut dari item pending.
 
 ### Sesi biasa di proyek yang udah jalan
-Tinggal `claude` aja di folder proyek - aturan global ke-load otomatis, gak perlu paste apa-apa.
+Tinggal `claude` aja di folder proyek - aturan kit (`AGENTS.md` + `.claude-kit/`) ke-load otomatis, gak perlu paste apa-apa.
 
 ---
 
@@ -282,172 +214,11 @@ Kit ini dirancang jadi **standar tim IT 3-10 orang**. Filosofi: hemat energi, ko
 - **Semua anggota pakai versi yang sama** - taruh kit di Git repo private internal dengan tag versi (`v1`, `v1.1`, dst). Bukan Google Drive bebas yang versinya nyasar.
 - **1 owner standar** (mis. pemimpin tim) yang approve perubahan aturan + rilis versi baru. Anggota lain usul via issue/PR di repo standar.
 - **Channel diskusi tunggal** (`#it-standard` di Slack/Discord/WA) untuk usulan, announce update, troubleshooting.
-- **Update otomatis backup** - saat owner rilis v1.2, anggota jalanin `npx lintasai install-windows` lagi (atau minta AI). Pemasang backup file lama dengan timestamp, gak rusak setting existing.
+- **Update otomatis backup** - saat owner rilis versi baru, anggota cukup minta AI di chat: *"tolong update kit"* (atau `npx lintasai@latest update`). Mesin update mencadangkan kit lama ber-timestamp, gak rusak setting existing.
 - **Exception per-proyek dicatat** - kalau proyek X opt-out aturan Y, catat di `exceptions.md` di repo standar dengan sunset date. Review tiap bulan.
 - **Adopsi per-proyek pakai `PROJECT_LIFECYCLE_PROMPT_v1.md`** - 1 prompt, AI auto-route ke Stage 1 (Proyek Baru / Kickoff) / 2 (Bikin Catatan Proyek / Bootstrap Docs) / 3 (Perbarui Catatan / Update Docs) / 4 (Rapikan ke Standar Tim / Migration) sesuai kondisi proyek.
 
-Detail lengkap (governance, distribusi update, metric kesehatan tim, anti-pattern, FAQ tim) ada di **`%USERPROFILE%\.claude\TEAM_ROLLOUT_GUIDE_v1.md`** - baca kalau kamu pemimpin tim / owner standar.
-
-## Distribusi via GitHub repo
-
-Kit ini di-publish di **`github.com/ojokesusu/lintasAI`** (private repo standar tim). Staff IT clone langsung dari sana - tidak perlu kirim zip via email/chat. Update kit cukup `git pull` di local clone. **4 opsi setup** (dilabeli A-D supaya tak bingung dengan "Cara 1-4" di bagian "Cara Install" atas):
-
-### Opsi A - Git clone (paling umum, butuh git terpasang)
-
-```powershell
-# Dari root proyek
-git clone --depth 1 https://github.com/ojokesusu/lintasAI.git .claude-kit
-# Hapus .git/ supaya tidak konflik dengan git proyek user:
-Remove-Item .claude-kit\.git -Recurse -Force
-# Setup (jalur Node — tak perlu ExecutionPolicy):
-node .\.claude-kit\setup-pola-b.mjs
-# Buka Claude Code, paste isi .claude-kit\JALANKAN_KIT.md
-```
-
-`--depth 1` = clone shallow (tanpa history) supaya cepat + ringan (~80 KB vs MB-level).
-
-### Opsi B - git clone shallow lalu buang `.git/` (output bersih)
-
-```powershell
-git clone --depth 1 https://github.com/ojokesusu/lintasAI.git .claude-kit
-Remove-Item .claude-kit\.git -Recurse -Force
-# Setup (jalur Node — tak perlu ExecutionPolicy):
-node .\.claude-kit\setup-pola-b.mjs
-# Buka Claude Code, paste isi .claude-kit\JALANKAN_KIT.md
-```
-
-Membuang `.git/` = output bersih siap-pakai (tanpa riwayat git nyangkut di project).
-
-### Opsi C - Prompt ke Claude Code (paling simple)
-
-Buka Claude Code di root proyek, prompt:
-
-```
-Mohon clone https://github.com/ojokesusu/lintasAI ke folder .claude-kit
-(hapus .git/ setelahnya), lalu jalankan setup Node `node .claude-kit/setup-pola-b.mjs`,
-lalu eksekusi isi JALANKAN_KIT.md.
-```
-
-AI akan handle git clone + cleanup + setup + JALANKAN_KIT workflow end-to-end.
-
-### Opsi D - Download zip dari GitHub Releases (fallback)
-
-Kalau staff IT tidak install git / Node.js, download zip dari [Releases](https://github.com/ojokesusu/lintasAI/releases) → extract ke `.claude-kit/`. Workflow sama seperti zip biasa.
-
-### Update kit ke versi baru
-
-**Cara termudah & disarankan:** minta AI di chat — **"tolong update kit"** — atau jalankan `npx lintasai@latest update` (jalur Node). AI memetakan tier perubahan + konfirmasi sebelum jalan.
-
-> Bagian di bawah = **referensi developer** untuk jalur git-clone manual. Mesin update = `update-kit.mjs` (dipanggil otomatis oleh `npx lintasai@latest update`).
-
-#### Opsi A - Auto-update langsung via `npx lintasai@latest update`
-
-Kit punya **alat auto-update** yang handle re-clone fresh + backup + setup + version detection dalam 1 perintah:
-
-```bash
-# Dari root proyek (folder yang ada .claude-kit/ di dalamnya):
-npx lintasai@latest update
-```
-
-Perintah otomatis lakukan:
-1. ✅ **Siapkan versi baru di folder sebelah** (dari paket npm publik yang sudah diunduh + diverifikasi npm — **tak butuh git/akun GitHub**), lalu **periksa kelengkapannya**. Gagal di sini → kit lama **tak tersentuh**.
-2. ✅ **Cadangkan** `.claude-kit/` lama ke `.claude-kit.backup-<cap-waktu>`, lalu **tukar** (rollback-safe).
-3. ✅ **Tolak jalan kalau updater-nya sendiri bukan versi terbaru** (jebakan cache `npx`) + **tolak turun versi** tanpa `--allow-downgrade`.
-4. ✅ **Re-run pemasang Node** (`setup-pola-b.mjs --force`, anti-overwrite preserve `docs/` existing).
-5. ✅ **Detect versi lama vs baru** + tampilkan action items.
-
-> `--from-repo` = jalur git lama (clone + verifikasi tanda tangan GPG), hanya untuk owner/tim ber-akses repo privat (mis. menguji tag pra-rilis).
-
-**Bendera opsional**:
-- `--no-backup` - skip backup (irreversible). Akan minta konfirmasi dulu; untuk unattended/CI tambah `--yes-delete-no-backup`.
-- `--repo-url <url>` - override default (untuk fork private kamu sendiri).
-- `--branch <name>` - clone branch lain (default: `main`).
-- `--dry-run` - preview tindakan tanpa eksekusi.
-- `--cleanup-backups` - sekalian bersihkan cadangan lama (> 30 hari / di luar 3 terbaru).
-
-**Kalau git clone gagal** (network/auth issue): perintah auto-rollback restore backup. Zero half-state risk.
-
-#### Opsi B - Manual re-clone (fallback tanpa `npx`)
-
-```powershell
-cd <project-root>
-Remove-Item .claude-kit -Recurse -Force
-git clone --depth 1 https://github.com/ojokesusu/lintasAI.git .claude-kit
-Remove-Item .claude-kit\.git -Recurse -Force
-node .\.claude-kit\setup-pola-b.mjs --force
-```
-
-Sama hasilnya dengan Opsi A, tapi manual + tidak ada backup otomatis.
-
-**PENTING - selalu re-run `node .\.claude-kit\setup-pola-b.mjs --force` setelah update kit manual.** Itu yang trigger copy file skeleton BARU dari kit ke `docs/` (anti-overwrite tetap aktif → file `docs/*.md` user existing AMAN, tidak ditimpa).
-
-**Action items setelah update**:
-1. Baca `CHANGELOG.md` section `[vX.Y.Z]` untuk overview perubahan.
-2. Update `AGENTS.md` field `Versi kit aktif: vX.Y.Z` di root proyek.
-3. Kalau CHANGELOG sebut workflow change di `JALANKAN_KIT.md` → re-paste ke Claude Code untuk aktifkan.
-4. Verify 1 sesi Claude Code untuk pastikan kit jalan smooth.
-
-### Trade-off private vs public repo
-
-| Aspek | **Private repo** (saat ini default) | **Public repo** |
-|---|---|---|
-| Staff IT clone | Wajib GitHub auth (SSH key / PAT) | Zero auth - `git clone` langsung |
-| Bocoran ke pihak luar | Tidak - repo invisible | Public - tapi kit ini generic + MIT license, tidak ada secret |
-| Adopsi external (community) | Tidak | Bisa - komunitas eksternal bisa fork / contribute |
-| Setup friction | +1 step setup GitHub auth per staff IT | 0 |
-| Saran owner | Cocok kalau tim kecil + tidak mau external visibility | Cocok kalau OK community contribution + lebih simple untuk staff IT baru |
-
-**Default rekomen**: **public** kalau kit ini generic infrastructure. Pilih private cuma kalau ada concern internal-only.
-
----
-
-## Pola B: Embed kit di proyek (manual extract, tanpa GitHub)
-
-Selain install global di `%USERPROFILE%\.claude\` (Pola A) atau clone dari GitHub (di atas), kit ini bisa di-embed manual dari zip yang kamu dapat (mis. lewat chat/email) sebagai `.claude-kit/`. Cocok kalau kit mau **di-track di git proyek** biar version-locked (semua anggota tim dapat versi sama persis saat clone repo), atau kalau proyek punya aturan khusus beda dari aturan global. Bedanya: Pola A berlaku untuk **semua proyek** di laptop user, Pola B cuma berlaku untuk **satu proyek** itu saja. Versi kit aktif paket ini = lihat baris versi teratas `.claude-kit\CHANGELOG.md` setelah extract (selalu akurat, tak perlu disebut angka di sini supaya tak basi).
-
-### Cara setup otomatis
-
-Buka terminal dan `cd` ke **root proyek** dulu (tempat `package.json` / `.git` berada). Semua perintah di bawah asumsikan cwd = root proyek.
-
-```powershell
-# 1. Extract zip kit jadi folder .claude-kit\ di root proyek
-#    Ganti <path-ke-zip-kamu> dengan lokasi zip yang kamu download (Slack/email/Downloads).
-Expand-Archive -Path "<path-ke-zip-kamu>" -DestinationPath ".\.claude-kit" -Force
-
-# 2. Jalankan setup (jalur Node — tak perlu ExecutionPolicy)
-node .\.claude-kit\setup-pola-b.mjs
-```
-
-Script otomatis: (a) **deteksi nested extract** dan tawarkan auto-flatten; (b) **tangani Mark-of-the-Web** untuk semua file kit (cegah block kalau zip didownload via browser); (c) **deteksi CLAUDE.md existing** dan tanya: rename ke `.legacy-<timestamp>` / biarkan dua-duanya / batal; (d) copy `AGENTS.md.template` jadi `AGENTS.md`, isi placeholder; (e) auto-backup `AGENTS.md` lama kalau ada.
-
-### Cara setup manual
-
-Kalau lebih suka manual (atau script error), 3 langkah dari root proyek:
-
-1. **Extract zip kit** jadi `.\.claude-kit\` (perintah `Expand-Archive` di atas).
-2. **Copy template:** `Copy-Item .\.claude-kit\AGENTS.md.template .\AGENTS.md` (cek dulu `AGENTS.md` belum ada - kalau ada, backup pakai nama ber-timestamp).
-3. **Edit `AGENTS.md`** di root: isi `<NAMA_PROYEK>`, `<TANGGAL_HARI_INI>`, override khusus proyek (boleh kosong dulu kalau belum ada).
-
-### Verifikasi
-
-Setelah langkah 1 + 2 di atas **selesai semua**, buka Claude Code di root proyek lalu paste isi `.\.claude-kit\JALANKAN_KIT.md` ke chat. AI cek `.claude-kit/` lengkap, versi kit match `AGENTS.md`, `AGENTS.md` ke-load, lalu kasih tour singkat. Kalau AI bilang "file X tidak ditemukan" atau "versi drift", berarti extract belum tepat - ulangi langkah 1. **PENTING:** jangan paste prompt sebelum script jalan, urutannya akan kacau.
-
-### Pakai sehari-hari di Pola B
-
-Workflow sama persis dengan Pola A (paste `PROJECT_LIFECYCLE_PROMPT_v1.md`, AI auto-route ke Stage 1/2/3/4), **bedanya cuma path prompt**: paste isi dari `.\.claude-kit\PROJECT_LIFECYCLE_PROMPT_v1.md`, bukan dari `%USERPROFILE%\.claude\PROJECT_LIFECYCLE_PROMPT_v1.md`. `AGENTS.md` otomatis kasih tau AI: kalau ada `./.claude-kit/`, baca prompts dari situ.
-
-> Kalau user **dua-duanya punya** (install global + `.claude-kit/`), `AGENTS.md` proyek menang - pas buat override aturan global untuk proyek tertentu.
-
-### Trade-off vs install global
-
-| Aspek         | Pola B (embed di proyek)                              | Pola A (install global)                          |
-|---------------|-------------------------------------------------------|--------------------------------------------------|
-| Auto-load     | Via `CLAUDE.md` di root proyek (`@import` `.claude-kit/CLAUDE_universal_v1.md` + `AGENTS.md`) | Via `CLAUDE.md` global di `%USERPROFILE%\.claude\` |
-| Scope         | Cuma proyek itu                                       | Semua proyek di laptop user                      |
-| Update kit    | Extract zip versi baru → overwrite `.claude-kit\` → `git commit` | Replace file di `%USERPROFILE%\.claude\` (1x untuk semua proyek) |
-| Duplikasi     | Tiap proyek punya copy sendiri (~beberapa MB/proyek)  | 1 copy dipakai semua proyek                      |
-
-### Hapus kit dari proyek (uninstall yang aman)
+## Hapus kit dari proyek (uninstall yang aman)
 
 Mau hapus lintasAI dari proyek? **JANGAN delete folder `docs/` atau `.github/` mentah-mentah** - folder itu kemungkinan campur antara file kit dan file proyek kamu sendiri. Pakai perintah uninstall bawaan (`npx lintasai uninstall`) yang tahu mana file kit vs mana file proyek.
 
@@ -518,58 +289,43 @@ Untuk install pakai versi < v1.0.0 (sebelum manifest support) atau manifest hila
 
 - `AGENTS.md` (root proyek) - heavy customized, **JANGAN hapus tanpa baca dulu**
 - `docs/architecture.md`, `docs/glossary.md`, `docs/_PATTERNS.md`, `docs/_EXAMPLE.md`
-- `docs/CLAUDE_TEAM_GUIDE.md`, `docs/PROMPT_LIBRARY.md`, `docs/ONBOARDING.md`, `docs/STACK_GUIDE.md`, `docs/STACK_MIGRATION_GUIDE.md`
-- `docs/MCP_SETUP.md`, `docs/RLS_SETUP_PROMPT.md`, `docs/DB_SCHEMA_SCAN_PROMPT.md`, `docs/GLOSSARY_NON_PROGRAMMER.md`, `docs/SECURITY_INCIDENT_PLAYBOOK.md`, `docs/feature-flags-advanced.md`
+- `docs/STACK_GUIDE.md`, `docs/STACK_MIGRATION_GUIDE.md`
+- `docs/RLS_SETUP_PROMPT.md`, `docs/DB_SCHEMA_SCAN_PROMPT.md`, `docs/GLOSSARY_NON_PROGRAMMER.md`, `docs/SECURITY_INCIDENT_PLAYBOOK.md`, `docs/feature-flags-advanced.md`
 - `docs/decisions/_TEMPLATE.md`, `docs/decisions/README.md`
-- `.github/workflows/ai-review.yml`, `.github/workflows/backup-schemas.yml`, `.github/scripts/ai-review.cjs`, `.github/CODEOWNERS`, `.github/pull_request_template.md`
+- `.github/workflows/backup-schemas.yml`, `.github/workflows/secret-guard.yml`
 - `.claude-kit/` folder itu sendiri
 
 Review tiap file sebelum hapus - `docs/` dan `.github/` kemungkinan campur dengan file proyek kamu sendiri.
 
-## Troubleshooting Pola B (kalau setup error)
+## Troubleshooting setup
 
 > Pemasang kit versi Node (`node .\.claude-kit\setup-pola-b.mjs`) **tidak perlu** `Set-ExecutionPolicy` — itu hanya relevan untuk skrip `.ps1` era lama yang sudah dihapus.
-
-**Error: `Expand-Archive: Cannot find path '<path-ke-zip-kamu>'`**
-Ganti `<path-ke-zip-kamu>` dengan path PENUH dari zip kit kamu, contoh:
-```powershell
-Expand-Archive -Path "$HOME\Downloads\claude-ai-rules-kit.zip" -DestinationPath ".\.claude-kit" -Force
-```
-
-**Error: file ke-block "this file is not digitally signed" / SecurityError saat buka file**
-Mark-of-the-Web (MOTW) - Windows nge-tag file dari internet. Pemasang otomatis menanganinya, tapi kalau gagal, buka-blokir manual di terminal:
-```powershell
-Get-ChildItem .\.claude-kit\ -Recurse | Unblock-File
-```
-
-**Setup script bilang "DETEKSI: Kit ter-extract NESTED"**
-Berarti zip extract jadi `.\.claude-kit\claude-ai-rules-kit\...` (nested). Pilih opsi `Y` saat ditanya - script otomatis flatten.
 
 **`claude` command not found**
 Install Claude Code dulu: https://claude.com/claude-code. Verifikasi: `claude --version`.
 
 **AI tidak baca AGENTS.md / `.claude-kit/`**
-Pastikan kamu jalankan Claude Code dari **root proyek** (folder tempat `AGENTS.md` berada), bukan dari subfolder. Tanya AI: *"Kamu baca file aturan dari path apa?"* - kalau jawab `~/.claude/CLAUDE.md` (Pola A), bukan `./AGENTS.md` (Pola B), kemungkinan kamu jalanin dari folder salah.
+Pastikan kamu jalankan Claude Code dari **root proyek** (folder tempat `AGENTS.md` berada), bukan dari subfolder. Tanya AI: *"Kamu baca file aturan dari path apa?"* - kalau jawab `~/.claude/CLAUDE.md`, bukan `./AGENTS.md`, kemungkinan kamu jalanin dari folder salah.
 
 ## FAQ singkat
 
 **Q: Aku udah punya `CLAUDE.md` global, gimana?**
-A: Pakai install global otomatis (`npx lintasai install-windows` — Cara 3 di bagian "Cara Install Manual" di atas): pemasang otomatis backup ke `CLAUDE.md.backup-<timestamp>` sebelum nimpa. Habis itu kamu bisa merge bagian yang mau dipertahankan.
+A: Biarkan saja — kit ini terpasang **per-project** (`.claude-kit/` + `AGENTS.md`), tidak menyentuh file globalmu. Saat bentrok, aturan project (`AGENTS.md`) yang menang.
 
 **Q: AI-nya bandel, gak ikut aturan?**
 A: Tegur langsung: *"kamu ngelanggar aturan poin X di CLAUDE.md, ulangi"*. Biasanya nurut. Kalau sering, cek dia baca file yang bener: tanya *"path CLAUDE.md yang kamu baca apa?"*
 
 **Q: Mau update aturan ke versi baru?**
-A: Tinggal jalanin install script lagi - backup otomatis, file baru ke-pasang. Versi tertulis di header tiap file (mis. `v1 · 2026-05-30`).
+A: Minta AI di chat: *"tolong update kit"* (atau `npx lintasai@latest update`) - backup otomatis, file baru ke-pasang. Versi tertulis di header tiap file.
 
 **Q: Boleh aku modif aturannya?**
 A: Boleh banget! Itu file kamu sendiri. Saran: naikkan versi & tanggal di header tiap kali nge-edit, biar gampang lacak.
 
 **Q: Komputer kerja kantor, gimana?**
-A: Aturan ini disimpan di profil user kamu (`~/.claude/`), gak ganggu setting kantor / proyek tim. Aman.
+A: Aturan kit disimpan di folder project (`.claude-kit/` + `AGENTS.md`), gak ganggu setting user lain / proyek lain. Aman.
 
-**Q: Bisa per-proyek juga?**
-A: Bisa. Bikin `CLAUDE.md` di root proyek - isinya bakal **ditambahkan** ke aturan global (bukan menimpa total). Jadi aturan proyek = aturan global + tambahan dari file proyek. Cocok buat catatan khusus stack/konvensi proyek itu.
+**Q: Mau nambah aturan khusus proyek?**
+A: Tulis di `AGENTS.md` root proyek - isinya **ditambahkan** ke aturan kit (bukan menimpa total). Cocok buat catatan khusus stack/konvensi proyek itu.
 
 **Q: Memory & plans Claude Code disimpan di mana? Kenapa gak di `.claude-kit/`?**
 A: Disimpan di `%USERPROFILE%\.claude\projects\<hash>\memory\` & `%USERPROFILE%\.claude\plans\` - **by-design Anthropic Claude Code**, bukan kit ini. Sengaja TIDAK di `.claude-kit/` karena:
@@ -592,12 +348,7 @@ Jadi 4 lokasi persistence Claude Code adalah:
 
 lintasAI menjalani audit komprehensif untuk memastikan stabilitas distribusi:
 - **2026-06-06**: 132-agent multi-lens scan, 59 confirmed findings, semua critical di-fix di v1.2.0-v1.2.2
-- Lihat [docs/AUDIT_HISTORY.md](docs/AUDIT_HISTORY.md) untuk:
-  - Detail audit + findings + verdict timeline
-  - Items deferred + rationale
-  - Roadmap + distribution rollout plan
-
-Kalau kamu mau audit ulang atau extend, ikuti pattern di file itu.
+- Riwayat audit lengkap (findings + verdict timeline + items deferred) ada di riwayat git repo GitHub. Advisori keamanan AKTIF ada di [SECURITY.md](SECURITY.md).
 
 ---
 

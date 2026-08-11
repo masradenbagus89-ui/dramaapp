@@ -8,7 +8,7 @@
 //   2. Isi sesuai project-mu (lihat contoh di bawah). Minta AI: "isi peta-konsistensi
 //      untuk project ini" -> AI akan scan + lengkapi.
 //   3. Jalankan robot (Node):
-//        node .claude-kit/lib/consistency-check.mjs --repo-root . --checks-file docs/consistency-map.jsonc
+//        node .claude-kit/engine/consistency-check.mjs --repo-root . --checks-file docs/consistency-map.jsonc
 //      -> dia lapor mana yang cocok / basi, dalam hitungan detik.
 //
 // PENTING: cuma masukkan deklarasi NILAI-SAAT-INI. Penanda SEJARAH (mis. "fitur ini lahir

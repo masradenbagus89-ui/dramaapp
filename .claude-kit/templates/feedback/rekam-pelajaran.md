@@ -1,9 +1,9 @@
 # Rekam Pelajaran lintasAI — spesifikasi operasional (TERKIRIM ke client)
 
 > v8 · 2026-07-17 · Berkas ini IKUT paket kit (di client: `.claude-kit/templates/feedback/rekam-pelajaran.md`).
-> **Dipakai OTOMATIS oleh AI** lewat aturan `workflows/6.5-rekam-pelajaran-frontier.md` (default **nyala-lokal**) —
+> **Dipakai OTOMATIS oleh AI** lewat aturan `rules/6.5-frontier-lessons.md` (default **nyala-lokal**) —
 > client **tidak perlu menempel prompt** apa pun. Untuk telaah khusus, bagian **PROMPT** di bawah boleh juga
-> ditempel manual. Bagian dari pipeline `docs/plans/PIPELINE_FEEDBACK_KE_STANDAR.md` (internal repo kit).
+> ditempel manual. Bagian dari pipeline feedback pembelajaran lintas-client (ADR-006, internal repo kit).
 >
 > **Perubahan besar (v7→v8):** dijadikan kemampuan BERDIRI yang ikut ter-install (bukan prompt yang dikirim
 > manual); **default = rekam LOKAL otomatis, kirim ke owner tetap opt-in** (izin sadar client); taksonomi kode
@@ -26,7 +26,7 @@ teknisnya, **bukan** isi bagasi atau ke mana mobil itu pergi. **Belajar CARANYA,
 
 | Pertanyaan | Jawaban |
 |---|---|
-| **Kapan mencatat?** | Otomatis, di **akhir tugas teknis substantif** (bukan tiap pesan) — lihat `workflows/6.5-rekam-pelajaran-frontier.md`. |
+| **Kapan mencatat?** | Otomatis, di **akhir tugas teknis substantif** (bukan tiap pesan) — lihat `rules/6.5-frontier-lessons.md`. |
 | **Disimpan di mana?** | Folder LOKAL `docs/pelajaran-lintasai/` (di-`.gitignore` → tak mengotori repo + tak tabrakan). |
 | **Dikirim ke owner otomatis?** | **TIDAK.** Rekam = otomatis-lokal; **mengirim ke owner = opt-in** (client sadar + setuju). Tanpa auto-upload. |
 | **ID-nya dari mana?** | **OTOMATIS, staff tak isi apa pun.** 3 ID hash-anonim dari git: `ORG-ID`, `REPO-ID`, `STAFF-ID`. |
@@ -113,7 +113,7 @@ semua. Lalu:
 
 === DAFTAR PERIKSA + KODE MASALAH ===
 Divisi, tingkat, dan KODE MASALAH baku = baca `.claude-kit/templates/feedback/taksonomi.kit.jsonc` (sumber
-tunggal; JANGAN salin daftar kodenya ke sini). Ringkas daftar periksa 8 divisi + lensa terlewat:
+tunggal; JANGAN salin daftar kodenya ke sini). Ringkas daftar periksa bidang profesional + lensa terlewat:
 Keamanan(cookie httpOnly? anti-IDOR? RLS? validasi pintu-masuk? rate-limit? secret di env? escape output?) ·
 Database(transaction? soft-delete? query parameter? FK/NOT NULL? index?) · Backend(validasi boundary? DTO
 anti-bocor field? atomik/idempoten? error tak ditelan?) · Frontend(Server Component default? secret tak ke
@@ -176,7 +176,7 @@ ringkasan_hitung: { GENTING: x, PENTING: y, RAPIKAN: z }
 
 **Rambu jujur (dari stress-test v7):** pagar field-teks-bebas hanya benar-benar terbukti setelah dilihat di
 praktik → **uji ke 2-3 client dulu** + baca beberapa berkas hasilnya sebelum sebar ke 40-50 sekaligus.
-Pengaman jangka panjang (robot redaksi `lib/feedback-scrub.mjs` + agregator `lib/feedback-aggregate.mjs`) =
-FASE B/C (`docs/plans/STATUS_SISTEM_FEEDBACK.md`). Setelah terkumpul → olah lewat gerbang uji standar
-(jangkar otoritas `docs/plans/OTORITAS_STANDAR.jsonc`) sebelum jadi standar kit — frekuensi = PRIORITAS, bukan
+Pengaman jangka panjang (robot redaksi `engine/feedback-scrub.mjs` + agregator `engine/feedback-aggregate.mjs`) =
+FASE B/C (ADR-006). Setelah terkumpul → olah lewat gerbang uji standar
+(allowlist otoritas internal owner) sebelum jadi standar kit — frekuensi = PRIORITAS, bukan
 VALIDITAS.

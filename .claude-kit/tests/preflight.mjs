@@ -31,18 +31,23 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
-import { invokeLintasConsistencyCheckKit, invokeLintasConsistencyCheckProject } from '../lib/consistency-check.mjs'
-import { scan as unicodeScan } from '../lib/unicode-safety-check.mjs'
-import { getKitVersionFromChangelog } from '../lib/version-detect.mjs'
-import { stripBom } from '../lib/fs-text.mjs'
-import { runPerfBudget, fmtKb } from '../lib/perf-budget.mjs'
-import { runRulesBudget, CHARS_PER_TOKEN } from '../lib/rules-budget-check.mjs'
-import { runWorkflowsRefCheck } from '../lib/workflows-ref-check.mjs'
-import { getLintasAiConfigTarget, invokeLintasAiConfigCheck } from '../lib/ai-config-check.mjs'
-import { runSwallowedErrorCheck } from '../lib/swallowed-error-check.mjs'
-import { compareEnvKeys } from '../lib/env-keys-check.mjs'
-import { invokeLintasStackCheck } from '../lib/stack-check.mjs'
-import { LINTAS_EXPECTED_SCHEMA } from '../lib/expected-schema.mjs'
+import { invokeLintasConsistencyCheckKit, invokeLintasConsistencyCheckProject } from '../engine/consistency-check.mjs'
+import { scan as unicodeScan } from '../engine/unicode-safety-check.mjs'
+import { getKitVersionFromChangelog } from '../engine/version-detect.mjs'
+import { stripBom } from '../engine/fs-text.mjs'
+import { runPerfBudget, fmtKb } from '../engine/perf-budget.mjs'
+import { runRulesBudget, runAlwaysLoadBudget, CHARS_PER_TOKEN } from '../engine/rules-budget-check.mjs'
+import { runRulesRefCheck } from '../engine/rules-ref-check.mjs'
+import { runToolReachCheck } from '../engine/tool-reach-check.mjs'
+import { runSkillFormatCheck } from '../engine/skill-format-check.mjs'
+import { scanSkills } from '../engine/skill-registry.mjs'
+import { bangunPeta, scanStrukturRepo, normalisasiPeta } from '../engine/peta-gen.mjs'
+import { getLintasAiConfigTarget, invokeLintasAiConfigCheck } from '../engine/ai-config-check.mjs'
+import { runSwallowedErrorCheck } from '../engine/swallowed-error-check.mjs'
+import { runComplexityBudget } from '../engine/complexity-budget.mjs'
+import { compareEnvKeys } from '../engine/env-keys-check.mjs'
+import { invokeLintasStackCheck } from '../engine/stack-check.mjs'
+import { LINTAS_EXPECTED_SCHEMA } from '../engine/expected-schema.mjs'
 
 // Tingkat keseriusan (bahasa non-programmer, sec. 2.1 #7 - bukan P0/Critical/High).
 //   GENTING = wajib diperbaiki, menghentikan gerbang. PENTING = saran kuat (menghentikan saat --strict).
@@ -253,7 +258,7 @@ export function checkReleaseCompleteness(repoRoot, { lastTag = null, mode = 'kit
 
 // ---------------------------------------------------------------------------
 // Penjaga Keranjang 1 (Langkah 4 rencana docs/plans/STRATEGI_UPDATE_v2.md §3+§7):
-// menaikkan angka peta versi-diharapkan (lib/expected-schema.mjs) = mengubah FORMAT artefak klien
+// menaikkan angka peta versi-diharapkan (engine/expected-schema.mjs) = mengubah FORMAT artefak klien
 // = kelas migrasi WAJIB-LANGSUNG (eager) -> entri CHANGELOG teratas WAJIB ber-label [BREAKING]
 // (+ sebut nama artefaknya + punya "Migration Steps"). Tanpa kunci mesin ini, kenaikan angka bisa
 // terselip di rilis biasa -> klien lama divonis TAK COCOK tanpa jalan keluar ("bom waktu" §5 risiko).
@@ -346,7 +351,7 @@ export function evaluateSchemaRaise({ current, baseline, changelogBlock, upgradi
   if (!/Migration Steps/i.test(block)) {
     out.push({
       id: 'skema-steps', label: 'Migration Steps utk naik-skema', level: LEVEL.PENTING,
-      detail: `Entri [BREAKING] ada, tapi belum punya bagian "Migration Steps" (wajib utk Tier 3 - workflows/4.5-update-strategy.md). Tulis langkah migrasinya inline di entri CHANGELOG.`,
+      detail: `Entri [BREAKING] ada, tapi belum punya bagian "Migration Steps" (wajib utk Tier 3 - rules/4.5-update-strategy.md). Tulis langkah migrasinya inline di entri CHANGELOG.`,
     })
   }
   // Langkah 5 rencana (§6 disiplin rilis): migrasi selalu SIMULASI dulu (jalan pura-pura, tak
@@ -355,7 +360,7 @@ export function evaluateSchemaRaise({ current, baseline, changelogBlock, upgradi
   if (!/SIMULASI/i.test(block)) {
     out.push({
       id: 'skema-simulasi', label: 'SIMULASI-dulu utk naik-skema', level: LEVEL.PENTING,
-      detail: 'Migration Steps belum menyebut langkah SIMULASI (jalan pura-pura tanpa mengubah apa pun, ditinjau dulu baru diterapkan). Migrasi artefak klien WAJIB simulasi-dulu (UPGRADING.md + workflows/4.5-update-strategy.md).',
+      detail: 'Migration Steps belum menyebut langkah SIMULASI (jalan pura-pura tanpa mengubah apa pun, ditinjau dulu baru diterapkan). Migrasi artefak klien WAJIB simulasi-dulu (UPGRADING.md + rules/4.5-update-strategy.md).',
     })
   }
   const history = getUpgradingHistorySection(upgradingText)
@@ -378,14 +383,14 @@ export function evaluateSchemaRaise({ current, baseline, changelogBlock, upgradi
   return out
 }
 
-// Pembungkus IO: baseline = `git show <lastTag>:lib/expected-schema.mjs` (peta saat rilis terakhir);
+// Pembungkus IO: baseline = `git show <lastTag>:engine/expected-schema.mjs` (peta saat rilis terakhir);
 // SEKARANG = peta yang di-import langsung (sumber kebenaran runtime). Plus CEK-WARAS parser: parser
 // harus bisa mereproduksi peta sekarang dari teks sumber sekarang - kalau tidak, parser buta ->
 // lapor PENTING (fail-closed), jangan diam-diam "tak ada kenaikan" palsu.
 export function checkSchemaRaiseBreaking(repoRoot, { lastTag = null } = {}) {
-  const srcPath = path.join(repoRoot, 'lib', 'expected-schema.mjs')
+  const srcPath = path.join(repoRoot, 'engine', 'expected-schema.mjs')
   if (!fs.existsSync(srcPath)) {
-    return [{ id: 'skema-naik', label: 'Naik versi skema artefak (Keranjang 1)', level: LEVEL.INFO, detail: 'lib/expected-schema.mjs tak ada - dilewati.' }]
+    return [{ id: 'skema-naik', label: 'Naik versi skema artefak (Keranjang 1)', level: LEVEL.INFO, detail: 'engine/expected-schema.mjs tak ada - dilewati.' }]
   }
   const current = { ...LINTAS_EXPECTED_SCHEMA }
   const parsedCurrent = parseExpectedSchemaSource(readText(srcPath))
@@ -394,13 +399,13 @@ export function checkSchemaRaiseBreaking(repoRoot, { lastTag = null } = {}) {
   if (!sameKeys) {
     return [{
       id: 'skema-naik', label: 'Naik versi skema artefak (Keranjang 1)', level: LEVEL.PENTING,
-      detail: 'parser peta tak bisa mereproduksi isi lib/expected-schema.mjs (bentuk berkas berubah?) - banding kenaikan TIDAK bisa dipercaya. Perbarui parseExpectedSchemaSource di tests/preflight.mjs.',
+      detail: 'parser peta tak bisa mereproduksi isi engine/expected-schema.mjs (bentuk berkas berubah?) - banding kenaikan TIDAK bisa dipercaya. Perbarui parseExpectedSchemaSource di tests/preflight.mjs.',
     }]
   }
   if (!lastTag) {
     return [{ id: 'skema-naik', label: 'Naik versi skema artefak (Keranjang 1)', level: LEVEL.INFO, detail: 'tag git tidak tersedia - banding peta versi-diharapkan dilewati.' }]
   }
-  const r = runCmd('git', ['-C', repoRoot, 'show', `${lastTag}:lib/expected-schema.mjs`])
+  const r = runCmd('git', ['-C', repoRoot, 'show', `${lastTag}:engine/expected-schema.mjs`])
   // Berkas belum ada di rilis terakhir (peta baru lahir) -> baseline null: entri dinilai sbg "BARU".
   const baseline = (cmdNotRun(r) || r.status !== 0) ? null : parseExpectedSchemaSource(stripBom(r.stdout || ''))
   let changelogBlock = null
@@ -487,6 +492,46 @@ export function runNodeTests(repoRoot, env, mode = 'kit') {
   return { id: 'node-test', label: 'Tes project (npm test)', level: LEVEL.OK, detail: '"npm test" lulus (exit 0).' }
 }
 
+// Bangun aplikasi klien (`npm run build`). LUBANG YANG DITUTUP (2026-07-19): sebelum ini 14 pemeriksa
+// gerbang TAK SATU PUN mencoba mengompilasi aplikasi -> gerbang bisa mencetak "LULUS" di atas project
+// yang gagal `next build`/`tsc`. Itu kelas kegagalan PALING MURAH ditangkap mesin (deterministik, ~0
+// token AI) dan justru satu-satunya yang tak dijaga. Diperparah CI: langkah build di
+// templates/github/workflows/preflight.yml dibungkus `continue-on-error: true` sambil menjanjikan
+// "robot mutu di langkah berikutnya yang melaporkan" - padahal langkah berikutnya (preflight) tak
+// punya pemeriksa build sama sekali. Janji itu menunjuk ruangan kosong.
+//
+// GENTING saat gagal: aplikasi yang tak bisa dibangun tak bisa dirilis - tak ada nuansa di sini.
+// Tak punya script "build" -> INFO (dilewati diam-diam), BUKAN alarm palsu: banyak project sah tanpa
+//   tahap build (library kecil, skrip, API polos).
+// Mode KIT dilewati: repo kit = paket CLI, "build"-nya bukan aplikasi web.
+// URUTAN PENTING: pemeriksa ini WAJIB jalan SEBELUM checkPerfBudget - perf-budget butuh hasil build
+//   (.next/) dan selama ini auto-lewat diam-diam karena tak ada yang pernah membangun (lihat :558
+//   "tak ada .next/ build ... - dilewati"). Satu perbaikan, dua lubang tertutup.
+// Timeout 10 menit: build yang menggantung tak boleh membekukan gerbang selamanya; lewat batas ->
+//   cmdNotRun() menangkapnya jadi GENTING berpesan jelas (fail-closed, bukan diam-diam hijau).
+export function runAppBuild(repoRoot, env, mode = 'kit') {
+  if (mode === 'kit') {
+    return { id: 'app-build', label: 'Build aplikasi', level: LEVEL.INFO, detail: 'repo kit (paket CLI, bukan aplikasi web) - dilewati.' }
+  }
+  const pkg = readPackageJson(repoRoot)
+  const buildScript = pkg && pkg.scripts && pkg.scripts.build
+  if (!buildScript) {
+    return { id: 'app-build', label: 'Build aplikasi', level: LEVEL.INFO, detail: 'project tak punya script "build" di package.json - dilewati (tak semua project perlu tahap build).' }
+  }
+  // Windows: npm = npm.cmd -> butuh shell:true. Perintah dikirim sebagai SATU STRING (args kosong)
+  // supaya tak memicu DeprecationWarning DEP0190 ("args + shell") ke layar staff - cermin runNodeTests.
+  const isWin = process.platform === 'win32'
+  const r = runCmd((isWin ? 'npm.cmd' : 'npm') + ' run build', [], { cwd: repoRoot, env, shell: true, timeout: 10 * 60 * 1000 })
+  if (cmdNotRun(r)) {
+    return { id: 'app-build', label: 'Build aplikasi', level: LEVEL.GENTING, detail: `tak bisa menjalankan "npm run build": ${cmdErrMsg(r)}. Kalau dependency belum terpasang, jalankan "npm install" dulu.` }
+  }
+  const out = (r.stdout || '') + (r.stderr || '')
+  if (r.status !== 0) {
+    return { id: 'app-build', label: 'Build aplikasi', level: LEVEL.GENTING, detail: `aplikasi GAGAL dibangun (exit ${r.status}) - dalam kondisi ini aplikasi tak bisa dirilis. Perbaiki error di bawah lalu jalankan ulang.\n${tailLines(out, 20)}` }
+  }
+  return { id: 'app-build', label: 'Build aplikasi', level: LEVEL.OK, detail: '"npm run build" berhasil (exit 0).' }
+}
+
 export function runEslint(repoRoot, mode = 'kit') {
   const bin = path.join(repoRoot, 'node_modules', 'eslint', 'bin', 'eslint.js')
   if (!fs.existsSync(bin)) {
@@ -571,32 +616,130 @@ function checkRulesBudget(repoRoot) {
     if (!res.present) return { id: 'rules-budget', label: 'Anggaran token berkas aturan', level: LEVEL.INFO, detail: 'CLAUDE_universal_v1.md tak ketemu (root / .claude-kit/) - dilewati.' }
     const budgetTok = Math.round(res.budgetChars / CHARS_PER_TOKEN)
     if (!res.over) return { id: 'rules-budget', label: 'Anggaran token berkas aturan', level: LEVEL.OK, detail: `~${res.tokensEst.toLocaleString('en-US')} token <= ${budgetTok.toLocaleString('en-US')} (sisa ~${res.remaining.toLocaleString('en-US')} char).` }
-    return { id: 'rules-budget', label: 'Anggaran token berkas aturan', level: LEVEL.RAPIKAN, detail: `~${res.tokensEst.toLocaleString('en-US')} token > anggaran ${budgetTok.toLocaleString('en-US')} (lebih ~${(-res.remaining).toLocaleString('en-US')} char). Padatkan / pindah detail ke workflows (§4.18 + §14).` }
+    return { id: 'rules-budget', label: 'Anggaran token berkas aturan', level: LEVEL.RAPIKAN, detail: `~${res.tokensEst.toLocaleString('en-US')} token > anggaran ${budgetTok.toLocaleString('en-US')} (lebih ~${(-res.remaining).toLocaleString('en-US')} char). Padatkan / pindah detail ke rules (§4.18 + §14).` }
   } catch (e) {
     return { id: 'rules-budget', label: 'Anggaran token berkas aturan', level: LEVEL.INFO, detail: `dilewati (${e.message}).` }
   }
 }
 
-// Penjaga rujukan rak on-demand workflows/ (v2.4.0 pecah-per-seksi): tiap rujukan `workflows/*.md` di
+// Penjaga anggaran token GABUNGAN (ADR-019): CLAUDE_universal_v1.md + AGENTS.md + CLAUDE.md - SEMUA
+// berkas yang ter-@import tiap sesi (bukan cuma 1 seperti checkRulesBudget di atas). AGENTS.md khususnya
+// didesain untuk TUMBUH (opt-in §15, catatan tim) - dulu pertumbuhannya tak terpantau. Non-blokir (RAPIKAN),
+// AUTO-SKIP anggun kalau anchor tak ketemu. Cuma-baca, deterministik.
+function checkAlwaysLoadBudget(repoRoot) {
+  try {
+    const res = runAlwaysLoadBudget({ repoRoot })
+    if (!res.present) return { id: 'rules-budget-total', label: 'Anggaran token gabungan (always-load)', level: LEVEL.INFO, detail: 'CLAUDE_universal_v1.md tak ketemu (root / .claude-kit/) - dilewati.' }
+    const budgetTok = Math.round(res.budgetChars / CHARS_PER_TOKEN)
+    const roles = res.parts.map((p) => p.role).join('+')
+    if (!res.over) return { id: 'rules-budget-total', label: 'Anggaran token gabungan (always-load)', level: LEVEL.OK, detail: `${roles}: ~${res.tokensEst.toLocaleString('en-US')} token <= ${budgetTok.toLocaleString('en-US')} (sisa ~${res.remaining.toLocaleString('en-US')} char).` }
+    return { id: 'rules-budget-total', label: 'Anggaran token gabungan (always-load)', level: LEVEL.RAPIKAN, detail: `${roles}: ~${res.tokensEst.toLocaleString('en-US')} token > anggaran ${budgetTok.toLocaleString('en-US')} (lebih ~${(-res.remaining).toLocaleString('en-US')} char). Tinjau AGENTS.md/CLAUDE.md (§14).` }
+  } catch (e) {
+    return { id: 'rules-budget-total', label: 'Anggaran token gabungan (always-load)', level: LEVEL.INFO, detail: `dilewati (${e.message}).` }
+  }
+}
+
+// Penjaga rujukan rak on-demand rules/ (v2.4.0 pecah-per-seksi): tiap rujukan `rules/*.md` di
 // berkas aturan WAJIB menunjuk berkas nyata, nol berkas yatim, INDEX sinkron, rujukan gaya lama
 // "LINTASAI_WORKFLOWS_v1.md §X" dilarang balik. Rujukan putus = aturan tak terbaca AI -> PENTING
-// (memblokir). AUTO-SKIP anggun: folder workflows/ tak ada (kit/client lama) -> INFO. Cuma-baca.
-function checkWorkflowsRefs(repoRoot) {
+// (memblokir). AUTO-SKIP anggun: folder rules/ tak ada (kit/client lama) -> INFO. Cuma-baca.
+function checkRulesRefs(repoRoot) {
   try {
-    const res = runWorkflowsRefCheck({ repoRoot })
-    if (!res.present) return { id: 'workflows-refs', label: 'Rujukan rak workflows/', level: LEVEL.INFO, detail: 'folder workflows/ tak ketemu (kit/client lama) - dilewati.' }
-    if (res.findings.length === 0) return { id: 'workflows-refs', label: 'Rujukan rak workflows/', level: LEVEL.OK, detail: `${res.sections} berkas seksi + ${res.ids} id anchor - semua rujukan tersambung, INDEX sinkron.` }
+    const res = runRulesRefCheck({ repoRoot })
+    if (!res.present) return { id: 'rules-refs', label: 'Rujukan rak rules/', level: LEVEL.INFO, detail: 'folder rules/ tak ketemu (kit/client lama) - dilewati.' }
+    if (res.findings.length === 0) return { id: 'rules-refs', label: 'Rujukan rak rules/', level: LEVEL.OK, detail: `${res.sections} berkas seksi + ${res.ids} id anchor - semua rujukan tersambung, INDEX sinkron.` }
     const sample = res.findings.slice(0, 8).map((f) => `[${f.tingkat}] ${f.pesan}`)
     const more = res.findings.length > 8 ? `\n  (+${res.findings.length - 8} temuan lagi)` : ''
     const level = res.counts.PENTING > 0 || res.counts.GENTING > 0 ? LEVEL.PENTING : LEVEL.RAPIKAN
-    return { id: 'workflows-refs', label: 'Rujukan rak workflows/', level, detail: `GENTING ${res.counts.GENTING} - PENTING ${res.counts.PENTING} - RAPIKAN ${res.counts.RAPIKAN}.\n  ${sample.join('\n  ')}${more}` }
+    return { id: 'rules-refs', label: 'Rujukan rak rules/', level, detail: `GENTING ${res.counts.GENTING} - PENTING ${res.counts.PENTING} - RAPIKAN ${res.counts.RAPIKAN}.\n  ${sample.join('\n  ')}${more}` }
   } catch (e) {
-    return { id: 'workflows-refs', label: 'Rujukan rak workflows/', level: LEVEL.INFO, detail: `dilewati (${e.message}).` }
+    return { id: 'rules-refs', label: 'Rujukan rak rules/', level: LEVEL.INFO, detail: `dilewati (${e.message}).` }
+  }
+}
+
+// Penjaga jangkauan perkakas: tiap robot lib/ yang DIKIRIM ke client + berdiri sendiri wajib punya
+// jalur pemanggil (perintah CLI / langkah preflight / hook). Nol gagang = kemampuan yang dibayar ruang
+// tapi tak bisa dipakai siapa pun - persis nasib engine/fact-gate.mjs (mati sejak lahir), engine/split-guard.mjs
+// dan engine/portfolio-write.mjs sebelum 2026-07-18. PENTING (memblokir --strict), bukan GENTING: ini cacat
+// jangkauan, bukan kerusakan data. Cuma-baca. Buku Pelajaran LP-012 + Resep 12.
+function checkToolReach(repoRoot) {
+  try {
+    const res = runToolReachCheck({ repoRoot })
+    if (!res.present) return { id: 'tool-reach', label: 'Jangkauan perkakas engine/', level: LEVEL.INFO, detail: 'engine/kit-files.json / bin/lintasai.js tak ketemu (bukan repo kit) - dilewati.' }
+    if (res.findings.length === 0) return { id: 'tool-reach', label: 'Jangkauan perkakas engine/', level: LEVEL.OK, detail: `${res.total} perkakas mandiri terkirim - semuanya punya gagang (perintah/preflight/hook).` }
+    const sample = res.findings.slice(0, 8).map((f) => `[${f.tingkat}] ${f.ref} - nol gagang (tak bisa dipanggil siapa pun).`)
+    const more = res.findings.length > 8 ? `\n  (+${res.findings.length - 8} temuan lagi)` : ''
+    return { id: 'tool-reach', label: 'Jangkauan perkakas engine/', level: LEVEL.PENTING, detail: `${res.findings.length} perkakas terkirim tanpa jalur pemanggil. Beri perintah di bin/lintasai.js, jadikan langkah preflight, atau berhenti mengirimnya (Resep 12).\n  ${sample.join('\n  ')}${more}` }
+  } catch (e) {
+    return { id: 'tool-reach', label: 'Jangkauan perkakas engine/', level: LEVEL.INFO, detail: `dilewati (${e.message}).` }
+  }
+}
+
+// Penjaga format skill (ADR-027 Tugas 9): tiap skills/*/SKILL.md wajib frontmatter lengkap + 🔒 HASIL +
+// Definition-of-Done (§7). Menutup celah "skill cacat DILEWATI DIAM" oleh skill-registry (fail-safe by
+// design). FORWARD-LOOKING: skills/ belum ada -> AUTO-SKIP (INFO). PENTING (memblokir --strict), cuma-baca.
+function checkSkillFormat(repoRoot) {
+  try {
+    const res = runSkillFormatCheck({ repoRoot })
+    if (!res.present) return { id: 'skill-format', label: 'Format skill (skills/*/SKILL.md)', level: LEVEL.INFO, detail: 'folder skills/ belum ada (masa transisi ADR-027) - dilewati.' }
+    if (res.findings.length === 0) return { id: 'skill-format', label: 'Format skill (skills/*/SKILL.md)', level: LEVEL.OK, detail: `${res.total} skill diperiksa - semua punya frontmatter + 🔒 HASIL + Definition-of-Done.` }
+    const sample = res.findings.slice(0, 8).map((f) => `[${f.tingkat}] ${f.pesan}`)
+    const more = res.findings.length > 8 ? `\n  (+${res.findings.length - 8} temuan lagi)` : ''
+    return { id: 'skill-format', label: 'Format skill (skills/*/SKILL.md)', level: LEVEL.PENTING, detail: `${res.findings.length} pelanggaran format skill (§7: wajib frontmatter + 🔒 HASIL + Definition-of-Done).\n  ${sample.join('\n  ')}${more}` }
+  } catch (e) {
+    return { id: 'skill-format', label: 'Format skill (skills/*/SKILL.md)', level: LEVEL.INFO, detail: `dilewati (${e.message}).` }
+  }
+}
+
+// Anti-basi registry (ADR-027 celah ③ — aktif sejak F1: registry.json ikut dikirim ke client). registry.json
+// = berkas GENERATED. Edit pemicu di SKILL.md tanpa `npx lintasai skill-registry` -> registry BASI ter-ship
+// -> routing klien meleset SENYAP. Cek deterministik: scanSkills(skills/) == registry.json.skills. AUTO-SKIP:
+// skills/ atau registry.json belum ada -> INFO. Cuma-baca (TAK menulis registry). PENTING (blokir --strict).
+function checkRegistryDrift(repoRoot) {
+  const LABEL = 'Registry skill anti-basi (skills/registry.json)'
+  try {
+    const skillsDir = path.join(repoRoot, 'skills')
+    const regPath = path.join(skillsDir, 'registry.json')
+    if (!fs.existsSync(skillsDir) || !fs.existsSync(regPath)) {
+      return { id: 'registry-drift', label: LABEL, level: LEVEL.INFO, detail: 'skills/ atau registry.json belum ada (masa transisi ADR-027) - dilewati.' }
+    }
+    const disk = JSON.parse(fs.readFileSync(regPath, 'utf8'))
+    const segar = scanSkills(skillsDir)
+    if (JSON.stringify(disk.skills) === JSON.stringify(segar)) {
+      return { id: 'registry-drift', label: LABEL, level: LEVEL.OK, detail: `sinkron dgn ${segar.length} skill di disk.` }
+    }
+    return { id: 'registry-drift', label: LABEL, level: LEVEL.PENTING, detail: 'registry.json BASI vs skills/*/SKILL.md - jalankan `npx lintasai skill-registry` lalu commit ulang (kalau tidak, klien terima routing meleset senyap).' }
+  } catch (e) {
+    return { id: 'registry-drift', label: LABEL, level: LEVEL.INFO, detail: `dilewati (${e.message}).` }
+  }
+}
+
+// Anti-basi PETA.md (ADR-027 Tugas 15, celah ③). PETA.md = GENERATED oleh engine/peta-gen.mjs. Ubah
+// folder/skill tanpa `npx lintasai peta-gen` -> PETA basi (AI baca "apa di mana" yg salah). Cek
+// deterministik: PETA.md == bangunPeta(scanStrukturRepo). AUTO-SKIP: PETA.md tak ada -> INFO (mode klien:
+// PETA ada di .claude-kit/, bukan project root -> skip, sama pola checkRegistryDrift). Banding pakai
+// normalisasiPeta (buang BOM + CRLF->LF) supaya checkout Windows tak memicu drift PALSU. Cuma-baca.
+// PENTING (blokir --strict).
+function checkPetaDrift(repoRoot) {
+  const LABEL = 'PETA.md anti-basi (peta apa-di-mana)'
+  try {
+    const p = path.join(repoRoot, 'PETA.md')
+    if (!fs.existsSync(p)) {
+      return { id: 'peta-drift', label: LABEL, level: LEVEL.INFO, detail: 'PETA.md belum ada (mode klien: peta ada di .claude-kit/) - dilewati.' }
+    }
+    const disk = normalisasiPeta(fs.readFileSync(p, 'utf8'))
+    const segar = normalisasiPeta(bangunPeta(scanStrukturRepo(repoRoot)))
+    if (disk === segar) {
+      return { id: 'peta-drift', label: LABEL, level: LEVEL.OK, detail: 'sinkron dgn struktur disk (folder + skill).' }
+    }
+    return { id: 'peta-drift', label: LABEL, level: LEVEL.PENTING, detail: 'PETA.md BASI vs folder/skill di disk - jalankan `npx lintasai peta-gen` lalu commit ulang.' }
+  } catch (e) {
+    return { id: 'peta-drift', label: LABEL, level: LEVEL.INFO, detail: `dilewati (${e.message}).` }
   }
 }
 
 // Penjaga keamanan konfigurasi-AI (.mcp.json / .claude/settings.json / docs/SKILLS_LOCAL.md). Cuma-baca,
-// meng-IMPORT robot lib/ai-config-check.mjs yang SUDAH teruji (anti-duplikasi sec. 5). Deteksi: kunci-API
+// meng-IMPORT robot engine/ai-config-check.mjs yang SUDAH teruji (anti-duplikasi sec. 5). Deteksi: kunci-API
 // bocor / izin tool terlalu lebar / hook unduh-lalu-jalankan / frasa menembus pagar keamanan.
 //
 // NON-BLOCKING BY DESIGN (keputusan owner 2026-07-08, sec. 4.6 owner-gated): temuan = SARAN, BUKAN vonis
@@ -634,7 +777,7 @@ export function runAiConfigCheck(repoRoot) {
 
 // Penjaga "error-ditelan-diam": pindai blok penangkap-error KOSONG (try/catch atau .catch() atau
 // except: pass Python yang menelan error tanpa pesan & tanpa komentar-alasan). Cuma-baca, meng-IMPORT
-// robot lib/swallowed-error-check.mjs yang sudah teruji (anti-duplikasi sec. 5).
+// robot engine/swallowed-error-check.mjs yang sudah teruji (anti-duplikasi sec. 5).
 //
 // MODE-PERINGATAN (keputusan Item #1, docs/plans/WILLEY_BORROW_IMPLEMENTASI.md sec. §4.6): level RAPIKAN -
 // TAK PERNAH memblokir gerbang (bahkan --strict). Kenapa bukan pemblokir-keras: (a) mutu-kode itu bisa-
@@ -660,8 +803,33 @@ export function runSwallowedCheck(repoRoot) {
   }
 }
 
+// Penjaga "anggaran kerumitan": berkas gemuk / fungsi panjang (robot engine/complexity-budget.mjs, cuma-baca,
+// anti-duplikasi §5; buang file auto-generate lewat isGenerated). MODE-PERINGATAN RAPIKAN - TAK memblokir
+// (bahkan --strict; §4.6 mutu-kode bisa-dibalik + robot baru belum punya angka laju-alarm-palsu). MODE KIT:
+// tooling kit memang besar (update-kit.mjs 1233 baris dll) -> temuan turun ke INFO supaya tak menyandera
+// Gerbang 0/0/0 kit; MODE PROJECT (app klien): RAPIKAN (nudge). Temuan tetap DICETAK jujur (§8.2 jangan
+// understate). TANPA skor-angka gabungan (§8.2-3b). Adaptasi ide Ponytail (MIT).
+export function checkComplexityBudget(repoRoot, mode = 'project') {
+  try {
+    const { findings, scanned, generated } = runComplexityBudget(repoRoot)
+    const genNote = generated > 0 ? ` (+${generated} file auto-generate dilewati)` : ''
+    if (findings.length === 0) {
+      return { id: 'complexity', label: 'Anggaran kerumitan (berkas/fungsi panjang)', level: LEVEL.OK, detail: `${scanned} berkas kode dipindai${genNote} - 0 berkas gemuk / fungsi panjang.` }
+    }
+    const sample = findings.slice(0, 8).map((f) => `${path.relative(repoRoot, f.File)}:${f.Line} (${f.Kind} ${f.Count}/${f.Budget} baris)`)
+    const more = findings.length > 8 ? `\n  (+${findings.length - 8} temuan lagi)` : ''
+    const level = mode === 'kit' ? LEVEL.INFO : LEVEL.RAPIKAN
+    return {
+      id: 'complexity', label: 'Anggaran kerumitan (berkas/fungsi panjang) - SARAN', level,
+      detail: `${findings.length} sinyal kerumitan${genNote} (berkas gemuk / fungsi panjang - sarang bug + boros token AI). Pecah jadi lebih kecil (REFACTOR_STANDARD.md). SARAN (tak memblokir gerbang).\n  ${sample.join('\n  ')}${more}`,
+    }
+  } catch (e) {
+    return { id: 'complexity', label: 'Anggaran kerumitan', level: LEVEL.INFO, detail: `dilewati (${e.message}).` }
+  }
+}
+
 // Penjaga "kunci env lupa di-set": banding NAMA kunci .env.example vs .env.local (robot
-// lib/env-keys-check.mjs — cuma-baca NAMA, nilai rahasia tak pernah disentuh; dijaga tes keamanannya).
+// engine/env-keys-check.mjs — cuma-baca NAMA, nilai rahasia tak pernah disentuh; dijaga tes keamanannya).
 // Dibangunkan ke gerbang v2.0.0 (Paket C pindai babak-2): dulu hanya CLI manual `npx lintasai env-keys`
 // yang 0 kali disebut alur mana pun = robot tidur; padahal env-var lupa di-set = penyebab crash
 // "jalan di lokal, mati saat online" tersering. NON-BLOCKING BY DESIGN (selaras runSwallowedCheck:
@@ -714,13 +882,20 @@ export function checkArchitectureMap(repoRoot) {
   }
 }
 
-// Penjaga "mutu kode + library rentan per-bahasa": robot lib/stack-check.mjs (tsc / npm audit CVE /
+// Penjaga "mutu kode + library rentan per-bahasa": robot engine/stack-check.mjs (tsc / npm audit CVE /
 // ruff / bandit / dll — config-gated, statis, tanpa --fix). Dibangunkan v2.0.0 (Paket C): dulu hanya
 // CLI manual. HANYA jalan saat --strict (gerbang rilis; preflight harian tetap cepat — alat bisa
 // makan 1-3 menit). eslint di-exclude (runEslint gerbang sudah menjalankannya — jangan dobel).
-// NON-BLOCKING pola runAiConfigCheck: robot menandai semua temuan alat = PENTING (lib/stack-check.mjs)
+// NON-BLOCKING pola runAiConfigCheck: robot menandai semua temuan alat = PENTING (engine/stack-check.mjs)
 // dan PENTING memblokir saat --strict — maka DIBUNGKUS ke RAPIKAN owner-gated (severity asli tetap
 // dicetak jujur); kegagalan jaringan `npm audit` (ENOTFOUND dkk.) = INFO dilewati, bukan temuan palsu.
+// DIPERTIMBANGKAN & DITOLAK (2026-07-19): menaikkan temuan cek-tipe (tsc/mypy) jadi PENTING supaya
+// memblokir di --strict. DIBATALKAN karena tests/preflight-robot-baru.test.mjs:54 mengunci kontrak
+// "apa pun hasilnya, level selalu non-blokir", dengan alasan tertulis di header berkas itu: "robot
+// baru tanpa data laju-alarm-palsu tak boleh menyandera rilis". Melemahkan tes itu agar perubahan
+// lolos = persis yang sec.12 larang. Lubang utamanya sudah ditutup runAppBuild (build gagal =
+// GENTING); sisa celahnya sempit (bundler yang melewati cek tipe / `ignoreBuildErrors: true`) dan
+// itu keputusan owner, bukan keputusan AI.
 export function runStackCheck(repoRoot) {
   try {
     const r = invokeLintasStackCheck({ repoRoot, quiet: true, timeoutSec: 120, excludeTools: ['eslint'] })
@@ -834,15 +1009,25 @@ export function runPreflight({ repoRoot = defaultRepoRoot(), strict = false, log
   // --- Semua pemeriksa Node (kit 100% Node sejak v2.0.0) --- anak-proses tes diberi penanda
   // anti-rekursi di env. Smoke Node ikut di runNodeTests (tests/smoke-portable.test.mjs).
   const childEnv = { ...process.env, LINTASAI_PREFLIGHT_ACTIVE: '1' }
+  // Build DULUAN (2026-07-19): (a) aplikasi yang gagal dibangun bikin pemeriksa lain tak bermakna;
+  // (b) checkPerfBudget di bawah butuh hasil build (.next/) - dulu selalu auto-lewat karena tak ada
+  // yang pernah membangun. Urutan ini yang membuat anggaran halaman akhirnya benar-benar terukur.
+  results.push(timed(() => runAppBuild(repoRoot, childEnv, mode)))
   results.push(timed(() => runNodeTests(repoRoot, childEnv, mode)))
   results.push(timed(() => runEslint(repoRoot, mode)))
   results.push(timed(() => runConsistency(repoRoot)))
   results.push(timed(() => runUnicode(repoRoot)))
   results.push(timed(() => checkPerfBudget(repoRoot)))
   results.push(timed(() => checkRulesBudget(repoRoot)))
-  results.push(timed(() => checkWorkflowsRefs(repoRoot)))
+  results.push(timed(() => checkAlwaysLoadBudget(repoRoot)))
+  results.push(timed(() => checkRulesRefs(repoRoot)))
+  results.push(timed(() => checkToolReach(repoRoot)))
+  results.push(timed(() => checkSkillFormat(repoRoot)))
+  results.push(timed(() => checkRegistryDrift(repoRoot)))
+  results.push(timed(() => checkPetaDrift(repoRoot)))
   results.push(timed(() => runAiConfigCheck(repoRoot)))
   results.push(timed(() => runSwallowedCheck(repoRoot)))
+  results.push(timed(() => checkComplexityBudget(repoRoot, mode)))
   results.push(timed(() => runEnvKeys(repoRoot)))
   results.push(timed(() => checkArchitectureMap(repoRoot)))
   // stack-check (tsc/npm-audit-CVE/ruff/bandit dll.) HANYA di gerbang rilis ketat — alat bisa 1-3 menit;
@@ -881,7 +1066,7 @@ function main() {
   const repoRoot = flagIdx('--repo-root') || flagIdx('--project-root') || defaultRepoRoot()
   const r = runPreflight({ repoRoot, strict })
   // exit-code = 1 kalau ada pemblokir, 0 kalau lulus. process.exitCode (bukan exit) supaya stdout
-  // selesai di-flush dulu (cermin pola aman lib/risk-gate.js).
+  // selesai di-flush dulu (cermin pola aman engine/risk-gate.js).
   process.exitCode = r.exitCode
 }
 

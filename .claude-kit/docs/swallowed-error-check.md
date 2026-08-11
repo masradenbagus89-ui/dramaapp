@@ -1,13 +1,13 @@
 # swallowed-error-check.md — Robot "Error-ditelan-diam" (cuma-baca)
 
-> Versi 1 · 2026-07-08 · pendamping `lib/swallowed-error-check.mjs`
+> Versi 1 · 2026-07-08 · pendamping `engine/swallowed-error-check.mjs`
 
 ## Tujuan
 Memindai berkas kode (JS/TS + Python) untuk **blok penangkap-error yang KOSONG** — yaitu `try/catch` (atau `.catch(...)`, atau `except:` Python) yang **menelan error tanpa berbuat apa pun dan tanpa komentar-alasan**. Pola ini menyembunyikan kegagalan: program tampak "jalan mulus" padahal ada error yang ditelan diam-diam, jadi bug baru ketahuan jauh belakangan (atau tak pernah).
 
 🏢 Analogi: seperti **alarm rumah yang dimatikan diam-diam** — kalau memang sengaja (mis. lagi bor tembok), tempel catatan "sengaja dimatikan sampai jam 3"; kalau tanpa catatan, tak ada yang tahu apakah alarm mati karena rusak atau sengaja.
 
-Ini standar industri sejati: **ESLint `no-empty`** (bagian dari `eslint:recommended`) dan **Go `errcheck`** menegakkan hal yang sama. Ide diadaptasi dari `willey-labs/agent-skills` (lisensi MIT) lalu ditulis ulang untuk Node + Bahasa Indonesia non-programmer (`docs/plans/WILLEY_BORROW_IMPLEMENTASI.md` Item #1).
+Ini standar industri sejati: **ESLint `no-empty`** (bagian dari `eslint:recommended`) dan **Go `errcheck`** menegakkan hal yang sama. Ide diadaptasi dari `willey-labs/agent-skills` (lisensi MIT) lalu ditulis ulang untuk Node + Bahasa Indonesia non-programmer (rencana serapan internal Item #1, riwayat git).
 
 ## Jalan-keluar sah (penting)
 Kalau pengabaian error memang **disengaja**, tulis **komentar-alasan DI DALAM blok** → blok dianggap "tak kosong" → **lolos**. Ini cermin desain resmi ESLint `no-empty` ("a comment inside the block is a valid escape").
@@ -54,7 +54,7 @@ Selaras keputusan `runAiConfigCheck` (SARAN owner-gated, RAPIKAN).
 Robot **menyamarkan** isi string-literal (→ spasi) dan isi komentar (→ karakter pengisi non-spasi) sebelum mencocokkan pola. Asimetri ini yang membuat dua hal benar sekaligus: (1) komentar-alasan **di dalam** `catch { … }` bikin blok "tak kosong" → lolos; (2) pola `catch {}` yang kebetulan ada **di dalam** string/komentar → tak ikut memicu. Nomor baris tetap akurat karena panjang teks dijaga.
 
 ## Dependensi
-Node 18+. Tanpa modul eksternal. Cuma-baca (`fs`). Reuse `readTextSafe` (`lib/fs-text.mjs`). Memakai regex *lookbehind* (didukung Node modern).
+Node 18+. Tanpa modul eksternal. Cuma-baca (`fs`). Reuse `readTextSafe` (`engine/fs-text.mjs`). Memakai regex *lookbehind* (didukung Node modern).
 
 ## Catatan
 - **Berkas yang dilewati** (anti alarm-palsu): `*.test.*` / `*.spec.*` / `test_*.py` / `*_test.py` (fixtures tes sengaja berisi pola "buruk"), `*.min.js`, `*.d.ts`, dan folder `node_modules/`, `dist/`, `build/`, `.next/`, `.git/`, `coverage/`, `.claude-kit/`, dll.

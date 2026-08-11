@@ -1,0 +1,69 @@
+================================================================
+  CHEAT SHEET PRESENTASI - DRAMAAPP / DRAMAKU
+  Selasa, 2 Juni 2026   |   https://dramaapp.vercel.app/
+================================================================
+
+KALIMAT PEMBUKA
+  "DramaApp (brand: DramaKu) adalah platform streaming drama China
+   pendek yang saya bangun dari nol - sudah ONLINE & bisa diakses
+   siapa saja. Saya jelaskan dari 2 sisi: teknis aplikasi & sistem
+   yang dipakai selama membangunnya."
+  >> Kalau bisa: buka dramaapp.vercel.app langsung (demo singkat).
+
+----------------------------------------------------------------
+ANGKA PENTING (hafalkan)
+  33 judul drama  .  7 kategori  .  ~25 poster  .  11 halaman
+  6 dari 8 tahap selesai  .  Biaya hosting = Rp 0
+----------------------------------------------------------------
+
+ALUR BICARA (per slide)
+  1  Pembuka + demo singkat app
+  2  Agenda: produk - teknis - data - admin/video/deploy
+  3  Apa itu: streaming drama China pendek, gratis, mobile-first
+       (gabungan Netflix katalog + TikTok shorts)
+  4  Fitur: katalog/discover, player episode, shorts, akun,
+       like+komentar+my list, panel admin
+  5  Tech stack: Next.js 16 + React 19 + TypeScript + Tailwind 4,
+       hosting Vercel, repo GitHub. FULL-STACK 1 codebase.
+  6  Arsitektur: server & client components, API routes, data JSON,
+       state di localStorage
+  7  Routing: nama folder = URL, 11 rute, [id]/[ep] = dinamis
+  8  API: publik vs admin; admin dicek header x-admin-email (401)
+  9  Data: tanpa DB, semua file JSON di folder data/
+  10 Panel admin /admin: kelola konten tanpa sentuh kode
+  11 Video: player HTML5, fallback otomatis ke sample
+  12 *ARSITEKTUR HYBRID (TONJOLKAN): app di Vercel, VIDEO di PC
+       backup disalurkan via Caddy + tunnel. Alasan: video besar
+       (GitHub batas 100MB). Hasil: biaya Rp 0.
+  13 Deploy: push GitHub -> Vercel auto build & online
+  14 Perjalanan 8 tahap (6 selesai): setup > vercel > video >
+       admin form > auto-hardlink (3 klik) > script otomatis.
+       Berikutnya: Named Tunnel + perbaikan akhir.
+  15 Tantangan>solusi: firewall->Vercel; video besar->dipisah;
+       tanpa DB->JSON (mudah upgrade nanti)
+  16 Roadmap: video ke CDN R2, upgrade ke database, search, auth
+  17 Tanya-jawab (lihat bawah)
+  18 Penutup
+
+----------------------------------------------------------------
+JAWABAN CEPAT TANYA-JAWAB
+  Kenapa tanpa database?
+    > JSON cukup utk skala ini, ringan, gratis; mudah migrasi ke
+      DB nanti tanpa ubah tampilan.
+  Berapa biaya?
+    > Rp 0. Vercel free + PC sendiri + tool open-source.
+  Aman?
+    > Role admin dicek di SERVER tiap endpoint; video terpisah.
+  Bisa di HP?
+    > Bisa, responsive + bottom-nav mobile, jalan di browser apa pun.
+  (Tidak tahu? Jujur: "itu masuk rencana pengembangan.")
+
+----------------------------------------------------------------
+KALIMAT PENUTUP
+  "DramaApp sudah online, dibangun dengan teknologi modern
+   (Next.js, TypeScript, Vercel), pakai arsitektur hybrid yang
+   hemat biaya untuk video besar, dan sistem admin yang membuat
+   tambah konten sangat cepat. Dari 8 tahap, 6 sudah selesai dan
+   aplikasinya sudah bisa dipakai sekarang."
+  >> Lanjut sesi tanya-jawab + tawarkan demo.
+================================================================

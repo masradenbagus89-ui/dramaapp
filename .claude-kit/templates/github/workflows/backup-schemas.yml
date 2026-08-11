@@ -1,5 +1,5 @@
 # .github/workflows/backup-schemas.yml
-# Daily backup pg_dump per-schema (Layer 3 di MCP_SETUP.md section 2.1d)
+# Daily backup pg_dump per-schema (lapis backup harian otomatis)
 #
 # Backup tiap schema staff (contoh: schema_a, schema_b, dst. — GANTI dengan nama schema proyekmu) terpisah → upload ke Supabase Storage.
 # Restore selective per-schema kalau ada accidental DROP TABLE.

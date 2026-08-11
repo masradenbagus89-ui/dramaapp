@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // setup-pola-b.mjs - Pemasang kit lintasAI di project (Pola B), versi Node.
 //
-// Gelombang 4 (ADR-004 / migrasi-besar-node-program.md): port orkestrator pemasang dari
+// Gelombang 4 (ADR-004): port orkestrator pemasang dari
 // setup-pola-b.ps1 (1755 baris). Dibangun BERDAMPINGAN - pemasang PowerShell lama TETAP jadi
 // jalur default (dispatcher `init` masih menunjuk .ps1) sampai versi Node ini terbukti
 // uji-jalan berkali-kali. JANGAN daftarkan ke COMMANDS_NODE sebelum gerbang end-to-end lulus.
@@ -12,9 +12,9 @@
 // TAHAP 2 (kini AKTIF, NON-INTERAKTIF): nama/repo, pilihan AGENTS.md, rapikan folder bersarang,
 //   identitas git, buka VS Code, rangkuman penutup + panduan kunci-gabung. KEPUTUSAN OWNER 06-22:
 //   popup jendela GUI DIBUANG dari versi Node - pemasang kini SEPENUHNYA OTOMATIS: tiap "pertanyaan"
-//   lewat lib/popup-shim.mjs langsung dijawab NILAI-AMAN (tak menampilkan apa pun, tak hang, tak crash),
+//   lewat engine/popup-shim.mjs langsung dijawab NILAI-AMAN (tak menampilkan apa pun, tak hang, tak crash),
 //   dan pilihan sebenarnya dilakukan staff lewat AI di chat sesudah pemasangan. Logika murni yang bisa
-//   diuji (validasi email, urutan opsi, deteksi VS Code, panduan commit) ada di lib/setup-interactive.mjs.
+//   diuji (validasi email, urutan opsi, deteksi VS Code, panduan commit) ada di engine/setup-interactive.mjs.
 //
 // Bahasa output WAJIB non-programmer Indonesia (ADR-004 #3) - dijaga robot output-lang-check.
 import fs from 'node:fs'
@@ -23,23 +23,18 @@ import os from 'node:os'
 import { fileURLToPath } from 'node:url'
 import { spawnSync, spawn } from 'node:child_process'
 
-import { isInteractiveInput, showYesNo, showInput, showChoice, showNumberedChoice, showInfo } from './lib/popup-shim.mjs'
-import { initializeManifest, addToManifest, addDirToManifest, saveManifest } from './lib/manifest.mjs'
-import { copyTemplateWithPlaceholder, copyStaticTemplate, refreshUpdateGuideIfLegacy } from './lib/template-deploy.mjs'
-import { removeGitMetadata, removeMotwBlock } from './lib/git-helpers.mjs'
-import { publishAgentsMd, publishClaudeMd } from './lib/agents-md.mjs'
-import { getKitVersionFromChangelog } from './lib/version-detect.mjs'
-import { readKitManifest } from './lib/kit-files.mjs'
-import { getStackType, getPackageManager } from './lib/project-detect.mjs'
-import { writeLintasProjectManifestIfMissing } from './lib/project-manifest.mjs'
-import { mergeAllowList } from './lib/json-merge-helpers.mjs'
-import { writeStaffRosterIfMissing } from './lib/staff-roster.mjs'
-import { ensureLangHook } from './lib/lang-hook-wiring.mjs'
-import { ensureRiskGateHook } from './lib/ensure-risk-gate-hook.mjs'
-import { ensureFeedbackCaptureHook } from './lib/ensure-feedback-capture-hook.mjs'
-import { runKimiAgentsGen } from './lib/kimi-agents-gen.mjs'
-import { installSecretHook } from './lib/install-secret-hook.mjs'
-import { testMainBranchProtected } from './lib/branch-protect.mjs'
+import { isInteractiveInput, showYesNo, showInput, showChoice, showNumberedChoice, showInfo } from './engine/popup-shim.mjs'
+import { initializeManifest, addToManifest, addDirToManifest, saveManifest } from './engine/manifest.mjs'
+import { copyTemplateWithPlaceholder, copyStaticTemplate, refreshUpdateGuideIfLegacy } from './engine/template-deploy.mjs'
+import { removeGitMetadata, removeMotwBlock } from './engine/git-helpers.mjs'
+import { publishAgentsMd, publishClaudeMd } from './engine/agents-md.mjs'
+import { getKitVersionFromChangelog } from './engine/version-detect.mjs'
+import { readKitManifest } from './engine/kit-files.mjs'
+import { getStackType, getPackageManager } from './engine/project-detect.mjs'
+import { findProjectRoot, terapkanModeAkar, pesanAkarMeleset } from './engine/project-root.mjs'
+import { writeLintasProjectManifestIfMissing } from './engine/project-manifest.mjs'
+import { installSecretHook } from './engine/install-secret-hook.mjs'
+import { installProjectHooks } from './engine/setup-hooks.mjs'
 import {
   STARTER_PROMPT,
   isValidGitEmail,
@@ -49,13 +44,33 @@ import {
   findVsCodeExe,
   buildCommitGuidance,
   diffLines,
-} from './lib/setup-interactive.mjs'
+} from './engine/setup-interactive.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
+// Apakah `dir` adalah repo PENGEMBANGAN lintasAI (bukan salinan kit di project client)?
+// Dipakai sebagai HENTI KERAS sebelum `removeGitMetadata` menghapus .git — lihat alasan lengkap di
+// titik pemanggilannya. Tiga syarat WAJIB terpenuhi serentak supaya tak pernah salah-alarm:
+//   1. ada .git/ SEBAGAI DIREKTORI  -> ini repo sungguhan, bukan salinan vendor
+//   2. package.json name === 'lintasai' -> ini kit-nya sendiri, bukan project client mana pun
+//   3. folder BUKAN bernama '.claude-kit' -> salinan terpasang di client selalu bernama itu
+// Salinan kit di client gagal syarat 1 & 3, jadi alur pemasangan normal TIDAK terpengaruh.
+// FAIL-SAFE: apa pun yang aneh (JSON rusak, izin baca ditolak) -> false = perilaku seperti sebelumnya.
+export function adalahRepoPengembanganKit(dir) {
+  try {
+    if (!dir) return false
+    if (path.basename(dir) === '.claude-kit') return false
+    if (!fs.statSync(path.join(dir, '.git')).isDirectory()) return false
+    const pkg = JSON.parse(fs.readFileSync(path.join(dir, 'package.json'), 'utf8'))
+    return String(pkg.name).toLowerCase() === 'lintasai'
+  } catch {
+    return false
+  }
+}
+
 // ---- Baca pilihan baris-perintah ----
 function parseArgs(argv) {
-  const a = { force: false, dryRun: false, skipTeamFiles: false, noGui: false, projectRoot: null }
+  const a = { force: false, dryRun: false, skipTeamFiles: false, noGui: false, projectRoot: null, projectRootMode: null }
   for (let i = 0; i < argv.length; i++) {
     const t = String(argv[i]).toLowerCase()
     if (t === '--force') a.force = true
@@ -63,6 +78,10 @@ function parseArgs(argv) {
     else if (t === '--skip-team-files' || t === '--skipteamfiles') a.skipTeamFiles = true
     else if (t === '--no-gui' || t === '--nogui') a.noGui = true
     else if (t === '--project-root' || t === '--projectroot') a.projectRoot = argv[++i] || null
+    // Celah 4 (ADR-024): jawaban atas "pasang di akar project, atau di folder sekarang?".
+    // Sengaja bendera, bukan popup - pemasang Node berjalan OTOMATIS PENUH tanpa input konsol.
+    else if (t.startsWith('--project-root-mode=')) a.projectRootMode = t.slice('--project-root-mode='.length)
+    else if (t === '--project-root-mode') a.projectRootMode = String(argv[++i] || '').toLowerCase()
   }
   return a
 }
@@ -102,7 +121,7 @@ export function shouldCopyKitEntry(srcAbs, kitRootAbs) {
   const base = rel.split('/').pop()
   if (KIT_COPY_EXCLUDE_NAMES.has(base)) return false
   // Pola berkas rahasia / identitas per-staff (di level mana pun):
-  if (/\.local\.md$/i.test(base)) return false          // PROFIL_TIM.local.md dll
+  if (/\.local\.md$/i.test(base)) return false          // berkas lokal owner (*.local.md)
   if (base.toLowerCase() === '.staff-profile.md') return false
   if (/^\.git-identity-/i.test(base)) return false
   if (/\.(pem|key)$/i.test(base)) return false
@@ -170,6 +189,43 @@ function main() {
     process.exit(1)
   }
   projectRoot = fs.realpathSync(projectRoot)
+
+  // ---- Celah 4 (ADR-024): pastikan kit mendarat di AKAR project, bukan di folder tempat
+  //      perintah kebetulan dijalankan ----
+  //
+  // `bin/lintasai.js` menyuntik --project-root <process.cwd()>. Kalau client menjalankan
+  // pemasang dari `bigseo/apps/web/`, kit mendarat di sana - lalu saat alat AI dibuka dari
+  // `bigseo/`, CLAUDE.md tak dimuat, .claude/settings.json tak terbaca, hook menunjuk berkas
+  // yang tak ada dan mati diam-diam. Client mengira lintasAI aktif padahal tidak.
+  //
+  // Yang dilakukan: DETEKSI + TANYA, bukan menebak. Memasang di subfolder itu SAH (monorepo);
+  // yang dilarang adalah memasangnya di sana tanpa client tahu. Mode tradisional (bukan npx,
+  // kit sudah duduk di <project>/.claude-kit/) dilewati - di situ tak ada yang bisa meleset.
+  if (npxMode) {
+    const jejakAkar = findProjectRoot(projectRoot)
+    const pilihan = terapkanModeAkar(jejakAkar, args.projectRootMode)
+    if (pilihan.butuhTanya) {
+      console.error(pesanAkarMeleset(jejakAkar, { perintah: 'npx lintasai init' }))
+      process.exit(2)
+    }
+    if (pilihan.root !== projectRoot) {
+      // Client memilih [1]: kit dipindahkan naik ke akar project.
+      console.log(`[akar] Akar project terdeteksi (${jejakAkar.cara}): ${pilihan.root}`)
+      console.log(`[akar] Kit dipasang di sana, bukan di folder perintah dijalankan (${projectRoot}).`)
+      projectRoot = fs.realpathSync(pilihan.root)
+    } else if (jejakAkar.meleset) {
+      // Client memilih [2]: pasang di subfolder walau akar sebenarnya ada di atas. Ini SAH, tapi
+      // DILARANG dilaporkan seolah folder ini akar project - keyakinan palsu semacam itu persis
+      // yang membuat Celah 4 tak terdeteksi selama ini.
+      console.log(`[akar] Atas pilihanmu, kit dipasang di folder ini: ${projectRoot}`)
+      console.log(`[akar] Akar project sebenarnya ada di: ${jejakAkar.root}`)
+      console.log('[akar] PENTING: buka alat AI-mu (Claude Code / Kimi / Codex / Cursor) dari folder')
+      console.log('       tempat kit dipasang di atas - BUKAN dari akar project. Kalau tidak, aturan')
+      console.log('       lintasAI tidak termuat dan pengamannya tidak jalan tanpa pesan error.')
+    } else if (jejakAkar.cara !== 'cwd') {
+      console.log(`[akar] Folder ini SUDAH akar project (dasar: ${jejakAkar.cara}).`)
+    }
+  }
 
   // ---- Pra-cek: jenis stack (HENTI KERAS untuk non-Node) ----
   // SEBELUM menyalin apa pun: kalau project BUKAN Node (mis. Python/PHP), pemasang berhenti DI SINI
@@ -288,6 +344,26 @@ function main() {
   const detectedVersion = getKitVersionFromChangelog(path.join(KitDir, 'CHANGELOG.md'))
   const kitVersion = detectedVersion || 'pre-launch (testing)'
 
+  // ---- HENTI KERAS: jangan pernah dijalankan DARI DALAM repo pengembangan kit ----
+  // KENAPA (kejadian nyata 2026-07-19): baris `removeGitMetadata(KitDir)` di bawah menghapus .git dari
+  // KitDir. Itu BENAR untuk salinan kit di project client (`<project>/.claude-kit/` = salinan vendor,
+  // riwayat git-nya memang sampah). Tapi kalau installer dijalankan dari repo PENGEMBANGAN kit sendiri,
+  // KitDir = repo itu sendiri -> SELURUH RIWAYAT GIT REPO KIT TERHAPUS, tanpa peringatan, tanpa cadangan.
+  // Terjadi sungguhan saat menguji installer: 7 commit yang belum di-push hilang (pohon kerja selamat).
+  // Pemeriksaan ini mengubah kegagalan-senyap-merusak jadi pesan berhenti yang jelas.
+  if (!dryRun && adalahRepoPengembanganKit(KitDir)) {
+    console.error('\n[STOP] Installer dijalankan DARI DALAM repo pengembangan lintasAI.')
+    console.error(`       KitDir: ${KitDir}`)
+    console.error('       Langkah berikutnya akan MENGHAPUS .git repo ini (benar untuk salinan kit di')
+    console.error('       project client, fatal untuk repo pengembangan). Dihentikan demi keselamatan.')
+    console.error('\n       Mau menguji installer? Pakai salinan kit di luar repo, contoh:')
+    console.error('         cp -r <repo-kit> d:/tmp/uji-kit && cd d:/tmp/uji-projek')
+    console.error('         node d:/tmp/uji-kit/setup-pola-b.mjs --project-root d:/tmp/uji-projek')
+    console.error('\n       CATATAN: `--project-root` saja TIDAK cukup — ia hanya mengubah TUJUAN')
+    console.error('       pemasangan, sedangkan .git yang dihapus adalah milik KitDir (asal kit).')
+    process.exit(1)
+  }
+
   // ---- Bersihkan .git bawaan kit + buka kunci keamanan Windows (Mark-of-the-Web) ----
   if (!dryRun) {
     if (!removeGitMetadata(KitDir)) console.log('PERINGATAN: Gagal hapus .claude-kit/.git/ (lanjut).')
@@ -306,16 +382,16 @@ function main() {
   console.log(`Tanggal       : ${today}`)
   if (dryRun) console.log('Mode          : SIMULASI (tidak ada berkas yang ditulis)')
 
-  // ---- Verifikasi berkas inti kit ADA (sumber-tunggal DUA-FORMAT: lib/kit-files.json v2 / .psd1 v1) ----
+  // ---- Verifikasi berkas inti kit ADA (sumber-tunggal DUA-FORMAT: engine/kit-files.json v2 / .psd1 v1) ----
   let manifest
   try {
     manifest = readKitManifest(KitDir)
   } catch (e) {
-    console.error(`ERROR: Gagal baca manifest daftar-berkas (lib/kit-files.json / .psd1): ${e.message}`)
+    console.error(`ERROR: Gagal baca manifest daftar-berkas (engine/kit-files.json / .psd1): ${e.message}`)
     process.exit(1)
   }
   if (!manifest) {
-    console.error('ERROR: manifest daftar-berkas (lib/kit-files.json) hilang. Pasang ulang kit.')
+    console.error('ERROR: manifest daftar-berkas (engine/kit-files.json) hilang. Pasang ulang kit.')
     process.exit(1)
   }
   const kitFiles = manifest.data
@@ -325,8 +401,8 @@ function main() {
   // tapi PEMASANG CLIENT cuma boleh mewajibkan berkas yang BENAR-BENAR dikirim ke client. Dulu mewajibkan
   // 'tests' -> "Kit tidak lengkap. Berkas hilang" di TIAP install/re-install npm (bug terdeteksi uji-tarball
   // 2026-06-25). Dijaga package-bundle.Tests.ps1 (berkas wajib pemasang non-tests WAJIB ada di tarball).
-  // 'workflows' (v2.4.0) = rak rujukan on-demand pecah-per-seksi; kit lama tanpa grup ini tetap jalan (|| []).
-  const groups = ['core_prompts', 'universal_rules', 'workflows', 'scripts', 'lib_files', 'templates', 'docs', 'ci', 'meta']
+  // 'rules' (eks 'workflows', ADR-027) = rak rujukan on-demand pecah-per-seksi; kit lama tanpa grup ini tetap jalan (|| []).
+  const groups = ['core_prompts', 'universal_rules', 'rules', 'scripts', 'lib_files', 'templates', 'docs', 'ci', 'meta']
   const wajibAda = []
   for (const g of groups) {
     for (const f of (kitFiles[g] || [])) wajibAda.push(String(f))
@@ -554,12 +630,11 @@ function main() {
 
   // ---- Bootstrap berkas TIM ----
   if (!skipTeamFiles && !almostEmpty) {
-    console.log('\n=== Salin berkas tim (Team Mode) ===')
+    console.log('\n=== Salin berkas pendukung (panduan docs + robot keamanan) ===')
     const githubDir = path.join(projectRoot, '.github')
     const workflowsDir = path.join(githubDir, 'workflows')
-    const scriptsDir = path.join(githubDir, 'scripts')
     const decisionsDir = path.join(docsDir, 'decisions')
-    for (const d of [githubDir, workflowsDir, scriptsDir, decisionsDir]) {
+    for (const d of [githubDir, workflowsDir, decisionsDir]) {
       if (!fs.existsSync(d) && !dryRun) {
         fs.mkdirSync(d, { recursive: true })
         addDirToManifest(manifestState, d)
@@ -567,18 +642,8 @@ function main() {
       }
     }
     const teamFiles = [
-      ['templates/github/workflows/ai-review.yml', path.join(workflowsDir, 'ai-review.yml')],
       ['templates/github/workflows/backup-schemas.yml', path.join(workflowsDir, 'backup-schemas.yml')],
       ['templates/github/workflows/secret-guard.yml', path.join(workflowsDir, 'secret-guard.yml')],
-      ['templates/github/workflows/audit-access.yml', path.join(workflowsDir, 'audit-access.yml')],
-      ['templates/github/scripts/ai-review.cjs', path.join(scriptsDir, 'ai-review.cjs')],
-      ['templates/github/CODEOWNERS.template', path.join(githubDir, 'CODEOWNERS')],
-      ['templates/github/pull_request_template.md', path.join(githubDir, 'pull_request_template.md')],
-      ['templates/KERJA_KELOMPOK.md', path.join(docsDir, 'KERJA_KELOMPOK.md')],
-      ['templates/CLAUDE_TEAM_GUIDE.md', path.join(docsDir, 'CLAUDE_TEAM_GUIDE.md')],
-      ['templates/PROMPT_LIBRARY.md', path.join(docsDir, 'PROMPT_LIBRARY.md')],
-      ['templates/ONBOARDING.md', path.join(docsDir, 'ONBOARDING.md')],
-      ['templates/TEAM_FLOW_SKETCH_v1.md', path.join(docsDir, 'TEAM_FLOW_SKETCH_v1.md')],
       ['templates/OWNER_SETUP_CHECKLIST_v1.md', path.join(docsDir, 'OWNER_SETUP_CHECKLIST.md')],
       ['templates/STACK_GUIDE.md', path.join(docsDir, 'STACK_GUIDE.md')],
       ['templates/STACK_MIGRATION_GUIDE.md', path.join(docsDir, 'STACK_MIGRATION_GUIDE.md')],
@@ -592,17 +657,15 @@ function main() {
       // Disalin sbg CONTOH (.example) -> klien/AI salin jadi docs/BUKU_PELAJARAN.md saat bug pertama,
       // lewat alur "AI usul -> owner setujui" (aturan CLAUDE_universal sec. 6.4, auto-baca tiap sesi).
       ['templates/BUKU_PELAJARAN.example.md', path.join(docsDir, 'BUKU_PELAJARAN.example.md')],
-      ['templates/MCP_SETUP.md', path.join(docsDir, 'MCP_SETUP.md')],
       ['templates/RLS_SETUP_PROMPT.md', path.join(docsDir, 'RLS_SETUP_PROMPT.md')],
       ['templates/DB_SCHEMA_SCAN_PROMPT.md', path.join(docsDir, 'DB_SCHEMA_SCAN_PROMPT.md')],
-      ['templates/OPERASI_DATABASE_AMAN.md', path.join(docsDir, 'OPERASI_DATABASE_AMAN.md')],
-      ['templates/OBSERVABILITY_PRODUKSI.md', path.join(docsDir, 'OBSERVABILITY_PRODUKSI.md')],
+      ['templates/SAFE_DATABASE_OPERATIONS.md', path.join(docsDir, 'SAFE_DATABASE_OPERATIONS.md')],
+      ['templates/PRODUCTION_OBSERVABILITY.md', path.join(docsDir, 'PRODUCTION_OBSERVABILITY.md')],
       ['templates/GLOSSARY_NON_PROGRAMMER.md', path.join(docsDir, 'GLOSSARY_NON_PROGRAMMER.md')],
-      ['templates/ANALOGI_LIBRARY.md', path.join(docsDir, 'ANALOGI_LIBRARY.md')],
+      ['templates/ANALOGY_LIBRARY.md', path.join(docsDir, 'ANALOGY_LIBRARY.md')],
       ['templates/UPDATE_GUIDE.md', path.join(docsDir, 'UPDATE_GUIDE.md')],
       ['templates/SECURITY_INCIDENT_PLAYBOOK.md', path.join(docsDir, 'SECURITY_INCIDENT_PLAYBOOK.md')],
       ['templates/THREAT_MODEL_NON_LEGAL.md', path.join(docsDir, 'THREAT_MODEL_NON_LEGAL.md')],
-      ['templates/ACCESS_CONTROL_NREPO_v1.md', path.join(docsDir, 'ACCESS_CONTROL_NREPO_v1.md')],
       ['templates/feature-flags-advanced.md', path.join(docsDir, 'feature-flags-advanced.md')],
       ['templates/decisions/_TEMPLATE.md', path.join(decisionsDir, '_TEMPLATE.md')],
       ['templates/decisions/README.md', path.join(decisionsDir, 'README.md')],
@@ -636,11 +699,9 @@ function main() {
     // Pengingat mode-tim (cermin setup-pola-b.ps1:939-949): tunjuk berkas tim yang baru disalin supaya
     // staff tahu langkah lanjut yang TAK muncul di rangkuman akhir (kunci branch main + setup database).
     console.log('')
-    console.log('=== Pengingat (mode tim) ===')
-    console.log('  - Kunci branch utama (main) biar tiap perubahan lewat review: baca docs/KERJA_KELOMPOK.md.')
-    console.log('  - Lengkapi peran tim: .github/CODEOWNERS + .github/staff-roster.yml.')
-    console.log('  - Panduan tim + kumpulan perintah siap-pakai: docs/CLAUDE_TEAM_GUIDE.md + docs/PROMPT_LIBRARY.md.')
-    console.log('  - Kalau pakai database: docs/MCP_SETUP.md, docs/RLS_SETUP_PROMPT.md, docs/DB_SCHEMA_SCAN_PROMPT.md.')
+    console.log('=== Pengingat ===')
+    console.log('  - Kunci branch utama (main) biar tiap perubahan lewat review: GitHub Settings -> Branches.')
+    console.log('  - Kalau pakai database: docs/RLS_SETUP_PROMPT.md, docs/DB_SCHEMA_SCAN_PROMPT.md, docs/SAFE_DATABASE_OPERATIONS.md.')
   } else if (skipTeamFiles) {
     console.log('\nINFO: --skip-team-files aktif - lewati salin .github/ + docs tim.')
   }
@@ -693,149 +754,12 @@ function main() {
     }
   }
 
-  // ---- Direktori tim: .github/staff-roster.yml ----
-  if (!dryRun) {
-    try {
-      const r = writeStaffRosterIfMissing(projectRoot)
-      if (r.written) console.log(`OK    .github/staff-roster.yml dibuat (${r.emailFromGit ? 'email owner dari git config' : 'isi email owner - masih placeholder'}; lengkapi sebelum staff onboard)`)
-      else if (r.reason === 'exists') console.log('LEWATI .github/staff-roster.yml (sudah ada, data tidak ditimpa)')
-    } catch (e) {
-      console.log(`PERINGATAN: Gagal buat staff-roster.yml: ${e.message}`)
-    }
-  }
-
-  // ---- Gabung daftar izin Claude Code (.claude/settings.local.json) ----
-  // Deterministik (pertahankan entri pengguna + buang duplikat). Notifikasi popup = [TAHAP 2].
-  try {
-    const settingsDir = path.join(projectRoot, '.claude')
-    const settingsTarget = path.join(settingsDir, 'settings.local.json')
-    const settingsTemplate = path.join(KitDir, 'templates', 'settings.local.json.template')
-    if (!fs.existsSync(settingsTemplate)) {
-      console.log('PERINGATAN: templates/settings.local.json.template tidak ada - lewati gabung daftar izin.')
-    } else if (dryRun) {
-      console.log('[SIMULASI] GABUNG daftar izin ke .claude/settings.local.json')
-    } else {
-      if (!fs.existsSync(settingsDir)) {
-        fs.mkdirSync(settingsDir, { recursive: true })
-        console.log(`DIBUAT ${settingsDir}`)
-      }
-      const changed = mergeAllowList({ existingPath: settingsTarget, templatePath: settingsTemplate, outputPath: settingsTarget })
-      console.log(changed ? 'OK    Daftar izin digabung (tutup + buka ulang VS Code untuk menerapkan).' : 'OK    Daftar izin sudah lengkap (tidak ada perubahan).')
-      // CATATAN URUTAN (beda SENGAJA dari PS): di pemasang Node, gabung daftar izin ini bagian TULANG
-      // PUNGGUNG Tahap 1 (deterministik) - jalan SEBELUM identitas git. Di PS ia di Pass 2 SETELAH git,
-      // jadi jalur "batal di langkah git" PS melewatinya; di Node ia sudah jalan duluan (idempoten +
-      // lebih benar: izin selalu terpasang). Header berkas menyatakan ini bagian Tahap 1.
-      // (Pemberitahuan popup GUI dibuang 06-22 - pesan konsol di atas sudah cukup untuk semua mode.)
-    }
-  } catch (e) {
-    console.log(`PERINGATAN: Gabung daftar izin dilewati: ${e.message} (pemasangan TETAP berhasil).`)
-  }
-
-  // ---- Pasang hook "pengingat Bahasa Indonesia" ke .claude/settings.json ----
-  // Idempoten + fail-safe (lib/lang-hook-wiring.mjs). Non-blokir: cuma menambah pengingat bahasa ke
-  // konteks AI tiap pesan. Jalan di init DAN update (update-kit menjalankan ulang setup-pola-b --force).
-  try {
-    if (dryRun) {
-      console.log('[SIMULASI] PASANG hook pengingat Bahasa Indonesia ke .claude/settings.json')
-    } else {
-      const r = ensureLangHook(projectRoot)
-      if (r.changed) console.log(`OK    Hook pengingat Bahasa Indonesia ${r.reason === 'dibuat' ? 'dipasang' : 'digabung'} (.claude/settings.json) - tutup + buka ulang VS Code untuk menerapkan.`)
-      else if (r.reason === 'sudah-ada') console.log('OK    Hook pengingat Bahasa Indonesia sudah terpasang (tidak ada perubahan).')
-      else if (r.reason === 'settings-rusak-atau-terkunci') console.log('PERINGATAN: .claude/settings.json rusak/terkunci - hook bahasa dilewati (perbaiki JSON lalu jalankan setup ulang). Pemasangan TETAP berhasil.')
-    }
-  } catch (e) {
-    console.log(`PERINGATAN: Pasang hook bahasa dilewati: ${e.message} (pemasangan TETAP berhasil).`)
-  }
-
-  // ---- Pasang "Palang Rem Otomatis" (risk-gate) ke .claude/settings.json (default NYALA sejak v1.61.0) ----
-  // Idempoten + FAIL-SAFE (lib/ensure-risk-gate-hook.mjs): minta konfirmasi klik sebelum aksi BENAR-BENAR
-  // berbahaya (rm -rf, DROP/DELETE tanpa WHERE, push --force, sentuh .env, format disk) + blokir menembus-
-  // pagar. Mode "ask" = kerja normal TAK terganggu (hanya aksi bahaya yang ditanya). BEDA dari mode-otonomi
-  // (§4.12 default mati): Palang Rem MENGURANGI risiko, jadi default NYALA = selaras "keamanan dulu" (tie-breaker #1).
-  // Sangat mudah dimatikan: hapus blok PreToolUse risk-gate dari .claude/settings.json.
-  try {
-    if (dryRun) {
-      console.log('[SIMULASI] PASANG Palang Rem risk-gate ke .claude/settings.json')
-    } else {
-      const rg = ensureRiskGateHook(projectRoot)
-      if (rg.changed) console.log(`OK    Palang Rem aksi-berbahaya ${rg.reason === 'dibuat' ? 'dipasang' : 'digabung'} (.claude/settings.json) - minta konfirmasi sebelum aksi merusak. Matikan: hapus blok PreToolUse risk-gate. Aktif setelah buka chat BARU.`)
-      else if (rg.reason === 'sudah-ada') console.log('OK    Palang Rem aksi-berbahaya sudah terpasang (tidak ada perubahan).')
-      else if (rg.reason === 'settings-rusak-atau-terkunci') console.log('PERINGATAN: .claude/settings.json rusak/terkunci - Palang Rem dilewati (perbaiki JSON lalu jalankan setup ulang). Pemasangan TETAP berhasil.')
-    }
-  } catch (e) {
-    console.log(`PERINGATAN: Pasang Palang Rem dilewati: ${e.message} (pemasangan TETAP berhasil).`)
-  }
-
-  // ---- Pasang "Pengingat rekam pelajaran" (feedback-capture) ke .claude/settings.json (default NYALA 2026-07-17) ----
-  // Idempoten + FAIL-SAFE (lib/ensure-feedback-capture-hook.mjs): hook Stop yang mengingatkan AI menimbang §6.5
-  // (rekam pelajaran teknis frontier ke berkas LOKAL ter-redaksi) di akhir tugas yang menyentuh kode. NON-BLOKIR
-  // (exit 0 selalu, cuma menepuk pundak) - profil sama dengan lang-reminder yang juga default NYALA. BEDA dari
-  // hook-penegak-checklist yang ADR-008 tunda (yang itu bisa MENAHAN "selesai"). Matikan: hapus blok Stop feedback-capture.
-  try {
-    if (dryRun) {
-      console.log('[SIMULASI] PASANG Pengingat rekam pelajaran (feedback-capture) ke .claude/settings.json')
-    } else {
-      const fc = ensureFeedbackCaptureHook(projectRoot)
-      if (fc.changed) console.log(`OK    Pengingat rekam pelajaran ${fc.reason === 'dibuat' ? 'dipasang' : 'digabung'} (.claude/settings.json) - AI diingatkan menimbang §6.5 di akhir tugas. Cuma pengingat, tak memaksa. Aktif setelah buka chat BARU.`)
-      else if (fc.reason === 'sudah-ada') console.log('OK    Pengingat rekam pelajaran sudah terpasang (tidak ada perubahan).')
-      else if (fc.reason === 'settings-rusak-atau-terkunci') console.log('PERINGATAN: .claude/settings.json rusak/terkunci - Pengingat rekam pelajaran dilewati (perbaiki JSON lalu jalankan setup ulang). Pemasangan TETAP berhasil.')
-    }
-  } catch (e) {
-    console.log(`PERINGATAN: Pasang Pengingat rekam pelajaran dilewati: ${e.message} (pemasangan TETAP berhasil).`)
-  }
-
-  // ---- Buat berkas aturan Kimi Code (.kimi-code/AGENTS.md) - SELALU jalan (init DAN update) ----
-  // Kimi Code CLI membaca AGENTS.md NATIF tiap sesi (bukan CLAUDE.md/@import). Generator menyalin PENUH
-  // .claude-kit/CLAUDE_universal_v1.md ke .kimi-code/AGENTS.md -> kualitas kit di Kimi IDENTIK dengan di
-  // Claude (tak ada aturan yang tertinggal). HARMLESS untuk pengguna Claude-only: Claude TIDAK membaca
-  // folder .kimi-code/, dan berkasnya gitignored. Artefak GENERATED (regenerate tiap update; deterministik).
-  // FAIL-SAFE: gagal -> pemasangan TETAP berhasil. (Pagar keamanan Kimi = OPT-IN: `npx lintasai enable-kimi-hooks`.)
-  try {
-    if (dryRun) {
-      console.log('[SIMULASI] BUAT berkas aturan Kimi Code (.kimi-code/AGENTS.md)')
-    } else {
-      const ka = runKimiAgentsGen({ repoRoot: projectRoot, write: true })
-      if (!ka.present) {
-        console.log('INFO  Berkas aturan Kimi dilewati (CLAUDE_universal_v1.md tak ketemu).')
-      } else if (ka.action === 'current') {
-        console.log('OK    Berkas aturan Kimi Code sudah sinkron (.kimi-code/AGENTS.md).')
-      } else {
-        addToManifest(manifestState, ka.target, 'kimi_agents', 'generated: .kimi-code/AGENTS.md')
-        console.log(`OK    Berkas aturan Kimi Code ${ka.action === 'created' ? 'dibuat' : 'diperbarui'} (.kimi-code/AGENTS.md) - kit jalan di Kimi Code juga, aturan sama seperti Claude. Pagar keamanan Kimi (opsional): npx lintasai enable-kimi-hooks.`)
-      }
-    }
-  } catch (e) {
-    console.log(`PERINGATAN: Buat berkas aturan Kimi dilewati: ${e.message} (pemasangan TETAP berhasil).`)
-  }
-
-  // Penanda: penjaga rahasia DILEWATI karena project belum "git init" saat langkah ini. Kalau nanti
-  // setupGitIdentity() membuat git init di sesi yang SAMA, kita pasang ulang penjaga (tutup celah-bocor
-  // .env di antara git-init dan update berikutnya).
-  let secretHookDeferred = false
-  // ---- Pasang penjaga rahasia pre-commit (.env / kunci API) ke .git/hooks/pre-commit ----
-  // Idempoten + FAIL-OPEN (lib/install-secret-hook.mjs): cegah rahasia ter-commit DI LAPTOP (shift-left,
-  // lapis-1). Lapis-2 = .github/workflows/secret-guard.yml (CI). PENTING, BUKAN jaminan menyeluruh:
-  // cegah commit BARU (bukan riwayat lama); bisa dilewati darurat `git commit --no-verify`. Jalan di init
-  // DAN update (update-kit menjalankan ulang setup-pola-b --force) -> idempoten, tak dobel.
-  try {
-    if (dryRun) {
-      console.log('[SIMULASI] PASANG penjaga rahasia pre-commit ke .git/hooks/pre-commit')
-    } else {
-      const sh = installSecretHook(projectRoot)
-      if (sh.installed) {
-        addToManifest(manifestState, sh.hookPath, 'secret_hook', 'generated: .git/hooks/pre-commit')
-        const note = sh.backupPath ? ` (hook lama dicadangkan ke ${path.basename(sh.backupPath)})` : ''
-        console.log(`OK    Penjaga rahasia pre-commit terpasang${note} - file .env/kunci ditolak sebelum commit. Lewati darurat: git commit --no-verify.`)
-      } else if (sh.reason === 'sudah-ada') {
-        console.log('OK    Penjaga rahasia pre-commit sudah terpasang (tidak ada perubahan).')
-      } else if (sh.reason === 'tak-ada-git') {
-        secretHookDeferred = true
-        console.log('INFO  Penjaga rahasia pre-commit dilewati (project belum "git init"). Akan dipasang otomatis kalau git init dibuat di langkah berikut.')
-      }
-    }
-  } catch (e) {
-    console.log(`PERINGATAN: Pasang penjaga rahasia dilewati: ${e.message} (pemasangan TETAP berhasil).`)
-  }
+  // ---- Pasang hook + wiring project (daftar izin, hook bahasa/risk-gate/rekam-pelajaran, Kimi, penjaga rahasia) ----
+  // Diekstrak ke engine/setup-hooks.mjs (refactor hemat-token, fungsi tak berubah - string output + urutan IDENTIK,
+  // dikunci tests/setup-hooks-lock.test.mjs). Semua langkah deterministik + FAIL-SAFE. secretHookDeferred=true
+  // kalau penjaga rahasia dilewati (project belum "git init") -> dipasang ulang di bawah setelah setupGitIdentity
+  // mungkin membuat git init (tutup celah-bocor .env di antara git-init dan update berikutnya).
+  const { secretHookDeferred } = installProjectHooks({ projectRoot, kitDir: KitDir, dryRun, manifestState })
 
   // ---- TAHAP 2: identitas git + buka VS Code ----
   // Lewati semua di mode SIMULASI (tanpa efek samping). setupGitIdentity bisa MENGHENTIKAN proses
@@ -866,7 +790,7 @@ function main() {
 }
 
 // ============================================================================
-// TAHAP 2 - fungsi "lem" interaktif (popup via lib/popup-shim.mjs + penolong murni lib/setup-interactive.mjs).
+// TAHAP 2 - fungsi "lem" interaktif (popup via engine/popup-shim.mjs + penolong murni engine/setup-interactive.mjs).
 // Mode otomatis/tanpa-layar: popup tak tampil, pakai nilai-aman (cermin pemasang PS non-interaktif).
 // ============================================================================
 
@@ -898,7 +822,7 @@ function setupGitIdentity({ projectRoot, kitDir, skippedSteps }) {
       console.log('')
       console.log('=== Pra-cek: cek repo Git ===')
       console.log(`Project '${path.basename(projectRoot)}' belum di-git init.`)
-      console.log('Tanpa repo git lokal, pencarian peran lewat git config user.email tidak bisa per-project.')
+      console.log('Tanpa repo git lokal, identitas git (user.email) tidak bisa di-set per-project.')
       console.log('')
       // Opsi [1] = lewati git (paling aman, tidak mengubah berkas) = rekomendasi + default (indeks 0).
       const idx = showNumberedChoice({
@@ -951,10 +875,10 @@ function setupGitIdentity({ projectRoot, kitDir, skippedSteps }) {
     // ---- Minta email (popup input). Mode tanpa-layar -> Cancel -> lewati (bisa diatur nanti). ----
     console.log('')
     console.log('=== Setup identitas Git ===')
-    console.log('Git user.email belum di-set. Diperlukan untuk pencarian peran (staff-roster.yml).')
+    console.log('Git user.email belum di-set. Diperlukan untuk identitas commit (jejak siapa mengubah apa).')
     const res = showInput({
       title: 'Setup Identitas Git',
-      message: 'Email kamu (untuk pencarian peran):',
+      message: 'Email kamu (untuk identitas commit git):',
       defaultValue: '',
       kitDir,
     })
@@ -1062,7 +986,7 @@ function launchVsCode({ projectRoot, kitDir, skippedSteps }) {
 // #4 Papan "apa yang sudah nyala vs belum": cek deterministik (cuma-baca) status tiap PENJAGA yang bisa
 // dinyalakan di project, supaya owner tahu di Hari-0 mana yang masih tidur (bukan baru ketahuan saat
 // insiden). Pola lintasAI: sebagian penjaga default-MATI/opt-in (pencegah salah-ketik-angka
-// consistency-map, Buku Induk akses; Palang Rem risk-gate justru default NYALA sejak v1.61.0)
+// consistency-map; Palang Rem risk-gate justru default NYALA sejak v1.61.0)
 // -> panel ini MEMBUATNYA TERLIHAT + 1 kalimat cara
 // nyalakan (ramah non-programmer). Semua cek = existsSync / baca teks -> tak mengubah apa pun. Diekspor
 // untuk uji-banding. Dipakai printFinalSummary (hanya saat bukan simulasi).
@@ -1081,11 +1005,16 @@ export function buildGuardStatusLines(projectRoot, { almostEmpty = false, skipTe
   // 3) Palang Rem aksi-berbahaya (risk-gate) - default NYALA sejak v1.61.0, di .claude/settings.json.
   const riskOn = hasText(path.join(projectRoot, '.claude', 'settings.json'), 'risk-gate')
   lines.push(`  ${mark(riskOn)} Palang Rem aksi-berbahaya  : ${riskOn ? 'NYALA (matikan: hapus blok PreToolUse risk-gate)' : 'BELUM (harusnya default NYALA) - jalankan: npx lintasai enable-risk-gate'}`)
-  // 4) Buku Induk akses (fondasi kontrol-akses pisah-repo) - hanya relevan untuk tim multi-repo.
-  if (!skipTeamFiles && !almostEmpty) {
-    const portfolioOn = fs.existsSync(path.join(projectRoot, 'lintasai-portfolio.yml'))
-    lines.push(`  ${mark(portfolioOn)} Buku Induk akses (tim)     : ${portfolioOn ? 'NYALA' : 'BELUM - minta AI: "buatkan Buku Induk akses"'}`)
-  }
+  // 3b) Lampu Hijau Plan Mode (plan-mode-gate) - default NYALA (ADR-021), di .claude/settings.json.
+  // Ikut dilaporkan karena ia MENGUBAH perilaku izin (mengurangi dialog saat plan mode) - staff berhak
+  // tahu apa yang menyala di mesinnya, bukan cuma pagar yang menambah pertanyaan.
+  const planGateOn = hasText(path.join(projectRoot, '.claude', 'settings.json'), 'plan-mode-gate')
+  lines.push(`  ${mark(planGateOn)} Lampu Hijau Plan Mode      : ${planGateOn ? 'NYALA (saat plan mode, aksi cuma-baca tanpa dialog izin)' : 'BELUM (harusnya default NYALA) - jalankan: node .claude-kit/engine/ensure-plan-mode-gate-hook.mjs'}`)
+  // 3c) Palang Rak (rak-gate) - default NYALA sejak v4.0.0 (Tugas 17), di .claude/settings.json.
+  // Tahan edit berkas berisiko (login/bayar/migrasi/API/unggah/DevOps) pertama kali per sesi sampai
+  // panduan terkait dibuka. Ditegakkan dari catatan pembacaan, bukan klaim; isi panduan tak mengikat.
+  const rakGateOn = hasText(path.join(projectRoot, '.claude', 'settings.json'), 'rak-gate')
+  lines.push(`  ${mark(rakGateOn)} Palang Rak (buka panduan)  : ${rakGateOn ? 'NYALA (matikan: hapus blok PreToolUse rak-gate)' : 'BELUM (harusnya default NYALA) - jalankan: npx lintasai enable-rak-gate'}`)
   return lines
 }
 
@@ -1100,13 +1029,13 @@ function printFinalSummary({ projectName, projectRoot, kitDir, kitVersion, almos
   console.log('')
 
   console.log('SUDAH AKTIF (otomatis dibaca tiap sesi AI):')
-  console.log('  [x] Aturan AI         : 4 dokumen aturan + Tinjauan lintasAI Divisi (Junior-<profesi> + Non-<profesi>) + blok belajar "Belajar dari task ini"')
+  console.log('  [x] Aturan AI         : 4 dokumen aturan + Tinjauan lintasAI Divisi (Junior-<profesi> + Non-<profesi>)')
   if (almostEmpty) {
     console.log('  [ ] docs/             : DILEWATI (project hampir kosong) - akan dibuat otomatis saat ada kode')
     console.log('  [ ] .github/          : DILEWATI (project hampir kosong) - berkas tim belum disalin')
   } else {
-    console.log('  [x] docs/             : skeleton + panduan tim (architecture, glossary, _PATTERNS, dll.)')
-    if (!skipTeamFiles) console.log('  [x] .github/          : ai-review.yml + CODEOWNERS + template PR')
+    console.log('  [x] docs/             : skeleton + panduan pendukung (architecture, glossary, _PATTERNS, dll.)')
+    if (!skipTeamFiles) console.log('  [x] .github/          : backup-schemas.yml + secret-guard.yml (robot keamanan)')
     else console.log('  [ ] .github/          : DILEWATI (--skip-team-files aktif)')
   }
   console.log('  [x] Lokasi aturan     : dari folder .claude-kit/ di project ini')
@@ -1117,22 +1046,13 @@ function printFinalSummary({ projectName, projectRoot, kitDir, kitVersion, almos
     try {
       console.log('STATUS PENJAGA (nyala vs belum - cek cepat, cuma-baca):')
       for (const line of buildGuardStatusLines(projectRoot, { almostEmpty, skipTeamFiles })) console.log(line)
-      console.log('  Lihat kondisi SEMUA repo tim 1 layar kapan saja: npx lintasai board')
-      console.log('  Frasa ajaib untuk AI (tinggal ketik): "lintasAI skill" = pindai menyeluruh; "audit"; "refactor bertingkat". Daftar lengkap: docs/ONBOARDING.md.')
+      console.log('  Frasa ajaib untuk AI (tinggal ketik): "lintasAI skill" = pindai menyeluruh; "audit"; "refactor bertingkat".')
       console.log('')
     } catch { /* panel status = pelengkap; jangan pernah bikin pemasangan gagal */ }
   }
 
   console.log('HAL YANG PERLU KAMU LAKUKAN SENDIRI:')
   let itemIdx = 1
-  if (!skipTeamFiles && !almostEmpty) {
-    console.log(`  [ ] (${itemIdx}) ~5 menit  Edit .github/CODEOWNERS - ganti placeholder @username dengan username GitHub asli.`)
-    itemIdx++
-    console.log(`  [ ] (${itemIdx}) ~2 menit  Atur ANTHROPIC_API_KEY di GitHub: Settings -> Secrets and variables -> Actions -> New secret.`)
-    itemIdx++
-  }
-  console.log(`  [ ] (${itemIdx}) opsional  Baca docs/CLAUDE_TEAM_GUIDE.md (panduan tim) + docs/PROMPT_LIBRARY.md.`)
-  itemIdx++
 
   // ---- Alat paket (biar staff tahu perintah pasang yang benar) ----
   try {
@@ -1156,11 +1076,12 @@ function printFinalSummary({ projectName, projectRoot, kitDir, kitVersion, almos
   }
 
   // ---- Panduan simpan ke git (kunci-gabung / branch protection) ----
+  // Pasca perampingan (robot deteksi kunci-gabung otomatis dicabut): selalu cabang netral
+  // buildCommitGuidance(null) - "cek manual di GitHub Settings -> Branches" + jalur aman branch+PR.
   try {
-    const bp = testMainBranchProtected(projectRoot)
     console.log('')
     console.log('=== Panduan simpan ke git (kunci-gabung / branch protection) ===')
-    for (const line of buildCommitGuidance(bp, kitVersion)) console.log(line)
+    for (const line of buildCommitGuidance(null, kitVersion)) console.log(line)
   } catch (e) {
     console.log('')
     console.log('=== Panduan simpan ke git ===')
@@ -1168,35 +1089,37 @@ function printFinalSummary({ projectName, projectRoot, kitDir, kitVersion, almos
   }
   console.log('')
 
-  console.log('LANGKAH SELANJUTNYA - BIASANYA OTOMATIS:')
+  console.log('LANGKAH SELANJUTNYA - OTOMATIS & SENYAP:')
   console.log(`  Buka Claude Code di ${projectRoot}.`)
-  console.log('  Popup pemandu akan MUNCUL SENDIRI (kamu tinggal klik/ketik angka) - kamu TIDAK')
-  console.log('  perlu menempel apa-apa. AI yang baca + memandu langkah demi langkah.')
+  console.log('  AI akan menjalankan aktivasi OTOMATIS (docs, ukuran tim, gerbang mutu) lalu')
+  console.log('  menampilkan 1 laporan penutup. Untuk pemasangan baku, TIDAK ADA popup yang perlu')
+  console.log('  kamu jawab - kamu bisa langsung kerja.')
   console.log('')
-  console.log('  KALAU popup tidak muncul sendiri, ketik 1 kalimat ini ke Claude Code:')
+  console.log('  KALAU aktivasi tidak jalan sendiri, ketik 1 kalimat ini ke Claude Code:')
   console.log('      lanjutkan setup lintasAI')
   console.log(`  (cara lama juga boleh: tempel isi ${path.join(kitDir, 'JALANKAN_KIT.md')} - hasil sama persis).`)
   console.log('')
-  // Baris penenang (cermin PS:1690-1691): tegaskan tak ada paksaan langkah lanjutan.
-  console.log('  Kalau mau langsung kerja: boleh - aturan AI tetap otomatis kebaca tiap')
-  console.log('  sesi, catatan kode dibuat otomatis saat dibutuhkan.')
+  // Baris penenang: tegaskan tak ada paksaan langkah lanjutan.
+  console.log('  Kalau mau langsung kerja: boleh - aturan AI (termasuk standar profesional lintas-bidang) tetap')
+  console.log('  otomatis kebaca tiap sesi. Peta struktur project diambil dari GIT saat perlu (cepat,')
+  console.log('  ~0 token); catatan/dokumentasi dibuat cuma kalau kamu minta.')
+  console.log('  Butuh audit / rapikan kode / pecah repo? tinggal minta kapan saja lewat chat.')
   console.log('')
 
-  // Catatan untuk AI (bukan untuk manusia) - cegah AI berhenti di "SIAP NGODING" tanpa lanjut Fase B.
+  // Catatan untuk AI (bukan untuk manusia) - info netral, BUKAN perintah lewat stdout (ADR-020 install senyap:
+  // menggerakkan AI lewat teks stdout = tidak andal + melanggar §8.1; aturan sebenarnya di §4.3b + JALANKAN_KIT).
   console.log('(Catatan di bawah ini UNTUK AI, bukan untukmu. Kamu sebagai manusia TIDAK perlu')
   console.log(' melakukan apa-apa - cukup biarkan AI yang baca + lanjut sendiri.)')
-  console.log('=== AI: POST-INSTALL CHECKLIST (WAJIB EKSEKUSI - JANGAN STOP) ===')
-  console.log('Pemasangan (Fase A) SELESAI - tapi tugasmu (AI) BELUM. Fase B (pemanduan chat) BELUM jalan.')
-  console.log("'Status: SIAP NGODING' di bawah = Fase A beres, BUKAN akhir tugasmu. JANGAN berhenti:")
-  console.log('  [ ] (1) WAJIB baca .claude-kit/POST_SETUP_CHECKLIST_PROMPT_v1.md')
-  console.log('  [ ] (2) WAJIB jalankan popup dari SUMBER TUNGGAL JALANKAN_KIT.md Bagian 2-7')
-  console.log('  [ ] (3) Eksekusi sesuai jawaban user (mapping di JALANKAN_KIT.md Bagian 2-6).')
-  console.log('  [ ] (4) WAJIB tawarkan Audit Post-Setup ke user (mode aman cuma-baca): ya/nanti.')
-  console.log('  [ ] (5) WAJIB lapor Pending Action Items + arahkan owner ke docs/OWNER_SETUP_CHECKLIST.md.')
-  console.log('  [ ] (6) WAJIB pakai Bahasa Non-Programmer di SEMUA output sesi setelah ini (PRE-SEND CHECKLIST §2.1.1).')
-  console.log('LARANGAN: AI TIDAK BOLEH berhenti di "Status: SIAP NGODING" tanpa lapor checklist (1-6).')
-  console.log('Per CLAUDE_universal_v1.md §2.1.1 + §4.3b + §4.4 (audit auto-tawar setelah setup-pola-b).')
-  console.log('User boleh menolak via chat: "skip post-setup checklist" / "cuma popup 3" / "cuma audit".')
+  console.log('=== AI: POST-INSTALL CHECKLIST (rujukan - aturan penuh di CLAUDE_universal §4.3b) ===')
+  console.log('Fase A (pemasangan) selesai. Fase Aktivasi = jalankan JALANKAN_KIT.md Bagian 1-2 (SENYAP):')
+  console.log('  - Aktivasi otomatis: baca stack ringan (package.json), ukuran tim default internal senyap,')
+  console.log('    gerbang mutu CI (kalau GitHub). TIDAK ada scan menyeluruh / generate docs.')
+  console.log('  - Struktur project = dari GIT (project-map / git ls-files, ~0 token). Docs = on-demand.')
+  console.log('  - Tutup dengan 1 Laporan Penutup non-popup: stack terdeteksi + hasil auto + Pending Action')
+  console.log('    Items + menu kapabilitas on-demand (audit / rapikan kode bertingkat / pecah repo).')
+  console.log('  - Instalasi baku = 0 popup wajib. Audit/refactor/split TIDAK ditawarkan proaktif - on-demand.')
+  console.log('  - Tier A aman (denah DB kalau diminta) = auto-eksekusi + lapor. Tier C = popup verbatim.')
+  console.log('  - Bahasa Non-Programmer di SEMUA output (PRE-SEND CHECKLIST §2.1.1).')
   console.log('')
 
   console.log('UPDATE KIT KE VERSI BARU:')
@@ -1214,10 +1137,10 @@ function printFinalSummary({ projectName, projectRoot, kitDir, kitVersion, almos
   }
   console.log('Status: SIAP NGODING')
   console.log('')
-  // Baris terakhir = arahan AI lanjut Fase B (cermin PS v1.43.1): kesan terakhir bukan "selesai".
-  console.log('=== AI (penutup): JANGAN berhenti di "SIAP NGODING" - itu cuma akhir Fase A. ===')
-  console.log('    LANJUT SEKARANG: baca .claude-kit/POST_SETUP_CHECKLIST_PROMPT_v1.md, lalu jalankan')
-  console.log('    popup pemandu Fase B (JALANKAN_KIT.md Bagian 2-7). Tugasmu belum kelar.')
+  // Baris terakhir = arahan AI lanjut Fase Aktivasi senyap: kesan terakhir bukan "berhenti di sini".
+  console.log('=== AI (penutup): "SIAP NGODING" = akhir Fase A pemasangan, bukan akhir tugasmu. ===')
+  console.log('    LANJUT SEKARANG: baca .claude-kit/POST_SETUP_CHECKLIST_PROMPT_v1.md, jalankan Fase')
+  console.log('    Aktivasi SENYAP (JALANKAN_KIT.md Bagian 1-2) + tampilkan Laporan Penutup. 0 popup wajib.')
   console.log('')
 }
 
@@ -1247,6 +1170,6 @@ function deployOne({ src, dst, from, kind, placeholders = {}, manifestState, dry
 }
 
 // Jalankan HANYA kalau dipanggil langsung (node setup-pola-b.mjs ...), bukan saat di-import untuk
-// diuji. Cermin pola isMain di lib/popup-shim.mjs (cegah eksekusi tak sengaja + buka jalan uji).
+// diuji. Cermin pola isMain di engine/popup-shim.mjs (cegah eksekusi tak sengaja + buka jalan uji).
 const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
 if (isMain) main()

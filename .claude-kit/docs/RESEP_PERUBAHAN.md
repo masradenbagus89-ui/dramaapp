@@ -1,6 +1,7 @@
 # RESEP_PERUBAHAN.md — Berkas mana yang ikut bergerak per jenis perubahan
 
-> Versi 4 · 2026-07-09 · Untuk maintainer + AI yang kerja DI repo kit lintasAI
+> Versi 5 · 2026-07-18 · Untuk maintainer + AI yang kerja DI repo kit lintasAI
+> (v5: Resep 12 "robot penjaga wajib punya gagang" + langkah 0 cek frasa terkunci di Resep 2)
 
 ## Untuk apa berkas ini
 
@@ -48,7 +49,7 @@ Kalau cuma mau cek kecocokan angka (lebih cepat dari preflight penuh), panggil r
 hitungan detik, biaya token ~nol (ini skrip, bukan AI baca-baca berkas):
 
 ```bash
-node lib/consistency-check.mjs        # atau: npx lintasai consistency-check
+node engine/consistency-check.mjs        # atau: npx lintasai consistency-check
 ```
 
 - ✅ Keluar kode `0` + "BERSIH" = semua deklarasi yang dijaga cocok dengan sumbernya.
@@ -56,17 +57,18 @@ node lib/consistency-check.mjs        # atau: npx lintasai consistency-check
 
 Robot ini juga jalan otomatis dalam suite tes (`tests/consistency-check.test.mjs`), jadi
 ketidakcocokan **menggagalkan tes** sebelum rilis.
-Sumber: [lib/consistency-check.mjs](../lib/consistency-check.mjs).
+Sumber: [engine/consistency-check.mjs](../engine/consistency-check.mjs).
 
 > **Apa yang dijaga robot saat ini:** (a) **NOMOR VERSI** di 5 dokumen vs `package.json`
 > (`KIT_VERSION_CHECKS`); (b) **JUMLAH FILE TIM** (total + rincian `.github`/`docs`),
 > dihitung otomatis dari blok `teamFiles` di `setup-pola-b.mjs` (`KIT_FACTS`).
 >
-> **Menambah fakta baru yang dijaga:** tambah blok di `KIT_FACTS` (`lib/consistency-check.mjs`).
+> **Menambah fakta baru yang dijaga:** tambah blok di `KIT_FACTS` (`engine/consistency-check.mjs`).
 > Syarat fakta **layak** dijaga: punya **1 sumber yang bisa dihitung** + pola tulisan **tidak ambigu**
 > (jangan jaga frasa bermakna ganda → alarm palsu).
-> **Angka konsep** (mis. "13 divisi", "18 kriteria") **bukan** turunan-kode + polanya ambigu → JANGAN
-> dijaga robot; jaga **daftarnya** lewat tes struktural (mis. `tests/skills-divisi.test.mjs`).
+> **Angka konsep** (mis. "10 divisi", "18 kriteria") **bukan** turunan-kode + polanya ambigu → JANGAN
+> dijaga robot; jaga **daftarnya** lewat tes struktural (mis. `tests/skills-divisi.test.mjs`,
+> `tests/roster-sync.test.mjs` = penjaga sinkron daftar-nama/hub lintas-berkas).
 > Penanda **sejarah** (mis. "fitur ini lahir di v1.30.0", laporan audit bertanggal, angka tes per rilis
 > di `CHANGELOG.md`) SENGAJA menyimpan nilai lama → JANGAN dimasukkan ke daftar robot.
 > **Angka turunan-kode di prosa** (mis. "jumlah tes", "jumlah file") yang TAK punya sumber-daftar rapi →
@@ -89,10 +91,16 @@ Berkas yang membawa **versi-saat-ini** (referensi / fallback manual — semua di
   breaking = BESAR. Label `[SECURITY]` untuk perbaikan keamanan mendesak.
 
 ### 2. Tambah / ubah ATURAN di `CLAUDE_universal_v1.md` (auto-baca tiap sesi staff)
+- **Langkah 0 — `npx lintasai locked-phrases`** (khusus saat MEMADATKAN/menulis-ulang, §4.18): cetak
+  frasa harfiah yang DIKUNCI tes sebelum menyentuh teksnya. Kalau dilewati, frasa terkunci bisa hilang
+  tanpa sadar dan baru ketahuan lewat tes merah — pernah terjadi 2026-07-18 pada
+  `Pengecualian 8 skill divisi WAJIB` (§4.9). Alat ini **heuristik**: daftar kosong ≠ aman, bukti tetap `npm test`.
 - `CLAUDE_universal_v1.md` — tulis aturan + naikkan versi judul
-- rak `workflows/<seksi>.md` — kalau aturan punya detail rujukan on-demand (hemat token always-load); lihat Resep 10
+- rak `rules/<seksi>.md` — kalau aturan punya detail rujukan on-demand (hemat token always-load); lihat Resep 10
 - `CHANGELOG.md` + naikkan versi (lihat Resep 1)
-- `tests/` — tambah/sesuaikan tes yang **mengunci** aturan (mis. `setup-pola-b-write.test.mjs` punya
+- `tests/` — tambah/sesuaikan tes yang **mengunci** aturan. Pagar frasa Tingkat-1 yang akan MERAH
+  kalau jangkar hilang = `tests/tingkat1-guard.test.mjs`; daftar/checklist 8 divisi = `tests/skills-divisi.test.mjs`;
+  sinkron salinan roster/hub = `tests/roster-sync.test.mjs`. (mis. `setup-pola-b-write.test.mjs` punya
   tes "section N punya ...")
 - ⚠️ Ingat: efek aturan baru baru terasa di project staff **setelah mereka update kit + buka chat baru**.
 
@@ -106,16 +114,16 @@ Kit 100% Node (`lib/*.mjs`, `bin/`, skrip `*.mjs`):
   breaking=BESAR; tandai `[SECURITY]` kalau keamanan mendesak).
 - **Berkas BARU?** Cek `package.json` `files[]` — kalau pola folder belum mencakupnya, tambahkan supaya
   ikut terbit ke npm (dijaga `tests/package-bundle.test.mjs`). Modul lib yang dipakai runtime:
-  daftarkan juga di `lib/kit-files.json` `node_lib` (dijaga `tests/install-mapping-sync.test.mjs`).
+  daftarkan juga di `engine/kit-files.json` `node_lib` (dijaga `tests/kit-files.test.mjs`).
 - ➡️ **Tutup dengan `npm run preflight`** (gerbang §4.6) → semua lulus baru boleh bilang "selesai".
 
 ### 4. Ubah ANGKA/JUMLAH yang tersebar (mis. jumlah tes, jumlah file, jumlah lensa/kriteria)
 - `Grep` angka itu di seluruh repo → update **semua** kemunculan.
 - **Lebih baik lagi: hapus angka turunan-kode dari prosa** (jumlah tes/file) → rujuk sumber/berkasnya
-  (mis. "lihat `tests/<...>`", "hitung dari `lib/kit-files.json`"). Lebih sedikit salinan = lebih sedikit
+  (mis. "lihat `tests/<...>`", "hitung dari `engine/kit-files.json`"). Lebih sedikit salinan = lebih sedikit
   peluang basi. *(Pelajaran Tahap B 2026-06-24.)*
 - **Jaga robot HANYA kalau lolos syarat** (1 sumber bisa dihitung + pola tak ambigu): tambah blok di
-  `KIT_FACTS` (`lib/consistency-check.mjs`). Angka **konsep** (lensa/kriteria/divisi) berpola ambigu →
+  `KIT_FACTS` (`engine/consistency-check.mjs`). Angka **konsep** (lensa/kriteria/divisi) berpola ambigu →
   JANGAN robot; jaga **daftarnya** lewat tes struktural.
 
 ### 5. Hapus fitur / berkas
@@ -138,7 +146,7 @@ kelas-bug yang **tak ada penjaga otomatisnya** → JANGAN cuma diperbaiki sekali
 **Sumber tunggal = `docs/plans/POLA_REPO_AMAN.md`.** JANGAN tulis angka repo tetap ("3 repo", "6-10") di berkas lain — rujuk prinsip **"jumlah ikut wilayah rahasia + kelompok tim, bukan angka target"**. Kalau prinsip/contoh topologi berubah, berkas yang ikut bergerak:
 - `docs/plans/POLA_REPO_AMAN.md` — ubah DI SINI dulu (sumber tunggal)
 - `SPLIT_REPO_MIGRATION_PROMPT_v1.md` — Mode Selector + label + tabel penamaan
-- `JALANKAN_KIT.md` — peta-langkah (Bagian 0) + Popup #3 (Bagian 4) + tabel pemetaan + Bagian 5c
+- `JALANKAN_KIT.md` — Peta Langkah (Bagian 0) + Pecah Repo on-demand (Bagian 3c) + menu kapabilitas di Laporan Penutup (Bagian 2)
 - `README.md` — klaim publik
 - `docs/PETA_SUMBER_KEBENARAN.md` — baris "Model + jumlah repo topologi" (Tabel C) *(internal — hanya di repo GitHub kit)*
 - ⚠️ **TIDAK dijaga robot** (angka topologi tak bisa dihitung dari 1 sumber + pola "3 repo" ambigu → alarm palsu). Andalkan **rujukan ke sumber tunggal** + jalankan **"lintasAI skill"** (§4.8) saat mau rilis untuk menangkap drift konseptual. JANGAN paksa robot di sini. *(Pelajaran: drift "2 vs 3 repo" + "6-10 vs 5/6/7" caught 2026-06-24 lewat scan owner, BUKAN robot — robot memang tak bisa.)*
@@ -150,9 +158,9 @@ kelas-bug yang **tak ada penjaga otomatisnya** → JANGAN cuma diperbaiki sekali
 - ⚠️ **TIDAK dijaga robot (by design).** Versi stak gagal 2 syarat robot: (a) bukan angka yang bisa **dihitung** dari 1 sumber — ini keputusan kebijakan "minimum/recommended/tested"; (b) pola "16.x"/"5+" **ambigu** → robot malah salah-alarm pada "Node 18.x"/"TypeScript 5+" yang sah. Andalkan **rujukan ke sumber tunggal** + verifikasi angka via `npm view <pkg> version` saat upgrade (catatan ini sudah tertulis di STACK_VERSIONS.md).
 
 ### 9. Naikkan versi skema artefak klien (`schema_version` kartu project / catatan-pasang)
-**Sumber tunggal = `lib/expected-schema.mjs`** (peta versi-diharapkan, Mesin 1 rencana
-`docs/plans/STRATEGI_UPDATE_v2.md`). Naikkan angka **DI SINI dulu** — penulis + pemeriksa sisi Node
-(`lib/project-manifest.mjs`, `lib/manifest.mjs`, `uninstall.mjs`) ikut otomatis lewat `import`.
+**Sumber tunggal = `engine/expected-schema.mjs`** (peta versi-diharapkan, Mesin 1 rencana
+internal STRATEGI_UPDATE_v2, riwayat git). Naikkan angka **DI SINI dulu** — penulis + pemeriksa sisi Node
+(`engine/project-manifest.mjs`, `engine/manifest.mjs`, `uninstall.mjs`) ikut otomatis lewat `import`.
 - **Salinan yang TAK bisa import** (template contoh) dijaga tes pengunci
   `tests/expected-schema.test.mjs` — habis naikkan angka, jalankan tes itu: yang MERAH = daftar
   berkas yang belum ikut (a.l. `templates/project.lintas.example.jsonc`).
@@ -167,29 +175,69 @@ kelas-bug yang **tak ada penjaga otomatisnya** → JANGAN cuma diperbaiki sekali
   "vLAMA → vBARU" di sana (kerangka entri ada di berkasnya) — buku panduan pindah-versi klien,
   terpisah dari CHANGELOG. **Pelapornya sudah jalan**
   (Mesin 2 / Langkah 3): robot
-  `lib/migration-state.mjs` otomatis lapor di `kit doctor` (bagian 2c — doctor MERAH sampai artefak
+  `engine/migration-state.mjs` otomatis lapor di `kit doctor` (bagian 2c — doctor MERAH sampai artefak
   menyusul) + `update` Langkah 7 ("Termigrasi X dari Y ... SELESAI SEBAGIAN"). Migrator yang kamu
   buat WAJIB **mencatat ke buku-besar** via `recordLintasMigrationApplied(root, { artifact,
   toVersion })` (idempoten — dicatat 2× tetap 1 entri) supaya tak dijalankan dobel.
 - **Artefak BARU ber-penanda?** Selain entri peta, daftarkan lokasinya di `ARTIFACT_LOCATIONS`
-  (`lib/migration-state.mjs`) — tanpa itu robot laporan LEMPAR error jelas (fail-closed, dikunci
+  (`engine/migration-state.mjs`) — tanpa itu robot laporan LEMPAR error jelas (fail-closed, dikunci
   tes "resolver lengkap" `tests/migration-state.test.mjs`).
 - Tes fixture yang menulis `schema_version: 1` keras (mis. `tests/rollback.test.mjs`,
   `tests/uninstall.test.mjs`) akan ikut merah → perbarui sadar-sadar, jangan dibisukan.
 
-### 10. Tambah / pindah SEKSI rujukan on-demand (rak `workflows/`)
-**Sejak v2.4.0 detail aturan hidup di rak `workflows/` — 1 seksi = 1 berkas, rujukan = path literal.**
+### 10. Tambah / pindah SEKSI rujukan on-demand (rak `rules/`)
+**Sejak v2.4.0 detail aturan hidup di rak `rules/` — 1 seksi = 1 berkas, rujukan = path literal.**
 Berkas yang SELALU ikut bergerak saat menambah/memindah/mengganti-nama seksi:
-- `workflows/<nomor>-<slug>.md` — berkas seksinya; **baris-1 WAJIB** penanda `<!-- LINTAS:SEKSI §<id> -->`
+- `rules/<nomor>-<slug>.md` — berkas seksinya; **baris-1 WAJIB** penanda `<!-- LINTAS:SEKSI §<id> -->`
   (id huruf kecil; id pertama harus muncul di nama berkas; boleh multi-id utk seksi gabungan).
-- `workflows/INDEX.md` — tambah/perbarui baris tabelnya (daftar isi utk manusia + cadangan AI).
-- `lib/kit-files.json` grup `workflows` — daftarkan berkasnya (tanpa ini TIDAK terkirim ke client).
-- Perujuknya (`CLAUDE_universal_v1.md` dll.) — tulis rujukan sebagai **path** `workflows/<berkas>.md`;
+- `rules/INDEX.md` — tambah/perbarui baris tabelnya (daftar isi utk manusia + cadangan AI).
+- `engine/kit-files.json` grup `workflows` — daftarkan berkasnya (tanpa ini TIDAK terkirim ke client).
+- Perujuknya (`CLAUDE_universal_v1.md` dll.) — tulis rujukan sebagai **path** `rules/<berkas>.md`;
   gaya lama (nama berkas monolit lama + nomor "§X") DILARANG — ditolak robot, cek istilah-pensiun.
-- ➡️ **Dikunci MESIN:** `node lib/workflows-ref-check.mjs` (atau `npm run preflight`) — rujukan putus /
+- ➡️ **Dikunci MESIN:** `node engine/rules-ref-check.mjs` (atau `npm run preflight`) — rujukan putus /
   berkas yatim / INDEX basi / penanda salah = MERAH. `--report` = inventaris semua rujukan.
 - ⚠️ Nomor § seksi lama JANGAN dinomori ulang (banyak perujuk lintas-berkas + memory AI client);
-  berkas >18 KB → pecah sub-seksi (contoh: `workflows/stack/4.14-*.md`).
+  berkas >18 KB → pecah sub-seksi (contoh: `rules/stack/4.14-*.md`).
+
+### 11. Tambah / hapus item KELUARGA "hub + berkas per-item" (pola HISTORIS — kini item jadi skill)
+> **CATATAN ADR-027:** ketiga keluarga lama `rules/div/*` (divisi), `rules/pola/*` (pola bantu),
+> `rules/cap/*` (capability pack) sudah DIMIGRASI jadi `skills/<nama>/SKILL.md` (rak asal kini
+> hanya di riwayat git). Folder `rules/div|pola|cap/` tak ada lagi; `tests/roster-sync.test.mjs` FAMILIES sudah
+> dikosongkan. Resep di bawah tetap berlaku kalau nanti dibuat keluarga hub+item BARU.
+
+Pola **hub + berkas per-item** (hemat token: baca 1 item, bukan semua). Selain langkah Resep 10
+(penanda baris-1 + INDEX + `kit-files.json`), ADA langkah EKSTRA yang dulu mudah lupa — kini dijaga tes:
+- **Tabel penunjuk di HUB-DOC induk WAJIB ikut** (mis. skill divisi → `rules/4.13-division-skills.md`;
+  capability pack → `rules/cap-packs.md`).
+- **JANGAN tulis angka keras jumlah item** ("15 pack") di prosa hub → rujuk tabel/INDEX (Resep 4).
+- **Khusus SKILL DIVISI (§4.13):** nama divisi juga hidup di `CLAUDE_universal_v1.md` (blok "Dua Tingkat" +
+  stub §4.13) dan blob governor `tests/skills-divisi.test.mjs`. Tambah divisi baru = perbarui SEMUA lokasi itu.
+- ➡️ **Dikunci MESIN:** `tests/roster-sync.test.mjs` (8 nama divisi konsisten CLAUDE_universal+hub + 10 lensa +
+  ambang MATURE) + `tests/skills-divisi.test.mjs` (isi checklist) + `node engine/rules-ref-check.mjs`.
+  Lupa satu salinan = tes MERAH sebelum rilis.
+
+### 12. Tambah / ubah / hapus ROBOT PENJAGA atau perkakas di `lib/`
+> Resep ini lahir dari LP-012: tiga perkakas (`fact-gate`, `split-guard`, `portfolio-write`) dikirim ke
+> **setiap client** tapi tak punya satu pun cara memanggilnya — kemampuan yang dibayar ruang, nol yang bisa
+> memakainya. Penyebabnya sama tiap kali: fokus ke "robotnya jadi", lupa "orang sampai ke robotnya lewat mana".
+
+- **GAGANG (wajib, minimal satu)** — pilih jalur pemanggilnya, jangan biarkan kosong:
+  - perintah CLI → daftarkan di `bin/lintasai.js` (`COMMANDS_NODE` + baris bantuan). Butuh akar project
+    user? masukkan ke `shouldPassProjectRoot` — **tapi cek dulu nama benderanya**: yang disuntik dispatcher
+    adalah `--project-root`; robot yang memakai `--repo-root` (mis. `split-guard`) TIDAK boleh masuk daftar itu.
+  - langkah gerbang → import + `results.push(...)` di `tests/preflight.mjs`
+  - hook → perintahnya ditulis pemasang `engine/setup-hooks.mjs` / `lib/ensure-*-hook.mjs`
+  - *(pustaka murni yang dipakai modul lain tak butuh gagang — ia bukan perkakas berdiri sendiri)*
+- **KIRIM** — `engine/kit-files.json` kalau client memerlukannya. Robot yang dipanggil preflight **wajib**
+  ikut terkirim, kalau tidak preflight di sisi client pecah saat meng-import berkas yang tak ada.
+- **SEBUT DI ATURAN** — kalau tak disebut `CLAUDE_universal_v1.md`, AI tak akan pernah tahu ia ada; itu
+  yang membuat `fact-gate` mati bertahun-tahun walau kodenya lengkap dan teruji.
+- **TES** — `tests/<nama>.test.mjs`. Untuk penjaga, kunci **dua sisi**: ia benar-benar MERAH pada kasus
+  rusak, DAN tidak beralarm-palsu pada kasus sah. Penjaga yang beralarm-palsu akan diabaikan orang —
+  lebih buruk daripada tak punya penjaga.
+- ➡️ **Dikunci MESIN:** `node engine/tool-reach-check.mjs` (ikut `preflight`) — perkakas terkirim tanpa gagang
+  = **PENTING**, memblokir `--strict`. Menghapus perkakas: keluarkan dari `kit-files.json` **dan** cabut
+  perintah/langkahnya, lalu jalankan robot ini supaya tak meninggalkan gagang menggantung.
 
 ---
 

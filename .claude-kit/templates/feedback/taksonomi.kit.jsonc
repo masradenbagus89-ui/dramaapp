@@ -6,13 +6,13 @@
   // Versi SKEMA dipisah dari ISI: "skema_versi" jarang naik; "taksonomi_versi" naik saat owner menambah kode.
   "skema": "TAKSONOMI_PELAJARAN/v1",
   "skema_versi": 1,
-  "taksonomi_versi": 1,
-  "tanggal": "2026-07-17",
+  "taksonomi_versi": 2,
+  "tanggal": "2026-07-18",
 
   // Tingkat keseriusan = KATA awam, BUKAN skor angka / P0-P1 (aturan §2.1 #7 + §8.2 3b).
   "tingkat": ["GENTING", "PENTING", "RAPIKAN"],
 
-  // 8 divisi baseline (§4.13) + lensa yang paling sering terlewat.
+  // bidang profesional inti + lensa yang paling sering terlewat.
   "divisi": [
     "Keamanan", "Database", "Backend", "Frontend", "UI/UX+a11y",
     "SEO", "QA", "DevOps", "Ketahanan/Dependency", "Privasi"
@@ -52,6 +52,9 @@
     "OPS-SECRET-IN-REPO": "Secret ter-commit ke repo/log/console.log.",
     "OPS-NO-ROLLBACK": "Rilis dampak-tinggi tanpa jalur rollback tertulis.",
     "OPS-ENV-DRIFT": "Kunci .env beda antara contoh vs nyata / antar-lingkungan.",
+    "OPS-FACT-DRIFT": "Fakta/konstanta/daftar yang sama disalin ke banyak berkas tanpa penjaga sinkron (tes/robot) — satu salinan diubah, salinan lain basi diam-diam (drift). Bila tak bisa disatukan ke 1 sumber, pasang tes-sinkron.",
+    "OPS-DEAD-SHIPPED": "Kode/perkakas/endpoint/feature-flag ikut ter-deploy tapi tak punya satu pun jalur pemanggil (tak ada rute, tak ada tombol, tak ada perintah, tak dibaca kode mana pun) - tampak ada di repo, nyatanya mati. Berbahaya sebab terlihat seperti pengaman yang sudah jalan. Cek: telusuri jalur pemanggilnya sungguhan, bukan keberadaan berkasnya.",
+    "DOC-POINTER-ROT": "Dokumen/komentar/README menunjuk berkas atau seksi yang sudah pindah, ganti nama, atau tak pernah ada. Yang PALING berbahaya bukan pointer yang putus (langsung ketahuan), tapi yang mendarat di tempat SALAH - pembaca yakin sudah baca yang benar. Cek: verifikasi judul/anchor tujuan benar-benar ada, jangan andalkan pencarian yang 'ada hasilnya'.",
     "OBS-NO-MONITORING": "Tanpa error-tracking + log terstruktur + healthcheck sebelum online.",
     "OBS-LOG-LEAK": "Log memuat secret/PII mentah.",
     "RES-NO-RETRY-BREAKER": "Panggil API luar tanpa retry berjeda + circuit breaker (rapuh saat luar mati).",

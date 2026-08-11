@@ -7,7 +7,7 @@
 
 | Bagian | Di Kimi Code | Cara |
 |---|---|---|
-| **Aturan lengkap** (bahasa non-programmer, 8 divisi, anti-ngarang, gerbang QA, dll) | ✅ Otomatis | Dibuat saat `npx lintasai init`/`update` → berkas `.kimi-code/AGENTS.md` (salinan PENUH aturan, kualitas **sama seperti Claude**). Kimi membacanya natif tiap sesi. |
+| **Aturan lengkap** (bahasa non-programmer, standar profesional, anti-ngarang, gerbang QA, dll) | ✅ Otomatis | Dibuat saat `npx lintasai init`/`update` → berkas `.kimi-code/AGENTS.md` (salinan PENUH aturan, kualitas **sama seperti Claude**). Kimi membacanya natif tiap sesi. |
 | **Pagar keamanan** (Palang Rem tolak perintah berbahaya) + pengingat | ⚙️ Opsional | `npx lintasai enable-kimi-hooks` — lalu **WAJIB diuji** (lihat di bawah). |
 | **(Bonus) Claude Code pakai otak Kimi** | ✅ Tanpa ubah kit | Hal TERPISAH: menjalankan *Claude Code* dengan model Kimi. Set `ANTHROPIC_BASE_URL` (lihat "Bonus" di bawah). |
 
@@ -49,7 +49,8 @@ npx lintasai@latest update    # project yang sudah pakai kit
 ```
 
 Ini otomatis membuat/memperbarui `.kimi-code/AGENTS.md`. Buka project di Kimi Code → aturan langsung
-aktif. (Perintah manual bila perlu: `npx lintasai kimi-sync --write`.)
+aktif. (Perintah manual bila perlu: `npx lintasai adapter-sync --write` — sinkron aturan Kimi + Cursor +
+Codex sekaligus.)
 
 ## 2. (Opsional) Nyalakan pagar keamanan Kimi
 
@@ -84,7 +85,7 @@ Buka **sesi Kimi BARU** dari folder project, lalu:
    `.kimi-code/config.toml` ke `~/.kimi-code/config.toml` (global) lalu uji ulang.
 
 Kalau (a) gagal (jawaban Inggris / tak terasa mengikuti aturan): pastikan `.kimi-code/AGENTS.md` ada di
-folder project (jalankan `npx lintasai kimi-sync --write`), lalu buka sesi Kimi BARU.
+folder project (jalankan `npx lintasai adapter-sync --write`), lalu buka sesi Kimi BARU.
 
 ## Bonus: Claude Code dengan model Kimi K2/K3
 

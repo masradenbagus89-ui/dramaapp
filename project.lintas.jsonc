@@ -7,8 +7,8 @@
 
   // DEKLARASI: tujuan project (AI isi sesi pertama - ganti 'pending').
   "intent": {
-    "purpose": "pending",
-    "domain": "pending"
+    "purpose": "Aplikasi web nonton drama online (Next.js): katalog/discover, halaman drama & episode, koin premium (coins/wallet), pembayaran Midtrans, panel admin",
+    "domain": "hiburan (streaming drama)"
   },
 
   // DERIVE: diisi otomatis dari package.json. Robot cek masih cocok (DeriveMatch).

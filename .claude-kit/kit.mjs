@@ -11,9 +11,9 @@
 //
 // DELEGASI:
 //   - setup/update/check-update/uninstall/rollback -> port Node (setup-pola-b.mjs, update-kit.mjs,
-//     uninstall.mjs, lib/rollback.mjs) di KitDir.
+//     uninstall.mjs, engine/rollback.mjs) di KitDir.
 //   - bump -> penulis cap-versi (invokeLintasVersionBump + setLintasDeclaredVersion +
-//     addLintasChangelogSkeleton dll) di lib/consistency-check.mjs; case 'bump' memanggilnya langsung.
+//     addLintasChangelogSkeleton dll) di engine/consistency-check.mjs; case 'bump' memanggilnya langsung.
 //
 // doctor bagian 2c "laporan migrasi artefak klien" (Mesin 2 STRATEGI_UPDATE_v2 Langkah 3) SELALU jalan:
 //   health-check boleh hijau hanya kalau semua artefak klien >= versi-diharapkan, jadi tak boleh
@@ -37,22 +37,21 @@
 //   - manifest cacat-tangan (mis. `files` objek/bukan array, `sha256` angka) ditolak ketat via
 //     Array.isArray + banding-string.
 //
-// Bahasa output WAJIB non-programmer Indonesia (ADR-004 #3) - dijaga robot lib/output-lang-check.mjs.
+// Bahasa output WAJIB non-programmer Indonesia (ADR-004 #3) - dijaga robot engine/output-lang-check.mjs.
 import fs from 'node:fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
 import { spawnSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
 
-import { getKitVersionFallback } from './lib/version-detect.mjs'
-import { getLatestNpmVersion } from './lib/npm-query.mjs'
-import { compareDotNetVersion } from './update-kit.mjs'
-import { getManifestSignatureStatus } from './lib/manifest-signing.mjs'
-import { readKitManifest } from './lib/kit-files.mjs'
-import { runEnvCheck } from './lib/env-check.mjs'
-import { isLegacyUpdateGuide } from './lib/template-deploy.mjs'
-import { stripBom } from './lib/fs-text.mjs'
-import { invokeLintasVersionBump, invokeLintasConsistencyCheckKit } from './lib/consistency-check.mjs'
+import { getKitVersionFallback } from './engine/version-detect.mjs'
+import { getManifestSignatureStatus } from './engine/manifest-signing.mjs'
+import { readKitManifest } from './engine/kit-files.mjs'
+import { stripBom } from './engine/fs-text.mjs'
+import { invokeLintasVersionBump, invokeLintasConsistencyCheckKit } from './engine/consistency-check.mjs'
+// Cek-cek doctor MANDIRI (versi/migrasi/artefak-yatim/struktur/lingkungan) diekstrak ke lib/.
+// Yang TETAP inline di invokeDoctor: cek file-inti (2) + integritas (2b) - lihat catatan di kit-doctor-checks.mjs.
+import { checkVersion, checkMigrationReport, checkOrphanArtifacts, checkProjectStructure, checkInstallLocation, checkAiTools, checkEnvironment } from './engine/kit-doctor-checks.mjs'
 
 // Lokasi kit.mjs sendiri (cache npm saat lewat `npx`, .claude-kit project saat dipanggil langsung).
 const ScriptRoot = path.dirname(fileURLToPath(import.meta.url))
@@ -199,49 +198,12 @@ function invokeDoctor(kitDir, projectRoot, extra = []) {
   let ok = 0
   let warn = 0
   let err = 0
+  const acc = (r) => { ok += r.ok; warn += r.warn; err += r.err }
 
-  // 1. Versi kit
-  const version = getKitVersion(kitDir)
-  if (/^v?\d+\.\d+\.\d+/.test(version)) {
-    const display = /^v/.test(version) ? version : 'v' + version
-    L(`OK    Kit version: ${display}`)
-    ok++
-  } else if (version === 'unknown') {
-    L('WARN  Kit version: unknown (manifest hilang, $script:KIT_VERSION kosong, CHANGELOG.md tidak parseable)')
-    warn++
-  } else {
-    L(`ERROR Kit version: format tidak dikenali ('${version}')`)
-    err++
-  }
+  // 1 + 1b. Versi kit + apakah KEDALUWARSA vs npm -> engine/kit-doctor-checks.mjs (cek mandiri).
+  acc(checkVersion(kitDir, extra, L))
 
-  // 1b. Kit kedaluwarsa? (banding ke npm - BUKAN ke repo, supaya klien TANPA akses repo ikut terlayani)
-  // KENAPA: sampai v2.7.0 doctor BUTA terhadap upstream - daftar berkas wajib dibaca dari lib/kit-files.json
-  // milik kit yang TERPASANG ITU SENDIRI, jadi kit v2.6.0 divonis "sehat, semua utuh" walau berkas v2.7.0
-  // (workflows/4.19-plan-mode.md, lib/fact-gate.mjs, lib/plan-scout.mjs) tak ada. Klien bisa duduk di versi
-  // lama SELAMANYA sambil semua lampu hijau - tak ada satu pun robot yang memberi tahu.
-  // FAIL-OPEN (wajib): offline / registry diblokir / npm tak ada -> INFO, JANGAN merah. Ketiadaan
-  // pengetahuan bukan bukti ada masalah; doctor tak boleh jadi alarm-palsu gara-gara jaringan kantor.
-  if (!extra.includes('--skip-cek-versi')) {
-    const latest = getLatestNpmVersion()
-    const now = String(version).replace(/^v/, '').trim()
-    if (!latest) {
-      L('INFO  Versi terbaru: belum bisa dicek (offline / npm tak terjangkau) - dilewati, bukan masalah.')
-    } else if (!/^\d+\.\d+\.\d+/.test(now)) {
-      L(`INFO  Versi terbaru di npm: v${latest} (versi terpasang tak terbaca, jadi tak bisa dibandingkan).`)
-    } else {
-      const c = compareDotNetVersion(now, latest)
-      if (c !== null && c < 0) {
-        L(`WARN  Kit kamu KEDALUWARSA: terpasang v${now}, terbaru v${latest}.`)
-        L("        -> Update dengan: npx lintasai@latest update   (tak butuh akun GitHub)")
-        warn++
-      } else {
-        L(`OK    Versi terbaru: v${now} sudah paling baru (npm: v${latest}).`)
-        ok++
-      }
-    }
-  }
-
-  // 2. Cek file inti. Sumber tunggal DUA-FORMAT (v2.0.0, D1): lib/kit-files.json (SSOT baru) ATAU
+  // 2. Cek file inti. Sumber tunggal DUA-FORMAT (v2.0.0, D1): engine/kit-files.json (SSOT baru) ATAU
   // lib/kit-files.psd1 (kit era-v1 klien). readKitManifest prefer .json, fallback .psd1. Inilah
   // penutup jebakan doctor lintas-versi (§2.3): doctor v2 atas kit v1 TETAP baca daftar (fallback
   // .psd1) -> INFO lunak ajakan update, BUKAN vonis "manifest hilang" ERROR.
@@ -249,13 +211,13 @@ function invokeDoctor(kitDir, projectRoot, extra = []) {
   let testsGroup = []
   let manifest = null
   try { manifest = readKitManifest(kitDir) } catch (e) {
-    L('ERROR manifest daftar-berkas (lib/kit-files.json / .psd1) rusak / tak terbaca')
+    L('ERROR manifest daftar-berkas (engine/kit-files.json / .psd1) rusak / tak terbaca')
     L(`      ${e.message}`)
     err++
     manifest = { data: null }
   }
   if (manifest === null) {
-    L('ERROR manifest daftar-berkas hilang (lib/kit-files.json - single-source-of-truth)')
+    L('ERROR manifest daftar-berkas hilang (engine/kit-files.json - single-source-of-truth)')
     err++
   } else {
     const kitFiles = manifest.data
@@ -265,7 +227,7 @@ function invokeDoctor(kitDir, projectRoot, extra = []) {
       L('      Saran lunak: jalankan `npx lintasai update` untuk pindah ke kit 100% Node (v2).')
     }
     if (kitFiles) {
-      const groups = ['core_prompts', 'universal_rules', 'workflows', 'scripts', 'lib_files', 'node_lib',
+      const groups = ['core_prompts', 'universal_rules', 'rules', 'scripts', 'lib_files', 'node_lib',
         'templates', 'docs', 'tests', 'ci', 'meta']
       const merged = []
       for (const g of groups) { if (Array.isArray(kitFiles[g])) merged.push(...kitFiles[g]) }
@@ -331,9 +293,11 @@ function invokeDoctor(kitDir, projectRoot, extra = []) {
     if (manifest !== null) {
       // 2b-i. Verifikasi KEASLIAN manifest (tanda-tangan) DULU supaya 'PRISTINE' tidak menyesatkan.
       // Helper Node selalu ada (di-import), TAPI hormati niat PS "skip kalau helper kit tak ada":
-      // gate ke keberadaan lib/manifest-signing.mjs di kit yang diinspeksi. Gagal/error => 'skipped'.
+      // gate ke keberadaan engine/manifest-signing.mjs di kit yang diinspeksi. Gagal/error => 'skipped'.
       let sigStatus = 'skipped'
-      const signingLib = path.join(kitDir, 'lib', 'manifest-signing.mjs')
+      const signingLib = fs.existsSync(path.join(kitDir, 'engine', 'manifest-signing.mjs'))
+        ? path.join(kitDir, 'engine', 'manifest-signing.mjs')
+        : path.join(kitDir, 'lib', 'manifest-signing.mjs')
       if (fs.existsSync(signingLib)) {
         try { sigStatus = getManifestSignatureStatus(manifest, { kitRoot: kitDir }) } catch { sigStatus = 'skipped' }
       }
@@ -403,194 +367,25 @@ function invokeDoctor(kitDir, projectRoot, extra = []) {
     L('INFO  Integrity check skipped: .install-manifest.json tidak ada (kit pre-manifest atau belum di-install)')
   }
 
-  // 2c. Laporan migrasi artefak klien (Mesin 2 rencana STRATEGI_UPDATE_v2 Langkah 3) - Node-only,
-  //     SELALU jalan (bukan opt-in kayak --env): health-check boleh HIJAU hanya kalau SEMUA artefak
-  //     klien ber-penanda >= versi-diharapkan kit; ada yang tertinggal/rusak -> ERROR ("Selesai
-  //     sebagian" §4.7), BUKAN "aman penuh". Dijalankan sebagai PROSES ANAK dari
-  //     kitDir/lib/migration-state.mjs (bukan import statis) supaya PETA versi-diharapkan yang
-  //     dipakai = milik kit yang DIINSPEKSI (kasus npx: kit.mjs bisa berjalan dari cache npm yang
-  //     versinya beda dari .claude-kit project). Kit lama tanpa robot -> INFO lewati (bukan error).
-  //     --skip-migrasi = untuk alat banding exit-code parity-check (detail + batas byte: header atas).
-  const skipMigrasi = extra.some((a) => String(a).toLowerCase() === '--skip-migrasi')
-  const migrationRobot = path.join(kitDir, 'lib', 'migration-state.mjs')
-  if (skipMigrasi) {
-    L('INFO  Laporan migrasi dilewati (--skip-migrasi - pemanggil menjalankan laporannya terpisah / sedang banding PS==Node).')
-  } else if (!fs.existsSync(migrationRobot)) {
-    L('INFO  Laporan migrasi dilewati: kit yang diinspeksi belum punya lib/migration-state.mjs (kit lama).')
-  } else {
-    // Tangkap keluaran (bukan stdio inherit) supaya bisa MEMBEDAKAN "robot crash" vs "robot
-    // melapor N artefak tertinggal" - dua-duanya keluar kode !=0. Pembedanya: baris penanda
-    // laporan (kontrak string dgn lib/migration-state.mjs, jangan diganti sepihak). Tanpa ini,
-    // crash (mis. salinan kit rusak sebagian) salah-didiagnosis "1 artefak belum termigrasi" +
-    // saran migrasi yang salah arah (temuan cek-silang 2026-07-09). stderr (jejak-error Node
-    // mentah, bisa memuat path komputer) SENGAJA tak ditampilkan - cermin pesan-tetap manifest-rusak.
-    const r = spawnSync(process.execPath, [migrationRobot, '--project-root', projectRoot, '--kit-dir', kitDir], { encoding: 'utf8', timeout: 60000 })
-    const robotOut = r.stdout || ''
-    if (robotOut.trim()) process.stdout.write(robotOut) // teruskan laporan robot ke layar
-    const reportPrinted = robotOut.includes('Robot laporan-migrasi artefak klien')
-    if (r.error || r.status == null || (r.status !== 0 && !reportPrinted)) {
-      // FAIL-HONEST: robot gagal jalan / berhenti sebelum melapor != artefak sehat -> WARN
-      // (jangan diam-diam dianggap OK; jangan pula divonis "artefak belum termigrasi").
-      L('WARN  Robot laporan-migrasi gagal dijalankan / berhenti sebelum melapor (dilewati).')
-      L('      Kemungkinan salinan kit tidak lengkap - coba pasang ulang / update kit, atau jalankan')
-      L('      manual untuk lihat detailnya: node .claude-kit/lib/migration-state.mjs')
-      warn++
-    } else if (r.status === 0) {
-      L('OK    Artefak klien sesuai versi yang diharapkan kit (laporan migrasi di atas).')
-      ok++
-    } else {
-      L(`ERROR ${r.status} artefak klien belum/tak terbukti termigrasi (lihat laporan di atas) - status "Selesai sebagian", belum "aman penuh".`)
-      err++
-    }
-  }
+  // 2c. Laporan migrasi artefak klien (robot anak) -> engine/kit-doctor-checks.mjs.
+  acc(checkMigrationReport(kitDir, projectRoot, extra, L))
 
-  // 2d. Deteksi kartu identitas legacy (.psd1 tersisa / kartu ganda) - Fase 1e v2.
-  //     INFO/WARN saja (bukan error gerbang); migrator terpisah: npx lintasai migrate-project-card.
-  const legacyRobot = path.join(kitDir, 'lib', 'project-card-migrate.mjs')
-  if (!fs.existsSync(legacyRobot)) {
-    L('INFO  Deteksi kartu legacy dilewati: kit belum punya lib/project-card-migrate.mjs (kit lama).')
-  } else {
-    const r = spawnSync(process.execPath, [legacyRobot, '--project-root', projectRoot, '--detect-only'], { encoding: 'utf8', timeout: 60000 })
-    const legacyOut = r.stdout || ''
-    if (legacyOut.trim()) process.stdout.write(legacyOut)
-    if (r.error || r.status == null) {
-      L('WARN  Robot deteksi kartu legacy gagal dijalankan (dilewati).')
-      warn++
-    } else if (legacyOut.includes('Robot deteksi kartu identitas legacy')) {
-      const actionable = (legacyOut.match(/\[PERLU\]/g) || []).length + (legacyOut.match(/\[MASALAH\]/g) || []).length
-      const leftover = (legacyOut.match(/\[INFO\]/g) || []).length
-      if (actionable > 0) {
-        L(`WARN  Kartu identitas legacy perlu migrasi (${actionable} temuan - lihat laporan di atas).`)
-        L('      Saran: npx lintasai migrate-project-card (SIMULASI) lalu --apply')
-        warn++
-      } else if (leftover > 0) {
-        L('INFO  Kartu .psd1 lama masih ada setelah migrasi - bisa dibersihkan manual bila .jsonc sudah benar.')
-      }
-    }
-  }
+  // 2e + 2e-bis + 2f. Artefak PowerShell era-lama (yatim / sisa v1 / UPDATE_GUIDE) -> engine/kit-doctor-checks.mjs.
+  acc(checkOrphanArtifacts(kitDir, projectRoot, L))
 
-  // 2e. Deteksi artefak PowerShell yatim milik klien (v2.0.0 3e). Kit kini 100% Node -> berkas
-  //     .ps1/.psd1 di LUAR .claude-kit adalah sisa era-PS (mis. .github/scripts/setup-branch-protection.ps1,
-  //     docs/consistency-map.example.psd1). INFO + tawaran bersihkan (read-only) - BUKAN error: berkas
-  //     ini tak lagi dipakai kit, tapi menghapusnya keputusan klien. Kartu project.lintas.psd1 di akar
-  //     SUDAH ditangani deteksi kartu legacy (2d) -> tak diulang di sini.
-  const orphanScan = [
-    ['.github\\scripts', /\.ps1$/i],
-    ['docs', /\.psd1$/i],
-  ]
-  const orphanHits = []
-  for (const [rel, re] of orphanScan) {
-    let entries = []
-    try { entries = fs.readdirSync(path.join(projectRoot, rel)) } catch { entries = [] }
-    for (const name of entries) { if (re.test(name)) orphanHits.push(`${rel}\\${name}`) }
-  }
-  if (orphanHits.length > 0) {
-    L(`INFO  ${orphanHits.length} artefak PowerShell era-lama terdeteksi (kit kini 100% Node - aman dibersihkan):`)
-    for (const h of orphanHits) L(`        - ${h}`)
-    L('      Opsional: hapus manual bila tak dipakai (mis. ganti setup-branch-protection.ps1 dengan `npx lintasai protect-main`).')
-  }
+  // 3-6. Struktur project (AGENTS.md / docs/ / .github/ / .git internal) -> engine/kit-doctor-checks.mjs.
+  acc(checkProjectStructure(kitDir, projectRoot, L))
 
-  // 2e-bis. Deteksi sisa alat PowerShell v1 DI DALAM .claude-kit (v2.4.1). Kit v2 hanya mengirim SATU
-  //     .ps1 = stub penyelamat setup-pola-b.ps1. Kalau client meng-"update" lewat jalur init-merge
-  //     (`npm create lintasai@latest` menimpa-tumpuk, BUKAN `npx lintasai update` yang cadangkan-lalu-segar),
-  //     alat v1 lama (kit.ps1/update-kit.ps1/uninstall.ps1/install-windows.ps1/team-setup.ps1 + lib/*.ps1)
-  //     TERTINGGAL di .claude-kit -> footgun: client refleks menjalankan update-kit.ps1 v1 yang setengah-jadi.
-  //     INFO ajakan bersihkan (read-only, bukan error) - selaras detektor 2e. Stub setup-pola-b.ps1 DIKECUALIKAN.
-  const stalePsHits = []
-  for (const sub of ['', 'lib']) {
-    const dir = sub ? path.join(kitDir, sub) : kitDir
-    let entries = []
-    try { entries = fs.readdirSync(dir) } catch { entries = [] }
-    for (const name of entries) {
-      if (!/\.ps(1|m1|d1)$/i.test(name)) continue
-      if (!sub && /^setup-pola-b\.ps1$/i.test(name)) continue // stub penyelamat = sah
-      stalePsHits.push(sub ? `${sub}/${name}` : name)
-    }
-  }
-  if (stalePsHits.length > 0) {
-    L(`INFO  ${stalePsHits.length} sisa alat PowerShell v1 di .claude-kit/ (kit v2 = 100% Node, hanya stub setup-pola-b.ps1 yang sah):`)
-    for (const h of stalePsHits) L(`        - .claude-kit/${h}`)
-    L('      Aman dibersihkan manual. JANGAN jalankan update-kit.ps1/kit.ps1 lama - pakai `npx lintasai update`.')
-  }
+  // 6b. Lokasi pasang: apakah kit mendarat di folder yang membuatnya benar-benar TERMUAT (Celah 4,
+  // ADR-024) -> engine/kit-doctor-checks.mjs. Gagal di sini = lintasAI diam-diam tidak aktif sama sekali.
+  acc(checkInstallLocation(kitDir, projectRoot, L))
 
-  // 2f. Deteksi docs/UPDATE_GUIDE.md era-PowerShell (v2.0.0 3e). Salinan lama menyuruh `kit.ps1 update`
-  //     dan tak pernah tersegarkan (deploy lewati-kalau-ada). INFO ajakan update (read-only, bukan error) -
-  //     penyegaran sungguhan + cadangan ber-cap-waktu dilakukan `npx lintasai update` (setup-pola-b.mjs).
-  const guidePath = path.join(projectRoot, 'docs', 'UPDATE_GUIDE.md')
-  if (fs.existsSync(guidePath)) {
-    try {
-      if (isLegacyUpdateGuide(fs.readFileSync(guidePath, 'utf8'))) {
-        L('INFO  docs/UPDATE_GUIDE.md masih menyebut perintah PowerShell lama (kit.ps1 / update-kit.ps1).')
-        L('      Saran lunak: `npx lintasai update` akan menyegarkannya otomatis + menyimpan cadangan ber-cap-waktu.')
-      }
-    } catch { /* baca gagal -> lewati senyap (bukan error gerbang) */ }
-  }
+  // 6c. Status per-alat AI: aturan sampai ke mana, palang berlaku di mana (v4 Tugas 10/11, ADR-024).
+  // Client Cursor/Codex berhak tahu ia TIDAK mendapat palang - mendiamkannya = rasa-aman-palsu.
+  acc(checkAiTools(kitDir, projectRoot, L))
 
-  // 3. AGENTS.md di root proyek
-  if (fs.existsSync(path.join(projectRoot, 'AGENTS.md'))) {
-    L('OK    AGENTS.md ada di root proyek')
-    ok++
-  } else {
-    L('WARN  AGENTS.md belum di-copy ke root proyek')
-      L('      Saran: npx lintasai init')
-    warn++
-  }
-
-  // 4. docs/ folder
-  const docsDir = path.join(projectRoot, 'docs')
-  if (fs.existsSync(docsDir)) {
-    const docsCount = countFilesRecursive(docsDir)
-    L(`OK    docs/ ada (${docsCount} file)`)
-    ok++
-  } else {
-    L('WARN  docs/ belum dibuat')
-      L('      Saran: npx lintasai init')
-    warn++
-  }
-
-  // 5. .github/ folder (team mode)
-  if (fs.existsSync(path.join(projectRoot, '.github'))) {
-    L('OK    .github/ ada (Team Mode aktif)')
-    ok++
-  } else {
-    L('INFO  .github/ tidak ada (Team Mode skipped, atau project non-GitHub)')
-  }
-
-  // 6. .git/ internal (seharusnya TIDAK ada untuk clone Pola B)
-  const internalGit = path.join(kitDir, '.git')
-  if (fs.existsSync(internalGit)) {
-    L('WARN  .claude-kit\\.git\\ masih ada (sisa dari clone)')
-    L(`      Saran: Remove-Item '${internalGit}' -Recurse -Force`)
-    warn++
-  } else {
-    L('OK    .claude-kit/ tidak ada .git/ internal')
-    ok++
-  }
-
-  // 7. Lingkungan eksekusi (parity). v2.0.0: jadi BAGIAN DEFAULT doctor (janji §7.6 poin 6) - gerbang
-  //    output-identik ADR-003 GUGUR bersama kit.ps1 (kit 100% Node, tak ada lagi yang harus disamakan
-  //    byte-per-byte). Robot lib/env-check.mjs memotret runtime client (Node/OS/Git) + node_modules/
-  //    lockfile -> menutup akar "terasa beda di client". Matikan dengan --no-env untuk keluaran ringkas.
-  //    Catatan: --env lama tetap diterima (alias no-op) demi kompat perintah/dokumen era-v1.
-  const skipEnv = extra.some((a) => String(a).toLowerCase() === '--no-env')
-  if (!skipEnv) {
-    L('')
-    L('--- Lingkungan eksekusi (parity) ---')
-    try {
-      const { findings } = runEnvCheck(projectRoot)
-      for (const f of findings) {
-        L(`${f.level.padEnd(5)} ${f.label}: ${f.message}`)
-        if (f.hint) L(`        -> ${f.hint}`)
-        if (f.level === 'OK') ok++
-        else if (f.level === 'WARN') warn++
-        else if (f.level === 'ERROR') err++
-      }
-    } catch {
-      // Robot env gagal != kit rusak: lapor jujur (fail-honest), jangan diam-diam OK, jangan crash doctor.
-      L('WARN  Pemeriksaan lingkungan gagal dijalankan (dilewati). Bagian kit di atas tetap sahih.')
-      warn++
-    }
-  }
+  // 7. Lingkungan eksekusi (parity, potret runtime klien) -> engine/kit-doctor-checks.mjs. --no-env skip.
+  acc(checkEnvironment(projectRoot, extra, L))
 
   // Ringkasan
   L('')
@@ -605,18 +400,6 @@ function invokeDoctor(kitDir, projectRoot, extra = []) {
     L('Kit BERMASALAH. Fix ERROR di atas dulu.')
     return 1
   }
-}
-
-// Hitung file rekursif di sebuah folder (cermin (Get-ChildItem -Recurse -File).Count).
-function countFilesRecursive(dir) {
-  let count = 0
-  let entries
-  try { entries = fs.readdirSync(dir, { withFileTypes: true }) } catch { return 0 }
-  for (const e of entries) {
-    if (e.isDirectory()) count += countFilesRecursive(path.join(dir, e.name))
-    else if (e.isFile()) count++
-  }
-  return count
 }
 
 // ---- Helper: scan project (cermin Invoke-Scan + 2 perbaikan: urutan deterministik + anti-crash) ----
@@ -870,7 +653,7 @@ function delegateNode(kitDir, scriptName, args) {
   return r.status == null ? 1 : r.status
 }
 
-// CATATAN: bump ditangani Node murni (lib/consistency-check.mjs invokeLintasVersionBump, dipanggil
+// CATATAN: bump ditangani Node murni (engine/consistency-check.mjs invokeLintasVersionBump, dipanggil
 // langsung di case 'bump').
 
 // ---- Router ----
@@ -915,13 +698,13 @@ function main(argv) {
       return 0
     case 'rollback':
       // CUTOVER Gelombang 6 (aksi MERUSAK, sesi-khusus owner 2026-06-23): rollback kini pakai port Node
-      // lib/rollback.mjs (dulu shim ke kit.ps1). Suntik --project-root supaya rollback menyasar manifest +
+      // engine/rollback.mjs (dulu shim ke kit.ps1). Suntik --project-root supaya rollback menyasar manifest +
       // .claude-kit di project (cermin delegasi setup/update/uninstall). NON-INTERAKTIF: butuh --yes untuk
       // benar-benar menimpa (default-batal).
-      return delegateNode(kitDir, 'lib/rollback.mjs', ['--project-root', projectRoot, ...extra])
+      return delegateNode(kitDir, 'engine/rollback.mjs', ['--project-root', projectRoot, ...extra])
     case 'bump': {
       // CUTOVER (migrasi PS->Node 2026-06-25, owner-gated): penulis cap-versi kini Node murni
-      // (lib/consistency-check.mjs invokeLintasVersionBump): stamp dulu, lalu jalankan pemeriksaan
+      // (engine/consistency-check.mjs invokeLintasVersionBump): stamp dulu, lalu jalankan pemeriksaan
       // kecocokan MODE KIT (verifikasi hasil), exit = jumlah ketakcocokan.
       const newVer = extra && extra.length >= 1 ? extra[0] : ''
       if (!newVer) {

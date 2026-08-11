@@ -40,7 +40,7 @@ Untuk **tiap** dari 3 folder (`<project>-backend`, `<project>-frontend`, `<proje
 
 **[5] Bagi file rahasia (`.env`) dengan AMAN — INI PALING PENTING**
 - **JANGAN PERNAH menyalin `.env` monolith mentah ke folder mana pun yang bukan `sensitive`.** File `.env` monolith berisi rahasia (kunci database, kunci API).
-- **Aturan UMUM per tingkat-sensitif (berlaku untuk BANYAK repo, bukan cuma frontend):** lihat `access_tier` repo itu — dari Buku Induk `lintasai-portfolio.yml` kalau ada, atau dari peran kalau belum:
+- **Aturan UMUM per tingkat-sensitif (berlaku untuk BANYAK repo, bukan cuma frontend):** lihat `access_tier` repo itu (tingkat-sensitif, diturunkan dari peran repo):
   - **`sensitive`** (mis. `backend`, `service` berisi resep rahasia): boleh punya `.env.example` dengan `DATABASE_URL=`, kunci server, dll.
   - **`feature`** (mis. `frontend`, `dashboard`, repo tampilan): **HANYA** kunci berawalan `NEXT_PUBLIC_*` (yang memang boleh dilihat publik). **DILARANG** ada `DATABASE_URL` / kunci rahasia apa pun. Mereka ambil data lewat **API backend**, bukan colok DB langsung.
   - **`shared`** (cuma bentuk-data): `.env.example` biasanya **kosong** (tidak butuh rahasia).
@@ -61,7 +61,7 @@ Untuk **tiap** dari 3 folder (`<project>-backend`, `<project>-frontend`, `<proje
 | Pengaman | Kenapa |
 |---|---|
 | **COPY, bukan MOVE** | Monorepo asli tetap utuh sebagai jaring pengaman (bisa balik kalau ada yang salah) |
-| **Repo non-`sensitive` `.env.example` DILARANG punya `DATABASE_URL`/secret** (frontend/dashboard/feature) — **ditegakkan robot** `node .claude-kit/lib/split-guard.mjs` (bukan cek-mata) | Cegah kebocoran rahasia ke repo yang diakses lebih banyak orang. Robot GENTING > 0 → **STOP**, jangan lapor "siap push" |
+| **Repo non-`sensitive` `.env.example` DILARANG punya `DATABASE_URL`/secret** (frontend/dashboard/feature) — **ditegakkan robot** `node .claude-kit/engine/split-guard.mjs` (bukan cek-mata) | Cegah kebocoran rahasia ke repo yang diakses lebih banyak orang. Robot GENTING > 0 → **STOP**, jangan lapor "siap push" |
 | **Jangan salin penanda per-install** (.install-manifest.json, .git-identity-*, dll) | Cegah identitas/penanda basi yang bikin AI salah deteksi |
 | **JANGAN push / publish** | Owner yang push (`git push`) + terbitkan paket bersama (`npm publish`) — keputusan manusia |
 | **Validasi dulu sebelum lapor "selesai"** | Pastikan tiap folder benar-benar siap, bukan setengah jadi |
@@ -72,7 +72,7 @@ Untuk **tiap** dari 3 folder (`<project>-backend`, `<project>-frontend`, `<proje
 TIDAK boleh lagi bergantung pada AI ingat memeriksa teks. Untuk TIAP folder hasil-pecah, jalankan:
 
 ```bash
-node .claude-kit/lib/split-guard.mjs --repo-root <folder>
+node .claude-kit/engine/split-guard.mjs --repo-root <folder>
 # peran/tier dibaca otomatis dari .claude-kit/.split-state; kalau perlu paksa: --tier sensitive | --role frontend
 ```
 

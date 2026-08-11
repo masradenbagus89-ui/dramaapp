@@ -1,6 +1,6 @@
 # split-guard.md — Robot Penjaga Anti-Bocor Saat Pecah-Repo
 
-> Versi 1 · 2026-06-24 · pendamping `lib/split-guard.mjs`
+> Versi 1 · 2026-06-24 · pendamping `engine/split-guard.mjs`
 
 ## Tujuan
 
@@ -21,14 +21,14 @@ harus ingat memeriksa satu-satu dengan mata.
 
 ```bash
 # Periksa satu folder hasil-pecah (peran/tier dibaca otomatis dari .claude-kit/.split-state):
-node lib/split-guard.mjs --repo-root ../akses-frontend
+node engine/split-guard.mjs --repo-root ../akses-frontend
 
 # Paksa tingkat-sensitif (kalau marker belum ada / salah):
-node lib/split-guard.mjs --repo-root ../akses-backend --tier sensitive
-node lib/split-guard.mjs --repo-root ../akses-frontend --role frontend
+node engine/split-guard.mjs --repo-root ../akses-backend --tier sensitive
+node engine/split-guard.mjs --repo-root ../akses-frontend --role frontend
 
 # Senyap (cuma kode-keluar, untuk dipakai di skrip/gerbang):
-node lib/split-guard.mjs --repo-root ../akses-frontend --quiet
+node engine/split-guard.mjs --repo-root ../akses-frontend --quiet
 ```
 
 Keluar-kode = **jumlah temuan GENTING** (0 = aman). Dipakai AI di **Step 0.7 "Verify"** split +
@@ -59,7 +59,7 @@ Keluar-kode = **jumlah temuan GENTING** (0 = aman). Dipakai AI di **Step 0.7 "Ve
 
 ## Dependensi
 
-Node ≥ 18 (tanpa paket eksternal). Reuse `lib/fs-text.mjs` (`readTextSafe`, `pathExists`). Berdiri sendiri.
+Node ≥ 18 (tanpa paket eksternal). Reuse `engine/fs-text.mjs` (`readTextSafe`, `pathExists`). Berdiri sendiri.
 
 ## Catatan
 
@@ -72,9 +72,9 @@ Node ≥ 18 (tanpa paket eksternal). Reuse `lib/fs-text.mjs` (`readTextSafe`, `p
   `<...>`/`your-…example`) dianggap contoh (tak ditandai); hanya nilai yang tampak **sungguhan** yang
   kena. `.env.production` yang isinya hanya var publik **tidak** memblokir gerbang (RAPIKAN). Backend/
   engine **boleh** punya `DATABASE_URL` + `prisma/` (tier `sensitive`).
-- **Pola rahasia** sengaja diselaraskan dengan `lib/ai-config-check.mjs` + `templates/hooks/
+- **Pola rahasia** sengaja diselaraskan dengan `engine/ai-config-check.mjs` + `templates/hooks/
   pre-commit-secret-scan.sh` (belum disatukan ke 1 modul — konsolidasi = refactor terpisah). Sumber:
-  `lib/split-guard.mjs:1`.
+  `engine/split-guard.mjs:1`.
 - **Bukan jaminan mutlak:** menutup pola kebocoran yang **diketahui** secara deterministik — bukan
   klaim "anti-bocor sempurna". Jujur soal batas (anti rasa-aman-palsu).
 - **Batas yang diketahui (Mode-2 `shared` + `prisma/`):** robot **tak** menandai repo `shared` yang

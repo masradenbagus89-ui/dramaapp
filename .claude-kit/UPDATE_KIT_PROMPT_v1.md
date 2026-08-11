@@ -89,7 +89,7 @@ Baca `./.claude-kit/CHANGELOG.md` (lokal = versi lama) **dan** CHANGELOG versi t
 
 Contoh: current `v1.0.0`, latest `v1.2.0` → parse entry `v1.0.1`, `v1.0.2`, `v1.1.0`, `v1.2.0`.
 
-> Catatan (v2.0.0): entri era pra-npm (< v1.33.0) sudah dipindah ke `CHANGELOG_ARCHIVE.md` (hanya di repo GitHub). Kalau `CURRENT_VERSION` client lebih tua dari entri tertua di CHANGELOG utama → andalkan **entri berlabel** ([SECURITY]/[BREAKING]/[SCAN-REQUIRED]) yang sengaja dipertahankan di CHANGELOG utama; riwayat non-kritis lengkapnya ada di arsip repo.
+> Catatan: entri lama tak-berlabel sudah dihapus dari CHANGELOG (riwayat lengkap di git repo kit). Kalau `CURRENT_VERSION` client lebih tua dari entri tertua di CHANGELOG utama → andalkan **entri berlabel** ([SECURITY]/[BREAKING]/[SCAN-REQUIRED]) yang sengaja dipertahankan di CHANGELOG utama.
 
 ### Step 5 - Auto-classify per entry ke Tier 1-4
 

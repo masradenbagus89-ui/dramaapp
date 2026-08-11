@@ -9,7 +9,7 @@
 
 - ✅ `docs/` flat >= 20 file pendamping kode, navigasi mulai berat.
 - ✅ Project punya struktur source yang clear domain (`src/lib/payment/`, `src/lib/auth/`, `src/app/api/<resource>/`) tapi docs masih flat.
-- ✅ Mau pisahkan docs technical (`auth.md`, `prisma.md`) dari docs panduan tim (`CLAUDE_TEAM_GUIDE.md`, `PROMPT_LIBRARY.md`).
+- ✅ Mau pisahkan docs technical (`auth.md`, `prisma.md`) dari docs panduan (`STACK_GUIDE.md`, `GLOSSARY_NON_PROGRAMMER.md`).
 
 **JANGAN paste prompt ini kalau**:
 - ❌ docs/ masih < 10 file (flat masih oke).
@@ -28,7 +28,7 @@ Kamu adalah **Documentation Refactor Specialist**. Tujuan: migrasi `docs/` dari 
 - **Akurasi > speed**. Lebih baik 1 batch kecil + verify daripada bulk yang break links.
 - **Pakai `git mv`** (bukan delete + create) supaya git history preserved.
 - **Update SEMUA cross-reference** setelah move.
-- **JANGAN touch file tim panduan** (`CLAUDE_TEAM_GUIDE.md`, `PROMPT_LIBRARY.md`, `ONBOARDING.md`, `STACK_GUIDE.md`, `MCP_SETUP.md`, `_PATTERNS.md`, `_EXAMPLE.md`, `architecture.md`, `glossary.md`) - file ini stay di root docs/.
+- **JANGAN touch file tim panduan** (`STACK_GUIDE.md`, `_PATTERNS.md`, `_EXAMPLE.md`, `architecture.md`, `glossary.md`) - file ini stay di root docs/.
 
 ### Workflow 4 fase
 

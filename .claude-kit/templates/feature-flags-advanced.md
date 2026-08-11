@@ -2,7 +2,7 @@
 
 > ⚠️ **JANGAN PAKAI FILE INI DI EARLY-STAGE PROJECT (progress <50% / belum launch ke user nyata).**
 >
-> Default workflow tim = **staging-only** (Vercel Preview per PR). Lihat `CLAUDE_TEAM_GUIDE.md` section 7b (Risk Level Decision Tree).
+> Default workflow tim = **staging-only** (Vercel Preview per PR).
 >
 > File ini cuma dipakai **post-launch** kalau project sudah punya user aktif dan butuh:
 > - Kill switch instant untuk fitur kritis (mis. payment toggle saat Black Friday)
@@ -163,9 +163,7 @@ Kalau butuh **instant toggle (sub-detik) tanpa redeploy** → migrasi ke **DB-ba
 
 Saat project sudah launch dan kamu mau pakai feature flag default:
 
-1. Update `CLAUDE_TEAM_GUIDE.md` section 7b: tambah sub-section "Decision Tree Branch + Flag" (lihat git history kit, sebelum stripped).
-2. Update `PROMPT_LIBRARY.md` Prompt 11: tambah field `[Flag?]` di template task.
-3. Update `AGENTS.md` proyek: tambah link ke file ini di section "Workflow & Komunikasi Task".
-4. Setup channel Slack/Discord untuk announce tiap flag flip (transparency).
+1. Update `AGENTS.md` proyek: tambah link ke file ini di section "Workflow & Komunikasi Task".
+2. Umumkan tiap flag flip ke tim lewat kanal komunikasi yang tim pakai (transparency).
 
 Atau: PR ke kit `lintasAI` untuk re-enable flag workflow di default kit (kalau team udah scale 20+).

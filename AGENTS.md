@@ -1,10 +1,12 @@
 # AGENTS.md - Aturan Proyek dramaapp
 
-> v1 · 2026-07-18 · ikut standar tim IT (Pola B)
+> v1 · 2026-07-23 · ikut standar tim IT (Pola B)
 
 <!-- Header auto-isi setup-pola-b.mjs. Berkas ini termuat tiap sesi (hemat baris!); frasa "Pola B" di atas + 5 placeholder = penanda mesin, jangan dihapus. -->
 
 Aturan utama tim (cara coding, dokumentasi, larangan) ada di **`./.claude-kit/CLAUDE_universal_v1.md`** — dimuat **OTOMATIS** tiap sesi lewat `CLAUDE.md` di root (yang `@import` berkas aturan itu + berkas ini). Berkas ini hanya berisi **override khusus proyek**.
+
+**AI: baca `./.claude-kit/PETA.md` dulu** untuk tahu "apa di mana" di dalam kit (fungsi tiap folder + daftar skill) + ke mana menaruh berkas baru (struktur-hygiene). PETA dirujuk (bukan disalin) supaya tak basi.
 
 ## Path resolution (instruksi untuk AI)
 
@@ -14,7 +16,7 @@ Kalau install global **dan** `./.claude-kit/` sama-sama ada → **`./.claude-kit
 
 ## Versi kit aktif
 
-- Versi aktif: cek **baris teratas `./.claude-kit/CHANGELOG.md`** (jangan salin angkanya ke sini — jadi basi setelah update).
+- Versi aktif: jalankan **`npx lintasai version`** (atau baca `kit_version` di `./.claude-kit/.install-manifest.json`). Jangan salin angkanya ke sini — jadi basi setelah update. ⚠️ Jangan buka `CHANGELOG.md` cuma untuk angka versi: berkasnya ~184 rb karakter (~46 rb token).
 - Sumber kit (repo standar tim): **belum-ada (solo project)**
 
 ## Override khusus proyek
@@ -29,11 +31,10 @@ Centang `[x]` hanya yang **beda dari default kit**; yang tidak dicentang = ikut 
 - [ ] Channel chat task: <!-- link Slack/Discord/Telegram/WhatsApp -->
 - [ ] Lain-lain:
 
-Workflow chat-driven + Risk Level + rollback playbook: `./.claude-kit/templates/CLAUDE_TEAM_GUIDE.md` (section 5b/7b/13b); format prompt task: `./.claude-kit/templates/PROMPT_LIBRARY.md`.
 
 ## Opt-in — mode & ide opsional (default semua MATI)
 
-Centang `[x]` yang mau diaktifkan di proyek ini. Detail tiap mode: `./.claude-kit/CLAUDE_universal_v1.md` §15 (+ `./.claude-kit/workflows/15-ide-opsional.md`).
+Centang `[x]` yang mau diaktifkan di proyek ini. Detail tiap mode: `./.claude-kit/CLAUDE_universal_v1.md` §15 (+ `./.claude-kit/rules/15-optional-ideas.md`).
 
 - [ ] **Mode Hemat (Lean Mode)** — task rutin dikerjakan cepat + irit token (skip blok 2-versi & Tinjauan Divisi saat sepele, docs on-demand, narasi padat). Pagar wajib TETAP nyala: keamanan, anti-ngarang, Bahasa Indonesia non-programmer, gerbang QA/QC. Cocok kalau tim sudah paham teknis + mau jawaban langsung-ke-inti.
 - [ ] **Mode Auto-Confirm** — lewati konfirmasi Y/N sederhana (aksi merusak TETAP wajib konfirmasi).
@@ -42,7 +43,7 @@ Centang `[x]` yang mau diaktifkan di proyek ini. Detail tiap mode: `./.claude-ki
 
 ## Rekam Pelajaran lintasAI — bantu kit makin pintar (default: NYALA-lokal)
 
-AI otomatis mencatat **pelajaran TEKNIS** (pola standar IT yang belum dijaga kit) ke berkas LOKAL `docs/pelajaran-lintasai/` (ter-redaksi, gitignored, **bukan** kode/data bisnismu). **Tidak dikirim ke mana pun otomatis** — mengirim ke owner standar tim akhir minggu = pilihanmu. Detail: `./.claude-kit/workflows/6.5-rekam-pelajaran-frontier.md`.
+AI otomatis mencatat **pelajaran TEKNIS** (pola standar IT yang belum dijaga kit) ke berkas LOKAL `docs/pelajaran-lintasai/` (ter-redaksi, gitignored, **bukan** kode/data bisnismu). **Tidak dikirim ke mana pun otomatis** — mengirim ke owner standar tim akhir minggu = pilihanmu. Detail: `./.claude-kit/rules/6.5-frontier-lessons.md`.
 
 - [x] **Rekam Pelajaran nyala** (default). Hapus `[x]` (atau bilang "matikan rekam pelajaran") untuk mematikan di proyek ini.
 
@@ -61,11 +62,12 @@ AI otomatis mencatat **pelajaran TEKNIS** (pola standar IT yang belum dijaga kit
 
 - Owner standar tim: <!-- nama + email/handle PIC kit -->
 - Channel diskusi: <!-- link Slack/Discord/Telegram -->
+- **Jembatan sesi (untuk AI):** baca `NEXT-SESSION.md` tepat setelah berkas ini di awal sesi — isinya ringkasan kondisi terkini project + yang terakhir dikerjakan, supaya sesi baru langsung nyambung tanpa meraba. Perbarui berkas itu di akhir sesi kalau ada progres/keputusan penting.
 
 ## Riwayat update kit di proyek ini
 
 | Versi kit | Tanggal update | Siapa update | Catatan |
 |---|---|---|---|
-| v2.9.0 | 2026-07-18 | user18 | Setup awal Pola B |
+| v3.0.0 | 2026-07-23 | user18 | Setup awal Pola B |
 
 <!-- Tambah baris tiap update `./.claude-kit/` ke versi lebih baru. -->

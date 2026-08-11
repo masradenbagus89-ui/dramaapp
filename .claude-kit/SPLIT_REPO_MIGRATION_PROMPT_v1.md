@@ -1,6 +1,6 @@
 ﻿# Split Repo Migration Prompt - lintasAI v1.10.0 (🧪 BETA - belum diuji end-to-end di GitHub nyata)
 
-> **Ini Tangga Refactor TINGKAT 3 (Repository Split / Polyrepo)** — tingkat paling berat. Default kit = **Tingkat 1 (Refactoring di tempat)**; naik ke sini **bertahap** (pola Strangler Fig), hanya saat modul sudah matang + butuh tim/akses(IP) terpisah. Lihat "Tangga Refactor 3-Tingkat" di `workflows/4.2-pattern-driven.md`.
+> **Ini langkah pecah-repo (Repository Split)** — perubahan struktur paling berat + keputusan owner/lead. Default kit = **refactor di tempat (in-place)**; ke sini hanya saat modul sudah matang + butuh tim/akses(IP) terpisah (pola Strangler Fig, bertahap). Lihat "Refactor Bertahap" di `rules/4.2-pattern-driven.md`.
 >
 > **Paste ke Claude Code di project monolithic kamu** untuk migrate jadi multi-repo.
 > Ada **2 bentuk split** — pilih dulu di "Mode Selector" di bawah: **[1] per-Lapisan (2-3 repo)** atau **[2] per-Kapabilitas (jumlah ikut wilayah rahasia + tim)**. **Jumlah repo = ikut kebutuhan, BUKAN angka tetap** — sumber tunggal keputusan topologi: `docs/plans/POLA_REPO_AMAN.md` (jangan salin angka dari sini).
@@ -67,9 +67,7 @@ Default (Enter/kosong) -> [1] Split per-Lapisan
 
 ### Kalau memang perlu kelola BANYAK repo terpisah (+ atur akses per-repo)
 
-Konsisten dengan poin di atas: yang melindungi = **siapa punya AKSES**, bukan jumlah repo. Kalau kamu punya beberapa **kelompok yang tidak boleh saling melihat** (mis. 3-5 orang inti boleh lihat backend+DB; ~40 staff cuma repo fitur), pisahkan repo **mengikuti batas-akses itu** lalu tegakkan izin clone per repo. Alatnya:
-- **Buku Induk** `lintasai-portfolio.yml` (+ `PORTFOLIO_REGISTRY_v1.md`) — catat tiap repo + siapa boleh akses.
-- **Kontrol-akses** `ACCESS_CONTROL_NREPO_v1.md` — ubah Buku Induk jadi izin clone GitHub nyata (mode cetak-rencana; owner yang eksekusi).
+Konsisten dengan poin di atas: yang melindungi = **siapa punya AKSES**, bukan jumlah repo. Kalau kamu punya beberapa **kelompok yang tidak boleh saling melihat** (mis. 3-5 orang inti boleh lihat backend+DB; ~40 staff cuma repo fitur), pisahkan repo **mengikuti batas-akses itu** lalu tegakkan izin clone per repo (undangan collaborator GitHub per-repo: Settings → Collaborators and teams; **default = tolak**, tambah seperlunya).
 
 > **Tetap berlaku:** jumlah repo **ikut jumlah batas-akses nyata**, BUKAN angka target. 6-10 repo sah HANYA kalau ada 6-10 kelompok terpisah; kalau cuma 2 kelompok, 2-3 repo cukup.
 
@@ -77,7 +75,7 @@ Konsisten dengan poin di atas: yang melindungi = **siapa punya AKSES**, bukan ju
 
 ## Idempotency guard - Post-Split Detection (WAJIB di awal)
 
-Sebelum analyze atau propose, AI WAJIB cek apakah project sudah pernah split (deteksi 3-lapis di bawah; robot Node: `testPostSplitState` di `lib/project-detect.mjs`):
+Sebelum analyze atau propose, AI WAJIB cek apakah project sudah pernah split (deteksi 3-lapis di bawah; robot Node: `testPostSplitState` di `engine/project-detect.mjs`):
 
 - **Layer 1 (paling reliable)**: marker file `.claude-kit/.split-state` exist → IsPostSplit = true.
 - **Layer 2**: `AGENTS.md` mention "post-split" / "multi-repo coordination" / "sister repo:" / "cross-repo types pipeline" → IsPostSplit = true.
@@ -106,15 +104,14 @@ Setelah split sukses, AI WAJIB tulis marker:
 split_date: 2026-06-08
 role: backend          # daftar TERBUKA: backend | frontend | shared | dashboard | service | tools
 base_name: akses
-access_tier: sensitive # opsional: sensitive | feature | shared (sejalan Buku Induk)
-portfolio_ref: ../akses-meta/lintasai-portfolio.yml  # opsional: link ke Buku Induk kalau kelola banyak repo
+access_tier: sensitive # opsional: sensitive | feature | shared
 sibling_repos:
   frontend: ../akses-frontend
   shared: ../akses-shared
 split_migration_doc: docs/decisions/2026-06-08-split-repo-migration.md
 ```
 
-> Catatan: `role` adalah **daftar terbuka** (bukan cuma 3). Untuk mengelola **banyak repo terpisah** + atur akses per-repo, isi `portfolio_ref` ke **Buku Induk** (`lintasai-portfolio.yml`) — lihat `PORTFOLIO_REGISTRY_v1.md` + `ACCESS_CONTROL_NREPO_v1.md`.
+> Catatan: `role` adalah **daftar terbuka** (bukan cuma 3).
 
 ---
 
@@ -311,7 +308,7 @@ Tambahan opsional yang membantu (boleh skip kalau belum tahu):
 
 **Step 0.7 — Verify standalone**:
 - **WAJIB jalankan robot penjaga anti-bocor per folder DULU** (deterministik, bukan cek-mata):
-  `node .claude-kit/lib/split-guard.mjs --repo-root <folder>` (peran/tier auto dari `.split-state`;
+  `node .claude-kit/engine/split-guard.mjs --repo-root <folder>` (peran/tier auto dari `.split-state`;
   paksa dengan `--tier sensitive`/`--role frontend` kalau perlu). **Keluar-kode > 0 (GENTING) → STOP,
   jangan lapor "siap push".** Robot tak pernah mencetak nilai rahasia. Detail: `docs/split-guard.md`.
 - Per folder, smoke check (checklist lengkap di `SPLIT_REPO_PREPROVISION_v1.md` > "Validasi per folder"):
@@ -443,7 +440,7 @@ Kelebihan:
 Kekurangan:
 - Sedikit dobel (alamat loket/route ditulis di 2 tempat)
 
-> 🔒 **WAJIB (cegah IDOR = ganti ID di URL untuk curi data orang lain):** validasi input + otorisasi per-resource SELALU di **backend** (handler asli `handleOrdersList` dst, pakai identitas server-side terverifikasi) — shell wrapper frontend HANYA meneruskan, JANGAN PERNAH menaruh keputusan akses di frontend. Kalau tidak, permintaan user A bisa membuka data user B. Selaras `workflows/4.13-skill-divisi.md` Backend + §8.
+> 🔒 **WAJIB (cegah IDOR = ganti ID di URL untuk curi data orang lain):** validasi input + otorisasi per-resource SELALU di **backend** (handler asli `handleOrdersList` dst, pakai identitas server-side terverifikasi) — shell wrapper frontend HANYA meneruskan, JANGAN PERNAH menaruh keputusan akses di frontend. Kalau tidak, permintaan user A bisa membuka data user B. Selaras `rules/4.13-division-skills.md` Backend + §8.
 
 ---
 
@@ -688,7 +685,7 @@ A: Auth provider biasanya stay di backend (token issued by backend, frontend han
 | Swagger doc out-of-sync dengan implementasi | Medium | High | Auto-generate dari decorator/annotation, CI validate |
 | Shared package version drift | Medium | Medium | Lockfile + auto-bump via Renovate/Dependabot |
 | Vercel build longer karena 2 project | Low | Low | Build paralel, total time tetap sama |
-| Secrets leak ke frontend repo accidentally | Low | Critical | **Ditegakkan robot deterministik** `node .claude-kit/lib/split-guard.mjs --repo-root <folder>` (Step 0.7 — GENTING > 0 → STOP; `docs/split-guard.md`): cek `.gitignore` menutup `.env` + `.env.example` repo non-rahasia bebas `DATABASE_URL`/secret + tak ada nilai rahasia asli + frontend NOL struktur DB. Tak lagi "cek manual". Penguatan tambahan opsional: salin `.github/workflows/secret-guard.yml` ke tiap repo, atau aktifkan GitHub push protection. |
+| Secrets leak ke frontend repo accidentally | Low | Critical | **Ditegakkan robot deterministik** `node .claude-kit/engine/split-guard.mjs --repo-root <folder>` (Step 0.7 — GENTING > 0 → STOP; `docs/split-guard.md`): cek `.gitignore` menutup `.env` + `.env.example` repo non-rahasia bebas `DATABASE_URL`/secret + tak ada nilai rahasia asli + frontend NOL struktur DB. Tak lagi "cek manual". Penguatan tambahan opsional: salin `.github/workflows/secret-guard.yml` ke tiap repo, atau aktifkan GitHub push protection. |
 | Owner kelelahan 4-6 minggu | Medium | High | Weekly checkpoint, skip-able tools, rollback option |
 
 ---
@@ -765,7 +762,6 @@ Setelah saya analyze project kamu, saya akan present plan dengan format:
 
 Tanya saja kalau ada konteks tambahan owner mau saya tahu (misal: ada module legacy, ada constraint compliance, ada deadline rilis fitur, dst).
 
-> 📊 **Setelah migrasi selesai:** pantau semua repo dari 1 layar dengan `npx lintasai board` (cuma-baca) — kelihatan repo mana yang tertinggal commit / punya perubahan berkas rahasia `.env` yang belum aman (ditandai GENTING). AI juga menawarkannya otomatis di akhir alur pecah-repo (`JALANKAN_KIT.md` 19b-ii).
 
 ---
 

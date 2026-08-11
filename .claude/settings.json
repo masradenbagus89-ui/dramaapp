@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.claude-kit/lib/lang-reminder.mjs\"",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude-kit/engine/lang-reminder.mjs\"",
             "timeout": 15
           }
         ]
@@ -18,7 +18,25 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude-kit/lib/risk-gate.js"
+            "command": "node .claude-kit/engine/risk-gate.js"
+          }
+        ]
+      },
+      {
+        "matcher": "Read|Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude-kit/engine/rak-gate.mjs"
+          }
+        ]
+      },
+      {
+        "matcher": "Read|Grep|Glob|NotebookRead|TodoWrite|WebSearch|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude-kit/engine/plan-mode-gate.js"
           }
         ]
       }
@@ -29,7 +47,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.claude-kit/lib/feedback-capture.mjs\"",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.claude-kit/engine/feedback-capture.mjs\"",
             "timeout": 10
           }
         ]

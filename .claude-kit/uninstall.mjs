@@ -13,38 +13,24 @@
 // AGENTS.md default DILEWATI (biasanya kamu sunting berat) - pakai --delete-agents untuk ikut hapus.
 //
 // ===========================================================================================
-// JALUR AKTIF untuk `npx lintasai uninstall` (v2.0.0, kit 100% Node):
-//   Dispatcher bin/lintasai.js memetakan 'uninstall' -> uninstall.mjs di COMMANDS_NODE, dan
-//   package.json files[] mendaftarkannya eksplisit -> ikut paket npm + jalan di mesin staff.
-//   (uninstall.ps1 sudah dihapus.)
-//
-// SIFAT NON-INTERAKTIF (keputusan owner 06-22): versi Node TIDAK menampilkan popup jendela.
-//   Karena ini aksi MERUSAK (hapus berkas), default-aman = TIDAK menghapus apa pun. Untuk
-//   benar-benar menghapus, WAJIB beri bendera --yes (AI mengonfirmasi ke staff di chat dulu,
-//   baru menjalankan dengan --yes). Tanpa --yes -> hanya menampilkan rencana lalu berhenti aman.
-//
-// BATAS VERIFIKASI SEGEL (jujur): manifest-signing.mjs (Node) hanya bisa memverifikasi segel
-//   format-BARU (urut-abjad). Manifest bersegel-LAMA (urutan-acak .NET dari kit lama) akan
-//   dianggap 'invalid' oleh Node -> butuh --force/--yes untuk lanjut. Ini AMAN (gagal ke arah
-//   "jangan hapus" / minta konfirmasi, bukan "hapus sembarangan"). Saat cutover nanti, PS
-//   menyegel-ulang manifest ke format-baru lebih dulu (lihat docs/plans/migrasi-besar-node-program.md G4).
-//
-// SHIM POWERSHELL (deteksi junction/symlink): pemeriksa reparse-point = Windows-asli
-//   (FileAttributes.ReparsePoint, menelusuri SEMUA folder-induk). Node fs.lstat lebih sempit
-//   (bisa lewatkan reparse eksotik) -> untuk batas KEAMANAN ini kita panggil Test-PathHasReparsePoint
-//   di lib/safety.ps1 (sumber tunggal) lewat PowerShell, di-BATCH (1 panggilan utk banyak path,
-//   bukan per-berkas yang lambat). Sama pola removeMotwBlock di git-helpers.mjs. Kalau shim tak
-//   bisa jalan -> BATAL (fail-secure: lebih baik tak menghapus daripada salah ikuti junction).
+// SIFAT NON-INTERAKTIF (keputusan owner 06-22): ini aksi MERUSAK -> default-aman TIDAK menghapus
+//   apa pun; hapus sungguhan WAJIB --yes (AI konfirmasi ke staff di chat dulu). Tanpa --yes ->
+//   hanya menampilkan rencana lalu berhenti aman.
+// BATAS VERIFIKASI SEGEL (jujur): manifest-signing.mjs hanya kenal segel format-BARU (urut-abjad);
+//   segel format-lama dianggap 'invalid' -> butuh --force/--yes. AMAN: gagal ke arah "jangan hapus".
+// DETEKSI JUNCTION/SYMLINK: engine/reparse-guard.mjs (Node murni sejak v2.0.0: lstat + telusur
+//   folder-induk, batch 1x). Gagal cek -> BATAL (fail-secure: lebih baik tak menghapus daripada
+//   salah ikuti junction ke luar project).
 // ===========================================================================================
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { makeSafeProjectRoot, resolveSafeProjectPath } from './lib/safety.mjs'
-import { getFileSha256 } from './lib/manifest.mjs'
-import { getLintasExpectedSchemaVersion } from './lib/expected-schema.mjs'
-import { getManifestSignatureStatus } from './lib/manifest-signing.mjs'
-import { stripBom, eqCI, backupStamp, isSymlinkLike } from './lib/fs-text.mjs'
-import { testPathsHaveReparsePoint } from './lib/reparse-guard.mjs'
+import { makeSafeProjectRoot, resolveSafeProjectPath } from './engine/safety.mjs'
+import { getFileSha256 } from './engine/manifest.mjs'
+import { getLintasExpectedSchemaVersion } from './engine/expected-schema.mjs'
+import { getManifestSignatureStatus } from './engine/manifest-signing.mjs'
+import { stripBom, eqCI, backupStamp, isSymlinkLike } from './engine/fs-text.mjs'
+import { testPathsHaveReparsePoint } from './engine/reparse-guard.mjs'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -69,11 +55,11 @@ export function parseArgs(argv) {
   return a
 }
 
-// eqCI (banding tak peka huruf) -> sumber bersama lib/fs-text.mjs (impor di atas).
+// eqCI (banding tak peka huruf) -> sumber bersama engine/fs-text.mjs (impor di atas).
 
-// ---- Shim PowerShell deteksi reparse-point (junction/symlink) -> disatukan ke lib/reparse-guard.mjs
-//      (audit fungsi-kembar 2026-06-25). Di-impor + di-RE-EXPORT supaya pemanggil internal + tes tetap
-//      bisa pakai dari modul ini (tanda tangan + perilaku tak berubah). LOGIKA keamanan = lib/safety.ps1.
+// ---- Deteksi reparse-point (junction/symlink) -> disatukan ke engine/reparse-guard.mjs (audit
+//      fungsi-kembar 2026-06-25; Node murni sejak v2.0.0). Di-impor + di-RE-EXPORT supaya pemanggil
+//      internal + tes tetap bisa pakai dari modul ini (tanda tangan + perilaku tak berubah).
 export { testPathsHaveReparsePoint }
 
 // ---- Inti: klasifikasi tiap berkas catatan-pasang. PURE terhadap argumen (FS read + shim reparse). ----
@@ -142,6 +128,109 @@ function segmentCount(s) { return String(s).split(/[\\/]/).length }
 export function runUninstall(argv, opts = {}) {
   const args = parseArgs(argv)
 
+  // ---- Resolusi akar project + folder kit (helper; kegagalan -> kode keluar) ----
+  const roots = resolveUninstallRoots(args)
+  if (typeof roots === 'number') return roots
+  const { projectRoot, kitDir } = roots
+
+  // ---- Cek + baca catatan-pasang (helper; kegagalan -> kode keluar) ----
+  const timestamp = backupStamp(new Date())
+  const loaded = loadUninstallManifest(kitDir)
+  if (typeof loaded === 'number') return loaded
+  const { manifest } = loaded
+
+  // ---- Verifikasi segel + skema + kecocokan akar project (helper; kegagalan -> kode keluar) ----
+  const trustCode = checkUninstallTrust(manifest, { args, kitDir, projectRoot, timestamp })
+  if (trustCode !== null) return trustCode
+
+  // ---- Siapkan akar canonical (dipakai helper safety) ----
+  const safe = makeSafeProjectRoot(projectRoot)
+  const projectName = path.basename(projectRoot)
+
+  // Pemeriksa junction/symlink: jalur utama Node (default; reparse-guard.mjs lstat ancestor-walk,
+  // PowerShell hanya cadangan saat Node gagal fatal) ATAU suntikan uji. SATU fungsi dipakai untuk
+  // klasifikasi DAN cek-ulang TOCTOU sebelum hapus -> sama-kuat (telusur folder-induk) di kedua titik.
+  const reparseCheck = typeof opts.reparseCheck === 'function'
+    ? opts.reparseCheck
+    : (absPaths) => testPathsHaveReparsePoint(absPaths, safe.root, kitDir)
+
+  printUninstallHeader(manifest, args, projectName, projectRoot)
+
+  // ---- Klasifikasi ----
+  let groups
+  try {
+    groups = classifyManifest(manifest, safe, kitDir, { deleteAgents: args.deleteAgents, reparseCheck })
+  } catch (e) {
+    // Pemeriksa reparse gagal jalan (jalur Node + cadangan PS dua-duanya gagal) -> fail-secure batal.
+    console.log('')
+    console.log(`[BATAL] Tidak bisa memeriksa junction/symlink dengan aman: ${e.message}`)
+    console.log('        Penghapusan dibatalkan demi keamanan. (Jalur Node murni; gagal-aman saat cek junction/symlink tak bisa dipastikan.)')
+    return 1
+  }
+  const { pristine, modified } = groups
+
+  // ---- Cetak rencana ----
+  printPlan(groups, manifest, args)
+
+  if (args.dryRun) return printDryRunSummary(groups, args)
+
+  // ---- Konfirmasi sebelum eksekusi (helper; non-interaktif: butuh --yes untuk aksi merusak) ----
+  const confirmCode = confirmDeletionOrStop(args, pristine, modified)
+  if (confirmCode !== null) return confirmCode
+
+  // ---- TOCTOU (tutup celah): cek-ULANG junction/symlink (telusur folder-induk via shim, sama-kuat
+  // dgn klasifikasi) untuk SEMUA berkas yang akan disentuh, SEKALI, SEBELUM menghapus apa pun. Cermin
+  // Test-PathHasReparsePoint PS di titik hapus (PS cek per-berkas; kita batch 1x = jendela JS-loop sangat
+  // sempit, + per-berkas lstat di bawah menutup swap-berkas detik-terakhir). Gagal cek -> BATAL sebelum
+  // hapus apa pun (fail-secure: lebih baik tak menghapus daripada salah ikuti junction ke luar project).
+  const toCheckExec = pristine.map((p) => p.path)
+  if (args.allowModified) for (const m of modified) toCheckExec.push(m.path)
+  let reparseAtExec
+  try {
+    reparseAtExec = reparseCheck(toCheckExec)
+  } catch (e) {
+    console.log('')
+    console.log(`[BATAL] Cek-ulang junction sebelum hapus gagal: ${e.message}. Tidak ada yang dihapus (fail-secure).`)
+    return 1
+  }
+
+  // ---- Eksekusi: hapus berkas asli (helper; re-hash + cek-ulang junction = tutup celah TOCTOU) ----
+  console.log('')
+  console.log('--- EKSEKUSI ---')
+  const pristineRes = deletePristineEntries(pristine, reparseAtExec)
+  let deletedCount = pristineRes.deleted
+  let errorCount = pristineRes.errors
+  const rehashSkipped = pristineRes.rehashSkipped
+
+  // ---- Eksekusi: backup + hapus berkas yang diedit (helper; kalau --allow-modified) ----
+  if (args.allowModified && modified.length > 0) {
+    const modRes = backupThenDeleteModified(modified, safe, timestamp, reparseAtExec)
+    deletedCount += modRes.deleted
+    errorCount += modRes.errors
+  }
+
+  // ---- Hapus folder kosong (helper; terdalam dulu supaya nested aman) ----
+  const dirsRes = removeEmptyKitDirs(manifest, safe, reparseCheck)
+  errorCount += dirsRes.errors
+  const { dirs, dirDeleted, dirsMissing } = dirsRes
+
+  // ---- Status berkas project + instruksi hapus-sendiri + ringkasan (helper) ----
+  printUninstallClosing({
+    projectRoot, kitDir, args, groups,
+    dirs, dirDeleted, dirsMissing,
+    deletedCount, errorCount, rehashSkipped,
+  })
+
+  return errorCount > 0 ? 1 : 0
+}
+
+// ============== Helper runUninstall (pecahan §5: fungsi <100 baris) ==============
+// Kode DIPINDAH apa adanya dari badan runUninstall (2026-07-22) - perilaku + urutan +
+// teks keluaran konsol byte-identik. Helper yang bisa gagal mengembalikan kode-keluar.
+
+// Resolusi akar project + folder kit + validasi posisi .claude-kit.
+// Kembalikan number (kode-keluar) saat gagal, atau { projectRoot, kitDir } saat sah.
+function resolveUninstallRoots(args) {
   // ---- Resolusi akar project (param-driven, fallback ke lokasi script) ----
   let projectRoot
   if (args.projectRoot && String(args.projectRoot).trim() !== '') {
@@ -194,9 +283,12 @@ export function runUninstall(argv, opts = {}) {
     return 1
   }
 
-  // ---- Cek catatan-pasang (manifest) ----
+  return { projectRoot, kitDir }
+}
+
+// Cek keberadaan + baca catatan-pasang. Kembalikan number saat gagal, atau { manifest }.
+function loadUninstallManifest(kitDir) {
   const manifestPath = path.join(kitDir, '.install-manifest.json')
-  const timestamp = backupStamp(new Date())
   if (!fs.existsSync(manifestPath)) {
     console.log('')
     console.log('BERHENTI: Tidak bisa lanjut karena berkas pencatat pasang hilang.')
@@ -210,8 +302,6 @@ export function runUninstall(argv, opts = {}) {
     console.log('  B. Hapus manual sesuai daftar di README bagian "Kalau manifest TIDAK ADA".')
     return 1
   }
-
-  // ---- Baca catatan-pasang ----
   let manifest
   try {
     manifest = JSON.parse(stripBom(fs.readFileSync(manifestPath, 'utf8')))
@@ -224,7 +314,12 @@ export function runUninstall(argv, opts = {}) {
     console.log('Saran: pasang ulang (npx lintasai init) untuk membuat ulang catatan dari berkas yang ada.')
     return 1
   }
+  return { manifest }
+}
 
+// Verifikasi segel HMAC + schema_version + kecocokan akar project.
+// Kembalikan number (kode-keluar) saat harus berhenti, atau null saat aman lanjut.
+function checkUninstallTrust(manifest, { args, kitDir, projectRoot, timestamp }) {
   // ---- Verifikasi segel keaslian (HMAC) ----
   // 'unsigned' -> kit lama / pra-segel. 'invalid' -> mungkin diutak-atik (atau segel format-lama yang
   // Node belum bisa baca). 'verified' -> aman, lanjut diam-diam. Default tanpa --force/--yes = BATAL.
@@ -236,7 +331,7 @@ export function runUninstall(argv, opts = {}) {
     console.log('')
     console.log(`PERINGATAN: Verifikasi segel catatan-pasang GAGAL JALAN: ${e.message}`)
     console.log('[BATAL] Penghapusan dibatalkan: verifikasi segel tak bisa jalan (fail-secure).')
-    console.log('        Periksa lib/manifest-signing.mjs sebelum mengulang.')
+    console.log('        Periksa engine/manifest-signing.mjs sebelum mengulang.')
     return 1
   }
   const bypass = args.force || args.yes
@@ -266,8 +361,8 @@ export function runUninstall(argv, opts = {}) {
   }
 
   // ---- Validasi schema_version (penjaga maju-kompat) ----
-  // Angka dari peta versi-diharapkan (lib/expected-schema.mjs, Mesin 1 STRATEGI_UPDATE_v2) - satu
-  // sumber dgn penulis lib/manifest.mjs. TETAP cek PERSIS-sama (===), BUKAN >=: menghapus berkas
+  // Angka dari peta versi-diharapkan (engine/expected-schema.mjs, Mesin 1 STRATEGI_UPDATE_v2) - satu
+  // sumber dgn penulis engine/manifest.mjs. TETAP cek PERSIS-sama (===), BUKAN >=: menghapus berkas
   // berdasar catatan berformat lebih BARU dari yang skrip ini pahami = bahaya (fail-closed dua arah).
   const expectedManifestSchema = getLintasExpectedSchemaVersion('.install-manifest.json')
   const schemaVersion = parseInt(String(manifest.schema_version), 10)
@@ -300,18 +395,11 @@ export function runUninstall(argv, opts = {}) {
     console.log('INFO: --project-root diberi eksplisit, pengecekan akar di catatan dilewati.')
   }
 
-  // ---- Siapkan akar canonical (dipakai helper safety) ----
-  const safe = makeSafeProjectRoot(projectRoot)
-  const projectName = path.basename(projectRoot)
+  return null
+}
 
-  // Pemeriksa junction/symlink: jalur utama Node (default; reparse-guard.mjs lstat ancestor-walk,
-  // PowerShell hanya cadangan saat Node gagal fatal) ATAU suntikan uji. SATU fungsi dipakai untuk
-  // klasifikasi DAN cek-ulang TOCTOU sebelum hapus -> sama-kuat (telusur folder-induk) di kedua titik.
-  const reparseCheck = typeof opts.reparseCheck === 'function'
-    ? opts.reparseCheck
-    : (absPaths) => testPathsHaveReparsePoint(absPaths, safe.root, kitDir)
-
-  // ---- Header ----
+// Cetak header + daftar bendera aktif.
+function printUninstallHeader(manifest, args, projectName, projectRoot) {
   console.log('')
   console.log('================================================================')
   console.log('  lintasAI uninstall - hapus aman berbasis sidik-jari')
@@ -337,46 +425,33 @@ export function runUninstall(argv, opts = {}) {
     console.log('Bendera aktif  : (default - konservatif, lewati berkas yang sudah diedit)')
   }
   console.log('')
+}
 
-  // ---- Klasifikasi ----
-  let groups
-  try {
-    groups = classifyManifest(manifest, safe, kitDir, { deleteAgents: args.deleteAgents, reparseCheck })
-  } catch (e) {
-    // Pemeriksa reparse gagal jalan (jalur Node + cadangan PS dua-duanya gagal) -> fail-secure batal.
-    console.log('')
-    console.log(`[BATAL] Tidak bisa memeriksa junction/symlink dengan aman: ${e.message}`)
-    console.log('        Penghapusan dibatalkan demi keamanan. (Jalur Node murni; gagal-aman saat cek junction/symlink tak bisa dipastikan.)')
-    return 1
-  }
+// Cetak ringkasan mode SIMULASI lalu kembalikan kode-keluar 0.
+function printDryRunSummary(groups, args) {
   const { pristine, modified, symlinked, blocked, locked, missing, skipped, backups } = groups
-
-  // ---- Cetak rencana ----
-  printPlan(groups, manifest, args)
-
-  // ---- Ringkasan SIMULASI + keluar ----
-  if (args.dryRun) {
-    console.log('')
-    console.log('--- RINGKASAN SIMULASI ---')
-    console.log(`  Aman dihapus (asli)      : ${pristine.length} berkas`)
-    if (modified.length > 0) {
-      if (args.allowModified) console.log(`  Diedit user + backup     : ${modified.length} berkas (karena --allow-modified)`)
-      else console.log(`  Diedit user (DILEWATI)   : ${modified.length} berkas - pakai --allow-modified kalau mau ikut hapus`)
-    }
-    if (symlinked.length > 0) console.log(`  Tautan/junction          : ${symlinked.length} berkas (SELALU dilewati)`)
-    if (locked.length > 0) console.log(`  Terkunci (cek editor)    : ${locked.length} berkas`)
-    if (blocked.length > 0) console.log(`  DITOLAK (keluar project) : ${blocked.length} berkas - catatan mungkin diutak-atik`)
-    console.log(`  Sudah hilang             : ${missing.length} berkas`)
-    console.log(`  Sengaja dilewati         : ${skipped.length} berkas (mis. AGENTS.md)`)
-    if (backups.length > 0) console.log(`  Backup pra-pasang        : ${backups.length} berkas (dipertahankan)`)
-    console.log('')
-    console.log('Yakin dengan rencana di atas?')
-    console.log('  - Lanjut hapus beneran : jalankan ulang TANPA --dry-run, tambah --yes')
-    console.log('  - Batal                : tidak ada yang berubah')
-    return 0
+  console.log('')
+  console.log('--- RINGKASAN SIMULASI ---')
+  console.log(`  Aman dihapus (asli)      : ${pristine.length} berkas`)
+  if (modified.length > 0) {
+    if (args.allowModified) console.log(`  Diedit user + backup     : ${modified.length} berkas (karena --allow-modified)`)
+    else console.log(`  Diedit user (DILEWATI)   : ${modified.length} berkas - pakai --allow-modified kalau mau ikut hapus`)
   }
+  if (symlinked.length > 0) console.log(`  Tautan/junction          : ${symlinked.length} berkas (SELALU dilewati)`)
+  if (locked.length > 0) console.log(`  Terkunci (cek editor)    : ${locked.length} berkas`)
+  if (blocked.length > 0) console.log(`  DITOLAK (keluar project) : ${blocked.length} berkas - catatan mungkin diutak-atik`)
+  console.log(`  Sudah hilang             : ${missing.length} berkas`)
+  console.log(`  Sengaja dilewati         : ${skipped.length} berkas (mis. AGENTS.md)`)
+  if (backups.length > 0) console.log(`  Backup pra-pasang        : ${backups.length} berkas (dipertahankan)`)
+  console.log('')
+  console.log('Yakin dengan rencana di atas?')
+  console.log('  - Lanjut hapus beneran : jalankan ulang TANPA --dry-run, tambah --yes')
+  console.log('  - Batal                : tidak ada yang berubah')
+  return 0
+}
 
-  // ---- Konfirmasi sebelum eksekusi (non-interaktif: butuh --yes untuk aksi merusak) ----
+// Konfirmasi non-interaktif sebelum eksekusi: tanpa --yes -> berhenti aman (kode 0), dgn --yes -> null (lanjut).
+function confirmDeletionOrStop(args, pristine, modified) {
   console.log('')
   let forceSuffix = ''
   if (args.allowModified) forceSuffix = ` + ${modified.length} diedit (dengan backup)`
@@ -391,27 +466,12 @@ export function runUninstall(argv, opts = {}) {
     return 0
   }
   console.log('Konfirmasi otomatis via --yes.')
+  return null
+}
 
-  // ---- TOCTOU (tutup celah): cek-ULANG junction/symlink (telusur folder-induk via shim, sama-kuat
-  // dgn klasifikasi) untuk SEMUA berkas yang akan disentuh, SEKALI, SEBELUM menghapus apa pun. Cermin
-  // Test-PathHasReparsePoint PS di titik hapus (PS cek per-berkas; kita batch 1x = jendela JS-loop sangat
-  // sempit, + per-berkas lstat di bawah menutup swap-berkas detik-terakhir). Gagal cek -> BATAL sebelum
-  // hapus apa pun (fail-secure: lebih baik tak menghapus daripada salah ikuti junction ke luar project).
-  const toCheckExec = pristine.map((p) => p.path)
-  if (args.allowModified) for (const m of modified) toCheckExec.push(m.path)
-  let reparseAtExec
-  try {
-    reparseAtExec = reparseCheck(toCheckExec)
-  } catch (e) {
-    console.log('')
-    console.log(`[BATAL] Cek-ulang junction sebelum hapus gagal: ${e.message}. Tidak ada yang dihapus (fail-secure).`)
-    return 1
-  }
-
-  // ---- Eksekusi: hapus berkas asli (re-hash + cek-ulang junction sesaat sebelum hapus = tutup celah TOCTOU) ----
-  console.log('')
-  console.log('--- EKSEKUSI ---')
-  let deletedCount = 0, errorCount = 0, rehashSkipped = 0
+// Hapus berkas ASLI (re-hash + cek-ulang junction sesaat sebelum hapus = tutup celah TOCTOU).
+function deletePristineEntries(pristine, reparseAtExec) {
+  let deleted = 0, errors = 0, rehashSkipped = 0
   for (const p of pristine) {
     let rehash
     try {
@@ -419,7 +479,7 @@ export function runUninstall(argv, opts = {}) {
     } catch (e) {
       console.log(`KUNCI ${p.item.path}: ${e.message}`)
       console.log('       PETUNJUK: Tutup berkas di editor (VS Code/Notepad), lalu ulangi.')
-      errorCount++
+      errors++
       continue
     }
     if (!eqCI(rehash, p.item.sha256)) {
@@ -438,58 +498,63 @@ export function runUninstall(argv, opts = {}) {
     try {
       fs.rmSync(p.path, { force: true })
       console.log(`HAPUS ${p.item.path}`)
-      deletedCount++
+      deleted++
     } catch (e) {
       console.log(`GAGAL ${p.item.path}: ${e.message}`)
       console.log('       PETUNJUK: Tutup berkas di editor, lalu ulangi.')
-      errorCount++
+      errors++
     }
   }
+  return { deleted, errors, rehashSkipped }
+}
 
-  // ---- Eksekusi: backup + hapus berkas yang diedit (kalau --allow-modified) ----
-  if (args.allowModified && modified.length > 0) {
-    for (const m of modified) {
-      const bakPath = `${m.path}.pre-uninstall-${timestamp}.bak`
-      let bakResolved
-      try { bakResolved = path.resolve(bakPath) } catch {
-        console.log(`GAGAL ${m.item.path}: path backup tidak valid`); errorCount++; continue
-      }
-      // Pertahanan berlapis: pastikan path backup tetap di dalam akar project.
-      if (!bakResolved.toLowerCase().startsWith(safe.canonical.toLowerCase())) {
-        console.log(`GAGAL ${m.item.path}: path backup keluar dari akar project (DITOLAK)`); errorCount++; continue
-      }
-      if (!fs.existsSync(m.path)) { console.log(`LEWATI ${m.item.path}: berkas hilang sejak rencana dibuat`); continue }
-      // Cek-ulang junction sebelum backup+hapus: telusur folder-induk (shim) + lstat. PENTING untuk
-      // berkas DIEDIT karena Copy-Item lewat junction bisa menyalin isi LUAR project ke .bak (bocor).
-      if (reparseAtExec.get(m.path) === true || isSymlinkLike(m.path)) {
-        console.log(`LEWATI ${m.item.path}: TOCTOU - jadi tautan/junction setelah rencana, tidak di-backup/hapus`)
-        continue
-      }
-      try {
-        fs.copyFileSync(m.path, bakPath)
-        fs.rmSync(m.path, { force: true })
-        console.log(`BACKUP ${m.item.path} -> ${path.basename(bakPath)}`)
-        deletedCount++
-      } catch (e) {
-        console.log(`GAGAL ${m.item.path}: ${e.message}`)
-        if (fs.existsSync(bakPath)) console.log(`       CATATAN: backup ada di ${path.basename(bakPath)} (berkas asli tetap di tempat)`)
-        errorCount++
-      }
+// Backup lalu hapus berkas DIEDIT (jalur --allow-modified).
+function backupThenDeleteModified(modified, safe, timestamp, reparseAtExec) {
+  let deleted = 0, errors = 0
+  for (const m of modified) {
+    const bakPath = `${m.path}.pre-uninstall-${timestamp}.bak`
+    let bakResolved
+    try { bakResolved = path.resolve(bakPath) } catch {
+      console.log(`GAGAL ${m.item.path}: path backup tidak valid`); errors++; continue
+    }
+    // Pertahanan berlapis: pastikan path backup tetap di dalam akar project.
+    if (!bakResolved.toLowerCase().startsWith(safe.canonical.toLowerCase())) {
+      console.log(`GAGAL ${m.item.path}: path backup keluar dari akar project (DITOLAK)`); errors++; continue
+    }
+    if (!fs.existsSync(m.path)) { console.log(`LEWATI ${m.item.path}: berkas hilang sejak rencana dibuat`); continue }
+    // Cek-ulang junction sebelum backup+hapus: telusur folder-induk (shim) + lstat. PENTING untuk
+    // berkas DIEDIT karena Copy-Item lewat junction bisa menyalin isi LUAR project ke .bak (bocor).
+    if (reparseAtExec.get(m.path) === true || isSymlinkLike(m.path)) {
+      console.log(`LEWATI ${m.item.path}: TOCTOU - jadi tautan/junction setelah rencana, tidak di-backup/hapus`)
+      continue
+    }
+    try {
+      fs.copyFileSync(m.path, bakPath)
+      fs.rmSync(m.path, { force: true })
+      console.log(`BACKUP ${m.item.path} -> ${path.basename(bakPath)}`)
+      deleted++
+    } catch (e) {
+      console.log(`GAGAL ${m.item.path}: ${e.message}`)
+      if (fs.existsSync(bakPath)) console.log(`       CATATAN: backup ada di ${path.basename(bakPath)} (berkas asli tetap di tempat)`)
+      errors++
     }
   }
+  return { deleted, errors }
+}
 
-  // ---- Hapus folder kosong (terdalam dulu supaya nested aman) ----
+// Hapus folder kosong dari catatan (terdalam dulu supaya nested aman; junction dijaga 3-lapis).
+function removeEmptyKitDirs(manifest, safe, reparseCheck) {
   const dirs = Array.isArray(manifest.directories_created) ? manifest.directories_created.map(String) : []
   const dirsSorted = [...dirs].sort((a, b) => segmentCount(b) - segmentCount(a))
-  let dirDeleted = 0
+  let dirDeleted = 0, errors = 0
   const dirsMissing = []
   const systemNoise = new Set(['desktop.ini', 'thumbs.db', '.ds_store'])
 
-  // KEAMANAN (paritas pass berkas di atas + uninstall.ps1:884 Test-PathHasReparsePoint): periksa SEMUA
+  // KEAMANAN (paritas pass berkas + uninstall.ps1:884 Test-PathHasReparsePoint): periksa SEMUA
   // folder kandidat lewat shim penelusur-folder-INDUK SEBELUM rmdir. isSymlinkLike (lstat) SAJA terlalu
   // sempit -> bisa tertembus junction folder yang menunjuk ke LUAR project (mis. 'docs/' = junction ke
   // folder luar; sub-folder kosong di dalamnya bisa ter-rmdir folder NYATA di luar project; PS terlindungi
-  // karena menelusur induk). lib/safety.mjs sendiri memperingatkan lstat "JANGAN dilemahkan demi Node".
+  // karena menelusur induk). engine/safety.mjs sendiri memperingatkan lstat "JANGAN dilemahkan demi Node".
   // Batch 1x (cermin TOCTOU berkas), fail-secure kalau shim gagal.
   const dirCheckPaths = []
   for (const dStr of dirsSorted) {
@@ -514,9 +579,9 @@ export function runUninstall(argv, opts = {}) {
     let fullDir
     try {
       fullDir = resolveSafeProjectPath(safe, dStr, `folder '${dStr}'`)
-    } catch { errorCount++; continue }
+    } catch { errors++; continue }
     if (!fs.existsSync(fullDir)) { dirsMissing.push(dStr); continue }
-    // Penjaga reparse 3-lapis (cermin pass berkas baris 469): shim penelusur-folder-induk (sama-kuat
+    // Penjaga reparse 3-lapis (cermin pass berkas): shim penelusur-folder-induk (sama-kuat
     // klasifikasi) + isSymlinkLike (lstat backstop). reparseDirsFailed -> jangan hapus folder apa pun.
     if (reparseDirsFailed || reparseDirs.get(fullDir) === true || isSymlinkLike(fullDir)) {
       console.log(`SIMPAN ${dStr} (tautan/junction terdeteksi atau tak terverifikasi aman, tidak diikuti)`)
@@ -537,7 +602,7 @@ export function runUninstall(argv, opts = {}) {
         dirDeleted++
       } catch (e) {
         console.log(`GAGAL hapus folder ${dStr}: ${e.message}`)
-        errorCount++
+        errors++
       }
     } else {
       const sample = realEntries.slice(0, 5)
@@ -546,6 +611,13 @@ export function runUninstall(argv, opts = {}) {
       console.log(`SIMPAN ${dStr} (${realEntries.length} berkas/folder milikmu tersisa: ${sampleStr})`)
     }
   }
+
+  return { dirs, dirDeleted, dirsMissing, errors }
+}
+
+// Cetak status berkas project + instruksi hapus-sendiri .claude-kit + ringkasan akhir.
+function printUninstallClosing({ projectRoot, kitDir, args, groups, dirs, dirDeleted, dirsMissing, deletedCount, errorCount, rehashSkipped }) {
+  const { modified, symlinked, blocked, locked, skipped, backups } = groups
 
   // ---- Tenangkan dulu (status berkas project) sebelum instruksi hapus-sendiri ----
   console.log('')
@@ -603,8 +675,6 @@ export function runUninstall(argv, opts = {}) {
     console.log('         AMAN diulang: tutup editor/antivirus lalu jalankan uninstall sekali lagi (yang sudah hilang akan dilewati).')
   }
   console.log('')
-
-  return errorCount > 0 ? 1 : 0
 }
 
 // ---- Cetak rencana per-kategori ----
@@ -664,7 +734,7 @@ function printPlan(groups, manifest, args) {
   else console.log('[KIT] Folder .claude-kit harus kamu hapus MANUAL (script tidak bisa hapus-diri saat berjalan, instruksi di akhir).')
 }
 
-// ---- Util kecil ---- (stripBom/eqCI/backupStamp/isSymlinkLike dari sumber bersama lib/fs-text.mjs, impor di atas)
+// ---- Util kecil ---- (stripBom/eqCI/backupStamp/isSymlinkLike dari sumber bersama engine/fs-text.mjs, impor di atas)
 
 const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)
 if (isMain) {

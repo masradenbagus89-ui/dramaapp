@@ -9,25 +9,23 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { spawnSync } from 'node:child_process'
 import { fileURLToPath } from 'node:url'
-import { readKitManifest } from '../lib/kit-files.mjs'
+import { readKitManifest } from '../engine/kit-files.mjs'
 
 const SKIP_DIRS = ['\\.git\\', '\\node_modules\\', '\\.backup-']
 
-// Daftar berkas kritis era Node. v2.0.0: manifest SSOT = lib/kit-files.json (bukan .psd1 lagi).
+// Daftar berkas kritis era Node. v2.0.0: manifest SSOT = engine/kit-files.json (bukan .psd1 lagi).
 export const CRITICAL_FILES_NODE = [
   'bin/lintasai.js',
   'README.md',
   'package.json',
-  'lib/kit-files.json',
+  'engine/kit-files.json',
   'setup-pola-b.mjs',
   'kit.mjs',
   'update-kit.mjs',
   'uninstall.mjs',
-  'install-windows.mjs',
-  'team-setup.mjs',
   'AGENTS.md.template',
-  'lib/json-merge-helpers.mjs',
-  'lib/manifest.mjs',
+  'engine/json-merge-helpers.mjs',
+  'engine/manifest.mjs',
 ]
 
 function walk(root, exts) {
@@ -71,7 +69,7 @@ export function checkCriticalFiles(kitRoot, critical = CRITICAL_FILES_NODE) {
 }
 
 // Cek 3: integritas manifest daftar-berkas — jalan rekursif semua entri string (cermin Test-LintasManifestIntegrity).
-// Dua-format (v2.0.0): lib/kit-files.json (SSOT) atau .psd1 (kit era-v1) via readKitManifest.
+// Dua-format (v2.0.0): engine/kit-files.json (SSOT) atau .psd1 (kit era-v1) via readKitManifest.
 export function checkManifestIntegrity(kitRoot) {
   let resolved
   try {
@@ -80,7 +78,7 @@ export function checkManifestIntegrity(kitRoot) {
     return { total: 0, missing: [`manifest daftar-berkas parse error: ${e.message}`] }
   }
   if (!resolved) {
-    return { total: 0, missing: ['lib/kit-files.json (atau .psd1) not found'] }
+    return { total: 0, missing: ['engine/kit-files.json (atau .psd1) not found'] }
   }
   const manifest = resolved.data
   const missing = []

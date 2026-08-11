@@ -1,11 +1,11 @@
 # project-map.md — Peta Aktivitas Project (cuma-baca)
 
-> Versi 1 · 2026-07-12 · pendamping `lib/project-map.mjs` (Node)
+> Versi 1 · 2026-07-12 · pendamping `engine/project-map.mjs` (Node)
 
 ## Tujuan
 Ringkas **riwayat commit** (`git log`) jadi **fakta** yang gampang dibaca: berapa commit menyentuh tiap **modul** (dipetakan dari `project.lintas.jsonc` bila ada, kalau tidak pakai folder tingkat-atas), berapa commit per **jenis perubahan** (Conventional Commit: feat/fix/refactor/...), di **jendela** waktu/tag mana, modul deklarasi mana yang **tak tersentuh**, dan folder aktif mana yang **belum punya modul di kartu**.
 
-Gunanya: **umpan on-demand** buat AI menyusun draf roadmap/peta jalan (lihat `workflows/7.11-peta-project.md`). **Cuma-baca, on-demand** — bukan daemon, bukan peta lengkap project, bukan roadmap masa depan.
+Gunanya: **umpan on-demand** buat AI menyusun draf roadmap/peta jalan (lihat `rules/7.11-project-map.md`). **Cuma-baca, on-demand** — bukan daemon, bukan peta lengkap project, bukan roadmap masa depan.
 
 🏢 Analogi: seperti **buku tamu proyek** — mencatat siapa menyentuh ruangan mana dan kapan. Bukan denah gedung (itu `docs/architecture.md`), bukan rencana renovasi (itu roadmap yang kamu putuskan).
 
@@ -20,7 +20,7 @@ npx lintasai project-map --limit 50
 # Keluaran mesin (JSON) untuk diproses AI:
 npx lintasai project-map --json
 # Panggil langsung berkasnya (di project client: .claude-kit/lib/...):
-node .claude-kit/lib/project-map.mjs --project-root .
+node .claude-kit/engine/project-map.mjs --project-root .
 ```
 Output default = ringkasan Markdown di layar (header jujur + per-tipe + per-modul). **Tidak mengubah apa pun** (cuma membaca `git log`).
 
@@ -41,6 +41,6 @@ Output default = ringkasan Markdown di layar (header jujur + per-tipe + per-modu
 - Kartu `project.lintas.jsonc` **opsional**: ada → modul dipetakan dari `modules[].path`; tidak ada → fallback ke folder tingkat-atas.
 
 ## Catatan
-- **Cuma-baca + on-demand**: TIDAK ada daemon, TIDAK menyimpan state, TIDAK menyentuh git (tak fetch/commit/config), TIDAK menulis berkas. Keputusan roadmap tetap di manusia (gerbang di `workflows/7.11-peta-project.md`).
-- **Deterministik**: fungsi inti (`parseGitLog`, `parseConventionalSubject`, `mapFileToModule`, `groupCommits`, renderer) = murni, dites tanpa git nyata di `tests/project-map.test.mjs`. Source: `lib/project-map.mjs:1`.
+- **Cuma-baca + on-demand**: TIDAK ada daemon, TIDAK menyimpan state, TIDAK menyentuh git (tak fetch/commit/config), TIDAK menulis berkas. Keputusan roadmap tetap di manusia (gerbang di `rules/7.11-project-map.md`).
+- **Deterministik**: fungsi inti (`parseGitLog`, `parseConventionalSubject`, `mapFileToModule`, `groupCommits`, renderer) = murni, dites tanpa git nyata di `tests/project-map.test.mjs`. Source: `engine/project-map.mjs:1`.
 - **Rekonsiliasi keputusan**: kenapa robot fakta-git on-demand ini TIDAK melanggar ADR-001 → `docs/decisions/ADR-011-peta-aktivitas-git-on-demand.md`.

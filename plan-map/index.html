@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Plan Map — DramaApp / DramaKu</title>
+<style>
+  :root {
+    --bg: #07090c;
+    --panel: #11161d;
+    --panel-2: #161c25;
+    --card: #1a2129;
+    --line: #283341;
+    --text: #e6edf3;
+    --muted: #8b97a6;
+    --green: #3fb950;
+    --green-dim: #1f3a26;
+    --amber: #d29922;
+    --amber-dim: #3a2f12;
+    --blue: #4f8fd6;
+    --blue-dim: #1e3147;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---------- HEADER ---------- */
+  header {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 30;
+    padding: 14px 22px 12px;
+    background: linear-gradient(180deg, rgba(7,9,12,0.97) 60%, rgba(7,9,12,0));
+    pointer-events: none;
+  }
+  header .row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  header h1 { font-size: 19px; font-weight: 700; letter-spacing: .2px; }
+  header h1 .accent { color: var(--green); }
+  .url-chip {
+    pointer-events: auto;
+    font-size: 12px; color: var(--muted);
+    border: 1px solid var(--line); border-radius: 20px;
+    padding: 3px 11px; text-decoration: none;
+    background: var(--panel);
+    transition: .15s;
+  }
+  .url-chip:hover { color: var(--green); border-color: var(--green); }
+  .subtitle { font-size: 12px; color: var(--muted); margin-top: 5px; }
+
+  /* counters + controls */
+  .toolbar {
+    margin-top: 12px;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+  .pill {
+    pointer-events: auto;
+    display: flex; align-items: center; gap: 7px;
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 8px; padding: 6px 12px; font-size: 12.5px; font-weight: 600;
+  }
+  .dot { width: 9px; height: 9px; border-radius: 50%; }
+  .dot.g { background: var(--green); }
+  .dot.a { background: var(--amber); }
+  .dot.b { background: var(--blue); }
+  .spacer { flex: 1; }
+  .zoom-ctl { pointer-events: auto; display: flex; gap: 6px; }
+  .zoom-ctl button {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: var(--panel); color: var(--text);
+    border: 1px solid var(--line); cursor: pointer;
+    font-size: 16px; line-height: 1; transition: .12s;
+  }
+  .zoom-ctl button:hover { border-color: var(--green); color: var(--green); }
+  .legend {
+    pointer-events: none;
+    display: flex; gap: 14px; font-size: 12px; color: var(--muted);
+  }
+  .legend span { display: flex; align-items: center; gap: 6px; }
+  .hint { font-size: 11px; color: #4d5867; }
+
+  /* ---------- CANVAS ---------- */
+  #viewport {
+    position: fixed; inset: 0;
+    cursor: grab;
+    background:
+      radial-gradient(circle at 18% 30%, rgba(63,185,80,0.05), transparent 45%),
+      radial-gradient(circle at 82% 75%, rgba(79,143,214,0.045), transparent 45%);
+  }
+  #viewport.grabbing { cursor: grabbing; }
+  #world { position: absolute; top: 0; left: 0; transform-origin: 0 0; }
+  #links { position: absolute; top: 0; left: 0; overflow: visible; }
+
+  /* ---------- NODES ---------- */
+  .node { position: absolute; }
+
+  /* phase node */
+  .phase {
+    border-radius: 13px; padding: 13px 15px;
+    background: var(--panel-2);
+    border: 1.5px solid var(--line);
+    display: flex; flex-direction: column; gap: 3px;
+    transition: transform .12s, box-shadow .12s;
+  }
+  .phase:hover { transform: translateY(-2px); }
+  .phase.done   { border-color: rgba(63,185,80,.55);  box-shadow: 0 0 0 1px rgba(63,185,80,.12), 0 8px 22px -10px rgba(63,185,80,.4); }
+  .phase.active { border-color: rgba(210,153,34,.6);   box-shadow: 0 0 0 1px rgba(210,153,34,.14), 0 8px 22px -10px rgba(210,153,34,.4); }
+  .phase.plan   { border-color: rgba(79,143,214,.5); }
+  .phase .ptop { display: flex; align-items: center; justify-content: space-between; }
+  .pnum {
+    width: 26px; height: 26px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px;
+  }
+  .done .pnum   { background: var(--green); color: #06140a; }
+  .active .pnum { background: var(--amber); color: #1a1303; }
+  .plan .pnum   { background: var(--blue-dim); color: var(--blue); border: 1px solid var(--blue); }
+  .badge {
+    font-size: 9.5px; font-weight: 800; letter-spacing: .7px;
+    padding: 3px 8px; border-radius: 5px;
+  }
+  .done .badge   { background: var(--green-dim); color: var(--green); }
+  .active .badge { background: var(--amber-dim); color: var(--amber); }
+  .plan .badge   { background: var(--blue-dim);  color: var(--blue); }
+  .phase .ptitle { font-size: 14px; font-weight: 700; margin-top: 4px; }
+  .phase .pdate { font-size: 11px; color: var(--muted); }
+
+  /* feature card */
+  .feat {
+    border-radius: 11px; padding: 11px 13px 12px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-left-width: 3px;
+    display: flex; flex-direction: column; gap: 4px;
+    transition: transform .12s, border-color .12s;
+  }
+  .feat:hover { transform: translateY(-2px); }
+  .feat.done   { border-left-color: var(--green); }
+  .feat.active { border-left-color: var(--amber); }
+  .feat.plan   { border-left-color: var(--blue); }
+  .feat .ftop { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
+  .feat .ftitle { font-size: 12.5px; font-weight: 700; line-height: 1.3; }
+  .feat .fdesc {
+    font-size: 11px; color: var(--muted); line-height: 1.45;
+    display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .check {
+    flex-shrink: 0;
+    width: 17px; height: 17px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 900;
+  }
+  .done .check   { background: var(--green); color: #06140a; }
+  .active .check { background: var(--amber); color: #1a1303; }
+  .plan .check   { background: transparent; border: 1.5px solid var(--blue); color: var(--blue); }
+
+  @media (max-width: 720px) {
+    header h1 { font-size: 16px; }
+    .legend { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="row">
+    <h1>Plan Map — <span class="accent">DramaApp / DramaKu</span></h1>
+    <a class="url-chip" href="https://dramaapp.vercel.app/" target="_blank" rel="noopener">dramaapp.vercel.app &#8599;</a>
+  </div>
+  <div class="subtitle">Pohon roadmap horizontal — trunk = alur fase, cabang ke atas/bawah = fitur. Diperbarui 22 Mei 2026.</div>
+  <div class="toolbar">
+    <div class="pill"><span class="dot g"></span><span id="cDone">0</span> Selesai</div>
+    <div class="pill"><span class="dot a"></span><span id="cActive">0</span> Berjalan</div>
+    <div class="pill"><span class="dot b"></span><span id="cPlan">0</span> Rencana</div>
+    <div class="zoom-ctl">
+      <button id="zOut" title="Perkecil">&minus;</button>
+      <button id="zReset" title="Reset tampilan">&#10227;</button>
+      <button id="zIn" title="Perbesar">&plus;</button>
+    </div>
+    <div class="spacer"></div>
+    <div class="legend">
+      <span><span class="dot g"></span>Selesai</span>
+      <span><span class="dot a"></span>Berjalan</span>
+      <span><span class="dot b"></span>Rencana</span>
+      <span class="hint">&#8597; seret kanvas untuk geser &nbsp;&middot;&nbsp; scroll untuk zoom</span>
+    </div>
+  </div>
+</header>
+
+<div id="viewport">
+  <div id="world">
+    <svg id="links"></svg>
+    <div id="nodes"></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   DATA ROADMAP — DRAMAAPP
+   status: "done" | "active" | "plan"
+   side  : "top" | "bottom"
+   ============================================================ */
+const ROADMAP = [
+  {
+    n: 0, title: "Fase 0 · Fondasi Project", date: "14 Mei 2026", status: "done",
+    features: [
+      { side:"top",    status:"done", title:"Source Code dari GitHub",
+        desc:"Ambil repo masradenbagus89-ui/dramaapp ke server dev." },
+      { side:"top",    status:"done", title:"Run Lokal",
+        desc:"npm install (47 paket) + npm run dev jalan di port 3002 (Next.js 16 + Turbopack)." },
+      { side:"bottom", status:"done", title:"Blocker Akses Publik",
+        desc:"Firewall & proxy block semua tunnel — diputuskan pindah ke deploy Vercel." },
+    ]
+  },
+  {
+    n: 1, title: "Fase 1 · Deploy & Arsitektur", date: "15–16 Mei 2026", status: "done",
+    features: [
+      { side:"top",    status:"done", title:"Vercel Deploy Live",
+        desc:"App online, bisa dibuka siapa saja di dramaapp.vercel.app." },
+      { side:"top",    status:"done", title:"Keputusan Arsitektur",
+        desc:"Vercel host app + file JSON, PC backup self-host video." },
+      { side:"bottom", status:"done", title:"Tolak Supabase & Oracle",
+        desc:"Storage Supabase terlalu kecil, Oracle Cloud terlalu ribet untuk setup." },
+    ]
+  },
+  {
+    n: 2, title: "Fase 2 · Pipeline Video", date: "16 Mei 2026", status: "done",
+    features: [
+      { side:"top",    status:"done", title:"Caddy + Cloudflared",
+        desc:"PC backup serve folder video (port 8088) lewat Cloudflare Quick Tunnel." },
+      { side:"top",    status:"done", title:"Env Video Base URL",
+        desc:"NEXT_PUBLIC_VIDEO_BASE_URL menggantikan path video hardcoded." },
+      { side:"bottom", status:"done", title:"Hardlink Episode",
+        desc:"Script rename file episode tidak konsisten jadi 1.mp4, 2.mp4, dst." },
+      { side:"bottom", status:"done", title:"Drama Pertama Live",
+        desc:"gadis-ini-tak-menyangka... (62 eps) bisa diputar end-to-end." },
+    ]
+  },
+  {
+    n: 3, title: "Fase 3 · Admin Form Self-Hosted", date: "16–17 Mei 2026", status: "done",
+    features: [
+      { side:"top",    status:"done", title:"API Tambah Drama",
+        desc:"/api/admin/drama commit dramas.json via GitHub REST API (read-modify-write)." },
+      { side:"top",    status:"done", title:"API Scan Episode",
+        desc:"/api/admin/scan auto-detect jumlah episode dari listing PC backup." },
+      { side:"bottom", status:"done", title:"Form Metadata-Only",
+        desc:"Admin cukup isi form — tidak ada lagi edit file JSON manual." },
+      { side:"bottom", status:"done", title:"Env GitHub Token",
+        desc:"GITHUB_TOKEN, REPO_OWNER, REPO_NAME ditambahkan di Vercel." },
+    ]
+  },
+  {
+    n: 4, title: "Fase 4 · Auto-Hardlink Agent", date: "17 Mei 2026", status: "done",
+    features: [
+      { side:"top",    status:"done", title:"Hardlink Agent",
+        desc:"hardlink-agent.js (port 8089) auto-rename + bikin hardlink file mentah." },
+      { side:"top",    status:"done", title:"Caddyfile Reverse-Proxy",
+        desc:"Caddy serve video + proxy /_agent/* ke agent di PC backup." },
+      { side:"bottom", status:"done", title:"API Hardlink",
+        desc:"/api/admin/hardlink jadi jembatan Vercel ke agent PC backup." },
+      { side:"bottom", status:"done", title:"Workflow 3-Klik",
+        desc:"Tambah drama: drop file → Scan & auto-hardlink → Simpan (~2 menit)." },
+    ]
+  },
+  {
+    n: 5, title: "Fase 5 · Automation Script", date: "19 Mei 2026", status: "done",
+    features: [
+      { side:"top",    status:"done", title:"start-dramaapp.ps1",
+        desc:"Satu command start agent + Caddy + cloudflared sekaligus." },
+      { side:"top",    status:"done", title:"Auto-Capture URL",
+        desc:"Script otomatis menangkap URL tunnel baru tiap PC restart." },
+      { side:"bottom", status:"done", title:"Auto-Update Vercel",
+        desc:"PATCH env var Vercel via API + trigger redeploy otomatis." },
+    ]
+  },
+  {
+    n: 6, title: "Fase 6 · Named Tunnel", date: "Berikutnya", status: "active",
+    features: [
+      { side:"top",    status:"plan", title:"Akun Cloudflare",
+        desc:"Daftar akun gratis + cloudflared tunnel login lewat browser." },
+      { side:"top",    status:"plan", title:"Buat Named Tunnel",
+        desc:"cloudflared tunnel create dramaapp-videos." },
+      { side:"bottom", status:"plan", title:"Config Permanen",
+        desc:"config.yml di ~/.cloudflared + route DNS ke tunnel." },
+      { side:"bottom", status:"plan", title:"URL Stabil Selamanya",
+        desc:"Stop rotasi URL manual — update Vercel terakhir kalinya." },
+    ]
+  },
+  {
+    n: 7, title: "Fase 7 · Polish & Scaling", date: "Rencana", status: "plan",
+    features: [
+      { side:"top",    status:"plan", title:"Fix Bug Slugify",
+        desc:"Naikkan limit slug 60 → 100 char biar judul panjang tidak terpotong." },
+      { side:"top",    status:"plan", title:"Auto-Start Service",
+        desc:"Agent/Caddy/cloudflared jalan sebagai Windows service (no manual restart)." },
+      { side:"top",    status:"plan", title:"Cache Headers",
+        desc:"Header cache di Caddyfile — viewer berulang jadi lebih cepat." },
+      { side:"bottom", status:"plan", title:"Keamanan Admin",
+        desc:"Ganti header x-admin-email dengan session/cookie auth yang proper." },
+      { side:"bottom", status:"plan", title:"Migrasi CDN",
+        desc:"Pindah video ke R2 / Bunny Stream kalau viewer sudah banyak." },
+      { side:"bottom", status:"plan", title:"Admin UX",
+        desc:"Preview URL video live + tombol Test Play sebelum simpan drama." },
+    ]
+  },
+];
+
+/* ============================================================
+   LAYOUT
+   ============================================================ */
+const PHASE_W = 210, PHASE_H = 104;
+const CARD_W = 232,  CARD_H = 116;
+const PHASE_GAP = 92;                 // jarak antar kolom fase
+const PHASE_STEP = PHASE_W + PHASE_GAP;
+const VGAP = 46;                      // jarak fase -> kartu pertama
+const CVGAP = 22;                     // jarak antar kartu
+const PAD = 90;
+
+const worldEl = document.getElementById("world");
+const nodesEl = document.getElementById("nodes");
+const svg = document.getElementById("links");
+const SVGNS = "http://www.w3.org/2000/svg";
+
+let nodes = [];   // {kind,x,y,w,h,data}
+let links = [];   // {x1,y1,x2,y2,status}
+
+function buildLayout() {
+  nodes = []; links = [];
+
+  ROADMAP.forEach((ph, i) => {
+    const cx = i * PHASE_STEP;        // pusat fase
+    // node fase
+    nodes.push({ kind:"phase", x: cx - PHASE_W/2, y: -PHASE_H/2, w:PHASE_W, h:PHASE_H, data: ph });
+
+    const top = ph.features.filter(f => f.side === "top");
+    const bot = ph.features.filter(f => f.side === "bottom");
+
+    top.forEach((f, k) => {
+      const cyc = -(PHASE_H/2 + VGAP + CARD_H/2 + k*(CARD_H+CVGAP));
+      nodes.push({ kind:"feat", x: cx - CARD_W/2, y: cyc - CARD_H/2, w:CARD_W, h:CARD_H, data: f });
+    });
+    bot.forEach((f, k) => {
+      const cyc = (PHASE_H/2 + VGAP + CARD_H/2 + k*(CARD_H+CVGAP));
+      nodes.push({ kind:"feat", x: cx - CARD_W/2, y: cyc - CARD_H/2, w:CARD_W, h:CARD_H, data: f });
+    });
+
+    // konektor vertikal (cabang)
+    if (top.length) {
+      const lastCy = -(PHASE_H/2 + VGAP + CARD_H/2 + (top.length-1)*(CARD_H+CVGAP));
+      links.push({ x1:cx, y1:-PHASE_H/2, x2:cx, y2:lastCy, status: ph.status });
+    }
+    if (bot.length) {
+      const lastCy = (PHASE_H/2 + VGAP + CARD_H/2 + (bot.length-1)*(CARD_H+CVGAP));
+      links.push({ x1:cx, y1:PHASE_H/2, x2:cx, y2:lastCy, status: ph.status });
+    }
+
+    // trunk horizontal ke fase berikutnya
+    if (i < ROADMAP.length - 1) {
+      const nx = (i+1) * PHASE_STEP;
+      links.push({ x1:cx+PHASE_W/2, y1:0, x2:nx-PHASE_W/2, y2:0,
+                   status: ROADMAP[i+1].status });
+    }
+  });
+
+  // hitung bounding box
+  let minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
+  nodes.forEach(n => {
+    minX=Math.min(minX,n.x); minY=Math.min(minY,n.y);
+    maxX=Math.max(maxX,n.x+n.w); maxY=Math.max(maxY,n.y+n.h);
+  });
+  const offX = PAD - minX, offY = PAD - minY;
+  nodes.forEach(n => { n.x+=offX; n.y+=offY; });
+  links.forEach(l => { l.x1+=offX; l.y1+=offY; l.x2+=offX; l.y2+=offY; });
+
+  const worldW = maxX-minX + PAD*2;
+  const worldH = maxY-minY + PAD*2;
+  worldEl.style.width  = worldW + "px";
+  worldEl.style.height = worldH + "px";
+  svg.setAttribute("width", worldW);
+  svg.setAttribute("height", worldH);
+  return { worldW, worldH };
+}
+
+const COLOR = { done:"#3fb950", active:"#d29922", plan:"#33445b" };
+
+function renderLinks() {
+  svg.innerHTML = "";
+  links.forEach(l => {
+    const line = document.createElementNS(SVGNS, "line");
+    line.setAttribute("x1", l.x1); line.setAttribute("y1", l.y1);
+    line.setAttribute("x2", l.x2); line.setAttribute("y2", l.y2);
+    line.setAttribute("stroke", COLOR[l.status] || COLOR.plan);
+    line.setAttribute("stroke-width", l.status==="plan" ? 2 : 3);
+    line.setAttribute("stroke-linecap", "round");
+    if (l.status === "plan") line.setAttribute("stroke-dasharray", "5 7");
+    svg.appendChild(line);
+  });
+}
+
+function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+const BADGE = { done:"SELESAI", active:"BERJALAN", plan:"RENCANA" };
+const MARK  = { done:"✓", active:"◐", plan:"" };
+
+function renderNodes() {
+  nodesEl.innerHTML = "";
+  nodes.forEach(n => {
+    const d = n.data;
+    const cls = d.status === "done" ? "done" : d.status === "active" ? "active" : "plan";
+    const el = document.createElement("div");
+    el.className = "node";
+    el.style.left = n.x + "px";
+    el.style.top  = n.y + "px";
+    el.style.width = n.w + "px";
+
+    if (n.kind === "phase") {
+      el.innerHTML =
+        '<div class="phase '+cls+'" style="height:'+n.h+'px">' +
+          '<div class="ptop">' +
+            '<div class="pnum">'+d.n+'</div>' +
+            '<div class="badge">'+BADGE[d.status]+'</div>' +
+          '</div>' +
+          '<div class="ptitle">'+esc(d.title)+'</div>' +
+          '<div class="pdate">'+esc(d.date)+'</div>' +
+        '</div>';
+    } else {
+      el.innerHTML =
+        '<div class="feat '+cls+'" style="height:'+n.h+'px">' +
+          '<div class="ftop">' +
+            '<div class="ftitle">'+esc(d.title)+'</div>' +
+            '<div class="check">'+MARK[d.status]+'</div>' +
+          '</div>' +
+          '<div class="fdesc">'+esc(d.desc)+'</div>' +
+        '</div>';
+    }
+    nodesEl.appendChild(el);
+  });
+}
+
+function renderCounters() {
+  let done=0, active=0, plan=0;
+  const tally = s => { if(s==="done")done++; else if(s==="active")active++; else plan++; };
+  ROADMAP.forEach(ph => { tally(ph.status); ph.features.forEach(f => tally(f.status)); });
+  document.getElementById("cDone").textContent   = done;
+  document.getElementById("cActive").textContent = active;
+  document.getElementById("cPlan").textContent   = plan;
+}
+
+/* ============================================================
+   PAN & ZOOM
+   ============================================================ */
+const viewport = document.getElementById("viewport");
+let zoom = 0.8, panX = 0, panY = 0;
+let world;
+
+function apply() {
+  worldEl.style.transform = "translate("+panX+"px,"+panY+"px) scale("+zoom+")";
+}
+function clamp(v,a,b){ return Math.max(a, Math.min(b, v)); }
+
+function fit() {
+  const vw = viewport.clientWidth, vh = viewport.clientHeight;
+  zoom = clamp((vh - 150) / world.worldH, 0.32, 1);
+  panX = 26;
+  panY = (vh - world.worldH*zoom)/2 + 30;
+  apply();
+}
+
+function zoomAt(cx, cy, factor) {
+  const r = viewport.getBoundingClientRect();
+  const mx = cx - r.left, my = cy - r.top;
+  const nz = clamp(zoom*factor, 0.3, 2);
+  const k = nz/zoom;
+  panX = mx - (mx-panX)*k;
+  panY = my - (my-panY)*k;
+  zoom = nz;
+  apply();
+}
+
+// drag pan
+let dragging=false, lastX=0, lastY=0, moved=false;
+viewport.addEventListener("pointerdown", e => {
+  dragging=true; moved=false; lastX=e.clientX; lastY=e.clientY;
+  viewport.classList.add("grabbing");
+  viewport.setPointerCapture(e.pointerId);
+});
+viewport.addEventListener("pointermove", e => {
+  if(!dragging) return;
+  const dx=e.clientX-lastX, dy=e.clientY-lastY;
+  if(Math.abs(dx)+Math.abs(dy)>3) moved=true;
+  panX+=dx; panY+=dy; lastX=e.clientX; lastY=e.clientY;
+  apply();
+});
+function endDrag(e){ dragging=false; viewport.classList.remove("grabbing"); }
+viewport.addEventListener("pointerup", endDrag);
+viewport.addEventListener("pointercancel", endDrag);
+
+// wheel zoom
+viewport.addEventListener("wheel", e => {
+  e.preventDefault();
+  zoomAt(e.clientX, e.clientY, e.deltaY < 0 ? 1.12 : 1/1.12);
+}, { passive:false });
+
+// buttons
+document.getElementById("zIn").onclick   = () => zoomAt(innerWidth/2, innerHeight/2, 1.2);
+document.getElementById("zOut").onclick  = () => zoomAt(innerWidth/2, innerHeight/2, 1/1.2);
+document.getElementById("zReset").onclick= () => fit();
+
+window.addEventListener("resize", () => { /* keep current view */ });
+
+/* ============================================================
+   INIT
+   ============================================================ */
+world = buildLayout();
+renderLinks();
+renderNodes();
+renderCounters();
+fit();
+</script>
+</body>
+</html>

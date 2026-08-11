@@ -16,8 +16,8 @@ aturannya sendiri: `CLAUDE.md` meng-`@import` `CLAUDE_universal_v1.md` tiap sesi
 
 ## Stack & jalur utama
 - **Runtime: Node.js 100%** (v2.0.0, lihat `docs/decisions/ADR-007` yang men-supersede ADR-003/004/005).
-  Seluruh alat PowerShell sudah **dihapus** — kit tidak lagi membawa `.ps1`/`.psd1`. (Satu-satunya sisa:
-  stub penyelamat `setup-pola-b.ps1` ~30 baris yang meng-exec `node setup-pola-b.mjs`, demi updater PS lama klien — dihapus di v3.)
+  Seluruh alat PowerShell sudah **dihapus** — kit tidak lagi membawa `.ps1`/`.psd1` (stub penyelamat
+  `setup-pola-b.ps1` ikut dihapus di v3; jalur resmi = `npx lintasai init`/`update`).
 - **Entry-point resmi:** `bin/lintasai.js` — dispatcher `npm create lintasai` / `npx lintasai <cmd>`.
   Memetakan perintah → port Node (`COMMANDS_NODE`). Dispatcher Node-murni; tak ada lagi registry PS.
 
@@ -27,7 +27,6 @@ aturannya sendiri: `CLAUDE.md` meng-`@import` `CLAUDE_universal_v1.md` tiap sesi
 - `setup-pola-b.mjs` — **installer Pola B** (salin kit → `.claude-kit/` + deploy berkas tim + kartu identitas).
 - `update-kit.mjs` — **updater** (re-clone + backup + setup, rollback-safe).
 - `uninstall.mjs` — **uninstaller** via manifest sha256.
-- `team-setup.mjs`, `install-windows.mjs` — setup tim + installer global (Pola A).
 - `lib/` — **helper engine** (Node `*.mjs`). Inti:
   - `consistency-check.mjs` — **robot kecocokan SSOT** (versi + fakta jumlah file-tim). MODE KIT + PROJECT.
   - `manifest.mjs` + `manifest-signing.mjs` — catatan-pasang + tanda tangan HMAC (integritas, tulis-atomik).
@@ -35,7 +34,6 @@ aturannya sendiri: `CLAUDE.md` meng-`@import` `CLAUDE_universal_v1.md` tiap sesi
   - `project-detect.mjs`, `project-manifest.mjs`, `stack-check.mjs` — deteksi stack + kartu identitas project.
   - `split-guard.mjs` — robot anti-bocor `.env` saat pecah-repo.
   - `unicode-safety-check.mjs` — pemindai "huruf-tipuan" Unicode.
-  - `project-card-migrate.mjs` — migrator kartu identitas `.psd1` (era-v1) → `.jsonc`.
   - `rollback.mjs` — balikin berkas project dari backup.
   - `risk-gate.js` — Palang Rem aksi berisiko (hook `PreToolUse`, default NYALA sejak v1.61.0).
   - `kit-files.json` (+ `kit-files.mjs`) — **SUMBER daftar berkas kit** (dibaca runtime via `JSON.parse`; pembaca dua-format juga menerima `.psd1` era-v1 untuk doctor lintas-versi).
@@ -47,7 +45,7 @@ aturannya sendiri: `CLAUDE.md` meng-`@import` `CLAUDE_universal_v1.md` tiap sesi
 
 ## Berkas aturan (akar) — yang auto-load tiap sesi
 - `CLAUDE.md` → `@import CLAUDE_universal_v1.md` — **aturan inti AI** (auto-load tiap sesi, di repo & client).
-- `workflows/` — rak detail rujukan **on-demand** pecah-per-seksi (TIDAK auto-load → hemat token; `workflows/INDEX.md` = daftar isi; `LINTASAI_WORKFLOWS_v1.md` = pengalih tipis; dijaga `lib/workflows-ref-check.mjs`).
+- `rules/` — rak detail rujukan **on-demand** pecah-per-seksi (TIDAK auto-load → hemat token; `rules/INDEX.md` = daftar isi; `LINTASAI_WORKFLOWS_v1.md` = pengalih tipis; dijaga `engine/rules-ref-check.mjs`).
 - `README.md`, `CHANGELOG.md`, `JALANKAN_KIT.md` — dokumen pendukung.
 
 ## Alur kerja (perintah utama)
@@ -55,14 +53,14 @@ aturannya sendiri: `CLAUDE.md` meng-`@import` `CLAUDE_universal_v1.md` tiap sesi
 - **Update:** `npx lintasai update` → `update-kit.mjs`. **Copot:** `npx lintasai uninstall` → `uninstall.mjs`.
 - **Gerbang pra-rilis (WAJIB lulus sebelum "selesai", §4.6):** `npm run preflight` (`tests/preflight.mjs`) —
   tes Node + ESLint + robot kecocokan + pemindai Unicode + smoke Node + cek CHANGELOG.
-- **Naikkan versi:** `node kit.mjs bump X.Y.Z` (penulis cap-versi `lib/consistency-check.mjs`).
+- **Naikkan versi:** `node kit.mjs bump X.Y.Z` (penulis cap-versi `engine/consistency-check.mjs`).
 
 ## SSOT — di mana fakta "tinggal" (JANGAN duplikasi tanpa penjaga)
 - `docs/PETA_SUMBER_KEBENARAN.md` — di mana tiap fakta tinggal + jenisnya (1-sumber sejati / duplikat+pengecek / prosa). *(internal — hanya di repo GitHub kit)*
 - `docs/RESEP_PERUBAHAN.md` — berkas mana ikut bergerak per jenis perubahan + cara jalankan robot.
-- Robot penjaga drift: `lib/consistency-check.mjs` (jalan otomatis di preflight + tes Node).
+- Robot penjaga drift: `engine/consistency-check.mjs` (jalan otomatis di preflight + tes Node).
 
 ## Konvensi penting
-- **Fakta robot** (versi/jumlah file-tim) diubah di `lib/consistency-check.mjs` (`KIT_FACTS`/`KIT_VERSION_CHECKS`); daftar berkas-tim di `setup-pola-b.mjs` (blok `teamFiles`) — dijaga tes Node.
+- **Fakta robot** (versi/jumlah file-tim) diubah di `engine/consistency-check.mjs` (`KIT_FACTS`/`KIT_VERSION_CHECKS`); daftar berkas-tim di `setup-pola-b.mjs` (blok `teamFiles`) — dijaga tes Node.
 - **Read-before-Edit** (§7.3a) + **gerbang preflight** (§4.6) sebelum menyatakan "selesai".
 - Keputusan teknis non-sepele → ADR di `docs/decisions/`.

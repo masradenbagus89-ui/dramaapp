@@ -22,6 +22,8 @@ ehthumbs_vista.db
 *.backup-*
 *.bak
 *.old
+# Cadangan snapshot ber-tanda pra-refactor (isi lama sudah aman di git history) — jangan dilacak lagi
+*.pre-*.txt
 
 # Log
 *.log
@@ -71,6 +73,18 @@ testResults.xml
 # Eksperimen / pilot lokal (benchmark, fixture coba-coba) — tidak untuk rilis
 experiments/
 
-# Berkas aturan Kimi Code yang DIBUAT OTOMATIS (lib/kimi-agents-gen.mjs) — artefak generated,
+# Berkas aturan Kimi Code yang DIBUAT OTOMATIS (engine/adapter-rules-gen.mjs) — artefak generated,
 # bukan sumber. Dibuat saat install ke client / dogfood lokal; regenerate dari CLAUDE_universal_v1.md.
 .kimi-code/
+
+# Berkas aturan Cursor yang DIBUAT OTOMATIS (generator yang sama, v4 Tugas 10) — artefak generated.
+.cursor/rules/lintasai.mdc
+
+# Blok aturan Codex di AGENTS.md AKAR repo kit — DIBUAT OTOMATIS (runCodexAgentsGen) sejak kernel
+# muat gerbang 32 KiB (perampingan microkernel 2026-07-22) — artefak generated, bukan sumber.
+# (Hanya untuk repo kit ini; AGENTS.md milik CLIENT tidak pernah di-ignore.)
+/AGENTS.md
+
+# Ditambah otomatis oleh pemasang lintasAI (cegah kebocoran rahasia + metadata):
+*.env
+*.env.local

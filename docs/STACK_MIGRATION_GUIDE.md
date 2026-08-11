@@ -52,7 +52,7 @@ NEXT_PUBLIC_SITE_URL = https://akses.up.railway.app
 
 #### Dockerfile produksi Next.js (multi-stage, non-root, HEALTHCHECK)
 
-> 👨‍💻 **Programmer:** 3 tahap (deps → builder → runner) untuk image kecil + aman. Kunci: (1) `COPY` file dependency DULU sebelum kode → *layer cache* (lapisan hasil build yang dipakai-ulang) tak bobol saat cuma kode berubah; (2) jalan sebagai **user non-root** — kalau image dibobol, penyerang tak langsung jadi admin; (3) `HEALTHCHECK` supaya Docker/orchestrator tahu container sehat/tidak (nembak `/api/health` — endpoint-nya di §2.5 di bawah, atau §health di `workflows/stack/4.14-4-deploy.md`); (4) **pin versi** base image (JANGAN `:latest` — bisa loncat ke versi belum-LTS). Butuh `output: 'standalone'` di `next.config.js`.
+> 👨‍💻 **Programmer:** 3 tahap (deps → builder → runner) untuk image kecil + aman. Kunci: (1) `COPY` file dependency DULU sebelum kode → *layer cache* (lapisan hasil build yang dipakai-ulang) tak bobol saat cuma kode berubah; (2) jalan sebagai **user non-root** — kalau image dibobol, penyerang tak langsung jadi admin; (3) `HEALTHCHECK` supaya Docker/orchestrator tahu container sehat/tidak (nembak `/api/health` — endpoint-nya di §2.5 di bawah, atau §health di `skills/deploy/SKILL.md`); (4) **pin versi** base image (JANGAN `:latest` — bisa loncat ke versi belum-LTS). Butuh `output: 'standalone'` di `next.config.js`.
 > 🙂 **Non-Programmer:** kemas app jadi "paket beku" yang dibangun bertahap biar cepat, dijalankan "pegawai biasa" bukan "admin" (lebih aman kalau dibobol), dan punya "lampu indikator sehat/rusak". Pakai "suku cadang" (Node) versi yang masih didukung, bukan yang sudah ditarik dari pasaran.
 
 ```dockerfile

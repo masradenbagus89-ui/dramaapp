@@ -25,13 +25,12 @@ AI yang baca prompt ini: auto-detect stage dari first user message, atau tanya k
 > v1 · 2026-05-30 · pasangan CLAUDE.md universal
 
 ## Peran kamu
-Kamu BUKAN satu engineer - kamu **9 peran lintas-divisi sekaligus** dalam satu otak: **Backend, Frontend, FullStack, DevOps, Security, DBA, UX/Web, SEO, Owner (bisnis)** (ini "Peran AI" §1). *(Catatan: ini PERAN — beda dari **8 skill divisi WAJIB** §4.13 yang jadi lantai kerja; jangan campurkan kedua daftar.)* Tiap keputusan ditimbang dari ke-9 sudut pandang itu; kalau satu sudut menang sambil merusak yang lain, itu solusi gagal. Sebutkan singkat trade-off lintas-divisi saat keputusan kamu non-obvious.
+Kamu BUKAN satu engineer - kamu **9 peran lintas-divisi sekaligus** dalam satu otak: **Backend, Frontend, FullStack, DevOps, Security, DBA, UX/Web, SEO, Owner (bisnis)** (ini "Peran AI" §1). *(Catatan: ini PERAN — beda dari **perpustakaan rujukan** §4.13 yang jadi bahan kerja; jangan campurkan kedua daftar.)* Tiap keputusan ditimbang dari ke-9 sudut pandang itu; kalau satu sudut menang sambil merusak yang lain, itu solusi gagal. Sebutkan singkat trade-off lintas-divisi saat keputusan kamu non-obvious.
 
 ## Sumber aturan
-Aturan kerja inti ada di SALAH SATU dari ini (cek dulu mana yang aktif):
-- **Pola A (install global):** `%USERPROFILE%\.claude\CLAUDE.md`
-- **Pola B (embed di proyek):** `./.claude-kit/CLAUDE_universal_v1.md` (cek juga `./AGENTS.md` untuk override + path resolution rule)
-- **Override per proyek (kedua pola):** `./AGENTS.md` atau `./CLAUDE.md` di root proyek
+Aturan kerja inti (kit terpasang per-project):
+- **Kit:** `./.claude-kit/CLAUDE_universal_v1.md` (cek juga `./AGENTS.md` untuk override + path resolution rule)
+- **Override per proyek:** `./AGENTS.md` atau `./CLAUDE.md` di root proyek
 
 **Cek dulu sebelum mulai:** ada `./AGENTS.md` di root proyek? Kalau iya, baca dulu - termasuk Path Resolution rule yang ngasih tau cara translate path `~/.claude/` → `./.claude-kit/`. Kalau permintaan user bentrok dengan aturan, ikuti tie-breaker: keamanan/privasi → benar & bebas bug → mudah dipahami junior → hemat token. Konfirmasi ke user kalau bentrokannya signifikan.
 
@@ -96,7 +95,7 @@ Konfirmasi kamu sudah baca `CLAUDE.md`/`AGENTS.md` di proyek ini, lalu mulai tas
 
 # Stage 2 — Bikin Catatan Proyek (Bootstrap Docs)
 > v2.3 · 2026-06-01 · **BULK-GENERATE TOOL** untuk `.md` pendamping
-> 2 cara invoke: (A) **on-demand manual** - user paste prompt ini; (B) **auto-triggered dari JALANKAN_KIT.md** - Popup #1 di Step 8, pilih **[1] LENGKAP (rekomendasi)** (atau Enter/default) -> auto bulk-bootstrap docs + schema scan, AI jalankan workflow ini internally. Mode FASE 5 default "approve all per kategori" (efisien) - user boleh switch ke per-file approval kalau butuh review ketat.
+> 2 cara invoke: (A) **on-demand manual** - user paste prompt ini / ketik "buat peta project sekarang"; (B) **auto internal dari JALANKAN_KIT.md** - saat AI membuat denah **LENGKAP** (peta project + schema scan) untuk project berisi kode — sejak v2.10.0 ini dipicu on-demand (bukan lagi dari popup Setup Mode yang sudah dibongkar). Mode FASE 5 default "approve all per kategori" (efisien) - user boleh switch ke per-file approval kalau butuh review ketat.
 
 ## Kapan pakai prompt ini?
 
@@ -105,8 +104,8 @@ Paste prompt ini di sesi AI **HANYA KALAU** (manual invocation):
 - ✅ Proyek setengah jadi (skenario adopsi `(c)`) dan ingin docs cepat catch-up sebelum kerja task biasa.
 - ✅ Migration dari proyek lain - banyak file CRITICAL pre-existing tanpa dokumentasi.
 
-Atau, **otomatis di-trigger** saat user paste `JALANKAN_KIT.md` dan:
-- ✅ User memilih **[1] LENGKAP** di Popup #1 (lihat header Stage 2 di atas) -> AI jalankan workflow ini internally dengan universal exhaustive scan (no cap) + auto-subfolder grouping.
+Atau, **otomatis di-trigger internal** saat:
+- ✅ AI membuat denah **LENGKAP** (peta project penuh) untuk project berisi kode — dipicu on-demand ("buat peta project sekarang") atau saat AI genuinely butuh context lengkap -> AI jalankan workflow ini internally dengan universal exhaustive scan (no cap) + auto-subfolder grouping.
 
 **JANGAN paste prompt ini kalau**:
 - ❌ Proyek baru / kosong (cukup paste `PROJECT_LIFECYCLE_PROMPT_v1.md` Stage 1: Kickoff).
@@ -114,7 +113,7 @@ Atau, **otomatis di-trigger** saat user paste `JALANKAN_KIT.md` dan:
 - ❌ Tidak yakin file CRITICAL apa saja (biar dibuat on-demand saat user kerja per-file).
 
 > **Kenapa default on-demand (bukan bulk)?** Bulk-generate boros token (10 file × ~50 baris × tokens = mahal), dan banyak file mungkin tidak relevan ke task user. On-demand = pay-as-you-use.
-> **Pengecualian**: kalau di-trigger dari JALANKAN_KIT → user sudah eksplisit pilih **[1] LENGKAP** di Popup #1 (lihat header Stage 2) = consent untuk bulk. FASE 5 default approve-all per kategori untuk efisiensi (per-file mode tetap available kalau user explicit minta).
+> **Pengecualian**: kalau user minta denah **LENGKAP** on-demand ("buat peta project sekarang") = consent untuk bulk. FASE 5 default approve-all per kategori untuk efisiensi (per-file mode tetap available kalau user explicit minta).
 
 ## Tujuan prompt ini
 1. **Auto-detect tech stack** (lewat manifest: `package.json` / `pyproject.toml` / `go.mod` / `composer.json` / dll)
@@ -130,7 +129,7 @@ Atau, **otomatis di-trigger** saat user paste `JALANKAN_KIT.md` dan:
 Kamu adalah **Senior Tech Writer + Architect**. Tujuanmu: bikin dokumentasi yang **akurat** untuk proyek ini - bukan boilerplate generik. Output dibaca developer junior Bahasa Indonesia + AI di sesi berikutnya (sebagai context hemat token).
 
 ### Aturan kerja inti
-- **Cek dulu Pola yang aktif:** kalau ada `./AGENTS.md` + `./.claude-kit/`, ini Pola B - baca aturan dari `./.claude-kit/CLAUDE_universal_v1.md` + ikuti Path Resolution rule di `./AGENTS.md`. Kalau tidak ada, ini Pola A - baca `%USERPROFILE%\.claude\CLAUDE.md`.
+- **Cek kit terpasang:** baca aturan dari `./.claude-kit/CLAUDE_universal_v1.md` + ikuti Path Resolution rule di `./AGENTS.md`. Kalau `./.claude-kit/` tidak ada → minta user pasang kit dulu (`npm create lintasai`).
 - **Bahasa Indonesia, junior-friendly** - definisikan jargon, pakai analogi singkat.
 - **PRIORITAS: akurasi > kelengkapan.** Lebih baik `[TBD: <alasan>]` daripada karang.
 - **JANGAN mengarang.** Setiap klaim traceable ke file/baris.
@@ -197,7 +196,7 @@ Glob recursive di SEMUA folder source umum (`src/`, `app/`, `lib/`, `internal/`,
 
 **Adaptive grouping per project structure**: kalau project punya folder `inbox/`, `users/`, `payment/` di source, AI auto-bikin `docs/inbox/`, `docs/users/`, `docs/payment/` mengikuti struktur.
 
-Total kandidat di-display ke user (per kategori + per subfolder). Saat di-trigger via JALANKAN_KIT, bulk-bootstrap sudah disetujui lewat Popup #1 **[1] LENGKAP** (lihat header Stage 2) - atau eksplisit di prompt manual.
+Total kandidat di-display ke user (per kategori + per subfolder). Saat dipicu denah **LENGKAP** on-demand ("buat peta project sekarang"), bulk-bootstrap sudah disetujui lewat permintaan itu - atau eksplisit di prompt manual.
 
 #### FASE 4 - Generate `docs/<basename>.md` pendamping
 Untuk tiap CRITICAL file yang lolos prioritas:
@@ -270,7 +269,7 @@ Prompt ini untuk **bulk refresh** `.md` pendamping kalau backlog menumpuk (mis. 
 Kamu adalah **Senior Tech Writer Maintainer**. Tujuan: pastikan semua `.md` di `docs/` **akurat** terhadap state code sekarang. Bahasa Indonesia, junior-friendly.
 
 ### Aturan kerja
-- Patuhi `CLAUDE_universal_v1.md` (atau `~/.claude/CLAUDE.md` kalau Pola A) seksi 7 - format `.md` standar.
+- Patuhi `CLAUDE_universal_v1.md` seksi 7 - format `.md` standar.
 - **JANGAN overwrite tanpa konfirmasi** - selalu tampilkan diff dulu sebelum write.
 - **Akurasi > kelengkapan** - kalau ragu, tulis `[TBD: <konteks>]` daripada karang.
 - Anggap `.md` di `docs/` PRIMARY source (kalau yang sudah ada masih relevan). Tambah/ubah HANYA section yang AFFECTED oleh perubahan code.
@@ -359,16 +358,13 @@ Filosofi: **bentrok OK**, **perbaikan bertahap** (boy scout rule: tinggalkan leb
 ### Peran AI
 Kamu adalah **Code Archaeologist + Migration Planner**. Tujuanmu: pahami state proyek sekarang, bandingkan dengan standar tim, bikin plan migrasi bertahap yang **tidak mengganggu produksi**. JANGAN refactor di sesi pertama - audit dulu, plan, lalu eksekusi quick wins dengan konfirmasi per langkah.
 
-### Langkah 0 - Cek Pola (Pola A vs Pola B)
-SEBELUM mulai audit, cek dulu Pola mana yang aktif:
-- **Ada `./.claude-kit/` + `./AGENTS.md` di root proyek?** → Pola B. Baca `./AGENTS.md` dulu (termasuk **Path Resolution rule**). Saat prompt ini sebut `~/.claude/...`, ganti pakai `./.claude-kit/...`.
-- **Tidak ada `./.claude-kit/`?** → Pola A (install global). Pakai path `%USERPROFILE%\.claude\...` apa adanya.
-- **Tidak ada keduanya?** → STOP, kasih tahu user untuk setup kit dulu (lihat README kit).
+### Langkah 0 - Cek kit terpasang
+SEBELUM mulai audit:
+- **Ada `./.claude-kit/` + `./AGENTS.md` di root proyek?** → Baca `./AGENTS.md` dulu (termasuk **Path Resolution rule**). Saat prompt ini sebut `~/.claude/...`, ganti pakai `./.claude-kit/...`.
+- **Tidak ada?** → STOP, kasih tahu user untuk setup kit dulu (`npm create lintasai`).
 
 ### Aturan kerja
-- Patuhi aturan global di kit (auto-detect Pola lewat Langkah 0):
-  - **Pola A:** `%USERPROFILE%\.claude\CLAUDE.md`
-  - **Pola B:** `./.claude-kit/CLAUDE_universal_v1.md`
+- Patuhi aturan kit: `./.claude-kit/CLAUDE_universal_v1.md`.
 - Patuhi `./AGENTS.md` atau `./CLAUDE.md` proyek kalau ada - itu override sebagian global untuk proyek ini.
 - **Bentrok aturan global vs konvensi proyek:** konvensi proyek menang untuk code yang sudah ada. Standar global berlaku untuk code BARU.
 - Bahasa Indonesia, ramah junior, definisikan jargon.
@@ -436,7 +432,7 @@ Code lama yang masih jalan tidak diganggu kecuali ada alasan kuat.
 ## Migration Plan
 
 ### Quick Wins (eksekusi sekarang, <30 menit, tanpa risiko)
-- [ ] Buat `docs/architecture.md` dari template kit (Pola A: `%USERPROFILE%\.claude\templates\architecture.md` · Pola B: `./.claude-kit/templates/architecture.md`) - kerangka awal (skeleton) + isi 30% bagian yang sudah jelas dari hasil audit
+- [ ] Buat `docs/architecture.md` dari template kit (`./.claude-kit/templates/architecture.md`) - kerangka awal (skeleton) + isi 30% bagian yang sudah jelas dari hasil audit
 - [ ] Buat `docs/glossary.md` dari template + isi 5-10 istilah domain yang sudah ketemu dari schema/route
 - [ ] Tambah `.gitignore` baris standar (mis. `.env`, `*.bak`)
 - [ ] <Quick Win lain spesifik proyek>

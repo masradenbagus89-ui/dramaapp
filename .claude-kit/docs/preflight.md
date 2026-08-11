@@ -1,12 +1,12 @@
 # preflight.md - Gerbang Pra-Rilis 1-perintah (`npm run preflight` / `npx lintasai preflight`)
 
-> Versi 9 · 2026-07-10 · user-written (Tahap A skrip + Tahap D gerbang CI + Tahap E sebar ke klien; cetak-biru `docs/plans/BUKU_PELAJARAN_DAN_PREFLIGHT.md`).
-> v9 (Paket C v2.0.0 — bangunkan robot tidur): sambung **Kunci env** (`lib/env-keys-check.mjs`, `runEnvKeys` — banding NAMA kunci `.env.example` vs `.env.local`, cegah crash "jalan di lokal, mati saat online"; RAPIKAN non-blokir, tiap run) + **Mutu kode per-bahasa** (`lib/stack-check.mjs`, `runStackCheck` — tsc / `npm audit` CVE / ruff / bandit dll; **HANYA `--strict`**, eslint di-exclude anti-dobel, dibungkus RAPIKAN owner-gated, gagal-jaringan `npm audit` = INFO dilewati). Keduanya dikunci `tests/preflight-robot-baru.test.mjs` (DILARANG memblokir gerbang). Template CI klien (`templates/github/workflows/preflight.yml`) dapat langkah **build kondisional Next.js** supaya robot anggaran-halaman punya bahan ukur (dulu auto-lewat tanpa `.next/`).
+> Versi 9 · 2026-07-10 · user-written (Tahap A skrip + Tahap D gerbang CI + Tahap E sebar ke klien; cetak-biru = rencana internal Buku Pelajaran + Preflight, riwayat git).
+> v9 (Paket C v2.0.0 — bangunkan robot tidur): sambung **Kunci env** (`engine/env-keys-check.mjs`, `runEnvKeys` — banding NAMA kunci `.env.example` vs `.env.local`, cegah crash "jalan di lokal, mati saat online"; RAPIKAN non-blokir, tiap run) + **Mutu kode per-bahasa** (`engine/stack-check.mjs`, `runStackCheck` — tsc / `npm audit` CVE / ruff / bandit dll; **HANYA `--strict`**, eslint di-exclude anti-dobel, dibungkus RAPIKAN owner-gated, gagal-jaringan `npm audit` = INFO dilewati). Keduanya dikunci `tests/preflight-robot-baru.test.mjs` (DILARANG memblokir gerbang). Template CI klien (`templates/github/workflows/preflight.yml`) dapat langkah **build kondisional Next.js** supaya robot anggaran-halaman punya bahan ukur (dulu auto-lewat tanpa `.next/`).
 > v4: tambah **lama-waktu per-pemeriksa + total** (transparansi — BUKAN paralelisasi tes berat, yang berisiko flaky) + **pesan error ramah non-programmer**.
 > v5: tambah **opt-in gerbang CI di project KLIEN** (`npx lintasai enable-preflight-ci`) — backstop MESIN supaya robot mutu tak cuma jalan saat AI ingat (audit 2026-06-28, PENTING #2).
-> v6: sambung **pemeriksa Keamanan config-AI** (`lib/ai-config-check.mjs`) ke gerbang — jalan otomatis, **NON-BLOCKING (SARAN owner-gated)** (Tingkat 2 migrasi PS→Node, 2026-07-08). Sekalian lengkapi tabel pemeriksa dengan 2 baris yang sudah ada di kode tapi belum terdaftar (**Anggaran ukuran halaman** + **Registry docs**).
-> v7: sambung **pemeriksa Error-ditelan-diam** (`lib/swallowed-error-check.mjs`) ke gerbang — jalan otomatis, **MODE-PERINGATAN (RAPIKAN, TIDAK memblokir)**; deteksi blok `catch`/`except` KOSONG yang menelan error tanpa pesan (Willey borrow Item #1, 2026-07-08).
-> v8: tambah penjaga **Naik versi skema artefak — Keranjang 1** (`checkSchemaRaiseBreaking`, mode kit): angka peta `lib/expected-schema.mjs` naik tanpa `[BREAKING]` = GENTING; label ada tapi Migration Steps / SIMULASI / entri `UPGRADING.md` (bagian "Riwayat pindah-versi") kurang = PENTING; angka turun / entri hilang = PENTING (Langkah 4+5 `docs/plans/STRATEGI_UPDATE_v2.md`).
+> v6: sambung **pemeriksa Keamanan config-AI** (`engine/ai-config-check.mjs`) ke gerbang — jalan otomatis, **NON-BLOCKING (SARAN owner-gated)** (Tingkat 2 migrasi PS→Node, 2026-07-08). Sekalian lengkapi tabel pemeriksa dengan 2 baris yang sudah ada di kode tapi belum terdaftar (**Anggaran ukuran halaman** + **Registry docs**).
+> v7: sambung **pemeriksa Error-ditelan-diam** (`engine/swallowed-error-check.mjs`) ke gerbang — jalan otomatis, **MODE-PERINGATAN (RAPIKAN, TIDAK memblokir)**; deteksi blok `catch`/`except` KOSONG yang menelan error tanpa pesan (Willey borrow Item #1, 2026-07-08).
+> v8: tambah penjaga **Naik versi skema artefak — Keranjang 1** (`checkSchemaRaiseBreaking`, mode kit): angka peta `engine/expected-schema.mjs` naik tanpa `[BREAKING]` = GENTING; label ada tapi Migration Steps / SIMULASI / entri `UPGRADING.md` (bagian "Riwayat pindah-versi") kurang = PENTING; angka turun / entri hilang = PENTING (Langkah 4+5 rencana internal STRATEGI_UPDATE_v2, riwayat git).
 
 ## Tujuan
 
@@ -14,7 +14,7 @@ Satu perintah yang menjalankan **semua pemeriksa mutu sekaligus** + menambah **c
 
 Masalah yang dipecahkan: dulu pemeriksa dijalankan **manual satu-satu** → gampang "lupa cek sesuatu", dan **tidak ada** cek kelengkapan rilis (mis. versi naik tapi `CHANGELOG.md` belum punya entrinya). Sekarang: `npm run preflight`.
 
-- **👨‍💻 Programmer:** orkestrator Node (`tests/preflight.mjs`) yang me-reuse robot yang sudah ada (`lib/consistency-check.mjs`, `lib/unicode-safety-check.mjs`, parser CHANGELOG `lib/version-detect.mjs`) + men-spawn tes Node, ESLint, smoke Node. Memilah temuan ke severity + exit-code. (v2.0.0: gerbang 100% Node — tak ada lagi Pester/PowerShell.)
+- **👨‍💻 Programmer:** orkestrator Node (`tests/preflight.mjs`) yang me-reuse robot yang sudah ada (`engine/consistency-check.mjs`, `engine/unicode-safety-check.mjs`, parser CHANGELOG `engine/version-detect.mjs`) + men-spawn tes Node, ESLint, smoke Node. Memilah temuan ke severity + exit-code. (v2.0.0: gerbang 100% Node — tak ada lagi Pester/PowerShell.)
 - **🙂 Non-Programmer:** kayak **satu tombol "Cek Kesehatan" di BCA mobile** — sekali tekan, semua diperiksa (saldo + tagihan + keamanan) lalu kasih ringkasan, bukan kamu cek satu per satu. Di sini: sekali ketik `npm run preflight`, semua pemeriksa jalan + kasih lampu hijau/kuning/merah.
 
 ## Cara Pakai
@@ -53,17 +53,18 @@ Bendera (flag):
 
 | Pemeriksa | Sumber | Kalau gagal |
 |---|---|---|
+| **Build aplikasi** | `npm run build` milik klien (`tests/preflight.mjs::runAppBuild`) | **GENTING** kalau build gagal; INFO kalau project tak punya script `build` / mode kit |
 | Tes Node | `tests/run-node-tests.mjs` | GENTING |
 | ESLint | `node_modules/eslint` (di-`npm ci`) | GENTING (PENTING kalau eslint belum terpasang) |
-| Robot kecocokan versi | `lib/consistency-check.mjs` (MODE KIT, atau MODE PROJECT via `docs/consistency-map.jsonc`) | GENTING (drift versi/fakta) |
-| Pemindai huruf-tipuan (Unicode) | `lib/unicode-safety-check.mjs` | GENTING (potensi serangan tersembunyi) |
-| Anggaran ukuran halaman (Next.js) | `lib/perf-budget.mjs` (paling berguna setelah `npm run build`) | RAPIKAN kalau ada route lewat anggaran; INFO kalau belum build / bukan Next.js |
-| Keamanan config-AI (`.mcp.json`/settings/skill) | `lib/ai-config-check.mjs` | **RAPIKAN — SARAN owner-gated, TIDAK memblokir** (severity asli GENTING/PENTING/RAPIKAN dicetak di detail); INFO kalau tak ada berkas config |
-| Error-ditelan-diam (catch/except kosong) | `lib/swallowed-error-check.mjs` | **RAPIKAN — SARAN mode-peringatan, TIDAK memblokir** (mutu-kode reversible + robot baru tanpa eval laju-alarm-palsu); OK kalau bersih. Bisa dinaikkan ke PENTING setelah eval |
+| Robot kecocokan versi | `engine/consistency-check.mjs` (MODE KIT, atau MODE PROJECT via `docs/consistency-map.jsonc`) | GENTING (drift versi/fakta) |
+| Pemindai huruf-tipuan (Unicode) | `engine/unicode-safety-check.mjs` | GENTING (potensi serangan tersembunyi) |
+| Anggaran ukuran halaman (Next.js) | `engine/perf-budget.mjs` (paling berguna setelah `npm run build`) | RAPIKAN kalau ada route lewat anggaran; INFO kalau belum build / bukan Next.js |
+| Keamanan config-AI (`.mcp.json`/settings/skill) | `engine/ai-config-check.mjs` | **RAPIKAN — SARAN owner-gated, TIDAK memblokir** (severity asli GENTING/PENTING/RAPIKAN dicetak di detail); INFO kalau tak ada berkas config |
+| Error-ditelan-diam (catch/except kosong) | `engine/swallowed-error-check.mjs` | **RAPIKAN — SARAN mode-peringatan, TIDAK memblokir** (mutu-kode reversible + robot baru tanpa eval laju-alarm-palsu); OK kalau bersih. Bisa dinaikkan ke PENTING setelah eval |
 | Entri CHANGELOG utk versi package.json | `CHANGELOG.md` | GENTING kalau hilang |
 | Isi entri CHANGELOG teratas | `CHANGELOG.md` | PENTING kalau masih teks-contoh kerangka |
 | Versi vs tag terakhir | `git tag` + `package.json` | PENTING kalau breaking tanpa naik BESAR / downgrade; selain itu INFO |
-| Naik versi skema artefak — Keranjang 1 (mode kit saja) | `lib/expected-schema.mjs` vs `git show <tag terakhir>` + `UPGRADING.md` | **GENTING** kalau angka peta naik TANPA `[BREAKING]` di entri CHANGELOG teratas; PENTING kalau label ada tapi nama artefak / "Migration Steps" / langkah SIMULASI / entri `UPGRADING.md` belum ditulis, atau angka TURUN / entri hilang dari peta; INFO kalau tag git tak ada (Resep 9 `RESEP_PERUBAHAN.md` + Dua Keranjang §4.5 WORKFLOWS) |
+| Naik versi skema artefak — Keranjang 1 (mode kit saja) | `engine/expected-schema.mjs` vs `git show <tag terakhir>` + `UPGRADING.md` | **GENTING** kalau angka peta naik TANPA `[BREAKING]` di entri CHANGELOG teratas; PENTING kalau label ada tapi nama artefak / "Migration Steps" / langkah SIMULASI / entri `UPGRADING.md` belum ditulis, atau angka TURUN / entri hilang dari peta; INFO kalau tag git tak ada (Resep 9 `RESEP_PERUBAHAN.md` + Dua Keranjang §4.5 WORKFLOWS) |
 | Tes untuk perubahan kode | `git diff <tag>..HEAD` | RAPIKAN kalau kode berubah tanpa tes |
 
 > Catatan: untuk pemeriksa yang menjalankan tes, kalau prosesnya **lulus (exit 0) tapi jumlah tes tak terbaca** (format output berubah) → dilaporkan PENTING (fail-closed), bukan diam-diam OK.
@@ -76,13 +77,16 @@ Saat dijalankan di project yang BUKAN repo kit (`package.json` `name` ≠ `linta
 
 | Pemeriksa | Mode KIT | Mode PROJECT (klien) |
 |---|---|---|
+| **Build aplikasi** | INFO dilewati (kit = paket CLI, bukan aplikasi web) | `npm run build` klien → **GENTING kalau gagal**; INFO kalau tak ada script `build` |
 | Tes | `tests/run-node-tests.mjs` (suite kit) → GENTING kalau gagal | `npm test` **milik klien** (kontrak universal: jest/vitest/mocha/node:test) → GENTING kalau gagal; **RAPIKAN** kalau klien belum punya script `test` / masih teks-contoh npm (tak memblokir) |
 | ESLint | GENTING kalau ada error; PENTING kalau eslint belum di-`npm ci` | sama, tapi **RAPIKAN** kalau eslint tak terpasang (opsional di klien — tak memblokir rilis) |
 | Robot kecocokan | MODE KIT (`$KitFacts`) | baca `docs/consistency-map.jsonc` klien; **RAPIKAN** (saran lembut) kalau belum ada — tak memblokir rilis |
 | CHANGELOG / versi | wajib → GENTING kalau hilang/drift | ketiadaan versi/CHANGELOG = **INFO** (banyak app klien tak pakai CHANGELOG formal); kalau KEDUANYA ada tapi entri drift = **PENTING** (tetap memblokir saat `--strict`/rilis) |
 | Pemindai Unicode | sama | sama (otomatis lewati `node_modules`/`.git`/`.claude-kit`) |
 
-Inti: di klien, hal yang "belum ada" (CHANGELOG, peta-konsistensi, eslint, tes) jadi **catatan/saran**, bukan penghenti — supaya gerbang tetap berguna sejak menit pertama tanpa membuat staff non-programmer panik melihat "lampu merah". Yang benar-benar salah (tes klien gagal, drift versi saat rilis, huruf-tipuan Unicode) **tetap** menghentikan.
+Inti: di klien, hal yang "belum ada" (CHANGELOG, peta-konsistensi, eslint, tes) jadi **catatan/saran**, bukan penghenti — supaya gerbang tetap berguna sejak menit pertama tanpa membuat staff non-programmer panik melihat "lampu merah". Yang benar-benar salah (**aplikasi gagal dibangun**, tes klien gagal, drift versi saat rilis, huruf-tipuan Unicode) **tetap** menghentikan.
+
+> **Kenapa "Build aplikasi" SENGAJA memblokir (beda dari pemeriksa owner-gated di atas, 2026-07-19):** sampai tanggal ini gerbang punya 14 pemeriksa dan **tak satu pun mencoba mengompilasi aplikasi** — jadi `preflight` bisa mencetak "LULUS" di atas project yang gagal `next build`. Lubangnya diperlebar CI: langkah build di `templates/github/workflows/preflight.yml` dibungkus `continue-on-error: true` sambil menjanjikan *"robot mutu di langkah berikutnya yang melaporkan masalahnya"* — padahal langkah berikutnya tak punya pemeriksa build sama sekali. Berbeda dari temuan alat (CVE/lint/config-AI) yang severity-nya butuh penilaian owner, **"aplikasi tak bisa dibangun" itu fakta biner tanpa nuansa** — tak ada tafsir yang membuatnya boleh dirilis. Karena itu ia GENTING, bukan saran. Anti-alarm-palsu: project tanpa script `build` dilewati diam-diam (INFO). Urutannya sengaja **paling awal** supaya `perf-budget` akhirnya punya hasil build untuk ditimbang — dulu ia selalu auto-lewat karena tak ada yang pernah membangun. Dikunci `tests/preflight-app-build.test.mjs` (termasuk **uji negatif**: build gagal wajib GENTING).
 
 ## Di CI (gerbang otomatis, Tahap D)
 
@@ -105,13 +109,13 @@ npx lintasai enable-preflight-ci      # pasang .github/workflows/preflight.yml (
 - **Kenapa OPT-IN (bukan dipasang otomatis):** butuh GitHub Actions + alur PR. Memaksanya ke klien yang belum pakai GitHub = CI merah membingungkan. Owner yang putuskan (§1.1). Cermin pola `enable-risk-gate`.
 - **WAJIB `windows-latest`:** CLI `lintasai` Windows-only (v1.x) — di Linux runner ia berhenti. Template sudah memakai `runs-on: windows-latest`.
 - **Idempoten + aman:** sudah ada + isi sama → no-op; sudah ada tapi **kamu sunting sendiri** → TIDAK ditimpa tanpa `--force` (editanmu dijaga). **Matikan:** hapus berkas `.github/workflows/preflight.yml`.
-- **Sumber + penjaga:** `lib/ensure-preflight-ci.mjs`; dikunci `tests/ensure-preflight-ci.test.mjs` + routing `tests/dispatcher-init-routing.test.mjs`.
+- **Sumber + penjaga:** `engine/ensure-preflight-ci.mjs`; dikunci `tests/ensure-preflight-ci.test.mjs` + routing `tests/dispatcher-init-routing.test.mjs`.
 
 ## Dependensi
 
 - **Node ≥ 18** (kit 100% Node — seluruh gerbang berjalan di Node).
 - **git** — opsional. Tanpa git → cek "versi vs tag" + "kode vs tes" jadi INFO (dilewati, tak crash).
-- Reuse: `lib/consistency-check.mjs`, `lib/unicode-safety-check.mjs`, `lib/version-detect.mjs`, `lib/fs-text.mjs`.
+- Reuse: `engine/consistency-check.mjs`, `engine/unicode-safety-check.mjs`, `engine/version-detect.mjs`, `engine/fs-text.mjs`.
 
 ## Catatan
 
@@ -124,4 +128,4 @@ npx lintasai enable-preflight-ci      # pasang .github/workflows/preflight.yml (
 - **Anti-rekursi:** `tests/preflight.mjs` bukan `*.test.mjs` → tak ikut dijalankan `npm test`. Saat di-import oleh tes pengunci, `main()` tidak jalan (dijaga `isMain`). Tes pengunci hanya menguji fungsi murni, tak memanggil `runPreflight()`.
 - **Tes pengunci (anti-rot):** `tests/preflight.test.mjs` — memastikan pemilah severity + cek kelengkapan rilis benar-benar menangkap masalah (uji skenario GAGAL, bukan cuma jalur hijau) + wiring `package.json` tak diam-diam hilang.
 - **Bukan jaminan nol-bug** (cetak-biru §9): menutup drift fakta + kelengkapan rilis + bug yang sudah ada tesnya. TIDAK menutup otomatis: bug logika baru, celah tak-terpikir, masalah integrasi runtime di mesin lain.
-- Source: `tests/preflight.mjs`, tes `tests/preflight.test.mjs`, cetak-biru `docs/plans/BUKU_PELAJARAN_DAN_PREFLIGHT.md`.
+- Source: `tests/preflight.mjs`, tes `tests/preflight.test.mjs` (cetak-biru = rencana internal, riwayat git).

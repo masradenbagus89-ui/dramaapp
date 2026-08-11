@@ -83,7 +83,7 @@ Aturan emas: **bagi per WILAYAH RAHASIA, bukan per algoritma.** Nambah algoritma
 ### Cara repo terhubung ke database ("kartu bank")
 - Database = layanan terpisah (Supabase, di server), **bukan di dalam repo mana pun**. Repo **terhubung** ke sana via jaringan.
 - Tiap repo punya **"kartu akses" = connection string + role terbatas**, disimpan di **pengaturan rahasia repo (server)** — bukan di kode, bukan di laptop staff.
-- **Lead/owner setup database + schema + kartu SEKALI** (template `MCP_SETUP.md` Option D). Setelah itu staff cukup prompt; AI pakai kartu yang sudah terpasang. Staff tak pernah memegang password DB.
+- **Lead/owner setup database + schema + kartu SEKALI** (pola "Option D": 1 DB bersama, schema-per-service, role DB terbatas per-schema — minta AI susun SQL `GRANT`/`REVOKE`-nya). Setelah itu staff cukup prompt; AI pakai kartu yang sudah terpasang. Staff tak pernah memegang password DB.
 
 | Repo | Kartu boleh buka | Untuk |
 |---|---|---|
@@ -139,7 +139,7 @@ Tim berikutnya tinggal **copy-paste** prompt yang dihasilkan AI → konteks meng
 2. **Repo private + izin clone per-orang** (GitHub + CODEOWNERS) — pertahanan code-dicuri NYATA. *(Label "tier" di file lokal = catatan niat, BUKAN pengaman.)*
 3. **Backend satu-satunya pegang kunci DB**, cuma di server (env/secret manager).
 4. **Data asli tak pernah di laptop staff** — staff pakai data palsu/staging + cuma dapat SCHEMA kosong.
-5. **Role terbatas per-schema + RLS** (1 login = 1 orang) — `MCP_SETUP.md` Option D.
+5. **Role terbatas per-schema + RLS** (1 login = 1 orang) — SQL `GRANT` per schema + `templates/RLS_SETUP_PROMPT.md`.
 6. **Backend cuma kirim hasil matang** (skor/ringkasan) — data mentah & rumus tak pernah keluar.
 7. **Audit log** aksi sensitif.
 
@@ -170,6 +170,5 @@ Yang Anda pakai = **microservice VARIAN SHARED-DATABASE** — BUKAN microservice
 3. Semua "naik kelas" + perubahan kit = **owner-gated** + lewat Gerbang Pra-Rilis §4.6.
 
 ## Terkait
-- Onderdil ECC layak-pinjam: `docs/plans/ECC_BORROW_LIST.md` *(dev-repo saja — tak ikut ke paket client)*
-- Setup DB + role: `templates/MCP_SETUP.md` Option D
-- Topologi + 8 divisi: `CLAUDE_universal_v1.md` §4.13 (detail: `workflows/4.13-skill-divisi.md`)
+- Setup DB + role: `skills/database/SKILL.md` (role tiering §9) + `templates/RLS_SETUP_PROMPT.md`
+- Topologi + 8 divisi: `CLAUDE_universal_v1.md` §4.13 (detail: `rules/4.13-skill-divisi.md`)

@@ -146,7 +146,7 @@ erDiagram
 - **Soft-delete pattern**: model `Credential`, `Post` punya `deletedAt` column → query default `WHERE deletedAt IS NULL`.
 - **Audit trail**: `LoginLog`, `CredentialAuditLog` immutable - tidak ada UPDATE atau DELETE, hanya INSERT.
 - **Encryption-at-rest**: field `password`, `username`, `notes` di `Credential` di-encrypt via [encryption.md](security/encryption.md) sebelum simpan.
-- **Schema isolation**: project ini pakai shared DB Supabase production, schema `<nama>`. Lihat [MCP_SETUP.md](MCP_SETUP.md) untuk role isolation.
+- **Schema isolation**: project ini pakai shared DB Supabase production, schema `<nama>` — role DB dibatasi per-schema (`GRANT` hanya ke schema sendiri).
 
 ## Migrasi history (recent)
 [Optional: kalau ada `prisma migrate` history yang menarik, summarize 3-5 migrasi terakhir]

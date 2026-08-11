@@ -1,15 +1,15 @@
 ﻿Tolong jalankan AUDIT KOMPREHENSIF di proyek ini, dengan ANALOGI NON-PROGRAMMER di setiap finding (biar staff IT non-programmer paham). Paste prompt ini = implicit consent untuk audit READ-ONLY (scan multi-dimensional, tidak ada file proyek yang diubah). User confirm dulu sebelum execute fix apapun.
 
-> Cocok dijalankan SETELAH `JALANKAN_KIT.md` selesai (bulk-bootstrap docs sudah jadi → AI sudah load context lengkap → audit hasilnya akurat). Bisa juga standalone kapan saja setelah setup awal.
+> Dipicu ON-DEMAND kapan saja (ketik "audit project" / "periksa seluruh kode" / paste prompt ini). Sejak v2.10.0 audit **TIDAK LAGI** auto-ditawarkan pasca-instalasi — dijalankan hanya saat kamu minta. Paling akurat kalau denah project sudah dibuat (AI sudah load context lengkap), tapi boleh juga kapan saja.
 
 ---
 
 ## Filosofi audit ini
 
 1. **READ-ONLY by default** - audit cuma SCAN + LAPORAN. Tidak ada `Edit`, `Write`, atau `Bash` destruktif. User pegang kontrol penuh "mau fix yang mana".
-2. **Multi-dimensional** - bukan cuma "refactor code". Cek 11 dimensi: Refactor / Security / QA-Test / Database / DevOps / Performance / Frontend-Webdesign / UI-UX-a11y / SEO / Docs gap / Onboarding readiness. (11 dimensi = peta penuh ke 8 divisi WAJIB `workflows/4.13-skill-divisi.md` — termasuk Frontend, Webdesign, UI/UX, SEO yang sering web app setengah-jadi punya banyak.)
+2. **Multi-dimensional** - bukan cuma "refactor code". Cek 11 dimensi: Refactor / Security / QA-Test / Database / DevOps / Performance / Frontend-Webdesign / UI-UX-a11y / SEO / Docs gap / Onboarding readiness. (11 dimensi = peta penuh ke standar inti + perpustakaan rujukan `rules/4.13-division-skills.md` — termasuk Frontend, Webdesign, UI/UX, SEO yang sering web app setengah-jadi punya banyak.)
 3. **Ranked low → high risk** - staff non-programmer butuh tahu "mana yang aman dikerjakan dulu". Quick wins yang risk merusak system = LOW jadi prioritas. HIGH RISK (auth/encryption/data migration) di-defer sampai test foundation siap.
-4. **Analogi non-programmer di SETIAP finding** - istilah programming (N+1, race condition, IDOR, transaction) WAJIB punya analogi sehari-hari (kantor, lemari arsip, ATM, tukang pos, brankas). Lihat `docs/ANALOGI_LIBRARY.md` untuk style guide.
+4. **Analogi non-programmer di SETIAP finding** - istilah programming (N+1, race condition, IDOR, transaction) WAJIB punya analogi sehari-hari (kantor, lemari arsip, ATM, tukang pos, brankas). Lihat `docs/ANALOGY_LIBRARY.md` untuk style guide.
 5. **Cek-silang skeptis per temuan + jujur kalau belum tuntas** (istilah internal: "adversarial verify") - anggap temuan salah dulu (`is_real=false`) kalau belum 100% yakin. Cegah AI mengarang/menggelembungkan jumlah temuan. **DAN sebaliknya:** pemeriksa-silang gagal jalan → JANGAN tampilkan laporan seolah "bersih"; ikuti gerbang kejujuran step 7 Bagian 2 (tanda **BELUM DICEK-SILANG**). Ke user ceritakan pakai bahasa hasil, BUKAN istilah teknis ini.
 
 ---
@@ -46,7 +46,7 @@
 | 📚 **Docs gap** | File CRITICAL belum ter-cover bulk-bootstrap, ADR yang harus ditulis, architecture.md `[TBD]` fields, glossary domain terms missing |
 | 🎓 **Onboarding** | PostgreSQL role per-staff, env var sharing flow, GitHub access policy, ANTHROPIC_API_KEY, Claude Code install panduan, "good first issue" backlog, eskalasi tree. **(Cek = baca KONFIGURASI/DOKUMEN saja: ada/tidaknya role/env var — DILARANG konek/SELECT ke DB live (§8.2 Aturan 3) atau menampilkan NILAI secret/.env (§8.1 #6); laporkan ada/tidaknya, bukan isinya.)** |
 
-> **+ Dimensi meta (deterministik, di luar 11 auditor divisi): 🧮 Anggaran Konteks/Token.** Bukan fan-out auditor AI — dihitung robot: overhead token yang ter-load tiap sesi. Cek: jumlah tool MCP tersambung (tiap skema tool ~500 token — server 30-tool bisa lebih mahal dari semua skill; tim yang pakai Supabase+Canva = puluhan tool = lever penghematan terbesar), ukuran berkas aturan always-load (jalankan `lib/rules-budget-check.mjs`), CLAUDE.md/workflows yang membengkak. Output: total token + **top-3 penghematan ber-angka**. Cek nilai context-window/biaya-tool model terpasang (§8.2 Aturan 1). (🙂 kayak kuota data HP — tiap app makan jatah; matikan yang tak dipakai.)
+> **+ Dimensi meta (deterministik, di luar 11 auditor divisi): 🧮 Anggaran Konteks/Token.** Bukan fan-out auditor AI — dihitung robot: overhead token yang ter-load tiap sesi. Cek: jumlah tool MCP tersambung (tiap skema tool ~500 token — server 30-tool bisa lebih mahal dari semua skill; tim yang pakai Supabase+Canva = puluhan tool = lever penghematan terbesar), ukuran berkas aturan always-load (jalankan `engine/rules-budget-check.mjs`), CLAUDE.md/workflows yang membengkak. Output: total token + **top-3 penghematan ber-angka**. Cek nilai context-window/biaya-tool model terpasang (§8.2 Aturan 1). (🙂 kayak kuota data HP — tiap app makan jatah; matikan yang tak dipakai.)
 
 Setiap auditor lapor 5-15 finding dengan struktur:
 
@@ -127,7 +127,7 @@ Setiap auditor lapor 5-15 finding dengan struktur:
 - ⏱ <perkiraan waktu> · 🚦 <GENTING/PENTING/RAPIKAN> · ⚠ Risiko bikin rusak: <RENDAH/SEDANG/TINGGI>
 ```
 
-**Penjelasan bahasa awam WAJIB per finding yang memuat jargon** (1 kalimat yang mudah dipahami — jargon TIDAK dibiarkan mentah). **1 analogi singkat OPSIONAL** — TIDAK wajib 3-lapis/contoh konkret *(disederhanakan per keputusan owner 2026-06-25)*. Bahan analogi kalau mau pakai: **`docs/ANALOGI_LIBRARY.md`** (35 jargon × sehari-hari + tools digital populer Indonesia + contoh proyek — termasuk N+1, rate-limit, race condition, IDOR, God Component, Memory leak, Tahan Penggabungan); style guide tools digital di `workflows/4.4-audit-post-setup.md`. Untuk istilah BARU yang belum ada di library, AI cukup jelaskan dengan bahasa awam 1 kalimat + boleh suggest tambah ke library.
+**Penjelasan bahasa awam WAJIB per finding yang memuat jargon** (1 kalimat yang mudah dipahami — jargon TIDAK dibiarkan mentah). **1 analogi singkat OPSIONAL** — TIDAK wajib 3-lapis/contoh konkret *(disederhanakan per keputusan owner 2026-06-25)*. Bahan analogi kalau mau pakai: **`docs/ANALOGY_LIBRARY.md`** (35 jargon × sehari-hari + tools digital populer Indonesia + contoh proyek — termasuk N+1, rate-limit, race condition, IDOR, God Component, Memory leak, Tahan Penggabungan); style guide tools digital di `rules/4.4-audit-post-setup.md`. Untuk istilah BARU yang belum ada di library, AI cukup jelaskan dengan bahasa awam 1 kalimat + boleh suggest tambah ke library.
 
 ### Bagian 4 - Susun Rencana Pengerjaan Bertahap
 
@@ -139,7 +139,7 @@ Setiap auditor lapor 5-15 finding dengan struktur:
 - **Tahap 3 - Refactor Sedang (menyentuh perilaku) + Penyiapan Staff Baru (Onboarding)** (1-2 minggu): touch behavior, cross-module refactor, onboarding setup
 - **Tahap 4+ - Refactor Berat / Risiko Tinggi** (1-2 minggu per finding): paired review, Tahan Penggabungan (HOLD MERGE), branch protection
 
-> Catatan istilah: "Sedang/Berat" di sini = **tingkat USAHA/RISIKO pengerjaan** (sumbu keseriusan, `templates/REFACTOR_STANDARD.md`), BUKAN "Tingkat 1/2/3" Tangga Refactor (sumbu STRUKTUR: Refactoring in-place / Modular Monolith / Repository Split — `workflows/4.2-pattern-driven.md`). Dua sumbu berbeda; jangan tertukar.
+> Catatan istilah: "Sedang/Berat" di sini = **tingkat USAHA/RISIKO pengerjaan** (sumbu keseriusan, `templates/REFACTOR_STANDARD.md`), BUKAN bentuk refactor (sumbu STRUKTUR: Refactoring in-place / Modular Monolith / Repository Split — `rules/4.2-pattern-driven.md`). Dua sumbu berbeda; jangan tertukar.
 
 ### Bagian 5 - Popup #1: Pilih tier (READONLY preview)
 
@@ -242,7 +242,7 @@ Pilihan:
       → AI tunjukkan dulu apa yang akan dikerjakan, baru mengerjakan setelah kamu setuju.
   [3] Mulai rapikan kode (refactor) sekarang — <N> peluang ditemukan, dari yang paling aman dulu
       → Masuk MODE REFACTOR BERTINGKAT: AI kelompokkan peluang jadi 🟢 Ringan → 🟡 Sedang → 🔴 Berat, lalu tawarkan TINGKAT DEMI TINGKAT (paling aman dulu). Tiap tingkat ada popup-nya sendiri: "kerjakan semua di tingkat ini / pilih satu-satu / lewati ke tingkat berikut / stop".
-      → Tiap perubahan: salinan terpisah (branch) + dicatat kecil-kecil (commit) yang bisa dibalik + cek otomatis (lint/build/test) lulus dulu sebelum naik tingkat. AI tunjukkan info tiap tingkat dulu, baru kerja setelah kamu pilih. (Mesin: CLAUDE_universal_v1.md §4.11 + `workflows/4.2-pattern-driven.md` "Mode Refactor Bertingkat".)
+      → Tiap perubahan: salinan terpisah (branch) + dicatat kecil-kecil (commit) yang bisa dibalik + cek otomatis (lint/build/test) lulus dulu sebelum naik tingkat. AI tunjukkan info tiap tingkat dulu, baru kerja setelah kamu pilih. (Mesin: CLAUDE_universal_v1.md §4.11 + `rules/4.2-pattern-driven.md` "Mode Refactor Bertingkat".)
   [4] Pilih 1 temuan spesifik untuk diperbaiki sampai tuntas
       → Kasih nomor (mis. "fix #1 dulu") → AI kerjakan dengan jaring pengaman penuh.
       → Kerja di salinan terpisah (branch — biar versi utama aman) + tiap perubahan dicatat kecil-kecil (commit) + semua cek otomatis (lint/build/test) lulus + rencana balik ke versi sebelumnya siap.
@@ -266,7 +266,7 @@ Untuk SETIAP refactor yang AI eksekusi (Tahap 0 atau pick spesifik):
 2. **Read existing test** (kalau ada vitest di area yang akan disentuh) untuk paham contract. **Kalau TIDAK ada tes DAN refactor menyentuh perilaku (🟡 Sedang/🔴 Berat) → tulis characterization test dulu** (kunci perilaku sekarang) atau tahan ke Test Foundation (Tahap 2) — JANGAN lanjut cuma berbekal lint/build/test hijau saat coverage 0 (0 dari 0 selalu "lulus" = rasa aman palsu).
 3. **List intended behavior PRESERVED** sebelum touch code (kontrak before/after) - tulis ke commit message body
 4. **Per refactor = 1 atomic commit kecil** (reversible via `git revert HEAD`)
-5. **Verify**: jalankan cek otomatis pakai package manager yang **TERDETEKSI** (`getPackageManager` di `lib/project-detect.mjs`, atau baca `packageManager`/lockfile di `package.json`) — mis. `pnpm lint && pnpm build && pnpm test` di project pnpm, `npm run lint && npm run build && npm test` di project npm. **JANGAN hardcode `pnpm`** (bisa rusakkan lockfile project npm/yarn). Pastikan perintahnya benar-benar jalan (exit-code sukses) sebelum percaya hasilnya (§6.3 disiplin #4).
+5. **Verify**: jalankan cek otomatis pakai package manager yang **TERDETEKSI** (`getPackageManager` di `engine/project-detect.mjs`, atau baca `packageManager`/lockfile di `package.json`) — mis. `pnpm lint && pnpm build && pnpm test` di project pnpm, `npm run lint && npm run build && npm test` di project npm. **JANGAN hardcode `pnpm`** (bisa rusakkan lockfile project npm/yarn). Pastikan perintahnya benar-benar jalan (exit-code sukses) sebelum percaya hasilnya (§6.3 disiplin #4).
 6. **Smoke test alur kritis manual** (untuk fix yang touch auth/DB/payment): list 3 alur untuk owner verify
 7. **HIGH RISK (Tier 3)** = Tahan Penggabungan (HOLD MERGE), owner approve dulu
 8. **Lapor per item**: "✅ Item #<N> selesai. Perubahan sudah tercatat aman (commit: <sha> — kayak Save di Google Docs). Semua cek otomatis lulus. Tes cepat alur penting (smoke test): <list>. Kalau mau dibatalkan: jalankan `git revert <sha>` (balik ke versi sebelumnya, kayak Ctrl+Z)."
@@ -302,12 +302,12 @@ Kalau user pilih "cukup/selesai" → tutup ramah: *"Oke, audit selesai. Kapan sa
 - **READ-ONLY default (STATIC)**: Bagian 2-6 = scan + report. Tidak ada `Edit`/`Write`/`Bash destruktif`. **Agen audit/verifikasi DILARANG menyentuh sistem live**: tidak menjalankan SQL yang mengubah data (`INSERT`/`UPDATE`/`DELETE`/`CREATE`/`DROP`/`ALTER`), tidak memakai MCP tool yang mengubah DB/Supabase/server produksi. Verifikasi = baca kode + Grep + nalar. (Pelajaran nyata 2026-06: agen pernah mengubah DB live lalu klaim bersih — JANGAN ulangi.) Pakai Workflow tool untuk parallel scan read-only.
 - **Implicit consent dari user paste prompt** = setuju AI lakukan audit read-only sampai Popup #1.
 - **Popup #1 + Popup #2 WAJIB** - tunggu user pilih tier + lanjutan.
-- **ANALOGI non-programmer WAJIB** di tiap finding (Bagian 3 style guide). Kalau istilah belum ada di `docs/ANALOGI_LIBRARY.md`, AI bikin analogi konsisten + suggest tambah ke library.
+- **ANALOGI non-programmer WAJIB** di tiap finding (Bagian 3 style guide). Kalau istilah belum ada di `docs/ANALOGY_LIBRARY.md`, AI bikin analogi konsisten + suggest tambah ke library.
 - **Cek-silang skeptis WAJIB** (internal: "adversarial verify") - anggap tiap temuan salah dulu sampai terbukti benar, supaya AI tidak mengarang temuan. Saat lapor ke user, JANGAN pakai kata "adversarial/halusinasi/is_real" — bilang "aku cek ulang tiap temuan dengan sikap skeptis biar tidak ada yang mengada-ada".
 - **Kejujuran soal cek-silang yang gagal jalan WAJIB (anti-bersih-palsu).** Kalau sebagian pemeriksa-silang balik kosong karena server membatasi sesaat: (a) ulang dulu yang gagal (maks 3 putaran, lihat Bagian 2 step 6); (b) yang TETAP gagal ditandai **BELUM DICEK-SILANG** dan tetap ditampilkan — JANGAN dibuang, JANGAN dianggap aman; (c) DILARANG menyatakan "bersih/aman/tuntas" kalau jumlah yang berhasil dicek-silang < jumlah yang dicoba. Bilang apa adanya: "Audit belum tuntas: <X> dari <Y> temuan belum sempat dicek-silang." Ini penerapan Gerbang Verifikasi Pra-Rilis (CLAUDE_universal_v1.md §4.6) + status jujur soal lingkungan: "kelihatan bersih" != "terbukti bersih".
 - **Rencana bertahap = panduan, BUKAN dijalankan otomatis.** Owner pegang kontrol final.
 - **Ikuti Alur Berpemandu Bertahap (CLAUDE_universal_v1.md §4.7)**: sajikan BERTAHAP (ringkasan dulu → popup → detail → popup), JANGAN tumpuk seluruh laporan sekaligus lalu diam. DILARANG buntu memaksa user re-prompt. WAJIB tutup dengan langkah penutup "✅ SELESAI + rekap rinci" (Bagian 9).
-- **Tinjauan lintasAI Divisi review WAJIB** di akhir (per CLAUDE_universal_v1.md section 4.1; label dinamis Junior-<profesi> + Non-<profesi>). Kalau blok "📚 Belajar dari task ini" (§4.1b) ikut tampil: Tinjauan dulu, blok Belajar paling akhir.
+- **Tinjauan lintasAI Divisi review WAJIB** di akhir (per CLAUDE_universal_v1.md section 4.1; label dinamis Junior-<profesi> + Non-<profesi>).
 - **JANGAN narasikan "dapur" internal ke user** (per CLAUDE_universal_v1.md §2.1 poin 6): dilarang sebut jumlah agen, kata "spawn/auditor/verifier/paralel/concurrency". Ke user cukup: "Aku sudah periksa proyek dari 11 sudut (keamanan, database, tampilan, kemudahan-pakai, SEO, dst.) dan saling cek ulang temuannya."
 - Semua respons AI dalam **Bahasa Indonesia** ramah, junior-friendly.
 

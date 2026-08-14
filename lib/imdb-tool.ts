@@ -281,7 +281,8 @@ async function countSeriesEpisodes(
       fetchSeasonEpisodeCount(imdbId, i + 1),
     ),
   );
-  const total = counts.reduce((sum, c) => sum + (c ?? 0), 0);
+  let total = 0;
+  for (const c of counts) total += c ?? 0;
   return total > 0 ? total : null;
 }
 

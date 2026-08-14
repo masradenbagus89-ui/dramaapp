@@ -26,6 +26,23 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+type ImdbMetadataJson = {
+  title: string;
+  year: string;
+  poster: string;
+  banner: string;
+  genre: string[];
+  rating: string;
+  runtime: string;
+  country: string;
+  language: string;
+  description: string;
+  director: string;
+  writers: string[];
+  stars: string[];
+  episodeCount?: number;
+};
+
 type ImdbDraftPreview = {
   imdbId: string;
   slug: string;
@@ -33,9 +50,22 @@ type ImdbDraftPreview = {
   year: string;
   synopsis: string;
   posterImage: string | null;
+  banner: string;
   genre: string;
-  actors: string;
+  genreList: string[];
+  stars: string;
+  starList: string[];
   director: string;
+  writer: string;
+  writerList: string[];
+  runtime: string;
+  contentRating: string;
+  imdbRating: string;
+  imdbVotes: string;
+  country: string;
+  language: string;
+  kind: string;
+  episodeCount: number | null;
   suggestedCategory: string | null;
 };
 
@@ -60,6 +90,30 @@ export default function DramaForm({
   setSubtitles,
   premium,
   setPremium,
+  imdbIdMeta,
+  setImdbIdMeta,
+  year,
+  setYear,
+  contentRating,
+  setContentRating,
+  runtime,
+  setRuntime,
+  imdbRating,
+  setImdbRating,
+  imdbVotes,
+  setImdbVotes,
+  genre,
+  setGenre,
+  director,
+  setDirector,
+  writer,
+  setWriter,
+  stars,
+  setStars,
+  country,
+  setCountry,
+  language,
+  setLanguage,
   effectiveId,
   scanning,
   scanResult,
@@ -89,6 +143,30 @@ export default function DramaForm({
   setSubtitles: Dispatch<SetStateAction<string[]>>;
   premium: boolean;
   setPremium: Dispatch<SetStateAction<boolean>>;
+  imdbIdMeta: string;
+  setImdbIdMeta: Dispatch<SetStateAction<string>>;
+  year: string;
+  setYear: Dispatch<SetStateAction<string>>;
+  contentRating: string;
+  setContentRating: Dispatch<SetStateAction<string>>;
+  runtime: string;
+  setRuntime: Dispatch<SetStateAction<string>>;
+  imdbRating: string;
+  setImdbRating: Dispatch<SetStateAction<string>>;
+  imdbVotes: string;
+  setImdbVotes: Dispatch<SetStateAction<string>>;
+  genre: string;
+  setGenre: Dispatch<SetStateAction<string>>;
+  director: string;
+  setDirector: Dispatch<SetStateAction<string>>;
+  writer: string;
+  setWriter: Dispatch<SetStateAction<string>>;
+  stars: string;
+  setStars: Dispatch<SetStateAction<string>>;
+  country: string;
+  setCountry: Dispatch<SetStateAction<string>>;
+  language: string;
+  setLanguage: Dispatch<SetStateAction<string>>;
   effectiveId: string;
   scanning: boolean;
   scanResult: ScanResult | null;
@@ -102,10 +180,14 @@ export default function DramaForm({
   const [imdbLoading, setImdbLoading] = useState(false);
   const [imdbError, setImdbError] = useState<string | null>(null);
   const [imdbDraft, setImdbDraft] = useState<ImdbDraftPreview | null>(null);
+  const [imdbMetadata, setImdbMetadata] = useState<ImdbMetadataJson | null>(
+    null,
+  );
 
   const fetchImdbDraft = async () => {
     setImdbError(null);
     setImdbDraft(null);
+    setImdbMetadata(null);
     const id = imdbId.trim();
     if (!id) return;
     setImdbLoading(true);
@@ -116,6 +198,7 @@ export default function DramaForm({
       const data = (await res.json()) as {
         ok?: boolean;
         draft?: ImdbDraftPreview;
+        metadata?: ImdbMetadataJson;
         error?: string;
       };
       if (!res.ok || !data.ok) {
@@ -123,6 +206,7 @@ export default function DramaForm({
         return;
       }
       if (data.draft) setImdbDraft(data.draft);
+      if (data.metadata) setImdbMetadata(data.metadata);
     } catch (err) {
       setImdbError(err instanceof Error ? err.message : "Koneksi gagal");
     } finally {
@@ -137,15 +221,38 @@ export default function DramaForm({
     setSynopsis(imdbDraft.synopsis);
     if (imdbDraft.posterImage) {
       setPosterImage(imdbDraft.posterImage);
-      setHeroImage(imdbDraft.posterImage);
     }
+    // Banner lebar hanya kalau ada (TMDB). Jangan salin poster tegak ke hero —
+    // di halaman drama poster yang sama sebagai backdrop 16:9 kelihatan pecah.
+    setHeroImage(imdbDraft.banner || "");
     if (
       imdbDraft.suggestedCategory &&
       (CATEGORY_OPTIONS as readonly string[]).includes(imdbDraft.suggestedCategory)
     ) {
       setCategory(imdbDraft.suggestedCategory);
     }
+    setImdbIdMeta(imdbDraft.imdbId);
+    setYear(imdbDraft.year);
+    setContentRating(imdbDraft.contentRating);
+    setRuntime(imdbDraft.runtime);
+    setImdbRating(imdbDraft.imdbRating);
+    setImdbVotes(imdbDraft.imdbVotes);
+    setGenre(imdbDraft.genre);
+    setDirector(imdbDraft.director);
+    setWriter(imdbDraft.writer);
+    setStars(imdbDraft.stars);
+    setCountry(imdbDraft.country);
+    setLanguage(imdbDraft.language);
+    if (
+      imdbDraft.kind === "series" &&
+      imdbDraft.episodeCount &&
+      imdbDraft.episodeCount > 0 &&
+      !scanResult
+    ) {
+      setEpisodes(imdbDraft.episodeCount);
+    }
     setImdbDraft(null);
+    setImdbMetadata(null);
     setImdbError(null);
   };
 
@@ -169,8 +276,10 @@ export default function DramaForm({
           ✨ Isi otomatis dari IMDb
         </h3>
         <p className="mb-3 text-xs text-zinc-500">
-          Masukkan ID IMDb (contoh: tt19869990) — data judul, sinopsis, poster,
-          dan kategori akan diambil dari OMDb.
+          Masukkan ID IMDb (contoh: tt19869990). Judul, tahun, poster, genre,
+          rating, durasi, negara, bahasa, sinopsis, director, writers, stars,
+          dan jumlah episode (kalau series) diambil otomatis. Banner lebar
+          terisi kalau kunci TMDB ada; kalau tidak, poster dipakai sebagai hero.
         </p>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
           <div className="flex-1 space-y-1.5">
@@ -206,13 +315,14 @@ export default function DramaForm({
           <div className="mt-4 rounded-xl border border-zinc-700 bg-zinc-950/60 p-3">
             <div className="flex gap-3">
               {imdbDraft.posterImage ? (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={imdbDraft.posterImage}
                   alt={`Poster ${imdbDraft.title}`}
-                  className="h-28 w-20 shrink-0 rounded-md object-cover"
+                  className="h-36 w-24 shrink-0 rounded-md object-cover"
                 />
               ) : (
-                <div className="flex h-28 w-20 shrink-0 items-center justify-center rounded-md bg-zinc-800 text-xs text-zinc-500">
+                <div className="flex h-36 w-24 shrink-0 items-center justify-center rounded-md bg-zinc-800 text-xs text-zinc-500">
                   tanpa poster
                 </div>
               )}
@@ -220,19 +330,97 @@ export default function DramaForm({
                 <p className="truncate font-semibold text-white">
                   {imdbDraft.title}
                 </p>
-                <p className="text-xs text-zinc-400">
-                  {imdbDraft.year} · {imdbDraft.genre}
+                <p className="mt-0.5 text-xs text-zinc-400">
+                  {[
+                    imdbDraft.year,
+                    imdbDraft.contentRating,
+                    imdbDraft.runtime,
+                    imdbDraft.country,
+                    imdbDraft.kind === "series" && imdbDraft.episodeCount
+                      ? `${imdbDraft.episodeCount} episode`
+                      : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
                 </p>
-                <p className="mt-1 line-clamp-3 text-xs text-zinc-500">
+                {(imdbDraft.imdbRating || imdbDraft.imdbVotes) && (
+                  <p className="mt-1 text-xs text-amber-300">
+                    IMDb {imdbDraft.imdbRating || "—"}/10
+                    {imdbDraft.imdbVotes ? ` · ${imdbDraft.imdbVotes} votes` : ""}
+                  </p>
+                )}
+                {imdbDraft.genreList?.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {imdbDraft.genreList.map((g) => (
+                      <span
+                        key={g}
+                        className="rounded-full border border-zinc-600 px-2 py-0.5 text-[10px] text-zinc-300"
+                      >
+                        {g}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <p className="mt-2 line-clamp-3 text-xs text-zinc-500">
                   {imdbDraft.synopsis}
                 </p>
+                <dl className="mt-2 space-y-0.5 text-xs text-zinc-400">
+                  {imdbDraft.language && (
+                    <div>
+                      <dt className="inline font-semibold text-zinc-300">Bahasa: </dt>
+                      <dd className="inline">{imdbDraft.language}</dd>
+                    </div>
+                  )}
+                  {imdbDraft.director && (
+                    <div>
+                      <dt className="inline font-semibold text-zinc-300">Director: </dt>
+                      <dd className="inline text-indigo-300">{imdbDraft.director}</dd>
+                    </div>
+                  )}
+                  {imdbDraft.writerList?.length > 0 && (
+                    <div>
+                      <dt className="inline font-semibold text-zinc-300">Writers: </dt>
+                      <dd className="inline text-indigo-300">
+                        {imdbDraft.writerList.join(" · ")}
+                      </dd>
+                    </div>
+                  )}
+                  {imdbDraft.starList?.length > 0 && (
+                    <div>
+                      <dt className="inline font-semibold text-zinc-300">Stars: </dt>
+                      <dd className="inline text-indigo-300">
+                        {imdbDraft.starList.join(" · ")}
+                      </dd>
+                    </div>
+                  )}
+                </dl>
                 {imdbDraft.suggestedCategory && (
                   <p className="mt-1 text-xs text-emerald-400">
                     Kategori cocok: {imdbDraft.suggestedCategory}
                   </p>
                 )}
+                {imdbDraft.kind === "series" && !imdbDraft.episodeCount && (
+                  <p className="mt-1 text-xs text-amber-400/80">
+                    Series terdeteksi, jumlah episode IMDb belum terhitung — isi manual atau Scan folder.
+                  </p>
+                )}
               </div>
             </div>
+            {imdbDraft.banner && (
+              <div className="mt-3 overflow-hidden rounded-lg border border-zinc-800">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={imdbDraft.banner}
+                  alt={`Banner ${imdbDraft.title}`}
+                  className="h-28 w-full object-cover"
+                />
+              </div>
+            )}
+            {imdbMetadata && (
+              <pre className="mt-3 max-h-48 overflow-auto rounded-lg border border-zinc-800 bg-black/40 p-3 text-[11px] leading-5 text-zinc-300">
+                {JSON.stringify(imdbMetadata, null, 2)}
+              </pre>
+            )}
             <div className="mt-3 flex flex-wrap gap-2">
               <Button
                 type="button"
@@ -243,7 +431,10 @@ export default function DramaForm({
               </Button>
               <Button
                 type="button"
-                onClick={() => setImdbDraft(null)}
+                onClick={() => {
+                  setImdbDraft(null);
+                  setImdbMetadata(null);
+                }}
                 variant="outline"
                 className="rounded-lg border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white"
               >
@@ -327,6 +518,115 @@ export default function DramaForm({
             className="resize-y rounded-lg border-zinc-700 bg-zinc-900 text-white focus-visible:border-amber-400 focus-visible:ring-0"
           />
         </div>
+
+        {(imdbIdMeta || director || writer || stars || imdbRating || country) && (
+          <div className="mt-4 rounded-xl border border-indigo-500/30 bg-indigo-950/20 p-4">
+            <p className="text-sm font-semibold text-indigo-200">
+              Metadata IMDb (ikut tersimpan)
+            </p>
+            <p className="mt-0.5 text-xs text-zinc-500">
+              Diisi otomatis dari “Ambil draft”. Boleh dikosongkan manual kalau perlu.
+            </p>
+            <div className="mt-3 grid gap-3 md:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label className="text-xs text-zinc-400">ID IMDb</Label>
+                <Input
+                  value={imdbIdMeta}
+                  onChange={(e) => setImdbIdMeta(e.target.value)}
+                  className="rounded-lg border-zinc-700 bg-zinc-900 font-mono text-sm text-white focus-visible:border-amber-400 focus-visible:ring-0"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-zinc-400">Tahun</Label>
+                <Input
+                  value={year}
+                  onChange={(e) => setYear(e.target.value)}
+                  className="rounded-lg border-zinc-700 bg-zinc-900 text-sm text-white focus-visible:border-amber-400 focus-visible:ring-0"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-zinc-400">Rating konten</Label>
+                <Input
+                  value={contentRating}
+                  onChange={(e) => setContentRating(e.target.value)}
+                  className="rounded-lg border-zinc-700 bg-zinc-900 text-sm text-white focus-visible:border-amber-400 focus-visible:ring-0"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-zinc-400">Runtime</Label>
+                <Input
+                  value={runtime}
+                  onChange={(e) => setRuntime(e.target.value)}
+                  className="rounded-lg border-zinc-700 bg-zinc-900 text-sm text-white focus-visible:border-amber-400 focus-visible:ring-0"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-zinc-400">IMDb rating</Label>
+                <Input
+                  value={imdbRating}
+                  onChange={(e) => setImdbRating(e.target.value)}
+                  className="rounded-lg border-zinc-700 bg-zinc-900 text-sm text-white focus-visible:border-amber-400 focus-visible:ring-0"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-zinc-400">IMDb votes</Label>
+                <Input
+                  value={imdbVotes}
+                  onChange={(e) => setImdbVotes(e.target.value)}
+                  className="rounded-lg border-zinc-700 bg-zinc-900 text-sm text-white focus-visible:border-amber-400 focus-visible:ring-0"
+                />
+              </div>
+              <div className="space-y-1.5 md:col-span-2">
+                <Label className="text-xs text-zinc-400">Genre (OMDb)</Label>
+                <Input
+                  value={genre}
+                  onChange={(e) => setGenre(e.target.value)}
+                  className="rounded-lg border-zinc-700 bg-zinc-900 text-sm text-white focus-visible:border-amber-400 focus-visible:ring-0"
+                />
+              </div>
+              <div className="space-y-1.5 md:col-span-2">
+                <Label className="text-xs text-zinc-400">Director</Label>
+                <Input
+                  value={director}
+                  onChange={(e) => setDirector(e.target.value)}
+                  className="rounded-lg border-zinc-700 bg-zinc-900 text-sm text-white focus-visible:border-amber-400 focus-visible:ring-0"
+                />
+              </div>
+              <div className="space-y-1.5 md:col-span-2">
+                <Label className="text-xs text-zinc-400">Writer</Label>
+                <Input
+                  value={writer}
+                  onChange={(e) => setWriter(e.target.value)}
+                  className="rounded-lg border-zinc-700 bg-zinc-900 text-sm text-white focus-visible:border-amber-400 focus-visible:ring-0"
+                />
+              </div>
+              <div className="space-y-1.5 md:col-span-2">
+                <Label className="text-xs text-zinc-400">Stars</Label>
+                <Input
+                  value={stars}
+                  onChange={(e) => setStars(e.target.value)}
+                  className="rounded-lg border-zinc-700 bg-zinc-900 text-sm text-white focus-visible:border-amber-400 focus-visible:ring-0"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-zinc-400">Negara</Label>
+                <Input
+                  value={country}
+                  onChange={(e) => setCountry(e.target.value)}
+                  className="rounded-lg border-zinc-700 bg-zinc-900 text-sm text-white focus-visible:border-amber-400 focus-visible:ring-0"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-zinc-400">Bahasa</Label>
+                <Input
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value)}
+                  className="rounded-lg border-zinc-700 bg-zinc-900 text-sm text-white focus-visible:border-amber-400 focus-visible:ring-0"
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <div className="space-y-1.5">

@@ -37,9 +37,23 @@ create table if not exists public.dramas (
   premium      boolean not null default false,
   subtitles    text[]  not null default '{}',
   sort_index   double precision not null default 0,
+  -- Metadata IMDb (opsional; diisi dari OMDb lewat form admin)
+  imdb_id         text,
+  year            text,
+  content_rating  text,
+  runtime         text,
+  imdb_rating     text,
+  imdb_votes      text,
+  genre           text,
+  director        text,
+  writer          text,
+  stars           text,
+  country         text,
+  language        text,
   created_at   timestamptz not null default now()
 );
 create index if not exists dramas_sort_idx on public.dramas (sort_index);
+create index if not exists dramas_imdb_id_idx on public.dramas (imdb_id);
 
 -- ---------------------------------------------------------------------
 -- 3) likes : jumlah like per drama (diubah atomik via RPC like_change).

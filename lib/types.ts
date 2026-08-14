@@ -28,6 +28,20 @@ export type Drama = {
    * premium, supaya koleksi lama tetap bisa ditonton gratis.
    */
   premium?: boolean;
+  /** Metadata IMDb (opsional; dari OMDb). Drama lama tanpa field ini = valid. */
+  imdbId?: string;
+  year?: string;
+  contentRating?: string;
+  runtime?: string;
+  imdbRating?: string;
+  imdbVotes?: string;
+  /** Genre teks dari OMDb (boleh beda dari `category` katalog DramaKu). */
+  genre?: string;
+  director?: string;
+  writer?: string;
+  stars?: string;
+  country?: string;
+  language?: string;
 };
 
 // --- Subtitle / multi-bahasa ---------------------------------------------

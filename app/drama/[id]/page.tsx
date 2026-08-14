@@ -29,24 +29,22 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
         <div className={`relative aspect-[16/9] w-full overflow-hidden bg-gradient-to-br md:rounded-2xl ${drama.gradient}`}>
           {(drama.heroImage || drama.posterImage) && (
             <>
-              {/* Latar blur dari gambar yang sama -> mengisi ruang kosong tanpa memotong gambar */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={drama.heroImage || drama.posterImage}
                 alt=""
                 aria-hidden
-                className="absolute inset-0 h-full w-full scale-110 object-cover opacity-60 blur-2xl"
+                className="absolute inset-0 h-full w-full scale-110 object-cover opacity-50 blur-2xl"
               />
-              {/* Gambar utama tampil UTUH (tidak terpotong) */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={drama.heroImage || drama.posterImage}
                 alt={drama.title}
-                className={`absolute inset-0 h-full w-full object-contain ${drama.heroDim ? "brightness-90" : "brightness-110"}`}
+                className={`absolute inset-0 h-full w-full object-cover ${drama.heroDim ? "brightness-90" : "brightness-100"}`}
               />
             </>
           )}
-          <div className={`absolute inset-0 bg-gradient-to-t ${drama.heroDim ? "from-black via-black/45 to-black/15" : "from-black/75 via-black/10 to-transparent"}`} />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-black/10" />
         </div>
         <Button
           asChild
@@ -72,9 +70,32 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
                 </Badge>
               )}
             </div>
-            <p className="mt-1 text-xs text-zinc-400 md:text-sm">
-              {drama.category}
-              {drama.episodes > 1 && ` · ${drama.episodes} episode`} · {drama.views} ditonton
+            {drama.genre && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {drama.genre.split(",").map((g) => (
+                  <span
+                    key={g.trim()}
+                    className="rounded-full border border-white/40 px-2.5 py-0.5 text-[11px] text-white"
+                  >
+                    {g.trim()}
+                  </span>
+                ))}
+              </div>
+            )}
+            <p className="mt-1.5 text-xs text-zinc-300 md:text-sm">
+              {[
+                drama.year,
+                drama.runtime,
+                drama.episodes > 1 ? `${drama.episodes} episode` : "",
+                drama.imdbRating ? `IMDb ${drama.imdbRating}/10` : "",
+                drama.country,
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+              {drama.year || drama.runtime || drama.imdbRating || drama.country
+                ? " · "
+                : ""}
+              {drama.views} ditonton
             </p>
           </div>
         </div>
@@ -119,6 +140,58 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
           Sinopsis
         </h2>
         <p className="mt-2 text-sm leading-6 text-zinc-300">{drama.synopsis}</p>
+
+        {(drama.director ||
+          drama.writer ||
+          drama.stars ||
+          drama.genre ||
+          drama.country ||
+          drama.language) && (
+          <dl className="mt-5 space-y-2 border-t border-zinc-800 pt-5 text-sm">
+            {(drama.country || drama.language) && (
+              <div className="flex flex-wrap gap-x-2">
+                <dt className="shrink-0 font-semibold text-zinc-200">Asal</dt>
+                <dd className="text-zinc-400">
+                  {[drama.country, drama.language].filter(Boolean).join(" · ")}
+                </dd>
+              </div>
+            )}
+            {drama.director && (
+              <div className="flex flex-wrap gap-x-2">
+                <dt className="shrink-0 font-semibold text-zinc-200">Director</dt>
+                <dd className="text-indigo-300">{drama.director}</dd>
+              </div>
+            )}
+            {drama.writer && (
+              <div className="flex flex-wrap gap-x-2">
+                <dt className="shrink-0 font-semibold text-zinc-200">Writers</dt>
+                <dd className="text-indigo-300">{drama.writer}</dd>
+              </div>
+            )}
+            {drama.stars && (
+              <div className="flex flex-wrap gap-x-2">
+                <dt className="shrink-0 font-semibold text-zinc-200">Stars</dt>
+                <dd className="text-indigo-300">{drama.stars}</dd>
+              </div>
+            )}
+            {drama.imdbId && (
+              <div className="flex flex-wrap gap-x-2">
+                <dt className="shrink-0 font-semibold text-zinc-200">IMDb</dt>
+                <dd>
+                  <a
+                    href={`https://www.imdb.com/title/${drama.imdbId}/`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-amber-300 underline-offset-2 hover:underline"
+                  >
+                    {drama.imdbId}
+                    {drama.imdbVotes ? ` · ${drama.imdbVotes} votes` : ""}
+                  </a>
+                </dd>
+              </div>
+            )}
+          </dl>
+        )}
 
         {drama.episodes > 1 && (
           <>

@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/session";
-import { fetchImdbDraft, isValidImdbId } from "@/lib/imdb-tool";
+import {
+  fetchImdbDraft,
+  isValidImdbId,
+  toImdbMetadata,
+  ImdbLookupError,
+} from "@/lib/imdb-tool";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -10,7 +15,8 @@ export const dynamic = "force-dynamic";
  * Hanya admin yang login (cookie sesi terverifikasi) yang boleh pakai.
  *
  * Query: ?imdbId=tt19869990
- * Response: { ok: true, draft: { imdbId, slug, title, year, synopsis, ... } }
+ * Response: { ok: true, draft, metadata }
+ *   metadata = JSON kontrak (title/year/poster/banner/genre[]/...)
  */
 export async function GET(req: NextRequest) {
   try {
@@ -27,10 +33,15 @@ export async function GET(req: NextRequest) {
     }
 
     const draft = await fetchImdbDraft(imdbId);
-    return NextResponse.json({ ok: true, draft });
+    return NextResponse.json({
+      ok: true,
+      draft,
+      metadata: toImdbMetadata(draft),
+    });
   } catch (err) {
+    const status = err instanceof ImdbLookupError ? err.status : 500;
     const message =
       err instanceof Error ? err.message : "Gagal mengambil data dari IMDb";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: message }, { status });
   }
 }

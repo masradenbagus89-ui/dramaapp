@@ -33,6 +33,19 @@ export default function AdminPage() {
   const [heroImage, setHeroImage] = useState("");
   const [subtitles, setSubtitles] = useState<string[]>([]);
   const [premium, setPremium] = useState(true); // drama baru default berbayar
+  // Metadata IMDb (opsional; diisi dari "Ambil draft")
+  const [imdbIdMeta, setImdbIdMeta] = useState("");
+  const [year, setYear] = useState("");
+  const [contentRating, setContentRating] = useState("");
+  const [runtime, setRuntime] = useState("");
+  const [imdbRating, setImdbRating] = useState("");
+  const [imdbVotes, setImdbVotes] = useState("");
+  const [genre, setGenre] = useState("");
+  const [director, setDirector] = useState("");
+  const [writer, setWriter] = useState("");
+  const [stars, setStars] = useState("");
+  const [country, setCountry] = useState("");
+  const [language, setLanguage] = useState("");
 
   const [scanning, setScanning] = useState(false);
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
@@ -161,6 +174,18 @@ export default function AdminPage() {
           heroImage: heroImage.trim(),
           subtitles,
           premium,
+          imdbId: imdbIdMeta.trim(),
+          year: year.trim(),
+          contentRating: contentRating.trim(),
+          runtime: runtime.trim(),
+          imdbRating: imdbRating.trim(),
+          imdbVotes: imdbVotes.trim(),
+          genre: genre.trim(),
+          director: director.trim(),
+          writer: writer.trim(),
+          stars: stars.trim(),
+          country: country.trim(),
+          language: language.trim(),
         }),
       });
       const data = await res.json();
@@ -184,6 +209,18 @@ export default function AdminPage() {
       setHeroImage("");
       setSubtitles([]);
       setPremium(true);
+      setImdbIdMeta("");
+      setYear("");
+      setContentRating("");
+      setRuntime("");
+      setImdbRating("");
+      setImdbVotes("");
+      setGenre("");
+      setDirector("");
+      setWriter("");
+      setStars("");
+      setCountry("");
+      setLanguage("");
       setScanResult(null);
       formRef.current?.reset();
       refreshList();
@@ -234,6 +271,18 @@ export default function AdminPage() {
     setHeroImage(d.heroImage ?? "");
     setSubtitles(d.subtitles ?? []);
     setPremium(d.premium ?? false);
+    setImdbIdMeta(d.imdbId ?? "");
+    setYear(d.year ?? "");
+    setContentRating(d.contentRating ?? "");
+    setRuntime(d.runtime ?? "");
+    setImdbRating(d.imdbRating ?? "");
+    setImdbVotes(d.imdbVotes ?? "");
+    setGenre(d.genre ?? "");
+    setDirector(d.director ?? "");
+    setWriter(d.writer ?? "");
+    setStars(d.stars ?? "");
+    setCountry(d.country ?? "");
+    setLanguage(d.language ?? "");
     setScanResult(null);
     setMessage({
       type: "ok",
@@ -300,6 +349,30 @@ export default function AdminPage() {
           setSubtitles={setSubtitles}
           premium={premium}
           setPremium={setPremium}
+          imdbIdMeta={imdbIdMeta}
+          setImdbIdMeta={setImdbIdMeta}
+          year={year}
+          setYear={setYear}
+          contentRating={contentRating}
+          setContentRating={setContentRating}
+          runtime={runtime}
+          setRuntime={setRuntime}
+          imdbRating={imdbRating}
+          setImdbRating={setImdbRating}
+          imdbVotes={imdbVotes}
+          setImdbVotes={setImdbVotes}
+          genre={genre}
+          setGenre={setGenre}
+          director={director}
+          setDirector={setDirector}
+          writer={writer}
+          setWriter={setWriter}
+          stars={stars}
+          setStars={setStars}
+          country={country}
+          setCountry={setCountry}
+          language={language}
+          setLanguage={setLanguage}
           effectiveId={effectiveId}
           scanning={scanning}
           scanResult={scanResult}

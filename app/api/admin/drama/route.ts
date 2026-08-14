@@ -12,6 +12,72 @@ import {
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+type DramaBody = Partial<{
+  id: string;
+  title: string;
+  category: string;
+  synopsis: string;
+  views: string;
+  episodes: number;
+  posterImage: string;
+  heroImage: string;
+  gradient: string;
+  exclusive: boolean;
+  subtitles: string[];
+  premium: boolean;
+  imdbId: string;
+  year: string;
+  contentRating: string;
+  runtime: string;
+  imdbRating: string;
+  imdbVotes: string;
+  genre: string;
+  director: string;
+  writer: string;
+  stars: string;
+  country: string;
+  language: string;
+}>;
+
+const IMDB_META_KEYS = [
+  "imdbId",
+  "year",
+  "contentRating",
+  "runtime",
+  "imdbRating",
+  "imdbVotes",
+  "genre",
+  "director",
+  "writer",
+  "stars",
+  "country",
+  "language",
+] as const;
+
+type ImdbMetaKey = (typeof IMDB_META_KEYS)[number];
+
+/** Ambil field metadata IMDb dari body (string ter-trim; kosong = tidak diisi). */
+function pickImdbMeta(body: DramaBody): Partial<Pick<Drama, ImdbMetaKey>> {
+  const out: Partial<Pick<Drama, ImdbMetaKey>> = {};
+  for (const key of IMDB_META_KEYS) {
+    const raw = body[key];
+    if (typeof raw !== "string") continue;
+    const v = raw.trim();
+    if (v) out[key] = v;
+  }
+  return out;
+}
+
+/** Terapkan metadata IMDb ke drama; string kosong menghapus field (saat update). */
+function applyImdbMeta(drama: Drama, body: DramaBody, replaceEmpty: boolean) {
+  for (const key of IMDB_META_KEYS) {
+    if (typeof body[key] !== "string") continue;
+    const v = body[key]!.trim();
+    if (v) drama[key] = v;
+    else if (replaceEmpty) delete drama[key];
+  }
+}
+
 // Simpan/ubah/hapus drama langsung ke database (Supabase). Update instan —
 // tidak perlu commit GitHub / redeploy seperti versi lama.
 
@@ -21,20 +87,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = (await req.json()) as Partial<{
-      id: string;
-      title: string;
-      category: string;
-      synopsis: string;
-      views: string;
-      episodes: number;
-      posterImage: string;
-      heroImage: string;
-      gradient: string;
-      exclusive: boolean;
-      subtitles: string[];
-      premium: boolean;
-    }>;
+    const body = (await req.json()) as DramaBody;
 
     if (!body.title?.trim()) {
       return NextResponse.json({ error: "Judul wajib diisi." }, { status: 400 });
@@ -83,6 +136,7 @@ export async function POST(req: NextRequest) {
         ...(body.exclusive ? { exclusive: true } : {}),
         ...(subtitles.length ? { subtitles } : {}),
         ...(body.premium ? { premium: true } : {}),
+        ...pickImdbMeta(body),
       };
     } else {
       drama = {
@@ -106,6 +160,7 @@ export async function POST(req: NextRequest) {
         if (body.premium) drama.premium = true;
         else delete drama.premium;
       }
+      applyImdbMeta(drama, body, true);
     }
 
     await upsertDrama(drama, isNew);

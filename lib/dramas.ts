@@ -42,6 +42,18 @@ type DramaRow = {
   premium: boolean;
   subtitles: string[] | null;
   sort_index: number;
+  imdb_id: string | null;
+  year: string | null;
+  content_rating: string | null;
+  runtime: string | null;
+  imdb_rating: string | null;
+  imdb_votes: string | null;
+  genre: string | null;
+  director: string | null;
+  writer: string | null;
+  stars: string | null;
+  country: string | null;
+  language: string | null;
 };
 
 function rowToDrama(r: DramaRow): Drama {
@@ -61,6 +73,18 @@ function rowToDrama(r: DramaRow): Drama {
   if (r.exclusive) d.exclusive = true;
   if (r.subtitles && r.subtitles.length) d.subtitles = r.subtitles;
   if (r.premium) d.premium = true;
+  if (r.imdb_id) d.imdbId = r.imdb_id;
+  if (r.year) d.year = r.year;
+  if (r.content_rating) d.contentRating = r.content_rating;
+  if (r.runtime) d.runtime = r.runtime;
+  if (r.imdb_rating) d.imdbRating = r.imdb_rating;
+  if (r.imdb_votes) d.imdbVotes = r.imdb_votes;
+  if (r.genre) d.genre = r.genre;
+  if (r.director) d.director = r.director;
+  if (r.writer) d.writer = r.writer;
+  if (r.stars) d.stars = r.stars;
+  if (r.country) d.country = r.country;
+  if (r.language) d.language = r.language;
   return d;
 }
 
@@ -80,6 +104,18 @@ function dramaToRow(d: Drama, sortIndex: number): DramaRow {
     premium: Boolean(d.premium),
     subtitles: d.subtitles ?? [],
     sort_index: sortIndex,
+    imdb_id: d.imdbId ?? null,
+    year: d.year ?? null,
+    content_rating: d.contentRating ?? null,
+    runtime: d.runtime ?? null,
+    imdb_rating: d.imdbRating ?? null,
+    imdb_votes: d.imdbVotes ?? null,
+    genre: d.genre ?? null,
+    director: d.director ?? null,
+    writer: d.writer ?? null,
+    stars: d.stars ?? null,
+    country: d.country ?? null,
+    language: d.language ?? null,
   };
 }
 

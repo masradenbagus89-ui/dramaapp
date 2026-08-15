@@ -16,10 +16,27 @@ Setiap ada perubahan kode/docs yang layak disimpan, AI **WAJIB**:
 
 Perintah tipikal setelah commit: `git push dramaku main` lalu `git push origin main`. Jangan anggap selesai kalau hanya satu remote yang ter-push.
 
-## Kondisi terkini (✅ terverifikasi 2026-08-11)
+## ⚠️ Koreksi remote (✅ terverifikasi 2026-08-15 lewat `git remote -v`)
 
-- Dual remote aktif: `dramaku` = ojokesusu/dramaku · `origin` = masradenbagus89-ui/dramaapp.
-- Push ke `dramaku` (2026-08-11) berhasil; samakan `origin` saat commit berikutnya.
+Di folder kerja ini (`D:\Users\user26\Dramaapp`) **hanya ada SATU remote**:
+
+- `origin` = `https://github.com/ojokesusu/dramaku.git`
+
+Remote bernama `dramaku` **tidak ada**, dan repo `masradenbagus89-ui/dramaapp`
+**belum terpasang sama sekali** di folder ini. Catatan lama di bawah menggambarkan
+folder kerja berbeda (`user18`), jadi jangan dipakai sebagai patokan.
+
+Akibatnya aturan dual-push di `AGENTS.md` **belum bisa dijalankan apa adanya** di
+folder ini. Owner memilih push ke `ojokesusu/dramaku` saja (2026-08-15). Kalau repo
+kedua masih dipakai → pasang remote-nya dulu; kalau sudah tidak dipakai → perbarui
+`AGENTS.md` supaya dokumennya tidak menyesatkan.
+
+Identitas commit di-set **lokal** (bukan global), sama dengan commit sebelumnya:
+`masradenbagus89-ui <zyyherlambang@gmail.com>`.
+
+## Kondisi lama soal remote (per 2026-08-11 — ❓ tidak akurat untuk folder ini)
+
+- Catatan lama menyebut dual remote `dramaku` + `origin`. Lihat koreksi di atas.
 
 ## Kondisi terkini (✅ terverifikasi 2026-07-23)
 
@@ -41,6 +58,36 @@ Perintah tipikal setelah commit: `git push dramaku main` lalu `git push origin m
   - Frontend: `app/components/admin/DramaForm.tsx` ditambahkan blok input ID IMDb → fetch draft → preview poster/judul/sinopsis → tombol **Isi form ini** mengisi judul, slug, sinopsis, poster, hero, dan kategori (kalau cocok).
   - Status: `tsc --noEmit` lulus dan `npm run build` lulus (route `/api/generate-from-imdb` terdaftar).
 - Prasyarat agar fitur jalan: `OMDB_API_KEY` di `.env.local` harus diisi (daftar gratis di omdbapi.com/apikey.aspx).
+
+## Yang terakhir dikerjakan (2026-08-15) — jalur terima video dari API luar
+
+Commit `6bb2539`, sudah ter-push ke `ojokesusu/dramaku`. Ada **dua jalur terpisah**;
+pemutar lama (video `.mp4` dari PC backup lewat `lib/video.ts`) TIDAK disentuh.
+
+| Jalur | Untuk apa | Berkas inti | Setelan wajib |
+|---|---|---|---|
+| **A — dashboard upload** (playly-dashboard) | berkas `.mp4` di Supabase Storage, diputar tag `<video>` (kendali putar tetap milik kita) | `lib/dashboard-videos.ts`, `app/api/videos/`, `DashboardVideoGrid.tsx`, disisipkan di `/discover` | `DASHBOARD_API_URL` |
+| **B — API pihak lain** | player milik penyedia lewat `<iframe>` | `lib/external-video.ts`, `app/api/external-videos/`, `EmbedPlayer.tsx`, halaman `/video-eksternal` | `EXTERNAL_VIDEO_API_URL` + `EXTERNAL_VIDEO_EMBED_HOSTS` |
+
+Panduan lengkap: `docs/sambungan-dashboard-webmovie.md` · `docs/video-eksternal.md`.
+Semua nama setelan sudah terdaftar di `.env.example` beserta akibat kalau dikosongkan.
+
+**✅ Terverifikasi 2026-08-15:** `npm test` 131 lulus (13 berkas) · `tsc --noEmit`
+bersih · uji hidup lewat API tiruan di port 3013 → jalur A `count=2 skipped=1`,
+jalur B `count=3 skipped=2`, halaman `/discover` + `/video-eksternal` HTTP 200,
+gerbang parameter menolak `page=abc` dan `q` >100 karakter dengan 400.
+
+**❓ BELUM terverifikasi:** sambungan ke dashboard ASLI dan API penyedia ASLI —
+dua-duanya belum ada alamatnya. Kode siap-tempel untuk sisi dashboard ada di
+`docs/dashboard-api-videos/` dan **belum pernah dijalankan** (repo dashboard di
+komputer lain).
+
+**Sisa pekerjaan yang sudah diketahui:**
+1. Isi `DASHBOARD_API_URL` (Vercel → Settings → Environment Variables → **deploy ulang**).
+2. Pasang endpoint `GET /api/videos` di playly-dashboard (salin dari `docs/dashboard-api-videos/`).
+3. Dua API tiruan (`app/api/demo-dashboard-videos/`, `app/api/demo-video-provider/`)
+   ikut ter-deploy dan bisa diakses publik. Isinya cuma data contoh, tapi sebaiknya
+   dimatikan di produksi atau dihapus setelah server asli siap.
 
 ## Catatan lama — ❓ BELUM diverifikasi ulang (per 2026-05-14)
 

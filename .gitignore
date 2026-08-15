@@ -2,6 +2,8 @@
 .next/
 out/
 build/
+# Cache hasil pemeriksaan tipe TypeScript — dibuat ulang otomatis, jangan di-commit.
+tsconfig.tsbuildinfo
 .env
 .env*.local
 *.log

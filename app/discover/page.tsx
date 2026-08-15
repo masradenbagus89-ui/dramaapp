@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { getAllDramas } from "@/lib/dramas";
 import DramaBrowser from "../components/DramaBrowser";
+import DashboardVideoGrid from "../components/DashboardVideoGrid";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Play } from "lucide-react";
@@ -11,6 +12,11 @@ export const dynamic = "force-dynamic";
 export default async function HomePage() {
   const dramas = await getAllDramas();
   const featured = dramas[0];
+
+  // Bagian "Video terbaru" hanya muncul kalau sambungan ke dashboard sudah
+  // dikonfigurasi. Tanpa penjaga ini, halaman publik akan menampilkan pesan
+  // error hanya karena env belum diisi.
+  const dashboardAktif = Boolean(process.env.DASHBOARD_API_URL?.trim());
 
   return (
     <div className="mx-auto max-w-7xl px-4 pb-10 pt-4 md:px-6">
@@ -53,6 +59,8 @@ export default async function HomePage() {
       <Suspense fallback={<div className="mt-8 text-center text-sm text-zinc-500">Memuat...</div>}>
         <DramaBrowser dramas={dramas} />
       </Suspense>
+
+      {dashboardAktif && <DashboardVideoGrid />}
     </div>
   );
 }

@@ -1,0 +1,59 @@
+# .gitignore folder kit (.lintasai/ di project client) — pola HANYA berlaku di dalam folder ini.
+# Proteksi akar project (rahasia dll.) ditangani terpisah oleh pemasang (engine/setup-fs.mjs).
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+ehthumbs.db
+ehthumbs_vista.db
+
+# Editor / IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.history/
+.project
+.classpath
+
+# Cadangan yang dibuat pemasang/updater saat re-install (.backup-<cap-waktu> / .bak.<cap-waktu>)
+*.backup-*
+*.bak
+*.old
+# Cadangan snapshot ber-tanda pra-refactor (isi lama sudah aman di git history) — jangan dilacak lagi
+*.pre-*.txt
+
+# Log
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# Secret — JANGAN PERNAH commit
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+credentials*
+secrets/
+.manifest-secret
+
+# Per-staff identity markers + install manifest (jangan commit)
+.git-identity-*
+.install-manifest.json
+
+# Catatan kerja lokal (tidak untuk dibagikan)
+*.local.md
+
+# Audit log (security decisions: GPG skip, allowlist bypass, etc) — local only
+.audit-log
+/.lintasai/.audit-log
+
+# CATATAN (ADR-032): /AGENTS.md akar TIDAK lagi di-ignore — kini KERNEL tulis-tangan (acuan tunggal,
+# dibaca native Codex/Kimi/Cursor + Claude via @import), bukan blok Codex generated seperti sebelumnya.
+
+# Ditambah otomatis oleh pemasang lintasAI (cegah kebocoran rahasia + metadata):
+*.env
+*.env.local

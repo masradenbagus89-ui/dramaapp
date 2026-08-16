@@ -12,7 +12,7 @@ Pakai langkah di bawah kalau kamu lihat **salah satu** signal berikut:
 | Signal | Sumber | Contoh |
 |---|---|---|
 | 🚨 Email "Secret Detected" | GitHub | *"GitGuardian detected token in commit abc123 by @bagus"* |
-| 🚨 AI Reviewer warning di PR | `.github/scripts/ai-review.cjs` | Comment: *"⚠️ Possible token leak at line 42: pattern matches `sk-ant-`"* |
+| 🚨 Penjaga rahasia CI merah | `.github/workflows/secret-guard.yml` | Log Actions: pola rahasia (mis. `sk-ant-`) terdeteksi di commit |
 | 🚨 Email anomaly | Vercel / Supabase / Anthropic | *"Unusual usage spike detected: 5000 requests in last hour from IP X"* |
 | 🚨 File `.env.local` muncul di `git status` | Terminal lokal | `git status` show `.env.local: untracked` - tapi seharusnya di `.gitignore` |
 | 🚨 Token ter-paste tidak sengaja | Channel chat tim, screenshot | Tanpa sengaja kamu/teman paste isi `.env.local` di Slack/Discord |
@@ -34,7 +34,7 @@ kunci API - **sebelum** terkirim ke server (saat itu rahasia belum bocor ke mana
 Pasang sekali per project: minta AI **"pasang penjaga rahasia pre-commit"**, atau jalankan:
 
 ```bash
-node .claude-kit/lib/install-secret-hook.mjs
+node .claude-kit/engine/install-secret-hook.mjs
 ```
 
 Setelah aktif: kalau kamu tak sengaja `git commit` file `.env`, commit **otomatis ditolak** +
@@ -173,7 +173,7 @@ Setup ini sekali, otomatis protect kedepan:
 | GitHub Secret Scanning | Settings → Code security & analysis | Enable "Secret scanning" + "Push protection" (block push kalau detect secret) |
 | GitGuardian (alternatif) | gitguardian.com → connect GitHub | Auto-scan tiap commit, lebih banyak pattern |
 | Pre-commit hook (cek otomatis Git sebelum commit) | `.husky/pre-commit` | Check `.env*` not staged: `git diff --cached --name-only \| grep -E '^\.env' && exit 1` |
-| AI Reviewer custom rules | `.github/scripts/ai-review.cjs` | Tambah pattern: `sk-ant-`, `eyJ\\w+`, `xoxb-`, `ghp_`, `postgres://.*:.*@` |
+| Penjaga rahasia CI | `.github/workflows/secret-guard.yml` | Pola bawaan: `sk-ant-`, `eyJ\\w+`, `xoxb-`, `ghp_`, `postgres://.*:.*@` |
 | Vercel anomaly alert | Vercel Settings → Notifications | Enable usage spike notification |
 | Supabase activity log | Supabase Dashboard → Logs | Review weekly untuk unusual queries |
 
@@ -212,13 +212,13 @@ Ini **skenario berbeda** dari kunci-bocor: seorang staf resign/dipecat dan kamu 
 
 **Langkah (urut — catat DULU, baru cabut):**
 
-1. **Daftar akses dia, SEBELUM dicabut** (5 menit, baca-saja). Buka tiap repo → Settings → Collaborators and teams; catat repo + tim apa saja yang dia punya. Atau minta AI baca Buku Induk (`lintasai-portfolio.yml`): *"grup si X boleh akses repo apa saja?"*. **Inilah daftar realistis yang bisa dia salin.** (Kalau langsung cabut tanpa catat, kamu kehilangan petanya.)
+1. **Daftar akses dia, SEBELUM dicabut** (5 menit, baca-saja). Buka tiap repo → Settings → Collaborators and teams; catat repo + tim apa saja yang dia punya. **Inilah daftar realistis yang bisa dia salin.** (Kalau langsung cabut tanpa catat, kamu kehilangan petanya.)
 2. **Lihat jejak kontribusi dia** (baca-saja):
    - Di laptop: `git log --author="<nama-atau-email-dia>" --all --stat` → apa saja yang pernah dia ubah.
    - Di GitHub: repo → **Insights → Contributors**, atau tab **Pull requests** filter `author:<username>`.
 3. **Cek riwayat robot/Actions** (baca-saja): repo → tab **Actions** → siapa memicu apa belakangan (deploy, terbit paket).
 4. **Cek Audit Log organisasi** (baca-saja, kalau paketmu mendukung): `github.com/orgs/<owner>/settings/audit-log`, filter username dia. **Kejujuran:** event "clone/download" hanya tercatat lengkap di paket **GitHub Team/Enterprise**. Di paket gratis, yang PASTI kamu tahu = **repo apa yang dia punya akses** (langkah 1) = itulah batas yang bisa dia salin. Jangan berasumsi kamu bisa melihat tiap unduhan.
-5. **BARU cabut akses + ganti kunci** (ini satu-satunya yang berupa TINDAKAN): GitHub → Settings → Collaborators and teams → **Remove**; hapus dari `members` di Buku Induk; **rotate** kunci yang dia mungkin tahu (DB password, token) lewat Decision Matrix di atas.
+5. **BARU cabut akses + ganti kunci** (ini satu-satunya yang berupa TINDAKAN): GitHub → Settings → Collaborators and teams → **Remove**; **rotate** kunci yang dia mungkin tahu (DB password, token) lewat Decision Matrix di atas.
 6. **Catat ringkas** di `docs/incidents/<tanggal>-staf-keluar-<nama>.md`: repo apa yang dia akses, kunci apa yang dirotate, tanggal akses dicabut. (Buat perbaiki proses onboarding + jaga-jaga.)
 
 > 🏢 **Analogi:** kayak **karyawan toko resign** — kamu cek dulu dia pernah pegang kunci ruang mana (daftar), tarik kunci-nya, lalu **ganti gembok** ruang sensitif (rotate kredensial). Bukan curiga berlebihan — prosedur standar. Memeriksa CCTV = membaca (aman); ganti gembok = tindakan.

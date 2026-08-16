@@ -1,0 +1,49 @@
+# AGENTS.local.md - Override khusus proyek <NAMA_PROYEK>
+
+> v1 · <TANGGAL_HARI_INI> · ikut standar tim IT (Pola B)
+
+<!-- Header auto-isi setup-pola-b.mjs. Tiap <PLACEHOLDER> + frasa "Pola B" = penanda mesin, jangan dihapus. -->
+
+Aturan tim ada di **`./AGENTS.md`** — kernel yang dibaca **OTOMATIS** tiap sesi (Codex & Kimi native; Cursor lewat `.cursor/rules/lintasai.mdc`; Claude lewat `CLAUDE.md` `@import`). **`AGENTS.md` = milik kit, di-refresh saat update — JANGAN edit langsung**; taruh perubahanmu di berkas INI (milikmu, tak pernah ditimpa). **AI: baca `./.lintasai/PETA.md` dulu** ("apa di mana": fungsi tiap folder + daftar skill).
+
+## Versi kit aktif
+
+- Cek versi: **`npx lintasai version`** (atau `kit_version` di `./.lintasai/.install-manifest.json`). Jangan salin angkanya ke sini — jadi basi setelah update.
+- Sumber kit (repo standar tim): **<URL_REPO_STANDAR>**
+
+## Override khusus proyek
+
+Centang `[x]` hanya yang **beda dari default kit**; yang tidak dicentang = ikut default.
+
+- [ ] Bahasa docs: <!-- default ID -->
+- [ ] Format commit: <!-- default Conventional Commits -->
+- [ ] Tech stack: <!-- default React/Next.js + Tailwind + shadcn -->
+- [ ] Branch utama: <!-- default `main` -->
+- [ ] Pakai GitHub Issue: <!-- default Tidak (chat-driven) -->
+- [ ] Channel chat task: <!-- link Slack/Discord/Telegram/WhatsApp -->
+- [ ] Lain-lain:
+
+## Opt-in — mode & ide opsional (default semua MATI)
+
+Centang `[x]` yang mau diaktifkan.
+
+<!-- Riwayat pencabutan opsi (mis. "Mode Hemat" -> dilebur ke TANGGA BOBOT kernel): .lintasai/CHANGELOG.md. -->
+
+- [ ] **Mode Auto-Confirm** — lewati konfirmasi Y/N sederhana (aksi merusak TETAP wajib konfirmasi).
+- [ ] **Mode Co-Pilot Berpagar** — AI proaktif kerjakan yang aman, berhenti di pagar (commit/push/PR/merge = manusia).
+- [ ] Ide opsional lain (UTM/tracking, i18n, performance budget, secret scanner — opt-in, catat di sini).
+
+## Catatan tim
+
+<!-- Kosongkan kalau proyek solo. -->
+
+- Owner standar tim: <!-- nama + email/handle PIC kit -->
+- Channel diskusi: <!-- link Slack/Discord/Telegram -->
+
+## Riwayat update kit di proyek ini
+
+| Versi kit | Tanggal update | Siapa update | Catatan |
+|---|---|---|---|
+| <VERSI_KIT> | <TANGGAL_HARI_INI> | <NAMA_KAMU> | Setup awal Pola B |
+
+<!-- Tambah baris tiap update `./.lintasai/` ke versi lebih baru. -->

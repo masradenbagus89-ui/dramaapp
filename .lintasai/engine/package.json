@@ -1,0 +1,4 @@
+{
+  "//": "PENANDA TIPE MODUL - bukan paket npm. Node menentukan format berkas .js dari package.json TERDEKAT ke atas. Tanpa berkas ini, .lintasai/engine/risk-gate.js + plan-mode-gate.js (CommonJS) ikut setelan package.json PROJECT CLIENT: kalau client memakai \"type\": \"module\", kedua hook mati dgn ReferenceError: require is not defined - Palang Rem & Lampu Hijau Plan Mode gagal-terbuka TANPA pesan ke user, dan doctor tetap melapor terpasang (ia cuma memeriksa blok di settings.json). Terbukti dijalankan 2026-08-11. Berkas .mjs di folder ini TIDAK terpengaruh (.mjs selalu ESM). Dijaga tests/hook-esm-project.test.mjs.",
+  "type": "commonjs"
+}

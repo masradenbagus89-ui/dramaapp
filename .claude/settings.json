@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.claude-kit/engine/lang-reminder.mjs\"",
+            "command": "node \"$CLAUDE_PROJECT_DIR/.lintasai/engine/lang-reminder.mjs\"",
             "timeout": 15
           }
         ]
@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude-kit/engine/risk-gate.js"
+            "command": "node .lintasai/engine/risk-gate.js"
           }
         ]
       },
@@ -27,7 +27,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude-kit/engine/rak-gate.mjs"
+            "command": "node .lintasai/engine/rak-gate.mjs"
           }
         ]
       },
@@ -36,19 +36,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node .claude-kit/engine/plan-mode-gate.js"
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node \"$CLAUDE_PROJECT_DIR/.claude-kit/engine/feedback-capture.mjs\"",
-            "timeout": 10
+            "command": "node .lintasai/engine/plan-mode-gate.js"
           }
         ]
       }

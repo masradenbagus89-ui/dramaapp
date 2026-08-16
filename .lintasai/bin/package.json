@@ -1,0 +1,4 @@
+{
+  "//": "PENANDA TIPE MODUL - bukan paket npm. Alasan sama dengan engine/package.json: bin/lintasai.js CommonJS, dan salinannya di .lintasai/bin/ ikut setelan package.json PROJECT CLIENT. Di project ber-\"type\": \"module\" ia gagal dgn SyntaxError: Illegal return statement (terbukti dijalankan 2026-08-11). Dijaga tests/hook-esm-project.test.mjs.",
+  "type": "commonjs"
+}

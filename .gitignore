@@ -25,22 +25,19 @@ _dubbing/
 *.webm
 
 
-# === lintasAI patterns (v1.5.8+ auto-appended by setup-pola-b.ps1) ===
-# Cegah leak: kit secrets, per-staff identity, backup folders.
-.claude-kit/.audit-log
-.claude-kit/.manifest-secret
-.claude-kit/.install-manifest.json
+# === pola lintasAI ===
+# Cegah kebocoran: rahasia kit, identitas per-staff, folder cadangan.
 .git-identity-*
 .staff-profile.md
-.claude-kit.backup-*/
 *.backup-*
 *.bak
 *.bak.*
+.kimi-code/AGENTS.md
+.lintasai/.audit-log
+.lintasai/.manifest-secret
+.lintasai/.install-manifest.json
+.lintasai.backup-*/
+.cursor/rules/lintasai.mdc
 
 # Catatan pembelajaran lintasAI (berkas belajar, BUKAN berkas proyek — jangan ikut ter-commit)
 docs/pelajaran-lintasai/
-
-
-# === pola lintasAI (ditambah otomatis pemasang) ===
-# Cegah kebocoran: rahasia kit, identitas per-staff, folder cadangan. .kimi-code/AGENTS.md = artefak generated (regenerate tiap update).
-.kimi-code/AGENTS.md

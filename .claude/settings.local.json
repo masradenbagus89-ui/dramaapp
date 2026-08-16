@@ -20,6 +20,7 @@
       "Bash(node -v)",
       "Bash(npm --version)",
       "Bash(npm view lintasai*)",
+      "Bash(npx lintasai init*)",
       "Bash(npx lintasai install*)",
       "Bash(npx lintasai uninstall*)",
       "Bash(npx lintasai update*)",

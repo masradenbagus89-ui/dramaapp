@@ -17,6 +17,7 @@ Situs hidup: **https://dramaapp.vercel.app** — commit `820abb8` sedang diganti
 - `657a43f` Merge branch 'dramaku/main' (sambungan dashboard video rekan)
 - `9b69055` chore(dev): dokumentasi rencana + AGENTS.local + helper lokal
 - `58d5d55` docs(handoff): update status commit Tahap 1
+- Fix tambahan: hero video di `/beranda` sekarang pakai `object-fit: contain` supaya tampil utuh, tidak terpotong
 
 Database Supabase **tidak diubah**. Perubahan admin (password per admin / admin VIEWER) **sengaja tidak ikut** commit; masih di working tree. Pantau Vercel untuk hasil deploy.
 

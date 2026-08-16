@@ -107,7 +107,7 @@ export default function HomeHero({
             src={reduceMotion ? "" : teaser}
             poster={still}
             title={hero.title}
-            fit="cover"
+            fit="contain"
             objectPosition="center"
             showBlurBg
             mutePosition="bottom-right"

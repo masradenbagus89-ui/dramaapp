@@ -9,15 +9,16 @@
 
 ## Status sekarang (1 menit)
 
-Situs hidup: **https://dramaapp.vercel.app** — commit `820abb8` (belum termasuk redesign + hero hidup).
+Situs hidup: **https://dramaapp.vercel.app** — commit `820abb8` sedang diganti ke `58d5d55` (Vercel sedang build).
 
-**Tahap 1 redesign streaming** sudah di-commit dan siap dual-push:
+**Tahap 1 redesign streaming** sudah **dual-push** ke `origin/main` dan `dramaku/main`:
 - `1af6e12` feat(streaming): Tahap 1 redesign DramaApp
 - `7bafe58` chore(kit): upgrade lintasAI kit v3 → v8
 - `657a43f` Merge branch 'dramaku/main' (sambungan dashboard video rekan)
 - `9b69055` chore(dev): dokumentasi rencana + AGENTS.local + helper lokal
+- `58d5d55` docs(handoff): update status commit Tahap 1
 
-Database Supabase **tidak diubah**. Perubahan admin (password per admin / admin VIEWER) **sengaja tidak ikut** commit; masih di working tree.
+Database Supabase **tidak diubah**. Perubahan admin (password per admin / admin VIEWER) **sengaja tidak ikut** commit; masih di working tree. Pantau Vercel untuk hasil deploy.
 
 ## Yang baru saja diperbaiki
 

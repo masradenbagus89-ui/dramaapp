@@ -206,6 +206,11 @@ export class DashboardError extends Error {
 export type DashboardConfig = {
   apiUrl: string;
   apiKey: string;
+  /**
+   * Nama header tempat kunci dititipkan, mis. "X-Playly-Key".
+   * Kosong = pakai cara umum "Authorization: Bearer <kunci>".
+   */
+  keyHeader: string;
   allowedHosts: string[];
 };
 
@@ -216,8 +221,32 @@ export function readDashboardConfig(
   return {
     apiUrl: (env.DASHBOARD_API_URL ?? "").trim().replace(/\/+$/, ""),
     apiKey: (env.DASHBOARD_API_KEY ?? "").trim(),
+    keyHeader: (env.DASHBOARD_API_KEY_HEADER ?? "").trim(),
     allowedHosts: parseAllowedHosts(env.DASHBOARD_VIDEO_HOSTS),
   };
+}
+
+/**
+ * Susun header untuk memanggil dashboard.
+ *
+ * KENAPA nama headernya bisa diatur: tiap dashboard beda cara memeriksa kunci.
+ * Playly, misalnya, hanya membaca header "X-Playly-Key" dan MENGABAIKAN
+ * "Authorization: Bearer" — dibuktikan pada 2026-08-16: memanggil
+ * /api/videos dengan Bearer tetap dibalas {"ok":false,"error":"missing_key"},
+ * sedangkan dengan X-Playly-Key berisi nilai ngawur balasannya berubah jadi
+ * "invalid_key" (artinya headernya terbaca, cuma nilainya salah).
+ *
+ * Nilai kuncinya sendiri TIDAK pernah dicatat ke log — kalau bocor ke log,
+ * siapa pun yang bisa membaca log server ikut memegang kunci itu.
+ */
+export function buildDashboardHeaders(
+  config: DashboardConfig,
+): Record<string, string> {
+  const headers: Record<string, string> = { Accept: "application/json" };
+  if (!config.apiKey) return headers;
+  if (config.keyHeader) headers[config.keyHeader] = config.apiKey;
+  else headers.Authorization = `Bearer ${config.apiKey}`;
+  return headers;
 }
 
 async function ambilJson(
@@ -225,8 +254,7 @@ async function ambilJson(
   config: DashboardConfig,
   detikCache: number,
 ): Promise<unknown> {
-  const headers: Record<string, string> = { Accept: "application/json" };
-  if (config.apiKey) headers.Authorization = `Bearer ${config.apiKey}`;
+  const headers = buildDashboardHeaders(config);
 
   let res: Response;
   try {
@@ -246,6 +274,17 @@ async function ambilJson(
 
   if (res.status === 404) {
     throw new DashboardError("Video tidak ditemukan di dashboard.", 404);
+  }
+  // Dibedakan dari error lain: 401/403 hampir selalu berarti KUNCI yang salah
+  // atau dikirim lewat nama header yang tidak dibaca dashboard. Tanpa pesan
+  // khusus, pemasang cuma melihat "HTTP 401" dan menebak-nebak.
+  if (res.status === 401 || res.status === 403) {
+    throw new DashboardError(
+      `Dashboard menolak kunci kita (HTTP ${res.status}). Cek DASHBOARD_API_KEY, ` +
+        "dan pastikan DASHBOARD_API_KEY_HEADER cocok dengan nama header yang " +
+        "diperiksa dashboard (Playly memakai X-Playly-Key).",
+      502,
+    );
   }
   if (!res.ok) {
     throw new DashboardError(`Dashboard membalas error (HTTP ${res.status}).`, 502);

@@ -2,6 +2,7 @@
 // (lib/dashboard-videos.ts). Fokus: penerjemah bentuk JSON + aturan alamat.
 import { describe, it, expect } from "vitest";
 import {
+  buildDashboardHeaders,
   normalizeVideoDetail,
   normalizeVideos,
   parseAllowedHosts,
@@ -133,5 +134,42 @@ describe("parseAllowedHosts & readDashboardConfig", () => {
 
   it("env kosong -> apiUrl kosong (nanti dibalas 503 oleh route)", () => {
     expect(readDashboardConfig({}).apiUrl).toBe("");
+  });
+
+  it("nama header kunci dibaca dari env", () => {
+    const cfg = readDashboardConfig({ DASHBOARD_API_KEY_HEADER: " X-Playly-Key " });
+    expect(cfg.keyHeader).toBe("X-Playly-Key");
+  });
+});
+
+describe("buildDashboardHeaders — cara kunci dikirim", () => {
+  const dasar = { apiUrl: "https://d.example/api/videos", allowedHosts: [] };
+
+  it("nama header diisi -> kunci dikirim lewat header itu, TANPA Authorization", () => {
+    // Playly hanya membaca X-Playly-Key; Authorization: Bearer diabaikan,
+    // jadi mengirim keduanya sekaligus percuma dan cuma menyebar kunci.
+    const headers = buildDashboardHeaders({
+      ...dasar,
+      apiKey: "rahasia",
+      keyHeader: "X-Playly-Key",
+    });
+    expect(headers["X-Playly-Key"]).toBe("rahasia");
+    expect(headers.Authorization).toBeUndefined();
+  });
+
+  it("nama header kosong -> jatuh ke cara umum Authorization: Bearer", () => {
+    const headers = buildDashboardHeaders({
+      ...dasar,
+      apiKey: "rahasia",
+      keyHeader: "",
+    });
+    expect(headers.Authorization).toBe("Bearer rahasia");
+  });
+
+  it("tanpa kunci -> tidak ada header kunci sama sekali", () => {
+    const headers = buildDashboardHeaders({ ...dasar, apiKey: "", keyHeader: "X-Playly-Key" });
+    expect(headers.Authorization).toBeUndefined();
+    expect(headers["X-Playly-Key"]).toBeUndefined();
+    expect(headers.Accept).toBe("application/json");
   });
 });

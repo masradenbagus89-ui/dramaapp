@@ -46,8 +46,11 @@ Server WebMovie  ──────────────►  Dashboard (playl
 # WAJIB — alamat endpoint daftar video di dashboard.
 DASHBOARD_API_URL=https://playly-dashboard.vercel.app/api/videos
 
-# Opsional — kalau dashboard minta kunci (dikirim sebagai Authorization: Bearer).
+# Opsional — kalau dashboard minta kunci.
 DASHBOARD_API_KEY=
+# Nama header tempat kunci dititipkan. KOSONG = "Authorization: Bearer <kunci>".
+# Playly memakai X-Playly-Key (lihat "Cara tahu nama header" di bawah).
+DASHBOARD_API_KEY_HEADER=X-Playly-Key
 
 # Opsional — batasi domain berkas video yang boleh diputar, dipisah koma.
 # KOSONG = semua alamat https diterima.
@@ -57,6 +60,34 @@ DASHBOARD_VIDEO_HOSTS=xxxx.supabase.co
 ⚠️ Selama `DASHBOARD_API_URL` kosong, bagian "Video terbaru" **tidak muncul sama
 sekali** di `/discover`. Ini disengaja: lebih baik tidak tampil daripada halaman
 publik menampilkan pesan error hanya karena setelan belum diisi.
+
+## Cara tahu nama header kunci yang dipakai dashboard
+
+Kunci yang benar tetap ditolak kalau dititipkan di header yang salah. Cara
+memastikannya tanpa perlu membaca kode dashboard — panggil endpoint-nya dan
+perhatikan **perubahan pesan errornya**:
+
+```powershell
+$u = "https://playly-dashboard.vercel.app/api/videos"
+# 1. tanpa kunci sama sekali
+curl.exe -s $u
+# 2. tebak nama headernya, isi nilai ngawur
+curl.exe -s -H "X-Playly-Key: ngawur" $u
+```
+
+Bacaannya:
+
+| Balasan berubah dari | Menjadi | Artinya |
+|---|---|---|
+| `missing_key` | `invalid_key` | ✅ Nama headernya **benar**, tinggal isi kunci asli |
+| `missing_key` | `missing_key` (tetap) | ❌ Header itu tidak dibaca — coba nama lain |
+
+Petunjuk lain: header balasan `Access-Control-Allow-Headers` sering menyebut nama
+header yang diterima. Playly membalas `Content-Type, X-Playly-Key` — dari situlah
+nama `X-Playly-Key` ketahuan (diuji 2026-08-16).
+
+Setelah nama header diketahui, isi `DASHBOARD_API_KEY_HEADER` dengan nama itu.
+Kalau dashboard memakai cara umum `Authorization: Bearer`, biarkan kosong.
 
 ---
 

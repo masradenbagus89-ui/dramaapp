@@ -4,11 +4,14 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { Drama } from "@/lib/types";
 import { readMyList } from "@/lib/myList";
-import { parseViews } from "@/lib/format";
+import { readHistory, type HistoryItem } from "@/lib/progress";
+import { parseRating, parseViews } from "@/lib/format";
+import { recommendDramas } from "@/lib/recommend";
+import { genreChipClass } from "@/lib/genre-accent";
 import ContentRow from "./ContentRow";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
-// Urutan kategori yang ditampilkan sebagai baris (yang ada isinya saja).
 const CATEGORY_ORDER = [
   "Romance",
   "Action",
@@ -19,26 +22,14 @@ const CATEGORY_ORDER = [
   "Fantasy",
 ] as const;
 
-const PROGRESS_KEY = "dramaku:progress";
-
-// Semua baris konten Beranda. Baris personalisasi (Lanjut Nonton, Daftar Saya)
-// dibaca dari localStorage → hanya muncul setelah mount agar SSR tidak bentrok.
 export default function BerandaRows({ dramas }: { dramas: Drama[] }) {
   const [mounted, setMounted] = useState(false);
-  const [progress, setProgress] = useState<Record<string, number>>({});
+  const [history, setHistory] = useState<HistoryItem[]>([]);
   const [saved, setSaved] = useState<string[]>([]);
 
   useEffect(() => {
     setMounted(true);
-    const loadProgress = () => {
-      try {
-        const raw = localStorage.getItem(PROGRESS_KEY);
-        const obj = raw ? JSON.parse(raw) : {};
-        setProgress(obj && typeof obj === "object" ? obj : {});
-      } catch {
-        setProgress({});
-      }
-    };
+    const loadProgress = () => setHistory(readHistory());
     const loadSaved = () => setSaved(readMyList());
     loadProgress();
     loadSaved();
@@ -65,6 +56,23 @@ export default function BerandaRows({ dramas }: { dramas: Drama[] }) {
 
   const newest = useMemo(() => [...dramas].reverse().slice(0, 12), [dramas]);
 
+  const popular = useMemo(() => {
+    const head = new Set(trending.slice(0, 6).map((d) => d.id));
+    return [...dramas]
+      .sort((a, b) => parseViews(b.views) - parseViews(a.views))
+      .filter((d) => !head.has(d.id))
+      .slice(0, 12);
+  }, [dramas, trending]);
+
+  const topRated = useMemo(
+    () =>
+      [...dramas]
+        .filter((d) => parseRating(d.imdbRating) > 0)
+        .sort((a, b) => parseRating(b.imdbRating) - parseRating(a.imdbRating))
+        .slice(0, 12),
+    [dramas],
+  );
+
   const byCategory = useMemo(() => {
     const map = new Map<string, Drama[]>();
     for (const d of dramas) {
@@ -84,10 +92,18 @@ export default function BerandaRows({ dramas }: { dramas: Drama[] }) {
 
   const continueWatching = useMemo(() => {
     if (!mounted) return [];
-    return Object.entries(progress)
-      .filter(([id, ep]) => byId.has(id) && typeof ep === "number" && ep >= 1)
-      .map(([id]) => byId.get(id)!);
-  }, [mounted, progress, byId]);
+    return history
+      .map((h) => byId.get(h.dramaId))
+      .filter((d): d is Drama => Boolean(d));
+  }, [mounted, history, byId]);
+
+  const continueMap = useMemo(() => {
+    const map: Record<string, { episode: number; positionSec: number }> = {};
+    for (const h of history) {
+      map[h.dramaId] = { episode: h.episode, positionSec: h.positionSec };
+    }
+    return map;
+  }, [history]);
 
   const savedDramas = useMemo(() => {
     if (!mounted) return [];
@@ -96,14 +112,25 @@ export default function BerandaRows({ dramas }: { dramas: Drama[] }) {
       .filter((d): d is Drama => Boolean(d));
   }, [mounted, saved, byId]);
 
+  const recommended = useMemo(() => {
+    if (!mounted) return { genre: null as string | null, items: [] as Drama[] };
+    return recommendDramas(
+      dramas,
+      history.map((h) => h.dramaId),
+      saved,
+    );
+  }, [mounted, dramas, history, saved]);
+
   return (
     <div className="space-y-7 pt-4 md:space-y-9 md:pt-6">
-      {/* Chip kategori cepat */}
       <div className="no-scrollbar flex gap-2 overflow-x-auto px-4 md:px-0">
         <Badge
           asChild
           variant="secondary"
-          className="shrink-0 bg-zinc-800 px-3.5 py-1.5 text-xs font-semibold text-zinc-200 hover:bg-zinc-700"
+          className={cn(
+            "shrink-0 border px-3.5 py-1.5 text-xs font-semibold",
+            genreChipClass("Semua"),
+          )}
         >
           <Link href="/discover">Semua</Link>
         </Badge>
@@ -112,7 +139,10 @@ export default function BerandaRows({ dramas }: { dramas: Drama[] }) {
             key={c}
             asChild
             variant="secondary"
-            className="shrink-0 bg-zinc-800 px-3.5 py-1.5 text-xs font-semibold text-zinc-200 hover:bg-zinc-700"
+            className={cn(
+              "shrink-0 border px-3.5 py-1.5 text-xs font-semibold",
+              genreChipClass(c),
+            )}
           >
             <Link href={`/discover?q=${encodeURIComponent(c)}`}>{c}</Link>
           </Badge>
@@ -121,34 +151,67 @@ export default function BerandaRows({ dramas }: { dramas: Drama[] }) {
 
       {mounted && continueWatching.length > 0 && (
         <ContentRow
-          title="Lanjut Nonton"
-          subtitle="Teruskan dari episode terakhir"
+          title="Lanjut Menonton"
+          subtitle="Teruskan dari menit terakhir"
           dramas={continueWatching}
-          continueMap={progress}
+          continueMap={continueMap}
+          href="/history"
+        />
+      )}
+
+      {mounted && recommended.items.length > 0 && (
+        <ContentRow
+          title={
+            recommended.genre
+              ? `Karena kamu suka ${recommended.genre}`
+              : "Rekomendasi Untuk Kamu"
+          }
+          subtitle={recommended.genre ? "Rekomendasi Untuk Kamu" : undefined}
+          accent={recommended.genre ?? undefined}
+          dramas={recommended.items}
+          href="/discover"
         />
       )}
 
       {mounted && savedDramas.length > 0 && (
-        <ContentRow title="Daftar Saya" dramas={savedDramas} href="/my-list" />
+        <ContentRow title="Favorit Saya" dramas={savedDramas} href="/my-list" />
       )}
 
       <ContentRow
-        title="Populer Minggu Ini"
+        title="Trending Drama"
         subtitle="Paling banyak ditonton"
         dramas={trending}
         href="/discover"
       />
 
       <ContentRow
-        title="Baru Ditambahkan"
+        title="Drama Terbaru"
         dramas={newest}
         href="/discover"
       />
+
+      {popular.length > 0 && (
+        <ContentRow
+          title="Drama Populer"
+          dramas={popular}
+          href="/discover"
+        />
+      )}
+
+      {topRated.length > 0 && (
+        <ContentRow
+          title="Rating Tertinggi"
+          subtitle="Berdasarkan IMDb"
+          dramas={topRated}
+          href="/discover"
+        />
+      )}
 
       {byCategory.map(({ category, items }) => (
         <ContentRow
           key={category}
           title={category}
+          accent={category}
           dramas={items}
           href={`/discover?q=${encodeURIComponent(category)}`}
         />

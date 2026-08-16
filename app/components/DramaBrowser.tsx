@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { CATEGORIES, type Category, type Drama } from "@/lib/types";
+import { genreChipClass } from "@/lib/genre-accent";
 import DramaCard from "./DramaCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,9 +59,14 @@ export default function DramaBrowser({ dramas }: { dramas: Drama[] }) {
               key={cat}
               type="button"
               size="sm"
-              variant={active ? "default" : "secondary"}
+              variant={active ? "default" : "outline"}
               onClick={() => setCategory(cat)}
-              className={cn("shrink-0", active && "font-semibold")}
+              className={cn(
+                "shrink-0 rounded-full",
+                active
+                  ? "font-semibold"
+                  : genreChipClass(cat),
+              )}
             >
               {cat}
             </Button>

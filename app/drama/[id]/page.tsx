@@ -6,9 +6,11 @@ import Poster from "@/app/components/Poster";
 import SaveButton from "@/app/components/SaveButton";
 import LikeButton from "@/app/components/LikeButton";
 import Comments from "@/app/components/Comments";
+import WatchCta from "@/app/components/WatchCta";
+import EpisodeList from "@/app/components/EpisodeList";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronLeft, Play, Captions } from "lucide-react";
+import { ChevronLeft, Captions } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -20,8 +22,6 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
   const { id } = await props.params;
   const drama = await getDrama(id);
   if (!drama) notFound();
-
-  const episodes = Array.from({ length: drama.episodes }, (_, i) => i + 1);
 
   return (
     <div className="mx-auto max-w-7xl pb-10 md:px-6">
@@ -103,15 +103,7 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
 
       <div className="mt-20 px-4 md:mt-24 md:px-8 md:max-w-3xl">
         <div className="flex flex-col gap-2 sm:flex-row">
-          <Button
-            asChild
-            className="h-auto flex-1 rounded-full py-3 text-sm font-semibold"
-          >
-            <Link href={`/feed/${drama.id}`}>
-              <Play className="h-4 w-4 fill-current" />
-              Tonton Eps 1
-            </Link>
-          </Button>
+          <WatchCta dramaId={drama.id} className="flex-1" />
           <div className="flex flex-1 gap-2">
             <SaveButton id={drama.id} />
             <LikeButton dramaId={drama.id} />
@@ -193,23 +185,17 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
           </dl>
         )}
 
-        {drama.episodes > 1 && (
+        {drama.episodes > 0 && (
           <>
             <h2 className="mt-6 text-sm font-semibold uppercase tracking-wider text-zinc-300">
               Episode
             </h2>
-            <div className="mt-3 grid grid-cols-5 gap-2">
-              {episodes.map((ep) => (
-                <Button
-                  key={ep}
-                  asChild
-                  variant="outline"
-                  className="h-10 rounded-md border-zinc-800 bg-zinc-900 text-sm text-zinc-200 hover:border-amber-400 hover:bg-zinc-900 hover:text-amber-400"
-                >
-                  <Link href={`/feed/${drama.id}?ep=${ep}`}>{ep}</Link>
-                </Button>
-              ))}
-            </div>
+            <EpisodeList
+              dramaId={drama.id}
+              episodes={drama.episodes}
+              posterImage={drama.posterImage || drama.heroImage}
+              title={drama.title}
+            />
           </>
         )}
 

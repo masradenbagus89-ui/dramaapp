@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import ActionRail from "./ActionRail";
 import EpisodeSheet from "./EpisodeSheet";
-import { setProgress } from "@/lib/progress";
+import { getProgressEntry, resumePosition, setProgress } from "@/lib/progress";
 import { setLiked } from "@/lib/myLikes";
 import { subtitleLabel } from "@/lib/types";
 import {
@@ -28,6 +28,7 @@ const FALLBACK = "/sample.mp4";
 const DOUBLE_TAP_MS = 280; // ambang ketuk-ganda (double tap) untuk like
 const CONTROLS_AUTO_HIDE_MS = 3500; // sembunyikan kontrol setelah diam beberapa detik
 const HEART_ANIM_MS = 700; // durasi animasi hati saat like
+const SAVE_PROGRESS_MS = 5000; // jangan tulis localStorage tiap frame timeupdate
 
 // Feed vertikal ala Melolo: tiap episode = 1 slide full-screen, geser ke atas =
 // episode berikutnya, autoplay saat slide terlihat, video habis = auto lanjut.
@@ -40,6 +41,7 @@ export default function FeedPlayer({
   posterImage,
   subtitles = [],
   premium = false,
+  resumeFromHistory = false,
 }: {
   dramaId: string;
   title: string;
@@ -49,6 +51,7 @@ export default function FeedPlayer({
   posterImage?: string;
   subtitles?: string[];
   premium?: boolean;
+  resumeFromHistory?: boolean;
 }) {
   const eps = Array.from({ length: episodes }, (_, i) => i + 1);
   const [active, setActive] = useState(startEp - 1);
@@ -67,6 +70,8 @@ export default function FeedPlayer({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [episodesOpen, setEpisodesOpen] = useState(false);
   const [seeking, setSeeking] = useState(false);
+  const [volume, setVolume] = useState(1);
+  const [muted, setMuted] = useState(false);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const pendingSeek = useRef<number | null>(null); // simpan posisi saat ganti resolusi
@@ -85,6 +90,8 @@ export default function FeedPlayer({
   const slideRefs = useRef<(HTMLDivElement | null)[]>([]);
   const videoRefs = useRef<Record<number, HTMLVideoElement | null>>({});
   const lastTap = useRef(0);
+  const lastSaveAt = useRef(0);
+  const prevActiveRef = useRef(active);
 
   const srcFor = (ep: number) => videoSrc(baseUrl, dramaId, ep, resolution);
 
@@ -182,10 +189,15 @@ export default function FeedPlayer({
     writeSubtitlePref(code);
   };
 
-  // Loncat ke episode awal saat pertama kali render.
+  // Loncat ke episode awal, atau ke episode terakhir di riwayat kalau URL tanpa ?ep=.
   useEffect(() => {
-    slideRefs.current[startEp - 1]?.scrollIntoView({ behavior: "auto" });
-  }, [startEp]);
+    let idx = startEp - 1;
+    if (resumeFromHistory) {
+      const entry = getProgressEntry(dramaId);
+      if (entry) idx = Math.min(Math.max(0, entry.episode - 1), episodes - 1);
+    }
+    slideRefs.current[idx]?.scrollIntoView({ behavior: "auto" });
+  }, [startEp, resumeFromHistory, dramaId, episodes]);
 
   // Deteksi slide mana yang sedang terlihat → jadikan "active".
   useEffect(() => {
@@ -203,14 +215,28 @@ export default function FeedPlayer({
     return () => obs.disconnect();
   }, [episodes]);
 
-  // Terapkan kecepatan ke video aktif (juga tiap pindah episode).
+  // Terapkan kecepatan & volume ke video aktif (juga tiap pindah episode).
   useEffect(() => {
     const v = videoRefs.current[active];
-    if (v) v.playbackRate = speed;
-  }, [active, speed]);
+    if (!v) return;
+    v.playbackRate = speed;
+    v.volume = volume;
+    v.muted = muted;
+  }, [active, speed, volume, muted]);
 
-  // Saat active berubah: mainkan yang aktif (kecuali terkunci), pause sisanya.
+  // Saat active berubah: simpan posisi episode lama, mainkan yang aktif.
   useEffect(() => {
+    const prev = prevActiveRef.current;
+    if (prev !== active) {
+      const prevVideo = videoRefs.current[prev];
+      if (prevVideo && !isLocked(prev + 1)) {
+        setProgress(dramaId, prev + 1, {
+          positionSec: prevVideo.currentTime || 0,
+          durationSec: prevVideo.duration || 0,
+        });
+      }
+      prevActiveRef.current = active;
+    }
     setPaused(false);
     setControlsVisible(true);
     setPayMsg(null);
@@ -232,8 +258,31 @@ export default function FeedPlayer({
     }
   }, [active, dramaId, isLocked]);
 
+  const persistProgress = useCallback(
+    (opts?: { completed?: boolean; force?: boolean }) => {
+      if (lockedActive) return;
+      const now = Date.now();
+      if (!opts?.force && !opts?.completed && now - lastSaveAt.current < SAVE_PROGRESS_MS) {
+        return;
+      }
+      lastSaveAt.current = now;
+      const v = videoRefs.current[active];
+      setProgress(dramaId, active + 1, {
+        positionSec: v?.currentTime ?? 0,
+        durationSec: v?.duration || 0,
+        completed: opts?.completed,
+      });
+    },
+    [active, dramaId, lockedActive],
+  );
+
   const goNext = useCallback(() => {
     slideRefs.current[active + 1]?.scrollIntoView({ behavior: "smooth" });
+  }, [active]);
+
+  const goPrev = useCallback(() => {
+    if (active <= 0) return;
+    slideRefs.current[active - 1]?.scrollIntoView({ behavior: "smooth" });
   }, [active]);
 
   // Lompat ke episode tertentu dari daftar episode (loncatan jauh = instan).
@@ -256,6 +305,7 @@ export default function FeedPlayer({
     } else {
       v.pause();
       setPaused(true);
+      persistProgress({ force: true });
     }
   };
 
@@ -290,6 +340,18 @@ export default function FeedPlayer({
     document.addEventListener("fullscreenchange", onFs);
     return () => document.removeEventListener("fullscreenchange", onFs);
   }, []);
+
+  useEffect(() => {
+    const onHide = () => {
+      if (document.visibilityState === "hidden") persistProgress({ force: true });
+    };
+    document.addEventListener("visibilitychange", onHide);
+    window.addEventListener("pagehide", onHide);
+    return () => {
+      document.removeEventListener("visibilitychange", onHide);
+      window.removeEventListener("pagehide", onHide);
+    };
+  }, [persistProgress]);
 
   // Auto-hide kontrol biar video jadi fokus; sentuh layar utk memunculkan lagi.
   const revealControls = useCallback(() => {
@@ -392,11 +454,17 @@ export default function FeedPlayer({
                   src={srcFor(ep)}
                   playsInline
                   preload={idx === active ? "auto" : "metadata"}
-                  onEnded={() => idx === active && goNext()}
+                  onEnded={() => {
+                    if (idx !== active) return;
+                    persistProgress({ completed: true, force: true });
+                    goNext();
+                  }}
                   onPlay={(e) => {
                     // HP kadang reset playbackRate saat mulai play → set ulang
                     // supaya kontrol kecepatan benar-benar berfungsi di mobile.
                     e.currentTarget.playbackRate = speed;
+                    e.currentTarget.volume = volume;
+                    e.currentTarget.muted = muted;
                   }}
                   onRateChange={(e) => {
                     if (idx === active && e.currentTarget.playbackRate !== speed) {
@@ -407,17 +475,23 @@ export default function FeedPlayer({
                     if (idx !== active || seeking) return;
                     setCurTime(e.currentTarget.currentTime);
                     setDur(e.currentTarget.duration || 0);
+                    persistProgress();
                   }}
                   onLoadedMetadata={(e) => {
                     if (idx !== active) return;
                     const v = e.currentTarget;
                     setDur(v.duration || 0);
                     v.playbackRate = speed;
-                    // Restore posisi setelah ganti resolusi.
+                    v.volume = volume;
+                    v.muted = muted;
+                    // Restore posisi setelah ganti resolusi, atau lanjut dari riwayat.
                     if (pendingSeek.current != null) {
                       v.currentTime = pendingSeek.current;
                       pendingSeek.current = null;
                       if (wasPlaying.current) v.play().catch(() => {});
+                    } else {
+                      const pos = resumePosition(getProgressEntry(dramaId), ep);
+                      if (pos > 0) v.currentTime = pos;
                     }
                   }}
                   onError={(e) => {
@@ -491,6 +565,17 @@ export default function FeedPlayer({
         onSeekUp={onSeekUp}
         onTogglePlay={togglePlay}
         onOpenEpisodes={() => setEpisodesOpen(true)}
+        onPrev={goPrev}
+        onNext={goNext}
+        hasPrev={active > 0}
+        hasNext={active < episodes - 1}
+        volume={volume}
+        muted={muted}
+        onVolume={(n) => {
+          setVolume(n);
+          setMuted(n === 0);
+        }}
+        onToggleMute={() => setMuted((m) => !m)}
         settings={{
           open: settingsOpen,
           speed,

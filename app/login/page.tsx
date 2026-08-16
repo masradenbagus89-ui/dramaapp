@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { writeUser } from "@/lib/auth";
+import { nameAfterLogin, readUser, writeUser } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -60,10 +60,19 @@ export default function LoginPage() {
 
       if (!res.ok || !data.ok) {
         setSubmitting(false);
-        setError(data.error ?? "Login gagal. Coba lagi.");
+        const raw = String(data.error ?? "Login gagal. Coba lagi.");
+        setError(
+          raw.includes("Password admin salah")
+            ? "Password admin salah. Pakai password admin — bukan password saat daftar sebagai penonton. Kalau belum punya password pribadi, tanya admin yang menambahkan akun ini."
+            : raw,
+        );
         return;
       }
-      writeUser({ name: data.name, email: data.email, role: data.role });
+      writeUser({
+        name: nameAfterLogin(data.name, data.email, readUser()),
+        email: data.email,
+        role: data.role,
+      });
       router.push("/beranda");
     } catch {
       setSubmitting(false);
@@ -205,8 +214,10 @@ export default function LoginPage() {
           </p>
 
           <p className="mt-6 text-center text-[11px] text-zinc-600">
-            Admin wajib memasukkan password yang benar. Akun penonton bersifat
-            ringan (tanpa password tersimpan).
+            Baru diangkat jadi admin? Keluar dari sesi penonton dulu tidak wajib
+            — cukup masuk lagi di sini dengan password admin (bukan password
+            saat daftar). Akun penonton bersifat ringan (password daftar tidak
+            disimpan di server).
           </p>
         </div>
       </div>

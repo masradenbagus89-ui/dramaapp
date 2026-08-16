@@ -12,8 +12,9 @@ export default async function FeedPage(props: PageProps<"/feed/[id]">) {
 
   const rawEp = Array.isArray(sp?.ep) ? sp.ep[0] : sp?.ep;
   const epNum = Number(rawEp);
-  const startEp =
-    Number.isFinite(epNum) && epNum >= 1 && epNum <= drama.episodes ? epNum : 1;
+  const hasEpQuery =
+    Number.isFinite(epNum) && epNum >= 1 && epNum <= drama.episodes;
+  const startEp = hasEpQuery ? epNum : 1;
 
   return (
     <FeedPlayer
@@ -25,6 +26,7 @@ export default async function FeedPage(props: PageProps<"/feed/[id]">) {
       posterImage={drama.posterImage}
       subtitles={drama.subtitles ?? []}
       premium={drama.premium ?? false}
+      resumeFromHistory={!hasEpQuery}
     />
   );
 }

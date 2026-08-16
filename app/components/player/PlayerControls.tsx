@@ -2,15 +2,18 @@
 
 import { fmtTime } from "@/lib/format";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, LayoutGrid, ChevronRight } from "lucide-react";
+import {
+  Play,
+  Pause,
+  LayoutGrid,
+  ChevronRight,
+  SkipBack,
+  SkipForward,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
 import PlayerSettings, { type PlayerSettingsProps } from "./PlayerSettings";
 
-// Panel kontrol bawah pemutar — judul + episode, subtitle, seek bar, tombol
-// putar/episode/pengaturan. Disusun dalam SATU kolom flex sehingga tidak pernah
-// saling menumpuk (rapi seperti app sejenis). Dipecah dari FeedPlayer (rapikan
-// kode): semua data + aksi disuplai induk lewat prop; tampilan & perilaku sama
-// persis. Control bar auto-sembunyi (controlsVisible) saat nonton biar video
-// jadi fokus; sentuh layar utk memunculkan lagi.
 export default function PlayerControls({
   title,
   currentEp,
@@ -27,6 +30,14 @@ export default function PlayerControls({
   onSeekUp,
   onTogglePlay,
   onOpenEpisodes,
+  onPrev,
+  onNext,
+  hasPrev,
+  hasNext,
+  volume,
+  muted,
+  onVolume,
+  onToggleMute,
   settings,
 }: {
   title: string;
@@ -44,20 +55,27 @@ export default function PlayerControls({
   onSeekUp: (e: React.PointerEvent<HTMLDivElement>) => void;
   onTogglePlay: () => void;
   onOpenEpisodes: () => void;
+  onPrev: () => void;
+  onNext: () => void;
+  hasPrev: boolean;
+  hasNext: boolean;
+  volume: number;
+  muted: boolean;
+  onVolume: (n: number) => void;
+  onToggleMute: () => void;
   settings: PlayerSettingsProps;
 }) {
+  const silent = muted || volume === 0;
+
   return (
     <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30 flex flex-col bg-gradient-to-t from-black/85 via-black/35 to-transparent pb-7 pt-10">
-      {/* Judul + episode — kecil & rapi ala PineDrama: rata kiri, maks 2 baris,
-          beri ruang utk rail ikon di kanan. Sengaja kecil (13px) supaya tidak
-          membludak di HP layar kecil & video tetap jadi fokus. */}
       <div className="px-3 pr-20">
         <h1 className="line-clamp-2 text-[13px] font-semibold leading-tight text-white/95 drop-shadow-md">
           {title}
         </h1>
         <button
           onClick={onOpenEpisodes}
-          className="pointer-events-auto mt-1 flex items-center gap-1 text-[11px] font-medium text-white/70 active:text-white"
+          className="pointer-events-auto mt-1 flex min-h-11 items-center gap-1 text-[11px] font-medium text-white/70 active:text-white"
         >
           <LayoutGrid className="h-3.5 w-3.5" />
           Eps {currentEp} / {episodes}
@@ -65,7 +83,6 @@ export default function PlayerControls({
         </button>
       </div>
 
-      {/* Subtitle — baris tersendiri di tengah, tak menumpuk judul/kontrol */}
       {cueText && (
         <div className="mt-2 flex justify-center px-3 pr-20">
           <span className="whitespace-pre-line rounded bg-black/60 px-2 py-0.5 text-center text-[13px] font-medium leading-snug text-white sm:text-sm">
@@ -74,15 +91,12 @@ export default function PlayerControls({
         </div>
       )}
 
-      {/* Control bar video — seek bar + tombol kontrol. Auto-sembunyi saat
-          nonton biar video jadi fokus; sentuh layar utk memunculkan lagi. */}
       {!lockedActive && (
         <div
           className={`mt-3 px-3 transition-opacity duration-300 ${
             controlsVisible ? "opacity-100" : "pointer-events-none opacity-0"
           }`}
         >
-        {/* Seek bar — bisa DIGESER (touch & mouse) utk maju/mundur di HP */}
         <div
           ref={seekBarRef}
           onPointerDown={onSeekDown}
@@ -106,14 +120,25 @@ export default function PlayerControls({
           </div>
         </div>
 
-        <div className="pointer-events-auto flex items-center gap-3">
+        <div className="pointer-events-auto flex items-center gap-1.5 sm:gap-3">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={onPrev}
+            disabled={!hasPrev}
+            aria-label="Episode sebelumnya"
+            className="size-9 text-white hover:bg-white/15 hover:text-white disabled:opacity-30"
+          >
+            <SkipBack className="size-5 fill-white" />
+          </Button>
           <Button
             type="button"
             variant="ghost"
             size="icon"
             onClick={onTogglePlay}
             aria-label={paused ? "Putar" : "Jeda"}
-            className="size-9 text-white transition-transform hover:bg-white/15 hover:text-white active:scale-90"
+            className="size-11 text-white transition-transform hover:bg-white/15 hover:text-white active:scale-90"
           >
             {paused ? (
               <Play className="size-7 fill-white" strokeWidth={0} />
@@ -121,9 +146,43 @@ export default function PlayerControls({
               <Pause className="size-7 fill-white" strokeWidth={0} />
             )}
           </Button>
-          <span className="text-xs tabular-nums text-white/80">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={onNext}
+            disabled={!hasNext}
+            aria-label="Episode berikutnya"
+            className="size-9 text-white hover:bg-white/15 hover:text-white disabled:opacity-30"
+          >
+            <SkipForward className="size-5 fill-white" />
+          </Button>
+          <span className="hidden text-xs tabular-nums text-white/80 sm:inline">
             {fmtTime(curTime)} / {fmtTime(dur)}
           </span>
+
+          <div className="ml-1 flex items-center gap-1">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={onToggleMute}
+              aria-label={silent ? "Nyalakan suara" : "Bisukan"}
+              className="size-9 text-white hover:bg-white/15 hover:text-white"
+            >
+              {silent ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
+            </Button>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.05}
+              value={silent ? 0 : volume}
+              onChange={(e) => onVolume(Number(e.target.value))}
+              aria-label="Volume"
+              className="hidden h-1.5 w-16 cursor-pointer accent-amber-400 sm:block"
+            />
+          </div>
 
           <Button
             type="button"
@@ -131,16 +190,17 @@ export default function PlayerControls({
             size="sm"
             onClick={onOpenEpisodes}
             aria-label="Daftar episode"
-            className="h-8 gap-1 rounded-full bg-white/15 px-2.5 text-xs font-bold text-white hover:bg-white/25 hover:text-white"
+            className="hidden h-8 gap-1 rounded-full bg-white/15 px-2.5 text-xs font-bold text-white hover:bg-white/25 hover:text-white sm:inline-flex"
           >
             <LayoutGrid className="size-4" />
             Episode
           </Button>
 
-          {/* Pengaturan — gabung resolusi, kecepatan, subtitle, unduh,
-              layar penuh ke SATU tombol biar layar tidak penuh tombol. */}
           <PlayerSettings {...settings} />
         </div>
+        <p className="mt-1 text-[10px] tabular-nums text-white/60 sm:hidden">
+          {fmtTime(curTime)} / {fmtTime(dur)}
+        </p>
         </div>
       )}
     </div>

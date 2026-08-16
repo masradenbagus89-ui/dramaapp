@@ -6,7 +6,13 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Bookmark } from "lucide-react";
 
-export default function SaveButton({ id }: { id: string }) {
+export default function SaveButton({
+  id,
+  variant = "block",
+}: {
+  id: string;
+  variant?: "block" | "hero";
+}) {
   const [saved, setSaved] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -22,6 +28,26 @@ export default function SaveButton({ id }: { id: string }) {
     setSaved(toggleSaved(id));
   };
 
+  const label = mounted ? (saved ? "Favorit" : "Tambah Favorit") : "Tambah Favorit";
+
+  if (variant === "hero") {
+    return (
+      <Button
+        type="button"
+        variant="outline"
+        onClick={onClick}
+        aria-pressed={saved}
+        className={cn(
+          "h-11 rounded-full border-zinc-600 bg-black/40 px-5 text-sm font-semibold text-white backdrop-blur hover:border-amber-400 hover:text-amber-400",
+          saved && "border-amber-400 text-amber-400 hover:text-amber-400",
+        )}
+      >
+        <Bookmark className="size-4" fill={saved ? "currentColor" : "none"} />
+        {label}
+      </Button>
+    );
+  }
+
   return (
     <Button
       type="button"
@@ -36,7 +62,7 @@ export default function SaveButton({ id }: { id: string }) {
       )}
     >
       <Bookmark className="size-4" fill={saved ? "currentColor" : "none"} />
-      {mounted ? (saved ? "Tersimpan" : "Simpan") : "Simpan"}
+      {mounted ? (saved ? "Dalam Favorit" : "Tambah Favorit") : "Tambah Favorit"}
     </Button>
   );
 }

@@ -172,6 +172,71 @@
   scrollbar-width: none;
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  /* Kamera hidup: geser + zoom berulang — kelihatan dalam 1 detik, bukan 18 detik. */
+  .hero-live {
+    animation: hero-live 12s ease-in-out infinite alternate;
+    will-change: transform;
+  }
+}
+
+@keyframes hero-live {
+  0% {
+    transform: scale(1.12) translate3d(-4%, 0, 0);
+  }
+  50% {
+    transform: scale(1.22) translate3d(3%, -2%, 0);
+  }
+  100% {
+    transform: scale(1.16) translate3d(4%, 2%, 0);
+  }
+}
+
+.hero-grain {
+  opacity: 0.14;
+  background-image: repeating-radial-gradient(
+    circle at 20% 20%,
+    rgba(255, 255, 255, 0.12) 0 1px,
+    transparent 1px 3px
+  );
+  background-size: 140px 140px;
+  mix-blend-mode: overlay;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .hero-grain {
+    animation: hero-grain 0.35s steps(3) infinite;
+  }
+  .hero-sweep {
+    background: linear-gradient(
+      105deg,
+      transparent 35%,
+      rgba(255, 255, 255, 0.08) 50%,
+      transparent 65%
+    );
+    background-size: 220% 100%;
+    animation: hero-sweep 4.5s ease-in-out infinite;
+  }
+}
+
+@keyframes hero-grain {
+  0% {
+    transform: translate(0, 0);
+  }
+  100% {
+    transform: translate(-3%, 2%);
+  }
+}
+
+@keyframes hero-sweep {
+  0% {
+    background-position: 120% 0;
+  }
+  100% {
+    background-position: -40% 0;
+  }
+}
+
 /* Subtitle di FeedPlayer dirender sendiri (state cueText) supaya posisinya
    terkontrol & tidak menumpuk judul/kontrol. Matikan render cue bawaan browser
    agar tidak ada teks subtitle ganda yang menimpa judul di HP. */

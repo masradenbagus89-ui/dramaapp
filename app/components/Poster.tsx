@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
 import type { Drama } from "@/lib/types";
 import { PAYWALL_ENABLED } from "@/lib/coins";
 import { Badge } from "@/components/ui/badge";
@@ -8,9 +11,33 @@ type Props = {
   drama: Drama;
   className?: string;
   showBadge?: boolean;
+  /** Cuplikan episode 1 — hanya dimuat saat hover di desktop. */
+  previewSrc?: string;
 };
 
-export default function Poster({ drama, className, showBadge = true }: Props) {
+export default function Poster({
+  drama,
+  className,
+  showBadge = true,
+  previewSrc,
+}: Props) {
+  const [preview, setPreview] = useState(false);
+  const delayRef = useRef(0);
+
+  const stopPreview = () => {
+    window.clearTimeout(delayRef.current);
+    setPreview(false);
+  };
+
+  const onEnter = () => {
+    if (!previewSrc) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+    delayRef.current = window.setTimeout(() => setPreview(true), 400);
+  };
+
+  useEffect(() => () => window.clearTimeout(delayRef.current), []);
+
   return (
     <div
       className={cn(
@@ -18,13 +45,15 @@ export default function Poster({ drama, className, showBadge = true }: Props) {
         drama.gradient,
         className,
       )}
+      onMouseEnter={onEnter}
+      onMouseLeave={stopPreview}
     >
       {drama.posterImage ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={drama.posterImage}
           alt={drama.title}
-          className="absolute inset-0 h-full w-full object-cover"
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
       ) : (
         <>
@@ -35,6 +64,18 @@ export default function Poster({ drama, className, showBadge = true }: Props) {
             </div>
           </div>
         </>
+      )}
+
+      {preview && previewSrc && (
+        <video
+          src={previewSrc}
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="absolute inset-0 h-full w-full object-cover"
+          onError={stopPreview}
+        />
       )}
 
       {showBadge && PAYWALL_ENABLED && drama.premium && (
@@ -56,7 +97,7 @@ export default function Poster({ drama, className, showBadge = true }: Props) {
         className="absolute left-2 top-2 gap-1 bg-black/60 px-2 py-0.5 text-[11px] font-normal text-white"
       >
         <Star className="size-3 fill-amber-400 text-amber-400" />
-        {drama.views}
+        {drama.imdbRating || drama.views}
       </Badge>
     </div>
   );

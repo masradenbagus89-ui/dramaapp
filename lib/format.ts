@@ -38,3 +38,10 @@ export function fmtTime(s: number): string {
   const sec = Math.floor(s % 60);
   return `${m}:${String(sec).padStart(2, "0")}`;
 }
+
+/** Ubah teks rating IMDb ("7.8", "7,8") jadi angka. Kosong/tidak valid -> 0. */
+export function parseRating(s?: string): number {
+  if (!s) return 0;
+  const n = parseFloat(s.trim().replace(",", "."));
+  return Number.isFinite(n) ? n : 0;
+}

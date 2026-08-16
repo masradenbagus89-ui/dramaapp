@@ -3,7 +3,7 @@
 // supaya kalau nanti kode dipecah/dirapikan dan perilakunya berubah tanpa
 // sengaja, tes ini langsung gagal (jadi rem darurat otomatis).
 import { describe, it, expect } from "vitest";
-import { parseViews, formatViews, slugify, fmtTime } from "../lib/format";
+import { parseViews, formatViews, slugify, fmtTime, parseRating } from "../lib/format";
 
 describe("parseViews — ubah teks views jadi angka", () => {
   it("membaca satuan K/M/B (huruf besar)", () => {
@@ -98,5 +98,18 @@ describe("fmtTime — detik jadi waktu tampilan m:ss", () => {
     expect(fmtTime(-3)).toBe("0:00");
     expect(fmtTime(NaN)).toBe("0:00");
     expect(fmtTime(Infinity)).toBe("0:00");
+  });
+});
+
+describe("parseRating — teks IMDb jadi angka", () => {
+  it("membaca angka biasa dan koma", () => {
+    expect(parseRating("7.8")).toBe(7.8);
+    expect(parseRating("7,8")).toBe(7.8);
+  });
+
+  it("kosong atau tidak valid jadi 0", () => {
+    expect(parseRating()).toBe(0);
+    expect(parseRating("")).toBe(0);
+    expect(parseRating("N/A")).toBe(0);
   });
 });

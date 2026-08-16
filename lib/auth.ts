@@ -71,3 +71,27 @@ export async function fetchUserRole(email: string): Promise<Role> {
     return "viewer";
   }
 }
+
+/** True kalau email sudah di daftar admin, tapi sesi browser masih penonton. */
+export function needsAdminRelogin(
+  user: User | null,
+  emailIsAdmin: boolean,
+): boolean {
+  return Boolean(user && user.role !== "admin" && emailIsAdmin);
+}
+
+/** Pertahankan nama kustom dari sesi lama kalau emailnya sama. */
+export function nameAfterLogin(
+  apiName: string,
+  email: string,
+  existing: User | null,
+): string {
+  if (
+    existing &&
+    existing.email.trim().toLowerCase() === email.trim().toLowerCase() &&
+    existing.name.trim()
+  ) {
+    return existing.name;
+  }
+  return apiName;
+}

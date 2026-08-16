@@ -44,7 +44,7 @@ const TABS: Tab[] = [
   {
     href: "/profile",
     label: "Profile",
-    match: (p) => p.startsWith("/profile"),
+    match: (p) => p.startsWith("/profile") || p.startsWith("/history"),
     icon: (active) => (
       <svg viewBox="0 0 24 24" className={`h-6 w-6 ${active ? "fill-amber-400" : "fill-zinc-400"}`}>
         <path d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-4.42 0-8 2.69-8 6v2h16v-2c0-3.31-3.58-6-8-6z" />

@@ -102,11 +102,10 @@ export default function ProfilePage() {
       key: "riwayat",
       label: "Riwayat tontonan",
       icon: Clock,
-      content: (
-        <div className="px-4 pb-4 text-sm text-zinc-400">
-          Riwayat tontonan otomatis terisi saat kamu menonton drama. Fitur tracking otomatis akan ditambahkan di update berikutnya.
-        </div>
-      ),
+      onClick: () => {
+        setExpanded(null);
+        router.push("/history");
+      },
     },
     {
       key: "pengaturan",

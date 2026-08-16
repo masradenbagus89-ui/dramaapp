@@ -3,7 +3,14 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { clearUser, getAvatarClass, readUser, type User } from "@/lib/auth";
+import {
+  clearUser,
+  fetchUserRole,
+  getAvatarClass,
+  needsAdminRelogin,
+  readUser,
+  type User,
+} from "@/lib/auth";
 import CoinChip from "./CoinChip";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,16 +35,36 @@ export default function TopNav() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [promptAdminRelogin, setPromptAdminRelogin] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [scrolled, setScrolled] = useState(false);
   const linkRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
   const [pill, setPill] = useState<{ left: number; width: number } | null>(null);
 
   useEffect(() => {
     setMounted(true);
-    setUser(readUser());
-    const handler = () => setUser(readUser());
+    let cancelled = false;
+    const apply = () => {
+      const u = readUser();
+      setUser(u);
+      if (!u || u.role === "admin") {
+        setPromptAdminRelogin(false);
+        return;
+      }
+      void fetchUserRole(u.email).then((role) => {
+        if (cancelled) return;
+        const latest = readUser();
+        if (!latest || latest.email !== u.email) return;
+        setPromptAdminRelogin(needsAdminRelogin(latest, role === "admin"));
+      });
+    };
+    apply();
+    const handler = () => apply();
     window.addEventListener("dramaku:auth-changed", handler);
-    return () => window.removeEventListener("dramaku:auth-changed", handler);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("dramaku:auth-changed", handler);
+    };
   }, []);
 
   const isActive = useCallback(
@@ -65,6 +92,20 @@ export default function TopNav() {
     return () => window.removeEventListener("resize", measurePill);
   }, [measurePill, mounted]);
 
+  const overlayHero =
+    pathname === "/beranda" || pathname.startsWith("/discover");
+
+  useEffect(() => {
+    if (!overlayHero) {
+      setScrolled(false);
+      return;
+    }
+    const onScroll = () => setScrolled(window.scrollY > 48);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [overlayHero]);
+
   if (pathname.startsWith("/watch") || pathname.startsWith("/feed")) return null;
   if (PUBLIC_PATHS.includes(pathname)) return null;
 
@@ -81,7 +122,19 @@ export default function TopNav() {
   };
 
   return (
-    <header className="sticky top-0 z-30 border-b border-zinc-800 bg-black/95 backdrop-blur">
+    <>
+    <header
+      className={cn(
+        overlayHero
+          ? cn(
+              "fixed inset-x-0 top-0 z-40 border-b transition-colors duration-300",
+              scrolled
+                ? "border-zinc-800 bg-black/90 backdrop-blur"
+                : "border-transparent bg-gradient-to-b from-black/85 via-black/40 to-transparent",
+            )
+          : "sticky top-0 z-30 border-b border-zinc-800 bg-black/95 backdrop-blur",
+      )}
+    >
       <div className="mx-auto flex h-14 max-w-7xl items-center gap-4 px-4 md:px-6">
         <Link
           href="/beranda"
@@ -208,5 +261,14 @@ export default function TopNav() {
         </div>
       </div>
     </header>
+    {promptAdminRelogin && (
+      <div className="border-b border-amber-900/50 bg-amber-950/40 px-4 py-2 text-center text-xs text-amber-200">
+        Akun ini sudah diangkat jadi admin, tapi sesinya masih penonton.{" "}
+        <Link href="/login" className="font-semibold text-amber-400 underline">
+          Masuk ulang dengan password admin
+        </Link>
+      </div>
+    )}
+    </>
   );
 }

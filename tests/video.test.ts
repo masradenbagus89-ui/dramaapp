@@ -11,6 +11,7 @@ describe("videoSrc — bikin alamat file video", () => {
 
   it("ada resolusi -> <ep>.<res>.mp4", () => {
     expect(videoSrc("https://x", "d", 1, "720p")).toBe("https://x/d/1.720p.mp4");
+    expect(videoSrc("https://x", "d", 1, "1080p")).toBe("https://x/d/1.1080p.mp4");
   });
 
   it("baseUrl kosong (mode lokal) -> folder publik /videos/", () => {

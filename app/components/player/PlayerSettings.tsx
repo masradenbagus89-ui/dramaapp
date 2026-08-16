@@ -6,23 +6,18 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Settings, Download, Maximize, Minimize, Gauge, MonitorPlay, Captions } from "lucide-react";
 
-// Kecepatan: opsi statis, dipakai hanya di menu ini → ikut pindah dari FeedPlayer.
-const SPEEDS = [1, 1.25, 1.5, 2];
+const SPEEDS = [0.5, 1, 1.25, 1.5, 2];
 
 // Resolusi: butuh file varian di PC backup dgn pola <ep>.<res>.mp4
 // (mis. 1.720p.mp4). "" = file asli <ep>.mp4. Kalau varian tak ada → balik Asli.
 const RESOLUTIONS: { code: string; label: string }[] = [
   { code: "", label: "Asli" },
+  { code: "1080p", label: "1080p" },
   { code: "720p", label: "720p" },
   { code: "480p", label: "480p" },
   { code: "360p", label: "360p" },
 ];
 
-// Menu Pengaturan pemutar — gabung kecepatan, resolusi, subtitle, unduh,
-// layar penuh ke SATU tombol gerigi biar layar tidak penuh tombol.
-// Dipecah dari FeedPlayer (rapikan kode). Data (status, pilihan aktif) + aksi
-// (ganti kecepatan/resolusi/subtitle, unduh, layar penuh) disuplai induk lewat
-// prop; konstanta opsi diimpor sendiri. Tampilan & perilaku sama persis.
 export type PlayerSettingsProps = {
   open: boolean;
   speed: number;
@@ -71,19 +66,18 @@ export default function PlayerSettings({
       </Button>
 
       {open && (
-        <div className="absolute bottom-full right-0 mb-2 w-60 rounded-xl border border-zinc-700 bg-zinc-900/95 p-3 shadow-xl backdrop-blur">
-          {/* Kecepatan */}
+        <div className="absolute bottom-full right-0 mb-2 w-72 rounded-xl border border-zinc-700 bg-zinc-900/95 p-3 shadow-xl backdrop-blur">
           <p className="mb-1.5 flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-zinc-500">
             <Gauge className="size-3" />
             Kecepatan
           </p>
-          <div className="mb-3 flex gap-1.5">
+          <div className="mb-3 flex flex-wrap gap-1.5">
             {SPEEDS.map((s) => (
               <button
                 key={s}
                 onClick={() => onSpeed(s)}
                 className={cn(
-                  "flex-1 rounded-lg py-1.5 text-xs font-bold transition-colors",
+                  "min-w-10 flex-1 rounded-lg py-1.5 text-xs font-bold transition-colors",
                   speed === s
                     ? "bg-amber-400 text-black"
                     : "bg-zinc-800 text-zinc-200 hover:bg-zinc-700"
@@ -94,18 +88,17 @@ export default function PlayerSettings({
             ))}
           </div>
 
-          {/* Resolusi */}
           <p className="mb-1.5 flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-zinc-500">
             <MonitorPlay className="size-3" />
             Resolusi
           </p>
-          <div className="mb-3 flex gap-1.5">
+          <div className="mb-3 flex flex-wrap gap-1.5">
             {RESOLUTIONS.map((r) => (
               <button
                 key={r.code}
                 onClick={() => onResolution(r.code)}
                 className={cn(
-                  "flex-1 rounded-lg py-1.5 text-xs font-bold transition-colors",
+                  "min-w-12 flex-1 rounded-lg py-1.5 text-xs font-bold transition-colors",
                   resolution === r.code
                     ? "bg-amber-400 text-black"
                     : "bg-zinc-800 text-zinc-200 hover:bg-zinc-700"
@@ -116,7 +109,6 @@ export default function PlayerSettings({
             ))}
           </div>
 
-          {/* Subtitle (kalau ada) */}
           {subtitles.length > 0 && (
             <>
               <p className="mb-1.5 flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-zinc-500">
@@ -153,7 +145,6 @@ export default function PlayerSettings({
             </>
           )}
 
-          {/* Aksi: unduh + layar penuh */}
           <div className="flex gap-2">
             <Button
               type="button"

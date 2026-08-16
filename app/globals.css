@@ -136,6 +136,8 @@
 
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+  /* Playfair Google Font 404 di Vercel (woff2 v40 hilang). Georgia sudah fallback judul. */
+  --font-playfair: Georgia, "Times New Roman", serif;
   --font-display: var(--font-playfair);
 }
 

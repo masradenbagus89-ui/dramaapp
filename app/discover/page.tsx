@@ -3,12 +3,18 @@ import { getAllDramas } from "@/lib/dramas";
 import { featuredHeroSlides } from "@/lib/hero-teaser";
 import DramaBrowser from "../components/DramaBrowser";
 import HomeHero from "../components/HomeHero";
+import DashboardVideoGrid from "../components/DashboardVideoGrid";
 
 export const dynamic = "force-dynamic";
 
 export default async function DiscoverPage() {
   const dramas = await getAllDramas();
   const slides = featuredHeroSlides(dramas);
+
+  // Bagian "Video terbaru" hanya muncul kalau sambungan ke dashboard sudah
+  // dikonfigurasi. Tanpa penjaga ini, halaman publik akan menampilkan pesan
+  // error hanya karena env belum diisi.
+  const dashboardAktif = Boolean(process.env.DASHBOARD_API_URL?.trim());
 
   return (
     <div className="pb-10">
@@ -29,6 +35,8 @@ export default async function DiscoverPage() {
         >
           <DramaBrowser dramas={dramas} />
         </Suspense>
+
+        {dashboardAktif && <DashboardVideoGrid />}
       </div>
     </div>
   );

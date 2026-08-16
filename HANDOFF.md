@@ -11,10 +11,13 @@
 
 Situs hidup: **https://dramaapp.vercel.app** — commit `820abb8` (belum termasuk redesign + hero hidup).
 
-**Tahap 1 redesign streaming** sudah di-verifikasi: `npm test` lulus 127/127, `npm run build` lulus. Sedang disiapkan untuk commit & dual-push. Database Supabase **tidak diubah**.
+**Tahap 1 redesign streaming** sudah di-commit dan siap dual-push:
+- `1af6e12` feat(streaming): Tahap 1 redesign DramaApp
+- `7bafe58` chore(kit): upgrade lintasAI kit v3 → v8
+- `657a43f` Merge branch 'dramaku/main' (sambungan dashboard video rekan)
+- `9b69055` chore(dev): dokumentasi rencana + AGENTS.local + helper lokal
 
-Perubahan admin (password per admin / admin VIEWER) **sengaja tidak ikut** commit kali ini; dibiarkan di working tree.
-Update kit lintasAI v8 (`.claude-kit` → `.lintasai/`) **ikut** commit kali ini.
+Database Supabase **tidak diubah**. Perubahan admin (password per admin / admin VIEWER) **sengaja tidak ikut** commit; masih di working tree.
 
 ## Yang baru saja diperbaiki
 

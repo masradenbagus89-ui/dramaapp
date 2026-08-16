@@ -20,12 +20,11 @@ Commit yang sedang tayang: **`820abb8`** (`fix(build): lepas Playfair Google Fon
 | Status | Commit | Isi | Aksi |
 |---|---|---|---|
 | ✅ sudah tayang | `820abb8` + `6bb2539` | Jalur video API luar + perbaikan font | Tidak perlu |
-| 🔄 siap deploy | working tree lokal | Tahap 1 redesign streaming: hero hidup, baris Netflix, player, riwayat | Commit & dual-push |
+| 🚀 siap deploy | `1af6e12`..`9b69055` | Tahap 1 redesign streaming + kit v8 + merge dashboard video + docs | Dual-push origin & dramaku, pantau Vercel |
 | ⏸️ menunggu bahan | — | API key Playly valid (yang kemarin `invalid_key`) | Jangan deploy env dulu |
 | ⏸️ tidak ikut antrian | working tree lokal | Admin VIEWER / password per admin | Jangan push kali ini |
-| 🔄 perlu masuk origin | `ce30315` di `dramaku/main` | feat(video): kunci dashboard bisa dikirim lewat header khusus | Merge sebelum push Tahap 1 |
 
-**Selisih `dramaku/main` vs `origin/main`:** `ce30315` ada di `dramaku/main`, belum di `origin/main`.
+**Selisih `dramaku/main` vs `origin/main`:** kosong setelah merge `ce30315`.
 
 ## Cara cek cepat (AI / kamu)
 

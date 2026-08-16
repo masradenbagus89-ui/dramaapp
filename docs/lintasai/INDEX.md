@@ -1,0 +1,16 @@
+# Buku pelajaran / indeks lintasAI (dramaapp)
+
+## Handoff & antrean
+
+- [HANDOFF.md](../../HANDOFF.md) — ketik `lanjut dari handoff` di tab baru
+- [antrean-deploy.md](../../antrean-deploy.md) — cek commit rekan yang belum di-deploy
+
+## Rencana
+
+- [2026-08-16-hero-trailer-hidup.md](./rencana/2026-08-16-hero-trailer-hidup.md) — hero trailer hidup di Beranda + Discover (lokal :3055)
+- [2026-08-16-redesign-streaming-tahap-1.md](./rencana/2026-08-16-redesign-streaming-tahap-1.md) — redesign homepage/detail/player/riwayat tanpa ganti skema Supabase
+- [2026-08-15-deploy-jalur-video-api.md](./rencana/2026-08-15-deploy-jalur-video-api.md) — pindahkan rilis video API luar dari dramaku ke origin lalu deploy Vercel
+- [2026-08-15-admin-tetap-viewer.md](./rencana/2026-08-15-admin-tetap-viewer.md) — admin baru tetap tampil VIEWER karena sesi penonton lama
+- [2026-08-15-riwayat-penonton.md](./rencana/2026-08-15-riwayat-penonton.md) — halaman Riwayat Penonton (Watch History) di `/history`
+- [2026-08-14-imdb-metadata-json.md](./rencana/2026-08-14-imdb-metadata-json.md) — generate JSON metadata dari IMDb ID (OMDb + banner opsional TMDB)
+- [2026-08-13-imdb-detail-drama.md](./rencana/2026-08-13-imdb-detail-drama.md) — detail film dari ID IMDb (OMDb), simpan metadata, tampil di halaman drama

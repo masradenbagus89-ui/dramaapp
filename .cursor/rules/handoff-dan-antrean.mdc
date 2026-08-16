@@ -1,0 +1,15 @@
+---
+description: Selalu isi HANDOFF.md dan antrean-deploy.md setelah perubahan
+alwaysApply: true
+---
+
+# Handoff + antrean deploy
+
+Kalau owner ketik **`lanjut dari handoff`** atau **`cek antrean-deploy`**: baca `HANDOFF.md` lalu `antrean-deploy.md` **sebelum** kerja lain.
+
+Setiap sesi yang mengubah kode, docs, env, atau status deploy:
+
+1. Perbarui `HANDOFF.md` di langkah terakhir (status sekarang + baris "yang baru saja diperbaiki"). Sejarah panjang pindah ke `NEXT-SESSION.md`.
+2. Kalau menyentuh rilis / commit rekan / Vercel: `git fetch origin` + `git fetch dramaku`, bandingkan, isi tabel di `antrean-deploy.md`.
+3. Jangan tulis secret, API key, atau isi `.env` ke kedua berkas itu.
+4. `git push origin main` tetap tombol rilis — perlu izin owner.

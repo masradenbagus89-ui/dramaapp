@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdmins, setAdmins, type AdminsFile } from "@/lib/store";
+import {
+  getAdmins,
+  setAdmins,
+  setAdminPassword,
+  type AdminsFile,
+} from "@/lib/store";
 import { getAdminEmail } from "@/lib/session";
+import { hashPassword, MIN_ADMIN_PASSWORD_LEN } from "@/lib/admin-password";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -21,12 +27,23 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const body = (await req.json()) as { email?: string; name?: string };
+    const body = (await req.json()) as {
+      email?: string;
+      name?: string;
+      password?: string;
+    };
     const email = String(body.email ?? "").trim().toLowerCase();
     const name = String(body.name ?? "").trim() || email.split("@")[0];
+    const password = String(body.password ?? "");
 
     if (!email || !email.includes("@")) {
       return NextResponse.json({ error: "Email tidak valid." }, { status: 400 });
+    }
+    if (password && password.length < MIN_ADMIN_PASSWORD_LEN) {
+      return NextResponse.json(
+        { error: `Password awal minimal ${MIN_ADMIN_PASSWORD_LEN} karakter.` },
+        { status: 400 },
+      );
     }
 
     const file: AdminsFile = await getAdmins();
@@ -44,8 +61,15 @@ export async function POST(req: NextRequest) {
     const today = new Date().toISOString().slice(0, 10);
     file.admins.push({ email, name, addedAt: today });
     await setAdmins(file);
+    if (password) {
+      await setAdminPassword(email, hashPassword(password));
+    }
 
-    return NextResponse.json({ ok: true, admin: { email, name, addedAt: today } });
+    return NextResponse.json({
+      ok: true,
+      admin: { email, name, addedAt: today },
+      hasPassword: Boolean(password),
+    });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Tambah admin gagal";
     return NextResponse.json({ error: message }, { status: 500 });

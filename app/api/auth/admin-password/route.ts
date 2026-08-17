@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminEmail } from "@/lib/session";
 import { setAdminPassword, clearAdminPassword } from "@/lib/store";
-import { hashPassword } from "@/lib/admin-password";
+import { hashPassword, MIN_ADMIN_PASSWORD_LEN } from "@/lib/admin-password";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const MIN_LEN = 8;
+const MIN_LEN = MIN_ADMIN_PASSWORD_LEN;
 
 // POST: admin yang SEDANG LOGIN memasang password pribadinya sendiri.
 // Identitas diambil dari cookie sesi bertanda-tangan (getAdminEmail) — BUKAN dari

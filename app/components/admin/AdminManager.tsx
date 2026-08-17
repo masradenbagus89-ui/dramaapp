@@ -24,6 +24,7 @@ export default function AdminManager({
   const [admins, setAdmins] = useState<AdminEntry[]>([]);
   const [newAdminEmail, setNewAdminEmail] = useState("");
   const [newAdminName, setNewAdminName] = useState("");
+  const [newAdminPassword, setNewAdminPassword] = useState("");
   const [adminMessage, setAdminMessage] = useState<{
     type: "ok" | "error";
     text: string;
@@ -46,23 +47,33 @@ export default function AdminManager({
       setAdminMessage({ type: "error", text: "Format email tidak valid." });
       return;
     }
+    if (newAdminPassword && newAdminPassword.length < 8) {
+      setAdminMessage({
+        type: "error",
+        text: "Password awal minimal 8 karakter, atau kosongkan untuk memakai password admin bersama.",
+      });
+      return;
+    }
     const res = await fetch("/api/admins", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         email: newAdminEmail.trim(),
         name: newAdminName.trim() || newAdminEmail.split("@")[0],
-        requesterEmail: currentAdminEmail,
+        password: newAdminPassword || undefined,
       }),
     });
     const data = await res.json();
     if (res.ok && data.ok) {
       setAdminMessage({
         type: "ok",
-        text: `Admin "${data.admin.email}" ditambahkan. Mereka bisa login sekarang.`,
+        text: data.hasPassword
+          ? `Admin "${data.admin.email}" ditambahkan. Mereka harus masuk ulang di /login dengan email itu + password yang Anda setel (bukan password saat daftar sebagai penonton).`
+          : `Admin "${data.admin.email}" ditambahkan. Mereka harus masuk ulang di /login dengan email itu + password admin bersama (bukan password saat daftar sebagai penonton).`,
       });
       setNewAdminEmail("");
       setNewAdminName("");
+      setNewAdminPassword("");
       refreshAdmins();
     } else {
       setAdminMessage({
@@ -106,11 +117,15 @@ export default function AdminManager({
       <Card className="gap-0 rounded-2xl border-zinc-800 bg-zinc-900/40 py-0">
         <CardContent className="p-5">
           <p className="mb-3 text-sm text-zinc-400">
-            Tambah email kolega yang mau Anda jadikan admin. Mereka login pakai email itu + password admin, lalu otomatis dapat role admin. Tiap admin bisa memasang password sendiri lewat panel &quot;Ubah Password Pribadi&quot; di bawah.
+            Tambah email kolega yang mau dijadikan admin. Lencana ADMIN tidak
+            muncul otomatis pada sesi yang sudah masuk sebagai penonton — mereka
+            harus masuk ulang di halaman Login. Password saat daftar sebagai
+            penonton tidak disimpan; isi password awal di bawah, atau mereka
+            memakai password admin bersama.
           </p>
           <form
             onSubmit={onAddAdmin}
-            className="grid gap-3 md:grid-cols-[1fr_1fr_auto]"
+            className="grid gap-3 md:grid-cols-[1fr_1fr_1fr_auto]"
           >
             <Input
               type="email"
@@ -126,6 +141,15 @@ export default function AdminManager({
               onChange={(e) => setNewAdminName(e.target.value)}
               placeholder="Nama (opsional)"
               aria-label="Nama admin baru"
+              className="rounded-lg border-zinc-700 bg-zinc-900 text-white focus-visible:border-amber-400 focus-visible:ring-0"
+            />
+            <Input
+              type="password"
+              value={newAdminPassword}
+              onChange={(e) => setNewAdminPassword(e.target.value)}
+              placeholder="Password awal (opsional)"
+              aria-label="Password awal admin baru"
+              autoComplete="new-password"
               className="rounded-lg border-zinc-700 bg-zinc-900 text-white focus-visible:border-amber-400 focus-visible:ring-0"
             />
             <Button

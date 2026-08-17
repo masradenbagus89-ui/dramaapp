@@ -7,6 +7,8 @@ import { scryptSync, randomBytes, timingSafeEqual } from "node:crypto";
 
 export type PasswordRecord = { hash: string; salt: string };
 
+export const MIN_ADMIN_PASSWORD_LEN = 8;
+
 const KEYLEN = 64; // panjang hash (byte)
 
 /** Buat salt acak + hash dari password. `salt` boleh diisi (untuk verifikasi/tes). */

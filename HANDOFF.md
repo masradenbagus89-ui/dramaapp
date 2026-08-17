@@ -9,28 +9,27 @@
 
 ## Status sekarang (1 menit)
 
-- Situs hidup: **https://dramaapp.vercel.app** — commit terbaru yang sudah di-push: `00f0d2e` (Tahap 2). Tahap 3 sudah di-push: `lihat log terbaru`.
-- **Tahap 3 redesign selesai** di working tree: rekomendasi pintar (karena kamu menonton X + trending genre), coin/premium polish (riwayat transaksi + buka semua episode), monetisasi (slot iklan beranda/detail).
+- Situs hidup: **https://dramaapp.vercel.app** — commit terbaru yang sudah di-push: `3007a73` (admin password per akun).
+- **Semua tahap redesign selesai**: Tahap 1 (homepage/player), Tahap 2 (discover/profile), Tahap 3 (rekomendasi/koin/iklan).
 - Build lokal & test lulus (212 tests).
 - Database Supabase **tidak diubah**.
-- Perubahan admin (password per admin / admin VIEWER) **sengaja tidak ikut** commit; masih di working tree.
+- Working tree bersih — tidak ada perubahan tertinggal.
 
 ## Yang baru saja diperbaiki
 
 | Kapan | Apa | Hasil yang kamu rasakan |
 |---|---|---|
+| 2026-08-17 sore | Push perubahan admin (password per admin + role VIEWER) | Admin bisa set password awal saat tambah kolega; pesan login lebih jelas; `origin/main` di `3007a73` |
 | 2026-08-17 sore | Tahap 3 redesign: rekomendasi pintar + coin polish + monetisasi | Beranda menampilkan "Karena kamu menonton X" dan "Trending di genre kamu"; paywall punya tombol "Buka semua episode"; profil menampilkan riwayat koin; iklan muncul di antara baris dan detail |
 | 2026-08-17 siang | Push Tahap 2 ke origin | `origin/main` diperbarui ke `00f0d2e` |
 | 2026-08-17 siang | Tahap 2 redesign: filter discover + dashboard profile | Buka `/discover` → pilih tahun / rating IMDb / urutan; buka `/profile` → lihat baris Lanjut Menonton, Favorit, Riwayat Terbaru, menu cepat, dan saldo koin |
 | 2026-08-17 siang | Commit revisi Hero Section cinematic `c2302dd` | Perubahan hero cinematic tersimpan di git, terpisah dari perubahan admin |
-| 2026-08-17 pagi | Revisi Hero Section cinematic: background video memenuhi layar, judul lebih kecil di kiri dengan pecahan koma, info minimal (rating, episode, genre, status), tombol `Mulai Menonton` merah premium + `Tambah ke My List`, navigasi dots garis, transisi halus | `/beranda` dan `/discover` terasa seperti Netflix/IDLIX: fokus pada video, teks tidak menutupi karakter, gradient kiri kuat |
 
 ## Belum selesai / menunggu kamu
 
-1. Commit + push Tahap 3 (butuh izin).
-2. Pantau Vercel untuk commit terbaru.
-3. API key Playly yang valid (produksi) — masih menunggu rekan.
-4. Perubahan admin (password per admin / admin VIEWER) masih di working tree — jangan di-push tanpa dipisah dulu.
+1. Pantau Vercel untuk commit terbaru (`3007a73`).
+2. API key Playly yang valid (produksi) — masih menunggu rekan.
+3. Fitur berikutnya (pilih): notifikasi/engagement, download offline, social features, atau performance/SEO.
 
 ## Jangan dilakukan
 

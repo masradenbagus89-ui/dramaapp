@@ -13,17 +13,16 @@
 | `masradenbagus89-ui/dramaapp` | `origin` | **Ya** — `git push origin main` = tombol rilis |
 
 Produksi: https://dramaapp.vercel.app  
-Commit terbaru yang di-push: **`a8ab69e`** (`feat(recommend,coins,ads): Tahap 3 redesign — rekomendasi pintar, coin polish, monetisasi`). Status Vercel perlu dicek langsung di dashboard.
+Commit terbaru yang di-push: **`3007a73`** (`feat(admin): password awal per admin + role VIEWER + UX login lebih jelas`). Status Vercel perlu dicek langsung di dashboard.
 
 ## Antrian sekarang
 
 | Status | Commit | Isi | Aksi |
 |---|---|---|---|
-| ✅ sudah di-push | `a8ab69e` (`00f0d2e`..`a8ab69e`) | Tahap 3 redesign: rekomendasi pintar + coin polish + monetisasi | Pantau Vercel origin/main |
+| ✅ sudah di-push | `3007a73` (`eb8d58a`..`3007a73`) | Admin password per akun + role VIEWER | Pantau Vercel origin/main |
 | ⏸️ menunggu bahan | — | API key Playly valid (yang kemarin `invalid_key`) | Jangan deploy env dulu |
-| ⏸️ tidak ikut antrian | working tree lokal | Admin VIEWER / password per admin | Jangan push kali ini |
 
-**Selisih `dramaku/main` vs `origin/main`:** `origin/main` 3 commit di depan (`c2302dd`, `00f0d2e`, `a8ab69e`).
+**Selisih `dramaku/main` vs `origin/main`:** `origin/main` 4 commit di depan (`c2302dd`, `00f0d2e`, `a8ab69e`, `3007a73`).
 
 ## Cara cek cepat (AI / kamu)
 

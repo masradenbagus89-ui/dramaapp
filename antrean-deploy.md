@@ -3,7 +3,7 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-08-17 siang WIB
+**Terakhir dicek:** 2026-08-17 sore WIB
 
 ## Siapa memantau apa
 
@@ -13,17 +13,17 @@
 | `masradenbagus89-ui/dramaapp` | `origin` | **Ya** — `git push origin main` = tombol rilis |
 
 Produksi: https://dramaapp.vercel.app  
-Commit terbaru yang di-push: **`00f0d2e`** (`feat(discover,profile): Tahap 2 redesign — filter tahun/rating/sort + dashboard user`). Status Vercel perlu dicek langsung di dashboard.
+Commit terbaru yang di-push: **`a8ab69e`** (`feat(recommend,coins,ads): Tahap 3 redesign — rekomendasi pintar, coin polish, monetisasi`). Status Vercel perlu dicek langsung di dashboard.
 
 ## Antrian sekarang
 
 | Status | Commit | Isi | Aksi |
 |---|---|---|---|
-| ✅ sudah di-push | `00f0d2e` (`4821c8f`..`00f0d2e`) | Hero cinematic + Tahap 2 redesign | Pantau Vercel origin/main |
+| ✅ sudah di-push | `a8ab69e` (`00f0d2e`..`a8ab69e`) | Tahap 3 redesign: rekomendasi pintar + coin polish + monetisasi | Pantau Vercel origin/main |
 | ⏸️ menunggu bahan | — | API key Playly valid (yang kemarin `invalid_key`) | Jangan deploy env dulu |
 | ⏸️ tidak ikut antrian | working tree lokal | Admin VIEWER / password per admin | Jangan push kali ini |
 
-**Selisih `dramaku/main` vs `origin/main`:** `origin/main` 2 commit di depan (`c2302dd`, `00f0d2e`).
+**Selisih `dramaku/main` vs `origin/main`:** `origin/main` 3 commit di depan (`c2302dd`, `00f0d2e`, `a8ab69e`).
 
 ## Cara cek cepat (AI / kamu)
 

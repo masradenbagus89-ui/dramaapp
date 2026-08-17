@@ -5,8 +5,13 @@
 // status) + aksi (buka, nonton iklan) disuplai induk lewat prop; konstanta koin
 // diimpor sendiri. Tampilan & perilaku sama persis seperti versi sebelumnya.
 import Link from "next/link";
-import { Lock, LockOpen, Clapperboard, Coins } from "lucide-react";
-import { COIN_PER_EPISODE, FREE_EPISODES, REWARD_PER_AD } from "@/lib/coins";
+import { Lock, LockOpen, Clapperboard, Coins, Zap } from "lucide-react";
+import {
+  COIN_PER_EPISODE,
+  FREE_EPISODES,
+  REWARD_PER_AD,
+  calculateUnlockAllPrice,
+} from "@/lib/coins";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -16,7 +21,10 @@ export default function EpisodePaywall({
   balance,
   unlocking,
   payMsg,
+  totalEpisodes,
+  unlockedCount,
   onUnlock,
+  onUnlockAll,
   onWatchAd,
 }: {
   episodeNumber: number;
@@ -24,9 +32,15 @@ export default function EpisodePaywall({
   balance: number;
   unlocking: boolean;
   payMsg: string | null;
+  totalEpisodes: number;
+  unlockedCount: number;
   onUnlock: () => void;
+  onUnlockAll: () => void;
   onWatchAd: () => void;
 }) {
+  const unlockAllPrice = calculateUnlockAllPrice(totalEpisodes, unlockedCount);
+  const canUnlockAll = unlockAllPrice > 0 && balance >= unlockAllPrice;
+  const remainingLocked = totalEpisodes - FREE_EPISODES - unlockedCount;
   return (
     <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/85 px-6">
       <div className="w-full max-w-xs text-center">
@@ -71,6 +85,29 @@ export default function EpisodePaywall({
               <Clapperboard className="h-4 w-4" />
               Nonton iklan +{REWARD_PER_AD} koin
             </Button>
+
+            {unlockAllPrice > 0 && (
+              <>
+                <div className="mt-3 flex items-center gap-2 text-[11px] text-zinc-500">
+                  <span className="h-px flex-1 bg-zinc-800" />
+                  atau
+                  <span className="h-px flex-1 bg-zinc-800" />
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={onUnlockAll}
+                  disabled={unlocking || !canUnlockAll}
+                  className="mt-2 w-full rounded-full border-amber-400 bg-amber-400/10 py-2.5 text-sm font-bold text-amber-300 hover:bg-amber-400/20 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <Zap className="h-4 w-4" />
+                  Buka semua {remainingLocked} episode • {unlockAllPrice} koin
+                </Button>
+                <p className="mt-1.5 text-[10px] text-zinc-500">
+                  Hemat {Math.round((1 - 0.8) * 100)}% dibanding buka satu-satu
+                </p>
+              </>
+            )}
+
             <Link
               href="/profile#koin"
               className="mt-2 inline-block text-xs text-zinc-400 underline hover:text-zinc-200"

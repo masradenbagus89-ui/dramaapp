@@ -6,9 +6,15 @@ import type { Drama } from "@/lib/types";
 import { readMyList } from "@/lib/myList";
 import { readHistory, type HistoryItem } from "@/lib/progress";
 import { parseRating, parseViews } from "@/lib/format";
-import { recommendDramas } from "@/lib/recommend";
+import {
+  latestHistoryDrama,
+  recommendDramas,
+  similarToDrama,
+  trendingInGenre,
+} from "@/lib/recommend";
 import { genreChipClass } from "@/lib/genre-accent";
 import ContentRow from "./ContentRow";
+import AdBanner from "./AdBanner";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
@@ -112,6 +118,24 @@ export default function BerandaRows({ dramas }: { dramas: Drama[] }) {
       .filter((d): d is Drama => Boolean(d));
   }, [mounted, saved, byId]);
 
+  const latestDrama = useMemo(() => {
+    if (!mounted || history.length === 0) return null;
+    return latestHistoryDrama(
+      dramas,
+      history.map((h) => h.dramaId),
+    );
+  }, [mounted, dramas, history]);
+
+  const similar = useMemo(() => {
+    if (!mounted || !latestDrama) return { base: null as Drama | null, items: [] as Drama[] };
+    return similarToDrama(
+      latestDrama.id,
+      dramas,
+      history.map((h) => h.dramaId),
+      saved,
+    );
+  }, [mounted, latestDrama, dramas, history, saved]);
+
   const recommended = useMemo(() => {
     if (!mounted) return { genre: null as string | null, items: [] as Drama[] };
     return recommendDramas(
@@ -120,6 +144,11 @@ export default function BerandaRows({ dramas }: { dramas: Drama[] }) {
       saved,
     );
   }, [mounted, dramas, history, saved]);
+
+  const trendingGenre = useMemo(() => {
+    if (!mounted) return [] as Drama[];
+    return trendingInGenre(recommended.genre, dramas, 12);
+  }, [mounted, recommended.genre, dramas]);
 
   return (
     <div className="space-y-7 pt-4 md:space-y-9 md:pt-6">
@@ -159,7 +188,17 @@ export default function BerandaRows({ dramas }: { dramas: Drama[] }) {
         />
       )}
 
-      {mounted && recommended.items.length > 0 && (
+      {mounted && similar.base && similar.items.length > 0 && (
+        <ContentRow
+          title={`Karena kamu menonton ${similar.base.title}`}
+          subtitle="Drama serupa yang belum kamu tonton"
+          accent={similar.base.category}
+          dramas={similar.items}
+          href="/discover"
+        />
+      )}
+
+      {mounted && !similar.base && recommended.items.length > 0 && (
         <ContentRow
           title={
             recommended.genre
@@ -172,6 +211,20 @@ export default function BerandaRows({ dramas }: { dramas: Drama[] }) {
           href="/discover"
         />
       )}
+
+      {mounted && trendingGenre.length > 0 && recommended.genre && (
+        <ContentRow
+          title={`Trending di ${recommended.genre}`}
+          subtitle="Paling banyak ditonton di genre favoritmu"
+          accent={recommended.genre}
+          dramas={trendingGenre}
+          href={`/discover?q=${encodeURIComponent(recommended.genre)}`}
+        />
+      )}
+
+      <div className="px-4 md:px-0">
+        <AdBanner className="mx-auto max-w-7xl" />
+      </div>
 
       {mounted && savedDramas.length > 0 && (
         <ContentRow title="Favorit Saya" dramas={savedDramas} href="/my-list" />
@@ -197,6 +250,10 @@ export default function BerandaRows({ dramas }: { dramas: Drama[] }) {
           href="/discover"
         />
       )}
+
+      <div className="px-4 md:px-0">
+        <AdBanner className="mx-auto max-w-7xl" />
+      </div>
 
       {topRated.length > 0 && (
         <ContentRow

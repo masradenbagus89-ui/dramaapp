@@ -40,6 +40,30 @@ export async function fetchWallet(dramaId?: string): Promise<WalletStatus> {
   return res.json();
 }
 
+export type CoinHistoryItem = {
+  type: "unlock" | "checkin" | "ad";
+  label: string;
+  at: string;
+  coins?: number;
+};
+
+export type CoinHistoryResponse = {
+  ok: boolean;
+  loggedIn: boolean;
+  balance: number;
+  history: CoinHistoryItem[];
+};
+
+export async function fetchCoinHistory(): Promise<CoinHistoryResponse> {
+  const qs = new URLSearchParams();
+  const e = email();
+  if (e) qs.set("email", e);
+  const res = await fetch(`/api/coins/history?${qs.toString()}`, {
+    cache: "no-store",
+  });
+  return res.json();
+}
+
 type MutationResult = {
   ok?: boolean;
   error?: string;
@@ -73,6 +97,9 @@ async function post(path: string, extra: Record<string, unknown> = {}) {
 
 export function unlockEpisode(dramaId: string, ep: number) {
   return post("/api/coins/unlock", { dramaId, ep });
+}
+export function unlockAllEpisodes(dramaId: string) {
+  return post("/api/coins/unlock-all", { dramaId });
 }
 export function claimReward() {
   return post("/api/coins/reward");

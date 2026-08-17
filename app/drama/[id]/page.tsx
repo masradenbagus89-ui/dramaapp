@@ -8,6 +8,7 @@ import LikeButton from "@/app/components/LikeButton";
 import Comments from "@/app/components/Comments";
 import WatchCta from "@/app/components/WatchCta";
 import EpisodeList from "@/app/components/EpisodeList";
+import AdBanner from "@/app/components/AdBanner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, Captions } from "lucide-react";
@@ -198,6 +199,8 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
             />
           </>
         )}
+
+        <AdBanner className="mt-6" />
 
         <Comments dramaId={drama.id} />
       </div>

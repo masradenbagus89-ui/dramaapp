@@ -334,6 +334,23 @@ export async function spendUnlock(
   return { ok: true, balance: data.wallets[e] };
 }
 
+/**
+ * Tambahkan banyak token unlock sekaligus (mis. fitur "buka semua episode").
+ * Idempoten: token yang sudah ada tidak ditambah ulang.
+ */
+export async function addUnlocks(email: string, tokens: string[]): Promise<void> {
+  const e = normEmail(email);
+  if (!e || tokens.length === 0) return;
+  if (useSupabase) {
+    const rows = tokens.map((token) => ({ email: e, token }));
+    await sbUpsert("unlocks", rows, "email,token");
+    return;
+  }
+  const data = readLocal<WalletFile>("wallets.json", EMPTY_WALLET);
+  data.unlocks[e] = Array.from(new Set([...(data.unlocks[e] ?? []), ...tokens]));
+  writeLocal("wallets.json", data);
+}
+
 export async function getCoinMeta(email: string): Promise<CoinMeta> {
   const e = normEmail(email);
   if (useSupabase) return (await sbDocGet<CoinMeta>(metaKey(e))) ?? {};

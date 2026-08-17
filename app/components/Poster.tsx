@@ -79,8 +79,8 @@ export default function Poster({
       )}
 
       {showBadge && PAYWALL_ENABLED && drama.premium && (
-        <Badge className="absolute right-2 top-2 gap-0.5 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide shadow">
-          🪙 Premium
+        <Badge className="absolute right-2 top-2 gap-1 border-amber-400/50 bg-amber-400/90 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-black shadow-lg">
+          <span className="text-xs">🪙</span> Premium
         </Badge>
       )}
       {showBadge && !drama.premium && drama.exclusive && (

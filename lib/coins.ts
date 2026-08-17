@@ -87,3 +87,22 @@ export function unlockToken(dramaId: string, ep: number): string {
 export function formatIDR(n: number): string {
   return "Rp" + n.toLocaleString("id-ID");
 }
+
+/**
+ * Hitung harga untuk membuka SEMUA episode premium yang masih terkunci.
+ * Diskon 20% dibanding buka satu-satu.
+ * @param totalEpisodes total episode drama
+ * @param unlockedCount jumlah episode yang sudah dibuka user
+ */
+export function calculateUnlockAllPrice(
+  totalEpisodes: number,
+  unlockedCount: number,
+  discount = 0.8,
+): number {
+  const remaining = Math.max(
+    0,
+    totalEpisodes - FREE_EPISODES - unlockedCount,
+  );
+  if (remaining === 0) return 0;
+  return Math.max(1, Math.ceil(remaining * COIN_PER_EPISODE * discount));
+}

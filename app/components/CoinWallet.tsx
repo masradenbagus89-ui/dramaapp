@@ -6,8 +6,10 @@ import { readUser } from "@/lib/auth";
 import {
   WALLET_EVENT,
   claimCheckin,
+  fetchCoinHistory,
   fetchWallet,
   topup,
+  type CoinHistoryItem,
 } from "@/lib/wallet";
 import {
   CHECKIN_BONUS,
@@ -63,21 +65,32 @@ export default function CoinWallet() {
   const [mounted, setMounted] = useState(false);
   const [email, setEmail] = useState("");
   const [balance, setBalance] = useState(0);
+  const [history, setHistory] = useState<CoinHistoryItem[]>([]);
   const [adOpen, setAdOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ type: "ok" | "error"; text: string } | null>(
     null,
   );
 
+  const loadHistory = () => {
+    fetchCoinHistory()
+      .then((h) => setHistory(h.history ?? []))
+      .catch(() => setHistory([]));
+  };
+
   useEffect(() => {
     setMounted(true);
     const u = readUser();
     setEmail(u?.email ?? "");
-    if (u?.email) fetchWallet().then((w) => setBalance(w.balance ?? 0)).catch(() => {});
+    if (u?.email) {
+      fetchWallet().then((w) => setBalance(w.balance ?? 0)).catch(() => {});
+      loadHistory();
+    }
 
     const onWallet = (e: Event) => {
       const detail = (e as CustomEvent).detail as { balance?: number };
       if (typeof detail?.balance === "number") setBalance(detail.balance);
+      loadHistory();
     };
     window.addEventListener(WALLET_EVENT, onWallet);
     return () => window.removeEventListener(WALLET_EVENT, onWallet);
@@ -235,6 +248,35 @@ export default function CoinWallet() {
             </Button>
           ))}
         </div>
+
+        {history.length > 0 && (
+          <>
+            <p className="mt-4 text-xs font-semibold uppercase tracking-wider text-zinc-500">
+              Riwayat terakhir
+            </p>
+            <div className="mt-2 space-y-1.5">
+              {history.slice(0, 5).map((item, i) => (
+                <div
+                  key={i}
+                  className="flex items-center justify-between rounded-lg bg-zinc-900/60 px-3 py-2 text-sm"
+                >
+                  <span className="text-zinc-300">{item.label}</span>
+                  {typeof item.coins === "number" && (
+                    <span
+                      className={cn(
+                        "font-semibold",
+                        item.coins >= 0 ? "text-emerald-400" : "text-red-400",
+                      )}
+                    >
+                      {item.coins >= 0 ? "+" : ""}
+                      {item.coins}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </>
+        )}
 
         {msg && (
           <div

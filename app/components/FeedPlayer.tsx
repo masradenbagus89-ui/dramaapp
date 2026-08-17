@@ -17,7 +17,7 @@ import {
 import { readUser } from "@/lib/auth";
 import { videoSrc, downloadUrl } from "@/lib/video";
 import { seekTime } from "@/lib/seek";
-import { fetchWallet, unlockEpisode } from "@/lib/wallet";
+import { fetchWallet, unlockEpisode, unlockAllEpisodes } from "@/lib/wallet";
 import { isEpisodeLocked } from "@/lib/coins";
 import RewardedAdModal from "./RewardedAdModal";
 import EpisodePaywall from "./player/EpisodePaywall";
@@ -139,6 +139,36 @@ export default function FeedPlayer({
       setPayMsg("Koin kurang — tonton iklan atau beli koin dulu.");
     } else {
       setPayMsg(data.error ?? "Gagal membuka episode.");
+    }
+    setUnlocking(false);
+  };
+
+  const onUnlockAll = async () => {
+    if (unlocking) return;
+    if (!email) {
+      setPayMsg("Masuk dulu untuk membuka episode ini.");
+      return;
+    }
+    setUnlocking(true);
+    setPayMsg(null);
+    const { status, data } = await unlockAllEpisodes(dramaId);
+    if (status === 200 && data.ok) {
+      if (typeof data.balance === "number") setBalance(data.balance);
+      // Refresh status wallet supaya unlockedEps terisi ulang.
+      fetchWallet(dramaId)
+        .then((w) => {
+          setBalance(w.balance ?? 0);
+          setUnlocked(new Set(w.unlockedEps ?? []));
+        })
+        .catch(() => {});
+      setPayMsg(null);
+    } else if (status === 402) {
+      if (typeof data.balance === "number") setBalance(data.balance);
+      setPayMsg(
+        data.error ?? "Koin kurang untuk membuka semua episode.",
+      );
+    } else {
+      setPayMsg(data.error ?? "Gagal membuka semua episode.");
     }
     setUnlocking(false);
   };
@@ -614,7 +644,10 @@ export default function FeedPlayer({
           balance={balance}
           unlocking={unlocking}
           payMsg={payMsg}
+          totalEpisodes={episodes}
+          unlockedCount={unlocked.size}
           onUnlock={onUnlock}
+          onUnlockAll={onUnlockAll}
           onWatchAd={() => setAdOpen(true)}
         />
       )}

@@ -9,9 +9,11 @@ import { Bookmark } from "lucide-react";
 export default function SaveButton({
   id,
   variant = "block",
+  className,
 }: {
   id: string;
   variant?: "block" | "hero";
+  className?: string;
 }) {
   const [saved, setSaved] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -29,6 +31,11 @@ export default function SaveButton({
   };
 
   const label = mounted ? (saved ? "Favorit" : "Tambah Favorit") : "Tambah Favorit";
+  const heroLabel = mounted
+    ? saved
+      ? "Dalam My List"
+      : "Tambah ke My List"
+    : "Tambah ke My List";
 
   if (variant === "hero") {
     return (
@@ -40,10 +47,11 @@ export default function SaveButton({
         className={cn(
           "h-11 rounded-full border-zinc-600 bg-black/40 px-5 text-sm font-semibold text-white backdrop-blur hover:border-amber-400 hover:text-amber-400",
           saved && "border-amber-400 text-amber-400 hover:text-amber-400",
+          className,
         )}
       >
         <Bookmark className="size-4" fill={saved ? "currentColor" : "none"} />
-        {label}
+        {heroLabel}
       </Button>
     );
   }

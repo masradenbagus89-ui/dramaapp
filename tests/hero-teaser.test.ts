@@ -5,6 +5,7 @@ import {
   swipeDirection,
   featuredHeroSlides,
   teaserSrc,
+  splitHeroTitle,
   VIDEO_RETRY_LIMIT,
 } from "../lib/hero-teaser";
 import type { Drama } from "../lib/types";
@@ -93,5 +94,32 @@ describe("featuredHeroSlides", () => {
       }),
     ]);
     expect(slides[0].id).toBe("series");
+  });
+});
+
+describe("splitHeroTitle", () => {
+  it("pecah judul di koma menjadi 2 baris", () => {
+    expect(
+      splitHeroTitle(
+        "Diremehkan Sebagai Gadis Desa, Ternyata Dia Legenda Terkuat",
+      ),
+    ).toEqual([
+      "Diremehkan Sebagai Gadis Desa",
+      "Ternyata Dia Legenda Terkuat",
+    ]);
+  });
+
+  it("batasi maksimal 3 baris meski ada banyak koma", () => {
+    expect(splitHeroTitle("A, B, C, D, E")).toEqual(["A, B, C, D, E"]);
+  });
+
+  it("kembalikan judul utuh kalau tidak ada koma", () => {
+    expect(splitHeroTitle("Guru Misterius Membentuk Pasukan Rahasia")).toEqual(
+      ["Guru Misterius Membentuk Pasukan Rahasia"],
+    );
+  });
+
+  it("abaikan spasi berlebih", () => {
+    expect(splitHeroTitle("A,  B ,C ")).toEqual(["A", "B", "C"]);
   });
 });

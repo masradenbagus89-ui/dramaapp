@@ -66,3 +66,26 @@ export function featuredHeroSlides(dramas: Drama[], max = 5): Drama[] {
   );
   return ranked.slice(0, Math.max(1, Math.min(max, ranked.length)));
 }
+
+/**
+ * Pecah judul hero menjadi beberapa baris untuk tampilan cinematic.
+ * Prioritaskan pemisah koma (contoh: "A, B" -> ["A", "B"]).
+ * Kalau tidak ada koma, kembalikan judul utuh dan biarkan CSS line-clamp
+ * yang membatasi jumlah baris.
+ */
+export function splitHeroTitle(title: string, maxLines = 3): string[] {
+  const trimmed = title.trim();
+  if (!trimmed) return [];
+
+  if (trimmed.includes(",")) {
+    const parts = trimmed
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (parts.length >= 2 && parts.length <= maxLines) {
+      return parts;
+    }
+  }
+
+  return [trimmed];
+}

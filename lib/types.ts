@@ -28,6 +28,8 @@ export type Drama = {
    * premium, supaya koleksi lama tetap bisa ditonton gratis.
    */
   premium?: boolean;
+  /** Status penayangan drama: sedang berjalan atau sudah selesai. */
+  status?: "Ongoing" | "Completed";
   /** Metadata IMDb (opsional; dari OMDb). Drama lama tanpa field ini = valid. */
   imdbId?: string;
   year?: string;

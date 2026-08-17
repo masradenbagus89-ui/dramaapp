@@ -1,10 +1,18 @@
 # Lanjutan Sesi Drama-App
 
-**Terakhir update:** 2026-08-16 (HANDOFF.md + antrean-deploy.md jadi jembatan utama)
+**Terakhir update:** 2026-08-17 (HANDOFF.md + antrean-deploy.md jadi jembatan utama)
 
 > **Titik lanjut tab baru:** `HANDOFF.md` (ketik `lanjut dari handoff`).
 > **Cek commit rekan / antrian rilis:** `antrean-deploy.md`.
 > Berkas ini = arsip lebih panjang. Tanda ❓ = belum diverifikasi ulang.
+
+## Riwayat singkat dari HANDOFF.md (dipindahkan 2026-08-17)
+
+| Kapan | Apa | Hasil yang kamu rasakan |
+|---|---|---|
+| 2026-08-16 sore | Hero hidup: kamera geser di poster (tunnel video mati), utamakan drama berseri, bukan film IMDb | Geser kiri/kanan di `/beranda` atau `/discover` — gambar bergerak seperti trailer, bukan foto kaku |
+| 2026-08-16 siang | Tahap 1: homepage 16:9, baris Netflix, daftar episode, player (volume/0.5×/1080p/prev-next), lanjut dari menit terakhir | Buka `/beranda` lokal — banner + baris baru; nonton lalu berhenti → teks "Lanjut Menonton Episode X dari mm:ss" |
+| 2026-08-15 malam | Deploy rilis rekan video API luar | Produksi belum berubah di sesi ini |
 
 ## WAJIB — Commit + Push dual remote (owner, 2026-08-11)
 

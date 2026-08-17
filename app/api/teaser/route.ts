@@ -25,9 +25,7 @@ export async function GET(req: NextRequest) {
   const fileName = `${ep}.mp4`;
   const url = `${baseUrl}/${encodeURIComponent(id)}/${encodeURIComponent(fileName)}`;
   const clientRange = req.headers.get("range");
-  const upstreamHeaders: HeadersInit = {
-    Range: clientRange || `bytes=0-${TEASER_BYTES - 1}`,
-  };
+  const upstreamHeaders: HeadersInit = clientRange ? { Range: clientRange } : {};
 
   try {
     const upstream = await fetch(url, {

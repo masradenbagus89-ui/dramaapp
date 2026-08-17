@@ -49,7 +49,9 @@ export default function HeroPreview({
   const videoRef = useRef<HTMLVideoElement>(null);
   const errorCount = useRef(0);
   const retryTimer = useRef<number>(0);
+  const playAttempt = useRef(0);
   const [ready, setReady] = useState(false);
+  const [hasMeta, setHasMeta] = useState(false);
   const [failed, setFailed] = useState(false);
   const [muted, setMuted] = useState(true);
 
@@ -75,8 +77,10 @@ export default function HeroPreview({
 
   useEffect(() => {
     errorCount.current = 0;
+    playAttempt.current = 0;
     setFailed(false);
     setReady(false);
+    setHasMeta(false);
     if (!src) {
       report("failed");
       return;
@@ -96,12 +100,17 @@ export default function HeroPreview({
 
   const tryPlay = useCallback(() => {
     const v = videoRef.current;
-    if (!v || failed) return;
+    if (!v || failed || ready) return;
     v.muted = true;
+    playAttempt.current += 1;
     void v.play().then(markPlaying).catch(() => {
-      // Autoplay diblokir: poster hidup tetap kelihatan.
+      // Autoplay diblokir: coba lagi beberapa saat, maksimal 5 kali.
+      if (playAttempt.current < 5) {
+        window.clearTimeout(retryTimer.current);
+        retryTimer.current = window.setTimeout(() => tryPlay(), 600);
+      }
     });
-  }, [failed, markPlaying]);
+  }, [failed, markPlaying, ready]);
 
   useEffect(() => {
     return () => window.clearTimeout(retryTimer.current);
@@ -109,7 +118,7 @@ export default function HeroPreview({
 
   return (
     <div
-      className={`absolute inset-0 overflow-hidden ${
+      className={`hero-bg-in absolute inset-0 overflow-hidden ${
         rounded ? "rounded-[1.75rem]" : ""
       } ${className}`}
     >
@@ -128,8 +137,8 @@ export default function HeroPreview({
         <img
           src={poster}
           alt={title}
-          className={`hero-live absolute inset-0 h-full w-full ${mediaClass} transition-opacity duration-500 ${
-            ready ? "opacity-0" : "opacity-100"
+          className={`hero-live absolute inset-0 h-full w-full ${mediaClass} transition-opacity duration-700 ${
+            ready || hasMeta ? "opacity-0" : "opacity-100"
           }`}
         />
       )}
@@ -144,10 +153,11 @@ export default function HeroPreview({
           playsInline
           preload="auto"
           aria-hidden
-          className={`absolute inset-0 h-full w-full ${mediaClass} transition-opacity duration-300 ${
+          className={`absolute inset-0 h-full w-full ${mediaClass} transition-opacity duration-700 ${
             ready ? "opacity-100" : "opacity-0"
           }`}
           onLoadedMetadata={(e) => {
+            setHasMeta(true);
             const v = e.currentTarget;
             if (
               startAt > 0 &&
@@ -160,9 +170,16 @@ export default function HeroPreview({
                 // Server tanpa seek: tetap putar dari detik 0.
               }
             }
+            tryPlay();
           }}
-          onLoadedData={tryPlay}
-          onCanPlay={tryPlay}
+          onLoadedData={() => {
+            setHasMeta(true);
+            tryPlay();
+          }}
+          onCanPlay={() => {
+            setHasMeta(true);
+            tryPlay();
+          }}
           onPlaying={markPlaying}
           onTimeUpdate={(e) => {
             const v = e.currentTarget;

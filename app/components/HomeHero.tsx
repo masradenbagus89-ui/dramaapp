@@ -1,18 +1,17 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import type { Drama } from "@/lib/types";
 import {
   PLAYING_ROTATE_MS,
   swipeDirection,
   teaserSrc,
+  splitHeroTitle,
   type TeaserStatus,
 } from "@/lib/hero-teaser";
 import HeroPreview from "./HeroPreview";
 import WatchCta from "./WatchCta";
 import SaveButton from "./SaveButton";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -62,6 +61,16 @@ export default function HomeHero({
     return () => window.clearInterval(t);
   }, [paused, listening, reduceMotion, count, go, index, teaserStatus]);
 
+  // Navigasi keyboard untuk aksesibilitas.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") go(-1);
+      if (e.key === "ArrowRight") go(1);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [go]);
+
   const hero = dramas[index];
   if (!hero) return null;
 
@@ -71,6 +80,8 @@ export default function HomeHero({
     .split(",")
     .map((g) => g.trim())
     .filter(Boolean);
+  const titleParts = splitHeroTitle(hero.title, 3);
+  const status = hero.status || "Ongoing";
 
   const onPointerDown = (e: React.PointerEvent) => {
     if ((e.target as HTMLElement).closest("button, a")) return;
@@ -98,16 +109,13 @@ export default function HomeHero({
       aria-roledescription="carousel"
       aria-label="Drama unggulan"
     >
-      <div className="relative min-h-[78svh] w-full md:min-h-[88svh]">
-        <div
-          className={`absolute inset-0 bg-gradient-to-br ${hero.gradient}`}
-        >
+      <div className="relative min-h-[80svh] w-full md:min-h-[90svh] lg:min-h-[92svh]">
+        {/* Background: video/poster memenuhi layar, di-remount per slide. */}
+        <div className="absolute inset-0" key={hero.id}>
           <HeroPreview
-            key={hero.id}
             src={reduceMotion ? "" : teaser}
             poster={still}
             title={hero.title}
-            fit="contain"
             objectPosition="center"
             showBlurBg
             mutePosition="bottom-right"
@@ -118,45 +126,77 @@ export default function HomeHero({
           />
         </div>
 
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/75 via-black/25 to-transparent" />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/25" />
+        {/* Gradient gelap dari kiri & bawah supaya teks tetap terbaca. */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/85 via-black/35 to-transparent" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/20" />
 
-        <div className="pointer-events-none relative z-10 flex min-h-[78svh] flex-col justify-end px-4 pb-16 pt-24 md:min-h-[88svh] md:px-10 md:pb-20 lg:max-w-3xl lg:px-16">
-          <div className="pointer-events-auto">
-            <Badge className="w-fit rounded-sm bg-amber-400 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.14em] text-black">
+        {/* Konten utama: kiri-bawah, lebar dibatasi. */}
+        <div className="pointer-events-none absolute inset-0 flex items-end px-4 pb-20 pt-24 md:px-10 md:pb-24 lg:px-16">
+          <div
+            className="hero-content-in pointer-events-auto w-full max-w-2xl"
+            key={`content-${hero.id}`}
+          >
+            <Badge className="mb-3 w-fit rounded-sm bg-amber-400 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.14em] text-black">
               Trending
             </Badge>
-            <h1 className="title-gold mt-3 text-4xl leading-[0.95] md:text-6xl lg:text-7xl">
-              {hero.title}
+
+            <h1 className="hero-title line-clamp-2 text-2xl leading-[1.1] text-white md:line-clamp-3 md:text-4xl lg:text-5xl">
+              {titleParts[0]}
+              {titleParts[1] && (
+                <>
+                  <br />
+                  {titleParts[1]}
+                </>
+              )}
+              {titleParts[2] && (
+                <>
+                  <br />
+                  {titleParts[2]}
+                </>
+              )}
             </h1>
-            <p className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-white/90">
+
+            {/* Info minimal: rating, tahun, episode, genre, status. */}
+            <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs font-medium text-white/85 md:text-sm">
               {hero.imdbRating && (
-                <span className="font-semibold text-amber-300">
-                  ★ {hero.imdbRating}
+                <span className="inline-flex items-center gap-1 text-amber-300">
+                  <span>★</span>
+                  {hero.imdbRating}
                 </span>
               )}
               {hero.year && <span>{hero.year}</span>}
-              {hero.episodes > 1 && <span>{hero.episodes} episode</span>}
-              {genres.slice(0, 3).map((g) => (
-                <span key={g}>{g}</span>
+              <span>{hero.episodes} Episode</span>
+              {genres.slice(0, 2).map((g) => (
+                <span key={g} className="text-white/70">
+                  {g}
+                </span>
               ))}
-            </p>
-            <p className="mt-3 max-w-xl line-clamp-3 text-sm leading-relaxed text-zinc-200 md:text-base">
+              <Badge
+                className={`rounded-sm px-1.5 py-0.5 text-[10px] font-bold uppercase ${
+                  status === "Completed"
+                    ? "bg-emerald-500/20 text-emerald-300"
+                    : "bg-amber-400/20 text-amber-300"
+                }`}
+              >
+                {status}
+              </Badge>
+            </div>
+
+            <p className="mt-4 hidden max-w-lg text-sm leading-relaxed text-white/80 md:line-clamp-2">
               {hero.synopsis}
             </p>
-            <div className="mt-6 flex flex-wrap gap-2">
+
+            {/* Tombol aksi modern. */}
+            <div className="mt-6 flex flex-wrap items-center gap-3">
               <WatchCta
                 dramaId={hero.id}
-                className="h-12 px-7 text-base shadow-[0_0_24px_rgba(251,191,36,0.35)]"
+                className="btn-hero-primary h-11 rounded-full bg-red-600 px-7 text-sm font-bold text-white shadow-lg hover:bg-red-500 md:h-12 md:text-base"
               />
-              <SaveButton id={hero.id} variant="hero" />
-              <Button
-                asChild
-                variant="outline"
-                className="h-12 rounded-full border-white/40 bg-black/30 px-6 text-sm font-semibold text-white backdrop-blur hover:border-amber-400 hover:text-amber-400"
-              >
-                <Link href={`/drama/${hero.id}`}>Detail</Link>
-              </Button>
+              <SaveButton
+                id={hero.id}
+                variant="hero"
+                className="btn-hero-secondary h-11 rounded-full border-white/30 bg-white/10 px-6 text-sm font-semibold text-white backdrop-blur hover:border-amber-400 hover:bg-white/15 hover:text-amber-400 md:h-12"
+              />
             </div>
           </div>
         </div>
@@ -167,7 +207,7 @@ export default function HomeHero({
               type="button"
               onClick={() => go(-1)}
               aria-label="Drama unggulan sebelumnya"
-              className="absolute left-2 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/40 bg-black/50 text-white backdrop-blur hover:bg-black/80 md:left-4"
+              className="absolute left-2 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-black/40 text-white backdrop-blur transition-colors hover:bg-black/70 md:left-4"
             >
               <ChevronLeft className="size-6" />
             </button>
@@ -175,11 +215,11 @@ export default function HomeHero({
               type="button"
               onClick={() => go(1)}
               aria-label="Drama unggulan berikutnya"
-              className="absolute right-2 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/40 bg-black/50 text-white backdrop-blur hover:bg-black/80 md:right-4"
+              className="absolute right-2 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/30 bg-black/40 text-white backdrop-blur transition-colors hover:bg-black/70 md:right-4"
             >
               <ChevronRight className="size-6" />
             </button>
-            <div className="absolute bottom-5 left-4 z-20 flex items-center gap-1.5 md:left-10 lg:left-16">
+            <div className="absolute bottom-5 left-1/2 z-20 flex -translate-x-1/2 items-center gap-1.5">
               {dramas.map((d, i) => (
                 <button
                   key={d.id}
@@ -191,14 +231,12 @@ export default function HomeHero({
                     setTeaserStatus("loading");
                     setListening(false);
                   }}
-                  className="flex h-11 min-w-11 items-center justify-center px-1"
+                  className="flex h-10 min-w-10 items-center justify-center px-1"
                 >
                   <span
-                    className={
-                      i === index
-                        ? "block h-1.5 w-9 rounded-full bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.8)]"
-                        : "block h-1.5 w-2 rounded-full bg-white/55"
-                    }
+                    className={`hero-dot block h-1 rounded-full bg-white/50 ${
+                      i === index ? "hero-dot-active" : "w-2"
+                    }`}
                   />
                 </button>
               ))}

@@ -37,7 +37,7 @@ export default function WatchCta({
       )}
     >
       <Link href={href}>
-        <Play className="size-4 fill-black text-black" />
+        <Play className="size-4 fill-current text-current" />
         {label}
       </Link>
     </Button>

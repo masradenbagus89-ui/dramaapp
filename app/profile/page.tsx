@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import type { Drama } from "@/lib/types";
 import {
   AVATAR_COLORS,
   clearUser,
@@ -13,6 +14,10 @@ import {
 } from "@/lib/auth";
 import CoinWallet from "@/app/components/CoinWallet";
 import AdBanner from "@/app/components/AdBanner";
+import ContinueWatchingRow from "@/app/components/profile/ContinueWatchingRow";
+import FavoritesRow from "@/app/components/profile/FavoritesRow";
+import RecentHistoryRow from "@/app/components/profile/RecentHistoryRow";
+import DashboardMenu from "@/app/components/profile/DashboardMenu";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,20 +25,14 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
-import {
-  Check,
-  ChevronRight,
-  Clock,
-  Globe,
-  Info,
-  LogOut,
-  Settings,
-} from "lucide-react";
+import { Check, LogOut, Settings } from "lucide-react";
 
 export default function ProfilePage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [dramas, setDramas] = useState<Drama[]>([]);
+  const [dramasReady, setDramasReady] = useState(false);
 
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState("");
@@ -43,6 +42,17 @@ export default function ProfilePage() {
   useEffect(() => {
     setMounted(true);
     setUser(readUser());
+
+    const ac = new AbortController();
+    fetch("/api/dramas", { signal: ac.signal })
+      .then((r) => r.json())
+      .then((data: Drama[]) => {
+        setDramas(Array.isArray(data) ? data : []);
+        setDramasReady(true);
+      })
+      .catch(() => setDramasReady(true));
+
+    return () => ac.abort();
   }, []);
 
   const onLogout = () => {
@@ -87,62 +97,10 @@ export default function ProfilePage() {
     setSaveMsg({ type: "ok", text: "Profil tersimpan." });
   };
 
-  const [expanded, setExpanded] = useState<string | null>(null);
-
-  type MenuItem = {
-    key: string;
-    label: string;
-    icon: React.ComponentType<{ className?: string }>;
-    onClick?: () => void;
-    content?: React.ReactNode;
-  };
-
-  const menuItems: MenuItem[] = [
-    {
-      key: "riwayat",
-      label: "Riwayat tontonan",
-      icon: Clock,
-      onClick: () => {
-        setExpanded(null);
-        router.push("/history");
-      },
-    },
-    {
-      key: "pengaturan",
-      label: "Pengaturan akun",
-      icon: Settings,
-      onClick: () => {
-        setExpanded(null);
-        if (user) onStartEdit();
-      },
-    },
-    {
-      key: "bahasa",
-      label: "Bahasa",
-      icon: Globe,
-      content: (
-        <div className="px-4 pb-4 text-sm text-zinc-400">
-          Saat ini hanya tersedia <strong className="text-zinc-200">Bahasa Indonesia</strong>. Bahasa lain (English, Mandarin) akan ditambahkan nanti.
-        </div>
-      ),
-    },
-    {
-      key: "tentang",
-      label: "Tentang DramaKu",
-      icon: Info,
-      content: (
-        <div className="space-y-2 px-4 pb-4 text-sm text-zinc-400">
-          <p><strong className="text-zinc-200">DramaKu v0.1</strong> — prototype platform menonton drama China pendek dalam Bahasa Indonesia.</p>
-          <p>Dibuat untuk koleksi drama pribadi. Login menggunakan local storage browser (bukan database asli — versi prototype).</p>
-        </div>
-      ),
-    },
-  ];
-
   return (
-    <div className="mx-auto max-w-2xl px-4 pb-10 pt-6 md:px-6">
-      {/* Header card */}
-      <Card className="border-zinc-800 bg-zinc-900/50 py-4">
+    <div className="mx-auto max-w-7xl px-4 pb-10 pt-6 md:px-6">
+      {/* Header profil */}
+      <Card className="mx-auto max-w-2xl border-zinc-800 bg-zinc-900/50 py-4">
         <CardContent className="px-4">
           <div className="flex items-center gap-4">
             <Avatar size="lg" className="h-16 w-16">
@@ -188,6 +146,7 @@ export default function ProfilePage() {
                 onClick={onStartEdit}
                 className="rounded-full border-zinc-700 bg-transparent text-xs font-semibold text-zinc-300 hover:border-amber-400 hover:text-amber-400"
               >
+                <Settings className="mr-1.5 size-3.5" />
                 Edit
               </Button>
             )}
@@ -278,7 +237,7 @@ export default function ProfilePage() {
       </Card>
 
       {mounted && !user && (
-        <div className="mt-3 flex gap-2">
+        <div className="mx-auto mt-3 flex max-w-2xl gap-2">
           <Button
             asChild
             variant="outline"
@@ -295,56 +254,32 @@ export default function ProfilePage() {
         </div>
       )}
 
-      <CoinWallet />
+      {/* Dashboard konten */}
+      <div className="mx-auto mt-6 max-w-7xl space-y-8">
+        {dramasReady && (
+          <>
+            <ContinueWatchingRow dramas={dramas} />
+            <FavoritesRow dramas={dramas} />
+            <RecentHistoryRow dramas={dramas} />
+          </>
+        )}
 
-      {/* Slot iklan otomatis — passive income; fallback iklan manual/promo. */}
-      <AdBanner className="mt-6" />
+        <DashboardMenu onOpenSettings={onStartEdit} />
 
-      <Card className="mt-6 gap-0 overflow-hidden border-zinc-800 bg-zinc-900/50 py-0">
-        {menuItems.map((item, i) => {
-          const isExpanded = expanded === item.key;
-          const isLast = i === menuItems.length - 1;
-          const Icon = item.icon;
-          const handleClick = () => {
-            if (item.onClick) {
-              item.onClick();
-            } else {
-              setExpanded(isExpanded ? null : item.key);
-            }
-          };
-          return (
-            <div key={item.key} className={isLast ? "" : "border-b border-zinc-800"}>
-              <button
-                onClick={handleClick}
-                className="flex w-full items-center justify-between px-4 py-3.5 text-left text-sm text-zinc-200 transition-colors hover:bg-zinc-800"
-              >
-                <div className="flex items-center gap-3">
-                  <Icon className="h-5 w-5" />
-                  {item.label}
-                </div>
-                <ChevronRight
-                  className={cn(
-                    "h-4 w-4 text-zinc-500 transition-transform",
-                    item.content && isExpanded ? "rotate-90" : "",
-                  )}
-                />
-              </button>
-              {item.content && isExpanded && (
-                <div className="border-t border-zinc-800/60 bg-zinc-900/30">
-                  {item.content}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </Card>
+        <div id="premium">
+          <CoinWallet />
+        </div>
+
+        {/* Slot iklan otomatis — passive income; fallback iklan manual/promo. */}
+        <AdBanner className="mx-auto max-w-2xl" />
+      </div>
 
       {mounted && user && (
         <Button
           type="button"
           variant="outline"
           onClick={onLogout}
-          className="mt-4 flex h-auto w-full items-center justify-center gap-2 rounded-2xl border-zinc-800 bg-zinc-900/50 py-3 font-semibold text-zinc-300 transition-colors hover:border-zinc-700 hover:bg-zinc-900 hover:text-white"
+          className="mx-auto mt-6 flex h-auto w-full max-w-2xl items-center justify-center gap-2 rounded-2xl border-zinc-800 bg-zinc-900/50 py-3 font-semibold text-zinc-300 transition-colors hover:border-zinc-700 hover:bg-zinc-900 hover:text-white"
         >
           <LogOut className="h-4 w-4" />
           Keluar dari akun

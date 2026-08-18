@@ -172,6 +172,46 @@ export async function getDrama(id: string): Promise<Drama | undefined> {
   return readLocalDramas().find((d) => d.id === id);
 }
 
+/**
+ * Berapa lama katalog boleh basi di halaman publik. Dipakai bersama
+ * `export const revalidate` di halaman — samakan angkanya supaya tak
+ * membingungkan.
+ */
+export const CATALOG_TTL_SECONDS = 60;
+
+/**
+ * Versi ber-cache dari `getAllDramas` untuk HALAMAN PUBLIK.
+ *
+ * Beda dengan `getAllDramas`: (1) hasilnya boleh basi maksimal
+ * CATALOG_TTL_SECONDS detik, (2) TIDAK menjalankan `seedDramasIfEmpty` —
+ * menyemai database adalah urusan jalur admin, bukan efek samping dari
+ * seseorang membuka beranda.
+ *
+ * Jalur tulis, admin, dan koin TETAP pakai `getAllDramas`/`getDrama`.
+ */
+export async function getAllDramasCached(): Promise<Drama[]> {
+  if (useSupabase) {
+    const rows = await sbSelect<DramaRow>(
+      "dramas?select=*&order=sort_index.asc",
+      { revalidate: CATALOG_TTL_SECONDS },
+    );
+    return rows.map(rowToDrama);
+  }
+  return readLocalDramas();
+}
+
+/** Versi ber-cache dari `getDrama` untuk halaman publik. Lihat catatan di atas. */
+export async function getDramaCached(id: string): Promise<Drama | undefined> {
+  if (useSupabase) {
+    const rows = await sbSelect<DramaRow>(
+      `dramas?id=${eq(id)}&select=*&limit=1`,
+      { revalidate: CATALOG_TTL_SECONDS },
+    );
+    return rows.length ? rowToDrama(rows[0]) : undefined;
+  }
+  return readLocalDramas().find((d) => d.id === id);
+}
+
 // =====================  TULIS  ============================================
 /** Tulis SELURUH katalog (upsert semua + hapus yang tak ada). Dipakai upload lokal. */
 export async function writeAllDramas(dramas: Drama[]): Promise<void> {

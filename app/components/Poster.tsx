@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import type { Drama } from "@/lib/types";
 import { PAYWALL_ENABLED } from "@/lib/coins";
 import { Badge } from "@/components/ui/badge";
@@ -49,11 +50,12 @@ export default function Poster({
       onMouseLeave={stopPreview}
     >
       {drama.posterImage ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
+        <Image
           src={drama.posterImage}
           alt={drama.title}
-          className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          fill
+          sizes="(max-width: 768px) 45vw, 220px"
+          className="object-cover transition-transform duration-300 group-hover:scale-105"
         />
       ) : (
         <>

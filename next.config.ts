@@ -11,6 +11,22 @@ const nextConfig: NextConfig = {
     "192.168.1.11",
     "*.local",
   ],
+
+  images: {
+    // Domain gambar yang boleh dioptimalkan next/image. Host di luar daftar ini
+    // akan DITOLAK (gambar gagal tampil), jadi tiap sumber poster baru wajib
+    // ditambahkan di sini.
+    remotePatterns: [
+      // Poster/hero katalog yang sudah ada di data.
+      { protocol: "https", hostname: "i.imgur.com" },
+      // Poster dari OMDb — lihat lib/imdb-tool.ts:153.
+      { protocol: "https", hostname: "m.media-amazon.com" },
+      // Banner dari TMDB — lihat lib/imdb-tool.ts:327.
+      { protocol: "https", hostname: "image.tmdb.org" },
+    ],
+    // Format modern: ukuran berkas jauh lebih kecil pada mutu yang sama.
+    formats: ["image/avif", "image/webp"],
+  },
 };
 
 export default nextConfig;

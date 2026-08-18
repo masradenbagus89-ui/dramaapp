@@ -1,14 +1,24 @@
+import type { Metadata } from "next";
 import Link from "next/link";
-import { getAllDramas } from "@/lib/dramas";
+import { getAllDramasCached } from "@/lib/dramas";
 import Poster from "@/app/components/Poster";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clapperboard } from "lucide-react";
 
-export const dynamic = "force-dynamic";
+// Disimpan & dipakai ulang, disegarkan tiap 60 detik (menggantikan force-dynamic
+// yang membangun ulang halaman untuk tiap pengunjung).
+export const revalidate = 60;
+
+export const metadata: Metadata = {
+  title: "Shorts — Cuplikan Drama China Pendek",
+  description:
+    "Kumpulan cuplikan drama China pendek di DramaKu. Tonton sekilas sebelum lanjut ke episode penuh — gratis dan tanpa perlu daftar.",
+  alternates: { canonical: "/shorts" },
+};
 
 export default async function ShortsPage() {
-  const trending = (await getAllDramas()).slice(0, 6);
+  const trending = (await getAllDramasCached()).slice(0, 6);
 
   return (
     <div className="mx-auto max-w-5xl px-4 pb-10 pt-6 md:px-6">

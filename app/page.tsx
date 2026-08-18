@@ -1,12 +1,19 @@
+import type { Metadata } from "next";
 import Link from "next/link";
-import { getAllDramas } from "@/lib/dramas";
+import { getAllDramasCached } from "@/lib/dramas";
 import RedirectIfAuthed from "@/app/components/RedirectIfAuthed";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Check, Lock } from "lucide-react";
 
-export const dynamic = "force-dynamic";
+// Disimpan & dipakai ulang, disegarkan tiap 60 detik (menggantikan force-dynamic
+// yang membangun ulang halaman untuk tiap pengunjung).
+export const revalidate = 60;
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 const FITUR = [
   {
@@ -48,7 +55,7 @@ const FITUR = [
 ] as const;
 
 export default async function LandingPage() {
-  const dramas = await getAllDramas();
+  const dramas = await getAllDramasCached();
   const heroDramas = dramas.slice(0, 6);
 
   return (
@@ -386,7 +393,7 @@ function FilmStripPattern() {
   );
 }
 
-type DramaForCollage = Awaited<ReturnType<typeof getAllDramas>>[number];
+type DramaForCollage = Awaited<ReturnType<typeof getAllDramasCached>>[number];
 
 function PosterCollage({ dramas }: { dramas: DramaForCollage[] }) {
   if (dramas.length === 0) return null;

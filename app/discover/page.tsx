@@ -1,14 +1,24 @@
+import type { Metadata } from "next";
 import { Suspense } from "react";
-import { getAllDramas } from "@/lib/dramas";
+import { getAllDramasCached } from "@/lib/dramas";
 import { featuredHeroSlides } from "@/lib/hero-teaser";
 import DramaBrowser from "../components/DramaBrowser";
 import HomeHero from "../components/HomeHero";
 import DashboardVideoGrid from "../components/DashboardVideoGrid";
 
-export const dynamic = "force-dynamic";
+// Disimpan & dipakai ulang, disegarkan tiap 60 detik (menggantikan force-dynamic
+// yang membangun ulang halaman untuk tiap pengunjung).
+export const revalidate = 60;
+
+export const metadata: Metadata = {
+  title: "Jelajahi Drama China — Genre, Tahun & Rating",
+  description:
+    "Jelajahi katalog drama China DramaKu. Saring berdasarkan genre, tahun rilis, dan rating IMDb, lalu urutkan sesuai yang kamu cari — gratis.",
+  alternates: { canonical: "/discover" },
+};
 
 export default async function DiscoverPage() {
-  const dramas = await getAllDramas();
+  const dramas = await getAllDramasCached();
   const slides = featuredHeroSlides(dramas);
 
   // Bagian "Video terbaru" hanya muncul kalau sambungan ke dashboard sudah

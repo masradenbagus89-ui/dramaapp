@@ -1,6 +1,9 @@
 import Link from "next/link";
+import Image from "next/image";
 import { notFound } from "next/navigation";
-import { getDrama, getAllDramas } from "@/lib/dramas";
+import type { Metadata } from "next";
+import { getAllDramas, getDramaCached } from "@/lib/dramas";
+import { SITE_URL, absoluteUrl, toMetaDescription } from "@/lib/site";
 import { subtitleLabel } from "@/lib/types";
 import Poster from "@/app/components/Poster";
 import SaveButton from "@/app/components/SaveButton";
@@ -13,15 +16,55 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, Captions } from "lucide-react";
 
-export const dynamic = "force-dynamic";
+// Halaman disimpan & dipakai ulang, disegarkan tiap 60 detik. Menggantikan
+// force-dynamic yang sebelumnya membangun ulang halaman untuk TIAP pengunjung
+// (dan diam-diam membatalkan generateStaticParams di bawah).
+export const revalidate = 60;
 
 export async function generateStaticParams() {
-  return (await getAllDramas()).map((d) => ({ id: d.id }));
+  // Katalog tak terjangkau saat build (mis. env Supabase belum ada) → kembalikan
+  // daftar kosong. Halaman tetap dibuat saat pengunjung pertama membukanya,
+  // jadi build tidak ikut gagal.
+  try {
+    return (await getAllDramas()).map((d) => ({ id: d.id }));
+  } catch (err) {
+    console.error("[drama] gagal ambil daftar id saat build:", err);
+    return [];
+  }
+}
+
+export async function generateMetadata(
+  props: PageProps<"/drama/[id]">,
+): Promise<Metadata> {
+  const { id } = await props.params;
+  const drama = await getDramaCached(id);
+  if (!drama) return { title: "Drama tidak ditemukan" };
+
+  const title = `${drama.title} Sub Indo`;
+  const description = toMetaDescription(
+    drama.synopsis,
+    `Nonton ${drama.title} sub Indo gratis di DramaKu — ${drama.episodes} episode.`,
+  );
+  const cover = drama.heroImage || drama.posterImage;
+  const path = `/drama/${encodeURIComponent(drama.id)}`;
+
+  return {
+    title,
+    description,
+    alternates: { canonical: path },
+    openGraph: {
+      type: "video.tv_show",
+      title,
+      description,
+      url: `${SITE_URL}${path}`,
+      ...(cover ? { images: [{ url: absoluteUrl(cover), alt: drama.title }] } : {}),
+    },
+  };
 }
 
 export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
   const { id } = await props.params;
-  const drama = await getDrama(id);
+  const drama = await getDramaCached(id);
   if (!drama) notFound();
 
   return (
@@ -30,18 +73,24 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
         <div className={`relative aspect-[16/9] w-full overflow-hidden bg-gradient-to-br md:rounded-2xl ${drama.gradient}`}>
           {(drama.heroImage || drama.posterImage) && (
             <>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={drama.heroImage || drama.posterImage}
+              {/* Latar kabur dekoratif: karena di-blur berat, versi kecil sudah
+                  cukup — sizes sengaja dibatasi supaya unduhannya ringan. */}
+              <Image
+                src={drama.heroImage || drama.posterImage!}
                 alt=""
                 aria-hidden
-                className="absolute inset-0 h-full w-full scale-110 object-cover opacity-50 blur-2xl"
+                fill
+                sizes="256px"
+                className="scale-110 object-cover opacity-50 blur-2xl"
               />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={drama.heroImage || drama.posterImage}
+              {/* Gambar utama halaman ini (LCP) → priority supaya dimuat lebih dulu. */}
+              <Image
+                src={drama.heroImage || drama.posterImage!}
                 alt={drama.title}
-                className={`absolute inset-0 h-full w-full object-cover ${drama.heroDim ? "brightness-90" : "brightness-100"}`}
+                fill
+                priority
+                sizes="(max-width: 768px) 100vw, 1280px"
+                className={`object-cover ${drama.heroDim ? "brightness-90" : "brightness-100"}`}
               />
             </>
           )}

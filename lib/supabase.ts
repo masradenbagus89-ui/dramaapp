@@ -40,11 +40,26 @@ export function eq(value: string): string {
   return `eq.${encodeURIComponent(value)}`;
 }
 
-/** SELECT. `query` contoh: "dramas?id=eq.foo&select=*". Kembalikan array baris. */
-export async function sbSelect<T>(query: string): Promise<T[]> {
+/**
+ * SELECT. `query` contoh: "dramas?id=eq.foo&select=*". Kembalikan array baris.
+ *
+ * Default TANPA cache — jalur tulis, admin, dan koin wajib melihat data terbaru;
+ * membaca data basi di sana bisa menimpa perubahan orang lain atau memotong koin
+ * berdasarkan harga lama. Halaman publik yang boleh sedikit basi harus MEMINTA
+ * cache secara eksplisit lewat `revalidate` (satuan detik).
+ *
+ * Catatan Next.js: satu fetch `no-store` membuat SELURUH halaman jadi dinamis —
+ * itu sebabnya opsi ini ada, bukan sekadar penghematan jaringan.
+ */
+export async function sbSelect<T>(
+  query: string,
+  opts: { revalidate?: number } = {},
+): Promise<T[]> {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${query}`, {
     headers: baseHeaders(),
-    cache: "no-store",
+    ...(opts.revalidate === undefined
+      ? { cache: "no-store" as const }
+      : { next: { revalidate: opts.revalidate } }),
   });
   await ensureOk(res, "select");
   return (await res.json()) as T[];

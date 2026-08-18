@@ -9,8 +9,8 @@
 
 ## Status sekarang (1 menit)
 
-- Situs hidup: **https://dramaapp.vercel.app** — yang TAYANG masih `0100a66`.
-- **2 commit baru menunggu di-push** (lokal `332b23f`): Tahap 4 Performance & SEO + pengaman `.gitignore`.
+- Situs hidup: **https://dramaapp.vercel.app** — commit terbaru `02efb6a` sudah di-push ke `origin` + `dramaku`.
+- **Belum diverifikasi:** apakah build Vercel untuk `02efb6a` sudah Ready — perlu dicek di dashboard.
 - Build lokal & test lulus (212 tests). Database Supabase **tidak diubah**.
 - Repo `dramaku` sudah disamakan sampai `0100a66` (utang dual-push 6 commit sudah dibayar).
 
@@ -25,7 +25,7 @@
 
 ## Belum selesai / menunggu kamu
 
-1. **Push `332b23f` ke `origin`** → ini yang memicu rilis ke Vercel. Belum dilakukan, menunggu izin kamu.
+1. **Cek dashboard Vercel** — pastikan build `02efb6a` statusnya Ready, lalu buka situsnya. Kalau gagal: Deployments → Promote `0100a66` untuk kembali ke versi sebelumnya.
 2. **Daftarkan sitemap ke Google Search Console** sesudah rilis — tanpa ini sitemap-nya ada tapi Google tak pernah tahu. Buka https://search.google.com/search-console → tambah properti `dramaapp.vercel.app` → menu Sitemaps → isi `sitemap.xml` → Submit.
 3. Sinopsis drama dari OMDb masih **berbahasa Inggris**, padahal situs berbahasa Indonesia. Itu isi data, bukan kode — perlu diterjemahkan lewat admin kalau mau rapi di hasil Google.
 4. API key Playly yang valid (produksi) — masih menunggu rekan.

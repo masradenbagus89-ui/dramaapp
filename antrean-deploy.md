@@ -13,17 +13,16 @@
 | `masradenbagus89-ui/dramaapp` | `origin` | **Ya** — `git push origin main` = tombol rilis |
 
 Produksi: https://dramaapp.vercel.app  
-Commit yang TAYANG: **`0100a66`**. Status Vercel perlu dicek langsung di dashboard.
+Commit terbaru yang di-push: **`02efb6a`**. Apakah sudah TAYANG belum diverifikasi — cek dashboard Vercel.
 
 ## Antrian sekarang
 
 | Status | Commit | Isi | Aksi |
 |---|---|---|---|
-| 🚀 **siap rilis** | `332b23f` (`a36bc67`..`332b23f`) | Tahap 4 Performance & SEO + pengaman .gitignore | **Menunggu izin owner** untuk `git push origin main` |
+| ⏳ sudah di-push, tunggu Vercel | `02efb6a` (`a36bc67`..`02efb6a`) | Tahap 4 Performance & SEO | Cek dashboard Vercel: build Ready? |
 | ⏸️ menunggu bahan | — | API key Playly valid (yang kemarin `invalid_key`) | Jangan deploy env dulu |
 
-**Selisih `dramaku/main` vs `origin/main`:** NOL — keduanya di `0100a66` (disamakan 2026-08-18).
-**Lokal vs kedua remote:** lokal 2 commit di depan (`a36bc67`, `332b23f`) — belum di-push ke mana pun.
+**Selisih `dramaku/main` vs `origin/main`:** NOL — lokal, `origin`, dan `dramaku` semuanya di `02efb6a`.
 
 ## Cara cek cepat (AI / kamu)
 
@@ -45,6 +44,7 @@ Rollback 1-baris: Vercel → project `dramaapp` → Deployments → Promote comm
 | 2026-08-15 | `6bb2539` … `8880c5a` dipindah ke origin | Build 1 gagal (font Playfair 404) |
 | 2026-08-15 | `820abb8` font Georgia | Build Ready, smoke test lulus; Playly idle (env kosong) |
 | 2026-08-18 | `4821c8f`..`0100a66` → `dramaku` | Utang dual-push 6 commit dibayar; kedua repo sama |
+| 2026-08-18 | `a36bc67`..`02efb6a` → origin + dramaku | Tahap 4 Performance & SEO dirilis; hasil build Vercel belum diverifikasi |
 
 ## Aturan isi (untuk AI)
 

@@ -24,7 +24,7 @@ sudah TERBUKTI, bukan cuma lulus tes lokal.
 
 | Kapan | Apa | Hasil yang kamu rasakan |
 |---|---|---|
-| 2026-08-18 | **Tahap 7: kode pemulihan** (belum push) | Saat daftar, penonton dapat 1 kode untuk disimpan. Lupa password → `/lupa-password`, masukkan email + kode → password baru. Tanpa email, tanpa domain, tanpa biaya |
+| 2026-08-18 | **Tahap 7: kode pemulihan** (`1ce14c3`) | Saat daftar, penonton dapat 1 kode untuk disimpan. Lupa password → `/lupa-password`, masukkan email + kode → password baru. Tanpa email, tanpa domain, tanpa biaya |
 | 2026-08-18 | **Tahap 6: login penonton aman** (`b48bf32`) | Password penonton sungguhan; koin & komentar orang lain tak bisa disentuh |
 | 2026-08-18 | **Tahap 5: rating + bagikan + balasan** | Bintang 1-5, tombol Bagikan, komentar bisa dibalas |
 | 2026-08-18 | **Tahap 4: Performance & SEO** | Judul unik per drama di Google, sitemap 42 URL, halaman jauh lebih cepat |
@@ -59,7 +59,7 @@ sudah TERBUKTI, bukan cuma lulus tes lokal.
 - **Belum ada verifikasi email.** Siapa pun bisa mendaftar dengan email milik orang
   lain selama email itu belum terdaftar. Butuh domain sendiri + layanan kirim email.
 - **Rating penonton masih belum dikirim ke Google.** Sejak Tahap 6 identitas sudah
-  aman, jadi batasan ini SUDAH BOLEH dicabut — tunggu Tahap 6 terbukti di produksi.
+  aman DAN sudah terbukti di produksi, jadi batasan ini SUDAH BOLEH dicabut kapan saja.
   Catatan ada di `lib/store.ts` ("BATAS JUJUR") dan `lib/structured-data.ts`.
 - **Satu kode pemulihan per akun** (bukan 10 seperti kode cadangan 2FA) — sengaja,
   supaya mudah dipahami penonton awam.

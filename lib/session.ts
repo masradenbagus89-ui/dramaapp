@@ -106,7 +106,22 @@ function readCookie(header: string | null, name: string): string | null {
  * masih ada di daftar admin (mencabut admin = langsung kehilangan akses).
  */
 export async function getAdminEmail(req: Request): Promise<string | null> {
-  const token = readCookie(req.headers.get("cookie"), ADMIN_COOKIE);
+  return verifyAdminSessionToken(
+    readCookie(req.headers.get("cookie"), ADMIN_COOKIE),
+  );
+}
+
+/**
+ * Versi yang menerima ISI COOKIE apa adanya (bukan objek Request).
+ *
+ * Dipakai Server Component: di sana cookie dibaca lewat `cookies()` dari
+ * next/headers dan tidak ada objek Request untuk dioper ke getAdminEmail().
+ * Pemeriksaannya persis sama — tanda tangan, masa berlaku, role, dan email
+ * masih terdaftar sebagai admin.
+ */
+export async function verifyAdminSessionToken(
+  token: string | null | undefined,
+): Promise<string | null> {
   if (!token) return null;
   const payload = verifyToken(token, "admin");
   if (!payload) return null;

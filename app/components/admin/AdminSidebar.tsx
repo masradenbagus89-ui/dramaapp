@@ -11,17 +11,25 @@ import {
   Users,
   ShieldCheck,
   Megaphone,
+  Film,
+  KeyRound,
   ArrowLeft,
   type LucideIcon,
 } from "lucide-react";
 
+// Tautan ditulis ABSOLUT ("/admin#dashboard", bukan "#dashboard") supaya menu
+// ini tetap berfungsi saat dipakai di halaman admin lain — mis. setelan Playly
+// yang punya alamatnya sendiri. Dari halaman /admin sendiri, browser tetap
+// memperlakukannya sebagai loncat-ke-bagian biasa (tanpa memuat ulang halaman).
 const NAV_ITEMS: { href: string; label: string; icon: LucideIcon }[] = [
-  { href: "#dashboard", label: "Dashboard", icon: Home },
-  { href: "#tambah", label: "Tambah Drama", icon: Plus },
-  { href: "#daftar", label: "Daftar Drama", icon: List },
-  { href: "#kelola-admin", label: "Kelola Admin", icon: Users },
-  { href: "#keamanan", label: "Keamanan (2FA)", icon: ShieldCheck },
-  { href: "#iklan", label: "Iklan Sponsor", icon: Megaphone },
+  { href: "/admin#dashboard", label: "Dashboard", icon: Home },
+  { href: "/admin#tambah", label: "Tambah Drama", icon: Plus },
+  { href: "/admin#daftar", label: "Daftar Drama", icon: List },
+  { href: "/admin/videos/playly", label: "Video Playly", icon: Film },
+  { href: "/admin/settings/playly", label: "Kunci Playly", icon: KeyRound },
+  { href: "/admin#kelola-admin", label: "Kelola Admin", icon: Users },
+  { href: "/admin#keamanan", label: "Keamanan (2FA)", icon: ShieldCheck },
+  { href: "/admin#iklan", label: "Iklan Sponsor", icon: Megaphone },
   { href: "/", label: "← Kembali ke web", icon: ArrowLeft },
 ];
 

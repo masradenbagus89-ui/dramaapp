@@ -13,6 +13,8 @@ tsconfig.tsbuildinfo
 data/twofa.json
 # Cookie jar hasil uji curl — berisi token sesi admin yang masih hidup.
 cookies.txt
+# Kunci API Playly (terenkripsi) + kaitan video — mode lokal tanpa Supabase.
+data/playly.json
 public/videos/
 public/audio/
 public/episodes/

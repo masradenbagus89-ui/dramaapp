@@ -122,6 +122,55 @@ komputer lain).
    ikut ter-deploy dan bisa diakses publik. Isinya cuma data contoh, tapi sebaiknya
    dimatikan di produksi atau dihapus setelah server asli siap.
 
+## Yang terakhir dikerjakan (2026-08-18) — integrasi Playly (kita = "Mitra")
+
+Jalur KETIGA, terpisah dari jalur A (dashboard upload) dan B (API pihak lain).
+Bedanya: kunci API-nya dimasukkan admin lewat HALAMAN, bukan env, dan disimpan
+TERENKRIPSI di database.
+
+| Bagian | Berkas |
+|---|---|
+| Inti (enkripsi, penyamaran, panggilan API) | `lib/playly.ts` |
+| Penyimpanan (dokumen `app_data`) | `lib/store.ts` bagian "INTEGRASI PLAYLY" |
+| API admin | `app/api/admin/playly/{key,videos,embeds}/` |
+| Halaman admin | `app/admin/settings/playly/` · `app/admin/videos/playly/` |
+| Tampilan publik | `app/components/PlaylyRow.tsx` di `/discover` |
+| Tes | `tests/playly.test.ts` (46 tes) |
+
+Panduan lengkap + tabel pesan error: `docs/playly-integrasi.md`.
+
+**Keputusan yang perlu diketahui sesi berikutnya:**
+1. Penyimpanan memakai tabel `app_data` yang sudah ada → **tidak ada migrasi SQL**.
+2. Halaman Playly dijaga DI SERVER (cookie sesi), sedangkan `/admin` lama masih
+   dijaga di sisi browser. Route API-nya sudah sama-sama dijaga cookie. Ada
+   `TODO` di `app/admin/settings/playly/page.tsx` untuk menyeragamkannya lewat
+   satu middleware.
+3. `lib/session.ts` dapat fungsi baru `verifyAdminSessionToken` supaya Server
+   Component bisa memakai pemeriksaan yang sama. `getAdminEmail` sekarang
+   memanggilnya (perilakunya tidak berubah).
+4. Menu samping admin (`AdminSidebar.tsx`) tautannya jadi absolut (`/admin#...`)
+   supaya tetap berfungsi dari halaman admin lain.
+
+**✅ Terverifikasi 2026-08-18:** `npm test` 181 lulus (14 berkas) · `tsc --noEmit`
+bersih · `npm run build` sukses (5 route Playly terdaftar) · uji hidup dengan
+Playly tiruan: akses tanpa login ditolak 401, kunci tersimpan teracak (kunci asli
+tidak ada di berkas), video domain asing dibuang, POST lintas-domain 403,
+`/discover` menampilkan video tanpa membocorkan kunci, dan saat Playly dimatikan
+pesan errornya jelas sementara halaman tetap 200.
+
+**❓ BELUM terverifikasi:** sambungan ke Playly ASLI (kunci `plyk_` sungguhan
+belum ada). Yang mungkin perlu disesuaikan: nama field JSON Playly, dan pola
+alamat embed `/embed/{id}` (bisa diubah lewat `PLAYLY_EMBED_PATH`). Cara
+memastikan: pasang kunci → `/admin/settings/playly` → "Uji sambungan".
+
+**Setelan baru di `.env.example`:** `PLAYLY_ENCRYPTION_KEY` (wajib kalau fitur
+dipakai) · `PLAYLY_API_URL` · `PLAYLY_API_KEY` · `PLAYLY_EMBED_HOSTS` ·
+`PLAYLY_EMBED_PATH`.
+
+**⚠️ Temuan sampingan:** `.env.local` di folder ini adalah **DIREKTORI KOSONG**,
+bukan berkas. Jadi setelan lokal tidak terbaca sama sekali. Kalau mau mengisi env
+di lokal, hapus dulu direktori itu lalu buat berkas `.env.local`.
+
 ## Catatan lama — ❓ BELUM diverifikasi ulang (per 2026-05-14)
 
 - Rencana deploy ke Vercel (akun GitHub `masradenbagus89-ui`) — statusnya belum dicek lagi.

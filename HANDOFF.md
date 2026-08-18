@@ -5,40 +5,41 @@
 >
 > **AI:** tiap kali ada perbaikan / deploy / keputusan — **perbarui berkas ini di langkah terakhir**, sebelum bilang selesai. Jangan tumpuk sejarah panjang di sini; pindahkan yang lama ke `NEXT-SESSION.md`.
 
-**Terakhir diisi:** 2026-08-17 sore
+**Terakhir diisi:** 2026-08-18
 
 ## Status sekarang (1 menit)
 
-- Situs hidup: **https://dramaapp.vercel.app** — commit terbaru yang sudah di-push: `3007a73` (admin password per akun).
-- **Semua tahap redesign selesai**: Tahap 1 (homepage/player), Tahap 2 (discover/profile), Tahap 3 (rekomendasi/koin/iklan).
-- Build lokal & test lulus (212 tests).
-- Database Supabase **tidak diubah**.
-- Working tree bersih — tidak ada perubahan tertinggal.
+- Situs hidup: **https://dramaapp.vercel.app** — yang TAYANG masih `0100a66`.
+- **2 commit baru menunggu di-push** (lokal `332b23f`): Tahap 4 Performance & SEO + pengaman `.gitignore`.
+- Build lokal & test lulus (212 tests). Database Supabase **tidak diubah**.
+- Repo `dramaku` sudah disamakan sampai `0100a66` (utang dual-push 6 commit sudah dibayar).
 
-## Yang baru saja diperbaiki
+## Yang baru saja dikerjakan
 
 | Kapan | Apa | Hasil yang kamu rasakan |
 |---|---|---|
-| 2026-08-17 sore | Push perubahan admin (password per admin + role VIEWER) | Admin bisa set password awal saat tambah kolega; pesan login lebih jelas; `origin/main` di `3007a73` |
-| 2026-08-17 sore | Tahap 3 redesign: rekomendasi pintar + coin polish + monetisasi | Beranda menampilkan "Karena kamu menonton X" dan "Trending di genre kamu"; paywall punya tombol "Buka semua episode"; profil menampilkan riwayat koin; iklan muncul di antara baris dan detail |
-| 2026-08-17 siang | Push Tahap 2 ke origin | `origin/main` diperbarui ke `00f0d2e` |
-| 2026-08-17 siang | Tahap 2 redesign: filter discover + dashboard profile | Buka `/discover` → pilih tahun / rating IMDb / urutan; buka `/profile` → lihat baris Lanjut Menonton, Favorit, Riwayat Terbaru, menu cepat, dan saldo koin |
-| 2026-08-17 siang | Commit revisi Hero Section cinematic `c2302dd` | Perubahan hero cinematic tersimpan di git, terpisah dari perubahan admin |
+| 2026-08-18 | **Tahap 4: Performance & SEO** (`332b23f`) | Tiap drama punya judul sendiri di Google (dulu semua judulnya sama); situs punya sitemap 42 URL + robots.txt; link yang di-share ke WhatsApp/FB kini tampil gambar; halaman publik di-cache 60 detik jadi jauh lebih cepat |
+| 2026-08-18 | Pengaman `.gitignore` (`a36bc67`) | `cookies.txt` berisi token login admin tak bisa lagi ter-commit tak sengaja ke repo publik |
+| 2026-08-18 | Dual push ke `dramaku` | Cadangan repo tak lagi tertinggal 6 commit |
+| 2026-08-17 sore | Push perubahan admin (password per admin + role VIEWER) | Admin bisa set password awal saat tambah kolega |
 
 ## Belum selesai / menunggu kamu
 
-1. Pantau Vercel untuk commit terbaru (`3007a73`).
-2. API key Playly yang valid (produksi) — masih menunggu rekan.
-3. Fitur berikutnya (pilih): notifikasi/engagement, download offline, social features, atau performance/SEO.
+1. **Push `332b23f` ke `origin`** → ini yang memicu rilis ke Vercel. Belum dilakukan, menunggu izin kamu.
+2. **Daftarkan sitemap ke Google Search Console** sesudah rilis — tanpa ini sitemap-nya ada tapi Google tak pernah tahu. Buka https://search.google.com/search-console → tambah properti `dramaapp.vercel.app` → menu Sitemaps → isi `sitemap.xml` → Submit.
+3. Sinopsis drama dari OMDb masih **berbahasa Inggris**, padahal situs berbahasa Indonesia. Itu isi data, bukan kode — perlu diterjemahkan lewat admin kalau mau rapi di hasil Google.
+4. API key Playly yang valid (produksi) — masih menunggu rekan.
+5. Fitur berikutnya (pilih): notifikasi/engagement, download offline, atau social features.
 
 ## Jangan dilakukan
 
-- Jangan commit `.env.local` / API key.
+- Jangan commit `.env.local` / API key / `cookies.txt`.
 - Jangan `git push` dari working tree kotor tanpa izin.
 - Jangan ganti tabel Supabase jadi `users`/`episodes`/`watch_history` — merusak koin & admin.
+- **Jangan pakai `getAllDramasCached`/`getDramaCached` di jalur koin, admin, atau tulis** — itu versi ber-cache khusus halaman publik. Jalur uang & tulis wajib `getAllDramas`/`getDrama` yang selalu terbaru.
 
 ## Berkas terkait
 
-- Rencana: [`docs/lintasai/rencana/2026-08-16-redesign-streaming-tahap-1.md`](./docs/lintasai/rencana/2026-08-16-redesign-streaming-tahap-1.md)
+- Rencana terbaru: [`docs/lintasai/rencana/2026-08-18-performance-seo.md`](./docs/lintasai/rencana/2026-08-18-performance-seo.md)
 - Antrean: [`antrean-deploy.md`](./antrean-deploy.md)
 - Arsip: [`NEXT-SESSION.md`](./NEXT-SESSION.md)

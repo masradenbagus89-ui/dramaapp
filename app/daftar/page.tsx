@@ -10,6 +10,9 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Eye, EyeOff } from "lucide-react";
 
+/** Samakan dengan MIN_VIEWER_PASSWORD_LEN di app/api/auth/register/route.ts. */
+const MIN_PASSWORD_LEN = 8;
+
 export default function DaftarPage() {
   const router = useRouter();
   const [name, setName] = useState("");
@@ -33,8 +36,8 @@ export default function DaftarPage() {
       setError("Format email tidak valid.");
       return;
     }
-    if (password.length < 6) {
-      setError("Password minimal 6 karakter.");
+    if (password.length < MIN_PASSWORD_LEN) {
+      setError(`Password minimal ${MIN_PASSWORD_LEN} karakter.`);
       return;
     }
     if (password !== confirm) {
@@ -48,25 +51,29 @@ export default function DaftarPage() {
 
     setSubmitting(true);
     try {
-      // Block emails yang sudah terdaftar sebagai admin — daftar publik hanya untuk viewer.
-      const res = await fetch("/api/admins");
-      if (res.ok) {
-        const data = (await res.json()) as { admins?: { email: string }[] };
-        const adminEmails = (data.admins ?? []).map((a) => a.email.trim().toLowerCase());
-        if (adminEmails.includes(email.trim().toLowerCase())) {
-          setSubmitting(false);
-          setError(
-            "Email ini sudah terdaftar sebagai admin. Silakan login, atau gunakan email lain.",
-          );
-          return;
-        }
+      // Akun DIBUAT DI SERVER: password disimpan sebagai hash, lalu server
+      // memberi cookie sesi. Sebelum Tahap 6, pendaftaran cuma menulis ke
+      // localStorage dan password yang diketik dibuang begitu saja.
+      // Penolakan email admin & email yang sudah dipakai juga diputuskan server.
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: name.trim(),
+          email: email.trim(),
+          password,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        setSubmitting(false);
+        setError(data.error ?? "Pendaftaran gagal. Coba lagi.");
+        return;
       }
 
-      writeUser({
-        name: name.trim(),
-        email: email.trim(),
-        role: "viewer",
-      });
+      // localStorage hanya untuk tampilan (nama & avatar) — identitas sebenarnya
+      // ada di cookie sesi yang baru saja diberikan server.
+      writeUser({ name: data.name, email: data.email, role: "viewer" });
       router.push("/beranda");
     } catch {
       setSubmitting(false);
@@ -145,7 +152,7 @@ export default function DaftarPage() {
                       type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Minimal 6 karakter"
+                      placeholder="Minimal 8 karakter"
                       autoComplete="new-password"
                       className="rounded-lg border-zinc-700 bg-zinc-900 pr-10 text-white focus-visible:border-amber-400 focus-visible:ring-0"
                     />

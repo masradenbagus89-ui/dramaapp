@@ -9,7 +9,8 @@
 // Pemetaan data di Supabase:
 //   - Dokumen JSON  -> tabel `app_data` (key -> value jsonb):
 //       "admins", "comments:<id>", "rating:<id>", "ads",
-//       "coinmeta:<email>", "twofa:<email>", "order:<orderId>".
+//       "coinmeta:<email>", "twofa:<email>", "adminpass:<email>",
+//       "viewerpass:<email>", "order:<orderId>".
 //   - Counter atomik -> tabel + RPC:
 //       likes   (RPC like_change), wallets (RPC coin_add/coin_spend_unlock),
 //       unlocks (tabel SET email+token).
@@ -528,6 +529,57 @@ export async function clearAdminPassword(email: string): Promise<void> {
   const file = readLocal<AdminPassFile>("adminpass.json", { passwords: {} });
   delete file.passwords[e];
   writeLocal("adminpass.json", file);
+}
+
+// =====================  AKUN PENONTON (viewer)  ============================
+// Dokumen app_data "viewerpass:<email>" -> { hash, salt, name, createdAt }.
+// Pola sama persis dengan "adminpass:<email>" di atas: yang disimpan HANYA hash
+// scrypt + salt acak (lib/admin-password.ts). Password asli tak pernah disimpan.
+//
+// Sebelum Tahap 6, akun penonton TIDAK ADA di server sama sekali — identitas cuma
+// ada di localStorage browser, sehingga siapa pun bisa mengaku jadi siapa pun dan
+// membelanjakan koin orang lain. Dokumen inilah yang membuat identitas penonton
+// bisa dibuktikan server.
+
+export type ViewerAccount = {
+  hash: string;
+  salt: string;
+  /** Nama tampilan saat mendaftar. Cuma label; identitas tetap emailnya. */
+  name: string;
+  createdAt: string;
+};
+
+type ViewersFile = { viewers: Record<string, ViewerAccount> };
+
+function viewerKey(email: string): string {
+  return `viewerpass:${normEmail(email)}`;
+}
+
+/** Akun penonton, atau null kalau email itu belum pernah mendaftar. */
+export async function getViewerAccount(
+  email: string,
+): Promise<ViewerAccount | null> {
+  const e = normEmail(email);
+  if (!e) return null;
+  const rec = useSupabase
+    ? await sbDocGet<ViewerAccount>(viewerKey(e))
+    : (readLocal<ViewersFile>("viewers.json", { viewers: {} }).viewers[e] ?? null);
+  // Record tanpa hash/salt dianggap tidak ada (jangan pernah meloloskan login).
+  return rec && rec.hash && rec.salt ? rec : null;
+}
+
+export async function setViewerAccount(
+  email: string,
+  rec: ViewerAccount,
+): Promise<void> {
+  const e = normEmail(email);
+  if (useSupabase) {
+    await sbDocSet(viewerKey(e), rec);
+    return;
+  }
+  const file = readLocal<ViewersFile>("viewers.json", { viewers: {} });
+  file.viewers[e] = rec;
+  writeLocal("viewers.json", file);
 }
 
 // =====================  ORDER KOIN (top-up Midtrans)  ======================

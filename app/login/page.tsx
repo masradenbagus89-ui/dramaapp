@@ -63,7 +63,7 @@ export default function LoginPage() {
         const raw = String(data.error ?? "Login gagal. Coba lagi.");
         setError(
           raw.includes("Password admin salah")
-            ? "Password admin salah. Pakai password admin — bukan password saat daftar sebagai penonton. Kalau belum punya password pribadi, tanya admin yang menambahkan akun ini."
+            ? "Password admin salah. Pakai password admin — bukan password akun penonton. Kalau belum punya password pribadi, tanya admin yang menambahkan akun ini."
             : raw,
         );
         return;
@@ -215,9 +215,10 @@ export default function LoginPage() {
 
           <p className="mt-6 text-center text-[11px] text-zinc-600">
             Baru diangkat jadi admin? Keluar dari sesi penonton dulu tidak wajib
-            — cukup masuk lagi di sini dengan password admin (bukan password
-            saat daftar). Akun penonton bersifat ringan (password daftar tidak
-            disimpan di server).
+            — cukup masuk lagi di sini dengan password admin, yang berbeda dari
+            password akun penontonmu. Belum bisa masuk sebagai penonton? Akun
+            penonton kini butuh password; kalau kamu memakai situs ini sebelum
+            password diberlakukan, daftar ulang dengan email yang sama.
           </p>
         </div>
       </div>

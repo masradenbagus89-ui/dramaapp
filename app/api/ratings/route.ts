@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "dramaId wajib." }, { status: 400 });
   }
   const map = await getRatingsFor(dramaId);
-  const id = await resolveUserEmail(req, req.nextUrl.searchParams.get("email"));
+  const id = await resolveUserEmail(req);
   return NextResponse.json({
     ...summarizeRatings(map),
     mine: id ? (map[id.email] ?? null) : null,
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
 
     // Identitas: admin diambil dari cookie tertanda-tangan, viewer masih
     // di-assert klien (lihat catatan BATAS JUJUR di lib/store.ts).
-    const id = await resolveUserEmail(req, body.email);
+    const id = await resolveUserEmail(req);
     if (!id) {
       return NextResponse.json(
         { error: "Masuk dulu untuk memberi rating." },

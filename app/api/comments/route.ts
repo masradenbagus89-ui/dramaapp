@@ -5,7 +5,7 @@ import {
   setCommentsFor,
   type Comment,
 } from "@/lib/store";
-import { isAdminRequest } from "@/lib/session";
+import { resolveUserEmail } from "@/lib/session";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,17 +30,26 @@ export async function POST(req: NextRequest) {
       parentId?: string;
     };
     const dramaId = String(body.dramaId ?? "").trim();
-    const user = String(body.user ?? "").trim();
-    const email = String(body.email ?? "").trim();
-    // Badge "admin" hanya diberikan kalau request benar-benar membawa sesi admin
-    // yang valid — bukan sekadar klaim dari body (anti-spoof).
-    const role: "admin" | "viewer" =
-      body.role === "admin" && (await isAdminRequest(req)) ? "admin" : "viewer";
     const text = String(body.text ?? "").trim();
 
-    if (!dramaId || !user || !text) {
+    // 🔒 Identitas (email + role) diambil dari cookie sesi terverifikasi.
+    // Sebelum Tahap 6, email diambil dari body — siapa pun bisa berkomentar
+    // atas nama orang lain. Nama tampilan boleh tetap dari body: itu label
+    // kosmetik, sedangkan identitas sebenarnya adalah emailnya.
+    const id = await resolveUserEmail(req);
+    if (!id) {
       return NextResponse.json(
-        { error: "dramaId, user, dan text wajib diisi." },
+        { error: "Masuk dulu untuk berkomentar." },
+        { status: 401 },
+      );
+    }
+    const email = id.email;
+    const role: "admin" | "viewer" = id.isAdmin ? "admin" : "viewer";
+    const user = String(body.user ?? "").trim() || email.split("@")[0];
+
+    if (!dramaId || !text) {
+      return NextResponse.json(
+        { error: "dramaId dan text wajib diisi." },
         { status: 400 },
       );
     }
@@ -91,11 +100,18 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const { dramaId, commentId, requesterEmail } = (await req.json()) as {
+    const { dramaId, commentId } = (await req.json()) as {
       dramaId?: string;
       commentId?: string;
-      requesterEmail?: string;
     };
+
+    // 🔒 Siapa yang menghapus ditentukan dari sesi, bukan dari body. Sebelum
+    // Tahap 6, requesterEmail dikirim klien — cukup tahu email orang lain
+    // untuk menghapus komentarnya.
+    const id = await resolveUserEmail(req);
+    if (!id) {
+      return NextResponse.json({ error: "Masuk dulu." }, { status: 401 });
+    }
     if (!dramaId || !commentId) {
       return NextResponse.json(
         { error: "dramaId & commentId wajib." },
@@ -107,9 +123,8 @@ export async function DELETE(req: NextRequest) {
     if (!target) {
       return NextResponse.json({ error: "Komentar tidak ditemukan." }, { status: 404 });
     }
-    const isAuthor = target.email === requesterEmail;
-    const isAdmin = await isAdminRequest(req); // diverifikasi dari sesi, bukan body
-    if (!isAuthor && !isAdmin) {
+    const isAuthor = target.email === id.email;
+    if (!isAuthor && !id.isAdmin) {
       return NextResponse.json(
         { error: "Hanya penulis komentar atau admin yang bisa menghapus." },
         { status: 403 },

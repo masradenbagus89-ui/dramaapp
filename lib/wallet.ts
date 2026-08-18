@@ -1,13 +1,11 @@
-// Pembungkus sisi-klien untuk API koin. Mengirim email user (dari localStorage
-// auth) sebagai identitas viewer; admin dikenali via cookie sesi di server.
-
-import { readUser } from "@/lib/auth";
+// Pembungkus sisi-klien untuk API koin.
+//
+// Sejak Tahap 6 berkas ini TIDAK LAGI mengirim email. Identitas ditentukan
+// server dari cookie sesi bertanda tangan yang ikut otomatis di tiap request
+// ke domain yang sama. Mengirim email dari sini percuma (server mengabaikannya)
+// sekaligus menyesatkan pembaca — seolah klien yang menentukan siapa dirinya.
 
 export const WALLET_EVENT = "dramaku:wallet-changed";
-
-function email(): string {
-  return readUser()?.email ?? "";
-}
 
 /** Beritahu komponen lain (mis. badge saldo) agar refresh. */
 export function announceWalletChange(balance?: number): void {
@@ -33,8 +31,6 @@ export type WalletStatus = {
 
 export async function fetchWallet(dramaId?: string): Promise<WalletStatus> {
   const qs = new URLSearchParams();
-  const e = email();
-  if (e) qs.set("email", e);
   if (dramaId) qs.set("dramaId", dramaId);
   const res = await fetch(`/api/coins?${qs.toString()}`, { cache: "no-store" });
   return res.json();
@@ -55,10 +51,7 @@ export type CoinHistoryResponse = {
 };
 
 export async function fetchCoinHistory(): Promise<CoinHistoryResponse> {
-  const qs = new URLSearchParams();
-  const e = email();
-  if (e) qs.set("email", e);
-  const res = await fetch(`/api/coins/history?${qs.toString()}`, {
+  const res = await fetch(`/api/coins/history`, {
     cache: "no-store",
   });
   return res.json();
@@ -88,7 +81,7 @@ async function post(path: string, extra: Record<string, unknown> = {}) {
   const res = await fetch(path, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email: email(), ...extra }),
+    body: JSON.stringify(extra),
   });
   const data = (await res.json()) as MutationResult;
   if (typeof data.balance === "number") announceWalletChange(data.balance);

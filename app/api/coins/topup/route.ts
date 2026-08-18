@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Body tidak valid." }, { status: 400 });
   }
 
-  const id = await resolveUserEmail(req, body.email);
+  const id = await resolveUserEmail(req);
   if (!id) {
     return NextResponse.json({ error: "Login dulu." }, { status: 401 });
   }

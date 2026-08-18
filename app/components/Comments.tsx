@@ -149,11 +149,11 @@ export default function Comments({ dramaId }: { dramaId: string }) {
       const res = await fetch("/api/comments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        // email & role TIDAK dikirim: server menentukannya dari cookie sesi.
+        // Nama tampilan tetap dikirim karena itu label kosmetik, bukan identitas.
         body: JSON.stringify({
           dramaId,
           user: user.name,
-          email: user.email,
-          role: user.role,
           text: bersih,
           ...(parentId ? { parentId } : {}),
         }),
@@ -196,12 +196,8 @@ export default function Comments({ dramaId }: { dramaId: string }) {
     const res = await fetch("/api/comments", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        dramaId,
-        commentId,
-        requesterEmail: user.email,
-        requesterRole: user.role,
-      }),
+      // Siapa yang menghapus ditentukan server dari cookie sesi.
+      body: JSON.stringify({ dramaId, commentId }),
     });
     const data = await res.json();
     if (res.ok && data.ok) refresh();

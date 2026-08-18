@@ -1,15 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "node:crypto";
-import { isAdminEmail, getTwoFA, getAdminPassword } from "@/lib/store";
+import {
+  isAdminEmail,
+  getTwoFA,
+  getAdminPassword,
+  getViewerAccount,
+} from "@/lib/store";
 import { verifyPassword } from "@/lib/admin-password";
 import { verifyTotp } from "@/lib/totp";
 import {
   signAdminSession,
+  signViewerSession,
   adminAuthConfigured,
-  adminCookieOptions,
+  sessionSecretConfigured,
+  sessionCookieOptions,
   ADMIN_COOKIE,
+  VIEWER_COOKIE,
   SESSION_MAX_AGE,
 } from "@/lib/session";
+import { guardMutation } from "@/lib/request-guard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -27,6 +36,15 @@ function displayName(email: string): string {
 }
 
 export async function POST(req: NextRequest) {
+  // Login kini benar-benar memeriksa password, jadi wajib dibatasi lajunya —
+  // tanpa ini penyerang bisa menebak password berkali-kali (brute-force).
+  const blocked = guardMutation(req, {
+    bucket: "auth:login",
+    limit: 10,
+    windowMs: 60_000,
+  });
+  if (blocked) return blocked;
+
   try {
     const { email, password, token } = (await req.json()) as {
       email?: string;
@@ -83,15 +101,44 @@ export async function POST(req: NextRequest) {
       res.cookies.set(
         ADMIN_COOKIE,
         signAdminSession(e),
-        adminCookieOptions(SESSION_MAX_AGE),
+        sessionCookieOptions(SESSION_MAX_AGE),
       );
+      // Jangan sisakan sesi penonton di browser yang sama.
+      res.cookies.set(VIEWER_COOKIE, "", sessionCookieOptions(0));
       return res;
     }
 
-    // Viewer: tidak ada password tersimpan (akun ringan). Pastikan tidak ada
-    // cookie admin yang menempel.
-    const res = NextResponse.json({ ok: true, role: "viewer", email: e, name });
-    res.cookies.set(ADMIN_COOKIE, "", adminCookieOptions(0));
+    // Viewer: WAJIB punya akun terdaftar dengan password yang cocok.
+    // (Sebelum Tahap 6 blok ini meloloskan email APA PUN tanpa password.)
+    if (!sessionSecretConfigured()) {
+      return NextResponse.json(
+        { error: "Login belum aktif (AUTH_SECRET belum di-set di server)." },
+        { status: 500 },
+      );
+    }
+
+    const account = await getViewerAccount(e);
+    // Pesan sengaja SAMA untuk "akun tak ada" dan "password salah", supaya form
+    // ini tak bisa dipakai menebak email mana yang terdaftar (user enumeration).
+    if (!account || !verifyPassword(password ?? "", account)) {
+      return NextResponse.json(
+        { error: "Email atau password salah." },
+        { status: 401 },
+      );
+    }
+
+    const res = NextResponse.json({
+      ok: true,
+      role: "viewer",
+      email: e,
+      name: account.name || name,
+    });
+    res.cookies.set(
+      VIEWER_COOKIE,
+      signViewerSession(e),
+      sessionCookieOptions(SESSION_MAX_AGE),
+    );
+    res.cookies.set(ADMIN_COOKIE, "", sessionCookieOptions(0));
     return res;
   } catch (err) {
     const message = err instanceof Error ? err.message : "Login gagal";

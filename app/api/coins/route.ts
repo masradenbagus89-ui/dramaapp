@@ -24,7 +24,7 @@ const CONFIG = {
 // Status wallet user: saldo + episode yang sudah dibuka untuk satu drama.
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const id = await resolveUserEmail(req, searchParams.get("email"));
+  const id = await resolveUserEmail(req);
 
   if (!id) {
     return NextResponse.json({

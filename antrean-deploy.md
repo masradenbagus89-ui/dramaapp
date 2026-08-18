@@ -3,7 +3,7 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-08-18 sore WIB
+**Terakhir dicek:** 2026-08-18 malam WIB
 
 ## Siapa memantau apa
 
@@ -13,16 +13,17 @@
 | `masradenbagus89-ui/dramaapp` | `origin` | **Ya** — `git push origin main` = tombol rilis |
 
 Produksi: https://dramaapp.vercel.app  
-Commit terbaru yang di-push: **`8602858`** (Tahap 5). Status build Vercel belum diverifikasi — cek dashboard.
+Commit terbaru yang di-push: **`55e6d8b`** (Tahap 5). Status build Vercel belum diverifikasi — cek dashboard.
 
 ## Antrian sekarang
 
 | Status | Commit | Isi | Aksi |
 |---|---|---|---|
-| ⏳ sudah di-push, tunggu Vercel | `8602858` (`d5bb261`..`8602858`) | Tahap 5: rating + bagikan + balasan komentar | Cek dashboard Vercel: build Ready? |
+| 🚀 **siap rilis** | (Tahap 6) | Login penonton aman — menutup IDOR jalur koin | **Menunggu izin owner.** Cek `AUTH_SECRET` di Vercel dulu; penonton lama HARUS daftar ulang |
 | ⏸️ menunggu bahan | — | API key Playly valid (yang kemarin `invalid_key`) | Jangan deploy env dulu |
 
-**Selisih `dramaku/main` vs `origin/main`:** NOL — lokal, `origin`, dan `dramaku` semuanya di `8602858`.
+**Selisih `dramaku/main` vs `origin/main`:** NOL — keduanya di `55e6d8b`.
+**Lokal vs kedua remote:** lokal di depan (Tahap 6) — belum di-push.
 
 ## Cara cek cepat (AI / kamu)
 
@@ -47,6 +48,7 @@ Rollback 1-baris: Vercel → project `dramaapp` → Deployments → Promote comm
 | 2026-08-18 | `a36bc67`..`02efb6a` → origin + dramaku | Tahap 4 Performance & SEO dirilis; hasil build Vercel belum diverifikasi |
 | 2026-08-18 | `5a51261` → origin + dramaku | Catatan status Tahap 4; ketiga ref sama |
 | 2026-08-18 | `d5bb261`..`8602858` → origin + dramaku | Tahap 5 dirilis; hasil build Vercel belum diverifikasi |
+| 2026-08-18 | `55e6d8b` → origin + dramaku | Catatan status Tahap 5; ketiga ref sama |
 
 ## Aturan isi (untuk AI)
 

@@ -32,10 +32,10 @@ export default function RatingStars({ dramaId }: { dramaId: string }) {
     setUser(current);
 
     const load = async (u: User | null) => {
-      const qs = new URLSearchParams({ dramaId });
-      if (u?.email) qs.set("email", u.email);
       try {
-        const res = await fetch(`/api/ratings?${qs.toString()}`);
+        const res = await fetch(
+          `/api/ratings?dramaId=${encodeURIComponent(dramaId)}`,
+        );
         if (!res.ok) return;
         setSummary((await res.json()) as Summary);
       } catch {
@@ -61,7 +61,8 @@ export default function RatingStars({ dramaId }: { dramaId: string }) {
       const res = await fetch("/api/ratings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ dramaId, email: user.email, stars }),
+        // email tidak dikirim: identitas dari cookie sesi di server.
+        body: JSON.stringify({ dramaId, stars }),
       });
       const data = await res.json();
       if (!res.ok) {

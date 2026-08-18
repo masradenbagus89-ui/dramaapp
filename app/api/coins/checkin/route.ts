@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
     body = {};
   }
 
-  const id = await resolveUserEmail(req, body.email);
+  const id = await resolveUserEmail(req);
   if (!id) {
     return NextResponse.json({ error: "Login dulu." }, { status: 401 });
   }

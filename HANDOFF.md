@@ -9,37 +9,46 @@
 
 ## Status sekarang (1 menit)
 
-- Situs hidup: **https://dramaapp.vercel.app** — commit terbaru `02efb6a` sudah di-push ke `origin` + `dramaku`.
-- **Belum diverifikasi:** apakah build Vercel untuk `02efb6a` sudah Ready — perlu dicek di dashboard.
-- Build lokal & test lulus (212 tests). Database Supabase **tidak diubah**.
-- Repo `dramaku` sudah disamakan sampai `0100a66` (utang dual-push 6 commit sudah dibayar).
+- Situs hidup: **https://dramaapp.vercel.app** — yang TAYANG `5a51261` (Tahap 4).
+- **Tahap 5 selesai tapi BELUM di-push**: lokal ada di `d5bb261`.
+- Build lokal & test lulus (**221 tests**). Skema database Supabase **tidak diubah**.
+- Tahap yang sudah kelar: 1 (homepage/player) · 2 (discover/profile) · 3 (rekomendasi/koin/iklan) · 4 (Performance & SEO) · 5 (rating/share/balasan).
 
 ## Yang baru saja dikerjakan
 
 | Kapan | Apa | Hasil yang kamu rasakan |
 |---|---|---|
-| 2026-08-18 | **Tahap 4: Performance & SEO** (`332b23f`) | Tiap drama punya judul sendiri di Google (dulu semua judulnya sama); situs punya sitemap 42 URL + robots.txt; link yang di-share ke WhatsApp/FB kini tampil gambar; halaman publik di-cache 60 detik jadi jauh lebih cepat |
-| 2026-08-18 | Pengaman `.gitignore` (`a36bc67`) | `cookies.txt` berisi token login admin tak bisa lagi ter-commit tak sengaja ke repo publik |
-| 2026-08-18 | Dual push ke `dramaku` | Cadangan repo tak lagi tertinggal 6 commit |
-| 2026-08-17 sore | Push perubahan admin (password per admin + role VIEWER) | Admin bisa set password awal saat tambah kolega |
+| 2026-08-18 | **Tahap 5: rating + bagikan + balasan komentar** (`d5bb261`) | Penonton bisa kasih bintang 1-5 di halaman drama; tombol Bagikan; komentar bisa dibalas; Google kini dapat data bintang IMDb asli |
+| 2026-08-18 | **Tahap 4: Performance & SEO** (`5a51261`) | Tiap drama punya judul sendiri di Google; sitemap 42 URL; halaman jauh lebih cepat (cache 60 detik) |
+| 2026-08-18 | Pengaman `.gitignore` | `cookies.txt` berisi token admin tak bisa lagi ter-commit tak sengaja |
 
 ## Belum selesai / menunggu kamu
 
-1. **Cek dashboard Vercel** — pastikan build `02efb6a` statusnya Ready, lalu buka situsnya. Kalau gagal: Deployments → Promote `0100a66` untuk kembali ke versi sebelumnya.
-2. **Daftarkan sitemap ke Google Search Console** sesudah rilis — tanpa ini sitemap-nya ada tapi Google tak pernah tahu. Buka https://search.google.com/search-console → tambah properti `dramaapp.vercel.app` → menu Sitemaps → isi `sitemap.xml` → Submit.
-3. Sinopsis drama dari OMDb masih **berbahasa Inggris**, padahal situs berbahasa Indonesia. Itu isi data, bukan kode — perlu diterjemahkan lewat admin kalau mau rapi di hasil Google.
+1. **Push `d5bb261` ke `origin` + `dramaku`** → ini yang memicu rilis Vercel. Menunggu izin kamu.
+2. **Daftarkan sitemap ke Google Search Console** (dari Tahap 4, belum dikerjakan): buka https://search.google.com/search-console → tambah properti `dramaapp.vercel.app` → menu Sitemaps → isi `sitemap.xml` → Submit. Tanpa ini, kerja SEO Tahap 4 tidak terbaca Google.
+3. Sinopsis drama dari OMDb masih **berbahasa Inggris** padahal situs berbahasa Indonesia — perlu diterjemahkan lewat admin.
 4. API key Playly yang valid (produksi) — masih menunggu rekan.
-5. Fitur berikutnya (pilih): notifikasi/engagement, download offline, atau social features.
+5. Kandidat Tahap 6: **perkuat login penonton** (paling disarankan, lihat di bawah), notifikasi episode baru, PWA "pasang ke HP", atau download offline.
+
+## Utang teknis yang DISENGAJA (penting, jangan lupa)
+
+**Identitas penonton belum aman.** `lib/session.ts:95-98` — email viewer di-assert dari browser, server tak bisa memverifikasi. Akibatnya:
+
+- Rating penonton **bisa dipalsukan** dengan mengganti email di request. Karena itu rating penonton **sengaja TIDAK dikirim ke Google**; yang dikirim adalah `imdbRating` asli dari OMDb (lihat `lib/structured-data.ts`).
+- Begitu login penonton diperkuat (cookie bertanda tangan seperti admin), rating jadi tepercaya dan boleh dipasang ke structured data. Catatannya ada di `lib/store.ts` bagian "BATAS JUJUR".
 
 ## Jangan dilakukan
 
 - Jangan commit `.env.local` / API key / `cookies.txt`.
 - Jangan `git push` dari working tree kotor tanpa izin.
 - Jangan ganti tabel Supabase jadi `users`/`episodes`/`watch_history` — merusak koin & admin.
-- **Jangan pakai `getAllDramasCached`/`getDramaCached` di jalur koin, admin, atau tulis** — itu versi ber-cache khusus halaman publik. Jalur uang & tulis wajib `getAllDramas`/`getDrama` yang selalu terbaru.
+- **Jangan pakai `getAllDramasCached`/`getDramaCached` di jalur koin, admin, atau tulis** — itu versi ber-cache khusus halaman publik. Jalur uang & tulis wajib `getAllDramas`/`getDrama`.
+- **Jangan kirim rating penonton ke schema.org** sebelum identitas viewer aman — risiko penalti Google.
+- Kalau menguji API lewat `next start`, ingat datanya masuk **Supabase produksi** — bersihkan setelah selesai.
 
 ## Berkas terkait
 
-- Rencana terbaru: [`docs/lintasai/rencana/2026-08-18-performance-seo.md`](./docs/lintasai/rencana/2026-08-18-performance-seo.md)
+- Rencana terbaru: [`docs/lintasai/rencana/2026-08-18-tahap-5-rating-share.md`](./docs/lintasai/rencana/2026-08-18-tahap-5-rating-share.md)
+- Rencana Tahap 4: [`docs/lintasai/rencana/2026-08-18-performance-seo.md`](./docs/lintasai/rencana/2026-08-18-performance-seo.md)
 - Antrean: [`antrean-deploy.md`](./antrean-deploy.md)
 - Arsip: [`NEXT-SESSION.md`](./NEXT-SESSION.md)

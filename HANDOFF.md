@@ -9,8 +9,8 @@
 
 ## Status sekarang (1 menit)
 
-- Situs hidup: **https://dramaapp.vercel.app** — yang TAYANG `5a51261` (Tahap 4).
-- **Tahap 5 selesai tapi BELUM di-push**: lokal ada di `d5bb261`.
+- Situs hidup: **https://dramaapp.vercel.app** — commit terbaru `8602858` (Tahap 5) sudah di-push ke `origin` + `dramaku`.
+- **Belum diverifikasi:** apakah build Vercel untuk `8602858` sudah Ready — perlu dicek di dashboard.
 - Build lokal & test lulus (**221 tests**). Skema database Supabase **tidak diubah**.
 - Tahap yang sudah kelar: 1 (homepage/player) · 2 (discover/profile) · 3 (rekomendasi/koin/iklan) · 4 (Performance & SEO) · 5 (rating/share/balasan).
 
@@ -24,7 +24,7 @@
 
 ## Belum selesai / menunggu kamu
 
-1. **Push `d5bb261` ke `origin` + `dramaku`** → ini yang memicu rilis Vercel. Menunggu izin kamu.
+1. **Cek dashboard Vercel** — pastikan build `8602858` statusnya Ready, lalu coba fitur bintang di halaman drama. Kalau gagal: Deployments → Promote `5a51261`.
 2. **Daftarkan sitemap ke Google Search Console** (dari Tahap 4, belum dikerjakan): buka https://search.google.com/search-console → tambah properti `dramaapp.vercel.app` → menu Sitemaps → isi `sitemap.xml` → Submit. Tanpa ini, kerja SEO Tahap 4 tidak terbaca Google.
 3. Sinopsis drama dari OMDb masih **berbahasa Inggris** padahal situs berbahasa Indonesia — perlu diterjemahkan lewat admin.
 4. API key Playly yang valid (produksi) — masih menunggu rekan.

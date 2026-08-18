@@ -13,17 +13,16 @@
 | `masradenbagus89-ui/dramaapp` | `origin` | **Ya** — `git push origin main` = tombol rilis |
 
 Produksi: https://dramaapp.vercel.app  
-Commit terbaru yang di-push: **`5a51261`** (Tahap 4). Status build Vercel belum diverifikasi — cek dashboard.
+Commit terbaru yang di-push: **`8602858`** (Tahap 5). Status build Vercel belum diverifikasi — cek dashboard.
 
 ## Antrian sekarang
 
 | Status | Commit | Isi | Aksi |
 |---|---|---|---|
-| 🚀 **siap rilis** | `d5bb261` | Tahap 5: rating penonton + tombol bagikan + balasan komentar | **Menunggu izin owner** untuk push |
+| ⏳ sudah di-push, tunggu Vercel | `8602858` (`d5bb261`..`8602858`) | Tahap 5: rating + bagikan + balasan komentar | Cek dashboard Vercel: build Ready? |
 | ⏸️ menunggu bahan | — | API key Playly valid (yang kemarin `invalid_key`) | Jangan deploy env dulu |
 
-**Selisih `dramaku/main` vs `origin/main`:** NOL — keduanya di `5a51261`.
-**Lokal vs kedua remote:** lokal 1 commit di depan (`d5bb261`, Tahap 5) — belum di-push.
+**Selisih `dramaku/main` vs `origin/main`:** NOL — lokal, `origin`, dan `dramaku` semuanya di `8602858`.
 
 ## Cara cek cepat (AI / kamu)
 
@@ -47,6 +46,7 @@ Rollback 1-baris: Vercel → project `dramaapp` → Deployments → Promote comm
 | 2026-08-18 | `4821c8f`..`0100a66` → `dramaku` | Utang dual-push 6 commit dibayar; kedua repo sama |
 | 2026-08-18 | `a36bc67`..`02efb6a` → origin + dramaku | Tahap 4 Performance & SEO dirilis; hasil build Vercel belum diverifikasi |
 | 2026-08-18 | `5a51261` → origin + dramaku | Catatan status Tahap 4; ketiga ref sama |
+| 2026-08-18 | `d5bb261`..`8602858` → origin + dramaku | Tahap 5 dirilis; hasil build Vercel belum diverifikasi |
 
 ## Aturan isi (untuk AI)
 

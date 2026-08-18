@@ -547,6 +547,13 @@ export type ViewerAccount = {
   /** Nama tampilan saat mendaftar. Cuma label; identitas tetap emailnya. */
   name: string;
   createdAt: string;
+  /**
+   * Hash kode pemulihan (lihat lib/recovery-code.ts). SENGAJA opsional:
+   * akun yang dibuat di Tahap 6 belum punya ini dan HARUS tetap valid —
+   * pemiliknya membuat kode lewat halaman profil selagi masih bisa masuk.
+   * Kode aslinya tak pernah disimpan.
+   */
+  recovery?: { hash: string; salt: string };
 };
 
 type ViewersFile = { viewers: Record<string, ViewerAccount> };

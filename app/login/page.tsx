@@ -202,7 +202,18 @@ export default function LoginPage() {
             </CardContent>
           </Card>
 
-          <p className="mt-5 text-center text-sm text-zinc-400">
+          <p className="mt-4 text-center text-sm text-zinc-400">
+            Lupa password?{" "}
+            <Button
+              asChild
+              variant="link"
+              className="h-auto p-0 font-semibold text-amber-400"
+            >
+              <Link href="/lupa-password">Pulihkan dengan kode</Link>
+            </Button>
+          </p>
+
+          <p className="mt-2 text-center text-sm text-zinc-400">
             Belum punya akun?{" "}
             <Button
               asChild

@@ -3,7 +3,7 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-08-18 malam WIB
+**Terakhir dicek:** 2026-08-18 malam WIB (Tahap 7)
 
 ## Siapa memantau apa
 
@@ -13,17 +13,19 @@
 | `masradenbagus89-ui/dramaapp` | `origin` | **Ya** — `git push origin main` = tombol rilis |
 
 Produksi: https://dramaapp.vercel.app  
-Commit terbaru yang di-push: **`82e7536`** (Tahap 6). Status build Vercel belum diverifikasi — cek dashboard.
+Commit terbaru yang di-push: **`b48bf32`** (Tahap 6). Status build Vercel belum diverifikasi — cek dashboard.
 AUTH_SECRET di Vercel: dikonfirmasi ADA oleh owner 2026-08-18.
 
 ## Antrian sekarang
 
 | Status | Commit | Isi | Aksi |
 |---|---|---|---|
-| ⏳ sudah di-push, tunggu Vercel | `82e7536` | Tahap 6: login penonton aman (tutup IDOR koin) | Cek build Ready, lalu KLAIM 3 akun bersaldo lewat /daftar |
+| 🚀 **siap rilis** | (Tahap 7) | Kode pemulihan password penonton | **Menunggu izin owner** |
+| ⏳ belum diverifikasi | `b48bf32` | Tahap 6: login penonton aman | Cek build Ready + KLAIM 3 akun bersaldo lewat /daftar |
 | ⏸️ menunggu bahan | — | API key Playly valid (yang kemarin `invalid_key`) | Jangan deploy env dulu |
 
-**Selisih `dramaku/main` vs `origin/main`:** NOL — lokal, `origin`, dan `dramaku` semuanya di `82e7536`.
+**Selisih `dramaku/main` vs `origin/main`:** NOL — keduanya di `b48bf32`.
+**Lokal vs kedua remote:** lokal di depan (Tahap 7) — belum di-push.
 
 ## Cara cek cepat (AI / kamu)
 
@@ -50,6 +52,7 @@ Rollback 1-baris: Vercel → project `dramaapp` → Deployments → Promote comm
 | 2026-08-18 | `d5bb261`..`8602858` → origin + dramaku | Tahap 5 dirilis; hasil build Vercel belum diverifikasi |
 | 2026-08-18 | `55e6d8b` → origin + dramaku | Catatan status Tahap 5; ketiga ref sama |
 | 2026-08-18 | `82e7536` → origin + dramaku | Tahap 6 dirilis (BREAKING: penonton daftar ulang); build Vercel belum diverifikasi |
+| 2026-08-18 | `b48bf32` → origin + dramaku | Catatan status Tahap 6; ketiga ref sama |
 
 ## Aturan isi (untuk AI)
 

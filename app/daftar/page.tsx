@@ -4,14 +4,13 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { writeUser } from "@/lib/auth";
+import { MIN_VIEWER_PASSWORD_LEN } from "@/lib/viewer-password";
+import RecoveryCodePanel from "@/app/components/RecoveryCodePanel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Eye, EyeOff } from "lucide-react";
-
-/** Samakan dengan MIN_VIEWER_PASSWORD_LEN di app/api/auth/register/route.ts. */
-const MIN_PASSWORD_LEN = 8;
 
 export default function DaftarPage() {
   const router = useRouter();
@@ -23,6 +22,9 @@ export default function DaftarPage() {
   const [agree, setAgree] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Terisi sesudah daftar berhasil: kode ditampilkan SEKALI sebelum masuk.
+  const [recoveryCode, setRecoveryCode] = useState<string | null>(null);
+  const [pendingUser, setPendingUser] = useState<{ name: string; email: string } | null>(null);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,8 +38,8 @@ export default function DaftarPage() {
       setError("Format email tidak valid.");
       return;
     }
-    if (password.length < MIN_PASSWORD_LEN) {
-      setError(`Password minimal ${MIN_PASSWORD_LEN} karakter.`);
+    if (password.length < MIN_VIEWER_PASSWORD_LEN) {
+      setError(`Password minimal ${MIN_VIEWER_PASSWORD_LEN} karakter.`);
       return;
     }
     if (password !== confirm) {
@@ -71,10 +73,11 @@ export default function DaftarPage() {
         return;
       }
 
-      // localStorage hanya untuk tampilan (nama & avatar) — identitas sebenarnya
-      // ada di cookie sesi yang baru saja diberikan server.
-      writeUser({ name: data.name, email: data.email, role: "viewer" });
-      router.push("/beranda");
+      // Jangan langsung ke beranda: tampilkan dulu kode pemulihan, karena
+      // kode ini tak bisa dilihat lagi setelah layar ini ditinggalkan.
+      setPendingUser({ name: data.name, email: data.email });
+      setRecoveryCode(data.recoveryCode);
+      setSubmitting(false);
     } catch {
       setSubmitting(false);
       setError("Pendaftaran gagal. Coba lagi.");
@@ -109,6 +112,19 @@ export default function DaftarPage() {
             </p>
           </div>
 
+          {recoveryCode ? (
+            <RecoveryCodePanel
+              code={recoveryCode}
+              onConfirm={() => {
+                // localStorage hanya untuk tampilan (nama & avatar); identitas
+                // sebenarnya ada di cookie sesi dari server.
+                if (pendingUser) {
+                  writeUser({ ...pendingUser, role: "viewer" });
+                }
+                router.push("/beranda");
+              }}
+            />
+          ) : (
           <Card className="rounded-2xl border-zinc-800 bg-zinc-900/40 py-0">
             <CardContent className="p-6">
               <form onSubmit={onSubmit}>
@@ -221,6 +237,7 @@ export default function DaftarPage() {
               </form>
             </CardContent>
           </Card>
+          )}
 
           <p className="mt-5 text-center text-sm text-zinc-400">
             Sudah punya akun?{" "}

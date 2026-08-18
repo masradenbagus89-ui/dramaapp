@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminEmail, getViewerAccount, setViewerAccount } from "@/lib/store";
 import { hashPassword } from "@/lib/admin-password";
+import { generateRecoveryCode, hashRecoveryCode } from "@/lib/recovery-code";
 import {
   signViewerSession,
   sessionCookieOptions,
@@ -10,12 +11,10 @@ import {
   SESSION_MAX_AGE,
 } from "@/lib/session";
 import { guardMutation } from "@/lib/request-guard";
+import { MIN_VIEWER_PASSWORD_LEN } from "@/lib/viewer-password";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
-/** Panjang minimum password penonton. Disamakan dengan admin supaya konsisten. */
-export const MIN_VIEWER_PASSWORD_LEN = 8;
 
 /**
  * Daftar akun PENONTON.
@@ -85,14 +84,28 @@ export async function POST(req: NextRequest) {
   }
 
   const rec = hashPassword(password);
+
+  // Kode pemulihan: satu-satunya jalan pulih kalau lupa password (project belum
+  // bisa kirim email). Yang disimpan hanya hash-nya; kode aslinya dikembalikan
+  // SEKALI di response ini dan tak bisa dilihat lagi.
+  const recoveryCode = generateRecoveryCode();
+  const recovery = hashRecoveryCode(recoveryCode);
+
   await setViewerAccount(email, {
     hash: rec.hash,
     salt: rec.salt,
     name,
     createdAt: new Date().toISOString(),
+    recovery: { hash: recovery.hash, salt: recovery.salt },
   });
 
-  const res = NextResponse.json({ ok: true, role: "viewer", email, name });
+  const res = NextResponse.json({
+    ok: true,
+    role: "viewer",
+    email,
+    name,
+    recoveryCode,
+  });
   res.cookies.set(VIEWER_COOKIE, signViewerSession(email), sessionCookieOptions(SESSION_MAX_AGE));
   // Pastikan tak ada sisa cookie admin yang menempel di browser yang sama.
   res.cookies.set(ADMIN_COOKIE, "", sessionCookieOptions(0));

@@ -13,6 +13,7 @@ import {
   type User,
 } from "@/lib/auth";
 import CoinWallet from "@/app/components/CoinWallet";
+import RecoverySection from "@/app/components/RecoverySection";
 import AdBanner from "@/app/components/AdBanner";
 import ContinueWatchingRow from "@/app/components/profile/ContinueWatchingRow";
 import FavoritesRow from "@/app/components/profile/FavoritesRow";
@@ -269,6 +270,10 @@ export default function ProfilePage() {
         <div id="premium">
           <CoinWallet />
         </div>
+
+        {/* Kode pemulihan hanya relevan untuk akun penonton; admin punya
+            jalur password sendiri di panel admin. */}
+        {mounted && user && user.role !== "admin" && <RecoverySection />}
 
         {/* Slot iklan otomatis — passive income; fallback iklan manual/promo. */}
         <AdBanner className="mx-auto max-w-2xl" />

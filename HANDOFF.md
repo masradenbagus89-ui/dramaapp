@@ -9,20 +9,16 @@
 
 ## Status sekarang (1 menit)
 
-- Situs hidup: **https://dramaapp.vercel.app** — yang TAYANG `b48bf32` (Tahap 6).
-- **Tahap 7 selesai tapi BELUM di-push.** Build lokal & test lulus (**241 tests**).
+- Situs hidup: **https://dramaapp.vercel.app** — commit terbaru `1ce14c3` (Tahap 7) sudah di-push ke `origin` + `dramaku`.
+- **Belum diverifikasi:** apakah build Vercel untuk `1ce14c3` sudah Ready. Build lokal & test lulus (**241 tests**).
 - Skema database Supabase **tidak diubah** (akun penonton memakai tabel `app_data` yang sudah ada).
 - Tahap kelar: 1 · 2 · 3 · 4 (Performance & SEO) · 5 (rating/share/balasan) · 6 (login penonton aman) · 7 (kode pemulihan).
 
-## ⚠️ Belum diverifikasi di produksi
+## ✅ Tahap 6 sudah diverifikasi di produksi
 
-**Tahap 6 belum dikonfirmasi jalan di produksi.** Owner sudah memastikan `AUTH_SECRET`
-ada di Vercel, tapi belum melapor bahwa build `b48bf32` Ready dan 3 akun bersaldo
-(42 koin) sudah diklaim. Kalau nanti ada masalah login penonton di produksi, curigai
-Tahap 6 dulu — Tahap 7 hanya menambah jalur pemulihan di atasnya.
-
-**Klaim 3 akun bersaldo** masih menunggu: buka `/daftar`, pakai email yang sama persis
-dengan akun lama. Koin menempel pada email. Siapa cepat dia dapat.
+Owner mengecek sendiri 2026-08-18: build Ready, daftar & login penonton jalan,
+password salah ditolak, dan akun bersaldo sudah diklaim. Jadi fondasi login aman
+sudah TERBUKTI, bukan cuma lulus tes lokal.
 
 ## Yang baru saja dikerjakan
 
@@ -49,7 +45,7 @@ dengan akun lama. Koin menempel pada email. Siapa cepat dia dapat.
 
 ## Belum selesai / menunggu kamu
 
-1. **Push Tahap 7** → menunggu izin kamu.
+1. **Cek dashboard Vercel** — pastikan build `1ce14c3` Ready, lalu coba daftar 1 akun dan simpan kode pemulihannya. Kalau build gagal: Deployments → Promote `b48bf32`.
 2. **Daftarkan sitemap ke Google Search Console** (tertunda sejak Tahap 4): buka
    https://search.google.com/search-console → tambah properti `dramaapp.vercel.app` →
    Sitemaps → isi `sitemap.xml` → Submit.

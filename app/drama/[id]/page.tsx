@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getAllDramas, getDramaCached } from "@/lib/dramas";
 import { SITE_URL, absoluteUrl, toMetaDescription } from "@/lib/site";
+import { dramaJsonLd, toJsonLdScript } from "@/lib/structured-data";
 import { subtitleLabel } from "@/lib/types";
 import Poster from "@/app/components/Poster";
 import SaveButton from "@/app/components/SaveButton";
@@ -12,6 +13,8 @@ import Comments from "@/app/components/Comments";
 import WatchCta from "@/app/components/WatchCta";
 import EpisodeList from "@/app/components/EpisodeList";
 import AdBanner from "@/app/components/AdBanner";
+import RatingStars from "@/app/components/RatingStars";
+import ShareButton from "@/app/components/ShareButton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, Captions } from "lucide-react";
@@ -157,6 +160,7 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
           <div className="flex flex-1 gap-2">
             <SaveButton id={drama.id} />
             <LikeButton dramaId={drama.id} />
+            <ShareButton title={drama.title} />
           </div>
         </div>
 
@@ -251,8 +255,24 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
 
         <AdBanner className="mt-6" />
 
+        <section className="mt-8">
+          <h2 className="mb-3 text-lg font-semibold text-white">Nilai drama ini</h2>
+          <RatingStars dramaId={drama.id} />
+        </section>
+
         <Comments dramaId={drama.id} />
       </div>
+
+      {/* Data terstruktur untuk Google. Memakai rating IMDb ASLI — bukan rating
+          penonton, yang belum tahan pemalsuan (lihat lib/structured-data.ts). */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: toJsonLdScript(
+            dramaJsonLd(drama, `${SITE_URL}/drama/${encodeURIComponent(drama.id)}`),
+          ),
+        }}
+      />
     </div>
   );
 }

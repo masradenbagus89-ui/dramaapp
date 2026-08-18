@@ -27,6 +27,7 @@ export async function POST(req: NextRequest) {
       email?: string;
       role?: "admin" | "viewer";
       text?: string;
+      parentId?: string;
     };
     const dramaId = String(body.dramaId ?? "").trim();
     const user = String(body.user ?? "").trim();
@@ -50,6 +51,27 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Balasan dibatasi 1 tingkat: induk harus ada DAN bukan balasan juga.
+    // Tanpa cek ini, klien bisa mengirim parentId ngawur -> komentar yatim
+    // yang tersimpan tapi tak pernah tampil.
+    const parentId = String(body.parentId ?? "").trim();
+    if (parentId) {
+      const existing = await getCommentsFor(dramaId);
+      const parent = existing.find((c) => c.id === parentId);
+      if (!parent) {
+        return NextResponse.json(
+          { error: "Komentar yang dibalas tidak ditemukan." },
+          { status: 400 },
+        );
+      }
+      if (parent.parentId) {
+        return NextResponse.json(
+          { error: "Balasan hanya boleh satu tingkat." },
+          { status: 400 },
+        );
+      }
+    }
+
     const comment: Comment = {
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       user,
@@ -57,6 +79,7 @@ export async function POST(req: NextRequest) {
       role,
       text,
       time: new Date().toISOString(),
+      ...(parentId ? { parentId } : {}),
     };
     await addComment(dramaId, comment);
     return NextResponse.json({ ok: true, comment });
@@ -92,9 +115,12 @@ export async function DELETE(req: NextRequest) {
         { status: 403 },
       );
     }
+    // Hapus komentar itu SEKALIGUS balasannya. Kalau hanya induknya yang
+    // dihapus, balasannya tetap tersimpan tapi tak punya induk -> tak pernah
+    // tampil di UI (sampah yang menumpuk diam-diam).
     await setCommentsFor(
       dramaId,
-      list.filter((c) => c.id !== commentId),
+      list.filter((c) => c.id !== commentId && c.parentId !== commentId),
     );
     return NextResponse.json({ ok: true });
   } catch (err) {

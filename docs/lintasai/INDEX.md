@@ -7,6 +7,7 @@
 
 ## Rencana
 
+- [2026-08-18-tahap-5-rating-share.md](./rencana/2026-08-18-tahap-5-rating-share.md) — rating penonton (1 email = 1 suara, TIDAK dikirim ke Google) + share + balasan komentar
 - [2026-08-18-performance-seo.md](./rencana/2026-08-18-performance-seo.md) — metadata unik per halaman, sitemap/robots, cache ISR 60 detik tanpa menyentuh jalur koin
 - [2026-08-16-hero-trailer-hidup.md](./rencana/2026-08-16-hero-trailer-hidup.md) — hero trailer hidup di Beranda + Discover (lokal :3055)
 - [2026-08-16-redesign-streaming-tahap-1.md](./rencana/2026-08-16-redesign-streaming-tahap-1.md) — redesign homepage/detail/player/riwayat tanpa ganti skema Supabase

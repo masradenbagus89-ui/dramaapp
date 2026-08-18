@@ -8,8 +8,8 @@
 //
 // Pemetaan data di Supabase:
 //   - Dokumen JSON  -> tabel `app_data` (key -> value jsonb):
-//       "admins", "comments:<id>", "ads", "coinmeta:<email>",
-//       "twofa:<email>", "order:<orderId>".
+//       "admins", "comments:<id>", "rating:<id>", "ads",
+//       "coinmeta:<email>", "twofa:<email>", "order:<orderId>".
 //   - Counter atomik -> tabel + RPC:
 //       likes   (RPC like_change), wallets (RPC coin_add/coin_spend_unlock),
 //       unlocks (tabel SET email+token).
@@ -41,6 +41,13 @@ export type Comment = {
   role: "admin" | "viewer";
   text: string;
   time: string;
+  /**
+   * Id komentar yang dibalas. Kosong/absen = komentar utama.
+   * Sengaja OPSIONAL: komentar lama yang sudah tersimpan tidak punya field ini
+   * dan harus tetap valid (tampil sebagai komentar utama), tanpa migrasi data.
+   * Balasan dibatasi 1 tingkat — balasan tidak boleh punya balasan lagi.
+   */
+  parentId?: string;
 };
 export type CommentsFile = { comments: Record<string, Comment[]> };
 
@@ -233,6 +240,72 @@ export async function setCommentsFor(
   const data = readLocal<CommentsFile>("comments.json", { comments: {} });
   data.comments[dramaId] = list;
   writeLocal("comments.json", data);
+}
+
+// =====================  RATING PENONTON (dokumen per-drama)  ===============
+// Dokumen app_data "rating:<dramaId>" -> { "<email>": <bintang> }.
+//
+// BATAS JUJUR (utang teknis yang disengaja): identitas viewer BELUM aman —
+// email di-assert dari klien (lihat lib/session.ts resolveUserEmail), jadi
+// angka ini TIDAK tahan pemalsuan. Cukup untuk mencegah satu orang menilai
+// dua kali secara tidak sengaja, TAPI dilarang dipakai sebagai sumber
+// structured data Google: rating palsu di schema.org berisiko penalti.
+// Cara upgrade: setelah sesi penonton bertanda-tangan ada, ambil email dari
+// cookie terverifikasi (seperti getAdminEmail) dan hapus catatan ini.
+
+export type RatingMap = Record<string, number>;
+type RatingsFile = { ratings: Record<string, RatingMap> };
+
+export const RATING_MIN = 1;
+export const RATING_MAX = 5;
+
+function ratingKey(dramaId: string): string {
+  return `rating:${dramaId}`;
+}
+
+/** Semua suara untuk satu drama: email -> bintang. */
+export async function getRatingsFor(dramaId: string): Promise<RatingMap> {
+  if (useSupabase) return (await sbDocGet<RatingMap>(ratingKey(dramaId))) ?? {};
+  return (
+    readLocal<RatingsFile>("ratings.json", { ratings: {} }).ratings[dramaId] ?? {}
+  );
+}
+
+/**
+ * Simpan suara satu penonton. Suara lamanya DITIMPA (1 email = 1 suara), jadi
+ * menilai ulang berarti mengubah nilai — bukan menambah suara baru.
+ */
+export async function setRating(
+  dramaId: string,
+  email: string,
+  stars: number,
+): Promise<RatingMap> {
+  const e = normEmail(email);
+  const value = Math.min(RATING_MAX, Math.max(RATING_MIN, Math.trunc(stars)));
+  const map = await getRatingsFor(dramaId);
+  map[e] = value;
+  if (useSupabase) {
+    await sbDocSet(ratingKey(dramaId), map);
+  } else {
+    const file = readLocal<RatingsFile>("ratings.json", { ratings: {} });
+    file.ratings[dramaId] = map;
+    writeLocal("ratings.json", file);
+  }
+  return map;
+}
+
+/** Ringkasan siap tampil: rata-rata 1 angka di belakang koma + jumlah suara. */
+export function summarizeRatings(map: RatingMap): {
+  average: number;
+  count: number;
+} {
+  const values = Object.values(map).filter((n) => Number.isFinite(n));
+  if (values.length === 0) return { average: 0, count: 0 };
+  const sum = values.reduce((a, b) => a + b, 0);
+  return {
+    average: Math.round((sum / values.length) * 10) / 10,
+    count: values.length,
+  };
 }
 
 // =====================  WALLET / KOIN  =====================================

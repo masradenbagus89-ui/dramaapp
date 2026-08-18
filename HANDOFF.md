@@ -9,8 +9,8 @@
 
 ## Status sekarang (1 menit)
 
-- Situs hidup: **https://dramaapp.vercel.app** — yang TAYANG `55e6d8b` (Tahap 5).
-- **Tahap 6 selesai tapi BELUM di-push.** Build lokal & test lulus (**229 tests**).
+- Situs hidup: **https://dramaapp.vercel.app** — commit terbaru `82e7536` (Tahap 6) sudah di-push ke `origin` + `dramaku`.
+- **Belum diverifikasi:** apakah build Vercel untuk `82e7536` sudah Ready. Build lokal & test lulus (**229 tests**).
 - Skema database Supabase **tidak diubah** (akun penonton pakai tabel `app_data` yang sudah ada).
 - Tahap kelar: 1 · 2 · 3 · 4 (Performance & SEO) · 5 (rating/share/balasan) · 6 (login penonton aman).
 
@@ -24,9 +24,7 @@ Tahap 6 menutup lubang keamanan, dan itu **memutus sesi penonton lama**:
    pakai **email yang sama persis** dengan akun lama. Koin menempel pada email, jadi
    begitu email itu diklaim, saldonya kembali. Siapa cepat dia dapat — kalau orang lain
    mendaftar dengan email itu lebih dulu, saldonya ikut ke dia.
-3. **Pastikan `AUTH_SECRET` sudah di-set di Vercel.** Tanpa itu, daftar & login penonton
-   membalas error 500 (sengaja gagal-mengunci, bukan gagal-membuka). Login admin sudah
-   memakainya, jadi kemungkinan besar sudah ada — tapi cek dulu sebelum rilis.
+3. ✅ **`AUTH_SECRET` di Vercel: sudah dikonfirmasi ADA** oleh owner (2026-08-18).
 
 ## Kenapa Tahap 6 dikerjakan (temuan, bukan permintaan fitur)
 
@@ -45,7 +43,7 @@ Sekarang identitas hanya berasal dari cookie bertanda tangan.
 
 ## Belum selesai / menunggu kamu
 
-1. **Push Tahap 6** → menunggu izin kamu (dan cek `AUTH_SECRET` di Vercel dulu).
+1. **Cek dashboard Vercel** — pastikan build `82e7536` Ready, lalu langsung KLAIM 3 akun bersaldo lewat `/daftar` (pakai email yang sama persis). Kalau build gagal: Deployments → Promote `55e6d8b`.
 2. **Daftarkan sitemap ke Google Search Console** (tertunda sejak Tahap 4): buka
    https://search.google.com/search-console → tambah properti `dramaapp.vercel.app` →
    Sitemaps → isi `sitemap.xml` → Submit.

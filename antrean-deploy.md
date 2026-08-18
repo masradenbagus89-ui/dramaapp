@@ -13,17 +13,17 @@
 | `masradenbagus89-ui/dramaapp` | `origin` | **Ya** — `git push origin main` = tombol rilis |
 
 Produksi: https://dramaapp.vercel.app  
-Commit terbaru yang di-push: **`55e6d8b`** (Tahap 5). Status build Vercel belum diverifikasi — cek dashboard.
+Commit terbaru yang di-push: **`82e7536`** (Tahap 6). Status build Vercel belum diverifikasi — cek dashboard.
+AUTH_SECRET di Vercel: dikonfirmasi ADA oleh owner 2026-08-18.
 
 ## Antrian sekarang
 
 | Status | Commit | Isi | Aksi |
 |---|---|---|---|
-| 🚀 **siap rilis** | (Tahap 6) | Login penonton aman — menutup IDOR jalur koin | **Menunggu izin owner.** Cek `AUTH_SECRET` di Vercel dulu; penonton lama HARUS daftar ulang |
+| ⏳ sudah di-push, tunggu Vercel | `82e7536` | Tahap 6: login penonton aman (tutup IDOR koin) | Cek build Ready, lalu KLAIM 3 akun bersaldo lewat /daftar |
 | ⏸️ menunggu bahan | — | API key Playly valid (yang kemarin `invalid_key`) | Jangan deploy env dulu |
 
-**Selisih `dramaku/main` vs `origin/main`:** NOL — keduanya di `55e6d8b`.
-**Lokal vs kedua remote:** lokal di depan (Tahap 6) — belum di-push.
+**Selisih `dramaku/main` vs `origin/main`:** NOL — lokal, `origin`, dan `dramaku` semuanya di `82e7536`.
 
 ## Cara cek cepat (AI / kamu)
 
@@ -49,6 +49,7 @@ Rollback 1-baris: Vercel → project `dramaapp` → Deployments → Promote comm
 | 2026-08-18 | `5a51261` → origin + dramaku | Catatan status Tahap 4; ketiga ref sama |
 | 2026-08-18 | `d5bb261`..`8602858` → origin + dramaku | Tahap 5 dirilis; hasil build Vercel belum diverifikasi |
 | 2026-08-18 | `55e6d8b` → origin + dramaku | Catatan status Tahap 5; ketiga ref sama |
+| 2026-08-18 | `82e7536` → origin + dramaku | Tahap 6 dirilis (BREAKING: penonton daftar ulang); build Vercel belum diverifikasi |
 
 ## Aturan isi (untuk AI)
 

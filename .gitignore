@@ -11,6 +11,8 @@ tsconfig.tsbuildinfo
 
 # Rahasia 2FA admin — JANGAN pernah commit (repo publik).
 data/twofa.json
+# Cookie jar hasil uji curl — berisi token sesi admin yang masih hidup.
+cookies.txt
 public/videos/
 public/audio/
 public/episodes/
@@ -43,3 +45,6 @@ _dubbing/
 
 # Catatan pembelajaran lintasAI (berkas belajar, BUKAN berkas proyek — jangan ikut ter-commit)
 docs/pelajaran-lintasai/
+
+# Artefak dev server lokal — nomor proses, dibuat ulang tiap start.
+*.pid

@@ -3,7 +3,7 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-08-19 pagi WIB (Tahap 7 terverifikasi tayang + insiden tunnel video)
+**Terakhir dicek:** 2026-08-19 sore WIB (commit docs `3b97791` di-push ke kedua repo)
 
 ## Siapa memantau apa
 
@@ -13,8 +13,8 @@
 | `masradenbagus89-ui/dramaapp` | `origin` | **Ya** — `git push origin main` = tombol rilis |
 
 Produksi: https://dramaapp.vercel.app  
-Commit terbaru yang di-push: **`bccb5ef`** (Tahap 7 + docs). **Sudah tayang & diverifikasi 2026-08-19** (`/lupa-password` 200, endpoint auth hidup).
-Catatan: `git ls-remote origin` OK = sama dengan lokal; cek `dramaku` timeout 2026-08-19 (belum terverifikasi sesi ini).
+Commit terbaru yang di-push: **`3b97791`** (Tahap 7 + catatan insiden tunnel). Kode aplikasi terakhir berubah di `1ce14c3` — **sudah tayang & diverifikasi 2026-08-19** (`/lupa-password` 200, endpoint auth hidup).
+Catatan: `git fetch` ke `origin` **dan** `dramaku` dua-duanya SUKSES 2026-08-19 sore (timeout `dramaku` pagi tadi tidak kambuh).
 Tahap 6 (`b48bf32`): **sudah diverifikasi owner jalan di produksi** 2026-08-18.
 AUTH_SECRET di Vercel: dikonfirmasi ADA oleh owner 2026-08-18.
 
@@ -26,7 +26,7 @@ AUTH_SECRET di Vercel: dikonfirmasi ADA oleh owner 2026-08-18.
 | ⚠️ utang operasional | — | `VERCEL_TOKEN` di `start-dramaapp.ps1` kedaluwarsa (403) | Buat token baru, tempel di PC backup |
 | ⏸️ menunggu bahan | — | API key Playly valid (yang kemarin `invalid_key`) | Jangan deploy env dulu |
 
-**Selisih `dramaku/main` vs `origin/main`:** NOL — lokal, `origin`, dan `dramaku` semuanya di `1ce14c3`.
+**Selisih `dramaku/main` vs `origin/main`:** NOL — lokal, `origin`, dan `dramaku` semuanya di `3b97791` (diverifikasi sesudah push, 2026-08-19 sore).
 
 ## Cara cek cepat (AI / kamu)
 
@@ -57,6 +57,7 @@ Rollback 1-baris: Vercel → project `dramaapp` → Deployments → Promote comm
 | 2026-08-18 | Tahap 6 diverifikasi owner | Build Ready, daftar & login jalan, password salah ditolak, akun bersaldo diklaim |
 | 2026-08-18 | `1ce14c3` → origin + dramaku | Tahap 7 dirilis; build Vercel belum diverifikasi |
 | 2026-08-19 | — (tanpa commit) | Tahap 7 terverifikasi tayang; tunnel video mati → env `NEXT_PUBLIC_VIDEO_BASE_URL` diupdate MANUAL ke tunnel baru + redeploy; video terbukti jalan (206) |
+| 2026-08-19 | `3b97791` → origin + dramaku | Commit catatan yang nyangkut di lokal dibayar; ketiga ref sama. Docs-only (HANDOFF + antrean), nol baris kode aplikasi |
 
 ## Aturan isi (untuk AI)
 

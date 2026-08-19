@@ -9,7 +9,7 @@
 
 ## Status sekarang (1 menit)
 
-- Situs hidup: **https://dramaapp.vercel.app** — commit terbaru `1ce14c3` (Tahap 7) sudah di-push ke `origin` + `dramaku`.
+- Situs hidup: **https://dramaapp.vercel.app** — commit terbaru `3b97791` sudah di-push ke `origin` + `dramaku` (selisih nol). Kode aplikasi terakhir berubah di `1ce14c3` (Tahap 7); `3b97791` isinya catatan saja.
 - **Tahap 7 SUDAH tayang di produksi** — diverifikasi 2026-08-19: `/lupa-password` balas 200 + berisi "Kode pemulihan", endpoint `/api/auth/reset-password` & `/recovery-code` hidup (405 untuk GET = hanya menerima POST), `tests/recovery-code.test.ts` 12 tes lulus.
 - Skema database Supabase **tidak diubah** (akun penonton memakai tabel `app_data` yang sudah ada).
 - Tahap kelar: 1 · 2 · 3 · 4 (Performance & SEO) · 5 (rating/share/balasan) · 6 (login penonton aman) · 7 (kode pemulihan).

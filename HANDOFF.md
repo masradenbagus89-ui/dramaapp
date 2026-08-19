@@ -9,7 +9,7 @@
 
 ## Status sekarang (1 menit)
 
-- Situs hidup: **https://dramaapp.vercel.app** — commit terbaru `3b97791` sudah di-push ke `origin` + `dramaku` (selisih nol). Kode aplikasi terakhir berubah di `1ce14c3` (Tahap 7); `3b97791` isinya catatan saja.
+- Situs hidup: **https://dramaapp.vercel.app** — commit terbaru `0d77f4a` sudah di-push ke `origin` + `dramaku` (selisih nol) dan **terverifikasi tayang** 2026-08-19 sore. Kode aplikasi: Tahap 7 (`1ce14c3`) + kartu status Playly (`0d77f4a`).
 - **Tahap 7 SUDAH tayang di produksi** — diverifikasi 2026-08-19: `/lupa-password` balas 200 + berisi "Kode pemulihan", endpoint `/api/auth/reset-password` & `/recovery-code` hidup (405 untuk GET = hanya menerima POST), `tests/recovery-code.test.ts` 12 tes lulus.
 - Skema database Supabase **tidak diubah** (akun penonton memakai tabel `app_data` yang sudah ada).
 - Tahap kelar: 1 · 2 · 3 · 4 (Performance & SEO) · 5 (rating/share/balasan) · 6 (login penonton aman) · 7 (kode pemulihan).
@@ -65,14 +65,16 @@ sudah TERBUKTI, bukan cuma lulus tes lokal.
 
 ## Belum selesai / menunggu kamu
 
-1. **Buat VERCEL_TOKEN baru** (Account Settings → Tokens → No Expiration) lalu tempel ke `$VERCEL_TOKEN` di `C:\Users\USER\pc-backup-agent\start-dramaapp.ps1` di PC backup. Selama token mati, tiap PC backup restart harus update env var manual di dashboard. **Jangan commit file itu** (berisi token + deploy hook).
-2. **Uji manual Tahap 7 dari sisi penonton**: daftar 1 akun uji → simpan kode pemulihan → coba `/lupa-password`. Kode sudah tayang & lulus tes unit, tapi alur end-to-end belum dicoba manusia.
-2. **Daftarkan sitemap ke Google Search Console** (tertunda sejak Tahap 4): buka
+1. **Uji manual Tahap 7 dari sisi penonton**: daftar 1 akun uji → simpan kode pemulihan → coba `/lupa-password`. Kode sudah tayang & lulus tes unit, tapi alur end-to-end belum dicoba manusia.
+2. **Isi 3 env Playly di Vercel** → Settings → Environment Variables: `DASHBOARD_API_URL=https://playly-dashboard.vercel.app/api/videos`, `DASHBOARD_API_KEY_HEADER=X-Playly-Key`, `DASHBOARD_API_KEY=<kunci dari rekan>`. Lalu **Redeploy**. Cek berhasil: `/admin` → Dashboard → kartu Playly berubah dari "Belum diatur" jadi "Tersambung".
+3. **Minta rekan upload video contoh** ke dashboard Playly — kuncinya sudah diuji SAH 2026-08-19, tapi dashboard-nya masih kosong (`count: 0`), jadi belum ada yang bisa ditampilkan.
+4. **Rotate (ganti) API key Playly** sesudah setup — kunci yang sekarang dikirim rekan lewat screenshot, jadi sudah terekam di riwayat chat.
+5. **Buat VERCEL_TOKEN baru** (Account Settings → Tokens → No Expiration) lalu tempel ke `$VERCEL_TOKEN` di `C:\Users\USER\pc-backup-agent\start-dramaapp.ps1` di PC backup. Selama token mati, tiap PC backup restart harus update env var manual di dashboard. **Jangan commit file itu** (berisi token + deploy hook).
+6. **Daftarkan sitemap ke Google Search Console** (tertunda sejak Tahap 4): buka
    https://search.google.com/search-console → tambah properti `dramaapp.vercel.app` →
    Sitemaps → isi `sitemap.xml` → Submit.
-3. Sinopsis drama dari OMDb masih **berbahasa Inggris** — perlu diterjemahkan lewat admin.
-4. API key Playly yang valid — masih menunggu rekan.
-5. Kandidat Tahap 8: **rating penonton ke Google** (kini sudah aman — tinggal cabut
+7. Sinopsis drama dari OMDb masih **berbahasa Inggris** — perlu diterjemahkan lewat admin.
+8. Kandidat Tahap 8: **rating penonton ke Google** (kini sudah aman — tinggal cabut
    batasannya), PWA "pasang ke HP", notifikasi episode baru, atau download offline.
 
 ## Utang teknis yang DISENGAJA

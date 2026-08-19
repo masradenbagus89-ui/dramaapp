@@ -1,10 +1,48 @@
-# Serah-terima deploy — jalur terima video dari API luar (2026-08-15)
+# ⛔ SUDAH KADALUARSA — Serah-terima deploy: jalur terima video dari API luar (2026-08-15)
+
+> ## ⛔ JANGAN pakai berkas ini sebagai status terkini
+>
+> **Ditandai kadaluarsa 2026-08-19.** Isinya sudah lewat 4 hari dan sebagian besar
+> instruksinya SUDAH DIKERJAKAN. Kalau diikuti apa adanya, kamu akan mengulang
+> pekerjaan yang sudah beres atau melakukan rollback ke versi yang jauh tertinggal.
+>
+> **Status sekarang baca di sini:**
+> [`HANDOFF.md`](../HANDOFF.md) (kondisi terkini) dan
+> [`antrean-deploy.md`](../antrean-deploy.md) (posisi commit + antrian rilis).
+>
+> ### Yang di berkas ini SUDAH SELESAI — jangan dikerjakan lagi
+>
+> - ❌ ~~"kode belum sampai ke repo yang di-deploy"~~ → **sudah**. Per 2026-08-19
+>   lokal, `origin`, dan `dramaku` semuanya di commit yang sama, selisih NOL.
+>   Sejak berkas ini ditulis sudah ada Tahap 4 sampai Tahap 7 yang tayang.
+> - ❌ ~~Instruksi `git merge dramaku/main` + `git push origin main`~~ → sudah dijalankan.
+> - ❌ ~~Smoke test "setelah deploy"~~ → deploy-nya sudah lewat berkali-kali.
+> - ❌ ~~Rollback ke `954c9ca` (14 Agustus)~~ → **BERBAHAYA sekarang**. Commit itu
+>   sudah tertinggal 7 tahap; promote ke situ berarti menghapus login penonton aman,
+>   kode pemulihan password, SEO, rating, dan perbaikan IDOR.
+>
+> ### Yang MASIH berlaku — baru 2 hal
+>
+> 1. **Dua API tiruan masih terpasang & bisa dibuka publik:** `/api/demo-dashboard-videos`
+>    dan `/api/demo-video-provider` (foldernya diverifikasi masih ada 2026-08-19).
+>    Isinya cuma data contoh, tidak ada data pengguna — tapi layak dihapus.
+> 2. **Robot GitHub Actions merah karena tagihan GitHub**, termasuk "Penjaga Anti-Tidur
+>    Database" Supabase. ❓ Belum diverifikasi apakah sudah beres.
+>
+> **Kenapa berkas ini tidak dihapus:** ia catatan sejarah yang sah — bukti keadaan
+> pada 15 Agustus, termasuk hasil tes rilis jalur video eksternal. Yang dilarang
+> adalah memakainya sebagai status HARI INI.
+
+---
+
+<sub>Isi asli 15 Agustus 2026, dibiarkan utuh di bawah ini sebagai arsip.</sub>
+
 
 > Untuk rekan yang memegang akses **Vercel**. Dibuat oleh sisi developer yang
 > TIDAK punya akses Vercel. Semua klaim di sini punya bukti; yang belum terbukti
 > ditandai ❓ supaya tidak ada yang dianggap beres padahal belum.
 
-## ⚠️ Baca ini dulu — kode belum sampai ke repo yang di-deploy
+## ✅ SUDAH SELESAI (jangan dikerjakan lagi) — ~~Baca ini dulu: kode belum sampai ke repo yang di-deploy~~
 
 | Repo | Isi terkini | Vercel |
 |---|---|---|
@@ -22,7 +60,7 @@ Buktinya (dibaca lewat GitHub API pada 2026-08-15):
 **Artinya: menekan tombol deploy saja tidak cukup.** Commit `6bb2539` dan `d93a1fb`
 harus dipindahkan dulu ke `masradenbagus89-ui/dramaapp`, baru Vercel bisa melihatnya.
 
-### Cara memindahkannya (untuk yang punya akses tulis ke `dramaapp`)
+### ✅ SUDAH DIJALANKAN — ~~Cara memindahkannya (untuk yang punya akses tulis ke `dramaapp`)~~
 
 Dijalankan di folder salinan `masradenbagus89-ui/dramaapp`:
 
@@ -69,7 +107,7 @@ memakai awalan `NEXT_PUBLIC_`, jadi kunci API tidak ikut terkirim ke browser pen
 ⚠️ Kalau nanti env ditambahkan di Vercel: **wajib deploy ulang**. Env baru tidak
 terbaca oleh build lama.
 
-## Smoke test setelah deploy (5 menit)
+## ✅ SUDAH LEWAT — ~~Smoke test setelah deploy (5 menit)~~
 
 Uji cepat "yang penting masih jalan?", dijalankan **setelah** deploy selesai:
 
@@ -84,7 +122,11 @@ Uji cepat "yang penting masih jalan?", dijalankan **setelah** deploy selesai:
 Kalau nomor 2 dan 3 membalas **500** (bukan 503), berarti ada yang tidak beres —
 lihat bagian rollback.
 
-## Rollback (tombol undo)
+## ⛔ JANGAN DIPAKAI LAGI — ~~Rollback (tombol undo)~~
+
+> ⛔ **Rollback ke `954c9ca` sekarang = merusak.** Commit itu tertinggal 7 tahap.
+> Kalau butuh rollback, promote deployment TERAKHIR yang diketahui sehat — lihat
+> [`antrean-deploy.md`](../antrean-deploy.md), bukan angka di bawah ini.
 
 **Satu baris:** di Vercel → project `dramaapp` → tab **Deployments** → pilih deployment
 tanggal 2026-08-14 (commit `954c9ca`) → **Promote to Production** / *Instant Rollback*.

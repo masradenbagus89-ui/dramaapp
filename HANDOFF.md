@@ -106,3 +106,4 @@ sudah TERBUKTI, bukan cuma lulus tes lokal.
 - Rencana Tahap 6: [`docs/lintasai/rencana/2026-08-18-tahap-6-login-penonton.md`](./docs/lintasai/rencana/2026-08-18-tahap-6-login-penonton.md)
 - Antrean: [`antrean-deploy.md`](./antrean-deploy.md)
 - Arsip: [`NEXT-SESSION.md`](./NEXT-SESSION.md)
+- ⛔ **Arsip kadaluarsa** (jangan dipakai sebagai status): [`docs/serah-terima-deploy-2026-08-15.md`](./docs/serah-terima-deploy-2026-08-15.md) — ditandai 2026-08-19

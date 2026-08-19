@@ -11,6 +11,7 @@ import { computeAdminStats } from "@/lib/admin-stats";
 import { formatViews } from "@/lib/format";
 import { CATEGORY_COLORS } from "@/app/admin/constants";
 import StatCard from "@/app/components/admin/StatCard";
+import PlaylyStatusCard from "@/app/components/admin/PlaylyStatusCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
@@ -62,6 +63,11 @@ export default function AdminDashboard({ dramas }: { dramas: Drama[] }) {
             icon="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
           />
         </div>
+
+        {/* Status sambungan Playly: dipisah dari 4 kartu angka di atas
+            karena ini kondisi sambungan (hidup/mati), bukan statistik
+            katalog drama. */}
+        <PlaylyStatusCard />
       </section>
 
       <Card className="rounded-2xl border-zinc-800 bg-zinc-900/40">

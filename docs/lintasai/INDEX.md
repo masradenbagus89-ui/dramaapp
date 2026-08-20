@@ -7,6 +7,7 @@
 
 ## Rencana
 
+- [2026-08-20-video-otomatis-tanpa-powershell.md](./rencana/2026-08-20-video-otomatis-tanpa-powershell.md) — alamat video permanen (named tunnel) + autostart PC backup; berisi 2 pelajaran bug: layar hitam `/sample.mp4` & `.ps1` non-ASCII gagal parse di PowerShell 5.1
 - [2026-08-18-tahap-7-kode-pemulihan.md](./rencana/2026-08-18-tahap-7-kode-pemulihan.md) — kode pemulihan password penonton, tanpa email/domain
 - [2026-08-18-tahap-6-login-penonton.md](./rencana/2026-08-18-tahap-6-login-penonton.md) — tutup IDOR jalur koin: identitas penonton pindah ke cookie terverifikasi
 - [2026-08-18-tahap-5-rating-share.md](./rencana/2026-08-18-tahap-5-rating-share.md) — rating penonton (1 email = 1 suara, TIDAK dikirim ke Google) + share + balasan komentar

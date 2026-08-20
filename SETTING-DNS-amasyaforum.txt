@@ -1,0 +1,35 @@
+=========================================================
+PERMINTAAN SETTING DNS — domain: amasyaforum.com
+(Registrar: Namecheap)
+=========================================================
+
+Halo, mohon bantuan setting DNS untuk domain amasyaforum.com supaya
+mengarah ke aplikasi web saya (hosting di Vercel). Langkahnya gampang,
+sekitar 5 menit. Terima kasih banyak 🙏
+
+LANGKAH:
+1. Login ke namecheap.com
+2. Account  ->  Domain List  ->  klik "Manage" di amasyaforum.com
+3. Buka tab "Advanced DNS"
+4. Di bagian HOST RECORDS, HAPUS semua record parkir bawaan untuk
+   Host "@" dan "www" (biasanya: A Record @ -> 192.64.119.233, dan
+   CNAME www -> parkingpage.namecheap.com).
+5. Klik "ADD NEW RECORD", lalu tambahkan 2 record ini:
+
+   -------------------------------------------------------
+   Type          | Host | Value                 | TTL
+   -------------------------------------------------------
+   A Record      | @    | 76.76.21.21           | Automatic
+   CNAME Record  | www  | cname.vercel-dns.com  | Automatic
+   -------------------------------------------------------
+
+6. Simpan (klik tanda centang hijau di tiap baris / Save All Changes).
+7. (Kalau ada) matikan "Domain Parking".
+
+CATATAN:
+- Domain lock "client transfer prohibited" TIDAK perlu dibuka — itu
+  tidak menghalangi perubahan DNS.
+- Tidak perlu setting SSL/https — itu otomatis dari sisi Vercel.
+- Setelah disimpan, mohon kabari saya. Propagasi 30 menit - beberapa jam.
+
+=========================================================

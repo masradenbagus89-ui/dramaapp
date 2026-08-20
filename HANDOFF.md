@@ -100,6 +100,22 @@ sudah TERBUKTI, bukan cuma lulus tes lokal.
     boleh mati total. Biaya ~Rp22rb/bln per 100 GB, egress gratis. Catatan lengkap di
     [`docs/lintasai/rencana/2026-08-20-video-otomatis-tanpa-powershell.md`](./docs/lintasai/rencana/2026-08-20-video-otomatis-tanpa-powershell.md).
 
+## Performance /beranda: SUDAH SEHAT (diukur 2026-08-20, jangan diulang)
+
+Sempat terlihat seperti masalah (HTML 382 KB), ternyata BUKAN. Angka lengkapnya:
+
+| Yang diukur | Hasil | Artinya |
+|---|---|---|
+| HTML dikirim di kabel | **22,5 KB** (brotli) | Yang 382 KB itu ukuran SESUDAH dibuka browser. Kompresi memampatkannya 17x |
+| Waktu muat | ~900 ms (sesudah panas) | Wajar. Angka 7 detik hanya muncul di request paling pertama |
+| Gambar poster | **AVIF 48 KB** (vs JPEG 89 KB) | Next.js Image sudah menyajikan format modern otomatis |
+| Lazy loading | 76 dari 79 gambar | Gambar di bawah layar baru dimuat saat digulir |
+
+**Rencana "ramping-kan payload beranda" DIBATALKAN** sesudah diukur: memangkas field
+yang tak dipakai (synopsis dll) hanya menghemat ~29 KB mentah = sekitar **2-3 KB
+sesudah kompresi**, sementara ongkosnya mengubah 4 komponen bersama yang dipakai 7
+halaman. Tidak sepadan. Kalau nanti ada yang mengusulkan ini lagi, tunjukkan tabel di atas.
+
 ## Utang teknis yang DISENGAJA
 
 - **Belum ada verifikasi email.** Siapa pun bisa mendaftar dengan email milik orang

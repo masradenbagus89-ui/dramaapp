@@ -5,11 +5,11 @@
 >
 > **AI:** tiap kali ada perbaikan / deploy / keputusan — **perbarui berkas ini di langkah terakhir**, sebelum bilang selesai. Jangan tumpuk sejarah panjang di sini; pindahkan yang lama ke `NEXT-SESSION.md`.
 
-**Terakhir diisi:** 2026-08-20
+**Terakhir diisi:** 2026-08-20 malam
 
 ## Status sekarang (1 menit)
 
-- Situs hidup: **https://dramaapp.vercel.app** — commit terbaru `0d77f4a` sudah di-push ke `origin` + `dramaku` (selisih nol) dan **terverifikasi tayang** 2026-08-19 sore. Kode aplikasi: Tahap 7 (`1ce14c3`) + kartu status Playly (`0d77f4a`).
+- Situs hidup: **https://dramaapp.vercel.app** — commit terbaru `4954817` sudah di-push ke `origin` + `dramaku` (selisih nol, 2026-08-20 malam). Sebelum push: **265 tes lulus**, `tsc --noEmit` exit 0, `next build` sukses. **Belum diverifikasi tayang** — perlu dicek sesudah Vercel selesai build.
 - **Tahap 7 SELESAI PENUH** — diverifikasi 2026-08-20 dari DUA sisi: (a) owner mencoba sendiri lewat tampilan (daftar → simpan kode → ganti password hanya dengan kode; alurnya mudah & berhasil); (b) uji end-to-end mesin ke API produksi **19/19 lulus**. `tests/recovery-code.test.ts` 12 tes lulus. Akun uji sudah dibersihkan dari Supabase (0 baris tersisa, login balas 401).
 - Skema database Supabase **tidak diubah** (akun penonton memakai tabel `app_data` yang sudah ada).
 - Tahap kelar: 1 · 2 · 3 · 4 (Performance & SEO) · 5 (rating/share/balasan) · 6 (login penonton aman) · 7 (kode pemulihan).
@@ -19,12 +19,43 @@
 
 ## 🔴 SEDANG DIKERJAKAN: video mati lagi 2026-08-20 → dibikin PERMANEN
 
-**Status 2026-08-20 siang (dicek ulang):** `/api/teaser?id=avengers-doomsday&ep=1` sekarang balas
-**404 "Teaser tidak ada"** — BUKAN lagi 502 seperti pagi tadi. Artinya server dramaapp BERHASIL
-menyambung ke alamat video (kalau tidak, kodenya melempar 502 di `app/api/teaser/route.ts:62`),
-tapi berkas videonya tak ditemukan di ujung sana. Belum bisa dipastikan apakah itu tunnel hidup
-dengan isi kosong atau halaman error Cloudflare — keduanya terlihat sama dari luar. Tetap perlu
-langkah owner di PC backup — lihat "Belum selesai" di bawah.
+**Status 2026-08-20 MALAM (terbaru — menggantikan status sore di bawah).** Owner lapor video
+tak bisa diputar. Diukur langsung: tunnel sore tadi `written-coated-drawings-joe.trycloudflare.com`
+sudah **LENYAP** — `nslookup` balas `Non-existent domain`, `curl` status 000 (sedangkan
+`cloudflare.com` balas 200 dari server yang sama, jadi bukan jaringan kami). Persis yang
+diprediksi: quick tunnel mati + ganti alamat tiap PC backup restart.
+
+Owner menjalankan `start-dramaapp.ps1`. Langkah **[1/6]-[4/6] SUKSES**, alamat baru
+`https://proxy-marks-isolation-subjects.trycloudflare.com` — diuji dari luar: root **200**,
+`/diremehkan-sebagai-gadis-desa-ternyata-dia-legenda-terkuat/2.mp4` **200** (berkasnya ADA).
+Langkah **[5/6] GAGAL 403 Forbidden** — `VERCEL_TOKEN` mati, jadi jalur otomatis buntu. Alamat baru
+akhirnya masuk ke env lewat jalur manual (Settings → Environment Variables → Redeploy).
+
+✅ **RANTAI VIDEO PULIH — diverifikasi ujung-ke-ujung 2026-08-20 malam.** Alamat yang dipakai
+produksi = `proxy-marks-isolation-subjects.trycloudflare.com`; ambil 1 MB pertama dari
+`/diremehkan-.../2.mp4` balas **206** `video/mp4` dan isinya diawali `ftypmp42` (tanda tangan MP4
+asli, bukan halaman error yang menyamar). 206 = server dukung seek, syarat player bisa memutar.
+
+⚠️ Alamat ini **tetap sementara** — mati lagi saat PC backup restart. Selama masih quick tunnel,
+tiap restart = ulangi `start-dramaapp.ps1` + tempel manual (karena [5/6] tetap 403).
+
+⚠️ **Koreksi catatan lama:** "utang `VERCEL_TOKEN` GUGUR" itu **baru berlaku SESUDAH named tunnel
+terpasang**. Selama masih quick tunnel, token mati = tiap restart PC owner harus tempel alamat
+manual. Hari ini utang itu menggigit.
+
+❓ **Temuan belum tuntas:** `/_agent/health` lewat tunnel baru balas **404**, padahal
+`pc-backup-agent/hardlink-agent.js:243` punya jalur `/health` dan `Caddyfile:13` mem-proxy
+`/_agent/*`. Dugaan: versi agent atau Caddyfile di PC backup masih lama — **belum diverifikasi**.
+Tidak menghalangi memutar video; berpotensi mengganggu "Scan & auto-hardlink".
+
+<details><summary>Status sore 2026-08-20 (sudah usang, disimpan sebagai riwayat)</summary>
+
+Tunnel `written-coated-drawings-joe.trycloudflare.com` balas 200, `/_agent/health` balas
+`{"ok":true}`, `guru-misterius-.../1.mp4` balas 200. Jadi 404 yang sempat terlihat bukan tunnel
+mati, melainkan berkas dengan nama yang dicari memang tidak ada di folder drama itu (kasus
+"Over Your Dead Body" di "Belum selesai" no.1).
+
+</details>
 
 **Akar masalahnya bukan bug, tapi rantai yang memang manual** (jadi restart PC tidak akan
 pernah menolong):
@@ -57,6 +88,7 @@ sudah TERBUKTI, bukan cuma lulus tes lokal.
 
 | Kapan | Apa | Hasil yang kamu rasakan |
 |---|---|---|
+| 2026-08-20 | **Diagnosa "Over Your Dead Body" tak bisa diputar + 3 bug hardlink-agent diperbaiki** | Penyebabnya bukan tunnel mati: berkas di PC backup bernama `Over-Your-Dead-Body.mp4`, sedangkan player selalu minta `1.mp4` → 404. Agent lama tak bisa membereskannya DAN tetap lapor "berhasil" walau nol berkas dibuat. Sekarang: berkas tanpa nomor jadi episode 1, berkas `.mkv` dilaporkan "perlu dikonversi", nol hasil = GAGAL dengan sebab jelas. Dikunci 10 tes (`tests/hardlink-agent.test.ts`). **Masih perlu 1 langkahmu di PC backup — lihat "Belum selesai" no.1** |
 | 2026-08-20 | **Penjaga permanen Tahap 7** (`npm run e2e:tahap7`) | Satu perintah untuk memastikan jalur "lupa password" masih hidup di produksi. Membuat 1 akun uji lalu MENGHAPUSNYA sendiri (bahkan kalau uji gagal di tengah). Dipisah dari `npm test` supaya tes harian tetap cepat & tak menyentuh database |
 | 2026-08-20 | **Tahap 7 diuji end-to-end ke produksi** | 19 pemeriksaan lulus semua di situs sungguhan: kode pemulihan hanya bisa dipakai SEKALI, password lama langsung mati, kode boleh diketik huruf kecil tanpa tanda hubung, pesan gagal selalu sama (orang luar tak bisa menebak email mana yang terdaftar), dan batas 5 percobaan/menit terbukti menahan penebakan kode. Akun uji dihapus lagi dari database |
 | 2026-08-20 | **Player tidak lagi kotak hitam saat sumber mati** | Dulu kalau PC backup/tunnel mati, layar cuma hitam tanpa keterangan (player mengarah ke `/sample.mp4` yang tidak pernah ada). Sekarang muncul "Video sedang tidak bisa diputar — sumber videonya sedang mati" + tombol **Coba lagi**. Dikunci 5 tes penjaga |
@@ -83,20 +115,25 @@ sudah TERBUKTI, bukan cuma lulus tes lokal.
 
 ## Belum selesai / menunggu kamu
 
-1. 🔴 **PRIORITAS — hidupkan video lagi (Tahap 1, ~10 menit).** Di PC backup: ambil alamat tunnel aktif dari `$env:TEMP\cloudflared-dramaapp.log` → tempel ke `NEXT_PUBLIC_VIDEO_BASE_URL` di Vercel → Redeploy tanpa build cache. Ini sementara; alamatnya mati lagi di restart berikutnya.
-2. 🔴 **Pasang alamat permanen + autostart (Tahap 2, ~1 jam).** Urutannya: (a) `amasyaforum.com` → Cloudflare, ganti nameserver di Namecheap; (b) `cloudflared` named tunnel + `service install`; (c) salin `start-video-services.ps1` ke PC backup + `schtasks /sc onstart`; (d) `powercfg` cegah sleep; (e) env Vercel = `https://video.amasyaforum.com` (terakhir kali). **Perintah lengkap ada di [`pc-backup-agent/README.md`](./pc-backup-agent/README.md).** Sesudah ini tidak perlu buka PowerShell lagi selamanya.
-3. ~~**Uji manual Tahap 7 dari sisi penonton**~~ — **SELESAI 2026-08-20.** Owner sudah mencoba sendiri (berhasil ganti password hanya bermodal kode) DAN uji end-to-end mesin ke API produksi lulus 19/19. Tak ada sisa pekerjaan di Tahap 7.
-4. **Isi 3 env Playly di Vercel** → Settings → Environment Variables: `DASHBOARD_API_URL=https://playly-dashboard.vercel.app/api/videos`, `DASHBOARD_API_KEY_HEADER=X-Playly-Key`, `DASHBOARD_API_KEY=<kunci dari rekan>`. Lalu **Redeploy**. Cek berhasil: `/admin` → Dashboard → kartu Playly berubah dari "Belum diatur" jadi "Tersambung".
-5. **Minta rekan upload video contoh** ke dashboard Playly — kuncinya sudah diuji SAH 2026-08-19, tapi dashboard-nya masih kosong (`count: 0`), jadi belum ada yang bisa ditampilkan.
-6. **Rotate (ganti) API key Playly** sesudah setup — kunci yang sekarang dikirim rekan lewat screenshot, jadi sudah terekam di riwayat chat.
-7. ~~**Buat VERCEL_TOKEN baru**~~ — **GUGUR per 2026-08-20.** Sesudah Tahap 2 (alamat video permanen), env `NEXT_PUBLIC_VIDEO_BASE_URL` tidak pernah berubah lagi, jadi script tidak perlu memanggil API Vercel sama sekali. Token baru **tidak dibutuhkan**.
-8. **Daftarkan sitemap ke Google Search Console** (tertunda sejak Tahap 4): buka
+1. 🔴 **PRIORITAS — bikin `1.mp4` untuk "Over Your Dead Body" (10 detik).** Berkasnya sudah ada & sehat di PC backup, cuma namanya salah. Di PC backup:
+   ```powershell
+   New-Item -ItemType HardLink -Path "C:\Users\USER\Downloads\video\over-your-dead-body\1.mp4" -Target "C:\Users\USER\Downloads\video\over-your-dead-body\Over-Your-Dead-Body.mp4"
+   ```
+   Lalu **salin `pc-backup-agent/hardlink-agent.js` versi baru** ke `C:\Users\USER\pc-backup-agent\` + `schtasks /run /tn "DramaApp Video"` supaya tombol Scan bisa menangani sendiri lain kali. Rincian: [`docs/lintasai/rencana/2026-08-20-video-nama-berkas-1mp4.md`](./docs/lintasai/rencana/2026-08-20-video-nama-berkas-1mp4.md).
+2. ~~**Hidupkan video lagi (Tahap 1)**~~ — **SELESAI per 2026-08-20.** `NEXT_PUBLIC_VIDEO_BASE_URL` sudah berisi tunnel yang aktif (`written-coated-drawings-joe.trycloudflare.com`); dites langsung: `guru-misterius-.../1.mp4` balas **200**, `/_agent/health` balas `ok:true`. Tetap sementara — alamatnya mati lagi saat PC backup restart, sampai Tahap 2 dipasang.
+3. 🔴 **Pasang alamat permanen + autostart (Tahap 2, ~1 jam).** Urutannya: (a) `amasyaforum.com` → Cloudflare, ganti nameserver di Namecheap; (b) `cloudflared` named tunnel + `service install`; (c) salin `start-video-services.ps1` ke PC backup + `schtasks /sc onstart`; (d) `powercfg` cegah sleep; (e) env Vercel = `https://video.amasyaforum.com` (terakhir kali). **Perintah lengkap ada di [`pc-backup-agent/README.md`](./pc-backup-agent/README.md).** Sesudah ini tidak perlu buka PowerShell lagi selamanya.
+4. ~~**Uji manual Tahap 7 dari sisi penonton**~~ — **SELESAI 2026-08-20.** Owner sudah mencoba sendiri (berhasil ganti password hanya bermodal kode) DAN uji end-to-end mesin ke API produksi lulus 19/19. Tak ada sisa pekerjaan di Tahap 7.
+5. **Isi 3 env Playly di Vercel** → Settings → Environment Variables: `DASHBOARD_API_URL=https://playly-dashboard.vercel.app/api/videos`, `DASHBOARD_API_KEY_HEADER=X-Playly-Key`, `DASHBOARD_API_KEY=<kunci dari rekan>`. Lalu **Redeploy**. Cek berhasil: `/admin` → Dashboard → kartu Playly berubah dari "Belum diatur" jadi "Tersambung".
+6. **Minta rekan upload video contoh** ke dashboard Playly — kuncinya sudah diuji SAH 2026-08-19, tapi dashboard-nya masih kosong (`count: 0`), jadi belum ada yang bisa ditampilkan.
+7. **Rotate (ganti) API key Playly** sesudah setup — kunci yang sekarang dikirim rekan lewat screenshot, jadi sudah terekam di riwayat chat.
+8. ~~**Buat VERCEL_TOKEN baru**~~ — **GUGUR per 2026-08-20.** Sesudah Tahap 2 (alamat video permanen), env `NEXT_PUBLIC_VIDEO_BASE_URL` tidak pernah berubah lagi, jadi script tidak perlu memanggil API Vercel sama sekali. Token baru **tidak dibutuhkan**.
+9. **Daftarkan sitemap ke Google Search Console** (tertunda sejak Tahap 4): buka
    https://search.google.com/search-console → tambah properti `dramaapp.vercel.app` →
    Sitemaps → isi `sitemap.xml` → Submit.
-9. Sinopsis drama dari OMDb masih **berbahasa Inggris** — perlu diterjemahkan lewat admin.
-10. Kandidat Tahap 8: **rating penonton ke Google** (kini sudah aman — tinggal cabut
+10. Sinopsis drama dari OMDb masih **berbahasa Inggris** — perlu diterjemahkan lewat admin.
+11. Kandidat Tahap 8: **rating penonton ke Google** (kini sudah aman — tinggal cabut
     batasannya), PWA "pasang ke HP", notifikasi episode baru, atau download offline.
-11. **Tahap 3 (ditunda, atas keputusanmu):** pindah video ke Cloudflare R2 supaya PC backup
+12. **Tahap 3 (ditunda, atas keputusanmu):** pindah video ke Cloudflare R2 supaya PC backup
     boleh mati total. Biaya ~Rp22rb/bln per 100 GB, egress gratis. Catatan lengkap di
     [`docs/lintasai/rencana/2026-08-20-video-otomatis-tanpa-powershell.md`](./docs/lintasai/rencana/2026-08-20-video-otomatis-tanpa-powershell.md).
 

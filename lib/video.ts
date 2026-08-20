@@ -27,3 +27,35 @@ export function downloadUrl(
     ? `${baseUrl.replace(/\/$/, "")}/${dramaId}/${ep}.mp4?dl=1`
     : `/api/download?id=${encodeURIComponent(dramaId)}&ep=${ep}`;
 }
+
+// Keputusan saat elemen <video> melempar error. Dipisah dari FeedPlayer sebagai
+// fungsi MURNI supaya bisa dites tanpa merender komponen (project ini belum
+// punya @testing-library/react).
+//
+// KENAPA ADA: dulu jalur gagal berakhir di `v.src = "/sample.mp4"` — berkas yang
+// tidak pernah ada di public/ dan malah diblokir .gitignore. Akibatnya saat
+// sumber video mati penonton cuma melihat kotak hitam tanpa keterangan apa pun.
+export type VideoErrorAction =
+  // Varian resolusi (mis. 720p) tidak ada di server → turun ke resolusi Asli.
+  | "turun-ke-asli"
+  // Sumber memang tidak bisa diputar → tampilkan pesan + tombol Coba lagi.
+  | "menyerah"
+  // Sudah menyerah sebelumnya → jangan lakukan apa pun (cegah loop error).
+  | "abaikan";
+
+export function decideVideoError(input: {
+  /** Resolusi yang sedang dipakai; string kosong = "Asli". */
+  resolution: string;
+  /** Resolusi yang SUDAH pernah gagal untuk elemen ini (penanda anti-ulang). */
+  resolutionTried: string;
+  /** Elemen ini sudah pernah dinyatakan gagal total. */
+  alreadyFailed: boolean;
+}): VideoErrorAction {
+  if (input.alreadyFailed) return "abaikan";
+  // Hanya sekali per resolusi: kalau varian yang sama sudah dicoba dan tetap
+  // gagal, itu tandanya bukan soal resolusi — sumbernya yang mati.
+  if (input.resolution && input.resolutionTried !== input.resolution) {
+    return "turun-ke-asli";
+  }
+  return "menyerah";
+}

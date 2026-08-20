@@ -15,7 +15,7 @@ import {
   writeSubtitlePref,
 } from "@/lib/subtitles";
 import { readUser } from "@/lib/auth";
-import { videoSrc, downloadUrl } from "@/lib/video";
+import { videoSrc, downloadUrl, decideVideoError } from "@/lib/video";
 import { seekTime } from "@/lib/seek";
 import { fetchWallet, unlockEpisode, unlockAllEpisodes } from "@/lib/wallet";
 import { isEpisodeLocked } from "@/lib/coins";
@@ -24,7 +24,6 @@ import EpisodePaywall from "./player/EpisodePaywall";
 import CommentsDrawer from "./player/CommentsDrawer";
 import PlayerControls from "./player/PlayerControls";
 
-const FALLBACK = "/sample.mp4";
 const DOUBLE_TAP_MS = 280; // ambang ketuk-ganda (double tap) untuk like
 const CONTROLS_AUTO_HIDE_MS = 3500; // sembunyikan kontrol setelah diam beberapa detik
 const HEART_ANIM_MS = 700; // durasi animasi hati saat like
@@ -72,6 +71,9 @@ export default function FeedPlayer({
   const [seeking, setSeeking] = useState(false);
   const [volume, setVolume] = useState(1);
   const [muted, setMuted] = useState(false);
+  // Episode yang sumbernya benar-benar gagal dimuat (mis. PC backup / tunnel
+  // mati). Ditampilkan sebagai pesan + tombol Coba lagi, BUKAN layar hitam.
+  const [failedEps, setFailedEps] = useState<Set<number>>(new Set());
 
   const containerRef = useRef<HTMLDivElement>(null);
   const pendingSeek = useRef<number | null>(null); // simpan posisi saat ganti resolusi
@@ -94,6 +96,23 @@ export default function FeedPlayer({
   const prevActiveRef = useRef(active);
 
   const srcFor = (ep: number) => videoSrc(baseUrl, dramaId, ep, resolution);
+
+  // Tombol "Coba lagi" pada panel gagal: hapus penanda gagal lalu paksa elemen
+  // <video> memuat ulang. dataset.resfb ikut dibersihkan supaya percobaan
+  // turun-resolusi boleh berjalan lagi dari awal.
+  const retryEpisode = useCallback((ep: number, idx: number) => {
+    setFailedEps((prev) => {
+      if (!prev.has(ep)) return prev;
+      const next = new Set(prev);
+      next.delete(ep);
+      return next;
+    });
+    const v = videoRefs.current[idx];
+    if (v) {
+      delete v.dataset.resfb;
+      v.load();
+    }
+  }, []);
 
   // Episode terkunci? Ep awal gratis; admin bebas; sisanya butuh sudah-dibuka.
   const isLocked = useCallback(
@@ -526,16 +545,20 @@ export default function FeedPlayer({
                   }}
                   onError={(e) => {
                     const v = e.currentTarget;
+                    const aksi = decideVideoError({
+                      resolution,
+                      resolutionTried: v.dataset.resfb ?? "",
+                      alreadyFailed: failedEps.has(ep),
+                    });
                     // Varian resolusi tak ada → balik ke Asli (tetap jalan).
-                    if (resolution && v.dataset.resfb !== resolution) {
+                    if (aksi === "turun-ke-asli") {
                       v.dataset.resfb = resolution;
                       pendingSeek.current = v.currentTime || pendingSeek.current;
                       setResolution("");
                       return;
                     }
-                    if (!v.dataset.fb) {
-                      v.dataset.fb = "1";
-                      v.src = FALLBACK;
+                    if (aksi === "menyerah") {
+                      setFailedEps((prev) => new Set(prev).add(ep));
                     }
                   }}
                   onClick={idx === active ? onTap : undefined}
@@ -556,6 +579,27 @@ export default function FeedPlayer({
               ) : (
                 <div className="h-full w-full bg-zinc-950" />
               )}
+
+              {/* Sumber video mati → beri tahu penonton apa yang terjadi.
+                  Tidak ditampilkan untuk episode terkunci, karena di situ sudah
+                  ada EpisodePaywall (jangan dua panel bertumpuk). */}
+              {failedEps.has(ep) && !isLocked(ep) ? (
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-black/90 px-6 text-center">
+                  <p className="text-base font-semibold text-white">
+                    Video sedang tidak bisa diputar
+                  </p>
+                  <p className="max-w-xs text-sm text-zinc-400">
+                    Sumber videonya sedang mati. Coba lagi beberapa menit lagi.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => retryEpisode(ep, idx)}
+                    className="mt-1 rounded-full bg-white px-5 py-2 text-sm font-medium text-black"
+                  >
+                    Coba lagi
+                  </button>
+                </div>
+              ) : null}
             </div>
           );
         })}

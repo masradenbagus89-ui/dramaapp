@@ -1,6 +1,7 @@
-// Tes pengunci perilaku untuk videoSrc + downloadUrl (lib/video.ts).
+// Tes pengunci perilaku untuk videoSrc + downloadUrl + decideVideoError
+// (lib/video.ts).
 import { describe, it, expect } from "vitest";
-import { videoSrc, downloadUrl } from "../lib/video";
+import { videoSrc, downloadUrl, decideVideoError } from "../lib/video";
 
 describe("videoSrc — bikin alamat file video", () => {
   it("resolusi asli (kode kosong) -> <ep>.mp4", () => {
@@ -43,5 +44,72 @@ describe("downloadUrl — bikin alamat unduh episode", () => {
     expect(downloadUrl("", "drama a&b", 5)).toBe(
       "/api/download?id=drama%20a%26b&ep=5",
     );
+  });
+});
+
+// PENJAGA REGRESI — bug yang pernah lolos ke penonton (2026-08-19/20):
+// saat tunnel PC backup mati, player mengarahkan src ke "/sample.mp4" yang tidak
+// pernah ada di public/ (malah diblokir .gitignore), jadi penonton cuma melihat
+// kotak hitam tanpa keterangan. Sekarang jalur gagal WAJIB berakhir di
+// "menyerah" supaya FeedPlayer menampilkan pesan + tombol Coba lagi.
+describe("decideVideoError — keputusan saat <video> gagal", () => {
+  it("varian resolusi gagal pertama kali -> turun ke resolusi Asli", () => {
+    expect(
+      decideVideoError({
+        resolution: "720p",
+        resolutionTried: "",
+        alreadyFailed: false,
+      }),
+    ).toBe("turun-ke-asli");
+  });
+
+  it("resolusi yang sama gagal lagi -> menyerah (bukan loop turun-resolusi)", () => {
+    expect(
+      decideVideoError({
+        resolution: "720p",
+        resolutionTried: "720p",
+        alreadyFailed: false,
+      }),
+    ).toBe("menyerah");
+  });
+
+  it("sudah di resolusi Asli lalu gagal -> menyerah (sumber memang mati)", () => {
+    expect(
+      decideVideoError({
+        resolution: "",
+        resolutionTried: "",
+        alreadyFailed: false,
+      }),
+    ).toBe("menyerah");
+  });
+
+  it("sudah pernah menyerah -> abaikan, jangan proses error berulang", () => {
+    expect(
+      decideVideoError({
+        resolution: "",
+        resolutionTried: "",
+        alreadyFailed: true,
+      }),
+    ).toBe("abaikan");
+    // Berlaku juga saat masih ada varian resolusi yang belum dicoba.
+    expect(
+      decideVideoError({
+        resolution: "1080p",
+        resolutionTried: "",
+        alreadyFailed: true,
+      }),
+    ).toBe("abaikan");
+  });
+
+  it("tidak pernah mengembalikan aksi yang menunjuk berkas fallback", () => {
+    // Sengaja eksplisit: hasil yang sah cuma 3, tidak ada jalur "ganti src".
+    const semuaHasil = [
+      decideVideoError({ resolution: "", resolutionTried: "", alreadyFailed: false }),
+      decideVideoError({ resolution: "720p", resolutionTried: "", alreadyFailed: false }),
+      decideVideoError({ resolution: "720p", resolutionTried: "720p", alreadyFailed: true }),
+    ];
+    for (const hasil of semuaHasil) {
+      expect(["turun-ke-asli", "menyerah", "abaikan"]).toContain(hasil);
+    }
   });
 });

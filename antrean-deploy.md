@@ -13,7 +13,7 @@
 | `masradenbagus89-ui/dramaapp` | `origin` | **Ya** — `git push origin main` = tombol rilis |
 
 Produksi: https://dramaapp.vercel.app  
-Commit terbaru yang di-push: **`4954817`** (5 commit sekaligus: perbaikan layar hitam player, berkas autostart named tunnel, tes e2e Tahap 7, 2 dokumentasi) — di-push 2026-08-20 malam sesudah 265 tes lulus + `tsc` exit 0 + `next build` sukses. **Belum diverifikasi tayang** — cek sesudah Vercel selesai build.
+Commit terbaru yang di-push: **`4954817`** (5 commit sekaligus: perbaikan layar hitam player, berkas autostart named tunnel, tes e2e Tahap 7, 2 dokumentasi) — di-push 2026-08-20 malam sesudah 265 tes lulus + `tsc` exit 0 + `next build` sukses. **TERVERIFIKASI TAYANG**: teks perbaikan player ditemukan di bundle produksi `/_next/static/chunks/27z9f9ucdybcg.js`.
 Catatan: `git fetch` ke `origin` **dan** `dramaku` dua-duanya SUKSES 2026-08-19 sore (timeout `dramaku` pagi tadi tidak kambuh).
 Tahap 6 (`b48bf32`): **sudah diverifikasi owner jalan di produksi** 2026-08-18.
 AUTH_SECRET di Vercel: dikonfirmasi ADA oleh owner 2026-08-18.
@@ -23,7 +23,7 @@ AUTH_SECRET di Vercel: dikonfirmasi ADA oleh owner 2026-08-18.
 | Status | Commit | Isi | Aksi |
 |---|---|---|---|
 | ✅ **video PULIH** | — | Tunnel sore (`written-coated-...`) LENYAP (DNS `Non-existent domain`) → owner jalankan `start-dramaapp.ps1` → alamat baru **`proxy-marks-isolation-subjects.trycloudflare.com`**. Langkah [5/6] gagal 403 (`VERCEL_TOKEN` mati), alamat masuk lewat jalur manual | **Terverifikasi 2026-08-20 malam:** URL yang dipakai produksi balas **206** `video/mp4`, isi diawali `ftypmp42`. ⚠️ Sementara — mati lagi saat PC backup restart |
-| ✅ **sudah di-push** | `8dd6f22`..`4954817` | Perbaikan layar hitam player + berkas autostart PC backup (`start-video-services.ps1`, `cloudflared-config.example.yml`, README baru, `.gitignore` kredensial tunnel) + tes e2e Tahap 7 | Owner memberi izin 2026-08-20 malam. Dual push SUKSES (`origin` + `dramaku`, selisih nol). Diperiksa dulu: nol secret di diff, 265 tes, tsc 0, build sukses. **Belum diverifikasi tayang** |
+| ✅ **sudah di-push** | `8dd6f22`..`4954817` | Perbaikan layar hitam player + berkas autostart PC backup (`start-video-services.ps1`, `cloudflared-config.example.yml`, README baru, `.gitignore` kredensial tunnel) + tes e2e Tahap 7 | Owner memberi izin 2026-08-20 malam. Dual push SUKSES (`origin` + `dramaku`, selisih nol). Diperiksa dulu: nol secret di diff, 265 tes, tsc 0, build sukses. **Terverifikasi tayang** — teks perbaikan ketemu di bundle produksi |
 | ✅ **SELESAI PENUH** | `1ce14c3` | Tahap 7: kode pemulihan password | Terverifikasi 2026-08-20: uji manual owner (tampilan) + uji end-to-end mesin ke API produksi **19/19 lulus**. Akun uji dibersihkan. Tak ada sisa |
 | ⚠️ **utang operasional (AKTIF lagi)** | — | `VERCEL_TOKEN` di `start-dramaapp.ps1` kedaluwarsa (403) — **menggigit 2026-08-20 malam**: langkah [5/6] gagal, owner harus tempel alamat manual | **Koreksi catatan sebelumnya:** utang ini gugur **hanya SESUDAH** named tunnel terpasang. Selama masih quick tunnel, tiap restart PC = tempel manual. Prioritaskan Tahap 2 |
 | ✅ tayang & terverifikasi | `0d77f4a` | Kartu status sambungan Playly di /admin | Selesai. Kartu kini menampilkan "Belum diatur" |

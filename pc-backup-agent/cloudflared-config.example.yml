@@ -1,0 +1,49 @@
+# ============================================================
+#  CONTOH config.yml untuk cloudflared NAMED TUNNEL
+#
+#  Berkas ini CONTOH — tidak dipakai langsung. Salin ke PC backup, ganti
+#  <UUID-TUNNEL> dengan UUID asli, lalu simpan sebagai `config.yml` di:
+#
+#      C:\Windows\System32\config\systemprofile\.cloudflared\
+#
+#  Lokasi itu WAJIB (bukan pilihan): cloudflared yang jalan sebagai Windows
+#  service memakai profil akun SYSTEM, dan di situlah ia mencari config-nya.
+#  Berkas kredensial <UUID>.json harus dipindah ke folder yang sama.
+#
+#  JANGAN commit config.yml asli maupun <UUID>.json ke repo — keduanya berisi
+#  kredensial yang bisa dipakai orang lain membajak tunnel-mu.
+#
+#  KENAPA named tunnel (bukan quick tunnel seperti dulu):
+#  quick tunnel (`--url`) memberi alamat ACAK BARU tiap kali PC restart, jadi
+#  alamat di Vercel harus diperbarui + redeploy setiap kali. Named tunnel
+#  alamatnya TETAP, jadi env var Vercel diisi sekali lalu tidak pernah
+#  disentuh lagi. Quick tunnel juga TIDAK BISA dijadikan Windows service.
+#
+#  Cara membuatnya (sekali saja, di PC backup):
+#    cloudflared.exe login                                    # pilih zona amasyaforum.com
+#    cloudflared.exe tunnel create dramaapp-videos            # catat UUID yang muncul
+#    cloudflared.exe tunnel route dns dramaapp-videos video.amasyaforum.com
+#    cloudflared.exe tunnel ingress validate
+#    cloudflared.exe service install
+#    sc start cloudflared
+# ============================================================
+
+tunnel: <UUID-TUNNEL>
+credentials-file: C:\Windows\System32\config\systemprofile\.cloudflared\<UUID-TUNNEL>.json
+
+# QUIC (UDP port 7844) sering diblokir jaringan rumah/kantor di Indonesia —
+# gejalanya tunnel dapat alamat tapi selalu balas 530. http2 dipasang dari awal
+# supaya tidak terjebak masalah itu.
+protocol: http2
+
+# Umur koneksi & jumlah koneksi cadangan: default cloudflared sudah cukup,
+# tidak diubah agar tidak menambah hal yang harus dirawat.
+
+ingress:
+  # Alamat publik video → diteruskan ke Caddy yang jalan di PC backup.
+  - hostname: video.amasyaforum.com
+    service: http://localhost:8088
+
+  # Aturan penutup WAJIB ada: apa pun yang tidak cocok di atas dijawab 404,
+  # bukan diteruskan. Tanpa ini cloudflared menolak start.
+  - service: http_status:404

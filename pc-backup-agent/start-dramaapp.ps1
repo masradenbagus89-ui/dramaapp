@@ -1,4 +1,19 @@
 # ============================================================
+#  !!  CARA LAMA - ARSIP / JALAN MUNDUR (sejak 2026-08-20)
+#
+#  Penggantinya: `start-video-services.ps1` (jalan otomatis lewat Task Scheduler)
+#  + cloudflared named tunnel sebagai Windows service. Lihat README.md.
+#
+#  Script ini disimpan HANYA sebagai jalan mundur kalau named tunnel bermasalah.
+#  Batasannya:
+#    - alamat tunnel ACAK BARU tiap restart -> env Vercel wajib di-update + redeploy
+#    - langkah [5/6] butuh $VERCEL_TOKEN, yang sudah mati (403) sejak 2026-08-19
+#    - ada Read-Host di akhir + window -NoExit -> TIDAK BISA dijadikan tugas otomatis
+#  Kalau dipakai bersamaan dengan named tunnel, dua cloudflared akan berebut
+#  port 8088. Pilih salah satu.
+# ============================================================
+
+# ============================================================
 #  start-dramaapp.ps1
 #  All-in-one startup untuk PC backup dramaapp.
 #  Jalankan script ini SETIAP habis mati lampu / restart PC.

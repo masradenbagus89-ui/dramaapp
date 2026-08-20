@@ -1,6 +1,13 @@
 # PC Backup Agent — Setup Guide
 
-Agent + Caddyfile untuk mendukung fitur "Scan & auto-hardlink" di admin form Vercel.
+Penyaji video dramaapp dari PC backup: Caddy menyajikan berkas `.mp4`, hardlink-agent
+merapikan nama berkas (fitur "Scan & auto-hardlink" di admin), cloudflared membuka
+alamat publiknya.
+
+> **Sejak 2026-08-20 cara jalannya berubah.** Dulu tiap PC restart wajib buka 3 window
+> PowerShell + update alamat di Vercel. Sekarang semuanya jalan sendiri saat PC menyala.
+> Bagian **"Cara baru"** di bawah adalah yang berlaku; cara lama disimpan di paling bawah
+> sebagai jalan mundur.
 
 ## Prasyarat
 
@@ -8,137 +15,178 @@ Agent + Caddyfile untuk mendukung fitur "Scan & auto-hardlink" di admin form Ver
 - Caddy terpasang (cek: `caddy version`)
 - cloudflared terpasang (cek: `cloudflared.exe --version`)
 - Folder video di `C:\Users\USER\Downloads\video\`
+- **1 domain di akun Cloudflare** (dipakai `amasyaforum.com`) — syarat named tunnel
 
-## File yang ada di folder ini
+## File di folder ini
 
-- `hardlink-agent.js` — Node.js HTTP server di port 8089
-- `Caddyfile` — Caddy config (serve video + reverse-proxy `/_agent/*`)
-- `README.md` — file ini
+| Berkas | Fungsi |
+|---|---|
+| `hardlink-agent.js` | Node HTTP server port 8089 — merapikan nama berkas video |
+| `Caddyfile` | Config Caddy: sajikan video port 8088 + reverse-proxy `/_agent/*` |
+| `start-video-services.ps1` | **[CARA BARU]** dijalankan Windows saat boot: start agent + Caddy |
+| `cloudflared-config.example.yml` | **[CARA BARU]** contoh config named tunnel |
+| `start-dramaapp.ps1` | **[CARA LAMA]** launcher manual — disimpan sebagai jalan mundur |
+| `README.md` | berkas ini |
 
-## Setup 1x (5 menit)
+---
 
-### Step 1 — Download file ini ke PC backup
+# Cara baru — jalan otomatis, tanpa buka PowerShell
 
-Di PC backup, buka PowerShell, jalankan:
+Hasil akhir: **nyalakan PC backup → tunggu ±1 menit → video sudah hidup.** Tidak ada
+window yang dibuka, tidak ada alamat yang di-update, tidak ada redeploy Vercel.
 
-```powershell
-$dst = "C:\Users\USER\pc-backup-agent"
-New-Item -ItemType Directory -Path $dst -Force | Out-Null
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/masradenbagus89-ui/dramaapp/main/pc-backup-agent/hardlink-agent.js" -OutFile "$dst\hardlink-agent.js"
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/masradenbagus89-ui/dramaapp/main/pc-backup-agent/Caddyfile" -OutFile "$dst\Caddyfile"
-Write-Host "Downloaded to: $dst"
-```
+Kenapa bisa begitu: alamat video jadi **tetap** (`https://video.amasyaforum.com`) berkat
+*named tunnel*, jadi env var `NEXT_PUBLIC_VIDEO_BASE_URL` di Vercel diisi **sekali
+selamanya**. `VERCEL_TOKEN` tidak dibutuhkan lagi.
 
-### Step 2 — Generate secret token
+## Setup 1× — Bagian A: token agent (kalau belum pernah)
 
-Token rahasia untuk auth antara Vercel ↔ agent. Generate string random:
+Token rahasia untuk auth antara Vercel ↔ agent.
 
 ```powershell
 $secret = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 32 | ForEach-Object {[char]$_})
 Write-Host "Secret: $secret"
 Set-Clipboard -Value $secret
-Write-Host "(Token sudah di-copy ke clipboard, paste ke Vercel env var nanti)"
 ```
 
-Catatan token-nya — perlu di-paste ke 2 tempat:
-- Vercel env var `HARDLINK_AGENT_SECRET`
-- PC backup PowerShell sebelum run agent (lihat Step 4)
+Token itu dipasang di **2 tempat**:
 
-### Step 3 — Set Vercel env var
+1. **Vercel** → project dramaapp → Settings → Environment Variables → `HARDLINK_AGENT_SECRET`
+   (Sensitive: **ON**, Environments: Production + Preview) → Save → Redeploy.
+2. **PC backup**, sebagai env var tingkat mesin — buka **PowerShell sebagai Administrator**:
+   ```powershell
+   [Environment]::SetEnvironmentVariable('HARDLINK_AGENT_SECRET','<paste-token>','Machine')
+   ```
+   Level `Machine` (bukan `User`) itu wajib: tugas Windows jalan sebagai akun SYSTEM,
+   yang tidak bisa membaca env var milik akun user. Token disimpan di sini, **bukan di
+   dalam script**, supaya tidak pernah ikut ter-commit ke repo.
 
-1. Buka `https://vercel.com/dashboard` → project dramaapp → Settings → Environment Variables
-2. Klik **Add Environment Variable**
-3. Isi:
-   - Key: `HARDLINK_AGENT_SECRET`
-   - Value: paste token dari Step 2 (Ctrl+V)
-   - Sensitive: **ON** ✅ (rahasia)
-   - Environments: Production + Preview
-4. Save
-5. Redeploy: Deployments → ⋯ → Redeploy (wajib biar env var ke-pickup)
+## Setup 1× — Bagian B: named tunnel + Windows service
 
-### Step 4 — Jalankan agent di PC backup
-
-Buka **PowerShell baru** di PC backup:
+Prasyarat: `amasyaforum.com` sudah ditambahkan ke akun Cloudflare dan berstatus **Active**
+(nameserver di Namecheap sudah diarahkan ke Cloudflare).
 
 ```powershell
-cd C:\Users\USER\pc-backup-agent
-$env:HARDLINK_AGENT_SECRET = "<paste-token-disini>"
-node hardlink-agent.js
+cd $env:USERPROFILE
+.\cloudflared.exe login                                   # pilih zona amasyaforum.com di browser
+.\cloudflared.exe tunnel create dramaapp-videos           # CATAT UUID yang muncul
+.\cloudflared.exe tunnel route dns dramaapp-videos video.amasyaforum.com
 ```
 
-Output harus:
-```
-[hardlink-agent] Listening on http://127.0.0.1:8089
-[hardlink-agent] Video root: C:\Users\USER\Downloads\video
-[hardlink-agent] Secret set: YES (length: 32)
-```
+Lalu siapkan config-nya:
 
-**Jangan close PowerShell ini.**
-
-### Step 5 — Restart Caddy pakai Caddyfile (replace command lama)
-
-Sebelumnya kamu jalanin Caddy dengan `caddy file-server --root ... --listen :8088 --browse`. Sekarang ganti pakai Caddyfile baru yang juga handle reverse-proxy:
-
-1. Close window Caddy yang lama (Ctrl+C atau X)
-2. Buka PowerShell baru:
+1. Salin `cloudflared-config.example.yml` → ganti `<UUID-TUNNEL>` dengan UUID asli.
+2. Simpan sebagai `config.yml` di `C:\Windows\System32\config\systemprofile\.cloudflared\`
+   (lokasi WAJIB — di situlah service mencarinya).
+3. Pindahkan berkas kredensial `<UUID>.json` ke folder yang sama.
 
 ```powershell
-cd C:\Users\USER\pc-backup-agent
-caddy run --config Caddyfile
+.\cloudflared.exe tunnel ingress validate     # harus bilang config valid
+.\cloudflared.exe service install
+sc start cloudflared
+sc query cloudflared                          # harus: STATE : 4 RUNNING
 ```
 
-Output harus ada baris:
-```
-INFO	http.handlers.file_server	...
-INFO	http.handlers.reverse_proxy	...
-```
+## Setup 1× — Bagian C: autostart agent + Caddy
 
-**Jangan close PowerShell ini.**
-
-### Step 6 — cloudflared (tetap seperti biasa)
-
-Window cloudflared yang lama tetap dipertahankan (atau restart kalau perlu URL baru):
+Salin `start-video-services.ps1` ke `C:\Users\USER\pc-backup-agent\`, lalu di
+**PowerShell sebagai Administrator**:
 
 ```powershell
-& "$env:USERPROFILE\cloudflared.exe" tunnel --url http://localhost:8088
+schtasks /create /tn "DramaApp Video" /sc onstart /ru SYSTEM /rl HIGHEST /f `
+  /tr "powershell -ExecutionPolicy Bypass -WindowStyle Hidden -File C:\Users\USER\pc-backup-agent\start-video-services.ps1"
 ```
 
-## Verifikasi setup
+Uji tanpa perlu restart:
 
-Buka di browser:
-
-```
-https://<tunnel-url>/_agent/health
-```
-
-Output harus JSON:
-```json
-{"ok":true,"videoRoot":"C:\\Users\\USER\\Downloads\\video","port":8089}
+```powershell
+schtasks /run /tn "DramaApp Video"
+Get-Content C:\Users\USER\pc-backup-agent\logs\start-video-services.log -Tail 30
 ```
 
-Kalau ya → setup berhasil. Buka admin form Vercel, klik tombol **🪄 Scan & auto-hardlink** untuk test.
+Baris terakhir harus `=== SELESAI — kedua service hidup ===`. Kalau ada yang `MATI`,
+log itu menyebut berkas mana yang harus dibuka (`logs\agent.err.log` / `logs\caddy.err.log`).
 
-## Setiap kali PC backup di-restart
+> Kalau lognya bilang `node.exe tidak ketemu` atau `caddy.exe tidak ketemu`: buka
+> `start-video-services.ps1`, tambahkan path asli di daftar `$NODE_CANDIDATES` /
+> `$CADDY_CANDIDATES` paling atas. Penyebabnya akun SYSTEM punya PATH berbeda dari
+> akun user — jadi nama perintah saja sering tidak cukup.
 
-Wajib jalankan **3 PowerShell window** lagi:
+## Setup 1× — Bagian D: cegah PC tidur
 
-1. `node hardlink-agent.js` (dengan env var `HARDLINK_AGENT_SECRET` di-set dulu)
-2. `caddy run --config Caddyfile`
-3. `cloudflared tunnel --url http://localhost:8088`
+PC yang tidur = tunnel putus, walaupun PC "kelihatan nyala".
 
-Kalau cloudflared dapat URL baru → update `NEXT_PUBLIC_VIDEO_BASE_URL` di Vercel + redeploy (sama prosedur seperti sebelumnya).
+```powershell
+powercfg /change standby-timeout-ac 0     # jangan pernah sleep saat colok listrik
+powercfg /change hibernate-timeout-ac 0
+powercfg /change monitor-timeout-ac 15    # layar boleh mati, mesin tetap jalan
+```
+
+## Setup 1× — Bagian E: alamat permanen di Vercel
+
+Settings → Environment Variables → `NEXT_PUBLIC_VIDEO_BASE_URL` = `https://video.amasyaforum.com`
+→ Save → **Redeploy**. Sesudah ini env var tersebut **tidak pernah disentuh lagi**.
+
+## Verifikasi
+
+```powershell
+# 1. Tunnel hidup dari internet
+Invoke-WebRequest "https://video.amasyaforum.com/" -Method Head -TimeoutSec 20 -UseBasicParsing
+
+# 2. Agent terjangkau lewat tunnel
+Invoke-WebRequest "https://video.amasyaforum.com/_agent/health" -TimeoutSec 20 -UseBasicParsing
+# harus JSON: {"ok":true,"videoRoot":"C:\\Users\\USER\\Downloads\\video","port":8089}
+
+# 3. Service tunnel jalan
+sc query cloudflared
+```
+
+Lalu dari mana saja:
+
+```
+https://dramaapp.vercel.app/api/teaser?id=<drama-id>&ep=1
+```
+harus balas **206/200** — kalau **502 "Sumber video sedang mati"**, berarti rantai di PC
+backup putus.
+
+**Tes yang menentukan:** restart PC backup, **jangan buka PowerShell sama sekali**, tunggu
+2 menit, ulangi 3 cek di atas. Kalau tetap benar → otomatisnya terbukti.
 
 ## Troubleshooting
 
-**Error "Tidak bisa connect ke hardlink-agent"** saat klik Scan:
-- Cek window `node hardlink-agent.js` masih jalan
-- Cek window `caddy run` masih jalan
-- Test manual: `curl https://<tunnel-url>/_agent/health` harus return JSON
+| Gejala | Yang dicek |
+|---|---|
+| Video mati, `/api/teaser` 502 | `sc query cloudflared` → Running? Lalu `Get-Content ...\logs\start-video-services.log -Tail 30` |
+| Log bilang port 8088/8089 `MATI` | buka `logs\caddy.err.log` / `logs\agent.err.log` |
+| Log bilang `HARDLINK_AGENT_SECRET belum di-set` | ulangi Setup Bagian A langkah 2 (level `Machine`, PowerShell Administrator) |
+| Scan admin error `Unauthorized` | token di Vercel ≠ token di PC backup. Samakan, redeploy Vercel, `schtasks /run /tn "DramaApp Video"` |
+| Scan admin error `Unexpected token '<'` | tunnel balas HTML error, bukan JSON → cek service cloudflared |
+| Tunnel 530 walau service Running | pastikan `protocol: http2` ada di `config.yml` (QUIC/UDP 7844 sering diblokir) |
+| Folder drama tidak ketemu | taruh `.mp4` di `C:\Users\USER\Downloads\video\<drama-id>\`; drama-id huruf kecil + dash |
 
-**Error "Unauthorized"** dari agent:
-- Token `HARDLINK_AGENT_SECRET` di Vercel beda dengan yang di PowerShell `$env:HARDLINK_AGENT_SECRET`
-- Pastikan sama persis, lalu redeploy Vercel + restart agent
+---
 
-**Folder tidak ditemukan**:
-- Drop file mp4 dulu di `C:\Users\USER\Downloads\video\<drama-id>\`
-- Drama-id harus huruf kecil + dash, mis. `istri-rahasia-sang-ceo`
+# Cara lama (arsip) — quick tunnel manual
+
+`start-dramaapp.ps1` **sengaja tidak dihapus** sebagai jalan mundur kalau named tunnel
+bermasalah. Batasannya, dan kenapa ditinggalkan:
+
+- Alamatnya **acak baru tiap restart** → wajib update env Vercel + redeploy tiap kali.
+- Langkah update itu butuh `VERCEL_TOKEN` yang **sudah mati** (403) sejak 2026-08-19.
+- Berisi `Read-Host` di akhir + membuka window `-NoExit`, jadi **tidak bisa** dijadikan
+  tugas otomatis.
+
+Kalau terpaksa dipakai:
+
+```powershell
+cd C:\Users\USER\pc-backup-agent
+powershell -ExecutionPolicy Bypass -File start-dramaapp.ps1
+```
+
+Lalu update `NEXT_PUBLIC_VIDEO_BASE_URL` di Vercel dengan alamat yang tercetak di langkah
+[4/6] + Redeploy. Sesudah named tunnel jalan, **matikan tugas ini** supaya tidak ada dua
+tunnel berebut port 8088:
+
+```powershell
+Get-Process cloudflared -ErrorAction SilentlyContinue | Stop-Process -Force
+```

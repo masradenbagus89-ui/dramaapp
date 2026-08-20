@@ -13,6 +13,11 @@ tsconfig.tsbuildinfo
 data/twofa.json
 # Cookie jar hasil uji curl — berisi token sesi admin yang masih hidup.
 cookies.txt
+# Kredensial cloudflared named tunnel — siapa pun yang punya berkas ini bisa
+# membajak tunnel video. Yang boleh di-commit hanya cloudflared-config.example.yml.
+pc-backup-agent/config.yml
+pc-backup-agent/*.json
+pc-backup-agent/logs/
 public/videos/
 public/audio/
 public/episodes/

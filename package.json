@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "e2e:tahap7": "node scripts/e2e-tahap7.mjs"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.2.0",

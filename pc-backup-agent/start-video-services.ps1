@@ -129,6 +129,36 @@ $PENANDA = Join-Path $LOG_DIR "alamat-terakhir.txt"
 # secara default, dan Vercel menolak protokol lama).
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
+# Tanya ke SITUS: bisakah ia mengambil video lewat tunnel yang berlaku sekarang?
+# Balas kode HTTP; 0 = benar-benar tak ada jawaban.
+#
+# WAJIB pakai HttpWebRequest.AddRange, JANGAN Invoke-WebRequest -Headers @{Range=...}:
+# PowerShell 5.1 melarang header Range diset lewat koleksi Headers dan melempar
+# System.ArgumentException ("The 'Range' header must be modified using the appropriate
+# property or method"). Exception itu TIDAK punya .Response, jadi terbaca sebagai
+# kode 0 alias "situs tak menjawab" - padahal situs baik-baik saja. Bug ini membuat
+# penjaga 15 menit selalu memvonis rantai rusak lalu membangun ulang tunnel terus-
+# menerus, sehingga alamat yang baru dilaporkan langsung jadi yatim (2026-08-22 16:19).
+function Uji-Situs {
+  $url = "$SITUS_URL/api/teaser?id=$DRAMA_UJI&ep=1"
+  try {
+    $req = [System.Net.HttpWebRequest]::Create($url)
+    $req.Method = "GET"
+    $req.Timeout = 30000
+    $req.ReadWriteTimeout = 30000
+    $req.AddRange(0, 1023)
+    $resp = $req.GetResponse()
+    $kode = [int]$resp.StatusCode
+    $resp.Close()
+    return $kode
+  } catch [System.Net.WebException] {
+    if ($_.Exception.Response) { return [int]$_.Exception.Response.StatusCode }
+    return 0
+  } catch {
+    return 0
+  }
+}
+
 # Laporkan alamat ke situs. Dipakai KETIGA jalur (sehat / NAMED / QUICK), jadi
 # didefinisikan di sini - sebelum pemanggilan pertama.
 function Lapor-Alamat([string]$alamat, [string]$mode) {
@@ -297,14 +327,7 @@ function Cek-Sudah-Sehat {
   # Proses pendukung harus hidup - kalau tidak, percuma menguji apa pun.
   if (-not (Get-Process cloudflared -ErrorAction SilentlyContinue)) { return $null }
   if (-not (Get-NetTCPConnection -LocalPort 8088 -State Listen -ErrorAction SilentlyContinue)) { return $null }
-  $kode = 0
-  try {
-    $r = Invoke-WebRequest -Uri "$SITUS_URL/api/teaser?id=$DRAMA_UJI&ep=1" -Method Get `
-      -Headers @{ Range = "bytes=0-1023" } -TimeoutSec 30 -UseBasicParsing
-    $kode = [int]$r.StatusCode
-  } catch {
-    if ($_.Exception.Response) { $kode = [int]$_.Exception.Response.StatusCode }
-  }
+  $kode = Uji-Situs
   if ($kode -eq 200 -or $kode -eq 206) { return $alamat }
   Catat "penanda ada ($alamat) tapi situs balas $kode -> rantai putus, akan dibangun ulang"
   return $null
@@ -533,14 +556,7 @@ if (-not (Lapor-Alamat $TUNNEL_URL "QUICK")) {
   $UJI_URL = "$SITUS_URL/api/teaser?id=$DRAMA_UJI&ep=1"
   $TERBUKTI = $false
   for ($i = 1; $i -le 12; $i++) {
-    $kode = 0
-    try {
-      $r = Invoke-WebRequest -Uri $UJI_URL -Method Get -Headers @{ Range = "bytes=0-1023" } `
-        -TimeoutSec 30 -UseBasicParsing
-      $kode = [int]$r.StatusCode
-    } catch {
-      if ($_.Exception.Response) { $kode = [int]$_.Exception.Response.StatusCode }
-    }
+    $kode = Uji-Situs
     if ($kode -eq 200 -or $kode -eq 206) { $TERBUKTI = $true; break }
     Catat "uji lewat situs percobaan ke-$i balas $kode, tunggu... (tunnel baru kadang perlu ~1 menit)"
     Start-Sleep -Seconds 10

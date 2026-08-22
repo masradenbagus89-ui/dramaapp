@@ -87,25 +87,70 @@ function Berhenti($pesan) {
   exit 1
 }
 
-# Cari .exe dari daftar kandidat, kalau nihil coba PATH. Alasan: SYSTEM tidak
-# mewarisi PATH milik akun user, jadi "node" saja sering tidak ketemu.
+# Kumpulkan folder PATH dari registry: MESIN + TIAP PROFIL USER.
+#
+# KENAPA PERLU: tugas ini jalan sebagai SYSTEM, dan SYSTEM TIDAK mewarisi PATH
+# milik akun user. Program yang dipasang lewat winget/scoop/choco biasanya
+# terdaftar di PATH user saja, jadi `Get-Command caddy` yang berhasil di jendela
+# PowerShell milikmu akan GAGAL total di sini. Ini kejadian nyata 2026-08-22:
+# log cuma bilang "caddy.exe tidak ketemu" padahal caddy jelas terpasang.
+function Ambil-PathTerdaftar {
+  $folder = @()
+  try {
+    $m = (Get-ItemProperty 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager\Environment' -Name Path -ErrorAction Stop).Path
+    $folder += $m -split ';'
+  } catch { }
+  # PATH tiap profil user di HKEY_USERS (SYSTEM bisa membacanya).
+  try {
+    $hive = Get-ChildItem 'Registry::HKEY_USERS' -ErrorAction Stop |
+      Where-Object { $_.Name -notmatch '_Classes$' }
+    foreach ($h in $hive) {
+      try {
+        $u = (Get-ItemProperty "Registry::$($h.Name)\Environment" -Name Path -ErrorAction Stop).Path
+        if ($u) { $folder += $u -split ';' }
+      } catch { }
+    }
+  } catch { }
+  return $folder | ForEach-Object { $_.Trim() } | Where-Object { $_ } | Sort-Object -Unique
+}
+
+$PATH_TERDAFTAR = Ambil-PathTerdaftar
+
+# Cari .exe: kandidat eksplisit -> PATH proses -> PATH registry (mesin + user).
 function Cari-Exe([string[]]$kandidat, [string]$namaPerintah) {
   foreach ($p in $kandidat) {
     if ($p -and (Test-Path $p)) { return $p }
   }
   $cmd = Get-Command $namaPerintah -ErrorAction SilentlyContinue
   if ($cmd) { return $cmd.Source }
+  foreach ($dir in $PATH_TERDAFTAR) {
+    $kandidatPath = Join-Path $dir "$namaPerintah.exe"
+    try {
+      if (Test-Path $kandidatPath) { return $kandidatPath }
+    } catch { }
+  }
   return $null
 }
 
 Catat "=== start-video-services dijalankan (user: $env:USERNAME) ==="
 
 # --- 1. Cek semua prasyarat DULU, sebelum ada yang di-start ---
+Catat "folder PATH terdaftar yang ikut dicari: $($PATH_TERDAFTAR.Count)"
+
+# Pesan gagal sengaja menyertakan CARA MENEMUKAN path-nya. Versi lama cuma bilang
+# "tidak ketemu" tanpa memberi tahu langkah berikutnya - buntu bagi yang membaca
+# log saat PC baru menyala (kejadian 2026-08-22).
+function Berhenti-TakKetemu([string]$nama, [string]$variabel) {
+  Berhenti ("$nama tidak ketemu (dicari di kandidat, PATH proses, dan PATH registry mesin+user). " +
+    "Cari lokasinya di jendela PowerShell BIASA dengan: (Get-Command $($nama -replace '\.exe$','')).Source " +
+    "lalu tambahkan hasilnya ke $variabel di paling atas script ini.")
+}
+
 $NODE_EXE = Cari-Exe $NODE_CANDIDATES "node"
-if (-not $NODE_EXE) { Berhenti "node.exe tidak ketemu. Tambahkan path-nya ke `$NODE_CANDIDATES di script ini." }
+if (-not $NODE_EXE) { Berhenti-TakKetemu "node.exe" "`$NODE_CANDIDATES" }
 
 $CADDY_EXE = Cari-Exe $CADDY_CANDIDATES "caddy"
-if (-not $CADDY_EXE) { Berhenti "caddy.exe tidak ketemu. Tambahkan path-nya ke `$CADDY_CANDIDATES di script ini." }
+if (-not $CADDY_EXE) { Berhenti-TakKetemu "caddy.exe" "`$CADDY_CANDIDATES" }
 
 if (-not (Test-Path "$AGENT_DIR\hardlink-agent.js")) { Berhenti "hardlink-agent.js tidak ada di $AGENT_DIR" }
 if (-not (Test-Path "$AGENT_DIR\Caddyfile"))         { Berhenti "Caddyfile tidak ada di $AGENT_DIR" }
@@ -261,9 +306,7 @@ if (-not $AGENT_OK) {
 }
 
 $CLOUDFLARED_EXE = Cari-Exe $CLOUDFLARED_CANDIDATES "cloudflared"
-if (-not $CLOUDFLARED_EXE) {
-  Berhenti "cloudflared.exe tidak ketemu. Tambahkan path-nya ke `$CLOUDFLARED_CANDIDATES di script ini."
-}
+if (-not $CLOUDFLARED_EXE) { Berhenti-TakKetemu "cloudflared.exe" "`$CLOUDFLARED_CANDIDATES" }
 Catat "cloudflared: $CLOUDFLARED_EXE"
 
 # Sisa cloudflared dari sesi sebelumnya WAJIB dimatikan. Kalau dibiarkan, akan

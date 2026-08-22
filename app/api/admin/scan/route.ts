@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/session";
+import { getVideoBaseUrl } from "@/lib/video-base";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,15 +17,18 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Parameter 'id' wajib." }, { status: 400 });
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_VIDEO_BASE_URL;
+    const baseUrl = await getVideoBaseUrl();
     if (!baseUrl) {
       return NextResponse.json(
-        { error: "NEXT_PUBLIC_VIDEO_BASE_URL belum di-set di Vercel env vars." },
+        {
+          error:
+            "Alamat sumber video belum ada. PC backup belum pernah melapor, dan NEXT_PUBLIC_VIDEO_BASE_URL juga kosong di env Vercel.",
+        },
         { status: 500 },
       );
     }
 
-    const folderUrl = `${baseUrl.replace(/\/$/, "")}/${encodeURIComponent(dramaId)}/`;
+    const folderUrl = `${baseUrl}/${encodeURIComponent(dramaId)}/`;
     let res: Response;
     try {
       res = await fetch(folderUrl, { cache: "no-store" });

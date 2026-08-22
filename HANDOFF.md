@@ -25,6 +25,37 @@ baru (tunnel yatim 530). Bagian lain masih apa adanya dari 2026-08-21, belum diu
 > Sementara. Mati lagi tiap PC backup restart — jangan dihafalkan, jangan dipercaya di sesi lain
 > tanpa diukur ulang.
 
+### 🆕 2026-08-22 — alamat video jadi RUNTIME CONFIG (kode selesai, tinggal dipasang di PC backup)
+
+Akar masalah "video mati tiap PC restart" **dihapus tanpa named tunnel**. Alamat tidak lagi
+dibakar saat build; kini dibaca dari Supabase `app_data` key `videobase`, dan PC backup
+**melapor sendiri** tiap dapat alamat baru → tidak perlu redeploy, tidak perlu `VERCEL_TOKEN`,
+tidak perlu tempel manual, tidak perlu domain.
+
+| Berkas | Perannya |
+|---|---|
+| `lib/video-base.ts` | `getVideoBaseUrl()` (baca DB, **fallback ke env lama**) + `isAllowedVideoBase()` (pagar keamanan) |
+| `lib/store.ts` | `getVideoBaseRecord` / `setVideoBaseRecord` (pola sama dengan `getTwoFA`) |
+| `app/api/agent/video-base/route.ts` | **titik-risiko** — POST dari PC backup; 3 lapis: rate-limit 2 kunci → banding rahasia hash+timing-safe → allowlist host |
+| `pc-backup-agent/start-video-services.ps1` | **mode QUICK/NAMED otomatis**; mode QUICK menjalankan tunnel lalu melapor |
+| `tests/video-base.test.ts` | 16 tes pagar keamanan (host menyamar, http, port, path, kredensial) |
+
+**Kenapa allowlist wajib:** alamat ini nanti di-`fetch` oleh server kita sendiri
+(`app/api/teaser/route.ts:31`) — jadi ini jalur **SSRF-tersimpan**. Allowlist-lah yang
+memblokir `localhost` / `169.254.169.254` / IP internal. Jangan dilonggarkan.
+
+**Bonus yang ikut beres:** `DramaCard`/`ContentRow` tidak lagi membaca env di browser (pakai
+`/api/teaser` seperti hero), dan prop `baseUrl` di `HomeHero` yang ternyata **tak pernah dipakai**
+sudah dibuang. Efeknya `/beranda` & `/discover` **tetap ISR 60 detik** — dikonfirmasi di output
+`next build` (`○ Static … 1m`), jadi performa yang sudah diukur sehat tidak berubah.
+
+Bukti: **281 tes lulus** (naik dari 265) · `tsc --noEmit` exit 0 · `next build` sukses ·
+route `/api/agent/video-base` terdaftar di `app-path-routes-manifest.json`.
+
+⏳ **Belum aktif sampai owner memasangnya di PC backup** — langkahnya di
+[`pc-backup-agent/README.md`](./pc-backup-agent/README.md) Bagian A + C + D (Bagian B named
+tunnel kini OPSIONAL). Sampai itu dilakukan, perilaku lama tetap berlaku lewat fallback env.
+
 **Status 2026-08-22 — siklus ke-3, PULIH & TERVERIFIKASI.** Owner lapor video tak bisa diputar.
 Diukur langsung: alamat yang dipakai produksi saat itu (`mac-carroll-flows-holly.trycloudflare.com`)
 sudah **LENYAP** (`nslookup` → `Non-existent domain`, `curl` → 000), dan `/api/teaser` balas **502**
@@ -143,7 +174,12 @@ sudah TERBUKTI, bukan cuma lulus tes lokal.
    ```
    Lalu **salin `pc-backup-agent/hardlink-agent.js` versi baru** ke `C:\Users\USER\pc-backup-agent\` + `schtasks /run /tn "DramaApp Video"` supaya tombol Scan bisa menangani sendiri lain kali. **Koreksi 2026-08-22:** "bukti tambahan" versi agent lama itu **tidak sahih** — `/_agent/health` sekarang balas **200**, jadi 404 waktu itu cuma gejala tunnel yang mati. Versi agent di PC backup **tetap belum diketahui** (`/health` tidak menyebut versi), jadi menyalin berkas versi baru masih layak dilakukan. Rincian: [`docs/lintasai/rencana/2026-08-20-video-nama-berkas-1mp4.md`](./docs/lintasai/rencana/2026-08-20-video-nama-berkas-1mp4.md).
 2. ~~**Hidupkan video lagi (Tahap 1)**~~ — **PULIH, terakhir 2026-08-22 (siklus ke-3).** Alamat aktif sekarang `https://therefore-donna-crops-doctors.trycloudflare.com`; `proxy-marks-isolation-subjects` dan `mac-carroll-flows-holly` sudah **LENYAP**. Diverifikasi 4 gerbang (bundle produksi cocok persis · DNS hidup · `/api/teaser` **206** · signature `ftypmp42`) — rinciannya di seksi "SEDANG DIKERJAKAN" di atas. ⚠️ **Tetap sementara** — mati lagi tiap PC backup restart, dan karena [5/6] balas 403 alamat barunya harus ditempel **manual** ke env Vercel + **Redeploy tanpa build cache**. Berhenti berulang hanya sesudah Tahap 2 (no.3).
-3. 🔴 **Pasang alamat permanen + autostart (Tahap 2, ~1 jam).** Urutannya: (a) `amasyaforum.com` → Cloudflare, ganti nameserver di Namecheap; (b) `cloudflared` named tunnel + `service install`; (c) salin `start-video-services.ps1` ke PC backup + `schtasks /sc onstart`; (d) `powercfg` cegah sleep; (e) env Vercel = `https://video.amasyaforum.com` (terakhir kali). **Perintah lengkap ada di [`pc-backup-agent/README.md`](./pc-backup-agent/README.md).** Sesudah ini tidak perlu buka PowerShell lagi selamanya.
+3. 🟡 **Pasang alamat permanen + autostart (Tahap 2).** **Turun prioritas 2026-08-22:** bagian
+   "alamat permanen" (a·b·e) kini **OPSIONAL** — mode QUICK sudah menghapus keharusan alamat tetap.
+   Yang MASIH perlu dikerjakan & bernilai tinggi: **(c) autostart `start-video-services.ps1` +
+   (d) `powercfg` cegah sleep**, plus set `HARDLINK_AGENT_SECRET` level `Machine`. Sesudah itu
+   PC menyala = video hidup sendiri, tanpa PowerShell, tanpa tempel alamat. Named tunnel dikerjakan
+   nanti saat domain di-ACC atasan; script berpindah mode sendiri. Urutan asli: Urutannya: (a) `amasyaforum.com` → Cloudflare, ganti nameserver di Namecheap; (b) `cloudflared` named tunnel + `service install`; (c) salin `start-video-services.ps1` ke PC backup + `schtasks /sc onstart`; (d) `powercfg` cegah sleep; (e) env Vercel = `https://video.amasyaforum.com` (terakhir kali). **Perintah lengkap ada di [`pc-backup-agent/README.md`](./pc-backup-agent/README.md).** Sesudah ini tidak perlu buka PowerShell lagi selamanya.
 4. ~~**Uji manual Tahap 7 dari sisi penonton**~~ — **SELESAI 2026-08-20.** Owner sudah mencoba sendiri (berhasil ganti password hanya bermodal kode) DAN uji end-to-end mesin ke API produksi lulus 19/19. Tak ada sisa pekerjaan di Tahap 7.
 5. **Isi 3 env Playly di Vercel** → Settings → Environment Variables: `DASHBOARD_API_URL=https://playly-dashboard.vercel.app/api/videos`, `DASHBOARD_API_KEY_HEADER=X-Playly-Key`, `DASHBOARD_API_KEY=<kunci dari rekan>`. Lalu **Redeploy**. Cek berhasil: `/admin` → Dashboard → kartu Playly berubah dari "Belum diatur" jadi "Tersambung".
 6. **Minta rekan upload video contoh** ke dashboard Playly — kuncinya sudah diuji SAH 2026-08-19, tapi dashboard-nya masih kosong (`count: 0`), jadi belum ada yang bisa ditampilkan.

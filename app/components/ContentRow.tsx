@@ -4,7 +4,7 @@ import { useRef } from "react";
 import Link from "next/link";
 import type { Drama } from "@/lib/types";
 import { continueLabel } from "@/lib/progress";
-import { videoSrc } from "@/lib/video";
+import { teaserSrc } from "@/lib/hero-teaser";
 import { genreBarClass, genreTextClass } from "@/lib/genre-accent";
 import Poster from "./Poster";
 import { Button } from "@/components/ui/button";
@@ -31,7 +31,6 @@ export default function ContentRow({
   accent,
 }: Props) {
   const scroller = useRef<HTMLDivElement>(null);
-  const baseUrl = process.env.NEXT_PUBLIC_VIDEO_BASE_URL ?? "";
 
   if (dramas.length === 0) return null;
 
@@ -111,10 +110,8 @@ export default function ContentRow({
                 className="group/card block w-28 shrink-0 transition-transform hover:-translate-y-1 sm:w-32 md:w-36"
               >
                 <div className="relative">
-                  <Poster
-                    drama={d}
-                    previewSrc={videoSrc(baseUrl, d.id, 1, "")}
-                  />
+                  {/* /api/teaser (same-origin) — lihat alasan di DramaCard.tsx */}
+                  <Poster drama={d} previewSrc={teaserSrc(d.id)} />
                   <div className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-xl bg-black/0 transition-colors group-hover/card:bg-black/35">
                     <Play className="size-9 fill-white text-white opacity-0 drop-shadow-lg transition-opacity group-hover/card:opacity-100" />
                   </div>

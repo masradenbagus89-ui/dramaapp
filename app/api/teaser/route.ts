@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getVideoBaseUrl } from "@/lib/video-base";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -17,7 +18,7 @@ export async function GET(req: NextRequest) {
     return new NextResponse("Parameter tidak valid", { status: 400 });
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_VIDEO_BASE_URL?.replace(/\/$/, "") ?? "";
+  const baseUrl = await getVideoBaseUrl();
   if (!baseUrl) {
     return new NextResponse("Sumber video belum di-set", { status: 404 });
   }

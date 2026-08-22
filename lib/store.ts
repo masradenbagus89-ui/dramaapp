@@ -76,9 +76,16 @@ function writeLocal<T>(file: string, value: T): void {
 }
 
 // --- Dokumen JSON di Supabase (tabel app_data: key -> value jsonb) ----------
-async function sbDocGet<T>(key: string): Promise<T | null> {
+// `opts.revalidate` diteruskan ke sbSelect: kosong = selalu segar (no-store).
+// Perlu untuk dokumen yang dibaca dari halaman ISR — satu fetch no-store
+// membuat SELURUH halaman jadi dinamis (lihat lib/supabase.ts:51).
+async function sbDocGet<T>(
+  key: string,
+  opts: { revalidate?: number } = {},
+): Promise<T | null> {
   const rows = await sbSelect<{ value: T }>(
     `app_data?key=${eq(key)}&select=value&limit=1`,
+    opts,
   );
   return rows.length ? rows[0].value : null;
 }
@@ -688,6 +695,37 @@ export async function incrementAdStat(
   if (!ad) return;
   ad[type] = (ad[type] ?? 0) + 1;
   await saveAds(ads);
+}
+
+// =====================  ALAMAT SUMBER VIDEO  ===============================
+// Dokumen app_data "videobase" -> { url, updatedAt, source }.
+//
+// KENAPA di database, bukan env: NEXT_PUBLIC_VIDEO_BASE_URL dibakar ke bundle
+// saat build, sedangkan quick tunnel memberi alamat acak baru tiap PC backup
+// restart -> tiap restart video mati sampai ditempel manual + redeploy. Disimpan
+// di sini supaya PC backup bisa melapor sendiri (lihat lib/video-base.ts).
+// Lokal (tanpa Supabase): data/videobase.json.
+
+export type VideoBaseRecord = {
+  url: string;
+  updatedAt: string;
+  /** Siapa yang terakhir menulis — "agent" (PC backup) atau "admin". */
+  source?: string;
+};
+
+export async function getVideoBaseRecord(
+  opts: { revalidate?: number } = {},
+): Promise<VideoBaseRecord | null> {
+  if (useSupabase) return await sbDocGet<VideoBaseRecord>("videobase", opts);
+  return readLocal<VideoBaseRecord | null>("videobase.json", null);
+}
+
+export async function setVideoBaseRecord(rec: VideoBaseRecord): Promise<void> {
+  if (useSupabase) {
+    await sbDocSet("videobase", rec);
+    return;
+  }
+  writeLocal("videobase.json", rec);
 }
 
 /** Mode penyimpanan aktif — berguna untuk debugging/health check. */

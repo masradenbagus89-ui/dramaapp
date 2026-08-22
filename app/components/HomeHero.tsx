@@ -21,8 +21,6 @@ export default function HomeHero({
   dramas,
 }: {
   dramas: Drama[];
-  /** Tetap diterima dari halaman (alamat tunnel); teaser memakai /api/teaser. */
-  baseUrl?: string;
 }) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);

@@ -30,10 +30,10 @@ export default async function BerandaPage() {
 
   return (
     <div className="pb-10">
-      <HomeHero
-        dramas={slides}
-        baseUrl={process.env.NEXT_PUBLIC_VIDEO_BASE_URL ?? ""}
-      />
+      {/* Tanpa prop alamat video: teaser hero memakai /api/teaser (same-origin),
+          yang membaca alamat terbaru di sisi server. Jadi ISR 60 detik halaman
+          ini tetap utuh. */}
+      <HomeHero dramas={slides} />
 
       <div className="mx-auto max-w-7xl px-4 pt-6 md:px-6">
         <AdBanner />

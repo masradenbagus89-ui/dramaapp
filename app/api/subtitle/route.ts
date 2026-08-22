@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { getVideoBaseUrl } from "@/lib/video-base";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,7 +27,7 @@ export async function GET(req: NextRequest) {
   }
 
   const fileName = `${ep}.${lang}.vtt`;
-  const baseUrl = process.env.NEXT_PUBLIC_VIDEO_BASE_URL?.replace(/\/$/, "") ?? "";
+  const baseUrl = await getVideoBaseUrl();
 
   let body: string;
   try {

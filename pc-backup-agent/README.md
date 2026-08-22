@@ -8,6 +8,19 @@ alamat publiknya.
 > PowerShell + update alamat di Vercel. Sekarang semuanya jalan sendiri saat PC menyala.
 > Bagian **"Cara baru"** di bawah adalah yang berlaku; cara lama disimpan di paling bawah
 > sebagai jalan mundur.
+>
+> **Sejak 2026-08-22 tidak perlu menunggu named tunnel lagi.** `start-video-services.ps1`
+> punya **dua mode** yang dipilih otomatis:
+>
+> | Mode | Kapan aktif | Yang terjadi |
+> |---|---|---|
+> | **QUICK** | service `cloudflared` **belum** terpasang | script menjalankan quick tunnel sendiri, lalu **melapor** alamat acaknya ke situs → alamat langsung dipakai **tanpa redeploy & tanpa tempel manual** |
+> | **NAMED** | service `cloudflared` **sudah** Running | alamat sudah permanen; script tidak menyentuh tunnel sama sekali |
+>
+> Artinya **Setup Bagian B (named tunnel) sekarang OPSIONAL** — pasang saat domain sudah
+> siap. Sebelum itu, Bagian A + C + D sudah cukup untuk membuat video hidup sendiri tiap
+> PC menyala. Saat nanti named tunnel dipasang, script berpindah mode **sendiri**, tidak
+> ada yang perlu diubah.
 
 ## Prasyarat
 
@@ -61,7 +74,15 @@ Token itu dipasang di **2 tempat**:
    yang tidak bisa membaca env var milik akun user. Token disimpan di sini, **bukan di
    dalam script**, supaya tidak pernah ikut ter-commit ke repo.
 
-## Setup 1× — Bagian B: named tunnel + Windows service
+## Setup 1× — Bagian B: named tunnel + Windows service  *(OPSIONAL sejak 2026-08-22)*
+
+> **Boleh dilewati dulu.** Tanpa bagian ini script jalan di **mode QUICK** dan video tetap
+> hidup sendiri tiap PC menyala — alamatnya saja yang berganti-ganti, dan itu tidak lagi
+> menjadi masalah karena PC backup melaporkannya sendiri. Kerjakan bagian ini saat domain
+> sudah di-ACC; script berpindah mode otomatis, tidak ada yang perlu diubah.
+>
+> Syarat mode QUICK: `cloudflared.exe` **ada di PC** (tidak harus jadi service) dan env
+> `HARDLINK_AGENT_SECRET` di PC = yang di Vercel (Bagian A).
 
 Prasyarat: `amasyaforum.com` sudah ditambahkan ke akun Cloudflare dan berstatus **Active**
 (nameserver di Namecheap sudah diarahkan ke Cloudflare).
@@ -104,8 +125,23 @@ schtasks /run /tn "DramaApp Video"
 Get-Content C:\Users\USER\pc-backup-agent\logs\start-video-services.log -Tail 30
 ```
 
-Baris terakhir harus `=== SELESAI — kedua service hidup ===`. Kalau ada yang `MATI`,
-log itu menyebut berkas mana yang harus dibuka (`logs\agent.err.log` / `logs\caddy.err.log`).
+Baris terakhir yang benar tergantung mode:
+
+- Mode QUICK: `=== SELESAI - semua hidup (mode QUICK, alamat sudah dilaporkan) ===`,
+  didahului baris `alamat DILAPORKAN & tersimpan: https://...`
+- Mode NAMED: `=== SELESAI - semua hidup (mode NAMED) ===`
+
+Kalau ada yang `MATI`, log menyebut berkas mana yang harus dibuka
+(`logs\agent.err.log` / `logs\caddy.err.log` / `logs\cloudflared.err.log`).
+
+**Kalau baris laporannya gagal**, log menuliskan balasan server apa adanya:
+
+| Isi log | Artinya | Perbaikannya |
+|---|---|---|
+| `401 ... x-agent-secret tidak cocok` | token di PC ≠ token di Vercel | ulangi Bagian A langkah 2, pastikan level **`Machine`** |
+| `400 ... baseUrl ditolak` | alamat di luar daftar host yang diizinkan | wajar hanya kalau ganti penyedia tunnel; tambahkan env `VIDEO_BASE_ALLOWED_SUFFIXES` di Vercel |
+| `500 ... HARDLINK_AGENT_SECRET belum di-set` | env belum ada **di Vercel** | Settings → Environment Variables → tambah → Redeploy |
+| `tunnel ... tidak melayani setelah ~45 detik` | tunnel hidup tapi Caddy belum menjawab | cek `logs\caddy.err.log`; alamat **sengaja tidak dilaporkan** supaya situs tidak menunjuk alamat mati |
 
 > Kalau lognya bilang `node.exe tidak ketemu` atau `caddy.exe tidak ketemu`: buka
 > `start-video-services.ps1`, tambahkan path asli di daftar `$NODE_CANDIDATES` /

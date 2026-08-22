@@ -29,10 +29,7 @@ export default async function DiscoverPage() {
   return (
     <div className="pb-10">
       {slides.length > 0 && (
-        <HomeHero
-          dramas={slides}
-          baseUrl={process.env.NEXT_PUBLIC_VIDEO_BASE_URL ?? ""}
-        />
+        <HomeHero dramas={slides} />
       )}
 
       <div className="mx-auto max-w-7xl px-4 pt-6 md:px-6">

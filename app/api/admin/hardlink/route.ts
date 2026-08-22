@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/session";
+import { getVideoBaseUrl } from "@/lib/video-base";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -22,11 +23,14 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const baseUrl = process.env.NEXT_PUBLIC_VIDEO_BASE_URL;
+    const baseUrl = await getVideoBaseUrl();
     const agentSecret = process.env.HARDLINK_AGENT_SECRET;
     if (!baseUrl) {
       return NextResponse.json(
-        { error: "NEXT_PUBLIC_VIDEO_BASE_URL belum di-set di Vercel env vars." },
+        {
+          error:
+            "Alamat sumber video belum ada. PC backup belum pernah melapor, dan NEXT_PUBLIC_VIDEO_BASE_URL juga kosong di env Vercel.",
+        },
         { status: 500 },
       );
     }
@@ -40,7 +44,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const agentUrl = `${baseUrl.replace(/\/$/, "")}/_agent/hardlink`;
+    const agentUrl = `${baseUrl}/_agent/hardlink`;
     let res: Response;
     try {
       res = await fetch(agentUrl, {

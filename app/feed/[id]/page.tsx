@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { getDrama } from "@/lib/dramas";
+import { getVideoBaseUrl } from "@/lib/video-base";
 import FeedPlayer from "@/app/components/FeedPlayer";
 
 export const dynamic = "force-dynamic";
@@ -21,7 +22,7 @@ export default async function FeedPage(props: PageProps<"/feed/[id]">) {
       dramaId={drama.id}
       title={drama.title}
       episodes={drama.episodes}
-      baseUrl={process.env.NEXT_PUBLIC_VIDEO_BASE_URL ?? ""}
+      baseUrl={await getVideoBaseUrl()}
       startEp={startEp}
       posterImage={drama.posterImage}
       subtitles={drama.subtitles ?? []}

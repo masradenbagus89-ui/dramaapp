@@ -7,6 +7,7 @@
 
 ## Rencana
 
+- [2026-08-22-alamat-video-runtime.md](./rencana/2026-08-22-alamat-video-runtime.md) — video berhenti mati tiap PC backup restart TANPA named tunnel: alamat pindah dari "dibakar saat build" ke `app_data` Supabase + PC backup lapor sendiri. Berisi alasan ngrok gugur (1 GB/bulan) & pre-mortem secret level User vs Machine
 - [2026-08-20-video-nama-berkas-1mp4.md](./rencana/2026-08-20-video-nama-berkas-1mp4.md) — drama baru tak bisa diputar padahal berkasnya ada: nama berkas bukan `1.mp4`; 3 bug hardlink-agent (angka "4" dari `.mp4`, berkas tanpa nomor dilewati, nol hardlink dibalas sukses) + penjaga `tests/hardlink-agent.test.ts`
 - [2026-08-20-video-otomatis-tanpa-powershell.md](./rencana/2026-08-20-video-otomatis-tanpa-powershell.md) — alamat video permanen (named tunnel) + autostart PC backup; berisi 2 pelajaran bug: layar hitam `/sample.mp4` & `.ps1` non-ASCII gagal parse di PowerShell 5.1
 - [2026-08-18-tahap-7-kode-pemulihan.md](./rencana/2026-08-18-tahap-7-kode-pemulihan.md) — kode pemulihan password penonton, tanpa email/domain

@@ -2,17 +2,16 @@
 
 import Link from "next/link";
 import type { Drama } from "@/lib/types";
-import { videoSrc } from "@/lib/video";
+import { teaserSrc } from "@/lib/hero-teaser";
 import { genreTextClass } from "@/lib/genre-accent";
 import Poster from "./Poster";
 
 export default function DramaCard({ drama }: { drama: Drama }) {
-  const previewSrc = videoSrc(
-    process.env.NEXT_PUBLIC_VIDEO_BASE_URL ?? "",
-    drama.id,
-    1,
-    "",
-  );
+  // Lewat /api/teaser (same-origin), bukan alamat tunnel langsung. Alasannya
+  // sama dengan hero (lib/hero-teaser.ts:50): alamat tunnel dibaca di SISI
+  // SERVER, jadi cuplikan ikut alamat terbaru tanpa perlu redeploy — komponen
+  // client tak bisa melakukan itu karena env NEXT_PUBLIC_* dibakar saat build.
+  const previewSrc = teaserSrc(drama.id);
 
   return (
     <Link

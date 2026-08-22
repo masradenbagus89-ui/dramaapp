@@ -473,12 +473,26 @@ try {
   # restart dan quick tunnel mendapat HOSTNAME BARU. Alamat yang sudah kita
   # laporkan jadi basi diam-diam, dan tidak ada yang melapor ulang karena script
   # ini cuma jalan saat boot.
+  #
+  # --protocol http2 WAJIB di jaringan ini. Bawaan cloudflared adalah QUIC (UDP
+  # 7844), dan jaringan PC backup memblokirnya - log 2026-08-22 17:29:
+  #   ERR Failed to dial a quic connection error="failed to dial to edge with quic:
+  #       timeout: handshake did not complete in time"
+  # Akibatnya tunnel TERDAFTAR (DNS hidup) tapi tidak pernah tersambung ke edge,
+  # sehingga Cloudflare membalas 530 ke semua orang - gejala yang menyamar persis
+  # seperti "tunnel yatim". README.md sudah mencatat obat ini untuk named tunnel;
+  # quick tunnel butuh yang sama. http2 memakai TCP 443 yang praktis tak pernah
+  # diblokir.
+  #
+  # --edge-ip-version auto: biarkan cloudflared memilih IPv4/IPv6 sesuai yang
+  # benar-benar bisa dipakai (log menunjukkan ia sempat mencoba IPv6 2606:4700:...).
   Start-Process -FilePath $CLOUDFLARED_EXE `
-    -ArgumentList "tunnel", "--no-autoupdate", "--url", "http://localhost:8088" `
+    -ArgumentList "tunnel", "--no-autoupdate", "--protocol", "http2", `
+                  "--edge-ip-version", "auto", "--url", "http://localhost:8088" `
     -RedirectStandardOutput $cfOut `
     -RedirectStandardError  $cfErr `
     -WindowStyle Hidden
-  Catat "cloudflared quick tunnel di-start (--no-autoupdate)"
+  Catat "cloudflared quick tunnel di-start (--no-autoupdate --protocol http2)"
 } catch {
   Berhenti "gagal menjalankan cloudflared: $($_.Exception.Message)"
 }
@@ -515,6 +529,36 @@ if (-not $TUNNEL_URL) {
   Berhenti "cloudflared tidak memberi alamat dalam 90 detik. Cek $cfErr"
 }
 Catat "alamat tunnel baru: $TUNNEL_URL"
+
+# Mendapat ALAMAT bukan berarti tunnel TERSAMBUNG. cloudflared mencetak alamat
+# lebih dulu, lalu baru menghubungi edge Cloudflare - dan tahap itulah yang gagal
+# 2026-08-22 (QUIC diblokir). Tunnel yang terdaftar tapi tak tersambung membalas
+# 530 ke semua orang, gejalanya sama persis dengan "tunnel yatim".
+# Konfirmasi paling langsung datang dari cloudflared sendiri: baris
+# "Registered tunnel connection".
+$TERSAMBUNG = $false
+$lewat = 0
+while (-not $TERSAMBUNG -and $lewat -lt 90) {
+  foreach ($f in $cfErr, $cfOut) {
+    if ((-not $TERSAMBUNG) -and (Test-Path $f)) {
+      $teks = Baca-LogTerbuka $f
+      if ($teks -match 'Registered tunnel connection') { $TERSAMBUNG = $true }
+      elseif ($teks -match 'failed to dial to edge with quic') {
+        Catat "PERINGATAN: QUIC (UDP 7844) diblokir jaringan ini - sudah dipaksa http2, tapi masih terlihat di log lama."
+      }
+    }
+  }
+  if ($TERSAMBUNG) { break }
+  Start-Sleep -Seconds 3
+  $lewat += 3
+}
+if ($TERSAMBUNG) {
+  Catat "cloudflared TERSAMBUNG ke edge Cloudflare (Registered tunnel connection)"
+} else {
+  Catat "PERINGATAN: cloudflared belum mencatat 'Registered tunnel connection' setelah 90 detik."
+  Catat "Tunnel kemungkinan belum melayani. Cek $cfErr - kalau ada 'failed to dial to edge',"
+  Catat "berarti jaringan memblokir koneksi keluar cloudflared."
+}
 
 # --- 8. Pastikan Caddy melayani DI DALAM PC ini ---
 # Yang diperiksa di sini sengaja LOKAL (127.0.0.1), bukan lewat internet.

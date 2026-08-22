@@ -263,7 +263,8 @@ backup putus.
 | Log bilang `HARDLINK_AGENT_SECRET belum di-set` | ulangi Setup Bagian A langkah 2 (level `Machine`, PowerShell Administrator) |
 | Scan admin error `Unauthorized` | token di Vercel ≠ token di PC backup. Samakan, redeploy Vercel, `schtasks /run /tn "DramaApp Video"` |
 | Scan admin error `Unexpected token '<'` | tunnel balas HTML error, bukan JSON → cek service cloudflared |
-| Tunnel 530 walau service Running | pastikan `protocol: http2` ada di `config.yml` (QUIC/UDP 7844 sering diblokir) |
+| **Tunnel 530 (mode apa pun)** | **Penyebab tersering: QUIC (UDP 7844) diblokir jaringan.** Cek `logs\cloudflared.err.log`; kalau ada `failed to dial to edge with quic ... handshake did not complete in time`, itu dia. Obat: paksa `http2` (TCP 443). Mode QUICK sudah otomatis (`--protocol http2` di script); named tunnel: tambahkan `protocol: http2` di `config.yml`. **Gejalanya menipu** — tunnel terdaftar sehingga DNS-nya hidup, tapi Cloudflare membalas 530 ke semua orang, persis seperti "tunnel yatim". Terjadi 2026-08-22. |
+| Tunnel dapat alamat tapi tetap 530 | Mendapat ALAMAT bukan berarti TERSAMBUNG. Cari baris `Registered tunnel connection` di `logs\cloudflared.err.log` — kalau tidak ada, cloudflared belum berhasil menghubungi edge Cloudflare (lihat baris di atas). |
 | Folder drama tidak ketemu | taruh `.mp4` di `C:\Users\USER\Downloads\video\<drama-id>\`; drama-id huruf kecil + dash |
 
 ---

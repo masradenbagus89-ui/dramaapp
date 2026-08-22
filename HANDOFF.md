@@ -21,10 +21,19 @@ baru (tunnel yatim 530). Bagian lain masih apa adanya dari 2026-08-21, belum diu
 
 ## 🔴 SEDANG DIKERJAKAN: video mati berulang → dibikin PERMANEN
 
-> **ALAMAT VIDEO AKTIF (2026-08-22, siklus ke-4):** `https://patio-commerce-dark-dennis.trycloudflare.com`
-> Sementara. Mati lagi tiap PC backup restart — jangan dihafalkan, jangan dipercaya di sesi lain
-> tanpa diukur ulang. Alamat sebelumnya (`therefore-donna-crops-doctors`) mati saat owner restart
-> PC backup dan berubah jadi **tunnel yatim** (DNS hidup, HTTP 530) — lagi.
+> ## ✅ SEJAK 2026-08-22 SORE: ALAMAT VIDEO DIURUS OTOMATIS — JANGAN TEMPEL MANUAL LAGI
+>
+> **JANGAN mencari/menghafal alamat tunnel di berkas ini lagi.** Alamat berganti tiap PC backup
+> restart dan **dilaporkan sendiri** oleh PC backup ke database. Cara melihat alamat yang
+> benar-benar dipakai (login admin):
+> `https://dramaapp.vercel.app/api/agent/video-base` → lihat field `dipakai` + `sumber`.
+>
+> **JANGAN jalankan `start-dramaapp.ps1` lagi** dan **jangan menempel alamat ke env Vercel** —
+> keduanya cara lama. Env `NEXT_PUBLIC_VIDEO_BASE_URL` kini hanya cadangan; kalau baris DB ada,
+> env TIDAK dipakai.
+>
+> Video mati? Cukup di PC backup: `schtasks /run /tn "DramaApp Video"` lalu baca
+> `C:\Users\USER\pc-backup-agent\logs\start-video-services.log`.
 
 ### 🆕 2026-08-22 — alamat video jadi RUNTIME CONFIG (kode selesai, tinggal dipasang di PC backup)
 
@@ -72,16 +81,35 @@ Yang lolos sudah diperbaiki:
 Pemeriksaan kesiapan tunnel juga dilonggarkan dari "2xx/3xx" ke **HTTP < 500** — tunnel sehat
 yang membalas 404/405 di root dulu dianggap gagal sehingga alamatnya tak pernah dilaporkan.
 
-⏳ **Belum aktif** — dua syarat, keduanya belum terpenuhi per 2026-08-22:
-1. **Commit `0e30b4d` + `3649e40` belum di-push** → `POST /api/agent/video-base` masih balas **404**
-   di produksi (diukur langsung). Push terhenti karena sesi AI non-interaktif tak bisa memunculkan
-   jendela login GitHub — owner yang menjalankan `git push origin main` + `git push dramaku main`.
-2. **Script belum dipasang di PC backup** — [`pc-backup-agent/README.md`](./pc-backup-agent/README.md)
-   Bagian A + C + D (Bagian B named tunnel kini OPSIONAL).
+✅ **AKTIF & TERBUKTI JALAN — 2026-08-22 15:23.** Rantai lengkap berhasil untuk pertama kalinya:
+PC backup menjalankan tunnel sendiri lalu **melapor sendiri**, dan situs langsung memakai alamat
+baru **tanpa redeploy dan tanpa owner menyentuh Vercel**.
 
-Sampai keduanya beres, perilaku lama tetap berlaku lewat fallback env — **terbukti 2026-08-22:**
-owner restart PC backup, video mati lagi (siklus ke-4), dipulihkan dengan cara lama (tempel manual
-+ Redeploy tanpa cache) dan lulus 4 gerbang.
+Bukti dari log PC backup (`logs\start-video-services.log`):
+
+```
+15:22:42  caddy: C:\Users\USER\AppData\Local\...\WinGet\Packages\CaddyServer.Caddy_...\caddy.exe
+15:22:47  cloudflared: C:\Users\USER\cloudflared.exe
+15:23:00  tunnel balas HTTP 530 (belum nyambung ke Caddy), tunggu...
+15:23:04  tunnel terbukti dijawab server (HTTP < 500)
+15:23:06  [QUICK] alamat DILAPORKAN & tersimpan: https://inspection-says-without-sam...
+```
+
+Perhatikan 15:23:00 → 15:23:04: tunnel sempat 530 dan script **menolak melaporkannya** sampai
+benar-benar melayani. Tanpa penjaga itu, alamat "tunnel yatim" akan tersimpan dan video mati —
+persis jebakan yang menggigit 4 kali sebelumnya.
+
+Bukti dari produksi: `/api/teaser` **206** di 3 drama berbeda; 1.048.576 byte terunduh dengan
+`content-type: video/mp4` dan signature `ftypmp42`; bundle produksi **nol** alamat tunnel
+(artinya alamat memang datang dari database, bukan dari build).
+
+**Dua kegagalan pemasangan yang terjadi & sudah diperbaiki** (jangan terulang di PC lain):
+1. Tugas terjadwal jalan sebagai **SYSTEM** (`DESKTOP-...$`), yang **tidak** mewarisi PATH akun
+   user → `caddy.exe tidak ketemu`. Diperbaiki: `Cari-Exe` membaca PATH dari **registry**
+   (mesin + tiap profil user).
+2. `caddy` dipasang lewat **winget**, jadi binernya di dalam profil user dengan nama folder
+   bervensi. Diperbaiki: pencarian wildcard ke `WinGet\Links`, `WinGet\Packages\*`, `scoop\shims`,
+   dan root profil user (yang terakhir menangkap `cloudflared.exe`).
 
 **Status 2026-08-22 — siklus ke-3, PULIH & TERVERIFIKASI.** Owner lapor video tak bisa diputar.
 Diukur langsung: alamat yang dipakai produksi saat itu (`mac-carroll-flows-holly.trycloudflare.com`)

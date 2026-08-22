@@ -132,9 +132,25 @@ Salin `start-video-services.ps1` ke `C:\Users\USER\pc-backup-agent\`, lalu di
 **PowerShell sebagai Administrator**:
 
 ```powershell
+# 1) saat PC menyala
 schtasks /create /tn "DramaApp Video" /sc onstart /ru SYSTEM /rl HIGHEST /f `
   /tr "powershell -ExecutionPolicy Bypass -WindowStyle Hidden -File C:\Users\USER\pc-backup-agent\start-video-services.ps1"
+
+# 2) WAJIB juga: penjaga yang jalan tiap 15 menit
+schtasks /create /tn "DramaApp Video Watchdog" /sc minute /mo 15 /ru SYSTEM /rl HIGHEST /f `
+  /tr "powershell -ExecutionPolicy Bypass -WindowStyle Hidden -File C:\Users\USER\pc-backup-agent\start-video-services.ps1"
 ```
+
+> **Kenapa perlu DUA tugas.** Tugas `onstart` berjalan sangat awal saat Windows menyala —
+> sering **sebelum jaringan siap**. Kalau saat itu gagal, dulu tidak ada yang mencoba lagi
+> sampai ada manusia yang turun tangan; itu penyebab kegagalan nyata 2026-08-22.
+> Penjaga 15 menit membuat sistem **memperbaiki dirinya sendiri**: apa pun sebab kegagalannya,
+> video pulih dalam ≤15 menit tanpa disentuh.
+>
+> Aman dijalankan sesering itu karena script bersifat **idempoten** — kalau tunnel masih hidup
+> dan melayani, ia tidak menyentuh apa pun (log: `sudah sehat - tidak ada yang diubah`).
+> Dua instance yang berpapasan juga tidak bertabrakan: ada kunci antar-proses, yang kedua
+> keluar diam-diam.
 
 Uji tanpa perlu restart:
 

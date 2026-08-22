@@ -116,6 +116,74 @@ function Ambil-PathTerdaftar {
 
 $PATH_TERDAFTAR = Ambil-PathTerdaftar
 
+# Berkas penanda alamat yang TERAKHIR berhasil dilaporkan. Dipakai supaya script
+# ini aman dijalankan berulang: kalau semuanya masih sehat, ia tidak menyentuh
+# apa pun (idempoten). Tanpa penanda ini, tiap kali jalan ia akan membunuh tunnel
+# yang sehat dan membuat alamat baru - alamat jadi berganti terus-menerus.
+$PENANDA = Join-Path $LOG_DIR "alamat-terakhir.txt"
+
+# TLS 1.2 diset SEBELUM panggilan HTTPS pertama (PowerShell 5.1 tidak memakainya
+# secara default, dan Vercel menolak protokol lama).
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+# Laporkan alamat ke situs. Dipakai KETIGA jalur (sehat / NAMED / QUICK), jadi
+# didefinisikan di sini - sebelum pemanggilan pertama.
+function Lapor-Alamat([string]$alamat, [string]$mode) {
+  $LAPOR_URL = "$SITUS_URL/api/agent/video-base"
+  for ($i = 1; $i -le 3; $i++) {
+    try {
+      $resp = Invoke-RestMethod -Uri $LAPOR_URL -Method Post `
+        -Headers @{ "x-agent-secret" = $SECRET } `
+        -Body (ConvertTo-Json @{ baseUrl = $alamat }) `
+        -ContentType "application/json" -TimeoutSec 30
+      Catat "[$mode] alamat DILAPORKAN & tersimpan: $($resp.url) (updatedAt $($resp.updatedAt))"
+      # Penanda ditulis hanya SESUDAH laporan berhasil, supaya berkas ini tidak
+      # pernah menyimpan alamat yang belum tentu dipakai situs.
+      try { Set-Content -Path $PENANDA -Value $alamat -Encoding ASCII } catch { }
+      return $true
+    } catch {
+      # Pesan server ikut dicatat: 401 = secret beda antara Vercel dan PC ini,
+      # 400 = alamat ditolak allowlist, 404 = endpoint belum tayang (commit belum
+      # di-push). Tanpa ini penyebabnya cuma bisa ditebak.
+      $detail = $_.Exception.Message
+      try {
+        $stream = $_.Exception.Response.GetResponseStream()
+        $detail = (New-Object System.IO.StreamReader($stream)).ReadToEnd()
+      } catch { }
+      Catat "[$mode] percobaan lapor ke-$i gagal: $detail"
+      Start-Sleep -Seconds 5
+    }
+  }
+  return $false
+}
+
+# Tunggu jaringan benar-benar bisa dipakai.
+#
+# KENAPA PERLU: tugas /sc onstart dijalankan SANGAT AWAL saat Windows menyala -
+# sering sebelum kartu jaringan mendapat IP dan DNS siap. Akibatnya cloudflared
+# gagal membuat tunnel atau laporan ke situs gagal, lalu tidak ada yang mencoba
+# lagi sampai manusia turun tangan. Ini penyebab kegagalan boot 2026-08-22.
+function Tunggu-Jaringan([int]$maksDetik = 300) {
+  $lewat = 0
+  while ($lewat -lt $maksDetik) {
+    try {
+      $r = Invoke-WebRequest -Uri "$SITUS_URL/api/agent/video-base" -Method Post `
+        -Headers @{ "x-agent-secret" = "cek-jaringan" } `
+        -Body "{}" -ContentType "application/json" `
+        -TimeoutSec 10 -UseBasicParsing
+      return $true
+    } catch {
+      # 401/400 = server MENJAWAB (jaringan hidup) - itu yang kita cari.
+      # Yang berarti belum siap: tidak ada response sama sekali (DNS/koneksi gagal).
+      if ($_.Exception.Response) { return $true }
+    }
+    Start-Sleep -Seconds 10
+    $lewat += 10
+    Catat "jaringan belum siap, menunggu... ($lewat dtk)"
+  }
+  return $false
+}
+
 # Cari .exe berurutan: kandidat eksplisit -> PATH proses -> PATH registry
 # (mesin + tiap user) -> folder package manager di dalam profil user.
 function Cari-Exe([string[]]$kandidat, [string]$namaPerintah) {
@@ -153,6 +221,21 @@ function Cari-Exe([string[]]$kandidat, [string]$namaPerintah) {
 
 Catat "=== start-video-services dijalankan (user: $env:USERNAME) ==="
 
+# Kunci antar-proses. Script ini dipicu DUA tugas (saat boot + tiap 15 menit),
+# jadi dua instance bisa berpapasan - dan keduanya sama-sama mematikan lalu
+# menyalakan cloudflared, yang berakhir dengan alamat saling menimpa. Instance
+# kedua cukup keluar diam-diam; toh yang pertama sedang mengerjakan hal yang sama.
+$MUTEX = New-Object System.Threading.Mutex($false, "Global\DramaAppVideoServices")
+$PUNYA_KUNCI = $false
+try { $PUNYA_KUNCI = $MUTEX.WaitOne(0) } catch [System.Threading.AbandonedMutexException] {
+  # Instance sebelumnya mati tanpa melepas kunci - kunci tetap jadi milik kita.
+  $PUNYA_KUNCI = $true
+}
+if (-not $PUNYA_KUNCI) {
+  Catat "instance lain sedang berjalan -> keluar (bukan error)"
+  exit 0
+}
+
 # --- 1. Cek semua prasyarat DULU, sebelum ada yang di-start ---
 Catat "folder PATH terdaftar yang ikut dicari: $($PATH_TERDAFTAR.Count)"
 
@@ -188,6 +271,45 @@ if (-not $SECRET) {
 Catat "node : $NODE_EXE"
 Catat "caddy: $CADDY_EXE"
 Catat "secret terbaca (panjang $($SECRET.Length) karakter)"   # nilainya JANGAN pernah dicatat
+
+# --- 1b. Tunggu jaringan, lalu cek apakah semuanya SUDAH sehat ---
+if (-not (Tunggu-Jaringan 300)) {
+  Berhenti "jaringan tidak tersedia setelah 5 menit. Tugas berjadwal akan mencoba lagi nanti."
+}
+Catat "jaringan siap"
+
+# Kalau tunnel yang tercatat masih hidup DAN masih melayani, JANGAN sentuh apa pun -
+# cukup pastikan situs tahu alamatnya, lalu keluar. Ini yang membuat script aman
+# dijalankan berulang (tiap beberapa menit) tanpa mengganti-ganti alamat.
+function Cek-Sudah-Sehat {
+  if (-not (Test-Path $PENANDA)) { return $null }
+  $alamat = (Get-Content $PENANDA -Raw -ErrorAction SilentlyContinue)
+  if ($alamat) { $alamat = $alamat.Trim() }
+  if (-not $alamat) { return $null }
+  if (-not (Get-Process cloudflared -ErrorAction SilentlyContinue)) { return $null }
+  if (-not (Get-NetTCPConnection -LocalPort 8088 -State Listen -ErrorAction SilentlyContinue)) { return $null }
+  $kode = 0
+  try {
+    $r = Invoke-WebRequest -Uri "$alamat/" -Method Get -TimeoutSec 15 -UseBasicParsing
+    $kode = [int]$r.StatusCode
+  } catch {
+    if ($_.Exception.Response) { $kode = [int]$_.Exception.Response.StatusCode }
+  }
+  if ($kode -ge 200 -and $kode -lt 500) { return $alamat }
+  return $null
+}
+
+$SEHAT = Cek-Sudah-Sehat
+if ($SEHAT) {
+  Catat "sudah sehat - tunnel lama masih melayani: $SEHAT (tidak ada yang diubah)"
+  # Tetap dilaporkan ulang: murah, dan menyembuhkan kasus tunnel sehat tapi alamat
+  # di database sempat salah/hilang.
+  if (Lapor-Alamat $SEHAT "SEHAT") {
+    Catat "=== SELESAI - tidak ada yang perlu diperbaiki ==="
+    exit 0
+  }
+  Catat "PERINGATAN: tunnel sehat tapi laporan gagal. Lanjut membangun ulang."
+}
 
 # --- 2. Bebaskan port kalau ada sisa proses dari sesi sebelumnya ---
 foreach ($port in 8088, 8089) {
@@ -244,37 +366,6 @@ for ($i = 0; $i -lt 10; $i++) {
 }
 Catat "port 8089 (agent): $(if ($AGENT_OK) { 'HIDUP' } else { 'MATI - cek logs\agent.err.log' })"
 Catat "port 8088 (Caddy): $(if ($CADDY_OK) { 'HIDUP' } else { 'MATI - cek logs\caddy.err.log' })"
-
-# --- 6. Laporkan alamat ke situs (dipakai KEDUA mode) ---
-# TLS 1.2 diset di sini, sebelum panggilan HTTPS pertama (PowerShell 5.1 tidak
-# memakainya secara default).
-[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-
-function Lapor-Alamat([string]$alamat, [string]$mode) {
-  $LAPOR_URL = "$SITUS_URL/api/agent/video-base"
-  for ($i = 1; $i -le 3; $i++) {
-    try {
-      $resp = Invoke-RestMethod -Uri $LAPOR_URL -Method Post `
-        -Headers @{ "x-agent-secret" = $SECRET } `
-        -Body (ConvertTo-Json @{ baseUrl = $alamat }) `
-        -ContentType "application/json" -TimeoutSec 30
-      Catat "[$mode] alamat DILAPORKAN & tersimpan: $($resp.url) (updatedAt $($resp.updatedAt))"
-      return $true
-    } catch {
-      # Pesan server ikut dicatat: 401 = secret beda antara Vercel dan PC ini,
-      # 400 = alamat ditolak allowlist, 404 = endpoint belum tayang (commit belum
-      # di-push). Tanpa ini penyebabnya cuma bisa ditebak.
-      $detail = $_.Exception.Message
-      try {
-        $stream = $_.Exception.Response.GetResponseStream()
-        $detail = (New-Object System.IO.StreamReader($stream)).ReadToEnd()
-      } catch { }
-      Catat "[$mode] percobaan lapor ke-$i gagal: $detail"
-      Start-Sleep -Seconds 5
-    }
-  }
-  return $false
-}
 
 # --- 7. Tunnel: mode NAMED (service) atau mode QUICK (jalankan sendiri) ---
 $svc = Get-Service -Name cloudflared -ErrorAction SilentlyContinue

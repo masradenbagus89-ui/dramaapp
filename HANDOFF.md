@@ -5,7 +5,9 @@
 >
 > **AI:** tiap kali ada perbaikan / deploy / keputusan — **perbarui berkas ini di langkah terakhir**, sebelum bilang selesai. Jangan tumpuk sejarah panjang di sini; pindahkan yang lama ke `NEXT-SESSION.md`.
 
-**Terakhir diisi:** 2026-08-20 malam
+**Terakhir diisi:** 2026-08-22 — video mati lagi (**siklus ke-3**) lalu **dipulihkan & diverifikasi
+ujung-ke-ujung**; alamat tunnel aktif diperbarui, tanda tanya `/_agent/health` terjawab, + 1 pelajaran
+baru (tunnel yatim 530). Bagian lain masih apa adanya dari 2026-08-21, belum diukur ulang.
 
 ## Status sekarang (1 menit)
 
@@ -17,43 +19,61 @@
   (a) **Tahap PRODUK 1-7** = yang dipakai berkas ini. Tahap 1-3 adalah rencana "platform streaming modern gabungan Melolo + IDLIX + Netflix" — SUDAH SELESAI SEMUA: Tahap 1 `1af6e12` (16 Agt), Tahap 2 `00f0d2e` (17 Agt), Tahap 3 `a8ab69e` (17 Agt). Tahap 4-7 kelanjutannya.
   (b) **Tahap INFRASTRUKTUR 1-8** di [`PLAN-MAPPING.md`](./PLAN-MAPPING.md) = peta lama soal setup/tunnel/deploy. Di situ "Tahap 7" berarti *named tunnel*, BUKAN kode pemulihan. Isinya belum diperbarui sejak Juli.
 
-## 🔴 SEDANG DIKERJAKAN: video mati lagi 2026-08-20 → dibikin PERMANEN
+## 🔴 SEDANG DIKERJAKAN: video mati berulang → dibikin PERMANEN
 
-**Status 2026-08-20 MALAM (terbaru — menggantikan status sore di bawah).** Owner lapor video
-tak bisa diputar. Diukur langsung: tunnel sore tadi `written-coated-drawings-joe.trycloudflare.com`
-sudah **LENYAP** — `nslookup` balas `Non-existent domain`, `curl` status 000 (sedangkan
-`cloudflare.com` balas 200 dari server yang sama, jadi bukan jaringan kami). Persis yang
-diprediksi: quick tunnel mati + ganti alamat tiap PC backup restart.
+> **ALAMAT VIDEO AKTIF (2026-08-22):** `https://therefore-donna-crops-doctors.trycloudflare.com`
+> Sementara. Mati lagi tiap PC backup restart — jangan dihafalkan, jangan dipercaya di sesi lain
+> tanpa diukur ulang.
 
-Owner menjalankan `start-dramaapp.ps1`. Langkah **[1/6]-[4/6] SUKSES**, alamat baru
-`https://proxy-marks-isolation-subjects.trycloudflare.com` — diuji dari luar: root **200**,
-`/diremehkan-sebagai-gadis-desa-ternyata-dia-legenda-terkuat/2.mp4` **200** (berkasnya ADA).
-Langkah **[5/6] GAGAL 403 Forbidden** — `VERCEL_TOKEN` mati, jadi jalur otomatis buntu. Alamat baru
-akhirnya masuk ke env lewat jalur manual (Settings → Environment Variables → Redeploy).
+**Status 2026-08-22 — siklus ke-3, PULIH & TERVERIFIKASI.** Owner lapor video tak bisa diputar.
+Diukur langsung: alamat yang dipakai produksi saat itu (`mac-carroll-flows-holly.trycloudflare.com`)
+sudah **LENYAP** (`nslookup` → `Non-existent domain`, `curl` → 000), dan `/api/teaser` balas **502**
+= `app/api/teaser/route.ts:62` "Sumber video sedang mati" — bukti dari sisi **server Vercel**, bukan
+cuma jaringan lokal. Situs sendiri sehat (`/beranda` 200).
 
-✅ **RANTAI VIDEO PULIH — diverifikasi ujung-ke-ujung 2026-08-20 malam.** Alamat yang dipakai
-produksi = `proxy-marks-isolation-subjects.trycloudflare.com`; ambil 1 MB pertama dari
-`/diremehkan-.../2.mp4` balas **206** `video/mp4` dan isinya diawali `ftypmp42` (tanda tangan MP4
-asli, bukan halaman error yang menyamar). 206 = server dukung seek, syarat player bisa memutar.
+Pemulihan: `start-dramaapp.ps1` di PC backup ([5/6] gagal 403 seperti biasa) → alamat baru ditempel
+manual ke env + **Redeploy tanpa build cache**. Diverifikasi **4 gerbang, semua LULUS**:
 
-⚠️ Alamat ini **tetap sementara** — mati lagi saat PC backup restart. Selama masih quick tunnel,
-tiap restart = ulangi `start-dramaapp.ps1` + tempel manual (karena [5/6] tetap 403).
+| Gerbang | Hasil |
+|---|---|
+| Bundle produksi memuat alamat yang benar | ✅ `therefore-donna-crops-doctors` (dicocokkan **persis**, bukan sekadar "bukan yang lama") |
+| DNS alamat itu | ✅ hidup |
+| `/api/teaser` (server Vercel → sumber) | ✅ **206** (bukan 502) |
+| Isi berkas `1.mp4` | ✅ **206** `video/mp4`, signature **`ftypmp42`** = MP4 asli, bukan halaman error menyamar |
+
+Diuji juga langsung ke tunnel: **8 dari 10** drama pertama punya `1.mp4` sah. Yang 404:
+`28-years-later-the-bone-temple`, `avengers-doomsday` — memang belum ada berkasnya (bukan masalah
+tunnel). Jangan pakai keduanya sebagai bahan uji.
+
+✅ **`/_agent/health` TERJAWAB — kini balas 200** `{"ok":true,"videoRoot":"C:\\Users\\USER\\Downloads\\video","port":8089}`.
+Dugaan lama "agent tak terjangkau" (404 pada 2026-08-20) **GUGUR** — itu gejala tunnel yang sudah
+mati, bukan soal agent.
+❓ **Masih terbuka:** apakah `hardlink-agent.js` di PC backup sudah versi baru. Jalur `/health`
+(`hardlink-agent.js:243`) cuma balas `ok/videoRoot/port` **tanpa menyebut versi**, jadi 200 TIDAK
+bisa dipakai menyimpulkan itu. Hanya memengaruhi "Scan & auto-hardlink", bukan pemutaran video.
+
+⚠️ **PELAJARAN BARU 2026-08-22 — "tunnel yatim" balas 530.** Owner menjalankan `start-dramaapp.ps1`
+**dua kali**, jadi dua alamat tercetak di layar. Run kedua membunuh cloudflared run pertama
+(`start-dramaapp.ps1:81`), **tapi catatan DNS-nya tertinggal** → alamat run pertama tetap resolve
+di DNS namun balas **530** (nama terdaftar, tak ada yang menjawab di ujung). Menempel alamat itu =
+video tetap mati dengan sebab yang sulit dilacak, karena cek DNS saja akan terlihat "hijau".
+**Aturan: selalu pakai alamat dari run TERAKHIR, dan verifikasi `curl` root balas 200 — bukan cuma
+DNS.** Jangan jalankan script lagi setelah alamatnya ditempel ke Vercel; alamat itu langsung basi.
 
 ⚠️ **Koreksi catatan lama:** "utang `VERCEL_TOKEN` GUGUR" itu **baru berlaku SESUDAH named tunnel
 terpasang**. Selama masih quick tunnel, token mati = tiap restart PC owner harus tempel alamat
-manual. Hari ini utang itu menggigit.
+manual. Sudah menggigit 3 kali.
 
-❓ **Temuan belum tuntas:** `/_agent/health` lewat tunnel baru balas **404**, padahal
-`pc-backup-agent/hardlink-agent.js:243` punya jalur `/health` dan `Caddyfile:13` mem-proxy
-`/_agent/*`. Dugaan: versi agent atau Caddyfile di PC backup masih lama — **belum diverifikasi**.
-Tidak menghalangi memutar video; berpotensi mengganggu "Scan & auto-hardlink".
+<details><summary>Riwayat siklus 1-2 (2026-08-20, usang — jangan dipakai sebagai status)</summary>
 
-<details><summary>Status sore 2026-08-20 (sudah usang, disimpan sebagai riwayat)</summary>
-
-Tunnel `written-coated-drawings-joe.trycloudflare.com` balas 200, `/_agent/health` balas
-`{"ok":true}`, `guru-misterius-.../1.mp4` balas 200. Jadi 404 yang sempat terlihat bukan tunnel
-mati, melainkan berkas dengan nama yang dicari memang tidak ada di folder drama itu (kasus
-"Over Your Dead Body" di "Belum selesai" no.1).
+- **Sore:** tunnel `written-coated-drawings-joe` balas 200, `/_agent/health` `{"ok":true}`,
+  `guru-misterius-.../1.mp4` 200. Jadi 404 yang sempat terlihat bukan tunnel mati, melainkan
+  berkas yang dicari memang tak ada di folder drama itu (kasus "Over Your Dead Body",
+  lihat "Belum selesai" no.1).
+- **Malam:** alamat sore itu lenyap → dipulihkan ke `proxy-marks-isolation-subjects`,
+  diverifikasi 206 `video/mp4` + `ftypmp42`.
+- Sesudah itu sempat berganti lagi ke `mac-carroll-flows-holly` (tak tercatat di sesinya) —
+  dan itu pun sudah mati per 2026-08-22.
 
 </details>
 
@@ -88,6 +108,7 @@ sudah TERBUKTI, bukan cuma lulus tes lokal.
 
 | Kapan | Apa | Hasil yang kamu rasakan |
 |---|---|---|
+| 2026-08-22 | **Video mati lagi (siklus ke-3) → dipulihkan & dibuktikan 4 gerbang** | Alamat video sebelumnya sudah lenyap dari internet; server Vercel sendiri balas 502 saat mencoba menjangkaunya. Dipulihkan ke `therefore-donna-crops-doctors`. Ketahuan juga jebakan baru: menjalankan `start-dramaapp.ps1` dua kali meninggalkan **"tunnel yatim"** yang DNS-nya masih hidup tapi balas **530** — kalau alamat itu yang ditempel, video tetap mati padahal semua "kelihatan hijau". Sekarang tercatat supaya tak terulang. Bonus: tanda tanya `/_agent/health` sejak 20 Agt terjawab (kini **200**, dugaan lama gugur) |
 | 2026-08-20 malam | **Video mati lagi → dipulihkan, DAN 5 commit yang tertahan akhirnya rilis** | Sesudah PC backup restart, alamat video sore tadi LENYAP (`nslookup` balas "Non-existent domain") — bukan dugaan, diukur langsung. Dipulihkan lewat `start-dramaapp.ps1` + tempel alamat manual ke Vercel (langkah [5/6] gagal 403). Terbukti jalan: **206 `video/mp4`**. Sekaligus 5 commit yang menumpuk (`8dd6f22`..`4954817`) di-dual-push sesudah lolos 265 tes + tsc 0 + build + scan secret → perbaikan "layar hitam" kini **TAYANG**, jadi kalau sumber mati lagi penonton melihat pesan + tombol **Coba lagi**, bukan layar hitam |
 | 2026-08-20 | **Diagnosa "Over Your Dead Body" tak bisa diputar + 3 bug hardlink-agent diperbaiki** | Penyebabnya bukan tunnel mati: berkas di PC backup bernama `Over-Your-Dead-Body.mp4`, sedangkan player selalu minta `1.mp4` → 404. Agent lama tak bisa membereskannya DAN tetap lapor "berhasil" walau nol berkas dibuat. Sekarang: berkas tanpa nomor jadi episode 1, berkas `.mkv` dilaporkan "perlu dikonversi", nol hasil = GAGAL dengan sebab jelas. Dikunci 10 tes (`tests/hardlink-agent.test.ts`). **Masih perlu 1 langkahmu di PC backup — lihat "Belum selesai" no.1** |
 | 2026-08-20 | **Penjaga permanen Tahap 7** (`npm run e2e:tahap7`) | Satu perintah untuk memastikan jalur "lupa password" masih hidup di produksi. Membuat 1 akun uji lalu MENGHAPUSNYA sendiri (bahkan kalau uji gagal di tengah). Dipisah dari `npm test` supaya tes harian tetap cepat & tak menyentuh database |
@@ -120,8 +141,8 @@ sudah TERBUKTI, bukan cuma lulus tes lokal.
    ```powershell
    New-Item -ItemType HardLink -Path "C:\Users\USER\Downloads\video\over-your-dead-body\1.mp4" -Target "C:\Users\USER\Downloads\video\over-your-dead-body\Over-Your-Dead-Body.mp4"
    ```
-   Lalu **salin `pc-backup-agent/hardlink-agent.js` versi baru** ke `C:\Users\USER\pc-backup-agent\` + `schtasks /run /tn "DramaApp Video"` supaya tombol Scan bisa menangani sendiri lain kali. **Bukti tambahan 2026-08-20 malam:** `/_agent/health` lewat tunnel baru balas **404**, padahal `hardlink-agent.js:243` punya jalur `/health` dan `Caddyfile:13` mem-proxy `/_agent/*` → menguatkan dugaan versi agent di PC backup memang masih lama (belum diverifikasi langsung). Rincian: [`docs/lintasai/rencana/2026-08-20-video-nama-berkas-1mp4.md`](./docs/lintasai/rencana/2026-08-20-video-nama-berkas-1mp4.md).
-2. ~~**Hidupkan video lagi (Tahap 1)**~~ — **PULIH, terakhir 2026-08-20 malam.** Alamat aktif sekarang `https://proxy-marks-isolation-subjects.trycloudflare.com`; yang lama (`written-coated-...`) sudah **LENYAP**. Diverifikasi ujung-ke-ujung: `/diremehkan-.../2.mp4` balas **206** `video/mp4`, isi diawali `ftypmp42`. ⚠️ **Tetap sementara** — mati lagi tiap PC backup restart, dan karena [5/6] balas 403 alamat barunya harus ditempel **manual** ke env Vercel + **Redeploy tanpa build cache**. Berhenti berulang hanya sesudah Tahap 2 (no.3).
+   Lalu **salin `pc-backup-agent/hardlink-agent.js` versi baru** ke `C:\Users\USER\pc-backup-agent\` + `schtasks /run /tn "DramaApp Video"` supaya tombol Scan bisa menangani sendiri lain kali. **Koreksi 2026-08-22:** "bukti tambahan" versi agent lama itu **tidak sahih** — `/_agent/health` sekarang balas **200**, jadi 404 waktu itu cuma gejala tunnel yang mati. Versi agent di PC backup **tetap belum diketahui** (`/health` tidak menyebut versi), jadi menyalin berkas versi baru masih layak dilakukan. Rincian: [`docs/lintasai/rencana/2026-08-20-video-nama-berkas-1mp4.md`](./docs/lintasai/rencana/2026-08-20-video-nama-berkas-1mp4.md).
+2. ~~**Hidupkan video lagi (Tahap 1)**~~ — **PULIH, terakhir 2026-08-22 (siklus ke-3).** Alamat aktif sekarang `https://therefore-donna-crops-doctors.trycloudflare.com`; `proxy-marks-isolation-subjects` dan `mac-carroll-flows-holly` sudah **LENYAP**. Diverifikasi 4 gerbang (bundle produksi cocok persis · DNS hidup · `/api/teaser` **206** · signature `ftypmp42`) — rinciannya di seksi "SEDANG DIKERJAKAN" di atas. ⚠️ **Tetap sementara** — mati lagi tiap PC backup restart, dan karena [5/6] balas 403 alamat barunya harus ditempel **manual** ke env Vercel + **Redeploy tanpa build cache**. Berhenti berulang hanya sesudah Tahap 2 (no.3).
 3. 🔴 **Pasang alamat permanen + autostart (Tahap 2, ~1 jam).** Urutannya: (a) `amasyaforum.com` → Cloudflare, ganti nameserver di Namecheap; (b) `cloudflared` named tunnel + `service install`; (c) salin `start-video-services.ps1` ke PC backup + `schtasks /sc onstart`; (d) `powercfg` cegah sleep; (e) env Vercel = `https://video.amasyaforum.com` (terakhir kali). **Perintah lengkap ada di [`pc-backup-agent/README.md`](./pc-backup-agent/README.md).** Sesudah ini tidak perlu buka PowerShell lagi selamanya.
 4. ~~**Uji manual Tahap 7 dari sisi penonton**~~ — **SELESAI 2026-08-20.** Owner sudah mencoba sendiri (berhasil ganti password hanya bermodal kode) DAN uji end-to-end mesin ke API produksi lulus 19/19. Tak ada sisa pekerjaan di Tahap 7.
 5. **Isi 3 env Playly di Vercel** → Settings → Environment Variables: `DASHBOARD_API_URL=https://playly-dashboard.vercel.app/api/videos`, `DASHBOARD_API_KEY_HEADER=X-Playly-Key`, `DASHBOARD_API_KEY=<kunci dari rekan>`. Lalu **Redeploy**. Cek berhasil: `/admin` → Dashboard → kartu Playly berubah dari "Belum diatur" jadi "Tersambung".
@@ -137,6 +158,20 @@ sudah TERBUKTI, bukan cuma lulus tes lokal.
 12. **Tahap 3 (ditunda, atas keputusanmu):** pindah video ke Cloudflare R2 supaya PC backup
     boleh mati total. Biaya ~Rp22rb/bln per 100 GB, egress gratis. Catatan lengkap di
     [`docs/lintasai/rencana/2026-08-20-video-otomatis-tanpa-powershell.md`](./docs/lintasai/rencana/2026-08-20-video-otomatis-tanpa-powershell.md).
+13. 🔑 **Pasang 2FA di akun Vercel owner — BELUM aktif per 2026-08-21, menunggu owner.** Vercel
+    menawarkannya lewat layar "Secure Your Account with 2FA"; akun inilah yang menguasai domain,
+    tombol Redeploy, dan Environment Variables (alamat video + `DASHBOARD_API_KEY`). Cara:
+    ketik sendiri `https://vercel.com/account/settings/authentication` (jangan lewat link kiriman —
+    cegah phishing) → Enable → **Authenticator App** → scan QR → ketik 6 angka → **simpan recovery
+    codes di password manager / di LUAR folder repo** (repo ini publik; `.gitignore` sudah dipasangi
+    pola `*recovery-codes*.txt` sebagai jaring cadangan, terbukti tidak menelan `lib/recovery-code.ts`).
+    **Efek ke pekerjaan lain:** no.5 (isi env Playly) dan no.8 opsi (b) (buat token baru di
+    `vercel.com/account/tokens`) sama-sama lewat dashboard → sesudah 2FA aktif, keduanya butuh HP
+    owner di tangan. Deploy otomatis dari GitHub **tidak** terpengaruh. Bukti sudah aktif: logout →
+    login lagi, harus diminta 6 angka. Dasar: <https://vercel.com/docs/two-factor-authentication>.
+    ❓ Belum terverifikasi: apakah access token lama tetap sah setelah 2FA menyala — dokumentasi 2FA
+    Vercel tidak menyebut token sama sekali. Tidak menghalangi apa pun sekarang (token itu memang
+    sudah mati 403 sejak 2026-08-19, lihat no.8).
 
 ## Performance /beranda: SUDAH SEHAT (diukur 2026-08-20, jangan diulang)
 
@@ -189,6 +224,12 @@ halaman. Tidak sepadan. Kalau nanti ada yang mengusulkan ini lagi, tunjukkan tab
   dipagari `.gitignore`, jangan dilonggarkan.
 - **Jangan jalankan `start-dramaapp.ps1` (cara lama) bersamaan dengan named tunnel** —
   dua cloudflared akan berebut port 8088.
+- **Jangan jalankan `start-dramaapp.ps1` dua kali, dan jangan menjalankannya lagi sesudah
+  alamatnya ditempel ke Vercel.** Tiap run memberi alamat baru DAN membunuh yang lama, tapi
+  catatan DNS alamat lama tertinggal → jadi "tunnel yatim" yang balas **530**. Akibatnya cek
+  DNS terlihat hijau padahal sumbernya mati. Kalau terlanjur dijalankan berkali-kali: pakai
+  alamat dari run **TERAKHIR**, dan pastikan `curl <alamat>/` balas **200** — jangan berhenti
+  di cek DNS. (Terjadi 2026-08-22.)
 
 ## Berkas terkait
 

@@ -13,6 +13,12 @@ tsconfig.tsbuildinfo
 data/twofa.json
 # Cookie jar hasil uji curl — berisi token sesi admin yang masih hidup.
 cookies.txt
+# Recovery code / kode cadangan 2FA akun luar (Vercel, GitHub) = kunci serep akun.
+# Tempat simpan yang BENAR: password manager atau di luar folder ini — pola ini cuma jaring
+# kalau berkasnya tak sengaja tercecer di sini. Sengaja dibatasi .txt + "codes" jamak supaya
+# tidak menelan kode fitur kode-pemulihan penonton (lib/recovery-code.ts, tests/, docs/).
+*recovery-codes*.txt
+*kode-pemulihan*.txt
 # Kredensial cloudflared named tunnel — siapa pun yang punya berkas ini bisa
 # membajak tunnel video. Yang boleh di-commit hanya cloudflared-config.example.yml.
 pc-backup-agent/config.yml

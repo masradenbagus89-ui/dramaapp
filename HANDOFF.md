@@ -21,9 +21,10 @@ baru (tunnel yatim 530). Bagian lain masih apa adanya dari 2026-08-21, belum diu
 
 ## 🔴 SEDANG DIKERJAKAN: video mati berulang → dibikin PERMANEN
 
-> **ALAMAT VIDEO AKTIF (2026-08-22):** `https://therefore-donna-crops-doctors.trycloudflare.com`
+> **ALAMAT VIDEO AKTIF (2026-08-22, siklus ke-4):** `https://patio-commerce-dark-dennis.trycloudflare.com`
 > Sementara. Mati lagi tiap PC backup restart — jangan dihafalkan, jangan dipercaya di sesi lain
-> tanpa diukur ulang.
+> tanpa diukur ulang. Alamat sebelumnya (`therefore-donna-crops-doctors`) mati saat owner restart
+> PC backup dan berubah jadi **tunnel yatim** (DNS hidup, HTTP 530) — lagi.
 
 ### 🆕 2026-08-22 — alamat video jadi RUNTIME CONFIG (kode selesai, tinggal dipasang di PC backup)
 
@@ -52,9 +53,16 @@ sudah dibuang. Efeknya `/beranda` & `/discover` **tetap ISR 60 detik** — dikon
 Bukti: **281 tes lulus** (naik dari 265) · `tsc --noEmit` exit 0 · `next build` sukses ·
 route `/api/agent/video-base` terdaftar di `app-path-routes-manifest.json`.
 
-⏳ **Belum aktif sampai owner memasangnya di PC backup** — langkahnya di
-[`pc-backup-agent/README.md`](./pc-backup-agent/README.md) Bagian A + C + D (Bagian B named
-tunnel kini OPSIONAL). Sampai itu dilakukan, perilaku lama tetap berlaku lewat fallback env.
+⏳ **Belum aktif** — dua syarat, keduanya belum terpenuhi per 2026-08-22:
+1. **Commit `0e30b4d` + `3649e40` belum di-push** → `POST /api/agent/video-base` masih balas **404**
+   di produksi (diukur langsung). Push terhenti karena sesi AI non-interaktif tak bisa memunculkan
+   jendela login GitHub — owner yang menjalankan `git push origin main` + `git push dramaku main`.
+2. **Script belum dipasang di PC backup** — [`pc-backup-agent/README.md`](./pc-backup-agent/README.md)
+   Bagian A + C + D (Bagian B named tunnel kini OPSIONAL).
+
+Sampai keduanya beres, perilaku lama tetap berlaku lewat fallback env — **terbukti 2026-08-22:**
+owner restart PC backup, video mati lagi (siklus ke-4), dipulihkan dengan cara lama (tempel manual
++ Redeploy tanpa cache) dan lulus 4 gerbang.
 
 **Status 2026-08-22 — siklus ke-3, PULIH & TERVERIFIKASI.** Owner lapor video tak bisa diputar.
 Diukur langsung: alamat yang dipakai produksi saat itu (`mac-carroll-flows-holly.trycloudflare.com`)

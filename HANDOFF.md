@@ -103,7 +103,41 @@ Bukti dari produksi: `/api/teaser` **206** di 3 drama berbeda; 1.048.576 byte te
 `content-type: video/mp4` dan signature `ftypmp42`; bundle produksi **nol** alamat tunnel
 (artinya alamat memang datang dari database, bukan dari build).
 
-**Dua kegagalan pemasangan yang terjadi & sudah diperbaiki** (jangan terulang di PC lain):
+### 🔴 PELAJARAN TERPENTING 2026-08-22: QUIC diblokir → 530 yang menyamar jadi "tunnel yatim"
+
+Sebagian besar waktu seharian itu habis karena **gejalanya berbohong**. Tunnel selalu punya
+DNS hidup dan setiap langkah pemasangan melapor sukses, tapi Cloudflare membalas **530** ke
+semua orang. Penyebabnya baru terbaca dari `logs\cloudflared.err.log`:
+
+```
+ERR Failed to dial a quic connection error="failed to dial to edge with quic:
+    timeout: handshake did not complete in time"
+```
+
+**Jaringan PC backup memblokir QUIC (UDP 7844)** — protokol bawaan cloudflared ke edge.
+Tunnel jadi *terdaftar* (DNS hidup) tapi tidak pernah *tersambung*. Dari luar, gejalanya
+identik dengan tunnel yatim, jadi berulang kali salah didiagnosis.
+
+**Obatnya:** `--protocol http2` (TCP 443). Sudah dipasang di script untuk mode QUICK.
+Untuk named tunnel nanti: `protocol: http2` di `config.yml`.
+
+**Cara mendeteksi cepat lain kali** — jangan tebak dari luar, baca dari cloudflared sendiri:
+baris **`Registered tunnel connection`** di `logs\cloudflared.err.log` = benar-benar tersambung.
+Kalau tidak ada baris itu, tunnel belum melayani berapa pun DNS-nya terlihat hidup.
+Script sekarang menunggu baris itu dan mencatatnya.
+
+⚠️ **Mendapat ALAMAT ≠ TERSAMBUNG.** cloudflared mencetak alamat lebih dulu, baru menghubungi
+edge. Jangan pernah menyimpulkan sehat hanya karena alamat sudah muncul.
+
+**Bukti berhasil (2026-08-22 18:35):** log memuat `TERSAMBUNG ke edge` + `TERBUKTI
+ujung-ke-ujung`; dari produksi `/api/teaser` **206 di 5 dari 5 drama**, 1.048.576 byte
+`video/mp4` `ftypmp42`; tunnel diuji dari jaringan lain balas **200** (bukan 530).
+
+**Empat kegagalan pemasangan yang terjadi & sudah diperbaiki** (jangan terulang di PC lain):
+0. **QUIC diblokir** (di atas) — akar yang sebenarnya.
+0b. **`Invoke-WebRequest -Headers @{Range=...}` dilarang di PowerShell 5.1** (`ArgumentException`,
+   tanpa `.Response` → terbaca "kode 0"). Ini membuat penjaga 15 menit selalu memvonis rantai
+   rusak lalu **membangun ulang tunnel terus-menerus**. Wajib `HttpWebRequest.AddRange`.
 1. Tugas terjadwal jalan sebagai **SYSTEM** (`DESKTOP-...$`), yang **tidak** mewarisi PATH akun
    user → `caddy.exe tidak ketemu`. Diperbaiki: `Cari-Exe` membaca PATH dari **registry**
    (mesin + tiap profil user).

@@ -59,8 +59,15 @@ $CLOUDFLARED_CANDIDATES = @(
   "$AGENT_DIR\cloudflared.exe",
   "C:\Program Files (x86)\cloudflared\cloudflared.exe"
 )
-# Alamat situs yang akan diberi tahu alamat tunnel baru (mode QUICK).
+# Alamat situs yang akan diberi tahu alamat tunnel (kedua mode).
 $SITUS_URL = "https://dramaapp.vercel.app"
+# Alamat PERMANEN named tunnel. Diisi saat Setup Bagian B dikerjakan.
+# WAJIB diisi begitu pindah ke named tunnel: alamat yang tersimpan di database
+# SELALU menang atas env var, dan tidak pernah kedaluwarsa. Kalau dibiarkan kosong,
+# mode NAMED tidak melapor apa-apa sehingga situs TETAP memakai alamat quick tunnel
+# lama yang sudah lenyap - padahal env var, status service, dan curl ke domain baru
+# semuanya terlihat sehat. Kerusakan senyap; ditemukan audit 2026-08-22.
+$NAMED_URL = ""
 # ====================
 
 $ErrorActionPreference = "Stop"
@@ -174,17 +181,63 @@ for ($i = 0; $i -lt 10; $i++) {
 Catat "port 8089 (agent): $(if ($AGENT_OK) { 'HIDUP' } else { 'MATI - cek logs\agent.err.log' })"
 Catat "port 8088 (Caddy): $(if ($CADDY_OK) { 'HIDUP' } else { 'MATI - cek logs\caddy.err.log' })"
 
-# --- 6. Tunnel: mode NAMED (service) atau mode QUICK (jalankan + lapor) ---
+# --- 6. Laporkan alamat ke situs (dipakai KEDUA mode) ---
+# TLS 1.2 diset di sini, sebelum panggilan HTTPS pertama (PowerShell 5.1 tidak
+# memakainya secara default).
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+function Lapor-Alamat([string]$alamat, [string]$mode) {
+  $LAPOR_URL = "$SITUS_URL/api/agent/video-base"
+  for ($i = 1; $i -le 3; $i++) {
+    try {
+      $resp = Invoke-RestMethod -Uri $LAPOR_URL -Method Post `
+        -Headers @{ "x-agent-secret" = $SECRET } `
+        -Body (ConvertTo-Json @{ baseUrl = $alamat }) `
+        -ContentType "application/json" -TimeoutSec 30
+      Catat "[$mode] alamat DILAPORKAN & tersimpan: $($resp.url) (updatedAt $($resp.updatedAt))"
+      return $true
+    } catch {
+      # Pesan server ikut dicatat: 401 = secret beda antara Vercel dan PC ini,
+      # 400 = alamat ditolak allowlist, 404 = endpoint belum tayang (commit belum
+      # di-push). Tanpa ini penyebabnya cuma bisa ditebak.
+      $detail = $_.Exception.Message
+      try {
+        $stream = $_.Exception.Response.GetResponseStream()
+        $detail = (New-Object System.IO.StreamReader($stream)).ReadToEnd()
+      } catch { }
+      Catat "[$mode] percobaan lapor ke-$i gagal: $detail"
+      Start-Sleep -Seconds 5
+    }
+  }
+  return $false
+}
+
+# --- 7. Tunnel: mode NAMED (service) atau mode QUICK (jalankan sendiri) ---
 $svc = Get-Service -Name cloudflared -ErrorAction SilentlyContinue
 
 if ($svc -and $svc.Status -eq "Running") {
-  # Mode NAMED: alamat sudah permanen, tak ada yang perlu dilaporkan.
-  Catat "service cloudflared: Running (mode NAMED - alamat permanen, tidak ada laporan alamat)"
-  if ($AGENT_OK -and $CADDY_OK) {
+  # Mode NAMED. Alamatnya permanen, TAPI tetap WAJIB dilaporkan: baris alamat di
+  # database selalu menang atas env var dan tidak pernah kedaluwarsa. Kalau mode ini
+  # diam saja, alamat quick tunnel lama yang sudah lenyap akan terus disajikan ke
+  # penonton walau named tunnel sudah sehat - dan semua indikator tampak hijau.
+  Catat "service cloudflared: Running -> mode NAMED"
+  if (-not $NAMED_URL) {
+    Catat "GAGAL: mode NAMED aktif tapi `$NAMED_URL masih kosong di script ini."
+    Catat "AKIBATNYA: situs kemungkinan besar MASIH memakai alamat quick tunnel lama"
+    Catat "yang sudah mati, walau named tunnel sehat. Isi `$NAMED_URL (mis."
+    Catat "https://video.amasyaforum.com) lalu jalankan ulang; ATAU kosongkan alamat"
+    Catat "tersimpan lewat DELETE /api/agent/video-base (butuh login admin)."
+    Catat "=== SELESAI DENGAN MASALAH - alamat tidak dilaporkan ==="
+    exit 1
+  }
+  if (-not $CADDY_OK) {
+    Berhenti "mode NAMED: Caddy (port 8088) mati, video tidak akan terlayani."
+  }
+  if (Lapor-Alamat $NAMED_URL "NAMED") {
     Catat "=== SELESAI - semua hidup (mode NAMED) ==="
     exit 0
   }
-  Catat "=== SELESAI DENGAN MASALAH - ada service yang tidak hidup ==="
+  Catat "=== SELESAI DENGAN MASALAH - alamat named tidak terkirim ==="
   exit 1
 }
 
@@ -195,10 +248,16 @@ if ($svc) {
   Catat "service cloudflared belum terpasang -> mode QUICK"
 }
 
-# Mode QUICK butuh agent + Caddy hidup dulu; tunnel yang menunjuk port mati
-# cuma menghasilkan alamat yang membalas error.
-if (-not ($AGENT_OK -and $CADDY_OK)) {
-  Berhenti "mode QUICK dibatalkan: agent/Caddy tidak hidup, tunnel jadi percuma."
+# Yang WAJIB hidup cuma Caddy (8088) - itu yang menyajikan berkas video.
+# Agent (8089) hanya melayani tombol "Scan & auto-hardlink" di admin; kalau ia mati,
+# video tetap bisa diputar. Dulu di sini dipakai syarat "agent DAN Caddy", yang berarti
+# mematikan video demi fitur admin - salah prioritas (audit 2026-08-22).
+if (-not $CADDY_OK) {
+  Berhenti "mode QUICK dibatalkan: Caddy (port 8088) mati, tunnel jadi percuma."
+}
+if (-not $AGENT_OK) {
+  Catat "PERINGATAN: port 8089 (agent) mati -> tombol Scan & auto-hardlink di admin"
+  Catat "tidak akan jalan. Video TETAP dilayani Caddy, jadi mode QUICK diteruskan."
 }
 
 $CLOUDFLARED_EXE = Cari-Exe $CLOUDFLARED_CANDIDATES "cloudflared"
@@ -223,12 +282,16 @@ foreach ($f in $cfOut, $cfErr) {
 }
 
 try {
+  # --no-autoupdate WAJIB: kalau cloudflared memperbarui dirinya sendiri, ia
+  # restart dan quick tunnel mendapat HOSTNAME BARU. Alamat yang sudah kita
+  # laporkan jadi basi diam-diam, dan tidak ada yang melapor ulang karena script
+  # ini cuma jalan saat boot.
   Start-Process -FilePath $CLOUDFLARED_EXE `
-    -ArgumentList "tunnel", "--url", "http://localhost:8088" `
+    -ArgumentList "tunnel", "--no-autoupdate", "--url", "http://localhost:8088" `
     -RedirectStandardOutput $cfOut `
     -RedirectStandardError  $cfErr `
     -WindowStyle Hidden
-  Catat "cloudflared quick tunnel di-start"
+  Catat "cloudflared quick tunnel di-start (--no-autoupdate)"
 } catch {
   Berhenti "gagal menjalankan cloudflared: $($_.Exception.Message)"
 }
@@ -266,57 +329,56 @@ if (-not $TUNNEL_URL) {
 }
 Catat "alamat tunnel baru: $TUNNEL_URL"
 
-# --- 7. Buktikan tunnel benar-benar melayani, SEBELUM dilaporkan ---
+# --- 8. Buktikan tunnel benar-benar melayani, SEBELUM dilaporkan ---
 # Melaporkan alamat yang belum siap = situs menunjuk ke alamat mati, dan itu
 # persis masalah yang mau dihapus. Balasan 530 = tunnel terdaftar tapi belum
 # nyambung ke Caddy.
-[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+# Yang dibuktikan: ADA SERVER yang menjawab di ujung tunnel. Jadi kode 4xx pun
+# diterima (mis. 404/405 kalau root folder tak punya index) - yang ditolak hanya
+# 5xx, khususnya 530 = tunnel terdaftar tapi tidak nyambung ke Caddy. Dulu di sini
+# hanya 2xx/3xx yang lolos, sehingga tunnel sehat yang membalas 404 di root akan
+# dianggap gagal dan alamatnya tak pernah dilaporkan (audit 2026-08-22).
 $SIAP = $false
 for ($i = 0; $i -lt 10; $i++) {
+  $kode = 0
   try {
-    $r = Invoke-WebRequest -Uri "$TUNNEL_URL/" -Method Head -TimeoutSec 15 -UseBasicParsing
-    if ($r.StatusCode -ge 200 -and $r.StatusCode -lt 400) { $SIAP = $true; break }
-    Catat "tunnel balas HTTP $($r.StatusCode), tunggu..."
+    $r = Invoke-WebRequest -Uri "$TUNNEL_URL/" -Method Get -TimeoutSec 15 -UseBasicParsing
+    $kode = [int]$r.StatusCode
   } catch {
-    Catat "tunnel belum siap ($($_.Exception.Message.Split([char]10)[0])), tunggu..."
+    # PowerShell 5.1 melempar untuk 4xx/5xx; statusnya diambil dari response.
+    if ($_.Exception.Response) { $kode = [int]$_.Exception.Response.StatusCode }
+  }
+  if ($kode -ge 200 -and $kode -lt 500) { $SIAP = $true; break }
+  if ($kode -eq 0) {
+    Catat "tunnel belum menjawab sama sekali, tunggu..."
+  } else {
+    Catat "tunnel balas HTTP $kode (belum nyambung ke Caddy), tunggu..."
   }
   Start-Sleep -Seconds 3
 }
 if (-not $SIAP) {
   Berhenti "tunnel $TUNNEL_URL tidak melayani setelah ~45 detik. Alamat TIDAK dilaporkan (lebih baik tak berubah daripada menunjuk alamat mati)."
 }
-Catat "tunnel terbukti melayani (HTTP 2xx/3xx)"
+Catat "tunnel terbukti dijawab server (HTTP < 500)"
 
-# --- 8. Laporkan alamat ke situs ---
-$LAPOR_URL = "$SITUS_URL/api/agent/video-base"
-$terkirim = $false
-for ($i = 1; $i -le 3; $i++) {
-  try {
-    $resp = Invoke-RestMethod -Uri $LAPOR_URL -Method Post `
-      -Headers @{ "x-agent-secret" = $SECRET } `
-      -Body (ConvertTo-Json @{ baseUrl = $TUNNEL_URL }) `
-      -ContentType "application/json" -TimeoutSec 30
-    Catat "alamat DILAPORKAN & tersimpan: $($resp.url) (updatedAt $($resp.updatedAt))"
-    $terkirim = $true
-    break
-  } catch {
-    # Pesan server ikut dicatat: 401 = secret beda antara Vercel dan PC ini,
-    # 400 = alamat ditolak allowlist. Tanpa ini penyebabnya cuma bisa ditebak.
-    $detail = $_.Exception.Message
-    try {
-      $stream = $_.Exception.Response.GetResponseStream()
-      $detail = (New-Object System.IO.StreamReader($stream)).ReadToEnd()
-    } catch { }
-    Catat "percobaan lapor ke-$i gagal: $detail"
-    Start-Sleep -Seconds 5
-  }
+# --- 9. Laporkan alamat ke situs ---
+if (Lapor-Alamat $TUNNEL_URL "QUICK") {
+  Catat "=== SELESAI - semua hidup (mode QUICK, alamat sudah dilaporkan) ==="
+  exit 0
 }
 
-if (-not $terkirim) {
-  Catat "GAGAL melapor. Tunnel HIDUP di $TUNNEL_URL - owner bisa menempelnya manual ke env Vercel sebagai jalan mundur."
-  Catat "=== SELESAI DENGAN MASALAH - alamat tidak terkirim ==="
-  exit 1
-}
-
-Catat "=== SELESAI - semua hidup (mode QUICK, alamat sudah dilaporkan) ==="
-exit 0
+# Jujur soal keadaannya: tunnel LAMA sudah dibunuh di langkah sebelumnya, jadi
+# alamat yang tersimpan di database sekarang menunjuk ke sesuatu yang sudah mati.
+# Video MATI sampai laporan berhasil - jangan bilang "masih aman".
+Catat "GAGAL melapor. Tunnel BARU hidup di $TUNNEL_URL, tapi alamat di database"
+Catat "masih yang LAMA dan sudah mati -> VIDEO MATI sampai laporan berhasil."
+Catat "JALAN MUNDUR (jalankan di PC ini, ganti <token> dengan HARDLINK_AGENT_SECRET):"
+Catat "  [Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12"
+Catat "  Invoke-RestMethod '$SITUS_URL/api/agent/video-base' -Method Post ``"
+Catat "    -Headers @{'x-agent-secret'='<token>'} -ContentType 'application/json' ``"
+Catat "    -Body '{\"baseUrl\":\"$TUNNEL_URL\"}'"
+Catat "CATATAN: menempel alamat ke env var Vercel TIDAK menolong selama baris alamat"
+Catat "di database masih ada - database SELALU menang atas env. Kalau ingin kembali"
+Catat "memakai env, kosongkan dulu lewat DELETE /api/agent/video-base (login admin)."
+Catat "=== SELESAI DENGAN MASALAH - alamat tidak terkirim ==="
+exit 1

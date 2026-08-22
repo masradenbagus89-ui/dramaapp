@@ -28,6 +28,7 @@ import {
   useSupabase,
   sbSelect,
   sbUpsert,
+  sbDelete,
   sbRpc,
   eq,
 } from "./supabase";
@@ -726,6 +727,23 @@ export async function setVideoBaseRecord(rec: VideoBaseRecord): Promise<void> {
     return;
   }
   writeLocal("videobase.json", rec);
+}
+
+/**
+ * Kosongkan alamat tersimpan supaya getVideoBaseUrl jatuh ke env lagi.
+ *
+ * WAJIB ADA: baris ini SELALU menang atas env dan tidak punya masa kedaluwarsa.
+ * Tanpa jalan menghapus, alamat quick tunnel yang sudah lenyap akan terus dipakai
+ * selamanya — termasuk sesudah pindah ke named tunnel — dan semua indikator yang
+ * bisa dilihat owner (env var, status service, curl ke domain baru) tetap terlihat
+ * hijau. Itu kerusakan senyap.
+ */
+export async function clearVideoBaseRecord(): Promise<void> {
+  if (useSupabase) {
+    await sbDelete("app_data", `key=${eq("videobase")}`);
+    return;
+  }
+  writeLocal("videobase.json", null);
 }
 
 /** Mode penyimpanan aktif — berguna untuk debugging/health check. */

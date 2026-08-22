@@ -31,7 +31,9 @@ export async function GET(req: NextRequest) {
     const folderUrl = `${baseUrl}/${encodeURIComponent(dramaId)}/`;
     let res: Response;
     try {
-      res = await fetch(folderUrl, { cache: "no-store" });
+      // redirect manual: cegah SSRF lewat 302 dari upstream (allowlist host hanya
+      // memeriksa alamat awal).
+      res = await fetch(folderUrl, { cache: "no-store", redirect: "manual" });
     } catch (e) {
       const m = e instanceof Error ? e.message : String(e);
       return NextResponse.json(

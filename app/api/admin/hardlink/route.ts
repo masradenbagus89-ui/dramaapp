@@ -55,6 +55,9 @@ export async function POST(req: NextRequest) {
         },
         body: JSON.stringify({ dramaId }),
         cache: "no-store",
+        // PENTING di sini: permintaan ini membawa header x-agent-secret. Kalau
+        // redirect diikuti, rahasianya ikut terkirim ke host tujuan redirect.
+        redirect: "manual",
       });
     } catch (e) {
       const m = e instanceof Error ? e.message : String(e);

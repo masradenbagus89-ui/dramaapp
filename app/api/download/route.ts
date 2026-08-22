@@ -27,7 +27,11 @@ export async function GET(req: NextRequest) {
   try {
     if (baseUrl) {
       const url = `${baseUrl}/${encodeURIComponent(id)}/${encodeURIComponent(fileName)}`;
-      const upstream = await fetch(url, { cache: "no-store" });
+      // redirect manual: cegah upstream mengarahkan server kita ke host lain (SSRF).
+      const upstream = await fetch(url, {
+        cache: "no-store",
+        redirect: "manual",
+      });
       if (!upstream.ok || !upstream.body) {
         return new NextResponse(
           "Video tidak ditemukan atau sumber (PC backup) sedang mati.",
@@ -35,7 +39,10 @@ export async function GET(req: NextRequest) {
         );
       }
       const headers = new Headers();
-      headers.set("Content-Type", upstream.headers.get("Content-Type") || "video/mp4");
+      // Dipaksa video/mp4 (tidak disalin dari upstream): jalur ini same-origin,
+      // jadi tipe pilihan upstream bisa dirender browser di domain kita.
+      headers.set("Content-Type", "video/mp4");
+      headers.set("X-Content-Type-Options", "nosniff");
       const len = upstream.headers.get("Content-Length");
       if (len) headers.set("Content-Length", len);
       headers.set("Content-Disposition", disposition);

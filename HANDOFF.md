@@ -53,6 +53,25 @@ sudah dibuang. Efeknya `/beranda` & `/discover` **tetap ISR 60 detik** — dikon
 Bukti: **281 tes lulus** (naik dari 265) · `tsc --noEmit` exit 0 · `next build` sukses ·
 route `/api/agent/video-base` terdaftar di `app-path-routes-manifest.json`.
 
+#### 🔍 Audit adversarial 2026-08-22 — 7 temuan diperbaiki (dari 30, 23 ditolak verifikasi)
+
+Kode di atas diaudit 65 agent dengan 4 lensa; tiap temuan wajib lolos 2 skeptik independen.
+Yang lolos sudah diperbaiki:
+
+| # | Temuan | Perbaikan |
+|---|---|---|
+| **1 BLOCKER** | Baris DB **selalu menang** atas env & tak pernah kedaluwarsa, mode NAMED tak pernah melapor, tak ada cara menghapus → saat named tunnel dipasang nanti, situs **tetap** menyajikan alamat quick tunnel yang sudah lenyap, padahal env/service/curl semua tampak hijau | `$NAMED_URL` di script + **mode NAMED ikut melapor**; `DELETE /api/agent/video-base` (admin) untuk mengosongkan; `GET` menambah field `sumber`; README diluruskan |
+| **2** | Mode QUICK dibatalkan kalau port **8089** mati — padahal video dilayani **8088** (Caddy); 8089 cuma untuk tombol Scan | Syarat diturunkan ke Caddy saja; agent mati = peringatan, bukan pembatalan |
+| **3** | Kuota rate-limit global dihitung **sebelum** auth → orang luar bisa membanjiri endpoint tanpa tahu rahasia, menghabiskan kuota, lalu laporan sah PC backup ditolak 429. Pagar keamanan jadi tombol mematikan video | Auth **dulu**; kuota hanya dikenakan pada percobaan yang **gagal** auth |
+| **4** | Allowlist host hanya menjaga alamat **awal** — `fetch` mengikuti redirect, jadi upstream bisa membelokkan server kita ke IP internal/metadata cloud (SSRF) | `redirect: "manual"` di **semua** fetch ke sumber video; di `hardlink` ini juga mencegah `x-agent-secret` ikut terkirim ke host redirect |
+| **4b** | `/api/teaser` & `/api/download` menyalin `Content-Type` upstream mentah — jalur ini **same-origin**, jadi upstream yang mengaku `text/html` dirender browser di domain kita (XSS) | Dipaksa `video/mp4` + `X-Content-Type-Options: nosniff` |
+| **5** | `cloudflared` autoupdate bisa restart sendiri → hostname berganti diam-diam, alamat terlapor jadi basi | `--no-autoupdate` |
+| **6** | Kalau lapor gagal, DB **sudah basi** (tunnel lama dibunuh duluan) tapi pesan bilang aman, dan jalan mundur "tempel ke env" **tidak berfungsi** (env kalah dari DB) | Pesan diluruskan + perintah POST manual siap-salin dicetak ke log |
+| **7** | Bagian Verifikasi README hanya sahih untuk mode NAMED → pemakai mode QUICK dapat 3 kegagalan palsu | Verifikasi dipecah: langkah bersama + tambahan khusus NAMED |
+
+Pemeriksaan kesiapan tunnel juga dilonggarkan dari "2xx/3xx" ke **HTTP < 500** — tunnel sehat
+yang membalas 404/405 di root dulu dianggap gagal sehingga alamatnya tak pernah dilaporkan.
+
 ⏳ **Belum aktif** — dua syarat, keduanya belum terpenuhi per 2026-08-22:
 1. **Commit `0e30b4d` + `3649e40` belum di-push** → `POST /api/agent/video-base` masih balas **404**
    di produksi (diukur langsung). Push terhenti karena sesi AI non-interaktif tak bisa memunculkan

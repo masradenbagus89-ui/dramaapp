@@ -19,8 +19,26 @@ alamat publiknya.
 >
 > Artinya **Setup Bagian B (named tunnel) sekarang OPSIONAL** — pasang saat domain sudah
 > siap. Sebelum itu, Bagian A + C + D sudah cukup untuk membuat video hidup sendiri tiap
-> PC menyala. Saat nanti named tunnel dipasang, script berpindah mode **sendiri**, tidak
-> ada yang perlu diubah.
+> PC menyala.
+>
+> ⚠️ **PENTING saat nanti pindah ke named tunnel** (koreksi atas versi awal dokumen ini, yang
+> keliru menjanjikan "tidak ada yang perlu diubah"): alamat yang **tersimpan di database
+> SELALU menang** atas env var `NEXT_PUBLIC_VIDEO_BASE_URL`, dan **tidak pernah kedaluwarsa**.
+> Jadi saat berpindah ke named tunnel kamu **wajib** melakukan salah satu dari ini:
+>
+> 1. **Isi `$NAMED_URL`** di `start-video-services.ps1` (mis. `https://video.amasyaforum.com`).
+>    Mode NAMED akan melaporkan alamat itu tiap boot, jadi database selalu ikut kenyataan.
+>    **Ini cara yang disarankan.** Kalau dibiarkan kosong, script sengaja **berhenti dengan
+>    pesan gagal** — bukan diam-diam melanjutkan.
+> 2. Atau **kosongkan** alamat tersimpan supaya situs kembali memakai env var:
+>    `DELETE /api/agent/video-base` (perlu login admin).
+>
+> Tanpa salah satu langkah itu, situs akan **terus menyajikan alamat quick tunnel lama yang
+> sudah lenyap** walaupun named tunnel sehat — dan semuanya tampak hijau: env var benar,
+> `sc query cloudflared` Running, `curl https://video.amasyaforum.com/` balas 200.
+> **Cara memastikan alamat mana yang benar-benar dipakai:** buka `GET /api/agent/video-base`
+> sebagai admin dan lihat field `dipakai` + `sumber`. Env var di dashboard Vercel **bukan**
+> sumber kebenaran lagi.
 
 ## Prasyarat
 
@@ -158,24 +176,56 @@ powercfg /change hibernate-timeout-ac 0
 powercfg /change monitor-timeout-ac 15    # layar boleh mati, mesin tetap jalan
 ```
 
-## Setup 1× — Bagian E: alamat permanen di Vercel
+## Setup 1× — Bagian E: alamat permanen *(hanya saat pindah ke named tunnel)*
 
-Settings → Environment Variables → `NEXT_PUBLIC_VIDEO_BASE_URL` = `https://video.amasyaforum.com`
-→ Save → **Redeploy**. Sesudah ini env var tersebut **tidak pernah disentuh lagi**.
+**Isi `$NAMED_URL`** di `start-video-services.ps1`:
+
+```powershell
+$NAMED_URL = "https://video.amasyaforum.com"
+```
+
+Itu saja — script akan melaporkannya tiap boot, jadi database selalu ikut kenyataan.
+
+Env var `NEXT_PUBLIC_VIDEO_BASE_URL` sekarang hanya **cadangan** (dipakai saat database kosong).
+Boleh diisi `https://video.amasyaforum.com` juga, tapi **mengisinya saja tidak cukup** — selama
+baris alamat di database masih ada, env var tidak akan pernah dipakai.
 
 ## Verifikasi
 
-```powershell
-# 1. Tunnel hidup dari internet
-Invoke-WebRequest "https://video.amasyaforum.com/" -Method Head -TimeoutSec 20 -UseBasicParsing
+### Berlaku untuk KEDUA mode — mulai dari sini
 
-# 2. Agent terjangkau lewat tunnel
+```powershell
+# 1. Baca hasil jalannya script
+Get-Content C:\Users\USER\pc-backup-agent\logs\start-video-services.log -Tail 30
+```
+
+Cari baris `alamat DILAPORKAN & tersimpan: <url>`. **Itulah** alamat yang berlaku.
+Kalau baris itu tidak ada, laporannya gagal — log menyebut sebabnya.
+
+```powershell
+# 2. Alamat itu benar-benar melayani (JANGAN berhenti di cek DNS -
+#    "tunnel yatim" tetap punya DNS hidup tapi balas 530; lihat HANDOFF.md)
+Invoke-WebRequest "<url-dari-log>/" -Method Get -TimeoutSec 20 -UseBasicParsing
+
+# 3. Situs benar-benar memakai alamat itu (bukan alamat lama di database).
+#    Buka sebagai admin, lihat field "dipakai" dan "sumber":
+#    https://dramaapp.vercel.app/api/agent/video-base
+
+# 4. Server situs bisa menjangkau sumber - harus 206/200, bukan 502/404
+Invoke-WebRequest "https://dramaapp.vercel.app/api/teaser?id=<drama-id>&ep=1" -Headers @{Range="bytes=0-1023"} -UseBasicParsing
+```
+
+### Tambahan khusus mode NAMED
+
+```powershell
+sc query cloudflared                       # harus STATE : 4 RUNNING
 Invoke-WebRequest "https://video.amasyaforum.com/_agent/health" -TimeoutSec 20 -UseBasicParsing
 # harus JSON: {"ok":true,"videoRoot":"C:\\Users\\USER\\Downloads\\video","port":8089}
-
-# 3. Service tunnel jalan
-sc query cloudflared
 ```
+
+> Di mode **QUICK** ketiga perintah lama (`curl` ke `video.amasyaforum.com`, `sc query
+> cloudflared`) akan **gagal semua** — itu WAJAR, bukan tanda pemasangan salah. Domain itu
+> memang belum dipakai dan cloudflared memang belum jadi service.
 
 Lalu dari mana saja:
 

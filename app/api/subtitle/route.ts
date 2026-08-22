@@ -33,7 +33,9 @@ export async function GET(req: NextRequest) {
   try {
     if (baseUrl) {
       const url = `${baseUrl}/${encodeURIComponent(id)}/${encodeURIComponent(fileName)}`;
-      const res = await fetch(url, { cache: "no-store" });
+      // redirect manual: allowlist host hanya menjaga alamat AWAL, jadi 302 dari
+      // upstream bisa mengarahkan server kita ke IP internal (SSRF).
+      const res = await fetch(url, { cache: "no-store", redirect: "manual" });
       if (!res.ok) {
         return new NextResponse("Subtitle tidak ada", { status: 404 });
       }

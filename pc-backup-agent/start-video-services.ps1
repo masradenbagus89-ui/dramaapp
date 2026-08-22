@@ -61,6 +61,9 @@ $CLOUDFLARED_CANDIDATES = @(
 )
 # Alamat situs yang akan diberi tahu alamat tunnel (kedua mode).
 $SITUS_URL = "https://dramaapp.vercel.app"
+# Drama yang dipakai untuk membuktikan rantai situs -> tunnel -> Caddy -> berkas.
+# HARUS drama yang berkas 1.mp4-nya memang ada di folder video.
+$DRAMA_UJI = "ahli-bela-diri-terkuat-mengguncang-keluarga-besar"
 # Alamat PERMANEN named tunnel. Diisi saat Setup Bagian B dikerjakan.
 # WAJIB diisi begitu pindah ke named tunnel: alamat yang tersimpan di database
 # SELALU menang atas env var, dan tidak pernah kedaluwarsa. Kalau dibiarkan kosong,
@@ -281,21 +284,29 @@ Catat "jaringan siap"
 # Kalau tunnel yang tercatat masih hidup DAN masih melayani, JANGAN sentuh apa pun -
 # cukup pastikan situs tahu alamatnya, lalu keluar. Ini yang membuat script aman
 # dijalankan berulang (tiap beberapa menit) tanpa mengganti-ganti alamat.
+# Sehat = SITUS benar-benar bisa mengambil video. Sengaja diukur lewat situs,
+# BUKAN dengan menghubungi alamat tunnel dari sini: resolver lokal PC backup
+# sering belum mengenal hostname trycloudflare yang baru, sehingga penilaian dari
+# sini bisa salah vonis "mati" padahal dunia luar bisa mengaksesnya (kejadian
+# 2026-08-22 16:00).
 function Cek-Sudah-Sehat {
   if (-not (Test-Path $PENANDA)) { return $null }
   $alamat = (Get-Content $PENANDA -Raw -ErrorAction SilentlyContinue)
   if ($alamat) { $alamat = $alamat.Trim() }
   if (-not $alamat) { return $null }
+  # Proses pendukung harus hidup - kalau tidak, percuma menguji apa pun.
   if (-not (Get-Process cloudflared -ErrorAction SilentlyContinue)) { return $null }
   if (-not (Get-NetTCPConnection -LocalPort 8088 -State Listen -ErrorAction SilentlyContinue)) { return $null }
   $kode = 0
   try {
-    $r = Invoke-WebRequest -Uri "$alamat/" -Method Get -TimeoutSec 15 -UseBasicParsing
+    $r = Invoke-WebRequest -Uri "$SITUS_URL/api/teaser?id=$DRAMA_UJI&ep=1" -Method Get `
+      -Headers @{ Range = "bytes=0-1023" } -TimeoutSec 30 -UseBasicParsing
     $kode = [int]$r.StatusCode
   } catch {
     if ($_.Exception.Response) { $kode = [int]$_.Exception.Response.StatusCode }
   }
-  if ($kode -ge 200 -and $kode -lt 500) { return $alamat }
+  if ($kode -eq 200 -or $kode -eq 206) { return $alamat }
+  Catat "penanda ada ($alamat) tapi situs balas $kode -> rantai putus, akan dibangun ulang"
   return $null
 }
 
@@ -482,41 +493,70 @@ if (-not $TUNNEL_URL) {
 }
 Catat "alamat tunnel baru: $TUNNEL_URL"
 
-# --- 8. Buktikan tunnel benar-benar melayani, SEBELUM dilaporkan ---
-# Melaporkan alamat yang belum siap = situs menunjuk ke alamat mati, dan itu
-# persis masalah yang mau dihapus. Balasan 530 = tunnel terdaftar tapi belum
-# nyambung ke Caddy.
-# Yang dibuktikan: ADA SERVER yang menjawab di ujung tunnel. Jadi kode 4xx pun
-# diterima (mis. 404/405 kalau root folder tak punya index) - yang ditolak hanya
-# 5xx, khususnya 530 = tunnel terdaftar tapi tidak nyambung ke Caddy. Dulu di sini
-# hanya 2xx/3xx yang lolos, sehingga tunnel sehat yang membalas 404 di root akan
-# dianggap gagal dan alamatnya tak pernah dilaporkan (audit 2026-08-22).
-$SIAP = $false
+# --- 8. Pastikan Caddy melayani DI DALAM PC ini ---
+# Yang diperiksa di sini sengaja LOKAL (127.0.0.1), bukan lewat internet.
+#
+# KENAPA BUKAN LEWAT TUNNEL: versi sebelumnya menyuruh PC backup menghubungi
+# alamat tunnel-nya sendiri lewat internet, lalu MENOLAK melapor kalau gagal.
+# Terbukti salah 2026-08-22 16:00 - PC backup tidak bisa me-resolve hostname
+# trycloudflare yang baru dibuat (log: "belum menjawab sama sekali" 11x),
+# padahal dari jaringan lain alamat itu jelas terjangkau. Akibatnya penjaga itu
+# memblokir laporan yang SAH dan video tetap mati. Resolver lokal bukan wasit
+# yang tepat untuk menilai kesehatan tunnel.
+$LOKAL_OK = $false
 for ($i = 0; $i -lt 10; $i++) {
   $kode = 0
   try {
-    $r = Invoke-WebRequest -Uri "$TUNNEL_URL/" -Method Get -TimeoutSec 15 -UseBasicParsing
+    $r = Invoke-WebRequest -Uri "http://127.0.0.1:8088/" -Method Get -TimeoutSec 10 -UseBasicParsing
     $kode = [int]$r.StatusCode
   } catch {
-    # PowerShell 5.1 melempar untuk 4xx/5xx; statusnya diambil dari response.
     if ($_.Exception.Response) { $kode = [int]$_.Exception.Response.StatusCode }
   }
-  if ($kode -ge 200 -and $kode -lt 500) { $SIAP = $true; break }
-  if ($kode -eq 0) {
-    Catat "tunnel belum menjawab sama sekali, tunggu..."
-  } else {
-    Catat "tunnel balas HTTP $kode (belum nyambung ke Caddy), tunggu..."
-  }
+  # 4xx pun sah: artinya Caddy menjawab (mis. 404 karena root tak punya index).
+  if ($kode -ge 200 -and $kode -lt 500) { $LOKAL_OK = $true; break }
+  Catat "Caddy lokal belum menjawab (kode $kode), tunggu..."
   Start-Sleep -Seconds 3
 }
-if (-not $SIAP) {
-  Berhenti "tunnel $TUNNEL_URL tidak melayani setelah ~45 detik. Alamat TIDAK dilaporkan (lebih baik tak berubah daripada menunjuk alamat mati)."
+if (-not $LOKAL_OK) {
+  Berhenti "Caddy di 127.0.0.1:8088 tidak melayani. Cek logs\caddy.err.log - tunnel tak ada gunanya tanpa ini."
 }
-Catat "tunnel terbukti dijawab server (HTTP < 500)"
+Catat "Caddy lokal melayani (127.0.0.1:8088)"
 
-# --- 9. Laporkan alamat ke situs ---
-if (Lapor-Alamat $TUNNEL_URL "QUICK") {
-  Catat "=== SELESAI - semua hidup (mode QUICK, alamat sudah dilaporkan) ==="
+# --- 9. Laporkan alamat, lalu buktikan lewat SITUS (bukan lewat DNS lokal) ---
+if (-not (Lapor-Alamat $TUNNEL_URL "QUICK")) {
+  # jatuh ke blok penanganan gagal di bawah
+} else {
+  # Pembuktian ujung-ke-ujung dari jalur yang BENAR-BENAR dipakai penonton:
+  # situs -> tunnel -> Caddy -> berkas. Ini hanya butuh DNS ke dramaapp.vercel.app
+  # (sudah terbukti bisa di langkah Tunggu-Jaringan), jadi tidak terhalang resolver
+  # lokal yang belum mengenal hostname tunnel baru.
+  $UJI_URL = "$SITUS_URL/api/teaser?id=$DRAMA_UJI&ep=1"
+  $TERBUKTI = $false
+  for ($i = 1; $i -le 12; $i++) {
+    $kode = 0
+    try {
+      $r = Invoke-WebRequest -Uri $UJI_URL -Method Get -Headers @{ Range = "bytes=0-1023" } `
+        -TimeoutSec 30 -UseBasicParsing
+      $kode = [int]$r.StatusCode
+    } catch {
+      if ($_.Exception.Response) { $kode = [int]$_.Exception.Response.StatusCode }
+    }
+    if ($kode -eq 200 -or $kode -eq 206) { $TERBUKTI = $true; break }
+    Catat "uji lewat situs percobaan ke-$i balas $kode, tunggu... (tunnel baru kadang perlu ~1 menit)"
+    Start-Sleep -Seconds 10
+  }
+  if ($TERBUKTI) {
+    Catat "TERBUKTI ujung-ke-ujung: situs berhasil mengambil video lewat tunnel baru"
+    Catat "=== SELESAI - semua hidup (mode QUICK, alamat sudah dilaporkan) ==="
+    exit 0
+  }
+  # Alamat sudah tersimpan; yang belum terbukti cuma jalur ujung-ke-ujungnya.
+  # Jangan dianggap sukses, tapi juga jangan dibatalkan - penjaga 15 menit akan
+  # memeriksa ulang dan membangun ulang kalau memang rusak.
+  Catat "PERINGATAN: alamat sudah dilaporkan tapi situs belum berhasil mengambil video."
+  Catat "Kemungkinan tunnel masih menyambung. Penjaga 15 menit akan memeriksa ulang."
+  Catat "Cek sendiri: $UJI_URL (harus 206)"
+  Catat "=== SELESAI DENGAN CATATAN - alamat terkirim, jalur belum terbukti ==="
   exit 0
 }
 

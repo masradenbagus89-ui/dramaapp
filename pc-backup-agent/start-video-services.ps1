@@ -116,7 +116,8 @@ function Ambil-PathTerdaftar {
 
 $PATH_TERDAFTAR = Ambil-PathTerdaftar
 
-# Cari .exe: kandidat eksplisit -> PATH proses -> PATH registry (mesin + user).
+# Cari .exe berurutan: kandidat eksplisit -> PATH proses -> PATH registry
+# (mesin + tiap user) -> folder package manager di dalam profil user.
 function Cari-Exe([string[]]$kandidat, [string]$namaPerintah) {
   foreach ($p in $kandidat) {
     if ($p -and (Test-Path $p)) { return $p }
@@ -127,6 +128,24 @@ function Cari-Exe([string[]]$kandidat, [string]$namaPerintah) {
     $kandidatPath = Join-Path $dir "$namaPerintah.exe"
     try {
       if (Test-Path $kandidatPath) { return $kandidatPath }
+    } catch { }
+  }
+  # Package manager menaruh program DI DALAM profil user, dan nama foldernya
+  # memuat ID/versi paket yang berubah tiap update - jadi dicari dengan wildcard,
+  # bukan path tetap. Kasus nyata 2026-08-22: caddy dipasang lewat winget dan
+  # berada di ...\WinGet\Packages\CaddyServer.Caddy_<id>\caddy.exe, tak terlihat
+  # oleh SYSTEM. Semua profil user disapu, bukan cuma satu.
+  $polaProfil = @(
+    "C:\Users\*\AppData\Local\Microsoft\WinGet\Links\$namaPerintah.exe",
+    "C:\Users\*\AppData\Local\Microsoft\WinGet\Packages\*\$namaPerintah.exe",
+    "C:\Users\*\scoop\shims\$namaPerintah.exe",
+    "C:\Users\*\$namaPerintah.exe"
+  )
+  foreach ($pola in $polaProfil) {
+    try {
+      $hit = Get-ChildItem -Path $pola -File -ErrorAction SilentlyContinue |
+        Select-Object -First 1
+      if ($hit) { return $hit.FullName }
     } catch { }
   }
   return $null

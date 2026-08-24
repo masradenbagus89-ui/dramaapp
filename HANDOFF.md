@@ -77,14 +77,16 @@ terakhir di `start-video-services.log` → baru isinya.
 sifatnya sementara (`getaddrinfo` gagal untuk `api.trycloudflare.com` DAN `dramaapp.vercel.app`
 pada jam yang sama, lalu normal lagi sendiri).
 
-**🐞 BUG SUDAH DIPERBAIKI DI KODE, BELUM DI-PUSH (menunggu izin owner) — mis-parse alamat tunnel.**
+**🐞 BUG SUDAH DIPERBAIKI & DI-PUSH `ba82058` (izin owner 2026-08-24) — mis-parse alamat tunnel.**
 Perbaikan: saringan di [`start-video-services.ps1:522`](./pc-backup-agent/start-video-services.ps1)
 membuang `https://api.trycloudflare.com` dari hasil pencarian, + lapis kedua `HOST_TERLARANG` di
 [`lib/video-base.ts`](./lib/video-base.ts) yang menolaknya walau suffix-nya sah. Bukti: **283 tes
 lulus** (naik dari 281, +2 tes regresi di `tests/video-base.test.ts`) · `tsc --noEmit` exit 0 ·
 script PowerShell lolos parser · logika saringan diuji dengan teks log ASLI dari kejadian
 2026-08-24 (kasus gagal → 0 alamat, kasus berhasil → alamat asli tetap terambil).
-**Belum berlaku di PC backup sampai di-push** (PC backup mengunduh dari raw GitHub `main`).
+Sudah tayang di raw GitHub (30.427 byte, dicocokkan persis dengan berkas yang diuji). **PC backup
+masih memakai salinan LAMA** sampai di-download ulang — tidak mendesak, karena lapis kedua di situs
+sudah menolak alamat itu dengan 400 sehingga database tetap aman.
 Catatan koreksi: dampak bug ini lebih kecil dari dugaan awal — `Cek-Sudah-Sehat`
 ([`:322`](./pc-backup-agent/start-video-services.ps1)) menilai sehat lewat SITUS dan hanya menerima
 200/206, jadi alamat sampah akan tetap memicu bangun-ulang di siklus watchdog berikutnya. Yang

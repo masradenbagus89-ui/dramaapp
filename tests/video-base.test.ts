@@ -74,6 +74,23 @@ describe("isAllowedVideoBase — alamat yang HARUS DITOLAK", () => {
       false,
     );
   });
+
+  // Regresi 2026-08-24: PC backup nyaris melaporkan alamat ini. Saat pembuatan
+  // tunnel gagal, cloudflared mencetak pesan error yang memuat
+  //   Post "https://api.trycloudflare.com/tunnel"
+  // dan pencari alamat di start-video-services.ps1 menangkapnya sebagai alamat
+  // tunnel. Suffix-nya sah, jadi hanya penolakan eksplisit yang menahannya.
+  it("api.trycloudflare.com ditolak — itu endpoint API, bukan tunnel", () => {
+    expect(isAllowedVideoBase("https://api.trycloudflare.com")).toBe(false);
+    expect(isAllowedVideoBase("https://api.trycloudflare.com/")).toBe(false);
+    expect(isAllowedVideoBase("https://API.TryCloudflare.com")).toBe(false);
+  });
+
+  it("penolakan api. tidak ikut memblokir tunnel yang namanya diawali api", () => {
+    expect(isAllowedVideoBase("https://api-boats-voluntary.trycloudflare.com")).toBe(
+      true,
+    );
+  });
 });
 
 describe("parseAllowedSuffixes — daftar host boleh ditambah lewat env", () => {

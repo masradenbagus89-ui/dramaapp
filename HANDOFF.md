@@ -5,9 +5,11 @@
 >
 > **AI:** tiap kali ada perbaikan / deploy / keputusan — **perbarui berkas ini di langkah terakhir**, sebelum bilang selesai. Jangan tumpuk sejarah panjang di sini; pindahkan yang lama ke `NEXT-SESSION.md`.
 
-**Terakhir diisi:** 2026-08-22 — video mati lagi (**siklus ke-3**) lalu **dipulihkan & diverifikasi
-ujung-ke-ujung**; alamat tunnel aktif diperbarui, tanda tanya `/_agent/health` terjawab, + 1 pelajaran
-baru (tunnel yatim 530). Bagian lain masih apa adanya dari 2026-08-21, belum diukur ulang.
+**Terakhir diisi:** 2026-08-24 — video mati lagi (**siklus ke-4**) lalu **dipulihkan & diverifikasi
+ujung-ke-ujung**; akarnya BUKAN kode: berkas `start-video-services.ps1` tidak ada di PC backup +
+penjaga 15 menit ternyata belum pernah dipasang. Keduanya sudah dibereskan. **1 bug kode ditemukan
+& BELUM diperbaiki** (mis-parse `api.trycloudflare.com`, lihat di bawah). Bagian lain masih apa
+adanya dari 2026-08-21, belum diukur ulang.
 
 ## Status sekarang (1 menit)
 
@@ -32,8 +34,76 @@ baru (tunnel yatim 530). Bagian lain masih apa adanya dari 2026-08-21, belum diu
 > keduanya cara lama. Env `NEXT_PUBLIC_VIDEO_BASE_URL` kini hanya cadangan; kalau baris DB ada,
 > env TIDAK dipakai.
 >
-> Video mati? Cukup di PC backup: `schtasks /run /tn "DramaApp Video"` lalu baca
-> `C:\Users\USER\pc-backup-agent\logs\start-video-services.log`.
+> Video mati? Di PC backup, **PowerShell sebagai Administrator**, urut:
+> 1. `Test-Path C:\Users\USER\pc-backup-agent\start-video-services.ps1` → `False` = berkasnya
+>    hilang, itu akarnya (lihat pemulihan di bagian 2026-08-24).
+> 2. `schtasks /run /tn "DramaApp Video Watchdog"` → **tunggu 3 menit penuh**, jangan dibaca lebih cepat.
+> 3. `Get-Content C:\Users\USER\pc-backup-agent\logs\start-video-services.log -Tail 25` →
+>    **cocokkan JAM baris terakhir dengan jam sekarang** sebelum menyimpulkan apa pun.
+>
+> `SUCCESS: Attempted to run...` **bukan** tanda berhasil — lihat pelajaran 2026-08-24.
+
+### 🆕 2026-08-24 — siklus ke-4: akarnya PEMASANGAN, bukan kode. PULIH & TERVERIFIKASI
+
+Owner lapor video tak bisa diputar. Penelusuran ±3 jam; ringkasan supaya sesi berikut tidak
+mengulanginya. Alamat aktif saat ini `boats-voluntary-ensure-kim.trycloudflare.com` (jangan dihafal —
+akan berganti; baca `GET /api/agent/video-base` sebagai admin).
+
+**Dua akar yang sebenarnya — keduanya di PC backup, nol perubahan kode:**
+
+1. **`start-video-services.ps1` TIDAK ADA** di `C:\Users\USER\pc-backup-agent\`. Folder & berkas
+   lain (`Caddyfile`, `hardlink-agent.js`, `start-dramaapp.ps1`, `logs\`) utuh — hanya berkas ini
+   yang hilang. Dipulihkan dengan mengunduh dari raw GitHub lalu `Copy-Item` ke folder tujuan.
+2. **Tugas `DramaApp Video Watchdog` belum pernah dibuat.** Ketahuan dari lompatan 63 menit di log
+   2026-08-22 (17:31 → 18:34) — kalau terpasang, script menulis log tiap 15 menit walau hasilnya
+   "tidak ada yang perlu diperbaiki". Sudah dibuat sekarang; inilah yang membuat rantai
+   self-healing sungguhan.
+
+**PELAJARAN — 3 gejala yang MENIPU (ini yang memakan waktu):**
+
+- **`SUCCESS: Attempted to run the scheduled task` TIDAK berarti script jalan.** Ia hanya berarti
+  Windows berhasil memanggil `powershell.exe`. Berkas hilang → PowerShell mati seketika, tugas
+  `-WindowStyle Hidden` jadi tak meninggalkan jejak di layar maupun di log.
+- **`Last Result: -196608`** (`schtasks /query /v /fo LIST`) = `powershell.exe` keluar karena
+  argumen `-File` menunjuk berkas yang tidak ada. **Ini penanda tercepat** untuk kasus ini.
+- **Log jam lama = script tidak jalan.** Selalu cocokkan JAM baris terakhir dengan jam sekarang
+  sebelum menyimpulkan apa pun dari isi log.
+
+**Cara menilai lognya (urutan yang benar):** `Test-Path <script>` → `Last Result` → jam baris
+terakhir di `start-video-services.log` → baru isinya.
+
+**Salah diagnosis yang sempat diambil (jangan diulang):** (a) "Defender mengarantina" — GUGUR,
+`Get-MpThreat` kosong; (b) "jaringan memblokir cloudflared" — keliru, yang rusak **DNS** dan
+sifatnya sementara (`getaddrinfo` gagal untuk `api.trycloudflare.com` DAN `dramaapp.vercel.app`
+pada jam yang sama, lalu normal lagi sendiri).
+
+**🐞 BUG SUDAH DIPERBAIKI DI KODE, BELUM DI-PUSH (menunggu izin owner) — mis-parse alamat tunnel.**
+Perbaikan: saringan di [`start-video-services.ps1:522`](./pc-backup-agent/start-video-services.ps1)
+membuang `https://api.trycloudflare.com` dari hasil pencarian, + lapis kedua `HOST_TERLARANG` di
+[`lib/video-base.ts`](./lib/video-base.ts) yang menolaknya walau suffix-nya sah. Bukti: **283 tes
+lulus** (naik dari 281, +2 tes regresi di `tests/video-base.test.ts`) · `tsc --noEmit` exit 0 ·
+script PowerShell lolos parser · logika saringan diuji dengan teks log ASLI dari kejadian
+2026-08-24 (kasus gagal → 0 alamat, kasus berhasil → alamat asli tetap terambil).
+**Belum berlaku di PC backup sampai di-push** (PC backup mengunduh dari raw GitHub `main`).
+Catatan koreksi: dampak bug ini lebih kecil dari dugaan awal — `Cek-Sudah-Sehat`
+([`:322`](./pc-backup-agent/start-video-services.ps1)) menilai sehat lewat SITUS dan hanya menerima
+200/206, jadi alamat sampah akan tetap memicu bangun-ulang di siklus watchdog berikutnya. Yang
+dirugikan: jendela ≤15 menit video mati + gejala 404 yang menyesatkan saat didiagnosis.
+Uraian aslinya:
+[`start-video-services.ps1:522`](./pc-backup-agent/start-video-services.ps1) mencari alamat dengan
+pola `https://[a-z0-9-]+\.trycloudflare\.com` di log cloudflared. Saat pembuatan tunnel GAGAL,
+cloudflared mencetak pesan error yang memuat `Post "https://api.trycloudflare.com/tunnel"` —
+dan pola itu menangkapnya sebagai "alamat tunnel". Terjadi nyata 2026-08-24 12:00:27.
+**Bahayanya:** `api.trycloudflare.com` **LOLOS allowlist** (`lib/video-base.ts` hanya memeriksa
+akhiran `.trycloudflare.com`), jadi kalau DNS normal script akan **menyimpan alamat sampah itu ke
+database** → video mati tapi semua indikator hijau. Kali ini justru DNS mati yang menyelamatkan.
+**Perbaikan yang disarankan:** tolak host `api.trycloudflare.com` saat penangkapan alamat, dan
+pertimbangkan menolaknya juga di `isAllowedVideoBase()` sebagai lapis kedua.
+
+**Bukti pulih 2026-08-24 15:14–15:20** (diukur dari jaringan LAIN, bukan dari PC backup):
+`/api/teaser` **206** di ep 1/27/56 · `content-type: video/mp4` · 1.048.576 byte · signature
+**`ftypmp42`** · root tunnel balas **200** (bukan 530). Log PC backup memuat `TERSAMBUNG ke edge`
++ `alamat DILAPORKAN & tersimpan` + `TERBUKTI ujung-ke-ujung`.
 
 ### 🆕 2026-08-22 — alamat video jadi RUNTIME CONFIG (kode selesai, tinggal dipasang di PC backup)
 

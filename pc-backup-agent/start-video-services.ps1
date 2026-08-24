@@ -519,7 +519,18 @@ while (-not $TUNNEL_URL -and $lewat -lt 90) {
       $teks = Baca-LogTerbuka $f
       # Ambil kecocokan TERAKHIR: kalau cloudflared sempat mencetak lebih dari
       # satu alamat, yang berlaku adalah yang paling akhir.
-      $cocok = [regex]::Matches($teks, 'https://[a-z0-9-]+\.trycloudflare\.com')
+      #
+      # api.trycloudflare.com DIBUANG: itu endpoint API Cloudflare, bukan tunnel.
+      # Ia ikut tercetak di PESAN GAGAL cloudflared -
+      #   failed to request quick Tunnel: Post "https://api.trycloudflare.com/tunnel"
+      # - sehingga pola di atas menangkapnya sebagai "alamat tunnel" (kejadian
+      # nyata 2026-08-24 12:00:27, saat DNS PC backup sedang ngadat). Alamat itu
+      # LOLOS allowlist situs karena berakhiran .trycloudflare.com, jadi kalau
+      # ikut dilaporkan ia menimpa alamat benar di database dan /api/teaser
+      # membalas 404. Dengan disaring di sini, kegagalan tunnel berakhir sebagai
+      # "tidak dapat alamat" yang jujur - bukan alamat palsu yang tampak sah.
+      $cocok = @([regex]::Matches($teks, 'https://[a-z0-9-]+\.trycloudflare\.com') |
+        Where-Object { $_.Value -ne 'https://api.trycloudflare.com' })
       if ($cocok.Count -gt 0) { $TUNNEL_URL = $cocok[$cocok.Count - 1].Value }
     }
   }

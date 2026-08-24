@@ -23,6 +23,20 @@ import { getVideoBaseRecord } from "./store";
 const DEFAULT_ALLOWED_SUFFIXES = [".trycloudflare.com", ".amasyaforum.com"];
 
 /**
+ * Host yang TIDAK PERNAH sah jadi sumber video, walau lolos suffix di atas.
+ *
+ * `api.trycloudflare.com` adalah endpoint API Cloudflare, bukan tunnel. Ia muncul
+ * di dalam PESAN ERROR cloudflared saat pembuatan tunnel gagal:
+ *   failed to request quick Tunnel: Post "https://api.trycloudflare.com/tunnel"
+ * dan pernah tertangkap oleh pencari alamat di start-video-services.ps1 lalu
+ * nyaris dilaporkan sebagai alamat video (kejadian nyata 2026-08-24 12:00:27).
+ * Kalau tersimpan, ia menimpa alamat yang benar dan `/api/teaser` membalas 404 —
+ * bukan 502 — sehingga diagnosisnya menyesatkan. Ditolak di sini sebagai lapis
+ * kedua; lapis pertama ada di script PC backup.
+ */
+const HOST_TERLARANG = new Set(["api.trycloudflare.com"]);
+
+/**
  * Baca daftar suffix tambahan dari env (dipisah koma). Dipakai kalau nanti
  * pindah penyedia tunnel tanpa perlu ubah kode.
  */
@@ -71,6 +85,7 @@ export function isAllowedVideoBase(
   if (u.pathname !== "/" && u.pathname !== "") return false;
 
   const host = u.hostname.toLowerCase();
+  if (HOST_TERLARANG.has(host)) return false;
   return suffixes.some((s) => host.endsWith(s) && host.length > s.length);
 }
 

@@ -40,6 +40,12 @@ export const PLAYLY_KEY_HEADER = "X-Playly-Key";
 /** Domain player yang boleh dipasang di <iframe> tanpa perlu setelan tambahan. */
 export const DEFAULT_PLAYLY_EMBED_HOSTS = ["playly-dashboard.vercel.app"];
 
+/** Pola alamat pemutar Playly. Terverifikasi dari katalog asli 2026-08-25. */
+export const DEFAULT_PLAYLY_EMBED_PATH = "/id/{id}/embed";
+
+/** Katalog PUBLIK Playly (tanpa kunci) — dipakai halaman /nonton milik Playly. */
+export const PLAYLY_CATALOG_PATH = "/api/catalog";
+
 /** Spasi, tab, baris baru, dan karakter kontrol — tidak boleh ada di dalam kunci. */
 function adaSpasiAtauKontrol(s: string): boolean {
   for (let i = 0; i < s.length; i++) {
@@ -303,6 +309,10 @@ const LIST_KEYS = ["data", "items", "results", "videos", "rows", "list"];
 const ID_KEYS = ["id", "videoId", "video_id", "uuid", "slug"];
 const TITLE_KEYS = ["title", "judul", "name", "nama"];
 const EMBED_KEYS = [
+  // "embedUrlFull" DIDAHULUKAN: Playly mengirim alamat LENGKAP di field itu,
+  // sedangkan "embedUrl" miliknya berbentuk relatif ("/id/123/embed").
+  // Terverifikasi 2026-08-25 dari balasan /api/public-video Playly.
+  "embedUrlFull", "embed_url_full",
   "embedUrl", "embed_url", "embed", "playerUrl", "player_url", "iframe",
 ];
 const CREATOR_KEYS = [
@@ -398,11 +408,16 @@ function hostAllowed(host: string, allowedHosts: string[]): boolean {
  * WAJIB https. Situs kita https; isi http akan diblokir browser
  * (mixed content = konten campur aman/tidak aman) sehingga video jadi blank.
  */
-function toHttpsUrl(raw: string): URL | null {
+function toHttpsUrl(raw: string, baseUrl?: string): URL | null {
   let s = raw.trim().replace(/&amp;/g, "&");
   if (s.startsWith("//")) s = `https:${s}`;
   try {
-    const url = new URL(s);
+    // Alamat RELATIF ("/id/123/embed") dilengkapi memakai alamat dasar Playly.
+    // Tanpa ini SEMUA video Playly terbuang: bentuk itulah yang mereka kirim.
+    // baseUrl berasal dari env kita sendiri (bukan data luar), jadi melengkapi
+    // di sini tidak membuka jalan ke domain asing — hasilnya tetap diperiksa
+    // ulang terhadap daftar domain oleh pemanggil.
+    const url = s.startsWith("/") && baseUrl ? new URL(s, baseUrl) : new URL(s);
     return url.protocol === "https:" ? url : null;
   } catch {
     return null;
@@ -417,6 +432,8 @@ function extractEmbedUrl(value: string): string | null {
   if (!s) return null;
   const dariIframe = s.match(IFRAME_SRC_RE);
   if (dariIframe) return dariIframe[1].trim();
+  // Bentuk relatif dari Playly ("/id/123/embed") — dilengkapi oleh toHttpsUrl.
+  if (s.startsWith("/") && !s.startsWith("//")) return s;
   if (/^(https?:)?\/\//i.test(s)) return s;
   return null;
 }
@@ -462,13 +479,33 @@ export type PlaylyEmbedPattern = {
 /**
  * Bangun alamat player kalau Playly TIDAK mengirim embedUrl di JSON-nya.
  *
- * ❓ ASUMSI: pola "/embed/<id>" BELUM dikonfirmasi ke dokumentasi Playly.
- * Kalau ternyata beda, ubah lewat env PLAYLY_EMBED_PATH (tanpa mengubah kode).
+ * ✅ Pola "/id/<id>/embed" TERVERIFIKASI 2026-08-25 dari katalog Playly asli
+ * (dulu ditebak "/embed/<id>" dan selalu meleset). Kalau Playly mengubahnya,
+ * cukup ganti lewat env PLAYLY_EMBED_PATH tanpa menyentuh kode.
  * Kalau Playly memang mengirim embedUrl, nilai dari MEREKA yang dipakai.
  */
 function buildEmbedUrl(id: string, pola: PlaylyEmbedPattern): string {
   const path = pola.pattern.replace("{id}", encodeURIComponent(id));
   return `${pola.baseUrl.replace(/\/+$/, "")}${path.startsWith("/") ? path : `/${path}`}`;
+}
+
+/**
+ * Gambar sampul boleh berupa alamat https, alamat RELATIF Playly, atau data URI
+ * gambar (Playly menyisipkan sebagian sampul langsung sebagai "data:image/...").
+ *
+ * data URI sengaja dibatasi ke gambar raster. "data:image/svg+xml" DITOLAK
+ * karena SVG bisa memuat <script>: di dalam <img> memang tidak dieksekusi, tapi
+ * alamat yang sama bisa saja nanti dibuka di tab baru, dan di situ skripnya hidup.
+ */
+const DATA_URI_GAMBAR_RE =
+  /^data:image\/(jpeg|jpg|png|webp|gif|avif);base64,[a-z0-9+/=\s]+$/i;
+
+export function normalizeThumbnail(raw: string, baseUrl?: string): string | null {
+  const s = raw.trim();
+  if (!s) return null;
+  if (s.startsWith("data:")) return DATA_URI_GAMBAR_RE.test(s) ? s : null;
+  const url = toHttpsUrl(s, baseUrl);
+  return url ? url.toString() : null;
 }
 
 /**
@@ -511,7 +548,7 @@ export function normalizePlaylyVideos(
       return;
     }
 
-    const url = toHttpsUrl(calon);
+    const url = toHttpsUrl(calon, pola.baseUrl);
     if (!url) {
       rejected.push({ reason: "alamat embed harus https", value: calon.slice(0, 120) });
       return;
@@ -525,7 +562,7 @@ export function normalizePlaylyVideos(
       DURATION_KEYS.map((k) => rec[k]).find((v) => v !== undefined && v !== null),
     );
     const thumbMentah = pickString(rec, THUMB_KEYS);
-    const thumb = thumbMentah ? toHttpsUrl(thumbMentah) : null;
+    const thumbnail = thumbMentah ? normalizeThumbnail(thumbMentah, pola.baseUrl) : null;
 
     videos.push({
       id: id ?? url.toString(),
@@ -534,7 +571,7 @@ export function normalizePlaylyVideos(
       durationLabel: formatDuration(durationSeconds),
       creator: pickString(rec, CREATOR_KEYS) ?? "",
       embedUrl: url.toString(),
-      thumbnail: thumb ? thumb.toString() : null,
+      thumbnail,
     });
   });
 
@@ -546,8 +583,10 @@ export function normalizePlaylyVideos(
 export type PlaylyConfig = {
   /** Alamat dasar Playly (tanpa garis miring di ujung). */
   baseUrl: string;
-  /** Alamat lengkap endpoint daftar video. */
+  /** Alamat lengkap endpoint daftar video milik mitra (butuh kunci). */
   videosUrl: string;
+  /** Alamat katalog PUBLIK Playly — tanpa kunci; jaring pengaman kalau kunci belum siap. */
+  catalogUrl: string;
   allowedHosts: string[];
   embedPattern: PlaylyEmbedPattern;
 };
@@ -565,10 +604,11 @@ export function readPlaylyConfig(
   return {
     baseUrl,
     videosUrl: `${baseUrl}/api/videos`,
+    catalogUrl: `${baseUrl}${PLAYLY_CATALOG_PATH}`,
     allowedHosts,
     embedPattern: {
       baseUrl,
-      pattern: env.PLAYLY_EMBED_PATH?.trim() || "/embed/{id}",
+      pattern: env.PLAYLY_EMBED_PATH?.trim() || DEFAULT_PLAYLY_EMBED_PATH,
     },
   };
 }
@@ -588,25 +628,32 @@ export function buildPlaylyHeaders(apiKey: string): Record<string, string> {
   return { Accept: "application/json", [PLAYLY_KEY_HEADER]: apiKey };
 }
 
-/**
- * Ambil daftar video dari Playly. Semua kegagalan diterjemahkan jadi pesan
- * yang bisa DITINDAKLANJUTI admin, bukan sekadar "HTTP 401".
- */
-export async function fetchPlaylyVideos(
-  config: PlaylyConfig = readPlaylyConfig(),
-): Promise<PlaylyVideoResult> {
-  const apiKey = await getPlaylyKey();
-  if (!apiKey) {
-    throw new PlaylyError(
-      "Kunci API Playly belum dipasang. Buka Setelan → Playly dan masukkan kunci (plyk_...) lebih dulu.",
-      503,
-    );
-  }
+/** Dari mana daftar video yang sedang ditampilkan berasal. */
+export type PlaylySumber = "mitra" | "katalog-publik";
 
+export type PlaylyFetchResult = PlaylyVideoResult & {
+  source: PlaylySumber;
+  /** Penjelasan untuk admin kalau jalur utama tidak terpakai; null kalau normal. */
+  note: string | null;
+};
+
+/**
+ * Ambil JSON dari satu alamat Playly. Semua kegagalan diterjemahkan jadi pesan
+ * yang bisa DITINDAKLANJUTI admin, bukan sekadar "HTTP 401".
+ *
+ * `pesan401` dititipkan pemanggil karena arti "ditolak" berbeda per jalur:
+ * di jalur mitra artinya kuncinya bermasalah, di katalog publik tidak ada kunci
+ * sama sekali yang bisa disalahkan.
+ */
+async function ambilJsonPlayly(
+  url: string,
+  headers: Record<string, string>,
+  pesan401: string,
+): Promise<unknown> {
   let res: Response;
   try {
-    res = await fetch(config.videosUrl, {
-      headers: buildPlaylyHeaders(apiKey),
+    res = await fetch(url, {
+      headers,
       // Batas tunggu: kalau Playly ngadat, halaman admin jangan ikut menggantung.
       signal: AbortSignal.timeout(10_000),
       cache: "no-store",
@@ -620,11 +667,7 @@ export async function fetchPlaylyVideos(
   }
 
   if (res.status === 401 || res.status === 403) {
-    throw new PlaylyError(
-      "Playly menolak kunci kita (kunci salah, sudah dicabut, atau kedaluwarsa). " +
-        "Minta kunci baru ke Playly, lalu perbarui di Setelan → Playly.",
-      401,
-    );
+    throw new PlaylyError(pesan401, 401);
   }
   if (res.status === 429) {
     throw new PlaylyError(
@@ -634,7 +677,7 @@ export async function fetchPlaylyVideos(
   }
   if (res.status === 404) {
     throw new PlaylyError(
-      `Endpoint daftar video tidak ditemukan di ${config.videosUrl}. Cek lagi PLAYLY_API_URL.`,
+      `Endpoint daftar video tidak ditemukan di ${url}. Cek lagi PLAYLY_API_URL.`,
       502,
     );
   }
@@ -642,28 +685,106 @@ export async function fetchPlaylyVideos(
     throw new PlaylyError(`Playly membalas error (HTTP ${res.status}).`, 502);
   }
 
-  let data: unknown;
   try {
-    data = await res.json();
+    return await res.json();
   } catch {
     throw new PlaylyError(
       "Balasan Playly bukan JSON — kemungkinan alamatnya salah dan yang terbuka halaman biasa.",
       502,
     );
   }
+}
 
-  // Sebagian API membungkus kegagalan di dalam badan 200: { ok: false, error }.
+/** Sebagian API membungkus kegagalan di dalam badan 200: { ok: false, error }. */
+function lemparKalauBadanGagal(data: unknown): void {
   const rec = asRecord(data);
-  if (rec && rec.ok === false) {
-    const kode = typeof rec.error === "string" ? rec.error : "tidak diketahui";
-    const ramah =
-      kode === "missing_key"
-        ? "Playly tidak menerima kunci kita (header tidak terbaca)."
-        : kode === "invalid_key"
-          ? "Kunci ditolak Playly. Perbarui kuncinya di Setelan → Playly."
-          : `Playly menolak permintaan (${kode}).`;
-    throw new PlaylyError(ramah, 401);
+  if (!rec || rec.ok !== false) return;
+  const kode = typeof rec.error === "string" ? rec.error : "tidak diketahui";
+  const ramah =
+    kode === "missing_key"
+      ? "Playly tidak menerima kunci kita (header tidak terbaca)."
+      : kode === "invalid_key"
+        ? "Kunci ditolak Playly. Perbarui kuncinya di Setelan → Playly."
+        : `Playly menolak permintaan (${kode}).`;
+  throw new PlaylyError(ramah, 401);
+}
+
+/** Jalur MITRA: /api/videos + header kunci. Isinya video milik akun kunci itu. */
+async function fetchVideoMitra(
+  apiKey: string,
+  config: PlaylyConfig,
+): Promise<PlaylyVideoResult> {
+  const data = await ambilJsonPlayly(
+    config.videosUrl,
+    buildPlaylyHeaders(apiKey),
+    "Playly menolak kunci kita (kunci salah, sudah dicabut, atau kedaluwarsa). " +
+      "Minta kunci baru ke Playly, lalu perbarui di Setelan → Playly.",
+  );
+  lemparKalauBadanGagal(data);
+  return normalizePlaylyVideos(data, config.allowedHosts, config.embedPattern);
+}
+
+/**
+ * Jalur KATALOG PUBLIK: /api/catalog, TANPA kunci — persis yang dipakai halaman
+ * /nonton milik Playly sendiri.
+ *
+ * KENAPA ADA: kunci mitra diterbitkan pengelola Playly. Selama kunci itu belum
+ * ada atau ditolak, halaman admin kita buntu total — nol video yang bisa dipilih,
+ * padahal videonya sudah ter-upload. Katalog ini hanya memuat video yang memang
+ * SUDAH dibuka Playly untuk umum, jadi memakainya tidak menembus pembatas apa pun.
+ * Bedanya dengan jalur mitra: isinya seluruh video publik Playly, bukan hanya
+ * milik satu akun — karena itu sumbernya selalu diberitahukan ke admin.
+ */
+async function fetchVideoKatalogPublik(
+  config: PlaylyConfig,
+): Promise<PlaylyVideoResult> {
+  const data = await ambilJsonPlayly(
+    config.catalogUrl,
+    { Accept: "application/json" },
+    "Katalog publik Playly menolak permintaan kita.",
+  );
+  lemparKalauBadanGagal(data);
+  return normalizePlaylyVideos(data, config.allowedHosts, config.embedPattern);
+}
+
+/**
+ * Ambil daftar video Playly untuk halaman admin.
+ *
+ * Urutan: kunci mitra dulu kalau ada -> kalau kuncinya DITOLAK atau memang belum
+ * dipasang, turun ke katalog publik supaya admin tetap bisa memilih video.
+ * `source` + `note` ikut dikembalikan supaya halaman admin bisa mengatakan apa
+ * adanya daftar ini datang dari mana — jangan sampai admin mengira kunci mitranya
+ * sudah jalan padahal belum.
+ */
+export async function fetchPlaylyVideos(
+  config: PlaylyConfig = readPlaylyConfig(),
+): Promise<PlaylyFetchResult> {
+  const apiKey = await getPlaylyKey();
+
+  if (apiKey) {
+    try {
+      const hasil = await fetchVideoMitra(apiKey, config);
+      return { ...hasil, source: "mitra", note: null };
+    } catch (err) {
+      // Kunci ditolak (401) bukan alasan untuk buntu — katalog publik masih ada.
+      // Kegagalan LAIN (Playly mati, timeout, 404) tetap dilempar apa adanya:
+      // menyembunyikannya akan membuat gangguan jaringan terlihat seperti sukses.
+      if (!(err instanceof PlaylyError) || err.status !== 401) throw err;
+      const hasil = await fetchVideoKatalogPublik(config);
+      return {
+        ...hasil,
+        source: "katalog-publik",
+        note: `${err.message} Sementara ini daftar diambil dari katalog publik Playly.`,
+      };
+    }
   }
 
-  return normalizePlaylyVideos(data, config.allowedHosts, config.embedPattern);
+  const hasil = await fetchVideoKatalogPublik(config);
+  return {
+    ...hasil,
+    source: "katalog-publik",
+    note:
+      "Kunci API Playly belum dipasang, jadi daftar ini diambil dari katalog publik Playly. " +
+      "Pasang kunci di Setelan → Playly kalau ingin dibatasi ke video akun mitra saja.",
+  };
 }

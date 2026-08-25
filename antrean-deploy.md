@@ -1,40 +1,49 @@
 # Antrean deploy
 
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
-> AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
+> AI wajib `git fetch --all`, bandingkan `dramaapp/main` vs `origin/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
+>
+> ⚠️ **Nama remote sudah bertukar (dicek 2026-08-25).** Remote `dramaku` SUDAH TIDAK ADA.
 
-**Terakhir dicek:** 2026-08-18 malam WIB (Tahap 7)
+**Terakhir dicek:** 2026-08-25 sore WIB (integrasi Playly)
 
 ## Siapa memantau apa
 
 | Repo | Remote git | Dipantau Vercel? |
 |---|---|---|
-| `ojokesusu/dramaku` | `dramaku` | Tidak — tempat rekan sering commit dulu |
-| `masradenbagus89-ui/dramaapp` | `origin` | **Ya** — `git push origin main` = tombol rilis |
+| `masradenbagus89-ui/dramaapp` | **`dramaapp`** | **Ya** — `git push dramaapp main` = tombol rilis |
+| `ojokesusu/dramaku` | **`origin`** | Tidak |
+
+> Dulu tercatat terbalik (`origin` = dramaapp). Cek dengan `git remote -v` sebelum push.
 
 Produksi: https://dramaapp.vercel.app  
-Commit terbaru yang di-push: **`1ce14c3`** (Tahap 7). Status build Vercel belum diverifikasi — cek dashboard.
-Tahap 6 (`b48bf32`): **sudah diverifikasi owner jalan di produksi** 2026-08-18.
+Commit yang sedang jalan di produksi: **`617f6a0`** (pekerjaan `pc-backup`, 22 Agustus).
+`dramaapp/main` dan `origin/main` sama-sama di `617f6a0` — **tidak ada rilis tertinggal**.
 AUTH_SECRET di Vercel: dikonfirmasi ADA oleh owner 2026-08-18.
 
 ## Antrian sekarang
 
 | Status | Commit | Isi | Aksi |
 |---|---|---|---|
-| ⏳ sudah di-push, tunggu Vercel | `1ce14c3` | Tahap 7: kode pemulihan password | Cek build Ready |
-| ⏸️ menunggu bahan | — | API key Playly valid (yang kemarin `invalid_key`) | Jangan deploy env dulu |
+| 🚧 **belum di main** | `ecc0263` + perbaikan 2026-08-25 | Integrasi Playly (branch `feat/playly-integrasi`) | **Butuh izin owner**: merge ke `main` → `git push dramaapp main` |
+| ⏸️ menunggu bahan | — | Kunci `plyk_` valid dari pengelola Playly (yang ada ditolak `invalid_key`) | Tidak memblokir — fitur jalan lewat katalog publik |
+| ⏸️ perlu dicek | — | `PLAYLY_ENCRYPTION_KEY` di Environment Variables Vercel | Cek sebelum memasang kunci mitra |
 
-**Selisih `dramaku/main` vs `origin/main`:** NOL — lokal, `origin`, dan `dramaku` semuanya di `1ce14c3`.
+**Kondisi produksi 2026-08-25:** `/admin/videos/playly` masih **404** — fitur Playly
+belum pernah di-deploy. Branch `feat/playly-integrasi` tertinggal ~8 commit dari
+`main` (pekerjaan `pc-backup`), jadi perlu merge/rebase dulu sebelum rilis.
+
+**Selisih `dramaapp/main` vs `origin/main`:** NOL — keduanya di `617f6a0`.
 
 ## Cara cek cepat (AI / kamu)
 
 ```powershell
-git fetch origin
-git fetch dramaku
-git log --oneline origin/main..dramaku/main
+git fetch --all
+git remote -v
+git log --oneline dramaapp/main..origin/main
 ```
 
-- Ada baris di situ = **rekan sudah commit di dramaku, belum di origin** → masukkan ke tabel "Antrian sekarang", lalu tawarkan deploy (izin dulu sebelum `git push origin main`).
+- Ada baris di situ = **ada commit di `origin` yang belum dirilis** → masukkan ke tabel "Antrian sekarang", lalu tawarkan deploy (izin dulu sebelum `git push dramaapp main`).
 - Kosong = tidak ada rilis tertinggal.
 
 Rollback 1-baris: Vercel → project `dramaapp` → Deployments → Promote commit **`954c9ca`** (14 Agustus).

@@ -179,17 +179,69 @@ uji hidup lewat Playly tiruan + server produksi di port 3031:
 | Playly dimatikan → ambil video | "Playly tidak bisa dihubungi…"; halaman admin & `/discover` tetap 200 |
 | Lepas kaitan | bagian Playly hilang dari `/discover` |
 
-**❓ BELUM terverifikasi** — sambungan ke **Playly yang sungguhan**: kunci
-`plyk_` asli belum ada, jadi bentuk JSON balasan mereka belum pernah dilihat
-langsung. Dua hal yang mungkin perlu disesuaikan setelah dicoba dengan kunci asli:
+**✅ Terverifikasi ke Playly ASLI (2026-08-25).** Sambungan sungguhan akhirnya
+diuji, dan ternyata integrasi ini **tidak pernah bisa jalan** sebelumnya karena
+tiga salah tebak yang saling menutupi. Semuanya sudah diperbaiki:
 
-1. **Nama field** di JSON Playly. Penerjemah sudah mencoba banyak nama yang lazim
-   (`title`/`judul`/`name`, `creator`/`author`/`uploader`, dst). Kalau Playly
-   memakai nama lain, tambahkan namanya di daftar konstanta di `lib/playly.ts`
-   bagian "PENERJEMAH DAFTAR VIDEO" — logikanya tidak perlu diubah.
-2. **Pola alamat embed** `/embed/{id}`, yang dipakai **hanya kalau** Playly tidak
-   mengirim `embedUrl` di JSON-nya. Kalau polanya beda, ubah lewat
-   `PLAYLY_EMBED_PATH` tanpa mengubah kode.
+| Yang dulu salah | Kenyataannya | Akibat sebelum diperbaiki |
+|---|---|---|
+| pola alamat player ditebak `/embed/{id}` | `/id/{id}/embed` | alamat rakitan selalu meleset |
+| hanya menerima alamat `https://…` | Playly mengirim `embedUrl` **relatif** (`/id/123/embed`) | semua video dibuang diam-diam |
+| kunci `plyk_` dianggap satu-satunya jalan | ada katalog **publik** `/api/catalog` | tanpa kunci, halaman admin kosong total |
 
-Cara memastikan: pasang kunci asli → `/admin/settings/playly` → **Uji sambungan**.
-Kalau jumlah video terbaca > 0, dua hal di atas sudah benar.
+Bentuk balasan Playly yang sebenarnya (dari katalog asli):
+
+```json
+{ "ok": true, "count": 15, "videos": [
+  { "id": 1787642113102, "title": "…", "thumb": "data:image/jpeg;base64,…",
+    "duration": "2:20", "creator": "coklat",
+    "watchUrl": "/id/1787642113102", "embedUrl": "/id/1787642113102/embed" } ] }
+```
+
+Bukti uji hidup: 15 video terambil (0 dibuang), satu dikaitkan ke drama, lalu
+video benar-benar **diputar di browser** — maju 2,27 s → 7,27 s, gambar
+1280×720, dan berkas videonya nyata (MP4 44 MB, streaming HTTP 206).
+
+---
+
+## 5. Dua sumber daftar video
+
+Halaman `/admin/videos/playly` mengambil daftar dengan urutan berikut:
+
+1. **Jalur mitra** — `GET /api/videos` dengan header `X-Playly-Key`. Isinya
+   video milik akun pemegang kunci saja.
+2. **Katalog publik** — `GET /api/catalog`, tanpa kunci. Dipakai kalau kunci
+   belum dipasang **atau** kunci ditolak Playly. Isinya seluruh video yang
+   memang sudah dibuka Playly untuk umum (halaman `/nonton` milik Playly
+   memakai endpoint yang sama).
+
+Kalau daftar datang dari katalog publik, halaman admin menampilkan pita kuning
+yang mengatakannya apa adanya — supaya tidak ada yang mengira kunci mitranya
+sudah jalan padahal belum. Kegagalan lain (Playly mati, timeout) **tidak**
+diam-diam dialihkan ke katalog publik; itu tetap dilaporkan sebagai error.
+
+Kunci mitra diterbitkan **pengelola Playly**, tidak bisa dibuat sendiri.
+
+---
+
+## 6. Gerbang domain di sisi Playly (di luar kendali kode kita)
+
+Playly hanya mau video-nya disematkan di domain mitra yang **sudah didaftarkan
+di sisi mereka**. Domain yang belum terdaftar menerima halaman:
+
+> 🔒 Situs ini belum diizinkan — Video ini hanya boleh disematkan di situs mitra
+> yang terdaftar. Hubungi pengelola Playly untuk mendaftarkan domain.
+
+Pemeriksaannya memakai **nama domain** pengirim (bukan skema http/https), dan
+dijalankan di server Playly — jadi tidak ada setelan di DramaKu yang bisa
+mengubahnya.
+
+Status per 2026-08-25:
+
+| Domain | Status |
+|---|---|
+| `dramaapp.vercel.app` | ✅ sudah terdaftar |
+| `localhost` (komputer sendiri) | ❌ ditolak |
+
+**Konsekuensi praktis:** video Playly **tidak bisa dicoba dari `localhost`** —
+itu normal, bukan kerusakan. Pengujian pemutaran harus lewat domain produksi.

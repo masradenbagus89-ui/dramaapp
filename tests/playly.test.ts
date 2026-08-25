@@ -19,7 +19,9 @@ import {
   isAllowedPlaylyEmbedUrl,
   isValidPlaylyKey,
   maskPlaylyKey,
+  DEFAULT_PLAYLY_EMBED_PATH,
   normalizePlaylyVideos,
+  normalizeThumbnail,
   parseAllowedHosts,
   parseDurationSeconds,
   playlyKeyError,
@@ -380,5 +382,130 @@ describe("parseAllowedHosts — baca daftar domain dari env", () => {
   it("kosong/undefined -> daftar kosong", () => {
     expect(parseAllowedHosts("")).toEqual([]);
     expect(parseAllowedHosts(undefined)).toEqual([]);
+  });
+});
+
+
+// =====================================================================
+// PENGUNCI BUG NYATA (2026-08-25): video Playly sungguhan TIDAK PERNAH
+// muncul di DramaKu karena dua salah tebak yang saling menutupi:
+//   a. alamat pemutar ditebak "/embed/<id>", aslinya "/id/<id>/embed";
+//   b. Playly mengirim "embedUrl" RELATIF ("/id/123/embed"), sedangkan
+//      penerjemah kita cuma menerima yang diawali "https://" -> semua
+//      video dibuang diam-diam dengan alasan "alamat tidak bisa dibaca".
+// Bentuk data di bawah disalin dari balasan Playly ASLI hari itu, jadi
+// kalau Playly mengubah bentuknya lagi, tes ini yang merah lebih dulu —
+// bukan halaman admin yang mendadak kosong tanpa penjelasan.
+// =====================================================================
+describe("balasan Playly ASLI — bentuk yang dulu bikin video hilang", () => {
+  const THUMB_JPEG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBD";
+
+  it("embedUrl RELATIF dilengkapi jadi alamat penuh (dulu dibuang)", () => {
+    const { videos, rejected } = normalizePlaylyVideos(
+      {
+        ok: true,
+        count: 1,
+        videos: [
+          {
+            id: 1787642113102,
+            title: "Transformers 8 Rise of the Unicron",
+            thumb: THUMB_JPEG,
+            duration: "2:20",
+            creator: "coklat",
+            watchUrl: "/id/1787642113102",
+            embedUrl: "/id/1787642113102/embed",
+          },
+        ],
+      },
+      IZIN,
+      POLA,
+    );
+
+    expect(rejected).toHaveLength(0);
+    expect(videos).toHaveLength(1);
+    expect(videos[0]).toMatchObject({
+      id: "1787642113102", // id angka pun dipakai sebagai teks
+      title: "Transformers 8 Rise of the Unicron",
+      durationSeconds: 140,
+      durationLabel: "2:20",
+      creator: "coklat",
+      embedUrl: "https://playly-dashboard.vercel.app/id/1787642113102/embed",
+      thumbnail: THUMB_JPEG,
+    });
+  });
+
+  it("embedUrlFull (alamat penuh) menang atas embedUrl relatif", () => {
+    const { videos } = normalizePlaylyVideos(
+      [
+        {
+          id: 1787548316429,
+          title: "Trailer",
+          embedUrl: "/id/1787548316429/embed",
+          embedUrlFull: "https://playly-dashboard.vercel.app/id/1787548316429/embed",
+        },
+      ],
+      IZIN,
+      POLA,
+    );
+    expect(videos[0].embedUrl).toBe(
+      "https://playly-dashboard.vercel.app/id/1787548316429/embed",
+    );
+  });
+
+  it("tanpa alamat embed, alamat dirakit pakai pola Playly yang benar", () => {
+    const { videos } = normalizePlaylyVideos(
+      [{ id: 1786765416899, title: "pesona alam yg estetik" }],
+      IZIN,
+      { baseUrl: "https://playly-dashboard.vercel.app", pattern: DEFAULT_PLAYLY_EMBED_PATH },
+    );
+    expect(videos[0].embedUrl).toBe(
+      "https://playly-dashboard.vercel.app/id/1786765416899/embed",
+    );
+  });
+
+  it("alamat relatif TIDAK bisa dipakai menyelundupkan domain lain", () => {
+    // "//jahat.example.com/x" terbaca browser sebagai domain LAIN, bukan path.
+    const { videos, rejected } = normalizePlaylyVideos(
+      [{ id: "x1", title: "Palsu", embedUrl: "//jahat.example.com/id/x1/embed" }],
+      IZIN,
+      POLA,
+    );
+    expect(videos).toHaveLength(0);
+    expect(rejected[0].reason).toBe("domain player belum diizinkan");
+  });
+});
+
+describe("normalizeThumbnail — sampul boleh data URI, tapi bukan SVG", () => {
+  it("data URI gambar raster diterima apa adanya", () => {
+    const png = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUg==";
+    expect(normalizeThumbnail(png)).toBe(png);
+  });
+
+  it("SVG ditolak — bisa memuat <script> kalau alamatnya dibuka langsung", () => {
+    expect(
+      normalizeThumbnail("data:image/svg+xml;base64,PHN2Zz48c2NyaXB0Pg=="),
+    ).toBeNull();
+  });
+
+  it("alamat relatif dilengkapi memakai alamat dasar Playly", () => {
+    expect(
+      normalizeThumbnail("/thumbs/a.jpg", "https://playly-dashboard.vercel.app"),
+    ).toBe("https://playly-dashboard.vercel.app/thumbs/a.jpg");
+  });
+
+  it("http biasa (tidak aman) tetap ditolak", () => {
+    expect(normalizeThumbnail("http://playly-dashboard.vercel.app/a.jpg")).toBeNull();
+  });
+});
+
+describe("readPlaylyConfig — katalog publik & pola bawaan", () => {
+  it("alamat katalog publik ikut disusun dari alamat dasar", () => {
+    expect(readPlaylyConfig({}).catalogUrl).toBe(
+      "https://playly-dashboard.vercel.app/api/catalog",
+    );
+  });
+
+  it("pola bawaan sudah yang terverifikasi, bukan tebakan lama", () => {
+    expect(readPlaylyConfig({}).embedPattern.pattern).toBe("/id/{id}/embed");
   });
 });

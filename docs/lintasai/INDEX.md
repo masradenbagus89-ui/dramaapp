@@ -7,6 +7,7 @@
 
 ## Rencana
 
+- [2026-08-25-playly-video-tidak-muncul.md](./rencana/2026-08-25-playly-video-tidak-muncul.md) — video Playly tak pernah muncul: 4 lapis penyebab (pola embed salah, embedUrl relatif, kunci ditolak, gerbang domain Playly)
 - [2026-08-18-tahap-7-kode-pemulihan.md](./rencana/2026-08-18-tahap-7-kode-pemulihan.md) — kode pemulihan password penonton, tanpa email/domain
 - [2026-08-18-tahap-6-login-penonton.md](./rencana/2026-08-18-tahap-6-login-penonton.md) — tutup IDOR jalur koin: identitas penonton pindah ke cookie terverifikasi
 - [2026-08-18-tahap-5-rating-share.md](./rencana/2026-08-18-tahap-5-rating-share.md) — rating penonton (1 email = 1 suara, TIDAK dikirim ke Google) + share + balasan komentar

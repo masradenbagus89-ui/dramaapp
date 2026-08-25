@@ -49,6 +49,9 @@ export default function PlaylyVideoPicker({
   const [status, setStatus] = useState<Status>("loading");
   const [videos, setVideos] = useState<PlaylyVideo[]>([]);
   const [errorMsg, setErrorMsg] = useState("");
+  // Catatan dari server saat daftar TIDAK datang dari kunci mitra (mis. kunci
+  // belum dipasang / ditolak, jadi dipakai katalog publik Playly).
+  const [catatan, setCatatan] = useState("");
 
   const [aktif, setAktif] = useState<PlaylyVideo | null>(null);
   const [dramaId, setDramaId] = useState("");
@@ -65,12 +68,14 @@ export default function PlaylyVideoPicker({
   const muat = useCallback(async () => {
     setStatus("loading");
     setErrorMsg("");
+    setCatatan("");
     try {
       const res = await fetch("/api/admin/playly/videos", { cache: "no-store" });
       const data = (await res.json()) as {
         ok?: boolean;
         videos?: PlaylyVideo[];
         error?: string;
+        note?: string | null;
       };
 
       if (!res.ok || !data.ok) {
@@ -80,6 +85,7 @@ export default function PlaylyVideoPicker({
       }
 
       const list = data.videos ?? [];
+      setCatatan(data.note ?? "");
       setVideos(list);
       setStatus(list.length > 0 ? "ready" : "empty");
     } catch {
@@ -356,6 +362,14 @@ export default function PlaylyVideoPicker({
             Muat ulang
           </Button>
         </div>
+
+        {/* 0) Dari mana daftar ini datang — hanya muncul kalau BUKAN jalur mitra */}
+        {catatan && status !== "loading" && status !== "error" && (
+          <p className="mt-4 flex items-start gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-100">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <span>{catatan}</span>
+          </p>
+        )}
 
         {/* 1) Sedang memuat */}
         {status === "loading" && (

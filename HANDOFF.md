@@ -144,6 +144,38 @@ jadi Vercel memang TIDAK memantau `ojokesusu/dramaku`.
 Sesudah ter-push, Vercel deploy sendiri. Tanda berhasil: `/admin/videos/playly` tidak
 lagi 404.
 
+### 🎥 2026-08-25 — FILM BESAR TIDAK BISA DIPUTAR: akarnya BERKAS, bukan kode
+
+Owner menambahkan film `over-your-dead-body` lewat panel admin (tersimpan benar: `kind=movie`,
+1 video, gratis, subtitle id) tapi tidak bisa diputar. Ditelusuri sampai ke berkasnya. **Rantai
+penyajian SEHAT** — tunnel 200, folder ada, `1.mp4` ada, `video/mp4`, Range → 206, codec H.264+AAC.
+Dua angka ini yang membunuhnya:
+
+| Fakta terukur | Angka |
+|---|---|
+| Ukuran & durasi film | 1,82 GB / 105 menit 20 detik |
+| Aliran yang DIBUTUHKAN film | **281 KB/detik** (2,30 Mbps) terus-menerus |
+| Kapasitas tunnel PC backup (diukur 2x: di film & di drama biasa) | **~180 KB/detik** (1,4 Mbps) |
+| "Daftar isi" MP4 (box `moov`) | ada di **UJUNG** berkas, **5,1 MB** → browser wajib mengunduhnya dulu = **~28 detik layar kosong** sebelum gambar pertama |
+| Pembanding: 1 episode drama biasa | 12,7 MB → ringan, itulah sebabnya drama selama ini aman |
+
+**Kesimpulan:** selama film disajikan dari PC backup lewat quick tunnel, film sebesar ini TIDAK akan
+mulus. Berlaku untuk SETIAP film, bukan judul ini saja. Cara mengukurnya ulang: `curl -H "Range:
+bytes=0-2097151"` ke berkasnya, bandingkan `speed_download` dengan (ukuran / durasi).
+
+**Keputusan owner 2026-08-25:** perkecil filmnya sekali jalan (720p ~1 Mbps + `+faststart`).
+Alatnya sudah disiapkan & lolos uji parser PowerShell 5.1: **`pc-backup-agent/optimalkan-film.ps1`**
+(commit `2dffd3a`). Jalankan di PC backup, PowerShell:
+
+    powershell -ExecutionPolicy Bypass -File optimalkan-film.ps1 -DramaId over-your-dead-body
+
+Berkas asli TIDAK dihapus (disimpan jadi `1.asli.mp4`). Butuh `ffmpeg`; kalau belum terpasang script
+berhenti sopan sambil menyebut cara memasangnya (`winget install --id Gyan.FFmpeg -e`).
+
+**Opsi yang TIDAK diambil (kalau nanti berubah pikiran):** (a) hanya `+faststart` tanpa memperkecil —
+mulai instan tapi tetap buffering; (b) pindah film ke CDN (R2/Bunny) — permanen, berbayar bulanan;
+(c) sediakan 2 versi (kode sudah mendukung varian `1.720p.mp4`, lihat `lib/video.ts`).
+
 ## 🔴 SEDANG DIKERJAKAN: video mati berulang → dibikin PERMANEN
 
 > ## ✅ SEJAK 2026-08-22 SORE: ALAMAT VIDEO DIURUS OTOMATIS — JANGAN TEMPEL MANUAL LAGI

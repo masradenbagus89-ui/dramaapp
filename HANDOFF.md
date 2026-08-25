@@ -37,11 +37,15 @@ Permintaan owner: selama ini "Tambah Drama" selalu menuntut jumlah episode; atas
    produksi** 2026-08-25 ("Success. No rows returned"). Diverifikasi baca dari lokal: kolom `kind`
    ada, semua judul lama bernilai `series` — nol perubahan pada data lama.
 2. SELESAI — kode di-commit lokal: **`5156949`**.
-3. **BELUM di-push** — `git push` dari sesi AI ditolak: Git minta login GitHub dan sesi AI tak bisa
-   membuka dialognya (bukan masalah jaringan; github.com balas 200, `ls-remote` anonim ke `origin`
-   jalan, `dramaku` privat jadi butuh login juga). **Owner jalankan sendiri di PowerShell dari folder
-   project:** `git push origin main` lalu `git push dramaku main`. Push ke `origin` = tombol rilis
-   (Vercel memantau repo itu).
+3. SELESAI — **sudah di-push & TAYANG**. Push pertama dijalankan owner sendiri di PowerShell
+   (sesi AI tak bisa membuka dialog login GitHub; sesudah owner login, kredensial tersimpan dan sesi
+   AI bisa fetch/push lagi). Push ke `dramaku` sempat DITOLAK karena repo itu berisi 5 commit Playly
+   rekan yang belum pernah masuk produksi → atas izin owner keduanya **digabung** (`e765e29`) dan
+   dirilis bersama. Hasil akhir: lokal = `origin/main` = `dramaku/main` = `e765e29`, selisih NOL.
+   **Terverifikasi tayang** di deployment `dpl_28aUguP18E7FpHXZ4grMFFi3Tp5w`: chunk produksi
+   `/_next/static/chunks/3om_miassjcgs.js` memuat "Jenis tayangan" + "Film selalu gratis", dan
+   `/admin/videos/playly` balas **200** (sebelumnya 404). Sebelum push: 358 tes lulus, `tsc` exit 0,
+   `next build` sukses.
 4. MENYUSUL — Run `supabase_migrations/mark_existing_movies.sql` untuk menandai 7 judul film lama
    (Transformers, Spider-Man, Avengers, Predator, 28 Years Later, Fireworks Wednesday, The Dark
    Knight) jadi Film. Boleh sebelum/sesudah deploy — kode lama mengabaikan kolom `kind`.

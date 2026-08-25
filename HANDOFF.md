@@ -29,14 +29,21 @@ adanya dari 2026-08-21, belum diukur ulang.
 ## 🎬 2026-08-25 — FILM TANPA EPISODE (panel admin) — SIAP, MENUNGGU 1 LANGKAH OWNER
 
 Permintaan owner: selama ini "Tambah Drama" selalu menuntut jumlah episode; atasan mau menambah
-**film utuh** yang tidak berepisode. Sudah dikerjakan di kode (belum di-commit, belum deploy).
+**film utuh** yang tidak berepisode.
 
-**⚠️ URUTAN WAJIB — jangan dibalik:**
-1. Supabase Dashboard → SQL Editor → tempel & Run isi `supabase_migrations/add_kind_to_dramas.sql`
-   (menambah kolom `kind`, default `'series'`; judul lama tidak berubah).
-2. Baru commit + push + deploy kodenya.
-   Kalau dibalik, kode mengirim kolom `kind` yang belum ada → **SEMUA** penyimpanan drama gagal,
-   bukan cuma film. (Kalau itu terjadi, pesan errornya sudah diterjemahkan & menyebut berkas SQL-nya.)
+**Posisi sekarang (urutan aman sudah ditempuh: SQL dulu, kode belakangan):**
+1. SELESAI — SQL `supabase_migrations/add_kind_to_dramas.sql` **sudah dijalankan owner di Supabase
+   produksi** 2026-08-25 ("Success. No rows returned"). Diverifikasi baca dari lokal: kolom `kind`
+   ada, semua judul lama bernilai `series` — nol perubahan pada data lama.
+2. SELESAI — kode di-commit lokal: **`5156949`**.
+3. **BELUM di-push** — `git push` dari sesi AI ditolak: Git minta login GitHub dan sesi AI tak bisa
+   membuka dialognya (bukan masalah jaringan; github.com balas 200, `ls-remote` anonim ke `origin`
+   jalan, `dramaku` privat jadi butuh login juga). **Owner jalankan sendiri di PowerShell dari folder
+   project:** `git push origin main` lalu `git push dramaku main`. Push ke `origin` = tombol rilis
+   (Vercel memantau repo itu).
+4. MENYUSUL — Run `supabase_migrations/mark_existing_movies.sql` untuk menandai 7 judul film lama
+   (Transformers, Spider-Man, Avengers, Predator, 28 Years Later, Fireworks Wednesday, The Dark
+   Knight) jadi Film. Boleh sebelum/sesudah deploy — kode lama mengabaikan kolom `kind`.
 
 **Yang berubah untuk admin:** ada pilihan **Jenis tayangan: 📺 Serial / 🎬 Film** di form. Pilih Film →
 kolom "Jumlah episode" hilang (sistem mengunci 1 video = `1.mp4`) dan centang "berbayar (koin)"

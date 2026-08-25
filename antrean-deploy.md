@@ -3,7 +3,9 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-08-24 sore WIB (`git fetch origin` + `git fetch dramaku` dua-duanya SUKSES; `HEAD` = `origin/main` = `dramaku/main` = **`ba82058`**, selisih NOL)
+**Terakhir dicek:** 2026-08-25 (⚠️ `git fetch` **TIDAK bisa dijalankan dari sesi AI** — Git minta login GitHub, dan sesi AI tak bisa membuka dialog login. Yang berhasil: `git ls-remote origin` tanpa login (repo publik) → `origin/main` = **`617f6a0`**. `dramaku` repo privat → tak terbaca tanpa login. Lokal = **`5156949`**, yaitu **1 commit di depan `origin/main`** dan MENUNGGU PUSH oleh owner)
+
+**Catatan sebelumnya:** 2026-08-24 sore WIB (`git fetch origin` + `git fetch dramaku` dua-duanya SUKSES; `HEAD` = `origin/main` = `dramaku/main` = **`ba82058`**, selisih NOL)
 
 ## Siapa memantau apa
 
@@ -22,6 +24,8 @@ AUTH_SECRET di Vercel: dikonfirmasi ADA oleh owner 2026-08-18.
 
 | Status | Commit | Isi | Aksi |
 |---|---|---|---|
+| ⏸️ **MENUNGGU PUSH (owner)** | `5156949` | Fitur **Film tanpa episode** di panel admin (jenis tayangan Serial/Film) + kolom DB `kind` + 2 berkas tes baru + rencana & catatan | Owner sudah memberi izin rilis 2026-08-25 & **SQL `add_kind_to_dramas.sql` sudah dijalankan di Supabase produksi (Success)**. Push GAGAL dari sesi AI: Git minta login GitHub yang tak bisa dibuka di sesi non-interaktif (bukan masalah jaringan — github.com balas 200). **Owner jalankan di PowerShell:** `git push origin main` lalu `git push dramaku main`. Sudah diperiksa sebelum commit: nol secret di diff, **302 tes lulus**, `tsc` exit 0, `next build` sukses, halaman film diuji di dev server mode data lokal |
+| ⏸️ **menunggu owner (boleh kapan saja)** | — | SQL data-fix `supabase_migrations/mark_existing_movies.sql` — menandai 7 judul film lama (Transformers, Spider-Man, Avengers, Predator, 28 Years Later, Fireworks Wednesday, The Dark Knight) sebagai `kind = 'movie'` + melepas tanda berbayar yang memang tak berefek | Supabase → SQL Editor → tempel & Run. Boleh sebelum atau sesudah deploy (kode lama mengabaikan kolom `kind`, jadi tidak merusak apa pun) |
 | ✅ **sudah di-push** | `ba82058` | Tolak `api.trycloudflare.com` sebagai alamat video (2 lapis: saringan di `start-video-services.ps1` + `HOST_TERLARANG` di `lib/video-base.ts`) + `HANDOFF.md` siklus ke-4 | Owner memberi izin 2026-08-24. Dual push SUKSES (`origin` + `dramaku`, selisih nol). Diperiksa dulu: nol secret di diff, **283 tes lulus**, `tsc` exit 0, `next build` sukses, script PS lolos parser. Sesudah push: raw GitHub dicocokkan persis dengan berkas yang diuji; situs `/beranda` 200 & `/api/teaser` 206 |
 | ✅ **video PULIH (siklus ke-4)** | — | Akarnya PEMASANGAN, bukan kode: `start-video-services.ps1` tidak ada di PC backup + watchdog 15 menit belum pernah dibuat. Keduanya dibereskan; alamat aktif `boats-voluntary-ensure-kim.trycloudflare.com` (akan berganti — jangan dihafal) | **Terverifikasi 2026-08-24 dari jaringan LAIN:** `/api/teaser` **206** di ep 1/27/56, `video/mp4`, signature `ftypmp42`, root tunnel **200**. Owner mencoba sendiri: video tayang. Sejak sekarang watchdog memulihkan sendiri ≤15 menit |
 | ✅ **video PULIH** | — | Tunnel sore (`written-coated-...`) LENYAP (DNS `Non-existent domain`) → owner jalankan `start-dramaapp.ps1` → alamat baru **`proxy-marks-isolation-subjects.trycloudflare.com`**. Langkah [5/6] gagal 403 (`VERCEL_TOKEN` mati), alamat masuk lewat jalur manual | **Terverifikasi 2026-08-20 malam:** URL yang dipakai produksi balas **206** `video/mp4`, isi diawali `ftypmp42`. ⚠️ Sementara — mati lagi saat PC backup restart |
@@ -32,7 +36,9 @@ AUTH_SECRET di Vercel: dikonfirmasi ADA oleh owner 2026-08-18.
 | ⏸️ menunggu owner | — | 3 env Playly di Vercel (`DASHBOARD_API_URL`, `DASHBOARD_API_KEY_HEADER=X-Playly-Key`, `DASHBOARD_API_KEY`) | Owner isi manual + Redeploy; sesudah itu kartu berubah jadi "Tersambung" |
 | ⏸️ menunggu rekan | — | Dashboard Playly masih KOSONG (`count: 0`) | Kunci sudah diuji SAH 2026-08-19; minta rekan upload video contoh |
 
-**Selisih `dramaku/main` vs `origin/main`:** NOL — lokal, `origin`, dan `dramaku` semuanya di `4954817` (diverifikasi 2026-08-20 malam sesudah dual push). Branch `origin/chore/penjaga-anti-tidur` sudah ter-merge penuh ke `main` (nol commit tertinggal), jadi bukan pekerjaan yang menggantung.
+**Status 2026-08-25:** lokal `5156949` = `origin/main` `617f6a0` + 1 commit (belum di-push). Selisih `dramaku` belum bisa diukur dari sesi AI (repo privat, butuh login).
+
+**Catatan lama — selisih `dramaku/main` vs `origin/main`:** NOL — lokal, `origin`, dan `dramaku` semuanya di `4954817` (diverifikasi 2026-08-20 malam sesudah dual push). Branch `origin/chore/penjaga-anti-tidur` sudah ter-merge penuh ke `main` (nol commit tertinggal), jadi bukan pekerjaan yang menggantung.
 
 ## Cara cek cepat (AI / kamu)
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { Drama } from "@/lib/types";
+import { isMovie, type Drama } from "@/lib/types";
 import {
   PLAYING_ROTATE_MS,
   swipeDirection,
@@ -163,7 +163,7 @@ export default function HomeHero({
                 </span>
               )}
               {hero.year && <span>{hero.year}</span>}
-              <span>{hero.episodes} Episode</span>
+              <span>{isMovie(hero) ? "Film" : `${hero.episodes} Episode`}</span>
               {genres.slice(0, 2).map((g) => (
                 <span key={g} className="text-white/70">
                   {g}

@@ -1,4 +1,4 @@
-import type { Drama } from "./types";
+import { isMovie, type Drama } from "./types";
 
 /**
  * Data terstruktur (JSON-LD) untuk halaman detail drama.
@@ -12,13 +12,17 @@ import type { Drama } from "./types";
  * baik tanpa bintang daripada mengirim angka karangan.
  */
 export function dramaJsonLd(drama: Drama, url: string): Record<string, unknown> {
+  // Film dan serial punya tipe schema.org yang berbeda. Mengirim "TVSeries"
+  // untuk film (apalagi dengan numberOfEpisodes) = memberi Google keterangan
+  // yang salah tentang halaman ini.
+  const film = isMovie(drama);
   const data: Record<string, unknown> = {
     "@context": "https://schema.org",
-    "@type": "TVSeries",
+    "@type": film ? "Movie" : "TVSeries",
     name: drama.title,
     url,
     description: drama.synopsis,
-    numberOfEpisodes: drama.episodes,
+    ...(film ? {} : { numberOfEpisodes: drama.episodes }),
     inLanguage: "id",
   };
 

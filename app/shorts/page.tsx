@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getAllDramasCached } from "@/lib/dramas";
+import { isMovie } from "@/lib/types";
 import Poster from "@/app/components/Poster";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -53,7 +54,7 @@ export default async function ShortsPage() {
                     {drama.synopsis}
                   </p>
                   <p className="mt-1 text-[11px] text-zinc-500">
-                    {drama.views} ditonton · {drama.episodes} eps.
+                    {drama.views} ditonton · {isMovie(drama) ? "Film" : `${drama.episodes} eps.`}
                   </p>
                 </div>
               </Card>

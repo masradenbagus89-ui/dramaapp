@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 import { getAllDramas, getDramaCached } from "@/lib/dramas";
 import { SITE_URL, absoluteUrl, toMetaDescription } from "@/lib/site";
 import { dramaJsonLd, toJsonLdScript } from "@/lib/structured-data";
-import { subtitleLabel } from "@/lib/types";
+import { isMovie, subtitleLabel } from "@/lib/types";
 import Poster from "@/app/components/Poster";
 import SaveButton from "@/app/components/SaveButton";
 import LikeButton from "@/app/components/LikeButton";
@@ -43,10 +43,13 @@ export async function generateMetadata(
   const drama = await getDramaCached(id);
   if (!drama) return { title: "Drama tidak ditemukan" };
 
+  const film = isMovie(drama);
   const title = `${drama.title} Sub Indo`;
   const description = toMetaDescription(
     drama.synopsis,
-    `Nonton ${drama.title} sub Indo gratis di DramaKu — ${drama.episodes} episode.`,
+    film
+      ? `Nonton film ${drama.title} sub Indo gratis di DramaKu — full movie.`
+      : `Nonton ${drama.title} sub Indo gratis di DramaKu — ${drama.episodes} episode.`,
   );
   const cover = drama.heroImage || drama.posterImage;
   const path = `/drama/${encodeURIComponent(drama.id)}`;
@@ -56,7 +59,7 @@ export async function generateMetadata(
     description,
     alternates: { canonical: path },
     openGraph: {
-      type: "video.tv_show",
+      type: film ? "video.movie" : "video.tv_show",
       title,
       description,
       url: `${SITE_URL}${path}`,
@@ -69,6 +72,7 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
   const { id } = await props.params;
   const drama = await getDramaCached(id);
   if (!drama) notFound();
+  const film = isMovie(drama);
 
   return (
     <div className="mx-auto max-w-7xl pb-10 md:px-6">
@@ -139,7 +143,7 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
               {[
                 drama.year,
                 drama.runtime,
-                drama.episodes > 1 ? `${drama.episodes} episode` : "",
+                film ? "Film" : drama.episodes > 1 ? `${drama.episodes} episode` : "",
                 drama.imdbRating ? `IMDb ${drama.imdbRating}/10` : "",
                 drama.country,
               ]
@@ -239,7 +243,9 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
           </dl>
         )}
 
-        {drama.episodes > 0 && (
+        {/* Daftar episode hanya untuk serial — film cuma punya 1 video, jadi
+            daftar berisi satu baris "Episode 1" tak ada gunanya. */}
+        {!film && drama.episodes > 0 && (
           <>
             <h2 className="mt-6 text-sm font-semibold uppercase tracking-wider text-zinc-300">
               Episode

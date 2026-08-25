@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import type { Drama } from "@/lib/types";
+import { resolveKindRules, type Drama } from "@/lib/types";
 import { isAdminRequest } from "@/lib/session";
 import {
   getDrama,
@@ -19,6 +19,7 @@ type DramaBody = Partial<{
   synopsis: string;
   views: string;
   episodes: number;
+  kind: string;
   posterImage: string;
   heroImage: string;
   gradient: string;
@@ -55,6 +56,26 @@ const IMDB_META_KEYS = [
 ] as const;
 
 type ImdbMetaKey = (typeof IMDB_META_KEYS)[number];
+
+/**
+ * Terjemahkan error mentah database ke bahasa yang bisa ditindaklanjuti admin.
+ * Kasus yang paling mungkin muncul setelah fitur film: kolom `kind` belum
+ * dibuat di Supabase, dan itu membuat SEMUA penyimpanan drama gagal — bukan
+ * cuma film. Tanpa ini admin hanya melihat pesan PostgREST mentah.
+ */
+function explainSaveError(raw: string): string {
+  const kolomKindHilang =
+    /kind/i.test(raw) && /(column|schema cache|does not exist)/i.test(raw);
+  if (kolomKindHilang) {
+    return (
+      "Kolom 'kind' (jenis tayangan: serial/film) belum ada di database. " +
+      "Buka Supabase → SQL Editor, jalankan isi berkas " +
+      "supabase_migrations/add_kind_to_dramas.sql, lalu simpan lagi. " +
+      `Detail teknis: ${raw}`
+    );
+  }
+  return raw;
+}
 
 /** Ambil field metadata IMDb dari body (string ter-trim; kosong = tidak diisi). */
 function pickImdbMeta(body: DramaBody): Partial<Pick<Drama, ImdbMetaKey>> {
@@ -95,10 +116,15 @@ export async function POST(req: NextRequest) {
     if (!body.category?.trim()) {
       return NextResponse.json({ error: "Kategori wajib diisi." }, { status: 400 });
     }
-    const epNum = Number(body.episodes);
-    if (!Number.isFinite(epNum) || epNum < 1) {
+    // Jenis tayangan + akibatnya (jumlah video & gratis/berbayar) diputuskan di
+    // satu tempat: lib/types.ts. Judul lama yang dikirim tanpa field ini tetap
+    // dibaca sebagai serial.
+    const rules = resolveKindRules(body);
+    const isFilm = rules.kind === "movie";
+    if (rules.episodes === null) {
       return NextResponse.json({ error: "Jumlah episode minimal 1." }, { status: 400 });
     }
+    const epNum = rules.episodes;
 
     const id = body.id?.trim() || slugify(body.title);
     if (!id) {
@@ -107,6 +133,10 @@ export async function POST(req: NextRequest) {
 
     const existing = await getDrama(id);
     const isNew = !existing;
+
+    // Film untuk sekarang SELALU gratis (keputusan owner 2026-08-25) — lihat
+    // alasannya di resolveKindRules.
+    const premium = rules.premium;
 
     // Subtitle: terima array kode bahasa, buang yang tidak valid/duplikat.
     // Kalau field dikirim (array) → dianggap sumber kebenaran (boleh dikosongkan).
@@ -127,7 +157,8 @@ export async function POST(req: NextRequest) {
         id,
         title: body.title.trim(),
         category: body.category as Drama["category"],
-        episodes: Math.floor(epNum),
+        episodes: epNum,
+        ...(isFilm ? { kind: rules.kind } : {}),
         views: body.views?.trim() || "1.0K",
         synopsis: body.synopsis?.trim() || "",
         gradient: body.gradient?.trim() || pickRandomGradient(),
@@ -135,7 +166,7 @@ export async function POST(req: NextRequest) {
         ...(body.heroImage?.trim() ? { heroImage: body.heroImage.trim() } : {}),
         ...(body.exclusive ? { exclusive: true } : {}),
         ...(subtitles.length ? { subtitles } : {}),
-        ...(body.premium ? { premium: true } : {}),
+        ...(premium ? { premium: true } : {}),
         ...pickImdbMeta(body),
       };
     } else {
@@ -143,7 +174,7 @@ export async function POST(req: NextRequest) {
         ...existing!,
         title: body.title.trim(),
         category: body.category as Drama["category"],
-        episodes: Math.floor(epNum),
+        episodes: epNum,
         ...(body.views?.trim() ? { views: body.views.trim() } : {}),
         ...(body.synopsis?.trim() ? { synopsis: body.synopsis.trim() } : {}),
         ...(body.gradient?.trim() ? { gradient: body.gradient.trim() } : {}),
@@ -156,8 +187,11 @@ export async function POST(req: NextRequest) {
         if (subtitles.length) drama.subtitles = subtitles;
         else delete drama.subtitles;
       }
-      if (typeof body.premium === "boolean") {
-        if (body.premium) drama.premium = true;
+      // Jenis tayangan ikut ditimpa: serial boleh diubah jadi film & sebaliknya.
+      if (isFilm) drama.kind = "movie";
+      else delete drama.kind;
+      if (typeof premium === "boolean") {
+        if (premium) drama.premium = true;
         else delete drama.premium;
       }
       applyImdbMeta(drama, body, true);
@@ -169,7 +203,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, id: drama.id, action, drama });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Gagal simpan drama";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: explainSaveError(message) }, { status: 500 });
   }
 }
 

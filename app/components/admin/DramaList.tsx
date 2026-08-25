@@ -6,7 +6,7 @@
 // murni menampilkan. Tampilan dirombak ke shadcn/ui (Table, Button, Badge) —
 // perilaku & aksi tetap sama persis.
 import Link from "next/link";
-import type { Drama } from "@/lib/types";
+import { isMovie, type Drama } from "@/lib/types";
 import { CATEGORY_COLORS } from "@/app/admin/constants";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -60,7 +60,7 @@ export default function DramaList({
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-sm font-semibold text-white">{d.title}</div>
                       <div className="text-xs text-zinc-500">
-                        {d.episodes} eps · {d.views}
+                        {isMovie(d) ? "Film" : `${d.episodes} eps`} · {d.views}
                       </div>
                     </div>
                   </div>

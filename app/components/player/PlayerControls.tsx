@@ -18,6 +18,7 @@ export default function PlayerControls({
   title,
   currentEp,
   episodes,
+  isMovie = false,
   cueText,
   lockedActive,
   controlsVisible,
@@ -43,6 +44,8 @@ export default function PlayerControls({
   title: string;
   currentEp: number;
   episodes: number;
+  /** Film = 1 video utuh: semua tombol berbau episode disembunyikan. */
+  isMovie?: boolean;
   cueText: string;
   lockedActive: boolean;
   controlsVisible: boolean;
@@ -73,14 +76,18 @@ export default function PlayerControls({
         <h1 className="line-clamp-2 text-[13px] font-semibold leading-tight text-white/95 drop-shadow-md">
           {title}
         </h1>
-        <button
-          onClick={onOpenEpisodes}
-          className="pointer-events-auto mt-1 flex min-h-11 items-center gap-1 text-[11px] font-medium text-white/70 active:text-white"
-        >
-          <LayoutGrid className="h-3.5 w-3.5" />
-          Eps {currentEp} / {episodes}
-          <ChevronRight className="h-3 w-3" strokeWidth={2.5} />
-        </button>
+        {isMovie ? (
+          <p className="mt-1 text-[11px] font-medium text-white/70">Film</p>
+        ) : (
+          <button
+            onClick={onOpenEpisodes}
+            className="pointer-events-auto mt-1 flex min-h-11 items-center gap-1 text-[11px] font-medium text-white/70 active:text-white"
+          >
+            <LayoutGrid className="h-3.5 w-3.5" />
+            Eps {currentEp} / {episodes}
+            <ChevronRight className="h-3 w-3" strokeWidth={2.5} />
+          </button>
+        )}
       </div>
 
       {cueText && (
@@ -121,17 +128,19 @@ export default function PlayerControls({
         </div>
 
         <div className="pointer-events-auto flex items-center gap-1.5 sm:gap-3">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={onPrev}
-            disabled={!hasPrev}
-            aria-label="Episode sebelumnya"
-            className="size-9 text-white hover:bg-white/15 hover:text-white disabled:opacity-30"
-          >
-            <SkipBack className="size-5 fill-white" />
-          </Button>
+          {!isMovie && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={onPrev}
+              disabled={!hasPrev}
+              aria-label="Episode sebelumnya"
+              className="size-9 text-white hover:bg-white/15 hover:text-white disabled:opacity-30"
+            >
+              <SkipBack className="size-5 fill-white" />
+            </Button>
+          )}
           <Button
             type="button"
             variant="ghost"
@@ -146,17 +155,19 @@ export default function PlayerControls({
               <Pause className="size-7 fill-white" strokeWidth={0} />
             )}
           </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={onNext}
-            disabled={!hasNext}
-            aria-label="Episode berikutnya"
-            className="size-9 text-white hover:bg-white/15 hover:text-white disabled:opacity-30"
-          >
-            <SkipForward className="size-5 fill-white" />
-          </Button>
+          {!isMovie && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={onNext}
+              disabled={!hasNext}
+              aria-label="Episode berikutnya"
+              className="size-9 text-white hover:bg-white/15 hover:text-white disabled:opacity-30"
+            >
+              <SkipForward className="size-5 fill-white" />
+            </Button>
+          )}
           <span className="hidden text-xs tabular-nums text-white/80 sm:inline">
             {fmtTime(curTime)} / {fmtTime(dur)}
           </span>
@@ -184,17 +195,19 @@ export default function PlayerControls({
             />
           </div>
 
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={onOpenEpisodes}
-            aria-label="Daftar episode"
-            className="hidden h-8 gap-1 rounded-full bg-white/15 px-2.5 text-xs font-bold text-white hover:bg-white/25 hover:text-white sm:inline-flex"
-          >
-            <LayoutGrid className="size-4" />
-            Episode
-          </Button>
+          {!isMovie && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={onOpenEpisodes}
+              aria-label="Daftar episode"
+              className="hidden h-8 gap-1 rounded-full bg-white/15 px-2.5 text-xs font-bold text-white hover:bg-white/25 hover:text-white sm:inline-flex"
+            >
+              <LayoutGrid className="size-4" />
+              Episode
+            </Button>
+          )}
 
           <PlayerSettings {...settings} />
         </div>

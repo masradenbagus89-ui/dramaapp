@@ -5,7 +5,12 @@
 >
 > **AI:** tiap kali ada perbaikan / deploy / keputusan — **perbarui berkas ini di langkah terakhir**, sebelum bilang selesai. Jangan tumpuk sejarah panjang di sini; pindahkan yang lama ke `NEXT-SESSION.md`.
 
-**Terakhir diisi:** 2026-08-24 — video mati lagi (**siklus ke-4**) lalu **dipulihkan & diverifikasi
+**Terakhir diisi:** 2026-08-25 — fitur **Film (tanpa episode)** di panel admin selesai dikerjakan &
+diuji lokal, **menunggu 1 langkah owner: jalankan SQL `supabase_migrations/add_kind_to_dramas.sql`
+di Supabase SEBELUM deploy** (detail di bagian 2026-08-25 di bawah). Catatan video di bawah ini
+masih dari 2026-08-24.
+
+**Sebelumnya (2026-08-24):** video mati lagi (**siklus ke-4**) lalu **dipulihkan & diverifikasi
 ujung-ke-ujung**; akarnya BUKAN kode: berkas `start-video-services.ps1` tidak ada di PC backup +
 penjaga 15 menit ternyata belum pernah dipasang. Keduanya sudah dibereskan. **1 bug kode ditemukan
 & BELUM diperbaiki** (mis-parse `api.trycloudflare.com`, lihat di bawah). Bagian lain masih apa
@@ -20,6 +25,39 @@ adanya dari 2026-08-21, belum diukur ulang.
 - **AWAS dua penomoran "Tahap" yang beda di repo ini** (sumber salah paham antar-sesi):
   (a) **Tahap PRODUK 1-7** = yang dipakai berkas ini. Tahap 1-3 adalah rencana "platform streaming modern gabungan Melolo + IDLIX + Netflix" — SUDAH SELESAI SEMUA: Tahap 1 `1af6e12` (16 Agt), Tahap 2 `00f0d2e` (17 Agt), Tahap 3 `a8ab69e` (17 Agt). Tahap 4-7 kelanjutannya.
   (b) **Tahap INFRASTRUKTUR 1-8** di [`PLAN-MAPPING.md`](./PLAN-MAPPING.md) = peta lama soal setup/tunnel/deploy. Di situ "Tahap 7" berarti *named tunnel*, BUKAN kode pemulihan. Isinya belum diperbarui sejak Juli.
+
+## 🎬 2026-08-25 — FILM TANPA EPISODE (panel admin) — SIAP, MENUNGGU 1 LANGKAH OWNER
+
+Permintaan owner: selama ini "Tambah Drama" selalu menuntut jumlah episode; atasan mau menambah
+**film utuh** yang tidak berepisode. Sudah dikerjakan di kode (belum di-commit, belum deploy).
+
+**⚠️ URUTAN WAJIB — jangan dibalik:**
+1. Supabase Dashboard → SQL Editor → tempel & Run isi `supabase_migrations/add_kind_to_dramas.sql`
+   (menambah kolom `kind`, default `'series'`; judul lama tidak berubah).
+2. Baru commit + push + deploy kodenya.
+   Kalau dibalik, kode mengirim kolom `kind` yang belum ada → **SEMUA** penyimpanan drama gagal,
+   bukan cuma film. (Kalau itu terjadi, pesan errornya sudah diterjemahkan & menyebut berkas SQL-nya.)
+
+**Yang berubah untuk admin:** ada pilihan **Jenis tayangan: 📺 Serial / 🎬 Film** di form. Pilih Film →
+kolom "Jumlah episode" hilang (sistem mengunci 1 video = `1.mp4`) dan centang "berbayar (koin)"
+hilang. Draft IMDb bertipe movie otomatis memilih Film.
+
+**Keputusan owner (popup 2026-08-25):** (a) film **100% gratis** dulu — sebabnya aturan koin
+menggratiskan episode 1–3 (`FREE_EPISODES` di `lib/coins.ts`), jadi film 1 video akan gratis walau
+dicentang berbayar; (b) kalau nanti film dibuat berbayar, harga acuan **20 koin** (belum dikerjakan);
+(c) film **campur** dengan drama di katalog, dibedakan lewat tulisan "Film" di kartu — belum ada
+saringan/menu khusus.
+
+**Catatan katalog:** di database sekarang ada judul yang sebenarnya film tapi tersimpan sebagai
+serial 1 episode (mis. `transformers-the-last-knight`, `avengers-doomsday`,
+`spider-man-brand-new-day`). Setelah SQL dijalankan, ubah lewat Daftar Drama → Edit → Jenis
+tayangan: Film → Simpan.
+
+**Bukti uji (2026-08-25):** 302 tes lulus (2 berkas tes baru: `tests/drama-kind.test.ts`,
+`tests/admin-drama-route.test.ts`), `tsc --noEmit` exit 0, `next build` sukses, dan halaman film
+diperiksa di dev server mode data lokal: halaman detail tanpa daftar episode + JSON-LD `Movie`,
+pemutar tanpa tombol episode & tanpa petunjuk "geser ke atas", kartu Discover/Shorts menulis "Film".
+Rencana lengkap: `docs/lintasai/rencana/2026-08-25-tambah-film-tanpa-episode.md`.
 
 ## 🔴 SEDANG DIKERJAKAN: video mati berulang → dibikin PERMANEN
 

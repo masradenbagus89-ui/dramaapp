@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { Drama } from "@/lib/types";
+import { isMovie, type Drama } from "@/lib/types";
 import { teaserSrc } from "@/lib/hero-teaser";
 import { genreTextClass } from "@/lib/genre-accent";
 import Poster from "./Poster";
@@ -30,7 +30,7 @@ export default function DramaCard({ drama }: { drama: Drama }) {
         <p className={`mt-1 text-xs ${genreTextClass(drama.category)}`}>
           {drama.category}
           {drama.year ? ` · ${drama.year}` : ""}
-          {` · ${drama.episodes} eps`}
+          {isMovie(drama) ? " · Film" : ` · ${drama.episodes} eps`}
           {drama.imdbRating ? ` · ★ ${drama.imdbRating}` : ""}
         </p>
       </div>

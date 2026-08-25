@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { getDrama } from "@/lib/dramas";
+import { isMovie } from "@/lib/types";
 import { getVideoBaseUrl } from "@/lib/video-base";
 import FeedPlayer from "@/app/components/FeedPlayer";
 
@@ -28,6 +29,7 @@ export default async function FeedPage(props: PageProps<"/feed/[id]">) {
       subtitles={drama.subtitles ?? []}
       premium={drama.premium ?? false}
       resumeFromHistory={!hasEpQuery}
+      isMovie={isMovie(drama)}
     />
   );
 }

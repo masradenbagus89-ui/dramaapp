@@ -41,6 +41,7 @@ export default function FeedPlayer({
   subtitles = [],
   premium = false,
   resumeFromHistory = false,
+  isMovie = false,
 }: {
   dramaId: string;
   title: string;
@@ -51,6 +52,8 @@ export default function FeedPlayer({
   subtitles?: string[];
   premium?: boolean;
   resumeFromHistory?: boolean;
+  /** Film = 1 video utuh: tanpa slide berikutnya & tanpa tombol episode. */
+  isMovie?: boolean;
 }) {
   const eps = Array.from({ length: episodes }, (_, i) => i + 1);
   const [active, setActive] = useState(startEp - 1);
@@ -627,6 +630,7 @@ export default function FeedPlayer({
         title={title}
         currentEp={active + 1}
         episodes={episodes}
+        isMovie={isMovie}
         cueText={cueText}
         lockedActive={lockedActive}
         controlsVisible={controlsVisible}
@@ -725,7 +729,8 @@ export default function FeedPlayer({
         </div>
       )}
 
-      {active === 0 && !cueText && controlsVisible && (
+      {/* Petunjuk geser hanya masuk akal kalau memang ada episode berikutnya. */}
+      {!isMovie && active === 0 && !cueText && controlsVisible && (
         <div className="pointer-events-none absolute bottom-60 left-1/2 z-10 -translate-x-1/2 text-center text-[11px] text-white/70">
           Geser ke atas untuk episode berikutnya ↑
         </div>

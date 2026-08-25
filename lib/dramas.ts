@@ -32,6 +32,8 @@ type DramaRow = {
   title: string;
   category: string;
   episodes: number;
+  /** "series" (default) atau "movie". Baris lama = null → dibaca sebagai serial. */
+  kind: string | null;
   views: string | null;
   synopsis: string | null;
   gradient: string | null;
@@ -67,6 +69,7 @@ function rowToDrama(r: DramaRow): Drama {
     gradient: r.gradient ?? "",
   };
   // Field opsional hanya disertakan kalau terisi (samakan dengan bentuk JSON lama).
+  if (r.kind === "movie") d.kind = "movie";
   if (r.poster_image) d.posterImage = r.poster_image;
   if (r.hero_image) d.heroImage = r.hero_image;
   if (r.hero_dim) d.heroDim = true;
@@ -94,6 +97,9 @@ function dramaToRow(d: Drama, sortIndex: number): DramaRow {
     title: d.title,
     category: d.category,
     episodes: d.episodes ?? 0,
+    // Ditulis eksplisit (bukan null) supaya baris lama ikut terisi "series"
+    // saat di-update — kolomnya jadi tak pernah kosong setelah disentuh.
+    kind: d.kind === "movie" ? "movie" : "series",
     views: d.views ?? "",
     synopsis: d.synopsis ?? "",
     gradient: d.gradient ?? "",

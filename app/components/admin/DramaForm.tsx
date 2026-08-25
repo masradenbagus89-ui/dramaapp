@@ -10,7 +10,7 @@
 // & logika tetap sama persis.
 import { useState, type Dispatch, type SetStateAction, type RefObject, type FormEvent } from "react";
 import { slugify } from "@/lib/format";
-import { SUBTITLE_LANGS } from "@/lib/types";
+import { MOVIE_EPISODE_COUNT, SUBTITLE_LANGS, type DramaKind } from "@/lib/types";
 import { CATEGORY_OPTIONS } from "@/app/admin/constants";
 import type { ScanResult } from "@/lib/admin-api";
 import { Button } from "@/components/ui/button";
@@ -82,6 +82,8 @@ export default function DramaForm({
   setViews,
   episodes,
   setEpisodes,
+  kind,
+  setKind,
   posterImage,
   setPosterImage,
   heroImage,
@@ -135,6 +137,8 @@ export default function DramaForm({
   setViews: Dispatch<SetStateAction<string>>;
   episodes: number;
   setEpisodes: Dispatch<SetStateAction<number>>;
+  kind: DramaKind;
+  setKind: Dispatch<SetStateAction<DramaKind>>;
   posterImage: string;
   setPosterImage: Dispatch<SetStateAction<string>>;
   heroImage: string;
@@ -176,6 +180,10 @@ export default function DramaForm({
   onScan: () => void;
   onSubmit: (e: FormEvent) => void;
 }) {
+  // Film = 1 video utuh; dipakai berulang di bawah untuk menyembunyikan kolom
+  // yang tak berlaku (jumlah episode, centang berbayar).
+  const isFilm = kind === "movie";
+
   const [imdbId, setImdbId] = useState("");
   const [imdbLoading, setImdbLoading] = useState(false);
   const [imdbError, setImdbError] = useState<string | null>(null);
@@ -243,6 +251,15 @@ export default function DramaForm({
     setStars(imdbDraft.stars);
     setCountry(imdbDraft.country);
     setLanguage(imdbDraft.language);
+    // OMDb sudah tahu ini film atau serial → ikut memilih jenis tayangan supaya
+    // admin tak perlu mengubahnya manual. Tipe lain ("episode"/"game"/kosong)
+    // dibiarkan apa adanya.
+    if (imdbDraft.kind === "movie") {
+      setKind("movie");
+      setEpisodes(MOVIE_EPISODE_COUNT);
+    } else if (imdbDraft.kind === "series") {
+      setKind("series");
+    }
     if (
       imdbDraft.kind === "series" &&
       imdbDraft.episodeCount &&
@@ -264,8 +281,8 @@ export default function DramaForm({
       <div className="mb-3 rounded-xl border border-amber-700/60 bg-amber-900/15 px-4 py-3 text-xs text-amber-200">
         <p className="font-semibold">📋 Workflow self-hosted:</p>
         <ol className="mt-1 list-decimal space-y-0.5 pl-5">
-          <li>Taruh file video di PC backup, folder <code className="text-amber-100">{`<drama-id>`}</code>. Nama file <strong>bebas</strong> (raw): mis. <code className="text-amber-100">ep01.mp4</code>, <code className="text-amber-100">Video 1.mp4</code>, dst.</li>
-          <li>Isi form di bawah — judul, kategori, sinopsis.</li>
+          <li>Taruh file video di PC backup, folder <code className="text-amber-100">{`<drama-id>`}</code>. Nama file <strong>bebas</strong> (raw): mis. <code className="text-amber-100">ep01.mp4</code>, <code className="text-amber-100">Video 1.mp4</code>, dst. <strong>Film</strong> cukup SATU file.</li>
+          <li>Isi form di bawah — judul, kategori, sinopsis, dan <strong>jenis tayangan</strong> (Serial atau Film).</li>
           <li>Klik <strong>🪄 Scan & auto-hardlink</strong> → agent di PC backup auto-rename (kalau perlu) ke <code className="text-amber-100">1.mp4 2.mp4 ...</code> + scan jumlah episode.</li>
           <li>Klik <strong>Simpan drama</strong> → tersimpan langsung ke database, tampil seketika (tanpa redeploy).</li>
         </ol>
@@ -481,6 +498,32 @@ export default function DramaForm({
               </SelectContent>
             </Select>
           </div>
+        </div>
+
+        <div className="mt-4 space-y-1.5">
+          <Label htmlFor="drama-kind" className="text-sm text-zinc-300">
+            Jenis tayangan *
+          </Label>
+          <Select
+            value={kind}
+            onValueChange={(v) => setKind(v as DramaKind)}
+          >
+            <SelectTrigger
+              id="drama-kind"
+              className="w-full rounded-lg border-zinc-700 bg-zinc-900 text-white focus-visible:border-amber-400 focus-visible:ring-0 md:w-80"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="series">📺 Serial — pakai episode</SelectItem>
+              <SelectItem value="movie">🎬 Film — 1 video utuh</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-zinc-500">
+            {isFilm
+              ? "Film: penonton langsung memutar SATU video — tanpa daftar episode. Taruh 1 file video di folder PC backup (nanti jadi 1.mp4). Film untuk sekarang selalu GRATIS, tanpa koin."
+              : "Serial: penonton memilih dari daftar Episode 1, 2, 3, … Jumlah episodenya diisi di bagian bawah form."}
+          </p>
         </div>
 
         <div className="mt-4 space-y-1.5">
@@ -706,6 +749,18 @@ export default function DramaForm({
           </div>
         </div>
 
+        {isFilm ? (
+          <div className="mt-4 rounded-xl border border-zinc-800 bg-zinc-950/50 p-4 text-xs text-zinc-400">
+            <span className="text-sm font-semibold text-white">Film selalu gratis</span>
+            <span className="mt-0.5 block">
+              Centang “berbayar (koin)” sengaja tidak ditampilkan untuk film.
+              Aturan koin sekarang menggratiskan 3 episode pertama, jadi film
+              yang hanya punya 1 video akan tetap gratis walau dicentang —
+              menampilkannya cuma menyesatkan. Mau film berbayar? bilang saja,
+              aturan koinnya diubah dulu.
+            </span>
+          </div>
+        ) : (
         <div className="mt-4 rounded-xl border border-zinc-800 bg-zinc-950/50 p-4">
           <div className="flex items-start gap-3">
             <Checkbox
@@ -727,25 +782,35 @@ export default function DramaForm({
             </Label>
           </div>
         </div>
+        )}
 
         <div className="mt-5 rounded-xl border border-zinc-800 bg-zinc-950/50 p-4">
           <div className="flex flex-wrap items-end gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="drama-episodes" className="text-sm text-zinc-300">
-                Jumlah episode *
-              </Label>
-              <Input
-                id="drama-episodes"
-                type="number"
-                min={1}
-                max={999}
-                value={episodes}
-                onChange={(e) =>
-                  setEpisodes(Math.max(1, Number(e.target.value) || 1))
-                }
-                className="w-32 rounded-lg border-zinc-700 bg-zinc-900 text-white focus-visible:border-amber-400 focus-visible:ring-0"
-              />
-            </div>
+            {isFilm ? (
+              <div className="space-y-1.5">
+                <span className="block text-sm text-zinc-300">Jumlah video</span>
+                <p className="text-sm font-semibold text-amber-300">
+                  1 video utuh — tanpa episode
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                <Label htmlFor="drama-episodes" className="text-sm text-zinc-300">
+                  Jumlah episode *
+                </Label>
+                <Input
+                  id="drama-episodes"
+                  type="number"
+                  min={1}
+                  max={999}
+                  value={episodes}
+                  onChange={(e) =>
+                    setEpisodes(Math.max(1, Number(e.target.value) || 1))
+                  }
+                  className="w-32 rounded-lg border-zinc-700 bg-zinc-900 text-white focus-visible:border-amber-400 focus-visible:ring-0"
+                />
+              </div>
+            )}
             <Button
               type="button"
               onClick={onScan}
@@ -763,7 +828,12 @@ export default function DramaForm({
             {scanResult && (
               <div className="text-xs text-zinc-400">
                 Ditemukan <strong className="text-emerald-300">{scanResult.count}</strong> file (ep 1-{scanResult.max})
-                {scanResult.missing.length > 0 && (
+                {isFilm && scanResult.count > 1 && (
+                  <span className="ml-2 text-amber-300">
+                    ⚠️ ini film, yang diputar hanya <code>1.mp4</code> — file lain diabaikan
+                  </span>
+                )}
+                {!isFilm && scanResult.missing.length > 0 && (
                   <span className="ml-2 text-amber-300">
                     ⚠️ ada gap: ep {scanResult.missing.join(", ")} tidak ada
                   </span>
@@ -773,6 +843,9 @@ export default function DramaForm({
           </div>
           <p className="mt-2 text-xs text-zinc-500">
             Cek folder <code className="text-zinc-400">{`<tunnel-url>/${effectiveId || "<drama-id>"}/`}</code>. Kalau file masih raw (mis. <code className="text-zinc-400">Video PM 1.mp4</code>), agent di PC backup auto-bikin hardlink <code className="text-zinc-400">N.mp4</code> dulu, baru hitung.
+            {isFilm && (
+              <> Untuk film, yang dibutuhkan cuma <code className="text-zinc-400">1.mp4</code> (subtitle: <code className="text-zinc-400">1.id.vtt</code>).</>
+            )}
           </p>
         </div>
 

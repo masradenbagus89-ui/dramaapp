@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { Drama } from "@/lib/types";
+import { MOVIE_EPISODE_COUNT, type Drama, type DramaKind } from "@/lib/types";
 import { readUser, type User } from "@/lib/auth";
 import { slugify } from "@/lib/format";
 import { scanDrama, hardlinkDrama, type ScanResult } from "@/lib/admin-api";
@@ -29,6 +29,8 @@ export default function AdminPage() {
   const [synopsis, setSynopsis] = useState("");
   const [views, setViews] = useState("");
   const [episodes, setEpisodes] = useState<number>(1);
+  // Jenis tayangan: serial berepisode (perilaku lama) atau film 1 video utuh.
+  const [kind, setKind] = useState<DramaKind>("series");
   const [posterImage, setPosterImage] = useState("");
   const [heroImage, setHeroImage] = useState("");
   const [subtitles, setSubtitles] = useState<string[]>([]);
@@ -82,6 +84,15 @@ export default function AdminPage() {
 
   useEffect(refreshList, []);
 
+  /**
+   * Hasil scan folder → jumlah episode di form. Film tetap 1 berapa pun berkas
+   * yang ditemukan (server juga memaksanya) — kalau folder film berisi lebih
+   * dari satu berkas, angkanya tetap 1 dan hasil scan tampil apa adanya sebagai
+   * peringatan bahwa folder itu berisi berkas lain.
+   */
+  const applyScanCount = (max: number) =>
+    setEpisodes(kind === "movie" ? MOVIE_EPISODE_COUNT : max);
+
   const onScan = async () => {
     setMessage(null);
     setScanResult(null);
@@ -99,7 +110,7 @@ export default function AdminPage() {
       const scanRes = await scanDrama(effectiveId, authUser.email);
       if (scanRes.ok) {
         setScanResult(scanRes.result);
-        setEpisodes(scanRes.result.max);
+        applyScanCount(scanRes.result.max);
         return;
       }
 
@@ -127,7 +138,7 @@ export default function AdminPage() {
           return;
         }
         setScanResult(scan2.result);
-        setEpisodes(scan2.result.max);
+        applyScanCount(scan2.result.max);
         setMessage({
           type: "ok",
           text: `Auto-hardlink berhasil: ${hlRes.message ?? "ok"}. Folder siap dipakai.`,
@@ -170,6 +181,7 @@ export default function AdminPage() {
           synopsis: synopsis.trim(),
           views: views.trim(),
           episodes,
+          kind,
           posterImage: posterImage.trim(),
           heroImage: heroImage.trim(),
           subtitles,
@@ -205,6 +217,7 @@ export default function AdminPage() {
       setSynopsis("");
       setViews("");
       setEpisodes(1);
+      setKind("series");
       setPosterImage("");
       setHeroImage("");
       setSubtitles([]);
@@ -267,6 +280,7 @@ export default function AdminPage() {
     setSynopsis(d.synopsis);
     setViews(d.views);
     setEpisodes(d.episodes);
+    setKind(d.kind ?? "series");
     setPosterImage(d.posterImage ?? "");
     setHeroImage(d.heroImage ?? "");
     setSubtitles(d.subtitles ?? []);
@@ -341,6 +355,8 @@ export default function AdminPage() {
           setViews={setViews}
           episodes={episodes}
           setEpisodes={setEpisodes}
+          kind={kind}
+          setKind={setKind}
           posterImage={posterImage}
           setPosterImage={setPosterImage}
           heroImage={heroImage}

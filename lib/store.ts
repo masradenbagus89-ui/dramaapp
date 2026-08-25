@@ -32,6 +32,7 @@ import {
   sbRpc,
   eq,
 } from "./supabase";
+import { CATALOG_TTL_SECONDS } from "./dramas";
 
 export type Admin = { email: string; name: string; addedAt: string };
 export type AdminsFile = { admins: Admin[] };
@@ -77,9 +78,13 @@ function writeLocal<T>(file: string, value: T): void {
 }
 
 // --- Dokumen JSON di Supabase (tabel app_data: key -> value jsonb) ----------
-// `opts.revalidate` diteruskan ke sbSelect: kosong = selalu segar (no-store).
-// Perlu untuk dokumen yang dibaca dari halaman ISR — satu fetch no-store
-// membuat SELURUH halaman jadi dinamis (lihat lib/supabase.ts:51).
+/**
+ * Baca dokumen JSON. Default TANPA cache (jalur admin/tulis wajib lihat data
+ * terbaru). Halaman publik yang boleh sedikit basi mengoper `revalidate`
+ * (satuan detik), yang diteruskan ke sbSelect — tanpa itu satu pembacaan saja
+ * membuat SELURUH halaman dibangun ulang tiap pengunjung. Lihat catatan di
+ * lib/supabase.ts.
+ */
 async function sbDocGet<T>(
   key: string,
   opts: { revalidate?: number } = {},
@@ -744,6 +749,135 @@ export async function clearVideoBaseRecord(): Promise<void> {
     return;
   }
   writeLocal("videobase.json", null);
+}
+
+// =====================  INTEGRASI PLAYLY (kunci + kaitan embed)  ===========
+// Dua dokumen app_data:
+//   "playly:key"    -> kunci API Playly TERENKRIPSI + bentuk tersamarnya.
+//   "playly:embeds" -> daftar video Playly yang sudah dikaitkan ke drama kita.
+// Mode lokal (tanpa Supabase): keduanya di data/playly.json (sudah .gitignore).
+//
+// KENAPA app_data, bukan tabel baru: tabel app_data SUDAH ada, jadi fitur ini
+// jalan tanpa perlu menjalankan SQL migrasi dulu di Supabase. Konsekuensinya
+// sama seperti dokumen "ads"/"admins": dua admin yang menyimpan pada detik
+// yang persis sama bisa saling menimpa (jarang, dan taruhannya rendah).
+
+export type PlaylyKeyRecord = {
+  /** Kunci API Playly dalam bentuk TERENKRIPSI (AES-256-GCM). Tak pernah polos. */
+  secret: string;
+  /** Bentuk tersamar untuk ditampilkan ke admin, mis. "plyk_••••••••json". */
+  masked: string;
+  /** Kapan terakhir diganti (ISO). */
+  updatedAt: string;
+  /** Email admin yang menggantinya (jejak audit sederhana). */
+  updatedBy: string;
+};
+
+export type PlaylyEmbed = {
+  /** Pengenal video di sisi Playly (unik; jadi kunci baris ini). */
+  videoId: string;
+  /** Drama DramaKu yang dikaitkan (dramas.id). */
+  dramaId: string;
+  /** Nomor episode, kalau admin mengisinya. */
+  episode: number | null;
+  /** Alamat player siap tempel — SUDAH lolos cek https + daftar domain. */
+  embedUrl: string;
+  title: string;
+  durationLabel: string;
+  creator: string;
+  addedAt: string;
+  addedBy: string;
+};
+
+const PLAYLY_KEY_DOC = "playly:key";
+const PLAYLY_EMBEDS_DOC = "playly:embeds";
+
+type PlaylyFile = { key: PlaylyKeyRecord | null; embeds: PlaylyEmbed[] };
+const EMPTY_PLAYLY: PlaylyFile = { key: null, embeds: [] };
+
+/** Record kunci Playly tersimpan, atau null kalau admin belum memasangnya. */
+export async function getPlaylyKeyRecord(): Promise<PlaylyKeyRecord | null> {
+  const rec = useSupabase
+    ? await sbDocGet<PlaylyKeyRecord>(PLAYLY_KEY_DOC)
+    : readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY).key;
+  // Record kosong (sisa penghapusan) dianggap "belum dipasang".
+  return rec && rec.secret ? rec : null;
+}
+
+export async function setPlaylyKeyRecord(rec: PlaylyKeyRecord): Promise<void> {
+  if (useSupabase) {
+    await sbDocSet(PLAYLY_KEY_DOC, rec);
+    return;
+  }
+  const file = readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY);
+  file.key = rec;
+  writeLocal("playly.json", file);
+}
+
+/** Cabut kunci (mis. kunci bocor) — kaitan video yang sudah ada TIDAK ikut hilang. */
+export async function clearPlaylyKeyRecord(): Promise<void> {
+  if (useSupabase) {
+    await sbDocSet(PLAYLY_KEY_DOC, { secret: "", masked: "", updatedAt: "", updatedBy: "" });
+    return;
+  }
+  const file = readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY);
+  file.key = null;
+  writeLocal("playly.json", file);
+}
+
+/** Semua video Playly yang sudah dikaitkan (terbaru di depan). */
+export async function getPlaylyEmbeds(): Promise<PlaylyEmbed[]> {
+  if (useSupabase) return (await sbDocGet<PlaylyEmbed[]>(PLAYLY_EMBEDS_DOC)) ?? [];
+  return readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY).embeds;
+}
+
+/**
+ * Versi ber-cache dari `getPlaylyEmbeds` untuk HALAMAN PUBLIK — boleh basi
+ * maksimal CATALOG_TTL_SECONDS detik, sama seperti katalog drama, supaya
+ * halaman tetap bisa disimpan-dan-dipakai-ulang (ISR). Jalur admin TETAP
+ * memakai `getPlaylyEmbeds` supaya perubahan langsung terlihat.
+ */
+export async function getPlaylyEmbedsCached(): Promise<PlaylyEmbed[]> {
+  if (useSupabase) {
+    return (
+      (await sbDocGet<PlaylyEmbed[]>(PLAYLY_EMBEDS_DOC, {
+        revalidate: CATALOG_TTL_SECONDS,
+      })) ?? []
+    );
+  }
+  return readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY).embeds;
+}
+
+async function savePlaylyEmbeds(embeds: PlaylyEmbed[]): Promise<void> {
+  if (useSupabase) {
+    await sbDocSet(PLAYLY_EMBEDS_DOC, embeds);
+    return;
+  }
+  const file = readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY);
+  file.embeds = embeds;
+  writeLocal("playly.json", file);
+}
+
+/**
+ * Simpan/ubah kaitan satu video Playly -> satu drama.
+ * Satu videoId = satu baris: mengaitkan ulang video yang sama ke drama lain
+ * MEMINDAHKANNYA (bukan menggandakan), supaya di halaman publik tidak muncul dobel.
+ */
+export async function upsertPlaylyEmbed(embed: PlaylyEmbed): Promise<void> {
+  const list = await getPlaylyEmbeds();
+  const idx = list.findIndex((e) => e.videoId === embed.videoId);
+  if (idx === -1) list.unshift(embed);
+  else list[idx] = embed;
+  await savePlaylyEmbeds(list);
+}
+
+/** Lepas kaitan satu video. True kalau memang ada yang dilepas. */
+export async function removePlaylyEmbed(videoId: string): Promise<boolean> {
+  const list = await getPlaylyEmbeds();
+  const sisa = list.filter((e) => e.videoId !== videoId);
+  if (sisa.length === list.length) return false;
+  await savePlaylyEmbeds(sisa);
+  return true;
 }
 
 /** Mode penyimpanan aktif — berguna untuk debugging/health check. */

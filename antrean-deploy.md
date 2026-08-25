@@ -3,14 +3,17 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-08-24 sore WIB (`git fetch origin` + `git fetch dramaku` dua-duanya SUKSES; `HEAD` = `origin/main` = `dramaku/main` = **`ba82058`**, selisih NOL)
+**Terakhir dicek:** 2026-08-25 sore WIB (`git fetch origin` + `git fetch dramaku` dua-duanya SUKSES; `HEAD` = `origin/main` = `dramaku/main` = **`ba82058`**, selisih NOL)
 
 ## Siapa memantau apa
 
+> ⚠️ **NAMA REMOTE SUDAH BERTUKAR — dicek ulang 2026-08-25.** Remote bernama `dramaku`
+> **sudah tidak ada** (`git fetch dramaku` → error). Selalu `git remote -v` dulu sebelum push.
+
 | Repo | Remote git | Dipantau Vercel? |
 |---|---|---|
-| `ojokesusu/dramaku` | `dramaku` | Tidak — tempat rekan sering commit dulu |
-| `masradenbagus89-ui/dramaapp` | `origin` | **Ya** — `git push origin main` = tombol rilis |
+| `masradenbagus89-ui/dramaapp` | **`dramaapp`** | **Ya** — `git push dramaapp main` = tombol rilis |
+| `ojokesusu/dramaku` | **`origin`** | Tidak — tempat rekan sering commit dulu |
 
 Produksi: https://dramaapp.vercel.app  
 Commit terbaru yang di-push: **`4954817`** (5 commit sekaligus: perbaikan layar hitam player, berkas autostart named tunnel, tes e2e Tahap 7, 2 dokumentasi) — di-push 2026-08-20 malam sesudah 265 tes lulus + `tsc` exit 0 + `next build` sukses. **TERVERIFIKASI TAYANG**: teks perbaikan player ditemukan di bundle produksi `/_next/static/chunks/27z9f9ucdybcg.js`.
@@ -22,6 +25,8 @@ AUTH_SECRET di Vercel: dikonfirmasi ADA oleh owner 2026-08-18.
 
 | Status | Commit | Isi | Aksi |
 |---|---|---|---|
+| 🚀 **rilis Playly** | merge `feat/playly-integrasi` | Integrasi Playly + perbaikan yang membuatnya jalan (pola `/id/{id}/embed`, alamat relatif, katalog publik saat kunci mitra ditolak) | Owner memberi izin 2026-08-25. Sebelum push: 297 tes lulus, `tsc` exit 0, `next build` sukses, dan video **terbukti berputar** di browser (2,27 s → 7,27 s, 1280×720) |
+| ⚠️ **kunci Playly TIDAK SAH lagi** | — | `DASHBOARD_API_KEY` (`plyk_…`) diuji ulang 2026-08-25 → `invalid_key`. Dulu tercatat "SAH 2026-08-19" | Jalur embed **tidak terhalang** (turun ke katalog publik). Kartu "Video terbaru" di `/discover` **masih kosong** sampai ada kunci baru dari pengelola Playly |
 | ✅ **sudah di-push** | `ba82058` | Tolak `api.trycloudflare.com` sebagai alamat video (2 lapis: saringan di `start-video-services.ps1` + `HOST_TERLARANG` di `lib/video-base.ts`) + `HANDOFF.md` siklus ke-4 | Owner memberi izin 2026-08-24. Dual push SUKSES (`origin` + `dramaku`, selisih nol). Diperiksa dulu: nol secret di diff, **283 tes lulus**, `tsc` exit 0, `next build` sukses, script PS lolos parser. Sesudah push: raw GitHub dicocokkan persis dengan berkas yang diuji; situs `/beranda` 200 & `/api/teaser` 206 |
 | ✅ **video PULIH (siklus ke-4)** | — | Akarnya PEMASANGAN, bukan kode: `start-video-services.ps1` tidak ada di PC backup + watchdog 15 menit belum pernah dibuat. Keduanya dibereskan; alamat aktif `boats-voluntary-ensure-kim.trycloudflare.com` (akan berganti — jangan dihafal) | **Terverifikasi 2026-08-24 dari jaringan LAIN:** `/api/teaser` **206** di ep 1/27/56, `video/mp4`, signature `ftypmp42`, root tunnel **200**. Owner mencoba sendiri: video tayang. Sejak sekarang watchdog memulihkan sendiri ≤15 menit |
 | ✅ **video PULIH** | — | Tunnel sore (`written-coated-...`) LENYAP (DNS `Non-existent domain`) → owner jalankan `start-dramaapp.ps1` → alamat baru **`proxy-marks-isolation-subjects.trycloudflare.com`**. Langkah [5/6] gagal 403 (`VERCEL_TOKEN` mati), alamat masuk lewat jalur manual | **Terverifikasi 2026-08-20 malam:** URL yang dipakai produksi balas **206** `video/mp4`, isi diawali `ftypmp42`. ⚠️ Sementara — mati lagi saat PC backup restart |
@@ -32,7 +37,8 @@ AUTH_SECRET di Vercel: dikonfirmasi ADA oleh owner 2026-08-18.
 | ⏸️ menunggu owner | — | 3 env Playly di Vercel (`DASHBOARD_API_URL`, `DASHBOARD_API_KEY_HEADER=X-Playly-Key`, `DASHBOARD_API_KEY`) | Owner isi manual + Redeploy; sesudah itu kartu berubah jadi "Tersambung" |
 | ⏸️ menunggu rekan | — | Dashboard Playly masih KOSONG (`count: 0`) | Kunci sudah diuji SAH 2026-08-19; minta rekan upload video contoh |
 
-**Selisih `dramaku/main` vs `origin/main`:** NOL — lokal, `origin`, dan `dramaku` semuanya di `4954817` (diverifikasi 2026-08-20 malam sesudah dual push). Branch `origin/chore/penjaga-anti-tidur` sudah ter-merge penuh ke `main` (nol commit tertinggal), jadi bukan pekerjaan yang menggantung.
+**Selisih `dramaapp/main` vs `origin/main`:** NOL — keduanya di `617f6a0` sebelum rilis Playly hari ini (dicek 2026-08-25).
+⚠️ **Branch `main` LOKAL menyimpang** (`5c2147b`): berisi commit Playly duplikat dan tertinggal 52 commit. Rilis 2026-08-25 sengaja dikerjakan dari branch `rilis/playly` yang dibuat dari `dramaapp/main`, bukan dari `main` lokal. Selaraskan `main` lokal sebelum memakainya lagi. Branch `origin/chore/penjaga-anti-tidur` sudah ter-merge penuh ke `main` (nol commit tertinggal), jadi bukan pekerjaan yang menggantung.
 
 ## Cara cek cepat (AI / kamu)
 

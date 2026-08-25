@@ -172,6 +172,29 @@ Alatnya sudah disiapkan & lolos uji parser PowerShell 5.1: **`pc-backup-agent/op
 Berkas asli TIDAK dihapus (disimpan jadi `1.asli.mp4`). Butuh `ffmpeg`; kalau belum terpasang script
 berhenti sopan sambil menyebut cara memasangnya (`winget install --id Gyan.FFmpeg -e`).
 
+#### Hasil optimalkan-film.ps1 pada `over-your-dead-body` (2026-08-25, terukur dari luar)
+
+| Ukuran | Sebelum | Sesudah |
+|---|---|---|
+| Berkas | 1.818 MB | **895 MB** (turun 50,8%) |
+| Aliran yang dibutuhkan | 281 KB/detik | **138 KB/detik** |
+| Kapasitas tunnel (diukur ulang) | ~180 KB/detik | ~200 KB/detik |
+| Kelegaan | 0,64x (KURANG) | **1,45x (CUKUP)** |
+| Letak "daftar isi" (moov) | ujung berkas, 5,1 MB | **depan berkas, 3,0 MB** |
+| Jeda sebelum gambar muncul | ~28 detik | **~19 detik** (diukur: 3,2 MB dalam 18,96 detik) |
+
+Encode memakai **GPU AMD (`h264_amf`)** — terdeteksi otomatis oleh script; 105 menit film selesai
+dalam **15 menit** (speed 6,95x). NVIDIA memang tidak ada di PC backup (`nvcuda.dll` tak ada), dan
+itu normal.
+
+**Jujur soal yang BELUM beres:** jeda awal ~19 detik tidak hilang, hanya berkurang. Sebabnya film
+panjang punya daftar isi (moov) berukuran MB yang wajib dimuat lengkap sebelum frame pertama.
+Menghilangkannya butuh langkah lain (fragmented MP4 atau HLS) - belum dikerjakan, belum diminta.
+
+**Batas kapasitas:** kelegaan 1,45x itu untuk SATU penonton. Dua orang menonton film bersamaan =
+kapasitas terbagi -> buffering lagi. Kalau film jadi banyak ditonton, jalur CDN (opsi yang tadi tidak
+diambil) yang menyelesaikannya.
+
 **Opsi yang TIDAK diambil (kalau nanti berubah pikiran):** (a) hanya `+faststart` tanpa memperkecil —
 mulai instan tapi tetap buffering; (b) pindah film ke CDN (R2/Bunny) — permanen, berbayar bulanan;
 (c) sediakan 2 versi (kode sudah mendukung varian `1.720p.mp4`, lihat `lib/video.ts`).

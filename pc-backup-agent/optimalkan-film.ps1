@@ -58,13 +58,42 @@ Info "ffmpeg ditemukan: $($ffmpeg.Source)"
 
 # --- 1b. encoder GPU: ada di daftar ffmpeg BELUM berarti kartunya ada -----
 # Karena itu tiap kandidat DIUJI betulan: encode 0,1 detik layar hitam.
-# Yang lolos ujian = benar-benar bisa dipakai di PC ini.
+#
+# PENTING (jebakan PowerShell 5.1, pernah menghentikan script ini 2026-08-25):
+# JANGAN panggil ffmpeg dengan "&" lalu redirect stderr ("2>$null"). ffmpeg
+# menulis semua pesannya ke stderr, dan PowerShell membungkus stderr native
+# jadi ErrorRecord; dengan $ErrorActionPreference = "Stop" itu MEMATIKAN script
+# padahal kegagalan uji GPU adalah hasil yang WAJAR (mis. "Cannot load
+# nvcuda.dll" di PC tanpa kartu NVIDIA). Start-Process tidak punya masalah itu:
+# ia menaruh keluaran ke berkas dan hanya mengembalikan ExitCode.
+function Jalankan-Ffmpeg([string[]]$argumen, [string]$namaLog) {
+  $errLog = Join-Path $env:TEMP "$namaLog.err.txt"
+  $outLog = Join-Path $env:TEMP "$namaLog.out.txt"
+  try {
+    $proses = Start-Process -FilePath $ffmpeg.Source -ArgumentList $argumen `
+      -NoNewWindow -Wait -PassThru `
+      -RedirectStandardError $errLog -RedirectStandardOutput $outLog
+    return @{ Kode = $proses.ExitCode; Keluaran = (Get-Content $outLog -Raw -ErrorAction SilentlyContinue) }
+  } catch {
+    return @{ Kode = 1; Keluaran = "" }
+  } finally {
+    Remove-Item $errLog, $outLog -Force -ErrorAction SilentlyContinue
+  }
+}
+
 function Cari-EncoderGpu {
-  $daftar = & ffmpeg -hide_banner -encoders 2>&1 | Out-String
+  $daftar = (Jalankan-Ffmpeg @("-hide_banner", "-encoders") "encoders").Keluaran
+  if (-not $daftar) { return $null }
   foreach ($kandidat in @("h264_nvenc", "h264_qsv", "h264_amf")) {
     if ($daftar -notmatch [regex]::Escape($kandidat)) { continue }
-    & ffmpeg -hide_banner -loglevel error -f lavfi -i color=black:s=320x240:d=0.1 -c:v $kandidat -f null - 2>$null
-    if ($LASTEXITCODE -eq 0) { return $kandidat }
+    Info "  menguji encoder GPU: $kandidat"
+    $uji = Jalankan-Ffmpeg @(
+      "-hide_banner", "-loglevel", "error",
+      "-f", "lavfi", "-i", "color=black:s=320x240:d=0.1",
+      "-c:v", $kandidat, "-f", "null", "-"
+    ) "uji-$kandidat"
+    if ($uji.Kode -eq 0) { return $kandidat }
+    Info "  $kandidat tidak bisa dipakai di PC ini - dilewati"
   }
   return $null
 }
@@ -79,7 +108,9 @@ if ($encoderGpu) {
     Info "  Bedanya: CPU = lebih lama, gambar sedikit lebih bagus di bitrate rendah."
   }
 } elseif ($Cepat) {
-  Info "-Cepat diminta, tapi tidak ada encoder GPU yang benar-benar jalan di sini. Pakai CPU."
+  Info "-Cepat diminta, tapi tidak ada encoder GPU yang benar-benar jalan di PC ini."
+  Info "  Ini NORMAL, bukan kerusakan - berarti PC ini tidak punya kartu grafis yang"
+  Info "  bisa dipakai ffmpeg. Proses lanjut memakai CPU (lebih lama, gambar lebih bagus)."
 }
 
 # --- 2. berkas sumber ----------------------------------------------------

@@ -24,6 +24,8 @@ cookies.txt
 pc-backup-agent/config.yml
 pc-backup-agent/*.json
 pc-backup-agent/logs/
+# Kunci API Playly (terenkripsi) + kaitan video — mode lokal tanpa Supabase.
+data/playly.json
 public/videos/
 public/audio/
 public/episodes/

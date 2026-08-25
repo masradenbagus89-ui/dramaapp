@@ -5,10 +5,11 @@
 >
 > **AI:** tiap kali ada perbaikan / deploy / keputusan — **perbarui berkas ini di langkah terakhir**, sebelum bilang selesai. Jangan tumpuk sejarah panjang di sini; pindahkan yang lama ke `NEXT-SESSION.md`.
 
-**Terakhir diisi:** 2026-08-25 — fitur **Film (tanpa episode)** di panel admin selesai dikerjakan &
-diuji lokal, **menunggu 1 langkah owner: jalankan SQL `supabase_migrations/add_kind_to_dramas.sql`
-di Supabase SEBELUM deploy** (detail di bagian 2026-08-25 di bawah). Catatan video di bawah ini
-masih dari 2026-08-24.
+**Terakhir diisi:** 2026-08-25 — DUA hal digabung & dirilis bersama hari ini:
+(1) fitur **Film (tanpa episode)** di panel admin — SQL kolom `kind` sudah dijalankan owner di
+Supabase, kode sudah tayang di produksi; (2) **video Playly akhirnya bisa diputar** — pekerjaan yang
+sebelumnya tertahan di repo `dramaku` karena push ke repo produksi ditolak 403, sekarang ikut naik.
+Lihat dua seksi bertanggal 2026-08-25 di bawah. Catatan video (tunnel/PC backup) masih dari 2026-08-24.
 
 **Sebelumnya (2026-08-24):** video mati lagi (**siklus ke-4**) lalu **dipulihkan & diverifikasi
 ujung-ke-ujung**; akarnya BUKAN kode: berkas `start-video-services.ps1` tidak ada di PC backup +
@@ -65,6 +66,79 @@ tayangan: Film → Simpan.
 diperiksa di dev server mode data lokal: halaman detail tanpa daftar episode + JSON-LD `Movie`,
 pemutar tanpa tombol episode & tanpa petunjuk "geser ke atas", kartu Discover/Shorts menulis "Film".
 Rencana lengkap: `docs/lintasai/rencana/2026-08-25-tambah-film-tanpa-episode.md`.
+## 🎬 VIDEO PLAYLY — SUDAH BISA DIPUTAR (2026-08-25)
+
+Owner lapor: sudah meng-upload video di dashboard Playly, tapi di DramaKu daftarnya
+kosong dan tak ada yang bisa diputar. Ditelusuri sampai ke Playly sungguhan.
+
+**Videonya memang ada** — 15 video di Playly, semuanya `allowEmbed: true`.
+Penyebabnya berlapis LIMA; memperbaiki satu saja tidak mengubah apa pun:
+
+| # | Masalah | Status |
+|---|---|---|
+| 1 | Fitur Playly **belum pernah di-deploy** — `/admin/videos/playly` **404** di produksi | 🔴 **MASIH 404** — push ke repo produksi DITOLAK, lihat di bawah |
+| 2 | Pola alamat pemutar ditebak `/embed/{id}`, aslinya `/id/{id}/embed` | ✅ diperbaiki |
+| 3 | Playly kirim `embedUrl` **relatif** (`/id/123/embed`); penerjemah cuma terima `https://…` → semua video dibuang diam-diam | ✅ diperbaiki |
+| 4 | Kunci `plyk_…` **ditolak Playly** (`invalid_key`) & tersimpan di variabel salah | ⚠️ dilewati lewat katalog publik |
+| 5 | Playly hanya izinkan embed dari domain mitra terdaftar | ✅ `dramaapp.vercel.app` sudah terdaftar |
+
+**Bukti**: 15 video terambil (0 dibuang), kaitan tersimpan, dan video **benar-benar
+berputar di browser** — maju 2,27 s → 7,27 s, 1280×720, berkas MP4 44 MB (HTTP 206).
+
+### ⚠️ Kunci Playly SUDAH TIDAK SAH LAGI
+
+Catatan lama bilang kunci "sudah diuji SAH 2026-08-19". **Diuji ulang 2026-08-25:
+DITOLAK** (`{"ok":false,"error":"invalid_key"}`). Kunci itu tampaknya dicabut atau
+kedaluwarsa. Dampaknya kena DUA jalur:
+
+- **Jalur Playly baru** (embed) — tidak terhalang: turun otomatis ke katalog **publik**
+  Playly (`/api/catalog`), jadi 15 video tetap muncul & bisa diputar.
+- **Jalur A / kartu "Video terbaru"** (`lib/dashboard-videos.ts`) — **masih kosong**,
+  karena jalur itu wajib pakai kunci. Ini yang membuat `/discover` produksi menulis
+  "Belum ada video yang di-upload dari dashboard". Belum diperbaiki (lihat "Belum selesai").
+
+### Yang perlu diketahui soal Playly
+
+- **Video Playly tidak bisa dicoba dari `localhost`** — Playly menolak domain yang belum
+  terdaftar dengan halaman "🔒 Situs ini belum diizinkan". Itu **normal**, bukan kerusakan.
+  Ujilah lewat `dramaapp.vercel.app`.
+- Kunci mitra **diterbitkan pengelola Playly**, tidak bisa dibuat sendiri.
+- Kalau daftar datang dari katalog publik, halaman admin menampilkan pita kuning yang
+  mengatakannya apa adanya. Playly mati/timeout **tetap** dilaporkan sebagai error.
+
+Rincian + bukti: [`docs/lintasai/rencana/2026-08-25-playly-video-tidak-muncul.md`](./docs/lintasai/rencana/2026-08-25-playly-video-tidak-muncul.md)
+
+### 🔴 PENGHALANG TERAKHIR: push ke repo produksi ditolak (403)
+
+Kode perbaikan sudah selesai, teruji, dan **sudah ter-push ke `origin`
+(ojokesusu/dramaku) di commit `0e7a5c5`**. Tapi repo yang dipantau Vercel adalah
+**`masradenbagus89-ui/dramaapp`**, dan push ke sana ditolak:
+
+```
+remote: Permission to masradenbagus89-ui/dramaapp.git denied to yusufscorpio.
+fatal: ... error: 403
+```
+
+Sebabnya: GitHub CLI di komputer ini hanya login sebagai **`yusufscorpio`**, yang tidak
+punya akses tulis ke repo itu. Dicek 2026-08-25: produksi masih 404 setelah 4 menit,
+jadi Vercel memang TIDAK memantau `ojokesusu/dramaku`.
+
+**Dua jalan buntu yang SUDAH dicoba — jangan diulang:**
+
+- `d:\Users\user26\token.txt` (token `ghp_`, 11 Agt): juga milik **`yusufscorpio`**, izinnya
+  `{"push": false, "pull": true}` — **hanya baca**. Tidak bisa dipakai merilis.
+- **PR lintas-repo tidak mungkin**: `dramaapp` dan `dramaku` bukan fork satu sama lain
+  (dicek lewat API: `fork=false`, tanpa induk), jadi GitHub tak menyediakan jalur PR di antara keduanya.
+
+**Dua jalan keluar yang tersisa (butuh pemilik akun `masradenbagus89-ui`):**
+
+1. `gh auth login` sebagai `masradenbagus89-ui`, lalu:
+   `git push dramaapp d1a11d4:main`
+2. Pemilik menambahkan `yusufscorpio` sebagai **collaborator (Write)** di repo `dramaapp`
+   (Settings → Collaborators), lalu jalankan perintah push yang sama.
+
+Sesudah ter-push, Vercel deploy sendiri. Tanda berhasil: `/admin/videos/playly` tidak
+lagi 404.
 
 ## 🔴 SEDANG DIKERJAKAN: video mati berulang → dibikin PERMANEN
 
@@ -345,6 +419,7 @@ sudah TERBUKTI, bukan cuma lulus tes lokal.
 
 | Kapan | Apa | Hasil yang kamu rasakan |
 |---|---|---|
+| 2026-08-25 | **Perbaikan Playly selesai & terbukti** (`0e7a5c5`, belum sampai produksi) | Daftar video terisi **15 video** — dulu 0 — dan videonya terbukti berputar. Di situs belum terasa: push ke repo produksi masih tertahan izin (lihat penghalang di atas) |
 | 2026-08-22 | **Video mati lagi (siklus ke-3) → dipulihkan & dibuktikan 4 gerbang** | Alamat video sebelumnya sudah lenyap dari internet; server Vercel sendiri balas 502 saat mencoba menjangkaunya. Dipulihkan ke `therefore-donna-crops-doctors`. Ketahuan juga jebakan baru: menjalankan `start-dramaapp.ps1` dua kali meninggalkan **"tunnel yatim"** yang DNS-nya masih hidup tapi balas **530** — kalau alamat itu yang ditempel, video tetap mati padahal semua "kelihatan hijau". Sekarang tercatat supaya tak terulang. Bonus: tanda tanya `/_agent/health` sejak 20 Agt terjawab (kini **200**, dugaan lama gugur) |
 | 2026-08-20 malam | **Video mati lagi → dipulihkan, DAN 5 commit yang tertahan akhirnya rilis** | Sesudah PC backup restart, alamat video sore tadi LENYAP (`nslookup` balas "Non-existent domain") — bukan dugaan, diukur langsung. Dipulihkan lewat `start-dramaapp.ps1` + tempel alamat manual ke Vercel (langkah [5/6] gagal 403). Terbukti jalan: **206 `video/mp4`**. Sekaligus 5 commit yang menumpuk (`8dd6f22`..`4954817`) di-dual-push sesudah lolos 265 tes + tsc 0 + build + scan secret → perbaikan "layar hitam" kini **TAYANG**, jadi kalau sumber mati lagi penonton melihat pesan + tombol **Coba lagi**, bukan layar hitam |
 | 2026-08-20 | **Diagnosa "Over Your Dead Body" tak bisa diputar + 3 bug hardlink-agent diperbaiki** | Penyebabnya bukan tunnel mati: berkas di PC backup bernama `Over-Your-Dead-Body.mp4`, sedangkan player selalu minta `1.mp4` → 404. Agent lama tak bisa membereskannya DAN tetap lapor "berhasil" walau nol berkas dibuat. Sekarang: berkas tanpa nomor jadi episode 1, berkas `.mkv` dilaporkan "perlu dikonversi", nol hasil = GAGAL dengan sebab jelas. Dikunci 10 tes (`tests/hardlink-agent.test.ts`). **Masih perlu 1 langkahmu di PC backup — lihat "Belum selesai" no.1** |
@@ -387,7 +462,13 @@ sudah TERBUKTI, bukan cuma lulus tes lokal.
    PC menyala = video hidup sendiri, tanpa PowerShell, tanpa tempel alamat. Named tunnel dikerjakan
    nanti saat domain di-ACC atasan; script berpindah mode sendiri. Urutan asli: Urutannya: (a) `amasyaforum.com` → Cloudflare, ganti nameserver di Namecheap; (b) `cloudflared` named tunnel + `service install`; (c) salin `start-video-services.ps1` ke PC backup + `schtasks /sc onstart`; (d) `powercfg` cegah sleep; (e) env Vercel = `https://video.amasyaforum.com` (terakhir kali). **Perintah lengkap ada di [`pc-backup-agent/README.md`](./pc-backup-agent/README.md).** Sesudah ini tidak perlu buka PowerShell lagi selamanya.
 4. ~~**Uji manual Tahap 7 dari sisi penonton**~~ — **SELESAI 2026-08-20.** Owner sudah mencoba sendiri (berhasil ganti password hanya bermodal kode) DAN uji end-to-end mesin ke API produksi lulus 19/19. Tak ada sisa pekerjaan di Tahap 7.
-5. **Isi 3 env Playly di Vercel** → Settings → Environment Variables: `DASHBOARD_API_URL=https://playly-dashboard.vercel.app/api/videos`, `DASHBOARD_API_KEY_HEADER=X-Playly-Key`, `DASHBOARD_API_KEY=<kunci dari rekan>`. Lalu **Redeploy**. Cek berhasil: `/admin` → Dashboard → kartu Playly berubah dari "Belum diatur" jadi "Tersambung".
+5. 🟡 **Kunci `plyk_` BARU dari pengelola Playly.** Yang sekarang sudah ditolak
+   (`invalid_key`, diuji 2026-08-25). Tidak memblokir jalur embed (jalan lewat katalog
+   publik), TAPI membuat kartu "Video terbaru" di `/discover` tetap kosong. Sesudah dapat
+   kunci baru: pasang di `/admin/settings/playly` **dan** perbarui `DASHBOARD_API_KEY` di Vercel.
+6. 🟡 **Cek `PLAYLY_ENCRYPTION_KEY` di Vercel** → Settings → Environment Variables. Tanpa ini
+   kunci mitra tidak bisa disimpan lewat halaman setelan (fitur tetap jalan lewat katalog publik).
+7. **Isi 3 env Playly di Vercel** → Settings → Environment Variables: `DASHBOARD_API_URL=https://playly-dashboard.vercel.app/api/videos`, `DASHBOARD_API_KEY_HEADER=X-Playly-Key`, `DASHBOARD_API_KEY=<kunci dari rekan>`. Lalu **Redeploy**. Cek berhasil: `/admin` → Dashboard → kartu Playly berubah dari "Belum diatur" jadi "Tersambung".
 6. **Minta rekan upload video contoh** ke dashboard Playly — kuncinya sudah diuji SAH 2026-08-19, tapi dashboard-nya masih kosong (`count: 0`), jadi belum ada yang bisa ditampilkan.
 7. **Rotate (ganti) API key Playly** sesudah setup — kunci yang sekarang dikirim rekan lewat screenshot, jadi sudah terekam di riwayat chat.
 8. ⚠️ **`VERCEL_TOKEN` mati (403) — MASIH MENGGIGIT sampai Tahap 2 terpasang.** **Koreksi catatan sebelumnya** yang menyatakan ini "gugur": gugurnya baru berlaku **SESUDAH** named tunnel terpasang. Selama masih quick tunnel, tiap PC backup restart langkah [5/6] gagal → owner wajib tempel alamat manual (terbukti 2026-08-20 malam). Dua pilihan: **(a)** kerjakan Tahap 2 — disarankan, token jadi tak dibutuhkan selamanya; **(b)** penambal sementara: buat token baru di `vercel.com/account/tokens` → tempel ke `$VERCEL_TOKEN` di `start-dramaapp.ps1`.
@@ -445,6 +526,11 @@ halaman. Tidak sepadan. Kalau nanti ada yang mengusulkan ini lagi, tunjukkan tab
   keberadaan akun di `resolveUserEmail`.
 
 ## Jangan dilakukan
+
+- **Jangan anggap "tes lulus" = "tersambung".** 46 tes Playly lulus sejak awal padahal
+  integrasinya tidak pernah jalan — semua tesnya memakai bentuk data KARANGAN. Tes baru
+  (2026-08-25) memakai bentuk balasan Playly ASLI.
+- Jangan ganti pola `/id/{id}/embed` tanpa mengecek ulang ke katalog Playly.
 
 - Jangan commit `.env.local` / API key / `cookies.txt`.
 - Jangan `git push` dari working tree kotor tanpa izin.

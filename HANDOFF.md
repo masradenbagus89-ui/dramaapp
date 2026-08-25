@@ -34,7 +34,7 @@ Penyebabnya berlapis LIMA; memperbaiki satu saja tidak mengubah apa pun:
 
 | # | Masalah | Status |
 |---|---|---|
-| 1 | Fitur Playly **belum pernah di-deploy** — `/admin/videos/playly` **404** di produksi | ✅ dirilis 2026-08-25 |
+| 1 | Fitur Playly **belum pernah di-deploy** — `/admin/videos/playly` **404** di produksi | 🔴 **MASIH 404** — push ke repo produksi DITOLAK, lihat di bawah |
 | 2 | Pola alamat pemutar ditebak `/embed/{id}`, aslinya `/id/{id}/embed` | ✅ diperbaiki |
 | 3 | Playly kirim `embedUrl` **relatif** (`/id/123/embed`); penerjemah cuma terima `https://…` → semua video dibuang diam-diam | ✅ diperbaiki |
 | 4 | Kunci `plyk_…` **ditolak Playly** (`invalid_key`) & tersimpan di variabel salah | ⚠️ dilewati lewat katalog publik |
@@ -65,6 +65,33 @@ kedaluwarsa. Dampaknya kena DUA jalur:
   mengatakannya apa adanya. Playly mati/timeout **tetap** dilaporkan sebagai error.
 
 Rincian + bukti: [`docs/lintasai/rencana/2026-08-25-playly-video-tidak-muncul.md`](./docs/lintasai/rencana/2026-08-25-playly-video-tidak-muncul.md)
+
+### 🔴 PENGHALANG TERAKHIR: push ke repo produksi ditolak (403)
+
+Kode perbaikan sudah selesai, teruji, dan **sudah ter-push ke `origin`
+(ojokesusu/dramaku) di commit `0e7a5c5`**. Tapi repo yang dipantau Vercel adalah
+**`masradenbagus89-ui/dramaapp`**, dan push ke sana ditolak:
+
+```
+remote: Permission to masradenbagus89-ui/dramaapp.git denied to yusufscorpio.
+fatal: ... error: 403
+```
+
+Sebabnya: GitHub CLI di komputer ini hanya login sebagai **`yusufscorpio`**, yang tidak
+punya akses tulis ke repo itu. Dicek 2026-08-25: produksi masih 404 setelah 4 menit,
+jadi Vercel memang TIDAK memantau `ojokesusu/dramaku`.
+
+**Tiga jalan keluar (pilih satu):**
+
+1. `gh auth login` sebagai akun pemilik `masradenbagus89-ui`, lalu:
+   `git push dramaapp 0e7a5c5:main`
+2. Tambahkan `yusufscorpio` sebagai collaborator (write) di repo `dramaapp`, lalu push
+   perintah yang sama.
+3. Dari GitHub: buat PR `ojokesusu/dramaku@main` → `masradenbagus89-ui/dramaapp@main`,
+   lalu merge lewat web.
+
+Sesudah ter-push, Vercel deploy sendiri. Tanda berhasil: `/admin/videos/playly` tidak
+lagi 404.
 
 ## 🔴 SEDANG DIKERJAKAN: video mati berulang → dibikin PERMANEN
 
@@ -345,7 +372,7 @@ sudah TERBUKTI, bukan cuma lulus tes lokal.
 
 | Kapan | Apa | Hasil yang kamu rasakan |
 |---|---|---|
-| 2026-08-25 | **Video Playly akhirnya muncul & bisa diputar** | Halaman `/admin/videos/playly` (dulu 404) kini hidup dan daftarnya terisi **15 video** — dulu 0. Pilih video → kaitkan ke drama → tampil & bisa diputar di `/discover` |
+| 2026-08-25 | **Perbaikan Playly selesai & terbukti** (`0e7a5c5`, belum sampai produksi) | Daftar video terisi **15 video** — dulu 0 — dan videonya terbukti berputar. Di situs belum terasa: push ke repo produksi masih tertahan izin (lihat penghalang di atas) |
 | 2026-08-22 | **Video mati lagi (siklus ke-3) → dipulihkan & dibuktikan 4 gerbang** | Alamat video sebelumnya sudah lenyap dari internet; server Vercel sendiri balas 502 saat mencoba menjangkaunya. Dipulihkan ke `therefore-donna-crops-doctors`. Ketahuan juga jebakan baru: menjalankan `start-dramaapp.ps1` dua kali meninggalkan **"tunnel yatim"** yang DNS-nya masih hidup tapi balas **530** — kalau alamat itu yang ditempel, video tetap mati padahal semua "kelihatan hijau". Sekarang tercatat supaya tak terulang. Bonus: tanda tanya `/_agent/health` sejak 20 Agt terjawab (kini **200**, dugaan lama gugur) |
 | 2026-08-20 malam | **Video mati lagi → dipulihkan, DAN 5 commit yang tertahan akhirnya rilis** | Sesudah PC backup restart, alamat video sore tadi LENYAP (`nslookup` balas "Non-existent domain") — bukan dugaan, diukur langsung. Dipulihkan lewat `start-dramaapp.ps1` + tempel alamat manual ke Vercel (langkah [5/6] gagal 403). Terbukti jalan: **206 `video/mp4`**. Sekaligus 5 commit yang menumpuk (`8dd6f22`..`4954817`) di-dual-push sesudah lolos 265 tes + tsc 0 + build + scan secret → perbaikan "layar hitam" kini **TAYANG**, jadi kalau sumber mati lagi penonton melihat pesan + tombol **Coba lagi**, bukan layar hitam |
 | 2026-08-20 | **Diagnosa "Over Your Dead Body" tak bisa diputar + 3 bug hardlink-agent diperbaiki** | Penyebabnya bukan tunnel mati: berkas di PC backup bernama `Over-Your-Dead-Body.mp4`, sedangkan player selalu minta `1.mp4` → 404. Agent lama tak bisa membereskannya DAN tetap lapor "berhasil" walau nol berkas dibuat. Sekarang: berkas tanpa nomor jadi episode 1, berkas `.mkv` dilaporkan "perlu dikonversi", nol hasil = GAGAL dengan sebab jelas. Dikunci 10 tes (`tests/hardlink-agent.test.ts`). **Masih perlu 1 langkahmu di PC backup — lihat "Belum selesai" no.1** |

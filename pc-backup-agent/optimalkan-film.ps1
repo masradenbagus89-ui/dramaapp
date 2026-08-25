@@ -24,6 +24,7 @@
 #
 #  PAKAI:
 #    powershell -ExecutionPolicy Bypass -File optimalkan-film.ps1 -DramaId over-your-dead-body
+#    (opsional)  -Cepat   (pakai GPU: jauh lebih cepat)
 #    (opsional)  -VideoKbps 1200   -Tinggi 720   -FolderVideo "D:\video"
 # ============================================================
 
@@ -32,7 +33,11 @@ param(
   [int]$VideoKbps = 1000,
   [int]$AudioKbps = 128,
   [int]$Tinggi = 720,
-  [string]$FolderVideo = "C:\Users\USER\Downloads\video"
+  [string]$FolderVideo = "C:\Users\USER\Downloads\video",
+  # -Cepat = pakai encoder GPU (NVIDIA/AMD/Intel) kalau kartunya memang ada.
+  # Jauh lebih cepat (menit, bukan puluhan menit), kualitas sedikit di bawah
+  # CPU pada bitrate serendah ini. Tanpa switch ini dipakai CPU (libx264).
+  [switch]$Cepat
 )
 
 $ErrorActionPreference = "Stop"
@@ -50,6 +55,32 @@ if (-not $ffmpeg) {
   exit 1
 }
 Info "ffmpeg ditemukan: $($ffmpeg.Source)"
+
+# --- 1b. encoder GPU: ada di daftar ffmpeg BELUM berarti kartunya ada -----
+# Karena itu tiap kandidat DIUJI betulan: encode 0,1 detik layar hitam.
+# Yang lolos ujian = benar-benar bisa dipakai di PC ini.
+function Cari-EncoderGpu {
+  $daftar = & ffmpeg -hide_banner -encoders 2>&1 | Out-String
+  foreach ($kandidat in @("h264_nvenc", "h264_qsv", "h264_amf")) {
+    if ($daftar -notmatch [regex]::Escape($kandidat)) { continue }
+    & ffmpeg -hide_banner -loglevel error -f lavfi -i color=black:s=320x240:d=0.1 -c:v $kandidat -f null - 2>$null
+    if ($LASTEXITCODE -eq 0) { return $kandidat }
+  }
+  return $null
+}
+
+$encoderGpu = Cari-EncoderGpu
+if ($encoderGpu) {
+  if ($Cepat) {
+    Info "GPU dipakai: $encoderGpu (mode -Cepat)"
+  } else {
+    Info "GPU tersedia ($encoderGpu) TAPI tidak dipakai."
+    Info "  Mau jauh lebih cepat? hentikan (Ctrl+C) lalu jalankan ulang dengan tambahan -Cepat"
+    Info "  Bedanya: CPU = lebih lama, gambar sedikit lebih bagus di bitrate rendah."
+  }
+} elseif ($Cepat) {
+  Info "-Cepat diminta, tapi tidak ada encoder GPU yang benar-benar jalan di sini. Pakai CPU."
+}
 
 # --- 2. berkas sumber ----------------------------------------------------
 $folder = Join-Path $FolderVideo $DramaId
@@ -70,13 +101,35 @@ if (Test-Path $sementara) { Remove-Item $sementara -Force }
 # --- 3. encode -----------------------------------------------------------
 # -vf scale: lebar dihitung otomatis (-2 = kelipatan 2, syarat H.264)
 # -movflags +faststart: daftar isi (moov) dipindah ke depan berkas
-Info "Encode ke ${Tinggi}p, video ${VideoKbps} kbps + audio ${AudioKbps} kbps. Ini makan waktu (puluhan menit)."
+$pakaiGpu = ($Cepat -and $encoderGpu)
+if ($pakaiGpu) {
+  $argEncoder = @("-c:v", $encoderGpu, "-preset", "p5", "-rc", "vbr")
+  $perkiraan  = "beberapa menit"
+} else {
+  $argEncoder = @("-c:v", "libx264", "-preset", "medium")
+  $perkiraan  = "puluhan menit"
+}
+Info "Encode ke ${Tinggi}p, video ${VideoKbps} kbps + audio ${AudioKbps} kbps. Perkiraan: $perkiraan."
+Info "Jangan tutup jendela ini sampai muncul SELESAI."
+
 & ffmpeg -hide_banner -y -i $asli `
   -vf "scale=-2:$Tinggi" `
-  -c:v libx264 -preset medium -b:v "${VideoKbps}k" -maxrate "$([int]($VideoKbps * 1.3))k" -bufsize "$([int]($VideoKbps * 2))k" `
+  @argEncoder -b:v "${VideoKbps}k" -maxrate "$([int]($VideoKbps * 1.3))k" -bufsize "$([int]($VideoKbps * 2))k" `
   -c:a aac -b:a "${AudioKbps}k" -ac 2 `
   -movflags +faststart `
   $sementara
+
+# Driver NVIDIA lama menolak "-preset p5". Ulangi SEKALI tanpa preset itu supaya
+# proses tidak batal cuma karena beda versi driver.
+if ($LASTEXITCODE -ne 0 -and $pakaiGpu) {
+  Info "Encoder GPU menolak preset p5 (driver lama?). Diulang tanpa preset."
+  & ffmpeg -hide_banner -y -i $asli `
+    -vf "scale=-2:$Tinggi" `
+    -c:v $encoderGpu -b:v "${VideoKbps}k" -maxrate "$([int]($VideoKbps * 1.3))k" -bufsize "$([int]($VideoKbps * 2))k" `
+    -c:a aac -b:a "${AudioKbps}k" -ac 2 `
+    -movflags +faststart `
+    $sementara
+}
 
 if ($LASTEXITCODE -ne 0 -or -not (Test-Path $sementara)) {
   Write-Host "ffmpeg GAGAL (exit $LASTEXITCODE). Berkas asli TIDAK disentuh."

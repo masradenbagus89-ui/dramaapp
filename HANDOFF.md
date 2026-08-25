@@ -81,14 +81,19 @@ Sebabnya: GitHub CLI di komputer ini hanya login sebagai **`yusufscorpio`**, yan
 punya akses tulis ke repo itu. Dicek 2026-08-25: produksi masih 404 setelah 4 menit,
 jadi Vercel memang TIDAK memantau `ojokesusu/dramaku`.
 
-**Tiga jalan keluar (pilih satu):**
+**Dua jalan buntu yang SUDAH dicoba — jangan diulang:**
 
-1. `gh auth login` sebagai akun pemilik `masradenbagus89-ui`, lalu:
-   `git push dramaapp 0e7a5c5:main`
-2. Tambahkan `yusufscorpio` sebagai collaborator (write) di repo `dramaapp`, lalu push
-   perintah yang sama.
-3. Dari GitHub: buat PR `ojokesusu/dramaku@main` → `masradenbagus89-ui/dramaapp@main`,
-   lalu merge lewat web.
+- `d:\Users\user26\token.txt` (token `ghp_`, 11 Agt): juga milik **`yusufscorpio`**, izinnya
+  `{"push": false, "pull": true}` — **hanya baca**. Tidak bisa dipakai merilis.
+- **PR lintas-repo tidak mungkin**: `dramaapp` dan `dramaku` bukan fork satu sama lain
+  (dicek lewat API: `fork=false`, tanpa induk), jadi GitHub tak menyediakan jalur PR di antara keduanya.
+
+**Dua jalan keluar yang tersisa (butuh pemilik akun `masradenbagus89-ui`):**
+
+1. `gh auth login` sebagai `masradenbagus89-ui`, lalu:
+   `git push dramaapp d1a11d4:main`
+2. Pemilik menambahkan `yusufscorpio` sebagai **collaborator (Write)** di repo `dramaapp`
+   (Settings → Collaborators), lalu jalankan perintah push yang sama.
 
 Sesudah ter-push, Vercel deploy sendiri. Tanda berhasil: `/admin/videos/playly` tidak
 lagi 404.

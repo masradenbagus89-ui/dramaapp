@@ -5,11 +5,19 @@
 >
 > **AI:** tiap kali ada perbaikan / deploy / keputusan — **perbarui berkas ini di langkah terakhir**, sebelum bilang selesai. Jangan tumpuk sejarah panjang di sini; pindahkan yang lama ke `NEXT-SESSION.md`.
 
-**Terakhir diisi:** 2026-08-25 — DUA hal digabung & dirilis bersama hari ini:
+**Terakhir diisi:** 2026-08-26 — **video mati lagi (siklus ke-5) → PULIH & TERVERIFIKASI dari luar.**
+Akarnya sama persis dengan siklus ke-4: `start-video-services.ps1` hilang lagi dari PC backup, sementara
+penjaga 15 menit tetap jalan tapi menembak berkas kosong. Akarnya bukan kode aplikasi. Detail + 2 pelajaran baru
+(dugaan "PC backup mati" yang KELIRU, dan jeda ~24 jam antara sebab & gejala) ada di seksi 2026-08-26
+di bawah. **Sebab berkas itu raib DUA KALI masih belum ketemu — tersangka Norton, belum diuji.**
+**Penjaga permanen sudah dibangun & diuji** (3 berkas di `pc-backup-agent/`), tapi BELUM aktif:
+owner perlu menjalankan `pasang-penjaga.ps1` sekali sebagai Administrator — README Bagian F.
+
+**Sebelumnya (2026-08-25):** DUA hal digabung & dirilis bersama:
 (1) fitur **Film (tanpa episode)** di panel admin — SQL kolom `kind` sudah dijalankan owner di
 Supabase, kode sudah tayang di produksi; (2) **video Playly akhirnya bisa diputar** — pekerjaan yang
 sebelumnya tertahan di repo `dramaku` karena push ke repo produksi ditolak 403, sekarang ikut naik.
-Lihat dua seksi bertanggal 2026-08-25 di bawah. Catatan video (tunnel/PC backup) masih dari 2026-08-24.
+Lihat dua seksi bertanggal 2026-08-25 di bawah. Catatan video (tunnel/PC backup) TERBARU: seksi 2026-08-26.
 
 **Sebelumnya (2026-08-24):** video mati lagi (**siklus ke-4**) lalu **dipulihkan & diverifikasi
 ujung-ke-ujung**; akarnya BUKAN kode: berkas `start-video-services.ps1` tidak ada di PC backup +
@@ -220,6 +228,93 @@ mulai instan tapi tetap buffering; (b) pindah film ke CDN (R2/Bunny) — permane
 >    **cocokkan JAM baris terakhir dengan jam sekarang** sebelum menyimpulkan apa pun.
 >
 > `SUCCESS: Attempted to run...` **bukan** tanda berhasil — lihat pelajaran 2026-08-24.
+
+### 🆕 2026-08-26 — siklus ke-5: berkas yang SAMA hilang LAGI. PULIH & TERVERIFIKASI
+
+Owner lapor video tak bisa diputar pagi hari. Akarnya **persis siklus ke-4**:
+`start-video-services.ps1` **hilang lagi** dari `C:\Users\USER\pc-backup-agent\`. Nol perubahan kode.
+
+**Urutan bukti yang membuat diagnosa cepat (ikuti urutan ini):**
+1. Alamat di halaman produksi (`entered-paradise-occasions-neighborhood`) → DNS **Non-existent
+   domain**, bukan 530. Bedanya penting: 530 = tunnel ada tapi tak melayani; DNS hilang = tunnel
+   benar-benar lenyap, jadi cloudflared sudah berhenti.
+2. `Test-Path C:\Users\USER\pc-backup-agent\start-video-services.ps1` → **False**.
+3. `schtasks /query /tn "DramaApp Video Watchdog" /v /fo LIST` → **`Last Result: -196608`**,
+   `Last Run Time 26/08/2026 08:50:01`, `State: Enabled`, `Task To Run` menunjuk berkas yang hilang.
+
+**⚠️ DUGAAN AWAL YANG SALAH (jangan diulang):** "penjaga tak bereaksi = PC backup tidak nyala."
+KELIRU — PC nyala dan penjaga jalan tiap 15 menit, hanya saja menembak berkas kosong lalu mati
+senyap. Yang memutuskan status PC adalah `Last Run Time` di `schtasks`, BUKAN penalaran dari gejala
+luar. Baca `schtasks` sebelum menyimpulkan apa pun soal PC nyala/mati.
+
+**⏱️ JEDA ~24 JAM antara sebab dan gejala — ini yang paling menipu.** Log melompat dari
+`2026-08-25 08:50:35 === SELESAI ===` langsung ke `2026-08-26 08:59:00`. Berkas sudah hilang sejak
+~25 Agt pagi, tapi video baru mati 26 Agt pagi karena tunnel yang terlanjur dibuat 25 Agt masih
+hidup seharian sampai mati sendiri semalam. **Jangan cari penyebab di jam kejadian — cari di baris
+terakhir log SEBELUM lompatan waktu.**
+
+**Pemulihan yang berhasil (urutan ini yang dipakai):**
+1. Unduh ulang dari raw GitHub repo publik `masradenbagus89-ui/dramaapp` branch `main` ke
+   `C:\Users\USER\pc-backup-agent\start-video-services.ps1`.
+2. **Verifikasi SHA256 SEBELUM dijalankan** (§5.4 melarang unduh-lalu-jalankan buta):
+   `55A1423EB853F85E7ADCBCE5006B7E8DCFF493490F151A73EC6F98A906CEDFC9`, **30.427 byte** = commit
+   `ba82058`. Sidik jari raw GitHub sudah dicocokkan dengan salinan di repo — identik.
+3. `schtasks /run /tn "DramaApp Video Watchdog"` → tunggu 3 menit penuh.
+
+**Bukti pulih — diukur dari LUAR, bukan dari log PC backup:** alamat baru
+`kelly-officials-laid-written.trycloudflare.com` → root **200** · `diremehkan-sebagai-gadis-desa-.../1.mp4`
+**200** dengan `Content-Type: video/mp4`, `Content-Length: 40.187.380`, `Accept-Ranges: bytes` ·
+Range → **206** · 12 byte pertama **`ftypmp42`** (MP4 asli) · ep 2/10/30/56 → **200** ·
+`/_agent/health` → `{"ok":true}` · halaman produksi sudah menyajikan alamat baru.
+
+**🔴 BELUM TERJAWAB — kenapa berkas ini hilang DUA KALI** (24 Agt & ~25 Agt) sementara tetangganya di
+folder yang sama (`Caddyfile`, `hardlink-agent.js`, `start-dramaapp.ps1`, `optimalkan-film.ps1`) utuh
+terus. Selama sebabnya belum ketemu, **siklus ke-6 tinggal menunggu waktu**. Tersangka yang BELUM
+diuji: **antivirus pihak ketiga (Norton)** — pemeriksaan 24 Agt hanya menguji Defender
+(`Get-MpThreat` kosong), padahal Defender bukan satu-satunya yang bisa mengarantina. Langkah uji
+berikutnya: pastikan Norton terpasang atau tidak → cek riwayat karantinanya → pasang exclusion untuk
+folder `C:\Users\USER\pc-backup-agent\`. Penjaga permanen yang diusulkan (belum diizinkan owner):
+salinan cadangan berkas + pemeriksaan `Test-Path` yang melapor kalau berkasnya raib, supaya
+hilangnya ketahuan saat itu juga, bukan 24 jam kemudian.
+
+**✅ PENJAGA PERMANEN DIBANGUN (izin owner 2026-08-26)** — supaya siklus ke-6 tidak lagi berujung
+video mati diam-diam. Tiga berkas di `pc-backup-agent/`:
+
+| Berkas | Peran |
+|---|---|
+| `penjaga-berkas.ps1` (BARU) | tugas "DramaApp Penjaga Berkas" tiap 10 menit; berkas penting yang hilang dipulihkan dari `cadangan\` |
+| `pasang-penjaga.ps1` (BARU) | pemasang sekali-jalan; membuktikan sendiri tugasnya jalan lewat pertambahan baris log, bukan lewat `SUCCESS: Attempted to run` |
+| `start-video-services.ps1` (+ fungsi `Pastikan-Penjaga`) | arah sebaliknya: memulihkan penjaga kalau justru penjaganya yang raib |
+
+Dua arah itu disengaja — tidak ada satu berkas pun yang kalau hilang mematikan seluruh rantai tanpa
+ada yang mengembalikannya.
+
+**Dua batas yang SENGAJA dipasang (jangan "diperbaiki" jadi tak terbatas):**
+1. Penjaga BERHENTI memulihkan setelah **2 kali dalam 1 jam** untuk berkas yang sama, lalu menulis
+   `!!! BERHENTI MEMULIHKAN`. Memulihkan terus hanya menutupi gejala sementara akarnya (antivirus)
+   tidak tersentuh — dan log yang penuh pemulihan berhasil justru menyamarkan masalahnya.
+2. Penjaga **TIDAK** mengunduh dari internet. Itu pola "unduh-lalu-jalankan" yang dilarang §5.4 —
+   satu repo dibajak = PC backup ikut jatuh. Kalau cadangan ikut hilang, pemulihan tetap oleh
+   manusia dengan pencocokan SHA256, seperti pagi ini.
+
+**Bukti diuji — 6 skenario di folder simulasi, PC backup NOL disentuh:** cadangan dibuat ✅ ·
+`semua berkas utuh` saat sehat ✅ · berkas hilang → dipulihkan ✅ · dihapus 3× berturut-turut →
+pemulihan ke-1 & ke-2 jalan, percobaan ke-3 BERHENTI + exit 1 ✅ · aktif + cadangan sama-sama hilang
+→ GAGAL + exit 1 ✅ · isi berkas diubah → **cadangan yang disegarkan, update TIDAK dibatalkan** ✅.
+`Pastikan-Penjaga` diuji terpisah 4 skenario (diam saat sehat · pulihkan cadangan · pulihkan utama ·
+keduanya hilang → peringatan, exit 0 supaya start service tidak ikut gagal) ✅. Sintaks kedua script
+lolos `PSParser::Tokenize` ✅.
+
+**🐞 BUG DITEMUKAN SAAT UJI, diperbaiki sebelum sampai ke PC backup:** `schtasks` menolak `/tr` yang
+lebih dari **261 karakter**, dan pesan errornya tidak menyebut solusinya sama sekali. Untuk path
+`C:\Users\USER\pc-backup-agent` perintahnya **166 karakter (aman)**, tapi `pasang-penjaga.ps1`
+sekarang memeriksa panjang itu sendiri dan berhenti dengan angka yang jelas. Rumus pengutipan `\"`
+juga sudah diuji nyata: tugas dibuat → dibaca balik dari Windows (path berkutip utuh) → dihapus.
+
+**⏳ BELUM AKTIF DI PC BACKUP.** Owner perlu menjalankan SEKALI sebagai Administrator:
+`powershell -ExecutionPolicy Bypass -File C:\Users\USER\pc-backup-agent\pasang-penjaga.ps1`
+(README `pc-backup-agent/README.md` Bagian F). Sebelum itu dijalankan, penjaga hanya ada di repo.
+Prasyaratnya: `penjaga-berkas.ps1` + `pasang-penjaga.ps1` sudah disalin ke folder PC backup.
 
 ### 🆕 2026-08-24 — siklus ke-4: akarnya PEMASANGAN, bukan kode. PULIH & TERVERIFIKASI
 

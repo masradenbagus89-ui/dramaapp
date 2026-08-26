@@ -5,7 +5,12 @@
 >
 > **AI:** tiap kali ada perbaikan / deploy / keputusan — **perbarui berkas ini di langkah terakhir**, sebelum bilang selesai. Jangan tumpuk sejarah panjang di sini; pindahkan yang lama ke `NEXT-SESSION.md`.
 
-**Terakhir diisi:** 2026-08-25 — DUA hal digabung & dirilis bersama hari ini:
+**Terakhir diisi:** 2026-08-26 — **video Playly kini tampil OTOMATIS** di halaman baru
+`/playly` + baris di `/discover`, tanpa perlu dikaitkan ke drama, dan tetap jalan walau
+kunci mitra dicabut. Lihat seksi Playly di bawah — catatan Playly 2026-08-25 sudah BASI
+dan diganti.
+
+**Sebelumnya, 2026-08-25** — DUA hal digabung & dirilis bersama hari itu:
 (1) fitur **Film (tanpa episode)** di panel admin — SQL kolom `kind` sudah dijalankan owner di
 Supabase, kode sudah tayang di produksi; (2) **video Playly akhirnya bisa diputar** — pekerjaan yang
 sebelumnya tertahan di repo `dramaku` karena push ke repo produksi ditolak 403, sekarang ikut naik.
@@ -70,79 +75,75 @@ tayangan: Film → Simpan.
 diperiksa di dev server mode data lokal: halaman detail tanpa daftar episode + JSON-LD `Movie`,
 pemutar tanpa tombol episode & tanpa petunjuk "geser ke atas", kartu Discover/Shorts menulis "Film".
 Rencana lengkap: `docs/lintasai/rencana/2026-08-25-tambah-film-tanpa-episode.md`.
-## 🎬 VIDEO PLAYLY — SUDAH BISA DIPUTAR (2026-08-25)
+## 🎬 VIDEO PLAYLY — TAMPIL OTOMATIS (2026-08-26)
 
-Owner lapor: sudah meng-upload video di dashboard Playly, tapi di DramaKu daftarnya
-kosong dan tak ada yang bisa diputar. Ditelusuri sampai ke Playly sungguhan.
+Owner lapor lagi: video Playly **masih** belum masuk & tak bisa diputar di DramaKu.
+Ditelusuri ulang dari nol. **Catatan 2026-08-25 di bawah ternyata sudah BASI** — jangan
+dipakai sebagai dasar lagi.
 
-**Videonya memang ada** — 15 video di Playly, semuanya `allowEmbed: true`.
-Penyebabnya berlapis LIMA; memperbaiki satu saja tidak mengubah apa pun:
+### Yang ternyata SUDAH beres (bertentangan dengan catatan lama)
 
-| # | Masalah | Status |
-|---|---|---|
-| 1 | Fitur Playly **belum pernah di-deploy** — `/admin/videos/playly` **404** di produksi | 🔴 **MASIH 404** — push ke repo produksi DITOLAK, lihat di bawah |
-| 2 | Pola alamat pemutar ditebak `/embed/{id}`, aslinya `/id/{id}/embed` | ✅ diperbaiki |
-| 3 | Playly kirim `embedUrl` **relatif** (`/id/123/embed`); penerjemah cuma terima `https://…` → semua video dibuang diam-diam | ✅ diperbaiki |
-| 4 | Kunci `plyk_…` **ditolak Playly** (`invalid_key`) & tersimpan di variabel salah | ⚠️ dilewati lewat katalog publik |
-| 5 | Playly hanya izinkan embed dari domain mitra terdaftar | ✅ `dramaapp.vercel.app` sudah terdaftar |
+| Klaim catatan lama | Kenyataan 2026-08-26 |
+|---|---|
+| `/admin/videos/playly` **404**, push produksi tertahan 403 | ❌ SALAH — sudah **200**. `0e7a5c5` sudah ada di `dramaapp/main` (kini `7372259`) |
+| Kunci `plyk_…` ditolak | ⚠️ BERUBAH-UBAH — pagi `ok:true count:4`, 20 menit kemudian `invalid_key` |
 
-**Bukti**: 15 video terambil (0 dibuang), kaitan tersimpan, dan video **benar-benar
-berputar di browser** — maju 2,27 s → 7,27 s, 1280×720, berkas MP4 44 MB (HTTP 206).
+### Akar sebenarnya (3 lapis)
 
-### ⚠️ Kunci Playly SUDAH TIDAK SAH LAGI
+1. **Kaitan tersimpan tak pernah sampai produksi.** Sesi 25 Agt membuat kaitan di
+   `data/playly.json` — berkas itu ada di `.gitignore:28`, sedangkan produksi membaca
+   Supabase. Jadi "terbukti berhasil" itu benar, tapi hanya di 1 komputer.
+2. **Kegagalan SENYAP.** `PlaylyRow.tsx:29` `return null` saat daftar kosong → seluruh
+   barisnya hilang tanpa pesan. Owner tak melihat error karena memang tak ada yang dirender.
+3. **Kunci sah tersimpan di nama env yang salah.** Kunci ada di `DASHBOARD_API_KEY`,
+   sedangkan `getPlaylyKey()` hanya membaca `PLAYLY_API_KEY` → `configured:false` →
+   halaman admin menulis "kunci belum dipasang" & pemilih video tak pernah muncul.
+4. **Cacat desain**: video WAJIB dikaitkan ke drama. Isi Playly = trailer film, tak ada
+   drama padanannya. Buktinya "Transformers 8" terpaksa dikaitkan ke drama
+   `guru-misterius-membentuk-pasukan-rahasia` eps 1 hanya agar lolos validasi.
 
-Catatan lama bilang kunci "sudah diuji SAH 2026-08-19". **Diuji ulang 2026-08-25:
-DITOLAK** (`{"ok":false,"error":"invalid_key"}`). Kunci itu tampaknya dicabut atau
-kedaluwarsa. Dampaknya kena DUA jalur:
+### Yang dikerjakan (keputusan owner lewat popup)
 
-- **Jalur Playly baru** (embed) — tidak terhalang: turun otomatis ke katalog **publik**
-  Playly (`/api/catalog`), jadi 15 video tetap muncul & bisa diputar.
-- **Jalur A / kartu "Video terbaru"** (`lib/dashboard-videos.ts`) — **masih kosong**,
-  karena jalur itu wajib pakai kunci. Ini yang membuat `/discover` produksi menulis
-  "Belum ada video yang di-upload dari dashboard". Belum diperbaiki (lihat "Belum selesai").
+Video Playly kini **tampil OTOMATIS**, tak perlu dikaitkan ke drama:
 
-### Yang perlu diketahui soal Playly
+- **Halaman baru `/playly`** + baris di `/discover` + tautan di TopNav.
+- Sumber = **hanya video milik akun kita**. Dua jalur:
+  1. kunci mitra `/api/videos` (kalau sah);
+  2. **kunci ditolak → katalog publik `/api/catalog` DISARING nama kreator kita**
+     (`DEFAULT_PLAYLY_CREATOR = "coklat"`, timpa lewat env `PLAYLY_CREATOR`).
+  Jalur 2 ada karena kunci terbukti bisa dicabut sewaktu-waktu — tanpa itu video kita
+  ikut lenyap tiap kali kunci mati.
+- Admin bisa **menyembunyikan** video (daftar pengecualian `playly:hidden`, bukan daftar izin
+  — supaya video baru tak perlu disetujui dulu).
+- Daftar kosong **selalu menampilkan penjelasan**; tak boleh senyap lagi.
 
-- **Video Playly tidak bisa dicoba dari `localhost`** — Playly menolak domain yang belum
-  terdaftar dengan halaman "🔒 Situs ini belum diizinkan". Itu **normal**, bukan kerusakan.
-  Ujilah lewat `dramaapp.vercel.app`.
-- Kunci mitra **diterbitkan pengelola Playly**, tidak bisa dibuat sendiri.
-- Kalau daftar datang dari katalog publik, halaman admin menampilkan pita kuning yang
-  mengatakannya apa adanya. Playly mati/timeout **tetap** dilaporkan sebagai error.
+### ⚠️ Kunci Playly TIDAK ANDAL — jangan bergantung padanya
 
-Rincian + bukti: [`docs/lintasai/rencana/2026-08-25-playly-video-tidak-muncul.md`](./docs/lintasai/rencana/2026-08-25-playly-video-tidak-muncul.md)
+Diuji 2026-08-26: kunci yang sama dibalas `{"ok":true,"count":4}` lalu `{"ok":false,
+"error":"invalid_key"}` 20 menit kemudian, konsisten 5×. Kunci mitra diterbitkan pengelola
+Playly dan tampaknya berumur pendek. **Jalur katalog-tersaring membuat ini tidak lagi
+memblokir apa pun.** Kartu "Video terbaru" (`lib/dashboard-videos.ts`) masih butuh kunci
+dan TIDAK disentuh.
 
-### 🔴 PENGHALANG TERAKHIR: push ke repo produksi ditolak (403)
+### Bukti (dijalankan, bukan dibaca)
 
-Kode perbaikan sudah selesai, teruji, dan **sudah ter-push ke `origin`
-(ojokesusu/dramaku) di commit `0e7a5c5`**. Tapi repo yang dipantau Vercel adalah
-**`masradenbagus89-ui/dramaapp`**, dan push ke sana ditolak:
+- `/playly` lokal: **4 video milik `coklat` tampil**, 4 alamat embed, sampul ikut.
+- **Nol kebocoran**: 11 video kreator lain (`viozahra`, `cantika`) semuanya tertahan.
+- **Keempat video benar-benar mengalir**: HTTP 206, 512 KB masing-masing, `ftypisom`,
+  kotak MP4 `[ftyp,free,mdat]`.
+- Endpoint `hidden`: 401 tanpa sesi · 403 origin asing · sembunyikan/tampilkan jalan ·
+  tak menggandakan · tipe salah ditolak 400.
+- 357 tes lulus · `tsc` exit 0 · `next build` sukses · `/discover` **tetap Static 1m**
+  (nol regresi performa).
 
-```
-remote: Permission to masradenbagus89-ui/dramaapp.git denied to yusufscorpio.
-fatal: ... error: 403
-```
+### Video Playly tidak bisa dicoba dari `localhost`
 
-Sebabnya: GitHub CLI di komputer ini hanya login sebagai **`yusufscorpio`**, yang tidak
-punya akses tulis ke repo itu. Dicek 2026-08-25: produksi masih 404 setelah 4 menit,
-jadi Vercel memang TIDAK memantau `ojokesusu/dramaku`.
+Playly menolak domain tak terdaftar dengan "🔒 Situs ini belum diizinkan". Itu **normal**.
+Daftar videonya tetap muncul di localhost; yang diblokir hanya pemutarannya.
+Uji pemutaran lewat `dramaapp.vercel.app` (sudah terdaftar).
 
-**Dua jalan buntu yang SUDAH dicoba — jangan diulang:**
+Rincian: [`docs/lintasai/rencana/2026-08-26-playly-video-otomatis.md`](./docs/lintasai/rencana/2026-08-26-playly-video-otomatis.md)
 
-- `d:\Users\user26\token.txt` (token `ghp_`, 11 Agt): juga milik **`yusufscorpio`**, izinnya
-  `{"push": false, "pull": true}` — **hanya baca**. Tidak bisa dipakai merilis.
-- **PR lintas-repo tidak mungkin**: `dramaapp` dan `dramaku` bukan fork satu sama lain
-  (dicek lewat API: `fork=false`, tanpa induk), jadi GitHub tak menyediakan jalur PR di antara keduanya.
-
-**Dua jalan keluar yang tersisa (butuh pemilik akun `masradenbagus89-ui`):**
-
-1. `gh auth login` sebagai `masradenbagus89-ui`, lalu:
-   `git push dramaapp d1a11d4:main`
-2. Pemilik menambahkan `yusufscorpio` sebagai **collaborator (Write)** di repo `dramaapp`
-   (Settings → Collaborators), lalu jalankan perintah push yang sama.
-
-Sesudah ter-push, Vercel deploy sendiri. Tanda berhasil: `/admin/videos/playly` tidak
-lagi 404.
 
 ### 🎥 2026-08-25 — FILM BESAR TIDAK BISA DIPUTAR: akarnya BERKAS, bukan kode
 

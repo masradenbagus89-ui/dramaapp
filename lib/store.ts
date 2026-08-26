@@ -791,9 +791,15 @@ export type PlaylyEmbed = {
 
 const PLAYLY_KEY_DOC = "playly:key";
 const PLAYLY_EMBEDS_DOC = "playly:embeds";
+const PLAYLY_HIDDEN_DOC = "playly:hidden";
 
-type PlaylyFile = { key: PlaylyKeyRecord | null; embeds: PlaylyEmbed[] };
-const EMPTY_PLAYLY: PlaylyFile = { key: null, embeds: [] };
+type PlaylyFile = {
+  key: PlaylyKeyRecord | null;
+  embeds: PlaylyEmbed[];
+  /** videoId yang SENGAJA disembunyikan admin dari halaman penonton. */
+  hidden?: string[];
+};
+const EMPTY_PLAYLY: PlaylyFile = { key: null, embeds: [], hidden: [] };
 
 /** Record kunci Playly tersimpan, atau null kalau admin belum memasangnya. */
 export async function getPlaylyKeyRecord(): Promise<PlaylyKeyRecord | null> {
@@ -801,6 +807,25 @@ export async function getPlaylyKeyRecord(): Promise<PlaylyKeyRecord | null> {
     ? await sbDocGet<PlaylyKeyRecord>(PLAYLY_KEY_DOC)
     : readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY).key;
   // Record kosong (sisa penghapusan) dianggap "belum dipasang".
+  return rec && rec.secret ? rec : null;
+}
+
+/**
+ * Versi ber-cache untuk HALAMAN PUBLIK.
+ *
+ * Wajib ada: pembacaan tanpa cache walau SATU kali membuat seluruh halaman
+ * dibangun ulang untuk tiap pengunjung, sehingga `revalidate` di halaman jadi
+ * percuma (lihat catatan sbDocGet di atas). Kunci Playly nyaris tak pernah
+ * berubah, jadi basi paling lama CATALOG_TTL_SECONDS tidak berbahaya: kalau
+ * kunci dicabut, akibat terburuknya daftar video kosong beberapa puluh detik
+ * lebih lama. Jalur admin tetap memakai getPlaylyKeyRecord (selalu segar).
+ */
+export async function getPlaylyKeyRecordCached(): Promise<PlaylyKeyRecord | null> {
+  const rec = useSupabase
+    ? await sbDocGet<PlaylyKeyRecord>(PLAYLY_KEY_DOC, {
+        revalidate: CATALOG_TTL_SECONDS,
+      })
+    : readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY).key;
   return rec && rec.secret ? rec : null;
 }
 
@@ -878,6 +903,55 @@ export async function removePlaylyEmbed(videoId: string): Promise<boolean> {
   if (sisa.length === list.length) return false;
   await savePlaylyEmbeds(sisa);
   return true;
+}
+
+// ---- Daftar video Playly yang disembunyikan dari halaman penonton ----
+//
+// Video Playly tampil OTOMATIS begitu di-upload; daftar ini adalah daftar
+// PENGECUALIAN, bukan daftar izin. Bentuk ini dipilih supaya admin tidak perlu
+// menyetujui apa pun untuk video baru muncul — kalau daftar izin yang dipakai,
+// video baru akan diam-diam tidak tampil sampai ada yang ingat menyetujuinya,
+// dan itu persis kegagalan senyap yang membuat fitur ini macet sebelumnya.
+
+/** videoId yang disembunyikan admin. Kosong = semua video mitra tampil. */
+export async function getPlaylyHiddenIds(): Promise<string[]> {
+  if (useSupabase) return (await sbDocGet<string[]>(PLAYLY_HIDDEN_DOC)) ?? [];
+  return readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY).hidden ?? [];
+}
+
+/** Versi ber-cache untuk HALAMAN PUBLIK — alasannya sama dengan getPlaylyEmbedsCached. */
+export async function getPlaylyHiddenIdsCached(): Promise<string[]> {
+  if (useSupabase) {
+    return (
+      (await sbDocGet<string[]>(PLAYLY_HIDDEN_DOC, {
+        revalidate: CATALOG_TTL_SECONDS,
+      })) ?? []
+    );
+  }
+  return readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY).hidden ?? [];
+}
+
+/**
+ * Sembunyikan (hidden=true) atau tampilkan lagi (hidden=false) satu video.
+ * Mengembalikan daftar terbaru supaya pemanggil tak perlu membaca ulang.
+ */
+export async function setPlaylyVideoHidden(
+  videoId: string,
+  hidden: boolean,
+): Promise<string[]> {
+  const sekarang = await getPlaylyHiddenIds();
+  const tanpa = sekarang.filter((id) => id !== videoId);
+  // Set-like: menyembunyikan video yang sudah tersembunyi tidak menggandakan baris.
+  const baru = hidden ? [...tanpa, videoId] : tanpa;
+
+  if (useSupabase) {
+    await sbDocSet(PLAYLY_HIDDEN_DOC, baru);
+  } else {
+    const file = readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY);
+    file.hidden = baru;
+    writeLocal("playly.json", file);
+  }
+  return baru;
 }
 
 /** Mode penyimpanan aktif — berguna untuk debugging/health check. */

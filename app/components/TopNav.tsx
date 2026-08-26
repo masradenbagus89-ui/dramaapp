@@ -23,6 +23,7 @@ const LINKS = [
   { href: "/beranda", label: "Beranda", adminOnly: false },
   { href: "/discover", label: "Discover", adminOnly: false },
   { href: "/shorts", label: "Shorts", adminOnly: false },
+  { href: "/playly", label: "Playly", adminOnly: false },
   { href: "/my-list", label: "My List", adminOnly: false },
   { href: "/profile", label: "Profile", adminOnly: false },
   { href: "/admin", label: "Admin", adminOnly: true },

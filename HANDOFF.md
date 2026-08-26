@@ -10,7 +10,7 @@ Akarnya sama persis dengan siklus ke-4: `start-video-services.ps1` hilang lagi d
 penjaga 15 menit tetap jalan tapi menembak berkas kosong. Akarnya bukan kode aplikasi. Detail + 2 pelajaran baru
 (dugaan "PC backup mati" yang KELIRU, dan jeda ~24 jam antara sebab & gejala) ada di seksi 2026-08-26
 di bawah. **Sebab berkas itu raib DUA KALI masih belum ketemu — tersangka Norton, belum diuji.**
-**Penjaga permanen sudah dibangun, diuji, dan AKTIF di PC backup sejak 09:58** (3 berkas di
+**Penjaga permanen AKTIF di PC backup & pemulihannya TERBUKTI NYATA 10:47** (3 berkas di
 `pc-backup-agent/`) — berkas penting yang hilang kini dipulihkan sendiri tiap 10 menit.
 
 **Sebelumnya (2026-08-25):** DUA hal digabung & dirilis bersama:
@@ -317,12 +317,28 @@ ketiga berkas diunduh dengan **SHA256 COCOK** · folder `cadangan\` dibuat + 4 b
 `=== TERBUKTI JALAN - 1 baris baru di log ===` berisi `2026-08-26 09:58:02  semua berkas utuh
 (4 diperiksa)`.
 
-**Yang BELUM diuji di PC backup sungguhan:** pemulihan nyata. 10 skenario di atas dijalankan di folder
-simulasi, bukan di sana. Uji penuh <1 menit dan TIDAK menyentuh tunnel yang sedang hidup (kalaupun
-gagal, berkasnya tinggal diunduh ulang dari repo):
-`Remove-Item C:\Users\USER\pc-backup-agent\start-video-services.ps1` →
-`schtasks /run /tn "DramaApp Penjaga Berkas"` → tunggu 30 detik →
-`Test-Path C:\Users\USER\pc-backup-agent\start-video-services.ps1` harus `True`.
+**✅ PEMULIHAN NYATA TERBUKTI DI PC BACKUP 2026-08-26 10:47** — bukan lagi simulasi. Owner menghapus
+`start-video-services.ps1` lalu MENUNGGU tanpa menyentuh apa pun. Isi `logs\penjaga-berkas.log`:
+
+```
+2026-08-26 10:07:07  semua berkas utuh (4 diperiksa)
+2026-08-26 10:17:07  semua berkas utuh (4 diperiksa)
+2026-08-26 10:27:07  semua berkas utuh (4 diperiksa)
+2026-08-26 10:37:07  semua berkas utuh (4 diperiksa)
+2026-08-26 10:47:07  !!! DIPULIHKAN start-video-services.ps1 - berkas aktif HILANG, dikembalikan dari cadangan (pemulihan ke-1 dalam 1 jam)
+```
+
+`Test-Path` balas `True`. DUA hal terbukti sekaligus: (a) berkas hilang dipulihkan SENDIRI tanpa
+manusia; (b) **detak 10 menit yang rapi** — justru inilah yang dulu tidak ada. Lompatan jam di log
+sekarang langsung terlihat kalau penjaganya sendiri berhenti, jadi kegagalan tidak bisa senyap lagi.
+Diverifikasi juga dari luar saat berkas sedang terhapus: tunnel & video tetap **200** — menghapus
+script memang tidak mematikan tunnel yang sudah berjalan, itu sebabnya uji ini aman.
+
+⚠️ CATATAN UJI: `schtasks /run /tn "DramaApp Penjaga Berkas"` butuh PowerShell **Administrator**;
+tanpa itu balasannya `ERROR: Access is denied` dan penjaga tidak dipicu sama sekali — `Test-Path`
+lalu balas `False` yang MENIPU (terlihat seperti penjaga gagal, padahal belum jalan). Siklus
+otomatisnya TIDAK butuh admin. Jadi untuk membuktikan, MENUNGGU 10 menit lebih baik daripada memicu
+manual: jalur yang diuji sama dengan jalur yang dipakai sehari-hari.
 
 ### 🆕 2026-08-24 — siklus ke-4: akarnya PEMASANGAN, bukan kode. PULIH & TERVERIFIKASI
 

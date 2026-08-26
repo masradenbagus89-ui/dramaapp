@@ -270,6 +270,23 @@ Get-Content C:\Users\USER\pc-backup-agent\logs\penjaga-berkas.log -Tail 20
 Baris `semua berkas utuh (4 diperiksa)` ditulis tiap siklus walau tidak ada yang perlu diperbaiki —
 **disengaja**, supaya lompatan jam di log langsung terlihat kalau penjaganya sendiri berhenti jalan.
 
+**Uji sendiri (aman, video tetap jalan).** Menghapus script TIDAK mematikan tunnel yang sudah
+berjalan, jadi uji ini tidak mengganggu penonton:
+
+```powershell
+Remove-Item C:\Users\USER\pc-backup-agent\start-video-services.ps1
+# TUNGGU sampai lewat 10 menit - jangan dipicu manual
+Test-Path C:\Users\USER\pc-backup-agent\start-video-services.ps1     # harus True
+Get-Content C:\Users\USER\pc-backup-agent\logs\penjaga-berkas.log -Tail 5
+```
+
+Harus muncul baris `!!! DIPULIHKAN start-video-services.ps1`. Terbukti nyata 2026-08-26 10:47:07.
+
+⚠️ `schtasks /run /tn "DramaApp Penjaga Berkas"` butuh PowerShell **Administrator**; tanpa itu
+balasannya `ERROR: Access is denied` dan penjaga tidak dipicu sama sekali — lalu `Test-Path` balas
+`False` yang MENIPU, seolah penjaganya gagal. Siklus otomatisnya tidak butuh admin, jadi MENUNGGU
+justru menguji jalur yang sebenarnya dipakai sehari-hari.
+
 ## Verifikasi
 
 ### Berlaku untuk KEDUA mode — mulai dari sini

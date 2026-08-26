@@ -23,6 +23,23 @@ jadi menunggu reset TIDAK akan menghidupkannya sendiri. Detail + bukti: seksi �
 > hari terbukti aman. **`git push origin main` berikutnya AKAN ikut merilis fitur rekan — pastikan
 > itu memang yang diminta owner.**
 
+**🆘 JALAN KELUAR TANPA VERCEL (disiapkan 2026-08-26, BELUM dijalankan owner).** Ternyata pause
+`dramaapp` ada di tingkat **AKUN**, bukan project — dan pause tingkat akun **tidak punya tombol
+Resume gratis**, hanya Upgrade. (Dugaan sesi ini sebelumnya soal tombol Resume di Project → Settings
+→ General SALAH: di situ tertulis *"Pause Project"*, artinya project-nya justru tidak sedang paused.)
+Kuota Hobby juga memakai **rolling 30-day window**, bukan reset tanggal tetap — ledakan 22-26 Agt baru
+gugur sekitar **21-25 Sep**, dan sesudah itu pun akun tetap harus di-unpause manual lewat
+`vercel.com/help`.
+
+Karena project belum disetujui atasan (upgrade belum boleh), disiapkan jalur gratis: **jalankan situs
+dari PC backup** lewat cloudflared + Caddy yang sudah jalan 24 jam di sana. Bandwidth tanpa batas,
+nol biaya, tak ada yang bisa mem-pause. Bahan yang sudah siap:
+`pc-backup-agent/start-dramaapp-web.ps1` (sudah lolos uji parse PowerShell, ASCII murni) ·
+blok `app.amasyaforum.com` di `cloudflared-config.example.yml` · panduan **Bagian G** di
+`pc-backup-agent/README.md`. Harga yang harus diterima: **PC backup mati = seluruh situs mati**, bukan
+cuma videonya. PC backup meng-clone dari `dramaku` (bukan produksi), jadi situs dari PC backup IKUT
+memuat fitur Playly rekan.
+
 **Sebelumnya (2026-08-26, pekerjaan rekan — sudah masuk lokal & `dramaku`, BELUM produksi):**
 **video Playly kini tampil OTOMATIS** di halaman baru
 `/playly` + baris di `/discover`, tanpa perlu dikaitkan ke drama, dan tetap jalan walau

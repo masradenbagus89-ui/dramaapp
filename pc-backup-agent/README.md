@@ -287,6 +287,102 @@ balasannya `ERROR: Access is denied` dan penjaga tidak dipicu sama sekali — la
 `False` yang MENIPU, seolah penjaganya gagal. Siklus otomatisnya tidak butuh admin, jadi MENUNGGU
 justru menguji jalur yang sebenarnya dipakai sehari-hari.
 
+## Setup 1x - Bagian G: jalankan SITUS dari PC backup *(darurat / saat Vercel mati)*
+
+> **Kapan dipakai:** akun Vercel di-pause (mis. kuota jebol 2026-08-26) sementara upgrade
+> belum boleh. Blok ini membuat **seluruh situs**, bukan cuma video, hidup dari PC backup.
+> Gratis, bandwidth tanpa batas, tak ada yang bisa mem-pause.
+>
+> **Harga yang harus kamu terima:** kalau PC backup mati, **situs ikut mati** - bukan cuma
+> videonya. Untuk tahap develop ini wajar (video pun sudah begitu), tapi harus disadari.
+
+### G1. Siapkan repo + rahasia di PC backup
+
+```powershell
+# 1) Ambil kodenya (sekali saja). Kalau sudah ada, cukup: git pull
+#
+#    Diambil dari repo ojokesusu/dramaku, BUKAN dari repo produksi. Alasannya:
+#    per keputusan owner 2026-08-26 repo produksi SENGAJA ditahan berisi
+#    perbaikan kuota saja, sedangkan dramaku sudah memuat semuanya - perbaikan
+#    kuota + fitur Playly rekan + skrip di folder ini. Konsekuensinya: situs
+#    yang tampil dari PC backup IKUT memuat fitur Playly. Untuk keperluan
+#    menunjukkan hasil ke atasan, itu justru menguntungkan.
+cd C:\Users\USER
+git clone https://github.com/ojokesusu/dramaku.git dramaapp
+
+# 2) Isi rahasianya. SENGAJA tidak diotomatiskan - berisi kunci Supabase &
+#    AUTH_SECRET yang tak boleh disalin skrip (AGENTS.md 5.2).
+#    Salin daftar variabel dari .env.example, isi nilainya PERSIS seperti di
+#    Vercel -> Settings -> Environment Variables.
+notepad C:\Users\USER\dramaapp\.env.local
+```
+
+### G2. Nyalakan situsnya
+
+```powershell
+cd C:\Users\USER\dramaapp\pc-backup-agent
+powershell -ExecutionPolicy Bypass -File start-dramaapp-web.ps1
+```
+
+Skrip akan: cek Node -> cek `.env.local` -> `npm ci` (kalau perlu) -> `npm run build`
+-> `next start -p 3010`, lalu **menyalakan ulang sendiri kalau proses mati**.
+Log-nya di `start-dramaapp-web.log`. Sesudah `git pull`, jalankan dengan `-Rebuild`.
+
+Cek dari PC backup itu sendiri - harus balas `200`:
+
+```powershell
+curl.exe -s -o NUL -w "%{http_code}`n" http://localhost:3010/
+```
+
+### G3. Buka ke internet - pilih SATU
+
+**Jalur cepat (5 menit, alamat acak)** - cukup untuk menunjukkan hasil ke atasan:
+
+```powershell
+# Jendela terpisah, biarkan terbuka. Alamat https acak akan tercetak.
+.cloudflared.exe tunnel --url http://localhost:3010
+```
+
+Alamatnya berganti tiap kali dijalankan ulang - wajar, ini memang sementara.
+
+**Jalur rapi (alamat tetap `app.amasyaforum.com`)** - butuh named tunnel:
+
+1. Prasyarat yang WAJIB dicek dulu: zona `amasyaforum.com` harus sudah ada di akun
+   **Cloudflare** (bukan cuma terdaftar di Namecheap). Cek di dash.cloudflare.com.
+   Kalau belum, pindahkan nameserver-nya ke Cloudflare dulu - gratis. Tanpa ini,
+   perintah `tunnel route dns` di bawah akan gagal.
+2. Tambahkan hostname situs ke tunnel yang SUDAH ada:
+
+```powershell
+.cloudflared.exe tunnel route dns dramaapp-videos app.amasyaforum.com
+```
+
+3. Tambahkan blok `app.amasyaforum.com` ke `config.yml` - contohnya sudah disiapkan di
+   `cloudflared-config.example.yml` (blok bertanda 2026-08-26). Ingat: aturan penutup
+   `http_status:404` HARUS tetap paling bawah.
+4. Validasi lalu muat ulang service:
+
+```powershell
+.cloudflared.exe tunnel ingress validate    # harus bilang valid
+sc stop cloudflared; sc start cloudflared
+```
+
+### G4. Arahkan alamat video ke tunnel yang sama
+
+Situs tetap butuh alamat PUBLIK untuk berkas video (browser penonton tak bisa membaca
+`localhost` milik PC backup). Isi `NEXT_PUBLIC_VIDEO_BASE_URL` di `.env.local` dengan
+`https://video.amasyaforum.com`, lalu jalankan ulang skrip dengan `-Rebuild`.
+
+Alamat itu sudah lolos pagar keamanan tanpa perlu diubah: `lib/video-base.ts` memang
+mengizinkan suffix `.amasyaforum.com` (`DEFAULT_ALLOWED_SUFFIXES`).
+
+### G5. Kalau nanti balik ke Vercel
+
+Hentikan skrip (Ctrl+C), komentari blok `app.amasyaforum.com` di `config.yml`, muat
+ulang service. Jangan biarkan dua sumber hidup bersamaan - sesi berikutnya akan bingung
+mana yang sebenarnya dilihat penonton.
+
+---
 ## Verifikasi
 
 ### Berlaku untuk KEDUA mode — mulai dari sini

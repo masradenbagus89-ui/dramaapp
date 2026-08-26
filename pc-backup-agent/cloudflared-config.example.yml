@@ -23,6 +23,7 @@
 #    cloudflared.exe login                                    # pilih zona amasyaforum.com
 #    cloudflared.exe tunnel create dramaapp-videos            # catat UUID yang muncul
 #    cloudflared.exe tunnel route dns dramaapp-videos video.amasyaforum.com
+#    cloudflared.exe tunnel route dns dramaapp-videos app.amasyaforum.com     # situs (2026-08-26)
 #    cloudflared.exe tunnel ingress validate
 #    cloudflared.exe service install
 #    sc start cloudflared
@@ -43,6 +44,23 @@ ingress:
   # Alamat publik video → diteruskan ke Caddy yang jalan di PC backup.
   - hostname: video.amasyaforum.com
     service: http://localhost:8088
+
+  # --------------------------------------------------------------------
+  # SITUS dramaapp dijalankan dari PC backup (ditambahkan 2026-08-26).
+  #
+  # KENAPA ADA: akun Vercel di-pause karena kuota transfer jebol, dan pause
+  # tingkat AKUN tidak punya tombol Resume gratis - hanya Upgrade, sementara
+  # project ini belum disetujui atasan. Blok ini membuat situs tetap bisa
+  # dibuka tanpa Vercel: cloudflared meneruskan ke Next.js (next start) yang
+  # dijalankan start-dramaapp-web.ps1 di mesin yang sama.
+  #
+  # HAPUS atau komentari blok ini kalau situs sudah balik ke Vercel, supaya
+  # tidak ada dua sumber kebenaran yang membingungkan sesi berikutnya.
+  #
+  # Port 3010 WAJIB sama dengan -Port di start-dramaapp-web.ps1.
+  - hostname: app.amasyaforum.com
+    service: http://localhost:3010
+  # --------------------------------------------------------------------
 
   # Aturan penutup WAJIB ada: apa pun yang tidak cocok di atas dijawab 404,
   # bukan diteruskan. Tanpa ini cloudflared menolak start.

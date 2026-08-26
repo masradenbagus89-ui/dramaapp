@@ -9,7 +9,7 @@
 Akarnya sama persis dengan siklus ke-4: `start-video-services.ps1` hilang lagi dari PC backup, sementara
 penjaga 15 menit tetap jalan tapi menembak berkas kosong. Akarnya bukan kode aplikasi. Detail + 2 pelajaran baru
 (dugaan "PC backup mati" yang KELIRU, dan jeda ~24 jam antara sebab & gejala) ada di seksi 2026-08-26
-di bawah. **Sebab berkas itu raib DUA KALI masih belum ketemu — tersangka Norton, belum diuji.**
+di bawah. **Tersangka sebab berkas raib DUA KALI sudah teridentifikasi: antivirus KEDUA `360 Total Security` (bukan Norton) — terpasang di PC backup, belum terbukti mengarantina.**
 **Penjaga permanen AKTIF di PC backup & pemulihannya TERBUKTI NYATA 10:47** (3 berkas di
 `pc-backup-agent/`) — berkas penting yang hilang kini dipulihkan sendiri tiap 10 menit.
 
@@ -267,15 +267,39 @@ terakhir log SEBELUM lompatan waktu.**
 Range → **206** · 12 byte pertama **`ftypmp42`** (MP4 asli) · ep 2/10/30/56 → **200** ·
 `/_agent/health` → `{"ok":true}` · halaman produksi sudah menyajikan alamat baru.
 
-**🔴 BELUM TERJAWAB — kenapa berkas ini hilang DUA KALI** (24 Agt & ~25 Agt) sementara tetangganya di
-folder yang sama (`Caddyfile`, `hardlink-agent.js`, `start-dramaapp.ps1`, `optimalkan-film.ps1`) utuh
-terus. Selama sebabnya belum ketemu, **siklus ke-6 tinggal menunggu waktu**. Tersangka yang BELUM
-diuji: **antivirus pihak ketiga (Norton)** — pemeriksaan 24 Agt hanya menguji Defender
-(`Get-MpThreat` kosong), padahal Defender bukan satu-satunya yang bisa mengarantina. Langkah uji
-berikutnya: pastikan Norton terpasang atau tidak → cek riwayat karantinanya → pasang exclusion untuk
-folder `C:\Users\USER\pc-backup-agent\`. Penjaga permanen yang diusulkan (belum diizinkan owner):
-salinan cadangan berkas + pemeriksaan `Test-Path` yang melapor kalau berkasnya raib, supaya
-hilangnya ketahuan saat itu juga, bukan 24 jam kemudian.
+**🟠 TERSANGKA TERIDENTIFIKASI (2026-08-26) — antivirus KEDUA: `360 Total Security`.** Kenapa berkas
+ini hilang DUA KALI (24 Agt & ~25 Agt) sementara tetangganya di folder yang sama (`Caddyfile`,
+`hardlink-agent.js`, `start-dramaapp.ps1`, `optimalkan-film.ps1`) utuh terus — pertanyaan ini akhirnya
+punya arah. Hasil `Get-CimInstance -Namespace root\SecurityCenter2 -ClassName AntiVirusProduct`:
+
+```
+displayName
+-----------
+Windows Defender
+360 Total Security
+```
+
+**Inilah lubang diagnosa 2026-08-24.** Waktu itu hanya Defender yang diperiksa (`Get-MpThreat`
+kosong) lalu dugaan "antivirus" DICORET — padahal di PC ini ada antivirus KEDUA yang tidak pernah
+disentuh pemeriksaan. Pelajaran: jangan menyimpulkan "bukan antivirus" dari Defender saja; daftar
+lengkap ada di `root\SecurityCenter2`, dan itu perintah pertama yang harus dijalankan.
+
+**Status: tersangka KUAT, belum terbukti.** Yang sudah pasti: 360 Total Security terpasang. Yang
+BELUM: apakah dia yang mengarantina berkas itu. 360 tidak punya cmdlet PowerShell seperti Defender,
+jadi riwayat karantinanya hanya bisa dibaca dari aplikasinya sendiri (GUI).
+
+**Langkah berikutnya (menunggu owner):**
+1. Buka aplikasi 360 Total Security → bagian Quarantine / Karantina → cari `start-video-services.ps1`
+   bertanggal 24 atau 25 Agt. Ketemu = terbukti, dugaan berubah jadi fakta.
+2. Tambahkan folder `C:\Users\USER\pc-backup-agent` ke White List / Trust List 360 Total Security.
+3. Defender juga (murah, sekalian): `Add-MpPreference -ExclusionPath "C:\Users\USER\pc-backup-agent"`.
+
+Exclusion TIDAK dipasang otomatis oleh script mana pun — itu melemahkan pemindaian di folder tsb dan
+harus jadi keputusan sadar pemilik PC (§5.3).
+
+**Kalau langkah di atas tidak dikerjakan:** video TIDAK akan mati seperti dulu — penjaga berkas
+sudah aktif dan terbukti memulihkan. Risiko sisanya: kalau 360 menghapus berkas berulang dalam 1 jam,
+penjaga berhenti di pemulihan ke-2 (sesuai rancangan) dan barulah video bisa mati lagi.
 
 **✅ PENJAGA PERMANEN DIBANGUN (izin owner 2026-08-26)** — supaya siklus ke-6 tidak lagi berujung
 video mati diam-diam. Tiga berkas di `pc-backup-agent/`:

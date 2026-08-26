@@ -254,7 +254,7 @@ dan harus jadi keputusan sadar pemilik PC:
 Add-MpPreference -ExclusionPath "C:\Users\USER\pc-backup-agent"
 ```
 
-Untuk antivirus pihak ketiga (mis. Norton), exclusion dipasang lewat aplikasinya sendiri.
+Untuk antivirus pihak ketiga, exclusion dipasang lewat aplikasinya sendiri. Di PC backup ini yang terpasang `360 Total Security` (dipastikan 2026-08-26) — White List / Trust List di aplikasinya.
 
 **Batas yang perlu diketahui:** Windows menolak perintah tugas terjadwal lebih dari **261 karakter**
 (ditemukan saat uji 2026-08-26, pesan errornya tidak menyebut solusinya). Dengan path

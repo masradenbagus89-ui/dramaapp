@@ -3,7 +3,20 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-08-25 (sesudah owner login GitHub di PowerShell, `git fetch` dari sesi AI JALAN lagi). Keadaan saat pemeriksaan: `origin` (masradenbagus89-ui/dramaapp, **dipantau Vercel**) = `c648fef` — sudah berisi fitur Film & **terverifikasi tayang**; `dramaku` (ojokesusu/dramaku) = `fd83427` — berisi 5 commit Playly yang belum pernah masuk produksi. Keduanya digabung hari ini di komputer owner.
+**Terakhir dicek:** 2026-08-26 — `git fetch` ke kedua remote sukses. Keadaan: `masradenbagus89-ui/dramaapp` (**dipantau Vercel**) = `7372259`; `ojokesusu/dramaku` = `9e17f40` sesudah push hari ini.
+
+> 🚨 **NAMA REMOTE DI PC INI TIDAK SAMA DENGAN CATATAN LAMA — sumber salah kirim.**
+> Catatan 2026-08-25 di bawah memakai kata "origin" untuk repo PRODUKSI. Di komputer ini
+> justru terbalik (dicek `git remote -v` 2026-08-26):
+>
+> | Repo | Nama remote di PC ini | Dipantau Vercel? |
+> |---|---|---|
+> | `masradenbagus89-ui/dramaapp` | **`dramaapp`** | **Ya — ini tombol rilis** |
+> | `ojokesusu/dramaku` | **`origin`** | Tidak — repo cadangan |
+>
+> **SELALU `git remote -v` dulu sebelum push.** Jangan percaya kata "origin" di catatan mana pun.
+
+**Catatan lama, 2026-08-25** (sesudah owner login GitHub di PowerShell, `git fetch` dari sesi AI JALAN lagi). Keadaan saat pemeriksaan: `origin` (masradenbagus89-ui/dramaapp, **dipantau Vercel**) = `c648fef` — sudah berisi fitur Film & **terverifikasi tayang**; `dramaku` (ojokesusu/dramaku) = `fd83427` — berisi 5 commit Playly yang belum pernah masuk produksi. Keduanya digabung hari ini di komputer owner.
 
 ⚠️ **Penamaan remote BEDA antara komputer owner dan komputer rekan** (sumber salah paham): di sini `origin` = repo produksi & `dramaku` = repo rekan; di catatan rekan (baris Playly di bawah) `origin` justru berarti repo `dramaku`, dan repo produksi mereka sebut `dramaapp`. Selalu sebut URL-nya kalau ragu.
 
@@ -29,7 +42,7 @@ AUTH_SECRET di Vercel: dikonfirmasi ADA oleh owner 2026-08-18.
 
 | Status | Commit | Isi | Aksi |
 |---|---|---|---|
-| 🟡 **siap rilis — menunggu izin push** | branch `fix/playly-otomatis` | **Video Playly tampil OTOMATIS**: halaman baru `/playly`, baris di `/discover`, tautan TopNav, admin bisa menyembunyikan. Jalur katalog-publik-TERSARING supaya kunci mitra yang dicabut tak lagi mematikan video | Diperiksa dulu: **376 tes lulus**, `tsc` exit 0, `next build` sukses, nol secret di diff. Terbukti lokal: 4 video milik `coklat` tampil, **nol kebocoran** dari 11 video kreator lain, keempat berkas MP4 mengalir (206, `ftypisom`, `[ftyp,free,mdat]`). `/discover` tetap Static 1m (nol regresi) |
+| 🟡 **repo cadangan SUKSES — produksi menunggu owner** | `9e17f40` (branch `fix/playly-otomatis`) | **Video Playly tampil OTOMATIS**: halaman baru `/playly`, baris di `/discover`, tautan TopNav, admin bisa menyembunyikan. Jalur katalog-publik-TERSARING supaya kunci mitra yang dicabut tak lagi mematikan video | Diperiksa dulu: **376 tes lulus**, `tsc` exit 0, `next build` sukses, nol secret di diff. Terbukti lokal: 4 video milik `coklat` tampil, **nol kebocoran** dari 11 video kreator lain, keempat berkas MP4 mengalir (206, `ftypisom`, `[ftyp,free,mdat]`). `/discover` tetap Static 1m (nol regresi). **Push ke `ojokesusu/dramaku` SUKSES** `7372259..9e17f40` (2026-08-26, diverifikasi). **Push ke `masradenbagus89-ui/dramaapp` DITOLAK 403** — git di PC ini login sebagai `yusufscorpio` yang tak punya akses tulis (dicek lewat `git push --dry-run`, tidak mengubah apa pun). Owner jalankan: `git push dramaapp fix/playly-otomatis:main` |
 | ✅ **RILIS GABUNGAN TAYANG** | `e765e29` (merge) | **Fitur Film + integrasi Playly dirilis bersama** 2026-08-25 atas izin owner | Dual push SUKSES dari sesi AI: `origin` `c648fef..e765e29`, `dramaku` `fd83427..e765e29`. Sesudah `git fetch` keduanya: lokal = `origin/main` = `dramaku/main` = `e765e29`, **selisih NOL**. Sebelum push: **358 tes lulus** (302 + tes Playly), `tsc` exit 0, `next build` sukses (5 route Playly terdaftar), nol secret nyata di diff (hanya kunci contoh di tes). **Terverifikasi tayang** di deployment `dpl_28aUguP18E7FpHXZ4grMFFi3Tp5w`: `/admin/videos/playly` **200** (sebelumnya 404), dan chunk `/_next/static/chunks/3om_miassjcgs.js` memuat "Jenis tayangan" + "Film selalu gratis" + "Playly" sekaligus |
 | ✅ **sudah di-push & TAYANG** | `5156949` + `c648fef` | Fitur **Film tanpa episode** di panel admin (jenis tayangan Serial/Film) + kolom DB `kind` + 2 berkas tes baru | Owner memberi izin rilis 2026-08-25. SQL `add_kind_to_dramas.sql` dijalankan owner di Supabase produksi (Success) SEBELUM push. Push ke `origin` dilakukan owner sendiri di PowerShell (sesi AI tak bisa membuka dialog login GitHub): `617f6a0..c648fef`. **Terverifikasi tayang**: teks "Jenis tayangan", "Film selalu gratis", "1 video utuh" ditemukan di bundle produksi `/_next/static/chunks/32zoz1a8f4vl2.js`. Sebelum push: nol secret di diff, **302 tes lulus**, `tsc` exit 0, `next build` sukses |
 | ⏸️ **menunggu owner (boleh kapan saja)** | — | SQL data-fix `supabase_migrations/mark_existing_movies.sql` — menandai 7 judul film lama (Transformers, Spider-Man, Avengers, Predator, 28 Years Later, Fireworks Wednesday, The Dark Knight) sebagai `kind = 'movie'` + melepas tanda berbayar yang memang tak berefek | Supabase → SQL Editor → tempel & Run. Boleh sebelum atau sesudah deploy (kode lama mengabaikan kolom `kind`, jadi tidak merusak apa pun) |

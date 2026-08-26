@@ -56,6 +56,9 @@ alamat publiknya.
 | `Caddyfile` | Config Caddy: sajikan video port 8088 + reverse-proxy `/_agent/*` |
 | `start-video-services.ps1` | **[CARA BARU]** dijalankan Windows saat boot: start agent + Caddy |
 | `cloudflared-config.example.yml` | **[CARA BARU]** contoh config named tunnel |
+| `penjaga-berkas.ps1` | **[PENJAGA]** tiap 10 menit: pulihkan berkas penting yang hilang dari `cadangan\` |
+| `pasang-penjaga.ps1` | **[PENJAGA]** pemasang sekali-jalan untuk penjaga di atas (Bagian F) |
+| `optimalkan-film.ps1` | perkecil berkas film besar supaya bisa diputar lewat tunnel |
 | `start-dramaapp.ps1` | **[CARA LAMA]** launcher manual — disimpan sebagai jalan mundur |
 | `README.md` | berkas ini |
 
@@ -205,6 +208,67 @@ Itu saja — script akan melaporkannya tiap boot, jadi database selalu ikut keny
 Env var `NEXT_PUBLIC_VIDEO_BASE_URL` sekarang hanya **cadangan** (dipakai saat database kosong).
 Boleh diisi `https://video.amasyaforum.com` juga, tapi **mengisinya saja tidak cukup** — selama
 baris alamat di database masih ada, env var tidak akan pernah dipakai.
+
+## Setup 1× — Bagian F: penjaga berkas *(WAJIB — pasang sekali)*
+
+**Masalah yang dijawab.** `start-video-services.ps1` sudah HILANG dua kali dari folder ini
+(2026-08-24 dan ~2026-08-25). Tugas terjadwal tetap dipanggil Windows tiap 15 menit, tapi `-File`
+menunjuk berkas kosong → `powershell.exe` mati seketika (`Last Result: -196608`) **tanpa menulis
+sebaris pun log**. Video ikut mati dan baru ketahuan ~24 jam kemudian lewat laporan penonton.
+
+**Pasang (PowerShell sebagai Administrator, sekali saja):**
+
+```powershell
+powershell -ExecutionPolicy Bypass -File C:\Users\USER\pc-backup-agent\pasang-penjaga.ps1
+```
+
+Script itu membuat `cadangan\`, menyalin berkas penting ke sana, mendaftarkan tugas
+**"DramaApp Penjaga Berkas"** (tiap 10 menit, sebagai SYSTEM), lalu **membuktikan** tugasnya jalan
+dengan membandingkan jumlah baris log sebelum/sesudah — bukan berhenti di `SUCCESS: Attempted to run`.
+
+**Cara kerjanya (dua arah, tidak ada satu titik yang mematikan semuanya):**
+
+| Yang hilang | Yang mengembalikan | Kapan |
+|---|---|---|
+| `start-video-services.ps1`, `hardlink-agent.js`, `Caddyfile` | `cadangan\penjaga-berkas.ps1` | tiap 10 menit |
+| `penjaga-berkas.ps1` (di folder utama maupun di `cadangan\`) | `start-video-services.ps1` → `Pastikan-Penjaga` | tiap 15 menit |
+
+Berkas yang **berubah isinya** tidak dibatalkan — justru cadangannya yang disegarkan, supaya update
+yang kamu lakukan sendiri tidak ditimpa balik oleh penjaga.
+
+**Kalau berkas dihapus terus-menerus,** penjaga BERHENTI setelah 2 pemulihan dalam 1 jam dan menulis
+`!!! BERHENTI MEMULIHKAN`. Itu disengaja: memulihkan terus cuma menutupi gejala, sementara akarnya
+(hampir pasti antivirus mengarantina) tidak tersentuh. Yang harus dikerjakan manusia:
+
+```powershell
+# lihat antivirus apa saja yang terdaftar - BUKAN cuma Defender
+Get-CimInstance -Namespace root\SecurityCenter2 -ClassName AntiVirusProduct | Select-Object displayName
+# riwayat karantina Defender
+Get-MpThreatDetection | Select-Object -Last 5 InitialDetectionTime,Resources
+```
+
+Exclusion **tidak** dipasang otomatis oleh script mana pun di folder ini — itu melemahkan pemindaian
+dan harus jadi keputusan sadar pemilik PC:
+
+```powershell
+Add-MpPreference -ExclusionPath "C:\Users\USER\pc-backup-agent"
+```
+
+Untuk antivirus pihak ketiga (mis. Norton), exclusion dipasang lewat aplikasinya sendiri.
+
+**Batas yang perlu diketahui:** Windows menolak perintah tugas terjadwal lebih dari **261 karakter**
+(ditemukan saat uji 2026-08-26, pesan errornya tidak menyebut solusinya). Dengan path
+`C:\Users\USER\pc-backup-agent` perintahnya **166 karakter — aman**. Kalau folder agent dipindah ke
+path panjang, `pasang-penjaga.ps1` berhenti dengan pesan yang menyebut angkanya, bukan gagal diam-diam.
+
+**Cek berkala:**
+
+```powershell
+Get-Content C:\Users\USER\pc-backup-agent\logs\penjaga-berkas.log -Tail 20
+```
+
+Baris `semua berkas utuh (4 diperiksa)` ditulis tiap siklus walau tidak ada yang perlu diperbaiki —
+**disengaja**, supaya lompatan jam di log langsung terlihat kalau penjaganya sendiri berhenti jalan.
 
 ## Verifikasi
 

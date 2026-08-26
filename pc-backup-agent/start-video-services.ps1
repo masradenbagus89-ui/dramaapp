@@ -252,7 +252,43 @@ function Cari-Exe([string[]]$kandidat, [string]$namaPerintah) {
   return $null
 }
 
+# Pasangan dari penjaga-berkas.ps1 - yang ini memulihkan PENJAGANYA.
+#
+# KENAPA PERLU: tugas "DramaApp Penjaga Berkas" menjalankan salinan di
+# cadangan\penjaga-berkas.ps1. Kalau justru berkas ITU yang raib, penjaganya
+# mati senyap - persis pola kegagalan 2026-08-24/25, cuma pindah korban.
+# Script ini jalan tiap 15 menit, jadi dia titik pemulihan yang wajar.
+# Hasilnya: keduanya saling menjaga, tidak ada satu berkas pun yang kalau
+# hilang mematikan seluruh rantai tanpa ada yang mengembalikan.
+function Pastikan-Penjaga {
+  $master   = Join-Path $AGENT_DIR "penjaga-berkas.ps1"
+  $cadDir   = Join-Path $AGENT_DIR "cadangan"
+  $cadangan = Join-Path $cadDir "penjaga-berkas.ps1"
+  try {
+    if (-not (Test-Path $master) -and -not (Test-Path $cadangan)) {
+      Catat "PERINGATAN: penjaga-berkas.ps1 hilang di KEDUA tempat - berkas penting tidak terjaga lagi. Unduh ulang dari repo lalu jalankan pasang-penjaga.ps1"
+      return
+    }
+    New-Item -ItemType Directory -Path $cadDir -Force | Out-Null
+    if (-not (Test-Path $cadangan)) {
+      Copy-Item -Path $master -Destination $cadangan -Force
+      Catat "!!! penjaga-berkas.ps1 DIPULIHKAN ke folder cadangan (salinan yang dijalankan tugas terjadwal)"
+      return
+    }
+    if (-not (Test-Path $master)) {
+      Copy-Item -Path $cadangan -Destination $master -Force
+      Catat "!!! penjaga-berkas.ps1 DIPULIHKAN ke folder utama"
+    }
+  } catch {
+    # Kegagalan di sini tidak boleh menggagalkan start service: video tetap
+    # prioritas, penjaga cuma lapis tambahan.
+    Catat "PERINGATAN: gagal memastikan penjaga-berkas.ps1: $($_.Exception.Message)"
+  }
+}
+
 Catat "=== start-video-services dijalankan (user: $env:USERNAME) ==="
+
+Pastikan-Penjaga
 
 # Kunci antar-proses. Script ini dipicu DUA tugas (saat boot + tiap 15 menit),
 # jadi dua instance bisa berpapasan - dan keduanya sama-sama mematikan lalu

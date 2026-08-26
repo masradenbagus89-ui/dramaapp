@@ -8,12 +8,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { ADMIN_COOKIE, verifyAdminSessionToken } from "@/lib/session";
-import { getPlaylyKeyStatus } from "@/lib/playly";
+import { fetchPlaylyVideosKita, getPlaylyKeyStatus, readPlaylyConfig } from "@/lib/playly";
 import { getAllDramas } from "@/lib/dramas";
-import { getPlaylyEmbeds } from "@/lib/store";
+import { getPlaylyEmbeds, getPlaylyHiddenIds } from "@/lib/store";
 import AdminAccessDenied from "@/app/components/admin/AdminAccessDenied";
 import AdminSidebar from "@/app/components/admin/AdminSidebar";
 import PlaylyVideoPicker from "@/app/components/admin/PlaylyVideoPicker";
+import PlaylyVisibilityManager from "@/app/components/admin/PlaylyVisibilityManager";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, KeyRound } from "lucide-react";
 
@@ -31,10 +32,17 @@ export default async function PlaylyVideosPage() {
   const email = await verifyAdminSessionToken(jar.get(ADMIN_COOKIE)?.value);
   if (!email) return <AdminAccessDenied />;
 
-  const [status, dramas, embeds] = await Promise.all([
+  const konfigurasi = readPlaylyConfig();
+
+  // revalidateSeconds = 0 -> jalur admin selalu minta data SEGAR ke Playly,
+  // supaya video yang baru di-upload langsung kelihatan di sini. Halaman
+  // penonton yang memakai versi ber-cache.
+  const [status, dramas, embeds, mitra, hidden] = await Promise.all([
     getPlaylyKeyStatus(),
     getAllDramas(),
     getPlaylyEmbeds(),
+    fetchPlaylyVideosKita(konfigurasi, 0),
+    getPlaylyHiddenIds(),
   ]);
 
   // Dropdown hanya butuh 3 kolom; sisanya tidak perlu ikut ke browser.
@@ -53,15 +61,31 @@ export default async function PlaylyVideosPage() {
           <p className="text-xs uppercase tracking-wider text-zinc-500">Konten</p>
           <h1 className="mt-1 text-2xl font-bold text-white">Video dari Playly</h1>
           <p className="mt-2 max-w-2xl text-sm text-zinc-400">
-            Pilih video milik Playly, lalu kaitkan ke salah satu drama DramaKu.
-            Video yang sudah dikaitkan akan tampil di halaman{" "}
+            Video di akun Playly kita tampil <strong className="text-zinc-200">otomatis</strong>{" "}
+            di halaman{" "}
+            <Link href="/playly" className="text-amber-400 underline">
+              Video Playly
+            </Link>{" "}
+            dan di{" "}
             <Link href="/discover" className="text-amber-400 underline">
               Discover
-            </Link>{" "}
-            memakai pemutar milik Playly (embed), sementara video DramaKu sendiri
-            tetap berjalan seperti biasa.
+            </Link>
+            , memakai pemutar milik Playly (embed) — tidak perlu dikaitkan ke drama
+            dulu. Mengaitkan ke drama sifatnya opsional, hanya untuk memberi label
+            "bagian dari drama X". Video DramaKu sendiri tetap berjalan seperti biasa.
           </p>
         </header>
+
+{/* Sengaja TIDAK dibungkus syarat "kunci sudah dipasang": sejak ada jalur
+            katalog publik tersaring, video kita tetap tampil walau kunci ditolak —
+            jadi menyembunyikan panel ini justru membuat admin mengira tak ada apa-apa. */}
+        <PlaylyVisibilityManager
+          videos={mitra.videos}
+          initialHidden={hidden}
+          fetchError={mitra.error}
+          source={mitra.source}
+          creator={konfigurasi.creator}
+        />
 
         {status.configured ? (
           <PlaylyVideoPicker dramas={pilihanDrama} initialEmbeds={embeds} />

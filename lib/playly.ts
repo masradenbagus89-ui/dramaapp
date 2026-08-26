@@ -23,6 +23,7 @@
 import crypto from "node:crypto";
 import {
   getPlaylyKeyRecord,
+  getPlaylyKeyRecordCached,
   setPlaylyKeyRecord,
   clearPlaylyKeyRecord,
   type PlaylyKeyRecord,
@@ -45,6 +46,24 @@ export const DEFAULT_PLAYLY_EMBED_PATH = "/id/{id}/embed";
 
 /** Katalog PUBLIK Playly (tanpa kunci) — dipakai halaman /nonton milik Playly. */
 export const PLAYLY_CATALOG_PATH = "/api/catalog";
+
+/** Detail satu video publik. Dipakai HANYA untuk mengambil gambar sampulnya. */
+export const PLAYLY_PUBLIC_VIDEO_PATH = "/api/public-video";
+
+/**
+ * Nama akun kreator DramaKu di Playly.
+ *
+ * Dipakai untuk MENGENALI "video milik kita" di dalam katalog publik Playly,
+ * yang isinya bercampur dengan video kreator lain. Perlu ada karena kunci mitra
+ * ternyata bisa dicabut sewaktu-waktu (terbukti 2026-08-26: kunci yang sama
+ * dibalas ok:true pagi itu lalu invalid_key 20 menit kemudian). Tanpa penanda
+ * ini, kunci mati = video kita ikut hilang dari situs.
+ *
+ * Ditulis sebagai default supaya fitur ini hidup begitu di-deploy, tanpa
+ * menunggu siapa pun mengisi Environment Variables lebih dulu. Ganti lewat
+ * PLAYLY_CREATOR kalau nama akun Playly-nya berubah.
+ */
+export const DEFAULT_PLAYLY_CREATOR = "coklat";
 
 /** Spasi, tab, baris baru, dan karakter kontrol — tidak boleh ada di dalam kunci. */
 function adaSpasiAtauKontrol(s: string): boolean {
@@ -221,6 +240,33 @@ export type PlaylyKeyStatus = {
 };
 
 /**
+ * Kunci Playly yang ditaruh di env. Dua nama diterima, urutannya disengaja:
+ *   1. PLAYLY_API_KEY    -> nama yang benar untuk integrasi ini.
+ *   2. DASHBOARD_API_KEY -> nama LAMA dari jalur "Video terbaru" (lib/dashboard-videos.ts).
+ *
+ * KENAPA nama lama masih diterima: kunci mitra yang SAH ternyata sudah terlanjur
+ * dipasang di DASHBOARD_API_KEY (di .env.local maupun di Vercel), sedangkan kode ini
+ * hanya mencari PLAYLY_API_KEY. Akibatnya kunci yang sah dianggap tidak ada, halaman
+ * admin menulis "kunci belum dipasang", dan daftar video mitra SELALU kosong.
+ * Menerima nama lama menyembuhkan itu tanpa menuntut siapa pun mengedit Environment
+ * Variables di Vercel lebih dulu -- langkah yang gampang terlupa dan membuat rilis
+ * terlihat gagal padahal kodenya sudah benar.
+ *
+ * Keduanya env server (tanpa NEXT_PUBLIC_), jadi tak ada yang ikut ke browser.
+ */
+export function readPlaylyKeyFromEnv(
+  env: Record<string, string | undefined> = process.env,
+): string | null {
+  for (const nilai of [env.PLAYLY_API_KEY, env.DASHBOARD_API_KEY]) {
+    const key = (nilai ?? "").trim();
+    // Hanya yang berbentuk kunci Playly dipakai: DASHBOARD_API_KEY bisa saja diisi
+    // kunci layanan LAIN, dan mengirimnya ke Playly cuma menghasilkan 401.
+    if (key.startsWith(PLAYLY_KEY_PREFIX)) return key;
+  }
+  return null;
+}
+
+/**
  * Status kunci untuk DITAMPILKAN ke admin.
  * Sengaja tidak pernah memuat kunci asli — hanya bentuk tersamarnya.
  */
@@ -241,7 +287,7 @@ export async function getPlaylyKeyStatus(): Promise<PlaylyKeyStatus> {
 
   // Jaring pengaman: kunci boleh juga ditaruh di env (mis. saat migrasi atau
   // kalau database belum siap). Env tetap server-side, jadi sama amannya.
-  const dariEnv = (process.env.PLAYLY_API_KEY ?? "").trim();
+  const dariEnv = readPlaylyKeyFromEnv();
   if (dariEnv) {
     return {
       configured: true,
@@ -271,8 +317,18 @@ export async function getPlaylyKeyStatus(): Promise<PlaylyKeyStatus> {
 export async function getPlaylyKey(): Promise<string | null> {
   const rec = await getPlaylyKeyRecord();
   if (rec) return decryptSecret(rec.secret);
-  const dariEnv = (process.env.PLAYLY_API_KEY ?? "").trim();
-  return dariEnv || null;
+  return readPlaylyKeyFromEnv();
+}
+
+/**
+ * Sama dengan getPlaylyKey, tapi pembacaan dari database boleh dipakai ulang
+ * beberapa detik. Khusus HALAMAN PUBLIK — supaya halaman tetap bisa disimpan
+ * dan dipakai ulang (ISR), bukan dibangun ulang untuk tiap pengunjung.
+ */
+export async function getPlaylyKeyCached(): Promise<string | null> {
+  const rec = await getPlaylyKeyRecordCached();
+  if (rec) return decryptSecret(rec.secret);
+  return readPlaylyKeyFromEnv();
 }
 
 /** Simpan/ganti kunci (dienkripsi dulu). `adminEmail` dicatat sebagai jejak audit. */
@@ -589,6 +645,8 @@ export type PlaylyConfig = {
   catalogUrl: string;
   allowedHosts: string[];
   embedPattern: PlaylyEmbedPattern;
+  /** Nama kreator yang dianggap "milik kita" saat menyaring katalog publik. */
+  creator: string;
 };
 
 /** Setelan dari env — TANPA NEXT_PUBLIC_, jadi hanya hidup di server. */
@@ -610,6 +668,7 @@ export function readPlaylyConfig(
       baseUrl,
       pattern: env.PLAYLY_EMBED_PATH?.trim() || DEFAULT_PLAYLY_EMBED_PATH,
     },
+    creator: env.PLAYLY_CREATOR?.trim() || DEFAULT_PLAYLY_CREATOR,
   };
 }
 
@@ -626,6 +685,20 @@ export function readPlaylyConfig(
  */
 export function buildPlaylyHeaders(apiKey: string): Record<string, string> {
   return { Accept: "application/json", [PLAYLY_KEY_HEADER]: apiKey };
+}
+
+/**
+ * Ambil video milik kreator tertentu saja.
+ * Perbandingan mengabaikan besar-kecil huruf dan spasi di ujung: nama akun
+ * ditulis manusia, dan "Coklat" vs "coklat" tidak boleh membuat video hilang.
+ */
+export function filterVideoMilikKreator(
+  videos: PlaylyVideo[],
+  creator: string,
+): PlaylyVideo[] {
+  const target = creator.trim().toLowerCase();
+  if (!target) return []; // tanpa nama pembanding, lebih aman tidak menampilkan apa pun
+  return videos.filter((v) => v.creator.trim().toLowerCase() === target);
 }
 
 /** Dari mana daftar video yang sedang ditampilkan berasal. */
@@ -649,6 +722,7 @@ async function ambilJsonPlayly(
   url: string,
   headers: Record<string, string>,
   pesan401: string,
+  revalidateSeconds?: number,
 ): Promise<unknown> {
   let res: Response;
   try {
@@ -656,7 +730,15 @@ async function ambilJsonPlayly(
       headers,
       // Batas tunggu: kalau Playly ngadat, halaman admin jangan ikut menggantung.
       signal: AbortSignal.timeout(10_000),
-      cache: "no-store",
+      // Jalur admin (tanpa revalidateSeconds) selalu minta data segar supaya
+      // perubahan langsung terlihat. Jalur PUBLIK menitipkan angka detik: hasil
+      // SUKSES boleh dipakai ulang selama itu, jadi ribuan pengunjung tidak
+      // berubah jadi ribuan panggilan ke Playly. Yang gagal tidak pernah sampai
+      // ke sini (fetch melempar / status bukan 2xx), jadi kegagalan TIDAK ikut
+      // tersimpan -- penting, karena kosong yang ter-cache akan bertahan lama.
+      ...(revalidateSeconds
+        ? { next: { revalidate: revalidateSeconds } }
+        : { cache: "no-store" as const }),
     });
   } catch (err) {
     const alasan =
@@ -713,12 +795,14 @@ function lemparKalauBadanGagal(data: unknown): void {
 async function fetchVideoMitra(
   apiKey: string,
   config: PlaylyConfig,
+  revalidateSeconds?: number,
 ): Promise<PlaylyVideoResult> {
   const data = await ambilJsonPlayly(
     config.videosUrl,
     buildPlaylyHeaders(apiKey),
     "Playly menolak kunci kita (kunci salah, sudah dicabut, atau kedaluwarsa). " +
       "Minta kunci baru ke Playly, lalu perbarui di Setelan → Playly.",
+    revalidateSeconds,
   );
   lemparKalauBadanGagal(data);
   return normalizePlaylyVideos(data, config.allowedHosts, config.embedPattern);
@@ -737,11 +821,13 @@ async function fetchVideoMitra(
  */
 async function fetchVideoKatalogPublik(
   config: PlaylyConfig,
+  revalidateSeconds?: number,
 ): Promise<PlaylyVideoResult> {
   const data = await ambilJsonPlayly(
     config.catalogUrl,
     { Accept: "application/json" },
     "Katalog publik Playly menolak permintaan kita.",
+    revalidateSeconds,
   );
   lemparKalauBadanGagal(data);
   return normalizePlaylyVideos(data, config.allowedHosts, config.embedPattern);
@@ -787,4 +873,134 @@ export async function fetchPlaylyVideos(
       "Kunci API Playly belum dipasang, jadi daftar ini diambil dari katalog publik Playly. " +
       "Pasang kunci di Setelan → Playly kalau ingin dibatasi ke video akun mitra saja.",
   };
+}
+
+// =====================  6. JALUR PUBLIK (halaman penonton)  ===============
+
+/** Berapa lama daftar video Playly boleh dipakai ulang di halaman publik. */
+export const PLAYLY_PUBLIK_TTL_SECONDS = 300;
+
+export type PlaylyMitraResult = {
+  videos: PlaylyVideo[];
+  /**
+   * null = berhasil. Terisi = alasan daftarnya kosong, ditulis untuk ADMIN.
+   * Penonton tidak pernah melihat teks ini; halaman publik hanya memakainya
+   * untuk membedakan "memang belum ada video" dari "Playly sedang bermasalah".
+   */
+  error: string | null;
+  /** Jalur mana yang akhirnya dipakai — ditampilkan apa adanya ke admin. */
+  source: PlaylySumber;
+};
+
+/**
+ * Daftar video untuk HALAMAN PENONTON — hanya video milik akun mitra kita.
+ *
+ * Beda tegas dengan fetchPlaylyVideos() yang dipakai halaman admin:
+ *
+ *   1. TIDAK pernah turun ke katalog publik Playly. Katalog publik berisi video
+ *      kreator lain; menampilkannya di situs sendiri berarti isi orang lain ikut
+ *      terbit atas nama DramaKu. Di halaman admin turun ke katalog publik masih
+ *      masuk akal (admin sedang melihat-lihat dan diberi tahu sumbernya), di
+ *      halaman penonton tidak.
+ *
+ *   2. TIDAK pernah melempar. Halaman publik harus tetap tampil walau Playly
+ *      mati; kegagalan berubah jadi daftar KOSONG + alasan, bukan halaman rusak.
+ *      Ini sikap gagal-aman: saat ragu, jangan tampilkan apa pun.
+ */
+export async function fetchPlaylyVideosKita(
+  config: PlaylyConfig = readPlaylyConfig(),
+  revalidateSeconds: number = PLAYLY_PUBLIK_TTL_SECONDS,
+): Promise<PlaylyMitraResult> {
+  const apiKey = await getPlaylyKeyCached().catch(() => null);
+
+  // Jalur 1 — kunci mitra. Paling tepat: Playly sendiri yang menentukan mana
+  // video milik akun kita, jadi tidak bergantung pada nama kreator.
+  if (apiKey) {
+    try {
+      const { videos, rejected } = await fetchVideoMitra(apiKey, config, revalidateSeconds);
+      if (rejected.length > 0) {
+        console.warn(`[playly] ${rejected.length} video mitra dilewati:`, rejected.slice(0, 5));
+      }
+      return { videos, error: null, source: "mitra" };
+    } catch (err) {
+      // Kunci ditolak bukan akhir cerita — turun ke jalur 2. Kegagalan LAIN
+      // (Playly mati, timeout) tidak disembunyikan: kalau ikut dibungkus jadi
+      // "kosong", gangguan jaringan akan terlihat sama seperti "belum ada video".
+      if (!(err instanceof PlaylyError) || err.status !== 401) {
+        const pesan = err instanceof PlaylyError ? err.message : "Gagal menghubungi Playly.";
+        console.warn("[playly] jalur mitra gagal:", pesan);
+        return { videos: [], error: pesan, source: "mitra" };
+      }
+      console.warn("[playly] kunci mitra ditolak — turun ke katalog publik tersaring.");
+    }
+  }
+
+  // Jalur 2 — katalog publik, DISARING nama kreator kita.
+  //
+  // KENAPA ADA: kunci mitra terbukti bisa dicabut sewaktu-waktu (2026-08-26:
+  // kunci yang sama dibalas ok:true, lalu invalid_key 20 menit kemudian). Kalau
+  // hanya mengandalkan kunci, video kita ikut lenyap dari situs setiap kali itu
+  // terjadi — persis keluhan yang membuat fitur ini dikerjakan ulang.
+  //
+  // Yang diambil TETAP hanya video milik akun kita: katalog publik memuat nama
+  // kreator tiap video, dan yang bukan milik kita dibuang di sini. Jadi ini
+  // bukan pelonggaran diam-diam jadi "tampilkan punya semua orang".
+  try {
+    const { videos, rejected } = await fetchVideoKatalogPublik(config, revalidateSeconds);
+    if (rejected.length > 0) {
+      console.warn(`[playly] ${rejected.length} video katalog dilewati:`, rejected.slice(0, 5));
+    }
+    const milikKita = filterVideoMilikKreator(videos, config.creator);
+    return {
+      videos: milikKita,
+      error: null,
+      source: "katalog-publik",
+    };
+  } catch (err) {
+    const pesan = err instanceof PlaylyError ? err.message : "Gagal menghubungi Playly.";
+    console.warn("[playly] katalog publik gagal:", pesan);
+    return { videos: [], error: pesan, source: "katalog-publik" };
+  }
+}
+
+/**
+ * Gambar sampul (thumbnail) satu video Playly.
+ *
+ * KENAPA perlu panggilan terpisah: balasan /api/videos milik jalur mitra hanya
+ * memuat id, judul, durasi, kreator, dan alamat embed -- TIDAK ada sampulnya
+ * (diperiksa langsung ke Playly 2026-08-26). Tanpa ini setiap kartu video di
+ * halaman penonton cuma kotak abu-abu berikon, dan daftar video jadi sulit
+ * dibedakan satu sama lain.
+ *
+ * Yang diambil dari balasan HANYA field sampul. Balasan itu juga memuat
+ * "videoUrl" (alamat berkas mp4 bertanda tangan sementara) dan itu SENGAJA
+ * diabaikan: memutar lewat embed resmi Playly membuat hitungan tayang mereka
+ * tetap benar, dan alamat bertanda tangan kedaluwarsa dalam hitungan jam
+ * sehingga tidak layak disimpan atau dikirim ke browser.
+ *
+ * Gagal = null, tidak pernah melempar. Kartu tanpa sampul masih berguna;
+ * halaman rusak gara-gara gambar tidak.
+ */
+export async function fetchPlaylyThumbnail(
+  videoId: string,
+  config: PlaylyConfig = readPlaylyConfig(),
+  revalidateSeconds: number = PLAYLY_PUBLIK_TTL_SECONDS,
+): Promise<string | null> {
+  const url = `${config.baseUrl}${PLAYLY_PUBLIC_VIDEO_PATH}?id=${encodeURIComponent(videoId)}`;
+  try {
+    const res = await fetch(url, {
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(8_000),
+      next: { revalidate: revalidateSeconds },
+    });
+    if (!res.ok) return null;
+    const rec = asRecord(await res.json());
+    if (!rec) return null;
+    const mentah = pickString(rec, THUMB_KEYS);
+    // Dilewatkan penyaring yang sama dengan sampul lain: data URI gambar raster
+    // atau https saja (SVG ditolak -- bisa memuat skrip).
+    return mentah ? normalizeThumbnail(mentah, config.baseUrl) : null;
+  } catch {
+    return null;
+  }
 }

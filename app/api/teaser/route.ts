@@ -3,12 +3,40 @@ import { getVideoBaseUrl } from "@/lib/video-base";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-export const maxDuration = 30;
 
-// Teaser hero: potongan awal file episode, same-origin + dukung Range.
-// Hanya fetch ke VIDEO_BASE_URL yang sudah di-set (bukan URL dari klien) → bukan SSRF terbuka.
+// Teaser hero & kartu: PENUNJUK ARAH ke file episode di PC backup — bukan
+// penyalur isinya.
+//
+// KENAPA diubah dari proxy jadi redirect (2026-08-26): versi lama menyalurkan
+// byte video lewat server (`new NextResponse(upstream.body)`), jadi setiap byte
+// cuplikan dihitung Vercel sebagai "Fast Origin Transfer". Hero yang autoplay +
+// hover kartu membakar 29,71 GB dari jatah 10 GB dalam ~11 hari → SELURUH
+// project di-pause Vercel dan situs mati total (bukan cuma halaman video).
+// Dengan 307, yang keluar dari Vercel cuma header alamat (~200 byte); byte
+// videonya mengalir langsung dari PC backup ke penonton — persis seperti
+// pemutaran episode yang memang sudah begitu (lib/video.ts:12).
+//
+// KENAPA tetap lewat route ini, bukan alamat tunnel langsung di komponen:
+// alamat tunnel berganti tiap PC backup restart, dan komponen client tak bisa
+// membaca alamat terbaru karena env NEXT_PUBLIC_* dibakar saat build
+// (lib/video-base.ts:60). Route ini membacanya saat REQUEST, jadi cuplikan ikut
+// pindah alamat tanpa perlu redeploy.
+//
+// KEAMANAN (rak owasp — open redirect): tujuan redirect TIDAK berasal dari
+// klien. `baseUrl` datang dari getVideoBaseUrl() yang sudah lolos allowlist host
+// (isAllowedVideoBase: wajib https, tanpa path/port/kredensial, host di bawah
+// suffix yang diizinkan), dan `id`/`ep` divalidasi di bawah. Pemaksaan
+// Content-Type yang dulu dilakukan di sini tidak lagi diperlukan: sesudah
+// redirect, berkas disajikan oleh origin tunnel — HTML nyasar di sana tak bisa
+// jadi XSS di domain kita karena beda origin.
 const ID_RE = /^[a-z0-9-]+$/i;
-const TEASER_BYTES = 8 * 1024 * 1024; // ~8 MB cukup untuk cuplikan awal
+
+// Cache SENGAJA pendek — JANGAN dipanjangkan. Alamat tunnel berganti tiap PC
+// backup restart (sudah 5 kali kambuh, lihat HANDOFF.md), jadi redirect yang
+// disimpan lama = teaser menunjuk alamat mati sampai cache kedaluwarsa. 60 detik
+// cukup meredam pemanggilan berulang (hemat kuota Fluid Active CPU) tanpa
+// membuat alamat basi terasa lama oleh penonton.
+const REDIRECT_CACHE = "public, max-age=0, s-maxage=60";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -19,55 +47,24 @@ export async function GET(req: NextRequest) {
   }
 
   const baseUrl = await getVideoBaseUrl();
+  // Gagal-AMAN (rak owasp A10): alamat belum ada = 404, JANGAN redirect ke
+  // tebakan apa pun. <video> memicu onError → poster hero tetap tampil, jadi
+  // kegagalannya terlihat & tidak merusak halaman.
   if (!baseUrl) {
     return new NextResponse("Sumber video belum di-set", { status: 404 });
   }
 
   const fileName = `${ep}.mp4`;
-  const url = `${baseUrl}/${encodeURIComponent(id)}/${encodeURIComponent(fileName)}`;
-  const clientRange = req.headers.get("range");
-  const upstreamHeaders: HeadersInit = clientRange ? { Range: clientRange } : {};
+  const target = `${baseUrl}/${encodeURIComponent(id)}/${encodeURIComponent(fileName)}`;
 
-  try {
-    const upstream = await fetch(url, {
-      headers: upstreamHeaders,
-      cache: "no-store",
-      // JANGAN ikuti redirect: allowlist host hanya memeriksa alamat AWAL, jadi
-      // upstream yang membalas 302 ke http://169.254.169.254 (metadata cloud) atau
-      // IP internal akan menembus pagar itu. Penyaji video sah (Caddy file server)
-      // tidak pernah butuh redirect, jadi 3xx = tolak.
-      redirect: "manual",
-      signal: AbortSignal.timeout(8000),
-    });
-    if (!upstream.ok && upstream.status !== 206) {
-      return new NextResponse("Teaser tidak ada", { status: 404 });
-    }
-    if (!upstream.body) {
-      return new NextResponse("Teaser kosong", { status: 502 });
-    }
-
-    const headers = new Headers();
-    // Content-Type DIPAKSA, tidak disalin dari upstream: jalur ini same-origin,
-    // jadi kalau upstream mengaku "text/html" browser akan merendernya sebagai
-    // halaman DI DOMAIN KITA (jalan masuk XSS). Yang boleh keluar dari sini cuma
-    // video. Kalau sumbernya ternyata bukan video, <video> gagal memutar — itu
-    // kegagalan yang aman dan terlihat.
-    headers.set("Content-Type", "video/mp4");
-    headers.set("X-Content-Type-Options", "nosniff");
-    const len = upstream.headers.get("Content-Length");
-    if (len) headers.set("Content-Length", len);
-    const cr = upstream.headers.get("Content-Range");
-    if (cr) headers.set("Content-Range", cr);
-    const ar = upstream.headers.get("Accept-Ranges");
-    headers.set("Accept-Ranges", ar || "bytes");
-    headers.set("Cache-Control", "public, max-age=60");
-    headers.set("Content-Disposition", "inline");
-
-    return new NextResponse(upstream.body, {
-      status: upstream.status,
-      headers,
-    });
-  } catch {
-    return new NextResponse("Sumber video sedang mati", { status: 502 });
-  }
+  // 307, bukan 302: 307 mewajibkan klien mengulang permintaan APA ADANYA —
+  // termasuk header `Range` yang dipakai <video> untuk seek & buffering
+  // bertahap. Dengan 302 sebagian klien boleh mengubahnya jadi GET polos.
+  return new NextResponse(null, {
+    status: 307,
+    headers: {
+      Location: target,
+      "Cache-Control": REDIRECT_CACHE,
+    },
+  });
 }

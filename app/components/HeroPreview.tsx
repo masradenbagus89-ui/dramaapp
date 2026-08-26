@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Volume2, VolumeX } from "lucide-react";
 import {
+  HERO_TEASER_DELAY_MS,
   shouldGiveUpVideo,
   teaserShouldLoop,
   type TeaserStatus,
@@ -18,6 +19,8 @@ type Props = {
   startAt?: number;
   /** Panjang potongan teaser yang diulang (detik). */
   windowSec?: number;
+  /** Jeda sebelum teaser mulai diunduh (ms). 0 = langsung. */
+  delayMs?: number;
   fit?: "contain" | "cover";
   objectPosition?: "center" | "top";
   showBlurBg?: boolean;
@@ -37,6 +40,7 @@ export default function HeroPreview({
   title,
   startAt = 0,
   windowSec = 24,
+  delayMs = HERO_TEASER_DELAY_MS,
   fit = "cover",
   objectPosition = "center",
   showBlurBg,
@@ -54,8 +58,10 @@ export default function HeroPreview({
   const [hasMeta, setHasMeta] = useState(false);
   const [failed, setFailed] = useState(false);
   const [muted, setMuted] = useState(true);
+  // Video belum boleh dipasang sebelum jeda lewat - lihat effect di bawah.
+  const [armed, setArmed] = useState(false);
 
-  const showVideo = Boolean(src) && !failed;
+  const showVideo = Boolean(src) && !failed && armed;
   const objectFit = fit === "cover" ? "object-cover" : "object-contain";
   const posClass = objectPosition === "top" ? "object-top" : "object-center";
   const mediaClass = `${objectFit} ${posClass}`;
@@ -87,6 +93,20 @@ export default function HeroPreview({
     }
     report("loading");
   }, [src, report]);
+
+  // Tahan pengunduhan teaser selama delayMs. Pengunjung yang cuma lewat (dan
+  // bot perayap) keburu pergi sebelum ini menyala, jadi nol byte video terpakai.
+  // Selama menahan, status tetap "loading" -> carousel ikut menunggu, tidak
+  // berputar ke slide yang videonya belum sempat mulai.
+  useEffect(() => {
+    if (!src || delayMs <= 0) {
+      setArmed(Boolean(src));
+      return;
+    }
+    setArmed(false);
+    const t = window.setTimeout(() => setArmed(true), delayMs);
+    return () => window.clearTimeout(t);
+  }, [src, delayMs]);
 
   useEffect(() => {
     if (videoRef.current) videoRef.current.muted = muted;
@@ -151,7 +171,10 @@ export default function HeroPreview({
           muted
           loop
           playsInline
-          preload="auto"
+          // "metadata", bukan "auto": browser cuma ambil header video dulu,
+          // lalu menambah buffer sesuai yang benar-benar diputar. "auto" =
+          // izin menarik sebanyak-banyaknya sejak detik pertama.
+          preload="metadata"
           aria-hidden
           className={`absolute inset-0 h-full w-full ${mediaClass} transition-opacity duration-700 ${
             ready ? "opacity-100" : "opacity-0"

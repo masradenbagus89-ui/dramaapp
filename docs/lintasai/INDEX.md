@@ -7,6 +7,7 @@
 
 ## Rencana
 
+- [2026-08-26-vercel-paused-teaser-proxy.md](./rencana/2026-08-26-vercel-paused-teaser-proxy.md) — **situs mati TOTAL karena kuota Vercel jebol**: `/api/teaser` menyalurkan byte video lewat server (Fast Origin Transfer 29,71 GB dari jatah 10 GB) padahal video ada di PC backup. Diperbaiki jadi 307 redirect. Berisi temuan `TEASER_BYTES` yang dideklarasikan tapi tak pernah dipakai, alasan cache TIDAK boleh dipanjangkan (alamat tunnel berganti), + penjaga `tests/teaser-redirect.test.ts`
 - [2026-08-25-tambah-film-tanpa-episode.md](./rencana/2026-08-25-tambah-film-tanpa-episode.md) — jenis tayangan Serial vs **Film** (1 video utuh, tanpa episode) di panel admin: kolom DB `kind`, film dipaksa 1 video & gratis di server, JSON-LD `Movie`. Berisi alasan film tak bisa berbayar tanpa mengubah `FREE_EPISODES` + urutan wajib "SQL dulu, deploy belakangan"
 - [2026-08-25-playly-video-tidak-muncul.md](./rencana/2026-08-25-playly-video-tidak-muncul.md) — video Playly tak pernah muncul: 4 lapis penyebab (pola embed salah, embedUrl relatif, kunci ditolak, gerbang domain Playly)
 - [2026-08-22-alamat-video-runtime.md](./rencana/2026-08-22-alamat-video-runtime.md) — video berhenti mati tiap PC backup restart TANPA named tunnel: alamat pindah dari "dibakar saat build" ke `app_data` Supabase + PC backup lapor sendiri. Berisi alasan ngrok gugur (1 GB/bulan) & pre-mortem secret level User vs Machine

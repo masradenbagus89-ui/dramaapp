@@ -5,7 +5,14 @@
 >
 > **AI:** tiap kali ada perbaikan / deploy / keputusan — **perbarui berkas ini di langkah terakhir**, sebelum bilang selesai. Jangan tumpuk sejarah panjang di sini; pindahkan yang lama ke `NEXT-SESSION.md`.
 
-**Terakhir diisi:** 2026-08-26 — **video mati lagi (siklus ke-5) → PULIH & TERVERIFIKASI dari luar.**
+**Terakhir diisi:** 2026-08-26 sore — **SITUS MATI TOTAL: Vercel mem-pause seluruh project karena
+kuota Fast Origin Transfer jebol (29,71 GB dari jatah 10 GB).** Penyebabnya BUKAN video yang disimpan
+di Vercel (memang tidak ada) — `/api/teaser` MENYALURKAN byte video lewat server, jadi tiap cuplikan
+dihitung sebagai transfer. **Perbaikan SUDAH selesai & terbukti lokal (307 redirect, 0 byte lewat
+server), TAPI BELUM di-commit & BELUM di-push** — menunggu keputusan owner: tunggu reset kuota atau
+upgrade. Detail + bukti: seksi 💸 di bawah & `docs/lintasai/rencana/2026-08-26-vercel-paused-teaser-proxy.md`.
+
+**Sebelumnya (2026-08-26 pagi):** **video mati lagi (siklus ke-5) → PULIH & TERVERIFIKASI dari luar.**
 Akarnya sama persis dengan siklus ke-4: `start-video-services.ps1` hilang lagi dari PC backup, sementara
 penjaga 15 menit tetap jalan tapi menembak berkas kosong. Akarnya bukan kode aplikasi. Detail + 2 pelajaran baru
 (dugaan "PC backup mati" yang KELIRU, dan jeda ~24 jam antara sebab & gejala) ada di seksi 2026-08-26
@@ -34,6 +41,69 @@ adanya dari 2026-08-21, belum diukur ulang.
 - **AWAS dua penomoran "Tahap" yang beda di repo ini** (sumber salah paham antar-sesi):
   (a) **Tahap PRODUK 1-7** = yang dipakai berkas ini. Tahap 1-3 adalah rencana "platform streaming modern gabungan Melolo + IDLIX + Netflix" — SUDAH SELESAI SEMUA: Tahap 1 `1af6e12` (16 Agt), Tahap 2 `00f0d2e` (17 Agt), Tahap 3 `a8ab69e` (17 Agt). Tahap 4-7 kelanjutannya.
   (b) **Tahap INFRASTRUKTUR 1-8** di [`PLAN-MAPPING.md`](./PLAN-MAPPING.md) = peta lama soal setup/tunnel/deploy. Di situ "Tahap 7" berarti *named tunnel*, BUKAN kode pemulihan. Isinya belum diperbarui sejak Juli.
+
+## 💸 2026-08-26 — VERCEL MEM-PAUSE SITUS (kuota transfer jebol) — kode SUDAH diperbaiki, BELUM di-push
+
+**Gejala:** `dramaapp.vercel.app` balas "This deployment is temporarily paused" di SEMUA halaman.
+
+**Akar (terverifikasi dari dashboard + kode):** kuota **Fast Origin Transfer** = data yang ditarik
+server Vercel dari sumber luar lalu diteruskan ke penonton. Terpakai **29,71 GB / 10 GB**. Kuota lain
+aman (CPU 1j21m/4j · ISR 54K/200K · Fast Data Transfer 23,11/100 GB). Paket Hobby tak punya tagihan
+kelebihan → satu kuota lewat = SELURUH project di-pause.
+
+Yang membakar kuota adalah **cuplikan (teaser)**, BUKAN orang menonton: `/api/teaser` menyalurkan isi
+video lewat server, sementara pemutaran episode sudah langsung ke tunnel (`lib/video.ts:12`, nol beban
+Vercel). Diperparah `preload="auto"` + autoplay hero (tiap kunjungan menarik video tanpa diklik) dan
+**`TEASER_BYTES` yang dideklarasikan tapi TIDAK PERNAH dipakai** → satu cuplikan bisa menarik seluruh
+file episode.
+
+**Sudah dikerjakan (6 berkas, belum di-commit):**
+`app/api/teaser/route.ts` (proxy → 307 redirect + buang `TEASER_BYTES`) · `app/components/HeroPreview.tsx`
+(`preload="metadata"` + jeda 1,2 dtk sebelum unduh) · `app/components/Poster.tsx` (cuplikan hover dibatasi
+10 dtk) · `lib/hero-teaser.ts` (2 konstanta baru) · `tests/teaser-redirect.test.ts` (**penjaga baru, 8 tes**) ·
+`docs/lintasai/`.
+
+**Bukti:** 366 tes lulus · `tsc` exit 0 · `next build` sukses · mutation check (307→200 = tes MERAH,
+dikembalikan = hijau) · uji `next start` nyata: `HTTP/1.1 307` + `location: https://<tunnel>/.../1.mp4` +
+**0 byte** terunduh dari server kita.
+
+**⚠️ JANGAN panjangkan `Cache-Control` di `/api/teaser`.** Alamat tunnel berganti tiap PC backup restart;
+redirect yang di-cache lama = teaser menunjuk alamat mati. Tes `tests/teaser-redirect.test.ts` mengunci
+`s-maxage` maksimal 300 detik.
+
+**Keputusan yang MENUNGGU OWNER:** (a) tunggu reset kuota — siklus diduga tanggal 15 (owner ingat
+"pertama pakai 15 Mei"; halaman Usage tidak ketemu) → ~20 hari mati; atau (b) upgrade Pro → hidup
+seketika. **Tanpa perbaikan di atas, dua-duanya percuma**: 29,71 GB ÷ 11 hari ≈ 2,7 GB/hari, jadi jatah
+10 GB habis lagi dalam ~4 hari.
+
+**Belum bisa dijawab:** porsi bot vs penonton asli — Logs Vercel kosong karena deployment paused
+(tak ada request dilayani) + retensi log paket gratis pendek. Cek ulang lewat tab Logs/Firewall 1-2 hari
+SESUDAH situs hidup.
+
+**🔑 CARA MENGHIDUPKAN SITUS TANPA UPGRADE (temuan dari dokumentasi resmi Vercel):** dokumentasinya
+menyatakan *"Paused projects resume one at a time, never automatically"* — jadi (a) menunggu reset
+TIDAK menghidupkan situs sendiri, dan (b) ada tombol **Resume Project** yang **gratis**. Letaknya
+**Project `dramaapp` → Settings → General → seksi "Pause Project"** (tepat di atas Delete Project) —
+BUKAN di halaman Overview akun, di situ memang cuma ada tombol Upgrade. **Urutan wajib: push
+perbaikan DULU, baru Resume** — kalau tidak, kuota terbakar lagi dalam hitungan jam.
+
+**Audit kuota lain (2026-08-26):** Fast Data Transfer 23,11/100 GB & Fluid Active CPU 1j21m/4j ikut
+turun sendiri sesudah perbaikan teaser. **Risiko #2 = ISR Writes 54K/200K** (proyeksi ~147K/bulan =
+73%) dari `revalidate = 60` di 5 halaman — menaikkan ke 600 memotong ~10x, TAPI drama baru jadi muncul
+dalam 10 menit (bukan 1 menit) → **belum dikerjakan, menunggu keputusan owner**. Aman & sudah dicek:
+nol cron job, nol polling browser, Image Transformations 30 dari batas 5.000, `public/` cuma 19 KB.
+
+**⚠️ Risiko yang tak bisa ditambal kode:** Hobby resmi dibatasi *"non-commercial, personal use only"*.
+Kalau project ini dinilai komersial, Vercel bisa mem-pause karena kebijakan — bukan karena kuota.
+
+**`/api/download` juga sudah diubah jadi redirect** (+ `tests/download-redirect.test.ts`, 6 tes).
+Bukan penyebab aktif (tombol Unduh sudah langsung ke tunnel lewat `lib/video.ts:21`), tapi jalur
+cadangan yang menyala persis saat keadaan kacau. `?dl=1` dikunci di tes supaya paksa-unduh tak hilang.
+**Temuan terpisah (bukan akibat perubahan ini):** alamat tunnel tersimpan
+`kelly-officials-laid-written.trycloudflare.com` **sudah mati** (`nslookup` → "Non-existent domain";
+internet sesi normal, `example.com` → 200). Dugaan dari kode: PC backup melapor lewat **POST ke situs
+Vercel** (`pc-backup-agent/start-video-services.ps1:203`) — situs paused → laporan gagal → alamat beku.
+Kalau benar, begitu Vercel hidup PC backup bisa lapor lagi dan video pulih sendiri. **Belum diverifikasi.**
 
 ## 🎬 2026-08-25 — FILM TANPA EPISODE (panel admin) — SIAP, MENUNGGU 1 LANGKAH OWNER
 

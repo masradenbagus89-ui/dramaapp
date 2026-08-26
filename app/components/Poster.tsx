@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import type { Drama } from "@/lib/types";
 import { PAYWALL_ENABLED } from "@/lib/coins";
+import { CARD_PREVIEW_SEC, teaserShouldLoop } from "@/lib/hero-teaser";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Star } from "lucide-react";
@@ -76,6 +77,16 @@ export default function Poster({
           loop
           playsInline
           className="absolute inset-0 h-full w-full object-cover"
+          onTimeUpdate={(e) => {
+            // Ulang dari awal di detik ke-CARD_PREVIEW_SEC. Tanpa ini, mouse yang
+            // diam di atas kartu membuat browser mengunduh SELURUH episode dari
+            // PC backup. Mengulang potongan yang sama = diputar dari buffer,
+            // bukan diunduh lagi.
+            const v = e.currentTarget;
+            if (teaserShouldLoop(v.currentTime, v.duration, 0, CARD_PREVIEW_SEC)) {
+              v.currentTime = 0;
+            }
+          }}
           onError={stopPreview}
         />
       )}

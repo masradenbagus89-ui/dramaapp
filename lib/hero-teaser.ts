@@ -10,6 +10,28 @@ export const SWIPE_MIN_PX = 48;
 /** Jeda ganti-slide saat trailer sedang mutar (lebih lama dari foto diam). */
 export const PLAYING_ROTATE_MS = 20_000;
 
+/**
+ * Jeda sebelum teaser hero MULAI diunduh (ms). Poster diam tampil lebih dulu.
+ *
+ * KENAPA ADA: pengunjung yang langsung menutup halaman - dan bot perayap yang
+ * menjalankan JavaScript - jadi tidak ikut menarik video sama sekali. Sebelum
+ * ini hero memakai preload="auto" + autoplay seketika, jadi SETIAP kunjungan
+ * (sekejap pun) menarik puluhan MB lewat Vercel.
+ */
+export const HERO_TEASER_DELAY_MS = 1200;
+
+/**
+ * Panjang cuplikan hover di kartu drama (detik) sebelum diulang dari awal.
+ *
+ * KENAPA ADA: pengganti TEASER_BYTES di app/api/teaser/route.ts yang dulu
+ * dideklarasikan tapi TIDAK PERNAH dipakai, sehingga satu hover berkepanjangan
+ * bisa menarik SELURUH file episode. Sesudah teaser jadi redirect, server tak
+ * lagi bisa memotong byte - batasnya pindah ke browser: mengulang di detik
+ * ke-10 membuat browser berhenti menambah buffer (potongan yang sama diputar
+ * ulang dari cache, bukan diunduh lagi).
+ */
+export const CARD_PREVIEW_SEC = 10;
+
 export type TeaserStatus = "loading" | "playing" | "failed";
 
 export function shouldGiveUpVideo(errorCount: number): boolean {

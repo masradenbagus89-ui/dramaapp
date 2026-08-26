@@ -3,7 +3,7 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-08-25 (sesudah owner login GitHub di PowerShell, `git fetch` dari sesi AI JALAN lagi). Keadaan saat pemeriksaan: `origin` (masradenbagus89-ui/dramaapp, **dipantau Vercel**) = `c648fef` — sudah berisi fitur Film & **terverifikasi tayang**; `dramaku` (ojokesusu/dramaku) = `fd83427` — berisi 5 commit Playly yang belum pernah masuk produksi. Keduanya digabung hari ini di komputer owner.
+**Terakhir dicek:** 2026-08-26 (`git fetch origin` + `git fetch dramaku` dua-duanya SUKSES dari sesi AI). `origin` (masradenbagus89-ui/dramaapp, **dipantau Vercel**) = **`f17b528`** — perbaikan kuota Vercel, baru di-push hari ini. `dramaku` (ojokesusu/dramaku) = `fc34161` — berisi **2 commit rekan yang BELUM pernah masuk produksi** (fitur "video Playly tampil otomatis" + catatan). Lokal vs `dramaku`: **6 ahead, 2 behind** → push ke `dramaku` akan DITOLAK sampai digabung. **Menunggu keputusan owner.**
 
 ⚠️ **Penamaan remote BEDA antara komputer owner dan komputer rekan** (sumber salah paham): di sini `origin` = repo produksi & `dramaku` = repo rekan; di catatan rekan (baris Playly di bawah) `origin` justru berarti repo `dramaku`, dan repo produksi mereka sebut `dramaapp`. Selalu sebut URL-nya kalau ragu.
 
@@ -11,13 +11,15 @@
 
 ## Siapa memantau apa
 
-> ⚠️ **NAMA REMOTE SUDAH BERTUKAR — dicek ulang 2026-08-25.** Remote bernama `dramaku`
-> **sudah tidak ada** (`git fetch dramaku` → error). Selalu `git remote -v` dulu sebelum push.
+> ✅ **DIKOREKSI 2026-08-26 — peringatan lama di sini SALAH.** `git remote -v` hari ini membuktikan
+> nama remote TIDAK tertukar dan `dramaku` MASIH ADA (`git fetch dramaku` sukses, menarik `7372259..fc34161`).
+> Yang berlaku sekarang adalah tabel di bawah. Tetap jalankan `git remote -v` dulu sebelum push.
 
 | Repo | Remote git | Dipantau Vercel? |
 |---|---|---|
-| `masradenbagus89-ui/dramaapp` | **`dramaapp`** | **Ya** — `git push dramaapp main` = tombol rilis |
-| `ojokesusu/dramaku` | **`origin`** | Tidak — tempat rekan sering commit dulu |
+| `masradenbagus89-ui/dramaapp` | **`origin`** | **Ya** — `git push origin main` = tombol rilis |
+| `ojokesusu/dramaku` | **`dramaku`** | Tidak — cermin/tempat rekan commit. Push ke sini TIDAK merilis apa pun |
+| `projectraden/backup-dramaapp` | `official` | Tidak — cadangan |
 
 Produksi: https://dramaapp.vercel.app  
 Commit terbaru yang di-push: **`4954817`** (5 commit sekaligus: perbaikan layar hitam player, berkas autostart named tunnel, tes e2e Tahap 7, 2 dokumentasi) — di-push 2026-08-20 malam sesudah 265 tes lulus + `tsc` exit 0 + `next build` sukses. **TERVERIFIKASI TAYANG**: teks perbaikan player ditemukan di bundle produksi `/_next/static/chunks/27z9f9ucdybcg.js`.
@@ -29,6 +31,8 @@ AUTH_SECRET di Vercel: dikonfirmasi ADA oleh owner 2026-08-18.
 
 | Status | Commit | Isi | Aksi |
 |---|---|---|---|
+| ✅ **DI-PUSH ke `origin`** (belum tayang: project masih paused) | `f17b528` | **Perbaikan kuota Vercel**: `/api/teaser` + `/api/download` dari proxy byte jadi 307 redirect; `TEASER_BYTES` mangkrak dibuang; hero `preload="metadata"` + jeda 1,2 dtk; batas cuplikan hover 10 dtk; 14 tes penjaga baru | Owner memberi izin 2026-08-26. Push `4fca314..f17b528` SUKSES, lokal = `origin/main`, selisih NOL. Sebelum push: nol secret di diff, **372 tes lulus**, `tsc` exit 0, `next build` sukses, uji `next start` nyata balas **307 dengan 0 byte**. ⚠️ **Belum bisa diverifikasi tayang** — project Vercel masih paused. Langkah berikutnya: **Project `dramaapp` → Settings → General → Resume Project** (gratis, tak perlu upgrade) |
+| ⏸️ **MENUNGGU KEPUTUSAN OWNER** | `9e17f40` + `fc34161` (di `dramaku`) | Fitur rekan **"video Playly tampil otomatis"** — 1.353 baris, 17 berkas: halaman `/playly` baru, `PlaylyVideoGrid`, route `/api/admin/playly/hidden`, 18 tes | Push ke `dramaku` DITOLAK sampai digabung. **Sudah diaudit sesi AI 2026-08-26 dan AMAN dari bug kuota**: nol pola penyalur byte, video lewat `<iframe>` ke `playly-dashboard.vercel.app` (bukan lewat Vercel kita), thumbnail pakai `<img>` biasa (`next/image` sengaja dihindari — ada komentarnya). Menggabungkan = fitur rekan ikut rilis ke produksi pada push `origin` berikutnya |
 | ✅ **RILIS GABUNGAN TAYANG** | `e765e29` (merge) | **Fitur Film + integrasi Playly dirilis bersama** 2026-08-25 atas izin owner | Dual push SUKSES dari sesi AI: `origin` `c648fef..e765e29`, `dramaku` `fd83427..e765e29`. Sesudah `git fetch` keduanya: lokal = `origin/main` = `dramaku/main` = `e765e29`, **selisih NOL**. Sebelum push: **358 tes lulus** (302 + tes Playly), `tsc` exit 0, `next build` sukses (5 route Playly terdaftar), nol secret nyata di diff (hanya kunci contoh di tes). **Terverifikasi tayang** di deployment `dpl_28aUguP18E7FpHXZ4grMFFi3Tp5w`: `/admin/videos/playly` **200** (sebelumnya 404), dan chunk `/_next/static/chunks/3om_miassjcgs.js` memuat "Jenis tayangan" + "Film selalu gratis" + "Playly" sekaligus |
 | ✅ **sudah di-push & TAYANG** | `5156949` + `c648fef` | Fitur **Film tanpa episode** di panel admin (jenis tayangan Serial/Film) + kolom DB `kind` + 2 berkas tes baru | Owner memberi izin rilis 2026-08-25. SQL `add_kind_to_dramas.sql` dijalankan owner di Supabase produksi (Success) SEBELUM push. Push ke `origin` dilakukan owner sendiri di PowerShell (sesi AI tak bisa membuka dialog login GitHub): `617f6a0..c648fef`. **Terverifikasi tayang**: teks "Jenis tayangan", "Film selalu gratis", "1 video utuh" ditemukan di bundle produksi `/_next/static/chunks/32zoz1a8f4vl2.js`. Sebelum push: nol secret di diff, **302 tes lulus**, `tsc` exit 0, `next build` sukses |
 | ⏸️ **menunggu owner (boleh kapan saja)** | — | SQL data-fix `supabase_migrations/mark_existing_movies.sql` — menandai 7 judul film lama (Transformers, Spider-Man, Avengers, Predator, 28 Years Later, Fireworks Wednesday, The Dark Knight) sebagai `kind = 'movie'` + melepas tanda berbayar yang memang tak berefek | Supabase → SQL Editor → tempel & Run. Boleh sebelum atau sesudah deploy (kode lama mengabaikan kolom `kind`, jadi tidak merusak apa pun) |

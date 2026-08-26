@@ -10,8 +10,8 @@ Akarnya sama persis dengan siklus ke-4: `start-video-services.ps1` hilang lagi d
 penjaga 15 menit tetap jalan tapi menembak berkas kosong. Akarnya bukan kode aplikasi. Detail + 2 pelajaran baru
 (dugaan "PC backup mati" yang KELIRU, dan jeda ~24 jam antara sebab & gejala) ada di seksi 2026-08-26
 di bawah. **Sebab berkas itu raib DUA KALI masih belum ketemu — tersangka Norton, belum diuji.**
-**Penjaga permanen sudah dibangun & diuji** (3 berkas di `pc-backup-agent/`), tapi BELUM aktif:
-owner perlu menjalankan `pasang-penjaga.ps1` sekali sebagai Administrator — README Bagian F.
+**Penjaga permanen sudah dibangun, diuji, dan AKTIF di PC backup sejak 09:58** (3 berkas di
+`pc-backup-agent/`) — berkas penting yang hilang kini dipulihkan sendiri tiap 10 menit.
 
 **Sebelumnya (2026-08-25):** DUA hal digabung & dirilis bersama:
 (1) fitur **Film (tanpa episode)** di panel admin — SQL kolom `kind` sudah dijalankan owner di
@@ -311,10 +311,18 @@ lebih dari **261 karakter**, dan pesan errornya tidak menyebut solusinya sama se
 sekarang memeriksa panjang itu sendiri dan berhenti dengan angka yang jelas. Rumus pengutipan `\"`
 juga sudah diuji nyata: tugas dibuat → dibaca balik dari Windows (path berkutip utuh) → dihapus.
 
-**⏳ BELUM AKTIF DI PC BACKUP.** Owner perlu menjalankan SEKALI sebagai Administrator:
-`powershell -ExecutionPolicy Bypass -File C:\Users\USER\pc-backup-agent\pasang-penjaga.ps1`
-(README `pc-backup-agent/README.md` Bagian F). Sebelum itu dijalankan, penjaga hanya ada di repo.
-Prasyaratnya: `penjaga-berkas.ps1` + `pasang-penjaga.ps1` sudah disalin ke folder PC backup.
+**✅ AKTIF DI PC BACKUP sejak 2026-08-26 09:58** (dipasang owner). Bukti dari layar PC backup:
+ketiga berkas diunduh dengan **SHA256 COCOK** · folder `cadangan\` dibuat + 4 berkas disalin · tugas
+"DramaApp Penjaga Berkas" terdaftar (tiap 10 menit, SYSTEM) · gerbang bukti di pemasang lolos:
+`=== TERBUKTI JALAN - 1 baris baru di log ===` berisi `2026-08-26 09:58:02  semua berkas utuh
+(4 diperiksa)`.
+
+**Yang BELUM diuji di PC backup sungguhan:** pemulihan nyata. 10 skenario di atas dijalankan di folder
+simulasi, bukan di sana. Uji penuh <1 menit dan TIDAK menyentuh tunnel yang sedang hidup (kalaupun
+gagal, berkasnya tinggal diunduh ulang dari repo):
+`Remove-Item C:\Users\USER\pc-backup-agent\start-video-services.ps1` →
+`schtasks /run /tn "DramaApp Penjaga Berkas"` → tunggu 30 detik →
+`Test-Path C:\Users\USER\pc-backup-agent\start-video-services.ps1` harus `True`.
 
 ### 🆕 2026-08-24 — siklus ke-4: akarnya PEMASANGAN, bukan kode. PULIH & TERVERIFIKASI
 

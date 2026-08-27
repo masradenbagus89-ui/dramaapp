@@ -5,7 +5,39 @@
 >
 > **AI:** tiap kali ada perbaikan / deploy / keputusan — **perbarui berkas ini di langkah terakhir**, sebelum bilang selesai. Jangan tumpuk sejarah panjang di sini; pindahkan yang lama ke `NEXT-SESSION.md`.
 
-**Terakhir diisi:** 2026-08-26 sore — **SITUS MATI TOTAL: Vercel mem-pause seluruh project karena
+**Terakhir diisi:** 2026-08-27 — **SITUS SUDAH HIDUP LAGI & perbaikan kuota TERBUKTI BEKERJA.**
+Koreksi catatan 2026-08-26 di bawah ("SITUS MATI TOTAL / akun paused"): diukur hari ini dari luar,
+`/beranda` `/discover` `/admin/**` semuanya balas **200** lewat `Server: Vercel`, dan `/api/teaser`
+balas **307 redirect dengan 0 byte terunduh** — artinya penyalur byte yang membuat kuota jebol memang
+sudah mati di produksi. Jadi akun **tidak lagi paused** dan deploy otomatis dari GitHub jalan.
+
+**Video Playly masih 404 di produksi — dan itu SESUAI RENCANA, bukan kerusakan.** Fitur "Playly tampil
+otomatis" sengaja ditahan (keputusan owner 2026-08-26, tunggu 2-3 hari sesudah perbaikan kuota; 27 Agt
+baru hari ke-1). Bukti terukur: `/playly` **404** sementara `/admin/settings/playly` dan
+`/admin/videos/playly` **200** → produksi = `8a41ae4`, belum memuat `9e17f40`.
+
+**Kotak merah "PLAYLY_ENCRYPTION_KEY belum di-set" yang difoto owner: layarnya dari
+`dramaapp.vercel.app`, jadi yang kurang adalah env di VERCEL, bukan di komputer.** `.env.local` di PC
+rekan sudah benar (64 karakter hex, diperiksa) tapi berkas itu diblokir `.gitignore:7-8` — memang tak
+pernah ikut ter-upload; Vercel punya daftar Environment Variables sendiri. **PENTING: env ini BUKAN
+penyebab video tak tampil.** Ia hanya dipakai mengenkripsi kunci Playly sebelum masuk database, jadi
+satu-satunya yang diblokir adalah tombol "Simpan kunci" di halaman admin. `lib/playly.ts`
+`fetchPlaylyVideosKita()` memanggil `getPlaylyKeyCached().catch(() => null)` → gagal-dekripsi ditelan
+jadi "tak ada kunci", lalu turun ke katalog publik. Halaman `/playly` tetap tayang tanpa env itu.
+
+**Kunci mitra `plyk_…` KINI DITERIMA LAGI** — diuji 2026-08-27: `{"ok":true,"count":4}`. Catatan
+"invalid_key 2026-08-25" sudah BASI. Katalog publik juga hidup: 22 video, **4 milik `coklat`**.
+
+**Push rilis Playly DICOBA 2026-08-27 dan DITOLAK 403** (`Permission to masradenbagus89-ui/dramaapp.git
+denied to yusufscorpio`) — tembok yang sama dengan 25 Agt: git + `gh` di PC rekan login sebagai
+`yusufscorpio` yang izinnya baca saja. ⚠️ **Perintah yang dipakai HARUS
+`git push dramaapp origin/main:main`, BUKAN `git push dramaapp fix/playly-otomatis:main`** — yang
+kedua non-fast-forward (produksi punya 7 commit yang tak ada di branch itu, termasuk `f17b528`
+perbaikan kuota), memaksanya akan menghapus perbaikan kuota dari produksi. Gerbang pra-rilis sudah
+LULUS di PC rekan: **376 tes lulus**, `tsc` exit 0, `next build` sukses (`/playly` Static 5m,
+`/discover` tetap Static 1m), nol secret di diff.
+
+**Sebelumnya, 2026-08-26 sore —** **SITUS MATI TOTAL: Vercel mem-pause seluruh project karena
 kuota Fast Origin Transfer jebol (29,71 GB dari jatah 10 GB).** Penyebabnya BUKAN video yang disimpan
 di Vercel (memang tidak ada) — `/api/teaser` MENYALURKAN byte video lewat server, jadi tiap cuplikan
 dihitung sebagai transfer. **Perbaikan SUDAH di-push ke `origin`** (`f17b528` + `8a41ae4`), tapi
@@ -768,7 +800,7 @@ sudah TERBUKTI, bukan cuma lulus tes lokal.
    (`invalid_key`, diuji 2026-08-25). Tidak memblokir jalur embed (jalan lewat katalog
    publik), TAPI membuat kartu "Video terbaru" di `/discover` tetap kosong. Sesudah dapat
    kunci baru: pasang di `/admin/settings/playly` **dan** perbarui `DASHBOARD_API_KEY` di Vercel.
-6. 🟡 **Cek `PLAYLY_ENCRYPTION_KEY` di Vercel** → Settings → Environment Variables. Tanpa ini
+6. 🟡 **Isi `PLAYLY_ENCRYPTION_KEY` di Vercel** → Settings → Environment Variables → Redeploy. **Terjawab 2026-08-27: memang BELUM ada di sana** (owner memfoto pesan penolakannya dari `dramaapp.vercel.app`). Nilainya boleh sama dengan yang di `.env.local` PC rekan — aman, karena di produksi belum pernah ada kunci tersimpan yang bisa jadi tak-terbaca. Tanpa ini
    kunci mitra tidak bisa disimpan lewat halaman setelan (fitur tetap jalan lewat katalog publik).
 7. **Isi 3 env Playly di Vercel** → Settings → Environment Variables: `DASHBOARD_API_URL=https://playly-dashboard.vercel.app/api/videos`, `DASHBOARD_API_KEY_HEADER=X-Playly-Key`, `DASHBOARD_API_KEY=<kunci dari rekan>`. Lalu **Redeploy**. Cek berhasil: `/admin` → Dashboard → kartu Playly berubah dari "Belum diatur" jadi "Tersambung".
 6. **Minta rekan upload video contoh** ke dashboard Playly — kuncinya sudah diuji SAH 2026-08-19, tapi dashboard-nya masih kosong (`count: 0`), jadi belum ada yang bisa ditampilkan.

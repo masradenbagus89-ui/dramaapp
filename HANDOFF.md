@@ -5,8 +5,14 @@
 >
 > **AI:** tiap kali ada perbaikan / deploy / keputusan — **perbarui berkas ini di langkah terakhir**, sebelum bilang selesai. Jangan tumpuk sejarah panjang di sini; pindahkan yang lama ke `NEXT-SESSION.md`.
 
-**Terakhir diisi:** 2026-08-27 malam — **SELESAI + PENYISIRAN PENUH: dipastikan TIDAK ADA video
-yang lewat Vercel.** Sesuai permintaan owner, seluruh jalur video diperiksa satu per satu
+**Terakhir diisi:** 2026-08-27 malam — **SELESAI + PENYISIRAN PENUH + PLAYLY RESMI DIRILIS.**
+Malam ini owner menyetujui rilis Playly: `origin/main` (`a242921`) di-merge balik ke lokal
+(commit merge `14fa0cc`) lalu di-push ke `origin` **dan** `dramaku` — ketiganya kini **sama
+persis `14fa0cc`, selisih nol**. Fitur Playly (`/playly`, baris di `/discover`, tautan TopNav)
+resmi tayang ke publik; peringatan "lokal lebih maju dari produksi" di bawah sudah TIDAK
+berlaku. Catatan: Playly aman dari bug kuota — video lewat `<iframe>` ke Vercel *mereka*.
+
+**Penyisiran penuh (juga malam ini): dipastikan TIDAK ADA video yang lewat Vercel.** Sesuai permintaan owner, seluruh jalur video diperiksa satu per satu
 (permintaan ini muncul karena aplikasi masih mode develop dan owner ingin kepastian mutlak):
 pemutar utama langsung ke tunnel (`lib/video.ts:6` `videoSrc`), cuplikan kartu/hero lewat
 `/api/teaser` = 307 redirect 0 byte, unduh langsung tunnel `?dl=1` (`lib/video.ts:21`) +
@@ -36,13 +42,11 @@ jeda 1,2 dtk di browser — `app/components/HeroPreview.tsx:166`).
 > GB-an dalam seminggu = masih ada jalur bocor lain → telusuri SEGERA sebelum jatah 3× habis;
 > un-block kedua TIDAK akan diberikan.
 
-> ⚠️ **LOKAL SENGAJA LEBIH MAJU DARI PRODUKSI — baca sebelum `git push origin`.**
-> Atas keputusan owner 2026-08-26, 2 commit rekan dari `dramaku` (fitur "video Playly tampil
-> otomatis") digabung ke lokal lalu di-push ke **`dramaku` SAJA**. Produksi (`origin`) sengaja
-> ditahan berisi perbaikan kuota saja, supaya kalau kuota naik lagi sesudah Resume ketahuan jelas
-> penyebabnya — dua perubahan tayang bersamaan tak bisa dipisah. Fitur Playly menyusul sesudah 2-3
-> hari terbukti aman. **`git push origin main` berikutnya AKAN ikut merilis fitur rekan — pastikan
-> itu memang yang diminta owner.**
+> ✅ **RIWAYAT — sudah tidak berlaku per 2026-08-27 malam:** dulu lokal sengaja lebih maju dari
+> produksi (Playly ditahan di `dramaku` saja). Malam ini owner menyetujui rilisnya: merge balik
+> `a242921` → push `14fa0cc` ke `origin` + `dramaku`. Lokal = origin = dramaku, selisih nol.
+> ~~**`git push origin main` berikutnya AKAN ikut merilis fitur rekan**~~ — SUDAH dirilis atas
+> izin owner.
 
 **🆘 JALAN KELUAR TANPA VERCEL (disiapkan 2026-08-26, BELUM dijalankan owner).** ⏸️ *Status 2026-08-27:
 TIDAK DIPERLUKAN sekarang — akun sudah di-unblock Vercel. Simpan sebagai CADANGAN kalau kuota jebol

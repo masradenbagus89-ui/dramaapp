@@ -5,15 +5,36 @@
 >
 > **AI:** tiap kali ada perbaikan / deploy / keputusan — **perbarui berkas ini di langkah terakhir**, sebelum bilang selesai. Jangan tumpuk sejarah panjang di sini; pindahkan yang lama ke `NEXT-SESSION.md`.
 
-**Terakhir diisi:** 2026-08-26 sore — **SITUS MATI TOTAL: Vercel mem-pause seluruh project karena
-kuota Fast Origin Transfer jebol (29,71 GB dari jatah 10 GB).** Penyebabnya BUKAN video yang disimpan
-di Vercel (memang tidak ada) — `/api/teaser` MENYALURKAN byte video lewat server, jadi tiap cuplikan
-dihitung sebagai transfer. **Perbaikan SUDAH di-push ke `origin`** (`f17b528` + `8a41ae4`), tapi
-**belum bisa diverifikasi tayang karena project masih paused.** Langkah berikutnya milik owner:
-**Project `dramaapp` → Settings → General → seksi "Pause Project" → Resume Project** — GRATIS, tak
-perlu upgrade. Dokumentasi Vercel: *"Paused projects resume one at a time, never automatically"*,
-jadi menunggu reset TIDAK akan menghidupkannya sendiri. Detail + bukti: seksi 💸 di bawah &
-`docs/lintasai/rencana/2026-08-26-vercel-paused-teaser-proxy.md`.
+**Terakhir diisi:** 2026-08-27 malam — **SELESAI + PENYISIRAN PENUH: dipastikan TIDAK ADA video
+yang lewat Vercel.** Sesuai permintaan owner, seluruh jalur video diperiksa satu per satu
+(permintaan ini muncul karena aplikasi masih mode develop dan owner ingin kepastian mutlak):
+pemutar utama langsung ke tunnel (`lib/video.ts:6` `videoSrc`), cuplikan kartu/hero lewat
+`/api/teaser` = 307 redirect 0 byte, unduh langsung tunnel `?dl=1` (`lib/video.ts:21`) +
+`/api/download` = 307, video Playly lewat `<iframe>` ke Vercel *mereka*, route `/api/videos` ·
+`/api/external-videos` · demo hanya mengirim JSON teks, `next.config.ts` tanpa rewrite/proxy
+tersembunyi. **Satu-satunya proxy tersisa = `/api/subtitle`** — itu file teks `.vtt` berukuran
+KB (bukan video), wajib same-origin karena CORS pada `<track>`; dampak kuota bisa diabaikan.
+Bukti mesin: **59 tes penjaga lulus** (5 berkas: teaser-redirect, download-redirect, hero-teaser,
+video, video-base) — tes ini MERAH kalau ada yang mengembalikan route jadi penyalur byte.
+
+*Riwayat 2026-08-27 sore:* perbaikan kuota TAYANG & TERVERIFIKASI.
+Akun di-unblock Vercel (one-time courtesy, kuota 3× selama 30 hari s/d ~2026-09-26), tapi
+deployment `8a41ae4` ternyata tak pernah dibangun (terblokir saat paused) sehingga kode lama
+penyalur byte masih melayani dan membakar kuota baru. Owner meminta AI mengerjakan: AI mengirim
+commit pemicu `a242921` (kosong, berdiri di atas `8a41ae4` — **fitur Playly TIDAK ikut tayang**)
+ke `origin/main`; Vercel langsung membangun. **Bukti tayang (2026-08-27 sore):**
+`/api/teaser?id=over-your-dead-body&ep=1` balas **307, 0 byte**, `location` menunjuk tunnel baru
+`optical-comprehensive-harper-howto.trycloudflare.com`; mengikuti redirect dengan `Range: 0-15`
+balas **206 `video/mp4` signature `ftypisom`** — byte video mengalir langsung tunnel→penonton.
+HTML beranda tak lagi memuat `<video preload="auto">` (kode baru memasang video hanya sesudah
+jeda 1,2 dtk di browser — `app/components/HeroPreview.tsx:166`).
+**Tidak ada langkah owner yang tersisa untuk krisis ini** — tinggal pantauan mingguan di bawah.
+
+> ⏰ **PENGINGAT PEMANTAUAN 30 HARI (owner, mulai 2026-08-27):** tiap minggu buka dashboard Vercel →
+> **Usage** → lihat **Fast Origin Transfer**. Seharusnya merayap MB-an per hari, BUKAN GB — byte
+> video kini mengalir langsung tunnel→penonton (redirect 307, commit `f17b528`). Kalau melonjak
+> GB-an dalam seminggu = masih ada jalur bocor lain → telusuri SEGERA sebelum jatah 3× habis;
+> un-block kedua TIDAK akan diberikan.
 
 > ⚠️ **LOKAL SENGAJA LEBIH MAJU DARI PRODUKSI — baca sebelum `git push origin`.**
 > Atas keputusan owner 2026-08-26, 2 commit rekan dari `dramaku` (fitur "video Playly tampil
@@ -23,7 +44,9 @@ jadi menunggu reset TIDAK akan menghidupkannya sendiri. Detail + bukti: seksi �
 > hari terbukti aman. **`git push origin main` berikutnya AKAN ikut merilis fitur rekan — pastikan
 > itu memang yang diminta owner.**
 
-**🆘 JALAN KELUAR TANPA VERCEL (disiapkan 2026-08-26, BELUM dijalankan owner).** Ternyata pause
+**🆘 JALAN KELUAR TANPA VERCEL (disiapkan 2026-08-26, BELUM dijalankan owner).** ⏸️ *Status 2026-08-27:
+TIDAK DIPERLUKAN sekarang — akun sudah di-unblock Vercel. Simpan sebagai CADANGAN kalau kuota jebol
+lagi / pause kambuh.* Ternyata pause
 `dramaapp` ada di tingkat **AKUN**, bukan project — dan pause tingkat akun **tidak punya tombol
 Resume gratis**, hanya Upgrade. (Dugaan sesi ini sebelumnya soal tombol Resume di Project → Settings
 → General SALAH: di situ tertulis *"Pause Project"*, artinya project-nya justru tidak sedang paused.)
@@ -68,7 +91,7 @@ adanya dari 2026-08-21, belum diukur ulang.
 
 ## Status sekarang (1 menit)
 
-- Situs hidup: **https://dramaapp.vercel.app** — commit kode terbaru `4954817`, di-push ke `origin` + `dramaku` (selisih nol) dan **TERVERIFIKASI TAYANG** 2026-08-20 malam: teks perbaikan player ditemukan di bundle produksi `/_next/static/chunks/27z9f9ucdybcg.js`. Sebelum push: **265 tes lulus**, `tsc --noEmit` exit 0, `next build` sukses, nol secret di diff.
+- Situs hidup: **https://dramaapp.vercel.app** — **status 2026-08-27 sore: perbaikan kuota SUDAH TAYANG & terverifikasi** (teaser 307 / 0 byte → tunnel; video balas 206 `ftypisom`; commit produksi `a242921`). Akun dalam masa pantau 30 hari (un-block satu kali) — lihat pengingat mingguan di atas. Riwayat: commit `4954817` TERVERIFIKASI TAYANG 2026-08-20 malam (265 tes lulus, `tsc` exit 0, `next build` sukses, nol secret di diff).
 - **Tahap 7 SELESAI PENUH** — diverifikasi 2026-08-20 dari DUA sisi: (a) owner mencoba sendiri lewat tampilan (daftar → simpan kode → ganti password hanya dengan kode; alurnya mudah & berhasil); (b) uji end-to-end mesin ke API produksi **19/19 lulus**. `tests/recovery-code.test.ts` 12 tes lulus. Akun uji sudah dibersihkan dari Supabase (0 baris tersisa, login balas 401).
 - Skema database Supabase **tidak diubah** (akun penonton memakai tabel `app_data` yang sudah ada).
 - Tahap kelar: 1 · 2 · 3 · 4 (Performance & SEO) · 5 (rating/share/balasan) · 6 (login penonton aman) · 7 (kode pemulihan).
@@ -76,7 +99,23 @@ adanya dari 2026-08-21, belum diukur ulang.
   (a) **Tahap PRODUK 1-7** = yang dipakai berkas ini. Tahap 1-3 adalah rencana "platform streaming modern gabungan Melolo + IDLIX + Netflix" — SUDAH SELESAI SEMUA: Tahap 1 `1af6e12` (16 Agt), Tahap 2 `00f0d2e` (17 Agt), Tahap 3 `a8ab69e` (17 Agt). Tahap 4-7 kelanjutannya.
   (b) **Tahap INFRASTRUKTUR 1-8** di [`PLAN-MAPPING.md`](./PLAN-MAPPING.md) = peta lama soal setup/tunnel/deploy. Di situ "Tahap 7" berarti *named tunnel*, BUKAN kode pemulihan. Isinya belum diperbarui sejak Juli.
 
-## 💸 2026-08-26 — VERCEL MEM-PAUSE SITUS (kuota transfer jebol) — kode SUDAH diperbaiki, BELUM di-push
+## 💸 2026-08-26 — VERCEL MEM-PAUSE SITUS (kuota transfer jebol) — ✅ UNBLOCK 2026-08-27, masa pantau 30 hari
+
+**✅ KELANJUTAN 2026-08-27:** owner menghubungi Vercel lewat `vercel.com/help` (chat Vercel Agent,
+pakai bukti commit `f17b528` proxy→redirect). Vercel memberi **one-time courtesy unblock**: jatah
+dinaikkan 3× selama 30 hari (~sampai 2026-09-26). Syarat tersembunyinya: jebol lagi = wajib Pro,
+tak ada ampun kedua. **Tugas rutin owner selama masa ini: cek Usage tiap minggu** (lihat pengingat
+di blok paling atas berkas ini). Catatan koreksi sesi ini: jalan resmi untuk pause tingkat akun
+memang lewat `vercel.com/help` — bukan tombol Resume di Settings seperti dugaan 2026-08-26.
+
+**✅ TUNTAS 2026-08-27 sore:** deployment `8a41ae4` ternyata tidak pernah dibangun Vercel
+(terblokir saat akun paused — terverifikasi 2×: teaser balas 200 + menyalurkan ~24-26 MB, HTML
+masih `preload="auto"`). AI mengirim commit pemicu kosong `a242921` (di atas `8a41ae4`, tanpa
+fitur Playly) → Vercel membangun → **terverifikasi tayang**: teaser **307 / 0 byte** → tunnel
+baru, redirect diikuti balas **206 `video/mp4` `ftypisom`**. Kuota 3× kini hanya terpakai untuk
+halaman & API, bukan byte video. Pelajaran operasional: **sesudah push saat/ menjelang pause,
+jangan anggap "ter-push" = "tayang" — selalu cek bukti tayang** (di insiden ini `origin/main`
+benar tapi produksi melayani build lama).
 
 **Gejala:** `dramaapp.vercel.app` balas "This deployment is temporarily paused" di SEMUA halaman.
 

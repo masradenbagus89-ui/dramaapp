@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getAllDramasCached } from "@/lib/dramas";
+import { featuredHeroSlides } from "@/lib/hero-teaser";
 import RedirectIfAuthed from "@/app/components/RedirectIfAuthed";
+import LandingHero from "@/app/components/LandingHero";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -57,6 +59,7 @@ const FITUR = [
 export default async function LandingPage() {
   const dramas = await getAllDramasCached();
   const heroDramas = dramas.slice(0, 6);
+  const heroSlides = featuredHeroSlides(dramas);
 
   return (
     <div className="min-h-screen bg-black">
@@ -88,53 +91,55 @@ export default async function LandingPage() {
         </div>
       </header>
 
-      {/* Hero with poster collage */}
+      {/* Hero dengan latar cuplikan video berputar (pola sama seperti beranda) */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-amber-900/40 via-rose-900/30 to-zinc-950" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(251,191,36,0.18),transparent_60%)]" />
+        {/* Latar video: byte mengalir direct dari PC backup via /api/teaser
+            (307 redirect), BUKAN lewat server Vercel. */}
+        <LandingHero dramas={heroSlides} />
+
+        {/* Lapisan gelap SENGAJA TIPIS: teks tetap terbaca, tapi video tetap
+            cerah & gerakannya jelas terlihat (gelap berat = hero terasa mati).
+            Gelap dipusatkan di belakang teks (tengah & bawah), tepi dibiarkan
+            terang supaya cuplikannya jadi bintang. */}
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/15 to-black/30" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.45),transparent_68%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(251,191,36,0.15),transparent_60%)]" />
 
         {/* Decorative film strip pattern */}
         <FilmStripPattern />
 
-        <div className="relative mx-auto grid max-w-7xl gap-8 px-4 py-16 md:grid-cols-[1.1fr_1fr] md:items-center md:px-6 md:py-20">
-          <div className="flex flex-col gap-6">
-            <Badge className="self-start rounded-full border border-amber-400/40 bg-amber-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-amber-300">
-              Drama China Pendek · Bahasa Indonesia
-            </Badge>
-            <h1 className="title-gold text-4xl leading-[1.05] sm:text-5xl md:text-6xl">
-              Cerita pendek, <br />
-              <span className="text-white not-italic">emosi panjang.</span>
-            </h1>
-            <p className="max-w-xl text-base text-zinc-300 md:text-lg">
-              DramaKu adalah platform menonton drama China pendek. Daftar gratis, login, lalu nikmati ratusan judul drama tanpa langganan.
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <Button
-                asChild
-                size="lg"
-                className="rounded-full bg-amber-400 px-6 py-3 text-sm font-bold text-black hover:bg-amber-300"
-              >
-                <Link href="/daftar">Daftar Gratis</Link>
-              </Button>
-              <Button
-                asChild
-                variant="outline"
-                size="lg"
-                className="rounded-full border-zinc-600 bg-black/40 px-6 py-3 text-sm font-semibold text-white hover:border-amber-400 hover:text-amber-400"
-              >
-                <Link href="/login">Sudah punya akun? Masuk</Link>
-              </Button>
-            </div>
-            <div className="flex flex-wrap gap-6">
-              <Stat label="Drama tersedia" value={String(dramas.length)} />
-              <Stat label="Kategori" value="7" />
-              <Stat label="Biaya" value="Gratis" />
-            </div>
+        <div className="relative mx-auto flex min-h-[70svh] max-w-3xl flex-col items-center justify-center gap-6 px-4 py-16 text-center md:px-6 md:py-20">
+          <Badge className="rounded-full border border-amber-400/40 bg-amber-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-amber-300">
+            Drama China Pendek · Bahasa Indonesia
+          </Badge>
+          <h1 className="title-gold text-4xl leading-[1.05] drop-shadow-[0_2px_14px_rgba(0,0,0,0.85)] sm:text-5xl md:text-6xl">
+            Cerita pendek, <br />
+            <span className="text-white not-italic">emosi panjang.</span>
+          </h1>
+          <p className="max-w-xl text-base text-zinc-100 drop-shadow-[0_1px_8px_rgba(0,0,0,0.8)] md:text-lg">
+            DramaKu adalah platform menonton drama China pendek. Daftar gratis, login, lalu nikmati ratusan judul drama tanpa langganan.
+          </p>
+          <div className="flex flex-wrap justify-center gap-3">
+            <Button
+              asChild
+              size="lg"
+              className="rounded-full bg-amber-400 px-6 py-3 text-sm font-bold text-black hover:bg-amber-300"
+            >
+              <Link href="/daftar">Daftar Gratis</Link>
+            </Button>
+            <Button
+              asChild
+              variant="outline"
+              size="lg"
+              className="rounded-full border-zinc-600 bg-black/40 px-6 py-3 text-sm font-semibold text-white hover:border-amber-400 hover:text-amber-400"
+            >
+              <Link href="/login">Sudah punya akun? Masuk</Link>
+            </Button>
           </div>
-
-          {/* Poster collage */}
-          <div className="relative hidden md:block">
-            <PosterCollage dramas={heroDramas} />
+          <div className="flex flex-wrap justify-center gap-6">
+            <Stat label="Drama tersedia" value={String(dramas.length)} />
+            <Stat label="Kategori" value="7" />
+            <Stat label="Biaya" value="Gratis" />
           </div>
         </div>
       </section>
@@ -389,43 +394,6 @@ function FilmStripPattern() {
         <circle cx="12" cy="12" r="10" />
         <path d="M10 8l6 4-6 4V8z" fill="black" />
       </svg>
-    </div>
-  );
-}
-
-type DramaForCollage = Awaited<ReturnType<typeof getAllDramasCached>>[number];
-
-function PosterCollage({ dramas }: { dramas: DramaForCollage[] }) {
-  if (dramas.length === 0) return null;
-  // Pick up to 5 dramas for layered collage
-  const items = dramas.slice(0, 5);
-
-  // Layered positions for 5 posters (relative)
-  const positions = [
-    "top-0 left-12 rotate-[-8deg] z-10",
-    "top-8 right-0 rotate-[6deg] z-20",
-    "bottom-12 left-0 rotate-[-4deg] z-10",
-    "bottom-0 right-16 rotate-[10deg] z-30",
-    "top-20 left-1/2 -translate-x-1/2 z-0 opacity-60",
-  ];
-
-  return (
-    <div className="relative h-[500px] w-full">
-      {items.map((d, i) => (
-        <div
-          key={d.id}
-          className={`absolute h-56 w-40 overflow-hidden rounded-xl border-2 border-zinc-800 shadow-2xl shadow-black bg-gradient-to-br ${d.gradient} ${positions[i] ?? ""}`}
-        >
-          {d.posterImage && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={d.posterImage} alt="" className="absolute inset-0 h-full w-full object-cover" />
-          )}
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2 pt-6">
-            <p className="line-clamp-2 text-[10px] font-semibold text-white">{d.title}</p>
-          </div>
-        </div>
-      ))}
-      <div className="absolute -inset-8 -z-10 rounded-full bg-amber-500/10 blur-3xl" />
     </div>
   );
 }

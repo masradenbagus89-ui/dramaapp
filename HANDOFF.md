@@ -5,7 +5,18 @@
 >
 > **AI:** tiap kali ada perbaikan / deploy / keputusan — **perbarui berkas ini di langkah terakhir**, sebelum bilang selesai. Jangan tumpuk sejarah panjang di sini; pindahkan yang lama ke `NEXT-SESSION.md`.
 
-**Terakhir diisi:** 2026-08-27 malam — **SELESAI: PENYISIRAN PENUH TUNTAS + PLAYLY RESMI DIRILIS & TERBUKTI TAMPIL.**
+**Terakhir diisi:** 2026-08-28 — **HERO LANDING "HIDUP" DIRILIS & TERVERIFIKASI TAYANG.**
+
+**Rilis hero landing (2026-08-28, atas permintaan owner):** landing page publik kini memutar
+cuplikan video berputar seperti beranda — komponen baru `app/components/LandingHero.tsx`
+(5 judul unggulan via `featuredHeroSlides`, ganti tiap **60 detik**), kolase poster statis
+dihapus, lapisan gelap ditipiskan supaya video cerah & gerakannya jelas. **Kuota tetap aman:**
+jalur video tidak berubah — `/api/teaser` 307 redirect. **Bukti tayang:** push `53e923b` →
+`https://dramaapp.vercel.app/` memuat markup hero baru (`70svh`) 45 detik sesudah push;
+`/api/teaser` produksi balas **307 / 0 byte** → tunnel. Lokal = `origin/main` = `dramaku/main`
+= `53e923b`, selisih NOL. Pra-push: 390 tes lulus, `tsc` exit 0, `next build` sukses.
+
+**Riwayat sebelumnya (2026-08-27 malam) — Playly resmi dirilis:**
 
 **Rilis Playly = KEPUTUSAN owner malam ini** (koreksi atas dugaan "efek samping merge" di catatan
 rekan): sesudah kuota terbukti aman & penyisiran tuntas, owner diminta memilih dan menyetujui

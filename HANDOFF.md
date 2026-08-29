@@ -5,7 +5,9 @@
 >
 > **AI:** tiap kali ada perbaikan / deploy / keputusan — **perbarui berkas ini di langkah terakhir**, sebelum bilang selesai. Jangan tumpuk sejarah panjang di sini; pindahkan yang lama ke `NEXT-SESSION.md`.
 
-**Terakhir diisi:** 2026-08-28 — **HERO LANDING "HIDUP" DIRILIS & TERVERIFIKASI TAYANG.**
+**Terakhir diisi:** 2026-08-29 — **CEK RUTIN: semua selaras & sehat.** Lokal = `origin/main` = `dramaku/main` = `7a440c2` (selisih NOL, tak ada rilis tertinggal). Produksi: landing 200 · teaser 307/0 byte → tunnel `ping-newspapers-damaged-dublin.trycloudflare.com` · video balas 206 `video/mp4`.
+
+*2026-08-28 — HERO LANDING "HIDUP" DIRILIS & TERVERIFIKASI TAYANG.*
 
 **Rilis hero landing (2026-08-28, atas permintaan owner):** landing page publik kini memutar
 cuplikan video berputar seperti beranda — komponen baru `app/components/LandingHero.tsx`

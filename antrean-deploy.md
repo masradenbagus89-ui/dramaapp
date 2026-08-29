@@ -3,7 +3,9 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-08-28 (deploy hero landing). **Lokal = `origin/main` = `dramaku/main` = `53e923b`, selisih NOL.** Hero landing "hidup" (cuplikan 60 dtk/judul) TAYANG & terverifikasi (markup `70svh` di produksi 45 dtk sesudah push; `/api/teaser` produksi 307 / 0 byte → tunnel).
+**Terakhir dicek:** 2026-08-29. **Lokal = `origin/main` = `dramaku/main` = `7a440c2`, selisih NOL** (`7a440c2` = commit catatan handoff di atas `53e923b`, sudah ter-push ke dua remote). Tidak ada rilis tertinggal. **Cek kesehatan produksi 2026-08-29:** landing **200** · `/api/teaser` **307 / 0 byte** → tunnel baru `ping-newspapers-damaged-dublin.trycloudflare.com` · redirect diikuti balas **206 `video/mp4`** (byte video tetap mengalir langsung tunnel→penonton, kuota Vercel aman).
+
+Sebelumnya 2026-08-28 (deploy hero landing): **Lokal = `origin/main` = `dramaku/main` = `53e923b`, selisih NOL.** Hero landing "hidup" (cuplikan 60 dtk/judul) TAYANG & terverifikasi (markup `70svh` di produksi 45 dtk sesudah push; `/api/teaser` produksi 307 / 0 byte → tunnel).
 
 > ⚠️ **NAMA REMOTE BEDA ANTAR-KOMPUTER — inilah sumber salah kirim yang berulang.**
 > Bukan salah satu catatan yang keliru; keduanya benar untuk mesinnya masing-masing.

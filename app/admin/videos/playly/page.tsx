@@ -8,7 +8,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { ADMIN_COOKIE, verifyAdminSessionToken } from "@/lib/session";
-import { fetchPlaylyVideosKita, getPlaylyKeyStatus, readPlaylyConfig } from "@/lib/playly";
+import {
+  fetchPlaylyDetailPublik,
+  fetchPlaylyVideosKita,
+  getPlaylyKeyStatus,
+  readPlaylyConfig,
+} from "@/lib/playly";
 import { getAllDramas } from "@/lib/dramas";
 import { getPlaylyEmbeds, getPlaylyHiddenIds } from "@/lib/store";
 import AdminAccessDenied from "@/app/components/admin/AdminAccessDenied";
@@ -44,6 +49,23 @@ export default async function PlaylyVideosPage() {
     fetchPlaylyVideosKita(konfigurasi, 0),
     getPlaylyHiddenIds(),
   ]);
+
+  // Video yang catatannya ada di Playly tapi BERKASNYA tidak (upload putus di
+  // tengah / file dihapus). Halaman penonton sudah membuangnya sendiri
+  // (lib/playly-publik.ts), jadi tanpa penanda di sini hilangnya terasa seperti
+  // bug DramaKu -- padahal yang perlu dilakukan adalah upload ulang di Playly.
+  //
+  // revalidateSeconds = 0 mengikuti pemanggilan di atas: admin harus melihat
+  // keadaan SEKARANG, bukan salinan 5 menit lalu.
+  const belumSiapIds = (
+    await Promise.all(
+      mitra.videos.map(async (v) =>
+        (await fetchPlaylyDetailPublik(v.id, konfigurasi, 0)).punyaFile === false
+          ? v.id
+          : null,
+      ),
+    )
+  ).filter((id): id is string => id !== null);
 
   // Dropdown hanya butuh 3 kolom; sisanya tidak perlu ikut ke browser.
   const pilihanDrama = dramas.map((d) => ({
@@ -82,6 +104,7 @@ export default async function PlaylyVideosPage() {
         <PlaylyVisibilityManager
           videos={mitra.videos}
           initialHidden={hidden}
+          belumSiapIds={belumSiapIds}
           fetchError={mitra.error}
           source={mitra.source}
           creator={konfigurasi.creator}

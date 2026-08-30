@@ -10,14 +10,19 @@
 //   - Hanya video milik AKUN MITRA kita. Katalog publik Playly berisi video
 //     kreator lain dan sengaja TIDAK dipakai di halaman penonton.
 //   - Semua video mitra tampil OTOMATIS; yang disembunyikan admin dibuang.
+//   - Video yang BERKASNYA belum ada di Playly (upload putus di tengah, atau
+//     filenya dihapus) ikut dibuang. Catatannya tetap terdaftar di Playly, tapi
+//     pemutarnya cuma membalas "Video belum tersedia" -- lebih baik tidak
+//     ditampilkan sama sekali daripada mengantar penonton ke layar rusak.
 //   - Video TIDAK wajib dikaitkan ke drama. Kaitan lama (playly:embeds) tetap
 //     dipakai, tapi hanya sebagai LABEL tambahan ("bagian dari drama X").
 //
 // SERVER-ONLY. Jangan di-import dari komponen "use client".
 // -------------------------------------------------------------------------
 import {
-  fetchPlaylyThumbnail,
+  fetchPlaylyDetailPublik,
   fetchPlaylyVideosKita,
+  type PlaylyDetailPublik,
   type PlaylyVideo,
 } from "./playly";
 import { getAllDramasCached } from "./dramas";
@@ -80,6 +85,23 @@ export function rakitVideoPublik(
 }
 
 /**
+ * Video ini boleh ditampilkan ke penonton?
+ *
+ * Perhatikan tandanya: HANYA `false` (Playly menjawab, dan jawabannya "tidak ada
+ * berkas") yang membuat video disembunyikan. `null` berarti pertanyaannya TIDAK
+ * TERJAWAB -- Playly mati, timeout, atau bentuk balasannya berubah. Di keadaan
+ * itu video tetap ditampilkan: satu gangguan jaringan sesaat tidak boleh
+ * mengosongkan seluruh halaman video.
+ *
+ * Sengaja dipisah jadi fungsi bernama walau isinya satu baris: inilah aturan
+ * yang menentukan sebuah video hilang atau tidak dari situs, jadi ia butuh
+ * tempat yang bisa diuji langsung.
+ */
+export function bolehTampilKePenonton(detail: PlaylyDetailPublik | undefined): boolean {
+  return detail?.punyaFile !== false;
+}
+
+/**
  * Rakit daftar video Playly untuk halaman penonton.
  *
  * Tidak pernah melempar: kegagalan apa pun berubah jadi daftar kosong + alasan,
@@ -104,17 +126,33 @@ export async function getPlaylyVideosPublik(): Promise<PlaylyPublikResult> {
     dramas,
   );
 
-  // Sampul diambil satu panggilan per video karena jalur mitra tidak
-  // mengirimkannya. Dijalankan berbarengan (bukan antre) supaya total tunggunya
-  // tetap sepanjang SATU panggilan, dan hasilnya ikut tersimpan 5 menit seperti
-  // daftar videonya -- jadi ini tidak berubah jadi panggilan per pengunjung.
-  const sampul = await Promise.all(
-    tampil.map((v) => (v.thumbnail ? Promise.resolve(v.thumbnail) : fetchPlaylyThumbnail(v.id))),
+  // Detail diambil satu panggilan per video karena jalur mitra tidak mengirim
+  // sampul MAUPUN status berkasnya. Dijalankan berbarengan (bukan antre) supaya
+  // total tunggunya tetap sepanjang SATU panggilan, dan hasilnya ikut tersimpan
+  // 5 menit seperti daftar videonya -- jadi ini tidak berubah jadi panggilan
+  // per pengunjung. Yang menyeberang cuma JSON teks, bukan berkas videonya.
+  //
+  // Sengaja dipanggil untuk SEMUA video, termasuk yang sampulnya sudah ada:
+  // status berkas cuma bisa diketahui dari balasan ini.
+  const detail = new Map(
+    await Promise.all(
+      tampil.map(async (v) => [v.id, await fetchPlaylyDetailPublik(v.id)] as const),
+    ),
   );
 
-  const videos = tampil.map<PlaylyVideoPublik>((v, i) => ({
+  const siap = tampil.filter((v) => bolehTampilKePenonton(detail.get(v.id)));
+  const belumSiap = tampil.length - siap.length;
+  if (belumSiap > 0) {
+    // Dicatat supaya kalau ada yang bertanya "kok videonya tidak muncul",
+    // jawabannya bisa dilacak tanpa menebak.
+    console.warn(
+      `[playly] ${belumSiap} video tidak ditampilkan: berkasnya belum ada di Playly.`,
+    );
+  }
+
+  const videos = siap.map<PlaylyVideoPublik>((v) => ({
     ...v,
-    thumbnail: v.thumbnail ?? sampul[i],
+    thumbnail: v.thumbnail ?? detail.get(v.id)?.thumbnail ?? null,
     ...labelUntuk(v.id),
   }));
 

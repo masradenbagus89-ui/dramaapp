@@ -5,6 +5,46 @@
 >
 > **AI:** tiap kali ada perbaikan / deploy / keputusan — **perbarui berkas ini di langkah terakhir**, sebelum bilang selesai. Jangan tumpuk sejarah panjang di sini; pindahkan yang lama ke `NEXT-SESSION.md`.
 
+**Terakhir diisi:** 2026-08-29 — **VIDEO PLAYLY TANPA BERKAS BERHENTI DIANTAR KE PENONTON.**
+Owner melaporkan video `Diasingkan Ke Bumi… Mas Of Steel` (35:07) tampil di admin tapi di `/playly` hanya
+memberi layar hitam **"Video belum tersedia"**. **Bukan bug DramaKu**: kalimat itu nol hasil saat di-grep
+di seluruh kode kita — ia keluar dari dalam `<iframe>` pemutar Playly. Sebab sebenarnya: `/api/public-video`
+Playly membalas `videoUrl: null` + `variants: {}` untuk **dua** video 35 menit (id `1787977846374` dan
+`1787976646197`, judulnya kembar "…Steel" & "…Steelzz"), sedangkan 4 video lain punya `.mp4` + 360p–1080p
+di R2. Artinya CATATAN videonya tersimpan di Playly tapi BERKASNYA tidak pernah sampai (❓ dugaan: upload
+putus — semua yang sukses 2–5 menit, yang gagal 35 menit).
+
+**Yang diubah (atas persetujuan owner):** video begini kini otomatis TIDAK ditampilkan ke penonton, dan di
+`/admin/videos/playly` diberi badge merah **"belum siap"** + langkah perbaikannya. Berkas: `lib/playly.ts`
+(`fetchPlaylyThumbnail` → `fetchPlaylyDetailPublik` + `punyaFileVideo`), `lib/playly-publik.ts`
+(`bolehTampilKePenonton`), `app/admin/videos/playly/page.tsx`,
+`app/components/admin/PlaylyVisibilityManager.tsx`, `tests/playly-publik.test.ts`.
+
+⚠️ **Aturan yang JANGAN diperlonggar:** `punyaFile` punya **3** keadaan — `true` / `false` / **`null` =
+TIDAK TAHU**. Hanya `false` yang menyembunyikan video. Kalau `null` ikut disembunyikan, satu gangguan
+jaringan atau satu perubahan bentuk JSON di pihak Playly akan **mengosongkan seluruh halaman video**.
+Dikunci tes "bentuk JSON Playly berubah → null, BUKAN false".
+
+**Kuota Vercel: nol tambahan** (dicek sesuai permintaan owner). Yang menyeberang cuma JSON teks ke
+`/api/public-video` — panggilan yang SUDAH ada untuk mengambil sampul, kini sekalian membaca status
+berkas. Byte video tetap lewat `<iframe>` ke Vercel MILIK PLAYLY. `videoUrl` hanya dibaca ada/tidaknya,
+tidak pernah dipakai memutar atau menyalurkan.
+
+**Bukti:** 402 tes lulus (33 berkas; 12 tes baru) · `tsc --noEmit` exit 0 · uji ke Playly nyata memakai
+fungsi baru: 2 video 35 menit → DISEMBUNYIKAN, 4 video lain → TAMPIL, sampul keenamnya tetap terbaca.
+⚠️ `next build` GAGAL di komputer ini (prerender `/beranda`, `ENOTFOUND xxxxxxxxxxxx.supabase.co`) —
+**bukan akibat perubahan ini**: dibuktikan `git stash` + build ulang kode lama → gagal identik (digest
+error sama, `3227098399`). Sebabnya `.env.local` di PC ini masih berkas CONTOH. Tahap compile +
+TypeScript di dalam build sendiri lulus.
+
+**BELUM di-commit, BELUM di-push, BELUM deploy** — perubahan masih di working tree branch
+`fix/playly-otomatis`. Rencana lengkap: `docs/lintasai/rencana/2026-08-29-playly-video-tanpa-berkas.md`.
+
+**Langkah owner di Playly (bukan di DramaKu):** upload ulang video 35 menit sampai 100% selesai, lalu
+hapus salah satu dari 2 entri kembar — kalau dua-duanya jadi hidup, judulnya dobel di halaman penonton.
+
+---
+
 **Terakhir diisi:** 2026-08-27 — **VIDEO PLAYLY AKHIRNYA TAYANG DI PRODUKSI & TERBUKTI TAMPIL.**
 `https://dramaapp.vercel.app/playly` balas **200** dan halamannya (35 KB) memuat **keempat video milik
 `coklat`**: Transformers 8, Transformers The Last Knight, Hulk Abu-abu, Suara Hewan. Sebelumnya hari ini

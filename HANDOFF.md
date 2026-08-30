@@ -37,8 +37,16 @@ fungsi baru: 2 video 35 menit → DISEMBUNYIKAN, 4 video lain → TAMPIL, sampul
 error sama, `3227098399`). Sebabnya `.env.local` di PC ini masih berkas CONTOH. Tahap compile +
 TypeScript di dalam build sendiri lulus.
 
-**BELUM di-commit, BELUM di-push, BELUM deploy** — perubahan masih di working tree branch
-`fix/playly-otomatis`. Rencana lengkap: `docs/lintasai/rencana/2026-08-29-playly-video-tanpa-berkas.md`.
+**SUDAH di-commit `c2da792`. Push SEBAGIAN — repo produksi menolak.** Branch `fix/playly-otomatis`
+berhasil di-push ke `ojokesusu/dramaku` (di PC ini bernama remote `origin`) — repo ini **TIDAK dipantau
+Vercel**, jadi kodenya aman tersimpan tapi belum merilis apa pun. Push ke `masradenbagus89-ui/dramaapp`
+(di PC ini bernama remote `dramaapp`, **inilah tombol rilis**) ditolak **403 — `denied to yusufscorpio`**,
+kendala lama yang sudah tercatat: akun di PC ini cuma punya izin baca ke repo produksi.
+**Jadi perbaikan ini BELUM tayang di `dramaapp.vercel.app`.** Jalan keluar permanen tetap sama: pemegang
+akun `masradenbagus89-ui` menambahkan `yusufscorpio` sebagai **collaborator Write**; atau owner sendiri
+yang menarik branch `fix/playly-otomatis` dari `ojokesusu/dramaku` lalu push ke repo produksi.
+
+Rencana lengkap: `docs/lintasai/rencana/2026-08-29-playly-video-tanpa-berkas.md`.
 
 **Langkah owner di Playly (bukan di DramaKu):** upload ulang video 35 menit sampai 100% selesai, lalu
 hapus salah satu dari 2 entri kembar — kalau dua-duanya jadi hidup, judulnya dobel di halaman penonton.

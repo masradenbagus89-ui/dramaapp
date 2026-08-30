@@ -3,7 +3,13 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-08-27 malam (fetch dua remote SUKSES dari sesi AI). Posisi tak berubah sejak sore: `origin/main` = **`a242921`** (commit pemicu di atas `8a41ae4`) — **perbaikan kuota TAYANG & terverifikasi**: teaser 307 / 0 byte, video balas 206 dari tunnel. Lokal & `dramaku/main` = `2b9f530` (berisi Playly) — `origin/main` punya `a242921` yang belum ada di lokal (merge balik nanti bersama rilis berikutnya). **Produksi SENGAJA tertinggal dari lokal soal fitur Playly** — lihat baris 🟡 di tabel antrean. Malam ini juga tuntas **penyisiran penuh "nol video lewat Vercel"** — hasilnya di `HANDOFF.md` blok paling atas.
+**Terakhir dicek:** 2026-08-30 (fetch `origin` + `dramaapp` SUKSES dari sesi AI, di PC rekan). **Ada 1 commit
+tertahan di depan produksi:** `c2da792` — *fix(playly): jangan tampilkan video yang berkasnya belum ada di
+Playly*. Sudah masuk `ojokesusu/dramaku` (branch `fix/playly-otomatis`), **belum** masuk
+`masradenbagus89-ui/dramaapp` karena push ditolak **403 `denied to yusufscorpio`** (izin baca saja). Jadi
+perbaikan ini **belum tayang**. `git rev-list --count dramaapp/main..HEAD` = **1**.
+
+**Sebelumnya dicek:** 2026-08-27 malam (fetch dua remote SUKSES dari sesi AI). Posisi tak berubah sejak sore: `origin/main` = **`a242921`** (commit pemicu di atas `8a41ae4`) — **perbaikan kuota TAYANG & terverifikasi**: teaser 307 / 0 byte, video balas 206 dari tunnel. Lokal & `dramaku/main` = `2b9f530` (berisi Playly) — `origin/main` punya `a242921` yang belum ada di lokal (merge balik nanti bersama rilis berikutnya). **Produksi SENGAJA tertinggal dari lokal soal fitur Playly** — lihat baris 🟡 di tabel antrean. Malam ini juga tuntas **penyisiran penuh "nol video lewat Vercel"** — hasilnya di `HANDOFF.md` blok paling atas.
 
 > ⚠️ **NAMA REMOTE BEDA ANTAR-KOMPUTER — inilah sumber salah kirim yang berulang.**
 > Bukan salah satu catatan yang keliru; keduanya benar untuk mesinnya masing-masing.
@@ -58,6 +64,7 @@ AUTH_SECRET di Vercel: dikonfirmasi ADA oleh owner 2026-08-18.
 | ✅ **video PULIH** | — | Tunnel sore (`written-coated-...`) LENYAP (DNS `Non-existent domain`) → owner jalankan `start-dramaapp.ps1` → alamat baru **`proxy-marks-isolation-subjects.trycloudflare.com`**. Langkah [5/6] gagal 403 (`VERCEL_TOKEN` mati), alamat masuk lewat jalur manual | **Terverifikasi 2026-08-20 malam:** URL yang dipakai produksi balas **206** `video/mp4`, isi diawali `ftypmp42`. ⚠️ Sementara — mati lagi saat PC backup restart |
 | ✅ **sudah di-push** | `8dd6f22`..`4954817` | Perbaikan layar hitam player + berkas autostart PC backup (`start-video-services.ps1`, `cloudflared-config.example.yml`, README baru, `.gitignore` kredensial tunnel) + tes e2e Tahap 7 | Owner memberi izin 2026-08-20 malam. Dual push SUKSES (`origin` + `dramaku`, selisih nol). Diperiksa dulu: nol secret di diff, 265 tes, tsc 0, build sukses. **Terverifikasi tayang** — teks perbaikan ketemu di bundle produksi |
 | ✅ **SELESAI PENUH** | `1ce14c3` | Tahap 7: kode pemulihan password | Terverifikasi 2026-08-20: uji manual owner (tampilan) + uji end-to-end mesin ke API produksi **19/19 lulus**. Akun uji dibersihkan. Tak ada sisa |
+| 🔴 **tertahan 403 — belum tayang** | `c2da792` | Video Playly tanpa berkas disembunyikan dari penonton + badge "belum siap" di admin | Di-push ke `ojokesusu/dramaku` saja (branch `fix/playly-otomatis`); repo produksi menolak (`denied to yusufscorpio`). Bukti pra-rilis LULUS: 402 tes, `tsc` exit 0, uji ke Playly nyata. `next build` tak bisa dijalankan di PC ini (`.env.local` masih berkas contoh) — dibuktikan gagal identik pada kode lama, bukan akibat commit ini |
 | ⚠️ **utang operasional (AKTIF lagi)** | — | `VERCEL_TOKEN` di `start-dramaapp.ps1` kedaluwarsa (403) — **menggigit 2026-08-20 malam**: langkah [5/6] gagal, owner harus tempel alamat manual | **Koreksi catatan sebelumnya:** utang ini gugur **hanya SESUDAH** named tunnel terpasang. Selama masih quick tunnel, tiap restart PC = tempel manual. Prioritaskan Tahap 2 |
 | ✅ tayang & terverifikasi | `0d77f4a` | Kartu status sambungan Playly di /admin | Selesai. Kartu kini menampilkan "Belum diatur" |
 | ⏸️ menunggu owner | — | 3 env Playly di Vercel (`DASHBOARD_API_URL`, `DASHBOARD_API_KEY_HEADER=X-Playly-Key`, `DASHBOARD_API_KEY`) | Owner isi manual + Redeploy; sesudah itu kartu berubah jadi "Tersambung" |

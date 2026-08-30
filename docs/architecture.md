@@ -104,7 +104,7 @@ dramaapp/
 ---
 
 ## Sumber Data Eksternal
-- **Database utama**: Supabase Postgres — prod ref `iicrzdnmcpontfytfypi` (schema `public`), staging ref `nvblmpkwyzbpdbshyvzw` (schema `dramaapp`). Fallback: file JSON di `data/` saat env kosong. Detail: `docs/db.md`.
+- **Database utama**: Supabase Postgres — ref `nvblmpkwyzbpdbshyvzw` (schema `dramaapp`; project dipakai bersama aplikasi lain, makanya bukan `public`). Ref lama `iicrzdnmcpontfytfypi` (schema `public`) PENSIUN sejak migrasi 2026-08-29 — disimpan sebagai backup, tidak ditulis lagi. `lib/supabase.ts` mengirim header `Accept-Profile`/`Content-Profile: dramaapp`; schema itu wajib terdaftar di Settings → API → Exposed schemas. Fallback: file JSON di `data/` saat env kosong. Detail: `docs/db.md`.
 - **Video**: di-serve dari **tunnel PC backup** (`NEXT_PUBLIC_VIDEO_BASE_URL`, Cloudflare trycloudflare).
 - **Pembayaran**: Midtrans (Snap) — **belum aktif** (balas 501 sampai key dipasang).
 - **Iklan**: Google AdSense atau Adsterra/Monetag (opsional, via env).

@@ -16,6 +16,13 @@ const SUPABASE_URL = RAW_URL.replace(/\/+$/, "");
 const SUPABASE_KEY =
   process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_KEY ?? "";
 
+// Schema PostgREST yang dipakai app. Project Supabase saat ini
+// (nvblmpkwyzbpdbshyvzw) dipakai bersama aplikasi lain, jadi tabel DramaApp
+// sengaja ditaruh di schema `dramaapp` (bukan `public`) supaya tidak tabrakan.
+// Header di bawah memberi tahu PostgREST schema mana yang dibaca — syaratnya
+// schema itu sudah di-expose di Dashboard Supabase -> Settings -> API.
+const SUPABASE_SCHEMA = "dramaapp";
+
 /** True kalau Supabase dikonfigurasi; kalau false, semua lib pakai file lokal. */
 export const useSupabase = Boolean(SUPABASE_URL && SUPABASE_KEY);
 
@@ -24,6 +31,11 @@ function baseHeaders(extra: Record<string, string> = {}): Record<string, string>
     apikey: SUPABASE_KEY,
     Authorization: `Bearer ${SUPABASE_KEY}`,
     "Content-Type": "application/json",
+    // Accept-Profile = schema untuk request BACA (GET);
+    // Content-Profile = schema untuk request TULIS (POST/DELETE). PostgREST
+    // hanya memakai yang relevan, jadi aman dikirim dua-duanya.
+    "Accept-Profile": SUPABASE_SCHEMA,
+    "Content-Profile": SUPABASE_SCHEMA,
     ...extra,
   };
 }

@@ -5,21 +5,78 @@
 >
 > **AI:** tiap kali ada perbaikan / deploy / keputusan — **perbarui berkas ini di langkah terakhir**, sebelum bilang selesai. Jangan tumpuk sejarah panjang di sini; pindahkan yang lama ke `NEXT-SESSION.md`.
 
-**Terakhir diisi:** 2026-08-31 — **CEK RUTIN + 2 hal tertinggal ditemukan.** Produksi **SEHAT & sudah pakai database BARU**: landing 200 · `/playly` 200 · `/discover` 200 · `/api/teaser` **307 / 0 byte** → tunnel baru `interference-positions-style-manufacture.trycloudflare.com` · redirect diikuti balas **206 `video/mp4` `ftypisom`** (berkas 895 MB) → byte video tetap mengalir langsung tunnel→penonton, kuota Vercel aman. `/api/dramas` balas **42 judul** (berkas cadangan lokal `data/dramas.json` cuma 21) → bukti produksi benar-benar membaca Supabase project baru, bukan file.
+**Terakhir diisi:** 2026-08-31 (sore, KOREKSI) — **produksi SEHAT tapi MASIH memakai database LAMA.**
+Landing 200 · `/playly` 200 · `/discover` 200 · `/api/teaser` **307 / 0 byte** → tunnel
+`interference-positions-style-manufacture.trycloudflare.com` · redirect diikuti balas **206
+`video/mp4` `ftypisom`** (berkas 895 MB) → byte video tetap mengalir langsung tunnel→penonton,
+kuota Vercel aman. **Migrasi database BELUM tuntas** — datanya sudah pindah, tapi pintu API-nya
+masih terkunci; rinciannya di bagian KOREKSI di bawah. **Jangan ganti env Supabase di Vercel dulu
+— situs akan mati.**
 
-## ⚠️ 2026-08-31 — DUA HAL TERTINGGAL (butuh owner)
+## 🔴 2026-08-31 (sore) — KOREKSI: migrasi BELUM tuntas, produksi masih database LAMA
 
-**1. `.env.local` di PC ini masih memakai kunci database LAMA → `npm run dev` akan error.**
-Isi `SUPABASE_URL` sudah project BARU (`nvblmpkwyzbpdbshyvzw`), tapi `SUPABASE_SERVICE_ROLE_KEY`
-masih kunci project LAMA — dibuktikan dengan membuka isi kunci itu sendiri: `ref = iicrzdnmcpontfytfypi`
-(project lama yang sudah dipensiunkan). Uji langsung ke database baru balas
-`401 {"message":"Invalid API key"}`. *Apa artinya:* `service_role key` = kata sandi server untuk
-membaca/menulis database; kunci milik project lama tidak diterima project baru. *Dampak:* **produksi
-TIDAK terpengaruh** (kunci di Vercel sudah benar — terbukti 42 judul di atas), tapi menjalankan situs
-di komputer ini akan gagal 500 tiap membaca data (kode sengaja melempar error, bukan diam-diam
-pakai data lama — lihat `ensureOk` di [lib/supabase.ts:44](./lib/supabase.ts#L44)).
-*Langkah owner:* Supabase Dashboard → project `nvblmpkwyzbpdbshyvzw` → Settings → API → salin
-`service_role` **project baru** → tempel ke `.env.local`. Jangan commit berkas itu.
+**Klaim yang dikoreksi.** Catatan pagi ini menyimpulkan "produksi sudah pakai database baru" dari
+bukti `/api/dramas` balas 42 judul sedangkan `data/dramas.json` cuma 21. **Alasan itu tidak sah:**
+selisih 42 vs 21 hanya membuktikan produksi membaca *sebuah* database, bukan database yang *mana*.
+
+**Palang sebenarnya: schema `dramaapp` belum di-expose.** Supabase punya daftar putih schema mana
+yang boleh diakses lewat REST API (Dashboard → Settings → API → **Exposed schemas**). Isinya saat ini
+`public, graphql_public, datadomain, rtp, seoanalysis, footballbot, mappingplan_backup` — **tanpa
+`dramaapp`**. Uji langsung dengan kunci yang benar balas:
+
+```
+406 {"code":"PGRST106","message":"Invalid schema: dramaapp"}
+```
+
+**Kenapa ini membuktikan produksi belum pindah.** [lib/supabase.ts:24](./lib/supabase.ts#L24) selalu
+mengirim `Accept-Profile: dramaapp`. Kalau `SUPABASE_URL` di Vercel menunjuk project baru, tiap
+permintaan pasti kena 406 lalu `ensureOk` melempar error → `/api/dramas` jadi **500**. Kenyataannya
+produksi balas **200** dengan header `X-Vercel-Cache: MISS` + `Age: 0` (= query database hidup, bukan
+cache basi). Jadi produksi masih membaca project lama `iicrzdnmcpontfytfypi`. Ini kesimpulan lewat
+eliminasi — env var Vercel sendiri belum pernah dibaca langsung (CLI-nya `Logged out`).
+
+**Yang SUDAH beres** (diverifikasi lewat koneksi Postgres langsung ke pooler, read-only — jalur ini
+tidak lewat REST jadi tak terhalang Exposed schemas):
+
+| Tabel di `dramaapp` | Isi | Backup DB lama 29 Agu |
+|---|---|---|
+| `dramas` | 42 | 42 |
+| `app_data` | 20 | 20 |
+| `likes` | 35 | 35 |
+| `wallets` | 3 | 3 |
+| `unlocks` | 0 | 0 |
+
+42 id drama-nya **identik persis** dengan yang tayang di produksi. Kunci `ads` dan `playly:hidden`
+sudah ikut pindah. `SUPABASE_SERVICE_ROLE_KEY` di `.env.local` juga **sudah diganti owner** dan
+terbukti valid (401 hilang, berganti jadi 406 di atas).
+
+**⚠️ Data terus bergeser selama produksi belum dipindah.** Penonton masih menambah data ke DB lama.
+Terukur 2026-08-31: total like `111 → 114` (`permaisuri-bangkit-di-dunia-modern` 1→2 ·
+`over-your-dead-body` 2→4). Angkanya akan terus bertambah → **wajib sinkron ulang tepat sebelum
+pindah**, jangan pakai snapshot 29 Agu apa adanya.
+
+**Langkah owner (butuh pemilik project Supabase — bukan owner dramaapp):**
+Settings → API → Exposed schemas → **tambahkan `dramaapp`** ke daftar yang sudah ada (jangan hapus
+yang lain) → Save. Tidak menyentuh data, tidak mempengaruhi aplikasi lain yang menumpang project itu.
+
+**URUTAN AMAN — jangan dibalik:**
+1. Expose schema `dramaapp` ← satu-satunya yang butuh akses dashboard
+2. Uji dari lokal sampai benar-benar tembus (bukan diasumsikan)
+3. Sinkronkan data selisih yang menumpuk sejak 29 Agu
+4. Baru ganti `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` di Vercel + redeploy
+5. Verifikasi produksi hidup & datanya utuh
+
+**Jalan pintas yang SUDAH ditolak:** bikin *view* di schema `public` (yang sudah ter-expose) supaya
+tak perlu dashboard — **tidak bisa**. Kode menyimpan data pakai `on_conflict` (upsert), dan Postgres
+tidak mendukung `ON CONFLICT` di atas view → baca jalan, tapi semua penyimpanan (like, koin, komentar,
+admin) rusak. Mengubah `pgrst.db_schemas` lewat SQL juga tidak diambil: setelan itu dipakai bersama
+4 aplikasi lain di project yang sama.
+
+## ⚠️ 2026-08-31 — SISA HAL TERTINGGAL
+
+**1. ~~`.env.local` memakai kunci database LAMA~~ — SELESAI 2026-08-31.** Owner sudah menempel
+`service_role` project baru; uji langsung tidak lagi balas `401 Invalid API key`. `npm run dev`
+tetap belum bisa membaca data sampai palang Exposed schemas di atas dibuka.
 
 **2. Commit `3dad2e8` belum ter-push ke repo cermin `dramaku` (aturan dual push).**
 `origin/main` (repo produksi) sudah `3dad2e8` ✅, tapi `dramaku/main` masih `ee8f18c` — terakhir
@@ -29,7 +86,7 @@ di-push 2026-08-29 08:25. Saat sesi ini mencoba menghubungi `dramaku`, GitHub me
 di atas kode lama. *Langkah:* login ulang GitHub di PowerShell (`git credential-manager` / `gh auth login`),
 lalu `git push dramaku main`.
 
-## 🗄️ 2026-08-30 — MIGRASI SUPABASE KE PROJECT BARU (sudah tayang, tapi belum pernah dicatat di sini)
+## 🗄️ 2026-08-30 — MIGRASI SUPABASE KE PROJECT BARU (kode tayang, produksi BELUM pindah)
 
 Commit `3dad2e8` (30 Agt 08:42) — dibuat sesi lain yang berakhir tanpa mengisi handoff, jadi dicatat
 sekarang berdasarkan pembacaan commit + pengujian produksi hari ini.
@@ -38,14 +95,20 @@ sekarang berdasarkan pembacaan commit + pengujian produksi hari ini.
 sengaja ditaruh di **schema `dramaapp`** (bukan `public`) supaya nama tabel tidak tabrakan.
 *Cara kodenya tahu:* [lib/supabase.ts:24](./lib/supabase.ts#L24) mengirim header `Accept-Profile`
 (untuk baca) + `Content-Profile` (untuk tulis) berisi `dramaapp` di tiap permintaan — syaratnya
-schema itu sudah di-expose di Dashboard → Settings → API (**sudah**, terbukti produksi jalan).
+schema itu sudah di-expose di Dashboard → Settings → API (**BELUM** per 2026-08-31 sore — inilah
+palang yang menahan migrasi; lihat bagian KOREKSI di atas).
 *Bahan pendukung yang ikut masuk:* `supabase_migrations/2026-08-29_schema_lengkap_dramaapp.sql`
 (skema lengkap 5 tabel — `app_data`, `dramas`, `likes`, `wallets`, `unlocks` — idempoten, aman
 dijalankan ulang) · `scripts/export-dramaapp-sql.mjs` (ekspor SQL lengkap) ·
 `scripts/cek_db_lama_readonly.py` (cek read-only database lama sebelum dimatikan) · `.gitignore`
 kini melindungi `backups/` + hasil export (isinya data user, jangan sampai ter-commit).
-*Bukti tayang (2026-08-31):* `/api/dramas` 200 berisi 42 judul dari schema baru.
-*Sisa referensi project lama:* hanya di `.next/cache` (cache build, bukan kode) — kode sumber bersih.
+*Status tayang (dikoreksi 2026-08-31 sore):* `/api/dramas` memang 200 berisi 42 judul, tapi **dari
+database LAMA** — schema `dramaapp` di project baru belum bisa diakses lewat API.
+*Sisa referensi project lama `iicrzdnmcpontfytfypi`:* di kode aplikasi **nihil**; yang masih menyebut
+hanya berkas sejarah/alat — `docs/architecture.md` (catatan pensiun), `migrasi-full.sql`,
+`migrasi-schema.sql`, `supabase_migrations/2026-08-29_schema_lengkap_dramaapp.sql`,
+`scripts/fix_coin_spend_unlock_prod.sql`, `backups/prod-2026-08-29T06-34-11/manifest.json`, plus
+`.next/` (cache build). Semuanya wajar dan tidak perlu dibersihkan.
 
 **Terakhir diisi sebelumnya:** 2026-08-29 — **CEK RUTIN: semua selaras & sehat.** Lokal = `origin/main` = `dramaku/main` = `7a440c2` (selisih NOL, tak ada rilis tertinggal). Produksi: landing 200 · teaser 307/0 byte → tunnel `ping-newspapers-damaged-dublin.trycloudflare.com` · video balas 206 `video/mp4`.
 
@@ -170,6 +233,10 @@ adanya dari 2026-08-21, belum diukur ulang.
 
 ## Status sekarang (1 menit)
 
+- 🔴 **Migrasi Supabase BELUM tuntas** — data sudah ada di project baru `nvblmpkwyzbpdbshyvzw`,
+  tapi schema `dramaapp` belum di-expose sehingga produksi masih membaca database lama.
+  **Jangan ganti env Supabase di Vercel sebelum palang itu dibuka** (situs akan mati).
+  Rincian + urutan aman: seksi KOREKSI 2026-08-31 di atas.
 - Situs hidup: **https://dramaapp.vercel.app** — **status 2026-08-27 sore: perbaikan kuota SUDAH TAYANG & terverifikasi** (teaser 307 / 0 byte → tunnel; video balas 206 `ftypisom`; commit produksi `a242921`). Akun dalam masa pantau 30 hari (un-block satu kali) — lihat pengingat mingguan di atas. Riwayat: commit `4954817` TERVERIFIKASI TAYANG 2026-08-20 malam (265 tes lulus, `tsc` exit 0, `next build` sukses, nol secret di diff).
 - **Tahap 7 SELESAI PENUH** — diverifikasi 2026-08-20 dari DUA sisi: (a) owner mencoba sendiri lewat tampilan (daftar → simpan kode → ganti password hanya dengan kode; alurnya mudah & berhasil); (b) uji end-to-end mesin ke API produksi **19/19 lulus**. `tests/recovery-code.test.ts` 12 tes lulus. Akun uji sudah dibersihkan dari Supabase (0 baris tersisa, login balas 401).
 - Skema database Supabase **tidak diubah** (akun penonton memakai tabel `app_data` yang sudah ada).

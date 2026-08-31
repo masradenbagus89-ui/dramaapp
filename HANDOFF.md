@@ -78,10 +78,12 @@ admin) rusak. Mengubah `pgrst.db_schemas` lewat SQL juga tidak diambil: setelan 
 `service_role` project baru; uji langsung tidak lagi balas `401 Invalid API key`. `npm run dev`
 tetap belum bisa membaca data sampai palang Exposed schemas di atas dibuka.
 
-**2. Commit `3dad2e8` belum ter-push ke repo cermin `dramaku` (aturan dual push).**
-`origin/main` (repo produksi) sudah `3dad2e8` ✅, tapi `dramaku/main` masih `ee8f18c` — terakhir
-di-push 2026-08-29 08:25. Saat sesi ini mencoba menghubungi `dramaku`, GitHub menolak:
-`Invalid username or token` (kredensial repo `ojokesusu/dramaku` di PC ini kedaluwarsa/hilang).
+**2. TIGA commit belum ter-push ke repo cermin `dramaku` (aturan dual push).**
+`origin/main` sudah `e74aff4` ✅, tapi `dramaku/main` masih `ee8f18c` — terakhir di-push
+2026-08-29 08:25. Yang tertahan: `3dad2e8` · `4195567` · `e74aff4` (jumlahnya akan terus bertambah
+tiap commit baru sampai kredensialnya diperbaiki). Dicoba lagi 2026-08-31 sore, GitHub tetap menolak:
+`Invalid username or token. Password authentication is not supported for Git operations.`
+(kredensial repo `ojokesusu/dramaku` di PC ini kedaluwarsa/hilang).
 *Dampak:* nol untuk penonton — push ke `dramaku` **tidak** merilis apa pun; risikonya rekan bekerja
 di atas kode lama. *Langkah:* login ulang GitHub di PowerShell (`git credential-manager` / `gh auth login`),
 lalu `git push dramaku main`.

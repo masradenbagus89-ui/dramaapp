@@ -5,7 +5,49 @@
 >
 > **AI:** tiap kali ada perbaikan / deploy / keputusan — **perbarui berkas ini di langkah terakhir**, sebelum bilang selesai. Jangan tumpuk sejarah panjang di sini; pindahkan yang lama ke `NEXT-SESSION.md`.
 
-**Terakhir diisi:** 2026-08-29 — **CEK RUTIN: semua selaras & sehat.** Lokal = `origin/main` = `dramaku/main` = `7a440c2` (selisih NOL, tak ada rilis tertinggal). Produksi: landing 200 · teaser 307/0 byte → tunnel `ping-newspapers-damaged-dublin.trycloudflare.com` · video balas 206 `video/mp4`.
+**Terakhir diisi:** 2026-08-31 — **CEK RUTIN + 2 hal tertinggal ditemukan.** Produksi **SEHAT & sudah pakai database BARU**: landing 200 · `/playly` 200 · `/discover` 200 · `/api/teaser` **307 / 0 byte** → tunnel baru `interference-positions-style-manufacture.trycloudflare.com` · redirect diikuti balas **206 `video/mp4` `ftypisom`** (berkas 895 MB) → byte video tetap mengalir langsung tunnel→penonton, kuota Vercel aman. `/api/dramas` balas **42 judul** (berkas cadangan lokal `data/dramas.json` cuma 21) → bukti produksi benar-benar membaca Supabase project baru, bukan file.
+
+## ⚠️ 2026-08-31 — DUA HAL TERTINGGAL (butuh owner)
+
+**1. `.env.local` di PC ini masih memakai kunci database LAMA → `npm run dev` akan error.**
+Isi `SUPABASE_URL` sudah project BARU (`nvblmpkwyzbpdbshyvzw`), tapi `SUPABASE_SERVICE_ROLE_KEY`
+masih kunci project LAMA — dibuktikan dengan membuka isi kunci itu sendiri: `ref = iicrzdnmcpontfytfypi`
+(project lama yang sudah dipensiunkan). Uji langsung ke database baru balas
+`401 {"message":"Invalid API key"}`. *Apa artinya:* `service_role key` = kata sandi server untuk
+membaca/menulis database; kunci milik project lama tidak diterima project baru. *Dampak:* **produksi
+TIDAK terpengaruh** (kunci di Vercel sudah benar — terbukti 42 judul di atas), tapi menjalankan situs
+di komputer ini akan gagal 500 tiap membaca data (kode sengaja melempar error, bukan diam-diam
+pakai data lama — lihat `ensureOk` di [lib/supabase.ts:44](./lib/supabase.ts#L44)).
+*Langkah owner:* Supabase Dashboard → project `nvblmpkwyzbpdbshyvzw` → Settings → API → salin
+`service_role` **project baru** → tempel ke `.env.local`. Jangan commit berkas itu.
+
+**2. Commit `3dad2e8` belum ter-push ke repo cermin `dramaku` (aturan dual push).**
+`origin/main` (repo produksi) sudah `3dad2e8` ✅, tapi `dramaku/main` masih `ee8f18c` — terakhir
+di-push 2026-08-29 08:25. Saat sesi ini mencoba menghubungi `dramaku`, GitHub menolak:
+`Invalid username or token` (kredensial repo `ojokesusu/dramaku` di PC ini kedaluwarsa/hilang).
+*Dampak:* nol untuk penonton — push ke `dramaku` **tidak** merilis apa pun; risikonya rekan bekerja
+di atas kode lama. *Langkah:* login ulang GitHub di PowerShell (`git credential-manager` / `gh auth login`),
+lalu `git push dramaku main`.
+
+## 🗄️ 2026-08-30 — MIGRASI SUPABASE KE PROJECT BARU (sudah tayang, tapi belum pernah dicatat di sini)
+
+Commit `3dad2e8` (30 Agt 08:42) — dibuat sesi lain yang berakhir tanpa mengisi handoff, jadi dicatat
+sekarang berdasarkan pembacaan commit + pengujian produksi hari ini.
+*Apa yang berubah:* database pindah dari project Supabase lama `iicrzdnmcpontfytfypi` ke project baru
+`nvblmpkwyzbpdbshyvzw`. Karena project baru **dipakai bersama aplikasi lain**, tabel DramaApp
+sengaja ditaruh di **schema `dramaapp`** (bukan `public`) supaya nama tabel tidak tabrakan.
+*Cara kodenya tahu:* [lib/supabase.ts:24](./lib/supabase.ts#L24) mengirim header `Accept-Profile`
+(untuk baca) + `Content-Profile` (untuk tulis) berisi `dramaapp` di tiap permintaan — syaratnya
+schema itu sudah di-expose di Dashboard → Settings → API (**sudah**, terbukti produksi jalan).
+*Bahan pendukung yang ikut masuk:* `supabase_migrations/2026-08-29_schema_lengkap_dramaapp.sql`
+(skema lengkap 5 tabel — `app_data`, `dramas`, `likes`, `wallets`, `unlocks` — idempoten, aman
+dijalankan ulang) · `scripts/export-dramaapp-sql.mjs` (ekspor SQL lengkap) ·
+`scripts/cek_db_lama_readonly.py` (cek read-only database lama sebelum dimatikan) · `.gitignore`
+kini melindungi `backups/` + hasil export (isinya data user, jangan sampai ter-commit).
+*Bukti tayang (2026-08-31):* `/api/dramas` 200 berisi 42 judul dari schema baru.
+*Sisa referensi project lama:* hanya di `.next/cache` (cache build, bukan kode) — kode sumber bersih.
+
+**Terakhir diisi sebelumnya:** 2026-08-29 — **CEK RUTIN: semua selaras & sehat.** Lokal = `origin/main` = `dramaku/main` = `7a440c2` (selisih NOL, tak ada rilis tertinggal). Produksi: landing 200 · teaser 307/0 byte → tunnel `ping-newspapers-damaged-dublin.trycloudflare.com` · video balas 206 `video/mp4`.
 
 *2026-08-28 — HERO LANDING "HIDUP" DIRILIS & TERVERIFIKASI TAYANG.*
 

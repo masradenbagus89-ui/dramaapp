@@ -55,9 +55,35 @@ Terukur 2026-08-31: total like `111 → 114` (`permaisuri-bangkit-di-dunia-moder
 `over-your-dead-body` 2→4). Angkanya akan terus bertambah → **wajib sinkron ulang tepat sebelum
 pindah**, jangan pakai snapshot 29 Agu apa adanya.
 
-**Langkah owner (butuh pemilik project Supabase — bukan owner dramaapp):**
-Settings → API → Exposed schemas → **tambahkan `dramaapp`** ke daftar yang sudah ada (jangan hapus
-yang lain) → Save. Tidak menyentuh data, tidak mempengaruhi aplikasi lain yang menumpang project itu.
+**Konteks (2026-08-31): ini permintaan Kang Dedi.** Pengumuman 2026-08-29 di Discord: semua project
+wajib pindah ke `nvblmpkwyzbpdbshyvzw`, **deadline Selasa 2026-09-01**, project lama di-shutdown
+(biaya $285/bulan). Data DramaApp **sudah aman** di project baru sejak 29 Agu — yang belum, produksi
+masih *membaca* project lama, jadi begitu project lama dimatikan situs ikut mati.
+
+**Langkah owner (butuh pemilik project Supabase — Kang Dedi, bukan owner dramaapp).** Dua cara,
+pilih salah satu:
+
+*Cara 1 — dashboard:* Settings → **Data API** (dashboard lama: **API**) → **Exposed schemas** →
+tambahkan `dramaapp` ke daftar yang sudah ada (jangan hapus yang lain) → Save.
+Link langsung: `https://supabase.com/dashboard/project/nvblmpkwyzbpdbshyvzw/settings/api`
+
+*Cara 2 — Management API* (dipakai kalau menunya tak ketemu; per 2026-08-31 Kang Dedi tidak
+menemukan menu itu). Endpoint & nama field sudah dicek ke dokumentasi resmi Supabase:
+`PATCH https://api.supabase.com/v1/projects/{ref}/postgrest`, field `db_schema`. Butuh Personal
+Access Token dari `https://supabase.com/dashboard/account/tokens`. Jalankan GET dulu untuk ambil
+nilai `db_schema` yang sekarang, lalu PATCH dengan nilai itu + `, dramaapp`.
+**Token itu memberi akses ke SELURUH akun Supabase Kang Dedi — biar beliau sendiri yang menjalankan,
+jangan diminta/diteruskan.**
+
+**Rencana darurat kalau tenggat lewat & schema belum dibuka:** hapus `SUPABASE_URL` +
+`SUPABASE_SERVICE_ROLE_KEY` dari env Vercel → `useSupabase` jadi false → situs jatuh ke berkas
+`data/dramas.json` (21 judul, tanpa akun/koin/like). Jelek tapi situs tetap hidup, jauh lebih baik
+daripada halaman error 500. Lihat `getAllDramas` di [lib/dramas.ts:160](./lib/dramas.ts#L160).
+
+Jalur alternatif yang SUDAH DIUJI DAN BUNTU (jangan diulang):
+`ALTER ROLE authenticator SET pgrst.db_schemas` → ditolak, *"authenticator is a reserved role, only
+superusers can modify it"* · menumpang schema lain yang sudah ter-expose → `CREATE=False` di semua
+(`public` malah kosong, 0 tabel) · `creative_raden` tidak memiliki satu schema pun.
 
 **URUTAN AMAN — jangan dibalik:**
 1. Expose schema `dramaapp` ← satu-satunya yang butuh akses dashboard

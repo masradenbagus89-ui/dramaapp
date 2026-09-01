@@ -13,6 +13,33 @@ kuota Vercel aman. **Migrasi database BELUM tuntas** — datanya sudah pindah, t
 masih terkunci; rinciannya di bagian KOREKSI di bawah. **Jangan ganti env Supabase di Vercel dulu
 — situs akan mati.**
 
+## ✅ 2026-09-01 — PALANG SUDAH DIBUKA, TINGGAL TUKAR ENV VERCEL
+
+Urutannya beres semua kecuali langkah terakhir:
+1. ✅ Kang Dedi menambahkan `dramaapp` ke Exposed schemas.
+2. ✅ `revoke all on all tables in schema dramaapp from anon, authenticated` —
+   dijalankan owner lewat `scripts/perbaiki_izin_dramaapp.py`. Lubang keamanan tertutup.
+3. ✅ `grant usage on schema dramaapp to service_role` — dijalankan Kang Dedi di SQL Editor
+   (user `creative_raden` tidak berwenang: punya USAGE tapi tanpa GRANT OPTION; Postgres tidak
+   menolak perintahnya, hanya WARNING lalu tidak berbuat apa-apa — kegagalan SENYAP, selalu
+   verifikasi hasilnya).
+4. ✅ REST API terbukti jalan penuh: baca `dramas` 200 (42 judul, identik dengan produksi) ·
+   baca `app_data` 200 · **tulis** 201 → baca balik 200 → hapus 204 → bersih `[]`.
+5. ✅ Selisih data disusulkan lewat `scripts/sinkron_selisih_dramaapp.mjs` — 6 baris
+   (`app_data`: `ads`, `playly:hidden`, `videobase` · `likes`: 3 judul), semuanya diverifikasi cocok.
+   **`videobase` yang paling kritis** — berisi alamat tunnel video yang sedang hidup dan berganti
+   tiap PC backup restart; tanpa disalin, semua video mati begitu produksi pindah.
+6. ⬜ **SISA SATU: tukar env di Vercel + redeploy.** Ganti `SUPABASE_URL` ke
+   `https://nvblmpkwyzbpdbshyvzw.supabase.co` dan `SUPABASE_SERVICE_ROLE_KEY` ke kunci project
+   baru (nilainya sudah ada di `.env.local`). Jalankan ulang `sinkron_selisih_dramaapp.mjs` tepat
+   sebelum menukar untuk menangkap selisih menit terakhir.
+   **Jangan sinkron lagi SESUDAH tukar** — arahnya lama→baru, jadi akan menimpa data baru yang
+   sudah masuk. Rollback kalau bermasalah: kembalikan kedua env ke nilai lama
+   (kunci lama ada di `C:\Users\user18\Downloads\key-lama.txt`, JANGAN di-commit).
+
+Riwayat penelusuran yang menghasilkan ini ada di bawah — disimpan karena berisi jalur-jalur buntu
+yang tak perlu diulang.
+
 ## 🔴 2026-08-31 (sore) — KOREKSI: migrasi BELUM tuntas, produksi masih database LAMA
 
 **Klaim yang dikoreksi.** Catatan pagi ini menyimpulkan "produksi sudah pakai database baru" dari

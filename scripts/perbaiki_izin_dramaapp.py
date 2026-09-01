@@ -80,13 +80,30 @@ def main() -> None:
 
     potret(cur, "SEBELUM")
 
-    cur.execute("grant usage on schema dramaapp to service_role")
     cur.execute("revoke all on all tables in schema dramaapp from anon, authenticated")
 
     potret(cur, "SESUDAH (belum disimpan)")
 
     conn.commit()
-    print("COMMIT berhasil — perubahan tersimpan.")
+    print("COMMIT berhasil — hak anon/authenticated dicabut.")
+
+    # GRANT USAGE TIDAK bisa dikerjakan dari sini: schema `dramaapp` dimiliki
+    # role `postgres`, dan `creative_raden` tidak punya GRANT OPTION. Postgres
+    # TIDAK menolak perintahnya — hanya memberi warning lalu tidak melakukan
+    # apa-apa. Jadi wajib diperiksa hasilnya, bukan diasumsikan berhasil.
+    cur.execute("select has_schema_privilege('service_role', 'dramaapp', 'USAGE')")
+    if cur.fetchone()[0]:
+        print("service_role sudah punya USAGE — tidak ada sisa pekerjaan.")
+    else:
+        print()
+        print("!! BELUM SELESAI: service_role belum punya USAGE pada schema dramaapp.")
+        print("   Tanpa ini REST API balas 403 'permission denied for schema dramaapp'.")
+        print("   Hanya pemilik schema (role postgres) yang bisa memberikannya.")
+        print("   Minta owner project jalankan di Dashboard -> SQL Editor:")
+        print()
+        print("     grant usage on schema dramaapp to service_role;")
+        print("     notify pgrst, 'reload schema';")
+
     conn.close()
 
 

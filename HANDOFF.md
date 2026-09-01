@@ -13,7 +13,65 @@ kuota Vercel aman. **Migrasi database BELUM tuntas** — datanya sudah pindah, t
 masih terkunci; rinciannya di bagian KOREKSI di bawah. **Jangan ganti env Supabase di Vercel dulu
 — situs akan mati.**
 
-## ✅ 2026-09-01 — PALANG SUDAH DIBUKA, TINGGAL TUKAR ENV VERCEL
+## 🎉 2026-09-01 — MIGRASI SUPABASE SELESAI & TERVERIFIKASI TAYANG
+
+Produksi resmi membaca project BARU `nvblmpkwyzbpdbshyvzw` (schema `dramaapp`).
+Deployment `696dcGTPw` (commit `0e1395b`) **Ready** 1m14s.
+
+*Bukti produksi benar-benar di database BARU* (logis, bukan asumsi): kode yang tayang SELALU kirim
+`Accept-Profile: dramaapp`. Project LAMA diuji dengan header itu balas
+`406 PGRST106 — Only the following schemas are exposed: public, graphql_public`. Kalau produksi masih
+menunjuk project lama, `/api/dramas` pasti 500. Kenyataannya **200 berisi 42 judul** → tidak ada
+kemungkinan lain. (Catatan: perbandingan jumlah judul TIDAK sah sebagai bukti — kedua database
+isinya sama; yang membedakan adalah header schema.)
+
+*Bukti sehat menyeluruh:* landing · `/beranda` · `/discover` · `/playly` semua **200** ·
+`/api/teaser` **307 / 0 byte** → tunnel `chronic-restrictions-share-parcel.trycloudflare.com` →
+diikuti balas **206 `video/mp4`** (byte video tetap tidak lewat Vercel, kuota aman) ·
+`/api/likes` total **115** = isi DB baru **115**, cocok baris per baris.
+
+### Akar masalah 7 build gagal beruntun (22 jam)
+
+`SUPABASE_SERVICE_ROLE_KEY` di Vercel masih kunci project LAMA sementara `SUPABASE_URL` sudah
+project BARU → saat build, Next.js prerender `/beranda` → `Supabase select 401 Invalid API key` →
+`Export encountered an error on /beranda/page, exiting the build`. Direproduksi lokal dengan sengaja
+memasangkan URL baru + kunci lama.
+
+**Jebakan yang sempat menyesatkan:** log build Vercel berhenti di `Running TypeScript ...` karena
+baris-baris sesudahnya tidak sempat terkirim saat proses mati. Sempat didiagnosis sebagai error
+TypeScript — padahal TypeScript LOLOS (`Finished TypeScript in 13.4s`), matinya di tahap prerender
+sesudahnya. **Kalau log Vercel berakhir mendadak tanpa pesan error, jangan percaya baris terakhir
+sebagai titik gagal — reproduksi lokal dengan env yang sama.**
+
+### Tiga pelajaran yang perlu diingat
+
+1. **Env var Vercel bertipe `Secret` tidak bisa diverifikasi dengan mata** — setelah disimpan isinya
+   hanya titik-titik. Jangan "cek apakah sudah sama"; timpa saja: Ctrl+A → Delete → tempel ulang →
+   jangan ada spasi/Enter di ujung.
+2. **Perubahan env di Vercel tidak berlaku sampai Redeploy.** Deployment yang berjalan memakai nilai
+   saat ia dibangun.
+3. **Build gagal 22 jam tanpa ada yang tahu.** Situs tetap sehat karena Vercel mempertahankan
+   deployment sukses terakhir (`ee8f18c`, 29 Agu) — nyaman, tapi menyembunyikan bahwa semua commit
+   sejak `3dad2e8` tidak pernah sampai ke penonton. Belum ada notifikasi build gagal.
+
+### Kerapuhan yang ditemukan (belum diperbaiki, butuh keputusan owner)
+
+`app/page.tsx` · `app/beranda/page.tsx` · `app/discover/page.tsx` · `app/shorts/page.tsx` memanggil
+`getAllDramasCached()` **tanpa `try/catch`** saat prerender → satu gangguan Supabase saat build
+menjatuhkan SELURUH deployment. Bandingkan [app/sitemap.ts:29](./app/sitemap.ts#L29) dan
+`generateStaticParams` di [app/drama/[id]/page.tsx:31](./app/drama/[id]/page.tsx#L31) yang sengaja
+tahan gagal — terbukti di log: keduanya cuma mencetak peringatan lalu build lanjut.
+
+### Sisa pekerjaan
+
+- ⬜ `git push dramaku main` — masih tertahan kredensial kedaluwarsa (lihat seksi di bawah).
+- ⬜ Kabari Kang Dedi bahwa DramaApp sudah pindah, project lama `iicrzdnmcpontfytfypi` boleh dimatikan.
+- ⚠️ **JANGAN jalankan `scripts/sinkron_selisih_dramaapp.mjs` lagi** — arahnya lama→baru, sekarang
+  akan menimpa data penonton yang lebih baru dengan data lama.
+
+---
+
+## ✅ 2026-09-01 — riwayat: palang dibuka bertahap
 
 Urutannya beres semua kecuali langkah terakhir:
 1. ✅ Kang Dedi menambahkan `dramaapp` ke Exposed schemas.

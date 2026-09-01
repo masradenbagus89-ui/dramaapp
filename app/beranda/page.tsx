@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getAllDramasCached } from "@/lib/dramas";
+import { getAllDramasCachedSafe } from "@/lib/dramas";
 import { featuredHeroSlides } from "@/lib/hero-teaser";
 import BerandaRows from "../components/BerandaRows";
 import AdBanner from "../components/AdBanner";
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 };
 
 export default async function BerandaPage() {
-  const dramas = await getAllDramasCached();
+  const dramas = await getAllDramasCachedSafe();
   const slides = featuredHeroSlides(dramas);
 
   if (slides.length === 0) {

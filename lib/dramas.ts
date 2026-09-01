@@ -206,6 +206,32 @@ export async function getAllDramasCached(): Promise<Drama[]> {
   return readLocalDramas();
 }
 
+/**
+ * Sama seperti `getAllDramasCached`, tapi TIDAK PERNAH melempar error.
+ *
+ * KENAPA ADA: halaman yang di-prerender saat build memanggil katalog. Kalau
+ * panggilan itu gagal, Next.js membatalkan SELURUH build — bukan cuma halaman
+ * itu. Terbukti 2026-09-01: kunci Supabase di Vercel tertinggal versi lama,
+ * `/beranda` melempar `401`, dan 7 deployment beruntun gagal selama 22 jam
+ * tanpa ada yang menyadarinya (situs lama tetap tayang, jadi tak ada gejala).
+ *
+ * Kalau katalog tak terjangkau, jatuh ke berkas `data/dramas.json` — halaman
+ * tetap terisi, tidak kosong melompong. Isinya bisa lebih sedikit dan agak
+ * basi; itu ditebus saat revalidate berikutnya (CATALOG_TTL_SECONDS).
+ *
+ * Dipakai HANYA oleh halaman publik yang di-prerender. Jalur admin, tulis, dan
+ * koin tetap memakai versi yang melempar error — di sana kegagalan HARUS
+ * terlihat, jangan disamarkan jadi "katalog kosong".
+ */
+export async function getAllDramasCachedSafe(): Promise<Drama[]> {
+  try {
+    return await getAllDramasCached();
+  } catch (err) {
+    console.error("[dramas] katalog tak terjangkau, pakai berkas lokal:", err);
+    return readLocalDramas();
+  }
+}
+
 /** Versi ber-cache dari `getDrama` untuk halaman publik. Lihat catatan di atas. */
 export async function getDramaCached(id: string): Promise<Drama | undefined> {
   if (useSupabase) {

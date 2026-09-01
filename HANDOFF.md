@@ -54,13 +54,24 @@ sebagai titik gagal — reproduksi lokal dengan env yang sama.**
    deployment sukses terakhir (`ee8f18c`, 29 Agu) — nyaman, tapi menyembunyikan bahwa semua commit
    sejak `3dad2e8` tidak pernah sampai ke penonton. Belum ada notifikasi build gagal.
 
-### Kerapuhan yang ditemukan (belum diperbaiki, butuh keputusan owner)
+### ✅ Penjaga permanen dipasang (2026-09-01, atas persetujuan owner)
 
-`app/page.tsx` · `app/beranda/page.tsx` · `app/discover/page.tsx` · `app/shorts/page.tsx` memanggil
-`getAllDramasCached()` **tanpa `try/catch`** saat prerender → satu gangguan Supabase saat build
-menjatuhkan SELURUH deployment. Bandingkan [app/sitemap.ts:29](./app/sitemap.ts#L29) dan
-`generateStaticParams` di [app/drama/[id]/page.tsx:31](./app/drama/[id]/page.tsx#L31) yang sengaja
-tahan gagal — terbukti di log: keduanya cuma mencetak peringatan lalu build lanjut.
+`app/page.tsx` · `app/beranda/page.tsx` · `app/discover/page.tsx` · `app/shorts/page.tsx` dulu
+memanggil `getAllDramasCached()` **tanpa `try/catch`** saat prerender → satu gangguan Supabase saat
+build menjatuhkan SELURUH deployment. Sekarang keempatnya memakai
+`getAllDramasCachedSafe()` (lihat [lib/dramas.ts](./lib/dramas.ts), tepat sesudah
+`getAllDramasCached`): kalau katalog tak terjangkau, jatuh ke `data/dramas.json` supaya halaman tetap
+terisi — bukan kosong, dan bukan menjatuhkan build.
+
+Perbaikan ditaruh di lapisan data (satu fungsi), bukan ditambal di empat halaman.
+**Jalur admin/tulis/koin sengaja TIDAK diubah** — di sana kegagalan harus tetap melempar error, jangan
+disamarkan jadi "katalog kosong".
+
+*Bukti (skenario asli diulang):* build dengan URL baru + kunci lama — yang tadinya
+`Export encountered an error on /beranda/page, exiting the build` — kini **exit 0**, mencetak
+`[dramas] katalog tak terjangkau, pakai berkas lokal: ... 401` (error tetap terlihat, tidak ditelan)
+dan menghasilkan 21/21 halaman. Jalur normal tetap utuh: **63/63** halaman, 42 judul dari Supabase,
+tanpa peringatan fallback. `tsc --noEmit` exit 0.
 
 ### Sisa pekerjaan
 

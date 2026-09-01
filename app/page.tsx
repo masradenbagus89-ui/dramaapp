@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getAllDramasCached } from "@/lib/dramas";
+import { getAllDramasCachedSafe } from "@/lib/dramas";
 import { featuredHeroSlides } from "@/lib/hero-teaser";
 import RedirectIfAuthed from "@/app/components/RedirectIfAuthed";
 import LandingHero from "@/app/components/LandingHero";
@@ -57,7 +57,7 @@ const FITUR = [
 ] as const;
 
 export default async function LandingPage() {
-  const dramas = await getAllDramasCached();
+  const dramas = await getAllDramasCachedSafe();
   const heroDramas = dramas.slice(0, 6);
   const heroSlides = featuredHeroSlides(dramas);
 

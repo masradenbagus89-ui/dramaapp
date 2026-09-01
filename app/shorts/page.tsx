@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getAllDramasCached } from "@/lib/dramas";
+import { getAllDramasCachedSafe } from "@/lib/dramas";
 import { isMovie } from "@/lib/types";
 import Poster from "@/app/components/Poster";
 import { Card } from "@/components/ui/card";
@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 };
 
 export default async function ShortsPage() {
-  const trending = (await getAllDramasCached()).slice(0, 6);
+  const trending = (await getAllDramasCachedSafe()).slice(0, 6);
 
   return (
     <div className="mx-auto max-w-5xl px-4 pb-10 pt-6 md:px-6">

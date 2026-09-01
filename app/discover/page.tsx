@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
-import { getAllDramasCached } from "@/lib/dramas";
+import { getAllDramasCachedSafe } from "@/lib/dramas";
 import { featuredHeroSlides } from "@/lib/hero-teaser";
 import { getPlaylyVideosPublik } from "@/lib/playly-publik";
 import DramaBrowser from "../components/DramaBrowser";
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 };
 
 export default async function DiscoverPage() {
-  const dramas = await getAllDramasCached();
+  const dramas = await getAllDramasCachedSafe();
   const slides = featuredHeroSlides(dramas);
 
   // Video Playly milik akun mitra kita, tampil OTOMATIS (tak perlu dikaitkan

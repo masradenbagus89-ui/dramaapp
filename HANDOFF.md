@@ -78,9 +78,12 @@ tanpa peringatan fallback. `tsc --noEmit` exit 0.
 - ✅ `git push dramaku main` — 8 commit (`3dad2e8`..`5f7cac5`) terkirim. Ketiga repo selaras di
   `5f7cac5`, diverifikasi lewat `gh api` (langsung ke GitHub, bukan cache lokal), sisa 0 commit.
 - ✅ Kang Dedi sudah dikabari; project lama `iicrzdnmcpontfytfypi` boleh dimatikan.
-- ✅ Notifikasi `Deployment Failures` di Vercel ternyata **sudah aktif sejak awal** (Email + Web) —
-  jadi 7 kegagalan kemarin memang terkirim, hanya tidak terbaca. Push notification masih mati;
-  itu satu-satunya saluran yang sulit diabaikan (Settings → My Notifications → Push → Subscribe Device).
+- ✅ Notifikasi `Deployment Failures` di Vercel: **aktif di ketiga saluran (Push + Email + Web)**.
+  Email & Web ternyata sudah menyala sejak awal — 7 kegagalan kemarin memang terkirim, hanya tidak
+  terbaca. Push disubscribe 2026-09-01 karena itu satu-satunya saluran yang sulit diabaikan.
+  `Deployment Ready` sengaja Push saja (tanpa Email/Web) supaya notifikasi sukses tidak menenggelamkan
+  yang gagal. Letaknya: team switcher → Settings (sidebar) → Account → My Notifications
+  (`vercel.com/<team>/~/settings/notifications`) — BUKAN di menu foto profil.
 - ⚠️ **JANGAN jalankan `scripts/sinkron_selisih_dramaapp.mjs` lagi** — arahnya lama→baru, sekarang
   akan menimpa data penonton yang lebih baru dengan data lama.
 

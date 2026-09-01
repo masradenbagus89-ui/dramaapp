@@ -73,12 +73,32 @@ disamarkan jadi "katalog kosong".
 dan menghasilkan 21/21 halaman. Jalur normal tetap utuh: **63/63** halaman, 42 judul dari Supabase,
 tanpa peringatan fallback. `tsc --noEmit` exit 0.
 
-### Sisa pekerjaan
+### Sisa pekerjaan — SEMUA SELESAI
 
-- ⬜ `git push dramaku main` — masih tertahan kredensial kedaluwarsa (lihat seksi di bawah).
-- ⬜ Kabari Kang Dedi bahwa DramaApp sudah pindah, project lama `iicrzdnmcpontfytfypi` boleh dimatikan.
+- ✅ `git push dramaku main` — 8 commit (`3dad2e8`..`5f7cac5`) terkirim. Ketiga repo selaras di
+  `5f7cac5`, diverifikasi lewat `gh api` (langsung ke GitHub, bukan cache lokal), sisa 0 commit.
+- ✅ Kang Dedi sudah dikabari; project lama `iicrzdnmcpontfytfypi` boleh dimatikan.
+- ✅ Notifikasi `Deployment Failures` di Vercel ternyata **sudah aktif sejak awal** (Email + Web) —
+  jadi 7 kegagalan kemarin memang terkirim, hanya tidak terbaca. Push notification masih mati;
+  itu satu-satunya saluran yang sulit diabaikan (Settings → My Notifications → Push → Subscribe Device).
 - ⚠️ **JANGAN jalankan `scripts/sinkron_selisih_dramaapp.mjs` lagi** — arahnya lama→baru, sekarang
   akan menimpa data penonton yang lebih baru dengan data lama.
+
+### Kredensial GitHub untuk repo `dramaku` — sudah beres, begini cara memperbaikinya lagi
+
+Gejala kemarin: `git push dramaku main` menggantung lalu gagal
+`Invalid username or token. Password authentication is not supported`.
+Penyebab: tidak ada kredensial GitHub tersimpan sama sekali di PC ini.
+
+**JEBAKAN yang memakan satu putaran:** `gh auth login` saja **TIDAK CUKUP**. Pertanyaan
+*"Authenticate Git with your GitHub credentials?"* harus dijawab **Yes**; kalau terlewat, `gh auth status`
+tampak sehat tapi `git push` tetap ditolak — karena Git belum tahu soal login itu.
+Perbaikannya satu perintah tanpa dialog: **`gh auth setup-git`** (memasang
+`credential.https://github.com.helper` ke gitconfig global). Sesudah itu `git push dramaku main` jalan.
+
+*Cara memastikan push benar-benar mendarat* (jangan percaya pesan "berhasil" saja):
+`gh api repos/ojokesusu/dramaku/commits/main --jq '.sha[0:7]'` — membaca langsung dari GitHub,
+tidak terpengaruh cache `git fetch` yang bisa basi.
 
 ---
 

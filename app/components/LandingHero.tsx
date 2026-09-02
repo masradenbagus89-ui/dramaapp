@@ -75,7 +75,11 @@ export default function LandingHero({ dramas }: { dramas: Drama[] }) {
         />
       </div>
 
-      {/* Label judul yang sedang diputar; menuntun pengunjung baru ke daftar. */}
+      {/* Label judul yang sedang diputar; menuntun pengunjung baru ke daftar.
+          left-4 md:left-6 di bawah ini jadi PATOKAN garis kiri seluruh landing:
+          header & container hero di app/page.tsx memakai px-4 md:px-6 yang sama
+          persis supaya logo · judul · label ini sejajar. Ubah angkanya di sini →
+          ubah juga di sana, kalau tidak kesejajarannya putus tanpa error apa pun. */}
       <Link
         href="/daftar"
         className="absolute bottom-4 left-4 z-20 inline-flex max-w-[70%] items-center gap-2 rounded-full border border-white/20 bg-black/50 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur transition-colors hover:border-amber-400 hover:text-amber-300 md:bottom-6 md:left-6"

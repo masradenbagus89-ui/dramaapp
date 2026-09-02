@@ -13,6 +13,35 @@ kuota Vercel aman. **Migrasi database BELUM tuntas** — datanya sudah pindah, t
 masih terkunci; rinciannya di bagian KOREKSI di bawah. **Jangan ganti env Supabase di Vercel dulu
 — situs akan mati.**
 
+## 📐 2026-09-02 (lanjutan) — Satu garis kiri: logo · judul hero · label film
+
+Owner menilai hasil putaran pertama "masih kurang" — judul memang sudah kiri, tapi **tidak sejajar**
+dengan label judul film di pojok kiri-bawah hero. Owner memilih opsi "semua ikut ke tepi kiri".
+
+**Akar masalahnya bukan kurang geser, tapi DUA SISTEM POSISI yang berbeda:**
+label film memakai `left-4 md:left-6` (jarak TETAP dari tepi layar), sedangkan header & hero memakai
+`mx-auto max-w-7xl` (isi dibatasi 1280px lalu dipusatkan → jaraknya dari tepi IKUT BERUBAH mengikuti
+lebar layar; di layar 1583px jadi ~175px). Dua aturan berbeda tak akan pernah bertemu.
+
+Perbaikan — buang pembatas lebar di dua tempat (`app/page.tsx`):
+- baris ~72 header: `mx-auto flex h-16 max-w-7xl … px-4 md:px-6` → `flex h-16 … px-4 md:px-6`
+- baris ~117 container hero: `mx-auto … max-w-7xl` dihapus, sisanya tetap
+- `LandingHero.tsx` **tidak diubah kelasnya** — `left-4 md:left-6` sengaja dijadikan PATOKAN
+
+**⚠️ KONTRAK LINTAS-BERKAS (kerusakan senyap kalau dilanggar):** `px-4 md:px-6` di `app/page.tsx`
+WAJIB sama angkanya dengan `left-4 md:left-6` di `app/components/LandingHero.tsx`. Ubah satu sisi
+saja → kesejajaran putus **tanpa error apa pun**, tak ada yang melapor. Peringatan sudah ditulis
+sebagai komentar di KEDUA berkas.
+
+**Bukti sejajar (dibaca dari CSS hasil build, bukan asumsi):**
+`.px-4{padding-inline:calc(var(--spacing) * 4)}` vs `.left-4{left:calc(var(--spacing) * 4)}` ·
+`.md\:px-6{…* 6}` vs `.md\:left-6{…* 6}` · `--spacing: .25rem` → HP 16px, desktop 24px, sama untuk
+ketiganya. Karena header & hero kini selebar layar penuh, tepi kiri isi = 0 + padding itu.
+
+Sengaja TIDAK diubah: section fitur & footer (`app/page.tsx` ~176, ~205, ~370) tetap
+`mx-auto max-w-7xl` — hero menempel tepi itu gaya poster, tapi paragraf panjang selebar layar penuh
+capai dibaca.
+
 ## 🎨 2026-09-02 — Judul hero landing dipindah ke KIRI (gaya idlixku.com)
 
 Permintaan owner: judul besar di halaman depan yang tadinya rata tengah dibuat rata kiri seperti

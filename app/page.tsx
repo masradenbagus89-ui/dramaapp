@@ -64,9 +64,12 @@ export default async function LandingPage() {
   return (
     <div className="min-h-screen bg-black">
       <RedirectIfAuthed />
-      {/* Header */}
+      {/* Header — sengaja TANPA max-w/mx-auto (beda dari section di bawah): padding
+          px-4 md:px-6 harus sama persis dengan left-4 md:left-6 milik label judul
+          film di LandingHero, supaya logo · judul hero · label film jatuh di SATU
+          garis kiri yang sama di semua ukuran layar. */}
       <header className="relative z-20 border-b border-zinc-900">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-6">
+        <div className="flex h-16 items-center justify-between px-4 md:px-6">
           <Link href="/" className="flex items-center gap-2">
             <div className="flex h-9 w-9 items-center justify-center rounded-md bg-amber-400 font-serif text-base font-bold text-black">
               D
@@ -109,9 +112,10 @@ export default async function LandingPage() {
         {/* Decorative film strip pattern */}
         <FilmStripPattern />
 
-        {/* Rata KIRI (bukan tengah): max-w-7xl + px sama persis dengan header di
-            atas, jadi tepi kiri judul sejajar dengan logo "DramaKu". */}
-        <div className="relative mx-auto flex min-h-[70svh] max-w-7xl flex-col items-start justify-center gap-6 px-4 py-16 text-left md:px-6 md:py-20">
+        {/* Rata KIRI menempel tepi: px-4 md:px-6 = left-4 md:left-6 label film di
+            LandingHero. Angkanya WAJIB sama — kalau salah satu diubah, kesejajaran
+            logo/judul/label putus. */}
+        <div className="relative flex min-h-[70svh] flex-col items-start justify-center gap-6 px-4 py-16 text-left md:px-6 md:py-20">
           <Badge className="rounded-full border border-amber-400/40 bg-amber-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-amber-300">
             Drama China Pendek · Bahasa Indonesia
           </Badge>

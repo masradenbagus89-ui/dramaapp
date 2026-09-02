@@ -54,7 +54,19 @@ menambahkannya (`lib/store.ts` + `app/api/admin/ads/route.ts`). Menunggu owner.
 
 Rincian lengkap: [docs/lintasai/rencana/2026-09-02-banner-iklan-pas-badan.md](./docs/lintasai/rencana/2026-09-02-banner-iklan-pas-badan.md).
 
-**⏸️ BELUM di-commit & BELUM di-push** — menunggu izin owner (push = tombol rilis).
+**✅ SUDAH TAYANG DI PRODUKSI.** Commit `48a8516`, dual push `origin` + `dramaku` sukses; ketiganya
+terverifikasi di `48a8516` lewat `gh api` (baca langsung dari GitHub, bukan percaya pesan "berhasil").
+
+*Bukti tayang (bukan asumsi):* chunk JS produksi `/beranda` disisir sebelum & sesudah deploy —
+penanda kode LAMA `scale-125 object-cover blur-2xl` **hilang** dan penanda kode BARU
+`w-fit max-w-full overflow-hidden rounded-2xl` **muncul** pada percobaan ke-3 (±40 detik sesudah push).
+Iklan dirender di browser (AdBanner fetch `/api/ads` saat mount), jadi HTML halaman TIDAK memuat
+markup iklan — memeriksa HTML saja tidak sah sebagai bukti, harus lewat chunk JS-nya.
+Cek sehat: `/` `/beranda` `/discover` `/shorts` `/playly` `/profile` semua **200**.
+
+**Setelan ukuran:** owner memilih `MAX_CARD_H = 288` (gambar 2:1 → 552×290 di desktop). Mau
+diperbesar/diperkecil nanti? Cukup ubah **satu konstanta** itu di `AdCreative.tsx`, tidak perlu
+menyentuh yang lain.
 
 ## 📐 2026-09-02 (lanjutan) — Satu garis kiri: logo · judul hero · label film
 

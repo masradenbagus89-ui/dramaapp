@@ -28,12 +28,23 @@ idlixku.com. Semua di **`app/page.tsx`**, hanya class Tailwind (tampilan), tidak
 `Stat` (`app/page.tsx` ~377) sengaja TIDAK diubah — ia tidak punya `text-center` sendiri, jadi ikut
 container. Hanya dipakai di blok hero ini, tak ada pemanggil lain yang tersenggol.
 
-**Bukti:** `npx tsc --noEmit` exit 0 · `npm run build` exit 0 · dev server `GET / 200`, HTML yang
-benar-benar terkirim berisi `max-w-7xl … items-start … text-left` dan 2× `justify-start`. Sisa
+**Bukti lokal:** `npx tsc --noEmit` exit 0 · `npm run build` exit 0 · dev server `GET / 200`, HTML
+yang benar-benar terkirim berisi `max-w-7xl … items-start … text-left` dan 2× `justify-start`. Sisa
 `justify-center` di HTML semuanya milik komponen `Button` (memusatkan teks DI DALAM tombol) dan
 logo bulat header — bukan pemusatan blok hero.
 
-**BELUM di-commit & BELUM di-push** (menunggu izin owner, §5.5 — push = tombol rilis).
+**✅ SUDAH TAYANG DI PRODUKSI.** Commit `5aa8344`, dual push `origin` + `dramaku` sukses, keduanya
+terverifikasi di `5aa8344` (bukan cuma pesan "berhasil" — `git fetch` ulang lalu bandingkan hash).
+HTML `https://dramaapp.vercel.app/` berisi `max-w-7xl … items-start … text-left`, 2× `justify-start`,
+dan `ellipse_at_left`. Cek sehat: `/` `/beranda` `/discover` `/shorts` semua **200**.
+
+**⚠️ Remote `official` (`projectraden/backup-dramaapp`) SUDAH MATI** — `git fetch official` balas
+`Repository not found`. Dual push kini efektif hanya 2 repo (`origin` + `dramaku`), sesuai
+`AGENTS.local.md`. Kalau owner masih mau cadangan ketiga, repo-nya perlu dibuat/diberi akses ulang.
+
+*Catatan kecil:* `next-env.d.ts` berubah sendiri saat `npm run dev` dijalankan
+(`.next/types/…` → `.next/dev/types/…`). Berkas auto-generated, **sengaja tidak ikut di-commit**;
+Next.js menulisnya ulang sesuai mode yang terakhir dipakai.
 
 ## 🎉 2026-09-01 — MIGRASI SUPABASE SELESAI & TERVERIFIKASI TAYANG
 

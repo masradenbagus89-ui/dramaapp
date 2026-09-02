@@ -13,7 +13,39 @@ kuota Vercel aman. **Migrasi database BELUM tuntas** — datanya sudah pindah, t
 masih terkunci; rinciannya di bagian KOREKSI di bawah. **Jangan ganti env Supabase di Vercel dulu
 — situs akan mati.**
 
-## 🖼️ 2026-09-02 (terbaru) — Banner IKLAN: kotak "pas-badan" mengikuti bentuk gambar
+## 🚧 2026-09-02 (terbaru) — Halaman 404 milik DramaKu (`app/not-found.tsx`)
+
+**Bukan perbaikan bug — situs TIDAK pernah rusak.** Owner melaporkan layar 404 dan mengira produksi
+bermasalah. Ditelusuri: seluruh alamat sehat (7 menu navbar + `/history` `/login` `/daftar`
+`/lupa-password` `/video-eksternal` + 2 sub-halaman admin semuanya **200**, dan **ke-42 halaman detail
+drama balas 200** — nol poster yang menjerumuskan ke 404). Penyebabnya: owner mengklik **tautan berkas
+kode dari chat** (mis. `app/components/AdCreative.tsx`) sementara fokusnya di browser → browser
+mengarangnya jadi `https://dramaapp.vercel.app/app/components/AdCreative.tsx` → 404 yang wajar.
+
+⚠️ **Untuk AI sesi berikutnya:** owner minta nama berkas ditulis **teks polos**, JANGAN sebagai tautan
+markdown yang bisa diklik. Ini menimpa anjuran harness VSCode.
+
+**Yang dikerjakan (1 berkas baru, `app/not-found.tsx`):** proyek ini ternyata belum pernah punya
+halaman 404 sendiri, jadi yang tampil adalah bawaan Next.js yang memaksa **latar putih + teks Inggris**
+— asing di situs bertema gelap berbahasa Indonesia, dan tanpa jalan pulang penonton yang nyasar
+cenderung menutup tab. Sekarang: tema gelap, "404" emas (`title-gold`), judul "Halaman tidak
+ditemukan", penjelasan bahasa Indonesia, tombol **Kembali ke Beranda** + **Jelajahi Drama**.
+Navbar/bottom nav tidak dipasang ulang — sudah dari root layout.
+
+Gaya tombol sengaja MENYALIN pola yang sudah ada di `app/page.tsx` (amber `rounded-full` +
+outline `border-zinc-600`), bukan bikin gaya baru.
+
+**Diperiksa sebelum menulis:** kotak pencarian di TopNav ternyata `hidden … md:flex` = **tidak ada di
+HP**, jadi halaman ini sengaja TIDAK menyuruh penonton memakainya.
+
+**Bukti:** `tsc` 0 error · 390 tes lulus · `next build` sukses, rute `/_not-found` terbentuk ·
+uji otomatis 2 jalur (alamat tanpa rute, dan drama yang memanggil `notFound()`) × 2 ukuran layar →
+**0 dari 32 cek gagal**. Yang dikunci: **status HTTP tetap 404** (bukan 200 — kalau jadi 200, Google
+menganggapnya halaman sah lalu mengindeksnya, istilahnya *soft 404*) · latar `rgb(0,0,0)` ·
+teks Inggris bawaan hilang · tombol menunjuk `/beranda` & `/discover` · tak bisa digeser samping.
+`robots: { index: false, follow: true }` dipasang supaya halaman error tidak masuk hasil pencarian.
+
+## 🖼️ 2026-09-02 — Banner IKLAN: kotak "pas-badan" mengikuti bentuk gambar
 
 Owner mengirim screenshot slot IKLAN di `/beranda`: gambar iklan tampil kecil di tengah, kiri-kanan
 lebar dan buram. Minta "sesuai tempatnya, jangan melebihi batas, enak dilihat dan presisi".

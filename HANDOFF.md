@@ -64,9 +64,26 @@ Iklan dirender di browser (AdBanner fetch `/api/ads` saat mount), jadi HTML hala
 markup iklan — memeriksa HTML saja tidak sah sebagai bukti, harus lewat chunk JS-nya.
 Cek sehat: `/` `/beranda` `/discover` `/shorts` `/playly` `/profile` semua **200**.
 
-**Setelan ukuran:** owner memilih `MAX_CARD_H = 288` (gambar 2:1 → 552×290 di desktop). Mau
-diperbesar/diperkecil nanti? Cukup ubah **satu konstanta** itu di `AdCreative.tsx`, tidak perlu
-menyentuh yang lain.
+**Setelan ukuran — DISETEL ULANG hari yang sama.** Rilis pertama `MAX_CARD_H = 288`; owner melihat di
+produksi dan menilai kelewat besar (578×290, 47% lebar slot). Sekarang **`MAX_CARD_H = 160`** → kartu
+**322×162**, 26% lebar slot.
+
+*Kenapa 160:* sebelum banner ini diubah, kartu lama `sm:h-40` = tinggi 160 px dan gambar dirender
+**320×160** — ukuran yang sudah lama dilihat owner tanpa keluhan; yang dikeluhkan dulu adalah smear
+blur di sekelilingnya. Jadi 160 mengembalikan ukuran familiar, kini terisi penuh.
+
+*Diukur dulu sebelum diubah:* iklan yang benar-benar terpasang diambil dari `GET /api/ads` produksi →
+`https://i.imgur.com/a6CRqjj.jpeg`, **1774×887, rasio tepat 2,000**. Ini WAJIB dicek lebih dulu:
+kalau rasionya ≥ 2,4 ia masuk jalur landscape dan `MAX_CARD_H` **tidak berpengaruh sama sekali** —
+mengubah angkanya jadi sia-sia. Verifikasi ulang di 8 titik (3 slot `/beranda` + `/drama/[id]`, di
+1577 px & 390 px): **0 masalah**.
+
+Mau diubah lagi? Cukup **satu konstanta** di `AdCreative.tsx`. ⚠️ Tapi cek dulu rasio gambar iklan yang
+sedang terpasang — kalau ≥ 2,4, konstanta itu bukan tombolnya.
+
+*Kosmetik, belum diubah:* di ukuran 160 badge "IKLAN" (`absolute left-2 top-2`) menutupi sedikit tulisan
+creative di pojok kiri-atas. Badge wajib ada sebagai penanda konten sponsor; kalau mengganggu,
+pilihannya geser posisi atau perkecil badge-nya.
 
 ## 📐 2026-09-02 (lanjutan) — Satu garis kiri: logo · judul hero · label film
 

@@ -23,7 +23,23 @@ Ditolak sengaja: `object-cover`/crop. Iklan penuh teks & tombol CTA — memotong
 **1. `app/components/AdCreative.tsx`** — inti perbaikan.
 - Cabang landscape (rasio ≥ 2,4) **dipertahankan** → banner 1200×300 tetap melebar penuh, tanpa regresi.
 - Cabang lain: dua lapis blur + overlay `bg-black/30` **dibuang**, diganti satu kotak yang bentuknya = bentuk gambar (`aspectRatio` + lebar definit `MAX_CARD_H × rasio`, `maxWidth: 100%`).
-- Konstanta bernama: `MAX_CARD_H` (288 px — **satu-satunya tombol** untuk memperbesar/memperkecil iklan non-landscape), `FALLBACK_RATIO` (4), `MIN_RATIO` (0,6).
+- Konstanta bernama: `MAX_CARD_H` (**satu-satunya tombol** untuk memperbesar/memperkecil iklan non-landscape), `FALLBACK_RATIO` (4), `MIN_RATIO` (0,6).
+
+### Penyetelan ukuran (putaran kedua, hari yang sama)
+
+Rilis pertama memakai `MAX_CARD_H = 288`. Owner melihatnya di produksi dan menilai **kelewat besar** (kartu 578×290, memakan 47% lebar slot).
+
+**Diukur dulu sebelum diubah** — iklan yang benar-benar terpasang diambil dari `GET /api/ads` produksi: `https://i.imgur.com/a6CRqjj.jpeg`, **1774 × 887 px, rasio tepat 2,000 : 1**. Penting karena kalau rasionya ≥ 2,4 ia masuk jalur landscape dan `MAX_CARD_H` **tidak berpengaruh sama sekali** — mengubah angka itu jadi sia-sia. Ternyata 2,0 < 2,4, jadi tombolnya memang benar.
+
+Lima kandidat dipotret di halaman sungguhan memakai gambar asli itu (288 / 200 / 176 / 160 / 144), lalu owner memilih **`MAX_CARD_H = 160`**.
+
+Alasan 160 direkomendasikan: sebelum banner ini diubah, cabang lama memakai `sm:h-40` = tinggi 160 px dengan gambar `h-full w-auto` → gambar dirender **320 × 160**. Owner sudah lama melihat ukuran itu dan tidak pernah mengeluhkannya; yang dikeluhkan dulu adalah smear blur di sekelilingnya. Jadi 160 mengembalikan ukuran yang familiar, kini terisi penuh.
+
+Hasil: kartu **322 × 162** (gambar 320×160 + border 1 px), 26% lebar slot. Diverifikasi di 8 titik (3 slot `/beranda` + 1 `/drama/[id]`, masing-masing di 1577 px dan 390 px): **0 masalah** — `ukuranSesuai=YA`, `isiPenuh=YA`, `dalamBatas=YA`, `blurLatar=0`.
+
+**Catatan kosmetik:** di ukuran ini badge "IKLAN" (`absolute left-2 top-2` di `AdBanner`) menutupi sedikit tulisan creative di pojok kiri-atas. Badge wajib ada sebagai penanda konten sponsor. Belum diubah — kalau mengganggu, pilihannya geser posisi badge atau perkecil ukurannya.
+
+**Konsekuensi untuk bentuk lain** (belum ada iklannya, dicatat supaya tidak kaget): iklan potret jadi kecil pada 160 — mis. rasio 0,8 → kartu 128×160. Obatnya sama: naikkan `MAX_CARD_H`.
 - Rasio kini disimpan **bersama `src`-nya** (`{src, ratio}`), bukan angka telanjang — supaya di pratinjau admin, saat URL diketik ulang, bentuk gambar LAMA tidak sempat dipakai untuk gambar BARU.
 
 **2. `app/components/AdBanner.tsx`** — bingkai ikut menyusut. Cabang house-ad bergambar kini 2 elemen; `shell` (raw/adsense/promo) memakai `cn()`.
@@ -51,7 +67,7 @@ Sebabnya: [BerandaRows.tsx:226](../../../app/components/BerandaRows.tsx#L226) me
 3 bentuk gambar (1200×628 = kasus owner · 1200×300 landscape · 600×750 potret) × 2 layar (1577 px & 390 px) × semua slot iklan di `/beranda` (ada 3) dan `/drama/[id]`:
 
 - **`/beranda`: 0 masalah dari 24 pemeriksaan** — semua `isiPenuh=YA`, `dalamBatas=YA`, `blurLatar=0`, `geserSamping=TIDAK`.
-- Ukuran nyata: 2:1 → 552×290 (desktop) / 358×188 (HP) · 4:1 → **1202×302, tetap melebar penuh** · potret → 232×290 (terbatas rapi, tidak jadi kotak raksasa).
+- Ukuran nyata pada `MAX_CARD_H` awal (288): 2:1 → 552×290 (desktop) / 358×188 (HP) · 4:1 → **1202×302, tetap melebar penuh** · potret → 232×290. Angka final sesudah penyetelan ada di seksi di atas.
 - Keempat penanda sudut terlihat di semua kasus → gambar tidak pernah terpotong.
 
 ## Temuan sampingan — BUKAN dari perubahan ini, belum diperbaiki

@@ -22,9 +22,13 @@ const WIDE_THRESHOLD = 2.4;
 /**
  * Tinggi maksimum kartu di layar lebar (px). Lebar kotak = tinggi x rasio,
  * jadi INI satu-satunya tombol untuk memperbesar/memperkecil iklan non-landscape.
- * Contoh: gambar 1,9:1 → kotak ±547x288.
+ * Contoh: iklan yang sedang terpasang 1774x887 (rasio 2,0) → kotak 320x160.
+ *
+ * Nilai 160 dipilih owner 2026-09-02: sama persis dengan tinggi kartu sebelum
+ * banner ini diubah (`sm:h-40`), jadi ukuran gambarnya kembali familiar —
+ * bedanya kini mengisi penuh, tanpa latar blur.
  */
-const MAX_CARD_H = 288;
+const MAX_CARD_H = 160;
 
 /**
  * Bentuk cadangan selama rasio gambar belum terukur (rasio baru diketahui

@@ -99,16 +99,19 @@ export default async function LandingPage() {
 
         {/* Lapisan gelap SENGAJA TIPIS: teks tetap terbaca, tapi video tetap
             cerah & gerakannya jelas terlihat (gelap berat = hero terasa mati).
-            Gelap dipusatkan di belakang teks (tengah & bawah), tepi dibiarkan
-            terang supaya cuplikannya jadi bintang. */}
+            Gelap dipusatkan di belakang teks (KIRI & bawah — ikut teks yang kini
+            rata kiri), tepi kanan dibiarkan terang supaya cuplikannya jadi
+            bintang. */}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/15 to-black/30" />
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.45),transparent_68%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_left,rgba(0,0,0,0.45),transparent_68%)]" />
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(251,191,36,0.15),transparent_60%)]" />
 
         {/* Decorative film strip pattern */}
         <FilmStripPattern />
 
-        <div className="relative mx-auto flex min-h-[70svh] max-w-3xl flex-col items-center justify-center gap-6 px-4 py-16 text-center md:px-6 md:py-20">
+        {/* Rata KIRI (bukan tengah): max-w-7xl + px sama persis dengan header di
+            atas, jadi tepi kiri judul sejajar dengan logo "DramaKu". */}
+        <div className="relative mx-auto flex min-h-[70svh] max-w-7xl flex-col items-start justify-center gap-6 px-4 py-16 text-left md:px-6 md:py-20">
           <Badge className="rounded-full border border-amber-400/40 bg-amber-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-amber-300">
             Drama China Pendek · Bahasa Indonesia
           </Badge>
@@ -119,7 +122,7 @@ export default async function LandingPage() {
           <p className="max-w-xl text-base text-zinc-100 drop-shadow-[0_1px_8px_rgba(0,0,0,0.8)] md:text-lg">
             DramaKu adalah platform menonton drama China pendek. Daftar gratis, login, lalu nikmati ratusan judul drama tanpa langganan.
           </p>
-          <div className="flex flex-wrap justify-center gap-3">
+          <div className="flex flex-wrap justify-start gap-3">
             <Button
               asChild
               size="lg"
@@ -136,7 +139,7 @@ export default async function LandingPage() {
               <Link href="/login">Sudah punya akun? Masuk</Link>
             </Button>
           </div>
-          <div className="flex flex-wrap justify-center gap-6">
+          <div className="flex flex-wrap justify-start gap-6">
             <Stat label="Drama tersedia" value={String(dramas.length)} />
             <Stat label="Kategori" value="7" />
             <Stat label="Biaya" value="Gratis" />

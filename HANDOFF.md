@@ -13,6 +13,28 @@ kuota Vercel aman. **Migrasi database BELUM tuntas** — datanya sudah pindah, t
 masih terkunci; rinciannya di bagian KOREKSI di bawah. **Jangan ganti env Supabase di Vercel dulu
 — situs akan mati.**
 
+## 🎨 2026-09-02 — Judul hero landing dipindah ke KIRI (gaya idlixku.com)
+
+Permintaan owner: judul besar di halaman depan yang tadinya rata tengah dibuat rata kiri seperti
+idlixku.com. Semua di **`app/page.tsx`**, hanya class Tailwind (tampilan), tidak menyentuh logika:
+
+- baris ~113 container hero: `max-w-3xl items-center text-center` → `max-w-7xl items-start text-left`
+  (`max-w-7xl` + `px-4 md:px-6` = sama persis dengan container header, jadi tepi kiri judul sejajar
+  dengan logo "DramaKu")
+- baris ~124 (tombol) & ~141 (statistik 42/7/Gratis): `justify-center` → `justify-start`
+- baris ~105 lapisan gelap: `radial-gradient(ellipse_at_center …)` → `ellipse_at_left`, supaya
+  bagian gelapnya ikut pindah ke kiri menopang teks; huruf emas di atas video terang susah dibaca
+
+`Stat` (`app/page.tsx` ~377) sengaja TIDAK diubah — ia tidak punya `text-center` sendiri, jadi ikut
+container. Hanya dipakai di blok hero ini, tak ada pemanggil lain yang tersenggol.
+
+**Bukti:** `npx tsc --noEmit` exit 0 · `npm run build` exit 0 · dev server `GET / 200`, HTML yang
+benar-benar terkirim berisi `max-w-7xl … items-start … text-left` dan 2× `justify-start`. Sisa
+`justify-center` di HTML semuanya milik komponen `Button` (memusatkan teks DI DALAM tombol) dan
+logo bulat header — bukan pemusatan blok hero.
+
+**BELUM di-commit & BELUM di-push** (menunggu izin owner, §5.5 — push = tombol rilis).
+
 ## 🎉 2026-09-01 — MIGRASI SUPABASE SELESAI & TERVERIFIKASI TAYANG
 
 Produksi resmi membaca project BARU `nvblmpkwyzbpdbshyvzw` (schema `dramaapp`).

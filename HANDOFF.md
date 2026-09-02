@@ -13,6 +13,49 @@ kuota Vercel aman. **Migrasi database BELUM tuntas** — datanya sudah pindah, t
 masih terkunci; rinciannya di bagian KOREKSI di bawah. **Jangan ganti env Supabase di Vercel dulu
 — situs akan mati.**
 
+## 🖼️ 2026-09-02 (terbaru) — Banner IKLAN: kotak "pas-badan" mengikuti bentuk gambar
+
+Owner mengirim screenshot slot IKLAN di `/beranda`: gambar iklan tampil kecil di tengah, kiri-kanan
+lebar dan buram. Minta "sesuai tempatnya, jangan melebihi batas, enak dilihat dan presisi".
+
+**Akar:** `AdCreative.tsx` memakai ambang `WIDE_THRESHOLD = 2.4`. Gambar owner rasionya ±1,9:1 → di
+BAWAH ambang → jatuh ke "kartu sinematik" dengan tinggi **dipaku 160 px**, gambar `h-full w-auto` →
+lebarnya jadi 160 × 1,9 ≈ **307 px di dalam slot 1232 px**. Sisa ±75% ditutup gambar yang sama
+di-blur (`scale-125 object-cover blur-2xl`). Blur itu penutup gejala, bukan solusi.
+
+Owner memilih (dari 3 opsi) **"kotak pas-badan"**: kotak menyusut mengikuti bentuk gambar, gambar
+mengisi 100% kotaknya, nol blur. Logo TIDAK disentuh (sudah dicek, rasionya memang aman).
+
+Tiga berkas: `app/components/AdCreative.tsx` (inti — blur dibuang, kotak pakai `aspectRatio` + lebar
+`MAX_CARD_H × rasio`) · `app/components/AdBanner.tsx` (bingkai ikut menyusut) ·
+`app/components/SponsorAdsManager.tsx` (pratinjau admin + 2 teks petunjuk yang sudah tidak benar lagi).
+
+**⚠️ KONTRAK yang gampang dilanggar (regresi ini SEMPAT terjadi & tertangkap uji):**
+`max-w-full` pengaman **TIDAK BOLEH** digabung satu elemen dengan `className` dari pemanggil.
+`BerandaRows.tsx:226` mengirim `max-w-7xl` — properti CSS yang SAMA (`max-width`) → tailwind-merge
+memenangkan class pemanggil, `max-w-full` hilang **tanpa error apa pun**, `w-fit` kehilangan
+pengamannya, bingkai membludak jadi 552 px di layar 390 px. Obatnya: **dua batas → dua elemen**
+(pembungkus luar = batas pemanggil, `<a>` bingkai = `w-fit max-w-full`). Sudah ditulis sebagai
+komentar di `AdBanner.tsx`.
+
+**Bukti:** `tsc --noEmit` exit 0 · **390 tes lulus** · `next build` sukses (63 halaman) · uji visual
+Playwright+Chrome, iklan palsu disuntik lewat route interception, gambar uji berpenanda sudut
+TL/TR/BL/BR untuk mendeteksi pemotongan: 3 bentuk × 2 ukuran layar × semua slot →
+**`/beranda` 0 masalah dari 24 pemeriksaan** (`isiPenuh=YA`, `dalamBatas=YA`, `blurLatar=0`,
+`geserSamping=TIDAK`). Gambar 4:1 **tetap melebar penuh** (1202×302) — tanpa regresi.
+
+**Temuan sampingan, BUKAN dari perubahan ini:** `/drama/[id]` bisa digeser ke samping
+(`scrollWidth` 1680 desktop / 1106 HP). Diuji dengan DAN tanpa iklan → angkanya **identik**, jadi
+sudah ada sebelumnya. Pelakunya `button.inline-flex shrink-0 …` (baris tombol episode). Belum diperbaiki.
+
+**Sisa opsional:** loncatan kecil saat halaman pertama dimuat masih ada (rasio baru diketahui browser
+sesudah gambar terunduh). Penghilang tuntasnya = simpan lebar/tinggi gambar ke data iklan saat admin
+menambahkannya (`lib/store.ts` + `app/api/admin/ads/route.ts`). Menunggu owner.
+
+Rincian lengkap: [docs/lintasai/rencana/2026-09-02-banner-iklan-pas-badan.md](./docs/lintasai/rencana/2026-09-02-banner-iklan-pas-badan.md).
+
+**⏸️ BELUM di-commit & BELUM di-push** — menunggu izin owner (push = tombol rilis).
+
 ## 📐 2026-09-02 (lanjutan) — Satu garis kiri: logo · judul hero · label film
 
 Owner menilai hasil putaran pertama "masih kurang" — judul memang sudah kiri, tapi **tidak sejajar**

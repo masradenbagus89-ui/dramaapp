@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import AdCreative from "./AdCreative";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 // =====================================================================
 // Banner IKLAN OTOMATIS (auto ads). Beda dari RewardedAdModal (iklan koin
@@ -116,7 +117,14 @@ export default function AdBanner({
     }).catch(() => {});
   };
 
-  const shell = `relative overflow-hidden rounded-2xl border border-zinc-800 ${className}`;
+  // Bingkai selebar penuh untuk mode raw/adsense/promo — ketiganya memang harus
+  // membentang. Cabang house ad bergambar TIDAK memakai ini (lihat di bawah).
+  // cn() (tailwind-merge) supaya class dari pemanggil menimpa dengan pemenang
+  // yang pasti, bukan bergantung urutan CSS seperti pada template string.
+  const shell = cn(
+    "relative overflow-hidden rounded-2xl border border-zinc-800",
+    className,
+  );
 
   if (mode === "raw") {
     return (
@@ -155,24 +163,31 @@ export default function AdBanner({
 
   // House ad: iklan manual sponsor (kalau ada) atau promo DramaKu.
   if (ad) {
-    // Creative adaptif: landscape → edge-to-edge (gaya banner mockup); tegak/
-    // persegi → kartu sinematik. Lihat AdCreative.
+    // Dua batas lebar yang berbeda sengaja dipisah ke DUA elemen supaya tidak
+    // saling menggusur (keduanya properti CSS yang sama, max-width):
+    //   • pembungkus luar  → batas dari pemanggil (max-w-7xl, max-w-2xl, mt-6);
+    //   • <a> bingkai      → `w-fit max-w-full`: memeluk kotak pas-badan dari
+    //     AdCreative, tapi tak pernah melewati lebar pembungkusnya.
+    // Digabung jadi satu elemen, class pemanggil menang lewat tailwind-merge,
+    // `max-w-full` hilang, dan bingkai bisa membludak keluar layar di HP.
     return (
-      <a
-        href={ad.linkUrl}
-        target="_blank"
-        rel="noopener sponsored"
-        onClick={onHouseClick}
-        className={`group block ${shell}`}
-      >
-        <AdCreative src={ad.imageUrl} alt={ad.title ?? "Iklan"} hover />
-        <Badge
-          variant="secondary"
-          className="absolute left-2 top-2 rounded bg-black/60 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-widest text-white/80 backdrop-blur-sm"
+      <div className={cn("relative", className)}>
+        <a
+          href={ad.linkUrl}
+          target="_blank"
+          rel="noopener sponsored"
+          onClick={onHouseClick}
+          className="group relative mx-auto block w-fit max-w-full overflow-hidden rounded-2xl border border-zinc-800"
         >
-          Iklan
-        </Badge>
-      </a>
+          <AdCreative src={ad.imageUrl} alt={ad.title ?? "Iklan"} hover />
+          <Badge
+            variant="secondary"
+            className="absolute left-2 top-2 rounded bg-black/60 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-widest text-white/80 backdrop-blur-sm"
+          >
+            Iklan
+          </Badge>
+        </a>
+      </div>
     );
   }
 

@@ -36,16 +36,9 @@ type SponsorAd = {
 export default function AdBanner({
   slot,
   className = "",
-  maxCreativeHeight,
 }: {
   slot?: string;
   className?: string;
-  /**
-   * Tinggi maksimum creative untuk penempatan khusus — diteruskan apa adanya ke
-   * AdCreative. Dipakai kolom iklan di samping carousel (RowWithAd). Dibiarkan
-   * kosong = ukuran default, jadi pemakai lama tidak berubah.
-   */
-  maxCreativeHeight?: number;
 }) {
   const effectiveSlot = (slot || ADSENSE_SLOT).trim();
   const mode: "raw" | "adsense" | "house" = RAW_HTML
@@ -204,12 +197,7 @@ export default function AdBanner({
           onClick={onHouseClick}
           className="group relative mx-auto block w-fit max-w-full overflow-hidden rounded-2xl border border-zinc-800"
         >
-          <AdCreative
-            src={ad.imageUrl}
-            alt={ad.title ?? "Iklan"}
-            hover
-            maxHeight={maxCreativeHeight}
-          />
+          <AdCreative src={ad.imageUrl} alt={ad.title ?? "Iklan"} hover />
           <Badge
             variant="secondary"
             className="absolute left-2 top-2 rounded bg-black/60 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-widest text-white/80 backdrop-blur-sm"

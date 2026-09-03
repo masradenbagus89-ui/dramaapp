@@ -13,7 +13,36 @@ kuota Vercel aman. **Migrasi database BELUM tuntas** — datanya sudah pindah, t
 masih terkunci; rinciannya di bagian KOREKSI di bawah. **Jangan ganti env Supabase di Vercel dulu
 — situs akan mati.**
 
-## 🧱 2026-09-03 (terbaru) — Beranda gaya Netflix: iklan PINDAH ke kanan carousel
+## 🧱 2026-09-03 (sore, TERBARU) — Iklan BALIK melintang di bawah baris (gaya IDLIX)
+
+Owner membatalkan kolom iklan di kanan carousel (dipasang pagi ini, entri di bawah). Permintaan:
+**iklan melintang di BAWAH baris film**, mengikuti tampilan idlixku.com. Alasan owner: iklan di
+samping bukan yang dia mau lihat.
+
+**Yang berubah (3 berkas):** `app/components/BerandaRows.tsx` — 2 slot iklan kini blok melintang
+sendiri (`<div className="px-4 md:px-0"><AdBanner /></div>`), satu di bawah "Trending Drama", satu
+di antara "Drama Populer" dan "Rating Tertinggi". `app/components/RowWithAd.tsx` DIHAPUS.
+Prop `maxCreativeHeight` (AdBanner) + `maxHeight` (AdCreative) ikut dibuang — tak ada pemakai lagi.
+
+**Slot iklan sekarang berdiri sendiri, tidak digandeng baris film.** Sebelumnya iklan menempel pada
+`ContentRow`, jadi kalau barisnya kosong iklannya berisiko ikut hilang. Blok melintang tidak
+bergantung data drama sama sekali.
+
+**Lebar halaman TETAP 1440** (`.shell-wide`) — kontrak `TopNav.tsx` ↔ `beranda/page.tsx` di entri
+bawah masih berlaku. Pelebaran itu dulu dibuat untuk memberi ruang kolom kanan; dibiarkan karena
+menambah jumlah poster yang terlihat. Owner boleh minta balik ke 1280 kapan saja.
+
+**❓ Belum semirip IDLIX — soal BENTUK GAMBAR, bukan kode.** Ketiga creative terpasang rasionya
+1,75–2,14 (466×218 · 1200×687 · 1774×887) → tampil sebagai kotak ±280–342 × 160 px di tengah slot,
+bukan strip panjang. IDLIX memakai banner ±8:1. `AdCreative.tsx` sudah punya jalurnya: creative
+dengan rasio ≥ 2,4 (`WIDE_THRESHOLD`) otomatis MELEBAR mengisi lebar slot. Jadi cukup unggah
+creative bentuk strip (mis. 1200×150) lewat /admin — tanpa ubah kode.
+
+**Bukti:** `tsc` 0 error · 390 tes lulus (33 berkas) · `next build` sukses · HTML beranda dev
+(localhost:3311) diperiksa: slot iklan muncul SESUDAH "Trending Drama" dan SESUDAH "Drama Populer",
+dan penanda grid kolom kanan (`--ad-rail-w`) sudah tidak ada.
+
+## 🧱 2026-09-03 (pagi, DIBATALKAN sore) — Beranda gaya Netflix: iklan PINDAH ke kanan carousel
 
 Permintaan owner: iklan yang tadinya melintang di bawah baris film dipindah jadi **kolom di kanan
 carousel**, film tetap di kiri, tinggi sejajar, tema dark, responsive.

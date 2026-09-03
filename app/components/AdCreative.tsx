@@ -47,17 +47,10 @@ export default function AdCreative({
   src,
   alt = "",
   hover = false,
-  maxHeight,
 }: {
   src: string;
   alt?: string;
   hover?: boolean;
-  /**
-   * Timpa MAX_CARD_H untuk penempatan tertentu. Dipakai kolom iklan di samping
-   * carousel (RowWithAd) yang butuh kartu setinggi satu baris poster.
-   * Dibiarkan kosong = pakai MAX_CARD_H, jadi 5 pemakai lain tidak berubah.
-   */
-  maxHeight?: number;
 }) {
   // Rasio disimpan bersama src-nya supaya saat src berganti (admin mengetik URL
   // baru di pratinjau) bentuk lama tidak sempat terpakai untuk gambar baru.
@@ -92,7 +85,6 @@ export default function AdCreative({
   }
 
   const shape = Math.max(ratio ?? FALLBACK_RATIO, MIN_RATIO);
-  const cap = maxHeight ?? MAX_CARD_H;
 
   return (
     // Lebar sengaja definit (px), bukan `w-full`: bingkai pembungkusnya memakai
@@ -102,7 +94,7 @@ export default function AdCreative({
     <div
       className="relative"
       style={{
-        width: `${(cap * shape).toFixed(2)}px`,
+        width: `${(MAX_CARD_H * shape).toFixed(2)}px`,
         maxWidth: "100%",
         aspectRatio: shape,
       }}

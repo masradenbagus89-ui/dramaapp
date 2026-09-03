@@ -14,7 +14,7 @@ import {
 } from "@/lib/recommend";
 import { genreChipClass } from "@/lib/genre-accent";
 import ContentRow from "./ContentRow";
-import RowWithAd from "./RowWithAd";
+import AdBanner from "./AdBanner";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
@@ -226,16 +226,21 @@ export default function BerandaRows({ dramas }: { dramas: Drama[] }) {
         <ContentRow title="Favorit Saya" dramas={savedDramas} href="/my-list" />
       )}
 
-      {/* Slot iklan 1 — menempel di kanan baris ini, bukan melintang di bawahnya.
-          Sengaja digandeng ke "Trending Drama" yang SELALU terisi; baris di
-          atasnya ("Favorit Saya") bergantung data penonton dan sering kosong,
-          jadi iklan bisa hilang kalau digandeng ke situ. */}
-      <RowWithAd
+      <ContentRow
         title="Trending Drama"
         subtitle="Paling banyak ditonton"
         dramas={trending}
         href="/discover"
       />
+
+      {/* Slot iklan 1 — melintang di BAWAH baris, gaya IDLIX (permintaan owner
+          2026-09-03, menggantikan kolom di kanan carousel). Sengaja berdiri
+          sendiri, tidak digandeng ke baris mana pun: baris film bisa kosong
+          (mis. "Favorit Saya" saat penonton belum menyimpan apa pun) dan
+          ContentRow lalu menghilang — slot pendapatan tidak boleh ikut hilang. */}
+      <div className="px-4 md:px-0">
+        <AdBanner />
+      </div>
 
       <ContentRow
         title="Drama Terbaru"
@@ -251,11 +256,13 @@ export default function BerandaRows({ dramas }: { dramas: Drama[] }) {
         />
       )}
 
-      {/* Slot iklan 2 — posisinya dipertahankan persis seperti sebelumnya (tepat
-          sebelum "Rating Tertinggi"), hanya bentuknya yang berubah jadi
-          berdampingan. RowWithAd sendiri yang menangani kalau baris ini kosong:
-          iklannya tetap tampil melintang, tidak ikut hilang. */}
-      <RowWithAd
+      {/* Slot iklan 2 — sama seperti slot 1: melintang, berdiri sendiri, di
+          antara "Drama Populer" dan "Rating Tertinggi". */}
+      <div className="px-4 md:px-0">
+        <AdBanner />
+      </div>
+
+      <ContentRow
         title="Rating Tertinggi"
         subtitle="Berdasarkan IMDb"
         dramas={topRated}

@@ -14,7 +14,7 @@ import {
 } from "@/lib/recommend";
 import { genreChipClass } from "@/lib/genre-accent";
 import ContentRow from "./ContentRow";
-import AdBanner from "./AdBanner";
+import RowWithAd from "./RowWithAd";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
@@ -222,15 +222,15 @@ export default function BerandaRows({ dramas }: { dramas: Drama[] }) {
         />
       )}
 
-      <div className="px-4 md:px-0">
-        <AdBanner className="mx-auto max-w-7xl" />
-      </div>
-
       {mounted && savedDramas.length > 0 && (
         <ContentRow title="Favorit Saya" dramas={savedDramas} href="/my-list" />
       )}
 
-      <ContentRow
+      {/* Slot iklan 1 — menempel di kanan baris ini, bukan melintang di bawahnya.
+          Sengaja digandeng ke "Trending Drama" yang SELALU terisi; baris di
+          atasnya ("Favorit Saya") bergantung data penonton dan sering kosong,
+          jadi iklan bisa hilang kalau digandeng ke situ. */}
+      <RowWithAd
         title="Trending Drama"
         subtitle="Paling banyak ditonton"
         dramas={trending}
@@ -251,18 +251,16 @@ export default function BerandaRows({ dramas }: { dramas: Drama[] }) {
         />
       )}
 
-      <div className="px-4 md:px-0">
-        <AdBanner className="mx-auto max-w-7xl" />
-      </div>
-
-      {topRated.length > 0 && (
-        <ContentRow
-          title="Rating Tertinggi"
-          subtitle="Berdasarkan IMDb"
-          dramas={topRated}
-          href="/discover"
-        />
-      )}
+      {/* Slot iklan 2 — posisinya dipertahankan persis seperti sebelumnya (tepat
+          sebelum "Rating Tertinggi"), hanya bentuknya yang berubah jadi
+          berdampingan. RowWithAd sendiri yang menangani kalau baris ini kosong:
+          iklannya tetap tampil melintang, tidak ikut hilang. */}
+      <RowWithAd
+        title="Rating Tertinggi"
+        subtitle="Berdasarkan IMDb"
+        dramas={topRated}
+        href="/discover"
+      />
 
       {byCategory.map(({ category, items }) => (
         <ContentRow

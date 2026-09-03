@@ -13,7 +13,57 @@ kuota Vercel aman. **Migrasi database BELUM tuntas** — datanya sudah pindah, t
 masih terkunci; rinciannya di bagian KOREKSI di bawah. **Jangan ganti env Supabase di Vercel dulu
 — situs akan mati.**
 
-## 🚧 2026-09-02 (terbaru) — Halaman 404 milik DramaKu (`app/not-found.tsx`)
+## 🧱 2026-09-03 (terbaru) — Beranda gaya Netflix: iklan PINDAH ke kanan carousel
+
+Permintaan owner: iklan yang tadinya melintang di bawah baris film dipindah jadi **kolom di kanan
+carousel**, film tetap di kiri, tinggi sejajar, tema dark, responsive.
+
+**Keputusan owner (popup 2026-09-03):** kolom iklan **540×270** · lebar halaman **1440** · **2 slot**
+di antara baris film (slot bawah hero tetap melintang — di situ tak ada carousel untuk digandeng).
+
+Kenapa 540: creative iklan terpasang rasionya **tepat 2,000** (1774×887). 540/270 = 2,0, jadi gambar
+mengisi PENUH tanpa pita kosong. Kolom lebih ramping (400/320) akan memunculkan lagi ruang kosong
+atas-bawah — masalah yang baru dibereskan 2026-09-02.
+
+**7 berkas.** Baru: `app/components/RowWithAd.tsx` (baris film + kolom iklan). Diubah:
+`BerandaRows.tsx` (2 slot) · `AdCreative.tsx` + `AdBanner.tsx` (**prop OPSIONAL** `maxHeight` /
+`maxCreativeHeight` — 5 pemakai iklan lain tidak berubah sama sekali) · `globals.css` + `TopNav.tsx` +
+`beranda/page.tsx` (lebar 1440).
+
+**⚠️ KONTRAK LINTAS-BERKAS:** kelas `.shell-wide` (1440, didefinisikan di `app/globals.css`) dipakai
+navbar `TopNav.tsx` DAN isi `app/beranda/page.tsx`. Keduanya WAJIB sama — beda sedikit, logo DramaKu
+langsung meleset dari tepi konten, **putus tanpa error apa pun**. Itu sebabnya angkanya ditaruh di
+satu kelas, bukan ditulis `max-w-[90rem]` di dua berkas. Halaman lain sengaja masih 1280
+(`max-w-7xl`) — pelebaran dibatasi ke beranda atas pilihan owner.
+
+**Klik iklan → tab yang SAMA (kalau tujuannya situs kita sendiri).** Dulu selalu `target="_blank"`,
+padahal `linkUrl` iklan house menunjuk dramaapp → penonton dapat tab kembar. Sekarang origin
+dibandingkan: internal = tab sama, sponsor luar = tetap tab baru.
+**Ikutan yang WAJIB ikut:** `fetch` pencatat klik diberi `keepalive: true`. Tanpa itu, pindah halaman
+di tab yang sama membuat browser membatalkan permintaan → **hitungan klik hilang DIAM-DIAM**, tak ada
+error, angkanya saja tidak naik.
+
+**Breakpoint 1280, bukan 1024** — diukur: pada 1024 carousel cuma kebagian 412 px ≈ 2,5 poster.
+Di bawah 1280 layout jatuh bertumpuk seperti sebelumnya.
+
+**⚠️ PELAJARAN (bug nyata, tertangkap uji sebelum sampai penonton):** kolom iklan sempat 540 px di
+layar 390 px sehingga halaman bocor bisa digeser ke samping. Sebabnya **grid item tanpa `min-w-0`
+menolak menyusut di bawah lebar isinya**. Sudah lama dipasang di kolom carousel, LUPA dipasang di
+kolom iklan. Aturannya: di grid berisi konten lebar-tetap atau `overflow-x`, **setiap** kolom butuh
+`min-w-0` — bukan cuma yang kelihatan panjang.
+
+**Bukti:** `tsc` 0 error · 390 tes lulus · `next build` sukses 63 halaman · uji layout otomatis
+**8 ukuran layar (360 → 1577) → 0 masalah**, mengunci: iklan benar-benar di kanan & tumpang-tindih
+vertikal dengan barisnya · 540×270 di layar lebar · bertumpuk di bawah 1280 · gambar mengisi penuh ·
+tak bisa digeser samping · **`logoX == judulX`** (kontrak kesejajaran 1440).
+
+**Catatan insiden (bukan dari perubahan ini):** saat pengerjaan, Supabase sempat **mati ±15 menit** —
+`/api/dramas` & `/api/ads` balas **500** di produksi MAUPUN lokal, dan build lokal dapat Cloudflare
+**522**. Situs tetap hidup (`/beranda` 200) karena ISR menyajikan halaman tersimpan + penjaga
+`getAllDramasCachedSafe` jatuh ke `data/dramas.json`. Sudah pulih sendiri (200, build 63 halaman).
+Kalau kambuh: cek `/api/dramas` dulu — 500 di lokal DAN produksi = sisi Supabase, bukan env Vercel.
+
+## 🚧 2026-09-02 — Halaman 404 milik DramaKu (`app/not-found.tsx`)
 
 **Bukan perbaikan bug — situs TIDAK pernah rusak.** Owner melaporkan layar 404 dan mengira produksi
 bermasalah. Ditelusuri: seluruh alamat sehat (7 menu navbar + `/history` `/login` `/daftar`

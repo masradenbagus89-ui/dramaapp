@@ -36,9 +36,16 @@ type SponsorAd = {
 export default function AdBanner({
   slot,
   className = "",
+  maxCreativeHeight,
 }: {
   slot?: string;
   className?: string;
+  /**
+   * Tinggi maksimum creative untuk penempatan khusus — diteruskan apa adanya ke
+   * AdCreative. Dipakai kolom iklan di samping carousel (RowWithAd). Dibiarkan
+   * kosong = ukuran default, jadi pemakai lama tidak berubah.
+   */
+  maxCreativeHeight?: number;
 }) {
   const effectiveSlot = (slot || ADSENSE_SLOT).trim();
   const mode: "raw" | "adsense" | "house" = RAW_HTML
@@ -108,12 +115,30 @@ export default function AdBanner({
     };
   }, [mode]);
 
+  // Iklan yang menunjuk situs kita sendiri dibuka di TAB YANG SAMA — membuka
+  // tab baru ke halaman yang sedang dilihat penonton itu membingungkan. Iklan
+  // sponsor ke situs luar tetap tab baru supaya penonton tidak hilang dari sini.
+  const isInternalLink =
+    typeof window !== "undefined" && !!ad
+      ? (() => {
+          try {
+            return new URL(ad.linkUrl, window.location.href).origin === window.location.origin;
+          } catch {
+            return false; // URL tak terbaca → perlakukan sebagai tautan luar (lebih aman)
+          }
+        })()
+      : false;
+
   const onHouseClick = () => {
     if (!ad) return;
     fetch("/api/ads/event", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id: ad.id, type: "click" }),
+      // keepalive WAJIB sejak tautan internal pindah ke tab yang sama: tanpa ini
+      // browser membatalkan permintaan begitu halaman ditinggalkan, dan hitungan
+      // klik hilang DIAM-DIAM — tidak ada error, angkanya saja yang tidak naik.
+      keepalive: true,
     }).catch(() => {});
   };
 
@@ -174,12 +199,17 @@ export default function AdBanner({
       <div className={cn("relative", className)}>
         <a
           href={ad.linkUrl}
-          target="_blank"
+          target={isInternalLink ? undefined : "_blank"}
           rel="noopener sponsored"
           onClick={onHouseClick}
           className="group relative mx-auto block w-fit max-w-full overflow-hidden rounded-2xl border border-zinc-800"
         >
-          <AdCreative src={ad.imageUrl} alt={ad.title ?? "Iklan"} hover />
+          <AdCreative
+            src={ad.imageUrl}
+            alt={ad.title ?? "Iklan"}
+            hover
+            maxHeight={maxCreativeHeight}
+          />
           <Badge
             variant="secondary"
             className="absolute left-2 top-2 rounded bg-black/60 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-widest text-white/80 backdrop-blur-sm"

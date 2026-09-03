@@ -136,7 +136,10 @@ export default function TopNav() {
           : "sticky top-0 z-30 border-b border-zinc-800 bg-black/95 backdrop-blur",
       )}
     >
-      <div className="mx-auto flex h-14 max-w-7xl items-center gap-4 px-4 md:px-6">
+      {/* shell-wide (1440) — WAJIB sama dengan pembatas isi beranda di
+          app/beranda/page.tsx, kalau tidak logo meleset dari tepi konten.
+          Definisi + alasannya ada di app/globals.css. */}
+      <div className="shell-wide mx-auto flex h-14 items-center gap-4 px-4 md:px-6">
         <Link
           href="/beranda"
           className="flex items-center gap-2 transition-transform duration-200 hover:scale-105"

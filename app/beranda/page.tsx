@@ -35,11 +35,13 @@ export default async function BerandaPage() {
           ini tetap utuh. */}
       <HomeHero dramas={slides} />
 
-      <div className="mx-auto max-w-7xl px-4 pt-6 md:px-6">
+      {/* shell-wide (1440) — WAJIB sama dengan pembatas navbar di TopNav.tsx,
+          kalau tidak logo meleset dari tepi konten. Lihat app/globals.css. */}
+      <div className="shell-wide mx-auto px-4 pt-6 md:px-6">
         <AdBanner />
       </div>
 
-      <div className="mx-auto max-w-7xl md:px-6">
+      <div className="shell-wide mx-auto md:px-6">
         <BerandaRows dramas={dramas} />
       </div>
     </div>

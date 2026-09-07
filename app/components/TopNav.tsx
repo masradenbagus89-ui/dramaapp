@@ -93,8 +93,11 @@ export default function TopNav() {
     return () => window.removeEventListener("resize", measurePill);
   }, [measurePill, mounted]);
 
-  const overlayHero =
-    pathname === "/beranda" || pathname.startsWith("/discover");
+  // Navbar melayang (fixed) di atas hero setinggi layar — HANYA untuk halaman
+  // yang memang membuka dengan hero full-bleed. /beranda TIDAK lagi termasuk:
+  // sejak dirombak, elemen pertamanya adalah bar pencarian, dan navbar melayang
+  // akan menutupinya. Di sana navbar jadi bar hitam biasa yang menempel.
+  const overlayHero = pathname.startsWith("/discover");
 
   useEffect(() => {
     if (!overlayHero) {

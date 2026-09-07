@@ -13,6 +13,14 @@ type Props = {
   drama: Drama;
   className?: string;
   showBadge?: boolean;
+  /**
+   * false = jangan gambar chip rating/views bawaan di kiri-atas.
+   *
+   * Dipakai kartu grid beranda (CatalogCard) yang menyusun lencananya sendiri
+   * di posisi berbeda. Default `true` supaya pemanggil lama (DramaCard,
+   * ContentRow) sama sekali tak berubah.
+   */
+  showRating?: boolean;
   /** Cuplikan episode 1 — hanya dimuat saat hover di desktop. */
   previewSrc?: string;
 };
@@ -21,6 +29,7 @@ export default function Poster({
   drama,
   className,
   showBadge = true,
+  showRating = true,
   previewSrc,
 }: Props) {
   const [preview, setPreview] = useState(false);
@@ -105,13 +114,15 @@ export default function Poster({
         </Badge>
       )}
 
-      <Badge
-        variant="secondary"
-        className="absolute left-2 top-2 gap-1 bg-black/60 px-2 py-0.5 text-[11px] font-normal text-white"
-      >
-        <Star className="size-3 fill-amber-400 text-amber-400" />
-        {drama.imdbRating || drama.views}
-      </Badge>
+      {showRating && (
+        <Badge
+          variant="secondary"
+          className="absolute left-2 top-2 gap-1 bg-black/60 px-2 py-0.5 text-[11px] font-normal text-white"
+        >
+          <Star className="size-3 fill-amber-400 text-amber-400" />
+          {drama.imdbRating || drama.views}
+        </Badge>
+      )}
     </div>
   );
 }

@@ -13,6 +13,100 @@ kuota Vercel aman. **Migrasi database BELUM tuntas** — datanya sudah pindah, t
 masih terkunci; rinciannya di bagian KOREKSI di bawah. **Jangan ganti env Supabase di Vercel dulu
 — situs akan mati.**
 
+## 🎬 2026-09-07 (TERBARU) — Beranda dirombak: katalog grid padat + paginasi
+
+Permintaan owner: halaman Home dibuat seperti situs streaming katalog (bar cari mencolok, strip
+genre, **grid poster padat**) digabung rasa streaming modern. Rencana lengkap ada di
+`docs/lintasai/rencana/2026-09-07-beranda-lk21.md`.
+
+**Susunan `/beranda` sekarang:** hero sinematik (tetap) → iklan 1 → baris personal (Lanjut
+Menonton / Karena kamu menonton / Favorit) → **bar cari magenta (menempel saat digulir) + strip
+genre kuning + remah jejak + grid 3-8 kolom + nomor halaman** (iklan 2 di atas grid) → iklan 3.
+
+**Berkas:** BARU `lib/beranda-catalog.ts`, `tests/beranda-catalog.test.ts` (20 tes),
+`app/components/beranda/CatalogCard.tsx`, `CatalogBrowser.tsx`, `PersonalRows.tsx`.
+DIUBAH `app/beranda/page.tsx`, `app/components/Poster.tsx` (+prop opsional `showRating`, default
+`true` = pemanggil lama tak berubah), komentar usang di `lib/format.ts`.
+DIHAPUS `app/components/BerandaRows.tsx` (isinya pindah; baris generik Trending/Terbaru/Populer/
+Rating jadi pilihan "Urutkan" di grid).
+
+**3 slot iklan DIPERTAHANKAN persis 3** — diverifikasi dari HTML yang dilayani (`>Iklan<` = 3x).
+
+**Penyaring dipakai ulang dari `lib/discover.ts` APA ADANYA** (tidak diubah), jadi `/discover` tidak
+terpengaruh — dijaga `tests/discover-filter.test.ts` yang lama.
+
+**Bukti:** `npx tsc --noEmit` bersih · `npm test` 410 tes / 34 berkas hijau · `npm run build` sukses
+(`/beranda` tetap Static + ISR 1 menit) · `npx next start -p 3099` → `/beranda` HTTP 200, HTML
+memuat bar magenta, strip genre, "Halaman 1 dari 2", 24 kartu, lencana `62 EPS`/`SUB INDO`/`KOIN`.
+
+### 🔁 KOREKSI urutan (owner menolak versi pertama)
+
+Versi pertama masih menaruh hero setinggi layar di paling atas, jadi layar pertama terlihat SAMA
+seperti sebelum dirombak — owner menolak. Diperbaiki: **bar cari + strip genre + grid naik ke
+paling atas**, hero turun jadi banner ramping di bawah strip genre.
+
+Dua penghalang yang harus dibongkar untuk itu (keduanya penyebab versi pertama salah susun):
+
+1. `app/components/TopNav.tsx` — `overlayHero` dulu mencakup `/beranda`, membuat navbar `fixed`
+   (melayang) sehingga elemen paling atas PASTI tertutup. Sekarang `overlayHero` hanya untuk
+   `/discover`; di beranda navbar jadi bar hitam menempel biasa. **/discover tidak berubah** —
+   diverifikasi: hero `min-h-[80svh]` & navbar `fixed` masih ada di sana.
+2. `app/components/HomeHero.tsx` — tinggi `min-h-[80svh]..[92svh]` mengunci hero setinggi layar.
+   Ditambah prop opsional `compact` (default `false` = /discover apa adanya); mode `compact`
+   memakai `min-h-[300px]..[380px]`, judul lebih kecil, sinopsis disembunyikan.
+
+Ikut berubah: dropdown penyaring PINDAH ke dalam bar magenta (kanan) mengikuti contoh; bar magenta
+& strip genre kini selebar penuh layar (isinya tetap dibatasi `shell-wide`); lencana kartu ditata
+ulang — rating kiri-atas, jumlah episode kanan-atas (fuchsia), tahun & status di baris bawah.
+
+**Urutan final terverifikasi dari HTML yang dilayani** (posisi karakter, makin kecil makin atas):
+navbar 4944 -> bar magenta 7541 -> strip genre 17037 -> hero ramping 18784 -> hitungan 29083 ->
+grid 30806.
+
+**Bukti ulang:** `npx tsc --noEmit` bersih · `npm test` 410 tes hijau · `npm run build` sukses
+(`/beranda` & `/discover` tetap Static + ISR 1 menit).
+
+**Catatan port:** di komputer ini port 3000/3001/3005/3010/3011 SUDAH dipakai 5 aplikasi node lain.
+DramaKu dijalankan di **3055** (`npx next dev -p 3055`). Membuka `localhost:3000` akan menampilkan
+aplikasi lain, bukan DramaKu.
+
+### 🔁 KOREKSI 2 — hero berjalan DIBUANG dari beranda
+
+Owner: "hero seperti layarkaca21, jangan berjalan lagi". Banner sinematik yang berganti sendiri
+tiap 9 detik (`ROTATE_MS`) dicabut dari `/beranda`, diganti **baris FILM UNGGULAN**: deretan poster
+mendatar + tombol "LIHAT SEMUA FILM UNGGULAN" di bawahnya.
+
+- BARU `app/components/beranda/FeaturedRow.tsx` — nol gerakan otomatis (tak ada timer ganti-slide,
+  tak ada video autoplay). Poster hanya bergeser kalau penonton menekan panah / menggeser jari.
+  Kartunya memakai `CatalogCard` yang SAMA dengan grid di bawah, jadi lencana & hover tidak perlu
+  dibuat versi kedua.
+- `app/components/HomeHero.tsx` **DIKEMBALIKAN PERSIS ke versi git** — prop `compact` yang dipasang
+  di koreksi sebelumnya dicabut karena tak ada lagi pemakainya (kode mati). `git diff` berkas itu
+  KOSONG. `/discover` otomatis aman karena berkasnya tidak berubah sama sekali.
+
+**Terverifikasi dari HTML yang dilayani:** `min-h-[80svh]` TIDAK ADA · `aria-roledescription=
+"carousel"` TIDAK ADA · kelas animasi `hero-live`/`hero-sweep`/`hero-content-in` TIDAK ADA.
+Urutan: navbar 4944 -> bar magenta 7541 -> strip genre 17037 -> baris unggulan 18635 -> tombol
+lihat semua 37249 -> grid 41469. Slot iklan tetap **3**.
+
+**Bukti:** `npx tsc --noEmit` bersih · `npm test` 410 tes hijau · `npm run build` sukses.
+
+### ⚠️ TEMUAN LAMA yang tersingkap (BELUM diperbaiki — perlu keputusan owner)
+
+`lib/dramas.ts` **tidak memetakan kolom `status` sama sekali** (`rowToDrama`/`DramaRow` tak punya
+field itu). Akibatnya dari Supabase `drama.status` SELALU kosong. Dua efek:
+
+1. Lencana ONGOING/TAMAT di kartu grid baru **tidak pernah muncul** di produksi (kartu sengaja
+   tidak menggambarnya kalau data kosong — jujur, tidak mengarang).
+2. **Lebih penting:** `app/components/HomeHero.tsx:82` menulis `hero.status || "Ongoing"` — jadi
+   hero memasang label **ONGOING untuk SEMUA judul**, termasuk yang sudah tamat. Ini sudah terjadi
+   sebelum perombakan ini (kelihatan di screenshot owner).
+
+Perbaikannya perlu dicek dulu: apakah tabel `dramas` di Supabase memang punya kolom `status`?
+Kalau ada → tambahkan pemetaannya di `lib/dramas.ts`. Kalau belum → butuh migration SQL.
+
+**Belum di-commit & belum di-push.** Dual push (`origin` + `dramaku`) menunggu izin owner.
+
 ## 🧱 2026-09-03 (sore, TERBARU) — Iklan BALIK melintang di bawah baris (gaya IDLIX)
 
 Owner membatalkan kolom iklan di kanan carousel (dipasang pagi ini, entri di bawah). Permintaan:

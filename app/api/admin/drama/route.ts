@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { resolveKindRules, type Drama } from "@/lib/types";
+import { parseDramaStatus, resolveKindRules, type Drama } from "@/lib/types";
 import { isAdminRequest } from "@/lib/session";
 import {
   getDrama,
@@ -20,6 +20,7 @@ type DramaBody = Partial<{
   views: string;
   episodes: number;
   kind: string;
+  status: string;
   posterImage: string;
   heroImage: string;
   gradient: string;
@@ -119,6 +120,14 @@ export async function POST(req: NextRequest) {
     // Jenis tayangan + akibatnya (jumlah video & gratis/berbayar) diputuskan di
     // satu tempat: lib/types.ts. Judul lama yang dikirim tanpa field ini tetap
     // dibaca sebagai serial.
+    // Status tayang. UI admin cuma menyediakan dua pilihan, TAPI UI bukan pagar:
+    // siapa pun bisa mengirim body apa saja ke endpoint ini, jadi nilainya
+    // disaring ulang di server lewat satu tempat (lib/types.ts).
+    // "dikirim" dibedakan dari "sah": kiriman string kosong = perintah
+    // MENGOSONGKAN, bukan permintaan yang ditolak.
+    const statusProvided = typeof body.status === "string";
+    const status = parseDramaStatus(body.status);
+
     const rules = resolveKindRules(body);
     const isFilm = rules.kind === "movie";
     if (rules.episodes === null) {
@@ -159,6 +168,7 @@ export async function POST(req: NextRequest) {
         category: body.category as Drama["category"],
         episodes: epNum,
         ...(isFilm ? { kind: rules.kind } : {}),
+        ...(status ? { status } : {}),
         views: body.views?.trim() || "1.0K",
         synopsis: body.synopsis?.trim() || "",
         gradient: body.gradient?.trim() || pickRandomGradient(),
@@ -190,6 +200,13 @@ export async function POST(req: NextRequest) {
       // Jenis tayangan ikut ditimpa: serial boleh diubah jadi film & sebaliknya.
       if (isFilm) drama.kind = "movie";
       else delete drama.kind;
+      // Status hanya disentuh kalau field-nya DIKIRIM — alat lain yang mengirim
+      // body tanpa `status` tidak boleh diam-diam menghapus status yang sudah
+      // benar. Dikirim tapi tidak sah/kosong = sengaja dikosongkan.
+      if (statusProvided) {
+        if (status) drama.status = status;
+        else delete drama.status;
+      }
       if (typeof premium === "boolean") {
         if (premium) drama.premium = true;
         else delete drama.premium;

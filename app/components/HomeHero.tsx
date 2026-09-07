@@ -79,7 +79,10 @@ export default function HomeHero({
     .map((g) => g.trim())
     .filter(Boolean);
   const titleParts = splitHeroTitle(hero.title, 3);
-  const status = hero.status || "Ongoing";
+  // Status APA ADANYA — jangan diisi "Ongoing" saat kosong. Katalog belum
+  // menyimpan status (kolomnya baru ditambahkan), dan menebak berarti memberi
+  // tahu penonton bahwa drama TAMAT masih berjalan. Kosong = label tak digambar.
+  const status = hero.status ?? null;
 
   const onPointerDown = (e: React.PointerEvent) => {
     if ((e.target as HTMLElement).closest("button, a")) return;
@@ -169,15 +172,17 @@ export default function HomeHero({
                   {g}
                 </span>
               ))}
-              <Badge
-                className={`rounded-sm px-1.5 py-0.5 text-[10px] font-bold uppercase ${
-                  status === "Completed"
-                    ? "bg-emerald-500/20 text-emerald-300"
-                    : "bg-amber-400/20 text-amber-300"
-                }`}
-              >
-                {status}
-              </Badge>
+              {status && (
+                <Badge
+                  className={`rounded-sm px-1.5 py-0.5 text-[10px] font-bold uppercase ${
+                    status === "Completed"
+                      ? "bg-emerald-500/20 text-emerald-300"
+                      : "bg-amber-400/20 text-amber-300"
+                  }`}
+                >
+                  {status === "Completed" ? "Tamat" : "Ongoing"}
+                </Badge>
+              )}
             </div>
 
             <p className="mt-4 hidden max-w-lg text-sm leading-relaxed text-white/80 md:line-clamp-2">

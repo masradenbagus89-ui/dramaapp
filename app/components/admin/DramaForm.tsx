@@ -10,7 +10,13 @@
 // & logika tetap sama persis.
 import { useState, type Dispatch, type SetStateAction, type RefObject, type FormEvent } from "react";
 import { slugify } from "@/lib/format";
-import { MOVIE_EPISODE_COUNT, SUBTITLE_LANGS, type DramaKind } from "@/lib/types";
+import {
+  DRAMA_STATUS_OPTIONS,
+  MOVIE_EPISODE_COUNT,
+  SUBTITLE_LANGS,
+  type DramaKind,
+  type DramaStatus,
+} from "@/lib/types";
 import { CATEGORY_OPTIONS } from "@/app/admin/constants";
 import type { ScanResult } from "@/lib/admin-api";
 import { Button } from "@/components/ui/button";
@@ -84,6 +90,8 @@ export default function DramaForm({
   setEpisodes,
   kind,
   setKind,
+  status,
+  setStatus,
   posterImage,
   setPosterImage,
   heroImage,
@@ -139,6 +147,9 @@ export default function DramaForm({
   setEpisodes: Dispatch<SetStateAction<number>>;
   kind: DramaKind;
   setKind: Dispatch<SetStateAction<DramaKind>>;
+  /** "" = belum ditentukan; label status tidak akan digambar di tampilan. */
+  status: DramaStatus | "";
+  setStatus: Dispatch<SetStateAction<DramaStatus | "">>;
   posterImage: string;
   setPosterImage: Dispatch<SetStateAction<string>>;
   heroImage: string;
@@ -525,6 +536,44 @@ export default function DramaForm({
               : "Serial: penonton memilih dari daftar Episode 1, 2, 3, … Jumlah episodenya diisi di bagian bawah form."}
           </p>
         </div>
+
+        {/* Status tayang. BOLEH dikosongkan — kalau kosong, label ONGOING/TAMAT
+            tidak digambar di mana pun. Itu disengaja: label yang ditebak lebih
+            merugikan penonton daripada tidak ada label sama sekali. */}
+        {!isFilm && (
+          <div className="mt-4 space-y-1.5">
+            <Label htmlFor="drama-status" className="text-sm text-zinc-300">
+              Status tayang{" "}
+              <span className="text-zinc-500">(opsional)</span>
+            </Label>
+            <Select
+              value={status || "kosong"}
+              onValueChange={(v) =>
+                setStatus(v === "kosong" ? "" : (v as DramaStatus))
+              }
+            >
+              <SelectTrigger
+                id="drama-status"
+                className="w-full rounded-lg border-zinc-700 bg-zinc-900 text-white focus-visible:border-amber-400 focus-visible:ring-0 md:w-80"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="kosong">— Belum ditentukan —</SelectItem>
+                {DRAMA_STATUS_OPTIONS.map((o) => (
+                  <SelectItem key={o.value} value={o.value}>
+                    {o.value === "Completed" ? "✅ " : "🔴 "}
+                    {o.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-zinc-500">
+              Muncul sebagai label di kartu drama. Dibiarkan kosong = tidak ada
+              label sama sekali (lebih baik daripada label yang salah).
+            </p>
+          </div>
+        )}
 
         <div className="mt-4 space-y-1.5">
           <Label htmlFor="drama-id" className="text-sm text-zinc-300">

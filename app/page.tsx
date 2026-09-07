@@ -3,7 +3,7 @@ import Link from "next/link";
 import { getAllDramasCachedSafe } from "@/lib/dramas";
 import { featuredHeroSlides } from "@/lib/hero-teaser";
 import RedirectIfAuthed from "@/app/components/RedirectIfAuthed";
-import LandingHero from "@/app/components/LandingHero";
+import FeaturedRow from "@/app/components/beranda/FeaturedRow";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -64,9 +64,8 @@ export default async function LandingPage() {
   return (
     <div className="min-h-screen bg-black">
       <RedirectIfAuthed />
-      {/* Header — sengaja TANPA max-w/mx-auto (beda dari section di bawah): padding
-          px-4 md:px-6 harus sama persis dengan left-4 md:left-6 milik label judul
-          film di LandingHero, supaya logo · judul hero · label film jatuh di SATU
+      {/* Header — sengaja TANPA max-w/mx-auto: padding px-4 md:px-6 disamakan
+          dengan blok sambutan di bawahnya supaya logo & judul jatuh di SATU
           garis kiri yang sama di semua ukuran layar. */}
       <header className="relative z-20 border-b border-zinc-900">
         <div className="flex h-16 items-center justify-between px-4 md:px-6">
@@ -94,28 +93,23 @@ export default async function LandingPage() {
         </div>
       </header>
 
-      {/* Hero dengan latar cuplikan video berputar (pola sama seperti beranda) */}
-      <section className="relative overflow-hidden">
-        {/* Latar video: byte mengalir direct dari PC backup via /api/teaser
-            (307 redirect), BUKAN lewat server Vercel. */}
-        <LandingHero dramas={heroSlides} />
-
-        {/* Lapisan gelap SENGAJA TIPIS: teks tetap terbaca, tapi video tetap
-            cerah & gerakannya jelas terlihat (gelap berat = hero terasa mati).
-            Gelap dipusatkan di belakang teks (KIRI & bawah — ikut teks yang kini
-            rata kiri), tepi kanan dibiarkan terang supaya cuplikannya jadi
-            bintang. */}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/85 via-black/15 to-black/30" />
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_left,rgba(0,0,0,0.45),transparent_68%)]" />
+      {/* Sambutan. TIDAK ada lagi latar video yang berganti sendiri tiap 9 detik
+          (permintaan owner 2026-09-07) — halaman depan kini sejalan dengan
+          /beranda: yang bergerak hanya kalau penonton menggerakkannya.
+          Latar diganti gradasi diam, jadi teks tetap terbaca tanpa perlu lapisan
+          penggelap bertumpuk seperti dulu. */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-zinc-950 via-black to-black">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(251,191,36,0.15),transparent_60%)]" />
 
         {/* Decorative film strip pattern */}
         <FilmStripPattern />
 
-        {/* Rata KIRI menempel tepi: px-4 md:px-6 = left-4 md:left-6 label film di
-            LandingHero. Angkanya WAJIB sama — kalau salah satu diubah, kesejajaran
-            logo/judul/label putus. */}
-        <div className="relative flex min-h-[70svh] flex-col items-start justify-center gap-6 px-4 py-16 text-left md:px-6 md:py-20">
+        {/* Rata KIRI menempel tepi: px-4 md:px-6 disamakan dengan header di atas.
+            Angkanya WAJIB sama — kalau salah satu diubah, logo & judul tak lagi
+            sejajar. Tingginya dikecilkan dari 70svh: tanpa video di belakang,
+            ruang sebesar itu cuma kosong dan mendorong baris poster keluar dari
+            layar pertama. */}
+        <div className="relative flex min-h-[42svh] flex-col items-start justify-center gap-5 px-4 py-12 text-left md:px-6 md:py-14">
           <Badge className="rounded-full border border-amber-400/40 bg-amber-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-amber-300">
             Drama China Pendek · Bahasa Indonesia
           </Badge>
@@ -151,26 +145,15 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* Mobile poster strip */}
-      <section className="md:hidden">
-        <div className="flex gap-3 overflow-x-auto px-4 pb-2 pt-4">
-          {heroDramas.slice(0, 8).map((d) => (
-            <Link
-              key={d.id}
-              href="/login"
-              className={`relative aspect-[3/4] w-32 shrink-0 overflow-hidden rounded-xl bg-gradient-to-br ${d.gradient}`}
-            >
-              {d.posterImage && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={d.posterImage} alt={d.title} className="absolute inset-0 h-full w-full object-cover" />
-              )}
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2">
-                <p className="line-clamp-2 text-[11px] font-semibold text-white">{d.title}</p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
+      {/* Baris FILM UNGGULAN — komponen yang SAMA dengan /beranda, jadi tampilan
+          & perilakunya persis: poster hanya bergeser kalau digeser penonton.
+          Menggantikan strip poster lama yang cuma muncul di HP; komponen ini
+          jalan di semua ukuran layar, jadi tak perlu dua versi.
+
+          Kartunya menuju /drama/<id> (halaman itu PUBLIK — terbukti HTTP 200
+          tanpa cookie login), bukan lagi langsung ke /login seperti strip lama.
+          Tombol "lihat semua" tetap mengarah ke pendaftaran. */}
+      <FeaturedRow dramas={heroSlides} href="/daftar" />
 
       {/* Fitur grid */}
       <section className="mx-auto max-w-7xl px-4 py-14 md:px-6 md:py-20">

@@ -70,6 +70,44 @@ grid 30806.
 DramaKu dijalankan di **3055** (`npx next dev -p 3055`). Membuka `localhost:3000` akan menampilkan
 aplikasi lain, bukan DramaKu.
 
+## 🏠 2026-09-07 (TERBARU) — Halaman depan lepas dari hero berjalan + status tayang tersambung
+
+Owner: "aku cuma minta ganti hero hidup di landing page jadi seperti lk21". BENAR — koreksi
+sebelumnya cuma menyentuh `/beranda`; halaman depan `/` masih memakai `LandingHero` yang berganti
+sendiri tiap 9 detik (`FALLBACK_ROTATE_MS`). Sekarang dibereskan.
+
+**Halaman depan `/`:** `LandingHero` DIHAPUS (nol pemakai), diganti `FeaturedRow` — komponen yang
+SAMA dengan /beranda. Blok sambutan dikecilkan 70svh -> 42svh (tanpa video di belakang, ruang
+sebesar itu cuma kosong & mendorong baris poster keluar layar pertama). Teks penawaran + tombol
+Daftar Gratis TETAP. Strip poster khusus HP dibuang — FeaturedRow jalan di semua ukuran layar.
+Kartunya kini menuju `/drama/<id>` (PUBLIK, terbukti HTTP 200 tanpa cookie), bukan langsung /login.
+
+**Status tayang (A+B+C) — SELESAI:**
+- A `HomeHero.tsx` berhenti menulis `hero.status || "Ongoing"`. Kosong = label tak digambar.
+- B `lib/dramas.ts` memetakan kolom `status` (baca + tulis); nilai ngawur diabaikan.
+- C Panel admin dapat isian "Status tayang" (kosong / masih tayang / tamat), tersambung penuh.
+- `lib/types.ts` `parseDramaStatus` = SATU penjaga, dipakai di SERVER (form bukan pagar).
+- `tests/drama-status.test.ts` 6 tes, termasuk penjaga agar status kosong tak pernah ditebak lagi.
+
+**⚠️ MIGRASI DATABASE SUDAH DIJALANKAN** (disetujui owner lewat popup, dijalankan oleh AI lewat
+`psycopg2` — jalur `scripts/supabase_connect_test.py`, password dari `Downloads/password.txt`):
+`supabase_migrations/add_status_to_dramas.sql` -> `dramaapp.dramas` + kolom `status` (nullable) +
+`dramas_status_check`. Bukti: **42 drama utuh sebelum & sesudah**, kolom + constraint ADA,
+`notify pgrst, 'reload schema'` dijalankan lalu kolomnya terbukti terbaca lewat PostgREST.
+Urutan "SQL dulu, deploy belakangan" DIPATUHI — kalau dibalik, SEMUA penyimpanan drama gagal (42703).
+
+**Jebakan yang nyaris kena:** berkas migrasi LAMA di folder itu menulis `public.dramas` (dari
+sebelum pindah schema). Tabel sekarang di schema `dramaapp` (lib/supabase.ts:24). Menyalin mentah =
+menyasar tabel yang salah.
+
+**Bukti:** `tsc --noEmit` bersih · `npm test` **416 tes hijau** · `next build` sukses · commit
+`39f45f1` dual push terverifikasi lewat `git ls-remote` · produksi `/` `/beranda` `/discover`
+`/admin` semua 200, halaman depan nol carousel & nol animasi hero, 5 kartu unggulan tampil.
+
+**BELUM TERBUKTI (owner tolong coba):** menyimpan drama dari panel admin dengan isian Status belum
+dites end-to-end — itu menulis data produksi, jadi tidak dijalankan AI tanpa izin. Kolomnya sudah
+ada & terbaca, jadi seharusnya jalan; tapi "seharusnya" bukan "terbukti".
+
 ### 🔁 KOREKSI 2 — hero berjalan DIBUANG dari beranda
 
 Owner: "hero seperti layarkaca21, jangan berjalan lagi". Banner sinematik yang berganti sendiri

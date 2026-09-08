@@ -85,13 +85,13 @@ export default function FeaturedRow({
 
         <div
           ref={scroller}
-          className="no-scrollbar flex gap-2.5 overflow-x-auto scroll-smooth"
+          className="no-scrollbar flex gap-1.5 overflow-x-auto scroll-smooth"
         >
           {dramas.map((d) => (
             // Lebar dikunci di sini (bukan di CatalogCard) supaya kartunya tetap
             // kartu yang SAMA dengan yang dipakai grid di bawah — lencana, hover,
             // dan cuplikannya tidak perlu dibuat versi kedua.
-            <div key={d.id} className="w-24 shrink-0 sm:w-28 md:w-32">
+            <div key={d.id} className="w-20 shrink-0 sm:w-24 md:w-28">
               <CatalogCard drama={d} />
             </div>
           ))}

@@ -125,7 +125,14 @@ describe("pageOfCatalog", () => {
   });
 
   it("ukuran halaman bawaan dipakai kalau tidak disebut", () => {
-    expect(pageOfCatalog(list, 1).items).toHaveLength(CATALOG_PER_PAGE);
+    // Daftarnya dibuat SELALU lebih panjang dari CATALOG_PER_PAGE, berapa pun
+    // angkanya. Versi lama memakai daftar 50 tetap dan langsung pecah begitu
+    // angkanya dinaikkan ke 60 — yang diuji jadi angkanya, bukan perilakunya.
+    const panjang = Array.from({ length: CATALOG_PER_PAGE + 5 }, (_, i) =>
+      stub({ id: `p${i}`, title: `Panjang ${i}` }),
+    );
+    expect(pageOfCatalog(panjang, 1).items).toHaveLength(CATALOG_PER_PAGE);
+    expect(pageOfCatalog(panjang, 2).items).toHaveLength(5);
   });
 });
 

@@ -11,10 +11,14 @@ import { isMovie } from "./types";
 import { parseRating, parseViews } from "./format";
 
 /**
- * Poster per halaman di grid. 24 = 3 baris penuh saat 8 kolom (layar lebar),
- * 8 baris saat 3 kolom (HP) — dua-duanya masih nyaman digulir.
+ * Poster per halaman di grid.
+ *
+ * Dinaikkan 24 -> 60 (2026-09-08): sejak grid memakai kolom yang menyesuaikan
+ * lebar layar sendiri, layar lebar muat ~30 poster PER BARIS. Dengan 24, grid
+ * malah cuma terisi kurang dari satu baris penuh — terlihat seperti katalog
+ * yang hampir habis, padahal cuma dipotong terlalu cepat.
  */
-export const CATALOG_PER_PAGE = 24;
+export const CATALOG_PER_PAGE = 60;
 
 /**
  * Berapa poster yang dikirim ke baris FILM UNGGULAN.
@@ -207,8 +211,16 @@ export function countWithRating(dramas: Drama[]): number {
 }
 
 // =========================  BARIS KATALOG BERANDA  =======================
-/** Maksimal poster per baris. Lebih dari ini tak pernah terlihat tanpa digeser. */
-export const ROW_MAX_ITEMS = 20;
+/**
+ * Maksimal poster per baris.
+ *
+ * Dinaikkan 20 -> 40 (2026-09-08): di layar lebar satu baris sudah muat ~30
+ * poster sekaligus, jadi batas 20 membuat baris berhenti di tengah layar dan
+ * menyisakan ruang kosong — persis keluhan yang mau diperbaiki. 40 di atas
+ * jumlah katalog sekarang (42), jadi praktis baris "Terbaru"/"Terpopuler"
+ * memuat hampir semua judul.
+ */
+export const ROW_MAX_ITEMS = 40;
 
 /**
  * Minimal isi sebuah baris supaya layak digambar.

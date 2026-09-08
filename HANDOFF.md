@@ -128,6 +128,34 @@ grid 30806.
 DramaKu dijalankan di **3055** (`npx next dev -p 3055`). Membuka `localhost:3000` akan menampilkan
 aplikasi lain, bukan DramaKu.
 
+## 🔳 2026-09-08 (TERBARU) — Poster dirapatkan: 92 -> 133 kartu di halaman depan
+
+Owner: poster masih kurang rapat / kurang banyak sebaris. Ternyata ada **EMPAT** pengunci, bukan
+cuma ukuran kartu — itu sebabnya pengecilan sebelumnya belum cukup.
+
+1. `ROW_MAX_ITEMS` 20 -> 40 — baris berhenti di 20, jadi di layar lebar putus di tengah layar.
+2. `CATALOG_PER_PAGE` 24 -> 60 — sejak grid mengisi lebar sendiri, layar lebar muat ~30 poster
+   PER BARIS; dengan 24 grid tak sampai satu baris penuh (terlihat seperti katalog hampir habis).
+3. Kartu `w-24/28/32` (96-128px) -> `w-20/24/28` (80-112px); jarak `gap-2.5` -> `gap-1.5`.
+4. **AKAR PALING MENENTUKAN** — grid katalog memakai jumlah kolom yang DIPATOK per ukuran layar.
+   Patokan terbesar Tailwind berhenti di **1536px**, jadi di layar lebih lebar jumlah kolom TIDAK
+   bertambah; tiap poster malah MELAR jadi raksasa. Diganti
+   `grid-cols-[repeat(auto-fill,minmax(110px,1fr))]` -> kolom bertambah sendiri berapa pun lebar
+   layarnya. Kelasnya dipindah ke konstanta `GRID_CLASS` supaya alasannya terbaca di satu tempat.
+
+**⚠️ Pelajaran tes:** tes "ukuran halaman bawaan" dulu memakai daftar **50 item TETAP**, jadi
+langsung MERAH begitu `CATALOG_PER_PAGE` dinaikkan ke 60 — yang diuji ternyata ANGKANYA, bukan
+perilakunya. Diperbaiki: daftar dibuat mengikuti nilai konstanta (`CATALOG_PER_PAGE + 5`) + cek
+sisa di halaman kedua. Pola ini layak ditiru untuk tes konstanta lain.
+
+**⚠️ Kesalahan yang sempat terjadi:** komentar JSX `{/* … */}` disisipkan tepat di posisi `) : (`
+(cabang ternary) -> berkas gagal parse, `/` sempat **HTTP 500**. Di posisi itu JSX hanya boleh
+berisi SATU elemen. Obatnya: penjelasan dipindah ke konstanta bernama di atas komponen.
+
+**Bukti:** `tsc` bersih · 424 tes hijau · `next build` sukses · commit `8333bdc` dual push
+terverifikasi. Produksi: **133 kartu** halaman depan, **56** /beranda, nol sisa ukuran lama, nol
+sisa kolom-dipatok, tetap 1 h1.
+
 ## 📏 2026-09-08 (TERBARU) — Baris poster melebar sampai tepi layar
 
 Owner membandingkan dengan situs katalog pembandingnya: di sana baris poster melebar penuh dengan

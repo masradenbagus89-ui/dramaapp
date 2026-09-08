@@ -64,11 +64,6 @@ type Props = {
   heroSlot?: React.ReactNode;
   /** Blok bebas di antara banner dan hitungan halaman (iklan + baris personal). */
   beforeGridSlot?: React.ReactNode;
-  /**
-   * Slot iklan tepat di atas grid. Isinya tetap ditentukan halaman
-   * (app/beranda/page.tsx) — urusan pendapatan tidak menyusup ke logika katalog.
-   */
-  adSlot?: React.ReactNode;
 };
 
 /**
@@ -88,7 +83,6 @@ export default function CatalogBrowser({
   dramas,
   heroSlot,
   beforeGridSlot,
-  adSlot,
 }: Props) {
   const [query, setQuery] = useState("");
   const [genre, setGenre] = useState<string>(SEMUA);
@@ -292,8 +286,6 @@ export default function CatalogBrowser({
             </Button>
           )}
         </div>
-
-        {adSlot && <div className="pt-4">{adSlot}</div>}
 
         {/* Grid poster padat. scroll-mt-32 = saat pindah halaman, judul grid
             tidak tersembunyi di balik navbar + bar cari yang menempel. */}

@@ -70,6 +70,38 @@ grid 30806.
 DramaKu dijalankan di **3055** (`npx next dev -p 3055`). Membuka `localhost:3000` akan menampilkan
 aplikasi lain, bukan DramaKu.
 
+## 🔎 2026-09-08 (TERBARU) — Halaman SEBELUM LOGIN ikut struktur katalog
+
+Owner: halaman DramaKu sebelum login harus benar-benar mengikuti struktur situs katalog streaming,
+**tanpa blok sambutan besar di depan**. Sebelumnya `/` masih dibuka blok "Cerita pendek, emosi
+panjang" setinggi `min-h-[42svh]` sehingga poster terdorong jauh ke bawah.
+
+**Susunan `/` sekarang:** header (logo + Masuk/Daftar) -> **bar cari magenta** (menempel saat
+digulir) -> **strip genre kuning** -> **baris FILM UNGGULAN + tombol "Lihat semua"** -> ajakan
+daftar RINGKAS -> sisa halaman lama tak disentuh.
+
+Ajakan daftar dipindah ke BAWAH baris poster: poster jadi pemikat, ajakan menyusul sesudah
+pengunjung melihat ada isinya. Tombol Daftar Gratis / Masuk + 3 angka statistik TETAP ada.
+
+**Anti-duplikasi — bar dipecah jadi komponen bersama, dipakai DUA halaman:**
+- BARU `app/components/beranda/SearchBar.tsx` · `GenreStrip.tsx` · `shell.ts` (pembatas lebar 1
+  tempat) · `PublicTopBars.tsx` (perakitan untuk halaman depan)
+- `CatalogBrowser.tsx` dirampingkan **-107 baris**, kini memakai komponen yang sama.
+- Bedanya cuma ARTI, bukan tampilan: di /beranda menyaring grid di tempat, di halaman depan
+  melempar ke /discover.
+
+**Cek keamanan sebelum menambah tautan:** `/discover`, `/discover?q=`, `/discover?cat=`, dan
+`/drama/<id>` semuanya dipastikan **HTTP 200 tanpa cookie login** — jadi tautan baru ini TIDAK
+membuka apa pun yang tadinya tertutup. Genre yang tampil dihitung dari katalog (`availableGenres`),
+bukan daftar tetap, supaya genre kosong tak bisa diklik.
+
+**Bukti:** `tsc --noEmit` bersih · `npm test` **416 tes hijau** · `next build` sukses · commit
+`72fabb3` dual push terverifikasi lewat `git ls-remote`. **TAYANG:** urutan di HTML produksi
+header 5919 -> bar cari 7449 -> strip genre 9039 -> baris unggulan 10539 -> ajakan daftar 30122;
+5 kartu poster, 6 tautan genre, nol `aria-roledescription="carousel"`, tombol Daftar Gratis tetap.
+`/beranda` tidak terpengaruh: bar, strip, baris unggulan, grid padat, "Halaman 1 dari 2", 3 slot
+iklan semuanya utuh.
+
 ## 🏠 2026-09-07 (TERBARU) — Halaman depan lepas dari hero berjalan + status tayang tersambung
 
 Owner: "aku cuma minta ganti hero hidup di landing page jadi seperti lk21". BENAR — koreksi

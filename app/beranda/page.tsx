@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getAllDramasCachedSafe } from "@/lib/dramas";
 import { featuredHeroSlides } from "@/lib/hero-teaser";
+import { FEATURED_ROW_COUNT } from "@/lib/beranda-catalog";
 import AdBanner from "../components/AdBanner";
 import CatalogBrowser from "../components/beranda/CatalogBrowser";
 import FeaturedRow from "../components/beranda/FeaturedRow";
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
 
 export default async function BerandaPage() {
   const dramas = await getAllDramasCachedSafe();
-  const slides = featuredHeroSlides(dramas);
+  const slides = featuredHeroSlides(dramas, FEATURED_ROW_COUNT);
 
   if (slides.length === 0) {
     return (

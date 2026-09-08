@@ -16,6 +16,19 @@ import { parseRating, parseViews } from "./format";
  */
 export const CATALOG_PER_PAGE = 24;
 
+/**
+ * Berapa poster yang dikirim ke baris FILM UNGGULAN.
+ *
+ * KENAPA 14, bukan bawaan `featuredHeroSlides` yang 5: pada layar 1440px muat
+ * ±8 kartu sekaligus, jadi 5 menyisakan ruang kosong lebar di kanan dan barisnya
+ * terlihat belum jadi. 14 membuat baris penuh DAN masih menyisakan beberapa
+ * kartu untuk digeser — kalau pas-pasan, panah gesernya jadi tak ada gunanya.
+ *
+ * Angka ini TIDAK dipakai hero /discover: di sana slide berganti satu per satu,
+ * jadi 5 memang batas yang benar.
+ */
+export const FEATURED_ROW_COUNT = 14;
+
 // ============================  LENCANA KARTU  ============================
 /**
  * Label yang boleh ditempel di kartu poster.

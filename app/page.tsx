@@ -5,7 +5,7 @@ import { featuredHeroSlides } from "@/lib/hero-teaser";
 import RedirectIfAuthed from "@/app/components/RedirectIfAuthed";
 import FeaturedRow from "@/app/components/beranda/FeaturedRow";
 import PublicTopBars from "@/app/components/beranda/PublicTopBars";
-import { availableGenres } from "@/lib/beranda-catalog";
+import { availableGenres, FEATURED_ROW_COUNT } from "@/lib/beranda-catalog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -61,7 +61,7 @@ const FITUR = [
 export default async function LandingPage() {
   const dramas = await getAllDramasCachedSafe();
   const heroDramas = dramas.slice(0, 6);
-  const heroSlides = featuredHeroSlides(dramas);
+  const heroSlides = featuredHeroSlides(dramas, FEATURED_ROW_COUNT);
   // Hanya genre yang benar-benar berisi — genre kosong yang diklik memulangkan
   // halaman hampa, dan itu terbaca seperti situs rusak.
   const genres = availableGenres(dramas);

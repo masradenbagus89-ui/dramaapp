@@ -21,10 +21,17 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 export default function FeaturedRow({
   dramas,
   href = "/discover",
+  title,
 }: {
   dramas: Drama[];
-  /** Tujuan tombol "lihat semua". */
+  /** Tujuan tautan/tombol "lihat semua". */
   href?: string;
+  /**
+   * Judul baris (mis. "Drama Action"). Ada judul = baris kategori biasa:
+   * judul di kiri + tautan kecil di kanan. Tanpa judul = baris UNGGULAN di
+   * kepala halaman, yang pakai tombol besar di tengah supaya menonjol.
+   */
+  title?: string;
 }) {
   const scroller = useRef<HTMLDivElement>(null);
 
@@ -38,10 +45,21 @@ export default function FeaturedRow({
 
   return (
     <section
-      aria-label="Film unggulan"
+      aria-label={title ?? "Film unggulan"}
       className="group/unggulan relative border-b border-zinc-900 bg-black py-4"
     >
       <div className="shell-wide relative mx-auto px-4 md:px-6">
+        {title && (
+          <div className="mb-2 flex items-end justify-between gap-3">
+            <h2 className="text-sm font-bold text-white md:text-base">{title}</h2>
+            <Link
+              href={href}
+              className="shrink-0 text-[11px] font-bold uppercase tracking-wide text-amber-400 hover:underline"
+            >
+              Lihat semua
+            </Link>
+          </div>
+        )}
         {/* Panah geser. Sengaja hanya di layar lebar: di HP menggeser dengan
             jari sudah lebih enak daripada menekan tombol kecil. */}
         <Button
@@ -50,7 +68,7 @@ export default function FeaturedRow({
           size="icon"
           onClick={() => geser(-1)}
           aria-label="Geser ke kiri"
-          className="absolute left-1 top-1/2 z-20 hidden size-9 -translate-y-1/2 rounded-full border border-white/25 bg-black/80 text-white opacity-0 shadow-lg transition-opacity hover:bg-black md:flex md:group-hover/unggulan:opacity-100"
+          className="absolute left-1 top-[45%] z-20 hidden size-9 -translate-y-1/2 rounded-full border border-white/25 bg-black/80 text-white opacity-0 shadow-lg transition-opacity hover:bg-black md:flex md:group-hover/unggulan:opacity-100"
         >
           <ChevronLeft className="size-5" />
         </Button>
@@ -60,7 +78,7 @@ export default function FeaturedRow({
           size="icon"
           onClick={() => geser(1)}
           aria-label="Geser ke kanan"
-          className="absolute right-1 top-1/2 z-20 hidden size-9 -translate-y-1/2 rounded-full border border-white/25 bg-rose-600 text-white opacity-0 shadow-lg transition-opacity hover:bg-rose-500 md:flex md:group-hover/unggulan:opacity-100"
+          className="absolute right-1 top-[45%] z-20 hidden size-9 -translate-y-1/2 rounded-full border border-white/25 bg-rose-600 text-white opacity-0 shadow-lg transition-opacity hover:bg-rose-500 md:flex md:group-hover/unggulan:opacity-100"
         >
           <ChevronRight className="size-5" />
         </Button>
@@ -79,14 +97,16 @@ export default function FeaturedRow({
           ))}
         </div>
 
-        <div className="mt-4 flex justify-center">
-          <Button
-            asChild
-            className="h-10 rounded-sm bg-gradient-to-r from-fuchsia-600 to-rose-600 px-6 text-xs font-bold uppercase tracking-wide text-white shadow-lg hover:from-fuchsia-500 hover:to-rose-500"
-          >
-            <Link href={href}>Lihat semua film unggulan</Link>
-          </Button>
-        </div>
+        {!title && (
+          <div className="mt-4 flex justify-center">
+            <Button
+              asChild
+              className="h-10 rounded-sm bg-gradient-to-r from-fuchsia-600 to-rose-600 px-6 text-xs font-bold uppercase tracking-wide text-white shadow-lg hover:from-fuchsia-500 hover:to-rose-500"
+            >
+              <Link href={href}>Lihat semua film unggulan</Link>
+            </Button>
+          </div>
+        )}
       </div>
     </section>
   );

@@ -205,3 +205,73 @@ export function countWithYear(dramas: Drama[]): number {
 export function countWithRating(dramas: Drama[]): number {
   return dramas.filter((d) => parseRating(d.imdbRating) > 0).length;
 }
+
+// =========================  BARIS KATALOG BERANDA  =======================
+/** Maksimal poster per baris. Lebih dari ini tak pernah terlihat tanpa digeser. */
+export const ROW_MAX_ITEMS = 20;
+
+/**
+ * Minimal isi sebuah baris supaya layak digambar.
+ *
+ * KENAPA ADA: katalog DramaKu timpang — ada kategori yang cuma berisi 1 judul.
+ * Baris dengan 1 poster meninggalkan ruang kosong selebar layar dan terbaca
+ * seperti halaman rusak, bukan seperti kategori yang memang masih sepi. Lebih
+ * baik kategori itu tidak muncul sebagai baris (tetap terjangkau lewat strip
+ * genre & /discover).
+ */
+export const ROW_MIN_ITEMS = 4;
+
+export type CatalogRow = {
+  /** Kunci stabil untuk React — TIDAK ikut berubah walau judulnya diganti. */
+  key: string;
+  title: string;
+  /** Tujuan tautan "Lihat semua" di ujung kanan baris. */
+  href: string;
+  items: Drama[];
+};
+
+/**
+ * Susun baris-baris poster untuk halaman depan (pola situs katalog: satu baris
+ * per kategori, digeser ke samping).
+ *
+ * Judul boleh muncul di lebih dari satu baris (mis. drama baru ber-genre Action
+ * ada di "Terbaru" DAN di "Action"). Itu memang perilaku situs katalog, bukan
+ * bug — barisnya menjawab pertanyaan berbeda ("apa yang baru?" vs "apa yang
+ * Action?").
+ */
+export function homeCatalogRows(dramas: Drama[]): CatalogRow[] {
+  if (dramas.length === 0) return [];
+
+  const rows: CatalogRow[] = [];
+  const potong = (list: Drama[]) => list.slice(0, ROW_MAX_ITEMS);
+
+  const terbaru = potong(sortCatalog(dramas, "terbaru"));
+  if (terbaru.length >= ROW_MIN_ITEMS) {
+    rows.push({ key: "terbaru", title: "Drama Terbaru", href: "/discover", items: terbaru });
+  }
+
+  const populer = potong(sortCatalog(dramas, "populer"));
+  if (populer.length >= ROW_MIN_ITEMS) {
+    rows.push({
+      key: "populer",
+      title: "Paling Banyak Ditonton",
+      href: "/discover",
+      items: populer,
+    });
+  }
+
+  // Urut dari genre paling berisi — kategori sepi jatuh ke bawah, lalu tersaring
+  // sendiri oleh ROW_MIN_ITEMS.
+  for (const genre of availableGenres(dramas)) {
+    const items = potong(dramas.filter((d) => d.category === genre));
+    if (items.length < ROW_MIN_ITEMS) continue;
+    rows.push({
+      key: `genre-${genre}`,
+      title: `Drama ${genre}`,
+      href: `/discover?cat=${encodeURIComponent(genre)}`,
+      items,
+    });
+  }
+
+  return rows;
+}

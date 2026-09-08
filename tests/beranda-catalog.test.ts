@@ -2,6 +2,8 @@ import { describe, it, expect } from "vitest";
 import {
   CATALOG_PER_PAGE,
   PAGE_GAP,
+  ROW_MAX_ITEMS,
+  homeCatalogRows,
   availableGenres,
   cardBadges,
   countWithRating,
@@ -164,5 +166,62 @@ describe("opsi filter dihitung dari data nyata", () => {
     expect(countWithYear(list)).toBe(1);
     expect(countWithRating(list)).toBe(1);
     expect(countWithYear([])).toBe(0);
+  });
+});
+
+describe("homeCatalogRows — baris poster halaman depan", () => {
+  const banyak = (genre: Drama["category"], n: number, awalan: string) =>
+    Array.from({ length: n }, (_, i) =>
+      stub({ id: `${awalan}${i}`, title: `${awalan} ${i}`, category: genre }),
+    );
+
+  it("kategori yang isinya di bawah ambang TIDAK dijadikan baris sendiri", () => {
+    // Meniru kenyataan katalog: Action banyak, Comedy cuma 1.
+    const list = [...banyak("Action", 10, "a"), ...banyak("Comedy", 1, "c")];
+    const judul = homeCatalogRows(list).map((r) => r.title);
+    expect(judul).toContain("Drama Action");
+    expect(judul).not.toContain("Drama Comedy");
+  });
+
+  it("selalu diawali baris Terbaru lalu Paling Banyak Ditonton", () => {
+    const rows = homeCatalogRows(banyak("Action", 10, "a"));
+    expect(rows[0].title).toBe("Drama Terbaru");
+    expect(rows[1].title).toBe("Paling Banyak Ditonton");
+  });
+
+  it("tiap baris dipotong di ROW_MAX_ITEMS", () => {
+    const rows = homeCatalogRows(banyak("Action", 50, "a"));
+    for (const r of rows) expect(r.items.length).toBeLessThanOrEqual(ROW_MAX_ITEMS);
+  });
+
+  it("genre paling berisi tampil lebih dulu", () => {
+    const list = [...banyak("Romance", 5, "r"), ...banyak("Action", 9, "a")];
+    const genreRows = homeCatalogRows(list)
+      .filter((r) => r.key.startsWith("genre-"))
+      .map((r) => r.title);
+    expect(genreRows).toEqual(["Drama Action", "Drama Romance"]);
+  });
+
+  it("tautan 'lihat semua' genre membawa kategorinya", () => {
+    const row = homeCatalogRows(banyak("Time Travel", 6, "t")).find((r) =>
+      r.key.startsWith("genre-"),
+    );
+    expect(row?.href).toBe("/discover?cat=Time%20Travel");
+  });
+
+  it("katalog kosong = nol baris, bukan baris kosong", () => {
+    expect(homeCatalogRows([])).toEqual([]);
+  });
+
+  it("katalog sangat sedikit tidak menghasilkan baris yang terlihat rusak", () => {
+    expect(homeCatalogRows(banyak("Action", 2, "a"))).toEqual([]);
+  });
+
+  it("tiap baris punya kunci unik (React butuh ini)", () => {
+    const rows = homeCatalogRows([
+      ...banyak("Action", 8, "a"),
+      ...banyak("Romance", 8, "r"),
+    ]);
+    expect(new Set(rows.map((r) => r.key)).size).toBe(rows.length);
   });
 });

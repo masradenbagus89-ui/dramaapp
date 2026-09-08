@@ -128,6 +128,30 @@ grid 30806.
 DramaKu dijalankan di **3055** (`npx next dev -p 3055`). Membuka `localhost:3000` akan menampilkan
 aplikasi lain, bukan DramaKu.
 
+## 📏 2026-09-08 (TERBARU) — Baris poster melebar sampai tepi layar
+
+Owner membandingkan dengan situs katalog pembandingnya: di sana baris poster melebar penuh dengan
+~28 poster sebaris. Di DramaKu isinya terkurung jadi kolom sempit di tengah, kiri-kanan hitam
+kosong, cuma ~8 poster sebaris.
+
+**Akar masalah:** `.shell-wide { max-width: 90rem }` (1440px) di `app/globals.css`. Kelas itu
+dipakai BERSAMA navbar + seluruh isi katalog — justru itu untungnya: cukup diubah SEKALI, navbar
+ikut melebar dan tetap sejajar. Kontrak "satu tempat" itu memang ditulis untuk kasus begini.
+
+- `app/globals.css`: `max-width: 90rem` -> `100%`. Komentar kontraknya ikut diperbarui (masih
+  menyebut 1440 + alasan kolom iklan 540px yang sudah lama dibatalkan = menyesatkan).
+- `FeaturedRow.tsx`: kartu `w-28/32/36/40` (112-160px) -> `w-24/28/32` (96-128px).
+- `CatalogBrowser.tsx`: grid maks 8 -> **12 kolom**; tanpa ini kolom melar & poster jadi raksasa.
+
+`/discover` SENGAJA tidak ikut melebar — halaman itu memakai `max-w-7xl` sendiri, bukan shell-wide.
+
+**Bukti:** `tsc` bersih · 424 tes hijau · `next build` sukses · commit `1b7729d` dual push
+terverifikasi. **Produksi: CSS yang dilayani berisi `.shell-wide{max-width:100%}`** — jadi terbukti
+sampai ke penonton, bukan cuma ada di kode.
+
+**⚠️ Jebakan verifikasi (catat!):** CSS Next.js dilayani dari `/_next/static/chunks/*.css`, BUKAN
+`/_next/static/css/*.css`. Pola grep lama meleset dan sempat memberi kesan "aturannya tidak ada".
+
 ## 🎞️ 2026-09-08 (TERBARU) — Halaman depan jadi halaman KATALOG (14 -> 92 poster)
 
 Owner: halaman depan harus jadi platform streaming dengan **fokus utama katalog drama, banyak

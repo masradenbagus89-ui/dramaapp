@@ -128,6 +128,35 @@ grid 30806.
 DramaKu dijalankan di **3055** (`npx next dev -p 3055`). Membuka `localhost:3000` akan menampilkan
 aplikasi lain, bukan DramaKu.
 
+## 🚫 2026-09-08 (TERBARU) — 3 slot iklan DIHAPUS dari /beranda
+
+Owner menandai kotak merah di banner ungu "DramaKu" yang menyela antar-baris film, minta
+dihilangkan supaya susunan poster rapi seperti situs katalog pembandingnya.
+
+- `app/beranda/page.tsx`: 3 pemasangan `<AdBanner />` dihapus + impornya.
+- `CatalogBrowser.tsx`: prop `adSlot` DIHAPUS (nol pemanggil sesudahnya = kode mati).
+
+**⚠️ INI MEMBATALKAN permintaan owner 2026-09-03 (commit `68741a7`)** yang justru meminta 3 slot
+iklan melintang. Alasannya sudah ditulis sebagai komentar di `app/beranda/page.tsx` supaya sesi
+berikutnya TIDAK "memperbaikinya" balik tanpa perintah baru.
+
+**Komponen `AdBanner` TIDAK dihapus & halaman lain TIDAK disentuh:** `/drama/[id]` dan `/profile`
+masih memasang slotnya (diverifikasi produksi: `/drama/<id>` tetap 1 banner, `/profile` 200).
+
+**Konsekuensi pendapatan (owner sudah tahu — dia sendiri menyebutnya "iklan"):** banner ungu itu
+adalah `AdBanner` dalam mode *house ad* — promo DramaKu sendiri, tampil karena belum ada network
+iklan yang dikonfigurasi (`NEXT_PUBLIC_ADSENSE_CLIENT`/`SLOT` kosong). Dengan slotnya dihapus,
+halaman katalog kehilangan tempat menaruh iklan berbayar kalau nanti AdSense disetujui.
+**Alternatif kalau owner mau tampilan tetap bersih TAPI pendapatan kembali:** slot dipasang lagi
+tapi `AdBanner` dibuat TIDAK menggambar apa pun saat tak ada iklan nyata (buang fallback promo).
+Belum dikerjakan — menunggu perintah.
+
+**Bukti:** `tsc` bersih · 424 tes hijau · `next build` sukses · commit `7f12903` dual push
+terverifikasi. Produksi `/beranda`: label "Iklan" = 0, 56 kartu poster, baris unggulan + grid utuh.
+
+**Catatan deploy:** kali ini Vercel butuh ~2 menit (percobaan 1 & 2 masih versi lama), bukan ~1
+menit seperti rilis-rilis sebelumnya.
+
 ## 🔳 2026-09-08 (TERBARU) — Poster dirapatkan: 92 -> 133 kartu di halaman depan
 
 Owner: poster masih kurang rapat / kurang banyak sebaris. Ternyata ada **EMPAT** pengunci, bukan

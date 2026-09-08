@@ -22,8 +22,10 @@ import {
   type CatalogSort,
 } from "@/lib/beranda-catalog";
 import CatalogCard from "./CatalogCard";
+import GenreStrip from "./GenreStrip";
+import SearchBar from "./SearchBar";
+import { SHELL } from "./shell";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -32,19 +34,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Home,
-  Search,
-  SlidersHorizontal,
-  X,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, Home, Search, X } from "lucide-react";
 
 const SEMUA = "Semua";
-
-/** Kelas pembatas isi — sama dengan navbar & sisa beranda (lihat globals.css). */
-const SHELL = "shell-wide mx-auto px-4 md:px-6";
 
 /** Bentuk seragam untuk dropdown penyaring di bar magenta. */
 const TRIGGER_CLASS =
@@ -91,7 +83,6 @@ export default function CatalogBrowser({
   const [minRating, setMinRating] = useState<RatingKey>("all");
   const [sort, setSort] = useState<CatalogSort>("terbaru");
   const [page, setPage] = useState(1);
-  const [filterTerbuka, setFilterTerbuka] = useState(false);
   const gridRef = useRef<HTMLDivElement>(null);
 
   const genres = useMemo(() => availableGenres(dramas), [dramas]);
@@ -219,85 +210,25 @@ export default function CatalogBrowser({
   return (
     <section aria-labelledby="judul-katalog">
       {/* ============ 1. BAR CARI — kepala situs, menempel saat digulir ======
-          top-14 = tepat di bawah navbar (tingginya h-14). */}
-      <div className="sticky top-14 z-30 bg-gradient-to-r from-fuchsia-700 via-rose-600 to-red-600 shadow-lg shadow-black/50">
-        <div className={cn(SHELL, "flex items-center gap-2 py-2.5")}>
-          <form
-            onSubmit={(e) => e.preventDefault()}
-            className="flex min-w-0 flex-1 items-stretch md:max-w-xl"
-            role="search"
-          >
-            <Input
-              type="search"
-              value={query}
-              onChange={(e) => ubahFilter(() => setQuery(e.target.value))}
-              placeholder="Cari judul drama atau film di DramaKu"
-              aria-label="Cari drama"
-              className="h-9 rounded-l-sm rounded-r-none border-transparent bg-white text-sm text-zinc-900 placeholder:text-zinc-500 focus-visible:border-amber-400 focus-visible:ring-0"
-            />
-            <span className="flex h-9 w-11 shrink-0 items-center justify-center rounded-r-sm bg-red-700 text-white">
-              <Search className="size-4" />
-            </span>
-          </form>
-
-          {/* Penyaring berjajar di kanan bar — desktop. */}
-          <div className="ml-auto hidden items-center gap-1.5 md:flex">
-            {dropdownPenyaring}
-          </div>
-
-          {/* Di HP penyaring disembunyikan di balik tombol supaya bar tetap
-              muat satu baris. */}
-          <Button
-            type="button"
-            size="sm"
-            onClick={() => setFilterTerbuka((v) => !v)}
-            aria-expanded={filterTerbuka}
-            className="h-9 shrink-0 gap-1.5 rounded-sm bg-black/30 text-xs font-bold uppercase tracking-wide text-white hover:bg-black/50 md:hidden"
-          >
-            <SlidersHorizontal className="size-3.5" />
-            Filter
-          </Button>
-        </div>
-
-        {filterTerbuka && (
-          <div className={cn(SHELL, "grid grid-cols-2 gap-1.5 pb-2.5 md:hidden")}>
-            {dropdownPenyaring}
-          </div>
-        )}
-      </div>
+          top-14 = tepat di bawah navbar (tingginya h-14). Komponennya SAMA
+          dengan yang dipakai halaman depan; bedanya cuma arti pencariannya —
+          di sini menyaring grid di bawah, di sana melempar ke /discover. */}
+      <SearchBar
+        value={query}
+        onValueChange={(v) => ubahFilter(() => setQuery(v))}
+        filters={dropdownPenyaring}
+        className="sticky top-14"
+      />
 
       {/* ============ 2. STRIP GENRE ========================================
           Hanya genre yang benar-benar berisi (availableGenres) — genre kosong
           yang diklik memulangkan halaman hampa. */}
-      <div className="border-b-2 border-amber-600 bg-gradient-to-r from-amber-400 to-yellow-400">
-        <div className={cn(SHELL, "no-scrollbar flex items-center overflow-x-auto px-2 md:px-4")}>
-          {[SEMUA, ...genres].map((g) => {
-            const aktif = g === genre;
-            return (
-              <button
-                key={g}
-                type="button"
-                onClick={() => ubahFilter(() => setGenre(g))}
-                aria-pressed={aktif}
-                className={cn(
-                  "shrink-0 px-3 py-2 text-[11px] font-extrabold uppercase tracking-wide transition-colors",
-                  aktif
-                    ? "bg-zinc-950 text-amber-400"
-                    : "text-zinc-900 hover:bg-amber-300",
-                )}
-              >
-                {g}
-              </button>
-            );
-          })}
-          <Link
-            href="/discover"
-            className="ml-auto shrink-0 px-3 py-2 text-[11px] font-extrabold uppercase tracking-wide text-red-800 hover:bg-amber-300"
-          >
-            Jelajah
-          </Link>
-        </div>
-      </div>
+      <GenreStrip
+        genres={[SEMUA, ...genres]}
+        active={genre}
+        onSelect={(g) => ubahFilter(() => setGenre(g))}
+        moreHref="/discover"
+      />
 
       {/* ============ 3. BANNER UNGGULAN (ramping) ========================== */}
       {heroSlot}

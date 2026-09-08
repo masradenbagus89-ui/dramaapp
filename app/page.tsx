@@ -4,6 +4,8 @@ import { getAllDramasCachedSafe } from "@/lib/dramas";
 import { featuredHeroSlides } from "@/lib/hero-teaser";
 import RedirectIfAuthed from "@/app/components/RedirectIfAuthed";
 import FeaturedRow from "@/app/components/beranda/FeaturedRow";
+import PublicTopBars from "@/app/components/beranda/PublicTopBars";
+import { availableGenres } from "@/lib/beranda-catalog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -60,6 +62,9 @@ export default async function LandingPage() {
   const dramas = await getAllDramasCachedSafe();
   const heroDramas = dramas.slice(0, 6);
   const heroSlides = featuredHeroSlides(dramas);
+  // Hanya genre yang benar-benar berisi — genre kosong yang diklik memulangkan
+  // halaman hampa, dan itu terbaca seperti situs rusak.
+  const genres = availableGenres(dramas);
 
   return (
     <div className="min-h-screen bg-black">
@@ -93,34 +98,39 @@ export default async function LandingPage() {
         </div>
       </header>
 
-      {/* Sambutan. TIDAK ada lagi latar video yang berganti sendiri tiap 9 detik
-          (permintaan owner 2026-09-07) — halaman depan kini sejalan dengan
-          /beranda: yang bergerak hanya kalau penonton menggerakkannya.
-          Latar diganti gradasi diam, jadi teks tetap terbaca tanpa perlu lapisan
-          penggelap bertumpuk seperti dulu. */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-zinc-950 via-black to-black">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(251,191,36,0.15),transparent_60%)]" />
+      {/* ===== Kepala situs: bar cari + strip genre, LANGSUNG di bawah header.
+             Struktur ini mengikuti situs katalog streaming (permintaan owner
+             2026-09-08): pengunjung yang belum login pun langsung melihat
+             pencarian, genre, dan poster — bukan blok sambutan sehalaman penuh.
+             Cari & genre melempar ke /discover, yang memang publik. ===== */}
+      <PublicTopBars genres={genres} />
 
-        {/* Decorative film strip pattern */}
-        <FilmStripPattern />
+      {/* ===== Baris FILM UNGGULAN — komponen yang SAMA dengan /beranda, jadi
+             tampilan & perilakunya persis: poster hanya bergeser kalau digeser
+             penonton, tidak ada yang berjalan sendiri.
 
-        {/* Rata KIRI menempel tepi: px-4 md:px-6 disamakan dengan header di atas.
-            Angkanya WAJIB sama — kalau salah satu diubah, logo & judul tak lagi
-            sejajar. Tingginya dikecilkan dari 70svh: tanpa video di belakang,
-            ruang sebesar itu cuma kosong dan mendorong baris poster keluar dari
-            layar pertama. */}
-        <div className="relative flex min-h-[42svh] flex-col items-start justify-center gap-5 px-4 py-12 text-left md:px-6 md:py-14">
+             Kartunya menuju /drama/<id> (halaman itu PUBLIK — terbukti HTTP 200
+             tanpa cookie login), jadi pengunjung bisa mengintip dulu sebelum
+             diminta mendaftar. ===== */}
+      <FeaturedRow dramas={heroSlides} href="/discover" />
+
+      {/* ===== Ajakan daftar. DIPINDAH ke bawah baris poster (dulu blok besar
+             sehalaman penuh di paling atas): poster yang jadi pemikat, ajakan
+             menyusul sesudah pengunjung melihat ada isinya. Ringkas — tugasnya
+             mengajak, bukan menguasai layar pertama. ===== */}
+      <section className="border-y border-zinc-900 bg-gradient-to-b from-zinc-950 to-black">
+        <div className="mx-auto flex max-w-3xl flex-col items-center gap-4 px-4 py-10 text-center md:px-6">
           <Badge className="rounded-full border border-amber-400/40 bg-amber-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-amber-300">
             Drama China Pendek · Bahasa Indonesia
           </Badge>
-          <h1 className="title-gold text-4xl leading-[1.05] drop-shadow-[0_2px_14px_rgba(0,0,0,0.85)] sm:text-5xl md:text-6xl">
-            Cerita pendek, <br />
+          <h1 className="title-gold text-2xl leading-tight sm:text-3xl md:text-4xl">
+            Cerita pendek,{" "}
             <span className="text-white not-italic">emosi panjang.</span>
           </h1>
-          <p className="max-w-xl text-base text-zinc-100 drop-shadow-[0_1px_8px_rgba(0,0,0,0.8)] md:text-lg">
-            DramaKu adalah platform menonton drama China pendek. Daftar gratis, login, lalu nikmati ratusan judul drama tanpa langganan.
+          <p className="max-w-xl text-sm text-zinc-300 md:text-base">
+            Daftar gratis, login, lalu nikmati ratusan judul drama tanpa langganan.
           </p>
-          <div className="flex flex-wrap justify-start gap-3">
+          <div className="flex flex-wrap justify-center gap-3">
             <Button
               asChild
               size="lg"
@@ -137,23 +147,13 @@ export default async function LandingPage() {
               <Link href="/login">Sudah punya akun? Masuk</Link>
             </Button>
           </div>
-          <div className="flex flex-wrap justify-start gap-6">
+          <div className="flex flex-wrap justify-center gap-6 pt-1">
             <Stat label="Drama tersedia" value={String(dramas.length)} />
-            <Stat label="Kategori" value="7" />
+            <Stat label="Kategori" value={String(genres.length)} />
             <Stat label="Biaya" value="Gratis" />
           </div>
         </div>
       </section>
-
-      {/* Baris FILM UNGGULAN — komponen yang SAMA dengan /beranda, jadi tampilan
-          & perilakunya persis: poster hanya bergeser kalau digeser penonton.
-          Menggantikan strip poster lama yang cuma muncul di HP; komponen ini
-          jalan di semua ukuran layar, jadi tak perlu dua versi.
-
-          Kartunya menuju /drama/<id> (halaman itu PUBLIK — terbukti HTTP 200
-          tanpa cookie login), bukan lagi langsung ke /login seperti strip lama.
-          Tombol "lihat semua" tetap mengarah ke pendaftaran. */}
-      <FeaturedRow dramas={heroSlides} href="/daftar" />
 
       {/* Fitur grid */}
       <section className="mx-auto max-w-7xl px-4 py-14 md:px-6 md:py-20">

@@ -114,43 +114,40 @@ export default async function LandingPage() {
              diminta mendaftar. ===== */}
       <FeaturedRow dramas={heroSlides} href="/discover" />
 
-      {/* ===== Ajakan daftar. DIPINDAH ke bawah baris poster (dulu blok besar
-             sehalaman penuh di paling atas): poster yang jadi pemikat, ajakan
-             menyusul sesudah pengunjung melihat ada isinya. Ringkas — tugasnya
-             mengajak, bukan menguasai layar pertama. ===== */}
-      <section className="border-y border-zinc-900 bg-gradient-to-b from-zinc-950 to-black">
-        <div className="mx-auto flex max-w-3xl flex-col items-center gap-4 px-4 py-10 text-center md:px-6">
-          <Badge className="rounded-full border border-amber-400/40 bg-amber-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-amber-300">
-            Drama China Pendek · Bahasa Indonesia
-          </Badge>
-          <h1 className="title-gold text-2xl leading-tight sm:text-3xl md:text-4xl">
-            Cerita pendek,{" "}
-            <span className="text-white not-italic">emosi panjang.</span>
+      {/* ===== Ajakan daftar — STRIP TIPIS, bukan blok tinggi.
+             Dirampingkan 2026-09-08: sebelumnya memakai judul serif besar +
+             lencana + 3 kotak statistik, sehingga menguasai layar tepat sesudah
+             baris poster dan memutus alur "lihat poster -> gulir lagi". Di situs
+             katalog pembandingnya bagian ini cuma satu baris teks + satu tombol.
+
+             Judul h1 DIPERTAHANKAN (dikecilkan, bukan dibuang): ini satu-satunya
+             h1 di halaman depan, dipakai mesin pencari untuk mengenali isi
+             situs. Angka katalog dipindah ke dalam kalimat supaya tetap
+             tersampaikan tanpa perlu 3 kotak terpisah. ===== */}
+      <section className="border-y border-zinc-900 bg-zinc-950/70">
+        <div className="mx-auto flex max-w-2xl flex-col items-center gap-2.5 px-4 py-6 text-center md:px-6">
+          <h1 className="text-base font-bold text-amber-400 md:text-lg">
+            Nonton drama China pendek sub Indo — gratis
           </h1>
-          <p className="max-w-xl text-sm text-zinc-300 md:text-base">
-            Daftar gratis, login, lalu nikmati ratusan judul drama tanpa langganan.
+          <p className="text-xs leading-relaxed text-zinc-400 md:text-sm">
+            {dramas.length} judul dalam {genres.length} kategori, tanpa langganan.
+            Daftar gratis untuk menyimpan drama favorit dan melanjutkan tontonan
+            dari episode terakhir.
           </p>
-          <div className="flex flex-wrap justify-center gap-3">
+          <div className="flex flex-wrap justify-center gap-2 pt-0.5">
             <Button
               asChild
-              size="lg"
-              className="rounded-full bg-amber-400 px-6 py-3 text-sm font-bold text-black hover:bg-amber-300"
+              className="rounded-full bg-amber-400 px-5 text-sm font-bold text-black hover:bg-amber-300"
             >
               <Link href="/daftar">Daftar Gratis</Link>
             </Button>
             <Button
               asChild
               variant="outline"
-              size="lg"
-              className="rounded-full border-zinc-600 bg-black/40 px-6 py-3 text-sm font-semibold text-white hover:border-amber-400 hover:text-amber-400"
+              className="rounded-full border-zinc-700 bg-black/40 px-5 text-sm font-semibold text-white hover:border-amber-400 hover:text-amber-400"
             >
               <Link href="/login">Sudah punya akun? Masuk</Link>
             </Button>
-          </div>
-          <div className="flex flex-wrap justify-center gap-6 pt-1">
-            <Stat label="Drama tersedia" value={String(dramas.length)} />
-            <Stat label="Kategori" value={String(genres.length)} />
-            <Stat label="Biaya" value="Gratis" />
           </div>
         </div>
       </section>
@@ -358,15 +355,6 @@ export default async function LandingPage() {
           </div>
         </div>
       </footer>
-    </div>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex flex-col">
-      <p className="text-xl font-bold text-white md:text-2xl">{value}</p>
-      <p className="text-[10px] uppercase tracking-wider text-zinc-500">{label}</p>
     </div>
   );
 }

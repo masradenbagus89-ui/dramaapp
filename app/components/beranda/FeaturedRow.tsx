@@ -91,7 +91,7 @@ export default function FeaturedRow({
             // Lebar dikunci di sini (bukan di CatalogCard) supaya kartunya tetap
             // kartu yang SAMA dengan yang dipakai grid di bawah — lencana, hover,
             // dan cuplikannya tidak perlu dibuat versi kedua.
-            <div key={d.id} className="w-28 shrink-0 sm:w-32 md:w-36 lg:w-40">
+            <div key={d.id} className="w-24 shrink-0 sm:w-28 md:w-32">
               <CatalogCard drama={d} />
             </div>
           ))}

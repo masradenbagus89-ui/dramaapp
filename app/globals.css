@@ -175,20 +175,26 @@
 }
 
 /*
- * Lebar isi BERANDA + navbar atas (1440px). Beranda dilebarkan 2026-09-03 karena
- * barisnya kini berbagi tempat dengan kolom iklan 540px di kanan; tanpa tambahan
- * lebar, jumlah poster yang terlihat sekaligus berkurang terlalu banyak.
+ * Lebar isi KATALOG + navbar atas.
  *
- * ⚠️ KONTRAK: navbar (TopNav) WAJIB memakai kelas yang SAMA dengan isi beranda.
+ * 2026-09-08: batas 1440px DILEPAS atas permintaan owner — baris poster harus
+ * melebar sampai tepi layar seperti situs katalog pembandingnya. Dengan batas
+ * lama, di layar lebar isinya terkurung jadi kolom sempit di tengah dan sisa
+ * kiri-kanannya hitam kosong, sehingga poster yang terlihat sekaligus jauh lebih
+ * sedikit. Riwayat sebelumnya: 1280 -> 1440 (2026-09-03, waktu masih ada kolom
+ * iklan 540px di kanan; kolom itu sendiri sudah dibatalkan).
+ *
+ * ⚠️ KONTRAK: navbar (TopNav) WAJIB memakai kelas yang SAMA dengan isi katalog.
  * Kalau salah satu diubah sendiri, logo DramaKu tidak lagi sejajar dengan tepi
  * konten — putus TANPA error apa pun, tak ada yang melapor. Itu sebabnya
  * angkanya ditaruh di SATU tempat ini, bukan ditulis ulang di tiap berkas.
+ * Justru karena satu tempat inilah pelebaran cukup diubah sekali di sini.
  *
- * Halaman lain sengaja masih 1280 (max-w-7xl) — pelebaran dibatasi ke beranda
- * atas pilihan owner.
+ * Halaman lain (mis. /discover) sengaja masih 1280 (max-w-7xl) — pelebaran
+ * dibatasi ke halaman katalog atas pilihan owner.
  */
 .shell-wide {
-  max-width: 90rem; /* 1440px */
+  max-width: 100%;
 }
 
 @media (prefers-reduced-motion: no-preference) {

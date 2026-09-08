@@ -128,6 +128,34 @@ grid 30806.
 DramaKu dijalankan di **3055** (`npx next dev -p 3055`). Membuka `localhost:3000` akan menampilkan
 aplikasi lain, bukan DramaKu.
 
+## 🎞️ 2026-09-08 (TERBARU) — Halaman depan jadi halaman KATALOG (14 -> 92 poster)
+
+Owner: halaman depan harus jadi platform streaming dengan **fokus utama katalog drama, banyak
+poster dalam satu halaman**. Sebelumnya halaman depan masih halaman PROMOSI.
+
+**DIBUANG (4 seksi + kode matinya):** "Apa saja yang bisa kamu lakukan" (+ konstanta `FITUR`),
+"Sekilas drama yang bisa kamu tonton" (cuma 6 poster, + variabel `heroDramas`), "Cara mulai dalam
+3 langkah", "Kenapa pilih DramaKu?". Impor `Badge`/`Card`/`Check`/`Lock` ikut menganggur -> dibuang.
+
+**DIGANTI baris poster per kategori:** `homeCatalogRows()` di `lib/beranda-catalog.ts` menyusun
+baris dari data nyata. `FeaturedRow` dapat prop opsional `title` — ada judul = baris kategori
+(judul kiri + tautan kecil kanan), tanpa judul = baris unggulan dengan tombol besar seperti semula,
+jadi pemakaian lama tak berubah.
+
+**⚠️ BATAS JUJUR — `ROW_MIN_ITEMS = 4`.** Katalog TIMPANG: Action 21, Romance 14, Tycoon 4, tapi
+**Harem / Time Travel / Comedy masing-masing CUMA 1 judul**. Baris berisi 1 poster meninggalkan
+ruang kosong selebar layar dan terbaca seperti halaman rusak, jadi kategori di bawah ambang sengaja
+TIDAK dijadikan baris (tetap terjangkau lewat strip genre & /discover). Situs pembandingnya punya
+ribuan judul sehingga tiap barisnya penuh; DramaKu punya 42. **Ini batas DATA, bukan batas tata
+letak** — begitu katalog bertambah, barisnya muncul sendiri tanpa perlu ubah kode.
+
+Judul boleh muncul di lebih dari satu baris (drama Action baru ada di "Terbaru" DAN "Action") —
+itu memang perilaku situs katalog, bukan bug.
+
+**Bukti:** `tsc` bersih · **424 tes hijau** (8 tes baru, termasuk penjaga agar kategori sepi tak
+dijadikan baris) · `next build` sukses · commit `d89ef3f` dual push terverifikasi. Produksi:
+**92 kartu poster** dalam 6 baris, keempat seksi promosi NOL, tetap 1 h1, tombol Daftar Gratis ada.
+
 ## 📐 2026-09-08 (TERBARU) — Ajakan daftar dirampingkan jadi strip tipis
 
 Owner membandingkan halaman depan dengan situs katalog pembandingnya, dua tangkapan layar dipotong

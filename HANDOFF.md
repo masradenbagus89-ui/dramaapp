@@ -70,6 +70,26 @@ grid 30806.
 DramaKu dijalankan di **3055** (`npx next dev -p 3055`). Membuka `localhost:3000` akan menampilkan
 aplikasi lain, bukan DramaKu.
 
+## 🖼️ 2026-09-08 (TERBARU) — Baris FILM UNGGULAN diisi penuh (5 -> 14 poster)
+
+Owner mengirim tangkapan layar halaman depan: strukturnya sudah benar, TAPI posternya cuma 5 dan
+sisa lebar layar di kanan kosong melompong — barisnya terlihat belum jadi.
+
+**Akar masalah:** `featuredHeroSlides(dramas, max = 5)` di `lib/hero-teaser.ts:82`; KETIGA halaman
+memakai batas bawaan itu. Pada layar 1440px muat ~8 kartu sekaligus, jadi 5 tak akan pernah penuh.
+Stok drama sendiri ada 42.
+
+**Perbaikan:** `FEATURED_ROW_COUNT = 14` di `lib/beranda-catalog.ts` (angka diberi NAMA + alasan,
+bukan angka ajaib), dipakai `app/page.tsx` & `app/beranda/page.tsx`. 14 = baris penuh DAN masih
+ada sisa untuk digeser; kalau pas-pasan, panah gesernya jadi tak berguna.
+
+**`/discover` SENGAJA TIDAK diubah** — di sana `featuredHeroSlides` dipakai untuk hero sinematik
+yang berganti satu per satu, 5 memang batas yang benar. Terbukti di produksi masih punya
+`min-h-[80svh]` + carousel.
+
+**Bukti:** `tsc` bersih · 416 tes hijau · `next build` sukses · commit `88fbe18` dual push
+terverifikasi. Produksi: `/` **14 kartu** (dari 5), 6 tautan genre, nol carousel berjalan.
+
 ## 🔎 2026-09-08 (TERBARU) — Halaman SEBELUM LOGIN ikut struktur katalog
 
 Owner: halaman DramaKu sebelum login harus benar-benar mengikuti struktur situs katalog streaming,

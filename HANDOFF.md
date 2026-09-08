@@ -13,7 +13,65 @@ kuota Vercel aman. **Migrasi database BELUM tuntas** — datanya sudah pindah, t
 masih terkunci; rinciannya di bagian KOREKSI di bawah. **Jangan ganti env Supabase di Vercel dulu
 — situs akan mati.**
 
-## 🎬 2026-09-07 (TERBARU) — Beranda dirombak: katalog grid padat + paginasi
+## 📊 2026-09-08 (TERBARU) — Deck investor DramaKu dibuat dari Dokumentasi-Dashboard-DramaKu.xlsx
+
+Permintaan owner: jadikan dokumentasi dashboard (xlsx, 9 fitur berjalan + 8 rencana) sebagai
+presentasi menarik + visual untuk investor.
+
+**Hasil:** `presentasi/Deck-Investor-DramaKu.html` — 11 salindia, satu berkas mandiri (poster &
+logo ditanam sebagai data URI, jadi tetap tampil offline). Diterbitkan juga sebagai Artifact:
+https://claude.ai/code/artifact/2c06c4f1-2b81-4cd1-812c-03d522e8e362
+
+**Angka di deck DIVERIFIKASI dari situs publik**, bukan dari `data/dramas.json` (berkas itu
+fallback lokal dan sudah basi: 21 judul). Hasil crawl `dramaapp.vercel.app/beranda` + 34 halaman
+`/drama/<slug>` pada 2026-09-08: **34 judul, 2.153 episode**, rata-rata 63,3, terpanjang 102,
+terpendek 26; kategori terbaca 32/34 (Action 14, Romance 11, Tycoon 4, Harem/Time Travel/Comedy
+masing-masing 1). Dua judul terbaru belum berlabel kategori.
+
+**JEBAKAN untuk sesi berikutnya:** angka "1.0K ditonton" di halaman drama itu **nilai tampilan yang
+sama di SEMUA judul** — bukan jumlah tontonan nyata. Jangan pernah dipakai sebagai traksi.
+Karena itu deck sengaja TIDAK mencantumkan jumlah penonton/pendapatan; slide risiko menyatakan
+alasannya terbuka.
+
+**`SUPABASE_URL` di `.env.local` menunjuk project yang tabelnya sudah tidak ada** (query `dramas`
+balas `PGRST205 Could not find the table 'public.dramas'`). Konsisten dengan catatan migrasi di
+atas — kalau butuh angka katalog, ambil dari situs produksi, bukan dari env lokal.
+
+**Klaim di deck yang dicek langsung ke kode:** `FREE_EPISODES = 3` (`lib/coins.ts:17`) · penghitung
+tayang/klik iklan (`app/api/ads/event/route.ts`) · Midtrans terpasang tapi butuh kunci
+(`lib/midtrans.ts`, `app/api/coins/topup/route.ts` balas "Pembayaran belum aktif").
+
+**Catatan beda dengan xlsx:** baris rencana "Rekomendasi karena kamu menonton …" di xlsx ditulis
+sebagai usulan, padahal baris personal berbasis genre favorit SUDAH ada
+(`lib/recommend.ts` + `app/components/beranda/PersonalRows.tsx`). Deck tetap mengikuti xlsx;
+owner perlu memutuskan apakah baris itu dianggap selesai sebagian.
+
+**Yang MASIH kosong dan harus diisi owner sebelum presentasi** (klik tombol "Isi angka" di deck,
+tersimpan di browser lewat localStorage): jumlah dana yang diminta, tiga pos anggaran, dan kontak.
+
+**Bukti:** dirender Chrome via Playwright — 11 salindia, `document.title` = "DramaKu", font Anton
+termuat, **nol error konsol**, `scrollWidth == clientWidth` di 1440px maupun 390px (tidak ada
+geser samping). Potret tiap salindia diperiksa satu per satu.
+
+**JEBAKAN artifact:** tautan artifact claude.ai itu **private** — hanya terbuka di browser yang
+sedang login ke akun pemiliknya. Browser yang belum login menampilkan **"Page not found"**, bukan
+pesan "tidak punya akses". Owner mengalaminya 2026-09-08. Untuk dibagikan ke investor, artifact
+harus dibuka dulu (sudah login) lalu dipakai menu Share di halamannya. Karena itu deck ini
+disediakan juga sebagai berkas lokal yang **tidak butuh login sama sekali**:
+
+- `presentasi/Deck-Investor-DramaKu.html` — klik ganda, animasi poster jalan.
+  Berkas ini ditulis TANPA `<!doctype>` (wadah artifact yang menambahkannya). Dibandingkan
+  langsung: modus render beda (`BackCompat` vs `CSS1Compat`) tapi **semua ukuran identik**
+  (11 salindia, tinggi 900px, tanpa geser samping, font Anton termuat) → aman dibuka dari disk.
+- `presentasi/Deck-Investor-DramaKu.pdf` — 11 halaman, 3,34 MB, 2880x1800 px per halaman.
+  Dibuat dengan memotret tiap salindia (bukan print CSS) supaya poster & gradasi emas persis
+  sama; animasi dibekukan dan navigasi layar disembunyikan lebih dulu.
+  Skrip pembuatnya ada di scratchpad sesi, bukan di repo — kalau deck berubah, PDF harus
+  dibuat ulang, tidak ikut otomatis.
+
+**Tidak ada kode aplikasi yang disentuh** — hanya penambahan berkas di `presentasi/`.
+
+## 🎬 2026-09-07 — Beranda dirombak: katalog grid padat + paginasi
 
 Permintaan owner: halaman Home dibuat seperti situs streaming katalog (bar cari mencolok, strip
 genre, **grid poster padat**) digabung rasa streaming modern. Rencana lengkap ada di
@@ -69,6 +127,30 @@ grid 30806.
 **Catatan port:** di komputer ini port 3000/3001/3005/3010/3011 SUDAH dipakai 5 aplikasi node lain.
 DramaKu dijalankan di **3055** (`npx next dev -p 3055`). Membuka `localhost:3000` akan menampilkan
 aplikasi lain, bukan DramaKu.
+
+## 📐 2026-09-08 (TERBARU) — Ajakan daftar dirampingkan jadi strip tipis
+
+Owner membandingkan halaman depan dengan situs katalog pembandingnya, dua tangkapan layar dipotong
+di tempat yang SAMA: tepat sesudah baris poster. Di sana bedanya paling mencolok — pembandingnya
+cuma strip tipis (judul kecil + 1 baris teks + tombol), DramaKu masih blok tinggi berisi lencana,
+judul serif besar, dan 3 kotak statistik.
+
+**Perubahan (`app/page.tsx` saja):** lencana + judul serif besar + 3 kotak statistik DIBUANG.
+Angka katalog dipindah ke dalam kalimat ("42 judul dalam 6 kategori"). `py-10 gap-4 max-w-3xl` ->
+`py-6 gap-2.5 max-w-2xl`. `function Stat()` DIHAPUS (nol pemakai sesudahnya).
+
+**Yang SENGAJA dipertahankan:** judul `h1` (dikecilkan, bukan dibuang) — ini satu-satunya h1 di
+halaman depan dan dipakai mesin pencari mengenali isi situs; diverifikasi produksi tetap **tepat
+1 h1**. Tombol Daftar Gratis + Masuk juga tetap, jalur pendaftaran tidak boleh putus.
+
+**Bukti:** `tsc` bersih · 416 tes hijau · `next build` sukses · commit `6447db7` dual push
+terverifikasi. Produksi: 1 h1, 14 kartu poster, kedua tombol ada; judul serif besar / kotak
+statistik / lencana = NOL.
+
+**⚠️ Temuan sampingan (BELUM ditangani — owner minta fokus 1 hal saja):** saat `next build` muncul
+`[playly] katalog publik gagal: Playly membalas error (HTTP 500)` 2x. Akibatnya bagian "Video dari
+Playly" di /discover kosong. Situs tidak rusak (kegagalan ditangani, halaman tetap 200). Perlu
+dicek terpisah — kemungkinan kunci/endpoint Playly bermasalah, lihat rencana Playly 2026-08-25/26.
 
 ## 🖼️ 2026-09-08 (TERBARU) — Baris FILM UNGGULAN diisi penuh (5 -> 14 poster)
 

@@ -16,7 +16,8 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
  * timer ganti-slide, tak ada video yang diputar sendiri. Poster hanya bergeser
  * kalau penonton menekan panah atau menggeser dengan jari.
  *
- * `HomeHero` yang lama TIDAK dihapus — masih dipakai /discover.
+ * Menggantikan `HomeHero` yang lama; komponen itu sudah dihapus 2026-09-09
+ * setelah /, /beranda, dan /discover semuanya lepas darinya.
  */
 export default function FeaturedRow({
   dramas,

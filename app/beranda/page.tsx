@@ -37,8 +37,8 @@ export default async function BerandaPage() {
 
         Banner hero yang berganti sendiri DIBUANG dari halaman ini atas permintaan
         owner ("jangan berjalan lagi") — diganti FeaturedRow: deretan poster yang
-        hanya bergerak kalau digeser penonton. HomeHero sendiri tidak dihapus,
-        masih dipakai /discover.
+        hanya bergerak kalau digeser penonton. Komponen hero lama (HomeHero) sudah
+        DIHAPUS 2026-09-09 setelah /discover ikut lepas darinya.
 
         Syarat yang ikut berubah: TopNav tidak boleh memakai posisi `fixed` di
         halaman ini, kalau tidak bar cari tertutup navbar. Diatur di

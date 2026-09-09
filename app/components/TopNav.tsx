@@ -38,7 +38,6 @@ export default function TopNav() {
   const [mounted, setMounted] = useState(false);
   const [promptAdminRelogin, setPromptAdminRelogin] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [scrolled, setScrolled] = useState(false);
   const linkRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
   const [pill, setPill] = useState<{ left: number; width: number } | null>(null);
 
@@ -93,23 +92,12 @@ export default function TopNav() {
     return () => window.removeEventListener("resize", measurePill);
   }, [measurePill, mounted]);
 
-  // Navbar melayang (fixed) di atas hero setinggi layar — HANYA untuk halaman
-  // yang memang membuka dengan hero full-bleed. /beranda TIDAK lagi termasuk:
-  // sejak dirombak, elemen pertamanya adalah bar pencarian, dan navbar melayang
-  // akan menutupinya. Di sana navbar jadi bar hitam biasa yang menempel.
-  const overlayHero = pathname.startsWith("/discover");
-
-  useEffect(() => {
-    if (!overlayHero) {
-      setScrolled(false);
-      return;
-    }
-    const onScroll = () => setScrolled(window.scrollY > 48);
-    onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, [overlayHero]);
-
+  // Navbar SELALU menempel (sticky), tidak pernah melayang di atas konten.
+  //
+  // Dulu ada mode "melayang" khusus halaman yang membuka dengan hero setinggi
+  // layar. Sejak /, /beranda, dan /discover semuanya membuka dengan BAR CARI
+  // (2026-09-08/09), mode itu tak punya pemakai lagi — dan kalau dibiarkan
+  // justru menutupi bar cari itu.
   if (pathname.startsWith("/watch") || pathname.startsWith("/feed")) return null;
   if (PUBLIC_PATHS.includes(pathname)) return null;
 
@@ -127,18 +115,7 @@ export default function TopNav() {
 
   return (
     <>
-    <header
-      className={cn(
-        overlayHero
-          ? cn(
-              "fixed inset-x-0 top-0 z-40 border-b transition-colors duration-300",
-              scrolled
-                ? "border-zinc-800 bg-black/90 backdrop-blur"
-                : "border-transparent bg-gradient-to-b from-black/85 via-black/40 to-transparent",
-            )
-          : "sticky top-0 z-30 border-b border-zinc-800 bg-black/95 backdrop-blur",
-      )}
-    >
+    <header className="sticky top-0 z-30 border-b border-zinc-800 bg-black/95 backdrop-blur">
       {/* shell-wide (1440) — WAJIB sama dengan pembatas isi beranda di
           app/beranda/page.tsx, kalau tidak logo meleset dari tepi konten.
           Definisi + alasannya ada di app/globals.css. */}

@@ -24,7 +24,7 @@ import {
 import CatalogCard from "./CatalogCard";
 import GenreStrip from "./GenreStrip";
 import SearchBar from "./SearchBar";
-import { SHELL } from "./shell";
+import { GRID_CLASS, SHELL, TRIGGER_CLASS } from "./shell";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -37,23 +37,6 @@ import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight, Home, Search, X } from "lucide-react";
 
 const SEMUA = "Semua";
-
-/**
- * Grid poster: jumlah kolom MENYESUAIKAN SENDIRI — sebanyak mungkin kolom
- * selebar minimal 110px.
- *
- * KENAPA bukan `sm:grid-cols-4 md:grid-cols-6 …` seperti sebelumnya: patokan
- * ukuran layar terbesar Tailwind berhenti di 1536px. Di layar yang lebih lebar
- * dari itu jumlah kolomnya TIDAK bertambah — yang terjadi tiap poster justru
- * MELAR jadi raksasa. `auto-fill` menambah kolom sendiri berapa pun lebar
- * layarnya, jadi poster tetap seukuran dan jumlahnya yang bertambah.
- */
-const GRID_CLASS =
-  "grid grid-cols-[repeat(auto-fill,minmax(110px,1fr))] gap-x-1.5 gap-y-4 pt-4";
-
-/** Bentuk seragam untuk dropdown penyaring di bar magenta. */
-const TRIGGER_CLASS =
-  "h-9 w-full rounded-sm border-black/20 bg-black/25 text-xs font-semibold text-white focus:ring-0 md:w-auto [&>span]:text-white";
 
 type Props = {
   dramas: Drama[];

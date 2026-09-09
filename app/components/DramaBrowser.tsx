@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { CATEGORIES, type Category, type Drama } from "@/lib/types";
-import { genreChipClass } from "@/lib/genre-accent";
 import {
   SORT_OPTIONS,
   RATING_OPTIONS,
@@ -13,9 +12,11 @@ import {
   type RatingKey,
   type SortBy,
 } from "@/lib/discover";
-import DramaCard from "./DramaCard";
+import CatalogCard from "./beranda/CatalogCard";
+import GenreStrip from "./beranda/GenreStrip";
+import SearchBar from "./beranda/SearchBar";
+import { GRID_CLASS, SHELL, TRIGGER_CLASS } from "./beranda/shell";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -23,8 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
-import { Search, SlidersHorizontal, X } from "lucide-react";
+import { Search, X } from "lucide-react";
 
 function parseCategory(value: string | null): Category {
   if (!value) return "Semua";
@@ -133,164 +133,138 @@ export default function DramaBrowser({ dramas }: { dramas: Drama[] }) {
     });
   };
 
+  /** Dropdown penyaring — dititipkan ke bar cari, sama seperti /beranda. */
+  const dropdownPenyaring = (
+    <>
+      <Select
+        value={year}
+        onValueChange={(v) => {
+          setYear(v);
+          updateParams({ year: v });
+        }}
+      >
+        <SelectTrigger className={TRIGGER_CLASS} aria-label="Tahun">
+          <SelectValue placeholder="Tahun" />
+        </SelectTrigger>
+        <SelectContent className="border-zinc-700 bg-zinc-900 text-zinc-200">
+          <SelectItem value="all">Semua tahun</SelectItem>
+          {years.map((y) => (
+            <SelectItem key={y} value={y}>
+              {y}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Select
+        value={minRating}
+        onValueChange={(v) => {
+          setMinRating(v as RatingKey);
+          updateParams({ rating: v as RatingKey });
+        }}
+      >
+        <SelectTrigger className={TRIGGER_CLASS} aria-label="Rating IMDb">
+          <SelectValue placeholder="Rating" />
+        </SelectTrigger>
+        <SelectContent className="border-zinc-700 bg-zinc-900 text-zinc-200">
+          {RATING_OPTIONS.map((opt) => (
+            <SelectItem key={opt.value} value={opt.value}>
+              {opt.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Select
+        value={sortBy}
+        onValueChange={(v) => {
+          setSortBy(v as SortBy);
+          updateParams({ sort: v as SortBy });
+        }}
+      >
+        <SelectTrigger className={TRIGGER_CLASS} aria-label="Urutkan">
+          <SelectValue placeholder="Urutkan" />
+        </SelectTrigger>
+        <SelectContent className="border-zinc-700 bg-zinc-900 text-zinc-200">
+          {SORT_OPTIONS.map((opt) => (
+            <SelectItem key={opt.value} value={opt.value}>
+              {opt.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </>
+  );
+
   return (
     <>
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
-        <h1 className="hidden text-2xl font-bold text-white md:block">
-          Jelajah Drama
-        </h1>
-        <div className="relative md:ml-auto md:w-80">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Cari drama..."
-            className="rounded-full border-zinc-800 bg-zinc-900 pl-9 text-sm text-white placeholder:text-zinc-500 focus-visible:border-amber-400 focus-visible:ring-0"
-          />
-        </div>
-      </div>
+      {/* Bar cari + strip genre: komponen yang SAMA dengan halaman depan &
+          /beranda, supaya penonton tak merasa pindah situs. Yang beda cuma
+          artinya — di sini genre menyaring grid di halaman ini juga, DAN
+          ikut ditulis ke alamat URL (?cat=) supaya hasilnya bisa dibagikan.
+          Logika filter/URL di atas TIDAK diubah; yang diganti hanya bentuknya. */}
+      <SearchBar
+        value={query}
+        onValueChange={setQuery}
+        filters={dropdownPenyaring}
+        className="sticky top-14"
+      />
+      <GenreStrip
+        genres={CATEGORIES}
+        active={category}
+        onSelect={(g) => {
+          const cat = g as Category;
+          setCategory(cat);
+          updateParams({ cat });
+        }}
+      />
 
-      <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-        <div className="no-scrollbar flex gap-2 overflow-x-auto">
-          {CATEGORIES.map((cat) => {
-            const active = cat === category;
-            return (
-              <Button
-                key={cat}
-                type="button"
-                size="sm"
-                variant={active ? "default" : "outline"}
-                onClick={() => {
-                  setCategory(cat);
-                  updateParams({ cat });
-                }}
-                className={cn(
-                  "shrink-0 rounded-full",
-                  active ? "font-semibold" : genreChipClass(cat),
-                )}
-              >
-                {cat}
-              </Button>
-            );
-          })}
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-1.5 text-zinc-400">
-            <SlidersHorizontal className="size-4" />
-            <span className="sr-only md:not-sr-only md:text-xs">Filter</span>
-          </div>
-
-          <Select
-            value={year}
-            onValueChange={(v) => {
-              setYear(v);
-              updateParams({ year: v });
-            }}
-          >
-            <SelectTrigger
-              className="h-8 rounded-full border-zinc-700 bg-zinc-900 text-xs text-white focus:ring-0 focus-visible:border-amber-400 [&>span]:text-zinc-300"
-              aria-label="Tahun"
-            >
-              <SelectValue placeholder="Tahun" />
-            </SelectTrigger>
-            <SelectContent className="border-zinc-700 bg-zinc-900 text-zinc-200">
-              <SelectItem value="all">Semua tahun</SelectItem>
-              {years.map((y) => (
-                <SelectItem key={y} value={y}>
-                  {y}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select
-            value={minRating}
-            onValueChange={(v) => {
-              setMinRating(v as RatingKey);
-              updateParams({ rating: v as RatingKey });
-            }}
-          >
-            <SelectTrigger
-              className="h-8 rounded-full border-zinc-700 bg-zinc-900 text-xs text-white focus:ring-0 focus-visible:border-amber-400 [&>span]:text-zinc-300"
-              aria-label="Rating IMDb"
-            >
-              <SelectValue placeholder="Rating" />
-            </SelectTrigger>
-            <SelectContent className="border-zinc-700 bg-zinc-900 text-zinc-200">
-              {RATING_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select
-            value={sortBy}
-            onValueChange={(v) => {
-              setSortBy(v as SortBy);
-              updateParams({ sort: v as SortBy });
-            }}
-          >
-            <SelectTrigger
-              className="h-8 rounded-full border-zinc-700 bg-zinc-900 text-xs text-white focus:ring-0 focus-visible:border-amber-400 [&>span]:text-zinc-300"
-              aria-label="Urutkan"
-            >
-              <SelectValue placeholder="Urutkan" />
-            </SelectTrigger>
-            <SelectContent className="border-zinc-700 bg-zinc-900 text-zinc-200">
-              {SORT_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          {hasActiveFilters && (
+      <div className={SHELL}>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800 py-3">
+          <h1 className="text-sm text-zinc-400">
+            <span className="font-bold text-white">Jelajah Drama</span> &mdash;{" "}
+            {filtered.length} judul
+            {category !== "Semua" ? ` genre ${category}` : ""}
+            {query ? ` untuk "${query}"` : ""}
+          </h1>
+          {(hasActiveFilters || query) && (
             <Button
               type="button"
               variant="ghost"
               size="sm"
               onClick={resetFilters}
-              className="h-8 gap-1 rounded-full text-xs text-zinc-400 hover:text-white"
+              className="h-8 gap-1 rounded-sm text-xs text-zinc-400 hover:text-white"
             >
               <X className="size-3.5" />
-              Reset
-            </Button>
-          )}
-        </div>
-      </div>
-
-      <p className="mt-3 text-xs text-zinc-500">
-        Menampilkan {filtered.length} drama
-        {query && ` untuk "${query}"`}
-      </p>
-
-      {filtered.length === 0 ? (
-        <div className="mt-12 flex flex-col items-center gap-2 text-center">
-          <Search className="size-8 text-zinc-700" />
-          <p className="text-sm text-zinc-500">Tidak ada drama yang cocok.</p>
-          {hasActiveFilters && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={resetFilters}
-              className="mt-2 rounded-full border-zinc-700 bg-transparent text-xs text-zinc-300 hover:border-amber-400 hover:text-amber-400"
-            >
               Hapus filter
             </Button>
           )}
         </div>
-      ) : (
-        <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 md:gap-5 lg:grid-cols-5 xl:grid-cols-6">
-          {filtered.map((drama) => (
-            <DramaCard key={drama.id} drama={drama} />
-          ))}
-        </div>
-      )}
+
+        {filtered.length === 0 ? (
+          <div className="flex flex-col items-center gap-3 py-16 text-center">
+            <Search className="size-8 text-zinc-700" />
+            <p className="text-sm text-zinc-500">Tidak ada drama yang cocok.</p>
+            {hasActiveFilters && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={resetFilters}
+                className="rounded-sm border-zinc-700 bg-transparent text-xs text-zinc-300 hover:border-amber-400 hover:text-amber-400"
+              >
+                Hapus filter
+              </Button>
+            )}
+          </div>
+        ) : (
+          <div className={GRID_CLASS}>
+            {filtered.map((drama) => (
+              <CatalogCard key={drama.id} drama={drama} />
+            ))}
+          </div>
+        )}
+      </div>
     </>
   );
 }

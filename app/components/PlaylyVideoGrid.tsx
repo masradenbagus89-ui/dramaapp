@@ -55,7 +55,13 @@ export default function PlaylyVideoGrid({
         )}
       </div>
 
-      <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+      {/* Kolom MENYESUAIKAN SENDIRI: sebanyak mungkin kolom selebar >=240px.
+          Sebelumnya dipatok maks 4 kolom (`lg:grid-cols-4`). Itu masih pas waktu
+          isi halaman dibatasi 1440px, TAPI sejak batas itu dilepas (2026-09-08,
+          globals.css `.shell-wide`), 4 kolom membentang selebar layar dan tiap
+          kartu jadi raksasa. Angka 240px dipilih lebih besar dari poster (110px)
+          karena kartu video berbentuk melebar 16:9, bukan poster tegak. */}
+      <ul className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-3">
         {tampil.map((v) => {
           const dipilih = aktif?.id === v.id;
           return (

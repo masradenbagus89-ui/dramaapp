@@ -23,8 +23,19 @@ export default function FeaturedRow({
   dramas,
   href = "/discover",
   title,
+  cardHrefPrefix,
 }: {
   dramas: Drama[];
+  /**
+   * Awalan alamat tiap kartu; tautannya jadi `<awalan>/<id drama>`.
+   * Mis. "/feed" -> /feed/<id>. Kosong = kartu memakai bawaannya (/drama/<id>).
+   *
+   * Sengaja TEKS, bukan fungsi: komponen ini dirakit di browser sedangkan
+   * halaman pemanggilnya dirakit di server, dan Next.js MELARANG fungsi
+   * menyeberang di antara keduanya (halaman langsung error 500). Typecheck
+   * TIDAK menangkap ini — aturannya baru berlaku saat dijalankan.
+   */
+  cardHrefPrefix?: string;
   /** Tujuan tautan/tombol "lihat semua". */
   href?: string;
   /**
@@ -93,7 +104,10 @@ export default function FeaturedRow({
             // kartu yang SAMA dengan yang dipakai grid di bawah — lencana, hover,
             // dan cuplikannya tidak perlu dibuat versi kedua.
             <div key={d.id} className="w-20 shrink-0 sm:w-24 md:w-28">
-              <CatalogCard drama={d} />
+              <CatalogCard
+                drama={d}
+                href={cardHrefPrefix ? `${cardHrefPrefix}/${d.id}` : undefined}
+              />
             </div>
           ))}
         </div>

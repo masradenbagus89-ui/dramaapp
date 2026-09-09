@@ -20,13 +20,26 @@ import { Play, Star } from "lucide-react";
  * cuplikan-saat-hover supaya logika unduh teaser (yang menjaga kuota) tidak
  * ditulis dua kali.
  */
-export default function CatalogCard({ drama }: { drama: Drama }) {
+export default function CatalogCard({
+  drama,
+  href,
+}: {
+  drama: Drama;
+  /**
+   * Tujuan klik. Default `/drama/<id>` (halaman detail).
+   *
+   * Ada karena halaman Shorts memakai kartu yang SAMA tapi harus menuju
+   * pemutar cuplikan `/feed/<id>`. Opsional supaya pemanggil lama
+   * (baris katalog, grid) tidak berubah sama sekali.
+   */
+  href?: string;
+}) {
   const badge = cardBadges(drama);
   const tampilkanKoin = PAYWALL_ENABLED && badge.premium;
 
   return (
     <Link
-      href={`/drama/${drama.id}`}
+      href={href ?? `/drama/${drama.id}`}
       className="group/kartu block focus-visible:outline-none"
     >
       <div className="relative overflow-hidden rounded-sm ring-1 ring-white/10 transition duration-200 group-hover/kartu:ring-2 group-hover/kartu:ring-amber-400 group-focus-visible/kartu:ring-2 group-focus-visible/kartu:ring-amber-400">

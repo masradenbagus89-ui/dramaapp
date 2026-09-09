@@ -2,13 +2,16 @@
 
 // Grid video Playly + pemutarnya. Dipakai halaman /playly dan baris di /discover.
 //
-// Pemutarnya milik Playly (embed/iframe), jadi tombol play, posisi menit, dan
-// subtitle dikendalikan mereka — kita hanya menyediakan bingkainya. Karena isi
-// iframe beda domain, progres nonton video Playly memang tidak bisa kita baca.
+// Sejak 2026-09-09 videonya diputar PEMUTAR KITA SENDIRI (PlaylyPlayer), bukan
+// lagi <iframe> milik Playly. Alasannya: dengan iframe, tombol titik tiga yang
+// dilihat penonton adalah menu bawaan Chrome (cuma "Playback speed" +
+// "Picture in picture") dan tidak bisa kita ubah karena isi iframe beda domain.
+// Konsekuensi yang disetujui owner: video tidak lagi lewat pemutar resmi
+// Playly, jadi hitungan tayang di dashboard mereka bisa berhenti bertambah.
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { Clock, Film, Play, User } from "lucide-react";
-import EmbedPlayer from "./EmbedPlayer";
+import PlaylyPlayer from "./player/PlaylyPlayer";
 import type { PlaylyVideoPublik } from "@/lib/playly-publik";
 
 export default function PlaylyVideoGrid({
@@ -39,7 +42,12 @@ export default function PlaylyVideoGrid({
       <div ref={playerRef} className="scroll-mt-4">
         {aktif && (
           <div className="mb-6">
-            <EmbedPlayer src={aktif.embedUrl} title={aktif.title} />
+            <PlaylyPlayer
+              key={aktif.id}
+              videoId={aktif.id}
+              title={aktif.title}
+              poster={aktif.thumbnail}
+            />
             <h3 className="mt-3 text-base font-semibold text-white">{aktif.title}</h3>
             <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-400">
               {aktif.creator && <span>{aktif.creator}</span>}

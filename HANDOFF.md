@@ -128,6 +128,33 @@ grid 30806.
 DramaKu dijalankan di **3055** (`npx next dev -p 3055`). Membuka `localhost:3000` akan menampilkan
 aplikasi lain, bukan DramaKu.
 
+## 🎬 2026-09-09 (TERBARU) — Shorts jadi baris poster padat (6 -> 119 poster)
+
+Owner: halaman Shorts jangan pakai kartu besar; minta baris horizontal padat seperti katalog.
+
+`app/shorts/page.tsx`: 6 kartu besar 2 kolom -> baris poster dari `homeCatalogRows()` (sumber SAMA
+dengan halaman depan). `max-w-5xl` dilepas. Hasil **6 -> 119 poster** dalam 5 baris.
+
+**Sekalian membetulkan judul yang BERBOHONG:** versi lama memakai `.slice(0, 6)` = 6 drama PERTAMA
+di katalog, bukan yang paling banyak ditonton, padahal judulnya "Shorts Trending". Sekarang baris
+"Paling Banyak Ditonton" benar-benar diurutkan dari jumlah penonton.
+
+**Tujuan klik DIJAGA:** kartu Shorts harus ke `/feed/<id>` (pemutar cuplikan), bukan `/drama/<id>`.
+Ditambahkan prop OPSIONAL `href` (CatalogCard) + `cardHrefPrefix` (FeaturedRow). Diverifikasi
+produksi: /shorts 119 tautan ke /feed & **0** ke /drama; `/` 133 -> /drama & 0 -> /feed;
+`/beranda` 56 -> /drama & 0 -> /feed.
+
+**⚠️ JEBAKAN PENTING — jangan diulang.** Prop itu awalnya dibuat FUNGSI (`hrefFor?: (d) => string`)
+-> `/shorts` langsung **HTTP 500**: *"Functions cannot be passed directly to Client Components"*.
+Halaman dirakit di SERVER, `FeaturedRow` di BROWSER, dan fungsi TIDAK boleh menyeberang di antara
+keduanya. **`tsc` TIDAK menangkapnya** — aturan ini baru berlaku saat dijalankan. Obatnya: kirim
+TEKS, rakit alamatnya di dalam komponen browser (`cardHrefPrefix="/feed"`). Pelajaran umum: tiap
+menambah prop ke komponen `"use client"` yang dipanggil dari halaman server, pastikan propnya
+serializable (teks/angka/objek biasa), bukan fungsi.
+
+**Bukti:** `tsc` bersih · 424 tes hijau · `next build` sukses · commit `74ab06c` dual push
+terverifikasi · 5 halaman produksi semua 200.
+
 ## 📺 2026-09-09 (TERBARU) — Kartu video Playly diperkecil
 
 Owner: kartu Playly terlalu besar, minta diperkecil supaya elegan. Lingkup dibatasi 1 berkas atas

@@ -13,7 +13,45 @@ kuota Vercel aman. **Migrasi database BELUM tuntas** — datanya sudah pindah, t
 masih terkunci; rinciannya di bagian KOREKSI di bawah. **Jangan ganti env Supabase di Vercel dulu
 — situs akan mati.**
 
-## 📊 2026-09-08 (TERBARU) — Deck investor DramaKu dibuat dari Dokumentasi-Dashboard-DramaKu.xlsx
+## 🎬 2026-09-09 (TERBARU) — Menu pemutar sendiri (titik tiga) untuk video Playly
+
+Keluhan owner: di `/playly` tombol titik tiga cuma menampilkan "Playback speed" + "Picture in
+picture" (menu bawaan Chrome). **Sebabnya:** video Playly diputar `<iframe>` milik mereka, jadi
+menu itu ada di dalam bingkai domain lain dan MUSTAHIL diubah dari luar (same-origin policy).
+
+**Keputusan owner (popup 2026-09-09):** ganti pemutar di halaman Playly dengan pemutar DramaKu
+sendiri · Volume Stabil + Penguat Suara DILEWATI (tanpa proxy) · Kualitas & Terjemahan tetap
+tampil apa adanya + keterangan.
+
+**Yang dibuat:** `app/api/playly/video/route.ts` (balas alamat mp4, **JSON ~300 byte, BUKAN byte
+video** — pelajaran kuota Vercel dipatuhi) · `app/components/player/PlayerMenu.tsx` (popup titik
+tiga) · `app/components/player/PlaylyPlayer.tsx` (`<video>` + kontrol sendiri) ·
+`lib/playly.ts` + `fetchPlaylyVideoUrl()`. `PlaylyVideoGrid` beralih dari `EmbedPlayer` ke
+`PlaylyPlayer` → **halaman `/discover` ikut berubah**. `FeedPlayer`/`PlayerSettings`/`EmbedPlayer`
+TIDAK disentuh.
+
+**JEBAKAN untuk sesi berikutnya — jangan diulang menebak:** dicek langsung ke API Playly
+(9 dari 9 video), `variants` **kosong** dan `subtitles` **kosong** → varian 360p-1080p dan berkas
+subtitle memang TIDAK ADA. Menu Kualitas/Terjemahan sengaja cuma 1 pilihan + catatan; jangan
+"melengkapinya" dengan daftar karangan. Berkas mp4-nya di Cloudflare R2 **tanpa header CORS**
+(dicek dengan `Origin:`) → Web Audio API tidak bisa dipasang, jadi Volume Stabil & Penguat Suara
+mustahil TANPA CORS atau proxy. Kalau owner mau kedua fitur itu hidup: minta Playly menyalakan
+CORS di bucket R2 — itu jalan termurah, bukan bikin proxy (proxy = kuota Vercel jebol lagi).
+
+**Konsekuensi bisnis yang sudah disetujui owner:** video tak lagi lewat pemutar resmi Playly →
+hitungan tayang di dashboard mitra bisa berhenti bertambah.
+
+**SUDAH TAYANG di produksi** — commit `aca84f1`, dual push terverifikasi lewat `git ls-remote`.
+**Bukti:** `tsc` bersih · `npm test` **440 hijau** (dari 424; +16 penjaga baru:
+`tests/playly-video-route.test.ts` 7, `tests/player-menu.test.ts` 9) · `next build` sukses ·
+produksi `/` `/beranda` `/discover` `/playly` `/shorts` semua 200 · `/api/playly/video` di
+produksi: id sah **200 + videoUrl**, id asing **404**, id `../../etc` **400** · bundel JS `/playly`
+memuat penanda menu baru dan **NOL** penanda pemutar iframe lama. Rincian + jebakan verifikasi di
+`antrean-deploy.md`. **Rollback:** `git revert aca84f1 && git push origin main`.
+
+Rencana lengkap: `docs/lintasai/rencana/2026-09-09-menu-player-playly.md`
+
+## 📊 2026-09-08 — Deck investor DramaKu dibuat dari Dokumentasi-Dashboard-DramaKu.xlsx
 
 Permintaan owner: jadikan dokumentasi dashboard (xlsx, 9 fitur berjalan + 8 rencana) sebagai
 presentasi menarik + visual untuk investor.

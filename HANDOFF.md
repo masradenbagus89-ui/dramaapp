@@ -128,6 +128,31 @@ grid 30806.
 DramaKu dijalankan di **3055** (`npx next dev -p 3055`). Membuka `localhost:3000` akan menampilkan
 aplikasi lain, bukan DramaKu.
 
+## 📺 2026-09-09 (TERBARU) — Kartu video Playly diperkecil
+
+Owner: kartu Playly terlalu besar, minta diperkecil supaya elegan. Lingkup dibatasi 1 berkas atas
+permintaannya ("jangan sentuh yang lain").
+
+**AKAR — akibat sampingan perubahan kemarin.** Grid Playly memakai kolom DIPATOK
+(`grid-cols-2 sm:grid-cols-3 lg:grid-cols-4`). Itu pas selama isi halaman dibatasi 1440px; sejak
+`.shell-wide` dilepas jadi `max-width:100%` (2026-09-08), 4 kolom membentang selebar layar dan tiap
+kartu jadi raksasa. **Masalah yang SAMA dengan grid poster** — komponen ini saja yang belum ikut
+diperbaiki waktu itu.
+
+Diganti `grid-cols-[repeat(auto-fill,minmax(240px,1fr))]`. Ambang 240px sengaja lebih besar dari
+poster (110px) karena kartu video melebar 16:9, bukan poster tegak.
+
+**⚠️ Kalau nanti ada komponen lain yang terasa "kebesaran": kemungkinan besar sebabnya sama** —
+cari `grid-cols-<angka>` yang dipatok per ukuran layar, ganti ke `auto-fill minmax()`.
+
+**Bukti:** `tsc` bersih · 424 tes hijau · `next build` sukses · commit `f7ff444` dual push
+terverifikasi · penanda baru ADA di bundel JS produksi `2_aipsf02mu_7.js`. Grid poster diverifikasi
+TIDAK ikut berubah.
+
+**Jebakan verifikasi terulang:** `/playly` juga dirakit di BROWSER — grep HTML memulangkan 0.
+Dibuktikan bukan regresi: kelas LAMA (`lg:grid-cols-4`) pun tidak ada di HTML. Sama seperti
+/discover, verifikasi harus lewat bundel JS atau browser sungguhan.
+
 ## 🧭 2026-09-09 (TERBARU) — /discover ikut tampilan katalog + kode hero dibersihkan
 
 `/discover` halaman TERAKHIR yang belum dirombak: masih `max-w-7xl` (1280px = kolom sempit di layar

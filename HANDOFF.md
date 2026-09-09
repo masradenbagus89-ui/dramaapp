@@ -128,6 +128,39 @@ grid 30806.
 DramaKu dijalankan di **3055** (`npx next dev -p 3055`). Membuka `localhost:3000` akan menampilkan
 aplikasi lain, bukan DramaKu.
 
+## 🧭 2026-09-09 (TERBARU) — /discover ikut tampilan katalog + kode hero dibersihkan
+
+`/discover` halaman TERAKHIR yang belum dirombak: masih `max-w-7xl` (1280px = kolom sempit di layar
+lebar), poster besar 6 kolom, dan hero setinggi layar yang berganti sendiri.
+
+**`DramaBrowser` DIPERTAHANKAN, hanya tampilannya disamakan.** Logika penyaring & sinkronisasi URL
+TIDAK disentuh — komponen ini membaca 5 parameter (`q/cat/year/rating/sort`) dan ada **4 tempat**
+yang menautkan ke `/discover?cat=`/`?q=` (strip genre halaman depan, rekomendasi personal, kotak
+cari navbar). Menggantinya dengan `CatalogBrowser` akan memutus tautan itu DIAM-DIAM (jalan tapi
+tak menyaring). Bar cari + strip genre kini pakai `SearchBar`/`GenreStrip` bersama; grid pakai
+`CatalogCard` + `GRID_CLASS`.
+
+`GRID_CLASS` & `TRIGGER_CLASS` dipindah ke `app/components/beranda/shell.ts` (dipakai 2 komponen).
+`app/discover/page.tsx`: hero dibuang, `max-w-7xl` -> `shell-wide`.
+
+**Kode mati dibersihkan (akibat langsung):** `HomeHero.tsx` DIHAPUS (nol pemakai), `HeroPreview.tsx`
+DIHAPUS (hanya melayani HomeHero), TopNav: mode navbar **melayang** + state `scrolled` dibuang —
+nol pemakai, DAN kalau dibiarkan justru menutupi bar cari baru. `WatchCta`/`SaveButton` TIDAK
+dihapus (masih dipakai `/drama/[id]`). Kalau suatu saat hero mau dikembalikan: ada di git commit
+`a466721`.
+
+**Bukti filter tidak putus** (ini risiko terbesarnya, diuji bukan sekadar HTTP 200): jumlah poster
+cocok persis isi database — `/discover` 42 · `?cat=Action` 21 · `?cat=Romance` 14 · `?cat=Tycoon` 4.
+
+**⚠️ JEBAKAN VERIFIKASI:** `/discover` TIDAK bisa dicek lewat grep HTML — `DramaBrowser` dibungkus
+`<Suspense>` (`useSearchParams`), server hanya mengirim "Memuat..." dan isinya dirakit di BROWSER.
+Grep HTML memulangkan 0 poster & bikin seolah rilis gagal. Ini perilaku LAMA (dicek ke
+`git show a466721:app/discover/page.tsx`). Verifikasi yang benar: cari penanda di
+`/_next/static/chunks/*.js`, atau buka di browser.
+
+**Bukti:** `tsc` bersih · 424 tes hijau · `next build` sukses · commit `cac87bd` dual push
+terverifikasi · produksi 3 halaman 200, penanda tampilan baru ADA di bundel JS produksi.
+
 ## 🚫 2026-09-08 (TERBARU) — 3 slot iklan DIHAPUS dari /beranda
 
 Owner menandai kotak merah di banner ungu "DramaKu" yang menyela antar-baris film, minta

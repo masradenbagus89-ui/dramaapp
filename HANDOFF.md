@@ -62,7 +62,11 @@ build kalau memverifikasi tampilan — build inkremental menyajikan halaman stat
 curl dijawab server LAMA; pakai `netstat -ano` + `taskkill //PID x //F`; (3) tes yang menyalin
 ulang pemetaan URL tidak membuktikan apa-apa — sekarang dipakai bersama lewat `filterDariUrl`.
 
-**BELUM di-commit / BELUM di-deploy.** Owner belum minta.
+**SUDAH DI-COMMIT & TAYANG DI PRODUKSI** — commit `5ba75e8`, dual push ke `origin` + `dramaku`
+(hash dibandingkan lewat `git ls-remote`, selisih NOL). Tayang ~60 detik sesudah push; keenam menu
+terbukti ada di HTML `/` & `/beranda`, dan di bundel JS `/discover`. Nol regresi (poster tetap
+133 & 56, tetap 1 h1). **Rollback 1-baris:** `git revert 5ba75e8 && git push origin main`.
+Rinciannya di `antrean-deploy.md`.
 
 ## 🎬 2026-09-09 — Menu pemutar sendiri (titik tiga) untuk video Playly
 

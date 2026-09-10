@@ -1,19 +1,25 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { CATEGORIES, type Category, type Drama } from "@/lib/types";
 import {
   SORT_OPTIONS,
   RATING_OPTIONS,
+  FILTER_KOSONG,
+  bacaFilter,
   filterAndSortDramas,
+  filterOptions,
   getYearOptions,
-  parseSort,
+  tulisFilter,
+  type CatalogFilter,
   type RatingKey,
   type SortBy,
 } from "@/lib/discover";
+import { buildNavMenus, catalogShortcuts } from "@/lib/nav-katalog";
 import CatalogCard from "./beranda/CatalogCard";
 import GenreStrip from "./beranda/GenreStrip";
+import NavMenus from "./beranda/NavMenus";
 import SearchBar from "./beranda/SearchBar";
 import { GRID_CLASS, SHELL, TRIGGER_CLASS } from "./beranda/shell";
 import { Button } from "@/components/ui/button";
@@ -26,123 +32,107 @@ import {
 } from "@/components/ui/select";
 import { Search, X } from "lucide-react";
 
-function parseCategory(value: string | null): Category {
-  if (!value) return "Semua";
-  return CATEGORIES.includes(value as Category) ? (value as Category) : "Semua";
+/**
+ * Bentuk penyaring, pembacaan & penulisan alamat semuanya ada di
+ * lib/discover.ts — SATU tempat yang dipakai bersama penyusun menu
+ * (lib/nav-katalog.ts). Kalau nama parameternya ditulis ulang di sini, menu
+ * bisa mengirim "?negara=" sementara halaman ini membaca nama lain, dan
+ * tautannya mati tanpa pesan error.
+ */
+
+/** Alamat halaman ini beserta penyaringnya, siap diberikan ke router. */
+function alamatDenganFilter(f: CatalogFilter): string {
+  const query = tulisFilter(f);
+  const path = window.location.pathname;
+  return query ? `${path}?${query}` : path;
 }
 
-function parseRating(value: string | null): RatingKey {
-  if (value === "7" || value === "8" || value === "9") return value;
-  return "all";
+/**
+ * Label pendek untuk judul halaman, mis. " — serial, sudah tamat".
+ * Tanpa ini penonton yang datang dari menu melihat jumlah judul menyusut tanpa
+ * tahu penyaring mana yang sedang bekerja.
+ */
+function keteranganFilter(f: CatalogFilter): string {
+  const bagian: string[] = [];
+  if (f.cat !== "Semua") bagian.push(`genre ${f.cat}`);
+  if (f.kind !== "all") bagian.push(f.kind === "movie" ? "film" : "serial");
+  if (f.status !== "all")
+    bagian.push(f.status === "completed" ? "sudah tamat" : "masih tayang");
+  if (f.akses !== "all") bagian.push(f.akses === "koin" ? "pakai koin" : "gratis");
+  if (f.sub !== "all") bagian.push("sub Indo");
+  if (f.negara !== "all") bagian.push(f.negara);
+  if (f.year !== "all") bagian.push(`tahun ${f.year}`);
+  return bagian.length ? ` — ${bagian.join(", ")}` : "";
 }
 
 export default function DramaBrowser({ dramas }: { dramas: Drama[] }) {
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  const initialQ = searchParams?.get("q") ?? "";
-  const initialCat = parseCategory(searchParams?.get("cat"));
-  const initialYear = searchParams?.get("year") ?? "all";
-  const initialRating = parseRating(searchParams?.get("rating"));
-  const initialSort = parseSort(searchParams?.get("sort"));
+  const [filter, setFilter] = useState<CatalogFilter>(() => bacaFilter(searchParams));
 
-  const [query, setQuery] = useState(initialQ);
-  const [category, setCategory] = useState<Category>(initialCat);
-  const [year, setYear] = useState<string>(initialYear);
-  const [minRating, setMinRating] = useState<RatingKey>(initialRating);
-  const [sortBy, setSortBy] = useState<SortBy>(initialSort);
-
-  // Sinkronkan state kalau URL berubah dari luar (mis. browser back).
+  /**
+   * Sinkronkan penyaring tiap alamat berubah dari LUAR komponen ini: tombol
+   * Back browser, dan tautan menu/pintasan yang menunjuk halaman ini juga.
+   * Next.js tidak memasang ulang komponen untuk perpindahan di rute yang sama,
+   * jadi tanpa ini menu akan mengubah alamat tapi grid-nya diam — persis
+   * kegagalan senyap yang paling mungkin terjadi di fitur ini.
+   */
   useEffect(() => {
-    const q = searchParams?.get("q") ?? "";
-    setQuery(q);
-    setCategory(parseCategory(searchParams?.get("cat")));
-    setYear(searchParams?.get("year") ?? "all");
-    setMinRating(parseRating(searchParams?.get("rating")));
-    setSortBy(parseSort(searchParams?.get("sort")));
+    setFilter(bacaFilter(searchParams));
   }, [searchParams]);
 
   const years = useMemo(() => getYearOptions(dramas), [dramas]);
+  const menus = useMemo(() => buildNavMenus(dramas), [dramas]);
+  const shortcuts = useMemo(() => catalogShortcuts(dramas), [dramas]);
 
-  const hasActiveFilters =
-    category !== "Semua" || year !== "all" || minRating !== "all";
-
-  const updateParams = (
-    next: Partial<{
-      q: string;
-      cat: Category;
-      year: string;
-      rating: RatingKey;
-      sort: SortBy;
-    }>,
-  ) => {
-    const params = new URLSearchParams(searchParams?.toString());
-    const merged = {
-      q: next.q !== undefined ? next.q : query,
-      cat: next.cat !== undefined ? next.cat : category,
-      year: next.year !== undefined ? next.year : year,
-      rating: next.rating !== undefined ? next.rating : minRating,
-      sort: next.sort !== undefined ? next.sort : sortBy,
-    };
-
-    if (merged.q) params.set("q", merged.q);
-    else params.delete("q");
-    if (merged.cat && merged.cat !== "Semua") params.set("cat", merged.cat);
-    else params.delete("cat");
-    if (merged.year && merged.year !== "all") params.set("year", merged.year);
-    else params.delete("year");
-    if (merged.rating && merged.rating !== "all")
-      params.set("rating", merged.rating);
-    else params.delete("rating");
-    if (merged.sort && merged.sort !== "relevance")
-      params.set("sort", merged.sort);
-    else params.delete("sort");
-
-    const url = `${window.location.pathname}?${params.toString()}`;
-    router.replace(url, { scroll: false });
-  };
-
-  // Update URL saat query berubah, tapi dengan debounce sederhana.
-  useEffect(() => {
-    const t = setTimeout(() => updateParams({ q: query }), 250);
-    return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query]);
-
-  const filtered = useMemo(
+  /**
+   * Ketikan pencarian & urutan sengaja TIDAK dihitung sebagai "filter aktif":
+   * kotak cari punya tombol hapus sendiri, dan tombol "Hapus filter" yang ikut
+   * mengosongkan ketikan terasa seperti kehilangan yang baru saja diketik.
+   */
+  const adaFilterAktif = useMemo(
     () =>
-      filterAndSortDramas(dramas, {
-        query,
-        category,
-        year,
-        minRating,
-        sortBy,
-      }),
-    [dramas, query, category, year, minRating, sortBy],
+      (Object.keys(FILTER_KOSONG) as (keyof CatalogFilter)[]).some(
+        (k) => k !== "q" && k !== "sort" && filter[k] !== FILTER_KOSONG[k],
+      ),
+    [filter],
   );
 
-  const resetFilters = () => {
-    setCategory("Semua");
-    setYear("all");
-    setMinRating("all");
-    setSortBy("relevance");
-    const params = new URLSearchParams();
-    if (query) params.set("q", query);
-    router.replace(`${window.location.pathname}?${params.toString()}`, {
-      scroll: false,
-    });
-  };
+  const terapkan = useCallback(
+    (ubahan: Partial<CatalogFilter>) => {
+      const berikutnya = { ...filter, ...ubahan };
+      setFilter(berikutnya);
+      router.replace(alamatDenganFilter(berikutnya), { scroll: false });
+    },
+    [filter, router],
+  );
+
+  // Ketikan ditulis ke alamat setelah jeda singkat — kalau tiap huruf langsung
+  // menulis alamat, riwayat browser penuh dan halaman tersendat.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      const dariUrl = bacaFilter(searchParams);
+      if (dariUrl.q === filter.q) return;
+      router.replace(alamatDenganFilter({ ...dariUrl, q: filter.q }), {
+        scroll: false,
+      });
+    }, 250);
+    return () => clearTimeout(t);
+  }, [filter.q, searchParams, router]);
+
+  const filtered = useMemo(
+    () => filterAndSortDramas(dramas, filterOptions(filter)),
+    [dramas, filter],
+  );
+
+  // Ketikan pencarian DIPERTAHANKAN — alasannya sama dengan `adaFilterAktif`.
+  const resetFilters = () => terapkan({ ...FILTER_KOSONG, q: filter.q });
 
   /** Dropdown penyaring — dititipkan ke bar cari, sama seperti /beranda. */
   const dropdownPenyaring = (
     <>
-      <Select
-        value={year}
-        onValueChange={(v) => {
-          setYear(v);
-          updateParams({ year: v });
-        }}
-      >
+      <Select value={filter.year} onValueChange={(v) => terapkan({ year: v })}>
         <SelectTrigger className={TRIGGER_CLASS} aria-label="Tahun">
           <SelectValue placeholder="Tahun" />
         </SelectTrigger>
@@ -157,11 +147,8 @@ export default function DramaBrowser({ dramas }: { dramas: Drama[] }) {
       </Select>
 
       <Select
-        value={minRating}
-        onValueChange={(v) => {
-          setMinRating(v as RatingKey);
-          updateParams({ rating: v as RatingKey });
-        }}
+        value={filter.rating}
+        onValueChange={(v) => terapkan({ rating: v as RatingKey })}
       >
         <SelectTrigger className={TRIGGER_CLASS} aria-label="Rating IMDb">
           <SelectValue placeholder="Rating" />
@@ -176,11 +163,8 @@ export default function DramaBrowser({ dramas }: { dramas: Drama[] }) {
       </Select>
 
       <Select
-        value={sortBy}
-        onValueChange={(v) => {
-          setSortBy(v as SortBy);
-          updateParams({ sort: v as SortBy });
-        }}
+        value={filter.sort}
+        onValueChange={(v) => terapkan({ sort: v as SortBy })}
       >
         <SelectTrigger className={TRIGGER_CLASS} aria-label="Urutkan">
           <SelectValue placeholder="Urutkan" />
@@ -201,22 +185,19 @@ export default function DramaBrowser({ dramas }: { dramas: Drama[] }) {
       {/* Bar cari + strip genre: komponen yang SAMA dengan halaman depan &
           /beranda, supaya penonton tak merasa pindah situs. Yang beda cuma
           artinya — di sini genre menyaring grid di halaman ini juga, DAN
-          ikut ditulis ke alamat URL (?cat=) supaya hasilnya bisa dibagikan.
-          Logika filter/URL di atas TIDAK diubah; yang diganti hanya bentuknya. */}
+          ikut ditulis ke alamat URL (?cat=) supaya hasilnya bisa dibagikan. */}
       <SearchBar
-        value={query}
-        onValueChange={setQuery}
+        value={filter.q}
+        onValueChange={(v) => setFilter((f) => ({ ...f, q: v }))}
         filters={dropdownPenyaring}
+        chrome={{ menus: <NavMenus menus={menus} /> }}
         className="sticky top-14"
       />
       <GenreStrip
         genres={CATEGORIES}
-        active={category}
-        onSelect={(g) => {
-          const cat = g as Category;
-          setCategory(cat);
-          updateParams({ cat });
-        }}
+        active={filter.cat}
+        onSelect={(g) => terapkan({ cat: g as Category })}
+        shortcuts={shortcuts}
       />
 
       <div className={SHELL}>
@@ -224,10 +205,10 @@ export default function DramaBrowser({ dramas }: { dramas: Drama[] }) {
           <h1 className="text-sm text-zinc-400">
             <span className="font-bold text-white">Jelajah Drama</span> &mdash;{" "}
             {filtered.length} judul
-            {category !== "Semua" ? ` genre ${category}` : ""}
-            {query ? ` untuk "${query}"` : ""}
+            {keteranganFilter(filter)}
+            {filter.q ? ` untuk "${filter.q}"` : ""}
           </h1>
-          {(hasActiveFilters || query) && (
+          {(adaFilterAktif || filter.q) && (
             <Button
               type="button"
               variant="ghost"
@@ -245,7 +226,7 @@ export default function DramaBrowser({ dramas }: { dramas: Drama[] }) {
           <div className="flex flex-col items-center gap-3 py-16 text-center">
             <Search className="size-8 text-zinc-700" />
             <p className="text-sm text-zinc-500">Tidak ada drama yang cocok.</p>
-            {hasActiveFilters && (
+            {adaFilterAktif && (
               <Button
                 type="button"
                 variant="outline"

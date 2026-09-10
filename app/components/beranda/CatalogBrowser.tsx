@@ -21,8 +21,10 @@ import {
   sortCatalog,
   type CatalogSort,
 } from "@/lib/beranda-catalog";
+import { buildNavMenus, catalogShortcuts } from "@/lib/nav-katalog";
 import CatalogCard from "./CatalogCard";
 import GenreStrip from "./GenreStrip";
+import NavMenus from "./NavMenus";
 import SearchBar from "./SearchBar";
 import { GRID_CLASS, SHELL, TRIGGER_CLASS } from "./shell";
 import { Button } from "@/components/ui/button";
@@ -76,6 +78,11 @@ export default function CatalogBrowser({
   const gridRef = useRef<HTMLDivElement>(null);
 
   const genres = useMemo(() => availableGenres(dramas), [dramas]);
+  // Menu & pintasan katalog. Keduanya menuju /discover — satu-satunya halaman
+  // yang membaca penyaring dari alamat URL. Halaman INI menyimpan penyaringnya
+  // di state lokal, jadi tautan `?sort=…` ke sini akan diabaikan diam-diam.
+  const menus = useMemo(() => buildNavMenus(dramas), [dramas]);
+  const shortcuts = useMemo(() => catalogShortcuts(dramas), [dramas]);
   const years = useMemo(() => getYearOptions(dramas), [dramas]);
   const adaTahun = useMemo(() => countWithYear(dramas) > 0, [dramas]);
   const adaRating = useMemo(() => countWithRating(dramas) > 0, [dramas]);
@@ -207,6 +214,7 @@ export default function CatalogBrowser({
         value={query}
         onValueChange={(v) => ubahFilter(() => setQuery(v))}
         filters={dropdownPenyaring}
+        chrome={{ menus: <NavMenus menus={menus} /> }}
         className="sticky top-14"
       />
 
@@ -217,6 +225,7 @@ export default function CatalogBrowser({
         genres={[SEMUA, ...genres]}
         active={genre}
         onSelect={(g) => ubahFilter(() => setGenre(g))}
+        shortcuts={shortcuts}
         moreHref="/discover"
       />
 

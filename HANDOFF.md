@@ -13,7 +13,58 @@ kuota Vercel aman. **Migrasi database BELUM tuntas** — datanya sudah pindah, t
 masih terkunci; rinciannya di bagian KOREKSI di bawah. **Jangan ganti env Supabase di Vercel dulu
 — situs akan mati.**
 
-## 🎬 2026-09-09 (TERBARU) — Menu pemutar sendiri (titik tiga) untuk video Playly
+## 🧭 2026-09-10 (TERBARU) — Header gaya Layarkaca21: 6 menu dropdown + strip berpintasan
+
+Permintaan owner (dengan 2 screenshot pembanding, area dikotak-merahi): kepala DramaKu dibuat
+seperti Layarkaca21 — **satu baris logo + kotak cari + deretan menu dropdown**, lalu baris
+kategori kuning yang padat. Syarat tegas: **"semuanya berfungsi kalau diklik"**. Batas:
+"jangan sentuh yang lain".
+
+**Keputusan owner (popup 2026-09-10):** menu yang datanya kosong diganti yang datanya ada ·
+baris kuning = genre + pintasan · dipasang di **ketiga halaman** (`/`, `/beranda`, `/discover`).
+
+**⚠️ KOREKSI DATA di tengah pengerjaan (penting untuk sesi berikutnya).** Popup itu saya ajukan
+dengan premis "katalog tak punya `year`/`country`" — **premis itu SALAH**. Saya membacanya dari
+`data/dramas.json` (cadangan lokal, 21 judul, memang kosong), sementara katalog sungguhan ada di
+Supabase **schema `dramaapp`** dengan **42 judul**. Query pertama saya memakai schema `public`
+sehingga dijawab `PGRST205 "tabel tidak ada"` dan saya keliru menyimpulkan datanya tidak ada.
+**Cara memeriksa isi katalog yang benar: `GET /api/dramas` dari aplikasi yang sedang jalan**
+(sudah memetakan kolomnya), atau REST Supabase dengan header `Accept-Profile: dramaapp`
+(lihat `lib/supabase.ts:24`).
+
+Karena `year` & `country` ternyata ADA, hasil akhirnya justru **lebih dekat** ke permintaan asli
+owner: menu **Negara & Tahun jadi dibangun**. Sebaliknya kolom `status` ternyata **0 terisi**,
+jadi menu Status tidak digambar (akan muncul sendiri kalau owner mengisinya dari panel admin).
+
+**Header sekarang — 6 menu, sejajar situs pembanding:**
+`Genre · Jenis · Populer · Negara · Tahun · Lainnya`, dan strip kuning berisi genre +
+pintasan `Terbaru · Terpopuler · Film · Gratis`. Di halaman depan, baris header hitam lama
+(logo + Masuk/Daftar) **dilebur ke bar merah** jadi satu baris.
+
+**Yang dibuat/diubah:** `lib/nav-katalog.ts` (BARU — penyusun isi menu, fungsi murni) ·
+`app/components/beranda/NavMenus.tsx` (BARU — tampilan dropdown) · `lib/discover.ts` (+filter
+`kind`/`status`/`akses`/`sub`/`negara`, +urutan `terbaru`/`populer`/`episodes`, +pemetaan
+URL↔filter bersama) · `SearchBar.tsx` (+slot `chrome`) · `GenreStrip.tsx` (+`shortcuts`) ·
+`PublicTopBars.tsx` · `CatalogBrowser.tsx` · `DramaBrowser.tsx` · `app/page.tsx`.
+Semua tautan menu menuju **`/discover`** — satu-satunya halaman yang membaca penyaring dari
+alamat URL (`/beranda` memakai state lokal, tautan `?sort=` ke sana diabaikan diam-diam).
+
+**Bukti:** `npm test` **465 hijau / 38 berkas** · `npx tsc --noEmit` bersih · `npm run build`
+sukses · dijalankan `next start` lalu HTML dibaca (menu tergambar di `/` & `/beranda`) ·
+dijalankan terhadap **katalog nyata 42 judul: 34 pilihan menu + 4 pintasan SEMUANYA memulangkan
+≥1 judul** · 10 alamat menu dijawab HTTP 200.
+Penjaga baru: `tests/nav-katalog.test.ts` (aturan "tiap pilihan menu wajib berisi").
+
+**Jebakan verifikasi yang sempat menipu** (rinciannya di
+`docs/lintasai/rencana/2026-09-10-header-menu-lk21.md`): (1) **`rm -rf .next` dulu** sebelum
+build kalau memverifikasi tampilan — build inkremental menyajikan halaman statis LAMA; (2)
+**`pkill` tidak berlaku di Windows** — server lama tetap hidup, server baru gagal `listen`, dan
+curl dijawab server LAMA; pakai `netstat -ano` + `taskkill //PID x //F`; (3) tes yang menyalin
+ulang pemetaan URL tidak membuktikan apa-apa — sekarang dipakai bersama lewat `filterDariUrl`.
+
+**BELUM di-commit / BELUM di-deploy.** Owner belum minta.
+
+## 🎬 2026-09-09 — Menu pemutar sendiri (titik tiga) untuk video Playly
 
 Keluhan owner: di `/playly` tombol titik tiga cuma menampilkan "Playback speed" + "Picture in
 picture" (menu bawaan Chrome). **Sebabnya:** video Playly diputar `<iframe>` milik mereka, jadi
@@ -166,7 +217,7 @@ grid 30806.
 DramaKu dijalankan di **3055** (`npx next dev -p 3055`). Membuka `localhost:3000` akan menampilkan
 aplikasi lain, bukan DramaKu.
 
-## 🎬 2026-09-09 (TERBARU) — Shorts jadi baris poster padat (6 -> 119 poster)
+## 🎬 2026-09-09 — Shorts jadi baris poster padat (6 -> 119 poster)
 
 Owner: halaman Shorts jangan pakai kartu besar; minta baris horizontal padat seperti katalog.
 

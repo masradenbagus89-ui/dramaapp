@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import type { NavItem } from "@/lib/nav-katalog";
 import { cn } from "@/lib/utils";
 import { SHELL } from "./shell";
 
@@ -16,6 +17,12 @@ type Props = {
   hrefFor?: (genre: string) => string;
   /** Mode SARING-DI-TEMPAT (beranda): tiap genre jadi tombol. */
   onSelect?: (genre: string) => void;
+  /**
+   * Pintasan cepat sesudah daftar genre (Terbaru · Terpopuler · Tamat · Gratis).
+   * SELALU berupa tautan, apa pun mode genre di atas: isinya bukan genre, jadi
+   * tidak bisa dijawab oleh penyaring genre milik halaman.
+   */
+  shortcuts?: NavItem[];
   /** Tautan di ujung kanan strip. */
   moreHref?: string;
   moreLabel?: string;
@@ -37,6 +44,7 @@ export default function GenreStrip({
   active,
   hrefFor,
   onSelect,
+  shortcuts,
   moreHref,
   moreLabel = "Jelajah",
 }: Props) {
@@ -70,6 +78,26 @@ export default function GenreStrip({
             </button>
           );
         })}
+
+        {shortcuts && shortcuts.length > 0 && (
+          <>
+            {/* Garis tipis, bukan jarak kosong: di strip yang bisa digeser,
+                jarak kosong terbaca seperti daftarnya sudah habis. */}
+            <span
+              aria-hidden
+              className="mx-1 h-4 w-px shrink-0 bg-amber-700/50"
+            />
+            {shortcuts.map((s) => (
+              <Link
+                key={s.href}
+                href={s.href}
+                className={cn(ITEM_CLASS, "text-red-900 hover:bg-amber-300")}
+              >
+                {s.label}
+              </Link>
+            ))}
+          </>
+        )}
 
         {moreHref && (
           <Link

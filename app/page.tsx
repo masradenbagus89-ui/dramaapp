@@ -10,6 +10,7 @@ import {
   FEATURED_ROW_COUNT,
   homeCatalogRows,
 } from "@/lib/beranda-catalog";
+import { buildNavMenus, catalogShortcuts } from "@/lib/nav-katalog";
 import { Button } from "@/components/ui/button";
 
 // Disimpan & dipakai ulang, disegarkan tiap 60 detik (menggantikan force-dynamic
@@ -28,45 +29,25 @@ export default async function LandingPage() {
   const genres = availableGenres(dramas);
   // Baris poster per kategori — isi utama halaman ini.
   const rows = homeCatalogRows(dramas);
+  // Isi menu & pintasan dihitung DI SERVER: hasilnya cuma label + alamat, jauh
+  // lebih ringan dikirim ke browser daripada seluruh katalog.
+  const menus = buildNavMenus(dramas);
+  const shortcuts = catalogShortcuts(dramas);
 
   return (
     <div className="min-h-screen bg-black">
       <RedirectIfAuthed />
-      {/* Header — sengaja TANPA max-w/mx-auto: padding px-4 md:px-6 disamakan
-          dengan blok sambutan di bawahnya supaya logo & judul jatuh di SATU
-          garis kiri yang sama di semua ukuran layar. */}
-      <header className="relative z-20 border-b border-zinc-900">
-        <div className="flex h-16 items-center justify-between px-4 md:px-6">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-amber-400 font-serif text-base font-bold text-black">
-              D
-            </div>
-            <span className="text-lg font-bold text-white">DramaKu</span>
-          </Link>
-          <div className="flex items-center gap-2">
-            <Button
-              asChild
-              variant="outline"
-              className="rounded-full border-zinc-700 px-4 py-1.5 text-sm font-semibold text-white hover:border-amber-400 hover:text-amber-400"
-            >
-              <Link href="/login">Masuk</Link>
-            </Button>
-            <Button
-              asChild
-              className="rounded-full bg-amber-400 px-4 py-1.5 text-sm font-bold text-black hover:bg-amber-300"
-            >
-              <Link href="/daftar">Daftar</Link>
-            </Button>
-          </div>
-        </div>
-      </header>
+      {/* ===== Kepala situs — elemen PALING ATAS halaman ini.
+             Baris header hitam terpisah (logo + Masuk/Daftar) DIHAPUS
+             2026-09-10: isinya melebur ke bar merah supaya logo, kotak cari,
+             menu katalog, dan tombol akun jatuh di satu baris — bentuk yang
+             diminta owner dari situs katalog pembanding.
 
-      {/* ===== Kepala situs: bar cari + strip genre, LANGSUNG di bawah header.
-             Struktur ini mengikuti situs katalog streaming (permintaan owner
-             2026-09-08): pengunjung yang belum login pun langsung melihat
-             pencarian, genre, dan poster — bukan blok sambutan sehalaman penuh.
-             Cari & genre melempar ke /discover, yang memang publik. ===== */}
-      <PublicTopBars genres={genres} />
+             Struktur ini melanjutkan permintaan owner 2026-09-08: pengunjung
+             yang belum login pun langsung melihat pencarian, genre, dan poster,
+             bukan blok sambutan sehalaman penuh. Cari, genre & menu melempar ke
+             /discover, yang memang publik. ===== */}
+      <PublicTopBars genres={genres} menus={menus} shortcuts={shortcuts} />
 
       {/* ===== Baris FILM UNGGULAN — komponen yang SAMA dengan /beranda, jadi
              tampilan & perilakunya persis: poster hanya bergeser kalau digeser

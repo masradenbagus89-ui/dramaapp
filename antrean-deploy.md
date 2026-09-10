@@ -3,7 +3,19 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-08-30 (fetch `origin` + `dramaapp` SUKSES dari sesi AI, di PC rekan). **Ada 1 commit
+**Terakhir dicek:** 2026-09-10 (fetch `origin` + `dramaapp` SUKSES dari sesi AI, di PC rekan —
+`git remote -v` dijalankan lebih dulu, penamaan cocok kolom **PC rekan** di tabel bawah). **Ada 3 commit
+tertahan di depan produksi:** `e458d16` *feat(playly): redesain kartu video + tampilkan tahun & genre*,
+`da53a49` *docs(handoff)*, dan `c2da792` *fix(playly)*. `git rev-list --count dramaapp/main..HEAD` = **3**.
+Branch `redesign/playly-card` **sudah masuk** `ojokesusu/dramaku` (push sukses), **belum** masuk
+`masradenbagus89-ui/dramaapp`: ditolak **403 `denied to yusufscorpio`** — blokade yang sama sejak
+2026-08-30 dan **belum pernah dibereskan**. Diagnosis baru hari ini: `git config user.name` sudah
+`masradenbagus89-ui`, tapi **kredensial GitHub tersimpan** yang dipakai git milik akun `yusufscorpio`
+(izin baca-saja) → yang harus diperbaiki kredensialnya (Windows Credential Manager / `gh auth login`),
+bukan `git config`. Catatan: yang di-push cuma **branch fitur**, bukan `main` — jadi **belum ada rilis
+produksi**; Vercel paling banter membuat preview. Perbaikan-perbaikan ini **belum tayang**.
+
+**Sebelumnya dicek:** 2026-08-30 (fetch `origin` + `dramaapp` SUKSES dari sesi AI, di PC rekan). **Ada 1 commit
 tertahan di depan produksi:** `c2da792` — *fix(playly): jangan tampilkan video yang berkasnya belum ada di
 Playly*. Sudah masuk `ojokesusu/dramaku` (branch `fix/playly-otomatis`), **belum** masuk
 `masradenbagus89-ui/dramaapp` karena push ditolak **403 `denied to yusufscorpio`** (izin baca saja). Jadi

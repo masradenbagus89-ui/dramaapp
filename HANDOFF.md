@@ -5,6 +5,62 @@
 >
 > **AI:** tiap kali ada perbaikan / deploy / keputusan — **perbarui berkas ini di langkah terakhir**, sebelum bilang selesai. Jangan tumpuk sejarah panjang di sini; pindahkan yang lama ke `NEXT-SESSION.md`.
 
+**Terakhir diisi:** 2026-09-10 — **REDESAIN KARTU VIDEO PLAYLY + TAHUN & GENRE.**
+Commit `e458d16` di branch **`redesign/playly-card`** (5 berkas: `app/components/PlaylyVideoGrid.tsx`,
+`app/components/TopNav.tsx`, `lib/playly-publik.ts`, `tests/playly-publik.test.ts`, + berkas baru
+`tests/playly-video-grid.test.ts`). Kartu video Playly dirombak gaya situs streaming: sampul jadi elemen
+utama, badge rating bintang kiri-atas, badge durasi kanan-bawah, hover zoom + gradient gelap + ikon play,
+judul bold maks 2 baris, grid 2–6 kolom. Baris di bawah judul yang dulu berisi **nama uploader + durasi
+kedua** diganti jadi **tahun + genre**. Menu "Playly" di TopNav jadi biru (`text-blue-700` saat aktif;
+warna per-menu kini opsional lewat `warnaAktif`/`warnaDiam` supaya menu lain tak ikut berubah).
+**Logic pemutaran video (`putar()`, `EmbedPlayer`, `embedUrl`) TIDAK disentuh.**
+
+⚠️ **Tahun/genre/rating TIDAK dikirim Playly** — dicek langsung di `PlaylyVideo` (`lib/playly.ts:386`):
+isinya cuma id/judul/durasi/kreator/embedUrl/thumbnail. Satu-satunya sumbernya katalog drama kita sendiri
+lewat kaitan video→drama yang dibuat admin di `/admin/videos/playly` (form **"Kaitkan ke drama"**). Video
+yang **belum dikaitkan** → nilainya `null` dan barisnya **disembunyikan** (bukan kotak kosong); `genre`
+OMDb kosong → jatuh ke `category` katalog. Akibat praktis: di env lokal cuma **1** video Playly termuat
+dan belum dikaitkan, jadi baris tahun·genre & badge rating memang **belum kelihatan** sampai admin
+mengaitkannya — bukan berarti fiturnya gagal.
+
+**Bukti:** `npx tsc --noEmit` exit 0 · `npx vitest run` → **413 lulus, 34 berkas** (naik dari 402/33: +8
+tes render yang mengunci hilangnya nama uploader & munculnya baris tahun·genre, +3 tes jalur
+tahun/genre/rating) · dev server `/playly` HTTP 200 dengan penanda desain baru terverifikasi di HTML.
+
+🔴 **`next build` TIDAK bisa selesai di PC ini — BUKAN akibat perubahan di atas.** Tahap *Compiled
+successfully* + TypeScript lolos; gagal saat ambil data karena `.env.local` masih berisi alamat Supabase
+placeholder `xxxxxxxxxxxx.supabase.co` (`ENOTFOUND`). `/` dan `/discover` balas 500 karena sebab yang
+sama. Dibuktikan: perubahan ini di-stash → `/discover` **tetap** 500 pada kode asli.
+
+🔴 **Dual push baru separuh jalan (2026-09-10).** `origin` (= `ojokesusu/dramaku`) **SUKSES**, branch ada
+di `e458d16`. `dramaapp` (= `masradenbagus89-ui/dramaapp`) **DITOLAK 403 `denied to yusufscorpio`** —
+blokade yang SAMA dengan `c2da792`. Sebabnya bukan `git config` (`user.name` sudah `masradenbagus89-ui`),
+melainkan **kredensial GitHub tersimpan** milik akun `yusufscorpio` yang izinnya baca-saja → perbaikannya
+di Windows Credential Manager / `gh auth login`, bukan di `git config`. Sekarang **3 commit** tertahan di
+depan `dramaapp/main`: `e458d16`, `da53a49`, `c2da792` — ketiganya **belum tayang** di
+`dramaapp.vercel.app`.
+
+⚠️ **Nama remote di `AGENTS.local.md` TERTUKAR dengan kenyataan PC ini** (`git remote -v` 2026-09-10):
+dokumen menulis `dramaku`→ojokesusu & `origin`→dramaapp; kenyataannya **`origin`**→`ojokesusu/dramaku`
+dan **`dramaapp`**→`masradenbagus89-ui/dramaapp`. Ini persis pola kolom "PC rekan" di
+`antrean-deploy.md`. **Selalu `git remote -v` dulu sebelum push.**
+
+---
+
+**Terakhir diisi:** 2026-09-06 — **DOKUMEN PENGENALAN DASHBOARD UNTUK CLIENT.**
+Berkas baru: [`docs/pengenalan-dashboard-dramaku.md`](./docs/pengenalan-dashboard-dramaku.md) — gaya
+perkenalan produk (bukan laporan teknis): 9 fitur unggulan yang SUDAH jalan + 6 rencana terjadwal
+(A–F, disarikan dari daftar "Belum selesai / menunggu kamu" di bawah) + 2 usulan menunggu keputusan
+owner (laporan pemasukan di dashboard · kelola komentar). **Nol perubahan kode.** Isinya diambil dari
+kode nyata, bukan ingatan: `DramaForm.tsx` (isi otomatis IMDb), `app/admin/page.tsx` (Scan &
+auto-hardlink), `PlaylyVisibilityManager.tsx` + `PlaylyStatusCard.tsx`, `lib/coins.ts` (3 episode
+gratis · 8 koin/episode · paket Rp5rb–50rb), `AdminManager.tsx` + `TwoFactorSettings.tsx`,
+`SponsorAdsManager.tsx`, `AdminDashboard.tsx`. Angka tes diverifikasi ulang hari ini (`npm test` →
+**402 lulus, 33 berkas**), tidak disalin dari catatan lama. Dokumen ditutup catatan jujur bahwa
+perbaikan `c2da792` masih tertahan 403 dan **belum tayang** di `dramaapp.vercel.app`.
+
+---
+
 **Terakhir diisi:** 2026-08-29 — **VIDEO PLAYLY TANPA BERKAS BERHENTI DIANTAR KE PENONTON.**
 Owner melaporkan video `Diasingkan Ke Bumi… Mas Of Steel` (35:07) tampil di admin tapi di `/playly` hanya
 memberi layar hitam **"Video belum tersedia"**. **Bukan bug DramaKu**: kalimat itu nol hasil saat di-grep

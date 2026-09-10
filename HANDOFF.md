@@ -36,9 +36,10 @@ sama. Dibuktikan: perubahan ini di-stash → `/discover` **tetap** 500 pada kode
 di `e458d16`. `dramaapp` (= `masradenbagus89-ui/dramaapp`) **DITOLAK 403 `denied to yusufscorpio`** —
 blokade yang SAMA dengan `c2da792`. Sebabnya bukan `git config` (`user.name` sudah `masradenbagus89-ui`),
 melainkan **kredensial GitHub tersimpan** milik akun `yusufscorpio` yang izinnya baca-saja → perbaikannya
-di Windows Credential Manager / `gh auth login`, bukan di `git config`. Sekarang **3 commit** tertahan di
-depan `dramaapp/main`: `e458d16`, `da53a49`, `c2da792` — ketiganya **belum tayang** di
-`dramaapp.vercel.app`.
+di Windows Credential Manager / `gh auth login`, bukan di `git config`. Yang tertahan di depan `dramaapp/main` minimal
+`c2da792`, `da53a49`, `e458d16`, `2e2e243` — **semuanya belum tayang** di `dramaapp.vercel.app`.
+Angka pastinya JANGAN disalin dari sini (tiap commit baru menambahnya); jalankan
+`git rev-list --count dramaapp/main..HEAD`.
 
 ⚠️ **Nama remote di `AGENTS.local.md` TERTUKAR dengan kenyataan PC ini** (`git remote -v` 2026-09-10):
 dokumen menulis `dramaku`→ojokesusu & `origin`→dramaapp; kenyataannya **`origin`**→`ojokesusu/dramaku`

@@ -35,6 +35,18 @@ export type PlaylyVideoPublik = PlaylyVideo & {
   /** Alamat halaman drama terkait; null kalau tidak dikaitkan. */
   dramaHref: string | null;
   episode: number | null;
+  /**
+   * Tahun rilis, genre, dan rating untuk kartu video.
+   *
+   * Ketiganya TIDAK dikirim Playly (lihat `PlaylyVideo` di lib/playly.ts —
+   * isinya cuma judul, durasi, kreator, embed, sampul). Satu-satunya sumbernya
+   * adalah katalog drama kita sendiri, lewat kaitan video->drama yang dibuat
+   * admin. Jadi nilainya null untuk video yang belum dikaitkan, dan kartu
+   * menyembunyikan barisnya — bukan menampilkan kotak kosong.
+   */
+  year: string | null;
+  genre: string | null;
+  rating: string | null;
 };
 
 export type PlaylyPublikResult = {
@@ -53,6 +65,20 @@ export type PlaylyPublikResult = {
 type KaitanRingkas = { videoId: string; dramaId: string; episode: number | null };
 
 /**
+ * Drama sebatas kolom yang dipakai label kartu. Sengaja BUKAN `Drama` utuh:
+ * perakit di bawah tak perlu tahu soal poster, sinopsis, atau harga koin, dan
+ * bentuk sempit begini membuat tesnya bisa memakai data contoh seadanya.
+ */
+type DramaRingkas = {
+  id: string;
+  title: string;
+  year?: string;
+  genre?: string;
+  imdbRating?: string;
+  category?: string;
+};
+
+/**
  * Saring + beri label. Fungsi MURNI (tanpa jaringan/database) supaya aturan
  * "video mana yang boleh tampil" bisa diuji langsung — inilah aturan yang paling
  * mahal kalau salah: video yang sudah disembunyikan admin bocor ke penonton.
@@ -61,24 +87,31 @@ export function rakitVideoPublik(
   videosMitra: PlaylyVideo[],
   hiddenIds: string[],
   embeds: KaitanRingkas[],
-  dramas: { id: string; title: string }[],
+  dramas: DramaRingkas[],
 ): { tampil: PlaylyVideo[]; labelUntuk: (videoId: string) => Omit<PlaylyVideoPublik, keyof PlaylyVideo> } {
   const disembunyikan = new Set(hiddenIds);
-  const judulDrama = new Map(dramas.map((d) => [d.id, d.title]));
+  const dramaById = new Map(dramas.map((d) => [d.id, d] as const));
   // Kaitan yang dramanya sudah dihapus diabaikan, supaya tidak ada label yang
   // menunjuk halaman drama yang tidak ada lagi.
   const kaitan = new Map(
-    embeds.filter((e) => judulDrama.has(e.dramaId)).map((e) => [e.videoId, e] as const),
+    embeds.filter((e) => dramaById.has(e.dramaId)).map((e) => [e.videoId, e] as const),
   );
 
   return {
     tampil: videosMitra.filter((v) => !disembunyikan.has(v.id)),
     labelUntuk: (videoId: string) => {
       const e = kaitan.get(videoId);
+      const drama = e ? dramaById.get(e.dramaId) : undefined;
       return {
-        dramaTitle: e ? (judulDrama.get(e.dramaId) ?? null) : null,
+        dramaTitle: drama?.title ?? null,
         dramaHref: e ? `/drama/${e.dramaId}` : null,
         episode: e?.episode ?? null,
+        year: drama?.year ?? null,
+        // `genre` berasal dari OMDb dan sering kosong; `category` katalog kita
+        // selalu terisi, jadi dipakai sebagai cadangan supaya baris tahun-genre
+        // tidak sering separuh hampa.
+        genre: drama?.genre ?? drama?.category ?? null,
+        rating: drama?.imdbRating ?? null,
       };
     },
   };

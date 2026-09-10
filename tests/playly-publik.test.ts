@@ -112,6 +112,9 @@ describe("rakitVideoPublik — video mana yang boleh dilihat penonton", () => {
       dramaTitle: null,
       dramaHref: null,
       episode: null,
+      year: null,
+      genre: null,
+      rating: null,
     });
   });
 
@@ -126,7 +129,54 @@ describe("rakitVideoPublik — video mana yang boleh dilihat penonton", () => {
       dramaTitle: "Drama A",
       dramaHref: "/drama/drama-a",
       episode: 3,
+      year: null,
+      genre: null,
+      rating: null,
     });
+  });
+
+  // Kartu video menampilkan "2026 · Action, Sci-Fi" di bawah judul. Playly TIDAK
+  // mengirim tahun/genre/rating sama sekali (lihat PlaylyVideo di lib/playly.ts),
+  // jadi satu-satunya sumbernya drama yang dikaitkan admin. Tiga tes di bawah
+  // menjaga jalur itu tetap tersambung.
+  it("tahun, genre, dan rating ikut terbawa dari drama yang dikaitkan", () => {
+    const { labelUntuk } = rakitVideoPublik(
+      [video("1")],
+      [],
+      [{ videoId: "1", dramaId: "drama-b", episode: 1 }],
+      [
+        {
+          id: "drama-b",
+          title: "Drama B",
+          year: "2026",
+          genre: "Action, Sci-Fi",
+          imdbRating: "8.1",
+          category: "Action",
+        },
+      ],
+    );
+    expect(labelUntuk("1")).toMatchObject({
+      year: "2026",
+      genre: "Action, Sci-Fi",
+      rating: "8.1",
+    });
+  });
+
+  it("genre OMDb kosong -> pakai category katalog sebagai cadangan", () => {
+    const { labelUntuk } = rakitVideoPublik(
+      [video("1")],
+      [],
+      [{ videoId: "1", dramaId: "drama-c", episode: null }],
+      [{ id: "drama-c", title: "Drama C", category: "Romance" }],
+    );
+    expect(labelUntuk("1").genre).toBe("Romance");
+  });
+
+  it("video tanpa kaitan drama -> tahun/genre/rating null, bukan teks kosong", () => {
+    // Kartu memakai null sebagai tanda "sembunyikan barisnya". String kosong
+    // akan lolos pengecekan dan menyisakan baris hampa di bawah judul.
+    const { labelUntuk } = rakitVideoPublik([video("1")], [], [], dramas);
+    expect(labelUntuk("1")).toMatchObject({ year: null, genre: null, rating: null });
   });
 
   it("kaitan ke drama yang sudah DIHAPUS tidak menghasilkan tautan menggantung", () => {

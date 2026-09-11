@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { getAllDramasCached } from "@/lib/dramas";
-import { isMovie } from "@/lib/types";
-import Poster from "@/app/components/Poster";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { getAllDramasCachedSafe } from "@/lib/dramas";
+import { homeCatalogRows } from "@/lib/beranda-catalog";
+import FeaturedRow from "@/app/components/beranda/FeaturedRow";
+import { SHELL } from "@/app/components/beranda/shell";
 import { Clapperboard } from "lucide-react";
 
 // Disimpan & dipakai ulang, disegarkan tiap 60 detik (menggantikan force-dynamic
@@ -19,48 +17,51 @@ export const metadata: Metadata = {
 };
 
 export default async function ShortsPage() {
-  const trending = (await getAllDramasCached()).slice(0, 6);
+  const dramas = await getAllDramasCachedSafe();
+
+  /*
+   * Susunan BARIS POSTER PADAT (owner 2026-09-09), menggantikan 6 kartu besar
+   * 2 kolom yang lama. Barisnya memakai `homeCatalogRows` — sumber yang SAMA
+   * dengan halaman depan, jadi kalau urutannya diperbaiki di satu tempat,
+   * semua halaman ikut.
+   *
+   * Sekalian membetulkan judul yang dulu berbohong: versi lama memakai
+   * `.slice(0, 6)` — itu 6 drama PERTAMA di katalog, bukan yang paling banyak
+   * ditonton, padahal judulnya "Shorts Trending". Sekarang baris "Paling
+   * Banyak Ditonton" benar-benar diurutkan dari jumlah penonton.
+   */
+  const rows = homeCatalogRows(dramas);
 
   return (
-    <div className="mx-auto max-w-5xl px-4 pb-10 pt-6 md:px-6">
-      <h1 className="text-xl font-bold text-white md:text-2xl">Shorts Trending</h1>
-      <p className="mt-1 text-sm text-zinc-400">
-        Cuplikan singkat drama paling populer minggu ini.
-      </p>
+    <div className="pb-10">
+      <div className={`${SHELL} pt-6 pb-3`}>
+        <h1 className="text-xl font-bold text-white md:text-2xl">
+          Shorts Trending
+        </h1>
+        <p className="mt-1 text-sm text-zinc-400">
+          Cuplikan singkat drama paling populer minggu ini. Klik poster untuk
+          langsung memutar cuplikannya.
+        </p>
+      </div>
 
-      {trending.length === 0 ? (
-        <div className="mt-12 flex flex-col items-center gap-2 text-center">
+      {rows.length === 0 ? (
+        <div className="flex flex-col items-center gap-2 py-16 text-center">
           <Clapperboard className="size-8 text-zinc-700" />
           <p className="text-sm text-zinc-500">Belum ada shorts trending.</p>
         </div>
       ) : (
-        <div className="mt-4 grid gap-3 md:grid-cols-2">
-          {trending.map((drama, idx) => (
-            <Link key={drama.id} href={`/feed/${drama.id}`} className="block">
-              <Card className="flex-row gap-3 border-zinc-800 bg-zinc-900/50 p-2 shadow-none transition-colors hover:border-zinc-700">
-                <div className="w-20 shrink-0">
-                  <Poster drama={drama} showBadge={false} />
-                </div>
-                <div className="flex flex-1 flex-col justify-center">
-                  <div className="flex items-center gap-2">
-                    <Badge className="bg-amber-400/20 text-sm font-bold text-amber-400">
-                      #{idx + 1}
-                    </Badge>
-                    <h3 className="line-clamp-1 text-sm font-semibold text-white">
-                      {drama.title}
-                    </h3>
-                  </div>
-                  <p className="mt-1 line-clamp-2 text-xs text-zinc-400">
-                    {drama.synopsis}
-                  </p>
-                  <p className="mt-1 text-[11px] text-zinc-500">
-                    {drama.views} ditonton · {isMovie(drama) ? "Film" : `${drama.episodes} eps.`}
-                  </p>
-                </div>
-              </Card>
-            </Link>
-          ))}
-        </div>
+        rows.map((row) => (
+          <FeaturedRow
+            key={row.key}
+            title={row.title}
+            dramas={row.items}
+            href={row.href}
+            /* Kartu menuju PEMUTAR CUPLIKAN, bukan halaman detail — perilaku
+               yang sama dengan versi lama halaman ini. Tanpa prop ini kartunya
+               akan diam-diam berpindah tujuan ke /drama/<id>. */
+            cardHrefPrefix="/feed"
+          />
+        ))
       )}
     </div>
   );

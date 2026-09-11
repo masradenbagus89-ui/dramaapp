@@ -963,8 +963,16 @@ export async function fetchPlaylyVideosKita(
   }
 }
 
-/** Nama field yang menunjuk BERKAS videonya sendiri (bukan halaman pemutar). */
-const VIDEO_FILE_KEYS = [
+/**
+ * Nama field yang menunjuk BERKAS videonya sendiri (bukan halaman pemutar) —
+ * dipakai HANYA untuk memeriksa "berkasnya sudah ada atau belum".
+ *
+ * Sengaja beda nama dari `VIDEO_FILE_KEYS` milik `fetchPlaylyVideoUrl` di bawah:
+ * dua fitur ini dikembangkan terpisah lalu bertemu saat merge, dan daftarnya
+ * memang berbeda — yang di sini lebih luas karena cukup "ada tandanya", bukan
+ * harus alamat yang benar-benar bisa diputar.
+ */
+const FILE_PRESENCE_KEYS = [
   "videoUrl", "video_url", "playbackUrl", "playback_url",
   "fileUrl", "file_url", "mp4Url", "hlsUrl", "src",
 ];
@@ -985,7 +993,7 @@ const VARIANT_KEYS = ["variants", "qualities", "renditions", "sources"];
  * Fungsi MURNI (tanpa jaringan) supaya aturan ini bisa diuji langsung.
  */
 export function punyaFileVideo(rec: Record<string, unknown>): boolean {
-  if (pickString(rec, VIDEO_FILE_KEYS)) return true;
+  if (pickString(rec, FILE_PRESENCE_KEYS)) return true;
   // Versi hasil olahan saja sudah cukup untuk diputar, jadi berkas aslinya
   // tidak wajib ikut disebut di balasan.
   for (const k of VARIANT_KEYS) {
@@ -1067,5 +1075,62 @@ export async function fetchPlaylyDetailPublik(
     };
   } catch {
     return TIDAK_TAHU;
+  }
+}
+
+/** Nama field alamat berkas video di balasan /api/public-video Playly. */
+const VIDEO_FILE_KEYS = ["videoUrl", "video_url", "fileUrl", "file_url", "src"];
+
+/**
+ * Alamat berkas mp4 satu video Playly, untuk diputar pemutar DramaKu sendiri.
+ *
+ * KENAPA ADA (2026-09-09): halaman /playly dulu memakai <iframe> milik Playly,
+ * sehingga tombol-tombolnya milik mereka -- yang muncul di penonton cuma menu
+ * bawaan Chrome ("Playback speed" + "Picture in picture"). Isi iframe beda
+ * domain, jadi menu itu MUSTAHIL kita ganti dari luar (same-origin policy).
+ * Owner memutuskan video Playly diputar pemutar kita sendiri, dan itu butuh
+ * alamat berkasnya -- bukan alamat halaman player.
+ *
+ * Ini MEMBATALKAN keputusan lama di fetchPlaylyThumbnail di atas (videoUrl
+ * sengaja diabaikan demi hitungan tayang Playly). Owner sudah diberi tahu
+ * konsekuensinya dan tetap memilih pemutar sendiri.
+ *
+ * Alamatnya bertanda tangan dan hanya berlaku ~6 jam (X-Amz-Expires=21600,
+ * dicek 2026-09-09), jadi TIDAK boleh disimpan lama atau ikut dibakar ke dalam
+ * halaman yang di-cache -- selalu ambil saat video diklik.
+ *
+ * BATAS yang disengaja: yang diperiksa hanya "wajib https", bukan daftar domain
+ * seperti embed. Alasannya berkas video Playly ada di bucket R2 yang nama
+ * host-nya memuat hash akun mereka dan bisa berganti; memaksakan allowlist di
+ * sini berarti video mati diam-diam tiap kali mereka pindah bucket. Risikonya
+ * kecil: nilai ini hanya dipakai sebagai src <video> (memuat media, bukan
+ * skrip), dan asalnya dari PLAYLY_API_URL milik kita sendiri -- bukan input
+ * pengunjung.
+ *
+ * Gagal = null, tidak pernah melempar. Pemutar yang menampilkan pesan gagal
+ * jauh lebih berguna daripada halaman yang rusak.
+ */
+export async function fetchPlaylyVideoUrl(
+  videoId: string,
+  config: PlaylyConfig = readPlaylyConfig(),
+  revalidateSeconds: number = PLAYLY_PUBLIK_TTL_SECONDS,
+): Promise<string | null> {
+  const url = `${config.baseUrl}${PLAYLY_PUBLIC_VIDEO_PATH}?id=${encodeURIComponent(videoId)}`;
+  try {
+    const res = await fetch(url, {
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(8_000),
+      next: { revalidate: revalidateSeconds },
+    });
+    if (!res.ok) return null;
+    const rec = asRecord(await res.json());
+    if (!rec) return null;
+    const mentah = pickString(rec, VIDEO_FILE_KEYS);
+    if (!mentah) return null;
+    // toHttpsUrl menolak http -- situs kita https, dan browser memblokir media
+    // http di halaman https (mixed content) sehingga videonya jadi layar hitam.
+    return toHttpsUrl(mentah, config.baseUrl)?.toString() ?? null;
+  } catch {
+    return null;
   }
 }

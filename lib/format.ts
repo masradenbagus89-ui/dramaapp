@@ -1,6 +1,6 @@
 // Helper format angka tampilan (views) — dipakai bersama oleh halaman admin,
-// beranda, dan komponen BerandaRows. Fungsi murni (tanpa DOM/server), jadi aman
-// dipakai di server component maupun client component.
+// beranda, dan katalog beranda (lib/beranda-catalog.ts). Fungsi murni (tanpa
+// DOM/server), jadi aman dipakai di server component maupun client component.
 
 /** Ubah teks views ("1.2M", "850K", "1.5B", "1200") jadi angka. */
 export function parseViews(s: string): number {

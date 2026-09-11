@@ -11,6 +11,28 @@ export type Category =
 /** Jenis tayangan: serial berepisode, atau film 1 video utuh. */
 export type DramaKind = "series" | "movie";
 
+/** Status penayangan drama. Nilainya sengaja sama dengan isi kolom DB `status`. */
+export type DramaStatus = "Ongoing" | "Completed";
+
+/** Pilihan status untuk form admin — label yang dibaca owner, bukan istilah DB. */
+export const DRAMA_STATUS_OPTIONS: { value: DramaStatus; label: string }[] = [
+  { value: "Ongoing", label: "Masih tayang (episode masih nambah)" },
+  { value: "Completed", label: "Tamat (semua episode sudah lengkap)" },
+];
+
+/**
+ * SATU tempat yang memutuskan status kiriman sah atau tidak.
+ *
+ * Dipakai di SERVER: form admin memang cuma menyediakan dua pilihan, tapi UI
+ * bukan pagar — siapa pun bisa mengirim body apa saja ke endpoint admin. Nilai
+ * di luar dua itu dipulangkan `undefined` (dianggap kosong), bukan disimpan
+ * apa adanya — kolom status yang berisi teks ngawur membuat kartu drama
+ * memasang label yang tak berarti.
+ */
+export function parseDramaStatus(value: unknown): DramaStatus | undefined {
+  return value === "Ongoing" || value === "Completed" ? value : undefined;
+}
+
 export type Drama = {
   id: string;
   title: string;
@@ -31,8 +53,13 @@ export type Drama = {
    * premium, supaya koleksi lama tetap bisa ditonton gratis.
    */
   premium?: boolean;
-  /** Status penayangan drama: sedang berjalan atau sudah selesai. */
-  status?: "Ongoing" | "Completed";
+  /**
+   * Status penayangan: masih tayang atau sudah tamat. Boleh KOSONG — drama
+   * lama belum punya nilai ini, dan tampilan wajib DIAM kalau kosong (jangan
+   * menebak "Ongoing"; itu memberi tahu penonton bahwa drama tamat masih
+   * berjalan). Lihat parseDramaStatus di bawah.
+   */
+  status?: DramaStatus;
   /**
    * Jenis tayangan: serial berepisode (default) atau film 1 video utuh.
    * Judul lama tanpa field ini = "series" — itulah sebabnya tandanya "movie"

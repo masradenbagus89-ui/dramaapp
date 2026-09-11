@@ -1,4 +1,4 @@
-﻿node_modules/
+node_modules/
 .next/
 out/
 build/
@@ -61,3 +61,10 @@ docs/pelajaran-lintasai/
 
 # Artefak dev server lokal — nomor proses, dibuat ulang tiap start.
 *.pid
+
+# Backup export database lokal (berisi data user seperti password hash) — jangan pernah commit
+backups/
+# Hasil export SQL untuk pindah Supabase — berisi email user + hash password.
+supabase_export_*.sql
+# Paket migrasi lama berisi data user (email + hash password).
+migrasi-dramaapp.zip

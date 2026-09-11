@@ -5,144 +5,1097 @@
 >
 > **AI:** tiap kali ada perbaikan / deploy / keputusan — **perbarui berkas ini di langkah terakhir**, sebelum bilang selesai. Jangan tumpuk sejarah panjang di sini; pindahkan yang lama ke `NEXT-SESSION.md`.
 
-**Terakhir diisi:** 2026-09-10 — **REDESAIN KARTU VIDEO PLAYLY + TAHUN & GENRE.**
-Commit `e458d16` di branch **`redesign/playly-card`** (5 berkas: `app/components/PlaylyVideoGrid.tsx`,
-`app/components/TopNav.tsx`, `lib/playly-publik.ts`, `tests/playly-publik.test.ts`, + berkas baru
-`tests/playly-video-grid.test.ts`). Kartu video Playly dirombak gaya situs streaming: sampul jadi elemen
-utama, badge rating bintang kiri-atas, badge durasi kanan-bawah, hover zoom + gradient gelap + ikon play,
-judul bold maks 2 baris, grid 2–6 kolom. Baris di bawah judul yang dulu berisi **nama uploader + durasi
-kedua** diganti jadi **tahun + genre**. Menu "Playly" di TopNav jadi biru (`text-blue-700` saat aktif;
-warna per-menu kini opsional lewat `warnaAktif`/`warnaDiam` supaya menu lain tak ikut berubah).
-**Logic pemutaran video (`putar()`, `EmbedPlayer`, `embedUrl`) TIDAK disentuh.**
+**Terakhir diisi:** 2026-08-31 (sore, KOREKSI) — **produksi SEHAT tapi MASIH memakai database LAMA.**
+Landing 200 · `/playly` 200 · `/discover` 200 · `/api/teaser` **307 / 0 byte** → tunnel
+`interference-positions-style-manufacture.trycloudflare.com` · redirect diikuti balas **206
+`video/mp4` `ftypisom`** (berkas 895 MB) → byte video tetap mengalir langsung tunnel→penonton,
+kuota Vercel aman. **Migrasi database BELUM tuntas** — datanya sudah pindah, tapi pintu API-nya
+masih terkunci; rinciannya di bagian KOREKSI di bawah. **Jangan ganti env Supabase di Vercel dulu
+— situs akan mati.**
 
-⚠️ **Tahun/genre/rating TIDAK dikirim Playly** — dicek langsung di `PlaylyVideo` (`lib/playly.ts:386`):
-isinya cuma id/judul/durasi/kreator/embedUrl/thumbnail. Satu-satunya sumbernya katalog drama kita sendiri
-lewat kaitan video→drama yang dibuat admin di `/admin/videos/playly` (form **"Kaitkan ke drama"**). Video
-yang **belum dikaitkan** → nilainya `null` dan barisnya **disembunyikan** (bukan kotak kosong); `genre`
-OMDb kosong → jatuh ke `category` katalog. Akibat praktis: di env lokal cuma **1** video Playly termuat
-dan belum dikaitkan, jadi baris tahun·genre & badge rating memang **belum kelihatan** sampai admin
-mengaitkannya — bukan berarti fiturnya gagal.
+## 🧭 2026-09-10 (TERBARU) — Header gaya Layarkaca21: 6 menu dropdown + strip berpintasan
 
-**Bukti:** `npx tsc --noEmit` exit 0 · `npx vitest run` → **413 lulus, 34 berkas** (naik dari 402/33: +8
-tes render yang mengunci hilangnya nama uploader & munculnya baris tahun·genre, +3 tes jalur
-tahun/genre/rating) · dev server `/playly` HTTP 200 dengan penanda desain baru terverifikasi di HTML.
+Permintaan owner (dengan 2 screenshot pembanding, area dikotak-merahi): kepala DramaKu dibuat
+seperti Layarkaca21 — **satu baris logo + kotak cari + deretan menu dropdown**, lalu baris
+kategori kuning yang padat. Syarat tegas: **"semuanya berfungsi kalau diklik"**. Batas:
+"jangan sentuh yang lain".
 
-🔴 **`next build` TIDAK bisa selesai di PC ini — BUKAN akibat perubahan di atas.** Tahap *Compiled
-successfully* + TypeScript lolos; gagal saat ambil data karena `.env.local` masih berisi alamat Supabase
-placeholder `xxxxxxxxxxxx.supabase.co` (`ENOTFOUND`). `/` dan `/discover` balas 500 karena sebab yang
-sama. Dibuktikan: perubahan ini di-stash → `/discover` **tetap** 500 pada kode asli.
+**Keputusan owner (popup 2026-09-10):** menu yang datanya kosong diganti yang datanya ada ·
+baris kuning = genre + pintasan · dipasang di **ketiga halaman** (`/`, `/beranda`, `/discover`).
 
-🔴 **Dual push baru separuh jalan (2026-09-10).** `origin` (= `ojokesusu/dramaku`) **SUKSES**, branch ada
-di `e458d16`. `dramaapp` (= `masradenbagus89-ui/dramaapp`) **DITOLAK 403 `denied to yusufscorpio`** —
-blokade yang SAMA dengan `c2da792`. Sebabnya bukan `git config` (`user.name` sudah `masradenbagus89-ui`),
-melainkan **kredensial GitHub tersimpan** milik akun `yusufscorpio` yang izinnya baca-saja → perbaikannya
-di Windows Credential Manager / `gh auth login`, bukan di `git config`. Yang tertahan di depan `dramaapp/main` minimal
-`c2da792`, `da53a49`, `e458d16`, `2e2e243` — **semuanya belum tayang** di `dramaapp.vercel.app`.
-Angka pastinya JANGAN disalin dari sini (tiap commit baru menambahnya); jalankan
-`git rev-list --count dramaapp/main..HEAD`.
+**⚠️ KOREKSI DATA di tengah pengerjaan (penting untuk sesi berikutnya).** Popup itu saya ajukan
+dengan premis "katalog tak punya `year`/`country`" — **premis itu SALAH**. Saya membacanya dari
+`data/dramas.json` (cadangan lokal, 21 judul, memang kosong), sementara katalog sungguhan ada di
+Supabase **schema `dramaapp`** dengan **42 judul**. Query pertama saya memakai schema `public`
+sehingga dijawab `PGRST205 "tabel tidak ada"` dan saya keliru menyimpulkan datanya tidak ada.
+**Cara memeriksa isi katalog yang benar: `GET /api/dramas` dari aplikasi yang sedang jalan**
+(sudah memetakan kolomnya), atau REST Supabase dengan header `Accept-Profile: dramaapp`
+(lihat `lib/supabase.ts:24`).
 
-⚠️ **Nama remote di `AGENTS.local.md` TERTUKAR dengan kenyataan PC ini** (`git remote -v` 2026-09-10):
-dokumen menulis `dramaku`→ojokesusu & `origin`→dramaapp; kenyataannya **`origin`**→`ojokesusu/dramaku`
-dan **`dramaapp`**→`masradenbagus89-ui/dramaapp`. Ini persis pola kolom "PC rekan" di
-`antrean-deploy.md`. **Selalu `git remote -v` dulu sebelum push.**
+Karena `year` & `country` ternyata ADA, hasil akhirnya justru **lebih dekat** ke permintaan asli
+owner: menu **Negara & Tahun jadi dibangun**. Sebaliknya kolom `status` ternyata **0 terisi**,
+jadi menu Status tidak digambar (akan muncul sendiri kalau owner mengisinya dari panel admin).
+
+**Header sekarang — 6 menu, sejajar situs pembanding:**
+`Genre · Jenis · Populer · Negara · Tahun · Lainnya`, dan strip kuning berisi genre +
+pintasan `Terbaru · Terpopuler · Film · Gratis`. Di halaman depan, baris header hitam lama
+(logo + Masuk/Daftar) **dilebur ke bar merah** jadi satu baris.
+
+**Yang dibuat/diubah:** `lib/nav-katalog.ts` (BARU — penyusun isi menu, fungsi murni) ·
+`app/components/beranda/NavMenus.tsx` (BARU — tampilan dropdown) · `lib/discover.ts` (+filter
+`kind`/`status`/`akses`/`sub`/`negara`, +urutan `terbaru`/`populer`/`episodes`, +pemetaan
+URL↔filter bersama) · `SearchBar.tsx` (+slot `chrome`) · `GenreStrip.tsx` (+`shortcuts`) ·
+`PublicTopBars.tsx` · `CatalogBrowser.tsx` · `DramaBrowser.tsx` · `app/page.tsx`.
+Semua tautan menu menuju **`/discover`** — satu-satunya halaman yang membaca penyaring dari
+alamat URL (`/beranda` memakai state lokal, tautan `?sort=` ke sana diabaikan diam-diam).
+
+**Bukti:** `npm test` **465 hijau / 38 berkas** · `npx tsc --noEmit` bersih · `npm run build`
+sukses · dijalankan `next start` lalu HTML dibaca (menu tergambar di `/` & `/beranda`) ·
+dijalankan terhadap **katalog nyata 42 judul: 34 pilihan menu + 4 pintasan SEMUANYA memulangkan
+≥1 judul** · 10 alamat menu dijawab HTTP 200.
+Penjaga baru: `tests/nav-katalog.test.ts` (aturan "tiap pilihan menu wajib berisi").
+
+**Jebakan verifikasi yang sempat menipu** (rinciannya di
+`docs/lintasai/rencana/2026-09-10-header-menu-lk21.md`): (1) **`rm -rf .next` dulu** sebelum
+build kalau memverifikasi tampilan — build inkremental menyajikan halaman statis LAMA; (2)
+**`pkill` tidak berlaku di Windows** — server lama tetap hidup, server baru gagal `listen`, dan
+curl dijawab server LAMA; pakai `netstat -ano` + `taskkill //PID x //F`; (3) tes yang menyalin
+ulang pemetaan URL tidak membuktikan apa-apa — sekarang dipakai bersama lewat `filterDariUrl`.
+
+**SUDAH DI-COMMIT & TAYANG DI PRODUKSI** — commit `5ba75e8`, dual push ke `origin` + `dramaku`
+(hash dibandingkan lewat `git ls-remote`, selisih NOL). Tayang ~60 detik sesudah push; keenam menu
+terbukti ada di HTML `/` & `/beranda`, dan di bundel JS `/discover`. Nol regresi (poster tetap
+133 & 56, tetap 1 h1). **Rollback 1-baris:** `git revert 5ba75e8 && git push origin main`.
+Rinciannya di `antrean-deploy.md`.
+
+## 🎬 2026-09-09 — Menu pemutar sendiri (titik tiga) untuk video Playly
+
+Keluhan owner: di `/playly` tombol titik tiga cuma menampilkan "Playback speed" + "Picture in
+picture" (menu bawaan Chrome). **Sebabnya:** video Playly diputar `<iframe>` milik mereka, jadi
+menu itu ada di dalam bingkai domain lain dan MUSTAHIL diubah dari luar (same-origin policy).
+
+**Keputusan owner (popup 2026-09-09):** ganti pemutar di halaman Playly dengan pemutar DramaKu
+sendiri · Volume Stabil + Penguat Suara DILEWATI (tanpa proxy) · Kualitas & Terjemahan tetap
+tampil apa adanya + keterangan.
+
+**Yang dibuat:** `app/api/playly/video/route.ts` (balas alamat mp4, **JSON ~300 byte, BUKAN byte
+video** — pelajaran kuota Vercel dipatuhi) · `app/components/player/PlayerMenu.tsx` (popup titik
+tiga) · `app/components/player/PlaylyPlayer.tsx` (`<video>` + kontrol sendiri) ·
+`lib/playly.ts` + `fetchPlaylyVideoUrl()`. `PlaylyVideoGrid` beralih dari `EmbedPlayer` ke
+`PlaylyPlayer` → **halaman `/discover` ikut berubah**. `FeedPlayer`/`PlayerSettings`/`EmbedPlayer`
+TIDAK disentuh.
+
+**JEBAKAN untuk sesi berikutnya — jangan diulang menebak:** dicek langsung ke API Playly
+(9 dari 9 video), `variants` **kosong** dan `subtitles` **kosong** → varian 360p-1080p dan berkas
+subtitle memang TIDAK ADA. Menu Kualitas/Terjemahan sengaja cuma 1 pilihan + catatan; jangan
+"melengkapinya" dengan daftar karangan. Berkas mp4-nya di Cloudflare R2 **tanpa header CORS**
+(dicek dengan `Origin:`) → Web Audio API tidak bisa dipasang, jadi Volume Stabil & Penguat Suara
+mustahil TANPA CORS atau proxy. Kalau owner mau kedua fitur itu hidup: minta Playly menyalakan
+CORS di bucket R2 — itu jalan termurah, bukan bikin proxy (proxy = kuota Vercel jebol lagi).
+
+**Konsekuensi bisnis yang sudah disetujui owner:** video tak lagi lewat pemutar resmi Playly →
+hitungan tayang di dashboard mitra bisa berhenti bertambah.
+
+**SUDAH TAYANG di produksi** — commit `aca84f1`, dual push terverifikasi lewat `git ls-remote`.
+**Bukti:** `tsc` bersih · `npm test` **440 hijau** (dari 424; +16 penjaga baru:
+`tests/playly-video-route.test.ts` 7, `tests/player-menu.test.ts` 9) · `next build` sukses ·
+produksi `/` `/beranda` `/discover` `/playly` `/shorts` semua 200 · `/api/playly/video` di
+produksi: id sah **200 + videoUrl**, id asing **404**, id `../../etc` **400** · bundel JS `/playly`
+memuat penanda menu baru dan **NOL** penanda pemutar iframe lama. Rincian + jebakan verifikasi di
+`antrean-deploy.md`. **Rollback:** `git revert aca84f1 && git push origin main`.
+
+Rencana lengkap: `docs/lintasai/rencana/2026-09-09-menu-player-playly.md`
+
+## 📊 2026-09-08 — Deck investor DramaKu dibuat dari Dokumentasi-Dashboard-DramaKu.xlsx
+
+Permintaan owner: jadikan dokumentasi dashboard (xlsx, 9 fitur berjalan + 8 rencana) sebagai
+presentasi menarik + visual untuk investor.
+
+**Hasil:** `presentasi/Deck-Investor-DramaKu.html` — 11 salindia, satu berkas mandiri (poster &
+logo ditanam sebagai data URI, jadi tetap tampil offline). Diterbitkan juga sebagai Artifact:
+https://claude.ai/code/artifact/2c06c4f1-2b81-4cd1-812c-03d522e8e362
+
+**Angka di deck DIVERIFIKASI dari situs publik**, bukan dari `data/dramas.json` (berkas itu
+fallback lokal dan sudah basi: 21 judul). Hasil crawl `dramaapp.vercel.app/beranda` + 34 halaman
+`/drama/<slug>` pada 2026-09-08: **34 judul, 2.153 episode**, rata-rata 63,3, terpanjang 102,
+terpendek 26; kategori terbaca 32/34 (Action 14, Romance 11, Tycoon 4, Harem/Time Travel/Comedy
+masing-masing 1). Dua judul terbaru belum berlabel kategori.
+
+**JEBAKAN untuk sesi berikutnya:** angka "1.0K ditonton" di halaman drama itu **nilai tampilan yang
+sama di SEMUA judul** — bukan jumlah tontonan nyata. Jangan pernah dipakai sebagai traksi.
+Karena itu deck sengaja TIDAK mencantumkan jumlah penonton/pendapatan; slide risiko menyatakan
+alasannya terbuka.
+
+**`SUPABASE_URL` di `.env.local` menunjuk project yang tabelnya sudah tidak ada** (query `dramas`
+balas `PGRST205 Could not find the table 'public.dramas'`). Konsisten dengan catatan migrasi di
+atas — kalau butuh angka katalog, ambil dari situs produksi, bukan dari env lokal.
+
+**Klaim di deck yang dicek langsung ke kode:** `FREE_EPISODES = 3` (`lib/coins.ts:17`) · penghitung
+tayang/klik iklan (`app/api/ads/event/route.ts`) · Midtrans terpasang tapi butuh kunci
+(`lib/midtrans.ts`, `app/api/coins/topup/route.ts` balas "Pembayaran belum aktif").
+
+**Catatan beda dengan xlsx:** baris rencana "Rekomendasi karena kamu menonton …" di xlsx ditulis
+sebagai usulan, padahal baris personal berbasis genre favorit SUDAH ada
+(`lib/recommend.ts` + `app/components/beranda/PersonalRows.tsx`). Deck tetap mengikuti xlsx;
+owner perlu memutuskan apakah baris itu dianggap selesai sebagian.
+
+**Yang MASIH kosong dan harus diisi owner sebelum presentasi** (klik tombol "Isi angka" di deck,
+tersimpan di browser lewat localStorage): jumlah dana yang diminta, tiga pos anggaran, dan kontak.
+
+**Bukti:** dirender Chrome via Playwright — 11 salindia, `document.title` = "DramaKu", font Anton
+termuat, **nol error konsol**, `scrollWidth == clientWidth` di 1440px maupun 390px (tidak ada
+geser samping). Potret tiap salindia diperiksa satu per satu.
+
+**JEBAKAN artifact:** tautan artifact claude.ai itu **private** — hanya terbuka di browser yang
+sedang login ke akun pemiliknya. Browser yang belum login menampilkan **"Page not found"**, bukan
+pesan "tidak punya akses". Owner mengalaminya 2026-09-08. Untuk dibagikan ke investor, artifact
+harus dibuka dulu (sudah login) lalu dipakai menu Share di halamannya. Karena itu deck ini
+disediakan juga sebagai berkas lokal yang **tidak butuh login sama sekali**:
+
+- `presentasi/Deck-Investor-DramaKu.html` — klik ganda, animasi poster jalan.
+  Berkas ini ditulis TANPA `<!doctype>` (wadah artifact yang menambahkannya). Dibandingkan
+  langsung: modus render beda (`BackCompat` vs `CSS1Compat`) tapi **semua ukuran identik**
+  (11 salindia, tinggi 900px, tanpa geser samping, font Anton termuat) → aman dibuka dari disk.
+- `presentasi/Deck-Investor-DramaKu.pdf` — 11 halaman, 3,34 MB, 2880x1800 px per halaman.
+  Dibuat dengan memotret tiap salindia (bukan print CSS) supaya poster & gradasi emas persis
+  sama; animasi dibekukan dan navigasi layar disembunyikan lebih dulu.
+  Skrip pembuatnya ada di scratchpad sesi, bukan di repo — kalau deck berubah, PDF harus
+  dibuat ulang, tidak ikut otomatis.
+
+**Tidak ada kode aplikasi yang disentuh** — hanya penambahan berkas di `presentasi/`.
+
+## 🎬 2026-09-07 — Beranda dirombak: katalog grid padat + paginasi
+
+Permintaan owner: halaman Home dibuat seperti situs streaming katalog (bar cari mencolok, strip
+genre, **grid poster padat**) digabung rasa streaming modern. Rencana lengkap ada di
+`docs/lintasai/rencana/2026-09-07-beranda-lk21.md`.
+
+**Susunan `/beranda` sekarang:** hero sinematik (tetap) → iklan 1 → baris personal (Lanjut
+Menonton / Karena kamu menonton / Favorit) → **bar cari magenta (menempel saat digulir) + strip
+genre kuning + remah jejak + grid 3-8 kolom + nomor halaman** (iklan 2 di atas grid) → iklan 3.
+
+**Berkas:** BARU `lib/beranda-catalog.ts`, `tests/beranda-catalog.test.ts` (20 tes),
+`app/components/beranda/CatalogCard.tsx`, `CatalogBrowser.tsx`, `PersonalRows.tsx`.
+DIUBAH `app/beranda/page.tsx`, `app/components/Poster.tsx` (+prop opsional `showRating`, default
+`true` = pemanggil lama tak berubah), komentar usang di `lib/format.ts`.
+DIHAPUS `app/components/BerandaRows.tsx` (isinya pindah; baris generik Trending/Terbaru/Populer/
+Rating jadi pilihan "Urutkan" di grid).
+
+**3 slot iklan DIPERTAHANKAN persis 3** — diverifikasi dari HTML yang dilayani (`>Iklan<` = 3x).
+
+**Penyaring dipakai ulang dari `lib/discover.ts` APA ADANYA** (tidak diubah), jadi `/discover` tidak
+terpengaruh — dijaga `tests/discover-filter.test.ts` yang lama.
+
+**Bukti:** `npx tsc --noEmit` bersih · `npm test` 410 tes / 34 berkas hijau · `npm run build` sukses
+(`/beranda` tetap Static + ISR 1 menit) · `npx next start -p 3099` → `/beranda` HTTP 200, HTML
+memuat bar magenta, strip genre, "Halaman 1 dari 2", 24 kartu, lencana `62 EPS`/`SUB INDO`/`KOIN`.
+
+### 🔁 KOREKSI urutan (owner menolak versi pertama)
+
+Versi pertama masih menaruh hero setinggi layar di paling atas, jadi layar pertama terlihat SAMA
+seperti sebelum dirombak — owner menolak. Diperbaiki: **bar cari + strip genre + grid naik ke
+paling atas**, hero turun jadi banner ramping di bawah strip genre.
+
+Dua penghalang yang harus dibongkar untuk itu (keduanya penyebab versi pertama salah susun):
+
+1. `app/components/TopNav.tsx` — `overlayHero` dulu mencakup `/beranda`, membuat navbar `fixed`
+   (melayang) sehingga elemen paling atas PASTI tertutup. Sekarang `overlayHero` hanya untuk
+   `/discover`; di beranda navbar jadi bar hitam menempel biasa. **/discover tidak berubah** —
+   diverifikasi: hero `min-h-[80svh]` & navbar `fixed` masih ada di sana.
+2. `app/components/HomeHero.tsx` — tinggi `min-h-[80svh]..[92svh]` mengunci hero setinggi layar.
+   Ditambah prop opsional `compact` (default `false` = /discover apa adanya); mode `compact`
+   memakai `min-h-[300px]..[380px]`, judul lebih kecil, sinopsis disembunyikan.
+
+Ikut berubah: dropdown penyaring PINDAH ke dalam bar magenta (kanan) mengikuti contoh; bar magenta
+& strip genre kini selebar penuh layar (isinya tetap dibatasi `shell-wide`); lencana kartu ditata
+ulang — rating kiri-atas, jumlah episode kanan-atas (fuchsia), tahun & status di baris bawah.
+
+**Urutan final terverifikasi dari HTML yang dilayani** (posisi karakter, makin kecil makin atas):
+navbar 4944 -> bar magenta 7541 -> strip genre 17037 -> hero ramping 18784 -> hitungan 29083 ->
+grid 30806.
+
+**Bukti ulang:** `npx tsc --noEmit` bersih · `npm test` 410 tes hijau · `npm run build` sukses
+(`/beranda` & `/discover` tetap Static + ISR 1 menit).
+
+**Catatan port:** di komputer ini port 3000/3001/3005/3010/3011 SUDAH dipakai 5 aplikasi node lain.
+DramaKu dijalankan di **3055** (`npx next dev -p 3055`). Membuka `localhost:3000` akan menampilkan
+aplikasi lain, bukan DramaKu.
+
+## 🎬 2026-09-09 — Shorts jadi baris poster padat (6 -> 119 poster)
+
+Owner: halaman Shorts jangan pakai kartu besar; minta baris horizontal padat seperti katalog.
+
+`app/shorts/page.tsx`: 6 kartu besar 2 kolom -> baris poster dari `homeCatalogRows()` (sumber SAMA
+dengan halaman depan). `max-w-5xl` dilepas. Hasil **6 -> 119 poster** dalam 5 baris.
+
+**Sekalian membetulkan judul yang BERBOHONG:** versi lama memakai `.slice(0, 6)` = 6 drama PERTAMA
+di katalog, bukan yang paling banyak ditonton, padahal judulnya "Shorts Trending". Sekarang baris
+"Paling Banyak Ditonton" benar-benar diurutkan dari jumlah penonton.
+
+**Tujuan klik DIJAGA:** kartu Shorts harus ke `/feed/<id>` (pemutar cuplikan), bukan `/drama/<id>`.
+Ditambahkan prop OPSIONAL `href` (CatalogCard) + `cardHrefPrefix` (FeaturedRow). Diverifikasi
+produksi: /shorts 119 tautan ke /feed & **0** ke /drama; `/` 133 -> /drama & 0 -> /feed;
+`/beranda` 56 -> /drama & 0 -> /feed.
+
+**⚠️ JEBAKAN PENTING — jangan diulang.** Prop itu awalnya dibuat FUNGSI (`hrefFor?: (d) => string`)
+-> `/shorts` langsung **HTTP 500**: *"Functions cannot be passed directly to Client Components"*.
+Halaman dirakit di SERVER, `FeaturedRow` di BROWSER, dan fungsi TIDAK boleh menyeberang di antara
+keduanya. **`tsc` TIDAK menangkapnya** — aturan ini baru berlaku saat dijalankan. Obatnya: kirim
+TEKS, rakit alamatnya di dalam komponen browser (`cardHrefPrefix="/feed"`). Pelajaran umum: tiap
+menambah prop ke komponen `"use client"` yang dipanggil dari halaman server, pastikan propnya
+serializable (teks/angka/objek biasa), bukan fungsi.
+
+**Bukti:** `tsc` bersih · 424 tes hijau · `next build` sukses · commit `74ab06c` dual push
+terverifikasi · 5 halaman produksi semua 200.
+
+## 📺 2026-09-09 (TERBARU) — Kartu video Playly diperkecil
+
+Owner: kartu Playly terlalu besar, minta diperkecil supaya elegan. Lingkup dibatasi 1 berkas atas
+permintaannya ("jangan sentuh yang lain").
+
+**AKAR — akibat sampingan perubahan kemarin.** Grid Playly memakai kolom DIPATOK
+(`grid-cols-2 sm:grid-cols-3 lg:grid-cols-4`). Itu pas selama isi halaman dibatasi 1440px; sejak
+`.shell-wide` dilepas jadi `max-width:100%` (2026-09-08), 4 kolom membentang selebar layar dan tiap
+kartu jadi raksasa. **Masalah yang SAMA dengan grid poster** — komponen ini saja yang belum ikut
+diperbaiki waktu itu.
+
+Diganti `grid-cols-[repeat(auto-fill,minmax(240px,1fr))]`. Ambang 240px sengaja lebih besar dari
+poster (110px) karena kartu video melebar 16:9, bukan poster tegak.
+
+**⚠️ Kalau nanti ada komponen lain yang terasa "kebesaran": kemungkinan besar sebabnya sama** —
+cari `grid-cols-<angka>` yang dipatok per ukuran layar, ganti ke `auto-fill minmax()`.
+
+**Bukti:** `tsc` bersih · 424 tes hijau · `next build` sukses · commit `f7ff444` dual push
+terverifikasi · penanda baru ADA di bundel JS produksi `2_aipsf02mu_7.js`. Grid poster diverifikasi
+TIDAK ikut berubah.
+
+**Jebakan verifikasi terulang:** `/playly` juga dirakit di BROWSER — grep HTML memulangkan 0.
+Dibuktikan bukan regresi: kelas LAMA (`lg:grid-cols-4`) pun tidak ada di HTML. Sama seperti
+/discover, verifikasi harus lewat bundel JS atau browser sungguhan.
+
+## 🧭 2026-09-09 (TERBARU) — /discover ikut tampilan katalog + kode hero dibersihkan
+
+`/discover` halaman TERAKHIR yang belum dirombak: masih `max-w-7xl` (1280px = kolom sempit di layar
+lebar), poster besar 6 kolom, dan hero setinggi layar yang berganti sendiri.
+
+**`DramaBrowser` DIPERTAHANKAN, hanya tampilannya disamakan.** Logika penyaring & sinkronisasi URL
+TIDAK disentuh — komponen ini membaca 5 parameter (`q/cat/year/rating/sort`) dan ada **4 tempat**
+yang menautkan ke `/discover?cat=`/`?q=` (strip genre halaman depan, rekomendasi personal, kotak
+cari navbar). Menggantinya dengan `CatalogBrowser` akan memutus tautan itu DIAM-DIAM (jalan tapi
+tak menyaring). Bar cari + strip genre kini pakai `SearchBar`/`GenreStrip` bersama; grid pakai
+`CatalogCard` + `GRID_CLASS`.
+
+`GRID_CLASS` & `TRIGGER_CLASS` dipindah ke `app/components/beranda/shell.ts` (dipakai 2 komponen).
+`app/discover/page.tsx`: hero dibuang, `max-w-7xl` -> `shell-wide`.
+
+**Kode mati dibersihkan (akibat langsung):** `HomeHero.tsx` DIHAPUS (nol pemakai), `HeroPreview.tsx`
+DIHAPUS (hanya melayani HomeHero), TopNav: mode navbar **melayang** + state `scrolled` dibuang —
+nol pemakai, DAN kalau dibiarkan justru menutupi bar cari baru. `WatchCta`/`SaveButton` TIDAK
+dihapus (masih dipakai `/drama/[id]`). Kalau suatu saat hero mau dikembalikan: ada di git commit
+`a466721`.
+
+**Bukti filter tidak putus** (ini risiko terbesarnya, diuji bukan sekadar HTTP 200): jumlah poster
+cocok persis isi database — `/discover` 42 · `?cat=Action` 21 · `?cat=Romance` 14 · `?cat=Tycoon` 4.
+
+**⚠️ JEBAKAN VERIFIKASI:** `/discover` TIDAK bisa dicek lewat grep HTML — `DramaBrowser` dibungkus
+`<Suspense>` (`useSearchParams`), server hanya mengirim "Memuat..." dan isinya dirakit di BROWSER.
+Grep HTML memulangkan 0 poster & bikin seolah rilis gagal. Ini perilaku LAMA (dicek ke
+`git show a466721:app/discover/page.tsx`). Verifikasi yang benar: cari penanda di
+`/_next/static/chunks/*.js`, atau buka di browser.
+
+**Bukti:** `tsc` bersih · 424 tes hijau · `next build` sukses · commit `cac87bd` dual push
+terverifikasi · produksi 3 halaman 200, penanda tampilan baru ADA di bundel JS produksi.
+
+## 🚫 2026-09-08 (TERBARU) — 3 slot iklan DIHAPUS dari /beranda
+
+Owner menandai kotak merah di banner ungu "DramaKu" yang menyela antar-baris film, minta
+dihilangkan supaya susunan poster rapi seperti situs katalog pembandingnya.
+
+- `app/beranda/page.tsx`: 3 pemasangan `<AdBanner />` dihapus + impornya.
+- `CatalogBrowser.tsx`: prop `adSlot` DIHAPUS (nol pemanggil sesudahnya = kode mati).
+
+**⚠️ INI MEMBATALKAN permintaan owner 2026-09-03 (commit `68741a7`)** yang justru meminta 3 slot
+iklan melintang. Alasannya sudah ditulis sebagai komentar di `app/beranda/page.tsx` supaya sesi
+berikutnya TIDAK "memperbaikinya" balik tanpa perintah baru.
+
+**Komponen `AdBanner` TIDAK dihapus & halaman lain TIDAK disentuh:** `/drama/[id]` dan `/profile`
+masih memasang slotnya (diverifikasi produksi: `/drama/<id>` tetap 1 banner, `/profile` 200).
+
+**Konsekuensi pendapatan (owner sudah tahu — dia sendiri menyebutnya "iklan"):** banner ungu itu
+adalah `AdBanner` dalam mode *house ad* — promo DramaKu sendiri, tampil karena belum ada network
+iklan yang dikonfigurasi (`NEXT_PUBLIC_ADSENSE_CLIENT`/`SLOT` kosong). Dengan slotnya dihapus,
+halaman katalog kehilangan tempat menaruh iklan berbayar kalau nanti AdSense disetujui.
+**Alternatif kalau owner mau tampilan tetap bersih TAPI pendapatan kembali:** slot dipasang lagi
+tapi `AdBanner` dibuat TIDAK menggambar apa pun saat tak ada iklan nyata (buang fallback promo).
+Belum dikerjakan — menunggu perintah.
+
+**Bukti:** `tsc` bersih · 424 tes hijau · `next build` sukses · commit `7f12903` dual push
+terverifikasi. Produksi `/beranda`: label "Iklan" = 0, 56 kartu poster, baris unggulan + grid utuh.
+
+**Catatan deploy:** kali ini Vercel butuh ~2 menit (percobaan 1 & 2 masih versi lama), bukan ~1
+menit seperti rilis-rilis sebelumnya.
+
+## 🔳 2026-09-08 (TERBARU) — Poster dirapatkan: 92 -> 133 kartu di halaman depan
+
+Owner: poster masih kurang rapat / kurang banyak sebaris. Ternyata ada **EMPAT** pengunci, bukan
+cuma ukuran kartu — itu sebabnya pengecilan sebelumnya belum cukup.
+
+1. `ROW_MAX_ITEMS` 20 -> 40 — baris berhenti di 20, jadi di layar lebar putus di tengah layar.
+2. `CATALOG_PER_PAGE` 24 -> 60 — sejak grid mengisi lebar sendiri, layar lebar muat ~30 poster
+   PER BARIS; dengan 24 grid tak sampai satu baris penuh (terlihat seperti katalog hampir habis).
+3. Kartu `w-24/28/32` (96-128px) -> `w-20/24/28` (80-112px); jarak `gap-2.5` -> `gap-1.5`.
+4. **AKAR PALING MENENTUKAN** — grid katalog memakai jumlah kolom yang DIPATOK per ukuran layar.
+   Patokan terbesar Tailwind berhenti di **1536px**, jadi di layar lebih lebar jumlah kolom TIDAK
+   bertambah; tiap poster malah MELAR jadi raksasa. Diganti
+   `grid-cols-[repeat(auto-fill,minmax(110px,1fr))]` -> kolom bertambah sendiri berapa pun lebar
+   layarnya. Kelasnya dipindah ke konstanta `GRID_CLASS` supaya alasannya terbaca di satu tempat.
+
+**⚠️ Pelajaran tes:** tes "ukuran halaman bawaan" dulu memakai daftar **50 item TETAP**, jadi
+langsung MERAH begitu `CATALOG_PER_PAGE` dinaikkan ke 60 — yang diuji ternyata ANGKANYA, bukan
+perilakunya. Diperbaiki: daftar dibuat mengikuti nilai konstanta (`CATALOG_PER_PAGE + 5`) + cek
+sisa di halaman kedua. Pola ini layak ditiru untuk tes konstanta lain.
+
+**⚠️ Kesalahan yang sempat terjadi:** komentar JSX `{/* … */}` disisipkan tepat di posisi `) : (`
+(cabang ternary) -> berkas gagal parse, `/` sempat **HTTP 500**. Di posisi itu JSX hanya boleh
+berisi SATU elemen. Obatnya: penjelasan dipindah ke konstanta bernama di atas komponen.
+
+**Bukti:** `tsc` bersih · 424 tes hijau · `next build` sukses · commit `8333bdc` dual push
+terverifikasi. Produksi: **133 kartu** halaman depan, **56** /beranda, nol sisa ukuran lama, nol
+sisa kolom-dipatok, tetap 1 h1.
+
+## 📏 2026-09-08 (TERBARU) — Baris poster melebar sampai tepi layar
+
+Owner membandingkan dengan situs katalog pembandingnya: di sana baris poster melebar penuh dengan
+~28 poster sebaris. Di DramaKu isinya terkurung jadi kolom sempit di tengah, kiri-kanan hitam
+kosong, cuma ~8 poster sebaris.
+
+**Akar masalah:** `.shell-wide { max-width: 90rem }` (1440px) di `app/globals.css`. Kelas itu
+dipakai BERSAMA navbar + seluruh isi katalog — justru itu untungnya: cukup diubah SEKALI, navbar
+ikut melebar dan tetap sejajar. Kontrak "satu tempat" itu memang ditulis untuk kasus begini.
+
+- `app/globals.css`: `max-width: 90rem` -> `100%`. Komentar kontraknya ikut diperbarui (masih
+  menyebut 1440 + alasan kolom iklan 540px yang sudah lama dibatalkan = menyesatkan).
+- `FeaturedRow.tsx`: kartu `w-28/32/36/40` (112-160px) -> `w-24/28/32` (96-128px).
+- `CatalogBrowser.tsx`: grid maks 8 -> **12 kolom**; tanpa ini kolom melar & poster jadi raksasa.
+
+`/discover` SENGAJA tidak ikut melebar — halaman itu memakai `max-w-7xl` sendiri, bukan shell-wide.
+
+**Bukti:** `tsc` bersih · 424 tes hijau · `next build` sukses · commit `1b7729d` dual push
+terverifikasi. **Produksi: CSS yang dilayani berisi `.shell-wide{max-width:100%}`** — jadi terbukti
+sampai ke penonton, bukan cuma ada di kode.
+
+**⚠️ Jebakan verifikasi (catat!):** CSS Next.js dilayani dari `/_next/static/chunks/*.css`, BUKAN
+`/_next/static/css/*.css`. Pola grep lama meleset dan sempat memberi kesan "aturannya tidak ada".
+
+## 🎞️ 2026-09-08 (TERBARU) — Halaman depan jadi halaman KATALOG (14 -> 92 poster)
+
+Owner: halaman depan harus jadi platform streaming dengan **fokus utama katalog drama, banyak
+poster dalam satu halaman**. Sebelumnya halaman depan masih halaman PROMOSI.
+
+**DIBUANG (4 seksi + kode matinya):** "Apa saja yang bisa kamu lakukan" (+ konstanta `FITUR`),
+"Sekilas drama yang bisa kamu tonton" (cuma 6 poster, + variabel `heroDramas`), "Cara mulai dalam
+3 langkah", "Kenapa pilih DramaKu?". Impor `Badge`/`Card`/`Check`/`Lock` ikut menganggur -> dibuang.
+
+**DIGANTI baris poster per kategori:** `homeCatalogRows()` di `lib/beranda-catalog.ts` menyusun
+baris dari data nyata. `FeaturedRow` dapat prop opsional `title` — ada judul = baris kategori
+(judul kiri + tautan kecil kanan), tanpa judul = baris unggulan dengan tombol besar seperti semula,
+jadi pemakaian lama tak berubah.
+
+**⚠️ BATAS JUJUR — `ROW_MIN_ITEMS = 4`.** Katalog TIMPANG: Action 21, Romance 14, Tycoon 4, tapi
+**Harem / Time Travel / Comedy masing-masing CUMA 1 judul**. Baris berisi 1 poster meninggalkan
+ruang kosong selebar layar dan terbaca seperti halaman rusak, jadi kategori di bawah ambang sengaja
+TIDAK dijadikan baris (tetap terjangkau lewat strip genre & /discover). Situs pembandingnya punya
+ribuan judul sehingga tiap barisnya penuh; DramaKu punya 42. **Ini batas DATA, bukan batas tata
+letak** — begitu katalog bertambah, barisnya muncul sendiri tanpa perlu ubah kode.
+
+Judul boleh muncul di lebih dari satu baris (drama Action baru ada di "Terbaru" DAN "Action") —
+itu memang perilaku situs katalog, bukan bug.
+
+**Bukti:** `tsc` bersih · **424 tes hijau** (8 tes baru, termasuk penjaga agar kategori sepi tak
+dijadikan baris) · `next build` sukses · commit `d89ef3f` dual push terverifikasi. Produksi:
+**92 kartu poster** dalam 6 baris, keempat seksi promosi NOL, tetap 1 h1, tombol Daftar Gratis ada.
+
+## 📐 2026-09-08 (TERBARU) — Ajakan daftar dirampingkan jadi strip tipis
+
+Owner membandingkan halaman depan dengan situs katalog pembandingnya, dua tangkapan layar dipotong
+di tempat yang SAMA: tepat sesudah baris poster. Di sana bedanya paling mencolok — pembandingnya
+cuma strip tipis (judul kecil + 1 baris teks + tombol), DramaKu masih blok tinggi berisi lencana,
+judul serif besar, dan 3 kotak statistik.
+
+**Perubahan (`app/page.tsx` saja):** lencana + judul serif besar + 3 kotak statistik DIBUANG.
+Angka katalog dipindah ke dalam kalimat ("42 judul dalam 6 kategori"). `py-10 gap-4 max-w-3xl` ->
+`py-6 gap-2.5 max-w-2xl`. `function Stat()` DIHAPUS (nol pemakai sesudahnya).
+
+**Yang SENGAJA dipertahankan:** judul `h1` (dikecilkan, bukan dibuang) — ini satu-satunya h1 di
+halaman depan dan dipakai mesin pencari mengenali isi situs; diverifikasi produksi tetap **tepat
+1 h1**. Tombol Daftar Gratis + Masuk juga tetap, jalur pendaftaran tidak boleh putus.
+
+**Bukti:** `tsc` bersih · 416 tes hijau · `next build` sukses · commit `6447db7` dual push
+terverifikasi. Produksi: 1 h1, 14 kartu poster, kedua tombol ada; judul serif besar / kotak
+statistik / lencana = NOL.
+
+**⚠️ Temuan sampingan (BELUM ditangani — owner minta fokus 1 hal saja):** saat `next build` muncul
+`[playly] katalog publik gagal: Playly membalas error (HTTP 500)` 2x. Akibatnya bagian "Video dari
+Playly" di /discover kosong. Situs tidak rusak (kegagalan ditangani, halaman tetap 200). Perlu
+dicek terpisah — kemungkinan kunci/endpoint Playly bermasalah, lihat rencana Playly 2026-08-25/26.
+
+## 🖼️ 2026-09-08 (TERBARU) — Baris FILM UNGGULAN diisi penuh (5 -> 14 poster)
+
+Owner mengirim tangkapan layar halaman depan: strukturnya sudah benar, TAPI posternya cuma 5 dan
+sisa lebar layar di kanan kosong melompong — barisnya terlihat belum jadi.
+
+**Akar masalah:** `featuredHeroSlides(dramas, max = 5)` di `lib/hero-teaser.ts:82`; KETIGA halaman
+memakai batas bawaan itu. Pada layar 1440px muat ~8 kartu sekaligus, jadi 5 tak akan pernah penuh.
+Stok drama sendiri ada 42.
+
+**Perbaikan:** `FEATURED_ROW_COUNT = 14` di `lib/beranda-catalog.ts` (angka diberi NAMA + alasan,
+bukan angka ajaib), dipakai `app/page.tsx` & `app/beranda/page.tsx`. 14 = baris penuh DAN masih
+ada sisa untuk digeser; kalau pas-pasan, panah gesernya jadi tak berguna.
+
+**`/discover` SENGAJA TIDAK diubah** — di sana `featuredHeroSlides` dipakai untuk hero sinematik
+yang berganti satu per satu, 5 memang batas yang benar. Terbukti di produksi masih punya
+`min-h-[80svh]` + carousel.
+
+**Bukti:** `tsc` bersih · 416 tes hijau · `next build` sukses · commit `88fbe18` dual push
+terverifikasi. Produksi: `/` **14 kartu** (dari 5), 6 tautan genre, nol carousel berjalan.
+
+## 🔎 2026-09-08 (TERBARU) — Halaman SEBELUM LOGIN ikut struktur katalog
+
+Owner: halaman DramaKu sebelum login harus benar-benar mengikuti struktur situs katalog streaming,
+**tanpa blok sambutan besar di depan**. Sebelumnya `/` masih dibuka blok "Cerita pendek, emosi
+panjang" setinggi `min-h-[42svh]` sehingga poster terdorong jauh ke bawah.
+
+**Susunan `/` sekarang:** header (logo + Masuk/Daftar) -> **bar cari magenta** (menempel saat
+digulir) -> **strip genre kuning** -> **baris FILM UNGGULAN + tombol "Lihat semua"** -> ajakan
+daftar RINGKAS -> sisa halaman lama tak disentuh.
+
+Ajakan daftar dipindah ke BAWAH baris poster: poster jadi pemikat, ajakan menyusul sesudah
+pengunjung melihat ada isinya. Tombol Daftar Gratis / Masuk + 3 angka statistik TETAP ada.
+
+**Anti-duplikasi — bar dipecah jadi komponen bersama, dipakai DUA halaman:**
+- BARU `app/components/beranda/SearchBar.tsx` · `GenreStrip.tsx` · `shell.ts` (pembatas lebar 1
+  tempat) · `PublicTopBars.tsx` (perakitan untuk halaman depan)
+- `CatalogBrowser.tsx` dirampingkan **-107 baris**, kini memakai komponen yang sama.
+- Bedanya cuma ARTI, bukan tampilan: di /beranda menyaring grid di tempat, di halaman depan
+  melempar ke /discover.
+
+**Cek keamanan sebelum menambah tautan:** `/discover`, `/discover?q=`, `/discover?cat=`, dan
+`/drama/<id>` semuanya dipastikan **HTTP 200 tanpa cookie login** — jadi tautan baru ini TIDAK
+membuka apa pun yang tadinya tertutup. Genre yang tampil dihitung dari katalog (`availableGenres`),
+bukan daftar tetap, supaya genre kosong tak bisa diklik.
+
+**Bukti:** `tsc --noEmit` bersih · `npm test` **416 tes hijau** · `next build` sukses · commit
+`72fabb3` dual push terverifikasi lewat `git ls-remote`. **TAYANG:** urutan di HTML produksi
+header 5919 -> bar cari 7449 -> strip genre 9039 -> baris unggulan 10539 -> ajakan daftar 30122;
+5 kartu poster, 6 tautan genre, nol `aria-roledescription="carousel"`, tombol Daftar Gratis tetap.
+`/beranda` tidak terpengaruh: bar, strip, baris unggulan, grid padat, "Halaman 1 dari 2", 3 slot
+iklan semuanya utuh.
+
+## 🏠 2026-09-07 (TERBARU) — Halaman depan lepas dari hero berjalan + status tayang tersambung
+
+Owner: "aku cuma minta ganti hero hidup di landing page jadi seperti lk21". BENAR — koreksi
+sebelumnya cuma menyentuh `/beranda`; halaman depan `/` masih memakai `LandingHero` yang berganti
+sendiri tiap 9 detik (`FALLBACK_ROTATE_MS`). Sekarang dibereskan.
+
+**Halaman depan `/`:** `LandingHero` DIHAPUS (nol pemakai), diganti `FeaturedRow` — komponen yang
+SAMA dengan /beranda. Blok sambutan dikecilkan 70svh -> 42svh (tanpa video di belakang, ruang
+sebesar itu cuma kosong & mendorong baris poster keluar layar pertama). Teks penawaran + tombol
+Daftar Gratis TETAP. Strip poster khusus HP dibuang — FeaturedRow jalan di semua ukuran layar.
+Kartunya kini menuju `/drama/<id>` (PUBLIK, terbukti HTTP 200 tanpa cookie), bukan langsung /login.
+
+**Status tayang (A+B+C) — SELESAI:**
+- A `HomeHero.tsx` berhenti menulis `hero.status || "Ongoing"`. Kosong = label tak digambar.
+- B `lib/dramas.ts` memetakan kolom `status` (baca + tulis); nilai ngawur diabaikan.
+- C Panel admin dapat isian "Status tayang" (kosong / masih tayang / tamat), tersambung penuh.
+- `lib/types.ts` `parseDramaStatus` = SATU penjaga, dipakai di SERVER (form bukan pagar).
+- `tests/drama-status.test.ts` 6 tes, termasuk penjaga agar status kosong tak pernah ditebak lagi.
+
+**⚠️ MIGRASI DATABASE SUDAH DIJALANKAN** (disetujui owner lewat popup, dijalankan oleh AI lewat
+`psycopg2` — jalur `scripts/supabase_connect_test.py`, password dari `Downloads/password.txt`):
+`supabase_migrations/add_status_to_dramas.sql` -> `dramaapp.dramas` + kolom `status` (nullable) +
+`dramas_status_check`. Bukti: **42 drama utuh sebelum & sesudah**, kolom + constraint ADA,
+`notify pgrst, 'reload schema'` dijalankan lalu kolomnya terbukti terbaca lewat PostgREST.
+Urutan "SQL dulu, deploy belakangan" DIPATUHI — kalau dibalik, SEMUA penyimpanan drama gagal (42703).
+
+**Jebakan yang nyaris kena:** berkas migrasi LAMA di folder itu menulis `public.dramas` (dari
+sebelum pindah schema). Tabel sekarang di schema `dramaapp` (lib/supabase.ts:24). Menyalin mentah =
+menyasar tabel yang salah.
+
+**Bukti:** `tsc --noEmit` bersih · `npm test` **416 tes hijau** · `next build` sukses · commit
+`39f45f1` dual push terverifikasi lewat `git ls-remote` · produksi `/` `/beranda` `/discover`
+`/admin` semua 200, halaman depan nol carousel & nol animasi hero, 5 kartu unggulan tampil.
+
+**BELUM TERBUKTI (owner tolong coba):** menyimpan drama dari panel admin dengan isian Status belum
+dites end-to-end — itu menulis data produksi, jadi tidak dijalankan AI tanpa izin. Kolomnya sudah
+ada & terbaca, jadi seharusnya jalan; tapi "seharusnya" bukan "terbukti".
+
+### 🔁 KOREKSI 2 — hero berjalan DIBUANG dari beranda
+
+Owner: "hero seperti layarkaca21, jangan berjalan lagi". Banner sinematik yang berganti sendiri
+tiap 9 detik (`ROTATE_MS`) dicabut dari `/beranda`, diganti **baris FILM UNGGULAN**: deretan poster
+mendatar + tombol "LIHAT SEMUA FILM UNGGULAN" di bawahnya.
+
+- BARU `app/components/beranda/FeaturedRow.tsx` — nol gerakan otomatis (tak ada timer ganti-slide,
+  tak ada video autoplay). Poster hanya bergeser kalau penonton menekan panah / menggeser jari.
+  Kartunya memakai `CatalogCard` yang SAMA dengan grid di bawah, jadi lencana & hover tidak perlu
+  dibuat versi kedua.
+- `app/components/HomeHero.tsx` **DIKEMBALIKAN PERSIS ke versi git** — prop `compact` yang dipasang
+  di koreksi sebelumnya dicabut karena tak ada lagi pemakainya (kode mati). `git diff` berkas itu
+  KOSONG. `/discover` otomatis aman karena berkasnya tidak berubah sama sekali.
+
+**Terverifikasi dari HTML yang dilayani:** `min-h-[80svh]` TIDAK ADA · `aria-roledescription=
+"carousel"` TIDAK ADA · kelas animasi `hero-live`/`hero-sweep`/`hero-content-in` TIDAK ADA.
+Urutan: navbar 4944 -> bar magenta 7541 -> strip genre 17037 -> baris unggulan 18635 -> tombol
+lihat semua 37249 -> grid 41469. Slot iklan tetap **3**.
+
+**Bukti:** `npx tsc --noEmit` bersih · `npm test` 410 tes hijau · `npm run build` sukses.
+
+### ⚠️ TEMUAN LAMA yang tersingkap (BELUM diperbaiki — perlu keputusan owner)
+
+`lib/dramas.ts` **tidak memetakan kolom `status` sama sekali** (`rowToDrama`/`DramaRow` tak punya
+field itu). Akibatnya dari Supabase `drama.status` SELALU kosong. Dua efek:
+
+1. Lencana ONGOING/TAMAT di kartu grid baru **tidak pernah muncul** di produksi (kartu sengaja
+   tidak menggambarnya kalau data kosong — jujur, tidak mengarang).
+2. **Lebih penting:** `app/components/HomeHero.tsx:82` menulis `hero.status || "Ongoing"` — jadi
+   hero memasang label **ONGOING untuk SEMUA judul**, termasuk yang sudah tamat. Ini sudah terjadi
+   sebelum perombakan ini (kelihatan di screenshot owner).
+
+Perbaikannya perlu dicek dulu: apakah tabel `dramas` di Supabase memang punya kolom `status`?
+Kalau ada → tambahkan pemetaannya di `lib/dramas.ts`. Kalau belum → butuh migration SQL.
+
+**Belum di-commit & belum di-push.** Dual push (`origin` + `dramaku`) menunggu izin owner.
+
+## 🧱 2026-09-03 (sore, TERBARU) — Iklan BALIK melintang di bawah baris (gaya IDLIX)
+
+Owner membatalkan kolom iklan di kanan carousel (dipasang pagi ini, entri di bawah). Permintaan:
+**iklan melintang di BAWAH baris film**, mengikuti tampilan idlixku.com. Alasan owner: iklan di
+samping bukan yang dia mau lihat.
+
+**Yang berubah (3 berkas):** `app/components/BerandaRows.tsx` — 2 slot iklan kini blok melintang
+sendiri (`<div className="px-4 md:px-0"><AdBanner /></div>`), satu di bawah "Trending Drama", satu
+di antara "Drama Populer" dan "Rating Tertinggi". `app/components/RowWithAd.tsx` DIHAPUS.
+Prop `maxCreativeHeight` (AdBanner) + `maxHeight` (AdCreative) ikut dibuang — tak ada pemakai lagi.
+
+**Slot iklan sekarang berdiri sendiri, tidak digandeng baris film.** Sebelumnya iklan menempel pada
+`ContentRow`, jadi kalau barisnya kosong iklannya berisiko ikut hilang. Blok melintang tidak
+bergantung data drama sama sekali.
+
+**Lebar halaman TETAP 1440** (`.shell-wide`) — kontrak `TopNav.tsx` ↔ `beranda/page.tsx` di entri
+bawah masih berlaku. Pelebaran itu dulu dibuat untuk memberi ruang kolom kanan; dibiarkan karena
+menambah jumlah poster yang terlihat. Owner boleh minta balik ke 1280 kapan saja.
+
+**❓ Belum semirip IDLIX — soal BENTUK GAMBAR, bukan kode.** Ketiga creative terpasang rasionya
+1,75–2,14 (466×218 · 1200×687 · 1774×887) → tampil sebagai kotak ±280–342 × 160 px di tengah slot,
+bukan strip panjang. IDLIX memakai banner ±8:1. `AdCreative.tsx` sudah punya jalurnya: creative
+dengan rasio ≥ 2,4 (`WIDE_THRESHOLD`) otomatis MELEBAR mengisi lebar slot. Jadi cukup unggah
+creative bentuk strip (mis. 1200×150) lewat /admin — tanpa ubah kode.
+
+**Bukti:** `tsc` 0 error · 390 tes lulus (33 berkas) · `next build` sukses · HTML beranda dev
+(localhost:3311) diperiksa: slot iklan muncul SESUDAH "Trending Drama" dan SESUDAH "Drama Populer",
+dan penanda grid kolom kanan (`--ad-rail-w`) sudah tidak ada.
+
+## 🧱 2026-09-03 (pagi, DIBATALKAN sore) — Beranda gaya Netflix: iklan PINDAH ke kanan carousel
+
+Permintaan owner: iklan yang tadinya melintang di bawah baris film dipindah jadi **kolom di kanan
+carousel**, film tetap di kiri, tinggi sejajar, tema dark, responsive.
+
+**Keputusan owner (popup 2026-09-03):** kolom iklan **540×270** · lebar halaman **1440** · **2 slot**
+di antara baris film (slot bawah hero tetap melintang — di situ tak ada carousel untuk digandeng).
+
+Kenapa 540: creative iklan terpasang rasionya **tepat 2,000** (1774×887). 540/270 = 2,0, jadi gambar
+mengisi PENUH tanpa pita kosong. Kolom lebih ramping (400/320) akan memunculkan lagi ruang kosong
+atas-bawah — masalah yang baru dibereskan 2026-09-02.
+
+**7 berkas.** Baru: `app/components/RowWithAd.tsx` (baris film + kolom iklan). Diubah:
+`BerandaRows.tsx` (2 slot) · `AdCreative.tsx` + `AdBanner.tsx` (**prop OPSIONAL** `maxHeight` /
+`maxCreativeHeight` — 5 pemakai iklan lain tidak berubah sama sekali) · `globals.css` + `TopNav.tsx` +
+`beranda/page.tsx` (lebar 1440).
+
+**⚠️ KONTRAK LINTAS-BERKAS:** kelas `.shell-wide` (1440, didefinisikan di `app/globals.css`) dipakai
+navbar `TopNav.tsx` DAN isi `app/beranda/page.tsx`. Keduanya WAJIB sama — beda sedikit, logo DramaKu
+langsung meleset dari tepi konten, **putus tanpa error apa pun**. Itu sebabnya angkanya ditaruh di
+satu kelas, bukan ditulis `max-w-[90rem]` di dua berkas. Halaman lain sengaja masih 1280
+(`max-w-7xl`) — pelebaran dibatasi ke beranda atas pilihan owner.
+
+**Klik iklan → tab yang SAMA (kalau tujuannya situs kita sendiri).** Dulu selalu `target="_blank"`,
+padahal `linkUrl` iklan house menunjuk dramaapp → penonton dapat tab kembar. Sekarang origin
+dibandingkan: internal = tab sama, sponsor luar = tetap tab baru.
+**Ikutan yang WAJIB ikut:** `fetch` pencatat klik diberi `keepalive: true`. Tanpa itu, pindah halaman
+di tab yang sama membuat browser membatalkan permintaan → **hitungan klik hilang DIAM-DIAM**, tak ada
+error, angkanya saja tidak naik.
+
+**Breakpoint 1280, bukan 1024** — diukur: pada 1024 carousel cuma kebagian 412 px ≈ 2,5 poster.
+Di bawah 1280 layout jatuh bertumpuk seperti sebelumnya.
+
+**⚠️ PELAJARAN (bug nyata, tertangkap uji sebelum sampai penonton):** kolom iklan sempat 540 px di
+layar 390 px sehingga halaman bocor bisa digeser ke samping. Sebabnya **grid item tanpa `min-w-0`
+menolak menyusut di bawah lebar isinya**. Sudah lama dipasang di kolom carousel, LUPA dipasang di
+kolom iklan. Aturannya: di grid berisi konten lebar-tetap atau `overflow-x`, **setiap** kolom butuh
+`min-w-0` — bukan cuma yang kelihatan panjang.
+
+**Bukti:** `tsc` 0 error · 390 tes lulus · `next build` sukses 63 halaman · uji layout otomatis
+**8 ukuran layar (360 → 1577) → 0 masalah**, mengunci: iklan benar-benar di kanan & tumpang-tindih
+vertikal dengan barisnya · 540×270 di layar lebar · bertumpuk di bawah 1280 · gambar mengisi penuh ·
+tak bisa digeser samping · **`logoX == judulX`** (kontrak kesejajaran 1440).
+
+**Catatan insiden (bukan dari perubahan ini):** saat pengerjaan, Supabase sempat **mati ±15 menit** —
+`/api/dramas` & `/api/ads` balas **500** di produksi MAUPUN lokal, dan build lokal dapat Cloudflare
+**522**. Situs tetap hidup (`/beranda` 200) karena ISR menyajikan halaman tersimpan + penjaga
+`getAllDramasCachedSafe` jatuh ke `data/dramas.json`. Sudah pulih sendiri (200, build 63 halaman).
+Kalau kambuh: cek `/api/dramas` dulu — 500 di lokal DAN produksi = sisi Supabase, bukan env Vercel.
+
+## 🚧 2026-09-02 — Halaman 404 milik DramaKu (`app/not-found.tsx`)
+
+**Bukan perbaikan bug — situs TIDAK pernah rusak.** Owner melaporkan layar 404 dan mengira produksi
+bermasalah. Ditelusuri: seluruh alamat sehat (7 menu navbar + `/history` `/login` `/daftar`
+`/lupa-password` `/video-eksternal` + 2 sub-halaman admin semuanya **200**, dan **ke-42 halaman detail
+drama balas 200** — nol poster yang menjerumuskan ke 404). Penyebabnya: owner mengklik **tautan berkas
+kode dari chat** (mis. `app/components/AdCreative.tsx`) sementara fokusnya di browser → browser
+mengarangnya jadi `https://dramaapp.vercel.app/app/components/AdCreative.tsx` → 404 yang wajar.
+
+⚠️ **Untuk AI sesi berikutnya:** owner minta nama berkas ditulis **teks polos**, JANGAN sebagai tautan
+markdown yang bisa diklik. Ini menimpa anjuran harness VSCode.
+
+**Yang dikerjakan (1 berkas baru, `app/not-found.tsx`):** proyek ini ternyata belum pernah punya
+halaman 404 sendiri, jadi yang tampil adalah bawaan Next.js yang memaksa **latar putih + teks Inggris**
+— asing di situs bertema gelap berbahasa Indonesia, dan tanpa jalan pulang penonton yang nyasar
+cenderung menutup tab. Sekarang: tema gelap, "404" emas (`title-gold`), judul "Halaman tidak
+ditemukan", penjelasan bahasa Indonesia, tombol **Kembali ke Beranda** + **Jelajahi Drama**.
+Navbar/bottom nav tidak dipasang ulang — sudah dari root layout.
+
+Gaya tombol sengaja MENYALIN pola yang sudah ada di `app/page.tsx` (amber `rounded-full` +
+outline `border-zinc-600`), bukan bikin gaya baru.
+
+**Diperiksa sebelum menulis:** kotak pencarian di TopNav ternyata `hidden … md:flex` = **tidak ada di
+HP**, jadi halaman ini sengaja TIDAK menyuruh penonton memakainya.
+
+**Bukti:** `tsc` 0 error · 390 tes lulus · `next build` sukses, rute `/_not-found` terbentuk ·
+uji otomatis 2 jalur (alamat tanpa rute, dan drama yang memanggil `notFound()`) × 2 ukuran layar →
+**0 dari 32 cek gagal**. Yang dikunci: **status HTTP tetap 404** (bukan 200 — kalau jadi 200, Google
+menganggapnya halaman sah lalu mengindeksnya, istilahnya *soft 404*) · latar `rgb(0,0,0)` ·
+teks Inggris bawaan hilang · tombol menunjuk `/beranda` & `/discover` · tak bisa digeser samping.
+`robots: { index: false, follow: true }` dipasang supaya halaman error tidak masuk hasil pencarian.
+
+## 🖼️ 2026-09-02 — Banner IKLAN: kotak "pas-badan" mengikuti bentuk gambar
+
+Owner mengirim screenshot slot IKLAN di `/beranda`: gambar iklan tampil kecil di tengah, kiri-kanan
+lebar dan buram. Minta "sesuai tempatnya, jangan melebihi batas, enak dilihat dan presisi".
+
+**Akar:** `AdCreative.tsx` memakai ambang `WIDE_THRESHOLD = 2.4`. Gambar owner rasionya ±1,9:1 → di
+BAWAH ambang → jatuh ke "kartu sinematik" dengan tinggi **dipaku 160 px**, gambar `h-full w-auto` →
+lebarnya jadi 160 × 1,9 ≈ **307 px di dalam slot 1232 px**. Sisa ±75% ditutup gambar yang sama
+di-blur (`scale-125 object-cover blur-2xl`). Blur itu penutup gejala, bukan solusi.
+
+Owner memilih (dari 3 opsi) **"kotak pas-badan"**: kotak menyusut mengikuti bentuk gambar, gambar
+mengisi 100% kotaknya, nol blur. Logo TIDAK disentuh (sudah dicek, rasionya memang aman).
+
+Tiga berkas: `app/components/AdCreative.tsx` (inti — blur dibuang, kotak pakai `aspectRatio` + lebar
+`MAX_CARD_H × rasio`) · `app/components/AdBanner.tsx` (bingkai ikut menyusut) ·
+`app/components/SponsorAdsManager.tsx` (pratinjau admin + 2 teks petunjuk yang sudah tidak benar lagi).
+
+**⚠️ KONTRAK yang gampang dilanggar (regresi ini SEMPAT terjadi & tertangkap uji):**
+`max-w-full` pengaman **TIDAK BOLEH** digabung satu elemen dengan `className` dari pemanggil.
+`BerandaRows.tsx:226` mengirim `max-w-7xl` — properti CSS yang SAMA (`max-width`) → tailwind-merge
+memenangkan class pemanggil, `max-w-full` hilang **tanpa error apa pun**, `w-fit` kehilangan
+pengamannya, bingkai membludak jadi 552 px di layar 390 px. Obatnya: **dua batas → dua elemen**
+(pembungkus luar = batas pemanggil, `<a>` bingkai = `w-fit max-w-full`). Sudah ditulis sebagai
+komentar di `AdBanner.tsx`.
+
+**Bukti:** `tsc --noEmit` exit 0 · **390 tes lulus** · `next build` sukses (63 halaman) · uji visual
+Playwright+Chrome, iklan palsu disuntik lewat route interception, gambar uji berpenanda sudut
+TL/TR/BL/BR untuk mendeteksi pemotongan: 3 bentuk × 2 ukuran layar × semua slot →
+**`/beranda` 0 masalah dari 24 pemeriksaan** (`isiPenuh=YA`, `dalamBatas=YA`, `blurLatar=0`,
+`geserSamping=TIDAK`). Gambar 4:1 **tetap melebar penuh** (1202×302) — tanpa regresi.
+
+**Temuan sampingan, BUKAN dari perubahan ini:** `/drama/[id]` bisa digeser ke samping
+(`scrollWidth` 1680 desktop / 1106 HP). Diuji dengan DAN tanpa iklan → angkanya **identik**, jadi
+sudah ada sebelumnya. Pelakunya `button.inline-flex shrink-0 …` (baris tombol episode). Belum diperbaiki.
+
+**Sisa opsional:** loncatan kecil saat halaman pertama dimuat masih ada (rasio baru diketahui browser
+sesudah gambar terunduh). Penghilang tuntasnya = simpan lebar/tinggi gambar ke data iklan saat admin
+menambahkannya (`lib/store.ts` + `app/api/admin/ads/route.ts`). Menunggu owner.
+
+Rincian lengkap: [docs/lintasai/rencana/2026-09-02-banner-iklan-pas-badan.md](./docs/lintasai/rencana/2026-09-02-banner-iklan-pas-badan.md).
+
+**✅ SUDAH TAYANG DI PRODUKSI.** Commit `48a8516`, dual push `origin` + `dramaku` sukses; ketiganya
+terverifikasi di `48a8516` lewat `gh api` (baca langsung dari GitHub, bukan percaya pesan "berhasil").
+
+*Bukti tayang (bukan asumsi):* chunk JS produksi `/beranda` disisir sebelum & sesudah deploy —
+penanda kode LAMA `scale-125 object-cover blur-2xl` **hilang** dan penanda kode BARU
+`w-fit max-w-full overflow-hidden rounded-2xl` **muncul** pada percobaan ke-3 (±40 detik sesudah push).
+Iklan dirender di browser (AdBanner fetch `/api/ads` saat mount), jadi HTML halaman TIDAK memuat
+markup iklan — memeriksa HTML saja tidak sah sebagai bukti, harus lewat chunk JS-nya.
+Cek sehat: `/` `/beranda` `/discover` `/shorts` `/playly` `/profile` semua **200**.
+
+**Setelan ukuran — DISETEL ULANG hari yang sama.** Rilis pertama `MAX_CARD_H = 288`; owner melihat di
+produksi dan menilai kelewat besar (578×290, 47% lebar slot). Sekarang **`MAX_CARD_H = 160`** → kartu
+**322×162**, 26% lebar slot.
+
+*Kenapa 160:* sebelum banner ini diubah, kartu lama `sm:h-40` = tinggi 160 px dan gambar dirender
+**320×160** — ukuran yang sudah lama dilihat owner tanpa keluhan; yang dikeluhkan dulu adalah smear
+blur di sekelilingnya. Jadi 160 mengembalikan ukuran familiar, kini terisi penuh.
+
+*Diukur dulu sebelum diubah:* iklan yang benar-benar terpasang diambil dari `GET /api/ads` produksi →
+`https://i.imgur.com/a6CRqjj.jpeg`, **1774×887, rasio tepat 2,000**. Ini WAJIB dicek lebih dulu:
+kalau rasionya ≥ 2,4 ia masuk jalur landscape dan `MAX_CARD_H` **tidak berpengaruh sama sekali** —
+mengubah angkanya jadi sia-sia. Verifikasi ulang di 8 titik (3 slot `/beranda` + `/drama/[id]`, di
+1577 px & 390 px): **0 masalah**.
+
+Mau diubah lagi? Cukup **satu konstanta** di `AdCreative.tsx`. ⚠️ Tapi cek dulu rasio gambar iklan yang
+sedang terpasang — kalau ≥ 2,4, konstanta itu bukan tombolnya.
+
+*Kosmetik, belum diubah:* di ukuran 160 badge "IKLAN" (`absolute left-2 top-2`) menutupi sedikit tulisan
+creative di pojok kiri-atas. Badge wajib ada sebagai penanda konten sponsor; kalau mengganggu,
+pilihannya geser posisi atau perkecil badge-nya.
+
+## 📐 2026-09-02 (lanjutan) — Satu garis kiri: logo · judul hero · label film
+
+Owner menilai hasil putaran pertama "masih kurang" — judul memang sudah kiri, tapi **tidak sejajar**
+dengan label judul film di pojok kiri-bawah hero. Owner memilih opsi "semua ikut ke tepi kiri".
+
+**Akar masalahnya bukan kurang geser, tapi DUA SISTEM POSISI yang berbeda:**
+label film memakai `left-4 md:left-6` (jarak TETAP dari tepi layar), sedangkan header & hero memakai
+`mx-auto max-w-7xl` (isi dibatasi 1280px lalu dipusatkan → jaraknya dari tepi IKUT BERUBAH mengikuti
+lebar layar; di layar 1583px jadi ~175px). Dua aturan berbeda tak akan pernah bertemu.
+
+Perbaikan — buang pembatas lebar di dua tempat (`app/page.tsx`):
+- baris ~72 header: `mx-auto flex h-16 max-w-7xl … px-4 md:px-6` → `flex h-16 … px-4 md:px-6`
+- baris ~117 container hero: `mx-auto … max-w-7xl` dihapus, sisanya tetap
+- `LandingHero.tsx` **tidak diubah kelasnya** — `left-4 md:left-6` sengaja dijadikan PATOKAN
+
+**⚠️ KONTRAK LINTAS-BERKAS (kerusakan senyap kalau dilanggar):** `px-4 md:px-6` di `app/page.tsx`
+WAJIB sama angkanya dengan `left-4 md:left-6` di `app/components/LandingHero.tsx`. Ubah satu sisi
+saja → kesejajaran putus **tanpa error apa pun**, tak ada yang melapor. Peringatan sudah ditulis
+sebagai komentar di KEDUA berkas.
+
+**Bukti sejajar (dibaca dari CSS hasil build, bukan asumsi):**
+`.px-4{padding-inline:calc(var(--spacing) * 4)}` vs `.left-4{left:calc(var(--spacing) * 4)}` ·
+`.md\:px-6{…* 6}` vs `.md\:left-6{…* 6}` · `--spacing: .25rem` → HP 16px, desktop 24px, sama untuk
+ketiganya. Karena header & hero kini selebar layar penuh, tepi kiri isi = 0 + padding itu.
+
+Sengaja TIDAK diubah: section fitur & footer (`app/page.tsx` ~176, ~205, ~370) tetap
+`mx-auto max-w-7xl` — hero menempel tepi itu gaya poster, tapi paragraf panjang selebar layar penuh
+capai dibaca.
+
+## 🎨 2026-09-02 — Judul hero landing dipindah ke KIRI (gaya idlixku.com)
+
+Permintaan owner: judul besar di halaman depan yang tadinya rata tengah dibuat rata kiri seperti
+idlixku.com. Semua di **`app/page.tsx`**, hanya class Tailwind (tampilan), tidak menyentuh logika:
+
+- baris ~113 container hero: `max-w-3xl items-center text-center` → `max-w-7xl items-start text-left`
+  (`max-w-7xl` + `px-4 md:px-6` = sama persis dengan container header, jadi tepi kiri judul sejajar
+  dengan logo "DramaKu")
+- baris ~124 (tombol) & ~141 (statistik 42/7/Gratis): `justify-center` → `justify-start`
+- baris ~105 lapisan gelap: `radial-gradient(ellipse_at_center …)` → `ellipse_at_left`, supaya
+  bagian gelapnya ikut pindah ke kiri menopang teks; huruf emas di atas video terang susah dibaca
+
+`Stat` (`app/page.tsx` ~377) sengaja TIDAK diubah — ia tidak punya `text-center` sendiri, jadi ikut
+container. Hanya dipakai di blok hero ini, tak ada pemanggil lain yang tersenggol.
+
+**Bukti lokal:** `npx tsc --noEmit` exit 0 · `npm run build` exit 0 · dev server `GET / 200`, HTML
+yang benar-benar terkirim berisi `max-w-7xl … items-start … text-left` dan 2× `justify-start`. Sisa
+`justify-center` di HTML semuanya milik komponen `Button` (memusatkan teks DI DALAM tombol) dan
+logo bulat header — bukan pemusatan blok hero.
+
+**✅ SUDAH TAYANG DI PRODUKSI.** Commit `5aa8344`, dual push `origin` + `dramaku` sukses, keduanya
+terverifikasi di `5aa8344` (bukan cuma pesan "berhasil" — `git fetch` ulang lalu bandingkan hash).
+HTML `https://dramaapp.vercel.app/` berisi `max-w-7xl … items-start … text-left`, 2× `justify-start`,
+dan `ellipse_at_left`. Cek sehat: `/` `/beranda` `/discover` `/shorts` semua **200**.
+
+**⚠️ Remote `official` (`projectraden/backup-dramaapp`) SUDAH MATI** — `git fetch official` balas
+`Repository not found`. Dual push kini efektif hanya 2 repo (`origin` + `dramaku`), sesuai
+`AGENTS.local.md`. Kalau owner masih mau cadangan ketiga, repo-nya perlu dibuat/diberi akses ulang.
+
+*Catatan kecil:* `next-env.d.ts` berubah sendiri saat `npm run dev` dijalankan
+(`.next/types/…` → `.next/dev/types/…`). Berkas auto-generated, **sengaja tidak ikut di-commit**;
+Next.js menulisnya ulang sesuai mode yang terakhir dipakai.
+
+## 🎉 2026-09-01 — MIGRASI SUPABASE SELESAI & TERVERIFIKASI TAYANG
+
+Produksi resmi membaca project BARU `nvblmpkwyzbpdbshyvzw` (schema `dramaapp`).
+Deployment `696dcGTPw` (commit `0e1395b`) **Ready** 1m14s.
+
+*Bukti produksi benar-benar di database BARU* (logis, bukan asumsi): kode yang tayang SELALU kirim
+`Accept-Profile: dramaapp`. Project LAMA diuji dengan header itu balas
+`406 PGRST106 — Only the following schemas are exposed: public, graphql_public`. Kalau produksi masih
+menunjuk project lama, `/api/dramas` pasti 500. Kenyataannya **200 berisi 42 judul** → tidak ada
+kemungkinan lain. (Catatan: perbandingan jumlah judul TIDAK sah sebagai bukti — kedua database
+isinya sama; yang membedakan adalah header schema.)
+
+*Bukti sehat menyeluruh:* landing · `/beranda` · `/discover` · `/playly` semua **200** ·
+`/api/teaser` **307 / 0 byte** → tunnel `chronic-restrictions-share-parcel.trycloudflare.com` →
+diikuti balas **206 `video/mp4`** (byte video tetap tidak lewat Vercel, kuota aman) ·
+`/api/likes` total **115** = isi DB baru **115**, cocok baris per baris.
+
+### Akar masalah 7 build gagal beruntun (22 jam)
+
+`SUPABASE_SERVICE_ROLE_KEY` di Vercel masih kunci project LAMA sementara `SUPABASE_URL` sudah
+project BARU → saat build, Next.js prerender `/beranda` → `Supabase select 401 Invalid API key` →
+`Export encountered an error on /beranda/page, exiting the build`. Direproduksi lokal dengan sengaja
+memasangkan URL baru + kunci lama.
+
+**Jebakan yang sempat menyesatkan:** log build Vercel berhenti di `Running TypeScript ...` karena
+baris-baris sesudahnya tidak sempat terkirim saat proses mati. Sempat didiagnosis sebagai error
+TypeScript — padahal TypeScript LOLOS (`Finished TypeScript in 13.4s`), matinya di tahap prerender
+sesudahnya. **Kalau log Vercel berakhir mendadak tanpa pesan error, jangan percaya baris terakhir
+sebagai titik gagal — reproduksi lokal dengan env yang sama.**
+
+### Tiga pelajaran yang perlu diingat
+
+1. **Env var Vercel bertipe `Secret` tidak bisa diverifikasi dengan mata** — setelah disimpan isinya
+   hanya titik-titik. Jangan "cek apakah sudah sama"; timpa saja: Ctrl+A → Delete → tempel ulang →
+   jangan ada spasi/Enter di ujung.
+2. **Perubahan env di Vercel tidak berlaku sampai Redeploy.** Deployment yang berjalan memakai nilai
+   saat ia dibangun.
+3. **Build gagal 22 jam tanpa ada yang tahu.** Situs tetap sehat karena Vercel mempertahankan
+   deployment sukses terakhir (`ee8f18c`, 29 Agu) — nyaman, tapi menyembunyikan bahwa semua commit
+   sejak `3dad2e8` tidak pernah sampai ke penonton. Belum ada notifikasi build gagal.
+
+### ✅ Penjaga permanen dipasang (2026-09-01, atas persetujuan owner)
+
+`app/page.tsx` · `app/beranda/page.tsx` · `app/discover/page.tsx` · `app/shorts/page.tsx` dulu
+memanggil `getAllDramasCached()` **tanpa `try/catch`** saat prerender → satu gangguan Supabase saat
+build menjatuhkan SELURUH deployment. Sekarang keempatnya memakai
+`getAllDramasCachedSafe()` (lihat [lib/dramas.ts](./lib/dramas.ts), tepat sesudah
+`getAllDramasCached`): kalau katalog tak terjangkau, jatuh ke `data/dramas.json` supaya halaman tetap
+terisi — bukan kosong, dan bukan menjatuhkan build.
+
+Perbaikan ditaruh di lapisan data (satu fungsi), bukan ditambal di empat halaman.
+**Jalur admin/tulis/koin sengaja TIDAK diubah** — di sana kegagalan harus tetap melempar error, jangan
+disamarkan jadi "katalog kosong".
+
+*Bukti (skenario asli diulang):* build dengan URL baru + kunci lama — yang tadinya
+`Export encountered an error on /beranda/page, exiting the build` — kini **exit 0**, mencetak
+`[dramas] katalog tak terjangkau, pakai berkas lokal: ... 401` (error tetap terlihat, tidak ditelan)
+dan menghasilkan 21/21 halaman. Jalur normal tetap utuh: **63/63** halaman, 42 judul dari Supabase,
+tanpa peringatan fallback. `tsc --noEmit` exit 0.
+
+### Sisa pekerjaan — SEMUA SELESAI
+
+- ✅ `git push dramaku main` — 8 commit (`3dad2e8`..`5f7cac5`) terkirim. Ketiga repo selaras di
+  `5f7cac5`, diverifikasi lewat `gh api` (langsung ke GitHub, bukan cache lokal), sisa 0 commit.
+- ✅ Kang Dedi sudah dikabari; project lama `iicrzdnmcpontfytfypi` boleh dimatikan.
+- ✅ Notifikasi `Deployment Failures` di Vercel: **aktif di ketiga saluran (Push + Email + Web)**.
+  Email & Web ternyata sudah menyala sejak awal — 7 kegagalan kemarin memang terkirim, hanya tidak
+  terbaca. Push disubscribe 2026-09-01 karena itu satu-satunya saluran yang sulit diabaikan.
+  `Deployment Ready` sengaja Push saja (tanpa Email/Web) supaya notifikasi sukses tidak menenggelamkan
+  yang gagal. Letaknya: team switcher → Settings (sidebar) → Account → My Notifications
+  (`vercel.com/<team>/~/settings/notifications`) — BUKAN di menu foto profil.
+- ⚠️ **JANGAN jalankan `scripts/sinkron_selisih_dramaapp.mjs` lagi** — arahnya lama→baru, sekarang
+  akan menimpa data penonton yang lebih baru dengan data lama.
+
+### Kredensial GitHub untuk repo `dramaku` — sudah beres, begini cara memperbaikinya lagi
+
+Gejala kemarin: `git push dramaku main` menggantung lalu gagal
+`Invalid username or token. Password authentication is not supported`.
+Penyebab: tidak ada kredensial GitHub tersimpan sama sekali di PC ini.
+
+**JEBAKAN yang memakan satu putaran:** `gh auth login` saja **TIDAK CUKUP**. Pertanyaan
+*"Authenticate Git with your GitHub credentials?"* harus dijawab **Yes**; kalau terlewat, `gh auth status`
+tampak sehat tapi `git push` tetap ditolak — karena Git belum tahu soal login itu.
+Perbaikannya satu perintah tanpa dialog: **`gh auth setup-git`** (memasang
+`credential.https://github.com.helper` ke gitconfig global). Sesudah itu `git push dramaku main` jalan.
+
+*Cara memastikan push benar-benar mendarat* (jangan percaya pesan "berhasil" saja):
+`gh api repos/ojokesusu/dramaku/commits/main --jq '.sha[0:7]'` — membaca langsung dari GitHub,
+tidak terpengaruh cache `git fetch` yang bisa basi.
 
 ---
 
-**Terakhir diisi:** 2026-09-06 — **DOKUMEN PENGENALAN DASHBOARD UNTUK CLIENT.**
-Berkas baru: [`docs/pengenalan-dashboard-dramaku.md`](./docs/pengenalan-dashboard-dramaku.md) — gaya
-perkenalan produk (bukan laporan teknis): 9 fitur unggulan yang SUDAH jalan + 6 rencana terjadwal
-(A–F, disarikan dari daftar "Belum selesai / menunggu kamu" di bawah) + 2 usulan menunggu keputusan
-owner (laporan pemasukan di dashboard · kelola komentar). **Nol perubahan kode.** Isinya diambil dari
-kode nyata, bukan ingatan: `DramaForm.tsx` (isi otomatis IMDb), `app/admin/page.tsx` (Scan &
-auto-hardlink), `PlaylyVisibilityManager.tsx` + `PlaylyStatusCard.tsx`, `lib/coins.ts` (3 episode
-gratis · 8 koin/episode · paket Rp5rb–50rb), `AdminManager.tsx` + `TwoFactorSettings.tsx`,
-`SponsorAdsManager.tsx`, `AdminDashboard.tsx`. Angka tes diverifikasi ulang hari ini (`npm test` →
-**402 lulus, 33 berkas**), tidak disalin dari catatan lama. Dokumen ditutup catatan jujur bahwa
-perbaikan `c2da792` masih tertahan 403 dan **belum tayang** di `dramaapp.vercel.app`.
+## ✅ 2026-09-01 — riwayat: palang dibuka bertahap
 
----
+Urutannya beres semua kecuali langkah terakhir:
+1. ✅ Kang Dedi menambahkan `dramaapp` ke Exposed schemas.
+2. ✅ `revoke all on all tables in schema dramaapp from anon, authenticated` —
+   dijalankan owner lewat `scripts/perbaiki_izin_dramaapp.py`. Lubang keamanan tertutup.
+3. ✅ `grant usage on schema dramaapp to service_role` — dijalankan Kang Dedi di SQL Editor
+   (user `creative_raden` tidak berwenang: punya USAGE tapi tanpa GRANT OPTION; Postgres tidak
+   menolak perintahnya, hanya WARNING lalu tidak berbuat apa-apa — kegagalan SENYAP, selalu
+   verifikasi hasilnya).
+4. ✅ REST API terbukti jalan penuh: baca `dramas` 200 (42 judul, identik dengan produksi) ·
+   baca `app_data` 200 · **tulis** 201 → baca balik 200 → hapus 204 → bersih `[]`.
+5. ✅ Selisih data disusulkan lewat `scripts/sinkron_selisih_dramaapp.mjs` — 6 baris
+   (`app_data`: `ads`, `playly:hidden`, `videobase` · `likes`: 3 judul), semuanya diverifikasi cocok.
+   **`videobase` yang paling kritis** — berisi alamat tunnel video yang sedang hidup dan berganti
+   tiap PC backup restart; tanpa disalin, semua video mati begitu produksi pindah.
+6. ⬜ **SISA SATU: tukar env di Vercel + redeploy.** Ganti `SUPABASE_URL` ke
+   `https://nvblmpkwyzbpdbshyvzw.supabase.co` dan `SUPABASE_SERVICE_ROLE_KEY` ke kunci project
+   baru (nilainya sudah ada di `.env.local`). Jalankan ulang `sinkron_selisih_dramaapp.mjs` tepat
+   sebelum menukar untuk menangkap selisih menit terakhir.
+   **Jangan sinkron lagi SESUDAH tukar** — arahnya lama→baru, jadi akan menimpa data baru yang
+   sudah masuk. Rollback kalau bermasalah: kembalikan kedua env ke nilai lama
+   (kunci lama ada di `C:\Users\user18\Downloads\key-lama.txt`, JANGAN di-commit).
 
-**Terakhir diisi:** 2026-08-29 — **VIDEO PLAYLY TANPA BERKAS BERHENTI DIANTAR KE PENONTON.**
-Owner melaporkan video `Diasingkan Ke Bumi… Mas Of Steel` (35:07) tampil di admin tapi di `/playly` hanya
-memberi layar hitam **"Video belum tersedia"**. **Bukan bug DramaKu**: kalimat itu nol hasil saat di-grep
-di seluruh kode kita — ia keluar dari dalam `<iframe>` pemutar Playly. Sebab sebenarnya: `/api/public-video`
-Playly membalas `videoUrl: null` + `variants: {}` untuk **dua** video 35 menit (id `1787977846374` dan
-`1787976646197`, judulnya kembar "…Steel" & "…Steelzz"), sedangkan 4 video lain punya `.mp4` + 360p–1080p
-di R2. Artinya CATATAN videonya tersimpan di Playly tapi BERKASNYA tidak pernah sampai (❓ dugaan: upload
-putus — semua yang sukses 2–5 menit, yang gagal 35 menit).
+Riwayat penelusuran yang menghasilkan ini ada di bawah — disimpan karena berisi jalur-jalur buntu
+yang tak perlu diulang.
 
-**Yang diubah (atas persetujuan owner):** video begini kini otomatis TIDAK ditampilkan ke penonton, dan di
-`/admin/videos/playly` diberi badge merah **"belum siap"** + langkah perbaikannya. Berkas: `lib/playly.ts`
-(`fetchPlaylyThumbnail` → `fetchPlaylyDetailPublik` + `punyaFileVideo`), `lib/playly-publik.ts`
-(`bolehTampilKePenonton`), `app/admin/videos/playly/page.tsx`,
-`app/components/admin/PlaylyVisibilityManager.tsx`, `tests/playly-publik.test.ts`.
+## 🔴 2026-08-31 (sore) — KOREKSI: migrasi BELUM tuntas, produksi masih database LAMA
 
-⚠️ **Aturan yang JANGAN diperlonggar:** `punyaFile` punya **3** keadaan — `true` / `false` / **`null` =
-TIDAK TAHU**. Hanya `false` yang menyembunyikan video. Kalau `null` ikut disembunyikan, satu gangguan
-jaringan atau satu perubahan bentuk JSON di pihak Playly akan **mengosongkan seluruh halaman video**.
-Dikunci tes "bentuk JSON Playly berubah → null, BUKAN false".
+**Klaim yang dikoreksi.** Catatan pagi ini menyimpulkan "produksi sudah pakai database baru" dari
+bukti `/api/dramas` balas 42 judul sedangkan `data/dramas.json` cuma 21. **Alasan itu tidak sah:**
+selisih 42 vs 21 hanya membuktikan produksi membaca *sebuah* database, bukan database yang *mana*.
 
-**Kuota Vercel: nol tambahan** (dicek sesuai permintaan owner). Yang menyeberang cuma JSON teks ke
-`/api/public-video` — panggilan yang SUDAH ada untuk mengambil sampul, kini sekalian membaca status
-berkas. Byte video tetap lewat `<iframe>` ke Vercel MILIK PLAYLY. `videoUrl` hanya dibaca ada/tidaknya,
-tidak pernah dipakai memutar atau menyalurkan.
+**Palang sebenarnya: schema `dramaapp` belum di-expose.** Supabase punya daftar putih schema mana
+yang boleh diakses lewat REST API (Dashboard → Settings → API → **Exposed schemas**). Isinya saat ini
+`public, graphql_public, datadomain, rtp, seoanalysis, footballbot, mappingplan_backup` — **tanpa
+`dramaapp`**. Uji langsung dengan kunci yang benar balas:
 
-**Bukti:** 402 tes lulus (33 berkas; 12 tes baru) · `tsc --noEmit` exit 0 · uji ke Playly nyata memakai
-fungsi baru: 2 video 35 menit → DISEMBUNYIKAN, 4 video lain → TAMPIL, sampul keenamnya tetap terbaca.
-⚠️ `next build` GAGAL di komputer ini (prerender `/beranda`, `ENOTFOUND xxxxxxxxxxxx.supabase.co`) —
-**bukan akibat perubahan ini**: dibuktikan `git stash` + build ulang kode lama → gagal identik (digest
-error sama, `3227098399`). Sebabnya `.env.local` di PC ini masih berkas CONTOH. Tahap compile +
-TypeScript di dalam build sendiri lulus.
+```
+406 {"code":"PGRST106","message":"Invalid schema: dramaapp"}
+```
 
-**SUDAH di-commit `c2da792`. Push SEBAGIAN — repo produksi menolak.** Branch `fix/playly-otomatis`
-berhasil di-push ke `ojokesusu/dramaku` (di PC ini bernama remote `origin`) — repo ini **TIDAK dipantau
-Vercel**, jadi kodenya aman tersimpan tapi belum merilis apa pun. Push ke `masradenbagus89-ui/dramaapp`
-(di PC ini bernama remote `dramaapp`, **inilah tombol rilis**) ditolak **403 — `denied to yusufscorpio`**,
-kendala lama yang sudah tercatat: akun di PC ini cuma punya izin baca ke repo produksi.
-**Jadi perbaikan ini BELUM tayang di `dramaapp.vercel.app`.** Jalan keluar permanen tetap sama: pemegang
-akun `masradenbagus89-ui` menambahkan `yusufscorpio` sebagai **collaborator Write**; atau owner sendiri
-yang menarik branch `fix/playly-otomatis` dari `ojokesusu/dramaku` lalu push ke repo produksi.
+**Kenapa ini membuktikan produksi belum pindah.** [lib/supabase.ts:24](./lib/supabase.ts#L24) selalu
+mengirim `Accept-Profile: dramaapp`. Kalau `SUPABASE_URL` di Vercel menunjuk project baru, tiap
+permintaan pasti kena 406 lalu `ensureOk` melempar error → `/api/dramas` jadi **500**. Kenyataannya
+produksi balas **200** dengan header `X-Vercel-Cache: MISS` + `Age: 0` (= query database hidup, bukan
+cache basi). Jadi produksi masih membaca project lama `iicrzdnmcpontfytfypi`. Ini kesimpulan lewat
+eliminasi — env var Vercel sendiri belum pernah dibaca langsung (CLI-nya `Logged out`).
 
-Rencana lengkap: `docs/lintasai/rencana/2026-08-29-playly-video-tanpa-berkas.md`.
+**Yang SUDAH beres** (diverifikasi lewat koneksi Postgres langsung ke pooler, read-only — jalur ini
+tidak lewat REST jadi tak terhalang Exposed schemas):
 
-**Langkah owner di Playly (bukan di DramaKu):** upload ulang video 35 menit sampai 100% selesai, lalu
-hapus salah satu dari 2 entri kembar — kalau dua-duanya jadi hidup, judulnya dobel di halaman penonton.
+| Tabel di `dramaapp` | Isi | Backup DB lama 29 Agu |
+|---|---|---|
+| `dramas` | 42 | 42 |
+| `app_data` | 20 | 20 |
+| `likes` | 35 | 35 |
+| `wallets` | 3 | 3 |
+| `unlocks` | 0 | 0 |
 
----
+42 id drama-nya **identik persis** dengan yang tayang di produksi. Kunci `ads` dan `playly:hidden`
+sudah ikut pindah. `SUPABASE_SERVICE_ROLE_KEY` di `.env.local` juga **sudah diganti owner** dan
+terbukti valid (401 hilang, berganti jadi 406 di atas).
 
-**Terakhir diisi:** 2026-08-27 — **VIDEO PLAYLY AKHIRNYA TAYANG DI PRODUKSI & TERBUKTI TAMPIL.**
-`https://dramaapp.vercel.app/playly` balas **200** dan halamannya (35 KB) memuat **keempat video milik
-`coklat`**: Transformers 8, Transformers The Last Knight, Hulk Abu-abu, Suara Hewan. Sebelumnya hari ini
-halaman itu masih **404**.
+**⚠️ Data terus bergeser selama produksi belum dipindah.** Penonton masih menambah data ke DB lama.
+Terukur 2026-08-31: total like `111 → 114` (`permaisuri-bangkit-di-dunia-modern` 1→2 ·
+`over-your-dead-body` 2→4). Angkanya akan terus bertambah → **wajib sinkron ulang tepat sebelum
+pindah**, jangan pakai snapshot 29 Agu apa adanya.
 
-⚠️ **Fitur ini tayang lebih cepat dari rencana — owner perlu tahu.** Keputusan 2026-08-26 adalah menahan
-Playly 2-3 hari dulu supaya kalau kuota naik lagi penyebabnya jelas. Yang terjadi: commit merge `14fa0cc`
-di `dramaapp/main` ikut membawa `9e17f40`, jadi Playly naik bareng catatan kuota — kemungkinan efek samping
-merge, bukan keputusan baru. **Risikonya rendah** (audit di `antrean-deploy.md`: nol pola penyalur byte,
-video lewat `<iframe>` ke Vercel *milik Playly*, thumbnail pakai `<img>` biasa), tapi **pemantauan Fast
-Origin Transfer mingguan di bawah kini mencakup dua perubahan sekaligus, bukan satu.**
+**Konteks (2026-08-31): ini permintaan Kang Dedi.** Pengumuman 2026-08-29 di Discord: semua project
+wajib pindah ke `nvblmpkwyzbpdbshyvzw`, **deadline Selasa 2026-09-01**, project lama di-shutdown
+(biaya $285/bulan). Data DramaApp **sudah aman** di project baru sejak 29 Agu — yang belum, produksi
+masih *membaca* project lama, jadi begitu project lama dimatikan situs ikut mati.
 
-**Kotak merah "PLAYLY_ENCRYPTION_KEY belum di-set" yang difoto owner — layarnya dari
-`dramaapp.vercel.app`, jadi yang kurang env di VERCEL, bukan di komputer.** `.env.local` di PC rekan sudah
-benar (64 karakter hex, diperiksa) tapi diblokir `.gitignore:7-8` — memang tak pernah ikut ter-upload.
-**PENTING: env ini BUKAN penyebab video tak tampil** (terbukti — video kini tampil tanpa env itu). Ia hanya
-dipakai mengenkripsi kunci Playly sebelum masuk database, jadi satu-satunya yang diblokir adalah tombol
-**"Simpan kunci"** di halaman admin. `lib/playly.ts` `fetchPlaylyVideosKita()` memanggil
-`getPlaylyKeyCached().catch(() => null)` → gagal-dekripsi ditelan jadi "tak ada kunci", lalu turun ke
-katalog publik tersaring nama kreator.
+**Langkah owner (butuh pemilik project Supabase — Kang Dedi, bukan owner dramaapp).** Dua cara,
+pilih salah satu:
 
-**Kunci mitra `plyk_…` KINI DITERIMA LAGI** — diuji 2026-08-27: `{"ok":true,"count":4}`. Catatan
-"invalid_key 2026-08-25" sudah BASI. Katalog publik juga hidup: 22 video, 4 milik `coklat`.
+*Cara 1 — dashboard:* Settings → **Data API** (dashboard lama: **API**) → **Exposed schemas** →
+tambahkan `dramaapp` ke daftar yang sudah ada (jangan hapus yang lain) → Save.
+Link langsung: `https://supabase.com/dashboard/project/nvblmpkwyzbpdbshyvzw/settings/api`
 
-⚠️ **Kalau nanti perlu push dari PC rekan: pakai `git push dramaapp origin/main:main`, JANGAN
-`git push dramaapp fix/playly-otomatis:main`** — yang kedua non-fast-forward (produksi punya commit yang
-tak ada di branch itu, termasuk `f17b528` perbaikan kuota); memaksanya menghapus perbaikan kuota dari
-produksi. Push dari PC rekan tetap **403** (`denied to yusufscorpio`, izin baca saja) — jalan keluar
-permanen: pemegang akun `masradenbagus89-ui` menambahkan `yusufscorpio` sebagai **collaborator Write**.
-Gerbang pra-rilis di PC rekan LULUS: **376 tes lulus**, `tsc` exit 0, `next build` sukses.
+*Cara 2 — Management API* (dipakai kalau menunya tak ketemu; per 2026-08-31 Kang Dedi tidak
+menemukan menu itu). Endpoint & nama field sudah dicek ke dokumentasi resmi Supabase:
+`PATCH https://api.supabase.com/v1/projects/{ref}/postgrest`, field `db_schema`. Butuh Personal
+Access Token dari `https://supabase.com/dashboard/account/tokens`. Jalankan GET dulu untuk ambil
+nilai `db_schema` yang sekarang, lalu PATCH dengan nilai itu + `, dramaapp`.
+**Token itu memberi akses ke SELURUH akun Supabase Kang Dedi — biar beliau sendiri yang menjalankan,
+jangan diminta/diteruskan.**
 
-**Terakhir diisi:** 2026-08-27 malam — **SELESAI + PENYISIRAN PENUH: dipastikan TIDAK ADA video
-yang lewat Vercel.** Sesuai permintaan owner, seluruh jalur video diperiksa satu per satu
+**Rencana darurat kalau tenggat lewat & schema belum dibuka:** hapus `SUPABASE_URL` +
+`SUPABASE_SERVICE_ROLE_KEY` dari env Vercel → `useSupabase` jadi false → situs jatuh ke berkas
+`data/dramas.json` (21 judul, tanpa akun/koin/like). Jelek tapi situs tetap hidup, jauh lebih baik
+daripada halaman error 500. Lihat `getAllDramas` di [lib/dramas.ts:160](./lib/dramas.ts#L160).
+
+Jalur alternatif yang SUDAH DIUJI DAN BUNTU (jangan diulang):
+`ALTER ROLE authenticator SET pgrst.db_schemas` → ditolak, *"authenticator is a reserved role, only
+superusers can modify it"* · menumpang schema lain yang sudah ter-expose → `CREATE=False` di semua
+(`public` malah kosong, 0 tabel) · `creative_raden` tidak memiliki satu schema pun.
+
+**URUTAN AMAN — jangan dibalik:**
+1. Expose schema `dramaapp` ← satu-satunya yang butuh akses dashboard
+2. Uji dari lokal sampai benar-benar tembus (bukan diasumsikan)
+3. Sinkronkan data selisih yang menumpuk sejak 29 Agu
+4. Baru ganti `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` di Vercel + redeploy
+5. Verifikasi produksi hidup & datanya utuh
+
+**Jalan pintas yang SUDAH ditolak:** bikin *view* di schema `public` (yang sudah ter-expose) supaya
+tak perlu dashboard — **tidak bisa**. Kode menyimpan data pakai `on_conflict` (upsert), dan Postgres
+tidak mendukung `ON CONFLICT` di atas view → baca jalan, tapi semua penyimpanan (like, koin, komentar,
+admin) rusak. Mengubah `pgrst.db_schemas` lewat SQL juga tidak diambil: setelan itu dipakai bersama
+4 aplikasi lain di project yang sama.
+
+## ⚠️ 2026-08-31 — SISA HAL TERTINGGAL
+
+**1. ~~`.env.local` memakai kunci database LAMA~~ — SELESAI 2026-08-31.** Owner sudah menempel
+`service_role` project baru; uji langsung tidak lagi balas `401 Invalid API key`. `npm run dev`
+tetap belum bisa membaca data sampai palang Exposed schemas di atas dibuka.
+
+**2. TIGA commit belum ter-push ke repo cermin `dramaku` (aturan dual push).**
+`origin/main` sudah `e74aff4` ✅, tapi `dramaku/main` masih `ee8f18c` — terakhir di-push
+2026-08-29 08:25. Yang tertahan: `3dad2e8` · `4195567` · `e74aff4` (jumlahnya akan terus bertambah
+tiap commit baru sampai kredensialnya diperbaiki). Dicoba lagi 2026-08-31 sore, GitHub tetap menolak:
+`Invalid username or token. Password authentication is not supported for Git operations.`
+(kredensial repo `ojokesusu/dramaku` di PC ini kedaluwarsa/hilang).
+*Dampak:* nol untuk penonton — push ke `dramaku` **tidak** merilis apa pun; risikonya rekan bekerja
+di atas kode lama. *Langkah:* login ulang GitHub di PowerShell (`git credential-manager` / `gh auth login`),
+lalu `git push dramaku main`.
+
+## 🗄️ 2026-08-30 — MIGRASI SUPABASE KE PROJECT BARU (kode tayang, produksi BELUM pindah)
+
+Commit `3dad2e8` (30 Agt 08:42) — dibuat sesi lain yang berakhir tanpa mengisi handoff, jadi dicatat
+sekarang berdasarkan pembacaan commit + pengujian produksi hari ini.
+*Apa yang berubah:* database pindah dari project Supabase lama `iicrzdnmcpontfytfypi` ke project baru
+`nvblmpkwyzbpdbshyvzw`. Karena project baru **dipakai bersama aplikasi lain**, tabel DramaApp
+sengaja ditaruh di **schema `dramaapp`** (bukan `public`) supaya nama tabel tidak tabrakan.
+*Cara kodenya tahu:* [lib/supabase.ts:24](./lib/supabase.ts#L24) mengirim header `Accept-Profile`
+(untuk baca) + `Content-Profile` (untuk tulis) berisi `dramaapp` di tiap permintaan — syaratnya
+schema itu sudah di-expose di Dashboard → Settings → API (**BELUM** per 2026-08-31 sore — inilah
+palang yang menahan migrasi; lihat bagian KOREKSI di atas).
+*Bahan pendukung yang ikut masuk:* `supabase_migrations/2026-08-29_schema_lengkap_dramaapp.sql`
+(skema lengkap 5 tabel — `app_data`, `dramas`, `likes`, `wallets`, `unlocks` — idempoten, aman
+dijalankan ulang) · `scripts/export-dramaapp-sql.mjs` (ekspor SQL lengkap) ·
+`scripts/cek_db_lama_readonly.py` (cek read-only database lama sebelum dimatikan) · `.gitignore`
+kini melindungi `backups/` + hasil export (isinya data user, jangan sampai ter-commit).
+*Status tayang (dikoreksi 2026-08-31 sore):* `/api/dramas` memang 200 berisi 42 judul, tapi **dari
+database LAMA** — schema `dramaapp` di project baru belum bisa diakses lewat API.
+*Sisa referensi project lama `iicrzdnmcpontfytfypi`:* di kode aplikasi **nihil**; yang masih menyebut
+hanya berkas sejarah/alat — `docs/architecture.md` (catatan pensiun), `migrasi-full.sql`,
+`migrasi-schema.sql`, `supabase_migrations/2026-08-29_schema_lengkap_dramaapp.sql`,
+`scripts/fix_coin_spend_unlock_prod.sql`, `backups/prod-2026-08-29T06-34-11/manifest.json`, plus
+`.next/` (cache build). Semuanya wajar dan tidak perlu dibersihkan.
+
+**Terakhir diisi sebelumnya:** 2026-08-29 — **CEK RUTIN: semua selaras & sehat.** Lokal = `origin/main` = `dramaku/main` = `7a440c2` (selisih NOL, tak ada rilis tertinggal). Produksi: landing 200 · teaser 307/0 byte → tunnel `ping-newspapers-damaged-dublin.trycloudflare.com` · video balas 206 `video/mp4`.
+
+*2026-08-28 — HERO LANDING "HIDUP" DIRILIS & TERVERIFIKASI TAYANG.*
+
+**Rilis hero landing (2026-08-28, atas permintaan owner):** landing page publik kini memutar
+cuplikan video berputar seperti beranda — komponen baru `app/components/LandingHero.tsx`
+(5 judul unggulan via `featuredHeroSlides`, ganti tiap **60 detik**), kolase poster statis
+dihapus, lapisan gelap ditipiskan supaya video cerah & gerakannya jelas. **Kuota tetap aman:**
+jalur video tidak berubah — `/api/teaser` 307 redirect. **Bukti tayang:** push `53e923b` →
+`https://dramaapp.vercel.app/` memuat markup hero baru (`70svh`) 45 detik sesudah push;
+`/api/teaser` produksi balas **307 / 0 byte** → tunnel. Lokal = `origin/main` = `dramaku/main`
+= `53e923b`, selisih NOL. Pra-push: 390 tes lulus, `tsc` exit 0, `next build` sukses.
+
+**Riwayat sebelumnya (2026-08-27 malam) — Playly resmi dirilis:**
+
+**Rilis Playly = KEPUTUSAN owner malam ini** (koreksi atas dugaan "efek samping merge" di catatan
+rekan): sesudah kuota terbukti aman & penyisiran tuntas, owner diminta memilih dan menyetujui
+rilis. `origin/main` (`a242921`) di-merge balik ke lokal → `14fa0cc`, di-push ke `origin` +
+`dramaku`. **Bukti tayang:** `https://dramaapp.vercel.app/playly` balas **200** ±1 menit sesudah
+push (sebelumnya 404); diverifikasi rekan dari sisi mereka: halaman memuat keempat video `coklat`
+(Transformers 8, Transformers The Last Knight, Hulk Abu-abu, Suara Hewan). Pantauan Fast Origin
+Transfer mingguan kini mencakup dua perubahan sekaligus (perbaikan kuota + Playly) — audit Playly:
+nol pola penyalur byte, video lewat `<iframe>` ke Vercel *milik Playly*, thumbnail `<img>` biasa.
+
+**Kotak merah "PLAYLY_ENCRYPTION_KEY belum di-set" (difoto owner) = env yang kurang di VERCEL,
+bukan di komputer.** BUKAN penyebab video tak tampil (video tampil tanpa env itu) — ia hanya
+dipakai mengenkripsi kunci Playly sebelum masuk database, jadi satu-satunya yang diblokir = tombol
+"Simpan kunci" di halaman admin (`lib/playly.ts` menelan gagal-dekripsi lalu turun ke katalog
+publik). Isi lewat Vercel → Settings → Environment Variables kalau tombol itu mau dipakai.
+
+**Kunci mitra `plyk_…` KINI DITERIMA LAGI** — diuji rekan 2026-08-27: `{"ok":true,"count":4}`;
+catatan "invalid_key 2026-08-25" BASI. Katalog publik hidup: 22 video, 4 milik `coklat`.
+
+⚠️ **Push dari PC rekan tetap 403** (`denied to yusufscorpio`, izin baca saja). Jalan keluar
+permanen: pemegang akun `masradenbagus89-ui` menambahkan `yusufscorpio` sebagai collaborator
+Write. Kalau sudah bisa: pakai `git push dramaapp origin/main:main`, JANGAN
+`git push dramaapp fix/playly-otomatis:main` (non-fast-forward — memaksanya menghapus perbaikan
+kuota dari produksi).
+
+**Penyisiran penuh: dipastikan TIDAK ADA video yang lewat Vercel.** Sesuai permintaan owner,
+seluruh jalur video diperiksa satu per satu
 (permintaan ini muncul karena aplikasi masih mode develop dan owner ingin kepastian mutlak):
 pemutar utama langsung ke tunnel (`lib/video.ts:6` `videoSrc`), cuplikan kartu/hero lewat
 `/api/teaser` = 307 redirect 0 byte, unduh langsung tunnel `?dl=1` (`lib/video.ts:21`) +
@@ -172,13 +1125,11 @@ jeda 1,2 dtk di browser — `app/components/HeroPreview.tsx:166`).
 > GB-an dalam seminggu = masih ada jalur bocor lain → telusuri SEGERA sebelum jatah 3× habis;
 > un-block kedua TIDAK akan diberikan.
 
-> ⚠️ **LOKAL SENGAJA LEBIH MAJU DARI PRODUKSI — baca sebelum `git push origin`.**
-> Atas keputusan owner 2026-08-26, 2 commit rekan dari `dramaku` (fitur "video Playly tampil
-> otomatis") digabung ke lokal lalu di-push ke **`dramaku` SAJA**. Produksi (`origin`) sengaja
-> ditahan berisi perbaikan kuota saja, supaya kalau kuota naik lagi sesudah Resume ketahuan jelas
-> penyebabnya — dua perubahan tayang bersamaan tak bisa dipisah. Fitur Playly menyusul sesudah 2-3
-> hari terbukti aman. **`git push origin main` berikutnya AKAN ikut merilis fitur rekan — pastikan
-> itu memang yang diminta owner.**
+> ✅ **RIWAYAT — sudah tidak berlaku per 2026-08-27 malam:** dulu lokal sengaja lebih maju dari
+> produksi (Playly ditahan di `dramaku` saja). Malam ini owner menyetujui rilisnya: merge balik
+> `a242921` → push `14fa0cc` ke `origin` + `dramaku`. Lokal = origin = dramaku, selisih nol.
+> ~~**`git push origin main` berikutnya AKAN ikut merilis fitur rekan**~~ — SUDAH dirilis atas
+> izin owner.
 
 **🆘 JALAN KELUAR TANPA VERCEL (disiapkan 2026-08-26, BELUM dijalankan owner).** ⏸️ *Status 2026-08-27:
 TIDAK DIPERLUKAN sekarang — akun sudah di-unblock Vercel. Simpan sebagai CADANGAN kalau kuota jebol
@@ -227,6 +1178,10 @@ adanya dari 2026-08-21, belum diukur ulang.
 
 ## Status sekarang (1 menit)
 
+- 🔴 **Migrasi Supabase BELUM tuntas** — data sudah ada di project baru `nvblmpkwyzbpdbshyvzw`,
+  tapi schema `dramaapp` belum di-expose sehingga produksi masih membaca database lama.
+  **Jangan ganti env Supabase di Vercel sebelum palang itu dibuka** (situs akan mati).
+  Rincian + urutan aman: seksi KOREKSI 2026-08-31 di atas.
 - Situs hidup: **https://dramaapp.vercel.app** — **status 2026-08-27 sore: perbaikan kuota SUDAH TAYANG & terverifikasi** (teaser 307 / 0 byte → tunnel; video balas 206 `ftypisom`; commit produksi `a242921`). Akun dalam masa pantau 30 hari (un-block satu kali) — lihat pengingat mingguan di atas. Riwayat: commit `4954817` TERVERIFIKASI TAYANG 2026-08-20 malam (265 tes lulus, `tsc` exit 0, `next build` sukses, nol secret di diff).
 - **Tahap 7 SELESAI PENUH** — diverifikasi 2026-08-20 dari DUA sisi: (a) owner mencoba sendiri lewat tampilan (daftar → simpan kode → ganti password hanya dengan kode; alurnya mudah & berhasil); (b) uji end-to-end mesin ke API produksi **19/19 lulus**. `tests/recovery-code.test.ts` 12 tes lulus. Akun uji sudah dibersihkan dari Supabase (0 baris tersisa, login balas 401).
 - Skema database Supabase **tidak diubah** (akun penonton memakai tabel `app_data` yang sudah ada).

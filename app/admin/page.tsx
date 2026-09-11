@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { MOVIE_EPISODE_COUNT, type Drama, type DramaKind } from "@/lib/types";
+import { MOVIE_EPISODE_COUNT, type Drama, type DramaKind, type DramaStatus } from "@/lib/types";
 import { readUser, type User } from "@/lib/auth";
 import { slugify } from "@/lib/format";
 import { scanDrama, hardlinkDrama, type ScanResult } from "@/lib/admin-api";
@@ -31,6 +31,9 @@ export default function AdminPage() {
   const [episodes, setEpisodes] = useState<number>(1);
   // Jenis tayangan: serial berepisode (perilaku lama) atau film 1 video utuh.
   const [kind, setKind] = useState<DramaKind>("series");
+  // "" = belum ditentukan. Sengaja BOLEH kosong: memaksa owner memilih akan
+  // membuat drama lama tertandai asal-asalan saat diedit karena hal lain.
+  const [status, setStatus] = useState<DramaStatus | "">("");
   const [posterImage, setPosterImage] = useState("");
   const [heroImage, setHeroImage] = useState("");
   const [subtitles, setSubtitles] = useState<string[]>([]);
@@ -182,6 +185,7 @@ export default function AdminPage() {
           views: views.trim(),
           episodes,
           kind,
+          status,
           posterImage: posterImage.trim(),
           heroImage: heroImage.trim(),
           subtitles,
@@ -218,6 +222,7 @@ export default function AdminPage() {
       setViews("");
       setEpisodes(1);
       setKind("series");
+      setStatus("");
       setPosterImage("");
       setHeroImage("");
       setSubtitles([]);
@@ -281,6 +286,7 @@ export default function AdminPage() {
     setViews(d.views);
     setEpisodes(d.episodes);
     setKind(d.kind ?? "series");
+    setStatus(d.status ?? "");
     setPosterImage(d.posterImage ?? "");
     setHeroImage(d.heroImage ?? "");
     setSubtitles(d.subtitles ?? []);
@@ -356,6 +362,8 @@ export default function AdminPage() {
           episodes={episodes}
           setEpisodes={setEpisodes}
           kind={kind}
+          status={status}
+          setStatus={setStatus}
           setKind={setKind}
           posterImage={posterImage}
           setPosterImage={setPosterImage}

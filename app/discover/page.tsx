@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import Link from "next/link";
-import { getAllDramasCached } from "@/lib/dramas";
-import { featuredHeroSlides } from "@/lib/hero-teaser";
+import { getAllDramasCachedSafe } from "@/lib/dramas";
 import { getPlaylyVideosPublik } from "@/lib/playly-publik";
 import DramaBrowser from "../components/DramaBrowser";
-import HomeHero from "../components/HomeHero";
 import DashboardVideoGrid from "../components/DashboardVideoGrid";
 import PlaylyVideoGrid from "../components/PlaylyVideoGrid";
 
@@ -21,8 +19,7 @@ export const metadata: Metadata = {
 };
 
 export default async function DiscoverPage() {
-  const dramas = await getAllDramasCached();
-  const slides = featuredHeroSlides(dramas);
+  const dramas = await getAllDramasCachedSafe();
 
   // Video Playly milik akun mitra kita, tampil OTOMATIS (tak perlu dikaitkan
   // ke drama dulu). Semua pembacaannya ber-cache: satu saja pembacaan tanpa
@@ -41,20 +38,24 @@ export default async function DiscoverPage() {
 
   return (
     <div className="pb-10">
-      {slides.length > 0 && (
-        <HomeHero dramas={slides} />
-      )}
+      {/* Hero berjalan DIBUANG (owner 2026-09-09) — halaman ini kini seragam
+          dengan / dan /beranda: langsung bar cari + strip genre + grid poster
+          padat, tanpa banner setinggi layar yang berganti sendiri.
 
-      <div className="mx-auto max-w-7xl px-4 pt-6 md:px-6">
-        <Suspense
-          fallback={
-            <div className="mt-8 text-center text-sm text-zinc-500">
-              Memuat...
-            </div>
-          }
-        >
-          <DramaBrowser dramas={dramas} />
-        </Suspense>
+          DramaBrowser sengaja di LUAR pembungkus ber-padding: bar cari & strip
+          genre-nya melebar penuh sampai tepi layar, sedangkan isinya membatasi
+          diri sendiri lewat SHELL. */}
+      <Suspense
+        fallback={
+          <div className="py-16 text-center text-sm text-zinc-500">Memuat...</div>
+        }
+      >
+        <DramaBrowser dramas={dramas} />
+      </Suspense>
+
+      {/* shell-wide — WAJIB sama dengan pembatas isi DramaBrowser & navbar,
+          kalau tidak tepi kiri seksi di bawah ini meleset dari grid di atasnya. */}
+      <div className="shell-wide mx-auto px-4 md:px-6">
 
         {playlyVideos.length > 0 && (
           <section className="mt-10" aria-labelledby="judul-video-playly">

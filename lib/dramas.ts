@@ -7,7 +7,7 @@
 // -------------------------------------------------------------------------
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import type { Drama } from "./types";
+import { parseDramaStatus, type Drama } from "./types";
 import { useSupabase, sbSelect, sbUpsert, sbDelete, eq } from "./supabase";
 import { slugify } from "./format";
 
@@ -34,6 +34,8 @@ type DramaRow = {
   episodes: number;
   /** "series" (default) atau "movie". Baris lama = null → dibaca sebagai serial. */
   kind: string | null;
+  /** "Ongoing" | "Completed". null = belum diisi admin → tampilan wajib DIAM. */
+  status: string | null;
   views: string | null;
   synopsis: string | null;
   gradient: string | null;
@@ -70,6 +72,10 @@ function rowToDrama(r: DramaRow): Drama {
   };
   // Field opsional hanya disertakan kalau terisi (samakan dengan bentuk JSON lama).
   if (r.kind === "movie") d.kind = "movie";
+  // Nilai ngawur di kolom (mis. hasil edit manual lewat dashboard) diabaikan,
+  // bukan diteruskan ke tampilan — lebih baik tanpa label daripada label palsu.
+  const status = parseDramaStatus(r.status);
+  if (status) d.status = status;
   if (r.poster_image) d.posterImage = r.poster_image;
   if (r.hero_image) d.heroImage = r.hero_image;
   if (r.hero_dim) d.heroDim = true;
@@ -100,6 +106,9 @@ function dramaToRow(d: Drama, sortIndex: number): DramaRow {
     // Ditulis eksplisit (bukan null) supaya baris lama ikut terisi "series"
     // saat di-update — kolomnya jadi tak pernah kosong setelah disentuh.
     kind: d.kind === "movie" ? "movie" : "series",
+    // null (bukan string kosong) supaya "belum diisi" bisa dibedakan dari
+    // "sengaja dikosongkan" saat dibaca balik.
+    status: d.status ?? null,
     views: d.views ?? "",
     synopsis: d.synopsis ?? "",
     gradient: d.gradient ?? "",
@@ -204,6 +213,32 @@ export async function getAllDramasCached(): Promise<Drama[]> {
     return rows.map(rowToDrama);
   }
   return readLocalDramas();
+}
+
+/**
+ * Sama seperti `getAllDramasCached`, tapi TIDAK PERNAH melempar error.
+ *
+ * KENAPA ADA: halaman yang di-prerender saat build memanggil katalog. Kalau
+ * panggilan itu gagal, Next.js membatalkan SELURUH build — bukan cuma halaman
+ * itu. Terbukti 2026-09-01: kunci Supabase di Vercel tertinggal versi lama,
+ * `/beranda` melempar `401`, dan 7 deployment beruntun gagal selama 22 jam
+ * tanpa ada yang menyadarinya (situs lama tetap tayang, jadi tak ada gejala).
+ *
+ * Kalau katalog tak terjangkau, jatuh ke berkas `data/dramas.json` — halaman
+ * tetap terisi, tidak kosong melompong. Isinya bisa lebih sedikit dan agak
+ * basi; itu ditebus saat revalidate berikutnya (CATALOG_TTL_SECONDS).
+ *
+ * Dipakai HANYA oleh halaman publik yang di-prerender. Jalur admin, tulis, dan
+ * koin tetap memakai versi yang melempar error — di sana kegagalan HARUS
+ * terlihat, jangan disamarkan jadi "katalog kosong".
+ */
+export async function getAllDramasCachedSafe(): Promise<Drama[]> {
+  try {
+    return await getAllDramasCached();
+  } catch (err) {
+    console.error("[dramas] katalog tak terjangkau, pakai berkas lokal:", err);
+    return readLocalDramas();
+  }
 }
 
 /** Versi ber-cache dari `getDrama` untuk halaman publik. Lihat catatan di atas. */

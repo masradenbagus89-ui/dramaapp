@@ -1,11 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { getAllDramasCached } from "@/lib/dramas";
+import { getAllDramasCachedSafe } from "@/lib/dramas";
+import { featuredHeroSlides } from "@/lib/hero-teaser";
 import RedirectIfAuthed from "@/app/components/RedirectIfAuthed";
+import FeaturedRow from "@/app/components/beranda/FeaturedRow";
+import PublicTopBars from "@/app/components/beranda/PublicTopBars";
+import {
+  availableGenres,
+  FEATURED_ROW_COUNT,
+  homeCatalogRows,
+} from "@/lib/beranda-catalog";
+import { buildNavMenus, catalogShortcuts } from "@/lib/nav-katalog";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
-import { Check, Lock } from "lucide-react";
 
 // Disimpan & dipakai ulang, disegarkan tiap 60 detik (menggantikan force-dynamic
 // yang membangun ulang halaman untuk tiap pengunjung).
@@ -15,313 +21,101 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-const FITUR = [
-  {
-    icon: "M3 12l9-9 9 9M5 10v10h14V10",
-    title: "Beranda Dashboard",
-    desc: "Statistik drama, distribusi kategori, dan update terbaru — semua dalam satu layar.",
-    color: "bg-amber-500/15 text-amber-400",
-  },
-  {
-    icon: "M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z",
-    title: "Discover & Pencarian",
-    desc: "Filter berdasarkan kategori (Romance, Time Travel, Fantasy, dll) atau cari judul langsung.",
-    color: "bg-rose-500/15 text-rose-400",
-  },
-  {
-    icon: "M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z M21 12a9 9 0 11-18 0 9 9 0 0118 0z",
-    title: "Player Otomatis",
-    desc: "Player video yang otomatis menyesuaikan layar HP atau laptop. Mendukung skip & seek.",
-    color: "bg-violet-500/15 text-violet-400",
-  },
-  {
-    icon: "M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z",
-    title: "Daftar Saya",
-    desc: "Bookmark drama favorit untuk ditonton nanti. Tersimpan otomatis di browser.",
-    color: "bg-emerald-500/15 text-emerald-400",
-  },
-  {
-    icon: "M13 10V3L4 14h7v7l9-11h-7z",
-    title: "Shorts Trending",
-    desc: "Cuplikan singkat dari drama paling populer minggu ini, langsung tonton.",
-    color: "bg-yellow-500/15 text-yellow-400",
-  },
-  {
-    icon: "M12 4v16m8-8H4",
-    title: "Admin Panel",
-    desc: "Tambah drama baru lengkap dengan video, poster, dan metadata. Otomatis rapi.",
-    color: "bg-blue-500/15 text-blue-400",
-  },
-] as const;
-
 export default async function LandingPage() {
-  const dramas = await getAllDramasCached();
-  const heroDramas = dramas.slice(0, 6);
+  const dramas = await getAllDramasCachedSafe();
+  const heroSlides = featuredHeroSlides(dramas, FEATURED_ROW_COUNT);
+  // Hanya genre yang benar-benar berisi — genre kosong yang diklik memulangkan
+  // halaman hampa, dan itu terbaca seperti situs rusak.
+  const genres = availableGenres(dramas);
+  // Baris poster per kategori — isi utama halaman ini.
+  const rows = homeCatalogRows(dramas);
+  // Isi menu & pintasan dihitung DI SERVER: hasilnya cuma label + alamat, jauh
+  // lebih ringan dikirim ke browser daripada seluruh katalog.
+  const menus = buildNavMenus(dramas);
+  const shortcuts = catalogShortcuts(dramas);
 
   return (
     <div className="min-h-screen bg-black">
       <RedirectIfAuthed />
-      {/* Header */}
-      <header className="relative z-20 border-b border-zinc-900">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-6">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-md bg-amber-400 font-serif text-base font-bold text-black">
-              D
-            </div>
-            <span className="text-lg font-bold text-white">DramaKu</span>
-          </Link>
-          <div className="flex items-center gap-2">
+      {/* ===== Kepala situs — elemen PALING ATAS halaman ini.
+             Baris header hitam terpisah (logo + Masuk/Daftar) DIHAPUS
+             2026-09-10: isinya melebur ke bar merah supaya logo, kotak cari,
+             menu katalog, dan tombol akun jatuh di satu baris — bentuk yang
+             diminta owner dari situs katalog pembanding.
+
+             Struktur ini melanjutkan permintaan owner 2026-09-08: pengunjung
+             yang belum login pun langsung melihat pencarian, genre, dan poster,
+             bukan blok sambutan sehalaman penuh. Cari, genre & menu melempar ke
+             /discover, yang memang publik. ===== */}
+      <PublicTopBars genres={genres} menus={menus} shortcuts={shortcuts} />
+
+      {/* ===== Baris FILM UNGGULAN — komponen yang SAMA dengan /beranda, jadi
+             tampilan & perilakunya persis: poster hanya bergeser kalau digeser
+             penonton, tidak ada yang berjalan sendiri.
+
+             Kartunya menuju /drama/<id> (halaman itu PUBLIK — terbukti HTTP 200
+             tanpa cookie login), jadi pengunjung bisa mengintip dulu sebelum
+             diminta mendaftar. ===== */}
+      <FeaturedRow dramas={heroSlides} href="/discover" />
+
+      {/* ===== Ajakan daftar — STRIP TIPIS, bukan blok tinggi.
+             Dirampingkan 2026-09-08: sebelumnya memakai judul serif besar +
+             lencana + 3 kotak statistik, sehingga menguasai layar tepat sesudah
+             baris poster dan memutus alur "lihat poster -> gulir lagi". Di situs
+             katalog pembandingnya bagian ini cuma satu baris teks + satu tombol.
+
+             Judul h1 DIPERTAHANKAN (dikecilkan, bukan dibuang): ini satu-satunya
+             h1 di halaman depan, dipakai mesin pencari untuk mengenali isi
+             situs. Angka katalog dipindah ke dalam kalimat supaya tetap
+             tersampaikan tanpa perlu 3 kotak terpisah. ===== */}
+      <section className="border-y border-zinc-900 bg-zinc-950/70">
+        <div className="mx-auto flex max-w-2xl flex-col items-center gap-2.5 px-4 py-6 text-center md:px-6">
+          <h1 className="text-base font-bold text-amber-400 md:text-lg">
+            Nonton drama China pendek sub Indo — gratis
+          </h1>
+          <p className="text-xs leading-relaxed text-zinc-400 md:text-sm">
+            {dramas.length} judul dalam {genres.length} kategori, tanpa langganan.
+            Daftar gratis untuk menyimpan drama favorit dan melanjutkan tontonan
+            dari episode terakhir.
+          </p>
+          <div className="flex flex-wrap justify-center gap-2 pt-0.5">
+            <Button
+              asChild
+              className="rounded-full bg-amber-400 px-5 text-sm font-bold text-black hover:bg-amber-300"
+            >
+              <Link href="/daftar">Daftar Gratis</Link>
+            </Button>
             <Button
               asChild
               variant="outline"
-              className="rounded-full border-zinc-700 px-4 py-1.5 text-sm font-semibold text-white hover:border-amber-400 hover:text-amber-400"
+              className="rounded-full border-zinc-700 bg-black/40 px-5 text-sm font-semibold text-white hover:border-amber-400 hover:text-amber-400"
             >
-              <Link href="/login">Masuk</Link>
-            </Button>
-            <Button
-              asChild
-              className="rounded-full bg-amber-400 px-4 py-1.5 text-sm font-bold text-black hover:bg-amber-300"
-            >
-              <Link href="/daftar">Daftar</Link>
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      {/* Hero with poster collage */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-amber-900/40 via-rose-900/30 to-zinc-950" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(251,191,36,0.18),transparent_60%)]" />
-
-        {/* Decorative film strip pattern */}
-        <FilmStripPattern />
-
-        <div className="relative mx-auto grid max-w-7xl gap-8 px-4 py-16 md:grid-cols-[1.1fr_1fr] md:items-center md:px-6 md:py-20">
-          <div className="flex flex-col gap-6">
-            <Badge className="self-start rounded-full border border-amber-400/40 bg-amber-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-wider text-amber-300">
-              Drama China Pendek · Bahasa Indonesia
-            </Badge>
-            <h1 className="title-gold text-4xl leading-[1.05] sm:text-5xl md:text-6xl">
-              Cerita pendek, <br />
-              <span className="text-white not-italic">emosi panjang.</span>
-            </h1>
-            <p className="max-w-xl text-base text-zinc-300 md:text-lg">
-              DramaKu adalah platform menonton drama China pendek. Daftar gratis, login, lalu nikmati ratusan judul drama tanpa langganan.
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <Button
-                asChild
-                size="lg"
-                className="rounded-full bg-amber-400 px-6 py-3 text-sm font-bold text-black hover:bg-amber-300"
-              >
-                <Link href="/daftar">Daftar Gratis</Link>
-              </Button>
-              <Button
-                asChild
-                variant="outline"
-                size="lg"
-                className="rounded-full border-zinc-600 bg-black/40 px-6 py-3 text-sm font-semibold text-white hover:border-amber-400 hover:text-amber-400"
-              >
-                <Link href="/login">Sudah punya akun? Masuk</Link>
-              </Button>
-            </div>
-            <div className="flex flex-wrap gap-6">
-              <Stat label="Drama tersedia" value={String(dramas.length)} />
-              <Stat label="Kategori" value="7" />
-              <Stat label="Biaya" value="Gratis" />
-            </div>
-          </div>
-
-          {/* Poster collage */}
-          <div className="relative hidden md:block">
-            <PosterCollage dramas={heroDramas} />
-          </div>
-        </div>
-      </section>
-
-      {/* Mobile poster strip */}
-      <section className="md:hidden">
-        <div className="flex gap-3 overflow-x-auto px-4 pb-2 pt-4">
-          {heroDramas.slice(0, 8).map((d) => (
-            <Link
-              key={d.id}
-              href="/login"
-              className={`relative aspect-[3/4] w-32 shrink-0 overflow-hidden rounded-xl bg-gradient-to-br ${d.gradient}`}
-            >
-              {d.posterImage && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={d.posterImage} alt={d.title} className="absolute inset-0 h-full w-full object-cover" />
-              )}
-              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2">
-                <p className="line-clamp-2 text-[11px] font-semibold text-white">{d.title}</p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* Fitur grid */}
-      <section className="mx-auto max-w-7xl px-4 py-14 md:px-6 md:py-20">
-        <div className="mb-8 text-center">
-          <h2 className="text-2xl font-bold text-white md:text-3xl">
-            Apa saja yang bisa kamu lakukan di DramaKu?
-          </h2>
-          <p className="mt-2 text-sm text-zinc-400">
-            6 fitur utama untuk pengalaman menonton yang seru.
-          </p>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {FITUR.map((f) => (
-            <Card
-              key={f.title}
-              className="gap-0 rounded-2xl border-zinc-800 bg-zinc-900/40 p-5 py-5 shadow-none transition-colors hover:border-zinc-700"
-            >
-              <div className={`mb-3 inline-flex h-10 w-10 items-center justify-center rounded-lg ${f.color}`}>
-                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d={f.icon} />
-                </svg>
-              </div>
-              <h3 className="text-base font-semibold text-white">{f.title}</h3>
-              <p className="mt-1 text-sm text-zinc-400">{f.desc}</p>
-            </Card>
-          ))}
-        </div>
-      </section>
-
-      {/* Drama populer preview */}
-      <section className="border-y border-zinc-900 bg-gradient-to-b from-zinc-950 via-zinc-900/30 to-zinc-950">
-        <div className="mx-auto max-w-7xl px-4 py-14 md:px-6 md:py-20">
-          <div className="mb-8 flex items-end justify-between">
-            <div>
-              <h2 className="text-2xl font-bold text-white md:text-3xl">
-                Sekilas drama yang bisa kamu tonton
-              </h2>
-              <p className="mt-2 text-sm text-zinc-400">
-                Daftar gratis untuk mengakses semua judul.
-              </p>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-            {heroDramas.map((d) => (
-              <Link
-                key={d.id}
-                href="/daftar"
-                className="group block"
-              >
-                <div className={`relative aspect-[3/4] overflow-hidden rounded-xl bg-gradient-to-br ${d.gradient}`}>
-                  {d.posterImage && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={d.posterImage}
-                      alt={d.title}
-                      className="absolute inset-0 h-full w-full object-cover transition-transform group-hover:scale-105"
-                    />
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-90 transition-opacity group-hover:opacity-100" />
-                  <div className="absolute inset-x-0 bottom-0 p-2">
-                    <p className="line-clamp-2 text-xs font-semibold text-white">{d.title}</p>
-                    <p className="mt-0.5 text-[10px] text-zinc-400">{d.category}</p>
-                  </div>
-                  <Badge
-                    variant="secondary"
-                    className="absolute right-2 top-2 gap-0.5 rounded bg-black/70 px-1.5 py-0.5 text-[9px] font-semibold text-amber-300"
-                  >
-                    <Lock className="size-2.5" />
-                    Login
-                  </Badge>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Cara mulai */}
-      <section className="relative overflow-hidden bg-zinc-950/50">
-        <FilmStripPattern />
-        <div className="relative mx-auto max-w-5xl px-4 py-14 md:px-6 md:py-20">
-          <div className="mb-8 text-center">
-            <h2 className="text-2xl font-bold text-white md:text-3xl">
-              Cara mulai dalam 3 langkah
-            </h2>
-          </div>
-          <div className="grid gap-5 md:grid-cols-3">
-            {[
-              { n: "1", title: "Daftar Akun", desc: "Cukup isi nama, email, dan password. Tidak perlu kartu kredit." },
-              { n: "2", title: "Login", desc: "Masuk dengan akun yang baru kamu buat. Hanya hitungan detik." },
-              { n: "3", title: "Nonton Drama", desc: "Pilih drama favoritmu di halaman beranda dan langsung tonton." },
-            ].map((s) => (
-              <Card key={s.n} className="gap-0 rounded-2xl border-zinc-800 bg-zinc-900/60 p-5 py-5 text-center shadow-none backdrop-blur">
-                <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-amber-400 text-base font-bold text-black">
-                  {s.n}
-                </div>
-                <h3 className="mt-3 text-base font-semibold text-white">{s.title}</h3>
-                <p className="mt-1 text-sm text-zinc-400">{s.desc}</p>
-              </Card>
-            ))}
-          </div>
-          <div className="mt-8 text-center">
-            <Button
-              asChild
-              size="lg"
-              className="rounded-full bg-amber-400 px-8 py-3 text-sm font-bold text-black hover:bg-amber-300"
-            >
-              <Link href="/daftar">Daftar Sekarang →</Link>
+              <Link href="/login">Sudah punya akun? Masuk</Link>
             </Button>
           </div>
         </div>
       </section>
 
-      {/* Kenapa kami */}
-      <section className="mx-auto max-w-5xl px-4 py-14 md:px-6 md:py-20">
-        <div className="grid gap-8 md:grid-cols-2 md:items-center">
-          <div className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-zinc-800">
-            <div className="grid h-full grid-cols-2 gap-1 p-1">
-              {heroDramas.slice(0, 4).map((d) => (
-                <div
-                  key={d.id}
-                  className={`relative overflow-hidden rounded-lg bg-gradient-to-br ${d.gradient}`}
-                >
-                  {d.posterImage && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={d.posterImage} alt="" className="absolute inset-0 h-full w-full object-cover" />
-                  )}
-                </div>
-              ))}
-            </div>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-            <div className="absolute bottom-3 left-3 right-3">
-              <p className="text-xs font-semibold text-white">Koleksi terus bertambah</p>
-              <p className="text-[10px] text-zinc-300">{dramas.length} judul · 7 kategori</p>
-            </div>
-          </div>
-          <div>
-            <h2 className="text-2xl font-bold text-white md:text-3xl">
-              Kenapa pilih DramaKu?
-            </h2>
-            <p className="mt-3 text-sm text-zinc-400">
-              Platform yang dirancang sederhana, fokus pada konten drama pendek
-              berbahasa Indonesia. Tidak ada iklan ganggu, tidak ada langganan
-              tersembunyi.
-            </p>
-            <div className="mt-5 space-y-3">
-              {[
-                "Gratis tanpa biaya tersembunyi",
-                "Tampilan optimal di HP & laptop",
-                "Update drama baru terus menerus",
-                "Bookmark untuk ditonton nanti",
-              ].map((p) => (
-                <div key={p} className="flex items-start gap-3">
-                  <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
-                    <Check className="size-3" strokeWidth={3} />
-                  </div>
-                  <p className="text-sm text-zinc-300">{p}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* ===== ISI UTAMA: BARIS-BARIS KATALOG =============================
+             Permintaan owner 2026-09-08: halaman depan jadi halaman KATALOG —
+             banyak poster dalam satu halaman, bukan halaman promosi. Empat seksi
+             promosi lama (kartu fitur, "sekilas drama" 6 poster, "cara mulai 3
+             langkah", "kenapa pilih kami") DIBUANG dan diganti baris poster per
+             kategori, pola yang dipakai situs katalog streaming.
+
+             Barisnya disusun `homeCatalogRows` dari data NYATA. Kategori yang
+             isinya di bawah ROW_MIN_ITEMS sengaja TIDAK dijadikan baris: katalog
+             ini timpang (ada kategori berisi 1 judul), dan baris berisi 1 poster
+             meninggalkan ruang kosong selebar layar — terbaca seperti halaman
+             rusak, bukan kategori yang memang masih sepi. ===== */}
+      {rows.map((row) => (
+        <FeaturedRow
+          key={row.key}
+          title={row.title}
+          dramas={row.items}
+          href={row.href}
+        />
+      ))}
 
       {/* CTA bottom */}
       <section className="relative overflow-hidden border-t border-zinc-900 bg-gradient-to-br from-amber-900/30 via-rose-900/20 to-zinc-950">
@@ -367,15 +161,6 @@ export default async function LandingPage() {
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex flex-col">
-      <p className="text-xl font-bold text-white md:text-2xl">{value}</p>
-      <p className="text-[10px] uppercase tracking-wider text-zinc-500">{label}</p>
-    </div>
-  );
-}
-
 function FilmStripPattern() {
   return (
     <div className="pointer-events-none absolute inset-0 opacity-[0.06]">
@@ -389,43 +174,6 @@ function FilmStripPattern() {
         <circle cx="12" cy="12" r="10" />
         <path d="M10 8l6 4-6 4V8z" fill="black" />
       </svg>
-    </div>
-  );
-}
-
-type DramaForCollage = Awaited<ReturnType<typeof getAllDramasCached>>[number];
-
-function PosterCollage({ dramas }: { dramas: DramaForCollage[] }) {
-  if (dramas.length === 0) return null;
-  // Pick up to 5 dramas for layered collage
-  const items = dramas.slice(0, 5);
-
-  // Layered positions for 5 posters (relative)
-  const positions = [
-    "top-0 left-12 rotate-[-8deg] z-10",
-    "top-8 right-0 rotate-[6deg] z-20",
-    "bottom-12 left-0 rotate-[-4deg] z-10",
-    "bottom-0 right-16 rotate-[10deg] z-30",
-    "top-20 left-1/2 -translate-x-1/2 z-0 opacity-60",
-  ];
-
-  return (
-    <div className="relative h-[500px] w-full">
-      {items.map((d, i) => (
-        <div
-          key={d.id}
-          className={`absolute h-56 w-40 overflow-hidden rounded-xl border-2 border-zinc-800 shadow-2xl shadow-black bg-gradient-to-br ${d.gradient} ${positions[i] ?? ""}`}
-        >
-          {d.posterImage && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={d.posterImage} alt="" className="absolute inset-0 h-full w-full object-cover" />
-          )}
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-2 pt-6">
-            <p className="line-clamp-2 text-[10px] font-semibold text-white">{d.title}</p>
-          </div>
-        </div>
-      ))}
-      <div className="absolute -inset-8 -z-10 rounded-full bg-amber-500/10 blur-3xl" />
     </div>
   );
 }

@@ -104,7 +104,7 @@ export default function SponsorAdsManager() {
                 <Label htmlFor="ad-image-url" className="text-sm text-zinc-300">
                   URL gambar iklan *
                 </Label>
-                <span className="block text-xs text-zinc-500">Bentuk apa pun bisa — gambar tampil utuh di kartu dengan latar blur. Landscape (mis. 1200×300) paling rapi. Lihat pratinjau di bawah.</span>
+                <span className="block text-xs text-zinc-500">Bentuk apa pun bisa — kotak iklan menyesuaikan bentuk gambar, jadi gambar selalu tampil utuh &amp; mengisi penuh kotaknya (tidak pernah terpotong). Landscape (mis. 1200×300) paling maksimal karena melebar selebar halaman. Lihat pratinjau di bawah.</span>
                 <Input
                   id="ad-image-url"
                   value={imageUrl}
@@ -144,11 +144,13 @@ export default function SponsorAdsManager() {
                 <p className="text-xs text-zinc-500">
                   Pratinjau banner (persis seperti di beranda):
                 </p>
-                <div className="mt-1 overflow-hidden rounded-2xl border border-zinc-800">
+                {/* `mx-auto w-fit max-w-full` disamakan dengan bingkai di
+                    AdBanner supaya pratinjau ini benar-benar WYSIWYG. */}
+                <div className="mt-1 mx-auto w-fit max-w-full overflow-hidden rounded-2xl border border-zinc-800">
                   <AdCreative src={imageUrl} />
                 </div>
                 <p className="mt-1 text-[11px] text-zinc-600">
-                  Tampil persis seperti ini di beranda. Gambar landscape (mis. 1200×300) jadi banner penuh; gambar tegak jadi kartu sinematik.
+                  Tampil persis seperti ini di beranda. Gambar landscape (mis. 1200×300) melebar selebar halaman; bentuk lain jadi kotak yang menyusut pas mengikuti gambar.
                 </p>
               </div>
             )}

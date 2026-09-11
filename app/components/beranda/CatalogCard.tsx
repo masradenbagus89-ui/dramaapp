@@ -53,21 +53,21 @@ export default function CatalogCard({
 
         {/* Kiri-atas: rating IMDb — hanya kalau drama ini memang punya. */}
         {badge.rating && (
-          <span className="pointer-events-none absolute left-1 top-1 z-10 flex items-center gap-0.5 rounded-sm bg-black/85 px-1.5 py-0.5 text-[10px] font-bold leading-tight text-white shadow">
-            <Star className="size-2.5 fill-amber-400 text-amber-400" />
+          <span className="pointer-events-none absolute left-1 top-1 z-10 flex items-center gap-0.5 rounded-sm bg-black/85 px-1.5 py-0.5 text-[10px] font-bold leading-tight text-white shadow md:left-1.5 md:top-1.5 md:text-[11px]">
+            <Star className="size-2.5 fill-amber-400 text-amber-400 md:size-3" />
             {badge.rating}
           </span>
         )}
 
         {/* Kanan-atas: jumlah episode / penanda film. */}
-        <span className="pointer-events-none absolute right-1 top-1 z-10 rounded-sm bg-fuchsia-600 px-1.5 py-0.5 text-center text-[10px] font-bold uppercase leading-tight tracking-wide text-white shadow">
+        <span className="pointer-events-none absolute right-1 top-1 z-10 rounded-sm bg-fuchsia-600 px-1.5 py-0.5 text-center text-[10px] font-bold uppercase leading-tight tracking-wide text-white shadow md:right-1.5 md:top-1.5 md:text-[11px]">
           {badge.format}
         </span>
 
         {/* Baris bawah: tahun di kiri, status di kanan. Keduanya menghilang
             sendiri kalau katalog belum punya datanya — kartu tidak mengarang. */}
         <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex items-end justify-between gap-1 bg-gradient-to-t from-black/95 via-black/50 to-transparent px-1.5 pb-1 pt-8">
-          <span className="text-[10px] font-bold text-white/90">
+          <span className="text-[10px] font-bold text-white/90 md:text-[11px]">
             {drama.year ?? (badge.subIndo ? "SUB INDO" : "")}
           </span>
           <span className="flex items-center gap-1">
@@ -80,8 +80,8 @@ export default function CatalogCard({
               <span
                 className={
                   badge.status === "ONGOING"
-                    ? "text-[10px] font-bold text-rose-400"
-                    : "text-[10px] font-bold text-sky-400"
+                    ? "text-[10px] font-bold text-rose-400 md:text-[11px]"
+                    : "text-[10px] font-bold text-sky-400 md:text-[11px]"
                 }
               >
                 {badge.status}
@@ -92,14 +92,14 @@ export default function CatalogCard({
 
         {/* Tombol putar muncul saat mouse di atas kartu (desktop). */}
         <span className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-black/0 transition-colors duration-200 group-hover/kartu:bg-black/40">
-          <Play className="size-9 fill-white text-white opacity-0 drop-shadow-lg transition-opacity duration-200 group-hover/kartu:opacity-100" />
+          <Play className="size-9 fill-white text-white opacity-0 drop-shadow-lg transition-opacity duration-200 group-hover/kartu:opacity-100 md:size-12" />
         </span>
       </div>
 
-      <h3 className="mt-1.5 line-clamp-2 text-[13px] font-bold leading-snug text-white transition-colors group-hover/kartu:text-amber-400">
+      <h3 className="mt-1.5 line-clamp-2 text-[13px] font-bold leading-snug text-white transition-colors group-hover/kartu:text-amber-400 md:text-sm">
         {drama.title}
       </h3>
-      <p className="mt-0.5 line-clamp-1 text-[11px] text-zinc-500">
+      <p className="mt-0.5 line-clamp-1 text-[11px] text-zinc-500 md:text-xs">
         {drama.category}
       </p>
     </Link>

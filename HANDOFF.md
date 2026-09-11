@@ -5,7 +5,8 @@
 >
 > **AI:** tiap kali ada perbaikan / deploy / keputusan — **perbarui berkas ini di langkah terakhir**, sebelum bilang selesai. Jangan tumpuk sejarah panjang di sini; pindahkan yang lama ke `NEXT-SESSION.md`.
 
-**Terakhir diisi:** 2026-09-11 (sore) — Tahap 2 selesai: branch rekan di-merge & tayang (`c3312f2`).
+**Terakhir diisi:** 2026-09-11 (malam) — poster katalog DIPERBESAR (permintaan owner: "seperti LK21").
+BELUM di-commit & BELUM di-push — menunggu keputusan owner.
 Catatan 2026-08-31 di bawah ini masih berlaku soal database.
 
 **Sebelumnya:** 2026-08-31 (sore, KOREKSI) — **produksi SEHAT tapi MASIH memakai database LAMA.**
@@ -16,7 +17,52 @@ kuota Vercel aman. **Migrasi database BELUM tuntas** — datanya sudah pindah, t
 masih terkunci; rinciannya di bagian KOREKSI di bawah. **Jangan ganti env Supabase di Vercel dulu
 — situs akan mati.**
 
-## 🧭 2026-09-11 (TERBARU) — TAHAP 2 SELESAI: branch Yusuf di-merge & TAYANG (`c3312f2`)
+## 🧭 2026-09-11 (TERBARU) — POSTER KATALOG DIPERBESAR (belum di-commit)
+
+Owner membandingkan halaman depan DramaKu dengan **LK21** dan menilai cover/poster kita terlalu
+kecil. Permintaannya tegas: **hanya tampilan katalog**, jangan sentuh yang lain.
+
+**Akar masalahnya dua angka, bukan banyak berkas:**
+- `app/components/beranda/FeaturedRow.tsx` — lebar kartu dipatok `w-20 sm:w-24 md:w-28`, jadi
+  poster berhenti di **112px** betapapun lebar layarnya.
+- `app/components/beranda/shell.ts` — `GRID_CLASS` memakai `minmax(110px,1fr)` untuk SEMUA ukuran
+  layar, jadi di monitor lebar yang bertambah cuma JUMLAH poster, bukan ukurannya.
+
+**Yang diubah (4 berkas, murni kelas CSS — nol logika data tersentuh):**
+| Berkas | Sebelum | Sesudah |
+|---|---|---|
+| `shell.ts` `GRID_CLASS` | `minmax(110px)` semua layar | 104 → 124 → 150 → **172px** (HP→lg) |
+| `shell.ts` `ROW_CARD_CLASS` (BARU) | — | 116 → 132 → 150 → **172px** |
+| `FeaturedRow.tsx` | `w-20 sm:w-24 md:w-28`, `gap-1.5` | pakai `ROW_CARD_CLASS`, `gap-2 md:gap-2.5` |
+| `CatalogCard.tsx` | teks & lencana ukuran tunggal | naik di `md:` (judul, lencana, tombol putar) |
+| `ContentRow.tsx` | `md:w-36` berhenti di situ | `+ lg:w-44` biar tak jomplang dengan baris di atasnya |
+
+**Kenapa angka BERTINGKAT, bukan satu angka:** 172px yang enak di desktop memaksa HP turun ke 2
+kolom raksasa; 104px yang pas di HP jadi belasan poster mungil di layar 1920. Alasan ini ditulis
+di komentar `shell.ts` supaya tak ada yang "merapikan"-nya jadi satu angka.
+
+**Halaman yang ikut berubah** (komponennya dipakai bersama): `/` · `/beranda` · `/discover` ·
+`/shorts`. Tidak tersentuh: `/my-list` & baris favorit profil (keduanya pakai `DramaCard`, bukan
+`CatalogCard`).
+
+**Bukti pra-rilis:** `npx tsc --noEmit` exit **0** · `npm test` **488 lulus / 39 berkas** ·
+`npm run build` **sukses**. Build BERSIH pertama (`rm -rf .next`) sempat gagal
+`build worker exited with code: 4294967295` di tahap "Generating static pages", **lolos saat
+diulang tanpa perubahan kode apa pun** → gangguan worker Windows, bukan akibat perubahan ini.
+Kelasnya dipastikan benar-benar jadi CSS (bukan cuma ditulis): `minmax(172px,1fr)`,
+`minmax(104px,1fr)`, `width:172px` **ditemukan di** `.next/static/chunks/0pi-onsgnr3um.css`, dan
+markup `lg:w-[172px]` ada di `.next/server/app/index.html` + `beranda.html` + `shorts.html`.
+`/discover` tidak bisa dibuktikan lewat HTML statis karena `DramaBrowser` ada di dalam
+`<Suspense>` (pakai `useSearchParams`, jadi gridnya dirakit di browser) — bukti untuk halaman itu
+bersandar pada `GRID_CLASS` yang satu sumber (`DramaBrowser.tsx:242`).
+
+**Catatan preview lokal:** port **3010** di komputer owner sedang dipakai proyek lain
+("Football Bot Dashboard"), BUKAN dramaapp. Preview dramaapp harus dijalankan di port lain.
+
+**Status rilis: BELUM.** Belum `git commit`, belum push ke `origin`/`dramaku` — menunggu owner
+menilai ukurannya dulu.
+
+## 🧭 2026-09-11 (sore) — TAHAP 2 SELESAI: branch Yusuf di-merge & TAYANG (`c3312f2`)
 
 Owner minta Tahap 2 dikerjakan. Hasilnya **jauh lebih mulus dari perkiraan catatan lama** —
 peringatan "6 berkas bentrok + 2 kemunduran senyap" sudah tidak berlaku.

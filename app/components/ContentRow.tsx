@@ -107,7 +107,7 @@ export default function ContentRow({
               <Link
                 key={d.id}
                 href={to}
-                className="group/card block w-28 shrink-0 transition-transform hover:-translate-y-1 sm:w-32 md:w-36"
+                className="group/card block w-28 shrink-0 transition-transform hover:-translate-y-1 sm:w-32 md:w-36 lg:w-44"
               >
                 <div className="relative">
                   {/* /api/teaser (same-origin) — lihat alasan di DramaCard.tsx */}

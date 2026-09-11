@@ -4,6 +4,7 @@ import { useRef } from "react";
 import Link from "next/link";
 import type { Drama } from "@/lib/types";
 import CatalogCard from "./CatalogCard";
+import { ROW_CARD_CLASS } from "./shell";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -63,7 +64,9 @@ export default function FeaturedRow({
       <div className="shell-wide relative mx-auto px-4 md:px-6">
         {title && (
           <div className="mb-2 flex items-end justify-between gap-3">
-            <h2 className="text-sm font-bold text-white md:text-base">{title}</h2>
+            <h2 className="text-base font-bold text-white md:text-lg">
+              {title}
+            </h2>
             <Link
               href={href}
               className="shrink-0 text-[11px] font-bold uppercase tracking-wide text-amber-400 hover:underline"
@@ -97,13 +100,15 @@ export default function FeaturedRow({
 
         <div
           ref={scroller}
-          className="no-scrollbar flex gap-1.5 overflow-x-auto scroll-smooth"
+          className="no-scrollbar flex gap-2 overflow-x-auto scroll-smooth md:gap-2.5"
         >
           {dramas.map((d) => (
             // Lebar dikunci di sini (bukan di CatalogCard) supaya kartunya tetap
             // kartu yang SAMA dengan yang dipakai grid di bawah — lencana, hover,
-            // dan cuplikannya tidak perlu dibuat versi kedua.
-            <div key={d.id} className="w-20 shrink-0 sm:w-24 md:w-28">
+            // dan cuplikannya tidak perlu dibuat versi kedua. Angkanya sendiri
+            // ada di ROW_CARD_CLASS (./shell), satu tangga dengan lebar kolom
+            // grid supaya poster baris & poster grid tidak beda besar.
+            <div key={d.id} className={ROW_CARD_CLASS}>
               <CatalogCard
                 drama={d}
                 href={cardHrefPrefix ? `${cardHrefPrefix}/${d.id}` : undefined}

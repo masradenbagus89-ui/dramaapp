@@ -6,7 +6,7 @@
 > **AI:** tiap kali ada perbaikan / deploy / keputusan — **perbarui berkas ini di langkah terakhir**, sebelum bilang selesai. Jangan tumpuk sejarah panjang di sini; pindahkan yang lama ke `NEXT-SESSION.md`.
 
 **Terakhir diisi:** 2026-09-11 (malam) — poster katalog DIPERBESAR (permintaan owner: "seperti LK21").
-BELUM di-commit & BELUM di-push — menunggu keputusan owner.
+**SUDAH TAYANG** di produksi lewat `fde4c97` (dual push origin + dramaku).
 Catatan 2026-08-31 di bawah ini masih berlaku soal database.
 
 **Sebelumnya:** 2026-08-31 (sore, KOREKSI) — **produksi SEHAT tapi MASIH memakai database LAMA.**
@@ -59,8 +59,17 @@ bersandar pada `GRID_CLASS` yang satu sumber (`DramaBrowser.tsx:242`).
 **Catatan preview lokal:** port **3010** di komputer owner sedang dipakai proyek lain
 ("Football Bot Dashboard"), BUKAN dramaapp. Preview dramaapp harus dijalankan di port lain.
 
-**Status rilis: BELUM.** Belum `git commit`, belum push ke `origin`/`dramaku` — menunggu owner
-menilai ukurannya dulu.
+**Status rilis: SUDAH TAYANG** (`fde4c97`, dual push `7d4258d..fde4c97` ke `origin` + `dramaku`,
+fast-forward — kedua remote tertinggal 0 sebelum push). Verifikasi produksi: 7 halaman utama
+semua **200** · penanda `lg:w-[172px]` muncul **133x di `/`**, 14x di `/beranda`, 119x di
+`/shorts` · penanda lama `md:w-28` & `minmax(110px` **NOL** · nol regresi (poster `/` tetap 133,
+`/beranda` tetap 56, tetap 1 h1). Rincian lengkap + rollback 1-baris ada di `antrean-deploy.md`.
+
+**⚠️ JEBAKAN GERBANG yang baru ketahuan:** urutan `rm -rf .next` → `tsc` di AGENTS.local.md butir 6
+memulangkan **4 error palsu** `TS2304: Cannot find name 'PageProps'`. Next 16 MENGHASILKAN tipe
+rute itu saat build, jadi mengetik sebelum build = tipe belum ada. Urutan benar: `rm -rf .next`
+→ **build dulu** → `tsc` → `test`. Bukan bug kode (dibuktikan: `tsc` sebelum `.next` dihapus dan
+sesudah build sama-sama exit 0).
 
 ## 🧭 2026-09-11 (sore) — TAHAP 2 SELESAI: branch Yusuf di-merge & TAYANG (`c3312f2`)
 

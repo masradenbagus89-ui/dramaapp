@@ -19,11 +19,34 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { LogOut, Search } from "lucide-react";
 
-const LINKS = [
+/**
+ * Satu menu di navigasi atas. `warnaAktif`/`warnaDiam` OPSIONAL — kosong berarti
+ * ikut warna default (hitam di atas kotak kuning saat aktif, abu-abu saat diam).
+ * Diisi hanya untuk menu yang sengaja dibedakan warnanya.
+ */
+type NavLink = {
+  href: string;
+  label: string;
+  adminOnly: boolean;
+  warnaAktif?: string;
+  warnaDiam?: string;
+};
+
+const LINKS: NavLink[] = [
   { href: "/beranda", label: "Beranda", adminOnly: false },
   { href: "/discover", label: "Discover", adminOnly: false },
   { href: "/shorts", label: "Shorts", adminOnly: false },
-  { href: "/playly", label: "Playly", adminOnly: false },
+  {
+    href: "/playly",
+    label: "Playly",
+    adminOnly: false,
+    // Permintaan owner: teks Playly biru terang. Saat menu ini aktif, teksnya
+    // duduk di atas kotak kuning yang meluncur, jadi dipakai biru yang cukup
+    // pekat supaya tetap terbaca di sana; saat diam dipakai biru muda agar
+    // menonjol di latar gelap.
+    warnaAktif: "text-blue-700",
+    warnaDiam: "text-blue-400 hover:text-blue-300",
+  },
   { href: "/my-list", label: "My List", adminOnly: false },
   { href: "/profile", label: "Profile", adminOnly: false },
   { href: "/admin", label: "Admin", adminOnly: true },
@@ -158,8 +181,11 @@ export default function TopNav() {
                   className={cn(
                     "relative z-10 rounded-md px-3 py-1.5 text-sm transition-all duration-200",
                     active
-                      ? "font-semibold text-black"
-                      : "text-zinc-300 hover:-translate-y-0.5 hover:text-white",
+                      ? cn("font-semibold", link.warnaAktif ?? "text-black")
+                      : cn(
+                          "hover:-translate-y-0.5",
+                          link.warnaDiam ?? "text-zinc-300 hover:text-white",
+                        ),
                   )}
                 >
                   {link.label}

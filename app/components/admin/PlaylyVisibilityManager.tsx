@@ -9,6 +9,11 @@
 // Daftar videonya datang dari server sebagai props (halaman ini force-dynamic),
 // jadi komponen ini tidak perlu memuat apa pun saat dibuka — tidak ada kedipan
 // "memuat", dan satu-satunya panggilan jaringan terjadi saat tombol ditekan.
+//
+// "BELUM SIAP" = catatan videonya ada di Playly (judul, durasi, sampul) tapi
+// BERKAS videonya tidak — biasanya upload putus di tengah. Video begini sudah
+// otomatis tidak ditampilkan ke penonton; ditandai di sini supaya admin tahu
+// perbaikannya ada di dashboard Playly, bukan di DramaKu.
 import { useState } from "react";
 import { AlertTriangle, Eye, EyeOff, Info, Loader2 } from "lucide-react";
 import type { PlaylyVideo, PlaylySumber } from "@/lib/playly";
@@ -18,6 +23,7 @@ type Pesan = { jenis: "ok" | "gagal"; teks: string };
 export default function PlaylyVisibilityManager({
   videos,
   initialHidden,
+  belumSiapIds,
   fetchError,
   source,
   creator,
@@ -25,6 +31,8 @@ export default function PlaylyVisibilityManager({
   /** Seluruh video milik akun kita, termasuk yang sedang disembunyikan. */
   videos: PlaylyVideo[];
   initialHidden: string[];
+  /** Video yang berkasnya belum ada di Playly — tidak tampil ke penonton. */
+  belumSiapIds: string[];
   /** Terisi kalau daftar gagal diambil dari Playly. */
   fetchError: string | null;
   source: PlaylySumber;
@@ -79,7 +87,13 @@ export default function PlaylyVisibilityManager({
     );
   }
 
-  const jumlahTampil = videos.length - hidden.size;
+  // Dihitung dari daftar aslinya, bukan pengurangan angka: video bisa
+  // disembunyikan DAN belum siap sekaligus, jadi mengurangi dua angka akan
+  // menghitungnya dua kali dan hasilnya bisa minus.
+  const belumSiap = new Set(belumSiapIds);
+  const jumlahTampil = videos.filter(
+    (v) => !hidden.has(v.id) && !belumSiap.has(v.id),
+  ).length;
 
   return (
     <section className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-5">
@@ -91,6 +105,20 @@ export default function PlaylyVisibilityManager({
           ? "Belum ada video di akun Playly kita. Upload dulu di dashboard Playly — begitu ter-upload, video langsung muncul di sini dan di halaman penonton."
           : `${jumlahTampil} dari ${videos.length} video tampil. Semua video tampil otomatis; sembunyikan yang tidak ingin ditayangkan.`}
       </p>
+
+      {belumSiap.size > 0 && (
+        <p className="mt-3 flex items-start gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-100">
+          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+          <span>
+            <strong>{belumSiap.size} video belum siap.</strong> Catatannya ada di
+            Playly (judul, durasi, sampul), tapi file videonya tidak — biasanya
+            karena upload putus di tengah. Video ini <strong>tidak</strong>{" "}
+            ditampilkan ke penonton, karena kalau diklik yang muncul cuma layar
+            "Video belum tersedia". Perbaikannya di dashboard Playly: upload ulang
+            videonya sampai 100% selesai, lalu buka lagi halaman ini.
+          </span>
+        </p>
+      )}
 
       {source === "katalog-publik" && videos.length > 0 && (
         // Dikatakan apa adanya: daftar ini TIDAK datang dari kunci mitra, jadi
@@ -121,25 +149,40 @@ export default function PlaylyVisibilityManager({
         <ul className="mt-4 divide-y divide-zinc-800">
           {videos.map((v) => {
             const tersembunyi = hidden.has(v.id);
+            const belumAdaFile = belumSiap.has(v.id);
             const proses = sedangProses === v.id;
+            // Status bisa menumpuk (belum siap + disembunyikan), jadi dirangkai
+            // dari daftar, bukan rantai ternary yang saling menutupi.
+            const catatan = [
+              v.creator || "tanpa nama kreator",
+              v.durationLabel !== "-" ? v.durationLabel : null,
+              belumAdaFile ? "file videonya belum ada di Playly — upload ulang di sana" : null,
+              tersembunyi ? "disembunyikan" : null,
+            ]
+              .filter(Boolean)
+              .join(" · ");
             return (
               <li
                 key={v.id}
                 className="flex items-center justify-between gap-4 py-3"
               >
                 <div className="min-w-0">
-                  <p
-                    className={`truncate text-sm font-medium ${
-                      tersembunyi ? "text-zinc-500 line-through" : "text-zinc-100"
-                    }`}
-                  >
-                    {v.title}
-                  </p>
-                  <p className="mt-0.5 text-xs text-zinc-500">
-                    {v.creator || "tanpa nama kreator"}
-                    {v.durationLabel !== "-" ? ` · ${v.durationLabel}` : ""}
-                    {tersembunyi ? " · disembunyikan" : ""}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p
+                      className={`truncate text-sm font-medium ${
+                        tersembunyi ? "text-zinc-500 line-through" : "text-zinc-100"
+                      }`}
+                    >
+                      {v.title}
+                    </p>
+                    {belumAdaFile && (
+                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-rose-500/40 bg-rose-500/10 px-2 py-0.5 text-[11px] font-semibold text-rose-300">
+                        <AlertTriangle className="h-3 w-3" aria-hidden="true" />
+                        belum siap
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-0.5 text-xs text-zinc-500">{catatan}</p>
                 </div>
                 <button
                   type="button"

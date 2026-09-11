@@ -10,7 +10,7 @@
 // Playly, jadi hitungan tayang di dashboard mereka bisa berhenti bertambah.
 import { useRef, useState } from "react";
 import Link from "next/link";
-import { Clock, Film, Play, User } from "lucide-react";
+import { Film, Play, Star } from "lucide-react";
 import PlaylyPlayer from "./player/PlaylyPlayer";
 import type { PlaylyVideoPublik } from "@/lib/playly-publik";
 
@@ -72,6 +72,10 @@ export default function PlaylyVideoGrid({
       <ul className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-3">
         {tampil.map((v) => {
           const dipilih = aktif?.id === v.id;
+          // Tahun & genre digabung jadi satu baris "2026 · Action, Sci-Fi".
+          // Keduanya bisa null (video yang belum dikaitkan admin ke drama), jadi
+          // yang kosong dibuang dulu — supaya tidak tersisa pemisah "·" menggantung.
+          const metaFilm = [v.year, v.genre].filter(Boolean).join(" · ");
           return (
             <li key={v.id}>
               <button
@@ -100,9 +104,23 @@ export default function PlaylyVideoGrid({
                   ) : (
                     <Film className="h-7 w-7 text-zinc-600" aria-hidden="true" />
                   )}
-                  <span className="absolute inset-0 flex items-center justify-center bg-black/30 opacity-0 transition group-hover:opacity-100 group-focus-visible:opacity-100">
-                    <Play className="h-8 w-8 fill-white text-white" aria-hidden="true" />
+                  {/* Gelap dari bawah saat hover — biar ikon play & badge tetap
+                      terbaca di atas sampul yang terang. */}
+                  <span
+                    className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100"
+                    aria-hidden="true"
+                  />
+                  <span className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100">
+                    <span className="flex h-11 w-11 items-center justify-center rounded-full bg-white/20 ring-1 ring-white/60 backdrop-blur-sm">
+                      <Play className="h-5 w-5 fill-white text-white" aria-hidden="true" />
+                    </span>
                   </span>
+                  {v.rating && (
+                    <span className="absolute left-1.5 top-1.5 flex items-center gap-0.5 rounded bg-black/75 px-1.5 py-0.5 text-[11px] font-bold text-amber-300">
+                      <Star className="h-3 w-3 fill-amber-300" aria-hidden="true" />
+                      {v.rating}
+                    </span>
+                  )}
                   {v.durationLabel !== "-" && (
                     <span className="absolute bottom-1 right-1 rounded bg-black/75 px-1.5 py-0.5 text-[11px] font-medium text-zinc-100">
                       {v.durationLabel}
@@ -110,23 +128,14 @@ export default function PlaylyVideoGrid({
                   )}
                 </div>
                 <div className="p-2.5">
-                  <p className="line-clamp-2 text-xs font-semibold text-zinc-100">
+                  <p className="line-clamp-2 text-xs font-bold text-zinc-100 transition-colors group-hover:text-white sm:text-sm">
                     {v.title}
                   </p>
-                  <p className="mt-1 flex flex-wrap items-center gap-x-3 text-[11px] text-zinc-500">
-                    {v.creator && (
-                      <span className="flex items-center gap-1">
-                        <User className="h-3 w-3" aria-hidden="true" />
-                        {v.creator}
-                      </span>
-                    )}
-                    {v.durationLabel !== "-" && (
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" aria-hidden="true" />
-                        {v.durationLabel}
-                      </span>
-                    )}
-                  </p>
+                  {metaFilm && (
+                    <p className="mt-1 line-clamp-1 text-[11px] text-zinc-500">
+                      {metaFilm}
+                    </p>
+                  )}
                   {v.dramaTitle && (
                     <p className="mt-1 line-clamp-1 text-[11px] text-amber-400/80">
                       {v.dramaTitle}

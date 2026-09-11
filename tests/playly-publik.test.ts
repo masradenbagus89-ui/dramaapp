@@ -9,9 +9,18 @@
 //      selalu kosong, padahal kuncinya benar.
 //   2. Video yang disembunyikan admin tetap ikut tampil ke penonton — kesalahan
 //      yang tak terlihat dari sisi admin, jadi bisa berlarut-larut.
-import { describe, it, expect } from "vitest";
-import { filterVideoMilikKreator, readPlaylyKeyFromEnv } from "../lib/playly";
-import { rakitVideoPublik } from "../lib/playly-publik";
+//   3. Video yang BERKASNYA tidak pernah sampai di Playly (upload putus) tetap
+//      ditampilkan, jadi penonton mengkliknya lalu dapat layar hitam "Video
+//      belum tersedia". Dilaporkan owner 2026-08-29 untuk dua video 35 menit.
+import { describe, it, expect, vi, afterEach } from "vitest";
+import {
+  fetchPlaylyDetailPublik,
+  filterVideoMilikKreator,
+  punyaFileVideo,
+  readPlaylyConfig,
+  readPlaylyKeyFromEnv,
+} from "../lib/playly";
+import { bolehTampilKePenonton, rakitVideoPublik } from "../lib/playly-publik";
 import type { PlaylyVideo } from "../lib/playly";
 
 function video(id: string, judul = `Video ${id}`, creator = "coklat"): PlaylyVideo {
@@ -103,6 +112,9 @@ describe("rakitVideoPublik — video mana yang boleh dilihat penonton", () => {
       dramaTitle: null,
       dramaHref: null,
       episode: null,
+      year: null,
+      genre: null,
+      rating: null,
     });
   });
 
@@ -117,7 +129,54 @@ describe("rakitVideoPublik — video mana yang boleh dilihat penonton", () => {
       dramaTitle: "Drama A",
       dramaHref: "/drama/drama-a",
       episode: 3,
+      year: null,
+      genre: null,
+      rating: null,
     });
+  });
+
+  // Kartu video menampilkan "2026 · Action, Sci-Fi" di bawah judul. Playly TIDAK
+  // mengirim tahun/genre/rating sama sekali (lihat PlaylyVideo di lib/playly.ts),
+  // jadi satu-satunya sumbernya drama yang dikaitkan admin. Tiga tes di bawah
+  // menjaga jalur itu tetap tersambung.
+  it("tahun, genre, dan rating ikut terbawa dari drama yang dikaitkan", () => {
+    const { labelUntuk } = rakitVideoPublik(
+      [video("1")],
+      [],
+      [{ videoId: "1", dramaId: "drama-b", episode: 1 }],
+      [
+        {
+          id: "drama-b",
+          title: "Drama B",
+          year: "2026",
+          genre: "Action, Sci-Fi",
+          imdbRating: "8.1",
+          category: "Action",
+        },
+      ],
+    );
+    expect(labelUntuk("1")).toMatchObject({
+      year: "2026",
+      genre: "Action, Sci-Fi",
+      rating: "8.1",
+    });
+  });
+
+  it("genre OMDb kosong -> pakai category katalog sebagai cadangan", () => {
+    const { labelUntuk } = rakitVideoPublik(
+      [video("1")],
+      [],
+      [{ videoId: "1", dramaId: "drama-c", episode: null }],
+      [{ id: "drama-c", title: "Drama C", category: "Romance" }],
+    );
+    expect(labelUntuk("1").genre).toBe("Romance");
+  });
+
+  it("video tanpa kaitan drama -> tahun/genre/rating null, bukan teks kosong", () => {
+    // Kartu memakai null sebagai tanda "sembunyikan barisnya". String kosong
+    // akan lolos pengecekan dan menyisakan baris hampa di bawah judul.
+    const { labelUntuk } = rakitVideoPublik([video("1")], [], [], dramas);
+    expect(labelUntuk("1")).toMatchObject({ year: null, genre: null, rating: null });
   });
 
   it("kaitan ke drama yang sudah DIHAPUS tidak menghasilkan tautan menggantung", () => {
@@ -171,5 +230,118 @@ describe("filterVideoMilikKreator — katalog publik disaring ke akun kita", () 
 
   it("nama kreator yang tidak ada di katalog -> kosong, bukan error", () => {
     expect(filterVideoMilikKreator(katalogCampur, "tidak-ada")).toEqual([]);
+  });
+});
+
+
+// Balasan ASLI /api/public-video Playly, dipangkas ke field yang menentukan.
+// Diambil langsung dari Playly 2026-08-29 — jangan "dirapikan" jadi bentuk yang
+// lebih masuk akal: nilai apa adanya itulah yang harus tertangani.
+const BALASAN_TANPA_BERKAS = {
+  ok: true,
+  id: 1787977846374,
+  title: "Diasingkan Ke Bumi‼️ Dianggap Dewa Oleh Manusia   Cerita Film Mas Of Steel",
+  creator: "coklat",
+  allowEmbed: true,
+  thumb: "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD",
+  videoUrl: null,
+  variants: {},
+  duration: "35:07",
+};
+
+const BALASAN_SEHAT = {
+  ok: true,
+  id: 1787642113102,
+  title: "Transformers 8 Rise of the Unicron (2027)",
+  creator: "coklat",
+  allowEmbed: true,
+  thumb: "https://playly-videos.r2.cloudflarestorage.com/thumbs/1787642113102.jpg?X-Amz-Signature=abc",
+  videoUrl: "https://playly-videos.r2.cloudflarestorage.com/videos/1787642113102.mp4?X-Amz-Signature=abc",
+  variants: {
+    "360p": "https://playly-videos.r2.cloudflarestorage.com/videos/1787642113102_360p.mp4?X-Amz-Signature=abc",
+    "720p": "https://playly-videos.r2.cloudflarestorage.com/videos/1787642113102_720p.mp4?X-Amz-Signature=abc",
+  },
+  duration: "2:20",
+};
+
+describe("punyaFileVideo — catatan video ada, tapi berkasnya belum tentu", () => {
+  it("BUG YANG DILAPORKAN OWNER: videoUrl null + variants kosong -> tidak punya berkas", () => {
+    expect(punyaFileVideo(BALASAN_TANPA_BERKAS)).toBe(false);
+  });
+
+  it("video yang tayang normal -> punya berkas", () => {
+    expect(punyaFileVideo(BALASAN_SEHAT)).toBe(true);
+  });
+
+  it("cukup salah satu: variants terisi walau videoUrl kosong", () => {
+    // Versi hasil olahan saja sudah bisa diputar, jadi jangan ikut dibuang.
+    expect(
+      punyaFileVideo({ ...BALASAN_TANPA_BERKAS, variants: { "480p": "https://a/b_480p.mp4" } }),
+    ).toBe(true);
+  });
+
+  it("nilai kosong/spasi tidak dihitung sebagai berkas", () => {
+    expect(punyaFileVideo({ ...BALASAN_TANPA_BERKAS, videoUrl: "" })).toBe(false);
+    expect(punyaFileVideo({ ...BALASAN_TANPA_BERKAS, videoUrl: "   " })).toBe(false);
+    expect(punyaFileVideo({ ...BALASAN_TANPA_BERKAS, variants: { "480p": "" } })).toBe(false);
+  });
+});
+
+describe("fetchPlaylyDetailPublik — 'tidak tahu' TIDAK BOLEH sama dengan 'tidak ada'", () => {
+  const konfigurasi = readPlaylyConfig({}); // default, tidak bergantung env mesin
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  const balasDengan = (data: unknown, ok = true) => {
+    vi.stubGlobal("fetch", vi.fn(async () => ({ ok, json: async () => data })));
+  };
+
+  it("balasan asli tanpa berkas -> punyaFile false (video disembunyikan)", async () => {
+    balasDengan(BALASAN_TANPA_BERKAS);
+    const d = await fetchPlaylyDetailPublik("1787977846374", konfigurasi, 0);
+    expect(d.punyaFile).toBe(false);
+    expect(d.thumbnail).toContain("data:image/jpeg;base64,");
+  });
+
+  it("balasan asli lengkap -> punyaFile true + sampulnya ikut terbaca", async () => {
+    balasDengan(BALASAN_SEHAT);
+    const d = await fetchPlaylyDetailPublik("1787642113102", konfigurasi, 0);
+    expect(d.punyaFile).toBe(true);
+    expect(d.thumbnail).toContain("thumbs/1787642113102.jpg");
+  });
+
+  it("PAGAR: bentuk JSON Playly berubah -> null (tidak tahu), BUKAN false", async () => {
+    // Kalau ini dijawab false, satu perubahan di pihak Playly menghapus SELURUH
+    // video dari halaman penonton sekaligus — kerusakan jauh lebih parah
+    // daripada masalah yang sedang diperbaiki.
+    balasDengan({ data: BALASAN_SEHAT });
+    expect((await fetchPlaylyDetailPublik("x", konfigurasi, 0)).punyaFile).toBeNull();
+  });
+
+  it("PAGAR: Playly tak bisa dihubungi -> null, video tetap tampil", async () => {
+    vi.stubGlobal("fetch", vi.fn(async () => { throw new Error("timeout"); }));
+    expect((await fetchPlaylyDetailPublik("x", konfigurasi, 0)).punyaFile).toBeNull();
+  });
+
+  it("PAGAR: balasan bukan 200 -> null", async () => {
+    balasDengan(BALASAN_TANPA_BERKAS, false);
+    expect((await fetchPlaylyDetailPublik("x", konfigurasi, 0)).punyaFile).toBeNull();
+  });
+});
+
+describe("bolehTampilKePenonton — aturan yang menentukan video hilang atau tidak", () => {
+  it("punya berkas -> tampil", () => {
+    expect(bolehTampilKePenonton({ thumbnail: null, punyaFile: true })).toBe(true);
+  });
+
+  it("terbukti tidak punya berkas -> disembunyikan", () => {
+    expect(bolehTampilKePenonton({ thumbnail: null, punyaFile: false })).toBe(false);
+  });
+
+  it("TIDAK TAHU -> tetap tampil (gagal ke sisi 'jangan hilangkan konten')", () => {
+    expect(bolehTampilKePenonton({ thumbnail: null, punyaFile: null })).toBe(true);
+    expect(bolehTampilKePenonton(undefined)).toBe(true);
   });
 });

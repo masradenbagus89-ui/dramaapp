@@ -964,28 +964,90 @@ export async function fetchPlaylyVideosKita(
 }
 
 /**
- * Gambar sampul (thumbnail) satu video Playly.
+ * Nama field yang menunjuk BERKAS videonya sendiri (bukan halaman pemutar) —
+ * dipakai HANYA untuk memeriksa "berkasnya sudah ada atau belum".
+ *
+ * Sengaja beda nama dari `VIDEO_FILE_KEYS` milik `fetchPlaylyVideoUrl` di bawah:
+ * dua fitur ini dikembangkan terpisah lalu bertemu saat merge, dan daftarnya
+ * memang berbeda — yang di sini lebih luas karena cukup "ada tandanya", bukan
+ * harus alamat yang benar-benar bisa diputar.
+ */
+const FILE_PRESENCE_KEYS = [
+  "videoUrl", "video_url", "playbackUrl", "playback_url",
+  "fileUrl", "file_url", "mp4Url", "hlsUrl", "src",
+];
+
+/** Nama field berisi versi kualitas hasil olahan Playly (360p/480p/720p/1080p). */
+const VARIANT_KEYS = ["variants", "qualities", "renditions", "sources"];
+
+/**
+ * Apakah catatan video ini punya BERKAS videonya di penyimpanan Playly?
+ *
+ * Playly menyimpan CATATAN video (judul, durasi, sampul) terpisah dari BERKAS
+ * videonya. Kalau upload putus di tengah, catatannya tetap tersimpan tapi
+ * berkasnya tidak pernah sampai: videonya muncul di daftar, lalu pemutar Playly
+ * membalas "Video belum tersedia" begitu diklik. Terverifikasi 2026-08-29 pada
+ * dua video 35 menit milik akun kita -- videoUrl null dan variants kosong,
+ * sementara empat video yang tayang normal punya keduanya terisi.
+ *
+ * Fungsi MURNI (tanpa jaringan) supaya aturan ini bisa diuji langsung.
+ */
+export function punyaFileVideo(rec: Record<string, unknown>): boolean {
+  if (pickString(rec, FILE_PRESENCE_KEYS)) return true;
+  // Versi hasil olahan saja sudah cukup untuk diputar, jadi berkas aslinya
+  // tidak wajib ikut disebut di balasan.
+  for (const k of VARIANT_KEYS) {
+    const v = rec[k];
+    if (Array.isArray(v)) {
+      if (v.length > 0) return true;
+      continue;
+    }
+    const obj = asRecord(v);
+    if (obj && Object.values(obj).some((x) => typeof x === "string" && x.trim())) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/** Detail satu video dari katalog publik Playly, sebatas yang kita butuhkan. */
+export type PlaylyDetailPublik = {
+  /** Alamat sampul yang sudah lolos penyaring; null kalau tidak ada/ditolak. */
+  thumbnail: string | null;
+  /**
+   * true  = berkasnya ADA, aman ditampilkan ke penonton.
+   * false = catatannya ada tapi berkasnya TIDAK ada (upload gagal / dihapus).
+   * null  = TIDAK TAHU -- Playly tak terjawab, atau balasannya tak dikenali.
+   */
+  punyaFile: boolean | null;
+};
+
+/**
+ * Detail satu video Playly dari katalog PUBLIK (tanpa kunci).
  *
  * KENAPA perlu panggilan terpisah: balasan /api/videos milik jalur mitra hanya
- * memuat id, judul, durasi, kreator, dan alamat embed -- TIDAK ada sampulnya
- * (diperiksa langsung ke Playly 2026-08-26). Tanpa ini setiap kartu video di
- * halaman penonton cuma kotak abu-abu berikon, dan daftar video jadi sulit
- * dibedakan satu sama lain.
+ * memuat id, judul, durasi, kreator, dan alamat embed -- TIDAK ada sampul
+ * maupun status berkasnya (diperiksa langsung ke Playly 2026-08-26). Tanpa
+ * sampul, tiap kartu video cuma kotak abu-abu berikon.
  *
- * Yang diambil dari balasan HANYA field sampul. Balasan itu juga memuat
- * "videoUrl" (alamat berkas mp4 bertanda tangan sementara) dan itu SENGAJA
- * diabaikan: memutar lewat embed resmi Playly membuat hitungan tayang mereka
- * tetap benar, dan alamat bertanda tangan kedaluwarsa dalam hitungan jam
- * sehingga tidak layak disimpan atau dikirim ke browser.
+ * "videoUrl" di balasan ini HANYA dibaca ada-tidaknya, tidak pernah dipakai
+ * memutar. Tiga alasannya: memutar lewat embed resmi Playly menjaga hitungan
+ * tayang mereka tetap benar; alamat mp4-nya bertanda tangan sementara
+ * (kedaluwarsa dalam hitungan jam) sehingga tak layak disimpan; dan menyalurkan
+ * berkasnya sendiri berarti byte video lewat server kita -- persis yang
+ * dihindari demi kuota.
  *
- * Gagal = null, tidak pernah melempar. Kartu tanpa sampul masih berguna;
- * halaman rusak gara-gara gambar tidak.
+ * Gagal = { thumbnail: null, punyaFile: null }, tidak pernah melempar. "Tidak
+ * tahu" SENGAJA dibedakan dari "tidak punya berkas": pemanggil hanya boleh
+ * menyembunyikan video kalau TERBUKTI kosong, supaya satu gangguan jaringan
+ * tidak mengosongkan halaman penonton.
  */
-export async function fetchPlaylyThumbnail(
+export async function fetchPlaylyDetailPublik(
   videoId: string,
   config: PlaylyConfig = readPlaylyConfig(),
   revalidateSeconds: number = PLAYLY_PUBLIK_TTL_SECONDS,
-): Promise<string | null> {
+): Promise<PlaylyDetailPublik> {
+  const TIDAK_TAHU: PlaylyDetailPublik = { thumbnail: null, punyaFile: null };
   const url = `${config.baseUrl}${PLAYLY_PUBLIC_VIDEO_PATH}?id=${encodeURIComponent(videoId)}`;
   try {
     const res = await fetch(url, {
@@ -993,15 +1055,26 @@ export async function fetchPlaylyThumbnail(
       signal: AbortSignal.timeout(8_000),
       next: { revalidate: revalidateSeconds },
     });
-    if (!res.ok) return null;
+    if (!res.ok) return TIDAK_TAHU;
     const rec = asRecord(await res.json());
-    if (!rec) return null;
+    if (!rec) return TIDAK_TAHU;
+
+    // Pagar anti-salah-sembunyi: kalau balasannya tidak berbentuk catatan video
+    // yang kita kenali (mis. Playly kelak membungkusnya jadi { data: ... }),
+    // status berkas dinyatakan TIDAK TAHU. Tanpa pagar ini, satu perubahan
+    // bentuk JSON di pihak Playly menghapus SEMUA video dari halaman sekaligus.
+    const dikenali =
+      pickString(rec, ID_KEYS) !== null || pickString(rec, TITLE_KEYS) !== null;
+
     const mentah = pickString(rec, THUMB_KEYS);
-    // Dilewatkan penyaring yang sama dengan sampul lain: data URI gambar raster
-    // atau https saja (SVG ditolak -- bisa memuat skrip).
-    return mentah ? normalizeThumbnail(mentah, config.baseUrl) : null;
+    return {
+      // Dilewatkan penyaring yang sama dengan sampul lain: data URI gambar
+      // raster atau https saja (SVG ditolak -- bisa memuat skrip).
+      thumbnail: mentah ? normalizeThumbnail(mentah, config.baseUrl) : null,
+      punyaFile: dikenali ? punyaFileVideo(rec) : null,
+    };
   } catch {
-    return null;
+    return TIDAK_TAHU;
   }
 }
 

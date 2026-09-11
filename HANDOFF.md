@@ -69,7 +69,24 @@ menjalankan port 3055**, dan node-nya dipatok ke `C:\Program Files\nodejs\node.e
 portabel. Panduan rekan sengaja diarahkan ke `npm run dev`. Berkasnya tidak diubah (di luar
 lingkup; milik komputer owner).
 
-**BELUM di-commit & BELUM di-push** — menunggu keputusan owner.
+**TERKIRIM `dce13c3`** (owner memberi izin). Dual push `df2316c..dce13c3` ke `origin` **dan**
+`dramaku`; hash dibandingkan lewat `git ls-remote` LANGSUNG ke server → **selisih NOL**.
+Produksi sehat sesudah push: `/` `/beranda` `/discover` `/playly` `/shorts` semua **200**.
+Karena nol kode aplikasi berubah, penonton tidak melihat perbedaan apa pun — memang bukan
+rilis fitur. Rollback 1-baris: `git revert dce13c3 && git push origin main`.
+
+**🟢 KOREKSI PENTING atas peringatan Tahap 2 di atas — fakta berubah di hari yang sama.**
+Rekan push lagi ke `dramaku/redesign/playly-card` pada 2026-09-11 (kini `328274d`), berisi
+merge `7496431` "tarik main ke redesign/playly-card + pasang ulang di atas kerja Raden".
+**Dua kemunduran senyap yang tadinya mengancam sudah HILANG** — diverifikasi langsung ke isi
+berkas di branch, bukan dari pesan commit: pemutar sudah `import PlaylyPlayer from
+"./player/PlaylyPlayer"` (bukan lagi `EmbedPlayer`), dan grid sudah
+`grid-cols-[repeat(auto-fill,minmax(240px,1fr))]` **identik dengan main**.
+Selisih sekarang: branch 7 commit belum di main, main 1 commit (`dce13c3`) belum di branch.
+Jadi Tahap 2 **tidak lagi** perlu pembongkaran per-bagian — cukup merge biasa, lalu uji penuh.
+Yang masih berharga & belum ada di main: `bolehTampilKePenonton()` (`lib/playly-publik.ts`),
+kolom `year`/`genre`/`rating` di kartu, dan berkas tes baru.
+⚠️ "Sudah di-merge" BUKAN bukti jalan — tetap wajib `tsc` + `npm test` + `next build`.
 
 ## 🧭 2026-09-10 — Header gaya Layarkaca21: 6 menu dropdown + strip berpintasan
 

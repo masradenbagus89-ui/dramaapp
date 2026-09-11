@@ -13,7 +13,47 @@ kuota Vercel aman. **Migrasi database BELUM tuntas** — datanya sudah pindah, t
 masih terkunci; rinciannya di bagian KOREKSI di bawah. **Jangan ganti env Supabase di Vercel dulu
 — situs akan mati.**
 
-## 🧭 2026-09-10 (TERBARU) — Header gaya Layarkaca21: 6 menu dropdown + strip berpintasan
+## 🧭 2026-09-11 (TERBARU) — Kartu Playly: tahun & genre, dipasang ulang di atas kerja Raden
+
+Permintaan owner: di kartu `/playly`, kotak di bawah judul yang berisi **nama uploader + durasi
+kedua** diganti **tahun rilis + genre**; plus badge rating bintang di kiri-atas, efek hover
+(gradient gelap + ikon play bundar), judul dipertebal, dan teks menu "Playly" di TopNav jadi biru.
+Branch **`redesign/playly-card`** — **belum di-merge ke `main`, belum tayang.**
+
+⚠️ **Tahun/genre/rating TIDAK dikirim Playly.** Dicek langsung di tipe `PlaylyVideo`
+(`lib/playly.ts`): isinya cuma id/judul/durasi/kreator/embedUrl/thumbnail. Satu-satunya sumbernya
+katalog drama kita sendiri, lewat kaitan video→drama yang dibuat admin di `/admin/videos/playly`
+(form **"Kaitkan ke drama"**). Video yang belum dikaitkan → nilainya `null` dan kartu
+**menyembunyikan barisnya** (bukan menyisakan kotak kosong); `genre` OMDb kosong → jatuh ke
+`category` katalog. Akibat praktis: selama video belum dikaitkan, baris tahun·genre dan badge
+rating memang **tidak muncul** — itu perilaku yang disengaja, bukan fitur yang gagal.
+
+🔴 **PELAJARAN MAHAL — branch dibuat tanpa `git fetch` lebih dulu.** Cabangnya tertinggal **54
+commit**, dan dua berkas yang disentuh ternyata sudah digarap Raden: `PlaylyVideoGrid.tsx` (2
+commit) dan `TopNav.tsx` (3 commit). Kalau di-merge apa adanya, dua pekerjaan Raden HILANG
+diam-diam: **PlaylyPlayer** (pemutar sendiri pengganti `<iframe>`, 2026-09-09) dan **grid
+`auto-fill minmax(240px,1fr)`** (pengganti jumlah kolom tetap). Sudah diperbaiki di commit merge
+`7496431`: `main` ditarik masuk, kerja Raden dipertahankan apa adanya, perubahan tampilan dipasang
+ulang DI ATASNYA. **Aturan yang lahir dari sini: `git fetch origin` + `git log ..origin/main --
+<berkas>` SEBELUM membuat branch, bukan sesudah.**
+
+🔴 **TABRAKAN SENYAP yang git TIDAK laporkan.** `lib/playly.ts` dilaporkan "auto-merging" sukses,
+tapi hasilnya **tidak bisa dikompilasi**: `VIDEO_FILE_KEYS` dideklarasikan **dua kali** —
+`punyaFileVideo` (dari `c2da792`) dan `fetchPlaylyVideoUrl` (dari Raden) kebetulan memakai nama
+yang sama di tingkat modul. Ketahuan HANYA karena `tsc` + tes dijalankan sesudah merge. Yang
+diganti nama cuma milik `c2da792` (→ `FILE_PRESENCE_KEYS`), isi daftarnya tidak diubah, supaya kode
+pemutar Raden tetap identik dengan `main`. **Pelajaran: "merge tanpa konflik" ≠ "kodenya jalan" —
+selalu jalankan pemeriksa sesudah merge.**
+
+**Bukti:** `npx tsc --noEmit` exit 0 · `npx vitest run` **488 lulus / 39 berkas** · `/playly` HTTP
+200 di dev server dengan penanda desain baru terverifikasi di HTML. ⚠️ `next build` TIDAK bisa
+diuji di PC ini: `.env.local` memakai alamat Supabase placeholder (`ENOTFOUND`), sehingga `/` dan
+`/discover` balas 500 secara LOKAL — dibuktikan bukan akibat perubahan ini dengan men-stash
+perubahan lalu menguji ulang kode asli.
+
+---
+
+## 🧭 2026-09-10 — Header gaya Layarkaca21: 6 menu dropdown + strip berpintasan
 
 Permintaan owner (dengan 2 screenshot pembanding, area dikotak-merahi): kepala DramaKu dibuat
 seperti Layarkaca21 — **satu baris logo + kotak cari + deretan menu dropdown**, lalu baris

@@ -5,7 +5,10 @@
 >
 > **AI:** tiap kali ada perbaikan / deploy / keputusan — **perbarui berkas ini di langkah terakhir**, sebelum bilang selesai. Jangan tumpuk sejarah panjang di sini; pindahkan yang lama ke `NEXT-SESSION.md`.
 
-**Terakhir diisi:** 2026-08-31 (sore, KOREKSI) — **produksi SEHAT tapi MASIH memakai database LAMA.**
+**Terakhir diisi:** 2026-09-11 (sore) — Tahap 2 selesai: branch rekan di-merge & tayang (`c3312f2`).
+Catatan 2026-08-31 di bawah ini masih berlaku soal database.
+
+**Sebelumnya:** 2026-08-31 (sore, KOREKSI) — **produksi SEHAT tapi MASIH memakai database LAMA.**
 Landing 200 · `/playly` 200 · `/discover` 200 · `/api/teaser` **307 / 0 byte** → tunnel
 `interference-positions-style-manufacture.trycloudflare.com` · redirect diikuti balas **206
 `video/mp4` `ftypisom`** (berkas 895 MB) → byte video tetap mengalir langsung tunnel→penonton,
@@ -13,7 +16,77 @@ kuota Vercel aman. **Migrasi database BELUM tuntas** — datanya sudah pindah, t
 masih terkunci; rinciannya di bagian KOREKSI di bawah. **Jangan ganti env Supabase di Vercel dulu
 — situs akan mati.**
 
-## 🧭 2026-09-11 (TERBARU) — Aturan kerja 2 orang (owner ↔ Yusuf) + preview lokal rekan
+## 🧭 2026-09-11 (TERBARU) — TAHAP 2 SELESAI: branch Yusuf di-merge & TAYANG (`c3312f2`)
+
+Owner minta Tahap 2 dikerjakan. Hasilnya **jauh lebih mulus dari perkiraan catatan lama** —
+peringatan "6 berkas bentrok + 2 kemunduran senyap" sudah tidak berlaku.
+
+**Kenapa mulus:** sejak titik-pisah (`df2316c`), `main` **nol menyentuh kode aplikasi** (cuma
+dokumen + `data/dramas.json`). Jadi seluruh kode rekan masuk otomatis; bentrok HANYA di
+`HANDOFF.md` + `antrean-deploy.md` → diambil versi main (AGENTS.local.md aturan 1).
+
+**Yang masuk (7 commit rekan + 2 commit merge):** `bolehTampilKePenonton()` + `punyaFileVideo()`
+(menyaring video yang berkasnya tak ada di Playly) · `fetchPlaylyThumbnail` **berganti nama**
+jadi `fetchPlaylyDetailPublik` (kini memulangkan `{thumbnail, punyaFile}`) · kartu Playly:
+uploader+durasi diganti **tahun · genre** + bintang rating · menu Playly biru di `TopNav`
+(tipe `NavLink` baru) · panel admin dapat penanda merah **"belum siap"**.
+
+**⚠️ UJI PALING PENTING — jangan diulang menebak.** Risiko terburuk fitur ini: kalau penilaian
+"punya berkas" meleset, SELURUH `/playly` bisa kosong. Diuji dengan **fungsi asli** terhadap
+**20 video yang saat itu tayang di produksi**: **19 lolos · 1 dibuang · 0 "tidak tahu"**.
+Video yang dibuang (`1788234998400`) dibuktikan memang rusak — `/api/playly/video?id=...` di
+produksi balas **HTTP 502 "Alamat video sedang tidak bisa diambil dari Playly"**, sedangkan
+pembandingnya 200 + videoUrl. Jadi fitur ini **membuang layar rusak**, bukan video sehat.
+
+**Cara menguji ulang kelak:** endpoint cek-berkas = `/api/public-video` (`lib/playly.ts:51`),
+**publik tanpa kunci**, dan **sama persis** dengan yang dipakai pemutar (`lib/playly.ts:1045`)
+— jadi bisa diuji dari komputer mana pun tanpa kredensial Playly.
+
+**Bukti pra-rilis:** `npx tsc --noEmit` exit **0** · `npm test` **488 lulus / 39 berkas** (naik
+dari 465, +23 penjaga baru) · `rm -rf .next` + `npm run build` **exit 0** ← inilah yang **belum
+pernah bisa diuji rekan** (env Supabase di PC-nya placeholder) · nol berkas env/kunci ter-stage
+(dua lapis: nama berkas + isi diff).
+
+**TAYANG & TERVERIFIKASI** (~30 detik, percobaan 2): `/` `/beranda` `/discover` `/playly`
+`/shorts` `/login` `/daftar` semua **200** · `/playly` kini **19 video** (dari 20), id
+`1788234998400` **0 jejak** = benar hilang · `year`/`genre`/`rating` masing-masing **19x** di
+HTML = kolom baru benar tergambar · `text-blue-400` **ada** di `/beranda` = menu Playly biru
+sampai ke penonton. **NOL regresi:** poster `/` tetap **133**, `/beranda` tetap **56**, `/`
+tetap **1 h1**, keenam menu katalog (Genre·Jenis·Populer·Negara·Tahun·Lainnya) tetap utuh.
+Catatan: `/beranda` **0 h1** itu keadaan LAMA, bukan regresi — `TopNav.tsx` nol `<h1>` dan rilis
+ini tak menyentuh apa pun yang menggambar judul beranda.
+
+**Konsekuensi yang owner perlu tahu:** halaman admin Playly jadi **~7 detik lebih lambat**
+dibuka — sengaja: ia memeriksa status berkas tiap video **tanpa cache** (`revalidateSeconds=0`)
+supaya admin melihat keadaan SEKARANG. Halaman penonton TIDAK ikut lambat (di-cache 5 menit).
+
+**Sisa untuk owner:** video `1788234998400` perlu **upload ulang di dashboard Playly** kalau
+masih diinginkan tayang. Penanda merah "belum siap" di panel admin akan menunjukkannya.
+
+**⚠️⚠️ JEBAKAN ALAT YANG NYARIS MEMBATALKAN RILIS INI — WAJIB DIBACA SESI BERIKUTNYA.**
+Saat menulis catatan ini, dipakai `node -e "...skrip..."` dengan **kutip GANDA** di bash. Di dalam
+teks catatan ada contoh perintah rollback yang ditulis dalam backtick. Bash menganggap backtick di
+dalam kutip ganda sebagai **command substitution** → isinya **BENAR-BENAR DIJALANKAN**. Akibatnya
+`git revert -m 1 e9f4f5b` ikut berjalan sungguhan: merge yang baru saja dirilis **ter-revert di
+lokal**, berkas `tests/playly-video-grid.test.ts` + 2 berkas docs lenyap dari disk, dan HEAD lokal
+diam-diam pindah ke commit revert. **Produksi SELAMAT** hanya karena `git push` yang ikut terpanggil
+gagal (`fatal: invalid refspec 'main\'`) — bukan karena ada pengaman. `git ls-remote` ke kedua
+server membuktikan keduanya tetap `c3312f2`.
+**Aturannya sekarang:** untuk menulis teks panjang berisi backtick (yaitu SEMUA catatan markdown
+ini), JANGAN pernah pakai `node -e "..."` kutip-ganda. Pakai salah satu: (a) heredoc **terkutip**
+`<<'EOF'` ke berkas terpisah, lalu `node -e '...'` **kutip tunggal** yang MEMBACA berkas itu — cara
+yang akhirnya dipakai di sini; atau (b) tool Write/Edit langsung.
+**Cara mendeteksi cepat kalau terlanjur:** `git rev-parse HEAD` dibanding `git ls-remote origin
+refs/heads/main`. Kalau HEAD lokal ≠ server padahal baru saja push sukses, curigai ini. `git reflog`
+menunjukkan pelakunya. Pemulihan **tanpa** perintah merusak: `git reset <hash-benar>` (BUKAN
+`--hard`, supaya catatan yang belum di-commit tidak ikut hilang) lalu
+`git restore --source=HEAD --worktree -- app lib tests docs`.
+
+**Dual push `ca0e21b..c3312f2`** ke `origin` **dan** `dramaku`; hash dibandingkan lewat
+`git ls-remote` LANGSUNG ke server → **selisih NOL**. **Rollback 1-baris:**
+`git revert -m 1 e9f4f5b && git push origin main` (merge commit → wajib `-m 1`).
+
+## 🧭 2026-09-11 (siang) — Aturan kerja 2 orang (owner ↔ Yusuf) + preview lokal rekan
 
 Owner bertanya: dengan pembagian "Yusuf commit di branch, owner pull lalu deploy", apakah
 pekerjaan akan bentrok. Jawabannya **ya** — dan sebagian bentrok **sudah ada**, bukan ramalan.

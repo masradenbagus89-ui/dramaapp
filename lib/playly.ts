@@ -1091,7 +1091,7 @@ const VIDEO_FILE_KEYS = ["videoUrl", "video_url", "fileUrl", "file_url", "src"];
  * Owner memutuskan video Playly diputar pemutar kita sendiri, dan itu butuh
  * alamat berkasnya -- bukan alamat halaman player.
  *
- * Ini MEMBATALKAN keputusan lama di fetchPlaylyThumbnail di atas (videoUrl
+ * Ini MEMBATALKAN keputusan lama di fetchPlaylyDetailPublik di atas (videoUrl
  * sengaja diabaikan demi hitungan tayang Playly). Owner sudah diberi tahu
  * konsekuensinya dan tetap memilih pemutar sendiri.
  *

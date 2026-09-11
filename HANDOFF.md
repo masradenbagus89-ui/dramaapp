@@ -13,7 +13,65 @@ kuota Vercel aman. **Migrasi database BELUM tuntas** — datanya sudah pindah, t
 masih terkunci; rinciannya di bagian KOREKSI di bawah. **Jangan ganti env Supabase di Vercel dulu
 — situs akan mati.**
 
-## 🧭 2026-09-10 (TERBARU) — Header gaya Layarkaca21: 6 menu dropdown + strip berpintasan
+## 🧭 2026-09-11 (TERBARU) — Aturan kerja 2 orang (owner ↔ Yusuf) + preview lokal rekan
+
+Owner bertanya: dengan pembagian "Yusuf commit di branch, owner pull lalu deploy", apakah
+pekerjaan akan bentrok. Jawabannya **ya** — dan sebagian bentrok **sudah ada**, bukan ramalan.
+Ini **Tahap 1**: memasang aturannya. **Nol kode aplikasi tersentuh.**
+
+**Temuan yang penting untuk sesi berikutnya:**
+- **Yusuf TIDAK bisa merilis.** `gh api .../collaborators` → repo produksi hanya punya 1
+  collaborator: `masradenbagus89-ui`. Pemisahan akses owner sudah benar.
+- **`main` produksi TIDAK diproteksi** (`gh api .../branches/main/protection` → "Branch not
+  protected"). Satu-satunya pagar rilis = kedisiplinan owner. Belum dipasang proteksi karena
+  owner satu-satunya yang bisa push — proteksi hanya akan menghalangi dirinya sendiri.
+- **Robot `ai-review.yml` tidak akan pernah jalan untuk kerja Yusuf** — berkas itu sengaja
+  melewati PR dari repo lain (`head.repo.full_name == github.repository`). Penggantinya =
+  gerbang manual di `AGENTS.local.md` aturan 6.
+- **Berkas catatan = sumber bentrok terbesar.** `HANDOFF.md` disentuh 34 dari 50 commit
+  terakhir, `antrean-deploy.md` 19 dari 50. Sekarang **milik owner saja**; rekan menulis
+  berkas baru di `docs/serah-terima/`.
+
+**⚠️ BAHAN TAHAP 2 — jangan `git merge` branch `dramaku/redesign/playly-card`.**
+Branch itu 5 commit, tertinggal 54 commit. `git merge-tree` → 6 berkas bentrok. Tapi bahaya
+sesungguhnya bukan bentrok yang git teriakkan, melainkan yang digabung **diam-diam**: branch
+masih memakai `EmbedPlayer` (iframe) padahal main sudah pindah ke `PlaylyPlayer` (rilis
+`aca84f1`), dan masih memakai grid kolom-dipatok padahal main sudah diganti ke
+`auto-fill,minmax(240px,1fr)` (rilis `f7ff444`). Merge apa adanya = **dua rilis yang sudah
+disetujui owner mundur tanpa peringatan.**
+Yang masih berharga & BELUM ada di main (diverifikasi grep): `bolehTampilKePenonton()` di
+`lib/playly-publik.ts`, kolom `year`/`genre`/`rating` di kartu, `tests/playly-video-grid.test.ts`
+(89 baris) + 178 baris tambahan di `tests/playly-publik.test.ts`, tipe `NavLink` di `TopNav.tsx`.
+Cara benar: ambil per-bagian, **tulis ulang** `PlaylyVideoGrid.tsx` di atas versi main, abaikan
+3 berkas catatan.
+
+**Yang dibuat/diubah:** `AGENTS.local.md` (+seksi "Pembagian kerja: owner ↔ rekan", 8 aturan) ·
+`docs/panduan-lokal-rekan.md` (BARU) · `docs/serah-terima/README.md` (BARU) ·
+`data/dramas.json` (disegarkan dari produksi: 21 → **42 judul**).
+
+**Kenapa katalog disegarkan:** tanpa env Supabase, app turun ke `data/dramas.json`
+(`lib/supabase.ts:28`). Berkas lama 21 judul dengan `year`/`country` **0 terisi**, jadi menu
+Negara & Tahun tampak rusak di layar rekan padahal produksi baik-baik saja — jebakan yang sama
+pernah menipu sesi AI sendiri 2026-09-10. Diambil dari `GET /api/dramas` (alamat **publik**,
+bukan membagi akses database), bentuknya identik jadi tanpa pemetaan (`app/api/dramas/route.ts:8`
+= `getAllDramas()` → `Drama[]`; `lib/dramas.ts:140` membaca `Drama[]`).
+
+**Bukti:** `npx tsc --noEmit` exit **0** · `npm test` **465 lulus / 38 berkas** (angka sama
+persis dengan sebelumnya = nol regresi; nol tes bergantung pada `dramas.json`, sudah di-grep) ·
+katalog baru diperiksa sebelum dipakai: 42 judul, nol jejak email/hash/token/password ·
+menu dihitung dengan tiruan persis `getYearOptions` (`lib/discover.ts:85`), `getCountryOptions`
+(`:97`), `negaraDari` (`:50`) → **Tahun 0 → 5 pilihan** (2026, 2025, 2017, 2008, 2006),
+**Negara 0 → 8 pilihan** (United States, Canada, United Kingdom, Germany, Australia, China,
+Iran, New Zealand).
+
+**⚠️ Temuan sampingan:** `start-localhost-3010.bat` **namanya menyebut 3010 tapi isinya
+menjalankan port 3055**, dan node-nya dipatok ke `C:\Program Files\nodejs\node.exe` — tidak
+portabel. Panduan rekan sengaja diarahkan ke `npm run dev`. Berkasnya tidak diubah (di luar
+lingkup; milik komputer owner).
+
+**BELUM di-commit & BELUM di-push** — menunggu keputusan owner.
+
+## 🧭 2026-09-10 — Header gaya Layarkaca21: 6 menu dropdown + strip berpintasan
 
 Permintaan owner (dengan 2 screenshot pembanding, area dikotak-merahi): kepala DramaKu dibuat
 seperti Layarkaca21 — **satu baris logo + kotak cari + deretan menu dropdown**, lalu baris

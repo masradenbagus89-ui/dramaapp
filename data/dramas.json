@@ -1,10 +1,489 @@
 [
   {
+    "id": "over-your-dead-body",
+    "title": "Over Your Dead Body",
+    "category": "Action",
+    "episodes": 1,
+    "views": "1.0K",
+    "synopsis": "A dysfunctional married couple retreats to a secluded cabin to repair their relationship, but each secretly plots to murder the other.",
+    "gradient": "from-emerald-600 via-teal-800 to-slate-900",
+    "kind": "movie",
+    "posterImage": "https://m.media-amazon.com/images/M/MV5BMWU2M2YyNTMtZGM4ZC00MDcwLWI3NmItZWM0YjIyOTEyNDZhXkEyXkFqcGc@._V1_SX600.jpg",
+    "subtitles": [
+      "id"
+    ],
+    "imdbId": "tt34685692",
+    "year": "2026",
+    "contentRating": "R",
+    "runtime": "105 min",
+    "imdbRating": "6.5",
+    "imdbVotes": "6,311",
+    "genre": "Action, Comedy, Thriller",
+    "director": "Jorma Taccone",
+    "writer": "Tommy Wirkola, Nick Ball, John Niven",
+    "stars": "Samara Weaving, Jason Segel, Timothy Olyphant",
+    "country": "United States",
+    "language": "English"
+  },
+  {
+    "id": "transformers-the-last-knight",
+    "title": "Transformers: The Last Knight",
+    "category": "Action",
+    "episodes": 1,
+    "views": "234.000",
+    "synopsis": "Optimus Prime finds his dead home planet, Cybertron, in which he comes to find he was responsible for its destruction. He finds a way to bring Cybertron back to life, but in order to do so, Optimus needs to find an artifact that is on Earth.",
+    "gradient": "from-emerald-600 via-teal-800 to-slate-900",
+    "kind": "movie",
+    "posterImage": "https://m.media-amazon.com/images/M/MV5BYWNlNjU3ZTItYTY3Mi00YTU1LTk4NjQtYjQ3MjFiNjcyODliXkEyXkFqcGc@._V1_SX600.jpg",
+    "subtitles": [
+      "id"
+    ],
+    "imdbId": "tt3371366",
+    "year": "2017",
+    "contentRating": "PG-13",
+    "runtime": "154 min",
+    "imdbRating": "5.2",
+    "imdbVotes": "184,025",
+    "genre": "Action, Adventure, Comedy",
+    "director": "Michael Bay",
+    "writer": "Art Marcum, Matt Holloway, Ken Nolan",
+    "stars": "Mark Wahlberg, Anthony Hopkins, Josh Duhamel",
+    "country": "United States, China, Canada",
+    "language": "English"
+  },
+  {
+    "id": "spider-man-brand-new-day",
+    "title": "Spider-Man: Brand New Day",
+    "category": "Action",
+    "episodes": 1,
+    "views": "1.0K",
+    "synopsis": "Four years have passed since the events of No Way Home, and Peter is now an adult living entirely alone, having voluntarily erased himself from the lives and memories of those he loves. Crime-fighting in a New York that no longer knows his name, he's devoted himself entirely to protecting his city - a full-time Spider-Man - but as the demands on him intensify, the pressure sparks a surprising physical evolution that threatens his existence, even as a strange new pattern of crimes gives rise to one of the most powerful threats he has ever faced.",
+    "gradient": "from-violet-600 via-indigo-800 to-blue-950",
+    "kind": "movie",
+    "posterImage": "https://m.media-amazon.com/images/M/MV5BOWNjYWM3NWItOGE0ZS00MWRjLThiZWEtYjc4ZmNmMmU5ZTVmXkEyXkFqcGc@._V1_SX600.jpg",
+    "imdbId": "tt22084616",
+    "year": "2026",
+    "contentRating": "PG-13",
+    "runtime": "145 min",
+    "imdbRating": "8.1",
+    "imdbVotes": "183,571",
+    "genre": "Action, Adventure, Sci-Fi",
+    "director": "Destin Daniel Cretton",
+    "writer": "Chris McKenna, Erik Sommers, Stan Lee",
+    "stars": "Tom Holland, Zendaya, Mark Ruffalo",
+    "country": "United States, Canada, United Kingdom, Germany",
+    "language": "English"
+  },
+  {
+    "id": "avengers-doomsday",
+    "title": "Avengers: Doomsday",
+    "category": "Action",
+    "episodes": 1,
+    "views": "1.0K",
+    "synopsis": "Heroes from three different worlds must unite when they're thrust together to confront a catastrophic danger that could destroy everything they know.",
+    "gradient": "from-violet-600 via-indigo-800 to-blue-950",
+    "kind": "movie",
+    "posterImage": "https://m.media-amazon.com/images/M/MV5BMTdlMDgxNjAtNjkxOC00ZDYxLTg3MDEtZmIwZjIxOGMwYjVkXkEyXkFqcGc@._V1_SX600.jpg",
+    "imdbId": "tt21357150",
+    "year": "2026",
+    "runtime": "165 min",
+    "genre": "Action, Adventure, Sci-Fi",
+    "director": "Anthony Russo, Joe Russo",
+    "writer": "Jack Kirby, Stan Lee, Stephen McFeely",
+    "stars": "Robert Downey Jr., Pedro Pascal, Chris Hemsworth",
+    "country": "United States",
+    "language": "English"
+  },
+  {
+    "id": "predator-badlands",
+    "title": "Predator: Badlands",
+    "category": "Action",
+    "episodes": 1,
+    "views": "780k",
+    "synopsis": "In the future, on a remote planet, Dek, a young predator recently outcast from his native clan, finds an unlikely ally in Thia. Together, they soon embark on a treacherous and extremely dangerous journey in search of the ultimate adversary.",
+    "gradient": "from-amber-600 via-orange-800 to-red-950",
+    "kind": "movie",
+    "posterImage": "https://m.media-amazon.com/images/M/MV5BNTdjZGUxMTItNjRkNS00N2VhLWE4MjMtMjVhODMwMGIxNjUwXkEyXkFqcGc@._V1_SX600.jpg",
+    "subtitles": [
+      "id"
+    ],
+    "imdbId": "tt31227572",
+    "year": "2025",
+    "contentRating": "PG-13",
+    "runtime": "107 min",
+    "imdbRating": "7.2",
+    "imdbVotes": "143,246",
+    "genre": "Action, Adventure, Sci-Fi",
+    "director": "Dan Trachtenberg",
+    "writer": "Patrick Aison, Dan Trachtenberg, Jim Thomas",
+    "stars": "Elle Fanning, Dimitrius Schuster-Koloamatangi, Ravi Narayan",
+    "country": "United States, Australia, New Zealand, Canada, Germany",
+    "language": "English"
+  },
+  {
+    "id": "28-years-later-the-bone-temple",
+    "title": "28 Years Later: The Bone Temple",
+    "category": "Romance",
+    "episodes": 1,
+    "views": "1.0K",
+    "synopsis": "In a continuation of the epic story, Dr. Kelson makes a discovery that could change the world as they know it - and Spike's encounter with Jimmy Crystal becomes a nightmare he can't escape. In the world of The Bone Temple, the infected are no longer the only threat to survival - the inhumanity of the survivors can be stranger and more terrifying.",
+    "gradient": "from-rose-500 via-pink-700 to-purple-900",
+    "kind": "movie",
+    "posterImage": "https://m.media-amazon.com/images/M/MV5BZGU2M2Y1YTItMWYxNS00NDYxLThhOTYtNjNhOWUzNjA3MTYwXkEyXkFqcGc@._V1_SX600.jpg",
+    "subtitles": [
+      "id"
+    ],
+    "imdbId": "tt32141377",
+    "year": "2026",
+    "contentRating": "R",
+    "runtime": "109 min",
+    "imdbRating": "7.3",
+    "imdbVotes": "84,391",
+    "genre": "Horror, Sci-Fi, Thriller",
+    "director": "Nia DaCosta",
+    "writer": "Alex Garland",
+    "stars": "Jack O'Connell, Alfie Williams, Connor Newall",
+    "country": "United Kingdom, United States, Canada",
+    "language": "English"
+  },
+  {
+    "id": "fireworks-wednesday",
+    "title": "Fireworks Wednesday",
+    "category": "Romance",
+    "episodes": 1,
+    "views": "1.0K",
+    "synopsis": "On the day before their holiday trip to Dubai, a wife who believes her husband is unfaithful enlists the help of Roohi, a young women sent by an agency to clean the house. She asks Roohi to make an appointment and gather information at the salon of the woman she suspects. Roohi is betrothed, innocent of marital discord. Over the course of the day, she, the couple, their small son, the wife's sister and husband, and the beautician engage in a series of exchanges, confrontations, and prevarications. Are the wife's suspicions unwarranted; is her behavior imperiling her marriage? Acts of kindness may go awry. And the trip to Dubai?",
+    "gradient": "from-amber-600 via-orange-800 to-red-950",
+    "kind": "movie",
+    "posterImage": "https://m.media-amazon.com/images/M/MV5BMTU3MTIzNDA1MV5BMl5BanBnXkFtZTgwNzAwMDY2ODE@._V1_SX600.jpg",
+    "heroImage": "https://m.media-amazon.com/images/M/MV5BMTU3MTIzNDA1MV5BMl5BanBnXkFtZTgwNzAwMDY2ODE@._V1_SX300.jpg",
+    "subtitles": [
+      "id"
+    ],
+    "imdbId": "tt0845439",
+    "year": "2006",
+    "contentRating": "Not Rated",
+    "runtime": "102 min",
+    "imdbRating": "7.6",
+    "imdbVotes": "13,765",
+    "genre": "Drama, Mystery, Romance",
+    "director": "Asghar Farhadi",
+    "writer": "Asghar Farhadi, Mani Haghighi",
+    "stars": "Hediyeh Tehrani, Taraneh Alidoosti, Hamid Farrokhnezhad",
+    "country": "Iran",
+    "language": "Persian"
+  },
+  {
+    "id": "the-dark-knight",
+    "title": "The Dark Knight",
+    "category": "Action",
+    "episodes": 1,
+    "views": "1.0K",
+    "synopsis": "Set within a year after the events of Batman Begins (2005), Batman, Lieutenant James Gordon, and new District Attorney Harvey Dent successfully begin to round up the criminals that plague Gotham City, until a mysterious and sadistic criminal mastermind known only as \"The Joker\" appears in Gotham, creating a new wave of chaos. Batman's struggle against The Joker becomes deeply personal, forcing him to \"confront everything he believes\" and improve his technology to stop him. A love triangle develops between Bruce Wayne, Dent, and Rachel Dawes.",
+    "gradient": "from-yellow-500 via-amber-700 to-orange-900",
+    "kind": "movie",
+    "posterImage": "https://m.media-amazon.com/images/M/MV5BMTMxNTMwODM0NF5BMl5BanBnXkFtZTcwODAyMTk2Mw@@._V1_SX600.jpg",
+    "heroImage": "https://m.media-amazon.com/images/M/MV5BMTMxNTMwODM0NF5BMl5BanBnXkFtZTcwODAyMTk2Mw@@._V1_QL75_UX380_CR0,0,380,562_.jpg",
+    "subtitles": [
+      "id"
+    ],
+    "imdbId": "tt0468569",
+    "year": "2008",
+    "contentRating": "PG-13",
+    "runtime": "152 min",
+    "imdbRating": "9.1",
+    "imdbVotes": "3,161,907",
+    "genre": "Action, Crime, Drama",
+    "director": "Christopher Nolan",
+    "writer": "Jonathan Nolan, Christopher Nolan, David S. Goyer",
+    "stars": "Christian Bale, Heath Ledger, Aaron Eckhart",
+    "country": "United States, United Kingdom",
+    "language": "English, Mandarin"
+  },
+  {
+    "id": "diremehkan-sebagai-gadis-desa-ternyata-dia-legenda-terkuat",
+    "title": "Diremehkan Sebagai Gadis Desa, Ternyata Dia Legenda Terkuat",
+    "category": "Harem",
+    "episodes": 56,
+    "views": "1.0K",
+    "synopsis": "Hidup sederhana di sebuah desa membuat banyak orang memandang rendah dirinya. Tidak ada yang tahu bahwa gadis itu memiliki kemampuan yang bahkan para pejuang hebat pun takut menghadapinya. Saat ancaman besar datang, identitas aslinya akhirnya terbongkar sebagai sosok terkuat di dunia.",
+    "gradient": "from-indigo-700 via-purple-800 to-slate-900",
+    "posterImage": "https://i.imgur.com/PKSsoW6.jpeg",
+    "heroImage": "https://i.imgur.com/PKSsoW6.jpeg",
+    "subtitles": [
+      "id"
+    ]
+  },
+  {
+    "id": "dulu-mereka-membuangku-kini-mereka-memohon-ampunan",
+    "title": "Dulu Mereka Membuangku, Kini Mereka Memohon Ampunan",
+    "category": "Time Travel",
+    "episodes": 76,
+    "views": "1.0K",
+    "synopsis": "Dulu, dia adalah anak yang selalu dianggap tidak berguna oleh keluarganya sendiri. Karena sebuah fitnah, dia diusir dan kehilangan segalanya, sementara keluarganya memilih meninggalkannya demi menjaga nama baik mereka.\n\nBertahun-tahun kemudian, dia kembali dengan identitas baru dan kekuatan yang tidak pernah mereka bayangkan. Orang yang dulu merendahkannya kini harus menghadapi kenyataan bahwa anak yang mereka buang telah menjadi seseorang yang sangat berpengaruh.",
+    "gradient": "from-fuchsia-700 via-rose-800 to-stone-900",
+    "posterImage": "https://i.imgur.com/wsNiSCe.png",
+    "heroImage": "https://i.imgur.com/wsNiSCe.png",
+    "subtitles": [
+      "id"
+    ]
+  },
+  {
+    "id": "napi-baru-jurus-master-menggemparkan-dunia",
+    "title": "Napi Baru, Jurus Master Menggemparkan Dunia",
+    "category": "Action",
+    "episodes": 52,
+    "views": "1.0K",
+    "synopsis": "Seorang napi baru masuk ke penjara dan langsung menjadi sasaran hinaan serta penindasan para tahanan kuat. Tidak ada yang menyangka bahwa pemuda yang terlihat lemah itu menyimpan masa lalu misterius.\n\nDi dalam penjara, ia bertemu seorang master bela diri legendaris yang mengajarinya jurus rahasia tingkat tinggi. Dengan latihan keras, kekuatannya perlahan bangkit hingga mampu mengalahkan para ahli hanya dengan satu serangan.",
+    "gradient": "from-amber-600 via-orange-800 to-red-950",
+    "posterImage": "https://i.imgur.com/dlSQxXH.jpeg",
+    "heroImage": "https://i.imgur.com/dlSQxXH.jpeg",
+    "subtitles": [
+      "id"
+    ]
+  },
+  {
+    "id": "cinta-gu-qingchen-dan-yan-jingchen-penuh-rahasia",
+    "title": "Cinta Gu Qingchen dan Yan Jingchen Penuh Rahasia",
+    "category": "Comedy",
+    "episodes": 75,
+    "views": "1.0K",
+    "synopsis": "Gu Qingchen tidak pernah menyangka bahwa pertemuannya dengan Yan Jingchen akan mengubah jalan hidupnya. Di balik sikap dingin dan misterius Yan Jingchen, tersimpan rahasia besar yang berkaitan dengan masa lalu dan takdir cinta mereka.",
+    "gradient": "from-emerald-600 via-teal-800 to-slate-900",
+    "posterImage": "https://i.imgur.com/CgciHvg.jpeg",
+    "heroImage": "https://i.imgur.com/CgciHvg.jpeg",
+    "subtitles": [
+      "id"
+    ]
+  },
+  {
+    "id": "reinkarnasi-raja-perang-dengan-strategi-taklukkan-ribuan-pasukan",
+    "title": "Reinkarnasi Raja Perang, Dengan Strategi Taklukkan Ribuan Pasukan!",
+    "category": "Action",
+    "episodes": 80,
+    "views": "1.0K",
+    "synopsis": "Seorang raja perang legendaris yang menguasai medan pertempuran selama hidupnya harus menghadapi kematian. Namun, takdir memberinya kesempatan kedua ketika ia bereinkarnasi ke dunia baru sebagai seorang pemuda biasa yang dianggap lemah dan tidak berguna.\n\nDengan ingatan perang, ilmu strategi, dan pengalaman memimpin ribuan pasukan dari kehidupan sebelumnya, ia perlahan membangun kekuatannya. Dari seorang yang diremehkan, ia berubah menjadi sosok jenius militer yang mampu mengubah keadaan hanya dengan satu rencana.",
+    "gradient": "from-indigo-700 via-purple-800 to-slate-900",
+    "posterImage": "https://i.imgur.com/gpVGVIP.jpeg",
+    "heroImage": "https://i.imgur.com/gpVGVIP.jpeg",
+    "subtitles": [
+      "id"
+    ]
+  },
+  {
+    "id": "pemuda-buangan-bangkit-kekuatan-rahasianya-selamatkan-3-putri",
+    "title": "Pemuda Buangan Bangkit, Kekuatan Rahasianya Selamatkan 3 Putri!",
+    "category": "Tycoon",
+    "episodes": 66,
+    "views": "1.0K",
+    "synopsis": "Dahulu dianggap sebagai pemuda tak berguna dan dibuang oleh keluarganya sendiri, ia hidup dalam hinaan dan cemoohan dari orang-orang di sekitarnya. Namun, tidak ada yang mengetahui bahwa di balik sosok sederhana itu tersimpan kekuatan luar biasa yang telah lama tersembunyi.\n\nKetika tiga putri kerajaan berada dalam bahaya dan tidak ada pendekar yang mampu menyelamatkan mereka, pemuda buangan itu akhirnya menunjukkan kemampuan aslinya. Dengan satu gerakan, ia mengalahkan para musuh yang mengancam ibu kota dan membuat seluruh dunia terkejut.",
+    "gradient": "from-fuchsia-700 via-rose-800 to-stone-900",
+    "posterImage": "https://i.imgur.com/vijC3Ou.jpeg",
+    "heroImage": "https://i.imgur.com/vijC3Ou.jpeg",
+    "subtitles": [
+      "id"
+    ]
+  },
+  {
+    "id": "diremehkan-saat-latihan-pedang-ternyata-dewa-abadi",
+    "title": "Diremehkan Saat Latihan Pedang, Ternyata Dewa Abadi!",
+    "category": "Tycoon",
+    "episodes": 49,
+    "views": "1.0K",
+    "synopsis": "Seorang pemuda yang selalu dianggap lemah dan tidak berbakat hanya bisa menerima hinaan saat berlatih pedang. Semua orang meremehkannya karena tidak pernah menunjukkan kekuatan sebenarnya. Namun, di balik sosok sederhana itu tersimpan rahasia besar: ia adalah pewaris kekuatan Dewa Abadi yang telah lama menghilang.",
+    "gradient": "from-emerald-600 via-teal-800 to-slate-900",
+    "posterImage": "https://i.imgur.com/sOvYZKC.jpeg",
+    "heroImage": "https://i.imgur.com/sOvYZKC.jpeg",
+    "subtitles": [
+      "id"
+    ],
+    "premium": true
+  },
+  {
+    "id": "mereka-menganggapku-biasa-ternyata-aku-penyelamat-negeri",
+    "title": "Mereka Menganggapku Biasa, Ternyata Aku Penyelamat Negeri",
+    "category": "Tycoon",
+    "episodes": 49,
+    "views": "1.0K",
+    "synopsis": "Semua orang menganggap Arga hanyalah pria biasa yang tidak memiliki kemampuan istimewa. Ia sering diremehkan, dihina, bahkan dianggap tidak akan mampu mengubah apa pun. Namun, di balik sikap tenangnya, Arga menyimpan kecerdasan dan strategi luar biasa yang tidak diketahui siapa pun.\n\nKetika negeri berada di ambang kehancuran akibat perang dan pengkhianatan dari dalam, para pemimpin gagal menemukan jalan keluar. Di saat semua harapan mulai hilang, Arga muncul dengan rencana brilian yang mampu membalikkan keadaan.",
+    "gradient": "from-amber-600 via-orange-800 to-red-950",
+    "posterImage": "https://i.imgur.com/Ep1VncZ.jpeg",
+    "heroImage": "https://i.imgur.com/Ep1VncZ.jpeg",
+    "subtitles": [
+      "id"
+    ],
+    "premium": true
+  },
+  {
+    "id": "pria-nakal-menembus-waktu-menguasai-harem-kaisar",
+    "title": "Pria Nakal Menembus Waktu, Menguasai Harem Kaisar",
+    "category": "Romance",
+    "episodes": 56,
+    "views": "1.0K",
+    "synopsis": "Seorang pria modern yang terkenal suka bermain cinta tiba-tiba mengalami kejadian aneh dan terlempar ke masa lalu. Saat membuka mata, ia mendapati dirinya berada di dalam istana kekaisaran dengan identitas baru sebagai seorang kasim yang dianggap tidak berdaya.\nAwalnya ia hanya ingin bertahan hidup dan mencari cara untuk kembali ke zamannya. Namun, dengan kecerdikannya, keberanian, dan pengetahuan dari masa depan, ia mulai mengubah keadaan di istana. Dari seorang kasim yang diremehkan, ia perlahan menjadi sosok yang ditakuti dan dihormati.",
+    "gradient": "from-violet-600 via-indigo-800 to-blue-950",
+    "posterImage": "https://i.imgur.com/qEXTVPQ.jpeg",
+    "heroImage": "https://i.imgur.com/qEXTVPQ.jpeg",
+    "subtitles": [
+      "id"
+    ],
+    "premium": true
+  },
+  {
+    "id": "pemuda-diremehkan-menaklukkan-dunia-lewat-sastra",
+    "title": "Pemuda Diremehkan, Menaklukkan Dunia Lewat Sastra",
+    "category": "Action",
+    "episodes": 97,
+    "views": "1.0K",
+    "synopsis": "Dulu dianggap sebagai pemuda tak berguna, ia selalu dihina karena hidupnya sederhana dan tidak memiliki kekuatan seperti orang-orang berpengaruh di sekitarnya. Namun, di balik kesederhanaannya, ia menyimpan bakat luar biasa dalam merangkai kata dan memahami makna kehidupan melalui sastra.",
+    "gradient": "from-indigo-700 via-purple-800 to-slate-900",
+    "posterImage": "https://i.imgur.com/TWAJIzr.jpeg",
+    "heroImage": "https://i.imgur.com/TWAJIzr.jpeg",
+    "subtitles": [
+      "id"
+    ],
+    "premium": true
+  },
+  {
+    "id": "malam-terlupakan-putrinya-menyatukan-mereka",
+    "title": "Malam Terlupakan, Putrinya Menyatukan Mereka",
+    "category": "Action",
+    "episodes": 54,
+    "views": "1.0K",
+    "synopsis": "Satu malam yang penuh rahasia mengubah hidupnya selamanya. Setelah ditinggalkan tanpa kabar, seorang wanita harus membesarkan putrinya sendirian selama enam tahun. Ia berusaha melupakan pria yang pernah menghancurkan hatinya, tanpa tahu bahwa takdir masih menyimpan kejutan besar.",
+    "gradient": "from-amber-600 via-orange-800 to-red-950",
+    "posterImage": "https://i.imgur.com/C1CGY8I.png",
+    "heroImage": "https://i.imgur.com/C1CGY8I.png",
+    "subtitles": [
+      "id"
+    ],
+    "premium": true
+  },
+  {
+    "id": "pembantu-miskin-taklukkan-hati-ceo",
+    "title": "Pembantu Miskin Taklukkan Hati CEO!",
+    "category": "Romance",
+    "episodes": 56,
+    "views": "1.0K",
+    "synopsis": "Seorang pembantu miskin selalu dipandang rendah dan dihina oleh orang-orang di sekitarnya. Meski hidup dalam kesulitan, ia tetap memiliki hati yang tulus dan penuh kebaikan.\n\nSuatu hari, ia bertemu dengan seorang CEO dingin yang mengalami masalah besar dalam hidupnya. Tak ada yang mampu memahami atau membantu sang CEO, hingga pembantu sederhana itu perlahan mengubah hidupnya dengan perhatian dan ketulusannya.",
+    "gradient": "from-indigo-700 via-purple-800 to-slate-900",
+    "posterImage": "https://i.imgur.com/981Uh32.png",
+    "heroImage": "https://i.imgur.com/981Uh32.png",
+    "subtitles": [
+      "id"
+    ],
+    "premium": true
+  },
+  {
+    "id": "ceo-menikah-paksa-penyelamat-masa-kecil",
+    "title": "CEO Wanita Menikah Paksa, Suaminya Penyelamat Masa Kecilnya!",
+    "category": "Romance",
+    "episodes": 64,
+    "views": "1.0K",
+    "synopsis": "Demi menyelamatkan keluarganya dari krisis besar, seorang CEO wanita terpaksa menerima pernikahan dengan pria yang hampir tidak ia kenal. Baginya, pernikahan itu hanyalah sebuah kesepakatan tanpa cinta.\n\nNamun, setelah hidup bersama, ia mulai menemukan sisi lain dari suaminya yang penuh misteri. Pria yang selama ini ia anggap biasa ternyata adalah sosok yang pernah menyelamatkannya saat kecil, seseorang yang selama ini ia cari tanpa pernah mengetahui identitasnya.",
+    "gradient": "from-indigo-700 via-purple-800 to-slate-900",
+    "posterImage": "https://i.imgur.com/QoPKgIl.jpeg",
+    "heroImage": "https://i.imgur.com/QoPKgIl.jpeg",
+    "subtitles": [
+      "id"
+    ],
+    "premium": true
+  },
+  {
+    "id": "raja-neraka-nikahi-adik-tunangan",
+    "title": "Raja Neraka Menikahi Adik Tunangan",
+    "category": "Action",
+    "episodes": 61,
+    "views": "1.0K",
+    "synopsis": "Setelah bertahun-tahun pergi memenuhi janji besar di dunia lain, Raja Neraka akhirnya kembali untuk menepati janji pernikahannya dengan wanita yang ia cintai. Namun, kepulangannya justru disambut penolakan dan penghinaan dari keluarga sang tunangan.",
+    "gradient": "from-amber-600 via-orange-800 to-red-950",
+    "posterImage": "https://i.imgur.com/Aq5g9aM.jpeg",
+    "heroImage": "https://i.imgur.com/Aq5g9aM.jpeg",
+    "subtitles": [
+      "id"
+    ],
+    "premium": true
+  },
+  {
+    "id": "pemuda-miskin-jadi-penguasa-kota",
+    "title": "Pemuda Miskin Sang Penguasa Kota",
+    "category": "Romance",
+    "episodes": 67,
+    "views": "1.0K",
+    "synopsis": "Seorang pemuda miskin hidup dalam hinaan dan diremehkan oleh banyak orang. Tidak ada yang tahu bahwa di balik kehidupannya yang sederhana, ia menyimpan kemampuan luar biasa yang mampu mengubah nasibnya dalam sekejap.\n\nSetelah sebuah kejadian tak terduga mempertemukannya dengan seorang CEO kaya, kekuatan rahasia sang pemuda mulai terungkap. Dengan satu gerakan, ia mampu melakukan hal yang mustahil dan membuat seluruh kota gempar.",
+    "gradient": "from-violet-600 via-indigo-800 to-blue-950",
+    "posterImage": "https://i.imgur.com/bfPHQXj.jpeg",
+    "heroImage": "https://i.imgur.com/bfPHQXj.jpeg",
+    "subtitles": [
+      "id"
+    ],
+    "premium": true
+  },
+  {
+    "id": "bermalam-dengan-bos-wanita-aku-kehilangan-kendali",
+    "title": "Bermalam dengan Bos Wanita, Aku Kehilangan Kendali!",
+    "category": "Action",
+    "episodes": 65,
+    "views": "1.0K",
+    "synopsis": "Seorang pria tanpa sengaja terjebak dalam satu malam yang tak pernah ia rencanakan bersama seorang bos wanita yang dikenal dingin, tegas, dan sangat berkuasa di dunia bisnis.\nAwalnya hanya sebuah kesalahpahaman, namun keadaan memaksa mereka menghabiskan waktu bersama dalam situasi yang penuh ketegangan dan emosi yang sulit dikendalikan.",
+    "gradient": "from-red-600 via-rose-800 to-purple-950",
+    "posterImage": "https://i.imgur.com/rLhMuSN.png",
+    "heroImage": "https://i.imgur.com/rLhMuSN.png",
+    "subtitles": [
+      "id"
+    ],
+    "premium": true
+  },
+  {
+    "id": "salah-kencan-jadi-suami-bos-cantik",
+    "title": "Salah Kencan, Jadi Suami Bos Cantik!",
+    "category": "Romance",
+    "episodes": 67,
+    "views": "1.0K",
+    "synopsis": "Seorang pria biasa datang ke sebuah kencan buta yang ternyata salah orang. Bukannya bertemu wanita biasa, dia justru tanpa sengaja berhadapan dengan seorang bos wanita muda yang cantik, dingin, dan sangat berkuasa di dunia bisnis.\n\nKarena sebuah kesalahpahaman besar yang tidak bisa dijelaskan begitu saja, pria itu malah terseret ke dalam situasi tak terduga—hingga akhirnya dipaksa menikah secara mendadak dengan sang bos wanita.\n\nAwalnya penuh tekanan dan konflik, tapi perlahan hubungan mereka berubah. Dari salah kencan yang kacau, tumbuh kisah cinta yang tidak pernah mereka bayangkan sebelumnya.",
+    "gradient": "from-yellow-500 via-amber-700 to-orange-900",
+    "posterImage": "https://i.imgur.com/0Tppcbj.png",
+    "heroImage": "https://i.imgur.com/0Tppcbj.png",
+    "subtitles": [
+      "id"
+    ],
+    "premium": true
+  },
+  {
+    "id": "dia-tertabrak-jadi-sosok-tak-terkalahkan-saham-3b",
+    "title": "Dia Tertabrak, Tapi Justru Jadi Sosok Tak Terkalahkan di Dunia Saham 3B",
+    "category": "Action",
+    "episodes": 78,
+    "views": "1.0K",
+    "synopsis": "Seorang pria biasa hidup tanpa arah, hingga sebuah kecelakaan tragis mengubah segalanya. Setelah ditabrak dalam insiden yang hampir merenggut nyawanya, ia justru terbangun dengan sesuatu yang tidak biasa—kemampuan misterius yang membuatnya mampu melihat pergerakan dan peluang di dunia saham dengan akurasi yang tidak masuk akal.",
+    "gradient": "from-yellow-500 via-amber-700 to-orange-900",
+    "posterImage": "https://i.imgur.com/1cWeUPs.jpeg",
+    "heroImage": "https://i.imgur.com/1cWeUPs.jpeg",
+    "subtitles": [
+      "id"
+    ],
+    "premium": true
+  },
+  {
+    "id": "salah-kamar-malam-pengantin-dua-saudari-dua-ceo-cinta",
+    "title": "Salah Kamar di Malam Pengantin! Dua Saudari & Dua CEO Cinta",
+    "category": "Romance",
+    "episodes": 102,
+    "views": "1.0K",
+    "synopsis": "Pada malam yang seharusnya menjadi awal kebahagiaan, sebuah kesalahan tak terduga mengubah segalanya. Dua saudari yang hadir di sebuah pernikahan mewah justru salah memasuki kamar hotel, tanpa sadar mereka telah memasuki jalan takdir yang penuh kejutan.",
+    "gradient": "from-fuchsia-700 via-rose-800 to-stone-900",
+    "posterImage": "https://i.imgur.com/sB1MgCx.jpeg",
+    "heroImage": "https://i.imgur.com/sB1MgCx.jpeg",
+    "subtitles": [
+      "id"
+    ],
+    "premium": true
+  },
+  {
     "id": "guru-misterius-membentuk-pasukan-rahasia",
     "title": "Guru Misterius Membentuk Pasukan Rahasia",
     "category": "Action",
     "episodes": 55,
-    "status": "Ongoing",
     "views": "1.0K",
     "synopsis": "Seorang guru misterius dengan masa lalu yang penuh rahasia ditugaskan mengajar di sekolah yang terkenal karena para muridnya yang suka membuat kerusuhan. Alih-alih menghukum mereka, ia memilih melatih sekelompok siswa paling bermasalah menjadi sebuah tim rahasia yang disiplin, tangguh, dan tak terkalahkan. Metode pendidikannya yang keras membuat pihak sekolah menganggapnya gila, tetapi perlahan para murid yang dulu dianggap sampah masyarakat mulai menunjukkan bakat luar biasa.",
     "gradient": "from-fuchsia-700 via-rose-800 to-stone-900",
@@ -17,7 +496,6 @@
     "title": "Pria Miskin Dengan Kekuatan Mata Dewa",
     "category": "Action",
     "episodes": 37,
-    "status": "Ongoing",
     "views": "1.0K",
     "synopsis": "Seorang pria miskin yang hidupnya selalu dihina tanpa sengaja menantang dewa karena merasa takdirnya begitu tidak adil. Namun setelah sebuah kejadian aneh, ia tiba-tiba memperoleh mata ajaib yang mampu melihat nilai asli setiap benda, mulai dari barang antik murah hingga harta tersembunyi bernilai miliaran.",
     "gradient": "from-emerald-600 via-teal-800 to-slate-900",
@@ -29,7 +507,6 @@
     "title": "Reinkarnasi Putri Kerajaan di Keluarga Berandalan",
     "category": "Action",
     "episodes": 53,
-    "status": "Completed",
     "views": "1.0K",
     "synopsis": "Seorang putri kerajaan dari masa lalu terlahir kembali di dunia modern sebagai anak dari seorang berandalan miskin yang hidupnya penuh kekacauan. Meski tumbuh di lingkungan keras dan diremehkan banyak orang, ingatan kehidupan masa lalunya membuat gadis kecil itu memiliki kecerdasan dan wibawa luar biasa.",
     "gradient": "from-indigo-700 via-purple-800 to-slate-900",
@@ -41,7 +518,6 @@
     "title": "Takdir Membawaku Ke Jalan Keabadian!",
     "category": "Action",
     "episodes": 62,
-    "status": "Ongoing",
     "views": "1.0K",
     "synopsis": "Sejak kecil hidupnya penuh hinaan dan penderitaan karena dianggap tidak memiliki bakat kultivasi sedikit pun. Namun sebuah pertemuan takdir membawanya menemukan warisan kuno yang membuka jalan menuju keabadian. Dari seorang pemuda biasa yang diremehkan semua orang, ia perlahan bangkit menjadi kultivator kuat dengan kekuatan yang mampu mengguncang langit dan bumi. Di tengah perjalanan penuh bahaya, pengkhianatan, dan pertarungan mematikan, ia harus memilih antara mempertahankan kemanusiaannya atau menjadi penguasa abadi yang ditakuti seluruh dunia.",
     "gradient": "from-stone-600 via-zinc-800 to-black",
@@ -53,7 +529,6 @@
     "title": "Bodyguard Misterius Sang Putri Miliarder",
     "category": "Action",
     "episodes": 50,
-    "status": "Completed",
     "views": "1.0K",
     "synopsis": "Seorang bodyguard legendaris yang dikenal tak pernah gagal menjalankan misi menerima tugas paling berbahaya dalam hidupnya: melindungi putri tunggal keluarga miliarder yang terus menjadi target penculikan dan pembunuhan. Di balik sikap dingin dan kerasnya, sang bodyguard diam-diam selalu menjaga gadis itu dari berbagai ancaman mematikan yang datang dari musuh keluarga, mafia, hingga pengkhianat di dalam perusahaan sendiri. Namun semakin lama bersama, hubungan profesional mereka perlahan berubah menjadi ikatan yang lebih dalam, sementara rahasia besar tentang identitas asli sang bodyguard mulai terungkap dan mengguncang kehidupan sang putri miliarder.",
     "gradient": "from-pink-600 via-rose-700 to-red-900",
@@ -169,62 +644,5 @@
     "gradient": "from-stone-600 via-zinc-800 to-black",
     "posterImage": "https://i.imgur.com/RIsNMXG.png",
     "heroImage": "https://i.imgur.com/RIsNMXG.png"
-  },
-  {
-    "id": "istri-tersembunyi-sang-ceo",
-    "title": "Istri Tersembunyi Sang CEO",
-    "category": "Romance",
-    "episodes": 1,
-    "views": "1.0K",
-    "synopsis": "Istri Tersembunyi Sang CEO mengisahkan Alina, wanita sederhana yang diam-diam menikah kontrak dengan Arsen, CEO muda paling berpengaruh di kota, demi menyelamatkan perusahaan keluarganya.",
-    "gradient": "from-red-600 via-rose-800 to-purple-950",
-    "posterImage": "/posters/istri-tersembunyi-sang-ceo.png"
-  },
-  {
-    "id": "from-nobody-to-business-legend",
-    "title": "Putry Ajaib Yang Diadopsi",
-    "category": "Fantasy",
-    "episodes": 2,
-    "views": "2.6M",
-    "synopsis": "Seorang gadis kecil dengan kekuatan ajaib diadopsi oleh keluarga mewah. Di tengah rahasia keluarga dan kekuatan misterius dalam dirinya, ia harus belajar siapa dirinya yang sebenarnya.",
-    "gradient": "from-yellow-600 via-orange-800 to-red-950",
-    "posterImage": "/posters/from-nobody-to-business-legend.png"
-  },
-  {
-    "id": "back-to-fix-my-marriage",
-    "title": "Kembali Memperbaiki Pernikahanku",
-    "category": "Time Travel",
-    "episodes": 72,
-    "views": "2.1M",
-    "synopsis": "Setelah perceraian menyakitkan, ia bangun kembali ke hari pernikahannya. Kali ini ia akan melakukannya dengan benar.",
-    "gradient": "from-violet-600 via-indigo-800 to-blue-950"
-  },
-  {
-    "id": "miss-substitute-bride",
-    "title": "Nona Pengganti Pengantin",
-    "category": "Romance",
-    "episodes": 88,
-    "views": "3.7M",
-    "synopsis": "Demi melindungi kakaknya, ia menggantikan posisi sebagai pengantin. Tak disangka, suaminya adalah pria paling berbahaya di kota.",
-    "gradient": "from-red-600 via-rose-800 to-purple-950"
-  },
-  {
-    "id": "comedy-king-system",
-    "title": "Sistem Raja Komedi",
-    "category": "Comedy",
-    "episodes": 55,
-    "views": "780K",
-    "synopsis": "Pemuda kuper mendapat sistem yang memaksanya melawak. Dari nol jadi raja panggung dalam semalam.",
-    "gradient": "from-yellow-500 via-amber-700 to-orange-900"
-  },
-  {
-    "id": "billionaire-husband-pretend-poor",
-    "title": "Suami Miliuner Pura-Pura Miskin",
-    "category": "Tycoon",
-    "episodes": 95,
-    "views": "6.3M",
-    "synopsis": "Setiap orang menertawakannya karena menikahi pria 'pengangguran'. Padahal suaminya pemilik separuh kota.",
-    "gradient": "from-amber-600 via-orange-700 to-red-900",
-    "exclusive": true
   }
 ]

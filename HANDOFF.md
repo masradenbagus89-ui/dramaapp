@@ -5,7 +5,10 @@
 >
 > **AI:** tiap kali ada perbaikan / deploy / keputusan — **perbarui berkas ini di langkah terakhir**, sebelum bilang selesai. Jangan tumpuk sejarah panjang di sini; pindahkan yang lama ke `NEXT-SESSION.md`.
 
-**Terakhir diisi:** 2026-09-11 (malam) — poster katalog DIPERBESAR (permintaan owner: "seperti LK21").
+**Terakhir diisi:** 2026-09-12 — PENCARIAN JUDUL diperbaiki (permintaan owner: "seperti LK21").
+**SUDAH TAYANG** di produksi lewat `f656b12` (dual push origin + dramaku).
+
+**Sebelumnya:** 2026-09-11 (malam) — poster katalog DIPERBESAR (permintaan owner: "seperti LK21").
 **SUDAH TAYANG** di produksi lewat `fde4c97` (dual push origin + dramaku).
 Catatan 2026-08-31 di bawah ini masih berlaku soal database.
 
@@ -17,7 +20,92 @@ kuota Vercel aman. **Migrasi database BELUM tuntas** — datanya sudah pindah, t
 masih terkunci; rinciannya di bagian KOREKSI di bawah. **Jangan ganti env Supabase di Vercel dulu
 — situs akan mati.**
 
-## 🧭 2026-09-11 (TERBARU) — POSTER KATALOG DIPERBESAR (belum di-commit)
+## 🔎 2026-09-12 (TERBARU) — PENCARIAN JUDUL DIPERBAIKI (SUDAH TAYANG `f656b12`)
+
+Owner mengirim tangkapan layar: mengetik **"Beyond The Last Signal"** di kotak cari DramaKu,
+hasilnya kosong. Permintaannya: pencarian bekerja seperti LK21, tidak sensitif huruf besar-kecil,
+**fokus itu saja**.
+
+**Koreksi premis (disampaikan terus terang ke owner):** bagian "tidak sensitif huruf besar-kecil"
+**SUDAH jalan sejak dulu** — `lib/discover.ts` lama sudah `toLowerCase()` di kedua sisi.
+Dibuktikan menjalankan `filterAndSortDramas` ASLI terhadap **42 judul produksi** (`GET /api/dramas`).
+Yang benar-benar rusak ada **4 hal lain**:
+
+| Ketikan | Sebelum | Sesudah | Sebab |
+|---|---|---|---|
+| `spider man` | **0** | 1 | judul aslinya `Spider-Man` (tanda hubung) |
+| `transformers last knight` | **0** | 1 | kata "The" dilewat penonton |
+| `knight dark` | **0** | 1 | urutan kata dibalik |
+| `beyond the last signal` | **0** | 1 video | **video Playly — gudang datanya TERPISAH dari katalog** |
+
+Akar pertama sampai ketiga: pencocokan lama memakai `includes` **kalimat utuh**, jadi satu kata
+terlewat atau satu tanda baca beda = nol hasil. Akar keempat: kotak cari tidak pernah melihat ke
+`lib/playly-publik.ts` sama sekali.
+
+**Keputusan owner (popup 2026-09-12): hasil DIPISAH 2 bagian** — poster drama di atas, bagian
+"Video dari Playly" yang ikut tersaring di bawahnya. Bukan dicampur satu grid, karena poster drama
+TEGAK (2:3) dan kartu Playly MELINTANG (16:9).
+
+**Yang diubah (5 berkas diubah + 3 baru):**
+| Berkas | Isi |
+|---|---|
+| `lib/pencarian.ts` **(BARU)** | SATU tempat aturan cocok: ratakan huruf besar-kecil + aksen + tanda baca, lalu **semua kata harus ada, urutan bebas** |
+| `lib/discover.ts` | pakai aturan di atas; field yang dicari TETAP judul·kategori·sinopsis |
+| `app/components/beranda/HasilPlayly.tsx` **(BARU)** | bagian "Video dari Playly" yang tersaring; batas 8 kartu DILEPAS saat mencari |
+| `CatalogBrowser.tsx` · `DramaBrowser.tsx` | +prop `playlyVideos`, + pesan "tapi ada N video Playly yang cocok" di layar kosong |
+| `app/beranda/page.tsx` | ambil video Playly & oper (halaman ini **belum pernah** punya bagian Playly) |
+| `app/discover/page.tsx` | bagian Playly **PINDAH ke dalam** DramaBrowser (kalau tidak, ada DUA bagian saat mencari) |
+| `tests/pencarian.test.ts` **(BARU)** | **24 penjaga** mengunci kelima kegagalan di atas |
+
+**Bukti pra-rilis:** `rm -rf .next` → `npm run build` **sukses** (63 halaman) → `npx tsc --noEmit`
+exit **0** → `npm test` **512 lulus / 40 berkas** (naik dari 488/39; +24 penjaga, nol regresi).
+**Mutation check 2 arah** (bukti tesnya benar-benar menjaga, bukan sekadar hijau):
+(a) pencocokan dikembalikan ke kalimat-utuh → **3 tes MERAH**; (b) perataan aksen dimatikan →
+**2 tes MERAH**; dikembalikan → 24 hijau lagi.
+**Uji server sungguhan** (`next start` port 3123, log "Ready" dipastikan): `/` `/beranda`
+`/discover` `/playly` `/shorts` semua **200**.
+**Nol regresi terhadap rilis poster kemarin:** `/` = **133 poster · 1 h1 · 133× `lg:w-[172px]`**,
+`/beranda` = **56 poster · 14× `lg:w-[172px]`** — angkanya SAMA PERSIS dengan produksi hari ini.
+(h1 `/beranda` = 0 di lokal DAN di produksi → bawaan lama, bukan akibat perubahan ini.)
+
+**⚠️ KONSEKUENSI yang harus diketahui owner:** di `/discover`, bagian "Video dari Playly" kini
+digambar **di browser**, bukan lagi oleh server — karena ia pindah ke dalam `DramaBrowser` yang
+berada di dalam `<Suspense>`. Terbukti: `.next/server/app/discover.html` sekarang berisi
+**0** "Video dari Playly" (sebelumnya ada). Dampaknya kecil dan disengaja: itulah harga supaya
+bagian tersebut bisa ikut tersaring kotak cari. Isinya tetap terbaca mesin pencari di `/playly`
+(`playly.html` = 2× "Video dari Playly" + 5 kartu, server-rendered). `/beranda` justru
+KEBALIKANNYA — sekarang server-rendered (`beranda.html` = 1× "Video dari Playly" + 5 kartu),
+padahal sebelumnya tidak punya bagian itu sama sekali.
+
+**⚠️ JEBAKAN yang baru ketahuan (catat!):** `taskkill //PID <n> //F` lewat Bash **menggantung
+sampai timeout** di komputer ini, dan `taskkill /PID` ditolak karena Git Bash menerjemahkan
+`/PID` jadi path (`C:/Program Files/Git/PID`). Yang berhasil: **PowerShell**
+`Stop-Process -Id <n> -Force`. Port 3077 & 3076 juga sudah terpakai proses lain — daftar port
+yang bebas dicek dulu lewat `netstat -ano | grep LISTENING`.
+
+**Status rilis: SUDAH TAYANG** (`f656b12`, dual push `2498b77..f656b12`, fast-forward —
+kedua remote tertinggal 0 sebelum push, dipastikan lewat `merge-base --is-ancestor`).
+Deploy Vercel ~1 menit (percobaan 3 dari 6). **Verifikasi produksi:** 7 halaman utama semua **200** ·
+bagian "Video dari Playly" muncul **1×** di `/beranda` dengan **8 kartu** (sebelum rilis: NOL) ·
+"Beyond The Last Signal" terbaca **2×** di HTML `/beranda` · bundel JS penonton memuat penanda
+baru "video Playly yang cocok" & "video cocok dengan" (1 bundel masing-masing), dan penanda
+pencocokan lama `synopsis.toLowerCase().includes` **NOL**. **Nol regresi:** `/` tetap **133
+poster · 1 h1 · 133× `lg:w-[172px]`**, `/beranda` tetap **56 poster**.
+**Rollback 1-baris:** `git revert f656b12 && git push origin main`.
+
+**⚠️ JEBAKAN ALUR KERJA yang memakan satu putaran penuh (catat!):** sesudah owner memilih "coba di
+lokal dulu", AI menyalakan preview di `localhost:3201` — tapi owner mengujinya di
+**dramaapp.vercel.app**, yang saat itu masih menjalankan kode LAMA, lalu melapor "masih belum bisa".
+Tidak ada pesan error apa pun yang memberi tahu bahwa itu situs yang berbeda. Cara membedakannya
+dengan cepat, tanpa menebak: bandingkan **bundel JS** kedua situs terhadap satu penanda teks baru
+(produksi **0** berkas vs lokal **1**), plus `git ls-remote` (keduanya masih `2498b77`). Pelajaran
+untuk sesi berikutnya: kalau owner memilih uji lokal, **sebut alamat + nomor port di baris paling
+menonjol**, dan sadari owner yang sudah login sebagai ADMIN hampir pasti sedang melihat produksi —
+menu My List · Profile · Admin + tombol Keluar adalah petunjuknya.
+
+**Rencana lengkap + pre-mortem:** `docs/lintasai/rencana/2026-09-12-pencarian-judul.md`.
+
+## 🧭 2026-09-11 — POSTER KATALOG DIPERBESAR (SUDAH TAYANG `fde4c97`)
 
 Owner membandingkan halaman depan DramaKu dengan **LK21** dan menilai cover/poster kita terlalu
 kecil. Permintaannya tegas: **hanya tampilan katalog**, jangan sentuh yang lain.

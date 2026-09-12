@@ -105,6 +105,13 @@ menu My List · Profile · Admin + tombol Keluar adalah petunjuknya.
 
 **Rencana lengkap + pre-mortem:** `docs/lintasai/rencana/2026-09-12-pencarian-judul.md`.
 
+**Ikutan (`5190669`):** 3 berkas presentasi yang sejak 2026-09-06/09-08 cuma hidup di komputer
+owner akhirnya diarsipkan ke repo atas permintaannya — `Dokumentasi-Dashboard-DramaKu.xlsx` +
+`presentasi/Deck-Investor-DramaKu.{html,pdf}` (4,4 MB). Nol kode tersentuh; dipindai lebih dulu
+untuk `service_role`/`SUPABASE_*_KEY`/`api_key`/`sk-*`/JWT/private key → semua NOL. Mengikuti
+preseden folder `presentasi/` yang sudah terlacak sejak `3ada7fc`, jadi rekan memang sudah bisa
+membacanya dari dulu. Sesudah ini working tree **bersih** (nol berkas menggantung).
+
 ## 🧭 2026-09-11 — POSTER KATALOG DIPERBESAR (SUDAH TAYANG `fde4c97`)
 
 Owner membandingkan halaman depan DramaKu dengan **LK21** dan menilai cover/poster kita terlalu

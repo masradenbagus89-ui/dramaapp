@@ -17,8 +17,10 @@ import {
   type SortBy,
 } from "@/lib/discover";
 import { buildNavMenus, catalogShortcuts } from "@/lib/nav-katalog";
+import type { PlaylyVideoPublik } from "@/lib/playly-publik";
 import CatalogCard from "./beranda/CatalogCard";
 import GenreStrip from "./beranda/GenreStrip";
+import HasilPlayly, { cariVideoPlayly } from "./beranda/HasilPlayly";
 import NavMenus from "./beranda/NavMenus";
 import SearchBar from "./beranda/SearchBar";
 import { GRID_CLASS, SHELL, TRIGGER_CLASS } from "./beranda/shell";
@@ -65,7 +67,20 @@ function keteranganFilter(f: CatalogFilter): string {
   return bagian.length ? ` — ${bagian.join(", ")}` : "";
 }
 
-export default function DramaBrowser({ dramas }: { dramas: Drama[] }) {
+export default function DramaBrowser({
+  dramas,
+  /**
+   * Video Playly untuk bagian hasil di bawah grid. Sebelum 2026-09-12 bagian
+   * ini digambar app/discover/page.tsx SENDIRI, di luar komponen ini —
+   * dipindah ke dalam supaya ia bisa ikut tersaring oleh kotak cari, yang
+   * ketikannya cuma ada di sini. Kalau dibiarkan di luar, /discover punya DUA
+   * bagian Playly begitu penonton mengetik.
+   */
+  playlyVideos = [],
+}: {
+  dramas: Drama[];
+  playlyVideos?: PlaylyVideoPublik[];
+}) {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -124,6 +139,13 @@ export default function DramaBrowser({ dramas }: { dramas: Drama[] }) {
   const filtered = useMemo(
     () => filterAndSortDramas(dramas, filterOptions(filter)),
     [dramas, filter],
+  );
+
+  // Disaring dengan ketikan YANG SAMA; jumlahnya ikut dipakai pesan kosong di
+  // bawah supaya penonton tahu harus menggulir.
+  const videoPlayly = useMemo(
+    () => cariVideoPlayly(playlyVideos, filter.q),
+    [playlyVideos, filter.q],
   );
 
   // Ketikan pencarian DIPERTAHANKAN — alasannya sama dengan `adaFilterAktif`.
@@ -226,6 +248,12 @@ export default function DramaBrowser({ dramas }: { dramas: Drama[] }) {
           <div className="flex flex-col items-center gap-3 py-16 text-center">
             <Search className="size-8 text-zinc-700" />
             <p className="text-sm text-zinc-500">Tidak ada drama yang cocok.</p>
+            {videoPlayly.length > 0 && (
+              <p className="text-sm font-medium text-amber-400">
+                Tapi ada {videoPlayly.length} video Playly yang cocok &mdash; ada
+                di bawah halaman ini.
+              </p>
+            )}
             {adaFilterAktif && (
               <Button
                 type="button"
@@ -245,6 +273,8 @@ export default function DramaBrowser({ dramas }: { dramas: Drama[] }) {
             ))}
           </div>
         )}
+
+        <HasilPlayly videos={videoPlayly} ketikan={filter.q} />
       </div>
     </>
   );

@@ -22,8 +22,10 @@ import {
   type CatalogSort,
 } from "@/lib/beranda-catalog";
 import { buildNavMenus, catalogShortcuts } from "@/lib/nav-katalog";
+import type { PlaylyVideoPublik } from "@/lib/playly-publik";
 import CatalogCard from "./CatalogCard";
 import GenreStrip from "./GenreStrip";
+import HasilPlayly, { cariVideoPlayly } from "./HasilPlayly";
 import NavMenus from "./NavMenus";
 import SearchBar from "./SearchBar";
 import { GRID_CLASS, SHELL, TRIGGER_CLASS } from "./shell";
@@ -49,6 +51,13 @@ type Props = {
   heroSlot?: React.ReactNode;
   /** Blok bebas di antara banner dan hitungan halaman (iklan + baris personal). */
   beforeGridSlot?: React.ReactNode;
+  /**
+   * Video Playly untuk bagian hasil di bawah grid. Datang dari gudang data
+   * TERPISAH (lib/playly-publik.ts, server-only) sehingga harus dioper dari
+   * halaman — komponen ini "use client" dan tak boleh mengambilnya sendiri.
+   * Default daftar kosong: bagiannya hilang sendiri, bukan error.
+   */
+  playlyVideos?: PlaylyVideoPublik[];
 };
 
 /**
@@ -68,6 +77,7 @@ export default function CatalogBrowser({
   dramas,
   heroSlot,
   beforeGridSlot,
+  playlyVideos = [],
 }: Props) {
   const [query, setQuery] = useState("");
   const [genre, setGenre] = useState<string>(SEMUA);
@@ -102,6 +112,15 @@ export default function CatalogBrowser({
   const halaman = useMemo(
     () => pageOfCatalog(hasil, page, CATALOG_PER_PAGE),
     [hasil, page],
+  );
+
+  // Video Playly disaring dengan ketikan YANG SAMA. Dihitung di sini (bukan di
+  // dalam HasilPlayly) karena jumlahnya ikut dipakai pesan "tidak ada judul
+  // yang cocok" di bawah — supaya penonton tahu harus menggulir, bukan mengira
+  // pencariannya gagal.
+  const videoPlayly = useMemo(
+    () => cariVideoPlayly(playlyVideos, query),
+    [playlyVideos, query],
   );
 
   const filterAktif =
@@ -288,6 +307,12 @@ export default function CatalogBrowser({
               <p className="text-sm text-zinc-500">
                 Tidak ada judul yang cocok dengan pencarian ini.
               </p>
+              {videoPlayly.length > 0 && (
+                <p className="text-sm font-medium text-amber-400">
+                  Tapi ada {videoPlayly.length} video Playly yang cocok &mdash;
+                  ada di bawah halaman ini.
+                </p>
+              )}
               {filterAktif && (
                 <Button
                   type="button"
@@ -364,6 +389,8 @@ export default function CatalogBrowser({
             </Button>
           </nav>
         )}
+
+        <HasilPlayly videos={videoPlayly} ketikan={query} />
       </div>
     </section>
   );

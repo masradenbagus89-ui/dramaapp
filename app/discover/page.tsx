@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import Link from "next/link";
 import { getAllDramasCachedSafe } from "@/lib/dramas";
 import { getPlaylyVideosPublik } from "@/lib/playly-publik";
 import DramaBrowser from "../components/DramaBrowser";
 import DashboardVideoGrid from "../components/DashboardVideoGrid";
-import PlaylyVideoGrid from "../components/PlaylyVideoGrid";
 
 // Disimpan & dipakai ulang, disegarkan tiap 60 detik (menggantikan force-dynamic
 // yang membangun ulang halaman untuk tiap pengunjung).
@@ -27,8 +25,9 @@ export default async function DiscoverPage() {
   // pengunjung, sehingga `revalidate = 60` di atas jadi percuma (lihat catatan
   // di lib/supabase.ts).
   //
-  // Di sini hanya 8 kartu; selebihnya di halaman /playly supaya baris ini tidak
-  // menenggelamkan katalog drama yang jadi isi utama situs.
+  // Bagiannya digambar DI DALAM DramaBrowser sejak 2026-09-12 supaya ikut
+  // tersaring kotak cari (ketikannya cuma ada di komponen itu). Batas 8 kartu
+  // saat menjelajah ada di HasilPlayly.tsx.
   const { videos: playlyVideos } = await getPlaylyVideosPublik();
 
   // Bagian "Video terbaru" hanya muncul kalau sambungan ke dashboard sudah
@@ -50,39 +49,12 @@ export default async function DiscoverPage() {
           <div className="py-16 text-center text-sm text-zinc-500">Memuat...</div>
         }
       >
-        <DramaBrowser dramas={dramas} />
+        <DramaBrowser dramas={dramas} playlyVideos={playlyVideos} />
       </Suspense>
 
       {/* shell-wide — WAJIB sama dengan pembatas isi DramaBrowser & navbar,
           kalau tidak tepi kiri seksi di bawah ini meleset dari grid di atasnya. */}
       <div className="shell-wide mx-auto px-4 md:px-6">
-
-        {playlyVideos.length > 0 && (
-          <section className="mt-10" aria-labelledby="judul-video-playly">
-            <div className="flex items-end justify-between gap-4">
-              <div>
-                <h2 id="judul-video-playly" className="text-lg font-bold text-white">
-                  Video dari Playly
-                </h2>
-                <p className="mt-1 text-sm text-zinc-400">
-                  Diputar langsung dari pemutar milik Playly.
-                </p>
-              </div>
-              {playlyVideos.length > 8 && (
-                <Link
-                  href="/playly"
-                  className="shrink-0 text-sm font-semibold text-amber-400 underline"
-                >
-                  Lihat semua
-                </Link>
-              )}
-            </div>
-            <div className="mt-4">
-              <PlaylyVideoGrid videos={playlyVideos} limit={8} />
-            </div>
-          </section>
-        )}
-
         {dashboardAktif && <DashboardVideoGrid />}
       </div>
     </div>

@@ -1,6 +1,7 @@
 import type { Category, Drama } from "./types";
 import { CATEGORIES, isMovie } from "./types";
 import { parseViews } from "./format";
+import { cocokSemuaKata, pecahKataKunci } from "./pencarian";
 
 export const SORT_OPTIONS = [
   { value: "relevance", label: "Paling sesuai" },
@@ -169,7 +170,9 @@ export function filterAndSortDramas(
     negara = "all",
   } = options;
 
-  const q = query.toLowerCase().trim();
+  // Dipecah SEKALI di sini, bukan di dalam perulangan: aturannya sama untuk
+  // seluruh katalog, jadi tak ada gunanya menghitung ulang tiap drama.
+  const kataCari = pecahKataKunci(query);
   const ratingThreshold = minRating === "all" ? 0 : Number(minRating);
 
   let result = dramas.filter((d) => {
@@ -179,11 +182,10 @@ export function filterAndSortDramas(
       ratingThreshold === 0
         ? true
         : parseImdb(d.imdbRating) >= ratingThreshold;
-    const matchQ =
-      !q ||
-      d.title.toLowerCase().includes(q) ||
-      d.category.toLowerCase().includes(q) ||
-      d.synopsis.toLowerCase().includes(q);
+    // Field yang dicari sengaja TETAP tiga ini; yang berubah cuma CARA
+    // mencocokkannya (lib/pencarian.ts), supaya hasil pencarian tidak
+    // tiba-tiba melebar ke kolom yang tak pernah dimaksud penonton.
+    const matchQ = cocokSemuaKata(kataCari, d.title, d.category, d.synopsis);
     return (
       matchCat &&
       matchYear &&

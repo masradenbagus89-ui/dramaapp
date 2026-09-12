@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getAllDramasCachedSafe } from "@/lib/dramas";
+import { getPlaylyVideosPublik } from "@/lib/playly-publik";
 import { featuredHeroSlides } from "@/lib/hero-teaser";
 import { FEATURED_ROW_COUNT } from "@/lib/beranda-catalog";
 import CatalogBrowser from "../components/beranda/CatalogBrowser";
@@ -20,6 +21,16 @@ export const metadata: Metadata = {
 export default async function BerandaPage() {
   const dramas = await getAllDramasCachedSafe();
   const slides = featuredHeroSlides(dramas, FEATURED_ROW_COUNT);
+
+  // Video Playly untuk bagian hasil pencarian di bawah grid (owner 2026-09-12).
+  // Judul seperti "Beyond The Last Signal" ada di sini, BUKAN di katalog
+  // Supabase — tanpa ini kotak cari membalas "tidak ada yang cocok" untuk video
+  // yang jelas-jelas tayang di situs.
+  //
+  // Aman terhadap revalidate=60 di atas: seluruh pembacaannya ber-cache 5 menit
+  // dan tidak pernah melempar error (lib/playly-publik.ts), jadi halaman ini
+  // tidak berubah jadi dibangun ulang untuk tiap pengunjung.
+  const { videos: playlyVideos } = await getPlaylyVideosPublik();
 
   if (slides.length === 0) {
     return (
@@ -52,6 +63,7 @@ export default async function BerandaPage() {
       */}
       <CatalogBrowser
         dramas={dramas}
+        playlyVideos={playlyVideos}
         heroSlot={<FeaturedRow dramas={slides} />}
         beforeGridSlot={
           <div className="pt-6">

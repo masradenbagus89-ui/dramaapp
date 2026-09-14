@@ -5,7 +5,16 @@
 >
 > **AI:** tiap kali ada perbaikan / deploy / keputusan — **perbarui berkas ini di langkah terakhir**, sebelum bilang selesai. Jangan tumpuk sejarah panjang di sini; pindahkan yang lama ke `NEXT-SESSION.md`.
 
-**Terakhir diisi:** 2026-09-12 — PENCARIAN JUDUL diperbaiki (permintaan owner: "seperti LK21").
+**Terakhir diisi:** 2026-09-14 — **PAGINASI PLAYLY DIPERBAIKI (kerja rekan) — SUDAH TAYANG `852c989`.**
+DramaKu dulu cuma mengambil **halaman pertama** daftar video Playly (20 dari 42). Karena daftar Playly
+urut **terlama dulu**, yang tak pernah terambil justru video yang **baru diunggah**. Sekarang seluruh
+halaman diikuti: `/playly` produksi naik dari **20 → 40 judul**. Dual push origin + dramaku.
+
+**Sebelumnya:** 2026-09-12 (sore) — **WEBHOOK PLAYLY: pertanyaan owner dijawab, NOL kode berubah.**
+Kesimpulan terbukti: DramaKu **tidak menunggu dikabari** Playly — ia menjemput sendiri tiap ≤5 menit,
+dan video Playly terbaru SUDAH tayang di produksi. Webhook = percepatan opsional, bukan syarat.
+
+**Sebelumnya:** 2026-09-12 — PENCARIAN JUDUL diperbaiki (permintaan owner: "seperti LK21").
 **SUDAH TAYANG** di produksi lewat `f656b12` (dual push origin + dramaku).
 
 **Sebelumnya:** 2026-09-11 (malam) — poster katalog DIPERBESAR (permintaan owner: "seperti LK21").
@@ -20,7 +29,111 @@ kuota Vercel aman. **Migrasi database BELUM tuntas** — datanya sudah pindah, t
 masih terkunci; rinciannya di bagian KOREKSI di bawah. **Jangan ganti env Supabase di Vercel dulu
 — situs akan mati.**
 
-## 🔎 2026-09-12 (TERBARU) — PENCARIAN JUDUL DIPERBAIKI (SUDAH TAYANG `f656b12`)
+## 🚀 2026-09-14 (TERBARU) — PAGINASI PLAYLY DIPERBAIKI (SUDAH TAYANG `852c989`)
+
+**Asal:** kerja **rekan** (`zyyherlambang@gmail.com`), ditarik owner dari cermin `dramaku/main`
+lalu dirilis ke produksi. 1 commit, 2 berkas: `lib/playly.ts` + `tests/playly-paginasi.test.ts` (baru).
+
+**Bug-nya (senyap, tanpa pesan error apa pun):** Playly memotong daftar video per halaman dan
+membalas `{ count, total, offset, hasMore, videos }`. Kode lama memanggil `/api/videos` dan
+`/api/catalog` **polos** — tak pernah meminta halaman berikutnya. Jadi DramaKu cuma melihat 20 dari
+42 video mitra. Karena daftar Playly urut **TERLAMA DULU**, yang tak pernah terambil persis video
+yang **baru diunggah**. Gejalanya bukan "video hilang", tapi "video baru tidak pernah sekali pun
+muncul" — itulah kenapa tak ada yang melapor.
+
+**Perbaikannya:** satu fungsi bersama `ambilSemuaHalamanPlayly()` (`lib/playly.ts`) yang meminta
+`limit=100` lalu mengikuti `hasMore` sampai habis. Dipakai **kedua** jalur (mitra + katalog publik),
+jadi diperbaiki sekali di akarnya. Tiga pengaman ikut dipasang:
+- `PLAYLY_MAKS_HALAMAN = 10` — `hasMore` yang keliru selalu-true tak bisa membuat server berputar tanpa henti; berhenti sambil menulis `console.warn`, jadi pemotongan tak pernah senyap.
+- offset maju sebanyak yang **benar-benar dikirim** (`count`), bukan sebanyak yang diminta — kalau Playly melayani kurang dari `limit`, video di tengah tak terlompati.
+- balasan **tanpa** `hasMore` → berhenti di halaman pertama = perilaku lama persis. Jadi perubahan ini tak bisa merusak jalur yang tadinya jalan.
+
+**Gerbang pra-rilis (AGENTS.local.md §6) — semua LULUS, dijalankan bukan cuma dibaca:**
+
+| Langkah | Hasil |
+|---|---|
+| `rm -rf .next` | bersih |
+| `npx tsc --noEmit` | **exit 0** |
+| `npm test` | **41 berkas / 522 tes lulus** (termasuk 10 tes paginasi baru) |
+| `npm run build` | **exit 0** |
+| berkas env/kunci ter-stage | **nol** |
+| `git push origin main` + `git push dramaku main` | `889b2cc..852c989`, ketiga ref sejajar |
+
+**Smoke test produksi sesudah rilis (bukan lokal):**
+
+| Yang dicek | Hasil |
+|---|---|
+| `/` `/login` `/beranda` `/discover` `/shorts` `/playly` | **200** semua |
+| `/api/dramas` | **200**, 67 drama |
+| Embed video Playly di `/playly` | **40** (2026-09-12 tercatat **20**) |
+| Video terbaru `1789356249652` (diunggah hari ini) | **TAMPIL** |
+
+**✅ TEMUAN LAMA TERJAWAB — bukan disembunyikan admin.** Catatan 2026-09-12 menandai
+`1789096535588` ("The Last Passenger KONO EXPRESS Chapter 1") **0 jejak** di `/playly` padahal
+berkasnya sehat, dengan dugaan "disembunyikan admin lewat `playly:hidden`". **Dugaan itu SALAH.**
+Sesudah rilis ini video tersebut **tampil** (1 jejak) — penyebab sebenarnya paginasi: video itu
+duduk di halaman kedua yang tak pernah diambil. Tidak perlu membuka `/admin/videos/playly`.
+
+**Rencana mundur kalau perlu:** `git revert --no-edit 852c989 && git push origin main`, atau tombol
+*Instant Rollback* di dashboard Vercel ke deployment `889b2cc`.
+
+**⚠️ Catatan proses (bukan soal kode — kodenya bagus):** rekan push **langsung ke `dramaku/main`**,
+bukan lewat branch + berkas `docs/serah-terima/` seperti AGENTS.local.md §1-2. Kali ini tak ada
+kerugian (fast-forward bersih, 0 konflik), tapi artinya owner tak sempat memeriksa sebelum masuk main.
+Identitas git juga masih separuh terpisah: email sudah beda, **nama author masih `masradenbagus89-ui`**
+(§7 belum tuntas) — `git log` sekilas masih terbaca seperti owner yang mengerjakan.
+
+**Catatan build lokal:** percobaan `npm run build` **pertama** mati di tengah *Generating static pages*
+(`build worker exited with code: 4294967295`). Dua build ulang sesudahnya **exit 0** tanpa perubahan
+apa pun → crash worker Windows yang sporadis, **bukan** cacat kode. Kalau kambuh saat rilis
+berikutnya: ulangi build, jangan langsung curiga ke commit-nya.
+
+## ❓ 2026-09-12 (sore) — WEBHOOK PLAYLY: pertanyaan owner dijawab, NOL kode berubah
+
+Owner mengirim tangkapan layar jawaban AI **dari sisi Playly** (dashboard Playly, BUKAN repo ini):
+tabel `partner_webhooks` nol baris, jadi "tiap kali `coklat` menerbitkan video, Playly menjalankan
+pengiriman lalu tak menemukan tujuan, dan berhenti diam-diam". Lanjutannya menyuruh: minta DramaKu
+menyediakan alamat penerima `https://dramaapp.vercel.app/api/playly-webhook`. Owner bertanya: "apa
+yang harus saya lakukan sekarang?"
+
+**Koreksi yang paling penting (dibuktikan, bukan pendapat): DramaKu TIDAK MENUNGGU dikabari.**
+`getPlaylyVideosPublik()` di `lib/playly-publik.ts` **menjemput sendiri** daftar video mitra lewat
+`fetchPlaylyVideosKita` (`lib/playly.ts:910`), ber-cache `PLAYLY_PUBLIK_TTL_SECONDS = 300`
+(`lib/playly.ts:881`) dan `export const revalidate = 300` di `app/playly/page.tsx:11`. Jadi video
+baru muncul sendiri paling lama ~5 menit (≤10 menit kalau dua lapis cache jatuh berurutan) **tanpa
+webhook apa pun**. Webhook = memotong tunggu itu jadi hitungan detik — percepatan, bukan syarat.
+
+**Bukti hidup hari ini (produksi, bukan lokal):**
+
+| Yang dicek | Hasil |
+|---|---|
+| `GET https://dramaapp.vercel.app/playly` | **200** · **20 judul video** tergambar |
+| Video TERBARU akun kita (`1789204824465` "DRAGON BLOOD", terbit hari ini) | **TAMPIL** — 2 jejak id di HTML |
+| 9 video `creator=coklat` di katalog publik Playly (`/api/catalog`, count 40) | **8 TAMPIL**, 1 tidak |
+| `partner_webhooks` / `playly-webhook` di repo dramaapp | **NOL hasil** — memang belum pernah ada |
+
+**Kesimpulan yang disampaikan ke owner:** tidak ada yang rusak, tidak ada yang wajib dikerjakan.
+Rantai Playly→DramaKu sudah jalan lewat jalur tarik (pull), bukan jalur dorong (push).
+
+**KEPUTUSAN OWNER (popup 2026-09-12 sore): BIARKAN APA ADANYA — webhook TIDAK dibangun.**
+Alasannya sederhana: selisihnya cuma ~5 menit vs hitungan detik, sementara membangunnya berarti
+menambah SATU pintu masuk baru ke situs produksi yang harus dijaga selamanya. Jangan tawarkan
+ulang di sesi berikutnya kecuali owner sendiri yang membukanya, atau muncul fakta baru (mis.
+jalur tarik terbukti gagal).
+
+**✅ (TERJAWAB 2026-09-14 — penyebabnya paginasi, lihat bagian teratas) Temuan yang dulu belum tuntas:** `1789096535588` ("The Last Passenger KONO EXPRESS Chapter 1",
+creator `coklat`) **0 jejak** di `/playly`, padahal `/api/public-video?id=...` membalas **200 +
+`videoUrl` ada + `allowEmbed:true`** → berkasnya SEHAT, jadi ini **bukan** hasil saringan
+`bolehTampilKePenonton()`. Dugaan terkuat: **disembunyikan admin** (daftar `playly:hidden` lewat
+`getPlaylyHiddenIdsCached`). Belum diverifikasi — butuh membuka `/admin/videos/playly`.
+
+**Kalau kelak webhook jadi dibangun** (belum dikerjakan, belum disetujui owner): endpoint
+`POST /api/playly-webhook` di DramaKu yang (a) memeriksa tanda tangan rahasia kiriman Playly —
+tanpa ini siapa pun bisa memicu endpoint kita, (b) memanggil `revalidatePath('/playly')` supaya
+cache 5 menit langsung dipotong, (c) menolak diam-diam permintaan tak bertanda tangan. Owner yang
+menempelkan URL-nya di panel Playly → API Mitra → kunci DramaKu → Webhook.
+
+## 🔎 2026-09-12 — PENCARIAN JUDUL DIPERBAIKI (SUDAH TAYANG `f656b12`)
 
 Owner mengirim tangkapan layar: mengetik **"Beyond The Last Signal"** di kotak cari DramaKu,
 hasilnya kosong. Permintaannya: pencarian bekerja seperti LK21, tidak sensitif huruf besar-kecil,

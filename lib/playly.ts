@@ -791,21 +791,139 @@ function lemparKalauBadanGagal(data: unknown): void {
   throw new PlaylyError(ramah, 401);
 }
 
+// ---- PAGINASI: Playly memotong daftar video per halaman -------------------
+//
+// Playly TIDAK mengirim seluruh video sekaligus. Balasannya berbentuk
+// { count, total, offset, hasMore, videos } — `count` = berapa yang dikirim
+// sekarang, `total` = berapa yang sebenarnya ada, `hasMore` = "masih ada lagi".
+//
+// KENAPA INI PENTING (bug 2026-09-14): dulu kedua jalur di bawah memanggil
+// alamatnya polos, tanpa pernah meminta halaman berikutnya. Akibatnya DramaKu
+// cuma melihat 20 dari 42 video akun mitra — dan karena daftar Playly urut
+// TERLAMA DULU, yang tak pernah terambil justru video yang BARU diunggah.
+// Gejalanya menipu: bukan "video hilang", tapi video baru tidak pernah sekali
+// pun terlihat, dan tidak ada error apa pun yang muncul.
+//
+// Batas yang sudah DIUJI langsung ke Playly 2026-09-14:
+//   /api/videos  : limit & offset dipakai. limit=100 -> 42 video sekali jalan.
+//   /api/catalog : limit & offset dipakai, TAPI limit dipatok 100 di sisi
+//                  mereka (limit=500 tetap membalas 100), total 291.
+// Karena itu limit diminta 100 (sebesar yang dilayani) LALU `hasMore` diikuti —
+// bukan sekadar menaikkan limit. Menaikkan limit saja akan patah lagi diam-diam
+// begitu jumlah video lewat batas itu.
+
+/** Sebesar-besarnya yang mau dilayani Playly dalam satu panggilan. */
+const PLAYLY_LIMIT_PER_HALAMAN = 100;
+
+/**
+ * Pengaman: berapa halaman paling banyak yang diikuti.
+ *
+ * Ada supaya `hasMore` yang keliru selalu-true di sisi Playly tidak membuat
+ * server kita berputar tanpa henti. 10 halaman x 100 = 1.000 video — jauh di
+ * atas kebutuhan sekarang (42 milik mitra, 291 di katalog publik).
+ */
+const PLAYLY_MAKS_HALAMAN = 10;
+
+/** Tempel limit & offset ke alamat, tanpa merusak query yang mungkin sudah ada. */
+function urlHalamanPlayly(baseUrl: string, offset: number): string {
+  const u = new URL(baseUrl);
+  u.searchParams.set("limit", String(PLAYLY_LIMIT_PER_HALAMAN));
+  // offset=0 sengaja tidak ditulis: halaman pertama tetap beralamat sama
+  // seperti sebelumnya, jadi hasil cache lama tidak terbuang percuma.
+  if (offset > 0) u.searchParams.set("offset", String(offset));
+  return u.toString();
+}
+
+/**
+ * Baca penanda halaman dari balasan.
+ *
+ * `hasMore` HARUS persis `true` untuk lanjut. Kalau field-nya tidak ada (Playly
+ * versi lain, atau bentuk balasannya berubah), hasilnya false dan pengambilan
+ * berhenti di halaman pertama — sama persis dengan perilaku lama. Jadi
+ * perubahan ini tidak bisa membuat jalur yang tadinya jalan malah jadi rusak.
+ */
+function bacaPenandaHalaman(data: unknown): { count: number | null; hasMore: boolean } {
+  const rec = asRecord(data);
+  if (!rec) return { count: null, hasMore: false };
+  const count =
+    typeof rec.count === "number" && Number.isFinite(rec.count) ? rec.count : null;
+  return { count, hasMore: rec.hasMore === true };
+}
+
+/**
+ * Ambil SELURUH video dari satu endpoint Playly, halaman demi halaman.
+ *
+ * Dipakai bersama oleh jalur mitra dan jalur katalog publik — keduanya punya
+ * bentuk balasan yang sama, dan dulu keduanya punya bug yang sama. Satu tempat
+ * supaya perbaikannya tidak perlu diingat dua kali.
+ */
+async function ambilSemuaHalamanPlayly(
+  baseUrl: string,
+  headers: Record<string, string>,
+  pesan401: string,
+  config: PlaylyConfig,
+  revalidateSeconds?: number,
+): Promise<PlaylyVideoResult> {
+  const videos: PlaylyVideo[] = [];
+  const rejected: RejectedVideo[] = [];
+  // Pengaman kedua: kalau offset meleset, video yang sama bisa terkirim dua
+  // kali. Tanpa ini ia akan muncul dobel di halaman penonton.
+  const sudahAda = new Set<string>();
+  let offset = 0;
+
+  for (let halaman = 1; halaman <= PLAYLY_MAKS_HALAMAN; halaman++) {
+    const data = await ambilJsonPlayly(
+      urlHalamanPlayly(baseUrl, offset),
+      headers,
+      pesan401,
+      revalidateSeconds,
+    );
+    lemparKalauBadanGagal(data);
+
+    const hasil = normalizePlaylyVideos(data, config.allowedHosts, config.embedPattern);
+    for (const v of hasil.videos) {
+      if (sudahAda.has(v.id)) continue;
+      sudahAda.add(v.id);
+      videos.push(v);
+    }
+    rejected.push(...hasil.rejected);
+
+    const { count, hasMore } = bacaPenandaHalaman(data);
+    if (!hasMore) return { videos, rejected };
+
+    // Maju sebanyak yang BENAR-BENAR dikirim Playly, bukan sebanyak yang kita
+    // minta: kalau mereka melayani lebih sedikit dari `limit`, memakai angka
+    // permintaan akan melompati video yang belum terambil.
+    const maju = count ?? hasil.videos.length + hasil.rejected.length;
+    // Halaman yang tidak memajukan apa pun tapi mengaku `hasMore` = balasan
+    // tidak masuk akal. Berhenti, jangan berputar di tempat.
+    if (maju <= 0) return { videos, rejected };
+    offset += maju;
+  }
+
+  // Sampai di sini artinya batas pengaman yang menghentikan, bukan Playly.
+  // Dicatat supaya pemotongan ini tidak pernah terjadi diam-diam.
+  console.warn(
+    `[playly] berhenti di ${PLAYLY_MAKS_HALAMAN} halaman (${videos.length} video terambil); ` +
+      "Playly masih menyatakan ada lagi. Naikkan PLAYLY_MAKS_HALAMAN kalau ini bukan kekeliruan.",
+  );
+  return { videos, rejected };
+}
+
 /** Jalur MITRA: /api/videos + header kunci. Isinya video milik akun kunci itu. */
 async function fetchVideoMitra(
   apiKey: string,
   config: PlaylyConfig,
   revalidateSeconds?: number,
 ): Promise<PlaylyVideoResult> {
-  const data = await ambilJsonPlayly(
+  return ambilSemuaHalamanPlayly(
     config.videosUrl,
     buildPlaylyHeaders(apiKey),
     "Playly menolak kunci kita (kunci salah, sudah dicabut, atau kedaluwarsa). " +
       "Minta kunci baru ke Playly, lalu perbarui di Setelan → Playly.",
+    config,
     revalidateSeconds,
   );
-  lemparKalauBadanGagal(data);
-  return normalizePlaylyVideos(data, config.allowedHosts, config.embedPattern);
 }
 
 /**
@@ -823,14 +941,13 @@ async function fetchVideoKatalogPublik(
   config: PlaylyConfig,
   revalidateSeconds?: number,
 ): Promise<PlaylyVideoResult> {
-  const data = await ambilJsonPlayly(
+  return ambilSemuaHalamanPlayly(
     config.catalogUrl,
     { Accept: "application/json" },
     "Katalog publik Playly menolak permintaan kita.",
+    config,
     revalidateSeconds,
   );
-  lemparKalauBadanGagal(data);
-  return normalizePlaylyVideos(data, config.allowedHosts, config.embedPattern);
 }
 
 /**

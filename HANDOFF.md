@@ -8,7 +8,9 @@
 **Terakhir diisi:** 2026-09-14 — **PAGINASI PLAYLY DIPERBAIKI (kerja rekan) — SUDAH TAYANG `852c989`.**
 DramaKu dulu cuma mengambil **halaman pertama** daftar video Playly (20 dari 42). Karena daftar Playly
 urut **terlama dulu**, yang tak pernah terambil justru video yang **baru diunggah**. Sekarang seluruh
-halaman diikuti: `/playly` produksi naik dari **20 → 40 judul**. Dual push origin + dramaku.
+halaman diikuti: `/playly` produksi naik dari **20 → ~40 judul** (terukur 39-40, berubah-ubah
+karena tiap video dicek dulu kesehatan berkasnya — selisih 1-2 itu NORMAL, bukan kemunduran).
+Dual push origin + dramaku.
 
 **Sebelumnya:** 2026-09-12 (sore) — **WEBHOOK PLAYLY: pertanyaan owner dijawab, NOL kode berubah.**
 Kesimpulan terbukti: DramaKu **tidak menunggu dikabari** Playly — ia menjemput sendiri tiap ≤5 menit,
@@ -65,7 +67,7 @@ jadi diperbaiki sekali di akarnya. Tiga pengaman ikut dipasang:
 |---|---|
 | `/` `/login` `/beranda` `/discover` `/shorts` `/playly` | **200** semua |
 | `/api/dramas` | **200**, 67 drama |
-| Embed video Playly di `/playly` | **40** (2026-09-12 tercatat **20**) |
+| Embed video Playly di `/playly` | **40** sesaat sesudah rilis, **39** pada pengukuran ulang (2026-09-12 tercatat **20**) — selisih 1-2 normal, lihat catatan di atas |
 | Video terbaru `1789356249652` (diunggah hari ini) | **TAMPIL** |
 
 **✅ TEMUAN LAMA TERJAWAB — bukan disembunyikan admin.** Catatan 2026-09-12 menandai

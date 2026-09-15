@@ -5,12 +5,15 @@
 >
 > **AI:** tiap kali ada perbaikan / deploy / keputusan — **perbarui berkas ini di langkah terakhir**, sebelum bilang selesai. Jangan tumpuk sejarah panjang di sini; pindahkan yang lama ke `NEXT-SESSION.md`.
 
-**Terakhir diisi:** 2026-09-14 — **PAGINASI PLAYLY DIPERBAIKI (kerja rekan) — SUDAH TAYANG `852c989`.**
-DramaKu dulu cuma mengambil **halaman pertama** daftar video Playly (20 dari 42). Karena daftar Playly
-urut **terlama dulu**, yang tak pernah terambil justru video yang **baru diunggah**. Sekarang seluruh
-halaman diikuti: `/playly` produksi naik dari **20 → ~40 judul** (terukur 39-40, berubah-ubah
-karena tiap video dicek dulu kesehatan berkasnya — selisih 1-2 itu NORMAL, bukan kemunduran).
+**Terakhir diisi:** 2026-09-15 — **WEBHOOK PLAYLY MASUK PRODUKSI, TAPI SENGAJA TIDUR** (`b7459a4`, kerja rekan).
+Endpoint `POST /api/webhooks/playly` sudah tayang; `PLAYLY_WEBHOOK_SECRET` **dibiarkan kosong** atas keputusan
+owner, jadi ia membalas **503** untuk ketukan apa pun dan belum memproses apa-apa (terbukti di produksi).
+Sebabnya: **nol bukti Playly punya fitur kirim webhook**, dan datanya pun belum tersambung ke `/playly`.
+Yang benar-benar berguna hari ini: perbaikan bug lama `readLocal()` di `lib/store.ts` yang ikut terbawa.
 Dual push origin + dramaku.
+
+**Sebelumnya:** 2026-09-14 — PAGINASI PLAYLY diperbaiki (kerja rekan), **SUDAH TAYANG** `852c989`.
+`/playly` naik dari 20 → ~40 judul karena seluruh halaman daftar Playly kini diikuti.
 
 **Sebelumnya:** 2026-09-12 (sore) — **WEBHOOK PLAYLY: pertanyaan owner dijawab, NOL kode berubah.**
 Kesimpulan terbukti: DramaKu **tidak menunggu dikabari** Playly — ia menjemput sendiri tiap ≤5 menit,
@@ -31,7 +34,85 @@ kuota Vercel aman. **Migrasi database BELUM tuntas** — datanya sudah pindah, t
 masih terkunci; rinciannya di bagian KOREKSI di bawah. **Jangan ganti env Supabase di Vercel dulu
 — situs akan mati.**
 
-## 🚀 2026-09-14 (TERBARU) — PAGINASI PLAYLY DIPERBAIKI (SUDAH TAYANG `852c989`)
+## 🚀 2026-09-15 (TERBARU) — WEBHOOK PLAYLY DIRILIS DALAM KEADAAN **TIDUR** (`b7459a4`)
+
+**Asal:** kerja **rekan** (`zyyherlambang@gmail.com`) di branch `feat/playly-webhook` (2 commit,
+10 berkas, +2316 baris), ditarik owner lewat fast-forward lalu dual push ke `origin` + `dramaku`.
+Kali ini rekan **patuh proses**: pakai branch + berkas `docs/serah-terima/2026-09-14-webhook-playly.md`,
+tidak menyentuh `HANDOFF.md`/`INDEX.md` (§1 AGENTS.local.md), dan branch-nya dicabang dari `main`
+terkini — **0 commit tertinggal, 0 konflik**.
+
+**Apa yang masuk:** endpoint `POST /api/webhooks/playly`. Selama ini DramaKu **menjemput** daftar
+video Playly tiap ≤5 menit; endpoint ini membuka jalan sebaliknya — Playly yang **mendorong**
+"ada video baru / video ditarik" seketika. Alamatnya publik, jadi nyaris seluruh kodenya soal satu
+hal: membuktikan yang mengetuk memang Playly sebelum sebaris pun datanya dipakai (dua jalur:
+kunci polos `x-playly-secret`, atau tanda-tangan HMAC `X-Playly-Signature`).
+
+**KEPUTUSAN OWNER (popup 2026-09-15): rilis, tapi kuncinya DIBIARKAN KOSONG.**
+`PLAYLY_WEBHOOK_SECRET` **tidak** dipasang di Vercel. Akibatnya endpoint membalas **503** untuk
+ketukan apa pun dan tidak memproses apa-apa — **terbukti di produksi**, termasuk saat diketuk
+dengan kunci ngawur (tetap 503, bukan 200). Alasan merilis dalam keadaan tidur: branch yang
+dibiarkan menganggur pernah membuat 6 berkas bentrok + 2 kemunduran senyap (`redesign/playly-card`),
+dan commit ini juga membawa **perbaikan bug lama** di `lib/store.ts` yang berguna terlepas dari webhook.
+
+**⚠️ Dua batas jujur — ini BELUM fitur yang hidup:**
+1. **Nol bukti Playly punya fitur kirim webhook.** Nama header & bentuk payload berasal dari
+   spesifikasi owner, bukan dokumentasi Playly. Endpoint siap menerima, tapi **tak akan pernah
+   diketuk** sampai pengelola Playly menyalakan pengiriman ke alamat kita.
+2. **Anti-replay belum tertutup** (payload tak bawa `event_id`/`sent_at`). Tidak berbahaya selama
+   kunci kosong — **wajib ditutup sebelum kunci diisi**.
+
+**Kalau suatu hari owner mau menghidupkannya, urutannya (§3 AGENTS.local.md — env DULU):**
+`node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"` → pasang sebagai
+`PLAYLY_WEBHOOK_SECRET` di Vercel → deploy ulang → kirim nilainya ke pengelola Playly lewat jalur
+aman (**jangan** lewat chat/email biasa).
+
+**Bug lama yang ikut terbawa masuk:** `readLocal()` di `lib/store.ts` mengembalikan objek fallback
+yang **dipakai bersama**, padahal pemanggilnya rutin mengubah hasil bacaan → isi satu operasi bocor
+ke operasi lain, senyap tanpa pesan error. Diperbaiki di akarnya dengan `structuredClone`, jadi
+`admins`/`comments`/`wallets`/`playly` ikut tertutup sekaligus. Dampak produksi kecil (di Vercel
+jalur file memang tak dipakai), nyata di dev lokal.
+
+**Gerbang pra-rilis (§6) — dijalankan di komputer owner, bukan dibaca dari catatan rekan:**
+
+| Langkah | Hasil |
+|---|---|
+| `npx tsc --noEmit` | **exit 0** |
+| `npm test` | **44 berkas / 604 tes lulus** (naik dari 41/522; +82 tes webhook) |
+| `rm -rf .next` + `npm run build` | **exit 0**, `/api/webhooks/playly` terdaftar **ƒ Dynamic** |
+| berkas env/kunci ter-stage | **nol** (yang muncul di diff cuma dummy `"rahasia-webhook-untuk-tes"` di dalam tes) |
+| `git push origin main` + `git push dramaku main` | `f30e499..b7459a4`, ketiga ref sejajar |
+
+**Smoke test produksi sesudah rilis:**
+
+| Yang dicek | Hasil |
+|---|---|
+| `/` `/login` `/beranda` `/discover` `/shorts` `/playly` | **200** semua |
+| `/api/dramas` | **200**, 67 drama |
+| `POST /api/webhooks/playly` tanpa kunci | **503** + `"PLAYLY_WEBHOOK_SECRET belum di-set di server."` |
+| `POST /api/webhooks/playly` dengan kunci ngawur | **503** (bukan 200 — pintunya memang tertutup) |
+| Embed video Playly di `/playly` | **35** |
+
+**❓ Jumlah video Playly 39-40 → 35 — BUKAN dari rilis ini, tapi belum 100% terlacak.**
+Yang sudah terbukti: (a) diff ke `lib/playly.ts` **cuma menambah kata `export`**, nol perubahan
+perilaku, dan 604 tes termasuk `playly-publik`/`playly-paginasi` lulus; (b) katalog publik Playly
+hari ini melaporkan **36** video milik akun `coklat` (dari 287 total semua kreator) — situs kita
+menampilkan 35, jadi selisihnya ada **di sumbernya**, bukan di kode kita. Yang **belum** bisa
+dibuktikan dari komputer ini: ke mana 4-5 video yang terhitung 2026-09-14 pergi — angka itu berasal
+dari daftar MITRA (`/api/videos`, butuh kunci yang tersimpan di Supabase), sedangkan yang bisa
+diketuk tanpa kunci hanya katalog publik. Dugaan paling masuk akal: video ditarik/di-unpublish di
+sisi Playly. **Jangan diklaim sebagai kemunduran DramaKu tanpa mengecek dulu ke dashboard Playly.**
+
+**Rencana mundur kalau perlu:** `git revert --no-edit b7459a4 b6e8b05 && git push origin main`,
+atau tombol *Instant Rollback* di dashboard Vercel ke deployment `f30e499`.
+
+**Yang SENGAJA tidak dikerjakan (keputusan owner, popup 2026-09-15):** menyambungkan data webhook
+ke `/playly` & `/discover`. `getPublishedPlaylyWebhookVideos()` sudah tersedia tapi **nol pemanggil**
+di luar tes — jadi walau webhook dihidupkan nanti, video barunya **tetap** datang lewat jalur
+tarikan 5-menitan yang sekarang sudah jalan. Menyambungkannya mengubah `getPlaylyVideosPublik()`
+yang dipakai 3 pemanggil = perubahan cakupan, tunggu Playly terbukti benar-benar mengirim dulu.
+
+## 🚀 2026-09-14 — PAGINASI PLAYLY DIPERBAIKI (SUDAH TAYANG `852c989`)
 
 **Asal:** kerja **rekan** (`zyyherlambang@gmail.com`), ditarik owner dari cermin `dramaku/main`
 lalu dirilis ke produksi. 1 commit, 2 berkas: `lib/playly.ts` + `tests/playly-paginasi.test.ts` (baru).

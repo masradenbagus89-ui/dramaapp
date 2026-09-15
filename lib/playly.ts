@@ -360,25 +360,29 @@ export async function deletePlaylyKey(): Promise<void> {
 // nama field yang lazim dicoba satu per satu (pola yang sama dipakai
 // lib/dashboard-videos.ts). Kalau nanti ternyata beda, cukup tambahkan
 // namanya di daftar konstanta di bawah — tak perlu mengubah logika.
+// Daftar nama field di bawah DIPAKAI BERSAMA dengan lib/playly-webhook.ts:
+// Playly menamai hal yang sama dengan ejaan berbeda-beda, dan kalau daftarnya
+// disalin ke dua tempat, penambahan nama baru pasti terlupa di salah satunya.
+// LIST_KEYS sengaja TIDAK diekspor — webhook mengirim satu video, bukan daftar.
 
 const LIST_KEYS = ["data", "items", "results", "videos", "rows", "list"];
-const ID_KEYS = ["id", "videoId", "video_id", "uuid", "slug"];
-const TITLE_KEYS = ["title", "judul", "name", "nama"];
-const EMBED_KEYS = [
+export const ID_KEYS = ["id", "videoId", "video_id", "uuid", "slug"];
+export const TITLE_KEYS = ["title", "judul", "name", "nama"];
+export const EMBED_KEYS = [
   // "embedUrlFull" DIDAHULUKAN: Playly mengirim alamat LENGKAP di field itu,
   // sedangkan "embedUrl" miliknya berbentuk relatif ("/id/123/embed").
   // Terverifikasi 2026-08-25 dari balasan /api/public-video Playly.
   "embedUrlFull", "embed_url_full",
   "embedUrl", "embed_url", "embed", "playerUrl", "player_url", "iframe",
 ];
-const CREATOR_KEYS = [
+export const CREATOR_KEYS = [
   "creator", "creatorName", "creator_name", "author", "owner",
   "uploader", "channel", "kreator", "pembuat",
 ];
-const DURATION_KEYS = [
+export const DURATION_KEYS = [
   "duration", "durationSeconds", "duration_seconds", "length", "durasi",
 ];
-const THUMB_KEYS = [
+export const THUMB_KEYS = [
   "thumbnail", "thumbnailUrl", "thumbnail_url", "thumb", "poster", "cover", "image",
 ];
 
@@ -406,7 +410,7 @@ function asRecord(value: unknown): Record<string, unknown> | null {
     : null;
 }
 
-function pickString(rec: Record<string, unknown>, keys: string[]): string | null {
+export function pickString(rec: Record<string, unknown>, keys: string[]): string | null {
   for (const k of keys) {
     const v = rec[k];
     if (typeof v === "string" && v.trim()) return v.trim();
@@ -483,7 +487,7 @@ function toHttpsUrl(raw: string, baseUrl?: string): URL | null {
 /** Ambil src dari kode tempel <iframe ...> — sebagian API mengirim HTML, bukan URL. */
 const IFRAME_SRC_RE = /<iframe[^>]*\ssrc\s*=\s*["']([^"']+)["']/i;
 
-function extractEmbedUrl(value: string): string | null {
+export function extractEmbedUrl(value: string): string | null {
   const s = value.trim();
   if (!s) return null;
   const dariIframe = s.match(IFRAME_SRC_RE);

@@ -63,11 +63,19 @@ function localPath(file: string): string {
 
 function readLocal<T>(file: string, fallback: T): T {
   const p = localPath(file);
-  if (!existsSync(p)) return fallback;
+  // Fallback selalu DISALIN, tidak pernah dikembalikan apa adanya.
+  //
+  // Alasannya: pemanggil di bawah lazim mengubah hasil bacaan lalu menuliskannya
+  // kembali (`file.embeds = ...`, `data.wallets[email] = ...`). Kalau yang
+  // dikembalikan objek konstan bersama (EMPTY_PLAYLY / EMPTY_WALLET / ...),
+  // perubahan itu menempel DI KONSTANTANYA dan ikut terbawa ke pembacaan
+  // berikutnya yang filenya juga belum ada — data dari satu operasi muncul di
+  // operasi lain. Kerusakannya senyap: tidak ada error, cuma isi yang salah.
+  if (!existsSync(p)) return structuredClone(fallback);
   try {
     return JSON.parse(readFileSync(p, "utf-8")) as T;
   } catch {
-    return fallback;
+    return structuredClone(fallback);
   }
 }
 
@@ -792,14 +800,17 @@ export type PlaylyEmbed = {
 const PLAYLY_KEY_DOC = "playly:key";
 const PLAYLY_EMBEDS_DOC = "playly:embeds";
 const PLAYLY_HIDDEN_DOC = "playly:hidden";
+const PLAYLY_WEBHOOK_DOC = "playly:webhook";
 
 type PlaylyFile = {
   key: PlaylyKeyRecord | null;
   embeds: PlaylyEmbed[];
   /** videoId yang SENGAJA disembunyikan admin dari halaman penonton. */
   hidden?: string[];
+  /** Video yang DIDORONG Playly lewat webhook (opsional: file lama tak punya). */
+  webhook?: PlaylyWebhookVideo[];
 };
-const EMPTY_PLAYLY: PlaylyFile = { key: null, embeds: [], hidden: [] };
+const EMPTY_PLAYLY: PlaylyFile = { key: null, embeds: [], hidden: [], webhook: [] };
 
 /** Record kunci Playly tersimpan, atau null kalau admin belum memasangnya. */
 export async function getPlaylyKeyRecord(): Promise<PlaylyKeyRecord | null> {
@@ -952,6 +963,139 @@ export async function setPlaylyVideoHidden(
     writeLocal("playly.json", file);
   }
   return baru;
+}
+
+// =========  VIDEO YANG DIDORONG PLAYLY LEWAT WEBHOOK (playly:webhook)  =====
+//
+// Dokumen ini SENGAJA dipisah dari dua dokumen Playly di atas karena sumbernya
+// beda, dan yang beda sumber tidak ditaruh di satu baris:
+//   - playly:embeds  -> kaitan video->drama yang dibuat ADMIN dengan tangan.
+//   - playly:webhook -> katalog yang DIDORONG Playly sendiri, tanpa campur
+//                       tangan siapa pun.
+// Kalau digabung, satu notifikasi Playly bisa menghapus kaitan yang susah payah
+// dibuat admin (dan sebaliknya).
+//
+// ATURAN INTINYA: satu videoId = SATU baris. Itulah yang membuat kiriman ulang
+// (retry) dari Playly aman — webhook yang sama masuk dua kali MEMPERBARUI baris
+// yang ada, bukan menambah baris kembar. Playly memang sengaja mengirim ulang
+// kalau balasan kita telat, jadi ini keadaan normal, bukan gangguan.
+//
+// UTANG TEKNIS (sama seperti dokumen "ads"/"admins" di atas, tapi di sini lebih
+// mungkin kejadian): penyimpanannya "baca -> ubah -> tulis" satu dokumen utuh,
+// jadi DUA notifikasi yang tiba dalam milidetik yang sama bisa saling menimpa
+// dan salah satunya hilang. Taruhannya rendah (video hilang akan muncul lagi di
+// notifikasi berikutnya), dan dipilih supaya fitur ini jalan tanpa menjalankan
+// SQL migrasi dulu. Cara menaikkannya kalau volumenya sudah ramai: pindahkan ke
+// tabel `playly_webhook_video` dengan `video_id` sebagai PRIMARY KEY, lalu
+// upsert per-baris — database yang menjamin tidak ada yang saling menimpa.
+
+export type PlaylyWebhookVideo = {
+  /** Pengenal video di sisi Playly. UNIK — inilah kunci anti-duplikatnya. */
+  videoId: string;
+  title: string;
+  /**
+   * Sinopsis dari Playly. TEKS POLOS, bukan HTML — apa pun yang tersimpan di
+   * sini akan tampil di halaman, jadi menyimpan HTML mentah berarti mengizinkan
+   * pengirimnya menaruh <script> di situs kita. Field ini tidak punya padanan
+   * di katalog Playly (tipe PlaylyVideo tak mengenal deskripsi).
+   */
+  description: string | null;
+  /** Tahun rilis; null kalau Playly tidak mengirimnya. */
+  year: number | null;
+  /** Genre apa adanya dari Playly; null kalau tidak dikirim. */
+  genre: string | null;
+  /** Nama pengunggah di sisi Playly; null kalau tidak dikirim. */
+  creator: string | null;
+  /** Durasi dalam detik; null kalau tidak dikirim atau tak terbaca. */
+  durationSeconds: number | null;
+  /** Alamat player siap tempel — SUDAH lolos https + daftar domain Playly. */
+  embedUrl: string;
+  /** Sampul — SUDAH lolos https / data-URI gambar; null kalau tak ada. */
+  thumbnailUrl: string | null;
+  /**
+   * "published" = boleh tampil. "unpublished" = Playly sudah menariknya.
+   *
+   * Baris unpublish sengaja DISIMPAN, bukan dihapus, karena dua alasan:
+   * (1) kalau video yang sama diterbitkan lagi nanti, catatannya tidak hilang;
+   * (2) notifikasi unpublish yang datang dua kali tetap berakhir di keadaan
+   *     yang sama — tidak ada bedanya diproses sekali atau sepuluh kali.
+   */
+  status: "published" | "unpublished";
+  /** Kapan notifikasi TERAKHIR untuk video ini diterima (ISO). */
+  receivedAt: string;
+};
+
+/** SEMUA baris webhook, termasuk yang sudah ditarik Playly. Terbaru di depan. */
+export async function getPlaylyWebhookVideos(): Promise<PlaylyWebhookVideo[]> {
+  if (useSupabase) {
+    return (await sbDocGet<PlaylyWebhookVideo[]>(PLAYLY_WEBHOOK_DOC)) ?? [];
+  }
+  return readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY).webhook ?? [];
+}
+
+/**
+ * Hanya video yang BOLEH tampil. Inilah yang dipakai halaman penonton.
+ *
+ * Namanya sengaja menyebut "Published" supaya pemanggil tahu daftarnya sudah
+ * disaring — kalau fungsi ini dinamai `getPlaylyWebhookVideos` saja, cepat atau
+ * lambat ada yang memakainya lalu video yang sudah ditarik Playly ikut tampil.
+ */
+export async function getPublishedPlaylyWebhookVideos(): Promise<PlaylyWebhookVideo[]> {
+  const semua = await getPlaylyWebhookVideos();
+  return semua.filter((v) => v.status === "published");
+}
+
+async function savePlaylyWebhookVideos(list: PlaylyWebhookVideo[]): Promise<void> {
+  if (useSupabase) {
+    await sbDocSet(PLAYLY_WEBHOOK_DOC, list);
+    return;
+  }
+  const file = readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY);
+  file.webhook = list;
+  writeLocal("playly.json", file);
+}
+
+/**
+ * Simpan/perbarui satu video dari webhook. Idempoten by videoId: dipanggil
+ * berkali-kali dengan video yang sama menghasilkan SATU baris.
+ *
+ * Balasannya "dibuat" atau "diperbarui" supaya route bisa mencatat mana yang
+ * benar-benar video baru — berguna saat menelusuri kenapa sebuah video muncul.
+ */
+export async function upsertPlaylyWebhookVideo(
+  video: PlaylyWebhookVideo,
+): Promise<"dibuat" | "diperbarui"> {
+  const list = await getPlaylyWebhookVideos();
+  const idx = list.findIndex((v) => v.videoId === video.videoId);
+  if (idx === -1) {
+    list.unshift(video);
+    await savePlaylyWebhookVideos(list);
+    return "dibuat";
+  }
+  list[idx] = video;
+  await savePlaylyWebhookVideos(list);
+  return "diperbarui";
+}
+
+/**
+ * Ubah status satu video (dipakai saat Playly menarik/menerbitkan ulang).
+ * False = videoId itu memang tidak ada di catatan kita.
+ *
+ * Video tak dikenal TIDAK dibuatkan baris baru di sini: notifikasi unpublish
+ * untuk video yang belum pernah kita terima berarti memang tak ada yang perlu
+ * disembunyikan — membuat baris hantu justru menambah sampah data.
+ */
+export async function setPlaylyWebhookVideoStatus(
+  videoId: string,
+  status: PlaylyWebhookVideo["status"],
+  receivedAt: string,
+): Promise<boolean> {
+  const list = await getPlaylyWebhookVideos();
+  const idx = list.findIndex((v) => v.videoId === videoId);
+  if (idx === -1) return false;
+  list[idx] = { ...list[idx], status, receivedAt };
+  await savePlaylyWebhookVideos(list);
+  return true;
 }
 
 /** Mode penyimpanan aktif — berguna untuk debugging/health check. */

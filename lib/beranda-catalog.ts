@@ -78,9 +78,16 @@ export const CATALOG_SORTS = [
 
 export type CatalogSort = (typeof CATALOG_SORTS)[number]["value"];
 
+/**
+ * Urutan yang dipakai kalau penonton belum memilih apa-apa. Diberi nama supaya
+ * "terbaru" tidak ditulis ulang sebagai teks lepas di beberapa tempat — kalau
+ * bawaannya diganti, satu tempat ini yang berubah (§3.8).
+ */
+export const URUTAN_BAWAAN: CatalogSort = "terbaru";
+
 export function parseCatalogSort(value: string | null | undefined): CatalogSort {
   const found = CATALOG_SORTS.find((o) => o.value === value);
-  return found ? found.value : "terbaru";
+  return found ? found.value : URUTAN_BAWAAN;
 }
 
 /**
@@ -208,6 +215,53 @@ export function countWithYear(dramas: Drama[]): number {
 
 export function countWithRating(dramas: Drama[]): number {
   return dramas.filter((d) => parseRating(d.imdbRating) > 0).length;
+}
+
+// =======================  KEADAAN PENYARING  =============================
+/** Nilai dropdown genre yang berarti "jangan saring apa pun". */
+export const GENRE_SEMUA = "Semua";
+
+/** Nilai bawaan dropdown Tahun & Rating yang berarti "semua". */
+const TANPA_BATAS = "all";
+
+/**
+ * Apa yang sedang dipilih penonton di bar penyaring beranda.
+ *
+ * Dibungkus jadi SATU objek (bukan 5 argumen berjajar) karena kelimanya memang
+ * satu hal: keadaan penyaring. Argumen berjajar gampang tertukar urutannya dan
+ * typecheck tidak menangkapnya — `year` dan `minRating` sama-sama string.
+ */
+export type KeadaanPenyaring = {
+  query: string;
+  genre: string;
+  year: string;
+  minRating: string;
+  sort: CatalogSort;
+};
+
+/**
+ * Penonton sedang MENCARI/MENYARING sesuatu, atau sedang santai menjelajah?
+ *
+ * Inilah satu-satunya penentu bentuk halaman /beranda: `false` = tampilkan
+ * baris kategori gaya Layarkaca21 (Drama Terbaru, Drama Action, …), `true` =
+ * tampilkan grid hasil + nomor halaman. Ditaruh di sini (bukan di dalam
+ * komponen) supaya bisa dites tanpa browser — aturannya halus dan kalau salah
+ * kerusakannya SENYAP: tak ada error, cuma halaman yang bentuknya keliru.
+ *
+ * `sort` WAJIB ikut dihitung meski bukan "penyaring" dalam arti memotong
+ * daftar. Alasannya dari pre-mortem: baris kategori punya urutannya SENDIRI
+ * (Terbaru, Populer, per-genre) yang tidak tunduk pada dropdown Urutkan. Kalau
+ * memilih "Judul A-Z" tidak memunculkan grid, penonton mengubah urutan lalu
+ * melihat layar yang sama persis — dan menyimpulkan fitur urut rusak.
+ */
+export function sedangMenyaring(k: KeadaanPenyaring): boolean {
+  return (
+    k.query.trim().length > 0 ||
+    k.genre !== GENRE_SEMUA ||
+    k.year !== TANPA_BATAS ||
+    k.minRating !== TANPA_BATAS ||
+    k.sort !== URUTAN_BAWAAN
+  );
 }
 
 // =========================  BARIS KATALOG BERANDA  =======================

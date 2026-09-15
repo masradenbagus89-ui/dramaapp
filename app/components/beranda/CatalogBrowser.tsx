@@ -12,23 +12,35 @@ import {
 import {
   CATALOG_PER_PAGE,
   CATALOG_SORTS,
+  // Dipakai sebagai `SEMUA` di bawah. Di-alias supaya nilainya punya SATU
+  // sumber (lib) tanpa mengganti nama yang sudah dipakai di sepanjang berkas.
+  GENRE_SEMUA as SEMUA,
   PAGE_GAP,
+  URUTAN_BAWAAN,
   availableGenres,
   countWithRating,
   countWithYear,
+  homeCatalogRows,
   pageNumbers,
   pageOfCatalog,
+  sedangMenyaring,
   sortCatalog,
   type CatalogSort,
 } from "@/lib/beranda-catalog";
 import { buildNavMenus, catalogShortcuts } from "@/lib/nav-katalog";
 import type { PlaylyVideoPublik } from "@/lib/playly-publik";
 import CatalogCard from "./CatalogCard";
+import FeaturedRow from "./FeaturedRow";
 import GenreStrip from "./GenreStrip";
 import HasilPlayly, { cariVideoPlayly } from "./HasilPlayly";
 import NavMenus from "./NavMenus";
 import SearchBar from "./SearchBar";
-import { GRID_CLASS, SHELL, TRIGGER_CLASS } from "./shell";
+import {
+  GRID_CLASS,
+  ROW_KATEGORI_CARD_CLASS,
+  SHELL,
+  TRIGGER_CLASS,
+} from "./shell";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -39,8 +51,6 @@ import {
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight, Home, Search, X } from "lucide-react";
-
-const SEMUA = "Semua";
 
 type Props = {
   dramas: Drama[];
@@ -83,7 +93,7 @@ export default function CatalogBrowser({
   const [genre, setGenre] = useState<string>(SEMUA);
   const [year, setYear] = useState("all");
   const [minRating, setMinRating] = useState<RatingKey>("all");
-  const [sort, setSort] = useState<CatalogSort>("terbaru");
+  const [sort, setSort] = useState<CatalogSort>(URUTAN_BAWAAN);
   const [page, setPage] = useState(1);
   const gridRef = useRef<HTMLDivElement>(null);
 
@@ -123,8 +133,28 @@ export default function CatalogBrowser({
     [playlyVideos, query],
   );
 
-  const filterAktif =
-    genre !== SEMUA || year !== "all" || minRating !== "all" || Boolean(query);
+  /**
+   * Baris kategori gaya Layarkaca21 (Drama Terbaru, Drama Action, …) — bentuk
+   * halaman saat penonton TIDAK sedang mencari. Dihitung dari katalog PENUH,
+   * bukan `hasil`: barisnya punya urutan & pengelompokannya sendiri.
+   *
+   * Fungsinya yang SAMA dipakai halaman depan `/`, jadi kedua halaman
+   * menampilkan kategori yang sama persis tanpa aturan kembar yang bisa
+   * menyimpang diam-diam.
+   */
+  const baris = useMemo(() => homeCatalogRows(dramas), [dramas]);
+
+  const menyaring = sedangMenyaring({ query, genre, year, minRating, sort });
+
+  /**
+   * Tampilkan grid + nomor halaman, atau baris kategori?
+   *
+   * `baris.length === 0` ikut memaksa grid sebagai JARING PENGAMAN: katalog yang
+   * isinya di bawah `ROW_MIN_ITEMS` tidak menghasilkan satu baris pun, dan tanpa
+   * cadangan ini tengah halaman jadi kosong melompong tanpa error — penonton
+   * melihat situs yang seperti rusak, padahal katalognya saja yang masih sepi.
+   */
+  const tampilGrid = menyaring || baris.length === 0;
 
   /**
    * Tiap penyaring berubah, balik ke halaman 1 — kalau tidak, hasil 2 drama
@@ -145,6 +175,11 @@ export default function CatalogBrowser({
     setGenre(SEMUA);
     setYear("all");
     setMinRating("all");
+    // Urutan ikut dipulangkan ke bawaan supaya "Hapus filter" benar-benar
+    // mengembalikan penonton ke baris kategori. Tanpa ini, urutan yang masih
+    // tersangkut menahan halaman di bentuk grid dan tombolnya terasa tidak
+    // bekerja.
+    setSort(URUTAN_BAWAAN);
     setPage(1);
   };
 
@@ -224,7 +259,7 @@ export default function CatalogBrowser({
   );
 
   return (
-    <section aria-labelledby="judul-katalog">
+    <section aria-label="Katalog drama">
       {/* ============ 1. BAR CARI — kepala situs, menempel saat digulir ======
           top-14 = tepat di bawah navbar (tingginya h-14). Komponennya SAMA
           dengan yang dipakai halaman depan; bedanya cuma arti pencariannya —
@@ -273,9 +308,37 @@ export default function CatalogBrowser({
             </>
           )}
         </nav>
+      </div>
 
+      {/* ============ 5. ISI TENGAH — dua bentuk, satu penentu ==============
+             Tidak mencari  -> BARIS KATEGORI gaya Layarkaca21 (permintaan owner
+             2026-09-15): tiap kategori satu baris poster kecil yang digeser ke
+             samping, berjudul di kiri dan "Lihat semua" di kanan.
+             Sedang mencari -> grid hasil + nomor halaman, persis seperti dulu.
+
+             KENAPA bercabang, bukan menampilkan keduanya: itulah cara situs
+             katalog yang dicontohkan owner bekerja — daftar panjang baru muncul
+             ketika penonton benar-benar mencari sesuatu. Nol fitur dibuang;
+             pencarian, penyaring, dan paginasi semuanya tetap ada. ===== */}
+      {!tampilGrid ? (
+        /* Baris kategori sengaja di LUAR pembungkus SHELL: FeaturedRow sudah
+           membawa `shell-wide … px-4 md:px-6` sendiri, jadi membungkusnya lagi
+           akan menggandakan jarak tepi kiri-kanan. */
+        <div className="pt-4">
+          {baris.map((row) => (
+            <FeaturedRow
+              key={row.key}
+              title={row.title}
+              dramas={row.items}
+              href={row.href}
+              cardClass={ROW_KATEGORI_CARD_CLASS}
+            />
+          ))}
+        </div>
+      ) : (
+      <div className={SHELL}>
         <div className="mt-2 flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800 pb-3">
-          <h2 id="judul-katalog" className="text-sm text-zinc-400">
+          <h2 className="text-sm text-zinc-400">
             <span className="font-bold text-white">
               Halaman {halaman.page} dari {halaman.totalPages}
             </span>{" "}
@@ -284,7 +347,7 @@ export default function CatalogBrowser({
             {query ? ` untuk "${query}"` : ""}
           </h2>
 
-          {filterAktif && (
+          {menyaring && (
             <Button
               type="button"
               variant="ghost"
@@ -313,7 +376,7 @@ export default function CatalogBrowser({
                   ada di bawah halaman ini.
                 </p>
               )}
-              {filterAktif && (
+              {menyaring && (
                 <Button
                   type="button"
                   variant="outline"
@@ -389,7 +452,15 @@ export default function CatalogBrowser({
             </Button>
           </nav>
         )}
+      </div>
+      )}
 
+      {/* Video Playly digambar di LUAR percabangan: kedua bentuk halaman
+          sama-sama menampilkannya. Judul seperti "Beyond The Last Signal" hanya
+          ada di gudang Playly dan tidak pernah muncul di katalog drama, jadi
+          menyembunyikannya di salah satu bentuk = video yang jelas tayang di
+          situs jadi tak bisa ditemukan. */}
+      <div className={SHELL}>
         <HasilPlayly videos={videoPlayly} ketikan={query} />
       </div>
     </section>

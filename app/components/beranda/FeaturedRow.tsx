@@ -25,6 +25,7 @@ export default function FeaturedRow({
   href = "/discover",
   title,
   cardHrefPrefix,
+  cardClass = ROW_CARD_CLASS,
 }: {
   dramas: Drama[];
   /**
@@ -45,6 +46,16 @@ export default function FeaturedRow({
    * kepala halaman, yang pakai tombol besar di tengah supaya menonjol.
    */
   title?: string;
+  /**
+   * Lebar satu kartu. Default `ROW_CARD_CLASS` = ukuran baris unggulan, jadi
+   * pemanggil lama (halaman depan `/`) tidak berubah sama sekali.
+   *
+   * Ada supaya baris KATEGORI /beranda bisa memakai poster yang lebih kecil
+   * (`ROW_KATEGORI_CARD_CLASS`) tanpa perlu komponen baris kedua — logika
+   * geser, panah, dan kartunya tetap satu, jadi tak ada yang perlu diperbaiki
+   * dua kali.
+   */
+  cardClass?: string;
 }) {
   const scroller = useRef<HTMLDivElement>(null);
 
@@ -106,9 +117,9 @@ export default function FeaturedRow({
             // Lebar dikunci di sini (bukan di CatalogCard) supaya kartunya tetap
             // kartu yang SAMA dengan yang dipakai grid di bawah — lencana, hover,
             // dan cuplikannya tidak perlu dibuat versi kedua. Angkanya sendiri
-            // ada di ROW_CARD_CLASS (./shell), satu tangga dengan lebar kolom
-            // grid supaya poster baris & poster grid tidak beda besar.
-            <div key={d.id} className={ROW_CARD_CLASS}>
+            // ada di ./shell: ROW_CARD_CLASS (bawaan, sejajar lebar kolom grid)
+            // atau ROW_KATEGORI_CARD_CLASS kalau pemanggil meminta yang kecil.
+            <div key={d.id} className={cardClass}>
               <CatalogCard
                 drama={d}
                 href={cardHrefPrefix ? `${cardHrefPrefix}/${d.id}` : undefined}

@@ -5,7 +5,16 @@
 >
 > **AI:** tiap kali ada perbaikan / deploy / keputusan — **perbarui berkas ini di langkah terakhir**, sebelum bilang selesai. Jangan tumpuk sejarah panjang di sini; pindahkan yang lama ke `NEXT-SESSION.md`.
 
-**Terakhir diisi:** 2026-09-15 — **WEBHOOK PLAYLY MASUK PRODUKSI, TAPI SENGAJA TIDUR** (`b7459a4`, kerja rekan).
+**Terakhir diisi:** 2026-09-15 (sore) — **SUSUNAN FILM /beranda JADI BARIS KATEGORI GAYA LK21.**
+Permintaan owner lewat 2 screenshot berkotak merah. Grid panjang ber-paginasi TIDAK lagi memenuhi layar;
+menggantikannya 5 baris kategori berposter kecil yang digeser ke samping (Drama Terbaru · Paling Banyak
+Ditonton · Drama Action · Drama Romance · Drama Tycoon). Grid + nomor halaman **tetap ada** dan muncul
+begitu penonton mencari / memilih genre / mengganti urutan — nol fitur dibuang.
+⚠️ **BELUM TAYANG — menunggu izin rilis owner.** Bukti lokal lengkap: tsc bersih · 613 tes hijau ·
+build sukses sesudah `rm -rf .next` · HTML produksi diperiksa. Rencana:
+`docs/lintasai/rencana/2026-09-15-beranda-baris-kategori-lk21.md`.
+
+**Sebelumnya:** 2026-09-15 — **WEBHOOK PLAYLY MASUK PRODUKSI, TAPI SENGAJA TIDUR** (`b7459a4`, kerja rekan).
 Endpoint `POST /api/webhooks/playly` sudah tayang; `PLAYLY_WEBHOOK_SECRET` **dibiarkan kosong** atas keputusan
 owner, jadi ia membalas **503** untuk ketukan apa pun dan belum memproses apa-apa (terbukti di produksi).
 Sebabnya: **nol bukti Playly punya fitur kirim webhook**, dan datanya pun belum tersambung ke `/playly`.
@@ -34,7 +43,55 @@ kuota Vercel aman. **Migrasi database BELUM tuntas** — datanya sudah pindah, t
 masih terkunci; rinciannya di bagian KOREKSI di bawah. **Jangan ganti env Supabase di Vercel dulu
 — situs akan mati.**
 
-## 🚀 2026-09-15 (TERBARU) — WEBHOOK PLAYLY DIRILIS DALAM KEADAAN **TIDUR** (`b7459a4`)
+## 🎬 2026-09-15 sore (TERBARU) — SUSUNAN FILM /beranda JADI BARIS KATEGORI (BELUM TAYANG)
+
+**Asal:** permintaan owner + 2 screenshot (dramaku vs Layarkaca21), kotak merah menandai **judul-judul
+baris kategori** LK21. Owner memilih (popup): baris kategori menggantikan grid, grid muncul saat mencari.
+
+**Apa yang berubah bagi penonton /beranda:**
+- Tidak sedang mencari → **5 baris kategori** berposter KECIL yang digeser ke samping, tiap baris
+  berjudul di kiri + "Lihat semua" di kanan. Persis pola LK21.
+- Mulai mencari / pilih genre / ganti urutan → tampilan berganti jadi **grid hasil + nomor halaman**
+  seperti sebelumnya. Pencarian, penyaring, dan paginasi **semuanya masih ada**.
+- Tombol "Hapus filter" sekarang ikut memulangkan urutan ke bawaan, supaya benar-benar kembali ke baris
+  kategori (tanpa itu penonton terjebak di tampilan grid).
+
+**Berkas yang disentuh (5 diubah, 2 baru) — halaman lain SENGAJA tidak disentuh:**
+- `lib/beranda-catalog.ts` — + `GENRE_SEMUA`, `URUTAN_BAWAAN`, fungsi murni `sedangMenyaring()`.
+- `app/components/beranda/shell.ts` — + `ROW_KATEGORI_CARD_CLASS` (poster kecil). `ROW_CARD_CLASS` &
+  `GRID_CLASS` **tidak diubah**.
+- `app/components/beranda/FeaturedRow.tsx` — + prop opsional `cardClass` (default = perilaku lama).
+- `app/components/beranda/CatalogBrowser.tsx` — percabangan baris vs grid.
+- `tests/beranda-catalog.test.ts` + `tests/beranda-bentuk-halaman.test.ts` (baru).
+
+**Jebakan yang ditemukan & ditutup (pre-mortem):**
+1. `filterAktif` lama **TIDAK menghitung `sort`**. Kalau percabangan memakainya apa adanya, memilih
+   "Judul A-Z" tak akan memunculkan grid → dropdown Urutkan terlihat rusak padahal tidak. Ditutup oleh
+   `sedangMenyaring()` yang ikut menghitung `sort`, dikunci tes.
+2. Katalog yang isinya di bawah `ROW_MIN_ITEMS` **tidak menghasilkan satu baris pun** → tengah halaman
+   kosong melompong tanpa error. Ditutup jaring pengaman `tampilGrid = menyaring || baris.length === 0`,
+   dikunci tes render.
+3. `FeaturedRow` membawa pembungkus `shell-wide … px-4` SENDIRI → menaruhnya di dalam `SHELL` membuat
+   jarak tepi dobel. Barisnya sengaja diletakkan di LUAR `SHELL`.
+4. ⚠️ **URUTAN GERBANG PRA-RILIS (AGENTS.local.md poin 6) BIKIN 4 ERROR PALSU.** Urutan yang tertulis
+   `rm -rf .next` → `npx tsc --noEmit` → … akan SELALU melaporkan 4× `TS2304: Cannot find name
+   'PageProps'` di `app/drama/[id]/page.tsx`, `app/feed/[id]/page.tsx`, `app/watch/[id]/[ep]/page.tsx`.
+   Sebabnya: `next-env.d.ts` mengimpor `./.next/types/routes.d.ts` — tipe yang baru DIBUAT oleh
+   `next build`. Menghapus `.next` lalu langsung `tsc` = memeriksa tipe yang belum ada. **Bukan bug
+   kode.** Urutan yang benar: `rm -rf .next` → `npm run build` → `npx tsc --noEmit` → `npm test`.
+   Terbukti 2026-09-15: sesudah build, `tsc` keluar **exit 0** atas kode yang sama persis.
+
+**Bukti terkumpul:** `npx tsc --noEmit` bersih · `npm test` **613 hijau / 45 berkas** (naik dari 610/44)
+· `rm -rf .next` + `npm run build` sukses · HTML `/beranda` dari server produksi berisi tepat 5 judul
+baris + **0** kemunculan "Halaman 1 dari" + 119 kartu `w-[92px]` · HTML `/` **0** kartu kecil (halaman
+depan tidak ikut mengecil) · `DramaBrowser.tsx` (/discover) tidak tersentuh (`git status`).
+
+**Katalog nyata saat dikerjakan:** 42 judul — Action 21 · Romance 14 · Tycoon 4 · Harem 1 · Time Travel 1
+· Comedy 1. Dibaca dari Supabase schema `dramaapp`, bukan `data/dramas.json`.
+
+---
+
+## 🚀 2026-09-15 — WEBHOOK PLAYLY DIRILIS DALAM KEADAAN **TIDUR** (`b7459a4`)
 
 **Asal:** kerja **rekan** (`zyyherlambang@gmail.com`) di branch `feat/playly-webhook` (2 commit,
 10 berkas, +2316 baris), ditarik owner lewat fast-forward lalu dual push ke `origin` + `dramaku`.

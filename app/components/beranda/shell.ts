@@ -43,6 +43,23 @@ export const GRID_CLASS =
 export const ROW_CARD_CLASS =
   "w-[116px] shrink-0 sm:w-[132px] md:w-[150px] lg:w-[172px]";
 
+/**
+ * Lebar SATU kartu di baris KATEGORI /beranda (Drama Terbaru, Drama Action, …).
+ *
+ * SENGAJA lebih kecil dari `ROW_CARD_CLASS` di atas — itu permintaan owner
+ * 2026-09-15: "buat tampilan poster berbentuk grid horizontal kecil", mencontoh
+ * Layarkaca21. Dipisah, bukan mengubah `ROW_CARD_CLASS`, karena angka itu masih
+ * dipakai baris UNGGULAN di halaman depan `/`; mengubahnya di satu tempat akan
+ * ikut mengecilkan halaman yang tidak diminta owner.
+ *
+ * Patokan angkanya: pada layar 1440px baris ini memuat ±10 poster sekaligus
+ * (128px + jarak antar-kartu), sedangkan `ROW_CARD_CLASS` memuat ±7. Di HP
+ * 360px tetap 3 poster per layar — di bawah ±90px judul dua baris di bawah
+ * poster mulai terpotong, jadi 92px adalah batas kecil yang masih terbaca.
+ */
+export const ROW_KATEGORI_CARD_CLASS =
+  "w-[92px] shrink-0 sm:w-[104px] md:w-[116px] lg:w-[128px]";
+
 /** Bentuk seragam untuk dropdown penyaring yang dititipkan ke bar cari. */
 export const TRIGGER_CLASS =
   "h-9 w-full rounded-sm border-black/20 bg-black/25 text-xs font-semibold text-white focus:ring-0 md:w-auto [&>span]:text-white";

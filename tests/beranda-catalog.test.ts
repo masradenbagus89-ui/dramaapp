@@ -1,8 +1,10 @@
 import { describe, it, expect } from "vitest";
 import {
   CATALOG_PER_PAGE,
+  GENRE_SEMUA,
   PAGE_GAP,
   ROW_MAX_ITEMS,
+  URUTAN_BAWAAN,
   homeCatalogRows,
   availableGenres,
   cardBadges,
@@ -11,7 +13,9 @@ import {
   pageNumbers,
   pageOfCatalog,
   parseCatalogSort,
+  sedangMenyaring,
   sortCatalog,
+  type KeadaanPenyaring,
 } from "../lib/beranda-catalog";
 import type { Drama } from "../lib/types";
 
@@ -230,5 +234,61 @@ describe("homeCatalogRows — baris poster halaman depan", () => {
       ...banyak("Romance", 8, "r"),
     ]);
     expect(new Set(rows.map((r) => r.key)).size).toBe(rows.length);
+  });
+});
+
+describe("sedangMenyaring — penentu bentuk /beranda (baris kategori vs grid)", () => {
+  /** Keadaan penonton yang baru membuka halaman: belum menyentuh apa pun. */
+  const santai: KeadaanPenyaring = {
+    query: "",
+    genre: GENRE_SEMUA,
+    year: "all",
+    minRating: "all",
+    sort: URUTAN_BAWAAN,
+  };
+
+  it("baru membuka halaman = belum menyaring, jadi baris kategori yang tampil", () => {
+    expect(sedangMenyaring(santai)).toBe(false);
+  });
+
+  it("mengetik di kotak cari memunculkan grid hasil", () => {
+    expect(sedangMenyaring({ ...santai, query: "cinta" })).toBe(true);
+  });
+
+  it("ketikan yang isinya cuma spasi TIDAK dianggap mencari", () => {
+    // Kalau dihitung mencari, satu spasi tak sengaja mengganti seluruh halaman
+    // jadi grid berisi semua judul — penonton kehilangan baris kategori tanpa
+    // pernah benar-benar mencari apa pun.
+    expect(sedangMenyaring({ ...santai, query: "   " })).toBe(false);
+  });
+
+  it("memilih genre, tahun, atau rating memunculkan grid hasil", () => {
+    expect(sedangMenyaring({ ...santai, genre: "Action" })).toBe(true);
+    expect(sedangMenyaring({ ...santai, year: "2024" })).toBe(true);
+    expect(sedangMenyaring({ ...santai, minRating: "7" })).toBe(true);
+  });
+
+  it("MENGGANTI URUTAN wajib memunculkan grid — baris kategori tak tunduk padanya", () => {
+    // Penjaga pre-mortem 2026-09-15. Baris kategori punya urutannya SENDIRI
+    // (Terbaru, Populer, per-genre), jadi kalau memilih "Judul A-Z" tidak
+    // mengganti bentuk halaman, penonton melihat layar yang sama persis dan
+    // menyimpulkan dropdown Urutkan rusak. Tidak ada error yang memberi tahu —
+    // itu sebabnya dikunci di sini.
+    expect(sedangMenyaring({ ...santai, sort: "judul" })).toBe(true);
+    expect(sedangMenyaring({ ...santai, sort: "populer" })).toBe(true);
+    expect(sedangMenyaring({ ...santai, sort: "rating" })).toBe(true);
+  });
+
+  it("semua penyaring dikembalikan ke bawaan = kembali ke baris kategori", () => {
+    // Ini yang dilakukan tombol "Hapus filter". Kalau satu saja tertinggal,
+    // penonton terjebak di tampilan grid tanpa jalan keluar yang terlihat.
+    const sesudahReset: KeadaanPenyaring = {
+      query: "",
+      genre: GENRE_SEMUA,
+      year: "all",
+      minRating: "all",
+      sort: URUTAN_BAWAAN,
+    };
+    expect(sedangMenyaring(sesudahReset)).toBe(false);
   });
 });

@@ -10,9 +10,11 @@ Permintaan owner lewat 2 screenshot berkotak merah. Grid panjang ber-paginasi TI
 menggantikannya 5 baris kategori berposter kecil yang digeser ke samping (Drama Terbaru · Paling Banyak
 Ditonton · Drama Action · Drama Romance · Drama Tycoon). Grid + nomor halaman **tetap ada** dan muncul
 begitu penonton mencari / memilih genre / mengganti urutan — nol fitur dibuang.
-⚠️ **BELUM TAYANG — menunggu izin rilis owner.** Bukti lokal lengkap: tsc bersih · 613 tes hijau ·
-build sukses sesudah `rm -rf .next` · HTML produksi diperiksa. Rencana:
-`docs/lintasai/rencana/2026-09-15-beranda-baris-kategori-lk21.md`.
+✅ **SUDAH TAYANG** lewat `e466595` (dual push `origin` + `dramaku`, keduanya `dca2326..e466595`).
+Terverifikasi DI SITUS SUNGGUHAN: `/beranda` memuat 5 judul baris + **0** kemunculan "Halaman 1 dari" +
+119 kartu poster kecil; `/` tetap **0** kartu kecil (halaman depan tidak ikut mengecil); `/discover` 200.
+Rencana: `docs/lintasai/rencana/2026-09-15-beranda-baris-kategori-lk21.md`.
+**Rollback 1-baris:** `git revert --no-edit e466595 && git push origin main`.
 
 **Sebelumnya:** 2026-09-15 — **WEBHOOK PLAYLY MASUK PRODUKSI, TAPI SENGAJA TIDUR** (`b7459a4`, kerja rekan).
 Endpoint `POST /api/webhooks/playly` sudah tayang; `PLAYLY_WEBHOOK_SECRET` **dibiarkan kosong** atas keputusan
@@ -73,7 +75,11 @@ baris kategori** LK21. Owner memilih (popup): baris kategori menggantikan grid, 
    dikunci tes render.
 3. `FeaturedRow` membawa pembungkus `shell-wide … px-4` SENDIRI → menaruhnya di dalam `SHELL` membuat
    jarak tepi dobel. Barisnya sengaja diletakkan di LUAR `SHELL`.
-4. ⚠️ **URUTAN GERBANG PRA-RILIS (AGENTS.local.md poin 6) BIKIN 4 ERROR PALSU.** Urutan yang tertulis
+4. ⚠️ **URUTAN GERBANG PRA-RILIS (AGENTS.local.md poin 6) BIKIN 4 ERROR PALSU — KAMBUH, bukan baru.**
+   Sudah tercatat di `antrean-deploy.md` sejak 2026-09-11 dan sesi 2026-09-14 sudah menghindarinya, TAPI
+   teks aturan di `AGENTS.local.md` poin 6 **belum diperbaiki**, jadi siapa pun yang menurutinya harfiah
+   akan tertipu lagi — dan sesi ini memang tertipu sekali. **Usul ke owner: perbaiki urutan di poin 6.**
+   Urutan yang tertulis
    `rm -rf .next` → `npx tsc --noEmit` → … akan SELALU melaporkan 4× `TS2304: Cannot find name
    'PageProps'` di `app/drama/[id]/page.tsx`, `app/feed/[id]/page.tsx`, `app/watch/[id]/[ep]/page.tsx`.
    Sebabnya: `next-env.d.ts` mengimpor `./.next/types/routes.d.ts` — tipe yang baru DIBUAT oleh

@@ -28,10 +28,13 @@ const state = {
 /** Dicatat untuk membuktikan gerbang menahan SEBELUM Playly dihubungi. */
 const dipanggilDengan: string[] = [];
 
-vi.mock("@/lib/playly-publik", () => ({
-  getPlaylyVideosPublik: async () => ({
+// Sejak 2026-09-15 gerbang membaca daftar GABUNGAN (katalog mitra + video yang
+// masuk lewat webhook), bukan katalog saja — lib/playly-gabungan.ts. Yang
+// dijaga tes ini tidak berubah: id dari browser harus ADA di daftar yang tampil
+// di halaman penonton, apa pun sumber daftarnya.
+vi.mock("@/lib/playly-gabungan", () => ({
+  getPlaylyVideosGabungan: async () => ({
     videos: state.videos,
-    hiddenCount: 0,
     error: null,
   }),
 }));
@@ -77,6 +80,16 @@ describe("GET /api/playly/video — gerbang video yang boleh ditonton", () => {
     const res = await minta("?id=1788933611579");
     expect(res.status).toBe(404);
     expect(dipanggilDengan).toEqual([]);
+  });
+
+  it("video yang HANYA masuk lewat webhook tetap bisa diputar", async () => {
+    // Kalau gerbang ini tetap membaca katalog mitra saja, video webhook TAMPIL
+    // di /playly tapi membalas 404 begitu diklik — kartu yang terlihat sehat
+    // tapi mati, kerusakan yang tidak kelihatan sampai ada yang mengkliknya.
+    state.videos = [{ id: "1789004112233" }];
+    const res = await minta("?id=1789004112233");
+    expect(res.status).toBe(200);
+    expect(dipanggilDengan).toEqual(["1789004112233"]);
   });
 
   it("MENOLAK id berisi karakter di luar huruf/angka — tanpa menyentuh daftar maupun Playly", async () => {

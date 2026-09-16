@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Film } from "lucide-react";
-import { getPlaylyVideosPublik } from "@/lib/playly-publik";
+import { getPlaylyVideosGabungan } from "@/lib/playly-gabungan";
 import PlaylyVideoGrid from "@/app/components/PlaylyVideoGrid";
 
 // Halaman disimpan & dipakai ulang, disegarkan tiap 300 detik — sama dengan
@@ -18,7 +18,11 @@ export const metadata: Metadata = {
 };
 
 export default async function PlaylyPage() {
-  const { videos, error } = await getPlaylyVideosPublik();
+  // DUA sumber, satu daftar: katalog yang kita jemput dari API Playly + video
+  // yang didorong Playly lewat webhook. Aturan gabungnya (siapa menang saat
+  // videoId sama, urutannya, dan apa yang terjadi kalau satu sumber mati) ada
+  // di lib/playly-gabungan.ts — halaman ini cukup menggambar hasilnya.
+  const { videos, error } = await getPlaylyVideosGabungan();
 
   return (
     <main className="min-h-screen bg-zinc-950 pb-16">

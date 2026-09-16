@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fetchPlaylyVideoUrl } from "@/lib/playly";
-import { getPlaylyVideosPublik } from "@/lib/playly-publik";
+import { getPlaylyVideosGabungan } from "@/lib/playly-gabungan";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -40,7 +40,15 @@ export async function GET(req: NextRequest) {
   // gerbang ini endpoint kita berubah jadi pintu belakang ke seluruh katalog
   // Playly. Aturan "boleh tampil" sengaja dibaca dari sumber yang sama dengan
   // halaman penonton, bukan disalin ulang.
-  const { videos } = await getPlaylyVideosPublik();
+  //
+  // Sejak 2026-09-15 daftar itu = GABUNGAN katalog mitra + video yang masuk
+  // lewat webhook (lib/playly-gabungan.ts). Gerbangnya TIDAK melonggar: yang
+  // berubah cuma isi daftar yang diizinkan, dan isinya tetap daftar tertutup
+  // yang kita kurasi sendiri — baris webhook hanya bisa masuk lewat POST yang
+  // lolos verifikasi kunci (lib/playly-webhook.ts), berstatus published, dan
+  // tidak ada di daftar sembunyi admin. Kalau gerbang ini tetap membaca katalog
+  // saja, video webhook akan TAMPIL di halaman tapi membalas 404 saat diklik.
+  const { videos } = await getPlaylyVideosGabungan();
   if (!videos.some((v) => v.id === id)) {
     return gagal(404, "Video tidak tersedia.");
   }

@@ -23,6 +23,64 @@ const SUPABASE_KEY =
 // schema itu sudah di-expose di Dashboard Supabase -> Settings -> API.
 const SUPABASE_SCHEMA = "dramaapp";
 
+/**
+ * Bedakan setelan yang sengaja KOSONG dari yang RUSAK.
+ *
+ * Kosong = pilihan sadar: seluruh lib jatuh ke file JSON di data/ (mode dev).
+ * Terisi-tapi-salah = salah ketik atau placeholder .env.example yang lupa
+ * diganti. Yang kedua TIDAK boleh ikut jalur fallback: di produksi folder data/
+ * read-only, jadi tiap tulisan gagal tanpa ada yang melapor — penonton melihat
+ * situs "jalan" sementara komentar & koin menguap. Lebih baik berhenti di sini
+ * dengan pesan yang menyebut langkah perbaikannya.
+ *
+ * Batasnya jujur: yang diperiksa cuma BENTUKNYA. Host yang salah ketik tapi
+ * bentuknya sah (...dbshyvzw vs ...dbshyvzx) baru ketahuan saat request pertama.
+ */
+export function periksaSetelanSupabase(url: string, key: string): string | null {
+  if (!url && !key) return null; // sengaja kosong = mode file lokal, sah
+
+  if (!url || !key) {
+    const terisi = url ? "SUPABASE_URL" : "SUPABASE_SERVICE_ROLE_KEY";
+    const kosong = url ? "SUPABASE_SERVICE_ROLE_KEY" : "SUPABASE_URL";
+    return `baru ${terisi} yang diisi, ${kosong} masih kosong`;
+  }
+
+  let u: URL;
+  try {
+    u = new URL(url);
+  } catch {
+    return "SUPABASE_URL bukan alamat yang sah";
+  }
+
+  // http polos mengirim service_role key tanpa enkripsi — kunci yang menembus
+  // RLS tidak boleh lewat jalur itu. localhost dikecualikan untuk Supabase yang
+  // dijalankan di komputer sendiri.
+  const lokal = u.hostname === "localhost" || u.hostname === "127.0.0.1";
+  if (u.protocol !== "https:" && !lokal) {
+    return "SUPABASE_URL harus https:// — http polos mengirim service_role key tanpa enkripsi";
+  }
+
+  // Dua placeholder bawaan .env.example: "xxxxxxxxxxxx.supabase.co" & "eyJhbGciOi..."
+  if (/^x+$/i.test(u.hostname.split(".")[0])) {
+    return "SUPABASE_URL masih placeholder contoh dari .env.example";
+  }
+  if (key.endsWith("...")) {
+    return "SUPABASE_SERVICE_ROLE_KEY masih placeholder contoh dari .env.example";
+  }
+
+  return null;
+}
+
+const masalahSetelan = periksaSetelanSupabase(SUPABASE_URL, SUPABASE_KEY);
+if (masalahSetelan) {
+  throw new Error(
+    `[supabase] Setelan database belum benar: ${masalahSetelan}. ` +
+      "Perbaiki di .env.local (lokal) atau Vercel -> Settings -> Environment Variables " +
+      "(produksi); nilainya ada di Supabase Dashboard -> Settings -> API. " +
+      "Kalau memang mau jalan TANPA database (pakai file di data/), kosongkan KEDUA baris itu.",
+  );
+}
+
 /** True kalau Supabase dikonfigurasi; kalau false, semua lib pakai file lokal. */
 export const useSupabase = Boolean(SUPABASE_URL && SUPABASE_KEY);
 
@@ -40,11 +98,94 @@ function baseHeaders(extra: Record<string, string> = {}): Record<string, string>
   };
 }
 
+// --- Ketahanan jalur ke Supabase -----------------------------------------
+// Angka-angka di bawah menjawab kejadian nyata 2026-09-16: server Supabase
+// berhenti menjawab query, lalu SELURUH route /api yang menyentuh database
+// balas 500 kosong setelah tepat 20 detik (batas jalan fungsi di Vercel).
+// Tanpa batas waktu sendiri, kita mati di tengah jalan tanpa sempat memberi
+// pesan; dengan batas ini kita yang menyerah baik-baik sambil menjelaskan.
+
+/** Batas satu request ke Supabase — sengaja jauh di bawah batas fungsi Vercel. */
+const BATAS_WAKTU_MS = 6_000;
+
+/** 2 = sekali coba + sekali ulang. Terburuk ~12,3 detik, masih di bawah 20. */
+const MAKS_COBA_BACA = 2;
+const JEDA_ULANG_MS = 300;
+
+/**
+ * Status yang berarti "jalurnya sedang terganggu", bukan "permintaannya salah"
+ * — hanya ini yang layak diulang. 520-524 = kode khusus Cloudflare (penjaga di
+ * depan Supabase); 522 = Cloudflare menyerah menunggu Supabase menjawab.
+ * 500 SENGAJA tidak masuk daftar: dari PostgREST itu umumnya query yang keliru,
+ * jadi mengulangnya cuma membuang jatah waktu yang tersisa.
+ */
+const STATUS_LAYAK_ULANG = new Set([408, 429, 502, 503, 504, 520, 521, 522, 523, 524]);
+
+/**
+ * Pendekkan badan balasan error jadi satu baris yang masih bisa dibaca manusia.
+ *
+ * Kenapa perlu: saat Supabase tak menjawab, yang kembali BUKAN JSON melainkan
+ * halaman HTML Cloudflare ribuan karakter. Sebelum perbaikan ini isi halaman
+ * itu ikut terbawa utuh ke pesan error — masuk log, lalu tercetak mentah di
+ * kotak merah halaman login sampai penonton tak tahu apa yang terjadi.
+ */
+export function ringkasBalasan(teks: string, maks = 200): string {
+  const bersih = teks.trim();
+  if (!bersih) return "(balasan kosong)";
+
+  if (/^<(?:!doctype|html)/i.test(bersih)) {
+    const judul = bersih.match(/<title[^>]*>([^<]*)<\/title>/i)?.[1]?.trim();
+    return judul
+      ? `server membalas halaman error HTML: "${judul}"`
+      : "server membalas halaman error HTML, bukan data";
+  }
+
+  return bersih.length > maks ? `${bersih.slice(0, maks)}…` : bersih;
+}
+
 async function ensureOk(res: Response, what: string): Promise<Response> {
   if (!res.ok) {
-    throw new Error(`Supabase ${what} ${res.status}: ${await res.text()}`);
+    throw new Error(
+      `Supabase ${what} ${res.status}: ${ringkasBalasan(await res.text())}`,
+    );
   }
   return res;
+}
+
+/**
+ * Fetch untuk operasi BACA: berbatas waktu + satu kali ulang saat jalur
+ * terganggu.
+ *
+ * SENGAJA hanya untuk baca. Operasi TULIS tidak boleh lewat sini: `coin_add`
+ * dan `like_change` menambah nilai, sementara timeout tak pernah bisa
+ * memastikan apakah server sudah terlanjur mengerjakannya — mengulangnya bisa
+ * menambah koin dua kali. Membaca ulang tidak pernah merusak apa pun.
+ */
+async function ambilBaca(url: string, init: RequestInit): Promise<Response> {
+  let sebab = "sebab tidak diketahui";
+
+  for (let coba = 1; coba <= MAKS_COBA_BACA; coba++) {
+    try {
+      const res = await fetch(url, {
+        ...init,
+        signal: AbortSignal.timeout(BATAS_WAKTU_MS),
+      });
+      if (coba === MAKS_COBA_BACA || !STATUS_LAYAK_ULANG.has(res.status)) return res;
+
+      // Body percobaan yang dibuang tetap dibaca supaya koneksinya dilepas.
+      sebab = `status ${res.status} (${ringkasBalasan(await res.text().catch(() => ""), 80)})`;
+    } catch (err) {
+      // TimeoutError = batas waktu kita sendiri; sisanya = jaringan gagal.
+      sebab = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
+      if (coba === MAKS_COBA_BACA) break;
+    }
+    await new Promise((lanjut) => setTimeout(lanjut, JEDA_ULANG_MS));
+  }
+
+  throw new Error(
+    `Supabase tidak menjawab setelah ${MAKS_COBA_BACA} percobaan (${sebab}). ` +
+      "Biasanya server database sedang bermasalah, bukan salah setelan.",
+  );
 }
 
 /** Encode sebuah nilai jadi filter "eq.<value>" yang aman untuk PostgREST. */
@@ -67,7 +208,7 @@ export async function sbSelect<T>(
   query: string,
   opts: { revalidate?: number } = {},
 ): Promise<T[]> {
-  const res = await fetch(`${SUPABASE_URL}/rest/v1/${query}`, {
+  const res = await ambilBaca(`${SUPABASE_URL}/rest/v1/${query}`, {
     headers: baseHeaders(),
     ...(opts.revalidate === undefined
       ? { cache: "no-store" as const }

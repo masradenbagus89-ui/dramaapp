@@ -141,7 +141,30 @@ export async function POST(req: NextRequest) {
     res.cookies.set(ADMIN_COOKIE, "", sessionCookieOptions(0));
     return res;
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Login gagal";
-    return NextResponse.json({ error: message }, { status: 500 });
+    // Pesan mentah TIDAK boleh diteruskan ke browser. Saat Supabase mati,
+    // isinya halaman error Cloudflare ribuan karakter — tak terbaca penonton,
+    // sekaligus membocorkan detail internal (host, jalur, versi). Terjadi
+    // nyata 2026-09-16: seluruh HTML "522 Connection timed out" tercetak di
+    // kotak merah halaman login. Cukup dicatat di log server.
+    console.error("[auth/login] gagal diproses:", err);
+
+    // Bedakan "database sedang mati" dari error lain. Ini penting bagi
+    // penonton: tanpa pembeda, satu-satunya tebakan yang masuk akal baginya
+    // adalah "password saya salah" — lalu ia mencoba berulang kali sia-sia.
+    const gangguanDatabase =
+      err instanceof Error && err.message.startsWith("Supabase ");
+
+    // Gagal-TUTUP (OWASP A10:2025): apa pun sebabnya, TIDAK ada sesi yang
+    // diterbitkan di jalur ini — error tak boleh jadi pintu masuk.
+    return NextResponse.json(
+      {
+        error: gangguanDatabase
+          ? "Server database sedang tidak merespons, jadi login belum bisa diproses. Ini BUKAN karena email atau password kamu salah — coba lagi beberapa menit lagi."
+          : "Login gagal diproses karena gangguan di server. Coba lagi beberapa saat lagi.",
+      },
+      // 503 = "layanannya yang sedang tidak tersedia", bukan 500 "ada yang
+      // rusak di kode kami". Bedanya dipakai monitoring untuk memilah alarm.
+      { status: gangguanDatabase ? 503 : 500 },
+    );
   }
 }

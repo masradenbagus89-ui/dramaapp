@@ -15,6 +15,9 @@ Terverifikasi DI SITUS SUNGGUHAN: `/beranda` memuat 5 judul baris + **0** kemunc
 119 kartu poster kecil; `/` tetap **0** kartu kecil (halaman depan tidak ikut mengecil); `/discover` 200.
 Rencana: `docs/lintasai/rencana/2026-09-15-beranda-baris-kategori-lk21.md`.
 **Rollback 1-baris:** `git revert --no-edit e466595 && git push origin main`.
+Menyusul di sesi yang sama: **urutan gerbang pra-rilis di `AGENTS.local.md` poin 6 DIPERBAIKI** atas izin
+owner (`build` naik ke sebelum `tsc`) — menutup jebakan 4 error `PageProps` palsu yang sudah menipu tiga
+sesi. Nol kode situs tersentuh, jadi tidak perlu rilis ulang.
 
 **Sebelumnya:** 2026-09-15 — **WEBHOOK PLAYLY MASUK PRODUKSI, TAPI SENGAJA TIDUR** (`b7459a4`, kerja rekan).
 Endpoint `POST /api/webhooks/playly` sudah tayang; `PLAYLY_WEBHOOK_SECRET` **dibiarkan kosong** atas keputusan
@@ -75,11 +78,13 @@ baris kategori** LK21. Owner memilih (popup): baris kategori menggantikan grid, 
    dikunci tes render.
 3. `FeaturedRow` membawa pembungkus `shell-wide … px-4` SENDIRI → menaruhnya di dalam `SHELL` membuat
    jarak tepi dobel. Barisnya sengaja diletakkan di LUAR `SHELL`.
-4. ⚠️ **URUTAN GERBANG PRA-RILIS (AGENTS.local.md poin 6) BIKIN 4 ERROR PALSU — KAMBUH, bukan baru.**
-   Sudah tercatat di `antrean-deploy.md` sejak 2026-09-11 dan sesi 2026-09-14 sudah menghindarinya, TAPI
-   teks aturan di `AGENTS.local.md` poin 6 **belum diperbaiki**, jadi siapa pun yang menurutinya harfiah
-   akan tertipu lagi — dan sesi ini memang tertipu sekali. **Usul ke owner: perbaiki urutan di poin 6.**
-   Urutan yang tertulis
+4. ✅ **URUTAN GERBANG PRA-RILIS (AGENTS.local.md poin 6) — SUDAH DIPERBAIKI 2026-09-15, atas izin owner.**
+   Jebakannya kambuh ketiga kalinya (tercatat 2026-09-11, dihindari 2026-09-14, menipu lagi 2026-09-15)
+   karena yang salah adalah **teks aturannya sendiri**, bukan kodenya. Poin 6 kini berbunyi
+   `rm -rf .next` → **`npm run build`** → `npx tsc --noEmit` → `npm test` → cek env → push → verifikasi
+   produksi, dengan blok peringatan "jangan dibalik" tepat di bawahnya supaya tidak ada yang
+   "memperbaiki" balik. Ketatnya gerbang TIDAK berkurang — keempat pemeriksaan tetap dijalankan semua.
+   **Duduk perkara aslinya (simpan, ini yang menipu):** urutan lama
    `rm -rf .next` → `npx tsc --noEmit` → … akan SELALU melaporkan 4× `TS2304: Cannot find name
    'PageProps'` di `app/drama/[id]/page.tsx`, `app/feed/[id]/page.tsx`, `app/watch/[id]/[ep]/page.tsx`.
    Sebabnya: `next-env.d.ts` mengimpor `./.next/types/routes.d.ts` — tipe yang baru DIBUAT oleh

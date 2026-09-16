@@ -5,7 +5,63 @@
 >
 > **AI:** tiap kali ada perbaikan / deploy / keputusan — **perbarui berkas ini di langkah terakhir**, sebelum bilang selesai. Jangan tumpuk sejarah panjang di sini; pindahkan yang lama ke `NEXT-SESSION.md`.
 
-**Terakhir diisi:** 2026-09-15 (sore) — **SUSUNAN FILM /beranda JADI BARIS KATEGORI GAYA LK21.**
+**Terakhir diisi:** 2026-09-16 — 🔴 **DATABASE SUPABASE TIDAK MENJAWAB — HALAMAN DETAIL DRAMA MATI DI PRODUKSI.**
+Ditemukan saat memverifikasi produksi sesudah dorongan catatan `bf73d5f`. **Bukan disebabkan perubahan apa pun
+dari sisi kita** — nol kode tersentuh sejak `e466595`, dan gejalanya muncul juga saat diuji **langsung dari
+komputer ini ke Supabase**, tanpa lewat Vercel sama sekali.
+
+**Apa yang rusak (terverifikasi, bukan dugaan):**
+- `GET /api/dramas` → **500**, konsisten 3 kali, tiap kali ~20 detik (pola habis-waktu, bukan tolak cepat).
+- `GET /drama/<id>` → **500** sesudah ~40 detik. Diuji 2 judul berbeda, dua-duanya sama. **Inilah yang paling
+  terasa penonton:** daftar film terlihat normal, tapi begitu satu judul diklik, halamannya menggantung lalu
+  gagal.
+- Kueri LANGSUNG ke Supabase dari komputer ini (kunci dari `.env.local`, tanpa Vercel) → **HTTP 522** sesudah
+  ~19,5 detik, **konsisten di 4 tabel berbeda** (`dramas`, `users`, `store_docs`, `videos`). 522 = kode
+  Cloudflare untuk "server di belakangnya tidak menjawab".
+- Sebaliknya `GET /rest/v1/` polos (tanpa kunci) → **401 dalam 0,23 detik**. Artinya **gerbang API-nya hidup
+  dan sehat; yang tidak menjawab adalah database PostgreSQL di belakangnya.** Project ref yang diuji =
+  `nvblmpkwyzbpdbshyvzw` (sama dengan yang tertulis di `lib/supabase.ts:20`).
+
+**Yang MASIH jalan (jadi situs belum mati total):** `/` `/beranda` `/discover` `/playly` `/shorts` `/login`
+`/daftar` `/history` `/my-list` `/video-eksternal` semua **200**, dan `/beranda` masih memuat **119** kartu
+poster. Sebabnya halaman-halaman itu disajikan dari hasil pra-render (ISR) — isinya salinan lama yang
+tersimpan, bukan hasil tanya database barusan. **Jangan tertipu ini:** 200 di halaman daftar TIDAK berarti
+database sehat.
+
+**Kapan mulai rusak:** antara 2026-09-15 dan 2026-09-16. Catatan 2026-09-15 mencatat `/api/dramas` **200,
+67 drama** — jadi jendelanya ±1 hari.
+
+❓ **Penyebab persisnya BELUM terverifikasi** dan tidak bisa dipastikan dari sini — perlu mata owner di
+dashboard Supabase (AI tak punya aksesnya). Kandidat yang cocok dengan gejala: project dibekukan/di-pause,
+disk penuh, compute kehabisan memori, atau koneksi database penuh. **Langkah owner:** buka
+<https://supabase.com/dashboard/project/nvblmpkwyzbpdbshyvzw> → lihat banner di atas + menu **Reports** /
+**Database → Health**. Kalau ada tombol **Restore/Resume**, itu jawabannya. Kalau statusnya hijau semua,
+lapor balik — berarti dugaan di atas salah dan perlu digali lagi.
+
+⚠️ **Jangan mengganti env Supabase di Vercel sebagai "perbaikan" tebak-tebakan** — kuncinya terbukti masih
+sah (gerbangnya menjawab 401, bukan 403 "kunci ditolak"). Menggantinya justru bisa mematikan yang masih hidup.
+
+**Sekaligus di sesi ini — catatan gerbang pra-rilis TERSIMPAN & TERKIRIM (`bf73d5f`).** Suntingan
+`AGENTS.local.md` poin 6 dari sesi kemarin (`npm run build` naik ke sebelum `npx tsc --noEmit`) ternyata
+**belum di-commit**; selama belum terkirim, komputer rekan & sesi AI berikutnya tetap membaca urutan lama
+yang memunculkan 4 error `PageProps` palsu. Sekarang lokal = `origin/main` = `dramaku/main` = `bf73d5f`,
+dibuktikan lewat `git ls-remote` LANGSUNG ke server kedua repo. Gerbang §6 dijalankan penuh walau isinya
+cuma `.md`: `npm run build` **exit 0** → `npx tsc --noEmit` **exit 0** (nol error `PageProps` — urutan barunya
+terbukti benar) → **613 tes lulus / 45 berkas** → nol berkas env/kunci ter-stage (dua lapis).
+**Rollback 1-baris:** `git revert --no-edit bf73d5f && git push origin main` (cuma memulihkan teks aturan).
+
+⚠️ **Jebakan alat baru yang ditemukan hari ini:** `rm -rf .next` lalu `npm run build` **gagal di percobaan
+pertama** dengan `Next.js build worker exited with code: 4294967295` di tahap "Collecting page data using 47
+workers". Percobaan kedua **tanpa mengubah kode sebaris pun** → **exit 0** dan lengkap. Jadi kegagalan itu
+**tidak stabil (flaky)**, bukan kode rusak. ❓ Penyebabnya belum terverifikasi (dugaan: 47 worker paralel
+kehabisan memori di Windows). **Kalau kambuh: ulangi `npm run build` sekali lagi TANPA menghapus `.next`
+sebelum menyimpulkan kode rusak.**
+
+❓ **Satu lagi untuk owner, tidak saya ubah sepihak:** `git config user.email` di komputer ini =
+`zyyherlambang@gmail.com` (email rekan) padahal `user.name` = `masradenbagus89-ui`. Poin 7 `AGENTS.local.md`
+(identitas git dipisahkan) masih belum tuntas — riwayat git belum bisa menjawab "siapa mengerjakan ini".
+
+**Sebelumnya:** 2026-09-15 (sore) — **SUSUNAN FILM /beranda JADI BARIS KATEGORI GAYA LK21.**
 Permintaan owner lewat 2 screenshot berkotak merah. Grid panjang ber-paginasi TIDAK lagi memenuhi layar;
 menggantikannya 5 baris kategori berposter kecil yang digeser ke samping (Drama Terbaru · Paling Banyak
 Ditonton · Drama Action · Drama Romance · Drama Tycoon). Grid + nomor halaman **tetap ada** dan muncul

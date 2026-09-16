@@ -5,7 +5,37 @@
 >
 > **AI:** tiap kali ada perbaikan / deploy / keputusan — **perbarui berkas ini di langkah terakhir**, sebelum bilang selesai. Jangan tumpuk sejarah panjang di sini; pindahkan yang lama ke `NEXT-SESSION.md`.
 
-**Terakhir diisi:** 2026-09-16 — 🔴 **DATABASE SUPABASE TIDAK MENJAWAB — HALAMAN DETAIL DRAMA MATI DI PRODUKSI.**
+**Terakhir diisi:** 2026-09-16 (siang) — ✅ **DUA KERJA REKAN DITARIK & TAYANG (`5e6cbec`): video webhook masuk /playly + login tahan saat database mati.** Sekaligus penutup insiden 522 yang tercatat di entri sebelumnya.
+
+**Asalnya rekan** (branch `feat/playly-webhook` di cermin `dramaku`, **patuh proses**: tidak menyentuh HANDOFF/antrean/INDEX, membawa 2 berkas `docs/serah-terima/` sendiri). Branch tertinggal 5 commit dari `main` tapi **uji merge kering (`git merge-tree`) bersih** — yang disentuh rekan beda berkas dengan rilis baris-kategori `e466595`. Dual push `1242955..5e6cbec` ke `origin` **dan** `dramaku`, keduanya sukses.
+
+**2 commit, 12 berkas, +1229 baris:**
+- `8297548` — `/playly` menggabungkan DUA sumber (katalog jemput + webhook dorong). Baru: `lib/playly-gabungan.ts`. Diubah: `app/playly/page.tsx`, `app/api/playly/video/route.ts` (gerbang IDOR ikut mengenal daftar gabungan — **tidak dilemahkan**, cuma isi daftar izinnya ditambah; tanpa ini video webhook TAMPIL tapi 404 saat diklik).
+- `b085453` — `lib/supabase.ts` + `app/api/auth/login/route.ts`: badan error diringkas di akarnya (berhenti memuntahkan HTML Cloudflare raksasa ke browser), batas waktu 6 detik per percobaan, percobaan ulang **hanya untuk BACA** (tulis sengaja tidak — mengulang `coin_add` berisiko koin bertambah dua kali).
+
+**Nol SQL · nol env baru.** Tidak ada yang perlu owner siapkan di Supabase atau Vercel.
+
+**Gerbang §6 dijalankan penuh, urutan baru:** `rm -rf .next` → `npm run build` **exit 0** → `npx tsc --noEmit` **exit 0** (nol `PageProps` palsu — urutan terbukti benar untuk kedua kalinya) → **653 tes lulus / 49 berkas, 0 gagal** (naik dari 613/45) → nol berkas env/kunci ter-stage.
+
+**TAYANG & TERVERIFIKASI di situs sungguhan:** `/` `/login` `/playly` semua **200** (0,50-0,70 detik) · `/api/dramas` **200** (1,86 dtk) · `/api/ads` **200** (1,50 dtk) · `POST /api/auth/login` dengan email yang pasti tak terdaftar → **401 dalam 1,49 detik** = jalur login benar-benar menyentuh database dan memverifikasi akun.
+
+🔴 **INSIDEN 522 SUDAH BERLALU** (lihat entri sebelumnya): jalur database yang kemarin **500 sesudah ~20 detik** kini **200 di bawah 2 detik**. Penyebab akarnya tetap ❓ **belum terverifikasi** — ada di pihak Supabase, bukan kode kita. Yang dirilis hari ini bukan penyembuh penyebabnya, melainkan peredam akibatnya.
+
+⚠️ **TEMUAN SESI INI — `/playly` BERUBAH DARI STATIC JADI DYNAMIC, bertentangan dengan klaim di berkas serah-terima rekan.** Berkas `docs/serah-terima/2026-09-15-gabung-video-playly.md` §5 menulis "`/playly` tetap static + revalidate 5m". **Kenyataannya tidak.** Bukti dua lapis: (a) keluaran `npm run build` mendaftar `/playly` sebagai **ƒ (Dynamic)** — sementara `/beranda` & `/discover` tetap **○ (Static) 1m 1y**; (b) header produksi `/playly` membalas `Cache-Control: private, no-cache, no-store, max-age=0, must-revalidate` + `X-Vercel-Cache: MISS`.
+
+**Sebabnya terlacak sampai baris:** `getPublishedPlaylyWebhookVideos()` memanggil `getPlaylyWebhookVideos()` (`lib/store.ts:1029-1034`) yang memanggil `sbDocGet(PLAYLY_WEBHOOK_DOC)` **tanpa opsi `revalidate`** → `sbSelect` jatuh ke default `cache: "no-store"` (`lib/supabase.ts:214`). Komentar di `lib/supabase.ts:204` sudah memperingatkan persis hal ini: **satu fetch `no-store` membuat SELURUH halaman jadi dinamis.** Bandingkan `getPlaylyHiddenIdsCached()` (`lib/store.ts:934-943`) yang memang memakai `revalidate: CATALOG_TTL_SECONDS` — itu sebabnya `/beranda` & `/discover` selamat.
+
+**Dampak apa adanya, dua arah — bukan bug merusak:**
+- **Merugikan:** tiap kunjungan `/playly` memanggil Supabase langsung. Beban fungsi Vercel naik, dan kalau Supabase kambuh seperti kemarin, `/playly` ikut mati — padahal saat insiden kemarin halaman itu **selamat justru karena static** (tercatat di entri sebelumnya: "/playly 200 karena ISR").
+- **Menguntungkan:** video webhook muncul **seketika**, tak menunggu 5 menit. Itu justru inti guna webhook. Langkah §6 no.2 di berkas serah-terima ("refresh setelah 5 menit") jadi tidak akurat — nyatanya langsung.
+
+**❓ Belum diputuskan owner.** Perbaikannya **BUKAN** menambahkan `revalidate` di `getPlaylyWebhookVideos()` — fungsi itu juga dibaca jalur TULIS (`upsertPlaylyWebhookVideo` membaca-lalu-menulis), dan membaca data basi di sana bisa **menimpa video lain**. Cara yang benar mengikuti pola yang sudah ada di repo: buat varian terpisah `getPublishedPlaylyWebhookVideosCached()` yang meneruskan `revalidate`, persis seperti pasangan `getPlaylyHiddenIds` ↔ `getPlaylyHiddenIdsCached`. Kalau owner justru ingin video webhook tampil seketika, **tidak perlu diapa-apakan** — cukup sadar ongkosnya.
+
+**3 hal lain yang rekan serahkan untuk keputusan owner:** (1) `/beranda` + `/discover` belum ikut daftar gabungan — cukup ganti satu baris import di `app/beranda/page.tsx:3` & `app/discover/page.tsx:4`, tapi keduanya halaman yang sudah tayang jadi tidak diubah diam-diam; (2) ±20 route lain masih meneruskan `err.message` ke browser (sekarang sudah pendek, tidak lagi HTML raksasa, tapi masih menyebut detail teknis) = satu tugas terpisah; (3) berkas `payload.json` di akar repo belum terlacak git, sepertinya sisa uji coba — belum disentuh siapa pun.
+
+**Rollback 1-baris:** `git revert --no-edit 5e6cbec -m 1 && git push origin main` (merge commit → wajib `-m 1`).
+
+**Sebelumnya:** 2026-09-16 — 🔴 **DATABASE SUPABASE TIDAK MENJAWAB — HALAMAN DETAIL DRAMA MATI DI PRODUKSI.**
 Ditemukan saat memverifikasi produksi sesudah dorongan catatan `bf73d5f`. **Bukan disebabkan perubahan apa pun
 dari sisi kita** — nol kode tersentuh sejak `e466595`, dan gejalanya muncul juga saat diuji **langsung dari
 komputer ini ke Supabase**, tanpa lewat Vercel sama sekali.

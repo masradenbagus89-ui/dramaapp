@@ -31,6 +31,19 @@
 ✅ **`payload.json` SUDAH TIDAK ADA** di akar repo (dicek hari ini). Coret dari daftar keputusan yang menggantung.
 
 ❓ **Masih menggantung, belum dikerjakan:** 21 berkas route di `app/api` masih meneruskan `.message` mesin ke browser penonton (sudah pendek sejak `b085453`, tapi masih menyebut detail teknis internal) — satu tugas terpisah, bukan darurat.
+✅ **KERJA REKAN SUDAH DITARIK KE LOKAL (`a40caef`, merge) — atas perintah owner 2026-09-18.** Yang ditarik: branch **`chore/gitignore-claude-memory`** di cermin `dramaku`, bukan `dramaku/main` — branch itu **superset**, sudah memuat kedua commit `dramaku/main` (`0827268` + merge `8e5323e`) PLUS satu commit lagi (`c12b8db`, `.gitignore` mengabaikan `.claude/memory/` karena memuat email owner & nama akun rekan). **7 berkas, +920 baris, 0 baris dihapus.**
+
+**Isinya:** halaman `/admin/webhooks/playly` + baris menu "Webhook Playly" di sidebar admin. Gunanya menjawab pertanyaan yang selama ini tak terjawab dari layar: **"kenapa daftar webhook kosong?"** — dua sebab yang tampak sama persis tapi langkah perbaikannya berlawanan (kunci belum dipasang → pasang env + deploy ulang · kunci sudah ada tapi Playly belum pernah mengirim → hubungi pengelola Playly). Berkas serah-terima rekan: `docs/serah-terima/2026-09-16-menu-webhook-admin.md`.
+
+**Nol bentrok, dibuktikan sebelum ditarik:** nol berkas disentuh berdua, dan `git merge-tree` (uji merge kering, tanpa mengubah disk) bersih. Keduanya justru **saling melengkapi**: halaman admin rekan memakai `getPlaylyWebhookVideos()` + `getPlaylyHiddenIds()` versi **SEGAR** — persis dua fungsi yang commit `254ce47` sengaja TIDAK sentuh, sebab admin harus melihat keadaan sekarang, bukan salinan ber-cache. `lib/playly-webhook-status.ts` cuma mengimpor **tipe** dari `lib/store.ts`, bukan fungsinya.
+
+**Bukti atas kode GABUNGAN:** `npx tsc --noEmit` **exit 0** · **687 tes lulus / 51 berkas, 0 gagal** (671 + 16 tes rekan = 687, cocok persis).
+
+⏸️ **MASIH TERTAHAN DI GERBANG YANG SAMA.** Supabase dicek ulang 2026-09-18 sesudah merge: tabel `dramas` **masih habis waktu 25 detik tanpa balasan**, produksi `/api/dramas` **masih 500**. Jadi `npm run build` tetap belum bisa lulus, dan rilis tetap menunggu.
+
+⚠️ **PLAYLY_WEBHOOK_SECRET MASIH BELUM TERPASANG di Vercel** (diverifikasi rekan: endpoint balas `503 PLAYLY_WEBHOOK_SECRET belum di-set`). Jadi begitu halaman admin ini tayang, yang owner lihat adalah **kartu merah "Jalur webhook belum menyala"** berisi 2 langkah perbaikan — **itu keadaan sebenarnya, bukan bug halaman**. Kartu kuning muncul sesudah env dipasang + deploy ulang; kartu hijau baru muncul sesudah Playly benar-benar mengirim notifikasi pertamanya.
+
+⚠️ **TEMUAN SAMPINGAN — remote `official` RUSAK.** `git remote -v` mendaftar `official` → `https://github.com/projectraden/backup-dramaapp.git`, dan server menjawab **"Repository not found"**, sehingga `git fetch --all` SELALU keluar error. Tidak berbahaya (dual push hanya memakai `origin` + `dramaku`), tapi bikin tiap `fetch --all` terlihat seperti gagal. ❓ Belum disentuh — menghapusnya perlu izin owner (`git remote remove official`).
 
 **Sebelumnya:** 2026-09-16 (siang) — ✅ **DUA KERJA REKAN DITARIK & TAYANG (`5e6cbec`): video webhook masuk /playly + login tahan saat database mati.** Sekaligus penutup insiden 522 yang tercatat di entri sebelumnya.
 

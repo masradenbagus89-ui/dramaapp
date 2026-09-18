@@ -1025,7 +1025,17 @@ export type PlaylyWebhookVideo = {
   receivedAt: string;
 };
 
-/** SEMUA baris webhook, termasuk yang sudah ditarik Playly. Terbaru di depan. */
+/** Aturan "baris webhook ini boleh tampil" — satu tempat, dipakai kedua pembaca. */
+const bolehTampil = (v: PlaylyWebhookVideo) => v.status === "published";
+
+/**
+ * SEMUA baris webhook, termasuk yang sudah ditarik Playly. Terbaru di depan.
+ *
+ * SENGAJA tanpa cache: pembacanya termasuk jalur TULIS (savePlaylyWebhookVideos
+ * di bawah selalu didahului pembacaan ini), dan daftar basi di sana akan
+ * MENIMPA baris yang masuk di sela cache — video hilang tanpa jejak error.
+ * Halaman publik yang boleh sedikit basi memakai varian Cached di bawahnya.
+ */
 export async function getPlaylyWebhookVideos(): Promise<PlaylyWebhookVideo[]> {
   if (useSupabase) {
     return (await sbDocGet<PlaylyWebhookVideo[]>(PLAYLY_WEBHOOK_DOC)) ?? [];
@@ -1034,7 +1044,8 @@ export async function getPlaylyWebhookVideos(): Promise<PlaylyWebhookVideo[]> {
 }
 
 /**
- * Hanya video yang BOLEH tampil. Inilah yang dipakai halaman penonton.
+ * Hanya video yang BOLEH tampil. Dipakai jalur yang butuh keadaan MUTAKHIR —
+ * gerbang izin pemutar (app/api/playly/video/route.ts) dan halaman admin.
  *
  * Namanya sengaja menyebut "Published" supaya pemanggil tahu daftarnya sudah
  * disaring — kalau fungsi ini dinamai `getPlaylyWebhookVideos` saja, cepat atau
@@ -1042,7 +1053,33 @@ export async function getPlaylyWebhookVideos(): Promise<PlaylyWebhookVideo[]> {
  */
 export async function getPublishedPlaylyWebhookVideos(): Promise<PlaylyWebhookVideo[]> {
   const semua = await getPlaylyWebhookVideos();
-  return semua.filter((v) => v.status === "published");
+  return semua.filter(bolehTampil);
+}
+
+/**
+ * Versi ber-cache untuk HALAMAN PENONTON — alasannya sama dengan
+ * getPlaylyHiddenIdsCached di atas, dan TTL-nya sengaja disamakan: keduanya
+ * membaca dokumen `app_data` yang sama-sama jarang berubah.
+ *
+ * KENAPA HARUS ADA (bukan sekadar penghematan jaringan): tanpa `revalidate`,
+ * sbSelect jatuh ke `cache: "no-store"` dan satu pembacaan itu membuat SELURUH
+ * halaman pemanggilnya jadi dinamis — dibangun ulang untuk tiap pengunjung,
+ * dan ikut mati begitu Supabase tidak menjawab. Itu yang terjadi pada /playly
+ * antara 2026-09-15 dan 2026-09-18 (lihat lib/supabase.ts:204).
+ *
+ * SENGAJA fungsi terpisah, BUKAN opsi di getPlaylyWebhookVideos: opsi di sana
+ * cepat atau lambat akan dipakai jalur tulis dan menimpa data (lihat catatan
+ * di fungsi itu).
+ */
+export async function getPublishedPlaylyWebhookVideosCached(): Promise<
+  PlaylyWebhookVideo[]
+> {
+  const semua = useSupabase
+    ? ((await sbDocGet<PlaylyWebhookVideo[]>(PLAYLY_WEBHOOK_DOC, {
+        revalidate: CATALOG_TTL_SECONDS,
+      })) ?? [])
+    : (readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY).webhook ?? []);
+  return semua.filter(bolehTampil);
 }
 
 async function savePlaylyWebhookVideos(list: PlaylyWebhookVideo[]): Promise<void> {

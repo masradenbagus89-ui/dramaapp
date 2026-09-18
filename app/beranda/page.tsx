@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getAllDramasCachedSafe } from "@/lib/dramas";
-import { getPlaylyVideosPublik } from "@/lib/playly-publik";
+import { getPlaylyVideosGabunganCached } from "@/lib/playly-gabungan";
 import { featuredHeroSlides } from "@/lib/hero-teaser";
 import { FEATURED_ROW_COUNT } from "@/lib/beranda-catalog";
 import CatalogBrowser from "../components/beranda/CatalogBrowser";
@@ -27,10 +27,16 @@ export default async function BerandaPage() {
   // Supabase — tanpa ini kotak cari membalas "tidak ada yang cocok" untuk video
   // yang jelas-jelas tayang di situs.
   //
-  // Aman terhadap revalidate=60 di atas: seluruh pembacaannya ber-cache 5 menit
-  // dan tidak pernah melempar error (lib/playly-publik.ts), jadi halaman ini
-  // tidak berubah jadi dibangun ulang untuk tiap pengunjung.
-  const { videos: playlyVideos } = await getPlaylyVideosPublik();
+  // Sejak 2026-09-18 sumbernya GABUNGAN katalog + webhook, bukan katalog saja —
+  // tanpa itu video yang masuk lewat webhook tampil di /playly tapi tidak di
+  // sini, dan penonton mengira videonya hilang.
+  //
+  // WAJIB varian Cached. Aman terhadap revalidate=60 di atas hanya selama
+  // SELURUH pembacaannya ber-cache: satu saja pembacaan `no-store` membuat
+  // halaman ini dibangun ulang untuk tiap pengunjung dan ikut mati saat Supabase
+  // tak menjawab (lib/supabase.ts:204). Buktinya bukan baris ini, melainkan
+  // kolom Static/Dynamic di keluaran `npm run build`.
+  const { videos: playlyVideos } = await getPlaylyVideosGabunganCached();
 
   if (slides.length === 0) {
     return (

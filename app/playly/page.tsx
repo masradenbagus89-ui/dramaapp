@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Film } from "lucide-react";
-import { getPlaylyVideosGabungan } from "@/lib/playly-gabungan";
+import { getPlaylyVideosGabunganCached } from "@/lib/playly-gabungan";
 import PlaylyVideoGrid from "@/app/components/PlaylyVideoGrid";
 
 // Halaman disimpan & dipakai ulang, disegarkan tiap 300 detik — sama dengan
@@ -22,7 +22,7 @@ export default async function PlaylyPage() {
   // yang didorong Playly lewat webhook. Aturan gabungnya (siapa menang saat
   // videoId sama, urutannya, dan apa yang terjadi kalau satu sumber mati) ada
   // di lib/playly-gabungan.ts — halaman ini cukup menggambar hasilnya.
-  const { videos, error } = await getPlaylyVideosGabungan();
+  const { videos, error } = await getPlaylyVideosGabunganCached();
 
   return (
     <main className="min-h-screen bg-zinc-950 pb-16">

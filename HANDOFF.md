@@ -5,7 +5,34 @@
 >
 > **AI:** tiap kali ada perbaikan / deploy / keputusan — **perbarui berkas ini di langkah terakhir**, sebelum bilang selesai. Jangan tumpuk sejarah panjang di sini; pindahkan yang lama ke `NEXT-SESSION.md`.
 
-**Terakhir diisi:** 2026-09-16 (siang) — ✅ **DUA KERJA REKAN DITARIK & TAYANG (`5e6cbec`): video webhook masuk /playly + login tahan saat database mati.** Sekaligus penutup insiden 522 yang tercatat di entri sebelumnya.
+**Terakhir diisi:** 2026-09-18 — ⚠️ **PERBAIKAN /playly SELESAI DIKODE & TERUJI, TAPI TERTAHAN: `npm run build` TIDAK BISA LULUS karena Supabase MATI LAGI.** Nol commit, nol push. Perubahan ada di working tree.
+
+🔴 **INSIDEN 522 KAMBUH HARI INI — sama persis dengan 2026-09-16.** Dibuktikan dari komputer ini, LANGSUNG ke Supabase tanpa lewat Vercel: `GET /rest/v1/` polos → **401 dalam 0,32 detik** (gerbang API hidup & sehat), tapi tabel `dramas` dan `app_data` dengan kunci sah → **habis waktu 30 detik tanpa balasan sama sekali**. Artinya database PostgreSQL di belakangnya yang tidak menjawab, bukan kuncinya. Project ref `nvblmpkwyzbpdbshyvzw`. ❓ Penyebab akar tetap **belum terverifikasi** — di luar jangkauan AI. **Langkah owner:** buka dashboard Supabase project itu → lihat banner atas + menu Reports / Database Health; kalau ada tombol Restore/Resume, itu jawabannya. ⚠️ **Jangan tebak-tebak mengganti env Supabase di Vercel** — kuncinya terbukti masih sah (401, bukan 403).
+
+**PRODUKSI SEKARANG, diukur langsung — dan angkanya persis membuktikan kenapa perbaikan ini dikerjakan:** `/beranda` **200 / 0,85 dtk** · `/discover` **200 / 0,69 dtk** · `/` **200 / 0,87 dtk** · `/login` **200 / 0,62 dtk** — semuanya static, selamat. Sedangkan `/playly` **200 tapi 13,11 detik** (dynamic, menggantung menunggu database yang mati) dan `/api/dramas` **500 / 12,90 dtk**. Header menegaskan: `/playly` → `no-store` + `X-Vercel-Cache: MISS` + `Age: 0`; `/beranda` → `X-Vercel-Cache: STALE` + `Age: 242` (disajikan dari salinan berumur 4 menit — itulah yang menyelamatkannya).
+
+**YANG SUDAH DIKERJAKAN (8 berkas, belum di-commit):** owner memilih urutan "nomor 1 dulu, baru nomor 2" sesudah diberi tahu bahwa nomor 2 TIDAK BISA duluan — `getPlaylyVideosGabungan()` membawa pembacaan `no-store` di dalamnya, jadi memasangnya ke `/beranda` + `/discover` akan menyeret dua halaman paling ramai itu ikut jadi dynamic. Rencana: `docs/lintasai/rencana/2026-09-18-playly-static-dan-gabungan.md`.
+- `lib/store.ts` — BARU `getPublishedPlaylyWebhookVideosCached()` (revalidate `CATALOG_TTL_SECONDS` = 60 dtk), meniru pasangan `getPlaylyHiddenIds` ↔ `getPlaylyHiddenIdsCached` yang sudah ada di berkas yang sama. `getPlaylyWebhookVideos()` **sengaja TIDAK disentuh** — jalur TULIS membacanya, daftar basi di sana akan MENIMPA video lain.
+- `lib/playly-gabungan.ts` — satu perakit internal, **dua pintu keluar**: `getPlaylyVideosGabungan()` (segar, untuk gerbang izin pemutar) dan `getPlaylyVideosGabunganCached()` (untuk halaman penonton).
+- `app/playly/page.tsx` · `app/beranda/page.tsx` · `app/discover/page.tsx` — ketiganya pindah ke pintu Cached. Nomor 1 + nomor 2 selesai sekaligus.
+- `app/api/playly/video/route.ts` **SENGAJA tidak disentuh**: gerbang IDOR tetap memakai daftar segar. Daftar izin yang boleh basi = video yang baru disembunyikan admin masih bisa ditonton — itu melemahkan pengaman, bukan optimasi.
+- 2 berkas tes: `tests/playly-halaman-cached.test.ts` (BARU) + tambahan di `tests/playly-gabungan.test.ts`.
+
+**BUKTI yang SUDAH ada:** `npx tsc --noEmit` **exit 0** · **671 tes lulus / 50 berkas, 0 gagal** (naik dari 653/49) · **mutation check 4 arah** — (1) `/beranda` dikembalikan ke pintu segar, (2) `revalidate` dihapus dari fungsi Cached, (3) gerbang izin dipindah ke pintu cache, (4) pintu Cached diam-diam memanggil pembaca segar — **keempatnya MERAH**, dan hijau lagi (36/36) sesudah dikembalikan.
+
+❌ **BUKTI yang BELUM ada, dan inilah yang menahan rilis:** keluaran `npm run build` yang mendaftar `/playly` sebagai **○ (Static)**. Itu satu-satunya bukti yang sah — pre-mortem rencana ini menulis persis bahwa membaca kode saja TIDAK cukup, karena kesalahan yang sama sudah terjadi 2026-09-15 (berkas serah-terima rekan menulis "/playly tetap static" berdasarkan membaca `export const revalidate`, padahal kenyataannya dynamic).
+
+**Build gagal 3× dengan `Next.js build worker exited with code: 4294967295 / 3221226505`, SELALU di tahap "Generating static pages", SELALU didahului `[drama] gagal ambil daftar id saat build: Supabase tidak menjawab setelah 2 percobaan (TimeoutError)`.** ✅ **Terbukti BUKAN karena perubahan ini:** perubahan di-`git stash`, build dijalankan atas kode `a65bfbf` yang apa adanya → **gagal dengan crash yang sama persis**. Di ketiga percobaan `✓ Compiled successfully` dan `Finished TypeScript` selalu lulus — yang tumbang cuma tahap pra-render yang butuh database.
+
+**LANGKAH BERIKUTNYA (berurutan):** (1) owner cek dashboard Supabase & pulihkan; (2) ulangi `rm -rf .next` → `npm run build` → pastikan `/playly` tercatat `○ (Static)` dan `/beranda` + `/discover` **TETAP** `○ (Static)` — kalau salah satu berubah jadi `ƒ`, pekerjaan ini merugikan dan harus dibatalkan, bukan dilanjutkan; (3) `npx tsc --noEmit` → `npm test` → cek nol berkas env ter-stage; (4) izin owner → dual push.
+
+⚠️ **ADA KERJA REKAN MENUNGGU, belum ditarik:** `dramaku/main` = `8e5323e`, **maju 2 commit** dari lokal `a65bfbf` — `0827268` + merge `8e5323e`, "halaman & menu pantau webhook Playly" di admin. **6 berkas, +916 baris, 0 baris dihapus** (semua berkas BARU kecuali `AdminSidebar.tsx` +7 baris menu). Patuh proses: membawa `docs/serah-terima/2026-09-16-menu-webhook-admin.md`, nol sentuhan ke berkas catatan owner, nol berkas env. Lokal adalah nenek-moyang langsung commit itu → **fast-forward bersih**. Belum ditarik: menariknya lalu mendorong ke `origin main` = tombol rilis, wajib izin owner, dan gerbang build sedang tidak bisa dijalankan.
+
+✅ **`payload.json` SUDAH TIDAK ADA** di akar repo (dicek hari ini). Coret dari daftar keputusan yang menggantung.
+
+❓ **Masih menggantung, belum dikerjakan:** 21 berkas route di `app/api` masih meneruskan `.message` mesin ke browser penonton (sudah pendek sejak `b085453`, tapi masih menyebut detail teknis internal) — satu tugas terpisah, bukan darurat.
+
+**Sebelumnya:** 2026-09-16 (siang) — ✅ **DUA KERJA REKAN DITARIK & TAYANG (`5e6cbec`): video webhook masuk /playly + login tahan saat database mati.** Sekaligus penutup insiden 522 yang tercatat di entri sebelumnya.
 
 **Asalnya rekan** (branch `feat/playly-webhook` di cermin `dramaku`, **patuh proses**: tidak menyentuh HANDOFF/antrean/INDEX, membawa 2 berkas `docs/serah-terima/` sendiri). Branch tertinggal 5 commit dari `main` tapi **uji merge kering (`git merge-tree`) bersih** — yang disentuh rekan beda berkas dengan rilis baris-kategori `e466595`. Dual push `1242955..5e6cbec` ke `origin` **dan** `dramaku`, keduanya sukses.
 

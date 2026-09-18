@@ -6,16 +6,23 @@
 //   mitra kita, dan sudah lolos dua saringan penting: video yang disembunyikan
 //   admin dibuang, dan video yang berkasnya belum ada di Playly juga dibuang.
 //
-// Sumber 2 — WEBHOOK (getPublishedPlaylyWebhookVideos di lib/store.ts):
+// Sumber 2 — WEBHOOK (getPublishedPlaylyWebhookVideos* di lib/store.ts):
 //   Playly yang MENDORONG ke kita lewat POST /api/webhooks/playly begitu ada
 //   video baru. Datanya sampai seketika (tak menunggu siklus jemput), tapi ia
 //   cuma potret saat notifikasi tiba — tidak lewat saringan apa pun.
 //
 // Berkas ini SENGAJA terpisah dari lib/playly-publik.ts. Berkas itu menjawab
-// satu pertanyaan ("apa isi katalog mitra yang boleh tampil?") dan masih
-// dipakai apa adanya oleh /beranda, /discover, dan halaman admin. Menyuntikkan
-// sumber kedua ke dalamnya berarti empat pemanggil ikut berubah diam-diam;
-// berkas terpisah membuat perubahannya hanya kena yang memang memanggilnya.
+// satu pertanyaan saja ("apa isi katalog mitra yang boleh tampil?") dan tetap
+// berdiri sendiri supaya aturan katalog bisa diuji tanpa ikut menyeret sumber
+// kedua.
+//
+// DUA PINTU KELUAR, sengaja (lihat keduanya di dasar berkas):
+//   getPlaylyVideosGabungan()       — segar, untuk GERBANG IZIN pemutar
+//   getPlaylyVideosGabunganCached() — ber-cache, untuk HALAMAN PENONTON
+// Sejak 2026-09-18 /playly, /beranda, dan /discover memakai yang Cached. Halaman
+// yang memakai pintu segar akan berubah jadi dinamis tanpa peringatan apa pun —
+// itu bukan bug Next.js, melainkan akibat langsung dari `no-store`
+// (lib/supabase.ts:204).
 //
 // SERVER-ONLY. Jangan di-import dari komponen "use client".
 // -------------------------------------------------------------------------
@@ -24,6 +31,7 @@ import { getPlaylyVideosPublik, type PlaylyVideoPublik } from "./playly-publik";
 import {
   getPlaylyHiddenIdsCached,
   getPublishedPlaylyWebhookVideos,
+  getPublishedPlaylyWebhookVideosCached,
   type PlaylyWebhookVideo,
 } from "./store";
 
@@ -149,13 +157,21 @@ export function gabungVideoPlayly(
  * Kedua pengambilan berjalan BERBARENGAN dan masing-masing punya jaring
  * sendiri: satu sumber mati tidak boleh mengosongkan halaman, karena sumber
  * yang lain masih punya video yang sah untuk ditonton.
+ *
+ * Cara mengambil daftar webhook DIOPER dari luar, bukan dipilih di sini: dua
+ * pemanggilnya butuh jaminan yang berbeda (gerbang izin butuh keadaan MUTAKHIR,
+ * halaman penonton butuh pembacaan ber-cache supaya halamannya tetap static),
+ * sedangkan aturan penggabungannya persis sama. Satu perakit, dua pintu di
+ * bawah — bukan dua salinan yang bisa berbeda diam-diam.
  */
-export async function getPlaylyVideosGabungan(): Promise<PlaylyGabunganResult> {
+async function rakitGabungan(
+  ambilWebhook: () => Promise<PlaylyWebhookVideo[]>,
+): Promise<PlaylyGabunganResult> {
   const [katalog, webhook, hiddenIds] = await Promise.all([
     // Sudah menangkap kegagalannya sendiri: mengembalikan daftar kosong +
     // alasan, bukan melempar.
     getPlaylyVideosPublik(),
-    getPublishedPlaylyWebhookVideos().then(
+    ambilWebhook().then(
       (videos) => ({ videos, error: null as string | null }),
       (err: unknown) => {
         // Rinciannya ke log server saja. Halaman penonton tidak menampilkan isi
@@ -198,4 +214,30 @@ export async function getPlaylyVideosGabungan(): Promise<PlaylyGabunganResult> {
     // bermasalah, satu kalimat sudah cukup untuk pengunjung.
     error: katalog.error ?? webhook.error,
   };
+}
+
+/**
+ * Untuk jalur yang butuh keadaan MUTAKHIR — gerbang izin pemutar
+ * (app/api/playly/video/route.ts). Sengaja TANPA cache: gerbang itu memutuskan
+ * sebuah video boleh diputar atau tidak, dan daftar izin yang boleh basi berarti
+ * video yang baru disembunyikan admin masih bisa ditonton sampai cache habis.
+ */
+export async function getPlaylyVideosGabungan(): Promise<PlaylyGabunganResult> {
+  return rakitGabungan(getPublishedPlaylyWebhookVideos);
+}
+
+/**
+ * Untuk HALAMAN PENONTON (/playly, /beranda, /discover).
+ *
+ * WAJIB versi ini, bukan yang di atas: satu pembacaan tanpa cache membuat
+ * SELURUH halaman pemanggilnya jadi dinamis (lib/supabase.ts:204) — dibangun
+ * ulang untuk tiap pengunjung, dan ikut mati begitu Supabase tidak menjawab.
+ * Itu yang menimpa /playly sampai 2026-09-18; /beranda & /discover selamat di
+ * insiden 2026-09-16 justru karena seluruh pembacaannya ber-cache.
+ *
+ * Ongkosnya, dan ini disetujui owner: video baru dari webhook muncul paling
+ * lambat 60 detik sesudah notifikasinya tiba, tidak lagi seketika.
+ */
+export async function getPlaylyVideosGabunganCached(): Promise<PlaylyGabunganResult> {
+  return rakitGabungan(getPublishedPlaylyWebhookVideosCached);
 }

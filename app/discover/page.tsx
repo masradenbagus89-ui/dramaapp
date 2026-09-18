@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getAllDramasCachedSafe } from "@/lib/dramas";
-import { getPlaylyVideosPublik } from "@/lib/playly-publik";
+import { getPlaylyVideosGabunganCached } from "@/lib/playly-gabungan";
 import DramaBrowser from "../components/DramaBrowser";
 import DashboardVideoGrid from "../components/DashboardVideoGrid";
 
@@ -20,15 +20,18 @@ export default async function DiscoverPage() {
   const dramas = await getAllDramasCachedSafe();
 
   // Video Playly milik akun mitra kita, tampil OTOMATIS (tak perlu dikaitkan
-  // ke drama dulu). Semua pembacaannya ber-cache: satu saja pembacaan tanpa
-  // cache di sini akan membuat SELURUH halaman ini dibangun ulang untuk tiap
-  // pengunjung, sehingga `revalidate = 60` di atas jadi percuma (lihat catatan
-  // di lib/supabase.ts).
+  // ke drama dulu). Sejak 2026-09-18 sumbernya GABUNGAN katalog + webhook,
+  // seragam dengan /playly dan /beranda.
+  //
+  // WAJIB varian Cached. Semua pembacaannya harus ber-cache: satu saja pembacaan
+  // tanpa cache di sini akan membuat SELURUH halaman ini dibangun ulang untuk
+  // tiap pengunjung, sehingga `revalidate = 60` di atas jadi percuma (lihat
+  // catatan di lib/supabase.ts:204).
   //
   // Bagiannya digambar DI DALAM DramaBrowser sejak 2026-09-12 supaya ikut
   // tersaring kotak cari (ketikannya cuma ada di komponen itu). Batas 8 kartu
   // saat menjelajah ada di HasilPlayly.tsx.
-  const { videos: playlyVideos } = await getPlaylyVideosPublik();
+  const { videos: playlyVideos } = await getPlaylyVideosGabunganCached();
 
   // Bagian "Video terbaru" hanya muncul kalau sambungan ke dashboard sudah
   // dikonfigurasi. Tanpa penjaga ini, halaman publik akan menampilkan pesan

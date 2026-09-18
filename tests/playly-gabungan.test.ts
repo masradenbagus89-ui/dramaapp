@@ -27,6 +27,12 @@ const state = {
   /** Dinyalakan untuk meniru Supabase yang tidak bisa dihubungi. */
   webhookGagal: false,
   hiddenGagal: false,
+  /**
+   * Berapa kali tiap JALUR baca webhook dipakai. Inilah yang membedakan kedua
+   * pintu keluar: keduanya menghasilkan daftar yang sama, jadi isi daftar saja
+   * tidak bisa membuktikan halaman memakai jalur ber-cache.
+   */
+  dibaca: { segar: 0, cached: 0 },
 };
 
 vi.mock("../lib/playly-publik", () => ({
@@ -37,6 +43,14 @@ vi.mock("../lib/playly-publik", () => ({
 
 vi.mock("../lib/store", () => ({
   getPublishedPlaylyWebhookVideos: async () => {
+    state.dibaca.segar += 1;
+    if (state.webhookGagal) throw new Error("supabase tidak bisa dihubungi");
+    return state.webhook;
+  },
+  // Jalur ber-cache. Di produksi bedanya cuma opsi `revalidate` yang dioper ke
+  // Supabase — yang tak bisa dilihat dari hasilnya, makanya dihitung di sini.
+  getPublishedPlaylyWebhookVideosCached: async () => {
+    state.dibaca.cached += 1;
     if (state.webhookGagal) throw new Error("supabase tidak bisa dihubungi");
     return state.webhook;
   },
@@ -46,9 +60,12 @@ vi.mock("../lib/store", () => ({
   },
 }));
 
-const { gabungVideoPlayly, getPlaylyVideosGabungan, webhookKeKartu } = await import(
-  "../lib/playly-gabungan"
-);
+const {
+  gabungVideoPlayly,
+  getPlaylyVideosGabungan,
+  getPlaylyVideosGabunganCached,
+  webhookKeKartu,
+} = await import("../lib/playly-gabungan");
 
 /** Satu baris katalog, sudah berbentuk kartu siap tampil. */
 function kartuKatalog(id: string, ubah: Partial<PlaylyVideoPublik> = {}): PlaylyVideoPublik {
@@ -97,6 +114,7 @@ beforeEach(() => {
   state.hidden = [];
   state.webhookGagal = false;
   state.hiddenGagal = false;
+  state.dibaca = { segar: 0, cached: 0 };
 });
 
 // =====================  (a) KEDUA SUMBER ADA ISINYA  ======================
@@ -336,5 +354,76 @@ describe("webhookKeKartu — baris webhook dipaskan ke bentuk yang dikenal kartu
       episode: null,
       rating: null,
     });
+  });
+});
+
+// ============  DUA PINTU KELUAR: SEGAR vs BER-CACHE (2026-09-18)  ==========
+//
+// KENAPA PENJAGA INI ADA. Halaman /playly diam-diam berubah dari static jadi
+// dynamic antara 2026-09-15 dan 2026-09-18: satu pembacaan Supabase tanpa
+// `revalidate` jatuh ke `cache: "no-store"`, dan satu saja pembacaan seperti itu
+// membuat SELURUH halaman dibangun ulang untuk tiap pengunjung
+// (lib/supabase.ts:204). Akibat nyatanya terbukti mahal — saat Supabase tidak
+// menjawab (insiden 522, 2026-09-16), halaman static /beranda & /discover tetap
+// melayani penonton sedangkan halaman dynamic ikut mati.
+//
+// Yang membuatnya lolos waktu itu: tak ada satu pun tes yang MERAH, karena
+// kedua jalur menghasilkan DAFTAR YANG SAMA PERSIS. Bedanya cuma opsi yang
+// dioper ke Supabase — tak terlihat dari hasilnya. Maka yang diperiksa di sini
+// adalah JALUR MANA yang dibaca, bukan isi daftarnya.
+describe("(e) dua pintu keluar — halaman wajib lewat jalur ber-cache", () => {
+  it("getPlaylyVideosGabungan (gerbang izin) membaca jalur SEGAR, bukan cache", async () => {
+    state.katalog.videos = [kartuKatalog("k1")];
+    state.webhook = [barisWebhook("w1")];
+
+    await getPlaylyVideosGabungan();
+
+    expect(state.dibaca).toEqual({ segar: 1, cached: 0 });
+  });
+
+  it("getPlaylyVideosGabunganCached (halaman penonton) membaca jalur BER-CACHE", async () => {
+    state.katalog.videos = [kartuKatalog("k1")];
+    state.webhook = [barisWebhook("w1")];
+
+    await getPlaylyVideosGabunganCached();
+
+    expect(state.dibaca).toEqual({ segar: 0, cached: 1 });
+  });
+
+  it("kedua pintu menghasilkan daftar yang SAMA — aturan gabung tidak bercabang", async () => {
+    // Kalau suatu saat keduanya berbeda, berarti perakitnya sudah tersalin jadi
+    // dua dan salah satunya akan tertinggal saat aturannya diperbaiki.
+    state.katalog.videos = [kartuKatalog("k1"), kartuKatalog("k2")];
+    state.webhook = [barisWebhook("w1"), barisWebhook("w2", { status: "unpublished" })];
+    state.hidden = ["k2"];
+
+    const segar = await getPlaylyVideosGabungan();
+    const cached = await getPlaylyVideosGabunganCached();
+
+    expect(cached.videos.map((v) => v.id)).toEqual(segar.videos.map((v) => v.id));
+    expect(cached.error).toBe(segar.error);
+  });
+
+  it("versi ber-cache ikut GAGAL-AMAN: daftar sembunyi tak terbaca -> webhook ditahan", async () => {
+    // Aturan 4 harus berlaku di KEDUA pintu. Pintu ber-cache justru yang dipakai
+    // halaman penonton, jadi kalau jaring ini cuma terpasang di pintu segar,
+    // yang terlindungi malah bukan yang menghadap publik.
+    state.katalog.videos = [kartuKatalog("k1")];
+    state.webhook = [barisWebhook("w1")];
+    state.hiddenGagal = true;
+
+    const { videos } = await getPlaylyVideosGabunganCached();
+
+    expect(videos.map((v) => v.id)).toEqual(["k1"]);
+  });
+
+  it("versi ber-cache tetap menampilkan katalog walau sumber webhook mati", async () => {
+    state.katalog.videos = [kartuKatalog("k1")];
+    state.webhookGagal = true;
+
+    const { videos, error } = await getPlaylyVideosGabunganCached();
+
+    expect(videos.map((v) => v.id)).toEqual(["k1"]);
+    expect(error).toBeTruthy(); // dilaporkan, TIDAK dilempar
   });
 });

@@ -13,6 +13,7 @@ import {
   Megaphone,
   Film,
   KeyRound,
+  Webhook,
   ArrowLeft,
   type LucideIcon,
 } from "lucide-react";
@@ -26,6 +27,12 @@ const NAV_ITEMS: { href: string; label: string; icon: LucideIcon }[] = [
   { href: "/admin#tambah", label: "Tambah Drama", icon: Plus },
   { href: "/admin#daftar", label: "Daftar Drama", icon: List },
   { href: "/admin/videos/playly", label: "Video Playly", icon: Film },
+  // Ditaruh tepat di bawah "Video Playly" karena keduanya menjawab pertanyaan
+  // yang sama ("video Playly mana yang tampil?") lewat dua jalur berbeda:
+  // yang atas untuk video yang KITA jemput, yang ini untuk video yang PLAYLY
+  // kirim sendiri. Berjauhan di menu = admin mencari di tempat yang salah saat
+  // sebuah video tidak muncul.
+  { href: "/admin/webhooks/playly", label: "Webhook Playly", icon: Webhook },
   { href: "/admin/settings/playly", label: "Kunci Playly", icon: KeyRound },
   { href: "/admin#kelola-admin", label: "Kelola Admin", icon: Users },
   { href: "/admin#keamanan", label: "Keamanan (2FA)", icon: ShieldCheck },

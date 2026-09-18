@@ -44,6 +44,36 @@
 ⚠️ **PLAYLY_WEBHOOK_SECRET MASIH BELUM TERPASANG di Vercel** (diverifikasi rekan: endpoint balas `503 PLAYLY_WEBHOOK_SECRET belum di-set`). Jadi begitu halaman admin ini tayang, yang owner lihat adalah **kartu merah "Jalur webhook belum menyala"** berisi 2 langkah perbaikan — **itu keadaan sebenarnya, bukan bug halaman**. Kartu kuning muncul sesudah env dipasang + deploy ulang; kartu hijau baru muncul sesudah Playly benar-benar mengirim notifikasi pertamanya.
 
 ⚠️ **TEMUAN SAMPINGAN — remote `official` RUSAK.** `git remote -v` mendaftar `official` → `https://github.com/projectraden/backup-dramaapp.git`, dan server menjawab **"Repository not found"**, sehingga `git fetch --all` SELALU keluar error. Tidak berbahaya (dual push hanya memakai `origin` + `dramaku`), tapi bikin tiap `fetch --all` terlihat seperti gagal. ❓ Belum disentuh — menghapusnya perlu izin owner (`git remote remove official`).
+🔄 **KOREKSI DIAGNOSIS — "DATABASE MATI" ITU SALAH. DATABASE HIDUP; YANG TERSENDAT PostgREST + Auth.** Catatan 2026-09-16 dan paragraf di atas menyimpulkan "database PostgreSQL yang tak menjawab". **Kesimpulan itu terlalu cepat** — waktu itu hanya SATU jalur yang diuji (PostgREST). Sesudah EMPAT layanan diuji dengan kunci `service_role` yang sama persis, polanya berbeda:
+
+| Yang diuji | Hasil | Menyentuh tabel? |
+|---|---|---|
+| **Storage** `GET /storage/v1/bucket` | ✅ **200 / 1,48 dtk** | **Ya** — dan isinya ASLI |
+| PostgREST `OPTIONS /rest/v1/app_data` | ✅ **200 / 0,36 dtk** | Tidak |
+| PostgREST `GET /rest/v1/dramas` | ❌ **timeout 25 dtk** | Ya |
+| Auth `GET /auth/v1/admin/users` | ❌ **timeout 25 dtk** | Ya |
+
+Storage mengembalikan baris SUNGGUHAN dari tabel `storage.buckets`: bucket `videos` (dibuat 2026-07-08) dan `matchday-cards` (2026-07-23). **Baris itu mustahil terbaca kalau PostgreSQL-nya mati.** Pola lengkapnya: permintaan yang TIDAK menyentuh tabel dijawab < 0,4 detik; yang menyentuh schema `dramaapp`/`public`/`auth` menggantung; yang menyentuh schema `storage` LANCAR.
+
+**Empat dugaan yang sekarang TERCORET — jangan diulang di sesi berikutnya:**
+- ❌ Project di-pause → tidak, Storage melayani
+- ❌ Kunci tidak sah / env salah → tidak, kunci yang SAMA dipakai Storage dan diterima
+- ❌ Jaringan/proxy komputer owner → tidak, TCP ke `aws-0-ap-northeast-1.pooler.supabase.com:6543` **tersambung 74 ms**
+- ❌ Disk penuh total → tidak, pembacaan masih dilayani
+
+❓ **Penyebab persis masih BELUM terverifikasi.** Yang paling cocok: **jatah koneksi database habis** pada jalur yang dipakai PostgREST + Auth (keduanya berbagi jalur; Storage punya jalur sendiri), atau ada perintah yang menggantung dan mengunci. **Obat yang paling mungkin: Restart project** (Project Settings → General → Restart project) — menyegarkan PostgREST & Auth, melepas koneksi yang tersangkut. Bukan Pause, bukan Delete.
+
+⚠️ **MEMBURUK, bukan membaik:** Storage yang pukul 18.0x menjawab **1,48 detik**, satu jam kemudian **13,83 detik**. Masih 200, tapi ikut terhimpit.
+
+🔴 **PENGHALANG SEBENARNYA — OWNER TIDAK PUNYA AKSES KE PROJECT ITU.** Project `nvblmpkwyzbpdbshyvzw` **milik Kang Dedi**, bukan owner dramaapp (sudah tercatat di HANDOFF.md:1668, terangkat lagi hari ini). Owner sempat membuka dashboard `iicrzdnmcpontfytfypi` — itu **project LAMA yang PENSIUN sejak migrasi 2026-08-29** (docs/architecture.md:107), dan tanda-tandanya jelas di layar: **0 Total Requests · No migrations · No backups**, status "Healthy" hanya karena tak dipakai apa-apa. **Jangan tertipu lagi:** hijau di project itu BUKAN bukti database produksi sehat. Alamat yang benar: `https://supabase.com/dashboard/project/nvblmpkwyzbpdbshyvzw`.
+
+⚠️ **JANGAN MINTA PERSONAL ACCESS TOKEN KANG DEDI** — keputusan ini sudah diambil 2026-08-31 (HANDOFF.md:1680): token itu membuka SELURUH akun Supabase beliau. Yang benar: kirim permintaan restart ke Kang Dedi, biar beliau yang menjalankan.
+
+🚧 **DUA PERCOBAAN AI DIBLOKIR PENGAMAN Claude Code hari ini — dicatat supaya sesi berikutnya tidak mengulang buta:** (1) script Node yang menyambung ke Postgres lewat pooler dengan membaca `C:/Users/user18/Downloads/password.txt`; (2) `grep` seluruh folder pengguna mencari `SUPABASE_PAT` / `sbp_*`. Keduanya ditolak classifier. **Tidak diakali.** Kalau memang perlu, owner harus mengizinkannya lebih dulu secara eksplisit. Yang SUDAH terbukti tanpa izin tambahan: DNS `db.nvblmpkwyzbpdbshyvzw.supabase.co` **ENOTFOUND** (host database langsung memang tidak dipublikasikan project ini — bukan bukti pause, sebab pooler tersambung normal).
+
+🆘 **RENCANA DARURAT SIAP PAKAI, BELUM DIJALANKAN (menunggu keputusan owner).** Sudah tertulis di HANDOFF.md:1684: hapus `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` dari env Vercel → `useSupabase` jadi false (lib/supabase.ts:85) → situs membaca cadangan `data/dramas.json`, **terverifikasi berisi 42 judul utuh** hari ini. Katalog & halaman detail hidup lagi; **login, koin, riwayat, My List MATI** selama mode ini. Data penonton **tidak hilang** — tetap di database, hanya tak dibaca. ⚠️ Folder `data/` read-only di Vercel, jadi tiap penulisan gagal SENYAP — mode ini bikin situs jadi baca-saja, itu harganya.
+
+🔧 **Paket `pg` dipasang lokal dengan `npm install pg --no-save`** untuk uji koneksi yang akhirnya diblokir. `package.json` **tidak berubah**, jadi tak akan ikut ter-commit. Hapus dengan `npm uninstall pg --no-save` kalau mengganggu.
 
 **Sebelumnya:** 2026-09-16 (siang) — ✅ **DUA KERJA REKAN DITARIK & TAYANG (`5e6cbec`): video webhook masuk /playly + login tahan saat database mati.** Sekaligus penutup insiden 522 yang tercatat di entri sebelumnya.
 

@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getAllDramas, getDramaCached } from "@/lib/dramas";
+import { getDramaCached } from "@/lib/dramas";
 import { SITE_URL, absoluteUrl, toMetaDescription } from "@/lib/site";
 import { dramaJsonLd, toJsonLdScript } from "@/lib/structured-data";
 import { isMovie, subtitleLabel } from "@/lib/types";
@@ -24,16 +24,32 @@ import { ChevronLeft, Captions } from "lucide-react";
 // (dan diam-diam membatalkan generateStaticParams di bawah).
 export const revalidate = 60;
 
-export async function generateStaticParams() {
-  // Katalog tak terjangkau saat build (mis. env Supabase belum ada) → kembalikan
-  // daftar kosong. Halaman tetap dibuat saat pengunjung pertama membukanya,
-  // jadi build tidak ikut gagal.
-  try {
-    return (await getAllDramas()).map((d) => ({ id: d.id }));
-  } catch (err) {
-    console.error("[drama] gagal ambil daftar id saat build:", err);
-    return [];
-  }
+// Daftar kosong DISENGAJA: halaman drama tidak lagi dibuat saat build, melainkan
+// saat pengunjung pertama membukanya (lalu disimpan ISR 60 detik oleh
+// `revalidate` di atas). `dynamicParams` harus tetap true — dengan daftar kosong,
+// mematikannya membuat SEMUA halaman drama balas 404.
+//
+// KENAPA prerender dilepas (2026-09-19). Sebelumnya fungsi ini memulangkan 42 id
+// dan build mem-prerender 42 halaman, masing-masing memanggil `getDramaCached`.
+// Pembacaan ber-cache itu tersendat lewat batas 6 detik di dalam proses build
+// SEKALIPUN databasenya sehat — dibuktikan: bentuk query yang sama persis diuji
+// langsung untuk seluruh 42 judul (42/42 sukses < 1 detik) dan Supabase dipantau
+// 3 menit tanpa putus (36/36 sukses), tapi `npm run build` tetap gagal 9× dengan
+// "Supabase tidak menjawab". Yang lolos di build yang sama justru pembacaan TANPA
+// cache di fungsi ini dulu (`getAllDramas`, 42 judul terambil) — jadi masalahnya
+// di jalur cache fetch Next saat prerender, bukan di database. Sudah dicoret lewat
+// percobaan: jumlah worker (1 worker pun gagal), serbuan permintaan, berat query,
+// baris data tertentu, batas waktu 60 detik (makin buruk), disk/antivirus, versi
+// Next. Penyebab persis di dalam Next ❓ belum terverifikasi.
+//
+// Yang hilang kecil: dengan `revalidate = 60` halaman ini toh dibangun ulang tiap
+// 60 detik, jadi prerender hanya menolong pengunjung pertama sesudah deploy.
+// Yang didapat: build produksi tak bisa lagi dijatuhkan oleh satu pembacaan
+// database yang lambat. Penjaga: tests/drama-prerender-build.test.ts.
+export const dynamicParams = true;
+
+export async function generateStaticParams(): Promise<{ id: string }[]> {
+  return [];
 }
 
 export async function generateMetadata(

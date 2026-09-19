@@ -5,7 +5,73 @@
 >
 > **AI:** tiap kali ada perbaikan / deploy / keputusan — **perbarui berkas ini di langkah terakhir**, sebelum bilang selesai. Jangan tumpuk sejarah panjang di sini; pindahkan yang lama ke `NEXT-SESSION.md`.
 
-**Terakhir diisi:** 2026-09-18 — ⚠️ **PERBAIKAN /playly SELESAI DIKODE & TERUJI, TAPI TERTAHAN: `npm run build` TIDAK BISA LULUS karena Supabase MATI LAGI.** Nol commit, nol push. Perubahan ada di working tree.
+**Terakhir diisi:** 2026-09-19 — ✅ **GERBANG RILIS AKHIRNYA LULUS. `/playly` TERBUKTI `○ (Static)` dari keluaran `npm run build` — bukti yang dicari sejak 2026-09-15 akhirnya ada.** Penyebab kemacetan 4 hari juga terbongkar, dan **ternyata bukan Supabase.** 8 commit siap dirilis, menunggu izin push owner.
+
+## Bukti gerbang (urutan §6, exit code dibaca dari berkas — tidak dipipa)
+
+| Gerbang | Hasil |
+|---|---|
+| `rm -rf .next` → `npm run build` | ✅ **exit 0** — pertama kali sejak 2026-09-16 |
+| `/playly` di daftar route | ✅ **`○ (Static)` 1m 1y** ← yang dicari 4 hari |
+| `/beranda` · `/discover` · `/` · `/shorts` | ✅ **tetap `○ (Static)` 1m 1y** — nol kemunduran |
+| `/sitemap.xml` · `/robots.txt` | ✅ tetap `○` — SEO utuh |
+| Tahap prerender | ✅ **21/21 selesai** dalam 18,4 dtk (dulu 63 dan selalu tumbang) |
+| `npx tsc --noEmit` | ✅ **exit 0** |
+| `npm test` | ✅ **693 tes lulus / 52 berkas, 0 gagal** (687+6 penjaga baru, cocok persis) |
+| Berkas env/kunci ter-stage | ✅ **NOL** (dicek dua lapis: nama berkas + isi diff) |
+
+**Bukti ISR dari server produksi sungguhan (`next start`, build hari ini):** halaman drama yang belum pernah diminta → kunjungan **pertama 200 / 0,32 dtk / `x-nextjs-cache=MISS`**, kunjungan **ke-2 & ke-3 200 / 0,01 dtk / `HIT`** dengan `cache-control: s-maxage=60` → halamannya **benar-benar disimpan**, bukan dibangun ulang tiap pengunjung. `/playly` **ber-cache** (`s-maxage=60`, `STALE`) — **bukan** `no-store`, jadi commit `254ce47` terbukti bekerja. `/beranda` + `/discover` sama-sama ber-cache. Judul yang tak ada → **404**, bukan halaman error.
+
+## Yang diubah hari ini (2 berkas kode, atas keputusan owner)
+
+- **`app/drama/[id]/page.tsx`** — `generateStaticParams()` sekarang memulangkan **daftar kosong**: 42 halaman drama tidak lagi dibuat saat build, melainkan saat pengunjung pertama membukanya (lalu disimpan ISR 60 detik). Ditambah `export const dynamicParams = true` **eksplisit** — ini pengaman: dengan daftar kosong, `dynamicParams = false` akan membuat **SEMUA** halaman drama balas 404 tanpa error apa pun di build. Impor `getAllDramas` dibuang (tak terpakai lagi). Alasan lengkap ditulis sebagai komentar **di dalam berkasnya**, bukan cuma di catatan ini.
+- **`tests/drama-prerender-build.test.ts`** (BARU, 6 tes) — penjaga permanen. **Mutation check 4 arah, keempatnya MERAH** lalu hijau lagi sesudah dipulihkan: (1) prerender dikembalikan, (2) `dynamicParams` dimatikan, (3) `revalidate` dihapus, (4) komentar alasan dihapus.
+
+**Harganya, jujur:** pengunjung **pertama** tiap judul menunggu **0,32 detik** (terukur, bukan taksiran). Yang didapat: build produksi tak bisa lagi dijatuhkan oleh satu pembacaan database yang lambat. Karena `revalidate = 60` toh sudah membangun ulang halaman ini tiap 60 detik, prerender saat build sebenarnya hanya menolong pengunjung pertama sesudah deploy — itulah sebabnya kerugiannya kecil.
+
+## 🔴 Penyebab kemacetan 4 hari: BUKAN Supabase
+
+Catatan 2026-09-15/16/18 semuanya menyalahkan Supabase. **Terbukti salah.** Build gagal **9×** hari ini sementara Supabase terbukti sehat sempurna.
+
+**Bukti paling bersih ada DI DALAM satu build yang gagal**, pada berkas yang sama: `generateStaticParams()` → pembacaan **TANPA cache** **BERHASIL** ambil 42 judul (pesan `[drama] gagal ambil daftar id saat build` **nol kemunculan**), lalu `getDramaCached()` → pembacaan **LEWAT cache fetch Next** (`revalidate: 60`) **timeout 6 detik** dan membunuh build. Kalau databasenya mati, pembacaan pertama juga mati — ia tidak. Diperkuat dari luar: bentuk query **persis** milik halaman drama diuji untuk **seluruh 42 judul → 42/42 sukses < 1 detik** (termasuk keempat judul yang membunuh build), plus pantauan **3 menit tanpa putus → 36/36 sukses**, dan build tepat sesudahnya **tetap gagal**.
+
+⚠️ **Pesan `"Supabase tidak menjawab setelah 2 percobaan"` MENYESATKAN** — ia dari pembungkus kita sendiri (`lib/supabase.ts:186`) yang menyimpulkan *setiap* timeout = database bermasalah. Timeout hanya membuktikan **operasi kita** melewati batas waktu, bukan **siapa** yang lambat.
+
+**Sembilan dugaan dimatikan dengan PERCOBAAN — jangan diulang:** ❌ Supabase mati (42/42 & 36/36 sukses) · ❌ 47 worker menyerbu DB (**1 worker pun gagal**, lewat env `CIRCLE_NODE_TOTAL`, dibaca di `node_modules/next/dist/server/config-shared.js:202` → bisa diuji tanpa mengubah berkas) · ❌ banyak proses serentak (47 **proses** terpisah → 46/47 sukses 0,2 dtk) · ❌ serbuan katalog penuh (5/15/30 tarikan `select=*` serentak → semua 200, terlambat 0,14 dtk) · ❌ query berat (`select=*` vs `select=id` sama-sama 0,02–0,04 dtk) · ❌ baris film menggembung (3 tersangka **0,7–1,5 KB**) · ❌ batas 6 dtk kependekan (dinaikkan 60 dtk → **lebih buruk**: worker crash keras) · ❌ disk/antivirus lambat (30× tulis-baca `.next/cache` → tengah **0,5 ms**) · ❌ regresi versi Next (`16.2.9` ter-pin lama).
+
+**Dua wajah kegagalannya:** cache fetch **KOSONG** → `exit 1` bersih, timeout di `getDramaCached`, **halaman drama BERBEDA tiap percobaan** (`transformers-the-last-knight` → `spider-man-brand-new-day` → `predator-badlands` → `avengers-doomsday`) = gangguan acak · cache **HANGAT** atau batas waktu 60 dtk → crash keras `⨯ Next.js build worker exited with code: 4294967295`, **crash yang sama** yang 2026-09-18 dituduhkan ke database.
+
+❓ **Penyebab persis di dalam Next BELUM terverifikasi.** Dugaan terkuat: jalur **cache fetch Next 16 (Turbopack) saat prerender**, sebab hanya pembacaan ber-`revalidate` yang tumbang. Belum bisa ditunjuk `berkas:baris` di dalam Next → masih dugaan, bukan fakta. **Perubahan hari ini menghindari masalahnya, bukan menyembuhkannya** — itu batas yang jujur.
+
+ℹ️ Komputer ini **dipakai bersama banyak pengguna**: **164 proses `node.exe` / 40,5 GB** di sesi RDP #6/#16/#25/#27/#47, CPU sudah terpakai **41–46% dari 48 inti** saat kita idle. Belum terbukti jadi penyebab (1 worker pun gagal), tapi layak disebut sebelum menyalahkan kode.
+
+## 🔴 Supabase MASIH bermasalah — itu penyakit PRODUKSI yang BELUM selesai
+
+Dua hal berbeda yang selama ini tercampur. Supabase **memang** kedip: satu jendela **25/25 sukses** (0,02–0,11 dtk), jendela lain **30/30 timeout**, dan saat sempat menjawab ia mengeluarkan kode errornya sendiri — **`PGRST002` · "Could not query the database for the schema cache. Retrying."** Artinya PostgREST (lapisan yang mengubah database jadi alamat web `/rest/v1/...`) gagal membaca "daftar isi" tabel & kolom **karena tidak kebagian sambungan ke database**. Mengonfirmasi dugaan 2026-09-18 (jatah koneksi habis / ada yang mengunci); obatnya **Restart project**, bukan Pause/Delete. Project `nvblmpkwyzbpdbshyvzw` **milik Kang Dedi**, jadi owner tak bisa menekan tombolnya sendiri.
+
+🆘 **SUDAH DISIAPKAN, TINGGAL DIKIRIM:** `docs/permintaan-restart-supabase.md` — teks siap salin-tempel (bagian 2) berisi project ref, kode error, angka kedipnya, 4 dugaan yang sudah dicoret supaya beliau tak mengulang, dan permintaan spesifik Project Settings → General → **Restart project**. **Tidak** meminta Personal Access Token (keputusan 2026-08-31 dihormati). Nol secret di dalamnya (diperiksa).
+
+**PRODUKSI SAAT DIUKUR — penonton TIDAK melihat situs rusak:** `/` **200/0,41 dtk** · `/beranda` **200/0,36** · `/discover` **200/0,29** · `/shorts` **200/0,29** · `/drama/<2 judul>` **200/0,32–0,34** · `/login` **200/0,06**, semuanya dari salinan ISR (`STALE`/`HIT`). **POST `/api/auth/login`** email pasti-tak-terdaftar → **401 / 0,91 dtk** = jalur login menyentuh database & memverifikasi akun dengan benar. ⚠️ **200 di halaman katalog BUKAN bukti database sehat.**
+
+❌ **Yang benar-benar rusak di produksi & siapa merasakannya:** `/api/dramas` **500 (12,5 dtk, 3× konsisten)** → menjatuhkan **4 halaman** jadi **daftar film kosong**: `/history` (`app/history/page.tsx:26`), `/my-list` (`app/my-list/page.tsx:17`), `/profile` (`app/profile/page.tsx:48`), `/admin` (`app/admin/page.tsx:82`). Juga `/api/ads` **500** (`AdBanner.tsx:91`, `RewardedAdModal.tsx:40`) — ⚠️ **tak terasa**, sebab kunci `ads` di `app_data` isinya memang `[]`. 🧮 Angka 12,5 dtk = jatah percobaan aplikasi sendiri: 2 × 6.000 ms + 300 ms = **12,3 dtk** (`lib/supabase.ts:109-113`) — sesuai rancangan, bukan bug baru.
+
+## 🪤 Dua jebakan alat yang wajib diingat
+
+1. **`npm run build 2>&1 | tail` MELAPOR `exit code 0` PADAHAL BUILD GAGAL `exit 1`** — exit code yang terbaca milik `tail`, bukan `npm`. Sesi ini kena dan sempat melapor "build lulus" ke owner; **salah**. Gerbang §6 bersandar penuh pada exit code → **selalu `> berkas.log 2>&1` lalu baca `$?`**, jangan pernah dipipa.
+2. **Jendela sampel pendek = bukti palsu untuk gangguan yang kedip.** 20 percobaan cepat cuma memotret 12 detik. Sampel yang layak memutuskan "sudah pulih" harus **berdurasi** (≥3 menit berjeda) dan **100% sukses**, bukan mayoritas.
+
+## LANGKAH BERIKUTNYA
+
+1. **Izin owner → dual push** `origin` **dan** `dramaku`. **8 commit siap** (lokal ahead 8 dari `origin/main` = `a65bfbf`): `c12b8db`, `254ce47`, `0827268`, `8e5323e`, `a40caef`, `ddf5862`, `2e381aa`, + commit hari ini. `dramaku/main` = `8e5323e`; **nol kerja rekan baru**.
+2. **Verifikasi tayang sesudah push**: `/playly` harus balas **cepat** (dulu 12,8 dtk) dengan header ber-cache, bukan `no-store`; `/beranda` + `/discover` tetap normal; buka 1 judul drama → tampil.
+3. **Kirim `docs/permintaan-restart-supabase.md` bagian 2 ke Kang Dedi** → menyembuhkan `/api/dramas` + 4 halaman yang daftarnya kosong. **Terpisah dari rilis ini.**
+4. ❓ Menggantung, bukan darurat: 21 route di `app/api` masih meneruskan `.message` mesin ke browser penonton · penyebab persis cache fetch Next belum ditemukan.
+
+⚠️ **Remote `official` MASIH rusak** (dicek ulang hari ini): `https://github.com/projectraden/backup-dramaapp.git` → **"Repository not found"**, jadi `git fetch --all` selalu terlihat gagal. Dual push tak terpengaruh (hanya `origin` + `dramaku`). ❓ Belum dihapus — perlu izin owner (`git remote remove official`).
+
+🔧 **Paket `pg` masih terpasang lokal** dari sesi lalu (`npm install pg --no-save`). `package.json` tak berubah, jadi tak ikut ter-commit. Hapus dengan `npm uninstall pg --no-save` kalau mengganggu.
+
+**Sebelumnya:** 2026-09-18 —    ⚠️ **PERBAIKAN /playly SELESAI DIKODE & TERUJI, TAPI TERTAHAN: `npm run build` TIDAK BISA LULUS karena Supabase MATI LAGI.** Nol commit, nol push. Perubahan ada di working tree.
 
 🔴 **INSIDEN 522 KAMBUH HARI INI — sama persis dengan 2026-09-16.** Dibuktikan dari komputer ini, LANGSUNG ke Supabase tanpa lewat Vercel: `GET /rest/v1/` polos → **401 dalam 0,32 detik** (gerbang API hidup & sehat), tapi tabel `dramas` dan `app_data` dengan kunci sah → **habis waktu 30 detik tanpa balasan sama sekali**. Artinya database PostgreSQL di belakangnya yang tidak menjawab, bukan kuncinya. Project ref `nvblmpkwyzbpdbshyvzw`. ❓ Penyebab akar tetap **belum terverifikasi** — di luar jangkauan AI. **Langkah owner:** buka dashboard Supabase project itu → lihat banner atas + menu Reports / Database Health; kalau ada tombol Restore/Resume, itu jawabannya. ⚠️ **Jangan tebak-tebak mengganti env Supabase di Vercel** — kuncinya terbukti masih sah (401, bukan 403).
 

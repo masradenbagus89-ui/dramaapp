@@ -173,6 +173,39 @@ describe("chip strip & menu yang SUNGGUHAN digambar halaman", () => {
     expect(html).not.toContain("bg-amber-400 font-serif");
   });
 
+  it("logo halaman depan & halaman berkatalog PERSIS sama bentuknya", () => {
+    // Keduanya memakai komponen `LogoDramaKu` yang sama. Sebelum 2026-09-21
+    // markup-nya disalin di dua tempat dan sempat menyimpang — halaman depan
+    // memakai kotak kuning berisi huruf "D" sementara yang lain memakai
+    // lambang. Yang dibandingkan potongan logonya, bukan seluruh halaman,
+    // sebab alamat tautannya memang sengaja berbeda ("/" vs "/beranda").
+    const ambilLogo = (html: string) => {
+      const i = html.indexOf("<img");
+      expect(i, "gambar logo tidak ditemukan").toBeGreaterThan(-1);
+      return html.slice(i, html.indexOf("</a>", i));
+    };
+
+    const depan = renderToStaticMarkup(
+      createElement(PublicTopBars, { menus: buildNavMenus(KATALOG) }),
+    );
+    const katalog = renderToStaticMarkup(
+      createElement(DramaBrowser, { dramas: KATALOG }),
+    );
+    expect(ambilLogo(depan)).toBe(ambilLogo(katalog));
+  });
+
+  it("logo cukup besar untuk dibaca (owner 2026-09-21)", () => {
+    // Angkanya dikunci karena owner dua kali menilainya terlalu kecil.
+    // 36px sengaja = tinggi kotak cari (`h-9`), jadi bar tidak ikut meninggi.
+    const html = renderToStaticMarkup(
+      createElement(PublicTopBars, { menus: buildNavMenus(KATALOG) }),
+    );
+    expect(html).toContain('width="36"');
+    expect(html).toContain("size-9");
+    expect(html).toContain("text-xl");
+    expect(html, "ukuran lama 28px seharusnya sudah naik").not.toContain("size-7");
+  });
+
   it("bar cari sudah TIDAK memuat dropdown penyaring", () => {
     // Keluhan owner 2026-09-21: bar cari terlalu ramai. Keempat dropdown
     // (genre · urutan · tahun · rating) dilepas; penggantinya menu dropdown di

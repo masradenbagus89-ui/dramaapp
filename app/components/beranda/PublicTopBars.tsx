@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { STRIP_KATALOG, type NavMenu } from "@/lib/nav-katalog";
 import StripKatalog from "./StripKatalog";
+import { LogoDramaKu } from "./KepalaKatalog";
 import NavMenus from "./NavMenus";
 import SearchBar from "./SearchBar";
 
@@ -47,22 +47,10 @@ export default function PublicTopBars({ menus }: Props) {
         className="sticky top-0"
         chrome={{
           /* Logo dirapikan 2026-09-21: kotak kuning berisi huruf "D" diganti
-             lambang situs yang sesungguhnya + teks putih, sejajar dengan situs
-             katalog pembanding DAN dengan kepala /beranda (KepalaKatalog.tsx),
-             supaya penonton tidak merasa berpindah situs. */
-          brand: (
-            <Link href="/" className="flex items-center gap-2">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/logo-mark.png"
-                alt="DramaKu"
-                width={28}
-                height={28}
-                className="size-7 shrink-0 object-contain"
-              />
-              <span className="text-base font-bold text-white">DramaKu</span>
-            </Link>
-          ),
+             lambang situs yang sesungguhnya. Komponennya SAMA dengan kepala
+             /beranda (KepalaKatalog.tsx) — bukan salinan — supaya ukuran &
+             bentuknya tak pernah lagi menyimpang antar halaman. */
+          brand: <LogoDramaKu href="/" />,
           menus: <NavMenus menus={menus} />,
           /* Tombol Masuk & Daftar SENGAJA tidak dipasang di sini (owner
              2026-09-21: "dobel"). Halaman ini sudah menawarkannya dua kali di

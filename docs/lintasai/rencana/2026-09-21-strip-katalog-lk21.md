@@ -403,3 +403,39 @@ terlihat tes, pindahkan juga penjaganya — jangan cuma memindahkan kodenya.**
   (kotak "D" kuning **hilang**), dan **blok bar merah halaman depan terbukti
   NOL tautan `/login` & `/daftar`** — keenam tautan akun yang tersisa semuanya
   di badan halaman & footer, persis seperti yang dimaksud owner.
+
+---
+
+# REVISI KEENAM 2026-09-21 — logo diperbesar & dijadikan satu sumber
+
+## Maksud owner
+> "logo atau tulisan dramaku di sebelah kiri masih terlalu kecil, aku mau
+> tulisan atau logonya seperti layarkaca21 agak besar dan enak dilihatnya"
+
+## Yang diubah
+| Sebelum | Sesudah |
+|---|---|
+| lambang **28px** (`size-7`) | **36px** (`size-9`) |
+| nama situs **16px** (`text-base`) | **20px** (`text-xl`, `tracking-tight`) |
+| markup logo **disalin di dua berkas** | **satu komponen** `LogoDramaKu`, diekspor dari `KepalaKatalog.tsx` |
+
+**36px bukan angka asal:** sama persis dengan tinggi kotak cari (`h-9`), jadi
+bar **tidak ikut meninggi** — logo membesar tanpa mendorong poster pertama
+turun.
+
+## Kenapa dijadikan satu komponen
+Markup logo sebelumnya ada di DUA berkas (`PublicTopBars` & `KepalaKatalog`),
+dan itu **sudah pernah menyimpang**: halaman depan memakai kotak kuning berisi
+huruf "D" sementara halaman berkatalog memakai lambang situs — dua halaman yang
+sama-sama dibuka penonton terasa seperti dua situs berbeda. Sekarang keduanya
+memanggil komponen yang sama; yang berbeda cuma alamat tautannya (`/` vs
+`/beranda`), yang memang disengaja.
+
+## Bukti REVISI KEENAM
+- ✅ `rm -rf .next` → `npm run build` **exit 0**; semua halaman tetap `○ (Static)`.
+- ✅ `npx tsc --noEmit` **exit 0** · `npm test` **741 tes / 54 berkas hijau**.
+- ✅ **Mutation check 3 arah, SEMUANYA MERAH**: logo dikecilkan lagi · nama situs
+  dikecilkan lagi · halaman depan memakai logo salinan sendiri lagi.
+- ✅ Dijalankan (`next start`, log dibaca dulu): `/` dan `/beranda` sama-sama
+  **36px + `text-xl`**, dan potongan markup logonya **identik karakter per
+  karakter** (diuji, bukan dilihat sekilas).

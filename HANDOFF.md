@@ -5,7 +5,19 @@
 >
 > **AI:** tiap kali ada perbaikan / deploy / keputusan — **perbarui berkas ini di langkah terakhir**, sebelum bilang selesai. Jangan tumpuk sejarah panjang di sini; pindahkan yang lama ke `NEXT-SESSION.md`.
 
-**Terakhir diisi:** 2026-09-21 (revisi ke-5) — 🔄 **BAR CARI DISAMAKAN DENGAN LK21. SELESAI & TERBUKTI, BELUM di-push** (owner melihat preview dulu).
+**Terakhir diisi:** 2026-09-21 (revisi ke-6) — 🔄 **LOGO DIPERBESAR + revisi ke-5. SELESAI & TERBUKTI, BELUM di-push** (owner melihat preview dulu). **Dua revisi menunggu satu push.**
+
+## 2026-09-21 — logo diperbesar & dijadikan satu sumber
+
+Owner: "logo atau tulisan dramaku di sebelah kiri masih terlalu kecil". Lambang **28px → 36px**, nama situs **16px → 20px**. **36px bukan angka asal** — sama dengan tinggi kotak cari (`h-9`), jadi bar **tidak ikut meninggi**.
+
+Sekalian markup logo yang tadinya **disalin di dua berkas** dijadikan **satu komponen** `LogoDramaKu` (diekspor dari `KepalaKatalog.tsx`). Itu sudah pernah menyimpang: halaman depan memakai kotak kuning huruf "D" sementara halaman berkatalog memakai lambang situs — dua halaman terasa seperti dua situs.
+
+**Bukti:** build **exit 0** · `tsc` **exit 0** · **741 tes / 54 berkas** · **mutation check 3 arah SEMUANYA MERAH** · `next start`: `/` & `/beranda` sama-sama 36px + `text-xl`, potongan markup logonya **identik karakter per karakter** (diuji).
+
+---
+
+## 2026-09-21 — bar cari: warna, logo, dan tombol akun (revisi ke-5, ikut menunggu push)
 
 ## 2026-09-21 — bar cari: warna, logo, dan tombol akun
 

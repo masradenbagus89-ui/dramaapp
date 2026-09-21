@@ -120,6 +120,39 @@ function usePenonton() {
 const ITEM_CLASS = "cursor-pointer text-sm focus:bg-zinc-800 focus:text-amber-400";
 
 /**
+ * Lambang + nama situs di ujung kiri bar cari.
+ *
+ * SATU komponen yang dipakai halaman depan (`PublicTopBars`) DAN halaman
+ * berkatalog — sebelumnya markup-nya disalin di dua tempat dan sempat
+ * menyimpang (halaman depan memakai kotak kuning berisi huruf "D", yang lain
+ * memakai lambang). Ukurannya dinaikkan 2026-09-21 atas permintaan owner:
+ * lambang 28px → 36px dan nama situs 16px → 20px, sejajar dengan situs katalog
+ * pembanding. 36px sengaja dipilih karena sama dengan tinggi kotak cari
+ * (`h-9`), jadi barnya TIDAK ikut meninggi.
+ *
+ * Nama situs disembunyikan di layar paling sempit: di bawah ±640px ia memakan
+ * ruang yang dibutuhkan kotak cari, dan lambangnya sendiri sudah mengenalkan
+ * situs.
+ */
+export function LogoDramaKu({ href = "/beranda" }: { href?: string }) {
+  return (
+    <Link href={href} className="flex shrink-0 items-center gap-2">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/logo-mark.png"
+        alt="DramaKu"
+        width={36}
+        height={36}
+        className="size-9 shrink-0 object-contain"
+      />
+      <span className="hidden text-xl font-bold tracking-tight text-white sm:inline">
+        DramaKu
+      </span>
+    </Link>
+  );
+}
+
+/**
  * Tombol garis-tiga + logo, dipasang di ujung KIRI bar cari lewat
  * `SearchBarChrome.brand`. Isinya seluruh navigasi aplikasi.
  */
@@ -215,19 +248,7 @@ export function MenuAplikasi() {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <Link href="/beranda" className="flex items-center gap-2">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/logo-mark.png"
-          alt="DramaKu"
-          width={28}
-          height={28}
-          className="size-7 shrink-0 object-contain"
-        />
-        <span className="hidden text-base font-bold text-white sm:inline">
-          DramaKu
-        </span>
-      </Link>
+      <LogoDramaKu />
     </div>
   );
 }

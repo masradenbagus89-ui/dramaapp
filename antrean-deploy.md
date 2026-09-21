@@ -3,7 +3,19 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-09-21 malam (**✅ TIGA RILIS HARI INI, antrean KOSONG**). **`HEAD` = `origin/main` = `dramaku/main` = `a6c2e82`**, lokal ahead 0. Rilis ketiga = **`a6c2e82`** (tulisan kotak cari "Cari film di DramaKu" + label menu Genre · Series · Populer · Negara · Tahun · + More), dual push atas izin owner, fast-forward.
+**Terakhir dicek:** 2026-09-21 malam (**✅ EMPAT RILIS HARI INI, antrean KOSONG**). **`HEAD` = `origin/main` = `dramaku/main` = `2cf4952`**, lokal ahead 0. Rilis keempat = **`2cf4952`** (kepala situs `/beranda` & `/discover` jadi dua baris: navbar hitam + kotak cari kecil + 4 dropdown penyaring dilepas, isinya pindah ke tombol ☰ di bar merah; kotak cari dipanjangkan). Dual push atas izin owner, fast-forward. **Owner melihat preview lokal dulu.**
+
+**Gerbang §6:** build **exit 0** (nol kemunduran status halaman) → `tsc` **exit 0** → **735 tes / 54 berkas** (dari 715/53) → **mutation check 7 arah semuanya MERAH** → nol berkas env/kunci → push → verifikasi tayang. **Nol SQL, nol env baru.**
+
+**Verifikasi tayang (6 halaman produksi, semua 200):** `/beranda` navbar **hilang** + tombol ☰ **ada** + dropdown **hilang**; `/shorts` `/playly` `/profile` `/my-list` navbar **TETAP ADA** (akses terjaga — itu yang dijaga `tests/kepala-situs.test.ts`).
+
+**❗ Efek samping yang perlu diketahui:** `/discover` tidak merender apa pun di server (dibungkus `<Suspense>` karena `useSearchParams`) — HTML-nya cuma "Memuat...". **Sudah begitu sejak sebelum hari ini**, tapi navbar yang dulu ikut tergambar kini tidak ada, jadi halaman itu **sesaat tanpa navigasi** sebelum JavaScript aktif. Perbaikan yang masuk akal: ganti fallback `"Memuat..."` di `app/discover/page.tsx` dengan kerangka bar merah. **Menunggu keputusan owner.**
+
+**Rollback rilis keempat:** `git revert --no-edit 2cf4952 && git push origin main && git push dramaku main`.
+
+---
+
+**Rilis ketiga hari ini (`a6c2e82`):** **`HEAD` = `origin/main` = `dramaku/main` = `a6c2e82`**, lokal ahead 0. Rilis ketiga = **`a6c2e82`** (tulisan kotak cari "Cari film di DramaKu" + label menu Genre · Series · Populer · Negara · Tahun · + More), dual push atas izin owner, fast-forward.
 
 **Gerbang §6 rilis ketiga:** build **exit 0** (nol kemunduran status halaman) → `tsc` **exit 0** → **715 tes / 53 berkas** → **mutation check 4 arah semuanya MERAH** → nol berkas env/kunci → push → verifikasi tayang. **Owner melihat preview lokal dulu** (`next start` port 3040) sebelum memberi izin — pola yang layak diulang untuk perubahan tampilan. **Nol SQL, nol env baru.**
 

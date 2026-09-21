@@ -5,7 +5,25 @@
 >
 > **AI:** tiap kali ada perbaikan / deploy / keputusan — **perbarui berkas ini di langkah terakhir**, sebelum bilang selesai. Jangan tumpuk sejarah panjang di sini; pindahkan yang lama ke `NEXT-SESSION.md`.
 
-**Terakhir diisi:** 2026-09-21 (malam, revisi ke-4) — 🔄 **KEPALA SITUS DIRAMPINGKAN JADI DUA BARIS. SELESAI & TERBUKTI, BELUM di-push** (owner mau melihat preview dulu).
+**Terakhir diisi:** 2026-09-21 (malam, revisi ke-4) — ✅ **KEPALA SITUS DUA BARIS SUDAH DIRILIS & TERBUKTI TAYANG.** `HEAD` = `origin/main` = `dramaku/main` = **`2cf4952`**, antrean **KOSONG**. Owner melihat preview lokal dulu sebelum memberi izin push.
+
+**Verifikasi tayang — 6 halaman produksi diperiksa satu per satu, semuanya 200:**
+
+| Halaman | Navbar hitam | Tombol ☰ | Dropdown penyaring |
+|---|---|---|---|
+| `/beranda` | **hilang** ✅ | **ada** ✅ | **hilang** ✅ |
+| `/discover` | **hilang** ✅ | (dirender di browser) | **hilang** ✅ |
+| `/shorts` `/playly` `/profile` `/my-list` | **TETAP ADA** ✅ | – | – |
+
+### ❗ Efek samping yang DISENGAJA tapi perlu diketahui: `/discover` sesaat tanpa navigasi
+
+`/discover` **tidak merender apa pun di server** — `app/discover/page.tsx` membungkus `DramaBrowser` dalam `<Suspense>` (karena `useSearchParams`), jadi HTML servernya cuma berisi **"Memuat..."**. Itu **sudah begitu sejak sebelum hari ini** (HTML `/discover` pagi juga cuma fallback). Yang **berubah**: navbar hitam yang dulu ikut tergambar di HTML itu sekarang tidak ada lagi, sehingga selama sepersekian detik sebelum JavaScript aktif halaman itu **tidak menampilkan navigasi apa pun**. Sesudah aktif, bar merah + tombol ☰ muncul normal.
+
+**Belum diperbaiki — menunggu keputusan owner.** Perbaikan yang masuk akal: ganti teks `"Memuat..."` di `app/discover/page.tsx` dengan kerangka bar merah, sehingga kepala situs tergambar sejak HTML pertama. Nol biaya, tak menyentuh logika.
+
+---
+
+## 2026-09-21 — kepala situs /beranda & /discover jadi DUA baris (SUDAH TAYANG)
 
 ## 2026-09-21 — kepala situs /beranda & /discover jadi DUA baris
 

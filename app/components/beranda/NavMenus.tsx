@@ -32,7 +32,7 @@ export default function NavMenus({ menus }: { menus: NavMenu[] }) {
     >
       {menus.map((m) => (
         <DropdownMenu key={m.key}>
-          <DropdownMenuTrigger className="group flex h-9 shrink-0 items-center gap-1 rounded-sm px-2.5 text-xs font-bold uppercase tracking-wide text-white transition-colors outline-none hover:bg-black/25 focus-visible:bg-black/25 data-[state=open]:bg-black/30">
+          <DropdownMenuTrigger className="group flex h-9 shrink-0 items-center gap-1 rounded-sm px-2.5 text-[13px] font-semibold text-white transition-colors outline-none hover:bg-black/25 focus-visible:bg-black/25 data-[state=open]:bg-black/30">
             {m.label}
             {/* Panah ikut berputar saat menu terbuka — penanda "ini bisa dibuka"
                 yang dipahami tanpa perlu dijelaskan. */}

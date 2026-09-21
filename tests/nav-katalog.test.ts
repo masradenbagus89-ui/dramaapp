@@ -79,6 +79,27 @@ describe("buildNavMenus", () => {
     ]);
   });
 
+  it("memakai label tombol PERSIS seperti yang ditentukan owner", () => {
+    // Owner menentukan keenam tulisan ini dari situs katalog pembanding
+    // (2026-09-21, ditegaskan dua kali). Dikunci di sini karena sudah dua kali
+    // jadi soal — label bukan detail teknis yang boleh diganti sambil lalu.
+    expect(buildNavMenus(KAYA).map((m) => m.label)).toEqual([
+      "Genre",
+      "Series",
+      "Populer",
+      "Negara",
+      "Tahun",
+      "+ More",
+    ]);
+  });
+
+  it("kunci internal menu TIDAK ikut berubah saat labelnya diganti", () => {
+    // `key` dipakai React & tes; memisahkannya dari label itu yang membuat
+    // tulisan bisa diganti kapan saja tanpa menyentuh apa pun yang lain.
+    expect(kunciMenu(KAYA)).toContain("jenis");
+    expect(kunciMenu(KAYA)).toContain("lainnya");
+  });
+
   it("membuang menu Negara & Tahun saat kolomnya kosong", () => {
     // Ini yang paling mudah salah: kolom `country`/`year` boleh kosong, dan
     // menu yang diklik lalu memulangkan halaman hampa terbaca seperti situs

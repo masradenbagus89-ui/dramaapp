@@ -134,6 +134,31 @@ describe("chip strip & menu yang SUNGGUHAN digambar halaman", () => {
     });
   }
 
+  it("kotak cari memakai tulisan pendek yang diminta owner", () => {
+    const html = renderToStaticMarkup(
+      createElement(DramaBrowser, { dramas: KATALOG }),
+    );
+    expect(html).toContain('placeholder="Cari film di DramaKu"');
+    // Kotak carinya tetap kotak cari sungguhan, bukan hiasan.
+    expect(html).toContain('role="search"');
+    expect(html).toContain('type="search"');
+  });
+
+  it("menggambar keenam tombol menu dengan tulisan yang ditentukan owner", () => {
+    const html = renderToStaticMarkup(
+      createElement(DramaBrowser, { dramas: KATALOG }),
+    );
+    // Hanya TOMBOL-nya yang ada di HTML — isi dropdown Radix baru dirender
+    // saat menunya dibuka, jadi isinya dijaga di tests/nav-katalog.test.ts.
+    for (const label of ["Genre", "Series", "Populer", "Negara", "Tahun", "+ More"]) {
+      expect(html, `tombol menu "${label}" tidak tergambar`).toContain(
+        `>${label}<`,
+      );
+    }
+    expect(html).not.toContain(">Jenis<");
+    expect(html).not.toContain(">Lainnya<");
+  });
+
   it("strip TIDAK lagi memajang negara & pintasan yang tak diminta owner", () => {
     // Keluhan owner 2026-09-21: "terlalu banyak tulisan dan negara lainnya".
     // Sebelumnya strip dihitung dari katalog dan tumbuh jadi 29 chip.

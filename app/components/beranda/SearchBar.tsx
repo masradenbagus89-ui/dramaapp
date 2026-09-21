@@ -55,7 +55,12 @@ export default function SearchBar({
   value,
   onValueChange,
   onSubmit,
-  placeholder = "Cari judul drama atau film di DramaKu",
+  // Teks abu-abu di dalam kotak cari. Dipendekkan atas permintaan owner
+  // 2026-09-21 supaya sejajar dengan situs katalog pembanding ("Cari judul
+  // film di Lk21"). Ini MURNI tulisan — yang dicari tetap judul, kategori,
+  // dan sinopsis (lihat `cocokSemuaKata` di lib/discover.ts), jadi memendekkan
+  // kalimatnya tidak mempersempit hasil pencarian.
+  placeholder = "Cari film di DramaKu",
   filters,
   chrome,
   className,

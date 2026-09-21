@@ -138,7 +138,12 @@ export function buildNavMenus(dramas: Drama[]): NavMenu[] {
         })),
       ],
     ),
-    menu("jenis", "Jenis", [
+    // Label "Series" & "+ More" di bawah ditulis PERSIS seperti situs katalog
+    // pembanding — permintaan owner 2026-09-21, ditegaskan dua kali. `key`-nya
+    // sengaja TIDAK ikut berubah ("jenis"/"lainnya"): itu kunci internal yang
+    // dipakai React & tes, dan menggantinya cuma menambah risiko tanpa satu pun
+    // perubahan yang terlihat penonton.
+    menu("jenis", "Series", [
       serial > 0 ? { label: "Serial", href: tautan({ kind: "series" }) } : null,
       film > 0 ? { label: "Film", href: tautan({ kind: "movie" }) } : null,
     ]),
@@ -167,7 +172,7 @@ export function buildNavMenus(dramas: Drama[]): NavMenu[] {
     // Tempat sisa — padanan "+ More". Pilihan Gratis hanya berarti kalau
     // katalog memuat KEDUANYA; kalau semua judul gratis, ia cuma memulangkan
     // katalog utuh.
-    menu("lainnya", "Lainnya", [
+    menu("lainnya", "+ More", [
       subIndo > 0 ? { label: "Sub Indo", href: tautan({ sub: "id" }) } : null,
       gratis > 0 && koin > 0
         ? { label: "Gratis", href: tautan({ akses: "gratis" }) }

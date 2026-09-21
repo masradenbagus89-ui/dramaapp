@@ -224,3 +224,64 @@ Penyaringan genre di tempat **tidak hilang** — masih ada di dropdown
    parameter yang salah tulis diabaikan diam-diam oleh `bacaFilter`, dan
    chip-nya lalu menampilkan SELURUH katalog seolah penyaringnya bekerja. Itu
    lebih menyesatkan daripada halaman kosong.
+
+---
+
+# REVISI KETIGA 2026-09-21 — tulisan kotak cari & label menu
+
+## Maksud owner (2 screenshot berdampingan: DramaKu vs Layarkaca21)
+1. Tulisan di dalam kotak cari **dipendekkan** jadi "Cari film di DramaKu"
+   (sebelumnya "Cari judul drama atau film di DramaKu"), **tanpa** mengurangi
+   kemampuan pencariannya.
+2. Label enam tombol menu ditulis **persis seperti situs pembanding**:
+   **Genre · Series · Populer · Negara · Tahun · + More**
+   (sebelumnya Genre · Jenis · Populer · Negara · Tahun · Lainnya).
+3. Menu tetap **sejajar** dengan kotak cari dan tetap berfungsi saat diklik.
+
+## ⚠️ Koreksi atas penolakan sebelumnya — alasannya KELIRU
+Revisi pagi menolak "Series" & "+ More" dengan dua alasan; keduanya tidak tahan
+diperiksa:
+
+1. **"§1 kernel mewajibkan bahasa Indonesia."** SALAH. §1 berjudul *"BAHASA
+   OUTPUT — berlaku tiap output ke user (narasi antar-langkah, to-do, Q&A,
+   popup)"*; yang diatur adalah cara **AI berbicara kepada owner**, bukan teks
+   di dalam produk yang dibangun untuk penonton. Teks tombol adalah **keputusan
+   desain owner**, dan owner sudah menyebutnya dua kali.
+2. **"'Series' salah untuk menu yang isinya Serial + Film."** Ini keberatan yang
+   sah, tapi bobotnya kecil: penonton yang membuka menunya langsung melihat dua
+   pilihan itu. Dan §2.2 sudah dipenuhi — keberatannya SUDAH disampaikan, owner
+   menegaskan ulang, jadi itu keputusannya.
+
+**Aturan yang layak diulang: setelah keberatan disampaikan dan owner tetap pada
+pilihannya, kerjakan permintaan penuhnya.** Mengulang penolakan yang sama =
+mengabaikan keputusan owner, bukan menjaga mutu.
+
+## Yang diubah (3 berkas kode, semuanya TULISAN + 1 kelas CSS)
+| Berkas | Isi |
+|---|---|
+| `app/components/beranda/SearchBar.tsx` | Teks bawaan kotak cari → `"Cari film di DramaKu"`. **Hanya tulisan** — yang dicari tetap judul, kategori, dan sinopsis (`cocokSemuaKata`, lib/discover.ts), jadi kalimat yang lebih pendek TIDAK mempersempit hasil. |
+| `lib/nav-katalog.ts` | Label `"Jenis"` → `"Series"`, `"Lainnya"` → `"+ More"`. **`key`-nya sengaja tidak ikut berubah** (`"jenis"`/`"lainnya"`) — itu kunci internal React & tes; menggantinya menambah risiko tanpa satu pun perubahan yang terlihat penonton. |
+| `app/components/beranda/NavMenus.tsx` | `uppercase tracking-wide text-xs font-bold` → `text-[13px] font-semibold`. Owner menulis labelnya berkapital-awal ("Genre", bukan "GENRE") dan situs pembanding memang begitu. Huruf kecil terbaca lebih kecil dari kapital, jadi ukurannya dinaikkan 12px → 13px supaya tidak menyusut. Strip kuning di bawah **tetap** huruf kapital — di sana owner memang menulisnya kapital. |
+
+Tata letaknya **tidak disentuh**: menu sudah sejajar dengan kotak cari sejak
+2026-09-10 (`SearchBar` menaruh `chrome.menus` di baris yang sama).
+
+## Penjaga baru (tulisan ini sudah DUA KALI jadi soal)
+- `tests/nav-katalog.test.ts` — mengunci keenam label **dan** memastikan `key`
+  internal tidak ikut berubah saat labelnya diganti.
+- `tests/strip-katalog.test.ts` — memastikan HTML yang benar-benar dirender
+  memuat tulisan kotak cari yang diminta, keenam tombol menu, **dan** bahwa
+  kotaknya tetap kotak cari sungguhan (`role="search"` + `type="search"`) —
+  pagar supaya "memendekkan tulisan" tak pernah diam-diam melumpuhkan fungsinya.
+
+## Bukti REVISI KETIGA
+- ✅ `rm -rf .next` → `npm run build` **exit 0**; `/` `/beranda` `/discover`
+  `/playly` `/shorts` `/sitemap.xml` semua tetap **`○ (Static)` 1m 1y**.
+- ✅ `npx tsc --noEmit` **exit 0** · `npm test` **715 tes / 53 berkas hijau**.
+- ✅ **Mutation check 4 arah, SEMUANYA MERAH**: label "Series" diganti balik ·
+  label "+ More" diganti balik · tulisan kotak cari dipanjangkan lagi · kotak
+  cari kehilangan penanda pencarian.
+- ✅ Dijalankan (`next start`, log servernya dibaca dulu) → tulisan kotak cari
+  **"Cari film di DramaKu"**, tombol menu **Genre · Series · Populer · Negara ·
+  Tahun · + More**, huruf kapital paksa **sudah hilang**, dan kotak carinya
+  tetap membawa `role="search"` + `type="search"`.

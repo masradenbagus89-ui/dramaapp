@@ -5,7 +5,27 @@
 >
 > **AI:** tiap kali ada perbaikan / deploy / keputusan — **perbarui berkas ini di langkah terakhir**, sebelum bilang selesai. Jangan tumpuk sejarah panjang di sini; pindahkan yang lama ke `NEXT-SESSION.md`.
 
-**Terakhir diisi:** 2026-09-21 (sore) — ✅ **REVISI strip SUDAH DIRILIS & TERBUKTI TAYANG.** `HEAD` = `origin/main` = `dramaku/main` = **`923d3ed`**, antrean deploy **KOSONG**. Strip produksi menggambar **14 chip persis** sesuai daftar owner. **Diuji ke katalog produksi yang sedang hidup (41 judul): 9 chip berisi, 5 chip masih kosong** — dan itu memang disengaja, bukan bug:
+**Terakhir diisi:** 2026-09-21 (malam) — 🔄 **REVISI KETIGA: tulisan kotak cari & label menu. SELESAI & TERBUKTI, BELUM di-push.**
+
+## 2026-09-21 MALAM — tulisan kotak cari & label enam tombol menu
+
+**Yang diminta owner (2 screenshot berdampingan, DramaKu vs Layarkaca21):** (1) tulisan di kotak cari dipendekkan jadi **"Cari film di DramaKu"** tanpa mengurangi kemampuan pencariannya; (2) label tombol menu ditulis persis **Genre · Series · Populer · Negara · Tahun · + More**; (3) menu tetap sejajar dengan kotak cari & tetap berfungsi.
+
+**⚠️ KOREKSI PENTING — penolakan saya sebelumnya KELIRU.** Revisi pagi menolak "Series" & "+ More" dengan alasan *"§1 kernel mewajibkan bahasa Indonesia"*. **Salah.** §1 berjudul *"BAHASA OUTPUT — berlaku tiap output ke user (narasi, to-do, Q&A, popup)"* — yang diatur adalah cara **AI berbicara kepada owner**, BUKAN teks di dalam produk yang dibangun untuk penonton. Teks tombol adalah **keputusan desain owner**. **Aturan yang layak diulang: sesudah keberatan disampaikan sekali dan owner tetap pada pilihannya, kerjakan permintaan penuhnya** — mengulang penolakan yang sama itu mengabaikan keputusan owner, bukan menjaga mutu.
+
+**Yang diubah — 3 berkas, semuanya TULISAN + 1 kelas CSS. Nol logika disentuh:** `SearchBar.tsx` (teks bawaan kotak cari; **hanya tulisan** — yang dicari tetap judul, kategori & sinopsis lewat `cocokSemuaKata`, jadi kalimat pendek TIDAK mempersempit hasil) · `lib/nav-katalog.ts` (label `"Jenis"`→`"Series"`, `"Lainnya"`→`"+ More"`; **`key` internal sengaja tidak ikut berubah**) · `NavMenus.tsx` (`uppercase` dilepas jadi kapital-awal seperti situs pembanding, ukuran dinaikkan 12px→13px supaya huruf kecil tidak menyusut; **strip kuning tetap kapital** — di sana owner memang menulisnya kapital).
+
+**Tata letak tidak disentuh** — menu sudah sejajar dengan kotak cari sejak 2026-09-10.
+
+**Bukti:** `rm -rf .next` → build **exit 0** (nol kemunduran status halaman) → `tsc` **exit 0** → **715 tes / 53 berkas hijau** → **mutation check 4 arah SEMUANYA MERAH** (label "Series" diganti balik · label "+ More" diganti balik · tulisan kotak cari dipanjangkan lagi · kotak cari kehilangan penanda pencarian) → `next start` (log server dibaca dulu) menggambar tulisan **"Cari film di DramaKu"** + tombol **Genre · Series · Populer · Negara · Tahun · + More**, dan kotaknya tetap membawa `role="search"` + `type="search"`.
+
+**Penjaga baru:** tulisan ini sudah **dua kali** jadi soal, jadi sekarang dikunci di `tests/nav-katalog.test.ts` (keenam label + `key` internal tak ikut berubah) dan `tests/strip-katalog.test.ts` (HTML yang benar-benar dirender + pagar bahwa kotak carinya tetap berfungsi).
+
+---
+
+## 2026-09-21 SORE — strip dipangkas jadi 14 chip
+
+✅ **SUDAH DIRILIS & TERBUKTI TAYANG.** `HEAD` = `origin/main` = `dramaku/main` = **`923d3ed`**, antrean deploy **KOSONG**. Strip produksi menggambar **14 chip persis** sesuai daftar owner. **Diuji ke katalog produksi yang sedang hidup (41 judul): 9 chip berisi, 5 chip masih kosong** — dan itu memang disengaja, bukan bug:
 
 | Chip | Judul | Chip | Judul |
 |---|---|---|---|

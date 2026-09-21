@@ -4,8 +4,12 @@
 > AI wajib baca berkas ini **pertama**, lalu `antrean-deploy.md`.
 >
 > **AI:** tiap kali ada perbaikan / deploy / keputusan — **perbarui berkas ini di langkah terakhir**, sebelum bilang selesai. Jangan tumpuk sejarah panjang di sini; pindahkan yang lama ke `NEXT-SESSION.md`.
+>
+> **⚠️ Cara menyisipkan catatan baru (dibetulkan 2026-09-21).** Sisipkan **satu** judul `## ` saja, lalu isinya, lalu `---`. JANGAN menulis ulang judul seksi lama sebagai penanda posisi — itu menghasilkan **judul kembar/yatim**, dan sesi 2026-09-21 meninggalkan **4 judul yatim + 2 judul kembar** sebelum ketahuan. Kalau satu topik perlu dua blok (status rilis + rincian), beri judul kedua akhiran **` — rincian`**.
+>
+> **📦 Berkas ini sudah 2.980 baris / ±240 KB** dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-09-21 (revisi ke-6) — ✅ **SUDAH DIRILIS & TERBUKTI TAYANG** (2 commit sekaligus). `HEAD` = `origin/main` = `dramaku/main` = **`f068a73`**, antrean **KOSONG**. Owner melihat preview lokal dulu sebelum memberi izin push.
+**Terakhir diisi:** 2026-09-21 (revisi ke-6) — ✅ **SUDAH DIRILIS & TERBUKTI TAYANG** (2 commit sekaligus). `HEAD` = `origin/main` = `dramaku/main` = **`ac6d2de`**, antrean **KOSONG**. Owner melihat preview lokal dulu sebelum memberi izin push.
 
 **Verifikasi tayang:** `/` dan `/beranda` sama-sama memakai bar **`from-rose-700 via-rose-600 to-pink-600`** (ungu hilang), lambang **36px**, nama situs **`text-xl`**, **nol tombol Masuk/Daftar di dalam bar**, menu **Genre · Series · Populer · Negara · Tahun · + More**. Pagar ikut diperiksa: **`/shorts` navbar hitamnya TETAP ADA**.
 
@@ -26,8 +30,6 @@ Akibat yang dirasakan penonton: halaman depan sesaat menampilkan **dua baris kep
 
 ## 2026-09-21 — logo diperbesar & dijadikan satu sumber (SUDAH TAYANG)
 
-## 2026-09-21 — logo diperbesar & dijadikan satu sumber
-
 Owner: "logo atau tulisan dramaku di sebelah kiri masih terlalu kecil". Lambang **28px → 36px**, nama situs **16px → 20px**. **36px bukan angka asal** — sama dengan tinggi kotak cari (`h-9`), jadi bar **tidak ikut meninggi**.
 
 Sekalian markup logo yang tadinya **disalin di dua berkas** dijadikan **satu komponen** `LogoDramaKu` (diekspor dari `KepalaKatalog.tsx`). Itu sudah pernah menyimpang: halaman depan memakai kotak kuning huruf "D" sementara halaman berkatalog memakai lambang situs — dua halaman terasa seperti dua situs.
@@ -36,9 +38,7 @@ Sekalian markup logo yang tadinya **disalin di dua berkas** dijadikan **satu kom
 
 ---
 
-## 2026-09-21 — bar cari: warna, logo, dan tombol akun (revisi ke-5, ikut menunggu push)
-
-## 2026-09-21 — bar cari: warna, logo, dan tombol akun
+## 2026-09-21 — bar cari: warna, logo, dan tombol akun (SUDAH TAYANG)
 
 **Diminta owner:** (1) tombol **Masuk & Daftar di bar dihapus** karena dobel dengan ajakan di badan halaman; (2) menu tetap Genre · Series · Populer · Negara · Tahun · + More; (3) **warna merah terang** seperti LK21; (4) **logo kiri dirapikan**.
 
@@ -52,7 +52,7 @@ Sekalian markup logo yang tadinya **disalin di dua berkas** dijadikan **satu kom
 
 ---
 
-## 2026-09-21 — kepala situs /beranda & /discover jadi DUA baris
+## 2026-09-21 — kepala situs /beranda & /discover jadi DUA baris (SUDAH TAYANG)
 
 ✅ **SUDAH DIRILIS & TERBUKTI TAYANG.** `HEAD` = `origin/main` = `dramaku/main` = **`2cf4952`**, antrean **KOSONG**. Owner melihat preview lokal dulu sebelum memberi izin push.
 
@@ -72,9 +72,7 @@ Sekalian markup logo yang tadinya **disalin di dua berkas** dijadikan **satu kom
 
 ---
 
-## 2026-09-21 — kepala situs /beranda & /discover jadi DUA baris (SUDAH TAYANG)
-
-## 2026-09-21 — kepala situs /beranda & /discover jadi DUA baris
+## 2026-09-21 — kepala situs /beranda & /discover jadi DUA baris — rincian
 
 **Yang diminta owner (screenshot, 3 kotak merah):** hilangkan (1) navbar hitam, (2) kotak cari kecil di navbar, (3) empat dropdown penyaring; lalu panjangkan kotak cari — "seperti layarkaca21, tersusun rapi, simpel dan enak dilihat sama penonton".
 
@@ -104,9 +102,7 @@ Sekalian markup logo yang tadinya **disalin di dua berkas** dijadikan **satu kom
 
 ---
 
-## 2026-09-21 MALAM — tulisan kotak cari & label enam tombol menu
-
-## 2026-09-21 MALAM — tulisan kotak cari & label enam tombol menu
+## 2026-09-21 MALAM — tulisan kotak cari & label enam tombol menu — rincian
 
 **Yang diminta owner (2 screenshot berdampingan, DramaKu vs Layarkaca21):** (1) tulisan di kotak cari dipendekkan jadi **"Cari film di DramaKu"** tanpa mengurangi kemampuan pencariannya; (2) label tombol menu ditulis persis **Genre · Series · Populer · Negara · Tahun · + More**; (3) menu tetap sejajar dengan kotak cari & tetap berfungsi.
 

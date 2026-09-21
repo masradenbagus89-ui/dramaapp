@@ -3,7 +3,25 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-09-19 (**GERBANG RILIS LULUS — `/playly` TERBUKTI `○ (Static)`; 8 COMMIT SIAP, MENUNGGU IZIN PUSH OWNER**). **Lokal ahead 8 commit dari `origin/main` = `a65bfbf`.** `dramaku/main` = `8e5323e`, **nol kerja rekan baru**. **Belum di-push** — push ke `origin main` = tombol rilis, wajib izin owner.
+**Terakhir dicek:** 2026-09-21 (**✅ SUDAH DIRILIS — antrean KOSONG.**). **`HEAD` = `origin/main` = `dramaku/main` = `2104976`**, lokal **ahead 0 commit** dari keduanya. Dual push dijalankan atas izin owner ("push sekarang"), urutan cermin dulu (`dramaku`) baru produksi (`origin`), keduanya **fast-forward** (`git rev-list --count HEAD..origin/main` = **0** sebelum push → nol pekerjaan orang lain yang tertimpa).
+
+**9 commit yang ikut tayang dalam satu rilis ini** — 8 antrean lama + 1 baru. Antrean lama sengaja tidak dipisah: `019fa8a` justru perbaikan yang **membuat build bisa lulus**, jadi merilis yang baru tanpa dia mustahil. Isinya: `c12b8db` (.gitignore `.claude/memory/`) · `254ce47` (`/playly` static + video gabungan ke `/beranda` & `/discover`) · `0827268` + `8e5323e` + `a40caef` (**kerja rekan**: halaman & menu pantau webhook Playly di admin) · `ddf5862` + `2e381aa` (catatan) · `019fa8a` (lepas prerender halaman drama) · **`2104976` (BARU: strip katalog gaya LK21)**.
+
+**✅ GERBANG §6 DIJALANKAN PENUH, urutan benar, exit code dibaca dari berkas (TIDAK dipipa):** `rm -rf .next` → `npm run build` **exit 0** → `npx tsc --noEmit` **exit 0** → **712 tes lulus / 53 berkas, 0 gagal** (dari 693/52) → **nol berkas env/kunci ter-stage** (dua lapis: nama berkas + pola rahasia di isi diff) → push → **verifikasi tayang**.
+
+**🎯 VERIFIKASI TAYANG DI SITUS SUNGGUHAN (bukan localhost):** HTML `https://dramaapp.vercel.app/` dibaca langsung → strip kuning menggambar **29 chip dalam 5 kelompok** dengan **4 garis pemisah**, kelas pembungkusnya `flex-nowrap overflow-x-auto md:flex-wrap md:overflow-x-visible` (= membungkus di layar lebar), dan menu bar tetap **Genre · Jenis · Populer · Negara · Tahun · Lainnya**. **29 alamat chip diuji satu per satu ke produksi → 29/29 HTTP 200, nol yang gagal.**
+
+⚠️ **Batas yang jujur soal bukti di atas:** HTTP 200 membuktikan halamannya **terbuka**, BUKAN berapa judul yang muncul — `/discover` dibungkus `<Suspense>` (karena `useSearchParams`) sehingga **tidak merender apa pun di server**; HTML-nya cuma "Memuat...". Bukti jumlah judul datang dari tempat lain: **58 tautan menu+chip dijalankan terhadap katalog PRODUKSI nyata (41 judul, `GET /api/dramas`) → 0 yang memulangkan halaman hampa.**
+
+**Nol SQL, nol env baru** — kolom `genre` & `country` yang dipakai penyaring baru memang sudah ada di database. Jadi urutan wajib "SQL dulu → env → baru push" (butir 3) tidak berlaku untuk rilis ini.
+
+**🪤 JEBAKAN ALAT BARU (tambah ke daftar):** **`next start` yang GAGAL tetap membalas HTTP 200 — dari server LAIN.** Port uji ternyata sudah dipakai proses lain; `next start` mati dengan `EADDRINUSE` **di lognya**, tapi `curl` balas **200 + HTML utuh berisi kode LAMA**. Nyaris jadi kesimpulan "perubahan tidak masuk". **Sesudah menjalankan server uji, baca log server-nya dulu** — HTTP 200 tidak membuktikan permintaanmu sampai ke server yang baru dijalankan.
+
+**LANGKAH BERIKUTNYA:** (1) ~~izin owner → dual push~~ **SELESAI**; (2) ~~verifikasi tayang~~ **SELESAI**; (3) **masih menggantung & terpisah dari rilis ini:** kirim `docs/permintaan-restart-supabase.md` bagian 2 ke Kang Dedi — itu yang menyembuhkan `/history`, `/my-list`, `/profile`, `/admin` yang menampilkan daftar film kosong. **Rollback 1-baris kalau ada masalah:** `git revert --no-edit 2104976 && git push origin main && git push dramaku main`.
+
+**⚠️ Remote `official` MASIH rusak** ("Repository not found"), `git fetch --all` selalu terlihat gagal. Dual push tak terpengaruh. ❓ Perlu izin owner untuk `git remote remove official`.
+
+**Sebelumnya dicek:** 2026-09-19 (**GERBANG RILIS LULUS — `/playly` TERBUKTI `○ (Static)`; 8 COMMIT SIAP, MENUNGGU IZIN PUSH OWNER**). **Lokal ahead 8 commit dari `origin/main` = `a65bfbf`.** `dramaku/main` = `8e5323e`, **nol kerja rekan baru**. **Belum di-push** — push ke `origin main` = tombol rilis, wajib izin owner.
 
 **8 commit yang siap:** `c12b8db` (.gitignore `.claude/memory/`) · `254ce47` (`/playly` static + video gabungan ke `/beranda` & `/discover`) · `0827268` + `8e5323e` + `a40caef` (kerja rekan: halaman & menu pantau webhook Playly di admin) · `ddf5862` + `2e381aa` (catatan) · + commit hari ini (lepas prerender halaman drama + penjaga + catatan).
 

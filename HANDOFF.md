@@ -5,7 +5,11 @@
 >
 > **AI:** tiap kali ada perbaikan / deploy / keputusan — **perbarui berkas ini di langkah terakhir**, sebelum bilang selesai. Jangan tumpuk sejarah panjang di sini; pindahkan yang lama ke `NEXT-SESSION.md`.
 
-**Terakhir diisi:** 2026-09-21 — ✅ **Strip katalog & pencarian bergaya Layarkaca21 SELESAI & TERBUKTI** (permintaan owner + 2 screenshot). Belum di-push — menunggu izin rilis owner. Catatan 2026-09-19 di bawah **masih berlaku semua** (Supabase produksi masih kedip, antrean rilis masih menggantung).
+**Terakhir diisi:** 2026-09-21 — ✅ **SUDAH DIRILIS & TERBUKTI TAYANG.** Strip katalog bergaya Layarkaca21 selesai, dan **dual push dijalankan atas izin owner** — `HEAD` = `origin/main` = `dramaku/main` = **`2104976`**, antrean rilis **KOSONG** (9 commit tayang sekaligus: 8 antrean lama + 1 baru). Catatan 2026-09-19 di bawah **sudah tidak lagi menunggu rilis**, tapi bagian **Supabase produksi masih berlaku penuh** (itu penyakit terpisah yang belum selesai — lihat langkah berikutnya).
+
+**Verifikasi tayang (situs sungguhan, bukan localhost):** HTML `https://dramaapp.vercel.app/` dibaca langsung → **29 chip, 5 kelompok, 4 garis pemisah**, menu bar tetap enam. **29 alamat chip diuji satu per satu → 29/29 HTTP 200.** ⚠️ Batas jujurnya: HTTP 200 membuktikan halaman **terbuka**, bukan berapa judul yang muncul (lihat jebakan `/discover` di bawah); bukti jumlah judul datang dari 58 tautan yang dijalankan ke katalog produksi nyata → **0 yang hampa**.
+
+**🔴 Yang MASIH menggantung (terpisah dari rilis ini):** kirim `docs/permintaan-restart-supabase.md` bagian 2 ke Kang Dedi. Itu yang menyembuhkan `/history`, `/my-list`, `/profile`, `/admin` yang menampilkan **daftar film kosong**. **Rollback 1-baris kalau rilis ini bermasalah:** `git revert --no-edit 2104976 && git push origin main && git push dramaku main`.
 
 ## 2026-09-21 — Strip katalog LK21: 12 chip → 29 chip, semuanya berfungsi
 

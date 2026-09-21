@@ -5,7 +5,18 @@
 >
 > **AI:** tiap kali ada perbaikan / deploy / keputusan — **perbarui berkas ini di langkah terakhir**, sebelum bilang selesai. Jangan tumpuk sejarah panjang di sini; pindahkan yang lama ke `NEXT-SESSION.md`.
 
-**Terakhir diisi:** 2026-09-21 (sore) — 🔄 **REVISI strip: owner memangkas 29 chip → 14. SELESAI & TERBUKTI, BELUM di-push.** Rilis pagi hari ini (`7fa2d85`) tetap tayang; revisi ini menimpanya. Ringkasan rilis pagi: ✅ **SUDAH DIRILIS & TERBUKTI TAYANG.** Strip katalog bergaya Layarkaca21 selesai, dan **dual push dijalankan atas izin owner** — `HEAD` = `origin/main` = `dramaku/main` = **`2104976`**, antrean rilis **KOSONG** (9 commit tayang sekaligus: 8 antrean lama + 1 baru). Catatan 2026-09-19 di bawah **sudah tidak lagi menunggu rilis**, tapi bagian **Supabase produksi masih berlaku penuh** (itu penyakit terpisah yang belum selesai — lihat langkah berikutnya).
+**Terakhir diisi:** 2026-09-21 (sore) — ✅ **REVISI strip SUDAH DIRILIS & TERBUKTI TAYANG.** `HEAD` = `origin/main` = `dramaku/main` = **`923d3ed`**, antrean deploy **KOSONG**. Strip produksi menggambar **14 chip persis** sesuai daftar owner. **Diuji ke katalog produksi yang sedang hidup (41 judul): 9 chip berisi, 5 chip masih kosong** — dan itu memang disengaja, bukan bug:
+
+| Chip | Judul | Chip | Judul |
+|---|---|---|---|
+| ACTION | 20 | CINA | 1 |
+| ROMANCE | 14 | 2026 | 3 |
+| SCI-FI | 4 | 2025 | 1 |
+| HORROR | 1 | TERPOPULER | 41 |
+| KOMEDI | 1 | | |
+| **ANIME · INDIA · JEPANG · KOREA · THAILAND** | **0** | | |
+
+Kelima chip kosong **hidup sendiri** begitu owner menambah judul bernegara/bergenre itu dari panel admin — **tidak perlu menyentuh kode lagi**. Ringkasan rilis pagi: ✅ **SUDAH DIRILIS & TERBUKTI TAYANG.** Strip katalog bergaya Layarkaca21 selesai, dan **dual push dijalankan atas izin owner** — `HEAD` = `origin/main` = `dramaku/main` = **`2104976`**, antrean rilis **KOSONG** (9 commit tayang sekaligus: 8 antrean lama + 1 baru). Catatan 2026-09-19 di bawah **sudah tidak lagi menunggu rilis**, tapi bagian **Supabase produksi masih berlaku penuh** (itu penyakit terpisah yang belum selesai — lihat langkah berikutnya).
 
 **Verifikasi tayang (situs sungguhan, bukan localhost):** HTML `https://dramaapp.vercel.app/` dibaca langsung → **29 chip, 5 kelompok, 4 garis pemisah**, menu bar tetap enam. **29 alamat chip diuji satu per satu → 29/29 HTTP 200.** ⚠️ Batas jujurnya: HTTP 200 membuktikan halaman **terbuka**, bukan berapa judul yang muncul (lihat jebakan `/discover` di bawah); bukti jumlah judul datang dari 58 tautan yang dijalankan ke katalog produksi nyata → **0 yang hampa**.
 

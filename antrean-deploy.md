@@ -3,7 +3,17 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-09-21 (**✅ SUDAH DIRILIS — antrean KOSONG.**). **`HEAD` = `origin/main` = `dramaku/main` = `2104976`**, lokal **ahead 0 commit** dari keduanya. Dual push dijalankan atas izin owner ("push sekarang"), urutan cermin dulu (`dramaku`) baru produksi (`origin`), keduanya **fast-forward** (`git rev-list --count HEAD..origin/main` = **0** sebelum push → nol pekerjaan orang lain yang tertimpa).
+**Terakhir dicek:** 2026-09-21 sore (**✅ DUA RILIS HARI INI, antrean KOSONG**). **`HEAD` = `origin/main` = `dramaku/main` = `923d3ed`**, lokal ahead 0. Rilis kedua = **`923d3ed`** (revisi strip 29 chip → 14 atas permintaan owner), dual push atas izin owner, fast-forward, `git rev-list --count HEAD..origin/main` = **0** sebelum push.
+
+**Gerbang §6 rilis kedua:** `rm -rf .next` → `npm run build` **exit 0** (nol kemunduran: `/` `/beranda` `/discover` `/playly` `/shorts` `sitemap.xml` semua tetap `○ (Static)` 1m 1y) → `npx tsc --noEmit` **exit 0** → **711 tes / 53 berkas** → **mutation check 7 arah semuanya MERAH** → **nol berkas env/kunci** (dua lapis) → push → verifikasi tayang.
+
+**Verifikasi tayang:** HTML produksi menggambar **14 chip persis** (`ACTION ANIME HORROR KOMEDI SCI-FI ROMANCE CINA INDIA JEPANG KOREA THAILAND 2025 2026 TERPOPULER`), dan tiap chip diuji ke **katalog produksi yang sedang hidup (41 judul)** → **9 berisi, 5 kosong (Anime · India · Jepang · Korea · Thailand)**. Kelima yang kosong **disengaja** (keputusan owner, dicatat terbuka di komentar `STRIP_KATALOG`) dan **hidup sendiri** saat owner menambah judulnya — nol perubahan kode. **Nol SQL, nol env baru.**
+
+**Rollback rilis kedua:** `git revert --no-edit 923d3ed && git push origin main && git push dramaku main`.
+
+---
+
+**Rilis pertama hari ini (`7fa2d85`):** **`HEAD` = `origin/main` = `dramaku/main` = `2104976`**, lokal **ahead 0 commit** dari keduanya. Dual push dijalankan atas izin owner ("push sekarang"), urutan cermin dulu (`dramaku`) baru produksi (`origin`), keduanya **fast-forward** (`git rev-list --count HEAD..origin/main` = **0** sebelum push → nol pekerjaan orang lain yang tertimpa).
 
 **9 commit yang ikut tayang dalam satu rilis ini** — 8 antrean lama + 1 baru. Antrean lama sengaja tidak dipisah: `019fa8a` justru perbaikan yang **membuat build bisa lulus**, jadi merilis yang baru tanpa dia mustahil. Isinya: `c12b8db` (.gitignore `.claude/memory/`) · `254ce47` (`/playly` static + video gabungan ke `/beranda` & `/discover`) · `0827268` + `8e5323e` + `a40caef` (**kerja rekan**: halaman & menu pantau webhook Playly di admin) · `ddf5862` + `2e381aa` (catatan) · `019fa8a` (lepas prerender halaman drama) · **`2104976` (BARU: strip katalog gaya LK21)**.
 

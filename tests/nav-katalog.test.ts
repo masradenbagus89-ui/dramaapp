@@ -151,6 +151,23 @@ describe("buildNavMenus", () => {
     expect(cari("Horror")).toBe("/discover?genre=Horror");
   });
 
+  it("menawarkan penyaring rating IMDb di menu + More", () => {
+    // Dropdown rating di bar cari dilepas 2026-09-21; pilihannya pindah ke sini
+    // supaya penyaringnya tidak ikut hilang. KAYA punya satu judul 8.5.
+    const lainnya = buildNavMenus(KAYA).find((m) => m.key === "lainnya");
+    const label = lainnya?.items.map((i) => i.label) ?? [];
+    expect(label).toContain("IMDb 7+");
+    expect(label).toContain("IMDb 8+");
+    // Tak satu pun judul mencapai 9, jadi ambang itu tidak digambar.
+    expect(label).not.toContain("IMDb 9+");
+  });
+
+  it("tidak menawarkan rating sama sekali saat katalog tak punya nilainya", () => {
+    const lainnya = buildNavMenus(POLOS).find((m) => m.key === "lainnya");
+    const label = lainnya?.items.map((i) => i.label) ?? [];
+    expect(label.filter((l) => l.startsWith("IMDb"))).toHaveLength(0);
+  });
+
   it("menyembunyikan urutan Rating & Tahun saat katalog tak punya datanya", () => {
     const populer = buildNavMenus(POLOS).find((m) => m.key === "populer");
     const label = populer?.items.map((i) => i.label) ?? [];

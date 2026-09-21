@@ -7,12 +7,24 @@
 //
 // Dipakai `createElement`, bukan JSX, supaya berkas tetap .ts dan ikut pola
 // `tests/**/*.test.ts` yang sudah dipakai project (vitest.config.ts).
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import CatalogBrowser from "../app/components/beranda/CatalogBrowser";
 import { ROW_MIN_ITEMS } from "../lib/beranda-catalog";
 import type { Drama } from "../lib/types";
+
+// Sejak 2026-09-21 CatalogBrowser memasang KepalaKatalog (tombol garis-tiga +
+// tombol akun), yang memakai usePathname/useRouter — keduanya cuma hidup di
+// dalam runtime Next, jadi harus dipalsukan di sini.
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/beranda",
+  useSearchParams: () => new URLSearchParams(""),
+  useRouter: () => ({ replace: () => {}, push: () => {} }),
+}));
+
+const { default: CatalogBrowser } = await import(
+  "../app/components/beranda/CatalogBrowser"
+);
 
 /**
  * Drama seadanya. SENGAJA tanpa `posterImage`: dengan gambar, `Poster` memakai

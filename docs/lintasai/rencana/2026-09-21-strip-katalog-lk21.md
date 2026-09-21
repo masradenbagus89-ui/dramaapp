@@ -285,3 +285,69 @@ Tata letaknya **tidak disentuh**: menu sudah sejajar dengan kotak cari sejak
   **"Cari film di DramaKu"**, tombol menu **Genre · Series · Populer · Negara ·
   Tahun · + More**, huruf kapital paksa **sudah hilang**, dan kotak carinya
   tetap membawa `role="search"` + `type="search"`.
+
+---
+
+# REVISI KEEMPAT 2026-09-21 — kepala situs dirampingkan jadi DUA baris
+
+## Maksud owner (screenshot berkotak merah, 3 kotak)
+> "yang saya kasih kotak merah kamu hilangkan saja, aku maunya seperti
+> layarkaca21 tersusun rapi, simpel dan enak dilihat sama penonton. dan bisa
+> dipanjangkan lagi kotak pencari film di dramaku seperti layarkaca21"
+
+Tiga kotak merah: (1) navbar hitam berisi logo + Beranda/Discover/Shorts/
+Playly/My List/Profile · (2) kotak cari kecil di navbar · (3) empat dropdown
+penyaring (Semua genre · Terbaru ditambah · Semua tahun · Semua rating).
+
+## ⚠️ Kotak merah #1 TIDAK bisa sekadar dibuang — dan itu tak terlihat dari layar
+Navbar hitam adalah **satu-satunya navigasi di layar komputer**. `BottomNav`
+hanya muncul di HP (`md:hidden`) dan cuma memuat empat tujuan (Shorts · Beranda ·
+My List · Profile). Menghapusnya berarti **Discover · Playly · Admin · tombol
+Keluar · nama akun · saldo koin** tidak bisa dicapai dari mana pun kecuali
+mengetik alamatnya sendiri — **tanpa satu pun error yang memberi tahu**.
+
+Karena ini perubahan cakupan (§4.4), owner disajikan **popup 3 pilihan** lengkap
+dengan akibat yang dirasakan penonton. **Owner memilih: pindahkan ke tombol menu
+ringkas.**
+
+## Yang dibangun
+| Berkas | Isi |
+|---|---|
+| `app/components/beranda/KepalaKatalog.tsx` (**BARU**) | `MenuAplikasi` — tombol garis-tiga + logo, isinya SELURUH navigasi aplikasi + Admin + peringatan "masuk ulang sebagai admin" + Keluar. `TombolAkun` — saldo koin (sudah masuk) atau Masuk/Daftar (belum). Keduanya berbagi hook `usePenonton` supaya aturan "kapan Admin muncul" cuma ditulis sekali. |
+| `app/components/TopNav.tsx` | +`PUNYA_BAR_CARI = ["/beranda", "/discover"]` → navbar menghilang HANYA di dua halaman itu. `LINKS` diekspor supaya bisa diadu dengan `TUJUAN`. |
+| `CatalogBrowser.tsx` (/beranda) | Keempat dropdown penyaring **dilepas**; state `genre`/`year`/`minRating`/`sort` yang jadi mati ikut dibuang, diganti konstanta bernama `TANPA_PENYARING` supaya `sedangMenyaring` tetap dipanggil lewat aturan bersama. Bar cari pindah ke `sticky top-0` (navbar tak lagi di atasnya) dan memasang `MenuAplikasi` + `TombolAkun`. 14 impor mati ikut dibersihkan. |
+| `DramaBrowser.tsx` (/discover) | Sama: dropdown dilepas, kepala situs dipasang, `sticky top-0`. Penyaring `year`/`rating`/`sort` **tetap hidup lewat alamat URL** — yang dilepas cuma tampilannya. |
+| `SearchBar.tsx` | `md:max-w-md` (28rem) **dilepas** → kotak cari mengisi sisa ruang, seperti situs pembanding. |
+| `lib/nav-katalog.ts` | Penyaring **rating IMDb** pindah ke menu "+ More" (`IMDb 7+` · `8+` · `9+`), supaya fungsinya tidak ikut hilang bersama dropdown-nya. Ambang yang tak dipunyai satu judul pun tidak digambar. |
+
+## Yang TIDAK hilang (sengaja diperiksa satu per satu)
+- **Navbar tetap tergambar** di `/shorts` `/playly` `/my-list` `/profile`
+  `/history` `/admin` `/drama/*` — halaman-halaman itu tidak punya bar cari,
+  jadi navbar di sana satu-satunya navigasi. Dikunci tes.
+- **Penyaring tahun · urutan · genre** tetap ada, pindah ke menu dropdown.
+- **Penyaring rating** tetap ada, pindah ke menu "+ More".
+- **Kotak cari kecil di navbar** tetap ada di halaman yang memakai navbar —
+  di sana ia satu-satunya kotak cari. Yang hilang cuma di `/beranda` &
+  `/discover`, dan itu memang yang dikotaki owner.
+
+## Penjaga baru
+`tests/kepala-situs.test.ts` (**BARU**, 15 tes) — merender `TopNav` dan
+`MenuAplikasi` sungguhan untuk **13 alamat berbeda**: navbar WAJIB hilang di
+`/beranda` `/discover` `/` `/login` `/daftar` `/watch/*` `/feed/*`, dan WAJIB
+TETAP ADA di tujuh halaman lain. Plus: daftar `TUJUAN` tidak boleh menyimpang
+dari `LINKS`, dan tanda `adminOnly` harus ada di keduanya.
+
+## Bukti REVISI KEEMPAT
+- ✅ `rm -rf .next` → `npm run build` **exit 0**; `/` `/beranda` `/discover`
+  `/playly` `/shorts` `/sitemap.xml` tetap **`○ (Static)`**.
+- ✅ `npx tsc --noEmit` **exit 0** · `npm test` **735 tes / 54 berkas hijau**
+  (dari 715/53).
+- ✅ **Mutation check 7 arah, SEMUANYA MERAH**: halaman tanpa bar cari ikut
+  kehilangan navbar · navbar kembali muncul di halaman berkatalog · satu tujuan
+  hilang dari menu garis-tiga · menu Admin bocor ke penonton biasa · kotak cari
+  dipatok pendek lagi · tombol menu halaman hilang dari bar cari · ambang rating
+  tak dikenali penyaring halaman.
+- ✅ Dijalankan (`next start`, log server dibaca dulu), 8 halaman **200**:
+  **`/beranda`** → navbar hitam **hilang**, tombol garis-tiga **ada**, **satu**
+  kotak cari ("Cari film di DramaKu"), dropdown penyaring **hilang**, 14 chip,
+  6 tombol menu. **`/shorts`** → navbar **tetap ada** (akses terjaga).

@@ -17,7 +17,12 @@
 import type { Drama } from "./types";
 import { isMovie } from "./types";
 import { availableGenres, countWithRating, countWithYear } from "./beranda-catalog";
-import { getCountryOptions, getGenreOptions, getYearOptions } from "./discover";
+import {
+  getCountryOptions,
+  getGenreOptions,
+  getYearOptions,
+  parseImdb,
+} from "./discover";
 import { labelNegara } from "./negara";
 
 /**
@@ -57,6 +62,14 @@ function tautan(params: Record<string, string>): string {
  * menambah satu klik untuk sampai ke tempat yang sama.
  */
 export const MIN_ITEM_MENU = 2;
+
+/**
+ * Ambang rating IMDb yang ditawarkan menu. Nilainya WAJIB sama dengan yang
+ * dikenali `parseRatingKey` di lib/discover.ts — ambang di luar daftar itu
+ * diabaikan diam-diam, dan pilihannya akan memulangkan seluruh katalog seolah
+ * penyaringnya bekerja.
+ */
+const AMBANG_IMDB = ["7", "8", "9"] as const;
 
 function hitung(dramas: Drama[], cocok: (d: Drama) => boolean): number {
   return dramas.filter(cocok).length;
@@ -184,6 +197,15 @@ export function buildNavMenus(dramas: Drama[]): NavMenu[] {
       tayang > 0
         ? { label: "Masih Tayang", href: tautan({ status: "ongoing" }) }
         : null,
+      // Penyaring rating IMDb. Dulu berupa dropdown tersendiri di bar cari;
+      // dropdown itu dilepas 2026-09-21 (owner: bar cari terlalu ramai), jadi
+      // pilihannya pindah ke sini supaya fungsinya tidak ikut hilang. Ambang
+      // yang tidak dipunyai satu judul pun tidak digambar.
+      ...AMBANG_IMDB.map((r) =>
+        hitung(dramas, (d) => parseImdb(d.imdbRating) >= Number(r)) > 0
+          ? { label: `IMDb ${r}+`, href: tautan({ rating: r }) }
+          : null,
+      ),
       { label: "Judul A-Z", href: tautan({ sort: "title" }) },
       { label: "Semua Judul", href: TUJUAN },
     ]),

@@ -2,53 +2,32 @@
 
 import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import type { Category, Drama } from "@/lib/types";
-import {
-  filterAndSortDramas,
-  getYearOptions,
-  RATING_OPTIONS,
-  type RatingKey,
-} from "@/lib/discover";
+import type { Drama } from "@/lib/types";
+import { filterAndSortDramas } from "@/lib/discover";
 import {
   CATALOG_PER_PAGE,
-  CATALOG_SORTS,
   // Dipakai sebagai `SEMUA` di bawah. Di-alias supaya nilainya punya SATU
   // sumber (lib) tanpa mengganti nama yang sudah dipakai di sepanjang berkas.
   GENRE_SEMUA as SEMUA,
   PAGE_GAP,
   URUTAN_BAWAAN,
-  availableGenres,
-  countWithRating,
-  countWithYear,
   homeCatalogRows,
   pageNumbers,
   pageOfCatalog,
   sedangMenyaring,
   sortCatalog,
-  type CatalogSort,
 } from "@/lib/beranda-catalog";
 import { STRIP_KATALOG, buildNavMenus } from "@/lib/nav-katalog";
 import type { PlaylyVideoPublik } from "@/lib/playly-publik";
 import CatalogCard from "./CatalogCard";
 import FeaturedRow from "./FeaturedRow";
 import StripKatalog from "./StripKatalog";
+import { MenuAplikasi, TombolAkun } from "./KepalaKatalog";
 import HasilPlayly, { cariVideoPlayly } from "./HasilPlayly";
 import NavMenus from "./NavMenus";
 import SearchBar from "./SearchBar";
-import {
-  GRID_CLASS,
-  ROW_KATEGORI_CARD_CLASS,
-  SHELL,
-  TRIGGER_CLASS,
-} from "./shell";
+import { GRID_CLASS, ROW_KATEGORI_CARD_CLASS, SHELL } from "./shell";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight, Home, Search, X } from "lucide-react";
 
@@ -83,6 +62,25 @@ type Props = {
  * kalau ditulis ulang di sini, dua halaman akan pelan-pelan menyimpang.
  * Pengurutan & paginasinya khas beranda, ada di `lib/beranda-catalog.ts`.
  */
+/**
+ * Penyaring selain kotak cari sudah TIDAK ADA di halaman ini sejak 2026-09-21:
+ * owner meminta bar cari seramping situs katalog pembanding, jadi keempat
+ * dropdown (genre · urutan · tahun · rating) dilepas. Penggantinya sudah ada
+ * dan lebih lengkap — menu dropdown di bar cari + strip kuning, yang semuanya
+ * melempar ke /discover.
+ *
+ * Nilainya ditulis sebagai konstanta BERNAMA, bukan ditanam satu per satu di
+ * pemanggilnya: `sedangMenyaring` tetap dipanggil lewat aturan bersama
+ * (lib/beranda-catalog.ts), jadi kalau aturan "kapan halaman berubah jadi grid"
+ * berubah, halaman ini ikut tanpa disentuh.
+ */
+const TANPA_PENYARING = {
+  genre: SEMUA,
+  year: "all",
+  minRating: "all",
+  sort: URUTAN_BAWAAN,
+} as const;
+
 export default function CatalogBrowser({
   dramas,
   heroSlot,
@@ -90,33 +88,19 @@ export default function CatalogBrowser({
   playlyVideos = [],
 }: Props) {
   const [query, setQuery] = useState("");
-  const [genre, setGenre] = useState<string>(SEMUA);
-  const [year, setYear] = useState("all");
-  const [minRating, setMinRating] = useState<RatingKey>("all");
-  const [sort, setSort] = useState<CatalogSort>(URUTAN_BAWAAN);
   const [page, setPage] = useState(1);
   const gridRef = useRef<HTMLDivElement>(null);
 
-  const genres = useMemo(() => availableGenres(dramas), [dramas]);
-  // Menu & pintasan katalog. Keduanya menuju /discover — satu-satunya halaman
-  // yang membaca penyaring dari alamat URL. Halaman INI menyimpan penyaringnya
-  // di state lokal, jadi tautan `?sort=…` ke sini akan diabaikan diam-diam.
+  // Menu katalog menuju /discover — satu-satunya halaman yang membaca
+  // penyaring dari alamat URL. Halaman INI menyimpan pencariannya di state
+  // lokal, jadi tautan `?sort=…` ke sini akan diabaikan diam-diam.
   const menus = useMemo(() => buildNavMenus(dramas), [dramas]);
-  const years = useMemo(() => getYearOptions(dramas), [dramas]);
-  const adaTahun = useMemo(() => countWithYear(dramas) > 0, [dramas]);
-  const adaRating = useMemo(() => countWithRating(dramas) > 0, [dramas]);
 
   const hasil = useMemo(() => {
-    const tersaring = filterAndSortDramas(dramas, {
-      query,
-      category: genre as Category,
-      year,
-      minRating,
-      // Pengurutan diserahkan ke sortCatalog di bawah — di sini murni menyaring.
-      sortBy: "relevance",
-    });
-    return sortCatalog(tersaring, sort);
-  }, [dramas, query, genre, year, minRating, sort]);
+    // Pengurutan diserahkan ke sortCatalog di bawah — di sini murni menyaring.
+    const tersaring = filterAndSortDramas(dramas, { query, sortBy: "relevance" });
+    return sortCatalog(tersaring, TANPA_PENYARING.sort);
+  }, [dramas, query]);
 
   const halaman = useMemo(
     () => pageOfCatalog(hasil, page, CATALOG_PER_PAGE),
@@ -143,7 +127,7 @@ export default function CatalogBrowser({
    */
   const baris = useMemo(() => homeCatalogRows(dramas), [dramas]);
 
-  const menyaring = sedangMenyaring({ query, genre, year, minRating, sort });
+  const menyaring = sedangMenyaring({ query, ...TANPA_PENYARING });
 
   /**
    * Tampilkan grid + nomor halaman, atau baris kategori?
@@ -171,109 +155,32 @@ export default function CatalogBrowser({
 
   const resetFilter = () => {
     setQuery("");
-    setGenre(SEMUA);
-    setYear("all");
-    setMinRating("all");
-    // Urutan ikut dipulangkan ke bawaan supaya "Hapus filter" benar-benar
-    // mengembalikan penonton ke baris kategori. Tanpa ini, urutan yang masih
-    // tersangkut menahan halaman di bentuk grid dan tombolnya terasa tidak
-    // bekerja.
-    setSort(URUTAN_BAWAAN);
     setPage(1);
   };
-
-  /** Dipakai dua kali: berjajar di bar magenta (desktop) & menumpuk (HP). */
-  const dropdownPenyaring = (
-    <>
-      <Select
-        value={genre}
-        onValueChange={(v) => ubahFilter(() => setGenre(v))}
-      >
-        <SelectTrigger className={TRIGGER_CLASS} aria-label="Genre">
-          <SelectValue placeholder="Genre" />
-        </SelectTrigger>
-        <SelectContent className="border-zinc-700 bg-zinc-900 text-zinc-200">
-          <SelectItem value={SEMUA}>Semua genre</SelectItem>
-          {genres.map((g) => (
-            <SelectItem key={g} value={g}>
-              {g}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      <Select
-        value={sort}
-        onValueChange={(v) => ubahFilter(() => setSort(v as CatalogSort))}
-      >
-        <SelectTrigger className={TRIGGER_CLASS} aria-label="Urutkan">
-          <SelectValue placeholder="Urutkan" />
-        </SelectTrigger>
-        <SelectContent className="border-zinc-700 bg-zinc-900 text-zinc-200">
-          {CATALOG_SORTS.map((o) => (
-            <SelectItem key={o.value} value={o.value}>
-              {o.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      {/* Dropdown Tahun & Rating SENGAJA disembunyikan kalau tak ada satu pun
-          drama yang punya datanya — penyaring yang selalu memulangkan nol hasil
-          membuat situs terasa rusak. */}
-      {adaTahun && (
-        <Select value={year} onValueChange={(v) => ubahFilter(() => setYear(v))}>
-          <SelectTrigger className={TRIGGER_CLASS} aria-label="Tahun">
-            <SelectValue placeholder="Tahun" />
-          </SelectTrigger>
-          <SelectContent className="border-zinc-700 bg-zinc-900 text-zinc-200">
-            <SelectItem value="all">Semua tahun</SelectItem>
-            {years.map((y) => (
-              <SelectItem key={y} value={y}>
-                {y}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      )}
-
-      {adaRating && (
-        <Select
-          value={minRating}
-          onValueChange={(v) => ubahFilter(() => setMinRating(v as RatingKey))}
-        >
-          <SelectTrigger className={TRIGGER_CLASS} aria-label="Rating IMDb">
-            <SelectValue placeholder="Rating" />
-          </SelectTrigger>
-          <SelectContent className="border-zinc-700 bg-zinc-900 text-zinc-200">
-            {RATING_OPTIONS.map((o) => (
-              <SelectItem key={o.value} value={o.value}>
-                {o.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      )}
-    </>
-  );
 
   return (
     <section aria-label="Katalog drama">
       {/* ============ 1. BAR CARI — kepala situs, menempel saat digulir ======
-          top-14 = tepat di bawah navbar (tingginya h-14). Komponennya SAMA
-          dengan yang dipakai halaman depan; bedanya cuma arti pencariannya —
-          di sini menyaring grid di bawah, di sana melempar ke /discover. */}
+          top-0, BUKAN top-14: sejak 2026-09-21 navbar hitam disembunyikan di
+          halaman ini dan isinya pindah ke tombol garis-tiga di bar ini juga
+          (KepalaKatalog.tsx), jadi bar inilah elemen menempel paling atas.
+          Komponennya SAMA dengan yang dipakai halaman depan; bedanya cuma arti
+          pencariannya — di sini menyaring grid di bawah, di sana melempar ke
+          /discover. */}
       <SearchBar
         value={query}
         onValueChange={(v) => ubahFilter(() => setQuery(v))}
-        filters={dropdownPenyaring}
-        chrome={{ menus: <NavMenus menus={menus} /> }}
-        className="sticky top-14"
+        chrome={{
+          brand: <MenuAplikasi />,
+          menus: <NavMenus menus={menus} />,
+          trailing: <TombolAkun />,
+        }}
+        className="sticky top-0"
       />
 
-      {/* ============ 2. STRIP GENRE ========================================
-          Hanya genre yang benar-benar berisi (availableGenres) — genre kosong
-          yang diklik memulangkan halaman hampa. */}
+      {/* ============ 2. STRIP KATALOG ======================================
+          Daftar TETAP milik owner (lib/nav-katalog.ts `STRIP_KATALOG`), sama
+          persis di ketiga halaman berkatalog. */}
       <StripKatalog items={STRIP_KATALOG} />
 
       {/* ============ 3. BANNER UNGGULAN (ramping) ========================== */}
@@ -294,12 +201,6 @@ export default function CatalogBrowser({
           </Link>
           <span>/</span>
           <span className="text-zinc-300">Drama</span>
-          {genre !== SEMUA && (
-            <>
-              <span>/</span>
-              <span className="font-semibold text-amber-400">{genre}</span>
-            </>
-          )}
         </nav>
       </div>
 
@@ -336,7 +237,6 @@ export default function CatalogBrowser({
               Halaman {halaman.page} dari {halaman.totalPages}
             </span>{" "}
             &mdash; {halaman.total} judul
-            {genre !== SEMUA ? ` genre ${genre}` : ""}
             {query ? ` untuk "${query}"` : ""}
           </h2>
 

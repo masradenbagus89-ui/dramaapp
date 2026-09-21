@@ -32,7 +32,12 @@ type NavLink = {
   warnaDiam?: string;
 };
 
-const LINKS: NavLink[] = [
+/**
+ * Diekspor supaya bisa diadu dengan `TUJUAN` di
+ * app/components/beranda/KepalaKatalog.tsx — keduanya navigasi yang sama dan
+ * tidak boleh menyimpang. Penjaganya: tests/kepala-situs.test.ts.
+ */
+export const LINKS: NavLink[] = [
   { href: "/beranda", label: "Beranda", adminOnly: false },
   { href: "/discover", label: "Discover", adminOnly: false },
   { href: "/shorts", label: "Shorts", adminOnly: false },
@@ -53,6 +58,20 @@ const LINKS: NavLink[] = [
 ];
 
 const PUBLIC_PATHS = ["/", "/login", "/daftar"];
+
+/**
+ * Halaman yang KEPALA SITUSNYA sudah dipegang bar cari merah
+ * (app/components/beranda/KepalaKatalog.tsx): logo, menu halaman di balik
+ * tombol garis-tiga, dan tombol akun semuanya ada di sana.
+ *
+ * Navbar ini disembunyikan di situ atas permintaan owner 2026-09-21 — dua baris
+ * kepala sebelum poster pertama terasa penuh, dan situs katalog pembandingnya
+ * cukup memakai satu. JANGAN menambahkan halaman ke daftar ini kecuali halaman
+ * itu benar-benar memasang `KepalaKatalog`; kalau tidak, halaman tersebut
+ * kehilangan SELURUH navigasinya di layar komputer tanpa satu pun error
+ * (BottomNav hanya muncul di HP).
+ */
+const PUNYA_BAR_CARI = ["/beranda", "/discover"];
 
 export default function TopNav() {
   const pathname = usePathname() ?? "/";
@@ -123,6 +142,7 @@ export default function TopNav() {
   // justru menutupi bar cari itu.
   if (pathname.startsWith("/watch") || pathname.startsWith("/feed")) return null;
   if (PUBLIC_PATHS.includes(pathname)) return null;
+  if (PUNYA_BAR_CARI.includes(pathname)) return null;
 
   const onLogout = () => {
     if (!confirm("Yakin mau keluar dari akun?")) return;

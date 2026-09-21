@@ -81,12 +81,16 @@ export default function SearchBar({
           <div className="order-1 shrink-0 md:order-none">{chrome.brand}</div>
         )}
 
+        {/* md:flex-1 TANPA batas lebar: owner minta kotaknya sepanjang situs
+            katalog pembanding (2026-09-21). Batas `md:max-w-md` (28rem) yang
+            lama membuatnya berhenti di tengah dan menyisakan ruang kosong di
+            kanannya. */}
         <form
           onSubmit={(e) => {
             e.preventDefault();
             onSubmit?.();
           }}
-          className="order-3 flex w-full min-w-0 items-stretch md:order-none md:w-auto md:max-w-md md:flex-1"
+          className="order-3 flex w-full min-w-0 items-stretch md:order-none md:w-auto md:flex-1"
           role="search"
         >
           <Input

@@ -5,34 +5,23 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { type Category, type Drama } from "@/lib/types";
 import { labelNegara } from "@/lib/negara";
 import {
-  SORT_OPTIONS,
-  RATING_OPTIONS,
   FILTER_KOSONG,
   bacaFilter,
   filterAndSortDramas,
   filterOptions,
-  getYearOptions,
   tulisFilter,
   type CatalogFilter,
-  type RatingKey,
-  type SortBy,
 } from "@/lib/discover";
 import { STRIP_KATALOG, buildNavMenus } from "@/lib/nav-katalog";
 import type { PlaylyVideoPublik } from "@/lib/playly-publik";
 import CatalogCard from "./beranda/CatalogCard";
 import StripKatalog from "./beranda/StripKatalog";
+import { MenuAplikasi, TombolAkun } from "./beranda/KepalaKatalog";
 import HasilPlayly, { cariVideoPlayly } from "./beranda/HasilPlayly";
 import NavMenus from "./beranda/NavMenus";
 import SearchBar from "./beranda/SearchBar";
-import { GRID_CLASS, SHELL, TRIGGER_CLASS } from "./beranda/shell";
+import { GRID_CLASS, SHELL } from "./beranda/shell";
 import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Search, X } from "lucide-react";
 
 /**
@@ -101,7 +90,6 @@ export default function DramaBrowser({
     setFilter(bacaFilter(searchParams));
   }, [searchParams]);
 
-  const years = useMemo(() => getYearOptions(dramas), [dramas]);
   const menus = useMemo(() => buildNavMenus(dramas), [dramas]);
 
   /**
@@ -165,57 +153,6 @@ export default function DramaBrowser({
     return query ? `/discover?${query}` : "/discover";
   }, [filter]);
 
-  /** Dropdown penyaring — dititipkan ke bar cari, sama seperti /beranda. */
-  const dropdownPenyaring = (
-    <>
-      <Select value={filter.year} onValueChange={(v) => terapkan({ year: v })}>
-        <SelectTrigger className={TRIGGER_CLASS} aria-label="Tahun">
-          <SelectValue placeholder="Tahun" />
-        </SelectTrigger>
-        <SelectContent className="border-zinc-700 bg-zinc-900 text-zinc-200">
-          <SelectItem value="all">Semua tahun</SelectItem>
-          {years.map((y) => (
-            <SelectItem key={y} value={y}>
-              {y}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      <Select
-        value={filter.rating}
-        onValueChange={(v) => terapkan({ rating: v as RatingKey })}
-      >
-        <SelectTrigger className={TRIGGER_CLASS} aria-label="Rating IMDb">
-          <SelectValue placeholder="Rating" />
-        </SelectTrigger>
-        <SelectContent className="border-zinc-700 bg-zinc-900 text-zinc-200">
-          {RATING_OPTIONS.map((opt) => (
-            <SelectItem key={opt.value} value={opt.value}>
-              {opt.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      <Select
-        value={filter.sort}
-        onValueChange={(v) => terapkan({ sort: v as SortBy })}
-      >
-        <SelectTrigger className={TRIGGER_CLASS} aria-label="Urutkan">
-          <SelectValue placeholder="Urutkan" />
-        </SelectTrigger>
-        <SelectContent className="border-zinc-700 bg-zinc-900 text-zinc-200">
-          {SORT_OPTIONS.map((opt) => (
-            <SelectItem key={opt.value} value={opt.value}>
-              {opt.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </>
-  );
-
   return (
     <>
       {/* Bar cari + strip genre: komponen yang SAMA dengan halaman depan &
@@ -225,9 +162,12 @@ export default function DramaBrowser({
       <SearchBar
         value={filter.q}
         onValueChange={(v) => setFilter((f) => ({ ...f, q: v }))}
-        filters={dropdownPenyaring}
-        chrome={{ menus: <NavMenus menus={menus} /> }}
-        className="sticky top-14"
+        chrome={{
+          brand: <MenuAplikasi />,
+          menus: <NavMenus menus={menus} />,
+          trailing: <TombolAkun />,
+        }}
+        className="sticky top-0"
       />
       {/* activeHref: chip yang alamatnya PERSIS sama dengan penyaring yang
           sedang berlaku akan disorot. Cocok karena tiap chip memasang satu

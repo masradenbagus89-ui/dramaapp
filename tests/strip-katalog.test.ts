@@ -23,6 +23,7 @@ import { STRIP_KATALOG, buildNavMenus } from "../lib/nav-katalog";
 import type { Drama } from "../lib/types";
 
 vi.mock("next/navigation", () => ({
+  usePathname: () => "/discover",
   useSearchParams: () => new URLSearchParams(""),
   useRouter: () => ({ replace: () => {}, push: () => {} }),
 }));
@@ -133,6 +134,43 @@ describe("chip strip & menu yang SUNGGUHAN digambar halaman", () => {
       }
     });
   }
+
+  it("bar cari sudah TIDAK memuat dropdown penyaring", () => {
+    // Keluhan owner 2026-09-21: bar cari terlalu ramai. Keempat dropdown
+    // (genre · urutan · tahun · rating) dilepas; penggantinya menu dropdown di
+    // bar yang sama + strip kuning, yang semuanya melempar ke /discover.
+    const html = renderToStaticMarkup(
+      createElement(DramaBrowser, { dramas: KATALOG }),
+    );
+    for (const hilang of [
+      "Semua genre",
+      "Semua tahun",
+      "Semua rating",
+      "Terbaru ditambah",
+    ]) {
+      expect(html, `dropdown "${hilang}" seharusnya sudah dilepas`).not.toContain(
+        hilang,
+      );
+    }
+  });
+
+  it("bar cari memasang tombol menu halaman pengganti navbar", () => {
+    // Navbar hitam disembunyikan di halaman ini, jadi tombol inilah satu-satunya
+    // jalan ke Discover/Playly/Admin/Keluar di layar komputer.
+    const html = renderToStaticMarkup(
+      createElement(DramaBrowser, { dramas: KATALOG }),
+    );
+    expect(html).toContain('aria-label="Menu halaman"');
+    expect(html).toContain('alt="DramaKu"');
+  });
+
+  it("kotak cari memanjang, tidak lagi dipatok 28rem", () => {
+    const html = renderToStaticMarkup(
+      createElement(DramaBrowser, { dramas: KATALOG }),
+    );
+    expect(html).toContain("md:flex-1");
+    expect(html).not.toContain("md:max-w-md");
+  });
 
   it("kotak cari memakai tulisan pendek yang diminta owner", () => {
     const html = renderToStaticMarkup(

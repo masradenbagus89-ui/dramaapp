@@ -5,7 +5,27 @@
 >
 > **AI:** tiap kali ada perbaikan / deploy / keputusan — **perbarui berkas ini di langkah terakhir**, sebelum bilang selesai. Jangan tumpuk sejarah panjang di sini; pindahkan yang lama ke `NEXT-SESSION.md`.
 
-**Terakhir diisi:** 2026-09-21 (malam) — ✅ **REVISI KETIGA SUDAH DIRILIS & TERBUKTI TAYANG.** `HEAD` = `origin/main` = `dramaku/main` = **`a6c2e82`**, antrean deploy **KOSONG**. Owner **melihat preview lokal dulu** (`next start` di `http://127.0.0.1:3040`) sebelum memberi izin push — pola yang layak diulang untuk perubahan tampilan.
+**Terakhir diisi:** 2026-09-21 (malam, revisi ke-4) — 🔄 **KEPALA SITUS DIRAMPINGKAN JADI DUA BARIS. SELESAI & TERBUKTI, BELUM di-push** (owner mau melihat preview dulu).
+
+## 2026-09-21 — kepala situs /beranda & /discover jadi DUA baris
+
+**Yang diminta owner (screenshot, 3 kotak merah):** hilangkan (1) navbar hitam, (2) kotak cari kecil di navbar, (3) empat dropdown penyaring; lalu panjangkan kotak cari — "seperti layarkaca21, tersusun rapi, simpel dan enak dilihat sama penonton".
+
+**⚠️ Kotak merah #1 tidak bisa sekadar dibuang — dan itu TIDAK terlihat dari layar.** Navbar hitam adalah **satu-satunya navigasi di layar komputer**: `BottomNav` cuma muncul di HP (`md:hidden`) dan memuat empat tujuan saja. Membuangnya = **Discover · Playly · Admin · Keluar · nama akun · saldo koin** tak bisa dicapai dari mana pun kecuali mengetik alamatnya, **tanpa satu pun error**. Owner disajikan **popup 3 pilihan** lengkap dengan akibatnya, dan memilih **"pindahkan ke tombol menu ringkas"**.
+
+**Yang dibangun:** `app/components/beranda/KepalaKatalog.tsx` (**BARU**) — `MenuAplikasi` (tombol garis-tiga + logo, isinya seluruh navigasi + Admin + peringatan masuk-ulang-admin + Keluar) dan `TombolAkun` (saldo koin / Masuk-Daftar). `TopNav` dapat daftar `PUNYA_BAR_CARI` sehingga menghilang **hanya** di `/beranda` & `/discover`. Keempat dropdown penyaring dilepas dari kedua halaman; state mati di `CatalogBrowser` + 14 impor mati ikut dibersihkan. `SearchBar` melepas batas `md:max-w-md` → kotak cari **memanjang**. Penyaring **rating IMDb pindah ke menu "+ More"** supaya fungsinya tidak ikut hilang.
+
+**Yang TIDAK hilang (diperiksa satu per satu):** navbar **tetap tergambar** di `/shorts` `/playly` `/my-list` `/profile` `/history` `/admin` `/drama/*` — di sana ia satu-satunya navigasi. Penyaring tahun/urutan/genre pindah ke menu dropdown; rating ke "+ More". Kotak cari kecil tetap ada di halaman yang memakai navbar.
+
+**Penjaga baru:** `tests/kepala-situs.test.ts` (**BARU**, 15 tes) merender `TopNav` & `MenuAplikasi` sungguhan untuk **13 alamat**: navbar wajib hilang di 7 alamat dan wajib TETAP ADA di 7 halaman lain; plus daftar `TUJUAN` tidak boleh menyimpang dari `LINKS`, dan `adminOnly` harus ada di keduanya.
+
+**Bukti:** build **exit 0** (nol kemunduran status halaman) · `tsc` **exit 0** · **735 tes / 54 berkas** (dari 715/53) · **mutation check 7 arah SEMUANYA MERAH** · `next start` (log dibaca dulu) 8 halaman **200**, `/beranda` tanpa navbar & tanpa dropdown dengan tombol garis-tiga, `/shorts` navbarnya **tetap ada**.
+
+---
+
+## 2026-09-21 MALAM — tulisan kotak cari & label enam tombol menu
+
+✅ **SUDAH DIRILIS & TERBUKTI TAYANG.** `HEAD` = `origin/main` = `dramaku/main` = **`a6c2e82`**, antrean deploy **KOSONG**. Owner **melihat preview lokal dulu** (`next start` di `http://127.0.0.1:3040`) sebelum memberi izin push — pola yang layak diulang untuk perubahan tampilan.
 
 **Verifikasi tayang:** HTML produksi memuat tulisan kotak cari **"Cari film di DramaKu"**, tombol menu **Genre · Series · Populer · Negara · Tahun · + More**, huruf kapital paksa **sudah hilang**, strip tetap **14 chip**, dan kotak carinya tetap membawa `role="search"` + `type="search"`.
 

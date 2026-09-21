@@ -351,3 +351,55 @@ dari `LINKS`, dan tanda `adminOnly` harus ada di keduanya.
   **`/beranda`** → navbar hitam **hilang**, tombol garis-tiga **ada**, **satu**
   kotak cari ("Cari film di DramaKu"), dropdown penyaring **hilang**, 14 chip,
   6 tombol menu. **`/shorts`** → navbar **tetap ada** (akses terjaga).
+
+---
+
+# REVISI KELIMA 2026-09-21 — bar cari disamakan dengan LK21
+
+## Maksud owner (screenshot berdampingan, 2 kotak merah)
+1. Tombol **Masuk & Daftar** di bar cari **dihapus** — "dobel, masuk sama daftar
+   di bawah" (halaman depan memang sudah menawarkannya di badan halaman).
+2. Menu tetap **Genre · Series · Populer · Negara · Tahun · + More**, dan
+   "ketika diklik isinya pun sama seperti LK21".
+3. **Warna** bar harus **merah terang** seperti LK21.
+4. **Logo "DramaKu" di kiri** dirapikan supaya sesuai LK21.
+
+## Keputusan owner (popup) — isi menu
+Katalog DramaKu (41 judul) tidak sebanyak LK21, jadi menyamakan daftar menu
+persis akan membuat ±2 dari 3 pilihan kosong saat diklik. Owner disajikan tiga
+pilihan lengkap dengan akibatnya dan memilih **"tetap hanya yang ada isinya"**.
+Isi menu karena itu **TIDAK diubah** — tetap dihitung dari katalog, nol pilihan
+kosong, dan tumbuh sendiri saat owner menambah judul.
+
+## Yang diubah
+| Berkas | Isi |
+|---|---|
+| `SearchBar.tsx` | Gradasi `from-fuchsia-700 via-rose-600 to-red-600` (ungu → merah) diganti **`from-rose-700 via-rose-600 to-pink-600`** — merah terang bergradasi, tanpa ungu. Tombol cari ikut disesuaikan `bg-red-700` → `bg-rose-700` supaya hue-nya menyatu. |
+| `PublicTopBars.tsx` | Logo: kotak kuning berisi huruf **"D"** diganti **lambang situs** (`/logo-mark.png`) + teks putih — sama persis dengan kepala `/beranda`, jadi penonton tak merasa berpindah situs. Slot `trailing` (Masuk/Daftar) **dilepas**. |
+| `KepalaKatalog.tsx` | `TombolAkun` tinggal **saldo koin** saja. Masuk & Daftar **pindah ke dalam menu garis-tiga** — di `/beranda` & `/discover` badan halamannya cuma poster, jadi menghapusnya begitu saja akan membuat kedua halaman itu **tak punya jalan masuk sama sekali**. Alamatnya diekspor sebagai `TAUTAN_AKUN` supaya bisa diuji. |
+
+## Kenapa `TAUTAN_AKUN` diekspor — titik buta yang ketahuan dari mutation check
+Mutasi "tautan Daftar di menu salah alamat" mula-mula **LOLOS** (tes tetap
+hijau). Sebabnya sudah dikenal tapi akibatnya baru terasa di sini: **isi
+dropdown Radix tidak tergambar di HTML sampai menunya dibuka**, jadi tes
+berbasis render tidak bisa melihatnya sama sekali — padahal sejak tombolnya
+dilepas dari bar, menu itu **satu-satunya** jalan masuk di dua halaman.
+Alamatnya karena itu dipindah ke konstanta yang diekspor dan diuji langsung;
+mutasi yang sama sekarang **MERAH**.
+
+**Aturan yang layak diulang: saat sebuah jalan dipindahkan ke tempat yang tidak
+terlihat tes, pindahkan juga penjaganya — jangan cuma memindahkan kodenya.**
+
+## Bukti REVISI KELIMA
+- ✅ `rm -rf .next` → `npm run build` **exit 0**; `/` `/beranda` `/discover`
+  `/playly` `/shorts` `/sitemap.xml` tetap **`○ (Static)`**.
+- ✅ `npx tsc --noEmit` **exit 0** · `npm test` **739 tes / 54 berkas hijau**
+  (dari 735).
+- ✅ **Mutation check 5 arah, SEMUANYA MERAH**: warna ungu dikembalikan · tombol
+  Masuk kembali muncul di bar · logo menunjuk berkas lain · tautan Daftar salah
+  alamat · jalan masuk ke akun hilang sama sekali.
+- ✅ Dijalankan (`next start`, log server dibaca dulu): bar kedua halaman
+  memakai **`from-rose-700 via-rose-600 to-pink-600`**, logo memakai lambang
+  (kotak "D" kuning **hilang**), dan **blok bar merah halaman depan terbukti
+  NOL tautan `/login` & `/daftar`** — keenam tautan akun yang tersisa semuanya
+  di badan halaman & footer, persis seperti yang dimaksud owner.

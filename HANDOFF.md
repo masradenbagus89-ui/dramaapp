@@ -5,7 +5,25 @@
 >
 > **AI:** tiap kali ada perbaikan / deploy / keputusan — **perbarui berkas ini di langkah terakhir**, sebelum bilang selesai. Jangan tumpuk sejarah panjang di sini; pindahkan yang lama ke `NEXT-SESSION.md`.
 
-**Terakhir diisi:** 2026-09-21 (malam, revisi ke-4) — ✅ **KEPALA SITUS DUA BARIS SUDAH DIRILIS & TERBUKTI TAYANG.** `HEAD` = `origin/main` = `dramaku/main` = **`2cf4952`**, antrean **KOSONG**. Owner melihat preview lokal dulu sebelum memberi izin push.
+**Terakhir diisi:** 2026-09-21 (revisi ke-5) — 🔄 **BAR CARI DISAMAKAN DENGAN LK21. SELESAI & TERBUKTI, BELUM di-push** (owner melihat preview dulu).
+
+## 2026-09-21 — bar cari: warna, logo, dan tombol akun
+
+**Diminta owner:** (1) tombol **Masuk & Daftar di bar dihapus** karena dobel dengan ajakan di badan halaman; (2) menu tetap Genre · Series · Populer · Negara · Tahun · + More; (3) **warna merah terang** seperti LK21; (4) **logo kiri dirapikan**.
+
+**Popup — isi menu:** katalog DramaKu (41 judul) jauh lebih kecil dari LK21, jadi menyamakan daftar menu persis akan membuat ±2 dari 3 pilihan kosong. Owner memilih **"tetap hanya yang ada isinya"** → isi menu **tidak diubah**.
+
+**Yang diubah:** warna bar `from-fuchsia-700 … to-red-600` (ungu→merah) jadi **`from-rose-700 via-rose-600 to-pink-600`** + tombol cari `bg-rose-700`; logo halaman depan dari kotak kuning huruf **"D"** jadi **lambang situs** (sama dengan kepala /beranda); `trailing` Masuk/Daftar **dilepas**, `TombolAkun` tinggal saldo koin, dan **Masuk/Daftar pindah ke dalam menu garis-tiga** — di /beranda & /discover badan halamannya cuma poster, jadi menghapusnya begitu saja membuat kedua halaman **tak punya jalan masuk sama sekali**.
+
+**🪤 Titik buta yang ketahuan dari mutation check:** mutasi "tautan Daftar salah alamat" mula-mula **LOLOS**. Sebabnya **isi dropdown Radix tidak tergambar di HTML sampai menunya dibuka** — padahal sejak tombolnya dilepas dari bar, menu itu SATU-SATUNYA jalan masuk. Alamatnya dipindah ke konstanta `TAUTAN_AKUN` yang diekspor & diuji; mutasi yang sama sekarang **MERAH**. **Aturan: saat sebuah jalan dipindahkan ke tempat yang tak terlihat tes, pindahkan juga penjaganya.**
+
+**Bukti:** build **exit 0** (nol kemunduran) · `tsc` **exit 0** · **739 tes / 54 berkas** (dari 735) · **mutation check 5 arah SEMUANYA MERAH** · `next start`: blok bar merah halaman depan terbukti **NOL tautan `/login` & `/daftar`** — keenam tautan akun yang tersisa ada di badan halaman & footer.
+
+---
+
+## 2026-09-21 — kepala situs /beranda & /discover jadi DUA baris
+
+✅ **SUDAH DIRILIS & TERBUKTI TAYANG.** `HEAD` = `origin/main` = `dramaku/main` = **`2cf4952`**, antrean **KOSONG**. Owner melihat preview lokal dulu sebelum memberi izin push.
 
 **Verifikasi tayang — 6 halaman produksi diperiksa satu per satu, semuanya 200:**
 

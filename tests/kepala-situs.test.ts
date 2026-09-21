@@ -20,7 +20,7 @@ vi.mock("next/navigation", () => ({
 
 const { default: TopNav } = await import("../app/components/TopNav");
 const { LINKS } = await import("../app/components/TopNav");
-const { MenuAplikasi, TUJUAN } = await import(
+const { MenuAplikasi, TUJUAN, TAUTAN_AKUN } = await import(
   "../app/components/beranda/KepalaKatalog"
 );
 
@@ -111,6 +111,15 @@ describe("menu garis-tiga (pengganti navbar di halaman berkatalog)", () => {
     // Logo ikut pindah ke sini — tanpa ini halaman berkatalog kehilangan
     // identitas situsnya sama sekali.
     expect(html).toContain('alt="DramaKu"');
+  });
+
+  it("menyimpan jalan MASUK ke akun dengan alamat yang benar", () => {
+    // Sejak tombol Masuk/Daftar dilepas dari bar cari (owner 2026-09-21),
+    // menu ini SATU-SATUNYA jalan masuk di /beranda & /discover. Diperiksa dari
+    // daftarnya, bukan dari HTML: isi dropdown Radix baru dirender saat menunya
+    // dibuka — salah alamat di sini terbukti LOLOS dari tes berbasis render.
+    expect(TAUTAN_AKUN.map((t) => t.href)).toEqual(["/login", "/daftar"]);
+    expect(TAUTAN_AKUN.map((t) => t.label)).toEqual(["Masuk", "Daftar"]);
   });
 
   it("TIDAK menawarkan Admin untuk penonton biasa", () => {

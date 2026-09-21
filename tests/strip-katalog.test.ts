@@ -135,6 +135,44 @@ describe("chip strip & menu yang SUNGGUHAN digambar halaman", () => {
     });
   }
 
+  it("bar cari berwarna merah terang, bukan ungu", () => {
+    // Owner 2026-09-21: ujung kiri yang ungu (`fuchsia-700`) terlalu mencolok
+    // dan tidak sejajar dengan situs katalog pembanding.
+    const html = renderToStaticMarkup(
+      createElement(DramaBrowser, { dramas: KATALOG }),
+    );
+    expect(html).toContain("from-rose-700");
+    // Diperiksa pada KELAS GRADASI-nya, bukan kata "fuchsia" begitu saja:
+    // warna itu masih dipakai sah di tempat lain (mis. lencana koin pada
+    // kartu poster), jadi pencarian yang terlalu lebar akan merah palsu.
+    expect(html, "gradasi ungu seharusnya sudah dilepas").not.toContain(
+      "from-fuchsia",
+    );
+  });
+
+  it("halaman depan: bar cari TIDAK lagi memuat tombol Masuk/Daftar", () => {
+    // Owner 2026-09-21: "dobel" — halaman depan sudah menawarkannya dua kali
+    // di badan halaman plus footer.
+    const html = renderToStaticMarkup(
+      createElement(PublicTopBars, { menus: buildNavMenus(KATALOG) }),
+    );
+    expect(html).not.toContain('href="/login"');
+    expect(html).not.toContain('href="/daftar"');
+    // Pagar: barnya sendiri tetap utuh, bukan kosong karena render gagal.
+    expect(html).toContain("Cari film di DramaKu");
+    expect(html).toContain(">Action<");
+  });
+
+  it("halaman depan: logo memakai lambang situs, bukan huruf dalam kotak", () => {
+    const html = renderToStaticMarkup(
+      createElement(PublicTopBars, { menus: buildNavMenus(KATALOG) }),
+    );
+    expect(html).toContain('alt="DramaKu"');
+    expect(html).toContain("/logo-mark.png");
+    // Kotak kuning berisi huruf "D" yang lama sudah tidak dipakai.
+    expect(html).not.toContain("bg-amber-400 font-serif");
+  });
+
   it("bar cari sudah TIDAK memuat dropdown penyaring", () => {
     // Keluhan owner 2026-09-21: bar cari terlalu ramai. Keempat dropdown
     // (genre · urutan · tahun · rating) dilepas; penggantinya menu dropdown di

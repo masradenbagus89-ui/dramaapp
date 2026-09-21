@@ -70,7 +70,11 @@ export default function SearchBar({
   return (
     <div
       className={cn(
-        "z-30 bg-gradient-to-r from-fuchsia-700 via-rose-600 to-red-600 shadow-lg shadow-black/50",
+        // Merah terang bergradasi, TANPA ungu — owner 2026-09-21: ujung kiri
+        // yang tadinya `fuchsia-700` (ungu) terlalu mencolok dan tidak sejajar
+        // dengan situs katalog pembanding, yang memakai merah tua di kiri
+        // melembut jadi merah-pink di kanan.
+        "z-30 bg-gradient-to-r from-rose-700 via-rose-600 to-pink-600 shadow-lg shadow-black/50",
         className,
       )}
     >
@@ -104,7 +108,7 @@ export default function SearchBar({
           <button
             type="submit"
             aria-label="Cari"
-            className="flex h-9 w-11 shrink-0 items-center justify-center rounded-r-sm bg-red-700 text-white transition-colors hover:bg-red-600"
+            className="flex h-9 w-11 shrink-0 items-center justify-center rounded-r-sm bg-rose-700 text-white transition-colors hover:bg-rose-600"
           >
             <Search className="size-4" />
           </button>

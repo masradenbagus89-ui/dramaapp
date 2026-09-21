@@ -46,31 +46,28 @@ export default function PublicTopBars({ menus }: Props) {
         onSubmit={cari}
         className="sticky top-0"
         chrome={{
+          /* Logo dirapikan 2026-09-21: kotak kuning berisi huruf "D" diganti
+             lambang situs yang sesungguhnya + teks putih, sejajar dengan situs
+             katalog pembanding DAN dengan kepala /beranda (KepalaKatalog.tsx),
+             supaya penonton tidak merasa berpindah situs. */
           brand: (
             <Link href="/" className="flex items-center gap-2">
-              <div className="flex size-8 items-center justify-center rounded-md bg-amber-400 font-serif text-base font-bold text-black">
-                D
-              </div>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/logo-mark.png"
+                alt="DramaKu"
+                width={28}
+                height={28}
+                className="size-7 shrink-0 object-contain"
+              />
               <span className="text-base font-bold text-white">DramaKu</span>
             </Link>
           ),
           menus: <NavMenus menus={menus} />,
-          trailing: (
-            <>
-              <Link
-                href="/login"
-                className="rounded-full border border-white/40 px-3.5 py-1.5 text-xs font-semibold text-white transition-colors hover:border-amber-400 hover:text-amber-400"
-              >
-                Masuk
-              </Link>
-              <Link
-                href="/daftar"
-                className="rounded-full bg-amber-400 px-3.5 py-1.5 text-xs font-bold text-black transition-colors hover:bg-amber-300"
-              >
-                Daftar
-              </Link>
-            </>
-          ),
+          /* Tombol Masuk & Daftar SENGAJA tidak dipasang di sini (owner
+             2026-09-21: "dobel"). Halaman ini sudah menawarkannya dua kali di
+             badan halaman — strip ajakan di bawah baris poster pertama, dan
+             blok penutup "Siap memulai marathon drama?" — plus footer. */
         }}
       />
       <StripKatalog items={STRIP_KATALOG} />

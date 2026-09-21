@@ -41,6 +41,21 @@ import { LogOut, Menu } from "lucide-react";
 type Tujuan = { href: string; label: string; adminOnly?: boolean };
 
 /**
+ * Jalan MASUK ke akun, untuk penonton yang belum login.
+ *
+ * Sejak 2026-09-21 keduanya cuma ada di dalam menu garis-tiga ini — tombolnya
+ * di bar cari dilepas atas permintaan owner ("dobel"). Artinya di /beranda &
+ * /discover inilah SATU-SATUNYA jalan masuk, jadi alamatnya diekspor supaya
+ * bisa diuji: isi dropdown Radix tidak tergambar di HTML sampai menunya dibuka,
+ * sehingga salah alamat di sini TIDAK akan tertangkap tes yang memeriksa hasil
+ * render (terbukti lolos saat diuji-rusak 2026-09-21).
+ */
+export const TAUTAN_AKUN = [
+  { href: "/login", label: "Masuk" },
+  { href: "/daftar", label: "Daftar" },
+] as const;
+
+/**
  * Daftarnya WAJIB sama dengan `LINKS` di app/components/TopNav.tsx — kedua
  * tempat menampilkan navigasi yang sama, hanya bentuknya yang berbeda (baris
  * menu vs daftar di balik tombol), dan tiap halaman memakai salah satunya.
@@ -161,7 +176,7 @@ export function MenuAplikasi() {
             </>
           )}
 
-          {mounted && user && (
+          {mounted && user ? (
             <>
               <DropdownMenuSeparator className="bg-zinc-700" />
               <DropdownMenuLabel className="text-xs font-normal text-zinc-500">
@@ -174,6 +189,27 @@ export function MenuAplikasi() {
                 <LogOut className="size-4" />
                 Keluar
               </DropdownMenuItem>
+            </>
+          ) : (
+            /* Masuk & Daftar ada DI SINI, bukan sebagai tombol di bar cari —
+               owner 2026-09-21: tombolnya dobel dengan ajakan di badan halaman.
+               Tapi menghapusnya begitu saja akan membuat halaman ini tak punya
+               jalan masuk sama sekali (badan /beranda & /discover cuma berisi
+               poster), jadi keduanya dipindah, bukan dibuang. */
+            <>
+              <DropdownMenuSeparator className="bg-zinc-700" />
+              {TAUTAN_AKUN.map((t) => (
+                <DropdownMenuItem key={t.href} asChild className={ITEM_CLASS}>
+                  <Link
+                    href={t.href}
+                    className={cn(
+                      t.href === "/daftar" && "font-semibold text-amber-400",
+                    )}
+                  >
+                    {t.label}
+                  </Link>
+                </DropdownMenuItem>
+              ))}
             </>
           )}
         </DropdownMenuContent>
@@ -197,33 +233,18 @@ export function MenuAplikasi() {
 }
 
 /**
- * Ujung KANAN bar cari (`SearchBarChrome.trailing`): saldo koin untuk penonton
- * yang sudah masuk, tombol Masuk/Daftar untuk yang belum.
+ * Ujung KANAN bar cari (`SearchBarChrome.trailing`): saldo koin, dan HANYA itu.
  *
- * Tombol Keluar sengaja TIDAK di sini melainkan di dalam menu garis-tiga —
- * bar ini harus tetap ringkas, dan Keluar bukan tombol yang ditekan tiap hari.
+ * Masuk · Daftar · Keluar semuanya ada di dalam menu garis-tiga, bukan di sini.
+ * Owner 2026-09-21: tombol Masuk/Daftar di bar cari dobel dengan ajakan yang
+ * sudah ada di badan halaman, dan bar ini harus seringkas situs katalog
+ * pembanding. Saldo koin tetap di luar karena ia ANGKA yang perlu dilihat
+ * sekilas — menyembunyikannya di balik satu klik membuat penonton tidak tahu
+ * sisa koinnya sebelum membuka episode berbayar.
  */
 export function TombolAkun() {
   const { user, mounted } = usePenonton();
 
-  if (!mounted) return null;
-
-  if (user) return <CoinChip />;
-
-  return (
-    <>
-      <Link
-        href="/login"
-        className="rounded-full border border-white/40 px-3.5 py-1.5 text-xs font-semibold text-white transition-colors hover:border-amber-400 hover:text-amber-400"
-      >
-        Masuk
-      </Link>
-      <Link
-        href="/daftar"
-        className="rounded-full bg-amber-400 px-3.5 py-1.5 text-xs font-bold text-black transition-colors hover:bg-amber-300"
-      >
-        Daftar
-      </Link>
-    </>
-  );
+  if (!mounted || !user) return null;
+  return <CoinChip />;
 }

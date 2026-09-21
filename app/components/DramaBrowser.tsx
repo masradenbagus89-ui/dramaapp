@@ -2,7 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { CATEGORIES, type Category, type Drama } from "@/lib/types";
+import { type Category, type Drama } from "@/lib/types";
+import { GENRE_SEMUA, availableGenres } from "@/lib/beranda-catalog";
+import { labelNegara } from "@/lib/negara";
 import {
   SORT_OPTIONS,
   RATING_OPTIONS,
@@ -62,7 +64,10 @@ function keteranganFilter(f: CatalogFilter): string {
     bagian.push(f.status === "completed" ? "sudah tamat" : "masih tayang");
   if (f.akses !== "all") bagian.push(f.akses === "koin" ? "pakai koin" : "gratis");
   if (f.sub !== "all") bagian.push("sub Indo");
-  if (f.negara !== "all") bagian.push(f.negara);
+  // labelNegara: alamatnya menyimpan nama asli OMDb ("China"), tapi yang
+  // dibaca penonton harus bahasa Indonesia ("Cina").
+  if (f.negara !== "all") bagian.push(labelNegara(f.negara));
+  if (f.genre !== "all") bagian.push(`genre ${f.genre}`);
   if (f.year !== "all") bagian.push(`tahun ${f.year}`);
   return bagian.length ? ` — ${bagian.join(", ")}` : "";
 }
@@ -98,6 +103,13 @@ export default function DramaBrowser({
   }, [searchParams]);
 
   const years = useMemo(() => getYearOptions(dramas), [dramas]);
+  /**
+   * Genre strip dihitung dari katalog, BUKAN dari daftar tetap `CATEGORIES`.
+   * Sampai 2026-09-21 halaman ini memakai daftar tetap itu, sehingga chip
+   * "Fantasy" tergambar padahal katalog punya 0 judul Fantasy — diklik =
+   * halaman hampa. /beranda & / sudah memakai aturan ini sejak awal.
+   */
+  const genres = useMemo(() => availableGenres(dramas), [dramas]);
   const menus = useMemo(() => buildNavMenus(dramas), [dramas]);
   const shortcuts = useMemo(() => catalogShortcuts(dramas), [dramas]);
 
@@ -216,7 +228,7 @@ export default function DramaBrowser({
         className="sticky top-14"
       />
       <GenreStrip
-        genres={CATEGORIES}
+        genres={[GENRE_SEMUA, ...genres]}
         active={filter.cat}
         onSelect={(g) => terapkan({ cat: g as Category })}
         shortcuts={shortcuts}

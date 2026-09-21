@@ -1,10 +1,14 @@
 import { describe, it, expect } from "vitest";
 import {
+  bacaFilter,
   filterAndSortDramas,
+  genreDari,
   getCountryOptions,
+  getGenreOptions,
   getYearOptions,
   negaraDari,
   parseImdb,
+  tulisFilter,
 } from "../lib/discover";
 import type { Drama } from "../lib/types";
 
@@ -240,5 +244,68 @@ describe("negara (kolom country gabungan dari OMDb)", () => {
 
   it("negara yang tidak ada memulangkan nol judul, bukan seluruh katalog", () => {
     expect(filterAndSortDramas(FILM, { negara: "Indonesia" })).toEqual([]);
+  });
+});
+
+describe("genre sinema (kolom genre gabungan dari OMDb)", () => {
+  // `category` (kategori kurasi DramaKu) dan `genre` (genre sinema OMDb) adalah
+  // DUA hal berbeda yang sengaja hidup berdampingan. Tes di bawah mengunci
+  // pemisahan itu: menyatukannya akan menghapus arti salah satunya.
+  const FILM: Drama[] = [
+    stub({
+      id: "g1",
+      title: "Satu",
+      category: "Action",
+      genre: "Action, Sci-Fi",
+    }),
+    stub({ id: "g2", title: "Dua", category: "Romance", genre: "Horror" }),
+    stub({ id: "g3", title: "Tiga", category: "Comedy" }), // tanpa genre OMDb
+  ];
+
+  it("memecah daftar gabungan jadi genre satuan", () => {
+    expect(genreDari(FILM[0])).toEqual(["Action", "Sci-Fi"]);
+    expect(genreDari(FILM[2])).toEqual([]);
+  });
+
+  it("mendaftar genre urut dari yang paling banyak judulnya", () => {
+    expect(getGenreOptions(FILM)).toEqual(["Action", "Horror", "Sci-Fi"]);
+  });
+
+  it("filter genre menangkap judul yang genrenya salah satu dari daftar", () => {
+    expect(
+      filterAndSortDramas(FILM, { genre: "Sci-Fi" }).map((d) => d.id),
+    ).toEqual(["g1"]);
+    expect(
+      filterAndSortDramas(FILM, { genre: "Horror" }).map((d) => d.id),
+    ).toEqual(["g2"]);
+  });
+
+  it("genre TIDAK sama dengan category — keduanya menyaring kolom berbeda", () => {
+    // g2 berkategori Romance tapi bergenre Horror. Kalau keduanya disatukan,
+    // salah satu dari dua harapan di bawah pasti meleset.
+    expect(
+      filterAndSortDramas(FILM, { genre: "Horror" }).map((d) => d.id),
+    ).toEqual(["g2"]);
+    expect(
+      filterAndSortDramas(FILM, { category: "Romance" }).map((d) => d.id),
+    ).toEqual(["g2"]);
+    expect(filterAndSortDramas(FILM, { category: "Comedy", genre: "Horror" })).toEqual(
+      [],
+    );
+  });
+
+  it("genre yang tidak ada memulangkan nol judul, bukan seluruh katalog", () => {
+    expect(filterAndSortDramas(FILM, { genre: "Anime" })).toEqual([]);
+  });
+
+  it("genre ikut terbaca & tertulis di alamat URL", () => {
+    // Pemetaan alamat inilah yang menghubungkan chip strip ke grid /discover.
+    // Kalau salah satu arah tertinggal, chip-nya tergambar tapi grid diam.
+    const f = bacaFilter(new URLSearchParams("genre=Horror"));
+    expect(f.genre).toBe("Horror");
+    expect(tulisFilter(f)).toBe("genre=Horror");
+    // Tanpa parameter = "all", dan "all" TIDAK ikut ditulis ke alamat.
+    expect(bacaFilter(new URLSearchParams("")).genre).toBe("all");
+    expect(tulisFilter(bacaFilter(new URLSearchParams("")))).toBe("");
   });
 });

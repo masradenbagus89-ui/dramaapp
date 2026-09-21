@@ -30,8 +30,9 @@ export const RATING_OPTIONS: { value: RatingKey; label: string }[] = [
 ];
 
 // --- Penyaring tambahan (dipakai menu navigasi gaya situs katalog) ---------
-// Semuanya memakai field yang BENAR-BENAR ada di `Drama`; tidak ada penyaring
-// negara/kualitas video karena datanya memang tidak disimpan DramaKu.
+// Semuanya memakai field yang BENAR-BENAR ada di `Drama`. Yang TIDAK ada di
+// sini: kualitas video (BLURAY/HD/CAM) — DramaKu memang tidak menyimpannya,
+// jadi menyediakan penyaringnya cuma akan berbohong ke penonton.
 
 /** Jenis tayangan. "all" = tidak menyaring (perilaku lama). */
 export type KindKey = "all" | "series" | "movie";
@@ -55,6 +56,24 @@ export function negaraDari(drama: Drama): string[] {
     .filter(Boolean);
 }
 
+/**
+ * Kolom `genre` juga datang dari OMDb sebagai DAFTAR GABUNGAN dipisah koma
+ * ("Action, Adventure, Comedy") — aturannya persis sama dengan `country` di
+ * atas, jadi bentuk fungsinya sengaja dibuat kembar.
+ *
+ * KENAPA ini terpisah dari `category`: `category` adalah kategori kurasi
+ * DramaKu (Romance · Tycoon · Harem · …) yang dipilih admin, sedangkan `genre`
+ * adalah genre sinema dari OMDb (Horror · Sci-Fi · Thriller · …). Keduanya
+ * SENGAJA tidak disatukan — menimpa salah satunya akan menghapus arti yang
+ * satunya lagi (lib/types.ts:79).
+ */
+export function genreDari(drama: Drama): string[] {
+  return (drama.genre ?? "")
+    .split(",")
+    .map((g) => g.trim())
+    .filter(Boolean);
+}
+
 export function parseKind(value?: string | null): KindKey {
   return value === "series" || value === "movie" ? value : "all";
 }
@@ -73,6 +92,12 @@ export function parseSub(value?: string | null): SubKey {
 
 /** Negara tidak punya daftar tetap (datanya teks bebas dari OMDb). */
 export function parseNegara(value?: string | null): string {
+  const bersih = value?.trim();
+  return bersih ? bersih : "all";
+}
+
+/** Genre sinema tidak punya daftar tetap (datanya teks bebas dari OMDb). */
+export function parseGenre(value?: string | null): string {
   const bersih = value?.trim();
   return bersih ? bersih : "all";
 }
@@ -105,6 +130,21 @@ export function getCountryOptions(dramas: Drama[]): string[] {
     .map(([negara]) => negara);
 }
 
+/**
+ * Genre sinema yang BENAR-BENAR punya isi di katalog, urut dari yang terbanyak.
+ * Sejajar dengan `getCountryOptions` di atas & `availableGenres` di
+ * lib/beranda-catalog.ts — satu aturan yang sama di tiga tempat.
+ */
+export function getGenreOptions(dramas: Drama[]): string[] {
+  const jumlah = new Map<string, number>();
+  for (const d of dramas) {
+    for (const g of genreDari(d)) jumlah.set(g, (jumlah.get(g) ?? 0) + 1);
+  }
+  return [...jumlah.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "id"))
+    .map(([genre]) => genre);
+}
+
 export type FilterDramaOptions = {
   query?: string;
   category?: Category;
@@ -118,6 +158,8 @@ export type FilterDramaOptions = {
   sub?: SubKey;
   /** Nama SATU negara; dicocokkan ke daftar gabungan lewat `negaraDari`. */
   negara?: string;
+  /** SATU genre sinema OMDb; dicocokkan lewat `genreDari`. Bukan `category`. */
+  genre?: string;
 };
 
 // --- Pencocok satu-satu, dipisah supaya `filterAndSortDramas` tetap terbaca
@@ -153,6 +195,11 @@ function cocokNegara(d: Drama, negara: string): boolean {
   return negaraDari(d).includes(negara);
 }
 
+function cocokGenre(d: Drama, genre: string): boolean {
+  if (genre === "all") return true;
+  return genreDari(d).includes(genre);
+}
+
 export function filterAndSortDramas(
   dramas: Drama[],
   options: FilterDramaOptions = {},
@@ -168,6 +215,7 @@ export function filterAndSortDramas(
     akses = "all",
     sub = "all",
     negara = "all",
+    genre = "all",
   } = options;
 
   // Dipecah SEKALI di sini, bukan di dalam perulangan: aturannya sama untuk
@@ -195,7 +243,8 @@ export function filterAndSortDramas(
       cocokStatus(d, status) &&
       cocokAkses(d, akses) &&
       cocokSub(d, sub) &&
-      cocokNegara(d, negara)
+      cocokNegara(d, negara) &&
+      cocokGenre(d, genre)
     );
   });
 
@@ -266,6 +315,7 @@ export type CatalogFilter = {
   akses: AksesKey;
   sub: SubKey;
   negara: string;
+  genre: string;
 };
 
 /** Nilai "tidak menyaring apa-apa" — nilai inilah yang DIHAPUS dari alamat. */
@@ -280,6 +330,7 @@ export const FILTER_KOSONG: CatalogFilter = {
   akses: "all",
   sub: "all",
   negara: "all",
+  genre: "all",
 };
 
 function parseCategory(value?: string | null): Category {
@@ -307,6 +358,7 @@ export function bacaFilter(sp: URLSearchParams | null): CatalogFilter {
     akses: parseAkses(sp?.get("akses")),
     sub: parseSub(sp?.get("sub")),
     negara: parseNegara(sp?.get("negara")),
+    genre: parseGenre(sp?.get("genre")),
   };
 }
 
@@ -336,6 +388,7 @@ export function filterOptions(f: CatalogFilter): FilterDramaOptions {
     akses: f.akses,
     sub: f.sub,
     negara: f.negara,
+    genre: f.genre,
   };
 }
 

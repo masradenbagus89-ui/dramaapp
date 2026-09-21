@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { buildNavMenus, catalogShortcuts } from "../lib/nav-katalog";
+import {
+  MAKS_CHIP_SEKELOMPOK,
+  MAKS_CHIP_TAHUN,
+  buildNavMenus,
+  catalogShortcuts,
+} from "../lib/nav-katalog";
 import { filterDariUrl } from "../lib/discover";
 import type { Drama } from "../lib/types";
 
@@ -25,6 +30,9 @@ const KAYA: Drama[] = [
     imdbRating: "8.5",
     year: "2024",
     country: "United States, Canada",
+    // Genre OMDb sengaja BERBEDA dari `category` — itulah bentuk aslinya di
+    // katalog: "Romance" (kategori DramaKu) vs "Horror, Sci-Fi" (genre sinema).
+    genre: "Horror, Sci-Fi",
   }),
   stub({
     id: "b",
@@ -34,9 +42,12 @@ const KAYA: Drama[] = [
     premium: true,
     year: "2023",
     country: "Canada",
+    // "Action" sengaja diulang di sini: ia sudah jadi kategori DramaKu, jadi
+    // menu TIDAK boleh menggambarnya dua kali.
+    genre: "Action, Sci-Fi",
   }),
   stub({ id: "c", title: "Gamma", category: "Comedy", kind: "movie" }),
-  stub({ id: "d", title: "Delta", category: "Romance" }),
+  stub({ id: "d", title: "Delta", category: "Romance", year: "2022" }),
 ];
 
 /** Katalog apa adanya milik DramaKu sekarang: tanpa tahun, rating, koin, film. */
@@ -91,9 +102,36 @@ describe("buildNavMenus", () => {
     // menunya memajang satu baris panjang yang cuma cocok untuk satu judul.
     const negara = buildNavMenus(KAYA).find((m) => m.key === "negara");
     const label = negara?.items.map((i) => i.label) ?? [];
-    expect(label).toContain("United States");
-    expect(label).toContain("Canada");
+    expect(label).toContain("Amerika");
+    expect(label).toContain("Kanada");
     expect(label).not.toContain("United States, Canada");
+  });
+
+  it("menerjemahkan LABEL negara tapi TIDAK alamatnya", () => {
+    // Inilah kegagalan senyap yang paling mungkin: label "Cina" ikut terkirim
+    // ke alamat, padahal penyaring mencocokkan nilai asli OMDb "China" —
+    // chip-nya tergambar rapi lalu memulangkan halaman hampa.
+    const negara = buildNavMenus(KAYA).find((m) => m.key === "negara");
+    const amerika = negara?.items.find((i) => i.label === "Amerika");
+    expect(amerika?.href).toBe("/discover?negara=United+States");
+    expect(hasilDariTautan(KAYA, amerika!.href).map((d) => d.id)).toEqual(["a"]);
+  });
+
+  it("menggabungkan genre sinema OMDb ke menu Genre tanpa menggandakan", () => {
+    const genre = buildNavMenus(KAYA).find((m) => m.key === "genre");
+    const label = genre?.items.map((i) => i.label) ?? [];
+    // Genre sinema yang belum jadi kategori DramaKu → ikut digambar.
+    expect(label).toContain("Horror");
+    expect(label).toContain("Sci-Fi");
+    // "Action" sudah jadi kategori, jadi hanya boleh muncul SEKALI.
+    expect(label.filter((l) => l === "Action")).toHaveLength(1);
+  });
+
+  it("memisahkan alamat kategori (?cat=) dari genre sinema (?genre=)", () => {
+    const genre = buildNavMenus(KAYA).find((m) => m.key === "genre");
+    const cari = (l: string) => genre?.items.find((i) => i.label === l)?.href;
+    expect(cari("Action")).toBe("/discover?cat=Action");
+    expect(cari("Horror")).toBe("/discover?genre=Horror");
   });
 
   it("menyembunyikan urutan Rating & Tahun saat katalog tak punya datanya", () => {
@@ -158,5 +196,49 @@ describe("catalogShortcuts", () => {
         `pintasan ${s.label} (${s.href}) memulangkan nol judul`,
       ).toBeGreaterThan(0);
     }
+  });
+
+  it("menyusun chip berurut: genre sinema, negara, tahun, lalu urutan", () => {
+    // Urutan ini yang ditiru dari situs katalog pembanding. Strip memakai
+    // pergantian grup untuk menaruh garis pemisah, jadi urutan yang teracak
+    // membuat garisnya muncul di tempat yang salah.
+    const grup = catalogShortcuts(KAYA).map((s) => s.grup);
+    const urutPertamaKali = [...new Set(grup)];
+    expect(urutPertamaKali).toEqual(["genre", "negara", "tahun", "urutan"]);
+  });
+
+  it("memajang chip negara berlabel Indonesia dengan alamat aslinya", () => {
+    const cina = catalogShortcuts(KAYA).find((s) => s.label === "Kanada");
+    expect(cina?.href).toBe("/discover?negara=Canada");
+    expect(cina?.grup).toBe("negara");
+  });
+
+  it("memajang chip tahun TERBARU saja, sebanyak MAKS_CHIP_TAHUN", () => {
+    const tahun = catalogShortcuts(KAYA).filter((s) => s.grup === "tahun");
+    expect(tahun).toHaveLength(MAKS_CHIP_TAHUN);
+    // KAYA punya 2024, 2023, 2022 — yang dipajang dua yang terbaru.
+    expect(tahun.map((s) => s.label)).toEqual(["2024", "2023"]);
+  });
+
+  it("tidak memajang chip negara/tahun saat kolomnya kosong", () => {
+    const grup = catalogShortcuts(POLOS).map((s) => s.grup);
+    expect(grup).not.toContain("negara");
+    expect(grup).not.toContain("tahun");
+  });
+
+  it("membatasi jumlah chip per kelompok", () => {
+    // Katalog yang tumbuh tidak boleh mendorong poster pertama turun jauh ke
+    // bawah layar hanya karena strip jadi berbaris-baris.
+    const banyakNegara: Drama[] = Array.from({ length: 20 }, (_, i) =>
+      stub({ id: `n${i}`, title: `Judul ${i}`, country: `Negara${i}` }),
+    );
+    const negara = catalogShortcuts(banyakNegara).filter(
+      (s) => s.grup === "negara",
+    );
+    expect(negara.length).toBe(MAKS_CHIP_SEKELOMPOK);
+  });
+
+  it("tidak menggambar chip apa pun untuk katalog kosong", () => {
+    expect(catalogShortcuts([])).toEqual([]);
   });
 });

@@ -5,6 +5,53 @@
 >
 > **AI:** tiap kali ada perbaikan / deploy / keputusan — **perbarui berkas ini di langkah terakhir**, sebelum bilang selesai. Jangan tumpuk sejarah panjang di sini; pindahkan yang lama ke `NEXT-SESSION.md`.
 
+**Terakhir diisi:** 2026-09-21 — ✅ **Strip katalog & pencarian bergaya Layarkaca21 SELESAI & TERBUKTI** (permintaan owner + 2 screenshot). Belum di-push — menunggu izin rilis owner. Catatan 2026-09-19 di bawah **masih berlaku semua** (Supabase produksi masih kedip, antrean rilis masih menggantung).
+
+## 2026-09-21 — Strip katalog LK21: 12 chip → 29 chip, semuanya berfungsi
+
+**Apa yang diminta owner:** baris menu di bar cari sejajar & berfungsi; strip di bawah kotak cari diisi seperti LK21 (`ACTION ANIME HORROR KOMEDI SCI-FI ROMANCE CINA INDIA JEPANG KOREA THAILAND BLURAY 2025 2026 TERPOPULER`), semua berfungsi saat diklik.
+
+**Yang sudah ada sebelum sesi ini (jangan diklaim baru):** enam menu dropdown **Genre · Jenis · Populer · Negara · Tahun · Lainnya** sudah tayang di produksi sejak 2026-09-10 — terbukti dari HTML `https://dramaapp.vercel.app/` (`aria-label="Menu katalog"`). Yang kurang cuma isinya, dan itulah yang dikerjakan hari ini.
+
+**Yang diubah (5 berkas kode + 3 berkas tes):**
+
+| Berkas | Isi |
+|---|---|
+| `lib/discover.ts` | Penyaring **BARU `?genre=`** untuk kolom `genre` OMDb + `genreDari` + `getGenreOptions`. Aditif — default `"all"`, pemanggil lama tak berubah. |
+| `lib/negara.ts` **(BARU)** | Nama negara OMDb → label Indonesia (`China` → **Cina**). Label diterjemahkan, **alamat URL TIDAK** — nama tak terdaftar dipakai apa adanya. |
+| `lib/nav-katalog.ts` | Menu Genre kini memuat genre sinema OMDb yang belum terwakili kategori; menu Negara berlabel Indonesia; `catalogShortcuts` jadi chip **bergrup** (genre · negara · tahun · urutan). |
+| `app/components/beranda/GenreStrip.tsx` | **Membungkus** di layar lebar (digeser di HP) + garis pemisah antar kelompok + warna beda untuk grup urutan. |
+| `app/components/DramaBrowser.tsx` | Strip `/discover` memakai `availableGenres` (bukan daftar tetap); keterangan filter menyebut genre & nama negara Indonesia. |
+
+**🐞 Bug yang ikut ditutup:** `/discover` masih memakai daftar tetap `CATEGORIES`, jadi chip **`Fantasy` (0 judul di katalog)** tergambar di halaman katalog utama dan diklik = **halaman hampa**. Aturan "jangan gambar pilihan kosong" sudah dipegang sejak 2026-09-07, tapi halaman itu terlewat 11 hari.
+
+**Hasil di layar (dibaca dari `next start`, bukan dari membaca kode):** `/` dan `/beranda` sama-sama menggambar **29 chip dalam 5 kelompok** — `Semua · Action · Romance · Tycoon · Comedy · Harem · Time Travel | Adventure · Sci-Fi · Drama · Crime · Horror · Mystery · Thriller | Amerika · Kanada · Inggris · Jerman · Australia · Cina · Iran · Selandia Baru | 2026 · 2025 | Terpopuler · Terbaru · Film · Gratis | Jelajah`.
+
+**❌ Yang SENGAJA tidak dibangun — datanya memang nol di katalog (41 judul, dibaca lewat `GET /api/dramas`):** **ANIME · INDIA · JEPANG · KOREA · THAILAND** (0 judul) dan **BLURAY** (DramaKu tidak menyimpan kualitas video sama sekali). Chip-nya **muncul sendiri** begitu owner menambah judul bernegara/bergenre itu dari panel admin — tidak perlu sentuh kode lagi. Label menu tetap **"Jenis"** & **"Lainnya"** (bukan "Series"/"+ More"): menu itu memilih antara *Serial* dan *Film*, jadi "Series" akan salah untuk isinya sendiri.
+
+### Bukti gerbang (urutan §6, exit code dibaca dari berkas — tidak dipipa)
+
+| Gerbang | Hasil |
+|---|---|
+| `rm -rf .next` → `npm run build` | ✅ **exit 0** |
+| `/` · `/beranda` · `/discover` · `/playly` · `/shorts` · `sitemap.xml` | ✅ **tetap `○ (Static)` 1m 1y** — nol kemunduran |
+| `npx tsc --noEmit` (SESUDAH build) | ✅ **exit 0** |
+| `npm test` | ✅ **712 tes / 53 berkas, 0 gagal** (dari 693/52) |
+| Mutation check **6 arah** | ✅ **6/6 MERAH** — penjaganya benar-benar menangkap |
+| 58 tautan diuji ke **katalog produksi nyata** | ✅ **0 yang memulangkan halaman hampa** |
+| Berkas env/kunci ter-stage | ✅ **NOL** |
+
+**Penjaga baru:** `tests/strip-katalog.test.ts` — merender `DramaBrowser` & `PublicTopBars` **sungguhan**, lalu menjalankan **tiap alamat yang benar-benar tertulis di HTML** lewat penyaring halaman. Ini lapisan yang dulu tidak ada: daftar yang benar masih bisa gagal sampai ke layar.
+
+### 🪤 Dua jebakan alat baru (tambahan untuk daftar di bawah)
+
+1. **`next start` yang GAGAL tetap membalas HTTP 200 — dari server LAIN.** Port 3077 ternyata sudah dipakai proses lain; `next start` mati dengan `EADDRINUSE` di lognya, tapi `curl` balas **200 + HTML utuh** yang berisi **kode LAMA**. Nyaris jadi kesimpulan "perubahan tidak masuk". **Sesudah menjalankan server uji, baca log server-nya dulu** — HTTP 200 tidak membuktikan permintaanmu sampai ke server yang baru dijalankan.
+2. **`/discover` tidak merender apa pun di server** — dibungkus `<Suspense>` karena `useSearchParams`, jadi HTML server-nya cuma "Memuat...". Memeriksa chip halaman itu lewat `curl` **selalu** memulangkan "tidak ada", dan **itu bukan bug**.
+
+Rincian lengkap: `docs/lintasai/rencana/2026-09-21-strip-katalog-lk21.md`
+
+---
+
 **Terakhir diisi:** 2026-09-19 — ✅ **GERBANG RILIS AKHIRNYA LULUS. `/playly` TERBUKTI `○ (Static)` dari keluaran `npm run build` — bukti yang dicari sejak 2026-09-15 akhirnya ada.** Penyebab kemacetan 4 hari juga terbongkar, dan **ternyata bukan Supabase.** 8 commit siap dirilis, menunggu izin push owner.
 
 ## Bukti gerbang (urutan §6, exit code dibaca dari berkas — tidak dipipa)

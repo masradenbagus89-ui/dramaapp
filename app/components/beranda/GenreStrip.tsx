@@ -1,5 +1,6 @@
 "use client";
 
+import { Fragment } from "react";
 import Link from "next/link";
 import type { NavItem } from "@/lib/nav-katalog";
 import { cn } from "@/lib/utils";
@@ -18,9 +19,10 @@ type Props = {
   /** Mode SARING-DI-TEMPAT (beranda): tiap genre jadi tombol. */
   onSelect?: (genre: string) => void;
   /**
-   * Pintasan cepat sesudah daftar genre (Terbaru · Terpopuler · Tamat · Gratis).
-   * SELALU berupa tautan, apa pun mode genre di atas: isinya bukan genre, jadi
-   * tidak bisa dijawab oleh penyaring genre milik halaman.
+   * Chip sesudah daftar genre (genre sinema · negara · tahun · urutan), datang
+   * dari `catalogShortcuts`. SELALU berupa tautan, apa pun mode genre di atas:
+   * isinya bukan kategori, jadi tidak bisa dijawab oleh penyaring genre milik
+   * halaman — kecuali /discover, yang memang membaca penyaring dari alamat URL.
    */
   shortcuts?: NavItem[];
   /** Tautan di ujung kanan strip. */
@@ -50,10 +52,18 @@ export default function GenreStrip({
 }: Props) {
   return (
     <div className="border-b-2 border-amber-600 bg-gradient-to-r from-amber-400 to-yellow-400">
+      {/* Digeser di HP, MEMBUNGKUS di layar lebar.
+          Kenapa dibedakan: sejak strip ikut memuat negara & tahun (owner
+          2026-09-21) chip-nya bisa lewat 20 buah. Digeser di layar lebar
+          berarti chip yang diminta owner (mis. Cina, 2025) jatuh di luar layar
+          dan terbaca seperti tidak dikerjakan. Sebaliknya membungkus di HP
+          membuat strip setinggi lima baris dan mendorong poster pertama keluar
+          layar pertama. */}
       <div
         className={cn(
           SHELL,
-          "no-scrollbar flex items-center overflow-x-auto px-2 md:px-4",
+          "no-scrollbar flex flex-nowrap items-center overflow-x-auto px-2",
+          "md:flex-wrap md:overflow-x-visible md:px-4",
         )}
       >
         {genres.map((g) => {
@@ -79,25 +89,34 @@ export default function GenreStrip({
           );
         })}
 
-        {shortcuts && shortcuts.length > 0 && (
-          <>
-            {/* Garis tipis, bukan jarak kosong: di strip yang bisa digeser,
-                jarak kosong terbaca seperti daftarnya sudah habis. */}
-            <span
-              aria-hidden
-              className="mx-1 h-4 w-px shrink-0 bg-amber-700/50"
-            />
-            {shortcuts.map((s) => (
-              <Link
-                key={s.href}
-                href={s.href}
-                className={cn(ITEM_CLASS, "text-red-900 hover:bg-amber-300")}
-              >
-                {s.label}
-              </Link>
-            ))}
-          </>
-        )}
+        {shortcuts?.map((s, i) => (
+          <Fragment key={s.href}>
+            {/* Garis tipis tiap KELOMPOK berganti (genre -> negara -> tahun ->
+                urutan), bukan jarak kosong: di strip yang bisa digeser, jarak
+                kosong terbaca seperti daftarnya sudah habis. Chip pertama juga
+                dapat garis, memisahkannya dari daftar genre kategori. */}
+            {(i === 0 || s.grup !== shortcuts[i - 1].grup) && (
+              <span
+                aria-hidden
+                className="mx-1 h-4 w-px shrink-0 bg-amber-700/50"
+              />
+            )}
+            <Link
+              href={s.href}
+              className={cn(
+                ITEM_CLASS,
+                // Merah hanya untuk pintasan URUTAN — itu yang mengubah cara
+                // daftar disusun, bukan memotong daftarnya. Chip penyaring
+                // (genre/negara/tahun) sewarna dengan genre kategori di kiri
+                // karena kerjanya memang sama.
+                s.grup === "urutan" ? "text-red-900" : "text-zinc-900",
+                "hover:bg-amber-300",
+              )}
+            >
+              {s.label}
+            </Link>
+          </Fragment>
+        ))}
 
         {moreHref && (
           <Link

@@ -3,17 +3,14 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { NavItem, NavMenu } from "@/lib/nav-katalog";
-import GenreStrip from "./GenreStrip";
+import { STRIP_KATALOG, type NavMenu } from "@/lib/nav-katalog";
+import StripKatalog from "./StripKatalog";
 import NavMenus from "./NavMenus";
 import SearchBar from "./SearchBar";
 
 type Props = {
-  genres: string[];
   /** Isi menu dropdown, dihitung di server oleh `buildNavMenus`. */
   menus: NavMenu[];
-  /** Pintasan di ujung strip kuning, dari `catalogShortcuts`. */
-  shortcuts: NavItem[];
 };
 
 /**
@@ -29,7 +26,7 @@ type Props = {
  * MELEMPAR ke /discover. Halaman itu memang publik (bisa dibuka tanpa login),
  * jadi tautan ini tidak membuka apa pun yang tadinya tertutup.
  */
-export default function PublicTopBars({ genres, menus, shortcuts }: Props) {
+export default function PublicTopBars({ menus }: Props) {
   const router = useRouter();
   const [query, setQuery] = useState("");
 
@@ -76,14 +73,7 @@ export default function PublicTopBars({ genres, menus, shortcuts }: Props) {
           ),
         }}
       />
-      <GenreStrip
-        genres={["Semua", ...genres]}
-        hrefFor={(g) =>
-          g === "Semua" ? "/discover" : `/discover?cat=${encodeURIComponent(g)}`
-        }
-        shortcuts={shortcuts}
-        moreHref="/discover"
-      />
+      <StripKatalog items={STRIP_KATALOG} />
     </>
   );
 }

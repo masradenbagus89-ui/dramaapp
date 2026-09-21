@@ -10,7 +10,7 @@ import {
   FEATURED_ROW_COUNT,
   homeCatalogRows,
 } from "@/lib/beranda-catalog";
-import { buildNavMenus, catalogShortcuts } from "@/lib/nav-katalog";
+import { buildNavMenus } from "@/lib/nav-katalog";
 import { Button } from "@/components/ui/button";
 
 // Disimpan & dipakai ulang, disegarkan tiap 60 detik (menggantikan force-dynamic
@@ -29,10 +29,10 @@ export default async function LandingPage() {
   const genres = availableGenres(dramas);
   // Baris poster per kategori — isi utama halaman ini.
   const rows = homeCatalogRows(dramas);
-  // Isi menu & pintasan dihitung DI SERVER: hasilnya cuma label + alamat, jauh
-  // lebih ringan dikirim ke browser daripada seluruh katalog.
+  // Isi menu dihitung DI SERVER: hasilnya cuma label + alamat, jauh lebih
+  // ringan dikirim ke browser daripada seluruh katalog. Isi strip kuning tidak
+  // ikut dihitung — sejak 2026-09-21 daftarnya TETAP, ditentukan owner.
   const menus = buildNavMenus(dramas);
-  const shortcuts = catalogShortcuts(dramas);
 
   return (
     <div className="min-h-screen bg-black">
@@ -47,7 +47,7 @@ export default async function LandingPage() {
              yang belum login pun langsung melihat pencarian, genre, dan poster,
              bukan blok sambutan sehalaman penuh. Cari, genre & menu melempar ke
              /discover, yang memang publik. ===== */}
-      <PublicTopBars genres={genres} menus={menus} shortcuts={shortcuts} />
+      <PublicTopBars menus={menus} />
 
       {/* ===== Baris FILM UNGGULAN — komponen yang SAMA dengan /beranda, jadi
              tampilan & perilakunya persis: poster hanya bergeser kalau digeser

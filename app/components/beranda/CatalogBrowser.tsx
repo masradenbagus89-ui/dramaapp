@@ -27,11 +27,11 @@ import {
   sortCatalog,
   type CatalogSort,
 } from "@/lib/beranda-catalog";
-import { buildNavMenus, catalogShortcuts } from "@/lib/nav-katalog";
+import { STRIP_KATALOG, buildNavMenus } from "@/lib/nav-katalog";
 import type { PlaylyVideoPublik } from "@/lib/playly-publik";
 import CatalogCard from "./CatalogCard";
 import FeaturedRow from "./FeaturedRow";
-import GenreStrip from "./GenreStrip";
+import StripKatalog from "./StripKatalog";
 import HasilPlayly, { cariVideoPlayly } from "./HasilPlayly";
 import NavMenus from "./NavMenus";
 import SearchBar from "./SearchBar";
@@ -102,7 +102,6 @@ export default function CatalogBrowser({
   // yang membaca penyaring dari alamat URL. Halaman INI menyimpan penyaringnya
   // di state lokal, jadi tautan `?sort=…` ke sini akan diabaikan diam-diam.
   const menus = useMemo(() => buildNavMenus(dramas), [dramas]);
-  const shortcuts = useMemo(() => catalogShortcuts(dramas), [dramas]);
   const years = useMemo(() => getYearOptions(dramas), [dramas]);
   const adaTahun = useMemo(() => countWithYear(dramas) > 0, [dramas]);
   const adaRating = useMemo(() => countWithRating(dramas) > 0, [dramas]);
@@ -275,13 +274,7 @@ export default function CatalogBrowser({
       {/* ============ 2. STRIP GENRE ========================================
           Hanya genre yang benar-benar berisi (availableGenres) — genre kosong
           yang diklik memulangkan halaman hampa. */}
-      <GenreStrip
-        genres={[SEMUA, ...genres]}
-        active={genre}
-        onSelect={(g) => ubahFilter(() => setGenre(g))}
-        shortcuts={shortcuts}
-        moreHref="/discover"
-      />
+      <StripKatalog items={STRIP_KATALOG} />
 
       {/* ============ 3. BANNER UNGGULAN (ramping) ========================== */}
       {heroSlot}

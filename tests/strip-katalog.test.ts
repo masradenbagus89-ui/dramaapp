@@ -13,8 +13,13 @@
 import { describe, it, expect, vi } from "vitest";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { filterDariUrl } from "../lib/discover";
-import { buildNavMenus, catalogShortcuts } from "../lib/nav-katalog";
+import {
+  FILTER_KOSONG,
+  bacaFilter,
+  filterDariUrl,
+  type CatalogFilter,
+} from "../lib/discover";
+import { STRIP_KATALOG, buildNavMenus } from "../lib/nav-katalog";
 import type { Drama } from "../lib/types";
 
 vi.mock("next/navigation", () => ({
@@ -91,58 +96,92 @@ describe("chip strip & menu yang SUNGGUHAN digambar halaman", () => {
     [
       "/ (halaman depan)",
       renderToStaticMarkup(
-        createElement(PublicTopBars, {
-          genres: ["Action", "Romance", "Comedy"],
-          menus: buildNavMenus(KATALOG),
-          shortcuts: catalogShortcuts(KATALOG),
-        }),
+        createElement(PublicTopBars, { menus: buildNavMenus(KATALOG) }),
       ),
     ],
   ];
 
   for (const [nama, html] of halaman) {
-    it(`${nama}: tiap alamat yang digambar memulangkan minimal satu judul`, () => {
+    it(`${nama}: menggambar seluruh chip strip milik owner`, () => {
+      const alamat = new Set(alamatDiHtml(html));
+      for (const chip of STRIP_KATALOG) {
+        expect(
+          alamat.has(chip.href),
+          `chip ${chip.label} (${chip.href}) tidak tergambar di ${nama}`,
+        ).toBe(true);
+      }
+    });
+
+    it(`${nama}: tiap alamat yang digambar benar-benar MENYARING`, () => {
+      // Aturan yang dijaga di sini BUKAN "harus berisi" — sebagian chip
+      // memang belum ada judulnya (keputusan owner 2026-09-21). Yang dijaga:
+      // alamatnya harus dikenali `bacaFilter`. Nama parameter yang salah tulis
+      // diabaikan DIAM-DIAM, dan chip-nya lalu menampilkan SELURUH katalog
+      // seolah penyaringnya bekerja — jauh lebih menyesatkan daripada kosong.
       const alamat = alamatDiHtml(html);
       // Pagar terhadap tes yang lulus karena tak menemukan apa-apa.
-      expect(alamat.length).toBeGreaterThan(10);
+      expect(alamat.length).toBeGreaterThanOrEqual(STRIP_KATALOG.length);
       for (const href of alamat) {
-        expect(jumlahHasil(href), `${href} memulangkan nol judul`).toBeGreaterThan(
-          0,
-        );
+        const f = bacaFilter(new URLSearchParams(href.split("?")[1] ?? ""));
+        const berubah = (Object.keys(FILTER_KOSONG) as (keyof CatalogFilter)[])
+          .filter((k) => f[k] !== FILTER_KOSONG[k]);
+        expect(
+          berubah.length,
+          `${href} tidak mengubah penyaring apa pun — nama parameternya ` +
+            `kemungkinan salah tulis`,
+        ).toBeGreaterThan(0);
       }
     });
   }
 
-  it("/discover TIDAK menggambar kategori yang nol judul", () => {
+  it("strip TIDAK lagi memajang negara & pintasan yang tak diminta owner", () => {
+    // Keluhan owner 2026-09-21: "terlalu banyak tulisan dan negara lainnya".
+    // Sebelumnya strip dihitung dari katalog dan tumbuh jadi 29 chip.
     const html = renderToStaticMarkup(
       createElement(DramaBrowser, { dramas: KATALOG }),
     );
-    // "Fantasy" & "Harem" ada di daftar tetap CATEGORIES tapi nol judul di
-    // katalog ini. Sampai 2026-09-21 halaman ini memajang keduanya, dan diklik
-    // = halaman hampa.
-    expect(html).not.toContain(">Fantasy<");
-    expect(html).not.toContain(">Harem<");
-    // Yang berisi tetap digambar — pagar supaya tes di atas tidak lulus hanya
-    // karena stripnya kosong.
-    expect(html).toContain(">Action<");
-    expect(html).toContain(">Romance<");
+    for (const hilang of [
+      ">Amerika<",
+      ">Kanada<",
+      ">Inggris<",
+      ">Jerman<",
+      ">Selandia Baru<",
+      ">Adventure<",
+      ">Thriller<",
+      ">Jelajah<",
+      ">Gratis<",
+    ]) {
+      expect(html, `${hilang} seharusnya sudah tidak ada di strip`).not.toContain(
+        hilang,
+      );
+    }
+    // Pagar supaya tes di atas tidak lulus hanya karena stripnya kosong.
+    expect(html).toContain(">Cina<");
+    expect(html).toContain(">Terpopuler<");
   });
 
-  it("strip memajang negara berbahasa Indonesia, tahun, dan Terpopuler", () => {
+  it("chip yang katalognya berisi memulangkan judul, yang kosong memulangkan NOL", () => {
+    // Bedanya "belum ada isinya" (jujur) dengan "penyaring diabaikan"
+    // (menyesatkan): yang kedua memulangkan seluruh katalog.
+    expect(jumlahHasil("/discover?cat=Action")).toBeGreaterThan(0);
+    expect(jumlahHasil("/discover?genre=Horror")).toBeGreaterThan(0);
+    expect(jumlahHasil("/discover?negara=China")).toBeGreaterThan(0);
+    expect(jumlahHasil("/discover?negara=Japan")).toBe(0);
+    expect(jumlahHasil("/discover?genre=Animation")).toBe(0);
+  });
+
+  it("strip memajang label Indonesia tapi alamatnya ejaan OMDb", () => {
     const html = renderToStaticMarkup(
       createElement(DramaBrowser, { dramas: KATALOG }),
     );
-    // Inilah bentuk yang diminta owner dari situs katalog pembanding.
     expect(html).toContain(">Cina<");
-    expect(html).toContain(">Amerika<");
-    expect(html).toContain(">2026<");
-    expect(html).toContain(">2025<");
-    expect(html).toContain(">Terpopuler<");
-    // Genre sinema OMDb yang belum jadi kategori kurasi.
-    expect(html).toContain(">Horror<");
-    expect(html).toContain(">Sci-Fi<");
-    // Alamatnya memakai nilai ASLI katalog, bukan labelnya.
+    expect(html).toContain(">Jepang<");
+    expect(html).toContain(">Komedi<");
     expect(html).toContain("/discover?negara=China");
+    expect(html).toContain("/discover?negara=Japan");
+    // Label TIDAK boleh ikut masuk ke alamat.
     expect(html).not.toContain("negara=Cina");
+    expect(html).not.toContain("negara=Jepang");
+    expect(html).not.toContain("cat=Komedi");
   });
 });

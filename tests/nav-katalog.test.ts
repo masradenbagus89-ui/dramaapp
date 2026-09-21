@@ -1,11 +1,7 @@
 import { describe, it, expect } from "vitest";
-import {
-  MAKS_CHIP_SEKELOMPOK,
-  MAKS_CHIP_TAHUN,
-  buildNavMenus,
-  catalogShortcuts,
-} from "../lib/nav-katalog";
-import { filterDariUrl } from "../lib/discover";
+import { STRIP_KATALOG, buildNavMenus } from "../lib/nav-katalog";
+import { FILTER_KOSONG, bacaFilter, filterDariUrl } from "../lib/discover";
+import type { CatalogFilter } from "../lib/discover";
 import type { Drama } from "../lib/types";
 
 function stub(partial: Partial<Drama> & Pick<Drama, "id" | "title">): Drama {
@@ -169,76 +165,76 @@ describe("buildNavMenus", () => {
   });
 });
 
-describe("catalogShortcuts", () => {
-  it("selalu menyediakan Terbaru & Terpopuler", () => {
-    // Keduanya cuma butuh urutan katalog & `views` yang selalu ada.
-    const label = catalogShortcuts(POLOS).map((s) => s.label);
-    expect(label).toContain("Terbaru");
-    expect(label).toContain("Terpopuler");
+describe("STRIP_KATALOG (daftar tetap milik owner)", () => {
+  // ⚠️ Aturan penjaganya SENGAJA berbeda dari menu dropdown di atas.
+  // Menu dropdown dihitung dari katalog, jadi tiap pilihannya WAJIB berisi.
+  // Strip ini daftar TETAP yang ditentukan owner 2026-09-21, dan sebagian
+  // isinya memang belum ada judulnya (Anime, India, Jepang, Korea, Thailand).
+  // Yang dijaga di sini bukan "harus berisi", melainkan "tidak boleh mati
+  // karena salah tulis" — salah nama parameter diabaikan DIAM-DIAM oleh
+  // `bacaFilter` dan chip-nya akan memulangkan SELURUH katalog seolah
+  // penyaringnya bekerja. Itu jauh lebih menyesatkan daripada halaman kosong.
+
+  it("isinya persis daftar & urutan yang ditulis owner", () => {
+    expect(STRIP_KATALOG.map((c) => c.label)).toEqual([
+      "Action",
+      "Anime",
+      "Horror",
+      "Komedi",
+      "Sci-Fi",
+      "Romance",
+      "Cina",
+      "India",
+      "Jepang",
+      "Korea",
+      "Thailand",
+      "2025",
+      "2026",
+      "Terpopuler",
+    ]);
   });
 
-  it("menyembunyikan Tamat & Gratis saat datanya belum ada", () => {
-    const label = catalogShortcuts(POLOS).map((s) => s.label);
-    expect(label).not.toContain("Tamat");
-    expect(label).not.toContain("Gratis");
-  });
-
-  it("memunculkan Tamat & Gratis saat katalog memuat keduanya", () => {
-    const label = catalogShortcuts(KAYA).map((s) => s.label);
-    expect(label).toContain("Tamat");
-    expect(label).toContain("Gratis");
-  });
-
-  it("tiap pintasan memulangkan minimal satu judul", () => {
-    for (const s of catalogShortcuts(KAYA)) {
+  it("tiap chip memasang penyaring yang BENAR-BENAR dibaca halaman", () => {
+    for (const chip of STRIP_KATALOG) {
+      const f = bacaFilter(new URLSearchParams(chip.href.split("?")[1] ?? ""));
+      const berubah = (Object.keys(FILTER_KOSONG) as (keyof CatalogFilter)[])
+        .filter((k) => f[k] !== FILTER_KOSONG[k]);
       expect(
-        hasilDariTautan(KAYA, s.href).length,
-        `pintasan ${s.label} (${s.href}) memulangkan nol judul`,
-      ).toBeGreaterThan(0);
+        berubah,
+        `chip ${chip.label} (${chip.href}) tidak mengubah penyaring apa pun — ` +
+          `nama parameternya kemungkinan salah tulis, dan halaman akan ` +
+          `menampilkan SELURUH katalog seolah penyaringnya bekerja`,
+      ).toHaveLength(1);
     }
   });
 
-  it("menyusun chip berurut: genre sinema, negara, tahun, lalu urutan", () => {
-    // Urutan ini yang ditiru dari situs katalog pembanding. Strip memakai
-    // pergantian grup untuk menaruh garis pemisah, jadi urutan yang teracak
-    // membuat garisnya muncul di tempat yang salah.
-    const grup = catalogShortcuts(KAYA).map((s) => s.grup);
-    const urutPertamaKali = [...new Set(grup)];
-    expect(urutPertamaKali).toEqual(["genre", "negara", "tahun", "urutan"]);
+  it("semua chip menuju /discover", () => {
+    for (const chip of STRIP_KATALOG) {
+      expect(chip.href.startsWith("/discover?")).toBe(true);
+    }
   });
 
-  it("memajang chip negara berlabel Indonesia dengan alamat aslinya", () => {
-    const cina = catalogShortcuts(KAYA).find((s) => s.label === "Kanada");
-    expect(cina?.href).toBe("/discover?negara=Canada");
-    expect(cina?.grup).toBe("negara");
+  it("chip negara berlabel Indonesia tapi alamatnya ejaan OMDb", () => {
+    // Kegagalan senyap yang paling mungkin: label ikut masuk ke alamat.
+    const cari = (l: string) => STRIP_KATALOG.find((c) => c.label === l)?.href;
+    expect(cari("Cina")).toBe("/discover?negara=China");
+    expect(cari("Jepang")).toBe("/discover?negara=Japan");
+    expect(cari("Korea")).toBe("/discover?negara=South+Korea");
   });
 
-  it("memajang chip tahun TERBARU saja, sebanyak MAKS_CHIP_TAHUN", () => {
-    const tahun = catalogShortcuts(KAYA).filter((s) => s.grup === "tahun");
-    expect(tahun).toHaveLength(MAKS_CHIP_TAHUN);
-    // KAYA punya 2024, 2023, 2022 — yang dipajang dua yang terbaru.
-    expect(tahun.map((s) => s.label)).toEqual(["2024", "2023"]);
+  it("chip yang katalognya memang berisi memulangkan judul", () => {
+    // KAYA punya Romance, Action, genre Horror/Sci-Fi, negara Kanada/Amerika.
+    // Chip yang datanya ADA tidak boleh memulangkan nol — itu barulah bug.
+    expect(hasilDariTautan(KAYA, "/discover?cat=Action").length).toBeGreaterThan(0);
+    expect(hasilDariTautan(KAYA, "/discover?cat=Romance").length).toBeGreaterThan(0);
+    expect(hasilDariTautan(KAYA, "/discover?genre=Horror").length).toBeGreaterThan(0);
+    expect(hasilDariTautan(KAYA, "/discover?sort=populer").length).toBeGreaterThan(0);
   });
 
-  it("tidak memajang chip negara/tahun saat kolomnya kosong", () => {
-    const grup = catalogShortcuts(POLOS).map((s) => s.grup);
-    expect(grup).not.toContain("negara");
-    expect(grup).not.toContain("tahun");
-  });
-
-  it("membatasi jumlah chip per kelompok", () => {
-    // Katalog yang tumbuh tidak boleh mendorong poster pertama turun jauh ke
-    // bawah layar hanya karena strip jadi berbaris-baris.
-    const banyakNegara: Drama[] = Array.from({ length: 20 }, (_, i) =>
-      stub({ id: `n${i}`, title: `Judul ${i}`, country: `Negara${i}` }),
-    );
-    const negara = catalogShortcuts(banyakNegara).filter(
-      (s) => s.grup === "negara",
-    );
-    expect(negara.length).toBe(MAKS_CHIP_SEKELOMPOK);
-  });
-
-  it("tidak menggambar chip apa pun untuk katalog kosong", () => {
-    expect(catalogShortcuts([])).toEqual([]);
+  it("chip yang datanya belum ada memulangkan NOL, bukan seluruh katalog", () => {
+    // Inilah bedanya "belum ada isinya" (jujur) dengan "penyaring diabaikan"
+    // (menyesatkan). KAYA tak punya judul Jepang sama sekali.
+    expect(hasilDariTautan(KAYA, "/discover?negara=Japan")).toHaveLength(0);
+    expect(hasilDariTautan(KAYA, "/discover?genre=Animation")).toHaveLength(0);
   });
 });

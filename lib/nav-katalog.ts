@@ -21,14 +21,6 @@ import { getCountryOptions, getGenreOptions, getYearOptions } from "./discover";
 import { labelNegara } from "./negara";
 
 /**
- * Kelompok chip di strip kuning. Dipakai strip untuk menaruh garis pemisah &
- * membedakan warna — TANPA strip itu perlu tahu arti tiap chip. Bentuk yang
- * sama dengan situs katalog pembanding: genre, lalu negara, lalu tahun, lalu
- * pintasan urutan.
- */
-export type ChipGrup = "genre" | "negara" | "tahun" | "urutan";
-
-/**
  * Satu baris yang bisa diklik. `href` sudah lengkap & siap dipakai `<Link>`.
  *
  * `label` dan `href` SENGAJA dipisah: label boleh diterjemahkan ("Cina"), tapi
@@ -36,7 +28,7 @@ export type ChipGrup = "genre" | "negara" | "tahun" | "urutan";
  * label ikut masuk ke alamat, chip-nya tergambar rapi lalu memulangkan halaman
  * hampa — rusak tanpa satu pun pesan error.
  */
-export type NavItem = { label: string; href: string; grup?: ChipGrup };
+export type NavItem = { label: string; href: string };
 
 /** Satu tombol dropdown beserta isinya. */
 export type NavMenu = {
@@ -65,22 +57,6 @@ function tautan(params: Record<string, string>): string {
  * menambah satu klik untuk sampai ke tempat yang sama.
  */
 export const MIN_ITEM_MENU = 2;
-
-/**
- * Batas chip per kelompok di strip kuning.
- *
- * Bukan soal selera: strip membungkus ke baris berikutnya, jadi katalog yang
- * tumbuh (mis. 40 negara) akan mendorong poster pertama turun jauh ke bawah
- * layar. 8 masih muat dalam satu baris pada layar lebar. Kelompok yang
- * terpotong TIDAK hilang — daftar lengkapnya tetap ada di menu dropdown.
- */
-export const MAKS_CHIP_SEKELOMPOK = 8;
-
-/**
- * Berapa tahun yang jadi chip. Situs katalog pembanding memajang dua tahun
- * terakhir saja; tahun lama tetap bisa dipilih dari menu dropdown Tahun.
- */
-export const MAKS_CHIP_TAHUN = 2;
 
 function hitung(dramas: Drama[], cocok: (d: Drama) => boolean): number {
   return dramas.filter(cocok).length;
@@ -212,72 +188,46 @@ export function buildNavMenus(dramas: Drama[]): NavMenu[] {
 }
 
 /**
- * Chip di strip kuning, sesudah daftar genre kategori.
+ * ISI STRIP KUNING — DAFTAR TETAP, ditentukan langsung oleh owner (2026-09-21).
  *
- * Bentuknya meniru situs katalog pembanding (permintaan owner 2026-09-21):
- * genre sinema -> negara -> tahun -> pintasan urutan, dipisah garis tipis per
- * kelompok. Yang ditiru POLANYA, bukan daftarnya — isi tiap kelompok dihitung
- * dari katalog yang sedang dipakai.
+ * ⚠️ Ini SATU-SATUNYA tempat di berkas ini yang TIDAK dihitung dari katalog,
+ * dan itu disengaja. Versi sebelumnya menghitungnya sendiri sehingga strip
+ * tumbuh jadi 29 chip berisi delapan negara (Amerika, Kanada, Jerman, Iran,
+ * Selandia Baru, …) — owner menilai "terlalu banyak tulisan dan negara lainnya"
+ * dan menyerahkan daftar pendeknya sendiri. Keputusan owner MENANG atas aturan
+ * "hanya gambar yang ada isinya"; konsekuensinya ditulis terbuka di bawah.
  *
- * Karena itu chip yang diminta owner tapi datanya NOL (Anime, India, Jepang,
- * Korea, Thailand) memang tidak digambar, dan akan MUNCUL SENDIRI begitu owner
- * menambahkan judulnya. Chip kualitas video (Bluray) tidak akan pernah muncul
- * dari sini: DramaKu tidak menyimpan kolomnya sama sekali.
+ * AKIBAT YANG HARUS DIKETAHUI: sebagian chip di sini memang BELUM ada isinya
+ * (per 2026-09-21: Anime, India, Jepang, Korea, Thailand = 0 judul), jadi
+ * diklik = halaman "Tidak ada drama yang cocok" + tombol Hapus filter. Itu
+ * bukan kerusakan kode — chip-nya HIDUP SENDIRI begitu owner menambahkan judul
+ * bernegara/bergenre tersebut dari panel admin, TANPA menyentuh berkas ini.
+ *
+ * Daftar LENGKAP (semua negara, semua tahun, semua genre yang benar-benar
+ * berisi) tidak hilang — tetap tersedia di menu dropdown `buildNavMenus`
+ * di atas, yang masih dihitung dari katalog seperti sebelumnya.
+ *
+ * Urutan & ejaan label sengaja PERSIS seperti yang ditulis owner. Label ditulis
+ * huruf biasa; strip yang membesarkannya jadi huruf kapital (CSS `uppercase`).
  */
-export function catalogShortcuts(dramas: Drama[]): NavItem[] {
-  // Alasan yang sama dengan buildNavMenus: Terbaru & Terpopuler tidak
-  // bergantung isi katalog, jadi pagar ini yang mencegahnya tergambar sia-sia.
-  if (dramas.length === 0) return [];
-
-  const tamat = hitung(dramas, (d) => d.status === "Completed");
-  const film = hitung(dramas, (d) => isMovie(d));
-  const gratis = hitung(dramas, (d) => !d.premium);
-  const koin = hitung(dramas, (d) => Boolean(d.premium));
-
-  const genre: NavItem[] = genreSinema(dramas)
-    .slice(0, MAKS_CHIP_SEKELOMPOK)
-    .map((g) => ({ label: g, href: tautan({ genre: g }), grup: "genre" }));
-
-  const negara: NavItem[] = getCountryOptions(dramas)
-    .slice(0, MAKS_CHIP_SEKELOMPOK)
-    .map((n) => ({
-      // Label diterjemahkan, alamatnya TIDAK — lihat catatan di `NavItem`.
-      label: labelNegara(n),
-      href: tautan({ negara: n }),
-      grup: "negara",
-    }));
-
-  // getYearOptions sudah urut dari tahun terbaru, jadi cukup dipotong.
-  const tahun: NavItem[] = getYearOptions(dramas)
-    .slice(0, MAKS_CHIP_TAHUN)
-    .map((y) => ({ label: y, href: tautan({ year: y }), grup: "tahun" }));
-
-  const urutan: (NavItem | null)[] = [
-    // Keduanya tidak butuh field opsional apa pun (`views` & urutan katalog
-    // selalu ada), jadi selalu aman digambar.
-    { label: "Terpopuler", href: tautan({ sort: "populer" }), grup: "urutan" },
-    { label: "Terbaru", href: tautan({ sort: "terbaru" }), grup: "urutan" },
-    film > 0
-      ? { label: "Film", href: tautan({ kind: "movie" }), grup: "urutan" }
-      : null,
-    tamat > 0
-      ? {
-          label: "Tamat",
-          href: tautan({ status: "completed" }),
-          grup: "urutan",
-        }
-      : null,
-    // Pilihan Gratis hanya berarti kalau katalog memuat KEDUANYA; kalau semua
-    // judul gratis, ia cuma memulangkan katalog utuh.
-    gratis > 0 && koin > 0
-      ? { label: "Gratis", href: tautan({ akses: "gratis" }), grup: "urutan" }
-      : null,
-  ];
-
-  return [
-    ...genre,
-    ...negara,
-    ...tahun,
-    ...urutan.filter((i): i is NavItem => i !== null),
-  ];
-}
+export const STRIP_KATALOG: NavItem[] = [
+  { label: "Action", href: tautan({ cat: "Action" }) },
+  // OMDb menamai genre animasi "Animation" — "Anime" bukan nilai yang dikenal
+  // di sana, jadi chip ini menyaring Animation dan ditampilkan sebagai ANIME.
+  { label: "Anime", href: tautan({ genre: "Animation" }) },
+  { label: "Horror", href: tautan({ genre: "Horror" }) },
+  // Kategori kurasi DramaKu bernama "Comedy"; labelnya yang diindonesiakan.
+  { label: "Komedi", href: tautan({ cat: "Comedy" }) },
+  { label: "Sci-Fi", href: tautan({ genre: "Sci-Fi" }) },
+  { label: "Romance", href: tautan({ cat: "Romance" }) },
+  // Nama negara di alamat WAJIB memakai ejaan OMDb (bahasa Inggris) — itu yang
+  // dicocokkan `cocokNegara`. Labelnya diterjemahkan lewat lib/negara.ts.
+  { label: labelNegara("China"), href: tautan({ negara: "China" }) },
+  { label: labelNegara("India"), href: tautan({ negara: "India" }) },
+  { label: labelNegara("Japan"), href: tautan({ negara: "Japan" }) },
+  { label: labelNegara("South Korea"), href: tautan({ negara: "South Korea" }) },
+  { label: labelNegara("Thailand"), href: tautan({ negara: "Thailand" }) },
+  { label: "2025", href: tautan({ year: "2025" }) },
+  { label: "2026", href: tautan({ year: "2026" }) },
+  { label: "Terpopuler", href: tautan({ sort: "populer" }) },
+];

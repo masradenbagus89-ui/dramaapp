@@ -3,7 +3,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { type Category, type Drama } from "@/lib/types";
-import { GENRE_SEMUA, availableGenres } from "@/lib/beranda-catalog";
 import { labelNegara } from "@/lib/negara";
 import {
   SORT_OPTIONS,
@@ -18,10 +17,10 @@ import {
   type RatingKey,
   type SortBy,
 } from "@/lib/discover";
-import { buildNavMenus, catalogShortcuts } from "@/lib/nav-katalog";
+import { STRIP_KATALOG, buildNavMenus } from "@/lib/nav-katalog";
 import type { PlaylyVideoPublik } from "@/lib/playly-publik";
 import CatalogCard from "./beranda/CatalogCard";
-import GenreStrip from "./beranda/GenreStrip";
+import StripKatalog from "./beranda/StripKatalog";
 import HasilPlayly, { cariVideoPlayly } from "./beranda/HasilPlayly";
 import NavMenus from "./beranda/NavMenus";
 import SearchBar from "./beranda/SearchBar";
@@ -103,15 +102,7 @@ export default function DramaBrowser({
   }, [searchParams]);
 
   const years = useMemo(() => getYearOptions(dramas), [dramas]);
-  /**
-   * Genre strip dihitung dari katalog, BUKAN dari daftar tetap `CATEGORIES`.
-   * Sampai 2026-09-21 halaman ini memakai daftar tetap itu, sehingga chip
-   * "Fantasy" tergambar padahal katalog punya 0 judul Fantasy — diklik =
-   * halaman hampa. /beranda & / sudah memakai aturan ini sejak awal.
-   */
-  const genres = useMemo(() => availableGenres(dramas), [dramas]);
   const menus = useMemo(() => buildNavMenus(dramas), [dramas]);
-  const shortcuts = useMemo(() => catalogShortcuts(dramas), [dramas]);
 
   /**
    * Ketikan pencarian & urutan sengaja TIDAK dihitung sebagai "filter aktif":
@@ -162,6 +153,17 @@ export default function DramaBrowser({
 
   // Ketikan pencarian DIPERTAHANKAN — alasannya sama dengan `adaFilterAktif`.
   const resetFilters = () => terapkan({ ...FILTER_KOSONG, q: filter.q });
+
+  /**
+   * Alamat yang mewakili penyaring saat ini, dipakai strip untuk menyorot chip
+   * yang sedang bekerja. Dirakit dari `tulisFilter` — BUKAN dari
+   * `alamatDenganFilter`, yang membaca `window.location` dan karena itu tidak
+   * bisa dipakai saat komponen ini dirender di server (mis. di tes).
+   */
+  const alamatAktif = useMemo(() => {
+    const query = tulisFilter(filter);
+    return query ? `/discover?${query}` : "/discover";
+  }, [filter]);
 
   /** Dropdown penyaring — dititipkan ke bar cari, sama seperti /beranda. */
   const dropdownPenyaring = (
@@ -227,12 +229,11 @@ export default function DramaBrowser({
         chrome={{ menus: <NavMenus menus={menus} /> }}
         className="sticky top-14"
       />
-      <GenreStrip
-        genres={[GENRE_SEMUA, ...genres]}
-        active={filter.cat}
-        onSelect={(g) => terapkan({ cat: g as Category })}
-        shortcuts={shortcuts}
-      />
+      {/* activeHref: chip yang alamatnya PERSIS sama dengan penyaring yang
+          sedang berlaku akan disorot. Cocok karena tiap chip memasang satu
+          penyaring saja — begitu penonton menambah penyaring lain lewat
+          dropdown, sorotannya lepas dengan sendirinya, dan itu memang jujur. */}
+      <StripKatalog items={STRIP_KATALOG} activeHref={alamatAktif} />
 
       <div className={SHELL}>
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800 py-3">

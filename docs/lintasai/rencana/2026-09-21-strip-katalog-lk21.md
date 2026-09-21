@@ -143,3 +143,84 @@ Anggap semuanya sudah jadi tapi NOL guna bagi owner. Tiga penyebab paling mungki
    sudah dipegang sejak 2026-09-07, tapi `/discover` diam-diam tetap memakai
    `CATEGORIES` selama 11 hari sehingga chip `Fantasy` (0 judul) tergambar di
    halaman katalog utama. Penjaga barunya sekarang merender halaman itu sungguhan.
+
+---
+
+# REVISI SORE 2026-09-21 — owner memangkas strip: 29 chip → 14
+
+## Maksud owner (screenshot berkotak merah kedua)
+> "jangan seperti ini terlalu banyak tulisan dan negara lain nya, ini saja yg
+> saya tulis di bawah" — lalu menyerahkan daftarnya sendiri: ACTION · ANIME ·
+> HORROR · KOMEDI · SCI-FI · ROMANCE · CINA · INDIA · JEPANG · KOREA ·
+> THAILAND · BLURAY · 2025 · 2026 · TERPOPULER.
+
+Versi pagi menghitung isi strip dari katalog, dan itu tumbuh jadi **29 chip**
+berisi delapan negara (Amerika, Kanada, Inggris, Jerman, Australia, Iran,
+Selandia Baru) plus tujuh genre sinema plus empat pintasan. Owner menilainya
+terlalu ramai.
+
+## Keputusan yang diambil (dan yang DIKALAHKAN)
+**Keputusan owner MENANG atas aturan "hanya gambar pilihan yang ada isinya"**
+yang dipegang project sejak 2026-09-07. Konsekuensinya ditulis terbuka di
+komentar `STRIP_KATALOG` (lib/nav-katalog.ts), bukan disembunyikan: per hari ini
+**Anime · India · Jepang · Korea · Thailand = 0 judul**, jadi diklik = halaman
+"Tidak ada drama yang cocok" + tombol Hapus filter.
+
+Itu **bukan kerusakan kode**, dan tidak perlu disentuh lagi nanti: chip-nya
+**hidup sendiri** begitu owner menambah judul bernegara/bergenre itu dari panel
+admin. Daftar LENGKAP (semua negara & tahun yang benar-benar berisi) **tidak
+hilang** — tetap ada di menu dropdown `buildNavMenus`, yang masih dihitung dari
+katalog seperti sebelumnya.
+
+**BLURAY — popup ke owner, dijawab "lewati dulu".** DramaKu tidak punya kolom
+kualitas video sama sekali, jadi ini satu-satunya chip yang tak bisa berfungsi
+tanpa `ALTER TABLE` + pilihan baru di panel admin. Tiga pilihan disajikan
+(lewati · pasang biarpun kosong selamanya · bangun penuh dengan SQL), lengkap
+dengan **biaya yang harus dikerjakan owner sendiri**. Owner memilih **lewati** →
+strip berisi **14 chip**, nol tombol mati permanen.
+
+## Yang berubah dari versi pagi
+| Berkas | Isi |
+|---|---|
+| `lib/nav-katalog.ts` | `catalogShortcuts()` (dihitung dari katalog) **DIHAPUS**, diganti konstanta `STRIP_KATALOG` (daftar tetap 14 chip). `ChipGrup`, `MAKS_CHIP_SEKELOMPOK`, `MAKS_CHIP_TAHUN` ikut dibuang — tak ada yang memakainya lagi. `buildNavMenus` **tidak disentuh**. |
+| `GenreStrip.tsx` → **`StripKatalog.tsx`** (rename) | Dua mode (tombol saring-di-tempat + tautan) disederhanakan jadi **satu**: semua chip tautan. Enam prop (`genres`/`active`/`hrefFor`/`onSelect`/`shortcuts`/`moreHref`) jadi dua (`items`/`activeHref`). Nama lama sudah menyesatkan — isinya bukan cuma genre. |
+| `PublicTopBars.tsx` · `CatalogBrowser.tsx` · `DramaBrowser.tsx` · `page.tsx` | Ikut memakai `STRIP_KATALOG`; prop `genres`/`shortcuts` yang tak terpakai dibuang. |
+
+## Perubahan PERILAKU yang disengaja (disebut terbuka)
+Di `/beranda`, chip genre dulu **menyaring di tempat** (tanpa pindah halaman).
+Sekarang semua chip **pindah ke /discover**. Alasannya bukan selera: daftar
+tetap ini mencampur kategori (`?cat=`), genre sinema (`?genre=`), negara, dan
+tahun — sementara `/beranda` hanya menyimpan **genre kategori** di state
+lokalnya. Mempertahankan mode lama berarti chip CINA & SCI-FI **diam saja kalau
+diklik**, dan dua chip bersebelahan berperilaku beda tanpa ada tandanya.
+Penyaringan genre di tempat **tidak hilang** — masih ada di dropdown
+"Semua genre" pada bar cari `/beranda`.
+
+## Bukti REVISI (2026-09-21 sore)
+- ✅ `rm -rf .next` → `npm run build` **exit 0**; `/` `/beranda` `/discover`
+  `/playly` `/shorts` `/sitemap.xml` semua tetap **`○ (Static)` 1m 1y**.
+- ✅ `npx tsc --noEmit` **exit 0** · `npm test` **711 tes / 53 berkas hijau**.
+- ✅ **Mutation check 7 arah, SEMUANYA MERAH**: label negara bocor ke alamat ·
+  nama parameter salah tulis (`country` bukan `negara`) · urutan chip owner
+  diacak · chip negara yang tak diminta kembali muncul · `cocokGenre` tidak
+  menyaring · strip hilang dari halaman depan · semua chip mengarah ke alamat
+  yang sama.
+- ✅ Dijalankan (`next start`, **log servernya dibaca dulu**) → `/` dan
+  `/beranda` sama-sama menggambar **14 chip persis**:
+  `ACTION · ANIME · HORROR · KOMEDI · SCI-FI · ROMANCE · CINA · INDIA · JEPANG ·
+  KOREA · THAILAND · 2025 · 2026 · TERPOPULER`.
+
+## Pelajaran tambahan
+4. **Isi menu dropdown Radix TIDAK ADA di HTML sampai menunya dibuka.** Tes
+   render yang memeriksa "tiap alamat di HTML memulangkan ≥1 judul" karena itu
+   **tidak pernah benar-benar menguji menu** — yang terhitung selama ini cuma
+   chip strip. Ketahuan saat strip dipangkas dan penyaringnya memulangkan nol
+   alamat. Penjaga menu yang sah tetap `tests/nav-katalog.test.ts` (tingkat
+   fungsi, tanpa DOM).
+5. **Aturan penjaga harus ikut berubah saat keputusannya berubah.** Tes lama
+   "tiap chip wajib memulangkan ≥1 judul" jadi SALAH setelah owner memilih
+   daftar tetap. Penggantinya menjaga hal yang masih benar dan justru lebih
+   berbahaya kalau rusak: **tiap chip wajib benar-benar MENYARING** — nama
+   parameter yang salah tulis diabaikan diam-diam oleh `bacaFilter`, dan
+   chip-nya lalu menampilkan SELURUH katalog seolah penyaringnya bekerja. Itu
+   lebih menyesatkan daripada halaman kosong.

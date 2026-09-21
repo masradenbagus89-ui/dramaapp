@@ -5,7 +5,26 @@
 >
 > **AI:** tiap kali ada perbaikan / deploy / keputusan — **perbarui berkas ini di langkah terakhir**, sebelum bilang selesai. Jangan tumpuk sejarah panjang di sini; pindahkan yang lama ke `NEXT-SESSION.md`.
 
-**Terakhir diisi:** 2026-09-21 (revisi ke-6) — 🔄 **LOGO DIPERBESAR + revisi ke-5. SELESAI & TERBUKTI, BELUM di-push** (owner melihat preview dulu). **Dua revisi menunggu satu push.**
+**Terakhir diisi:** 2026-09-21 (revisi ke-6) — ✅ **SUDAH DIRILIS & TERBUKTI TAYANG** (2 commit sekaligus). `HEAD` = `origin/main` = `dramaku/main` = **`f068a73`**, antrean **KOSONG**. Owner melihat preview lokal dulu sebelum memberi izin push.
+
+**Verifikasi tayang:** `/` dan `/beranda` sama-sama memakai bar **`from-rose-700 via-rose-600 to-pink-600`** (ungu hilang), lambang **36px**, nama situs **`text-xl`**, **nol tombol Masuk/Daftar di dalam bar**, menu **Genre · Series · Populer · Negara · Tahun · + More**. Pagar ikut diperiksa: **`/shorts` navbar hitamnya TETAP ADA**.
+
+### 🔎 Anomali `/` akhirnya punya bukti yang jauh lebih tajam (masih ❓ sebabnya)
+
+Catatan pagi mencatat "`TopNav` tergambar di HTML produksi `/` tapi tidak di lokal". Verifikasi malam ini **memastikannya dari isi HTML**: halaman `/` produksi memuat **DUA logo sekaligus** —
+
+| posisi | milik | kelas |
+|---|---|---|
+| 5094 | **`TopNav`** (navbar hitam) | `text-lg` · `h-9 w-9` |
+| 7975 | **`LogoDramaKu`** (bar merah) | `text-xl` · `size-9` |
+
+Di lokal hanya yang kedua. **Bukan regresi** (sudah begitu sejak sebelum semua perubahan hari ini) dan **bukan salah baca**: `TopNav` di HTML itu menggambar menunya dalam keadaan **tidak ada yang aktif**, yang justru konsisten dengan `pathname === "/"` — padahal nilai itu ADA di `PUBLIC_PATHS` dan seharusnya membuat `TopNav` memulangkan `null`. **Jadi sebabnya belum terjelaskan dan JANGAN ditebak.**
+
+Akibat yang dirasakan penonton: halaman depan sesaat menampilkan **dua baris kepala** sebelum JavaScript aktif, lalu navbar hilang sendiri. **Belum diselidiki lebih jauh — di luar permintaan owner.** Kalau mau dikejar, jalur yang belum dicoba: memindahkan keputusan "halaman ini pakai navbar atau tidak" dari `usePathname()` (client) ke tata letak per-segment (server), sehingga tidak lagi bergantung tebakan alamat saat prerender.
+
+---
+
+## 2026-09-21 — logo diperbesar & dijadikan satu sumber (SUDAH TAYANG)
 
 ## 2026-09-21 — logo diperbesar & dijadikan satu sumber
 

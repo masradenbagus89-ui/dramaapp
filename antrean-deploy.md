@@ -3,7 +3,19 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-09-21 malam (**✅ EMPAT RILIS HARI INI, antrean KOSONG**). **`HEAD` = `origin/main` = `dramaku/main` = `2cf4952`**, lokal ahead 0. Rilis keempat = **`2cf4952`** (kepala situs `/beranda` & `/discover` jadi dua baris: navbar hitam + kotak cari kecil + 4 dropdown penyaring dilepas, isinya pindah ke tombol ☰ di bar merah; kotak cari dipanjangkan). Dual push atas izin owner, fast-forward. **Owner melihat preview lokal dulu.**
+**Terakhir dicek:** 2026-09-21 (**✅ LIMA RILIS HARI INI, antrean KOSONG**). **`HEAD` = `origin/main` = `dramaku/main` = `f068a73`**, lokal ahead 0. Rilis kelima membawa **2 commit**: `aa78995` (bar cari disamakan LK21 — warna merah terang tanpa ungu, logo kiri dirapikan, tombol Masuk/Daftar dilepas dari bar & dipindah ke menu garis-tiga) + `f068a73` (logo diperbesar 28→36px dan dijadikan satu komponen `LogoDramaKu`). Dual push atas izin owner, fast-forward. **Owner melihat preview lokal dulu.**
+
+**Gerbang §6:** build **exit 0** (semua halaman tetap `○ Static`) → `tsc` **exit 0** → **741 tes / 54 berkas** → **mutation check 5 + 3 arah semuanya MERAH** → nol berkas env/kunci → push → verifikasi tayang. **Nol SQL, nol env baru.**
+
+**Verifikasi tayang:** `/` & `/beranda` memakai `from-rose-700 via-rose-600 to-pink-600`, lambang **36px**, nama situs `text-xl`, **nol tombol Masuk/Daftar di dalam bar**, menu enam. Pagar: **`/shorts` navbar hitamnya TETAP ADA**.
+
+**🔎 Anomali `/` (❓ sebab belum terverifikasi, BUKAN regresi):** HTML produksi `/` memuat **DUA logo** — milik `TopNav` (`text-lg`, pos 5094) dan `LogoDramaKu` (`text-xl`, pos 7975); di lokal hanya yang kedua. `TopNav` di HTML itu menggambar menunya **tanpa satu pun yang aktif**, yang konsisten dengan `pathname === "/"` — padahal nilai itu ada di `PUBLIC_PATHS` dan seharusnya memulangkan `null`. Akibatnya halaman depan sesaat menampilkan dua baris kepala sebelum JavaScript aktif. **Jangan tebak sebabnya.** Jalur yang belum dicoba: pindahkan keputusan "pakai navbar atau tidak" dari `usePathname()` ke tata letak per-segment.
+
+**Rollback rilis kelima:** `git revert --no-edit f068a73 aa78995 && git push origin main && git push dramaku main`.
+
+---
+
+**Rilis keempat hari ini (`2cf4952`):** **`HEAD` = `origin/main` = `dramaku/main` = `2cf4952`**, lokal ahead 0. Rilis keempat = **`2cf4952`** (kepala situs `/beranda` & `/discover` jadi dua baris: navbar hitam + kotak cari kecil + 4 dropdown penyaring dilepas, isinya pindah ke tombol ☰ di bar merah; kotak cari dipanjangkan). Dual push atas izin owner, fast-forward. **Owner melihat preview lokal dulu.**
 
 **Gerbang §6:** build **exit 0** (nol kemunduran status halaman) → `tsc` **exit 0** → **735 tes / 54 berkas** (dari 715/53) → **mutation check 7 arah semuanya MERAH** → nol berkas env/kunci → push → verifikasi tayang. **Nol SQL, nol env baru.**
 

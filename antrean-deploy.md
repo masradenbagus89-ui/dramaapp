@@ -3,7 +3,17 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-09-21 sore (**✅ DUA RILIS HARI INI, antrean KOSONG**). **`HEAD` = `origin/main` = `dramaku/main` = `923d3ed`**, lokal ahead 0. Rilis kedua = **`923d3ed`** (revisi strip 29 chip → 14 atas permintaan owner), dual push atas izin owner, fast-forward, `git rev-list --count HEAD..origin/main` = **0** sebelum push.
+**Terakhir dicek:** 2026-09-21 malam (**✅ TIGA RILIS HARI INI, antrean KOSONG**). **`HEAD` = `origin/main` = `dramaku/main` = `a6c2e82`**, lokal ahead 0. Rilis ketiga = **`a6c2e82`** (tulisan kotak cari "Cari film di DramaKu" + label menu Genre · Series · Populer · Negara · Tahun · + More), dual push atas izin owner, fast-forward.
+
+**Gerbang §6 rilis ketiga:** build **exit 0** (nol kemunduran status halaman) → `tsc` **exit 0** → **715 tes / 53 berkas** → **mutation check 4 arah semuanya MERAH** → nol berkas env/kunci → push → verifikasi tayang. **Owner melihat preview lokal dulu** (`next start` port 3040) sebelum memberi izin — pola yang layak diulang untuk perubahan tampilan. **Nol SQL, nol env baru.**
+
+**❗ Temuan saat verifikasi (BUKAN regresi):** `/beranda` punya **dua** kotak cari — navbar hitam (`TopNav.tsx:208`, masih "Cari drama, kategori...") dan bar merah (sudah "Cari film di DramaKu"). Menyeragamkan yang kecil **menunggu keputusan owner**. Juga **❓ belum terverifikasi**: pada `/`, `TopNav` tergambar di HTML produksi tapi tidak di lokal — **sudah begitu sejak sebelum perubahan hari ini**, dan navbarnya hilang sendiri saat halaman aktif di browser.
+
+**Rollback rilis ketiga:** `git revert --no-edit a6c2e82 && git push origin main && git push dramaku main`.
+
+---
+
+**Rilis kedua hari ini (`923d3ed`):** **`HEAD` = `origin/main` = `dramaku/main` = `923d3ed`**, lokal ahead 0. Rilis kedua = **`923d3ed`** (revisi strip 29 chip → 14 atas permintaan owner), dual push atas izin owner, fast-forward, `git rev-list --count HEAD..origin/main` = **0** sebelum push.
 
 **Gerbang §6 rilis kedua:** `rm -rf .next` → `npm run build` **exit 0** (nol kemunduran: `/` `/beranda` `/discover` `/playly` `/shorts` `sitemap.xml` semua tetap `○ (Static)` 1m 1y) → `npx tsc --noEmit` **exit 0** → **711 tes / 53 berkas** → **mutation check 7 arah semuanya MERAH** → **nol berkas env/kunci** (dua lapis) → push → verifikasi tayang.
 

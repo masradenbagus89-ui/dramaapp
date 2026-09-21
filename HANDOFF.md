@@ -5,7 +5,19 @@
 >
 > **AI:** tiap kali ada perbaikan / deploy / keputusan — **perbarui berkas ini di langkah terakhir**, sebelum bilang selesai. Jangan tumpuk sejarah panjang di sini; pindahkan yang lama ke `NEXT-SESSION.md`.
 
-**Terakhir diisi:** 2026-09-21 (malam) — 🔄 **REVISI KETIGA: tulisan kotak cari & label menu. SELESAI & TERBUKTI, BELUM di-push.**
+**Terakhir diisi:** 2026-09-21 (malam) — ✅ **REVISI KETIGA SUDAH DIRILIS & TERBUKTI TAYANG.** `HEAD` = `origin/main` = `dramaku/main` = **`a6c2e82`**, antrean deploy **KOSONG**. Owner **melihat preview lokal dulu** (`next start` di `http://127.0.0.1:3040`) sebelum memberi izin push — pola yang layak diulang untuk perubahan tampilan.
+
+**Verifikasi tayang:** HTML produksi memuat tulisan kotak cari **"Cari film di DramaKu"**, tombol menu **Genre · Series · Populer · Negara · Tahun · + More**, huruf kapital paksa **sudah hilang**, strip tetap **14 chip**, dan kotak carinya tetap membawa `role="search"` + `type="search"`.
+
+### ❗ TEMUAN saat verifikasi (BUKAN akibat perubahan hari ini)
+
+**Halaman `/beranda` punya DUA kotak cari** — yang kecil di navbar hitam (`TopNav.tsx:208`, masih bertulis **"Cari drama, kategori..."**) dan yang lebar di bar merah (`SearchBar.tsx`, sudah **"Cari film di DramaKu"**). Screenshot owner diambil dari halaman itu. Owner menunjuk yang **lebar**, dan itulah yang diubah. **Menyeragamkan yang kecil belum dikerjakan — menunggu keputusan owner** (bukan bagian permintaan eksplisit).
+
+**❓ Anomali yang BELUM terverifikasi sebabnya:** pada halaman **`/`**, navbar `TopNav` **tergambar di HTML produksi tapi TIDAK di lokal**, padahal build-nya dari commit yang sama. Terbukti **sudah begitu sejak PAGI hari ini, sebelum satu pun perubahan** (HTML `/` produksi pagi juga memuat `<header>` + dua kotak cari) → **bukan regresi**. `TopNav` memang memulangkan `null` untuk `/` (`PUBLIC_PATHS`), jadi navbarnya hilang sendiri begitu halaman aktif di browser; dampaknya paling jauh sekadar kedipan. **Jangan simpulkan sebabnya tanpa mengukur** — belum ada satu pun percobaan yang menunjuk penyebabnya.
+
+---
+
+## 2026-09-21 MALAM — tulisan kotak cari & label enam tombol menu
 
 ## 2026-09-21 MALAM — tulisan kotak cari & label enam tombol menu
 

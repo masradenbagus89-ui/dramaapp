@@ -18,7 +18,7 @@ import CatalogCard from "./beranda/CatalogCard";
 import StripKatalog from "./beranda/StripKatalog";
 import { chromeKatalog } from "./beranda/KepalaKatalog";
 import HasilPlayly, { cariVideoPlayly } from "./beranda/HasilPlayly";
-import SearchBar from "./beranda/SearchBar";
+import SearchBar, { KELAS_MENEMPEL_KEPALA } from "./beranda/SearchBar";
 import { GRID_CLASS, SHELL } from "./beranda/shell";
 import { Button } from "@/components/ui/button";
 import { Search, X } from "lucide-react";
@@ -164,7 +164,7 @@ export default function DramaBrowser({
         /* Susunannya dipakai BERSAMA dengan kerangka pemuatan halaman ini
            (KerangkaKepalaKatalog) — lihat alasannya di chromeKatalog(). */
         chrome={chromeKatalog(menus)}
-        className="sticky top-0"
+        className={KELAS_MENEMPEL_KEPALA}
       />
       {/* activeHref: chip yang alamatnya PERSIS sama dengan penyaring yang
           sedang berlaku akan disorot. Cocok karena tiap chip memasang satu

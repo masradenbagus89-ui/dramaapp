@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import type { Drama } from "@/lib/types";
+import { alamatCari } from "@/lib/nav-katalog";
 import { readMyList } from "@/lib/myList";
 import { readHistory, type HistoryItem } from "@/lib/progress";
 import {
@@ -146,7 +147,7 @@ export default function PersonalRows({ dramas }: { dramas: Drama[] }) {
           subtitle="Paling banyak ditonton di genre favoritmu"
           accent={recommended.genre}
           dramas={trendingGenre}
-          href={`/discover?q=${encodeURIComponent(recommended.genre)}`}
+          href={alamatCari(recommended.genre)}
         />
       )}
 

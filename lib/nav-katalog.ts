@@ -58,6 +58,26 @@ function tautan(params: Record<string, string>): string {
 }
 
 /**
+ * Alamat halaman hasil pencarian. SATU sumber untuk seluruh situs.
+ *
+ * ⚠️ Kenapa jadi fungsi (owner 2026-09-22): logika ini tadinya disalin di
+ * `PublicTopBars` (kepala halaman depan) dan `KerangkaKepalaKatalog` (kerangka
+ * /discover) — dua tempat yang harus selalu sepakat soal "ketikan penonton
+ * dibawa ke mana". Kalau salah satu bergeser, pencarian dari satu halaman
+ * mendarat di tempat berbeda dari halaman lain, dan tak ada error apa pun yang
+ * memberi tahu.
+ *
+ * Sengaja memakai `encodeURIComponent`, BUKAN `URLSearchParams` seperti
+ * `tautan()` di atas: keduanya sah, tapi yang ini mempertahankan bentuk alamat
+ * yang sudah dipakai sejak 2026-09-10 (spasi jadi `%20`, bukan `+`) sehingga
+ * tautan pencarian lama yang pernah dibagikan penonton tetap berarti sama.
+ */
+export function alamatCari(kataKunci: string): string {
+  const q = kataKunci.trim();
+  return q ? `${TUJUAN}?q=${encodeURIComponent(q)}` : TUJUAN;
+}
+
+/**
  * Menu perlu minimal 2 pilihan supaya berarti. Menu berisi 1 pilihan cuma
  * menambah satu klik untuk sampai ke tempat yang sama.
  */

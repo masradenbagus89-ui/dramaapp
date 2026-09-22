@@ -142,7 +142,7 @@ describe("menu garis-tiga (pengganti navbar di halaman berkatalog)", () => {
 const { default: BottomNav } = await import("../app/components/BottomNav");
 const { punyaNavbarAtas, punyaNavigasiBawah, TANPA_NAVIGASI_SENGAJA } =
   await import("../lib/navigasi-halaman");
-const { readdirSync } = await import("node:fs");
+const { readdirSync, readFileSync } = await import("node:fs");
 const { join } = await import("node:path");
 
 /** Sidik-jari yang HANYA milik masing-masing navigasi. */
@@ -315,4 +315,120 @@ describe("tulisan kotak cari", () => {
     // pencarian tak boleh ikut hilang (pembaca layar & tombol hapus browser).
     expect(render("/shorts", TopNav)).toContain('type="search"');
   });
+});
+
+// ===========================================================================
+// PENJAGA 2026-09-22 (putaran kedua) — halaman 404 dan sumber tunggal.
+//
+// Kenapa ada: tinjauan hari yang sama menemukan bahwa pembalikan denylist →
+// allowlist membuat halaman 404 kehilangan SELURUH navigasi bawaan. Alamat
+// yang tidak punya halaman tidak cocok dengan akar mana pun, jadi `TopNav`
+// dan `BottomNav` sama-sama diam di sana. Terukur di produksi: /tautan-basi-uji
+// balas 404 dengan nol navbar dan nol bar bawah.
+//
+// PRE-MORTEM rencana hari itu sudah menulis persis risiko ini ("allowlist
+// melewatkan satu halaman → kehilangan navigasinya, senyap"), tapi penyusur
+// disk di atas cuma memungut berkas bernama `page.tsx` — dan `not-found.tsx`
+// bukan `page.tsx`, jadi lolos. Pelajaran: penyusur berbasis nama berkas hanya
+// menjaga yang namanya kamu sebut.
+// ===========================================================================
+const { default: NotFound } = await import("../app/not-found");
+
+describe("halaman 404 tetap punya jalan ke seluruh situs", () => {
+  const html = renderToStaticMarkup(createElement(NotFound));
+
+  it("membawa tombol menu berisi seluruh tujuan", () => {
+    expect(
+      html,
+      "halaman 404 tanpa tombol menu: penonton nyasar tak bisa mencapai " +
+        "Shorts/Playly/My List/Profile dari sini, dan TopNav memang diam di " +
+        "alamat asing sejak penyaringnya jadi allowlist",
+    ).toContain('aria-label="Menu halaman"');
+  });
+
+  it("membawa identitas situs", () => {
+    expect(html).toContain('alt="DramaKu"');
+  });
+
+  it("tetap menyediakan dua jalan pulang di badan halaman", () => {
+    // Ini sudah ada sebelumnya — dijaga supaya tidak ikut hilang saat kepala
+    // situs ditambahkan di atasnya.
+    expect(html).toContain('href="/beranda"');
+    expect(html).toContain('href="/discover"');
+  });
+
+  it("TIDAK bergantung pada pembacaan katalog", () => {
+    // Halaman error tidak boleh butuh database — kalau databasenya justru yang
+    // sedang bermasalah, 404-nya ikut gagal. Bar cari merah butuh
+    // `buildNavMenus(dramas)`, jadi SENGAJA tidak dipakai di sini.
+    //
+    // Diperiksa dari IMPOR & bentuk fungsinya, bukan dari sebutan teks:
+    // versi pertama tes ini mencocokkan kata "buildNavMenus" dan MERAH karena
+    // kena komentar di berkas itu yang justru menjelaskan kenapa fungsi itu
+    // TIDAK dipakai. Pelajaran: memeriksa kode dengan cocok-teks ikut
+    // menangkap komentar.
+    const sumber = readFileSync("app/not-found.tsx", "utf-8");
+    const impor = sumber.match(/^import[\s\S]*?;$/gm)?.join(" ") ?? "";
+    expect(impor).not.toMatch(/lib\/(dramas|nav-katalog|store)/);
+    // Komponen yang mengambil data harus `async`; yang ini tidak boleh.
+    expect(sumber).toContain("export default function NotFound()");
+  });
+});
+
+describe("posisi menempel kepala situs punya SATU sumber", () => {
+  // Nilai ini tadinya ditulis tangan di empat berkas. Beda 56px (`top-14` vs
+  // `top-0`) membuat bar cari bergeser tepat saat kerangka pemuatan ditukar
+  // isi sungguhan — poster yang mau diklik penonton ikut melompat.
+  const PEMAKAI = [
+    "app/components/DramaBrowser.tsx",
+    "app/components/beranda/CatalogBrowser.tsx",
+    "app/components/beranda/PublicTopBars.tsx",
+    "app/components/beranda/KerangkaKepalaKatalog.tsx",
+  ];
+
+  for (const berkas of PEMAKAI) {
+    it(`${berkas} memakai konstantanya, bukan teks tulis-tangan`, () => {
+      const sumber = readFileSync(berkas, "utf-8");
+      expect(sumber).toContain("KELAS_MENEMPEL_KEPALA");
+      expect(
+        sumber,
+        `${berkas} masih menulis kelas menempel sendiri — kalau salah satu ` +
+          `pemakai bergeser, bar cari melompat saat isi halaman masuk`,
+      ).not.toMatch(/className="sticky top-/);
+    });
+  }
+});
+
+describe("tulisan kotak cari tidak bisa basi di tiruan tes", () => {
+  it("nilai konstantanya dipatok", () => {
+    // tests/kerangka-discover.test.ts me-mock SearchBar sehingga HARUS menulis
+    // teks ini dengan tangan. Patokan di sini membuat tiruan itu tak bisa
+    // diam-diam berbeda dari aslinya.
+    expect(TEKS_KOTAK_CARI).toBe("Cari film di DramaKu");
+  });
+});
+
+describe("susunan kepala katalog punya SATU sumber", () => {
+  // ⚠️ Lubang ini ketahuan dari mutation check: `chromeKatalog()` diberi
+  // komentar "sumbernya sengaja dikunci satu", tapi TAK ADA satu pun tes yang
+  // menjaganya — mengembalikan susunan tulis-tangan di `CatalogBrowser` lolos
+  // hijau. Klaim tanpa penjaga cuma niat, bukan pagar.
+  const PEMAKAI = [
+    "app/components/DramaBrowser.tsx",
+    "app/components/beranda/CatalogBrowser.tsx",
+    "app/components/beranda/KerangkaKepalaKatalog.tsx",
+  ];
+
+  for (const berkas of PEMAKAI) {
+    it(`${berkas} memakai chromeKatalog(), bukan susunan sendiri`, () => {
+      const sumber = readFileSync(berkas, "utf-8");
+      expect(sumber).toContain("chromeKatalog(menus)");
+      expect(
+        sumber,
+        `${berkas} merakit susunan kepalanya sendiri — kalau salah satu ` +
+          `pemakai bertambah/berkurang tombol, halaman terasa seperti situs ` +
+          `berbeda dan kepala situs melompat saat isi halaman masuk`,
+      ).not.toMatch(/brand:\s*<MenuAplikasi/);
+    });
+  }
 });

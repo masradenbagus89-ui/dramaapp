@@ -42,6 +42,17 @@ export type SearchBarChrome = {
  */
 export const TEKS_KOTAK_CARI = "Cari film di DramaKu";
 
+/**
+ * Posisi menempel bar cari — SATU nilai untuk keempat pemakainya
+ * (`PublicTopBars`, `CatalogBrowser`, `DramaBrowser`, `KerangkaKepalaKatalog`).
+ *
+ * ⚠️ Kenapa dikunci satu (owner 2026-09-22): nilai ini tadinya ditulis tangan
+ * di keempat berkas. Kalau salah satu berbeda, bar cari BERGESER tepat saat
+ * kerangka pemuatan ditukar isi sungguhan — poster yang mau diklik penonton
+ * ikut melompat. Beda 56px (`top-14` vs `top-0`) sudah cukup terasa.
+ */
+export const KELAS_MENEMPEL_KEPALA = "sticky top-0";
+
 type Props = {
   value: string;
   onValueChange: (value: string) => void;
@@ -53,8 +64,23 @@ type Props = {
   filters?: ReactNode;
   /** Logo + menu + tombol kanan; lihat SearchBarChrome. */
   chrome?: SearchBarChrome;
-  /** Untuk posisi menempel (`sticky top-…`) yang berbeda tiap halaman. */
+  /** Untuk posisi menempel; pakai `KELAS_MENEMPEL_KEPALA`. */
   className?: string;
+  /**
+   * Alamat tujuan form saat JavaScript BELUM aktif. Diisi hanya oleh pemakai
+   * yang pencariannya memang MELEMPAR ke halaman lain (bukan menyaring di
+   * tempat). Kosong = form tanpa `action`, sama seperti sebelumnya.
+   *
+   * Kenapa perlu: sesudah JavaScript aktif, `onSubmit` di bawah memanggil
+   * `preventDefault()` sehingga atribut ini tak berpengaruh sama sekali. Tapi
+   * SEBELUM itu — dan itulah satu-satunya jendela kerangka pemuatan terlihat —
+   * React belum memasang satu pun penangan, jadi menekan Enter menjalankan
+   * pengiriman form BAWAAN browser. Tanpa `action` + `namaKolom`, pengiriman
+   * itu cuma memuat ulang halaman dan KETIKAN PENONTON HILANG tanpa jejak.
+   */
+  action?: string;
+  /** Nama kolom kotak cari, wajib diisi bila `action` dipakai (lihat di atas). */
+  namaKolom?: string;
 };
 
 /**
@@ -78,6 +104,8 @@ export default function SearchBar({
   filters,
   chrome,
   className,
+  action,
+  namaKolom,
 }: Props) {
   const [filterTerbuka, setFilterTerbuka] = useState(false);
 
@@ -104,6 +132,11 @@ export default function SearchBar({
             lama membuatnya berhenti di tengah dan menyisakan ruang kosong di
             kanannya. */}
         <form
+          // `action`/`method` hanya berarti sebelum JavaScript aktif —
+          // `preventDefault()` di bawah mematikannya sesudah itu. Lihat
+          // penjelasan prop `action` di atas.
+          action={action}
+          method={action ? "get" : undefined}
           onSubmit={(e) => {
             e.preventDefault();
             onSubmit?.();
@@ -113,6 +146,7 @@ export default function SearchBar({
         >
           <Input
             type="search"
+            name={namaKolom}
             value={value}
             onChange={(e) => onValueChange(e.target.value)}
             placeholder={placeholder}

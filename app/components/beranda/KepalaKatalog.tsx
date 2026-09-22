@@ -278,13 +278,19 @@ export function TombolAkun() {
  * kiri, deretan menu dropdown di tengah, tombol akun di kanan.
  *
  * ⚠️ Kenapa jadi fungsi bersama dan bukan ditulis di tiap pemakainya
- * (owner 2026-09-22): susunan ini dipakai DUA kali — kepala sungguhan
- * (`DramaBrowser`) dan kerangka pemuatannya (`KerangkaKepalaKatalog`, yang
- * tergambar selagi katalog belum siap). Kalau ditulis dua kali, salah satu
- * pasti tertinggal saat yang lain diubah, dan akibatnya kepala situs
- * "melompat" tepat di depan mata penonton begitu halaman aktif. Berkas ini
- * sudah tiga kali kena masalah menyimpang seperti itu (logo, lalu tulisan
- * kotak cari dua kali), jadi sumbernya sengaja dikunci satu.
+ * (owner 2026-09-22): susunan ini dipakai TIGA kali — kepala `/beranda`
+ * (`CatalogBrowser`), kepala `/discover` (`DramaBrowser`), dan kerangka
+ * pemuatan `/discover` (`KerangkaKepalaKatalog`). Kalau ditulis berulang,
+ * salah satu pasti tertinggal saat yang lain diubah, dan akibatnya kepala
+ * situs "melompat" tepat di depan mata penonton begitu halaman aktif — atau
+ * dua halaman terasa seperti dua situs. Berkas ini sudah tiga kali kena
+ * masalah menyimpang seperti itu (logo, lalu tulisan kotak cari dua kali),
+ * jadi sumbernya sengaja dikunci satu.
+ *
+ * KOREKSI: versi pertama komentar ini menulis "dipakai DUA kali" dan
+ * mengaku sumbernya sudah dikunci, padahal `CatalogBrowser` masih menyalin
+ * susunannya dengan tangan — salinan ketiga yang tak terlihat siapa pun.
+ * Ditemukan lewat tinjauan hari yang sama dan sudah disatukan.
  */
 export function chromeKatalog(menus: NavMenu[]): SearchBarChrome {
   return {

@@ -19,6 +19,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { LogOut, Search } from "lucide-react";
 import { punyaNavbarAtas } from "@/lib/navigasi-halaman";
+import { alamatCari } from "@/lib/nav-katalog";
 import { TEKS_KOTAK_CARI } from "./beranda/SearchBar";
 
 /**
@@ -147,8 +148,10 @@ export default function TopNav() {
 
   const onSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    const q = searchQuery.trim();
-    router.push(q ? `/discover?q=${encodeURIComponent(q)}` : "/discover");
+    // Alamatnya dari `alamatCari()` — sama dengan kotak cari lebar di bar
+    // merah. Dulu dirakit sendiri di sini, jadi dua kotak cari yang tulisannya
+    // sudah diseragamkan masih bisa mendarat di alamat berbeda.
+    router.push(alamatCari(searchQuery));
   };
 
   return (

@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { STRIP_KATALOG, type NavMenu } from "@/lib/nav-katalog";
+import { STRIP_KATALOG, alamatCari, type NavMenu } from "@/lib/nav-katalog";
 import StripKatalog from "./StripKatalog";
 import { LogoDramaKu } from "./KepalaKatalog";
 import NavMenus from "./NavMenus";
-import SearchBar from "./SearchBar";
+import SearchBar, { KELAS_MENEMPEL_KEPALA } from "./SearchBar";
 
 type Props = {
   /** Isi menu dropdown, dihitung di server oleh `buildNavMenus`. */
@@ -30,10 +30,9 @@ export default function PublicTopBars({ menus }: Props) {
   const router = useRouter();
   const [query, setQuery] = useState("");
 
-  const cari = () => {
-    const q = query.trim();
-    router.push(q ? `/discover?q=${encodeURIComponent(q)}` : "/discover");
-  };
+  // Alamatnya dari `alamatCari()` — dipakai bersama kerangka /discover supaya
+  // pencarian dari halaman mana pun mendarat di tempat yang sama.
+  const cari = () => router.push(alamatCari(query));
 
   return (
     <>
@@ -44,7 +43,7 @@ export default function PublicTopBars({ menus }: Props) {
         value={query}
         onValueChange={setQuery}
         onSubmit={cari}
-        className="sticky top-0"
+        className={KELAS_MENEMPEL_KEPALA}
         chrome={{
           /* Logo dirapikan 2026-09-21: kotak kuning berisi huruf "D" diganti
              lambang situs yang sesungguhnya. Komponennya SAMA dengan kepala

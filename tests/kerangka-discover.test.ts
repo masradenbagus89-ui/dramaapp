@@ -28,6 +28,8 @@ type PropsSearchBar = {
   onSubmit?: () => void;
   className?: string;
   chrome?: { brand?: unknown; menus?: unknown; trailing?: unknown };
+  action?: string;
+  namaKolom?: string;
 };
 
 const alamatDidorong = vi.hoisted(() => ({ daftar: [] as string[] }));
@@ -44,16 +46,23 @@ vi.mock("next/navigation", () => ({
   }),
 }));
 
+// Nilai kedua konstanta ini WAJIB ditulis tangan di sini (modulnya di-mock),
+// jadi keduanya dipatok di tests/kepala-situs.test.ts supaya tiruan ini tak
+// bisa diam-diam berbeda dari aslinya.
 vi.mock("../app/components/beranda/SearchBar", () => ({
   default: (props: unknown) => {
     tertangkap.props = props;
     return null;
   },
   TEKS_KOTAK_CARI: "Cari film di DramaKu",
+  KELAS_MENEMPEL_KEPALA: "sticky top-0",
 }));
 
 const { default: KerangkaKepalaKatalog } = await import(
   "../app/components/beranda/KerangkaKepalaKatalog"
+);
+const { KELAS_MENEMPEL_KEPALA } = await import(
+  "../app/components/beranda/SearchBar"
 );
 
 /** Render kerangkanya lalu pulangkan props yang benar-benar diterima SearchBar. */
@@ -82,9 +91,13 @@ describe("kotak cari kerangka /discover", () => {
     expect(alamatDidorong.daftar).toEqual(["/discover"]);
   });
 
-  it("memakai posisi menempel yang SAMA dengan kepala aslinya", () => {
-    // Beda posisi menempel = bar bergeser saat isi halaman masuk.
-    expect(render().className).toBe("sticky top-0");
+  it("memakai posisi menempel dari KONSTANTA bersama, bukan teks sendiri", () => {
+    // ⚠️ Versi pertama tes ini mengadu `className` dengan string tulis-tangan
+    // "sticky top-0" — jadi ia lulus walau kepala aslinya memakai nilai lain,
+    // dan namanya ("SAMA dengan kepala aslinya") berbohong. Sekarang yang
+    // diadu adalah nilai konstantanya, DAN berkas pemakainya diperiksa di
+    // tests/kepala-situs.test.ts ("posisi menempel punya SATU sumber").
+    expect(render().className).toBe(KELAS_MENEMPEL_KEPALA);
   });
 
   it("memakai susunan kepala bersama, bukan susunan sendiri", () => {
@@ -93,5 +106,40 @@ describe("kotak cari kerangka /discover", () => {
     expect(chrome).toBeTruthy();
     expect(chrome?.brand).toBeTruthy();
     expect(chrome?.menus).toBeTruthy();
+  });
+});
+
+// ===========================================================================
+// PENJAGA 2026-09-22 (putaran kedua) — kotak cari kerangka BERFUNGSI TANPA
+// JavaScript. Ini yang paling penting, dan versi pertama komponen ini SALAH.
+//
+// Kerangka ini HANYA terlihat di jendela sebelum JavaScript aktif. Di jendela
+// itu React belum memasang satu pun penangan, jadi `onSubmit` DIAM — dan tanpa
+// `action` di form + `name` di kotaknya, menekan Enter menjalankan pengiriman
+// form bawaan browser yang cuma memuat ulang halaman dan MENGHILANGKAN ketikan
+// penonton. Komentar versi pertama mengaku kotaknya "sengaja dibuat berfungsi"
+// padahal justru mati tepat di jendela ia dipakai.
+// ===========================================================================
+describe("kotak cari kerangka berfungsi tanpa JavaScript", () => {
+  it("form membawa action ke halaman hasil pencarian", () => {
+    expect(
+      render().action,
+      "tanpa action, Enter sebelum JavaScript aktif cuma memuat ulang " +
+        "halaman dan ketikan penonton hilang tanpa jejak",
+    ).toBe("/discover");
+  });
+
+  it("kotaknya membawa name, tanpa itu ketikan tidak ikut terkirim", () => {
+    // Form boleh punya action, tapi kalau kotaknya tak bernama, browser tidak
+    // menyertakan isinya — hasilnya /discover TANPA kata kunci: terlihat
+    // "jalan" padahal pencariannya hilang. Justru lebih menyesatkan.
+    expect(render().namaKolom).toBe("q");
+  });
+
+  it("nama kolomnya sama dengan yang dibaca halaman hasil", () => {
+    // `alamatCari()` menulis `?q=`, jadi kolomnya WAJIB bernama `q` — kalau
+    // beda, jalur tanpa-JavaScript dan jalur ber-JavaScript mendarat berbeda.
+    const { namaKolom, action } = render();
+    expect(`${action}?${namaKolom}=naga`).toBe("/discover?q=naga");
   });
 });

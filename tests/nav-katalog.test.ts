@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { STRIP_KATALOG, buildNavMenus } from "../lib/nav-katalog";
+import { STRIP_KATALOG, alamatCari, buildNavMenus } from "../lib/nav-katalog";
 import { FILTER_KOSONG, bacaFilter, filterDariUrl } from "../lib/discover";
 import type { CatalogFilter } from "../lib/discover";
 import type { Drama } from "../lib/types";
@@ -274,5 +274,44 @@ describe("STRIP_KATALOG (daftar tetap milik owner)", () => {
     // (menyesatkan). KAYA tak punya judul Jepang sama sekali.
     expect(hasilDariTautan(KAYA, "/discover?negara=Japan")).toHaveLength(0);
     expect(hasilDariTautan(KAYA, "/discover?genre=Animation")).toHaveLength(0);
+  });
+});
+
+// ===========================================================================
+// PENJAGA 2026-09-22 — `alamatCari()` satu sumber untuk "ketikan dibawa ke mana".
+//
+// Kenapa ada: logika ini tadinya DISALIN di empat tempat — TopNav (kotak cari
+// kecil), PublicTopBars (halaman depan), KerangkaKepalaKatalog (kerangka
+// /discover), dan PersonalRows (tautan rekomendasi genre). Kalau salah satu
+// bergeser, pencarian dari satu halaman mendarat berbeda dari halaman lain
+// TANPA satu pun error. Ketahuan lewat tinjauan 2026-09-22.
+// ===========================================================================
+describe("alamatCari", () => {
+  it("membawa kata kunci sebagai parameter q", () => {
+    expect(alamatCari("naga")).toBe("/discover?q=naga");
+  });
+
+  it("kosong/hanya spasi TIDAK membuat parameter kosong", () => {
+    // `?q=` kosong akan terbaca sebagai "cari string kosong" oleh penyaring,
+    // bukan "tidak mencari" — halaman hasilnya jadi aneh tanpa sebab jelas.
+    expect(alamatCari("")).toBe("/discover");
+    expect(alamatCari("   ")).toBe("/discover");
+  });
+
+  it("memangkas spasi di ujung", () => {
+    expect(alamatCari("  naga  ")).toBe("/discover?q=naga");
+  });
+
+  it("menyandikan karakter yang merusak alamat", () => {
+    // Tanpa penyandian, `&` memotong parameter dan spasi merusak alamat.
+    expect(alamatCari("cinta & benci")).toBe("/discover?q=cinta%20%26%20benci");
+    expect(alamatCari("50%")).toBe("/discover?q=50%25");
+  });
+
+  it("memakai spasi %20, bukan +", () => {
+    // Bentuk ini dipertahankan dari 2026-09-10 supaya tautan pencarian lama
+    // yang pernah dibagikan penonton tetap berarti sama.
+    expect(alamatCari("dua kata")).toContain("%20");
+    expect(alamatCari("dua kata")).not.toContain("+");
   });
 });

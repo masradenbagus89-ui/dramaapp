@@ -22,10 +22,9 @@ import type { PlaylyVideoPublik } from "@/lib/playly-publik";
 import CatalogCard from "./CatalogCard";
 import FeaturedRow from "./FeaturedRow";
 import StripKatalog from "./StripKatalog";
-import { MenuAplikasi, TombolAkun } from "./KepalaKatalog";
+import { chromeKatalog } from "./KepalaKatalog";
 import HasilPlayly, { cariVideoPlayly } from "./HasilPlayly";
-import NavMenus from "./NavMenus";
-import SearchBar from "./SearchBar";
+import SearchBar, { KELAS_MENEMPEL_KEPALA } from "./SearchBar";
 import { GRID_CLASS, ROW_KATEGORI_CARD_CLASS, SHELL } from "./shell";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -170,12 +169,10 @@ export default function CatalogBrowser({
       <SearchBar
         value={query}
         onValueChange={(v) => ubahFilter(() => setQuery(v))}
-        chrome={{
-          brand: <MenuAplikasi />,
-          menus: <NavMenus menus={menus} />,
-          trailing: <TombolAkun />,
-        }}
-        className="sticky top-0"
+        /* Susunan yang SAMA dengan /discover & kerangka pemuatannya —
+           lihat alasannya di chromeKatalog(). */
+        chrome={chromeKatalog(menus)}
+        className={KELAS_MENEMPEL_KEPALA}
       />
 
       {/* ============ 2. STRIP KATALOG ======================================

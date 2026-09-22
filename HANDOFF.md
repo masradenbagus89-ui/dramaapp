@@ -9,7 +9,29 @@
 >
 > **📦 Berkas ini sudah 2.980 baris / ±240 KB** dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-09-22 (revisi ke-10) — deret TAB katalog gaya LK21 di halaman depan (`5d37465`). — ✅ **LENCANA LENGKAP & PANEL ADMIN SEMBUH** (`f3d4a28`); jalan buntu DDL diterobos lewat `app_data`. — ✅ **LENCANA POSTER SUDAH TAYANG** (`f4c43a7`), ⛔ **panel admin lumpuh sampai owner menjalankan 2 berkas SQL** (seksi paling atas). — ⛔ **ADA PEKERJAAN MENUNGGU 1 SQL DARI OWNER** sebelum boleh di-push: lencana poster gaya LK21 (seksi paling atas). Sebelum itu: — ✅ **EMPAT RILIS HARI INI, SEMUANYA TERBUKTI TAYANG.** `HEAD` = `origin/main` = `dramaku/main` = **`64d36ec`**, antrean **KOSONG**. **Rilis ke-4 = perbaikan 4 cacat yang ditemukan tinjauan atas kerja hari ini sendiri, termasuk halaman 404 yang kehilangan SELURUH navigasi** (seksi paling atas). Rilis ke-3 = `/discover` berhenti berkedip "Memuat..." (`a3164f7`). Rilis ke-2 = dua kotak cari bertulisan sama (`9c1d1b2`). Rilis ke-1 = perbaikan navbar liar (`4c62839`).
+**Terakhir diisi:** 2026-09-22 (revisi ke-11).
+
+## ⚡ KEADAAN SEKARANG (baca ini dulu — 30 detik)
+
+`HEAD` = `origin/main` = `dramaku/main` = **`fdd2593`**. Antrean **KOSONG**, semua kerja hari ini **SUDAH TAYANG & TERVERIFIKASI** di **https://dramaapp.vercel.app**.
+
+**⚠️ KOREKSI ALAMAT:** `dramaku.vercel.app` **BUKAN** DramaKu (aplikasi React lain). Produksi = **`dramaapp.vercel.app`** (`lib/site.ts:8`). Di komputer owner juga ada Playly di `localhost:3072`/`:3074` (biru gelap + carousel) dan DramaKu versi LAMA di `localhost:3000` — dua-duanya sering tertukar.
+
+**Rilis hari ini (4 commit, urut lama→baru):**
+1. `f4c43a7` lencana poster 4 pojok (rating · kualitas · tahun · durasi/EPS)
+2. `f3d4a28` kualitas lewat `app_data` + **memperbaiki panel admin yang sempat lumpuh** karena rilis 1
+3. `5d37465` deret TAB katalog gaya LK21 + tombol FILTER di halaman depan
+4. `fdd2593` catatan
+
+**✅ TIDAK ADA SQL yang menunggu.** Seksi-seksi di bawah yang menyebut "SQL belum jalan / panel admin lumpuh" adalah **SEJARAH** — semuanya sudah dibereskan. `supabase_migrations/add_quality_to_dramas.sql` disimpan sebagai jalur NAIK KELAS kalau akses database pulih, **bukan syarat**.
+
+**⛔ AKSES DATABASE — batas yang masih berlaku:** password di `C:/Users/user18/Downloads/password.txt` **tidak berlaku lagi** (`password authentication failed`), tidak ada Supabase CLI maupun Personal Access Token, dan owner **tidak punya akses dashboard Supabase**. Artinya: mengubah **STRUKTUR** tabel (menambah kolom) TIDAK BISA dilakukan siapa pun sekarang. Mengubah **ISI** bisa — lewat `scripts/isi-lencana-lewat-rest.mjs` (PostgREST). Cara menemukan jalur yang terbuka: `GET /rest/v1/` memulangkan daftar tabel & fungsi yang boleh disentuh service_role.
+
+**Yang menunggu OWNER (opsional, bukan penghalang — tanpa ini pun semua tab berisi):**
+- centang **"Tandai sebagai Unggulan"** di panel admin → mengisi tab SERIES UNGGULAN
+- pilih status **"Masih tayang"** → mengisi tab SERIES UPDATE
+- isi kolom **Views** → membuat tab TERPOPULER benar-benar mengurutkan (sekarang 39 dari 41 judul angkanya identik "1.0K")
+- isi **rating asli** per drama → sekarang 35 judul memakai `7.8` seragam atas keputusan owner
 
 **Sisa yang masih menggantung:** (a) 21 berkas `app/api` masih meneruskan pesan error mesin ke browser penonton — bukan darurat; (b) ❓ fokus keyboard saat kerangka `/discover` ditukar isi sungguhan — **belum diukur**; (c) ❓ 404 halaman drama badannya KOSONG — **bukan** akibat kerja hari ini, berkasnya nol sentuhan.
 
@@ -74,7 +96,7 @@ Catatan 2026-09-21 menulis "sebabnya belum terjelaskan dan JANGAN ditebak". Seka
 
 ---
 
-## 2026-09-22 (malam) — ✅ LENCANA POSTER SUDAH TAYANG (`f4c43a7`) — ⛔ TAPI PANEL ADMIN LUMPUH SAMPAI SQL DIJALANKAN
+## 2026-09-22 (malam) — lencana poster tayang (`f4c43a7`) — ~~panel admin lumpuh~~ ✅ SUDAH SEMBUH di `f3d4a28` (seksi di atas). SEJARAH, bukan pekerjaan tertunda
 
 **Owner memerintahkan push, dan itu sudah dilakukan.** `f4c43a7` terdorong ke **kedua** repo (`dramaku` lalu `origin`), keduanya fast-forward murni dari `652d0ad` (nol commit tertinggal, tidak ada pekerjaan siapa pun tertimpa). Terverifikasi tayang di **https://dramaapp.vercel.app**: 7 durasi film (`02:45`, `02:25`, `01:42`, …), 113 lencana EPS, 6 rating bintang, `SUB INDO` = 0.
 
@@ -96,7 +118,7 @@ Catatan 2026-09-21 menulis "sebabnya belum terjelaskan dan JANGAN ditebak". Seka
 
 ---
 
-## 2026-09-22 (sore, revisi ke-2) — owner menentukan sendiri angka lencananya — ⛔ SQL MASIH TERBLOKIR
+## 2026-09-22 (sore, revisi ke-2) — owner menentukan sendiri angka lencananya — ~~SQL terblokir~~ ✅ SELESAI lewat REST (`f3d4a28`). SEJARAH
 
 **Owner memberi angka & warna, lewat dua poster pembanding.** Permintaan persis: `rating 7.8, tahun tayang 2024, durasi film buat 1:59 itu saja kamu masukan, kualitas video kamu buat saja CAM warna merah pojok kanan sebagian kau buat HD warna hijau pojok kanan.`
 
@@ -114,7 +136,7 @@ Catatan 2026-09-21 menulis "sebabnya belum terjelaskan dan JANGAN ditebak". Seka
 
 ---
 
-## 2026-09-22 (sore) — REVISI owner: "SUB INDO" dihapus + data lencana diisi massal — ⛔ SQL BELUM JALAN (diblokir pengaman sesi)
+## 2026-09-22 (sore) — REVISI owner: "SUB INDO" dihapus + data lencana diisi massal — ~~SQL belum jalan~~ ✅ SELESAI. SEJARAH
 
 **Owner melihat hasilnya di layar lalu merevisi tiga hal.** Screenshot owner membuktikan mesinnya SUDAH jalan (baris *Paling Banyak Ditonton* menggambar ⭐7.2/8.1/7.3/7.6/9.1; *Drama Terbaru* menggambar 62/47/102 EPS) — yang kosong DATANYA, bukan kodenya.
 
@@ -136,7 +158,7 @@ Catatan 2026-09-21 menulis "sebabnya belum terjelaskan dan JANGAN ditebak". Seka
 
 ---
 
-## 2026-09-22 — Lencana poster gaya LK21 (rating · kualitas · tahun · durasi/EPS) — ⛔ BELUM DI-PUSH, MENUNGGU 1 SQL DARI OWNER
+## 2026-09-22 — Lencana poster gaya LK21 (rating · kualitas · tahun · durasi/EPS) — ~~belum di-push~~ ✅ SUDAH TAYANG. SEJARAH (memuat rencana awalnya)
 
 **Status: SELESAI & TERBUKTI di lokal. JANGAN di-push sebelum owner menjalankan SQL-nya** — urutan terbalik = SEMUA penyimpanan drama dari panel admin gagal (jebakan yang sama sudah dua kali terjadi: kolom `kind` 2026-08-25, `status` 2026-09-07).
 

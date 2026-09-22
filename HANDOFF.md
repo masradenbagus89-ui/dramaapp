@@ -13,7 +13,19 @@
 
 ## ⚡ KEADAAN SEKARANG (baca ini dulu — 30 detik)
 
-`HEAD` = `origin/main` = **2 commit BARU di atas `da8d7a1`** (Playly katalog wajib kunci + tombol Unduh). Sisanya **SUDAH TAYANG & TERVERIFIKASI** di **https://dramaapp.vercel.app**.
+`HEAD` = `origin/main` = **`8e1c880`** (dikonfirmasi lewat `git ls-remote` langsung ke server).
+
+**🔴 SUDAH DI-PUSH TAPI BELUM TERBUKTI TAYANG — jangan dibaca sebagai "rilis selesai".** Commit `2fbb8b0` + `f65ccd6` + `8e1c880` naik ke `origin main` pukul ~20.27, tapi **15 menit sesudahnya produksi masih menyajikan kode LAMA**. Bukti bahwa ini bukan sekadar "tunggu sebentar":
+
+- `/drama/transformers-the-last-knight` → **200**, dirender penuh ("Mulai Nonton" ada), tapi penanda `DOWNLOAD` dan `api/download?id=` **NOL** pada 22 pengukuran selama 15 menit.
+- Header halaman itu: `X-Vercel-Cache: HIT` · **`Age: 53`** · `X-Nextjs-Prerender: 1`. Artinya HTML-nya **baru diregenerasi kurang dari semenit sebelumnya dan TETAP tanpa tombol** — dan regenerasi ISR selalu memakai kode **deployment yang aktif**. Jadi deployment aktif masih versi lama; ini **bukan** soal cache basi yang tinggal ditunggu.
+- Kesimpulan yang bisa ditarik dari luar: **Vercel belum membangun `8e1c880`** (antre / build gagal / auto-deploy mati / kuota). **Tidak bisa dipastikan tanpa dashboard Vercel** — itu hanya ada pada owner.
+
+**Langkah owner:** buka dashboard Vercel proyek dramaapp → lihat Deployments. Kalau build `8e1c880` **merah**, salin pesan errornya. Kalau **tidak ada sama sekali**, berarti auto-deploy dari `ojokesusu/dramaku` tidak aktif. Repo ini **pernah mati total karena kuota Vercel jebol** — periksa itu juga.
+
+**Rollback kalau perlu:** `git revert --no-edit 8e1c880 f65ccd6 2fbb8b0 && git push origin main`.
+
+**🚨 CERMIN TIDAK BISA DI-PUSH DARI KOMPUTER INI — 403, dan inilah akar semua kerancuan remote hari ini.** `git push dramaapp main` dibalas `Permission to masradenbagus89-ui/dramaapp.git denied to **yusufscorpio**`. Kredensial GitHub yang tersimpan di komputer ini milik **rekan**, bukan owner. Itu menjelaskan kenapa cermin tertinggal 35 commit (memang **tidak bisa** di-push dari sini) dan kenapa deploy pindah ke repo yang bisa. `HANDOFF.md:1879` mencatat 403 yang sama pernah terjadi 2026-08-26. **Hanya owner yang bisa membereskan** (pakai kredensial sendiri, atau beri akses ke akun `yusufscorpio`). Dual push tetap MUSTAHIL sampai itu beres — jangan buang waktu mencobanya lagi.
 
 **🚨 NAMA REMOTE SUDAH BERGESER — `AGENTS.local.md` §5 BASI SOAL INI (temuan 2026-09-22 malam).** Di komputer ini remote-nya sekarang:
 

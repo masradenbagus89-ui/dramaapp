@@ -44,7 +44,15 @@ export const DEFAULT_PLAYLY_EMBED_HOSTS = ["playly-dashboard.vercel.app"];
 /** Pola alamat pemutar Playly. Terverifikasi dari katalog asli 2026-08-25. */
 export const DEFAULT_PLAYLY_EMBED_PATH = "/id/{id}/embed";
 
-/** Katalog PUBLIK Playly (tanpa kunci) — dipakai halaman /nonton milik Playly. */
+/**
+ * Katalog SELURUH kreator Playly — sumber yang dipakai halaman /nonton milik
+ * Playly sendiri.
+ *
+ * "Publik" di sini soal CAKUPAN ISI (semua kreator, bukan cuma akun kita),
+ * BUKAN "tanpa kunci": sejak 2026-09-22 Playly mewajibkan kunci — kunci yang
+ * SAMA dengan /api/videos, tidak ada kunci kedua. Diverifikasi hari itu juga:
+ * tanpa kunci balasannya 401 {"ok":false,"error":"missing_key"}.
+ */
 export const PLAYLY_CATALOG_PATH = "/api/catalog";
 
 /** Detail satu video publik. Dipakai HANYA untuk mengambil gambar sampulnya. */
@@ -645,7 +653,11 @@ export type PlaylyConfig = {
   baseUrl: string;
   /** Alamat lengkap endpoint daftar video milik mitra (butuh kunci). */
   videosUrl: string;
-  /** Alamat katalog PUBLIK Playly — tanpa kunci; jaring pengaman kalau kunci belum siap. */
+  /**
+   * Alamat katalog seluruh kreator Playly — jaring pengaman kalau /api/videos
+   * tak terpakai. Sejak 2026-09-22 ikut BUTUH kunci, kunci yang sama dengan
+   * videosUrl.
+   */
   catalogUrl: string;
   allowedHosts: string[];
   embedPattern: PlaylyEmbedPattern;
@@ -931,24 +943,39 @@ async function fetchVideoMitra(
 }
 
 /**
- * Jalur KATALOG PUBLIK: /api/catalog, TANPA kunci — persis yang dipakai halaman
- * /nonton milik Playly sendiri.
+ * Jalur KATALOG: /api/catalog — persis yang dipakai halaman /nonton milik Playly
+ * sendiri. Isinya video SELURUH kreator Playly, bukan cuma akun kita; karena itu
+ * sumbernya selalu diberitahukan ke admin, dan di halaman penonton hasilnya masih
+ * disaring nama kreator kita.
  *
- * KENAPA ADA: kunci mitra diterbitkan pengelola Playly. Selama kunci itu belum
- * ada atau ditolak, halaman admin kita buntu total — nol video yang bisa dipilih,
- * padahal videonya sudah ter-upload. Katalog ini hanya memuat video yang memang
- * SUDAH dibuka Playly untuk umum, jadi memakainya tidak menembus pembatas apa pun.
- * Bedanya dengan jalur mitra: isinya seluruh video publik Playly, bukan hanya
- * milik satu akun — karena itu sumbernya selalu diberitahukan ke admin.
+ * KENAPA ADA: selama /api/videos belum bisa dipakai, halaman admin buntu total —
+ * nol video yang bisa dipilih, padahal videonya sudah ter-upload.
+ *
+ * KUNCI IKUT DIKIRIM sejak 2026-09-22 (Playly mewajibkannya; diverifikasi hari itu).
+ * `apiKey` boleh null dan panggilan tetap dicoba tanpa kunci, karena Playly
+ * menawarkan membuka akses sementara selama masa penyesuaian — kalau ternyata
+ * belum dibuka, hasilnya 401 yang sudah diterjemahkan jadi pesan di bawah, bukan
+ * halaman rusak.
+ *
+ * BATASNYA (utang yang disebut terang-terangan): kunci katalog = kunci
+ * /api/videos, jadi begitu kunci DITOLAK jalur cadangan ini ikut tertutup. Yang
+ * tersisa cuma satu kasus: /api/videos bermasalah sendiri sementara kuncinya sah.
  */
 async function fetchVideoKatalogPublik(
+  apiKey: string | null,
   config: PlaylyConfig,
   revalidateSeconds?: number,
 ): Promise<PlaylyVideoResult> {
   return ambilSemuaHalamanPlayly(
     config.catalogUrl,
-    { Accept: "application/json" },
-    "Katalog publik Playly menolak permintaan kita.",
+    // Kunci dititipkan lewat HEADER, bukan query ?key= yang juga dilayani Playly:
+    // query ikut tercetak di log server/proxy mana pun yang dilewati, header tidak.
+    apiKey ? buildPlaylyHeaders(apiKey) : { Accept: "application/json" },
+    apiKey
+      ? "Playly menolak kunci kita di katalog (kunci salah, sudah dicabut, atau " +
+          "kedaluwarsa). Minta kunci baru ke Playly, lalu perbarui di Setelan → Playly."
+      : "Katalog Playly kini WAJIB memakai kunci API (berlaku 22 September 2026), " +
+          "sedangkan kunci kita belum dipasang. Pasang di Setelan → Playly.",
     config,
     revalidateSeconds,
   );
@@ -977,7 +1004,11 @@ export async function fetchPlaylyVideos(
       // Kegagalan LAIN (Playly mati, timeout, 404) tetap dilempar apa adanya:
       // menyembunyikannya akan membuat gangguan jaringan terlihat seperti sukses.
       if (!(err instanceof PlaylyError) || err.status !== 401) throw err;
-      const hasil = await fetchVideoKatalogPublik(config);
+      // Kunci tetap dikirim walau baru saja ditolak /api/videos: katalog memakai
+      // kunci yang SAMA, jadi mengirimnya tanpa kunci hanya menukar satu 401
+      // dengan 401 yang lain. Peluang berhasil tinggal kalau /api/videos-lah
+      // yang bermasalah, bukan kuncinya.
+      const hasil = await fetchVideoKatalogPublik(apiKey, config);
       return {
         ...hasil,
         source: "katalog-publik",
@@ -986,7 +1017,8 @@ export async function fetchPlaylyVideos(
     }
   }
 
-  const hasil = await fetchVideoKatalogPublik(config);
+  // Sampai di sini apiKey pasti null (cabang di atas selalu return/throw).
+  const hasil = await fetchVideoKatalogPublik(null, config);
   return {
     ...hasil,
     source: "katalog-publik",
@@ -1067,7 +1099,11 @@ export async function fetchPlaylyVideosKita(
   // kreator tiap video, dan yang bukan milik kita dibuang di sini. Jadi ini
   // bukan pelonggaran diam-diam jadi "tampilkan punya semua orang".
   try {
-    const { videos, rejected } = await fetchVideoKatalogPublik(config, revalidateSeconds);
+    const { videos, rejected } = await fetchVideoKatalogPublik(
+      apiKey,
+      config,
+      revalidateSeconds,
+    );
     if (rejected.length > 0) {
       console.warn(`[playly] ${rejected.length} video katalog dilewati:`, rejected.slice(0, 5));
     }

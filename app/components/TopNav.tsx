@@ -18,6 +18,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { LogOut, Search } from "lucide-react";
+import { punyaNavbarAtas } from "@/lib/navigasi-halaman";
 
 /**
  * Satu menu di navigasi atas. `warnaAktif`/`warnaDiam` OPSIONAL — kosong berarti
@@ -57,24 +58,11 @@ export const LINKS: NavLink[] = [
   { href: "/admin", label: "Admin", adminOnly: true },
 ];
 
-const PUBLIC_PATHS = ["/", "/login", "/daftar"];
-
-/**
- * Halaman yang KEPALA SITUSNYA sudah dipegang bar cari merah
- * (app/components/beranda/KepalaKatalog.tsx): logo, menu halaman di balik
- * tombol garis-tiga, dan tombol akun semuanya ada di sana.
- *
- * Navbar ini disembunyikan di situ atas permintaan owner 2026-09-21 — dua baris
- * kepala sebelum poster pertama terasa penuh, dan situs katalog pembandingnya
- * cukup memakai satu. JANGAN menambahkan halaman ke daftar ini kecuali halaman
- * itu benar-benar memasang `KepalaKatalog`; kalau tidak, halaman tersebut
- * kehilangan SELURUH navigasinya di layar komputer tanpa satu pun error
- * (BottomNav hanya muncul di HP).
- */
-const PUNYA_BAR_CARI = ["/beranda", "/discover"];
 
 export default function TopNav() {
-  const pathname = usePathname() ?? "/";
+  // `?? ""` (bukan `?? "/"`): nilai yang tak bisa dipercaya sengaja dibiarkan
+  // apa adanya, sebab penyaring tampil/tidak di bawah ini ALLOWLIST.
+  const pathname = usePathname() ?? "";
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -140,9 +128,15 @@ export default function TopNav() {
   // layar. Sejak /, /beranda, dan /discover semuanya membuka dengan BAR CARI
   // (2026-09-08/09), mode itu tak punya pemakai lagi — dan kalau dibiarkan
   // justru menutupi bar cari itu.
-  if (pathname.startsWith("/watch") || pathname.startsWith("/feed")) return null;
-  if (PUBLIC_PATHS.includes(pathname)) return null;
-  if (PUNYA_BAR_CARI.includes(pathname)) return null;
+  //
+  // Siapa yang dapat navbar ini ditentukan ALLOWLIST di lib/navigasi-halaman.ts
+  // — "gambar HANYA di alamat yang dikenali". Bentuk sebelumnya denylist
+  // ("sembunyikan di daftar ini, selain itu tampilkan") dan itu gagal-terbuka:
+  // `pathname` bernilai `""`/`"/index"` lolos semua penyaring, sehingga HTML
+  // produksi halaman depan menggambar navbar hitam DI ATAS bar cari merah dan
+  // penonton melihat dua baris kepala lalu berkedip. JANGAN dibalik lagi;
+  // penjaganya tests/kepala-situs.test.ts.
+  if (!punyaNavbarAtas(pathname)) return null;
 
   const onLogout = () => {
     if (!confirm("Yakin mau keluar dari akun?")) return;

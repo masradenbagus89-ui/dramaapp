@@ -3,6 +3,22 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
+**Terakhir dicek:** 2026-09-22. **`HEAD` = `origin/main` = `dramaku/main` = `5501fdf`, lokal ahead 0 — antrean git KOSONG.** Fetch kedua remote dijalankan; nol kerja rekan baru.
+
+🟡 **ADA PEKERJAAN SELESAI YANG BELUM DI-COMMIT & BELUM DI-PUSH** — perbaikan navbar liar halaman depan (5 berkas: `lib/navigasi-halaman.ts` BARU, `app/components/TopNav.tsx`, `app/components/BottomNav.tsx`, `tests/kepala-situs.test.ts`, + 2 berkas catatan). **Menunggu keputusan owner**, bukan tertahan masalah teknis.
+
+**Gerbang §6 SUDAH dijalankan penuh, urutan benar, exit code dibaca dari berkas (TIDAK dipipa):** `rm -rf .next` → `npm run build` **exit 0** (`/` `/beranda` `/discover` `/playly` `/shorts` `sitemap.xml` semua tetap `○ (Static)` 1m 1y) → `npx tsc --noEmit` **exit 0 / 0 error** → **786 tes / 54 berkas** (dari 741/54) → **mutation check 6 arah semuanya MERAH** → **nol berkas env/kunci** (dua lapis: nama berkas + pola rahasia di isi diff). **Nol SQL, nol env baru** — jadi urutan wajib "SQL dulu → env → baru push" (`AGENTS.local.md` butir 3) tidak berlaku untuk rilis ini.
+
+**Isinya:** sebab anomali `/` yang sejak 2026-09-21 ditandai ❓ akhirnya **direproduksi** — `usePathname()` menerima nilai yang BUKAN `/` saat pra-render alamat akar, `?? "/"` tak menangkapnya (`??` hanya menangkap `null`/`undefined`, bukan string kosong), dan penyaringnya berbentuk **denylist** sehingga nilai tak dikenali membuat navbar **MUNCUL**. Diperbaiki jadi **allowlist** per-segmen. Perilaku 19 halaman lain **tidak berubah** (diukur satu per satu di produksi lebih dulu).
+
+⚠️ **VERIFIKASI TAYANG WAJIB PAKAI PENANGKAL CACHE.** Header produksi terukur `X-Vercel-Cache: STALE` dengan `Age: 5426` (~90 menit) dan `X-Nextjs-Prerender: 1`. HTML lama bisa bertahan sesudah deploy, jadi membuka browser begitu saja bisa terbaca seperti "perbaikannya gagal". Cara benar: `curl -sS "https://dramaapp.vercel.app/?nocache=$(...)" -D -` lalu hitung sidik-jari `sticky top-0 z-30 ... backdrop-blur` (harus **0**) dan baca `X-Vercel-Cache`.
+
+⚠️ **Bukti lokal TIDAK membuktikan bug produksinya sembuh** — seluruh anomali ini justru soal perbedaan lokal vs produksi; HTML lokal `/` sudah bersih bahkan sebelum diperbaiki. Yang membuktikan mekanismenya = 8 tes regresi (nilai `""` `/index` `/?` `//` → navigasi diam). Bukti akhir hanya dari produksi sesudah rilis.
+
+**Rollback kalau perlu:** perubahan belum di-commit, jadi pembatalannya `git restore app/components/TopNav.tsx app/components/BottomNav.tsx tests/kepala-situs.test.ts` + hapus `lib/navigasi-halaman.ts`. Sesudah di-commit: `git revert --no-edit <sha> && git push origin main && git push dramaku main`.
+
+---
+
 **Terakhir dicek:** 2026-09-21 (**✅ LIMA RILIS HARI INI, antrean KOSONG**). **`HEAD` = `origin/main` = `dramaku/main` = `f068a73`**, lokal ahead 0. Rilis kelima membawa **2 commit**: `aa78995` (bar cari disamakan LK21 — warna merah terang tanpa ungu, logo kiri dirapikan, tombol Masuk/Daftar dilepas dari bar & dipindah ke menu garis-tiga) + `f068a73` (logo diperbesar 28→36px dan dijadikan satu komponen `LogoDramaKu`). Dual push atas izin owner, fast-forward. **Owner melihat preview lokal dulu.**
 
 **Gerbang §6:** build **exit 0** (semua halaman tetap `○ Static`) → `tsc` **exit 0** → **741 tes / 54 berkas** → **mutation check 5 + 3 arah semuanya MERAH** → nol berkas env/kunci → push → verifikasi tayang. **Nol SQL, nol env baru.**

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { punyaNavigasiBawah } from "@/lib/navigasi-halaman";
 
 type Tab = {
   href: string;
@@ -53,12 +54,13 @@ const TABS: Tab[] = [
   },
 ];
 
-const PUBLIC_PATHS = ["/", "/login", "/daftar"];
-
 export default function BottomNav() {
-  const pathname = usePathname() ?? "/";
-  if (pathname.startsWith("/watch") || pathname.startsWith("/feed")) return null;
-  if (PUBLIC_PATHS.includes(pathname)) return null;
+  // `?? ""` (bukan `?? "/"`): nilai yang tak bisa dipercaya sengaja dibiarkan
+  // apa adanya, sebab penyaring di bawah ini ALLOWLIST — apa pun yang tak
+  // dikenali berarti navigasi DIAM. Daftar & alasannya di
+  // lib/navigasi-halaman.ts; jangan kembalikan ke bentuk denylist.
+  const pathname = usePathname() ?? "";
+  if (!punyaNavigasiBawah(pathname)) return null;
 
   const activeIndex = TABS.findIndex((t) => t.match(pathname));
   const tabWidth = 100 / TABS.length;

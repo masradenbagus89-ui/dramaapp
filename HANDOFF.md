@@ -9,22 +9,64 @@
 >
 > **📦 Berkas ini sudah 2.980 baris / ±240 KB** dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-09-21 (revisi ke-6) — ✅ **SUDAH DIRILIS & TERBUKTI TAYANG** (2 commit sekaligus). `HEAD` = `origin/main` = `dramaku/main` = **`ac6d2de`**, antrean **KOSONG**. Owner melihat preview lokal dulu sebelum memberi izin push.
+**Terakhir diisi:** 2026-09-22 — 🟡 **SELESAI & TERBUKTI, MENUNGGU IZIN RILIS OWNER.** `HEAD` lokal maju **1 commit** dari `origin/main` = `dramaku/main` = `5501fdf`. Isinya: sebab anomali navbar halaman depan akhirnya **KETEMU, DIREPRODUKSI, lalu diperbaiki**.
 
-**Verifikasi tayang:** `/` dan `/beranda` sama-sama memakai bar **`from-rose-700 via-rose-600 to-pink-600`** (ungu hilang), lambang **36px**, nama situs **`text-xl`**, **nol tombol Masuk/Daftar di dalam bar**, menu **Genre · Series · Populer · Negara · Tahun · + More**. Pagar ikut diperiksa: **`/shorts` navbar hitamnya TETAP ADA**.
+### ✅ Anomali `/` SELESAI — sebabnya terbukti, bukan lagi ❓
 
-### 🔎 Anomali `/` akhirnya punya bukti yang jauh lebih tajam (masih ❓ sebabnya)
+Catatan 2026-09-21 menulis "sebabnya belum terjelaskan dan JANGAN ditebak". Sekarang sudah diukur dan **direproduksi di tes**: `usePathname()` di `TopNav`/`BottomNav` menerima nilai yang **bukan** `/` saat pra-render alamat akar; `?? "/"` tidak menangkapnya (operator `??` hanya menangkap `null`/`undefined`, **bukan string kosong**); dan logikanya berbentuk **denylist** sehingga nilai apa pun yang tak dikenali membuat navbar **MUNCUL**. Rinciannya di seksi 2026-09-22 di bawah.
 
-Catatan pagi mencatat "`TopNav` tergambar di HTML produksi `/` tapi tidak di lokal". Verifikasi malam ini **memastikannya dari isi HTML**: halaman `/` produksi memuat **DUA logo sekaligus** —
+⚠️ **Koreksi atas catatan 2026-09-21 itu sendiri.** Kalimat *"`TopNav` menggambar menunya dalam keadaan tidak ada yang aktif, yang justru konsisten dengan `pathname === "/"`"* **menyimpulkan ke arah yang salah**. Keadaan "tak ada satu pun menu aktif" justru konsisten dengan `pathname` yang **BUKAN** `/` — sebab kalau nilainya benar-benar `/`, penyaring `PUBLIC_PATHS` sudah memulangkan `null` dan navbarnya tak tergambar sama sekali. Petunjuk itu sebenarnya sudah menunjuk jawabannya sejak semalam, cuma dibaca terbalik.
 
-| posisi | milik | kelas |
-|---|---|---|
-| 5094 | **`TopNav`** (navbar hitam) | `text-lg` · `h-9 w-9` |
-| 7975 | **`LogoDramaKu`** (bar merah) | `text-xl` · `size-9` |
+---
 
-Di lokal hanya yang kedua. **Bukan regresi** (sudah begitu sejak sebelum semua perubahan hari ini) dan **bukan salah baca**: `TopNav` di HTML itu menggambar menunya dalam keadaan **tidak ada yang aktif**, yang justru konsisten dengan `pathname === "/"` — padahal nilai itu ADA di `PUBLIC_PATHS` dan seharusnya membuat `TopNav` memulangkan `null`. **Jadi sebabnya belum terjelaskan dan JANGAN ditebak.**
+## 2026-09-22 — navbar liar di halaman depan: SEBABNYA KETEMU & DIPERBAIKI (belum tayang)
 
-Akibat yang dirasakan penonton: halaman depan sesaat menampilkan **dua baris kepala** sebelum JavaScript aktif, lalu navbar hilang sendiri. **Belum diselidiki lebih jauh — di luar permintaan owner.** Kalau mau dikejar, jalur yang belum dicoba: memindahkan keputusan "halaman ini pakai navbar atau tidak" dari `usePathname()` (client) ke tata letak per-segment (server), sehingga tidak lagi bergantung tebakan alamat saat prerender.
+🟡 **Selesai & terbukti lokal, menunggu izin rilis owner.** Nol SQL, nol env baru.
+
+**Keluhan owner:** halaman depan sesaat menampilkan **dua baris kepala** (navbar hitam + bar merah), lalu navbar hitamnya hilang sendiri.
+
+### Yang diukur lebih dulu (bukan ingatan)
+
+HTML produksi dihitung dengan sidik-jari yang **hanya** milik `TopNav` (`sticky top-0 z-30 ... backdrop-blur`, `app/components/TopNav.tsx:161`). Hasilnya: **hanya `/` yang melanggar** — `/login` `/daftar` `/beranda` `/discover` `/shorts` `/playly` semuanya **benar**. `BottomNav` mengidap hal yang sama, juga hanya di `/`.
+
+⚠️ **Jebakan yang nyaris menyesatkan sesi ini juga:** hitungan pertama memakai kelas `h-9 w-9 object-contain` dan menyimpulkan `/login` + `/daftar` ikut melanggar. **Salah** — kelas itu juga dipakai header milik halamannya sendiri (`app/login/page.tsx:89`, `app/daftar/page.tsx:93`). **Aturan: sebelum menghitung "komponen X ada di HTML", pastikan penanda yang dipakai benar-benar HANYA milik X.**
+
+### Sebab yang DIREPRODUKSI (tes penyelidik, bukan tebakan)
+
+| Nilai `usePathname()` | Hasil di `/` |
+|---|---|
+| `"/"` · `null` · `undefined` | kosong ✅ |
+| **`""` (string kosong)** · **`"/index"`** | **NAVBAR MUNCUL** ❌ |
+
+Dua cacat bertumpuk: (1) `usePathname() ?? "/"` — `??` **tidak** menangkap string kosong; (2) logikanya **denylist** ("sembunyikan di daftar ini, selain itu tampilkan") = **gagal-terbuka**, jadi nilai tak dikenali menghasilkan kerusakan yang **dilihat penonton**.
+
+❓ **Yang TETAP belum terbukti:** nilai persis mana yang dikirim Vercel saat pra-render alamat akar. **Justru itu sebabnya perbaikannya tidak menambal satu nilai**, melainkan membalik arah gagalnya.
+
+### Yang diperbaiki
+
+`lib/navigasi-halaman.ts` (**BARU**) — satu sumber kebenaran: `AKAR_BERNAVBAR_ATAS` (9 akar), `AKAR_BERBAR_CARI`, `TANPA_NAVIGASI_SENGAJA` (5 halaman + alasan tertulis), dan dua fungsi murni `punyaNavbarAtas()` / `punyaNavigasiBawah()`. `TopNav` & `BottomNav` berhenti memegang daftarnya sendiri. Pencocokan **per-segmen**, jadi `/drama` tidak ikut mencocoki `/dramaku`.
+
+**Perilaku 19 halaman TIDAK berubah** — 12 bernavbar & 7 tanpa navbar, semuanya diukur satu per satu di produksi **sebelum** disentuh. Satu-satunya yang sengaja berubah: `/` (navbar liarnya hilang). **Efek samping di HP:** bar navigasi bawah halaman depan juga berhenti berkedip — memang tak pernah dimaksudkan ada di sana (`PUBLIC_PATHS` sejak commit pertama).
+
+### Penjaga baru (di `tests/kepala-situs.test.ts`)
+
+1. **Regresi nilai aneh** — 4 nilai (`""`, `/index`, `/?`, `//`) x 2 komponen wajib DIAM. Kedelapan tes ini terbukti **MERAH** terhadap kode lama.
+2. **Penyusur disk** — membaca `app/**/page.tsx` **dari disk**, bukan daftar tulis-tangan. Halaman **BARU** yang tak terklasifikasi = tes **MERAH** (terbukti lewat mutasi 4). Plus jaring pengaman untuk penyusurnya sendiri: kalau ia memulangkan daftar kosong, tesnya gagal — bukan lulus tanpa memeriksa apa pun.
+3. Komponen **sungguhan** dirender & diadu dengan aturannya, bukan aturan diuji terhadap dirinya sendiri.
+
+### Bukti
+
+`rm -rf .next` → build **exit 0** (`/` `/beranda` `/discover` `/playly` `/shorts` `sitemap.xml` semua tetap **`○ (Static)`** 1m 1y — nol kemunduran) → `tsc` **exit 0** → **786 tes / 54 berkas** (dari 741/54) → **mutation check 6 arah SEMUANYA MERAH** → `next start` (log server dibaca dulu) **14 halaman diperiksa, 14/14 benar**.
+
+⚠️ **BATAS JUJUR — apa yang bukti lokal ini TIDAK membuktikan.** Seluruh anomali ini justru soal *perbedaan* lokal vs produksi: sebelum diperbaiki pun HTML lokal `/` sudah bersih. Jadi `next start` di atas membuktikan **nol kemunduran**, **bukan** bahwa bug produksinya sembuh. Yang membuktikan mekanismenya adalah 8 tes regresi di atas (nilai apa pun di luar 9 akar allowlist → navigasi diam). **Bukti akhir hanya bisa datang dari produksi sesudah rilis** — dan wajib memakai penangkal cache: header terukur `X-Vercel-Cache: STALE` dengan `Age: 5426` (~90 menit), jadi HTML lama bisa bertahan dan terbaca seperti "perbaikannya gagal".
+
+### Yang TIDAK dikerjakan (sengaja)
+
+- **Tidak** memindahkan 16 folder halaman ke route group `app/(navbar)/`. Itu lebih murni (struktur route yang memutuskan, nol ketergantungan pada `usePathname`) tapi harganya 16 pemindahan folder di situs yang sedang tayang, sementara allowlist sudah benar terhadap kegagalan yang **terbukti**. Kemungkinan naik-kelas, bukan pekerjaan sekarang.
+- **Tidak** menyentuh `/discover` yang sesaat menampilkan "Memuat..." (`app/discover/page.tsx:52`) — keluhan terpisah, masih menunggu owner.
+- **Tidak** menyeragamkan tulisan kotak cari kecil di `TopNav.tsx:228` ("Cari drama, kategori...") — juga masih menunggu owner.
+
+Rencana lengkap: `docs/lintasai/rencana/2026-09-22-navbar-liar-halaman-depan.md`
 
 ---
 

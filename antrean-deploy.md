@@ -3,6 +3,16 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
+**Terakhir dicek:** 2026-09-22 (**✅ EMPAT RILIS HARI INI, antrean KOSONG**). **`HEAD` = `origin/main` = `dramaku/main` = `64d36ec`**, lokal ahead 0. **Rilis ke-4 memperbaiki 4 cacat yang ditemukan tinjauan atas kerja hari ini sendiri:** (1) halaman 404 kehilangan SELURUH navigasi akibat pembalikan denylist→allowlist — terukur di produksi, nol navbar & nol bar bawah; (2) kotak cari kerangka `/discover` MATI tepat di jendela ia terlihat (sebelum hydration React belum memasang penangan) dan Enter malah memuat-ulang sambil menghilangkan ketikan; (3) klaim "sumber dikunci satu" ternyata masih 3-4 salinan (`chromeKatalog`, alamat pencarian, posisi menempel); (4) tiga penjaga tes PALSU. Dual push atas izin owner, cermin dulu baru produksi, keduanya **fast-forward**.
+
+**Gerbang §6:** build **exit 0** + tabel status halaman **IDENTIK** dengan build sebelumnya → `tsc` **exit 0 / 0 error** → **821 tes / 55 berkas** (dari 801) → **mutation check 9 arah semuanya MERAH** → nol berkas env/kunci → push → verifikasi tayang. **Nol SQL, nol env baru.**
+
+**🪤 Pelajaran alat dari rilis ini:** (a) **apa pun yang interaktif di dalam `<Suspense fallback>` adalah MATI** — fallback hanya hidup sebelum hydration, jadi kalau harus berfungsi ia wajib bekerja lewat HTML polos (`action` + `name`), bukan penangan React; (b) **penyusur tes berbasis nama berkas hanya menjaga yang namanya kamu sebut** — penyusur `page.tsx` melewatkan `not-found.tsx`, dan di situlah cacat terberat bersembunyi; (c) **klaim tanpa penjaga cuma niat** — tiap kalimat "X mustahil menyimpang" wajib punya tes yang MERAH kalau X menyimpang; (d) **penjaga berbasis cocok-teks ikut menangkap KOMENTAR** — periksa baris `import`-nya, bukan sebutan kata di mana pun; (e) **laporan agen peninjau wajib dibuktikan sendiri** — satu temuan (`sticky top-14`) ternyata salah.
+
+**Rollback rilis ke-4:** `git revert --no-edit 64d36ec && git push origin main && git push dramaku main`.
+
+---
+
 **Terakhir dicek:** 2026-09-22 (**✅ TIGA RILIS HARI INI, antrean KOSONG**). **`HEAD` = `origin/main` = `dramaku/main` = `a3164f7`**, lokal ahead 0. Rilis ke-3 = `/discover` berhenti menampilkan tulisan "Memuat..." polos sebelum isinya masuk; penggantinya kerangka kepala yang memakai bar merah & strip **sungguhan**, dengan susunan dari fungsi bersama `chromeKatalog()` supaya mustahil menyimpang dari kepala aslinya. Dual push atas izin owner, cermin dulu baru produksi, keduanya **fast-forward**.
 
 **Gerbang §6:** build **exit 0** + tabel status halaman **IDENTIK** dengan build sebelumnya (**`/discover` TETAP `○ (Static)`** — kerangkanya tidak membuatnya dinamis) → `tsc` **exit 0 / 0 error** → **801 tes / 55 berkas** (dari 789/54) → **mutation check 6 arah semuanya MERAH** → nol berkas env/kunci → push → verifikasi tayang. **Nol SQL, nol env baru.**

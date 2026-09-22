@@ -9,9 +9,9 @@
 >
 > **📦 Berkas ini sudah 2.980 baris / ±240 KB** dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-09-22 (revisi ke-3) — ✅ **TIGA RILIS HARI INI, SEMUANYA TERBUKTI TAYANG.** `HEAD` = `origin/main` = `dramaku/main` = **`a3164f7`**, antrean **KOSONG**. Rilis ke-3 = `/discover` berhenti berkedip "Memuat..." (seksi paling atas). Rilis ke-2 = dua kotak cari bertulisan sama (`9c1d1b2`). Rilis ke-1 = perbaikan navbar liar (`4c62839`).
+**Terakhir diisi:** 2026-09-22 (revisi ke-4) — ✅ **EMPAT RILIS HARI INI, SEMUANYA TERBUKTI TAYANG.** `HEAD` = `origin/main` = `dramaku/main` = **`64d36ec`**, antrean **KOSONG**. **Rilis ke-4 = perbaikan 4 cacat yang ditemukan tinjauan atas kerja hari ini sendiri, termasuk halaman 404 yang kehilangan SELURUH navigasi** (seksi paling atas). Rilis ke-3 = `/discover` berhenti berkedip "Memuat..." (`a3164f7`). Rilis ke-2 = dua kotak cari bertulisan sama (`9c1d1b2`). Rilis ke-1 = perbaikan navbar liar (`4c62839`).
 
-**Sisa yang masih menggantung, tinggal SATU:** 21 berkas `app/api` masih meneruskan pesan error mesin ke browser penonton. Bukan darurat. Sebab anomali navbar halaman depan akhirnya **KETEMU, DIREPRODUKSI, diperbaiki, dan terbukti sembuh di produksi**.
+**Sisa yang masih menggantung:** (a) 21 berkas `app/api` masih meneruskan pesan error mesin ke browser penonton — bukan darurat; (b) ❓ fokus keyboard saat kerangka `/discover` ditukar isi sungguhan — **belum diukur**; (c) ❓ 404 halaman drama badannya KOSONG — **bukan** akibat kerja hari ini, berkasnya nol sentuhan.
 
 **Verifikasi tayang — 13 halaman produksi diperiksa satu per satu, semuanya 200, NOL yang salah:** `/` sekarang **0 navbar + 0 nav-bawah** (navbar liarnya hilang), sementara `/shorts` `/playly` `/my-list` `/profile` `/history` `/video-eksternal` `/lupa-password` `/admin` **navbarnya TETAP UTUH** dan `/beranda` `/discover` tetap tanpa navbar tapi tetap punya nav-bawah di HP.
 
@@ -24,6 +24,58 @@ Catatan 2026-09-21 menulis "sebabnya belum terjelaskan dan JANGAN ditebak". Seka
 ---
 
 
+
+
+## 2026-09-22 — TINJAUAN menemukan 4 cacat di kerja hari ini (SUDAH DIPERBAIKI & TAYANG)
+
+Sesudah tiga rilis hari ini tayang, seluruh diff `5501fdf..HEAD` ditinjau ulang dengan 5 lensa berbeda + penyangkal independen per temuan. **Empat cacat nyata ketemu — semuanya akibat kerja hari ini, dan tiga di antaranya adalah KLAIM SENDIRI YANG BERLEBIHAN.** Semua sudah diperbaiki dalam satu rilis lanjutan.
+
+### ❗ Cacat 1 (TINGGI) — halaman 404 kehilangan SELURUH navigasi
+
+Pembalikan denylist → allowlist hanya memikirkan **19 halaman yang ADA di disk**. Alamat yang **tidak punya halaman** (salah ketik, tautan lama dari WhatsApp/Google, bookmark basi) tak cocok dengan akar mana pun, jadi `TopNav` **dan** `BottomNav` sama-sama diam di `app/not-found.tsx`. **Terukur di produksi:** `/tautan-basi-uji` → 404 dengan **nol navbar, nol bar bawah**. Penonton nyasar cuma punya dua tombol di badan halaman — kotak cari, Shorts, Playly, My List, Profile tak bisa dicapai.
+
+**Ini persis PRE-MORTEM #2 yang ditulis sendiri di rencananya** ("allowlist melewatkan satu halaman → kehilangan navigasinya, senyap"). Penjaganya gagal menangkap karena **penyusur disk hanya memungut berkas bernama `page.tsx`**, sementara `not-found.tsx` bukan `page.tsx`. **Aturan: penyusur berbasis nama berkas hanya menjaga yang namanya kamu sebut** — dan §7 "Yang ikut tersenggol" di rencana itu cuma menulis "seluruh 19 halaman", `not-found.tsx` tak terdaftar.
+
+**Diperbaiki** dengan memasang kepala situs ringkas (logo + `MenuAplikasi`, yang memuat SELURUH tujuan) di dalam `app/not-found.tsx` — **BUKAN** dengan melonggarkan allowlist-nya, sebab melonggarkan = mengembalikan bug kedipan halaman depan. Sengaja tidak memakai bar cari merah: bar itu butuh `buildNavMenus(dramas)`, dan **halaman error tidak boleh bergantung pada database yang mungkin justru sedang bermasalah**. Komentar `not-found.tsx` yang kini berbohong ikut dibetulkan.
+
+### ❗ Cacat 2 (TINGGI) — kotak cari kerangka /discover MATI tepat di jendela ia terlihat
+
+Komentar versi pertama `KerangkaKepalaKatalog` mengaku kotak carinya "SENGAJA dibuat berfungsi". **Itu SALAH.** Kerangka itu hanya terlihat **sebelum JavaScript aktif** — dan di jendela itu React belum memasang satu pun penangan, jadi `onSubmit`/`onValueChange` **diam**. Lebih buruk: menekan Enter menjalankan pengiriman form **bawaan browser**, dan karena form-nya tak punya `action` dan kotaknya tak punya `name`, yang terjadi cuma **memuat ulang halaman dengan ketikan penonton HILANG**.
+
+**Diperbaiki supaya benar-benar berfungsi tanpa JavaScript:** `SearchBar` dapat dua prop opsional `action` + `namaKolom`; kerangka memakai `action="/discover"` + `namaKolom="q"`. Sesudah JavaScript aktif, `onSubmit` (yang memanggil `preventDefault()`) mengambil alih dan memakai alamat yang SAMA, jadi hasilnya tak berbeda apa pun keadaannya. Pemakai lain tidak terpengaruh — kedua prop kosong berarti form tanpa `action`, persis seperti sebelumnya.
+
+**Aturan: apa pun yang interaktif di dalam `<Suspense fallback>` adalah MATI, sebab fallback hanya hidup sebelum hydration.** Kalau fallback perlu berfungsi, ia harus bekerja lewat HTML polos (`action` + `name`), bukan lewat penangan React.
+
+### ❗ Cacat 3 (SEDANG) — "sumber dikunci satu" ternyata masih tiga salinan
+
+`chromeKatalog()` diberi komentar "sumbernya sengaja dikunci satu", padahal `CatalogBrowser` (kepala `/beranda`) masih menyalin susunan itu dengan tangan. Pencarian lanjutan menemukan lebih banyak: logika "ketikan dibawa ke mana" ternyata disalin di **EMPAT** tempat (`TopNav`, `PublicTopBars`, `KerangkaKepalaKatalog`, `PersonalRows`), dan posisi menempel bar cari (`sticky top-0`) di **EMPAT** berkas.
+
+**Diperbaiki:** `CatalogBrowser` memakai `chromeKatalog()`; alamat pencarian jadi `alamatCari()` di `lib/nav-katalog.ts` (satu sumber, 4 pemakai); posisi menempel jadi `KELAS_MENEMPEL_KEPALA` di `SearchBar.tsx` (satu sumber, 4 pemakai). Klaim di komentar dibetulkan jadi apa adanya.
+
+### 🪤 Cacat 4 — TIGA penjaga palsu, semuanya ketahuan dari mutation check
+
+1. **`expect(kerangka).toContain("<form")`** untuk membuktikan kotak cari tersambung → **TETAP HIJAU** saat penanganya dilepas, sebab `SearchBar` menggambar `<form>` tanpa peduli tersambung atau tidak.
+2. **`expect(className).toBe("sticky top-0")`** di tes bernama *"memakai posisi menempel yang SAMA dengan kepala aslinya"* → nilai harapannya **ditulis mati**, kepala aslinya tak pernah dibaca. Namanya berbohong.
+3. **Klaim "sumber dikunci satu" untuk `chromeKatalog()` TAK ADA penjaganya sama sekali** → mengembalikan susunan tulis-tangan di `CatalogBrowser` lolos hijau.
+
+**Aturan: klaim tanpa penjaga cuma niat, bukan pagar.** Tiap kalimat "X mustahil menyimpang" di komentar wajib punya tes yang MERAH kalau X menyimpang.
+
+### 🪤 Jebakan alat keempat: penjaga berbasis cocok-teks ikut menangkap KOMENTAR
+
+Tes baru "404 tidak bergantung pada pembacaan katalog" memakai `expect(sumber).not.toContain("buildNavMenus")` dan langsung **MERAH** — yang tertangkap justru komentar di berkas itu yang menjelaskan kenapa fungsi itu **TIDAK** dipakai. Diperbaiki jadi memeriksa **baris `import`**-nya (`sumber.match(/^import[\s\S]*?;$/gm)`), bukan sebutan teks di mana pun.
+
+### ⚠️ Satu temuan tinjauan yang TERNYATA SALAH — jangan telan laporan agen apa adanya
+
+Satu lensa melaporkan `DramaBrowser` memakai `sticky top-14` sementara kerangkanya `top-0`, sehingga bar melompat 56px. **Dibuktikan sendiri: SALAH** — `DramaBrowser.tsx:167` memang `sticky top-0`, cocok. Temuan itu tetap berguna: justru karena memeriksanya, ketahuan nilai itu ditulis tangan di 4 berkas dan layak disatukan.
+
+### ❓ Yang SENGAJA belum diperbaiki (jujur, bukan diklaim beres)
+
+- **Fokus keyboard** bisa terlempar ke awal halaman saat kerangka ditukar isi sungguhan (React mengganti seluruh pohon elemen). **Belum diukur**, jadi belum diperbaiki — dicatat terbuka di komentar komponennya.
+- **404 halaman drama badannya KOSONG.** `/drama/<id-tak-ada>` balas 404 yang HTML-nya **nol teks terlihat** (teksnya ada, tapi di dalam payload script sehingga digambar browser), sementara `/tautan-basi-uji` menampilkan 404 lengkap. **BUKAN akibat kerja hari ini** — `app/not-found.tsx` dan `app/drama/[id]/page.tsx` nol sentuhan di seluruh diff hari ini. Masalah terpisah, belum diselidiki.
+
+**Bukti rilis lanjutan ini:** `rm -rf .next` → build **exit 0**, tabel status halaman **IDENTIK** dengan build sebelumnya → `tsc` **exit 0 / 0 error** → **821 tes / 55 berkas** (dari 801) → **mutation check 9 arah SEMUANYA MERAH** (7 putaran pertama + 2 tambahan sesudah lubang `chromeKatalog` ditutup) → `next start`: 404 membawa tombol menu + logo (**sebelumnya nol**), `/discover` membawa `action="/discover"` + `name="q"` + `aria-busy` + penanda memuat untuk pembaca layar.
+
+---
 
 ## 2026-09-22 — /discover berhenti berkedip "Memuat..." (SUDAH TAYANG)
 
@@ -61,7 +113,7 @@ Berkas tes baru itu **lulus seluruh tes** tapi gagal `npx tsc --noEmit` dengan 5
 
 ---
 
-## 2026-09-22 — navbar liar di halaman depan: SEBABNYA KETEMU & DIPERBAIKI (belum tayang)
+## 2026-09-22 — navbar liar di halaman depan: SEBABNYA KETEMU & DIPERBAIKI (SUDAH TAYANG)
 
 ✅ **SUDAH DIRILIS & TERBUKTI TAYANG** (`4c62839`). Nol SQL, nol env baru.
 

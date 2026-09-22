@@ -284,3 +284,35 @@ describe("perilaku 19 halaman tidak berubah dari yang diukur di produksi", () =>
     expect(punyaNavigasiBawah("/")).toBe(false);
   });
 });
+
+// ===========================================================================
+// PENJAGA 2026-09-22 — dua kotak cari WAJIB bertulisan sama.
+//
+// Kenapa ada: situs punya dua kotak cari (lebar di bar merah, kecil di navbar
+// hitam) yang berperilaku sama — keduanya melempar ke /discover. Tulisannya
+// sudah DUA KALI menyimpang karena ditulis terpisah, dan dua kotak yang sama
+// dengan tulisan beda terbaca seperti dua situs berbeda.
+// ===========================================================================
+const { TEKS_KOTAK_CARI } = await import(
+  "../app/components/beranda/SearchBar"
+);
+
+describe("tulisan kotak cari", () => {
+  it("kotak cari kecil di navbar memakai tulisan yang SAMA", () => {
+    // Diperiksa dari HTML yang benar-benar dirender, bukan dari konstantanya
+    // saja — menulis ulang teksnya langsung di TopNav akan lolos kalau yang
+    // diuji cuma nilai konstanta.
+    const html = render("/shorts", TopNav);
+    expect(html).toContain(`placeholder="${TEKS_KOTAK_CARI}"`);
+  });
+
+  it("tulisan lama TIDAK tertinggal di mana pun", () => {
+    expect(render("/shorts", TopNav)).not.toContain("Cari drama, kategori");
+  });
+
+  it("kotaknya tetap kotak PENCARIAN, bukan kolom biasa", () => {
+    // Pagar fungsi: tulisan boleh diubah owner kapan saja, tapi penanda
+    // pencarian tak boleh ikut hilang (pembaca layar & tombol hapus browser).
+    expect(render("/shorts", TopNav)).toContain('type="search"');
+  });
+});

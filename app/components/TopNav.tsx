@@ -19,6 +19,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { LogOut, Search } from "lucide-react";
 import { punyaNavbarAtas } from "@/lib/navigasi-halaman";
+import { TEKS_KOTAK_CARI } from "./beranda/SearchBar";
 
 /**
  * Satu menu di navigasi atas. `warnaAktif`/`warnaDiam` OPSIONAL — kosong berarti
@@ -219,7 +220,10 @@ export default function TopNav() {
               type="search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari drama, kategori..."
+              // Tulisan yang SAMA dengan kotak cari lebar di bar merah — dulu
+              // ditulis terpisah di sini dan tertinggal saat yang lebar
+              // diperbarui (owner 2026-09-22).
+              placeholder={TEKS_KOTAK_CARI}
               className="rounded-full border-zinc-800 bg-zinc-900 pl-9 text-sm text-white placeholder:text-zinc-500 focus-visible:border-amber-400 focus-visible:ring-0"
             />
           </div>

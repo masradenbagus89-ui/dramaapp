@@ -23,6 +23,25 @@ export type SearchBarChrome = {
   trailing?: ReactNode;
 };
 
+/**
+ * Teks abu-abu di dalam kotak cari — SATU sumber untuk SELURUH situs.
+ *
+ * Dipendekkan atas permintaan owner 2026-09-21 supaya sejajar dengan situs
+ * katalog pembanding ("Cari judul film di Lk21"). Ini MURNI tulisan — yang
+ * dicari tetap judul, kategori, dan sinopsis (lihat `cocokSemuaKata` di
+ * lib/discover.ts), jadi memendekkan kalimatnya TIDAK mempersempit hasil.
+ *
+ * ⚠️ Kenapa dijadikan konstanta dan bukan ditulis dua kali (owner 2026-09-22):
+ * situs punya DUA kotak cari — yang lebar di bar merah ini, dan yang kecil di
+ * navbar hitam (app/components/TopNav.tsx). Keduanya mengirim ke /discover
+ * dengan cara yang sama, tapi tulisannya sudah DUA KALI menyimpang karena
+ * ditulis terpisah: navbar tertinggal di "Cari drama, kategori..." sementara
+ * yang ini sudah diperbarui. Dua kotak berperilaku sama dengan tulisan beda
+ * terbaca seperti dua situs berbeda. JANGAN tulis ulang teksnya di tempat
+ * lain — impor konstanta ini. Penjaganya: tests/strip-katalog.test.ts.
+ */
+export const TEKS_KOTAK_CARI = "Cari film di DramaKu";
+
 type Props = {
   value: string;
   onValueChange: (value: string) => void;
@@ -55,12 +74,7 @@ export default function SearchBar({
   value,
   onValueChange,
   onSubmit,
-  // Teks abu-abu di dalam kotak cari. Dipendekkan atas permintaan owner
-  // 2026-09-21 supaya sejajar dengan situs katalog pembanding ("Cari judul
-  // film di Lk21"). Ini MURNI tulisan — yang dicari tetap judul, kategori,
-  // dan sinopsis (lihat `cocokSemuaKata` di lib/discover.ts), jadi memendekkan
-  // kalimatnya tidak mempersempit hasil pencarian.
-  placeholder = "Cari film di DramaKu",
+  placeholder = TEKS_KOTAK_CARI,
   filters,
   chrome,
   className,

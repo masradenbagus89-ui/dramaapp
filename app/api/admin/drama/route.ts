@@ -13,6 +13,7 @@ import {
   slugify,
   pickRandomGradient,
 } from "@/lib/dramas";
+import { simpanKualitas } from "@/lib/kualitas-drama";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -80,11 +81,6 @@ const KOLOM_MIGRASI = [
     kolom: "status",
     arti: "status tayang: masih tayang/tamat",
     berkas: "supabase_migrations/add_status_to_dramas.sql",
-  },
-  {
-    kolom: "quality",
-    arti: "kualitas video: CAM/HD/WEB-DL/BluRay",
-    berkas: "supabase_migrations/add_quality_to_dramas.sql",
   },
 ] as const;
 
@@ -260,6 +256,11 @@ export async function POST(req: NextRequest) {
     }
 
     await upsertDrama(drama, isNew);
+    // Kualitas disimpan TERPISAH (app_data), bukan sebagai kolom tabel dramas —
+    // alasannya di lib/kualitas-drama.ts. Hanya disentuh kalau field-nya
+    // DIKIRIM, mengikuti aturan yang sama dengan `status` di atas: alat lain
+    // yang mengirim body tanpa `quality` tidak boleh diam-diam menghapusnya.
+    if (qualityProvided) await simpanKualitas(drama.id, quality);
 
     const action = isNew ? "added" : "updated";
     return NextResponse.json({ ok: true, id: drama.id, action, drama });

@@ -7,7 +7,8 @@
 // -------------------------------------------------------------------------
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { parseDramaQuality, parseDramaStatus, type Drama } from "./types";
+import { parseDramaStatus, type Drama } from "./types";
+import { ambilPetaKualitas, gabungKualitas } from "./kualitas-drama";
 import { useSupabase, sbSelect, sbUpsert, sbDelete, eq } from "./supabase";
 import { slugify } from "./format";
 
@@ -36,8 +37,6 @@ type DramaRow = {
   kind: string | null;
   /** "Ongoing" | "Completed". null = belum diisi admin → tampilan wajib DIAM. */
   status: string | null;
-  /** "CAM" | "HD" | "WEB-DL" | ... null = belum diisi → lencana tidak digambar. */
-  quality: string | null;
   views: string | null;
   synopsis: string | null;
   gradient: string | null;
@@ -78,10 +77,6 @@ function rowToDrama(r: DramaRow): Drama {
   // bukan diteruskan ke tampilan — lebih baik tanpa label daripada label palsu.
   const status = parseDramaStatus(r.status);
   if (status) d.status = status;
-  // Kolom `quality` baru ada sejak 2026-09-22; baris lama memulangkan undefined
-  // (bukan null) dan itu ikut tersaring di sini jadi "tanpa lencana kualitas".
-  const quality = parseDramaQuality(r.quality);
-  if (quality) d.quality = quality;
   if (r.poster_image) d.posterImage = r.poster_image;
   if (r.hero_image) d.heroImage = r.hero_image;
   if (r.hero_dim) d.heroDim = true;
@@ -115,7 +110,9 @@ function dramaToRow(d: Drama, sortIndex: number): DramaRow {
     // null (bukan string kosong) supaya "belum diisi" bisa dibedakan dari
     // "sengaja dikosongkan" saat dibaca balik.
     status: d.status ?? null,
-    quality: d.quality ?? null,
+    // `quality` SENGAJA tidak dikirim: kolomnya tidak ada di tabel ini —
+    // disimpan terpisah di app_data (lihat lib/kualitas-drama.ts). Mengirimnya
+    // membuat PostgREST menolak SELURUH penyimpanan drama dengan kode 42703.
     views: d.views ?? "",
     synopsis: d.synopsis ?? "",
     gradient: d.gradient ?? "",
@@ -176,20 +173,22 @@ async function seedDramasIfEmpty(): Promise<void> {
 export async function getAllDramas(): Promise<Drama[]> {
   if (useSupabase) {
     await seedDramasIfEmpty();
-    const rows = await sbSelect<DramaRow>(
-      "dramas?select=*&order=sort_index.asc",
-    );
-    return rows.map(rowToDrama);
+    const [rows, peta] = await Promise.all([
+      sbSelect<DramaRow>("dramas?select=*&order=sort_index.asc"),
+      ambilPetaKualitas(),
+    ]);
+    return gabungKualitas(rows.map(rowToDrama), peta);
   }
   return readLocalDramas();
 }
 
 export async function getDrama(id: string): Promise<Drama | undefined> {
   if (useSupabase) {
-    const rows = await sbSelect<DramaRow>(
-      `dramas?id=${eq(id)}&select=*&limit=1`,
-    );
-    return rows.length ? rowToDrama(rows[0]) : undefined;
+    const [rows, peta] = await Promise.all([
+      sbSelect<DramaRow>(`dramas?id=${eq(id)}&select=*&limit=1`),
+      ambilPetaKualitas(),
+    ]);
+    return rows.length ? gabungKualitas([rowToDrama(rows[0])], peta)[0] : undefined;
   }
   return readLocalDramas().find((d) => d.id === id);
 }
@@ -213,11 +212,15 @@ export const CATALOG_TTL_SECONDS = 60;
  */
 export async function getAllDramasCached(): Promise<Drama[]> {
   if (useSupabase) {
-    const rows = await sbSelect<DramaRow>(
-      "dramas?select=*&order=sort_index.asc",
-      { revalidate: CATALOG_TTL_SECONDS },
-    );
-    return rows.map(rowToDrama);
+    // KEDUA pembacaan WAJIB ber-cache. Satu saja yang tidak, seluruh halaman
+    // pemanggil dibangun ulang untuk tiap pengunjung (lib/supabase.ts:204).
+    const [rows, peta] = await Promise.all([
+      sbSelect<DramaRow>("dramas?select=*&order=sort_index.asc", {
+        revalidate: CATALOG_TTL_SECONDS,
+      }),
+      ambilPetaKualitas({ revalidate: CATALOG_TTL_SECONDS }),
+    ]);
+    return gabungKualitas(rows.map(rowToDrama), peta);
   }
   return readLocalDramas();
 }
@@ -251,11 +254,13 @@ export async function getAllDramasCachedSafe(): Promise<Drama[]> {
 /** Versi ber-cache dari `getDrama` untuk halaman publik. Lihat catatan di atas. */
 export async function getDramaCached(id: string): Promise<Drama | undefined> {
   if (useSupabase) {
-    const rows = await sbSelect<DramaRow>(
-      `dramas?id=${eq(id)}&select=*&limit=1`,
-      { revalidate: CATALOG_TTL_SECONDS },
-    );
-    return rows.length ? rowToDrama(rows[0]) : undefined;
+    const [rows, peta] = await Promise.all([
+      sbSelect<DramaRow>(`dramas?id=${eq(id)}&select=*&limit=1`, {
+        revalidate: CATALOG_TTL_SECONDS,
+      }),
+      ambilPetaKualitas({ revalidate: CATALOG_TTL_SECONDS }),
+    ]);
+    return rows.length ? gabungKualitas([rowToDrama(rows[0])], peta)[0] : undefined;
   }
   return readLocalDramas().find((d) => d.id === id);
 }

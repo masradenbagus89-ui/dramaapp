@@ -9,7 +9,7 @@
 >
 > **📦 Berkas ini sudah 2.980 baris / ±240 KB** dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-09-22 (revisi ke-9) — ✅ **LENCANA LENGKAP & PANEL ADMIN SEMBUH** (`f3d4a28`); jalan buntu DDL diterobos lewat `app_data`. — ✅ **LENCANA POSTER SUDAH TAYANG** (`f4c43a7`), ⛔ **panel admin lumpuh sampai owner menjalankan 2 berkas SQL** (seksi paling atas). — ⛔ **ADA PEKERJAAN MENUNGGU 1 SQL DARI OWNER** sebelum boleh di-push: lencana poster gaya LK21 (seksi paling atas). Sebelum itu: — ✅ **EMPAT RILIS HARI INI, SEMUANYA TERBUKTI TAYANG.** `HEAD` = `origin/main` = `dramaku/main` = **`64d36ec`**, antrean **KOSONG**. **Rilis ke-4 = perbaikan 4 cacat yang ditemukan tinjauan atas kerja hari ini sendiri, termasuk halaman 404 yang kehilangan SELURUH navigasi** (seksi paling atas). Rilis ke-3 = `/discover` berhenti berkedip "Memuat..." (`a3164f7`). Rilis ke-2 = dua kotak cari bertulisan sama (`9c1d1b2`). Rilis ke-1 = perbaikan navbar liar (`4c62839`).
+**Terakhir diisi:** 2026-09-22 (revisi ke-10) — deret TAB katalog gaya LK21 di halaman depan (`5d37465`). — ✅ **LENCANA LENGKAP & PANEL ADMIN SEMBUH** (`f3d4a28`); jalan buntu DDL diterobos lewat `app_data`. — ✅ **LENCANA POSTER SUDAH TAYANG** (`f4c43a7`), ⛔ **panel admin lumpuh sampai owner menjalankan 2 berkas SQL** (seksi paling atas). — ⛔ **ADA PEKERJAAN MENUNGGU 1 SQL DARI OWNER** sebelum boleh di-push: lencana poster gaya LK21 (seksi paling atas). Sebelum itu: — ✅ **EMPAT RILIS HARI INI, SEMUANYA TERBUKTI TAYANG.** `HEAD` = `origin/main` = `dramaku/main` = **`64d36ec`**, antrean **KOSONG**. **Rilis ke-4 = perbaikan 4 cacat yang ditemukan tinjauan atas kerja hari ini sendiri, termasuk halaman 404 yang kehilangan SELURUH navigasi** (seksi paling atas). Rilis ke-3 = `/discover` berhenti berkedip "Memuat..." (`a3164f7`). Rilis ke-2 = dua kotak cari bertulisan sama (`9c1d1b2`). Rilis ke-1 = perbaikan navbar liar (`4c62839`).
 
 **Sisa yang masih menggantung:** (a) 21 berkas `app/api` masih meneruskan pesan error mesin ke browser penonton — bukan darurat; (b) ❓ fokus keyboard saat kerangka `/discover` ditukar isi sungguhan — **belum diukur**; (c) ❓ 404 halaman drama badannya KOSONG — **bukan** akibat kerja hari ini, berkasnya nol sentuhan.
 
@@ -25,6 +25,28 @@ Catatan 2026-09-21 menulis "sebabnya belum terjelaskan dan JANGAN ditebak". Seka
 
 
 
+
+## 2026-09-22 (malam, revisi ke-3) — deret TAB katalog gaya LK21 di halaman depan (`5d37465`)
+
+**Permintaan owner:** TERBARU · SERIES UNGGULAN · SERIES UPDATE · TERPOPULER · REKOMENDASI · <tahun> + tombol FILTER di ujung kanan, judul bagian di bawahnya, tombol SEMUA — "semua ketika di klik bisa berfungsi".
+
+**⚠️ FAKTA YANG MENENTUKAN BENTUKNYA — baca ini sebelum menambah tab baru:** tiga dari enam tab yang diminta TIDAK punya data pembedanya. Penanda unggulan **0/41**, status tayang **0/41**, dan **39 dari 41 judul angka penontonnya identik "1.0K"** sehingga TERPOPULER praktis mengurutkan apa adanya. Kalau dipaksa, hasilnya enam tombol yang isinya sama — persis jebakan yang sudah tercatat 2026-09-21 ("tiap chip wajib benar-benar MENYARING"). Disajikan ke owner lewat popup; owner memilih **"otomatis sekarang, bisa ditimpa penanda owner nanti"**.
+
+**Definisi tiap tab (semuanya di `lib/tab-katalog.ts`, berantai supaya TIDAK PERNAH kosong):**
+- UNGGULAN: drama bertanda Unggulan → nol? serial berbayar koin → nol? seluruh serial
+- UPDATE: serial berstatus "Masih tayang" → nol? serial terbaru ditambahkan
+- TERPOPULER: urut penonton · REKOMENDASI: urut rating, **pemecah seri = penonton** (34 serial ratingnya seragam 7.8; tanpa pemecah seri urutannya berubah tiap render dan daftar terlihat tak stabil)
+- Tab tahun: labelnya **DIHITUNG** dari katalog, bukan ditulis tetap — tab "2026" akan berbohong sendiri begitu katalog berisi judul 2027
+
+**Panel admin** dapat centang **"Tandai sebagai Unggulan"**, memakai field `exclusive` yang selama ini ada tapi nol dipakai. Dipakai ulang, bukan bikin field baru: menambah kolom butuh DDL yang sedang tidak ada (lihat seksi sebelumnya), dan artinya memang sama.
+
+**⚠️ POLA YANG PATUT DITIRU — halaman depan TETAP STATIS.** Membaca `?tab=` lewat `searchParams` milik halaman akan membuat Next membangun ulang SELURUH halaman untuk tiap pengunjung, dan `revalidate = 60` jadi percuma. Jadi alamat dibaca di komponen browser (`TabKatalog.tsx`), sementara BENTUKNYA dipisah ke `TabKatalogTampilan.tsx` (tanpa hook, tanpa "use client") supaya dipakai DUA kali: sekali di SERVER sebagai isi `<Suspense fallback>`, sekali di browser. Hasilnya halaman berisi sejak HTML pertama — tidak ada kedipan kosong seperti "Memuat..." yang dulu terjadi di /discover. **Batas jujurnya:** membuka `/?tab=unggulan` langsung akan sesaat menampilkan isi tab TERBARU sebelum browser menukarnya.
+
+**Cacat yang ketahuan TES RENDER, bukan dari membaca kode:** baris poster menggambar tombol besar "Lihat semua film unggulan" DI DALAM bagian tab, berdampingan dengan tombol SEMUA milik tab itu sendiri — dua tombol bermaksud sama di satu bagian. `FeaturedRow` dapat prop `tombolBawah` (default `true`, pemanggil lama tak berubah). Pelajaran: tes render menangkap yang tak terlihat saat menulis kodenya.
+
+**Bukti:** build exit 0 · tsc exit 0 · **881 tes / 60 berkas** · `next start` sungguhan menggambar keenam tab + tombol Filter + keenam alamatnya **sejak HTML SERVER**; `/?tab=ngawur` tetap balas 200 dengan isi tab bawaan (bukan halaman kosong).
+
+---
 
 ## 2026-09-22 (malam, revisi ke-2) — ✅ JALAN BUNTU DDL DITEROBOS: kualitas lewat `app_data`, panel admin SEMBUH (`f3d4a28`)
 

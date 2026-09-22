@@ -299,6 +299,13 @@ Sebelumnya 2026-08-28 (deploy hero landing): **Lokal = `origin/main` = `dramaku/
 
 **Catatan sebelumnya:** 2026-08-24 sore WIB (`git fetch origin` + `git fetch dramaku` dua-duanya SUKSES; `HEAD` = `origin/main` = `dramaku/main` = **`ba82058`**, selisih NOL)
 
+## 2026-09-22 — RILIS `5d37465` — ✅ deret TAB katalog gaya LK21 TAYANG
+
+- **Terdorong ke:** `dramaku` ✅ dan `origin` ✅ (fast-forward).
+- **Terverifikasi tayang di https://dramaapp.vercel.app:** keenam tab (TERBARU · SERIES UNGGULAN · SERIES UPDATE · TERPOPULER · REKOMENDASI · 2026), tombol **Filter**, judul bagian **Terbaru Ditambahkan**, dan tombol **Semua** — semuanya ada di HTML server.
+- **Yang masih menunggu owner (opsional, bukan penghalang):** centang "Tandai sebagai Unggulan" di panel admin & isi status "Masih tayang". Selama belum diisi, kedua tab itu terisi otomatis (serial berbayar koin / serial terbaru) — tidak ada tombol mati.
+- **Catatan angka penonton:** 39 dari 41 judul masih "1.0K", jadi tab TERPOPULER belum benar-benar membedakan. Owner bisa mengisi angka sebenarnya lewat kolom "Views" di panel admin.
+
 ## 2026-09-22 — RILIS `f3d4a28` — ✅ LENCANA LENGKAP TAYANG + PANEL ADMIN SEMBUH
 
 - **Terdorong ke:** `dramaku` ✅ dan `origin` ✅ (fast-forward).

@@ -6,6 +6,12 @@ build/
 tsconfig.tsbuildinfo
 .env
 .env*.local
+# Varian bersufiks (.env.local.cadangan, .env.local.pratinjau, ...). Pola
+# ".env*.local" di atas TIDAK menangkapnya — sufiksnya ada SESUDAH ".local" —
+# jadi berkas kerja sementara berisi ADMIN_PASSWORD/AUTH_SECRET/OMDB_API_KEY
+# bisa ikut ter-commit tanpa peringatan apa pun (nyaris terjadi 2026-09-22).
+.env.local.*
+.env.*.bak
 *.log
 .DS_Store
 
@@ -72,3 +78,7 @@ migrasi-dramaapp.zip
 # Catatan ingatan Claude Code (dipindah dari C ke sini 2026-09-16) — memuat email owner &
 # nama akun rekan; catatan lokal per-mesin, bukan berkas proyek. Jangan ikut ter-commit.
 .claude/memory/
+
+# Sampah kompilasi Python dari skrip di scripts/ (mis. jalankan_sql_dramaapp.py).
+__pycache__/
+*.pyc

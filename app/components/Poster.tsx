@@ -2,38 +2,67 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import type { Drama } from "@/lib/types";
+import type { Drama, DramaQuality } from "@/lib/types";
 import { PAYWALL_ENABLED } from "@/lib/coins";
 import { CARD_PREVIEW_SEC, teaserShouldLoop } from "@/lib/hero-teaser";
-import { Badge } from "@/components/ui/badge";
+import { lencanaKartu } from "@/lib/lencana-kartu";
 import { cn } from "@/lib/utils";
 import { Star } from "lucide-react";
 
 type Props = {
   drama: Drama;
   className?: string;
-  showBadge?: boolean;
   /**
-   * false = jangan gambar chip rating/views bawaan di kiri-atas.
+   * false = jangan gambar chip PREMIUM/EXCLUSIVE di kanan-atas.
    *
-   * Dipakai kartu grid beranda (CatalogCard) yang menyusun lencananya sendiri
-   * di posisi berbeda. Default `true` supaya pemanggil lama (DramaCard,
-   * ContentRow) sama sekali tak berubah.
+   * Dipakai halaman detail drama, yang sudah memajang lencana PREMIUM sendiri
+   * di sebelah judul — dua lencana yang sama di satu layar cuma mengulang.
+   * Lencana lain (rating/kualitas/tahun/durasi) TIDAK ikut dimatikan.
    */
-  showRating?: boolean;
+  showBadge?: boolean;
   /** Cuplikan episode 1 — hanya dimuat saat hover di desktop. */
   previewSrc?: string;
 };
+
+// --- Bentuk lencana (dipakai berulang; ditulis sekali supaya seragam) -------
+// Kecil & gelap-transparan supaya menempel di poster tanpa menutupi wajah
+// pemainnya — permintaan owner: "jangan membuat poster menjadi penuh".
+const CHIP =
+  "pointer-events-none flex items-center gap-0.5 rounded-sm px-1.5 py-0.5 text-[10px] font-bold leading-tight shadow md:text-[11px]";
+const CHIP_GELAP = "bg-black/75 text-white ring-1 ring-white/15 backdrop-blur-[2px]";
+
+/**
+ * Warna chip kualitas — dua warna saja, sesuai contoh yang diberikan owner
+ * 2026-09-22 sore (dua poster pembanding: CAM merah, HD hijau).
+ *
+ * MERAH = CAM/HDCAM, rekaman bioskop (buram, sering miring). Warnanya bukan
+ * hiasan: itu peringatan yang dicari penonton SEBELUM memutuskan menonton.
+ * HIJAU = sisanya (HD, WEB-DL, BluRay, 4K) = sumber bersih, aman ditonton.
+ *
+ * Sengaja cuma dua warna, bukan satu warna per nilai: penonton perlu menjawab
+ * satu pertanyaan saja ("jernih atau tidak?"), dan lima warna berbeda di pojok
+ * poster justru memperlambat jawabannya.
+ */
+function warnaKualitas(q: DramaQuality): string {
+  return q === "CAM" || q === "HDCAM"
+    ? "bg-red-600 text-white ring-1 ring-red-300/40"
+    : "bg-green-600 text-white ring-1 ring-green-300/40";
+}
 
 export default function Poster({
   drama,
   className,
   showBadge = true,
-  showRating = true,
   previewSrc,
 }: Props) {
   const [preview, setPreview] = useState(false);
   const delayRef = useRef(0);
+
+  // SATU sumber untuk seluruh label kartu (lib/lencana-kartu.ts) — bukan
+  // dibaca langsung dari `drama` di sini. Aturan "field kosong = lencana tidak
+  // digambar" jadi bisa diuji tanpa browser, dan semua kartu di situs memakai
+  // aturan yang sama persis.
+  const lencana = lencanaKartu(drama);
 
   const stopPreview = () => {
     window.clearTimeout(delayRef.current);
@@ -70,7 +99,9 @@ export default function Poster({
       ) : (
         <>
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.15),transparent_60%)]" />
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-3 pt-10">
+          {/* pb-7: menyisakan ruang untuk baris lencana bawah, supaya judul
+              cadangan ini tidak tertindih tahun & durasi. */}
+          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent px-3 pb-7 pt-10">
             <div className="title-gold line-clamp-4 text-sm leading-snug">
               {drama.title}
             </div>
@@ -100,29 +131,75 @@ export default function Poster({
         />
       )}
 
-      {showBadge && PAYWALL_ENABLED && drama.premium && (
-        <Badge className="absolute right-2 top-2 gap-1 border-amber-400/50 bg-amber-400/90 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-black shadow-lg">
-          <span className="text-xs">🪙</span> Premium
-        </Badge>
-      )}
-      {showBadge && !drama.premium && drama.exclusive && (
-        <Badge
-          variant="secondary"
-          className="absolute right-2 top-2 rounded bg-black/70 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white"
-        >
-          Exclusive
-        </Badge>
-      )}
+      {/* ===== LAPISAN LENCANA — empat pojok, pola situs streaming katalog.
+             Digambar di SINI (bukan di tiap kartu) karena semua kartu situs ini
+             memakai komponen Poster: halaman depan, hasil cari, kategori,
+             halaman detail, baris rekomendasi, riwayat, my-list. Satu tempat =
+             tidak ada halaman yang tertinggal saat aturannya berubah.
 
-      {showRating && (
-        <Badge
-          variant="secondary"
-          className="absolute left-2 top-2 gap-1 bg-black/60 px-2 py-0.5 text-[11px] font-normal text-white"
-        >
-          <Star className="size-3 fill-amber-400 text-amber-400" />
-          {drama.imdbRating || drama.views}
-        </Badge>
-      )}
+             Ditulis PALING AKHIR supaya berada di atas gambar & cuplikan video.
+             `pointer-events-none` = tak menghalangi klik menuju halaman drama. */}
+      <div className="pointer-events-none absolute inset-0 z-10 flex flex-col justify-between">
+        <div className="flex items-start gap-1 p-1 md:p-1.5">
+          {/* Kiri-atas: rating IMDb. Hilang sendiri kalau judul ini belum punya
+              rating — jangan diganti "—", itu terbaca seperti nilai nol. */}
+          {lencana.rating && (
+            <span className={cn(CHIP, CHIP_GELAP)}>
+              <Star className="size-2.5 fill-amber-400 text-amber-400 md:size-3" />
+              {lencana.rating}
+            </span>
+          )}
+
+          {/* Kanan-atas: kualitas video, lalu penanda koin/eksklusif di bawahnya.
+              `ml-auto` (bukan justify-between) supaya kelompok ini tetap menempel
+              ke kanan walau lencana rating di kiri tidak digambar. */}
+          <span className="ml-auto flex flex-col items-end gap-1">
+            {lencana.kualitas && (
+              <span className={cn(CHIP, warnaKualitas(lencana.kualitas))}>
+                {lencana.kualitas}
+              </span>
+            )}
+            {showBadge && PAYWALL_ENABLED && lencana.premium && (
+              <span
+                className={cn(CHIP, "bg-amber-400/90 uppercase tracking-wide text-black")}
+              >
+                🪙 Premium
+              </span>
+            )}
+            {showBadge && !lencana.premium && lencana.exclusive && (
+              <span className={cn(CHIP, CHIP_GELAP, "uppercase tracking-wider")}>
+                Exclusive
+              </span>
+            )}
+          </span>
+        </div>
+
+        {/* Baris bawah: tahun di kiri, durasi/jumlah episode di kanan. Gradien
+            hitam tipis di belakangnya supaya teks putih tetap terbaca di atas
+            poster berwarna terang. */}
+        <div className="flex items-end justify-between gap-1 bg-gradient-to-t from-black/90 via-black/45 to-transparent px-1.5 pb-1.5 pt-7">
+          <span className="flex min-w-0 items-center gap-1">
+            {lencana.kiriBawah && (
+              <span className="truncate text-[10px] font-bold text-white/90 md:text-[11px]">
+                {lencana.kiriBawah}
+              </span>
+            )}
+            {lencana.status && (
+              <span
+                className={cn(
+                  "shrink-0 text-[10px] font-bold md:text-[11px]",
+                  lencana.status === "ONGOING" ? "text-rose-400" : "text-sky-400",
+                )}
+              >
+                {lencana.status}
+              </span>
+            )}
+          </span>
+          <span className="shrink-0 text-[10px] font-bold text-white md:text-[11px]">
+            {lencana.kananBawah}
+          </span>
+        </div>
+      </div>
     </div>
   );
 }

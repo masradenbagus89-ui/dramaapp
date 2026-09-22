@@ -7,7 +7,7 @@
 // -------------------------------------------------------------------------
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { parseDramaStatus, type Drama } from "./types";
+import { parseDramaQuality, parseDramaStatus, type Drama } from "./types";
 import { useSupabase, sbSelect, sbUpsert, sbDelete, eq } from "./supabase";
 import { slugify } from "./format";
 
@@ -36,6 +36,8 @@ type DramaRow = {
   kind: string | null;
   /** "Ongoing" | "Completed". null = belum diisi admin → tampilan wajib DIAM. */
   status: string | null;
+  /** "CAM" | "HD" | "WEB-DL" | ... null = belum diisi → lencana tidak digambar. */
+  quality: string | null;
   views: string | null;
   synopsis: string | null;
   gradient: string | null;
@@ -76,6 +78,10 @@ function rowToDrama(r: DramaRow): Drama {
   // bukan diteruskan ke tampilan — lebih baik tanpa label daripada label palsu.
   const status = parseDramaStatus(r.status);
   if (status) d.status = status;
+  // Kolom `quality` baru ada sejak 2026-09-22; baris lama memulangkan undefined
+  // (bukan null) dan itu ikut tersaring di sini jadi "tanpa lencana kualitas".
+  const quality = parseDramaQuality(r.quality);
+  if (quality) d.quality = quality;
   if (r.poster_image) d.posterImage = r.poster_image;
   if (r.hero_image) d.heroImage = r.hero_image;
   if (r.hero_dim) d.heroDim = true;
@@ -109,6 +115,7 @@ function dramaToRow(d: Drama, sortIndex: number): DramaRow {
     // null (bukan string kosong) supaya "belum diisi" bisa dibedakan dari
     // "sengaja dikosongkan" saat dibaca balik.
     status: d.status ?? null,
+    quality: d.quality ?? null,
     views: d.views ?? "",
     synopsis: d.synopsis ?? "",
     gradient: d.gradient ?? "",

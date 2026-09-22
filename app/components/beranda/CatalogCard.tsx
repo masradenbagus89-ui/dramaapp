@@ -2,23 +2,21 @@
 
 import Link from "next/link";
 import type { Drama } from "@/lib/types";
-import { cardBadges } from "@/lib/beranda-catalog";
 import { teaserSrc } from "@/lib/hero-teaser";
-import { PAYWALL_ENABLED } from "@/lib/coins";
 import Poster from "../Poster";
-import { Play, Star } from "lucide-react";
+import { Play } from "lucide-react";
 
 /**
- * Kartu poster PADAT untuk grid beranda — poster 2:3 rapat berlencana, pola
+ * Kartu poster PADAT untuk grid katalog — poster 2:3 rapat berlencana, pola
  * yang dipakai situs streaming katalog (beda dari `DramaCard` yang lega 3:4
- * untuk /my-list & /discover).
+ * untuk /my-list & baris favorit).
  *
- * Tata letak lencananya mengikuti contoh yang diminta owner: rating di
- * kiri-atas, format (jumlah episode / film) di kanan-atas, lalu baris bawah
- * berisi tahun & status. Lencana digambar di sini, bukan di `Poster`, karena
- * posisinya beda dari kartu lain. `Poster` tetap dipakai untuk gambar +
- * cuplikan-saat-hover supaya logika unduh teaser (yang menjaga kuota) tidak
- * ditulis dua kali.
+ * Lencananya TIDAK lagi digambar di sini (2026-09-22). Sampai kemarin komponen
+ * ini menyusun lencananya sendiri karena posisinya beda dari kartu lain;
+ * sekarang keempat pojok itu jadi bentuk baku SELURUH situs, jadi gambarnya
+ * pindah ke `Poster` — satu-satunya komponen yang dipakai semua kartu. Menyalin
+ * aturannya di dua tempat berarti halaman lain tertinggal setiap kali aturannya
+ * berubah, dan itu persis yang terjadi pada badge tahun/rating sebelumnya.
  */
 export default function CatalogCard({
   drama,
@@ -34,9 +32,6 @@ export default function CatalogCard({
    */
   href?: string;
 }) {
-  const badge = cardBadges(drama);
-  const tampilkanKoin = PAYWALL_ENABLED && badge.premium;
-
   return (
     <Link
       href={href ?? `/drama/${drama.id}`}
@@ -46,51 +41,11 @@ export default function CatalogCard({
         <Poster
           drama={drama}
           previewSrc={teaserSrc(drama.id)}
-          showBadge={false}
-          showRating={false}
           className="aspect-[2/3] rounded-sm"
         />
 
-        {/* Kiri-atas: rating IMDb — hanya kalau drama ini memang punya. */}
-        {badge.rating && (
-          <span className="pointer-events-none absolute left-1 top-1 z-10 flex items-center gap-0.5 rounded-sm bg-black/85 px-1.5 py-0.5 text-[10px] font-bold leading-tight text-white shadow md:left-1.5 md:top-1.5 md:text-[11px]">
-            <Star className="size-2.5 fill-amber-400 text-amber-400 md:size-3" />
-            {badge.rating}
-          </span>
-        )}
-
-        {/* Kanan-atas: jumlah episode / penanda film. */}
-        <span className="pointer-events-none absolute right-1 top-1 z-10 rounded-sm bg-fuchsia-600 px-1.5 py-0.5 text-center text-[10px] font-bold uppercase leading-tight tracking-wide text-white shadow md:right-1.5 md:top-1.5 md:text-[11px]">
-          {badge.format}
-        </span>
-
-        {/* Baris bawah: tahun di kiri, status di kanan. Keduanya menghilang
-            sendiri kalau katalog belum punya datanya — kartu tidak mengarang. */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex items-end justify-between gap-1 bg-gradient-to-t from-black/95 via-black/50 to-transparent px-1.5 pb-1 pt-8">
-          <span className="text-[10px] font-bold text-white/90 md:text-[11px]">
-            {drama.year ?? (badge.subIndo ? "SUB INDO" : "")}
-          </span>
-          <span className="flex items-center gap-1">
-            {tampilkanKoin && (
-              <span className="rounded-sm bg-amber-400 px-1 py-px text-[9px] font-bold text-black">
-                KOIN
-              </span>
-            )}
-            {badge.status && (
-              <span
-                className={
-                  badge.status === "ONGOING"
-                    ? "text-[10px] font-bold text-rose-400 md:text-[11px]"
-                    : "text-[10px] font-bold text-sky-400 md:text-[11px]"
-                }
-              >
-                {badge.status}
-              </span>
-            )}
-          </span>
-        </div>
-
-        {/* Tombol putar muncul saat mouse di atas kartu (desktop). */}
+        {/* Tombol putar muncul saat mouse di atas kartu (desktop). z-20 = di
+            atas lapisan lencana (z-10), supaya ikon putarnya tidak tertindih. */}
         <span className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-black/0 transition-colors duration-200 group-hover/kartu:bg-black/40">
           <Play className="size-9 fill-white text-white opacity-0 drop-shadow-lg transition-opacity duration-200 group-hover/kartu:opacity-100 md:size-12" />
         </span>

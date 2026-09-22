@@ -9,7 +9,7 @@
 >
 > **📦 Berkas ini sudah 2.980 baris / ±240 KB** dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-09-22 (revisi ke-4) — ✅ **EMPAT RILIS HARI INI, SEMUANYA TERBUKTI TAYANG.** `HEAD` = `origin/main` = `dramaku/main` = **`64d36ec`**, antrean **KOSONG**. **Rilis ke-4 = perbaikan 4 cacat yang ditemukan tinjauan atas kerja hari ini sendiri, termasuk halaman 404 yang kehilangan SELURUH navigasi** (seksi paling atas). Rilis ke-3 = `/discover` berhenti berkedip "Memuat..." (`a3164f7`). Rilis ke-2 = dua kotak cari bertulisan sama (`9c1d1b2`). Rilis ke-1 = perbaikan navbar liar (`4c62839`).
+**Terakhir diisi:** 2026-09-22 (revisi ke-7) — ⛔ **ADA PEKERJAAN MENUNGGU 1 SQL DARI OWNER** sebelum boleh di-push: lencana poster gaya LK21 (seksi paling atas). Sebelum itu: — ✅ **EMPAT RILIS HARI INI, SEMUANYA TERBUKTI TAYANG.** `HEAD` = `origin/main` = `dramaku/main` = **`64d36ec`**, antrean **KOSONG**. **Rilis ke-4 = perbaikan 4 cacat yang ditemukan tinjauan atas kerja hari ini sendiri, termasuk halaman 404 yang kehilangan SELURUH navigasi** (seksi paling atas). Rilis ke-3 = `/discover` berhenti berkedip "Memuat..." (`a3164f7`). Rilis ke-2 = dua kotak cari bertulisan sama (`9c1d1b2`). Rilis ke-1 = perbaikan navbar liar (`4c62839`).
 
 **Sisa yang masih menggantung:** (a) 21 berkas `app/api` masih meneruskan pesan error mesin ke browser penonton — bukan darurat; (b) ❓ fokus keyboard saat kerangka `/discover` ditukar isi sungguhan — **belum diukur**; (c) ❓ 404 halaman drama badannya KOSONG — **bukan** akibat kerja hari ini, berkasnya nol sentuhan.
 
@@ -25,6 +25,71 @@ Catatan 2026-09-21 menulis "sebabnya belum terjelaskan dan JANGAN ditebak". Seka
 
 
 
+
+## 2026-09-22 (sore, revisi ke-2) — owner menentukan sendiri angka lencananya — ⛔ SQL MASIH TERBLOKIR
+
+**Owner memberi angka & warna, lewat dua poster pembanding.** Permintaan persis: `rating 7.8, tahun tayang 2024, durasi film buat 1:59 itu saja kamu masukan, kualitas video kamu buat saja CAM warna merah pojok kanan sebagian kau buat HD warna hijau pojok kanan.`
+
+**SUDAH DIKERJAKAN (kode, terbukti):**
+- **HD jadi HIJAU** (`bg-green-600`), CAM tetap MERAH (`bg-red-600`) — dua warna saja: CAM/HDCAM merah, sisanya (HD/WEB-DL/BluRay/4K) hijau. Penonton cuma perlu menjawab satu pertanyaan: jernih atau tidak.
+- `supabase_migrations/isi_lencana_awal_dramas.sql` ditulis ulang dengan angka owner: rating `7.8`, tahun `2024`, durasi `119 min` (= tergambar `01:59`), kualitas film-bioskop-2026 = `CAM`, sisanya = `HD`.
+
+**⛔ KEPUTUSAN PENTING YANG TIDAK DIMINTA TAPI WAJIB — angka owner HANYA mengisi yang KOSONG, tidak menimpa data asli.** Kalau `7.8` diterapkan rata, *The Dark Knight* yang 9.1 ikut jadi 7.8, dan ketujuh film kehilangan durasi asli (02:45, 02:32, …) diseragamkan jadi 01:59. Itu kerusakan SENYAP: tak ada error, cuma informasi yang jadi salah. Tiap UPDATE di berkas SQL karena itu memakai syarat `is null / btrim = ''`. Efek sampingnya bagus: berkasnya aman dijalankan berulang, dan koreksi manual owner lewat panel admin tidak tertimpa.
+
+**⛔ SQL MASIH BELUM JALAN — pengaman sesi Claude Code memblokirnya, BUKAN gagal teknis.** Sambungannya sendiri sudah terbukti hidup (percobaan pertama berhasil konek dan cuma gagal karena bug potret milik skrip saya, sudah diperbaiki: potret "SEBELUM" kini memeriksa `information_schema` dulu sebab kolom `quality` memang belum ada saat itu). Percobaan berikutnya diblokir pengaman. Perintah untuk owner (hilangkan `--jalankan` untuk simulasi yang otomatis di-rollback):
+
+    python scripts/jalankan_sql_dramaapp.py supabase_migrations/add_quality_to_dramas.sql supabase_migrations/isi_lencana_awal_dramas.sql --jalankan
+
+**Bukti:** build exit 0 · tsc exit 0 · **842 tes / 57 berkas** hijau (termasuk tes baru yang mengunci `119 min` → `01:59`, dan tes warna CAM-merah/HD-hijau untuk keenam nilai kualitas).
+
+---
+
+## 2026-09-22 (sore) — REVISI owner: "SUB INDO" dihapus + data lencana diisi massal — ⛔ SQL BELUM JALAN (diblokir pengaman sesi)
+
+**Owner melihat hasilnya di layar lalu merevisi tiga hal.** Screenshot owner membuktikan mesinnya SUDAH jalan (baris *Paling Banyak Ditonton* menggambar ⭐7.2/8.1/7.3/7.6/9.1; *Drama Terbaru* menggambar 62/47/102 EPS) — yang kosong DATANYA, bukan kodenya.
+
+**1. "SUB INDO" DIHAPUS (sudah dikerjakan & terbukti).** Cadangan di pojok kiri-bawah saat tahun kosong dibuang atas permintaan owner. Alasannya sah: pojok itu dibaca penonton sebagai TAHUN, jadi mencampurnya dengan keterangan subtitle membuat dua poster bersebelahan berarti beda. Keterangan subtitle tetap ada di halaman detail. Bukti: `next start` sungguhan → **SUB INDO = 0** (sebelumnya 68), EPS 113 & durasi 7 film tetap utuh.
+
+**2. Keputusan owner soal isi data (popup sore ini) — MEMBATALKAN keputusan "kosongkan dulu" tadi siang:**
+- 34 drama serial → `quality = 'HD'` (owner: koleksi unggahan sendiri)
+- 34 drama serial → `year = '2026'` (semua masuk katalog 2026; owner memastikan itu juga tahun tayangnya)
+- 7 film → tahun 2026 = `'CAM'` (masih di bioskop), sisanya = `'BluRay'`
+- **Rating 34 serial TETAP KOSONG** — tidak ada sumbernya sama sekali: drama China pendek ini tak terdaftar di IMDb, dan DramaKu punya **0 dokumen `rating:*`** di `app_data` (dicek langsung). Angka apa pun di situ = karangan. Owner mengisinya sendiri lewat panel admin → kotak "Lencana kartu".
+
+**3. ⛔ SQL BELUM DIJALANKAN.** Owner minta AI yang menjalankannya, dan jalurnya SUDAH ditemukan: `psycopg2` terpasang + kredensial pooler sama seperti `scripts/perbaiki_izin_dramaapp.py` (port **5432** = session mode, wajib untuk DDL; 6543 menolak DDL). Dibuatkan `scripts/jalankan_sql_dramaapp.py` — satu transaksi, potret SEBELUM/SESUDAH, dan **dry-run sebagai default** (tanpa `--jalankan` = rollback). **Tapi eksekusinya diblokir pengaman otomatis sesi Claude Code**, bukan gagal teknis. Perintahnya: `python scripts/jalankan_sql_dramaapp.py supabase_migrations/add_quality_to_dramas.sql supabase_migrations/isi_lencana_awal_dramas.sql --jalankan` (hilangkan `--jalankan` untuk simulasi).
+
+**Keadaan sekarang kalau dirilis apa adanya:** serial cuma memajang `62 EPS` (SUB INDO sudah hilang, tahun & kualitas belum terisi) — **lebih sepi daripada sebelumnya**. Jadi SQL-nya harus jalan DULU, baru rilis.
+
+**Berkas SQL:** `add_quality_to_dramas.sql` (struktur: kolom + CHECK) dan **`isi_lencana_awal_dramas.sql` (BARU — isi data)**. Sengaja dipisah: struktur sekali seumur hidup, isi boleh dikoreksi. Kedua UPDATE-nya hanya menyentuh baris yang MASIH KOSONG, jadi koreksi manual owner tidak akan tertimpa kalau dijalankan ulang.
+
+**Bukti:** build exit 0 · tsc exit 0 · **841 tes / 57 berkas** hijau.
+
+---
+
+## 2026-09-22 — Lencana poster gaya LK21 (rating · kualitas · tahun · durasi/EPS) — ⛔ BELUM DI-PUSH, MENUNGGU 1 SQL DARI OWNER
+
+**Status: SELESAI & TERBUKTI di lokal. JANGAN di-push sebelum owner menjalankan SQL-nya** — urutan terbalik = SEMUA penyimpanan drama dari panel admin gagal (jebakan yang sama sudah dua kali terjadi: kolom `kind` 2026-08-25, `status` 2026-09-07).
+
+**Yang owner minta:** kartu poster meniru Layarkaca21 — ⭐ rating kiri-atas, kualitas video (CAM/HD/WEB-DL/BluRay) kanan-atas, tahun kiri-bawah, durasi `01:26` / `62 EPS` kanan-bawah, di SEMUA halaman.
+
+**LANGKAH OWNER (wajib, sebelum rilis):** Supabase → SQL Editor → tempel isi `supabase_migrations/add_quality_to_dramas.sql` → Run. Aman diulang, tidak menyentuh data lama, ada rollback-nya di komentar berkas itu.
+
+**Keputusan owner (popup hari ini):** (1) kolom `quality` dibuat **KOSONG** untuk 41 judul lama — badge kualitas baru muncul di judul yang diisi sendiri lewat panel admin (pilihan "isi semua HD sekaligus" DITOLAK supaya tak ada label palsu); (2) pojok kiri-bawah saat tahun kosong tetap **"SUB INDO"** seperti perilaku yang sudah berjalan.
+
+**Temuan yang mengubah bentuk pekerjaan** (dibaca dari Supabase schema `dramaapp`, BUKAN `data/dramas.json`):
+- 4 dari 5 field yang diminta SUDAH ADA, cuma beda nama: `rating`→`imdb_rating`, `duration`→`runtime`, `episode_count`→`episodes`, `year`→`year`. **Sengaja TIDAK dibuat kolom kembar** — dua kolom untuk satu arti = sumber bug lintas-sesi. Yang benar-benar baru cuma `quality`.
+- **Isi katalog sangat timpang:** `year` 7/41 · `runtime` 7/41 · `imdb_rating` 6/41 · `episodes` 41/41 · `status` **0/41** · subtitle id 24/41. **Ketujuh yang terisi itu SEMUANYA film** — 34 drama serial nol tahun/rating/durasi. Jadi badge lengkap hanya tampil di 7 film; serial dapat "62 EPS" + "SUB INDO". Itu kenyataan data, bukan bug.
+- **Cacat yang ikut ditutup:** form admin MENYEMBUNYIKAN kolom Tahun/Durasi/Rating kalau drama belum punya metadata IMDb (`DramaForm.tsx:614` lama) — akibatnya 34 serial itu **tidak bisa diisi sama sekali**. Sekarang ada kotak **"Lencana kartu"** yang SELALU tampil (Tahun · Kualitas · Rating IMDb · Durasi), lengkap dengan pratinjau hidup "Tergambar di poster sebagai 02:45" supaya owner tak menyimpan teks yang tak terbaca.
+
+**Perubahan struktur:** lencana kartu dipindah dari `CatalogCard` ke komponen **`Poster`** (satu-satunya komponen yang dipakai SEMUA kartu), dan logikanya pindah dari `lib/beranda-catalog.ts` ke **`lib/lencana-kartu.ts`** (BARU). Efeknya satu perubahan langsung mengenai halaman depan, /beranda, /discover (cari + kategori), halaman detail, baris rekomendasi, riwayat, dan my-list — tidak ada halaman yang bisa tertinggal lagi. Tulisan di bawah kartu (`DramaCard`, `ContentRow`) berhenti mengulang rating/tahun/episode karena sudah jadi lencana di posternya.
+
+**Bukti:** `npm run build` exit 0 · `npx tsc --noEmit` exit 0 · **841 tes / 57 berkas** (dari 835/56) · **mutation check 4 arah semuanya MERAH** lalu hijau lagi sesudah dipulihkan · `next start` sungguhan (log dibaca dulu — server pertama sempat menipu dengan HTTP 200 dari proses lama, `EADDRINUSE`): halaman depan & /beranda menggambar **113 lencana "NN EPS"**, 7 durasi film (`02:45`, `02:25`, `01:42`, …), 6 rating (`9.1`…`5.2`), 68 "SUB INDO"; halaman detail `spider-man-brand-new-day` menggambar `⭐ 8.1` + `2026` + `02:25`. Lencana kualitas **0** — memang benar, kolomnya belum diisi.
+
+**Catatan jujur:** `/discover` & `/my-list` tidak merender apa pun di server (client-side), jadi `curl` ke sana selalu kosong — itu BUKAN bug; kartunya memakai `Poster` yang sama dan dibuktikan lewat `tests/poster-lencana-render.test.ts` yang merender komponennya sungguhan.
+
+**Berkas:** BARU `lib/lencana-kartu.ts`, `supabase_migrations/add_quality_to_dramas.sql`, `tests/lencana-kartu.test.ts`, `tests/poster-lencana-render.test.ts`, `docs/lintasai/rencana/2026-09-22-lencana-kartu-poster-lk21.md` · DIUBAH `lib/types.ts`, `lib/format.ts`, `lib/dramas.ts`, `lib/beranda-catalog.ts`, `app/components/Poster.tsx`, `app/components/beranda/CatalogCard.tsx`, `app/components/DramaCard.tsx`, `app/components/ContentRow.tsx`, `app/components/admin/DramaForm.tsx`, `app/admin/page.tsx`, `app/api/admin/drama/route.ts`, 2 tes lama.
+
+---
 
 ## 2026-09-22 — TINJAUAN menemukan 4 cacat di kerja hari ini (SUDAH DIPERBAIKI & TAYANG)
 

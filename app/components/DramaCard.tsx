@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { isMovie, type Drama } from "@/lib/types";
+import type { Drama } from "@/lib/types";
 import { teaserSrc } from "@/lib/hero-teaser";
 import { genreTextClass } from "@/lib/genre-accent";
 import Poster from "./Poster";
@@ -27,11 +27,11 @@ export default function DramaCard({ drama }: { drama: Drama }) {
         <h3 className="line-clamp-2 text-sm font-semibold text-white">
           {drama.title}
         </h3>
+        {/* Tinggal kategori: tahun, jumlah episode, dan rating sudah tergambar
+            sebagai lencana DI POSTER sejak 2026-09-22 — mengulanginya di sini
+            cuma membuat kartu terlihat penuh tanpa menambah informasi. */}
         <p className={`mt-1 text-xs ${genreTextClass(drama.category)}`}>
           {drama.category}
-          {drama.year ? ` · ${drama.year}` : ""}
-          {isMovie(drama) ? " · Film" : ` · ${drama.episodes} eps`}
-          {drama.imdbRating ? ` · ★ ${drama.imdbRating}` : ""}
         </p>
       </div>
     </Link>

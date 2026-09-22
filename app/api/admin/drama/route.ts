@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { parseDramaStatus, resolveKindRules, type Drama } from "@/lib/types";
+import {
+  parseDramaQuality,
+  parseDramaStatus,
+  resolveKindRules,
+  type Drama,
+} from "@/lib/types";
 import { isAdminRequest } from "@/lib/session";
 import {
   getDrama,
@@ -21,6 +26,7 @@ type DramaBody = Partial<{
   episodes: number;
   kind: string;
   status: string;
+  quality: string;
   posterImage: string;
   heroImage: string;
   gradient: string;
@@ -59,21 +65,48 @@ const IMDB_META_KEYS = [
 type ImdbMetaKey = (typeof IMDB_META_KEYS)[number];
 
 /**
+ * Kolom yang ditambahkan belakangan + berkas SQL-nya. Tiap kali salah satunya
+ * belum dijalankan di Supabase, PostgREST menolak SELURUH penyimpanan drama —
+ * bukan cuma drama yang memakai kolom itu — dan admin cuma melihat pesan mentah
+ * yang tidak menyebutkan apa yang harus dilakukan.
+ */
+const KOLOM_MIGRASI = [
+  {
+    kolom: "kind",
+    arti: "jenis tayangan: serial/film",
+    berkas: "supabase_migrations/add_kind_to_dramas.sql",
+  },
+  {
+    kolom: "status",
+    arti: "status tayang: masih tayang/tamat",
+    berkas: "supabase_migrations/add_status_to_dramas.sql",
+  },
+  {
+    kolom: "quality",
+    arti: "kualitas video: CAM/HD/WEB-DL/BluRay",
+    berkas: "supabase_migrations/add_quality_to_dramas.sql",
+  },
+] as const;
+
+/**
  * Terjemahkan error mentah database ke bahasa yang bisa ditindaklanjuti admin.
- * Kasus yang paling mungkin muncul setelah fitur film: kolom `kind` belum
- * dibuat di Supabase, dan itu membuat SEMUA penyimpanan drama gagal — bukan
- * cuma film. Tanpa ini admin hanya melihat pesan PostgREST mentah.
  */
 function explainSaveError(raw: string): string {
-  const kolomKindHilang =
-    /kind/i.test(raw) && /(column|schema cache|does not exist)/i.test(raw);
-  if (kolomKindHilang) {
-    return (
-      "Kolom 'kind' (jenis tayangan: serial/film) belum ada di database. " +
-      "Buka Supabase → SQL Editor, jalankan isi berkas " +
-      "supabase_migrations/add_kind_to_dramas.sql, lalu simpan lagi. " +
-      `Detail teknis: ${raw}`
+  const kolomHilang = /(column|schema cache|does not exist)/i.test(raw);
+  if (kolomHilang) {
+    // "\\b" (batas kata) ditulis sebagai string biasa, BUKAN di dalam template
+    // literal: di template literal `\b` berarti karakter backspace, bukan batas
+    // kata — polanya jadi tak pernah cocok dan pesan ramahnya tak pernah muncul.
+    const cocok = KOLOM_MIGRASI.find((m) =>
+      new RegExp("\\b" + m.kolom + "\\b", "i").test(raw),
     );
+    if (cocok) {
+      return (
+        `Kolom '${cocok.kolom}' (${cocok.arti}) belum ada di database. ` +
+        `Buka Supabase → SQL Editor, jalankan isi berkas ${cocok.berkas}, ` +
+        `lalu simpan lagi. Detail teknis: ${raw}`
+      );
+    }
   }
   return raw;
 }
@@ -128,6 +161,13 @@ export async function POST(req: NextRequest) {
     const statusProvided = typeof body.status === "string";
     const status = parseDramaStatus(body.status);
 
+    // Kualitas video: aturannya sama persis dengan status di atas — disaring
+    // ulang di server lewat satu tempat (lib/types.ts), dan "dikirim" dibedakan
+    // dari "sah" supaya alat lain yang mengirim body tanpa `quality` tidak
+    // diam-diam menghapus nilai yang sudah benar.
+    const qualityProvided = typeof body.quality === "string";
+    const quality = parseDramaQuality(body.quality);
+
     const rules = resolveKindRules(body);
     const isFilm = rules.kind === "movie";
     if (rules.episodes === null) {
@@ -169,6 +209,7 @@ export async function POST(req: NextRequest) {
         episodes: epNum,
         ...(isFilm ? { kind: rules.kind } : {}),
         ...(status ? { status } : {}),
+        ...(quality ? { quality } : {}),
         views: body.views?.trim() || "1.0K",
         synopsis: body.synopsis?.trim() || "",
         gradient: body.gradient?.trim() || pickRandomGradient(),
@@ -206,6 +247,10 @@ export async function POST(req: NextRequest) {
       if (statusProvided) {
         if (status) drama.status = status;
         else delete drama.status;
+      }
+      if (qualityProvided) {
+        if (quality) drama.quality = quality;
+        else delete drama.quality;
       }
       if (typeof premium === "boolean") {
         if (premium) drama.premium = true;

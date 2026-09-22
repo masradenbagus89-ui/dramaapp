@@ -7,7 +7,6 @@
 // sini — dipakai ulang dari lib/discover.ts yang sudah dipakai /discover.
 // -------------------------------------------------------------------------
 import type { Drama } from "./types";
-import { isMovie } from "./types";
 import { parseRating, parseViews } from "./format";
 
 /**
@@ -33,40 +32,10 @@ export const CATALOG_PER_PAGE = 60;
  */
 export const FEATURED_ROW_COUNT = 14;
 
-// ============================  LENCANA KARTU  ============================
-/**
- * Label yang boleh ditempel di kartu poster.
- *
- * ATURAN JUJUR: tiap nilai HARUS berasal dari field yang benar-benar ada di
- * `Drama`. DramaKu TIDAK menyimpan kualitas video, jadi TIDAK ADA badge
- * "HD"/"CAM" di sini — memasangnya cuma akan berbohong ke penonton. Field yang
- * kosong menghasilkan `null`, dan kartu tinggal tidak menggambarnya.
- */
-export type CardBadges = {
-  /** Kiri-atas: "FILM" atau "56 EPS". Selalu ada (episodes wajib di katalog). */
-  format: string;
-  /** Kanan-atas: rating IMDb apa adanya ("8.4"). null = drama belum punya rating. */
-  rating: string | null;
-  /** Pita bawah: "ONGOING"/"TAMAT". null = status belum diisi admin. */
-  status: string | null;
-  /** true = katalog mencatat subtitle Indonesia untuk drama ini. */
-  subIndo: boolean;
-  /** true = drama berbayar koin (dipakai jalur koin, bukan tebakan tampilan). */
-  premium: boolean;
-};
-
-export function cardBadges(d: Drama): CardBadges {
-  return {
-    format: isMovie(d) ? "FILM" : `${d.episodes} EPS`,
-    rating: d.imdbRating?.trim() ? d.imdbRating.trim() : null,
-    // "Completed" ditampilkan sebagai "TAMAT" — kata yang dipakai penonton
-    // Indonesia di situs streaming, bukan istilah database.
-    status:
-      d.status === "Completed" ? "TAMAT" : d.status === "Ongoing" ? "ONGOING" : null,
-    subIndo: Boolean(d.subtitles?.includes("id")),
-    premium: Boolean(d.premium),
-  };
-}
+// Lencana kartu poster (rating/kualitas/tahun/durasi) PINDAH ke
+// lib/lencana-kartu.ts pada 2026-09-22: sekarang dipakai SEMUA kartu lewat
+// komponen `Poster`, bukan cuma grid beranda — lihat alasannya di kepala
+// berkas itu.
 
 // ==============================  URUTAN  =================================
 export const CATALOG_SORTS = [

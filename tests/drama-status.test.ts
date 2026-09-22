@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { DRAMA_STATUS_OPTIONS, parseDramaStatus } from "../lib/types";
-import { cardBadges } from "../lib/beranda-catalog";
+import { lencanaKartu } from "../lib/lencana-kartu";
 import type { Drama } from "../lib/types";
 
 function stub(partial: Partial<Drama> = {}): Drama {
@@ -52,11 +52,11 @@ describe("status kosong TIDAK BOLEH ditebak jadi Ongoing", () => {
   // `hero.status || "Ongoing"`, sehingga SEMUA judul — termasuk yang sudah
   // tamat — dilabeli ONGOING. Tidak ada error, jadi tak ada yang melapor.
   it("drama tanpa status tidak menghasilkan label apa pun", () => {
-    expect(cardBadges(stub()).status).toBeNull();
+    expect(lencanaKartu(stub()).status).toBeNull();
   });
 
   it("status yang terisi tetap tampil apa adanya", () => {
-    expect(cardBadges(stub({ status: "Ongoing" })).status).toBe("ONGOING");
-    expect(cardBadges(stub({ status: "Completed" })).status).toBe("TAMAT");
+    expect(lencanaKartu(stub({ status: "Ongoing" })).status).toBe("ONGOING");
+    expect(lencanaKartu(stub({ status: "Completed" })).status).toBe("TAMAT");
   });
 });

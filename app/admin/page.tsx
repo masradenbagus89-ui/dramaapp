@@ -3,7 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { MOVIE_EPISODE_COUNT, type Drama, type DramaKind, type DramaStatus } from "@/lib/types";
+import {
+  MOVIE_EPISODE_COUNT,
+  type Drama,
+  type DramaKind,
+  type DramaQuality,
+  type DramaStatus,
+} from "@/lib/types";
 import { readUser, type User } from "@/lib/auth";
 import { slugify } from "@/lib/format";
 import { scanDrama, hardlinkDrama, type ScanResult } from "@/lib/admin-api";
@@ -34,6 +40,8 @@ export default function AdminPage() {
   // "" = belum ditentukan. Sengaja BOLEH kosong: memaksa owner memilih akan
   // membuat drama lama tertandai asal-asalan saat diedit karena hal lain.
   const [status, setStatus] = useState<DramaStatus | "">("");
+  // "" = belum diisi -> lencana kualitas tidak digambar di poster.
+  const [quality, setQuality] = useState<DramaQuality | "">("");
   const [posterImage, setPosterImage] = useState("");
   const [heroImage, setHeroImage] = useState("");
   const [subtitles, setSubtitles] = useState<string[]>([]);
@@ -186,6 +194,7 @@ export default function AdminPage() {
           episodes,
           kind,
           status,
+          quality,
           posterImage: posterImage.trim(),
           heroImage: heroImage.trim(),
           subtitles,
@@ -223,6 +232,7 @@ export default function AdminPage() {
       setEpisodes(1);
       setKind("series");
       setStatus("");
+      setQuality("");
       setPosterImage("");
       setHeroImage("");
       setSubtitles([]);
@@ -287,6 +297,7 @@ export default function AdminPage() {
     setEpisodes(d.episodes);
     setKind(d.kind ?? "series");
     setStatus(d.status ?? "");
+    setQuality(d.quality ?? "");
     setPosterImage(d.posterImage ?? "");
     setHeroImage(d.heroImage ?? "");
     setSubtitles(d.subtitles ?? []);
@@ -364,6 +375,8 @@ export default function AdminPage() {
           kind={kind}
           status={status}
           setStatus={setStatus}
+          quality={quality}
+          setQuality={setQuality}
           setKind={setKind}
           posterImage={posterImage}
           setPosterImage={setPosterImage}

@@ -7,7 +7,6 @@ import {
   URUTAN_BAWAAN,
   homeCatalogRows,
   availableGenres,
-  cardBadges,
   countWithRating,
   countWithYear,
   pageNumbers,
@@ -30,38 +29,9 @@ function stub(partial: Partial<Drama> & Pick<Drama, "id" | "title">): Drama {
   };
 }
 
-describe("cardBadges — label kartu hanya dari data yang benar-benar ada", () => {
-  it("serial memakai jumlah episode, film memakai label FILM", () => {
-    expect(cardBadges(stub({ id: "a", title: "A", episodes: 56 })).format).toBe(
-      "56 EPS",
-    );
-    expect(
-      cardBadges(stub({ id: "b", title: "B", kind: "movie", episodes: 1 })).format,
-    ).toBe("FILM");
-  });
-
-  it("rating kosong TIDAK dikarang jadi angka", () => {
-    expect(cardBadges(stub({ id: "a", title: "A" })).rating).toBeNull();
-    expect(cardBadges(stub({ id: "b", title: "B", imdbRating: "   " })).rating).toBeNull();
-    expect(cardBadges(stub({ id: "c", title: "C", imdbRating: "8.4" })).rating).toBe("8.4");
-  });
-
-  it("status diterjemahkan ke kata penonton, kosong tetap kosong", () => {
-    expect(cardBadges(stub({ id: "a", title: "A", status: "Ongoing" })).status).toBe(
-      "ONGOING",
-    );
-    expect(
-      cardBadges(stub({ id: "b", title: "B", status: "Completed" })).status,
-    ).toBe("TAMAT");
-    expect(cardBadges(stub({ id: "c", title: "C" })).status).toBeNull();
-  });
-
-  it("sub Indo hanya kalau katalog benar-benar mencatatnya", () => {
-    expect(cardBadges(stub({ id: "a", title: "A", subtitles: ["id", "en"] })).subIndo).toBe(true);
-    expect(cardBadges(stub({ id: "b", title: "B", subtitles: ["en"] })).subIndo).toBe(false);
-    expect(cardBadges(stub({ id: "c", title: "C" })).subIndo).toBe(false);
-  });
-});
+// Lencana kartu diuji di tests/lencana-kartu.test.ts sejak 2026-09-22 —
+// logikanya pindah ke lib/lencana-kartu.ts (dipakai SEMUA kartu, bukan cuma
+// grid beranda).
 
 describe("sortCatalog", () => {
   const list = [

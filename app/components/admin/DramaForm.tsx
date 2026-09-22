@@ -9,12 +9,14 @@
 // shadcn/ui (Card, Input, Label, Textarea, Select, Checkbox, Button) — perilaku
 // & logika tetap sama persis.
 import { useState, type Dispatch, type SetStateAction, type RefObject, type FormEvent } from "react";
-import { slugify } from "@/lib/format";
+import { formatJamMenit, menitDariRuntime, slugify } from "@/lib/format";
 import {
+  DRAMA_QUALITY_OPTIONS,
   DRAMA_STATUS_OPTIONS,
   MOVIE_EPISODE_COUNT,
   SUBTITLE_LANGS,
   type DramaKind,
+  type DramaQuality,
   type DramaStatus,
 } from "@/lib/types";
 import { CATEGORY_OPTIONS } from "@/app/admin/constants";
@@ -92,6 +94,8 @@ export default function DramaForm({
   setKind,
   status,
   setStatus,
+  quality,
+  setQuality,
   posterImage,
   setPosterImage,
   heroImage,
@@ -150,6 +154,9 @@ export default function DramaForm({
   /** "" = belum ditentukan; label status tidak akan digambar di tampilan. */
   status: DramaStatus | "";
   setStatus: Dispatch<SetStateAction<DramaStatus | "">>;
+  /** "" = belum diisi; lencana kualitas tidak akan digambar di poster. */
+  quality: DramaQuality | "";
+  setQuality: Dispatch<SetStateAction<DramaQuality | "">>;
   posterImage: string;
   setPosterImage: Dispatch<SetStateAction<string>>;
   heroImage: string;
@@ -194,6 +201,11 @@ export default function DramaForm({
   // Film = 1 video utuh; dipakai berulang di bawah untuk menyembunyikan kolom
   // yang tak berlaku (jumlah episode, centang berbayar).
   const isFilm = kind === "movie";
+
+  // Durasi yang BENAR-BENAR terbaca dari teks yang diketik owner. Dipakai untuk
+  // memperlihatkan hasil lencananya langsung di form — tanpa ini owner mengetik
+  // "1 setengah jam", menyimpan, lalu bingung kenapa lencananya tidak muncul.
+  const menitDurasi = menitDariRuntime(runtime);
 
   const [imdbId, setImdbId] = useState("");
   const [imdbLoading, setImdbLoading] = useState(false);
@@ -575,6 +587,119 @@ export default function DramaForm({
           </div>
         )}
 
+        {/* ===== LENCANA KARTU — kolom yang SELALU tampil.
+               Sampai 2026-09-22 ketiga kolom Tahun/Durasi/Rating cuma muncul di
+               dalam kotak "Metadata IMDb", dan kotak itu sendiri hanya tergambar
+               kalau drama sudah pernah diambil dari OMDb. Akibatnya 34 drama
+               serial di katalog TIDAK BISA diisi tahun/rating-nya sama sekali —
+               lencananya kosong permanen tanpa ada yang tahu sebabnya. ===== */}
+        <div className="mt-4 rounded-xl border border-amber-500/30 bg-amber-950/10 p-4">
+          <p className="text-sm font-semibold text-amber-200">
+            Lencana kartu (yang tampil di pojok poster)
+          </p>
+          <p className="mt-0.5 text-xs text-zinc-500">
+            Empat label kecil: ⭐ rating (kiri-atas), kualitas (kanan-atas), tahun
+            (kiri-bawah), durasi atau jumlah episode (kanan-bawah). Kolom yang
+            dibiarkan KOSONG membuat lencananya tidak digambar sama sekali — itu
+            disengaja: poster tanpa label lebih jujur daripada label yang
+            mengarang.
+          </p>
+          <div className="mt-3 grid gap-3 md:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="drama-year" className="text-xs text-zinc-400">
+                Tahun tayang
+              </Label>
+              <Input
+                id="drama-year"
+                value={year}
+                onChange={(e) => setYear(e.target.value)}
+                placeholder="2026"
+                className="rounded-lg border-zinc-700 bg-zinc-900 text-sm text-white focus-visible:border-amber-400 focus-visible:ring-0"
+              />
+              <p className="text-xs text-zinc-500">
+                Kosong = pojok kiri-bawah poster dibiarkan kosong.
+              </p>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="drama-quality" className="text-xs text-zinc-400">
+                Kualitas video
+              </Label>
+              <Select
+                value={quality || "kosong"}
+                onValueChange={(v) =>
+                  setQuality(v === "kosong" ? "" : (v as DramaQuality))
+                }
+              >
+                <SelectTrigger
+                  id="drama-quality"
+                  className="w-full rounded-lg border-zinc-700 bg-zinc-900 text-sm text-white focus-visible:border-amber-400 focus-visible:ring-0"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="kosong">— Belum diisi —</SelectItem>
+                  {DRAMA_QUALITY_OPTIONS.map((q) => (
+                    <SelectItem key={q} value={q}>
+                      {q}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-zinc-500">
+                Urut dari paling buram ke paling tajam. CAM (rekaman bioskop)
+                tergambar MERAH sebagai peringatan buat penonton.
+              </p>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="drama-imdb-rating" className="text-xs text-zinc-400">
+                Rating IMDb (0–10)
+              </Label>
+              <Input
+                id="drama-imdb-rating"
+                value={imdbRating}
+                onChange={(e) => setImdbRating(e.target.value)}
+                placeholder="7.8"
+                className="rounded-lg border-zinc-700 bg-zinc-900 text-sm text-white focus-visible:border-amber-400 focus-visible:ring-0"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="drama-runtime" className="text-xs text-zinc-400">
+                Durasi {isFilm ? "film" : "(tidak dipakai untuk serial)"}
+              </Label>
+              <Input
+                id="drama-runtime"
+                value={runtime}
+                onChange={(e) => setRuntime(e.target.value)}
+                placeholder="165 min"
+                className="rounded-lg border-zinc-700 bg-zinc-900 text-sm text-white focus-visible:border-amber-400 focus-visible:ring-0"
+              />
+              {!isFilm ? (
+                <p className="text-xs text-zinc-500">
+                  Serial memajang jumlah episode ({episodes} EPS) di pojok itu,
+                  bukan durasi — jadi kolom ini boleh dibiarkan.
+                </p>
+              ) : !runtime.trim() ? (
+                <p className="text-xs text-zinc-500">
+                  Kosong = pojok kanan-bawah memajang “FILM”.
+                </p>
+              ) : menitDurasi === null ? (
+                <p className="text-xs font-medium text-rose-300">
+                  Tidak terbaca sebagai durasi → lencananya akan memajang “FILM”.
+                  Yang terbaca misalnya: “165 min”, “2 jam 45 menit”, “2h 45m”.
+                </p>
+              ) : (
+                <p className="text-xs text-emerald-300">
+                  Tergambar di poster sebagai{" "}
+                  <span className="font-bold">{formatJamMenit(menitDurasi)}</span>
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
         <div className="mt-4 space-y-1.5">
           <Label htmlFor="drama-id" className="text-sm text-zinc-300">
             ID slug <span className="text-zinc-500">(opsional — auto-generate dari judul kalau kosong; harus sama dengan nama folder di PC backup)</span>
@@ -618,6 +743,9 @@ export default function DramaForm({
             </p>
             <p className="mt-0.5 text-xs text-zinc-500">
               Diisi otomatis dari “Ambil draft”. Boleh dikosongkan manual kalau perlu.
+              Tahun, Durasi, dan Rating IMDb pindah ke kotak “Lencana kartu” di
+              atas (2026-09-22) — ketiganya dipajang di poster, jadi harus bisa
+              diisi walau drama ini tidak diambil dari OMDb.
             </p>
             <div className="mt-3 grid gap-3 md:grid-cols-2">
               <div className="space-y-1.5">
@@ -629,34 +757,10 @@ export default function DramaForm({
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-zinc-400">Tahun</Label>
-                <Input
-                  value={year}
-                  onChange={(e) => setYear(e.target.value)}
-                  className="rounded-lg border-zinc-700 bg-zinc-900 text-sm text-white focus-visible:border-amber-400 focus-visible:ring-0"
-                />
-              </div>
-              <div className="space-y-1.5">
                 <Label className="text-xs text-zinc-400">Rating konten</Label>
                 <Input
                   value={contentRating}
                   onChange={(e) => setContentRating(e.target.value)}
-                  className="rounded-lg border-zinc-700 bg-zinc-900 text-sm text-white focus-visible:border-amber-400 focus-visible:ring-0"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs text-zinc-400">Runtime</Label>
-                <Input
-                  value={runtime}
-                  onChange={(e) => setRuntime(e.target.value)}
-                  className="rounded-lg border-zinc-700 bg-zinc-900 text-sm text-white focus-visible:border-amber-400 focus-visible:ring-0"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs text-zinc-400">IMDb rating</Label>
-                <Input
-                  value={imdbRating}
-                  onChange={(e) => setImdbRating(e.target.value)}
                   className="rounded-lg border-zinc-700 bg-zinc-900 text-sm text-white focus-visible:border-amber-400 focus-visible:ring-0"
                 />
               </div>

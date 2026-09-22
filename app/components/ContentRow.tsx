@@ -124,9 +124,10 @@ export default function ContentRow({
                     {continueLabel(cont)}
                   </p>
                 ) : (
+                  // Rating & tahun sudah jadi lencana di poster (2026-09-22),
+                  // jadi baris ini cukup menyebut kategorinya.
                   <p className="line-clamp-1 text-[11px] text-zinc-500">
-                    {d.imdbRating ? `★ ${d.imdbRating}` : d.category}
-                    {d.year ? ` · ${d.year}` : ""}
+                    {d.category}
                   </p>
                 )}
               </Link>

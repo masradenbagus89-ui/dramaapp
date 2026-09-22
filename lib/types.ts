@@ -33,6 +33,47 @@ export function parseDramaStatus(value: unknown): DramaStatus | undefined {
   return value === "Ongoing" || value === "Completed" ? value : undefined;
 }
 
+/**
+ * Kualitas video yang boleh dipajang di lencana kanan-atas poster.
+ *
+ * Urut dari paling buruk ke paling bagus — itu urutan yang dilihat owner di
+ * dropdown panel admin, dan urutan yang dipahami penonton situs streaming
+ * (CAM = rekaman bioskop, buram; BluRay/4K = sumber cakram, paling tajam).
+ *
+ * Daftar ini SUMBER TUNGGAL. Salinannya ada sebagai CHECK constraint di
+ * `supabase_migrations/add_quality_to_dramas.sql` — dua tempat ini WAJIB sama;
+ * penjaganya `tests/lencana-kartu.test.ts` yang benar-benar membaca berkas SQL
+ * itu lalu membandingkannya (bukan sekadar percaya komentar).
+ */
+export const DRAMA_QUALITY_OPTIONS = [
+  "CAM",
+  "HDCAM",
+  "HD",
+  "HDTV",
+  "WEB-DL",
+  "WEBRip",
+  "BluRay",
+  "4K",
+] as const;
+
+export type DramaQuality = (typeof DRAMA_QUALITY_OPTIONS)[number];
+
+/**
+ * SATU tempat yang memutuskan kiriman kualitas sah atau tidak — kembaran
+ * `parseDramaStatus` di atas, dan alasannya sama: dropdown admin memang cuma
+ * menyediakan 8 pilihan, TAPI UI bukan pagar (siapa pun bisa mengirim body apa
+ * saja ke endpoint admin). Nilai di luar daftar dipulangkan `undefined`
+ * (dianggap kosong), bukan disimpan apa adanya — poster yang memajang label
+ * ngawur lebih merugikan penonton daripada poster tanpa label.
+ *
+ * Sengaja PERSIS huruf-besarnya: "hd" ditolak, bukan diam-diam dibetulkan jadi
+ * "HD". Alasannya CHECK constraint di database juga persis — memperbaiki di
+ * sini berarti kode & database punya dua aturan yang menyimpang.
+ */
+export function parseDramaQuality(value: unknown): DramaQuality | undefined {
+  return DRAMA_QUALITY_OPTIONS.find((q) => q === value);
+}
+
 export type Drama = {
   id: string;
   title: string;
@@ -68,6 +109,15 @@ export type Drama = {
    * Nilainya sengaja sama dengan `OmdbTitleKind` di lib/imdb-tool.ts.
    */
   kind?: DramaKind;
+  /**
+   * Kualitas sumber video ("CAM", "HD", "WEB-DL", …) — dipajang di lencana
+   * kanan-atas poster. Boleh KOSONG, dan itu keadaan normal: kolomnya baru
+   * ditambahkan 2026-09-22 dan 41 judul yang sudah ada sengaja dibiarkan kosong
+   * (keputusan owner). Kosong = lencananya TIDAK digambar — jangan menebak "HD",
+   * sebab itu menjanjikan ketajaman yang belum tentu ada ke penonton.
+   * Lihat parseDramaQuality di atas.
+   */
+  quality?: DramaQuality;
   /** Metadata IMDb (opsional; dari OMDb). Drama lama tanpa field ini = valid. */
   imdbId?: string;
   year?: string;

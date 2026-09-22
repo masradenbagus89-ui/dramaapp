@@ -45,3 +45,58 @@ export function parseRating(s?: string): number {
   const n = parseFloat(s.trim().replace(",", "."));
   return Number.isFinite(n) ? n : 0;
 }
+
+// --- Durasi tayangan --------------------------------------------------------
+// Katalog menyimpan durasi apa adanya dari OMDb, dalam bentuk teks "165 min"
+// (lihat lib/imdb-tool.ts -> `runtime`). Lencana poster memintanya dalam bentuk
+// jam:menit ("02:45"), jadi terjemahannya ditaruh di sini — bukan di komponen —
+// supaya satu aturan dipakai semua tampilan dan bisa diuji tanpa browser.
+
+/**
+ * Baca durasi dalam MENIT dari teks bebas. `null` = tidak bisa dibaca.
+ *
+ * Bentuk yang ditangani: "165 min" (OMDb), "165min", "165 menit", "165",
+ * "2h 45m", "2 jam 45 menit". Bentuk yang SENGAJA dipulangkan `null`: "N/A"
+ * (nilai kosong khas OMDb), teks tanpa angka, dan 0/negatif.
+ *
+ * Kenapa `null`, bukan 0: 0 akan tergambar sebagai "00:00" di poster — sebuah
+ * angka yang terlihat sah padahal artinya "kami tak tahu". `null` membuat
+ * lencananya hilang, dan itu jujur.
+ */
+export function menitDariRuntime(runtime?: string | null): number | null {
+  if (!runtime) return null;
+  const teks = runtime.trim().toLowerCase();
+  if (!teks || teks === "n/a") return null;
+
+  // Bentuk berjam dulu ("2h 45m", "2 jam 45 menit", "2 hours 45") — kalau dicek
+  // belakangan, pola angka-polos di bawah akan menelan "2" dan mengira durasinya
+  // 2 menit. Satuan jam ditulis lengkap variannya sejak kolom Durasi bisa
+  // diketik bebas owner di panel admin — bukan lagi cuma "165 min" dari OMDb.
+  const berjam = teks.match(/(\d+)\s*(?:h(?:r|rs|our|ours)?|jam)\b\s*(\d+)?/);
+  if (berjam) {
+    const jam = Number(berjam[1]);
+    const menit = berjam[2] ? Number(berjam[2]) : 0;
+    const total = jam * 60 + menit;
+    return total > 0 ? total : null;
+  }
+
+  const angka = teks.match(/(\d+)/);
+  if (!angka) return null;
+  const total = Number(angka[1]);
+  return Number.isFinite(total) && total > 0 ? total : null;
+}
+
+/**
+ * Ubah menit jadi teks lencana "jam:menit" berpadding — 165 -> "02:45".
+ *
+ * Sengaja BUKAN `fmtTime` di atas: yang itu memformat posisi pemutar dalam
+ * DETIK ("1:23" = 1 menit 23 detik). Dua satuan berbeda dengan bentuk keluaran
+ * mirip = sumber salah pakai, jadi keduanya dipisah dan diberi nama yang
+ * menyebut satuannya.
+ */
+export function formatJamMenit(menit: number): string {
+  const aman = Math.max(0, Math.floor(menit));
+  const jam = Math.floor(aman / 60);
+  const sisa = aman % 60;
+  return `${String(jam).padStart(2, "0")}:${String(sisa).padStart(2, "0")}`;
+}

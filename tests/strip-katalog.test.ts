@@ -319,3 +319,83 @@ describe("chip strip & menu yang SUNGGUHAN digambar halaman", () => {
     expect(html).not.toContain("cat=Komedi");
   });
 });
+
+// ===========================================================================
+// PENJAGA 2026-09-22 — kerangka kepala /discover selagi katalog belum siap.
+//
+// Kenapa perlu: /discover TIDAK merender apa pun di server (DramaBrowser
+// memakai useSearchParams, jadi wajib dibungkus <Suspense>), sehingga isi
+// `fallback` adalah SATU-SATUNYA yang dilihat penonton sebelum JavaScript
+// aktif. Sampai hari ini isinya cuma tulisan "Memuat..." di layar hitam —
+// halaman katalog utama terbaca seperti situs rusak.
+//
+// Yang dijaga BUKAN "ada kerangkanya", tapi kerangkanya membawa penanda kepala
+// yang SAMA dengan kepala aslinya. Kalau menyimpang, kepala situs melompat
+// tepat di depan mata penonton saat isinya masuk.
+// ===========================================================================
+const { default: KerangkaKepalaKatalog } = await import(
+  "../app/components/beranda/KerangkaKepalaKatalog"
+);
+const { TEKS_KOTAK_CARI } = await import(
+  "../app/components/beranda/SearchBar"
+);
+const { readFileSync } = await import("node:fs");
+
+describe("kerangka kepala /discover", () => {
+  const menus = buildNavMenus(KATALOG);
+  const kerangka = renderToStaticMarkup(
+    createElement(KerangkaKepalaKatalog, { menus }),
+  );
+  const kepalaAsli = renderToStaticMarkup(
+    createElement(DramaBrowser, { dramas: KATALOG }),
+  );
+
+  /** Penanda yang membuat kepala situs dikenali sebagai DramaKu. */
+  const TANDA_KEPALA: Array<[string, string]> = [
+    ["bar merah", "from-rose-700 via-rose-600 to-pink-600"],
+    ["logo situs", 'alt="DramaKu"'],
+    ["tombol menu garis-tiga", 'aria-label="Menu halaman"'],
+    ["tulisan kotak cari", `placeholder="${TEKS_KOTAK_CARI}"`],
+    ["penanda pencarian", 'role="search"'],
+  ];
+
+  for (const [nama, tanda] of TANDA_KEPALA) {
+    it(`membawa ${nama}, sama dengan kepala aslinya`, () => {
+      expect(
+        kepalaAsli,
+        `${nama} tidak ada di kepala ASLI — penandanya berubah, ` +
+          `perbarui daftar TANDA_KEPALA di tes ini`,
+      ).toContain(tanda);
+      expect(
+        kerangka,
+        `${nama} tidak ada di KERANGKA — kepala situs akan melompat saat ` +
+          `isi halaman masuk, dan penonton melihat dua bentuk berbeda`,
+      ).toContain(tanda);
+    });
+  }
+
+  it("membawa strip chip sebanyak yang sebenarnya", () => {
+    // Strip yang isinya beda jumlah membuat tinggi halaman berubah saat isinya
+    // masuk — poster yang mau diklik penonton ikut bergeser.
+    const hitung = (html: string) =>
+      STRIP_KATALOG.filter((i) => html.includes(`href="${i.href}"`)).length;
+    expect(hitung(kerangka)).toBe(STRIP_KATALOG.length);
+    expect(hitung(kerangka)).toBe(hitung(kepalaAsli));
+  });
+
+  // CATATAN: "kotak carinya benar-benar tersambung" TIDAK bisa dijaga dari
+  // sini. Penjaga versi pertama memeriksa ada `<form>` di HTML dan itu LOLOS
+  // saat penanganya dilepas — `SearchBar` menggambar `<form>` tanpa peduli
+  // tersambung atau tidak. Penjaga yang sah ada di tests/kerangka-discover.ts
+  // (menangkap props yang diterima SearchBar, lalu MENJALANKAN penanganya).
+
+  it("halaman /discover TIDAK kembali memakai tulisan polos", () => {
+    // Penjaga langsung atas permintaan owner. Diperiksa dari berkas sumbernya
+    // karena `fallback` sebuah <Suspense> tak bisa dirender terpisah di sini.
+    const sumber = readFileSync("app/discover/page.tsx", "utf-8");
+    expect(sumber).toContain("<KerangkaKepalaKatalog menus={menus} />");
+    expect(sumber).not.toContain(
+      '<div className="py-16 text-center text-sm text-zinc-500">Memuat...</div>',
+    );
+  });
+});

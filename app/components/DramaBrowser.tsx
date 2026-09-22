@@ -16,9 +16,8 @@ import { STRIP_KATALOG, buildNavMenus } from "@/lib/nav-katalog";
 import type { PlaylyVideoPublik } from "@/lib/playly-publik";
 import CatalogCard from "./beranda/CatalogCard";
 import StripKatalog from "./beranda/StripKatalog";
-import { MenuAplikasi, TombolAkun } from "./beranda/KepalaKatalog";
+import { chromeKatalog } from "./beranda/KepalaKatalog";
 import HasilPlayly, { cariVideoPlayly } from "./beranda/HasilPlayly";
-import NavMenus from "./beranda/NavMenus";
 import SearchBar from "./beranda/SearchBar";
 import { GRID_CLASS, SHELL } from "./beranda/shell";
 import { Button } from "@/components/ui/button";
@@ -162,11 +161,9 @@ export default function DramaBrowser({
       <SearchBar
         value={filter.q}
         onValueChange={(v) => setFilter((f) => ({ ...f, q: v }))}
-        chrome={{
-          brand: <MenuAplikasi />,
-          menus: <NavMenus menus={menus} />,
-          trailing: <TombolAkun />,
-        }}
+        /* Susunannya dipakai BERSAMA dengan kerangka pemuatan halaman ini
+           (KerangkaKepalaKatalog) — lihat alasannya di chromeKatalog(). */
+        chrome={chromeKatalog(menus)}
         className="sticky top-0"
       />
       {/* activeHref: chip yang alamatnya PERSIS sama dengan penyaring yang

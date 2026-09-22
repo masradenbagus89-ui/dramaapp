@@ -4,6 +4,8 @@ import { getAllDramasCachedSafe } from "@/lib/dramas";
 import { getPlaylyVideosGabunganCached } from "@/lib/playly-gabungan";
 import DramaBrowser from "../components/DramaBrowser";
 import DashboardVideoGrid from "../components/DashboardVideoGrid";
+import KerangkaKepalaKatalog from "../components/beranda/KerangkaKepalaKatalog";
+import { buildNavMenus } from "@/lib/nav-katalog";
 
 // Disimpan & dipakai ulang, disegarkan tiap 60 detik (menggantikan force-dynamic
 // yang membangun ulang halaman untuk tiap pengunjung).
@@ -38,6 +40,12 @@ export default async function DiscoverPage() {
   // error hanya karena env belum diisi.
   const dashboardAktif = Boolean(process.env.DASHBOARD_API_URL?.trim());
 
+  // Isi menu dihitung DI SERVER supaya kerangka kepala di bawah sudah membawa
+  // menunya sejak HTML pertama. Hasilnya cuma label + alamat — jauh lebih
+  // ringan dikirim ke browser daripada seluruh katalog. Pola yang sama dipakai
+  // halaman depan (app/page.tsx).
+  const menus = buildNavMenus(dramas);
+
   return (
     <div className="pb-10">
       {/* Hero berjalan DIBUANG (owner 2026-09-09) — halaman ini kini seragam
@@ -47,11 +55,13 @@ export default async function DiscoverPage() {
           DramaBrowser sengaja di LUAR pembungkus ber-padding: bar cari & strip
           genre-nya melebar penuh sampai tepi layar, sedangkan isinya membatasi
           diri sendiri lewat SHELL. */}
-      <Suspense
-        fallback={
-          <div className="py-16 text-center text-sm text-zinc-500">Memuat...</div>
-        }
-      >
+      {/* Kerangka kepala situs, BUKAN tulisan "Memuat..." (owner 2026-09-22).
+          Halaman ini tak merender apa pun di server — `DramaBrowser` memakai
+          `useSearchParams()` sehingga wajib dibungkus `<Suspense>` — jadi
+          isi `fallback` inilah SATU-SATUNYA yang dilihat penonton sebelum
+          JavaScript aktif. Tulisan polos di layar hitam membuat halaman
+          katalog utama terbaca seperti situs rusak. */}
+      <Suspense fallback={<KerangkaKepalaKatalog menus={menus} />}>
         <DramaBrowser dramas={dramas} playlyVideos={playlyVideos} />
       </Suspense>
 

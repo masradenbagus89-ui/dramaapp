@@ -21,6 +21,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { LogOut, Menu } from "lucide-react";
+import type { NavMenu } from "@/lib/nav-katalog";
+import NavMenus from "./NavMenus";
+import type { SearchBarChrome } from "./SearchBar";
 
 /**
  * KEPALA SITUS untuk halaman berkatalog (/beranda & /discover).
@@ -268,4 +271,25 @@ export function TombolAkun() {
 
   if (!mounted || !user) return null;
   return <CoinChip />;
+}
+
+/**
+ * Susunan kepala situs untuk halaman BERKATALOG: logo + menu garis-tiga di
+ * kiri, deretan menu dropdown di tengah, tombol akun di kanan.
+ *
+ * ⚠️ Kenapa jadi fungsi bersama dan bukan ditulis di tiap pemakainya
+ * (owner 2026-09-22): susunan ini dipakai DUA kali — kepala sungguhan
+ * (`DramaBrowser`) dan kerangka pemuatannya (`KerangkaKepalaKatalog`, yang
+ * tergambar selagi katalog belum siap). Kalau ditulis dua kali, salah satu
+ * pasti tertinggal saat yang lain diubah, dan akibatnya kepala situs
+ * "melompat" tepat di depan mata penonton begitu halaman aktif. Berkas ini
+ * sudah tiga kali kena masalah menyimpang seperti itu (logo, lalu tulisan
+ * kotak cari dua kali), jadi sumbernya sengaja dikunci satu.
+ */
+export function chromeKatalog(menus: NavMenu[]): SearchBarChrome {
+  return {
+    brand: <MenuAplikasi />,
+    menus: <NavMenus menus={menus} />,
+    trailing: <TombolAkun />,
+  };
 }

@@ -9,7 +9,7 @@
 >
 > **📦 Berkas ini sudah 2.980 baris / ±240 KB** dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-09-22 — ✅ **SUDAH DIRILIS & TERBUKTI TAYANG.** `HEAD` = `origin/main` = `dramaku/main` = **`4c62839`**, antrean **KOSONG**. Sebab anomali navbar halaman depan akhirnya **KETEMU, DIREPRODUKSI, diperbaiki, dan terbukti sembuh di produksi**.
+**Terakhir diisi:** 2026-09-22 (revisi ke-2) — ✅ **DUA RILIS HARI INI, SEMUANYA TERBUKTI TAYANG.** `HEAD` = `origin/main` = `dramaku/main` = **`9c1d1b2`**, antrean **KOSONG**. Rilis ke-2 = dua kotak cari akhirnya bertulisan sama (seksi 2026-09-22 paling atas). Rilis ke-1 = perbaikan navbar liar (`4c62839`). Sebab anomali navbar halaman depan akhirnya **KETEMU, DIREPRODUKSI, diperbaiki, dan terbukti sembuh di produksi**.
 
 **Verifikasi tayang — 13 halaman produksi diperiksa satu per satu, semuanya 200, NOL yang salah:** `/` sekarang **0 navbar + 0 nav-bawah** (navbar liarnya hilang), sementara `/shorts` `/playly` `/my-list` `/profile` `/history` `/video-eksternal` `/lupa-password` `/admin` **navbarnya TETAP UTUH** dan `/beranda` `/discover` tetap tanpa navbar tapi tetap punya nav-bawah di HP.
 
@@ -18,6 +18,19 @@
 Catatan 2026-09-21 menulis "sebabnya belum terjelaskan dan JANGAN ditebak". Sekarang sudah diukur dan **direproduksi di tes**: `usePathname()` di `TopNav`/`BottomNav` menerima nilai yang **bukan** `/` saat pra-render alamat akar; `?? "/"` tidak menangkapnya (operator `??` hanya menangkap `null`/`undefined`, **bukan string kosong**); dan logikanya berbentuk **denylist** sehingga nilai apa pun yang tak dikenali membuat navbar **MUNCUL**. Rinciannya di seksi 2026-09-22 di bawah.
 
 ⚠️ **Koreksi atas catatan 2026-09-21 itu sendiri.** Kalimat *"`TopNav` menggambar menunya dalam keadaan tidak ada yang aktif, yang justru konsisten dengan `pathname === "/"`"* **menyimpulkan ke arah yang salah**. Keadaan "tak ada satu pun menu aktif" justru konsisten dengan `pathname` yang **BUKAN** `/` — sebab kalau nilainya benar-benar `/`, penyaring `PUBLIC_PATHS` sudah memulangkan `null` dan navbarnya tak tergambar sama sekali. Petunjuk itu sebenarnya sudah menunjuk jawabannya sejak semalam, cuma dibaca terbalik.
+
+---
+
+
+## 2026-09-22 — dua kotak cari akhirnya bertulisan sama (SUDAH TAYANG)
+
+**Diminta owner** sesudah ditawari tiga sisa pekerjaan: "nomor 2 saja". Kotak cari **kecil** di navbar hitam masih bertulis `"Cari drama, kategori..."` (`app/components/TopNav.tsx:222`) sementara yang **lebar** di bar merah sudah `"Cari film di DramaKu"` sejak 2026-09-21. Dua kotak yang berperilaku sama — keduanya melempar ke `/discover` — dengan tulisan berbeda terbaca seperti dua situs berbeda.
+
+**Yang diubah — MURNI tulisan, nol logika.** Bukan cuma disamakan: teksnya diangkat jadi konstanta **`TEKS_KOTAK_CARI`** yang diekspor dari `app/components/beranda/SearchBar.tsx`, lalu `TopNav` mengimpornya. **Kenapa tidak cukup disamakan saja:** teks ini sudah **DUA KALI** menyimpang justru karena ditulis terpisah di dua berkas. Sekarang di seluruh kode teksnya ditulis-tangan **di satu tempat** (`SearchBar.tsx:43`); menulisnya ulang di tempat lain akan membuat tes MERAH.
+
+**Penjaga baru** (3 tes di `tests/kepala-situs.test.ts`): kotak cari kecil diperiksa dari **HTML yang benar-benar dirender** (bukan dari nilai konstantanya — menulis ulang teks langsung di `TopNav` akan lolos kalau yang diuji cuma konstanta) · tulisan lama wajib nol · dan pagar fungsi `type="search"` tetap ada, sebab tulisan boleh diubah owner kapan saja tapi penanda pencarian tak boleh ikut hilang (dipakai pembaca layar & tombol hapus browser).
+
+**Bukti:** `rm -rf .next` → build **exit 0** dan tabel status halamannya **IDENTIK karakter-per-karakter** dengan build sebelumnya (nol kemunduran, dibandingkan otomatis bukan dilihat sekilas) → `tsc` **exit 0 / 0 error** → **789 tes / 54 berkas** (dari 786) → **mutation check 3 arah SEMUANYA MERAH** (teks lama dikembalikan · teks diubah hanya di satu kotak · penanda `type="search"` dihapus) → `next start` (log server dibaca dulu) **5 halaman diperiksa, kelimanya menggambar tulisan baru, nol tulisan lama**.
 
 ---
 

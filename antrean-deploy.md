@@ -3,6 +3,14 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
+**Terakhir dicek:** 2026-09-22 (**✅ DUA RILIS HARI INI, antrean KOSONG**). **`HEAD` = `origin/main` = `dramaku/main` = `9c1d1b2`**, lokal ahead 0. Rilis ke-2 membawa **1 commit**: dua kotak cari akhirnya bertulisan sama — teksnya diangkat jadi konstanta `TEKS_KOTAK_CARI` (satu sumber) karena sudah DUA KALI menyimpang akibat ditulis terpisah. Dual push atas izin owner, cermin dulu baru produksi, keduanya **fast-forward**.
+
+**Gerbang §6:** build **exit 0** + tabel status halaman **IDENTIK** dengan build sebelumnya (dibandingkan otomatis) → `tsc` **exit 0 / 0 error** → **789 tes / 54 berkas** (dari 786) → **mutation check 3 arah semuanya MERAH** → nol berkas env/kunci → push → verifikasi tayang. **Nol SQL, nol env baru.**
+
+**Rollback rilis ke-2:** `git revert --no-edit 9c1d1b2 && git push origin main && git push dramaku main`.
+
+---
+
 **Terakhir dicek:** 2026-09-22 (**✅ SUDAH DIRILIS & TERBUKTI TAYANG**). **`HEAD` = `origin/main` = `dramaku/main` = `4c62839`**, lokal ahead 0, antrean **KOSONG**. Rilis membawa **1 commit**: perbaikan navbar liar halaman depan. Dual push atas izin owner, urutan cermin (`dramaku`) dulu baru produksi (`origin`), keduanya **fast-forward** (`5501fdf..4c62839`, tanpa paksa) dan `git rev-list --count HEAD..origin/main` = **0** sebelum push.
 
 **Gerbang §6 dijalankan penuh, urutan benar, exit code dibaca dari berkas (TIDAK dipipa):** `rm -rf .next` → `npm run build` **exit 0** (`/` `/beranda` `/discover` `/playly` `/shorts` `sitemap.xml` semua tetap `○ (Static)` 1m 1y) → `npx tsc --noEmit` **exit 0 / 0 error** → **786 tes / 54 berkas** (dari 741/54) → **mutation check 6 arah semuanya MERAH** → **nol berkas env/kunci** (dua lapis) → push → verifikasi tayang. **Nol SQL, nol env baru.**

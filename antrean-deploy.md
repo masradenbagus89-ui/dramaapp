@@ -3,6 +3,16 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
+**Terakhir dicek:** 2026-09-22 (**✅ TIGA RILIS HARI INI, antrean KOSONG**). **`HEAD` = `origin/main` = `dramaku/main` = `a3164f7`**, lokal ahead 0. Rilis ke-3 = `/discover` berhenti menampilkan tulisan "Memuat..." polos sebelum isinya masuk; penggantinya kerangka kepala yang memakai bar merah & strip **sungguhan**, dengan susunan dari fungsi bersama `chromeKatalog()` supaya mustahil menyimpang dari kepala aslinya. Dual push atas izin owner, cermin dulu baru produksi, keduanya **fast-forward**.
+
+**Gerbang §6:** build **exit 0** + tabel status halaman **IDENTIK** dengan build sebelumnya (**`/discover` TETAP `○ (Static)`** — kerangkanya tidak membuatnya dinamis) → `tsc` **exit 0 / 0 error** → **801 tes / 55 berkas** (dari 789/54) → **mutation check 6 arah semuanya MERAH** → nol berkas env/kunci → push → verifikasi tayang. **Nol SQL, nol env baru.**
+
+**🪤 Dua jebakan yang ketahuan di rilis ini, layak diingat:** (a) penjaga "kotak carinya berfungsi" versi pertama memeriksa ada `<form>` di HTML dan **TETAP HIJAU** saat penanganya dilepas — **penangan yang terpasang tak bisa dibuktikan dari HTML statis**, harus menangkap props lalu MENJALANKAN penanganya; (b) berkas tes baru **lulus 801 tes tapi gagal `tsc` dengan 5 error** — vitest tidak memeriksa tipe, jadi gerbang `tsc` bukan formalitas.
+
+**Rollback rilis ke-3:** `git revert --no-edit a3164f7 && git push origin main && git push dramaku main`.
+
+---
+
 **Terakhir dicek:** 2026-09-22 (**✅ DUA RILIS HARI INI, antrean KOSONG**). **`HEAD` = `origin/main` = `dramaku/main` = `9c1d1b2`**, lokal ahead 0. Rilis ke-2 membawa **1 commit**: dua kotak cari akhirnya bertulisan sama — teksnya diangkat jadi konstanta `TEKS_KOTAK_CARI` (satu sumber) karena sudah DUA KALI menyimpang akibat ditulis terpisah. Dual push atas izin owner, cermin dulu baru produksi, keduanya **fast-forward**.
 
 **Gerbang §6:** build **exit 0** + tabel status halaman **IDENTIK** dengan build sebelumnya (dibandingkan otomatis) → `tsc` **exit 0 / 0 error** → **789 tes / 54 berkas** (dari 786) → **mutation check 3 arah semuanya MERAH** → nol berkas env/kunci → push → verifikasi tayang. **Nol SQL, nol env baru.**

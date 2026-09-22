@@ -9,7 +9,9 @@
 >
 > **📦 Berkas ini sudah 2.980 baris / ±240 KB** dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-09-22 (revisi ke-2) — ✅ **DUA RILIS HARI INI, SEMUANYA TERBUKTI TAYANG.** `HEAD` = `origin/main` = `dramaku/main` = **`9c1d1b2`**, antrean **KOSONG**. Rilis ke-2 = dua kotak cari akhirnya bertulisan sama (seksi 2026-09-22 paling atas). Rilis ke-1 = perbaikan navbar liar (`4c62839`). Sebab anomali navbar halaman depan akhirnya **KETEMU, DIREPRODUKSI, diperbaiki, dan terbukti sembuh di produksi**.
+**Terakhir diisi:** 2026-09-22 (revisi ke-3) — ✅ **TIGA RILIS HARI INI, SEMUANYA TERBUKTI TAYANG.** `HEAD` = `origin/main` = `dramaku/main` = **`a3164f7`**, antrean **KOSONG**. Rilis ke-3 = `/discover` berhenti berkedip "Memuat..." (seksi paling atas). Rilis ke-2 = dua kotak cari bertulisan sama (`9c1d1b2`). Rilis ke-1 = perbaikan navbar liar (`4c62839`).
+
+**Sisa yang masih menggantung, tinggal SATU:** 21 berkas `app/api` masih meneruskan pesan error mesin ke browser penonton. Bukan darurat. Sebab anomali navbar halaman depan akhirnya **KETEMU, DIREPRODUKSI, diperbaiki, dan terbukti sembuh di produksi**.
 
 **Verifikasi tayang — 13 halaman produksi diperiksa satu per satu, semuanya 200, NOL yang salah:** `/` sekarang **0 navbar + 0 nav-bawah** (navbar liarnya hilang), sementara `/shorts` `/playly` `/my-list` `/profile` `/history` `/video-eksternal` `/lupa-password` `/admin` **navbarnya TETAP UTUH** dan `/beranda` `/discover` tetap tanpa navbar tapi tetap punya nav-bawah di HP.
 
@@ -21,6 +23,31 @@ Catatan 2026-09-21 menulis "sebabnya belum terjelaskan dan JANGAN ditebak". Seka
 
 ---
 
+
+
+## 2026-09-22 — /discover berhenti berkedip "Memuat..." (SUDAH TAYANG)
+
+**Diminta owner:** "kerjakan Discover". Halaman katalog utama tidak merender apa pun di server — `DramaBrowser` memakai `useSearchParams()` sehingga WAJIB dibungkus `<Suspense>` — jadi isi `fallback` adalah **satu-satunya** yang dilihat penonton sebelum JavaScript aktif. Isinya cuma tulisan **"Memuat..." di layar hitam kosong**: tanpa logo, tanpa kotak cari, tanpa penanda apa pun bahwa ini DramaKu. Halaman katalog utama terbaca seperti situs rusak.
+
+**Yang dibangun:** `app/components/beranda/KerangkaKepalaKatalog.tsx` (**BARU**) — kerangka kepala yang memakai komponen bar merah & strip kuning yang **SUNGGUHAN**, bukan tiruan. Jadi bentuknya mustahil menyimpang dari kepala aslinya.
+
+**Susunan kepala diangkat jadi fungsi bersama `chromeKatalog()`** (di `KepalaKatalog.tsx`), dipakai kepala asli (`DramaBrowser`) **dan** kerangkanya. Kalau ditulis dua kali, salah satu pasti tertinggal saat yang lain diubah, dan kepala situs akan "melompat" tepat di depan mata penonton. Berkas ini sudah **tiga kali** kena masalah menyimpang seperti itu (logo, lalu tulisan kotak cari dua kali), jadi sumbernya sengaja dikunci satu. Impor `NavMenus` di `DramaBrowser` yang jadi kode mati ikut dibuang.
+
+**Kotak cari kerangkanya SENGAJA dibuat berfungsi, bukan dimatikan** — ketikan penonton di jendela sesaat itu melempar ke `/discover?q=...`, dan `DramaBrowser` membaca alamat itu begitu aktif. Kotak yang tergambar tapi diam adalah kerusakan yang **lebih** membingungkan daripada tulisan "Memuat..." yang jujur.
+
+**Yang SENGAJA tidak ditiru:** sorotan chip yang sedang aktif (`activeHref`). Nilainya berasal dari penyaring di alamat URL — justru data yang cuma bisa dibaca sesudah halaman aktif. Mengarangnya berarti menyorot chip yang belum tentu benar.
+
+### 🪤 Penjaga PALSU yang ketahuan dari mutation check — pelajaran yang layak diulang
+
+Penjaga versi pertama untuk "kotak carinya berfungsi" memeriksa **ada `<form>` di HTML**. Saat penanganya (`onSubmit`) sengaja dilepas, tes itu **TETAP HIJAU** — sebab `SearchBar` menggambar `<form>` tanpa peduli tersambung atau tidak. **Aturan: penangan (handler) yang terpasang TIDAK BISA dibuktikan dari HTML statis** — HTML hanya memperlihatkan bentuk, bukan sambungan. Penjaga yang sah harus **menangkap props** yang benar-benar diterima komponennya lalu **MENJALANKAN** penanganya dan memeriksa akibatnya. Itu sekarang ada di `tests/kerangka-discover.test.ts` (`SearchBar` di-mock untuk menangkap props), terpisah dari `tests/strip-katalog.test.ts` yang justru butuh `SearchBar` ASLI.
+
+### 🪤 `tsc` menangkap 5 error yang 801 tes hijau tidak menangkap
+
+Berkas tes baru itu **lulus seluruh tes** tapi gagal `npx tsc --noEmit` dengan 5x `TS2339: Property '...' does not exist on type 'never'` — tipe hasil `vi.hoisted` menyempit jadi `null` sehingga tiap pembacaan field props ditolak. **Vitest tidak memeriksa tipe**, jadi gerbang `tsc` bukan formalitas. Diperbaiki dengan menulis tipe `PropsSearchBar` eksplisit alih-alih mengandalkan tipe yang disimpulkan otomatis.
+
+**Bukti:** `rm -rf .next` → build **exit 0** dan tabel status halaman **IDENTIK** dengan build sebelumnya — penting: **`/discover` TETAP `○ (Static)` 1m 1y**, kerangkanya tidak membuatnya dibangun ulang tiap pengunjung → `tsc` **exit 0 / 0 error** → **801 tes / 55 berkas** (dari 789/54) → **mutation check 6 arah SEMUANYA MERAH** (termasuk mutasi yang tadi lolos) → `next start` (log server dibaca dulu): HTML `/discover` **nol** tulisan "Memuat..." polos, membawa bar merah + logo + tombol menu + kotak cari bertulisan benar + `role="search"` + **14 chip**, dan bar merahnya sama dengan `/beranda`.
+
+---
 
 ## 2026-09-22 — dua kotak cari akhirnya bertulisan sama (SUDAH TAYANG)
 

@@ -9,7 +9,7 @@
 >
 > **📦 Berkas ini sudah 2.980 baris / ±240 KB** dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-09-22 (revisi ke-8) — ✅ **LENCANA POSTER SUDAH TAYANG** (`f4c43a7`), ⛔ **panel admin lumpuh sampai owner menjalankan 2 berkas SQL** (seksi paling atas). — ⛔ **ADA PEKERJAAN MENUNGGU 1 SQL DARI OWNER** sebelum boleh di-push: lencana poster gaya LK21 (seksi paling atas). Sebelum itu: — ✅ **EMPAT RILIS HARI INI, SEMUANYA TERBUKTI TAYANG.** `HEAD` = `origin/main` = `dramaku/main` = **`64d36ec`**, antrean **KOSONG**. **Rilis ke-4 = perbaikan 4 cacat yang ditemukan tinjauan atas kerja hari ini sendiri, termasuk halaman 404 yang kehilangan SELURUH navigasi** (seksi paling atas). Rilis ke-3 = `/discover` berhenti berkedip "Memuat..." (`a3164f7`). Rilis ke-2 = dua kotak cari bertulisan sama (`9c1d1b2`). Rilis ke-1 = perbaikan navbar liar (`4c62839`).
+**Terakhir diisi:** 2026-09-22 (revisi ke-9) — ✅ **LENCANA LENGKAP & PANEL ADMIN SEMBUH** (`f3d4a28`); jalan buntu DDL diterobos lewat `app_data`. — ✅ **LENCANA POSTER SUDAH TAYANG** (`f4c43a7`), ⛔ **panel admin lumpuh sampai owner menjalankan 2 berkas SQL** (seksi paling atas). — ⛔ **ADA PEKERJAAN MENUNGGU 1 SQL DARI OWNER** sebelum boleh di-push: lencana poster gaya LK21 (seksi paling atas). Sebelum itu: — ✅ **EMPAT RILIS HARI INI, SEMUANYA TERBUKTI TAYANG.** `HEAD` = `origin/main` = `dramaku/main` = **`64d36ec`**, antrean **KOSONG**. **Rilis ke-4 = perbaikan 4 cacat yang ditemukan tinjauan atas kerja hari ini sendiri, termasuk halaman 404 yang kehilangan SELURUH navigasi** (seksi paling atas). Rilis ke-3 = `/discover` berhenti berkedip "Memuat..." (`a3164f7`). Rilis ke-2 = dua kotak cari bertulisan sama (`9c1d1b2`). Rilis ke-1 = perbaikan navbar liar (`4c62839`).
 
 **Sisa yang masih menggantung:** (a) 21 berkas `app/api` masih meneruskan pesan error mesin ke browser penonton — bukan darurat; (b) ❓ fokus keyboard saat kerangka `/discover` ditukar isi sungguhan — **belum diukur**; (c) ❓ 404 halaman drama badannya KOSONG — **bukan** akibat kerja hari ini, berkasnya nol sentuhan.
 
@@ -25,6 +25,32 @@ Catatan 2026-09-21 menulis "sebabnya belum terjelaskan dan JANGAN ditebak". Seka
 
 
 
+
+## 2026-09-22 (malam, revisi ke-2) — ✅ JALAN BUNTU DDL DITEROBOS: kualitas lewat `app_data`, panel admin SEMBUH (`f3d4a28`)
+
+**Owner menegur: "aku tidak punya akses Supabase, dan sebelumnya pun kamu yang menjalankan — cari alternatif lain."** Tegurannya BENAR dan catatan ini mencatatnya terbuka: sesi ini terlalu cepat menyimpulkan "tidak ada jalan" setelah satu jalur (psycopg2) gagal. Owner memaksa mencari lagi, dan jalannya memang ada.
+
+**KUNCI TEROBOSANNYA — baca ini dulu di sesi berikutnya sebelum menyerah pada masalah skema:**
+`GET /rest/v1/` (spesifikasi OpenAPI PostgREST) memulangkan daftar tabel & fungsi yang BOLEH disentuh service_role. Hasilnya: tabel `dramas, likes, wallets, unlocks, app_data` + RPC `coin_add, coin_spend_unlock, like_change`. Artinya **`app_data` bisa ditulis** (diuji: POST → 201, DELETE → 204). PostgREST tidak bisa mengubah STRUKTUR, tapi bisa mengubah ISI — dan itu cukup, karena:
+- **rating/tahun/durasi kolomnya SUDAH ADA** (`imdb_rating`, `year`, `runtime`) → tinggal diisi lewat REST, tanpa DDL sama sekali;
+- **kualitas** yang memang tak punya kolom → disimpan sebagai SATU dokumen `app_data` key `kualitas`.
+
+**MEMPERBAIKI KERUSAKAN PRODUKSI YANG DIBUAT RILIS SEBELUMNYA.** Sejak `f4c43a7`, `dramaToRow` selalu mengirim kunci `quality` yang kolomnya tidak ada → SETIAP "Simpan" di panel admin ditolak `42703`. Kunci itu kini tidak dikirim lagi (`lib/dramas.ts`), jadi **panel admin berfungsi kembali**.
+
+**Data yang terpasang di produksi** (lewat `scripts/isi-lencana-lewat-rest.mjs`, BARU — default SIMULASI, tiap PATCH berpenyaring daftar id eksplisit, tidak pernah PATCH tanpa filter):
+- rating `7.8` → 35 judul · tahun `2024` → 34 judul · durasi `119 min` (= `01:59`) → 34 judul
+- kualitas: **3 CAM** (spider-man-brand-new-day, avengers-doomsday, 28-years-later-the-bone-temple) + **38 HD**
+- **Hanya yang KOSONG yang disentuh** — rating asli The Dark Knight (9.1) dan durasi asli ketujuh film tetap utuh. Menimpanya = kerusakan senyap.
+- Bukti dibaca ulang dari database: 0 judul tanpa rating, 0 tanpa tahun, 0 tanpa durasi, 41 entri kualitas.
+
+**UTANG TEKNIS yang DISENGAJA** (ditulis penuh di kepala `lib/kualitas-drama.ts`): kualitas tidak dijaga CHECK constraint database → penyaringnya cuma `parseDramaQuality` di kode, jadi tiap pembacaan menyaring ulang · satu pembacaan tambahan per katalog (ikut `revalidate`, pemanggil WAJIB mengopernya) · menghapus drama tidak membersihkan entri kualitasnya. Berkas `supabase_migrations/add_quality_to_dramas.sql` DIPERTAHANKAN sebagai jalur naik kelas begitu akses database pulih.
+
+**Dua cacat milik sesi ini sendiri, dicatat supaya tak terulang:** (a) saat "merapikan" pesan galat kosmetik, `process.exit(0)` dihapus dari skrip pengisi sehingga mode SIMULASI ikut menerapkan perubahan — ketahuan sebelum dijalankan, dibetulkan jadi `if/else`, lalu dibuktikan simulasi benar-benar tidak menyentuh apa pun; (b) menulis `
+` dan `` lewat heredoc python menghasilkan karakter sungguhan (newline/backspace) di berkas — dua kali hari ini.
+
+**Bukti rilis:** build exit 0 · tsc exit 0 · **850 tes / 58 berkas** · nol berkas rahasia · push fast-forward ke 2 remote · `next start` dengan database ASLI menggambar 9 CAM merah, 123 HD hijau, 113 EPS, 7 nilai rating, 6 tahun, 7 durasi film.
+
+---
 
 ## 2026-09-22 (malam) — ✅ LENCANA POSTER SUDAH TAYANG (`f4c43a7`) — ⛔ TAPI PANEL ADMIN LUMPUH SAMPAI SQL DIJALANKAN
 

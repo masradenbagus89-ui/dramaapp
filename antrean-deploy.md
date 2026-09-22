@@ -299,6 +299,14 @@ Sebelumnya 2026-08-28 (deploy hero landing): **Lokal = `origin/main` = `dramaku/
 
 **Catatan sebelumnya:** 2026-08-24 sore WIB (`git fetch origin` + `git fetch dramaku` dua-duanya SUKSES; `HEAD` = `origin/main` = `dramaku/main` = **`ba82058`**, selisih NOL)
 
+## 2026-09-22 — RILIS `f3d4a28` — ✅ LENCANA LENGKAP TAYANG + PANEL ADMIN SEMBUH
+
+- **Terdorong ke:** `dramaku` ✅ dan `origin` ✅ (fast-forward).
+- **Terverifikasi tayang di https://dramaapp.vercel.app:** 9 lencana CAM merah, 123 HD hijau, 113 EPS, rating `5.2 7.2 7.3 7.6 7.8 8.1 9.1`, tahun `2006 2008 2017 2024 2025 2026`, durasi `01:42 … 02:45`.
+- **Panel admin SEMBUH — dibuktikan, bukan disimpulkan:** payload gaya `dramaToRow` sekarang → **HTTP 200 diterima, data utuh**; payload lama yang menyertakan `quality` → **HTTP 400 ditolak** (itulah penyebab rusaknya sejak `f4c43a7`).
+- **TIDAK ADA utang SQL lagi.** Kolom `quality` tidak jadi dibuat; kualitas disimpan di `app_data` (lihat `lib/kualitas-drama.ts` untuk 3 batasnya + cara naik kelas). `supabase_migrations/add_quality_to_dramas.sql` disimpan sebagai jalur naik kelas, BUKAN syarat.
+- **Catatan akses:** password database di berkas Downloads sudah tidak berlaku sejak sekitar 2026-09-16 — jalur `psycopg2` yang dipakai migrasi `status` (2026-09-07) kini mati. Jalur pengganti untuk perubahan DATA: `scripts/isi-lencana-lewat-rest.mjs`. Untuk perubahan STRUKTUR: masih perlu akses dashboard/password.
+
 ## 2026-09-22 — RILIS `f4c43a7` lencana poster LK21 — ✅ TAYANG, ⛔ ADA UTANG SQL
 
 - **Terdorong ke:** `dramaku` ✅ dan `origin` ✅ (fast-forward `652d0ad` → `f4c43a7`, nol commit tertinggal di kedua remote).

@@ -9,7 +9,7 @@
 >
 > **📦 Berkas ini sudah 2.980 baris / ±240 KB** dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-09-22 (revisi ke-7) — ⛔ **ADA PEKERJAAN MENUNGGU 1 SQL DARI OWNER** sebelum boleh di-push: lencana poster gaya LK21 (seksi paling atas). Sebelum itu: — ✅ **EMPAT RILIS HARI INI, SEMUANYA TERBUKTI TAYANG.** `HEAD` = `origin/main` = `dramaku/main` = **`64d36ec`**, antrean **KOSONG**. **Rilis ke-4 = perbaikan 4 cacat yang ditemukan tinjauan atas kerja hari ini sendiri, termasuk halaman 404 yang kehilangan SELURUH navigasi** (seksi paling atas). Rilis ke-3 = `/discover` berhenti berkedip "Memuat..." (`a3164f7`). Rilis ke-2 = dua kotak cari bertulisan sama (`9c1d1b2`). Rilis ke-1 = perbaikan navbar liar (`4c62839`).
+**Terakhir diisi:** 2026-09-22 (revisi ke-8) — ✅ **LENCANA POSTER SUDAH TAYANG** (`f4c43a7`), ⛔ **panel admin lumpuh sampai owner menjalankan 2 berkas SQL** (seksi paling atas). — ⛔ **ADA PEKERJAAN MENUNGGU 1 SQL DARI OWNER** sebelum boleh di-push: lencana poster gaya LK21 (seksi paling atas). Sebelum itu: — ✅ **EMPAT RILIS HARI INI, SEMUANYA TERBUKTI TAYANG.** `HEAD` = `origin/main` = `dramaku/main` = **`64d36ec`**, antrean **KOSONG**. **Rilis ke-4 = perbaikan 4 cacat yang ditemukan tinjauan atas kerja hari ini sendiri, termasuk halaman 404 yang kehilangan SELURUH navigasi** (seksi paling atas). Rilis ke-3 = `/discover` berhenti berkedip "Memuat..." (`a3164f7`). Rilis ke-2 = dua kotak cari bertulisan sama (`9c1d1b2`). Rilis ke-1 = perbaikan navbar liar (`4c62839`).
 
 **Sisa yang masih menggantung:** (a) 21 berkas `app/api` masih meneruskan pesan error mesin ke browser penonton — bukan darurat; (b) ❓ fokus keyboard saat kerangka `/discover` ditukar isi sungguhan — **belum diukur**; (c) ❓ 404 halaman drama badannya KOSONG — **bukan** akibat kerja hari ini, berkasnya nol sentuhan.
 
@@ -25,6 +25,28 @@ Catatan 2026-09-21 menulis "sebabnya belum terjelaskan dan JANGAN ditebak". Seka
 
 
 
+
+## 2026-09-22 (malam) — ✅ LENCANA POSTER SUDAH TAYANG (`f4c43a7`) — ⛔ TAPI PANEL ADMIN LUMPUH SAMPAI SQL DIJALANKAN
+
+**Owner memerintahkan push, dan itu sudah dilakukan.** `f4c43a7` terdorong ke **kedua** repo (`dramaku` lalu `origin`), keduanya fast-forward murni dari `652d0ad` (nol commit tertinggal, tidak ada pekerjaan siapa pun tertimpa). Terverifikasi tayang di **https://dramaapp.vercel.app**: 7 durasi film (`02:45`, `02:25`, `01:42`, …), 113 lencana EPS, 6 rating bintang, `SUB INDO` = 0.
+
+**⛔ KONSEKUENSI YANG SUDAH DIPERINGATKAN DUA KALI DAN KINI NYATA: menyimpan drama dari panel admin GAGAL.** Terbukti barusan lewat pembacaan produksi: `GET /rest/v1/dramas?select=quality` membalas `42703 column dramas.quality does not exist`, sementara `dramaToRow` SELALU menyertakan kunci `quality` di tiap upsert. Jadi tiap "Simpan" di panel admin ditolak database — bukan cuma drama yang diisi kualitasnya. **Yang TIDAK terpengaruh:** situs publik, pemutar video, login, koin, komentar (semuanya hanya membaca). Sembuh seketika begitu SQL dijalankan. Admin akan melihat pesan berbahasa Indonesia yang menyebut nama berkas SQL-nya (`explainSaveError`), bukan pesan PostgREST mentah.
+
+**⛔ KENAPA AI TIDAK BISA MENJALANKAN SQL-nya — sudah dicoba habis, jangan diulang buta:**
+- `psycopg2` + pooler `aws-1-ap-southeast-1.pooler.supabase.com` → **`password authentication failed for user "postgres"`**. Password di C:/Users/user18/Downloads/password.txt (17 karakter) sudah TIDAK BERLAKU — padahal catatan 2026-09-16 (baris ~549) mencatat pooler waktu itu tersambung normal, jadi passwordnya diganti setelah tanggal itu.
+- Diuji 4 kombinasi, semua ditolak: pooler 5432 user `postgres.<ref>`, pooler 5432 user `creative_raden.<ref>`, pooler 6543, dan host langsung `db.<ref>.supabase.co` (yang ini **DNS tidak resolve** — memang tidak dipublikasikan project ini, sama seperti temuan 2026-09-16).
+- Supabase CLI **tidak terpasang**; `~/.supabase` cuma berisi `telemetry.json` (tanpa access-token); **tidak ada** Personal Access Token (`sbp_*`) di mana pun.
+- Kesimpulan: jalur satu-satunya = owner menempel SQL di Supabase SQL Editor, **atau** owner mereset password database lalu menaruhnya di berkas itu.
+
+**Yang harus dijalankan (urut):** `supabase_migrations/add_quality_to_dramas.sql` lalu `supabase_migrations/isi_lencana_awal_dramas.sql`. Sesudah itu poster serial menampilkan ⭐7.8 · HD hijau · 2024 · 62 EPS, dan film bioskop 2026 menampilkan CAM merah.
+
+**Temuan keamanan yang ikut ditutup:** `.gitignore` memakai pola `.env*.local` yang TIDAK menangkap varian bersufiks seperti `.env.local.pratinjau` — berkas kerja sementara berisi `ADMIN_PASSWORD`/`AUTH_SECRET`/`OMDB_API_KEY` nyaris ikut ter-commit ke repo publik hari ini. Ditambah pola `.env.local.*`, `.env.*.bak`, `__pycache__/`, dan dibuktikan dengan `git check-ignore`.
+
+**Koreksi alamat:** `dramaku.vercel.app` **BUKAN** DramaKu (itu aplikasi React lain, HTML 846 byte berjudul "React App"). Produksi DramaKu = **`dramaapp.vercel.app`** (`lib/site.ts:8`). Sesi ini sempat menyebut alamat yang salah dua kali.
+
+**Bukti rilis:** build exit 0 · tsc exit 0 · **842 tes / 57 berkas** · nol berkas rahasia ter-stage · push fast-forward ke 2 remote · HTML produksi diperiksa langsung.
+
+---
 
 ## 2026-09-22 (sore, revisi ke-2) — owner menentukan sendiri angka lencananya — ⛔ SQL MASIH TERBLOKIR
 

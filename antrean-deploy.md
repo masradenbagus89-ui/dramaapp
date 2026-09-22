@@ -299,6 +299,13 @@ Sebelumnya 2026-08-28 (deploy hero landing): **Lokal = `origin/main` = `dramaku/
 
 **Catatan sebelumnya:** 2026-08-24 sore WIB (`git fetch origin` + `git fetch dramaku` dua-duanya SUKSES; `HEAD` = `origin/main` = `dramaku/main` = **`ba82058`**, selisih NOL)
 
+## 2026-09-22 — RILIS `f4c43a7` lencana poster LK21 — ✅ TAYANG, ⛔ ADA UTANG SQL
+
+- **Terdorong ke:** `dramaku` ✅ dan `origin` ✅ (fast-forward `652d0ad` → `f4c43a7`, nol commit tertinggal di kedua remote).
+- **Terverifikasi tayang:** https://dramaapp.vercel.app — 7 durasi film, 113 lencana EPS, 6 rating bintang, `SUB INDO` = 0.
+- **⛔ UTANG YANG HARUS DILUNASI OWNER:** jalankan `supabase_migrations/add_quality_to_dramas.sql` lalu `supabase_migrations/isi_lencana_awal_dramas.sql` di Supabase → SQL Editor. **Sampai itu dilakukan, tombol Simpan di panel admin GAGAL** (kolom `quality` belum ada; terbukti `42703` dari produksi). Situs publik tidak terpengaruh.
+- **AI tidak bisa menjalankannya sendiri:** password database di berkas Downloads sudah tidak berlaku (`password authentication failed`), tidak ada Supabase CLI maupun Personal Access Token. Rinciannya di `HANDOFF.md` seksi paling atas.
+
 ## Siapa memantau apa
 
 > ✅ **DIKOREKSI 2026-08-26 — peringatan lama di sini SALAH.** `git remote -v` hari ini membuktikan

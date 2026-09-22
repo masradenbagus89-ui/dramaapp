@@ -3,19 +3,35 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-09-22. **`HEAD` = `origin/main` = `dramaku/main` = `5501fdf`, lokal ahead 0 — antrean git KOSONG.** Fetch kedua remote dijalankan; nol kerja rekan baru.
+**Terakhir dicek:** 2026-09-22 (**✅ SUDAH DIRILIS & TERBUKTI TAYANG**). **`HEAD` = `origin/main` = `dramaku/main` = `4c62839`**, lokal ahead 0, antrean **KOSONG**. Rilis membawa **1 commit**: perbaikan navbar liar halaman depan. Dual push atas izin owner, urutan cermin (`dramaku`) dulu baru produksi (`origin`), keduanya **fast-forward** (`5501fdf..4c62839`, tanpa paksa) dan `git rev-list --count HEAD..origin/main` = **0** sebelum push.
 
-🟡 **ADA PEKERJAAN SELESAI YANG BELUM DI-COMMIT & BELUM DI-PUSH** — perbaikan navbar liar halaman depan (5 berkas: `lib/navigasi-halaman.ts` BARU, `app/components/TopNav.tsx`, `app/components/BottomNav.tsx`, `tests/kepala-situs.test.ts`, + 2 berkas catatan). **Menunggu keputusan owner**, bukan tertahan masalah teknis.
+**Gerbang §6 dijalankan penuh, urutan benar, exit code dibaca dari berkas (TIDAK dipipa):** `rm -rf .next` → `npm run build` **exit 0** (`/` `/beranda` `/discover` `/playly` `/shorts` `sitemap.xml` semua tetap `○ (Static)` 1m 1y) → `npx tsc --noEmit` **exit 0 / 0 error** → **786 tes / 54 berkas** (dari 741/54) → **mutation check 6 arah semuanya MERAH** → **nol berkas env/kunci** (dua lapis) → push → verifikasi tayang. **Nol SQL, nol env baru.**
 
-**Gerbang §6 SUDAH dijalankan penuh, urutan benar, exit code dibaca dari berkas (TIDAK dipipa):** `rm -rf .next` → `npm run build` **exit 0** (`/` `/beranda` `/discover` `/playly` `/shorts` `sitemap.xml` semua tetap `○ (Static)` 1m 1y) → `npx tsc --noEmit` **exit 0 / 0 error** → **786 tes / 54 berkas** (dari 741/54) → **mutation check 6 arah semuanya MERAH** → **nol berkas env/kunci** (dua lapis: nama berkas + pola rahasia di isi diff). **Nol SQL, nol env baru** — jadi urutan wajib "SQL dulu → env → baru push" (`AGENTS.local.md` butir 3) tidak berlaku untuk rilis ini.
+**🎯 VERIFIKASI TAYANG DI SITUS SUNGGUHAN — 13 halaman produksi diperiksa satu per satu, semuanya 200, NOL yang salah:**
 
-**Isinya:** sebab anomali `/` yang sejak 2026-09-21 ditandai ❓ akhirnya **direproduksi** — `usePathname()` menerima nilai yang BUKAN `/` saat pra-render alamat akar, `?? "/"` tak menangkapnya (`??` hanya menangkap `null`/`undefined`, bukan string kosong), dan penyaringnya berbentuk **denylist** sehingga nilai tak dikenali membuat navbar **MUNCUL**. Diperbaiki jadi **allowlist** per-segmen. Perilaku 19 halaman lain **tidak berubah** (diukur satu per satu di produksi lebih dulu).
+| Halaman | navbar hitam | nav bawah (HP) | Putusan |
+|---|---|---|---|
+| `/` | **0** | **0** | ✅ navbar liarnya HILANG |
+| `/login` `/daftar` | 0 | 0 | ✅ |
+| `/beranda` `/discover` | 0 | 1 | ✅ |
+| `/shorts` `/playly` `/my-list` `/profile` `/history` `/video-eksternal` `/lupa-password` `/admin` | **1** | 1 | ✅ navigasinya UTUH |
 
-⚠️ **VERIFIKASI TAYANG WAJIB PAKAI PENANGKAL CACHE.** Header produksi terukur `X-Vercel-Cache: STALE` dengan `Age: 5426` (~90 menit) dan `X-Nextjs-Prerender: 1`. HTML lama bisa bertahan sesudah deploy, jadi membuka browser begitu saja bisa terbaca seperti "perbaikannya gagal". Cara benar: `curl -sS "https://dramaapp.vercel.app/?nocache=$(...)" -D -` lalu hitung sidik-jari `sticky top-0 z-30 ... backdrop-blur` (harus **0**) dan baca `X-Vercel-Cache`.
+**Isinya:** sebab anomali `/` yang sejak 2026-09-21 ditandai ❓ akhirnya **direproduksi** — `usePathname()` menerima nilai yang BUKAN `/` saat pra-render alamat akar, `?? "/"` tak menangkapnya (`??` hanya menangkap `null`/`undefined`, bukan string kosong), dan penyaringnya berbentuk **denylist** sehingga nilai tak dikenali membuat navbar **MUNCUL**. Diperbaiki jadi **allowlist** per-segmen di `lib/navigasi-halaman.ts` (BARU).
 
-⚠️ **Bukti lokal TIDAK membuktikan bug produksinya sembuh** — seluruh anomali ini justru soal perbedaan lokal vs produksi; HTML lokal `/` sudah bersih bahkan sebelum diperbaiki. Yang membuktikan mekanismenya = 8 tes regresi (nilai `""` `/index` `/?` `//` → navigasi diam). Bukti akhir hanya dari produksi sesudah rilis.
+### ⚠️ KOREKSI atas nasihat yang saya tulis sendiri di sesi ini: penangkal cache sisi-klien TIDAK BEKERJA
 
-**Rollback kalau perlu:** perubahan belum di-commit, jadi pembatalannya `git restore app/components/TopNav.tsx app/components/BottomNav.tsx tests/kepala-situs.test.ts` + hapus `lib/navigasi-halaman.ts`. Sesudah di-commit: `git revert --no-edit <sha> && git push origin main && git push dramaku main`.
+Blok ini tadinya menyuruh memverifikasi dengan `?nocache=...`. **Itu keliru, dan sudah diuji:** terhadap `https://dramaapp.vercel.app/`, keempat cara ini sama-sama membalas `X-Vercel-Cache: HIT` dengan **ETag yang sama persis** dan `Age` yang cuma naik — nol yang menembus:
+
+| Cara | Hasil |
+|---|---|
+| URL polos | `HIT`, age 16 |
+| `?z=<acak>` (query-string acak) | `HIT`, age 17 — **query tidak masuk kunci cache** |
+| header `Cache-Control: no-cache` | `HIT`, age 18 |
+| header `Cache-Control: no-cache` + `Pragma: no-cache` | `HIT`, age 19 |
+
+**Cara yang BENAR-BENAR membuktikan (terpakai di rilis ini):** jangan coba menembus cache — **tunggu dan amati dua penanda**. (1) **`Etag` berubah** begitu deployment baru hidup (`"wygz4v927kbxrp"` → `"247d04d03ef4664326021d5bf7aebc98"`); (2) **`X-Vercel-Cache` berhenti berbunyi `STALE`** dan berganti jadi `PRERENDER`/`MISS` dengan **`Age: 0`** = HTML itu benar-benar dirakit oleh deployment baru. Di rilis ini percobaan ke-1 masih `STALE age=524` (navbar masih 1), percobaan ke-2 sudah `PRERENDER age=0` (navbar 0). **Jadi pola verifikasi yang sah = polling berjeda sampai `Age` kembali 0, bukan satu tembakan dengan penangkal cache.**
+
+**Rollback rilis ini:** `git revert --no-edit 4c62839 && git push origin main && git push dramaku main`.
 
 ---
 

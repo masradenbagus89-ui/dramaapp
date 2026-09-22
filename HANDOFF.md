@@ -9,7 +9,9 @@
 >
 > **📦 Berkas ini sudah 2.980 baris / ±240 KB** dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-09-22 — 🟡 **SELESAI & TERBUKTI, MENUNGGU IZIN RILIS OWNER.** `HEAD` lokal maju **1 commit** dari `origin/main` = `dramaku/main` = `5501fdf`. Isinya: sebab anomali navbar halaman depan akhirnya **KETEMU, DIREPRODUKSI, lalu diperbaiki**.
+**Terakhir diisi:** 2026-09-22 — ✅ **SUDAH DIRILIS & TERBUKTI TAYANG.** `HEAD` = `origin/main` = `dramaku/main` = **`4c62839`**, antrean **KOSONG**. Sebab anomali navbar halaman depan akhirnya **KETEMU, DIREPRODUKSI, diperbaiki, dan terbukti sembuh di produksi**.
+
+**Verifikasi tayang — 13 halaman produksi diperiksa satu per satu, semuanya 200, NOL yang salah:** `/` sekarang **0 navbar + 0 nav-bawah** (navbar liarnya hilang), sementara `/shorts` `/playly` `/my-list` `/profile` `/history` `/video-eksternal` `/lupa-password` `/admin` **navbarnya TETAP UTUH** dan `/beranda` `/discover` tetap tanpa navbar tapi tetap punya nav-bawah di HP.
 
 ### ✅ Anomali `/` SELESAI — sebabnya terbukti, bukan lagi ❓
 
@@ -21,7 +23,7 @@ Catatan 2026-09-21 menulis "sebabnya belum terjelaskan dan JANGAN ditebak". Seka
 
 ## 2026-09-22 — navbar liar di halaman depan: SEBABNYA KETEMU & DIPERBAIKI (belum tayang)
 
-🟡 **Selesai & terbukti lokal, menunggu izin rilis owner.** Nol SQL, nol env baru.
+✅ **SUDAH DIRILIS & TERBUKTI TAYANG** (`4c62839`). Nol SQL, nol env baru.
 
 **Keluhan owner:** halaman depan sesaat menampilkan **dua baris kepala** (navbar hitam + bar merah), lalu navbar hitamnya hilang sendiri.
 
@@ -58,7 +60,20 @@ Dua cacat bertumpuk: (1) `usePathname() ?? "/"` — `??` **tidak** menangkap str
 
 `rm -rf .next` → build **exit 0** (`/` `/beranda` `/discover` `/playly` `/shorts` `sitemap.xml` semua tetap **`○ (Static)`** 1m 1y — nol kemunduran) → `tsc` **exit 0** → **786 tes / 54 berkas** (dari 741/54) → **mutation check 6 arah SEMUANYA MERAH** → `next start` (log server dibaca dulu) **14 halaman diperiksa, 14/14 benar**.
 
-⚠️ **BATAS JUJUR — apa yang bukti lokal ini TIDAK membuktikan.** Seluruh anomali ini justru soal *perbedaan* lokal vs produksi: sebelum diperbaiki pun HTML lokal `/` sudah bersih. Jadi `next start` di atas membuktikan **nol kemunduran**, **bukan** bahwa bug produksinya sembuh. Yang membuktikan mekanismenya adalah 8 tes regresi di atas (nilai apa pun di luar 9 akar allowlist → navigasi diam). **Bukti akhir hanya bisa datang dari produksi sesudah rilis** — dan wajib memakai penangkal cache: header terukur `X-Vercel-Cache: STALE` dengan `Age: 5426` (~90 menit), jadi HTML lama bisa bertahan dan terbaca seperti "perbaikannya gagal".
+✅ **Bukti produksi (yang tadinya belum ada).** Saat rencana ini disusun, bukti lokal memang **tidak bisa** membuktikan bug produksinya sembuh — seluruh anomali ini justru soal *perbedaan* lokal vs produksi, dan HTML lokal `/` sudah bersih bahkan sebelum diperbaiki. Sesudah rilis, buktinya lengkap: **13 halaman produksi, 13/13 benar**, `/` membalas **0 navbar + 0 nav-bawah** sementara 8 halaman lain navbarnya **tetap utuh**.
+
+### ⚠️ KOREKSI atas nasihat yang saya tulis sendiri di sesi ini: penangkal cache sisi-klien TIDAK BEKERJA
+
+Blok ini tadinya menyuruh memverifikasi dengan `?nocache=...`. **Itu keliru, dan sudah diuji:** terhadap `https://dramaapp.vercel.app/`, keempat cara ini sama-sama membalas `X-Vercel-Cache: HIT` dengan **ETag yang sama persis** dan `Age` yang cuma naik — nol yang menembus:
+
+| Cara | Hasil |
+|---|---|
+| URL polos | `HIT`, age 16 |
+| `?z=<acak>` (query-string acak) | `HIT`, age 17 — **query tidak masuk kunci cache** |
+| header `Cache-Control: no-cache` | `HIT`, age 18 |
+| header `Cache-Control: no-cache` + `Pragma: no-cache` | `HIT`, age 19 |
+
+**Cara yang BENAR-BENAR membuktikan (terpakai di rilis ini):** jangan coba menembus cache — **tunggu dan amati dua penanda**. (1) **`Etag` berubah** begitu deployment baru hidup (`"wygz4v927kbxrp"` → `"247d04d03ef4664326021d5bf7aebc98"`); (2) **`X-Vercel-Cache` berhenti berbunyi `STALE`** dan berganti jadi `PRERENDER`/`MISS` dengan **`Age: 0`** = HTML itu benar-benar dirakit oleh deployment baru. Di rilis ini percobaan ke-1 masih `STALE age=524` (navbar masih 1), percobaan ke-2 sudah `PRERENDER age=0` (navbar 0). **Jadi pola verifikasi yang sah = polling berjeda sampai `Age` kembali 0, bukan satu tembakan dengan penangkal cache.**
 
 ### Yang TIDAK dikerjakan (sengaja)
 

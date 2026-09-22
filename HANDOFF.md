@@ -9,11 +9,20 @@
 >
 > **📦 Berkas ini sudah 2.980 baris / ±240 KB** dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-09-22 (revisi ke-11).
+**Terakhir diisi:** 2026-09-22 (revisi ke-12).
 
 ## ⚡ KEADAAN SEKARANG (baca ini dulu — 30 detik)
 
-`HEAD` = `origin/main` = `dramaku/main` = **`fdd2593`**. Antrean **KOSONG**, semua kerja hari ini **SUDAH TAYANG & TERVERIFIKASI** di **https://dramaapp.vercel.app**.
+`HEAD` = `origin/main` = **2 commit BARU di atas `da8d7a1`** (Playly katalog wajib kunci + tombol Unduh). Sisanya **SUDAH TAYANG & TERVERIFIKASI** di **https://dramaapp.vercel.app**.
+
+**🚨 NAMA REMOTE SUDAH BERGESER — `AGENTS.local.md` §5 BASI SOAL INI (temuan 2026-09-22 malam).** Di komputer ini remote-nya sekarang:
+
+| Nama remote | URL | Perannya SEKARANG |
+|---|---|---|
+| `origin` | `github.com/ojokesusu/dramaku` | **PRODUKSI** — inilah yang di-deploy Vercel |
+| `dramaapp` | `github.com/masradenbagus89-ui/dramaapp` | tertinggal **35 commit**, bukan lagi sumber deploy |
+
+Remote bernama `dramaku` **sudah tidak ada** — catatan lama yang menulis "`origin/main` = `dramaku/main`" mengacu ke penamaan yang sudah pensiun. `AGENTS.local.md` §5 masih menulis kebalikannya (`origin` = dramaapp = produksi); **kalimat itu sekarang keliru dan berbahaya** — mengikutinya berarti mendorong rilis ke repo yang tidak di-deploy. **Cara membuktikan tanpa menebak** (dipakai malam ini): ambil penanda teks dari commit yang hanya ada di satu remote (mis. `SERIES UNGGULAN` dari `5d37465`), lalu `curl` situs produksi dan cari penanda itu — ia **tampil** di `dramaapp.vercel.app`, padahal `SERIES UNGGULAN` **tidak ada** di `dramaapp/main`. Jadi Vercel jelas menarik dari `origin`.
 
 **⚠️ KOREKSI ALAMAT:** `dramaku.vercel.app` **BUKAN** DramaKu (aplikasi React lain). Produksi = **`dramaapp.vercel.app`** (`lib/site.ts:8`). Di komputer owner juga ada Playly di `localhost:3072`/`:3074` (biru gelap + carousel) dan DramaKu versi LAMA di `localhost:3000` — dua-duanya sering tertukar.
 
@@ -47,6 +56,47 @@ Catatan 2026-09-21 menulis "sebabnya belum terjelaskan dan JANGAN ditebak". Seka
 
 
 
+
+## 2026-09-22 (malam, revisi ke-4) — Playly menutup `/api/catalog` + tombol Unduh di halaman detail
+
+**Dua paket, dua commit terpisah** (sengaja terpisah supaya masing-masing bisa di-`revert` sendiri).
+
+### 1. `2fbb8b0` — Playly kini mewajibkan API key di `/api/catalog`
+
+Playly mengirim pemberitahuan. **Tidak dipercaya mentah — diuji langsung ke server mereka:**
+
+| Yang diuji | Hasil nyata |
+|---|---|
+| `/api/catalog?limit=2` **tanpa** kunci | **401** `{"ok":false,"error":"missing_key"}` |
+| `/api/catalog?limit=2` **dengan** kunci kita | **200** · `total:299` |
+| `/api/videos` dengan kunci kita | **200** — tidak berubah |
+| `/api/public-video?id=…` tanpa kunci | **200** — tidak berubah, tetap terbuka |
+
+✅ **Kuncinya kunci yang SUDAH kita punya.** Nol SQL · nol env baru. (Kunci aktif sebenarnya duduk di `DASHBOARD_API_KEY`; `PLAYLY_API_KEY` di `.env.local` kosong — bukan masalah, `readPlaylyKeyFromEnv()` memang menerima kedua nama.)
+
+`fetchVideoKatalogPublik()` di `lib/playly.ts` menerima `apiKey` dan mengirimnya lewat **header** `X-Playly-Key`, bukan query `?key=` yang juga dilayani Playly — URL ikut tercetak di log server/proxy/`Referer`, header tidak.
+
+⚠️ **AKIBAT YANG PERLU DIINGAT: jaring pengaman praktis ikut tertutup.** Jalur katalog dibangun untuk kasus nyata 2026-08-26 (kunci sama dibalas `ok:true`, lalu `invalid_key` 20 menit kemudian). Karena katalog kini memakai kunci yang **SAMA**, kunci mati = **kedua** jalur mati. Jaringnya sudah putus sebelum commit ini — ini cuma membuatnya kelihatan. Jalur cadangannya **tidak dihapus** (mengubah perilaku yang dipakai = keputusan owner).
+
+📌 **Utang dicatat, bukan dikerjakan diam-diam:** header `Retry-After` saat 429 belum dibaca. Batas Playly 120 permintaan/60 detik per IP, jauh di atas pemakaian kita.
+
+Penjaga: `tests/playly-katalog-kunci.test.ts` (5 tes) — termasuk pagar **"kunci tidak pernah bocor ke query string"** dan pagar arah sebaliknya (jalur mitra tetap didahulukan). **Diuji-balik:** header dilepas → 2 tes MERAH; dikembalikan → hijau.
+
+### 2. `f65ccd6` — tombol Unduh di `/drama/[id]` (keputusan owner 2026-09-21)
+
+Tombol **DOWNLOAD** berdampingan dengan Nonton; Save/Suka/Bagikan turun ke baris sendiri (lima tombol satu baris berdesakan di HP). **Hanya episode 1**, dan ep 1..`FREE_EPISODES`(=3) memang gratis — jadi **tidak bisa dipakai melewati paywall koin**, dan batas itu dikunci tes (`tests/download-button.test.ts`), termasuk tes yang memverifikasi premisnya (`PAYWALL_ENABLED` memang menyala).
+
+Alamatnya selalu lewat `/api/download`, tidak pernah menempel alamat tunnel: halaman detail di-cache (`revalidate = 60` + `generateStaticParams`) sedangkan alamat tunnel berganti tiap PC backup restart. TIDAK dipakai untuk video Playly (beda domain + tanda tangan kedaluwarsa ~6 jam; browser mengabaikan `download` lintas-domain).
+
+### ⚠️ Yang DIBUANG malam ini, dan kenapa
+
+Working tree lokal menyimpan paket **2026-09-18** (`lib/store.ts` + `lib/playly-gabungan.ts` + `tests/playly-webhook-cache.test.ts`) yang belum di-commit. Ternyata **sudah tayang lewat jalan lain** — `getPublishedPlaylyWebhookVideosCached` sudah ada di `origin/main`, beserta rencana `2026-09-18-playly-static-dan-gabungan.md`. Meng-commit versi lokal = **memundurkan kode yang sudah tayang** (persis "kemunduran senyap", `AGENTS.local.md` aturan 2). Dibuang atas persetujuan owner; cadangannya ada di `git stash` (`stash@{0}`, "cadangan sebelum pindah basis ke origin/main").
+
+Cabang `chore/gitignore-claude-memory` (`c12b8db`) **juga usang**: `origin/main` sudah mengabaikan `.claude/memory/` **plus** `.env.local.*`, `.env.*.bak`, `__pycache__/` yang cabang itu belum punya.
+
+**Pelajaran alur kerja:** gerbang §6 yang dijalankan di atas basis lama **tidak berlaku** setelah pindah basis — cabangnya tertinggal 32 commit, jadi build/tsc/tes diulang seluruhnya di basis baru sebelum push.
+
+---
 
 ## 2026-09-22 (malam, revisi ke-3) — deret TAB katalog gaya LK21 di halaman depan (`5d37465`)
 

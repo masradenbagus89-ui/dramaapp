@@ -26,6 +26,7 @@ export default function FeaturedRow({
   title,
   cardHrefPrefix,
   cardClass = ROW_CARD_CLASS,
+  tombolBawah = true,
 }: {
   dramas: Drama[];
   /**
@@ -56,6 +57,14 @@ export default function FeaturedRow({
    * dua kali.
    */
   cardClass?: string;
+  /**
+   * false = jangan gambar tombol besar "Lihat semua film unggulan" di bawah
+   * baris. Dipakai deret tab halaman depan (TabKatalogTampilan) yang sudah
+   * punya tombol "Semua" sendiri di kepala bagian — dua tombol dengan maksud
+   * sama di satu bagian membuat penonton ragu yang mana yang benar.
+   * Default `true` supaya pemanggil lama tidak berubah sama sekali.
+   */
+  tombolBawah?: boolean;
 }) {
   const scroller = useRef<HTMLDivElement>(null);
 
@@ -128,7 +137,7 @@ export default function FeaturedRow({
           ))}
         </div>
 
-        {!title && (
+        {!title && tombolBawah && (
           <div className="mt-4 flex justify-center">
             <Button
               asChild

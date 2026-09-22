@@ -46,6 +46,8 @@ export default function AdminPage() {
   const [heroImage, setHeroImage] = useState("");
   const [subtitles, setSubtitles] = useState<string[]>([]);
   const [premium, setPremium] = useState(true); // drama baru default berbayar
+  // Penanda tab SERIES UNGGULAN. Disimpan di field `exclusive` yang sudah ada.
+  const [unggulan, setUnggulan] = useState(false);
   // Metadata IMDb (opsional; diisi dari "Ambil draft")
   const [imdbIdMeta, setImdbIdMeta] = useState("");
   const [year, setYear] = useState("");
@@ -199,6 +201,7 @@ export default function AdminPage() {
           heroImage: heroImage.trim(),
           subtitles,
           premium,
+          exclusive: unggulan,
           imdbId: imdbIdMeta.trim(),
           year: year.trim(),
           contentRating: contentRating.trim(),
@@ -237,6 +240,7 @@ export default function AdminPage() {
       setHeroImage("");
       setSubtitles([]);
       setPremium(true);
+      setUnggulan(false);
       setImdbIdMeta("");
       setYear("");
       setContentRating("");
@@ -302,6 +306,7 @@ export default function AdminPage() {
     setHeroImage(d.heroImage ?? "");
     setSubtitles(d.subtitles ?? []);
     setPremium(d.premium ?? false);
+    setUnggulan(d.exclusive ?? false);
     setImdbIdMeta(d.imdbId ?? "");
     setYear(d.year ?? "");
     setContentRating(d.contentRating ?? "");
@@ -386,6 +391,8 @@ export default function AdminPage() {
           setSubtitles={setSubtitles}
           premium={premium}
           setPremium={setPremium}
+          unggulan={unggulan}
+          setUnggulan={setUnggulan}
           imdbIdMeta={imdbIdMeta}
           setImdbIdMeta={setImdbIdMeta}
           year={year}

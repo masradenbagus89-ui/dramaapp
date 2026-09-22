@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import Link from "next/link";
 import { getAllDramasCachedSafe } from "@/lib/dramas";
 import { featuredHeroSlides } from "@/lib/hero-teaser";
 import RedirectIfAuthed from "@/app/components/RedirectIfAuthed";
 import FeaturedRow from "@/app/components/beranda/FeaturedRow";
 import PublicTopBars from "@/app/components/beranda/PublicTopBars";
+import TabKatalog from "@/app/components/beranda/TabKatalog";
+import TabKatalogTampilan from "@/app/components/beranda/TabKatalogTampilan";
+import { TAB_BAWAAN } from "@/lib/tab-katalog";
 import {
   availableGenres,
   FEATURED_ROW_COUNT,
@@ -56,6 +60,22 @@ export default async function LandingPage() {
              Kartunya menuju /drama/<id> (halaman itu PUBLIK — terbukti HTTP 200
              tanpa cookie login), jadi pengunjung bisa mengintip dulu sebelum
              diminta mendaftar. ===== */}
+      {/* ===== DERET TAB KATALOG (owner 2026-09-22, meniru situs katalog):
+             TERBARU · SERIES UNGGULAN · SERIES UPDATE · TERPOPULER ·
+             REKOMENDASI · <tahun>, plus tombol FILTER di ujung kanan.
+
+             Dibungkus <Suspense> karena isinya membaca alamat lewat
+             `useSearchParams()` — tanpa pembungkus ini `next build` GAGAL.
+             Katalog dioper sebagai prop (bukan dibaca ulang di browser) supaya
+             halaman ini TETAP statis: menaruh `searchParams` di halamannya akan
+             membuat Next membangun ulang seluruh halaman untuk tiap pengunjung
+             dan `revalidate = 60` di atas jadi percuma. ===== */}
+      <Suspense
+        fallback={<TabKatalogTampilan dramas={dramas} tab={TAB_BAWAAN} semua={false} />}
+      >
+        <TabKatalog dramas={dramas} />
+      </Suspense>
+
       <FeaturedRow dramas={heroSlides} href="/discover" />
 
       {/* ===== Ajakan daftar — STRIP TIPIS, bukan blok tinggi.

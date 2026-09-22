@@ -104,6 +104,8 @@ export default function DramaForm({
   setSubtitles,
   premium,
   setPremium,
+  unggulan,
+  setUnggulan,
   imdbIdMeta,
   setImdbIdMeta,
   year,
@@ -165,6 +167,14 @@ export default function DramaForm({
   setSubtitles: Dispatch<SetStateAction<string[]>>;
   premium: boolean;
   setPremium: Dispatch<SetStateAction<boolean>>;
+  /**
+   * Penanda "Series Unggulan" — disimpan di field `exclusive` yang sudah ada di
+   * katalog tapi belum pernah dipakai (0 dari 41 judul). Dipakai ulang, bukan
+   * bikin field baru: menambah kolom butuh akses DDL yang sedang tidak ada, dan
+   * artinya memang sama (judul pilihan yang disorot).
+   */
+  unggulan: boolean;
+  setUnggulan: Dispatch<SetStateAction<boolean>>;
   imdbIdMeta: string;
   setImdbIdMeta: Dispatch<SetStateAction<string>>;
   year: string;
@@ -936,6 +946,32 @@ export default function DramaForm({
           </div>
         </div>
         )}
+
+        {/* Penanda tab SERIES UNGGULAN di halaman depan. Selama belum ada satu
+            pun drama dicentang, tab itu jatuh ke daftar otomatis (serial
+            berbayar koin) supaya tidak pernah kosong — lihat lib/tab-katalog.ts. */}
+        <div className="mt-4 rounded-xl border border-zinc-800 bg-zinc-950/50 p-4">
+          <div className="flex items-start gap-3">
+            <Checkbox
+              id="drama-unggulan"
+              checked={unggulan}
+              onCheckedChange={(checked) => setUnggulan(checked === true)}
+              className="mt-0.5 size-5 border-zinc-700 data-[state=checked]:border-amber-400 data-[state=checked]:bg-amber-400 data-[state=checked]:text-black"
+            />
+            <Label htmlFor="drama-unggulan" className="cursor-pointer items-start">
+              <span>
+                <span className="text-sm font-semibold text-white">
+                  Tandai sebagai Unggulan
+                </span>
+                <span className="block text-xs font-normal text-zinc-500">
+                  Centang = judul ini masuk tab <strong className="text-amber-300/80">SERIES UNGGULAN</strong> di
+                  halaman depan. Selama belum ada satu pun yang dicentang, tab itu
+                  diisi otomatis oleh drama berbayar koin.
+                </span>
+              </span>
+            </Label>
+          </div>
+        </div>
 
         <div className="mt-5 rounded-xl border border-zinc-800 bg-zinc-950/50 p-4">
           <div className="flex flex-wrap items-end gap-3">

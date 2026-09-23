@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import type { Drama, DramaQuality } from "@/lib/types";
-import { PAYWALL_ENABLED } from "@/lib/coins";
 import { CARD_PREVIEW_SEC, teaserShouldLoop } from "@/lib/hero-teaser";
 import { lencanaKartu } from "@/lib/lencana-kartu";
 import { cn } from "@/lib/utils";
@@ -13,10 +12,10 @@ type Props = {
   drama: Drama;
   className?: string;
   /**
-   * false = jangan gambar chip PREMIUM/EXCLUSIVE di kanan-atas.
+   * false = jangan gambar chip EXCLUSIVE di kanan-atas.
    *
-   * Dipakai halaman detail drama, yang sudah memajang lencana PREMIUM sendiri
-   * di sebelah judul — dua lencana yang sama di satu layar cuma mengulang.
+   * Dipakai halaman detail drama, yang sudah memajang lencananya sendiri di
+   * sebelah judul — dua lencana yang sama di satu layar cuma mengulang.
    * Lencana lain (rating/kualitas/tahun/durasi) TIDAK ikut dimatikan.
    */
   showBadge?: boolean;
@@ -150,20 +149,20 @@ export default function Poster({
             </span>
           )}
 
-          {/* Kanan-atas: kualitas video, lalu penanda koin/eksklusif di bawahnya.
+          {/* Kanan-atas: kualitas video, lalu penanda eksklusif di bawahnya.
               `ml-auto` (bukan justify-between) supaya kelompok ini tetap menempel
-              ke kanan walau lencana rating di kiri tidak digambar. */}
+              ke kanan walau lencana rating di kiri tidak digambar.
+
+              Chip "🪙 Premium" DIHAPUS dari poster atas permintaan owner
+              2026-09-23 — poster jadi terlalu penuh saat puluhan kartu berjajar.
+              Paywall-nya sendiri TIDAK ikut dimatikan (lihat PAYWALL_ENABLED di
+              lib/coins.ts): episode berbayar tetap terkunci, cuma penandanya
+              yang tidak lagi dipajang di kartu. Keterangan PREMIUM masih ada di
+              halaman detail drama, di sebelah judul. */}
           <span className="ml-auto flex flex-col items-end gap-1">
             {lencana.kualitas && (
               <span className={cn(CHIP, warnaKualitas(lencana.kualitas))}>
                 {lencana.kualitas}
-              </span>
-            )}
-            {showBadge && PAYWALL_ENABLED && lencana.premium && (
-              <span
-                className={cn(CHIP, "bg-amber-400/90 uppercase tracking-wide text-black")}
-              >
-                🪙 Premium
               </span>
             )}
             {showBadge && !lencana.premium && lencana.exclusive && (

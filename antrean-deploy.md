@@ -3,6 +3,20 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
+**Terakhir dicek:** 2026-09-23 (**✅ KERJA REKAN DITARIK & DIRILIS, antrean KOSONG**). **`HEAD` = `origin/main` = `dramaku/main` = `a8db3ca`**, lokal ahead 0. Cermin `dramaku` ternyata membawa **4 commit rekan** yang belum sampai ke produksi — ditarik fast-forward (nol pekerjaan tertimpa), ditemukan **commit `f65ccd6` tidak pernah memasang tombol Unduh-nya** (komponen + 7 tes hijau, tapi nol berkas mengimpornya), diperbaiki di `a8db3ca` lalu dirilis. Dual push dari komputer owner **berhasil di kedua repo**, keduanya fast-forward.
+
+**Gerbang §6:** `rm -rf .next` → build **exit 0** (`/drama/[id]` tetap `● SSG`, `/` tetap `○ Static` 1m 1y) → `tsc` **exit 0 / 0 error** → **896 tes / 62 berkas** (dari 881/60) → **mutation check 3 arah semuanya MERAH** → nol berkas env/kunci → push → **verifikasi tayang**: film menggambar `DOWNLOAD`, serial menggambar `DOWNLOAD EP 1`, 13 halaman produksi semuanya 200. **Nol SQL, nol env baru.**
+
+**⛔ KOREKSI atas catatan rekan:** kesimpulan mereka bahwa `AGENTS.local.md` §5 basi (`origin` = ojokesusu/dramaku = produksi) **tidak berdiri** — buktinya diuji ulang dan salah (`SERIES UNGGULAN` memang ADA di `masradenbagus89-ui/dramaapp`). Yang benar: **nama remote berbeda per komputer**, jadi "push ke origin" di komputer rekan tak pernah menyentuh repo produksi. Di komputer owner penamaan tetap seperti tertulis di `AGENTS.local.md`.
+
+**🔴 Temuan yang perlu keputusan owner:** 41 judul diuji satu per satu ke PC backup → **34 serial 200 OK, 7 film 404**. Ketujuh film tidak bisa ditonton maupun diunduh; berkas videonya memang tidak ada di sumber. Bukan akibat rilis ini.
+
+**🪤 Pelajaran alat:** (a) **mutation check bisa cacat sendiri** — menukar `<DownloadButton` jadi `<DownloadButtonXX` tetap hijau sebab `toContain` masih cocok; mutasi benar = hapus elemennya utuh; (b) **skrip gerbang yang dijalankan terdetach melaporkan exit 127 PALSU** untuk build yang lognya tuntas tanpa error — diukur ulang langsung: exit 0; exit code yang bertentangan dengan isi log = ukur ulang; (c) **gerbang §6 memeriksa "kodenya sehat", BUKAN "fiturnya ada"** — build/tsc/tes semuanya hijau untuk komponen yang tak pernah dipakai siapa pun.
+
+**Rollback rilis ini:** `git revert --no-edit a8db3ca && git push origin main && git push dramaku main`.
+
+---
+
 **Terakhir dicek:** 2026-09-22 (**✅ EMPAT RILIS HARI INI, antrean KOSONG**). **`HEAD` = `origin/main` = `dramaku/main` = `64d36ec`**, lokal ahead 0. **Rilis ke-4 memperbaiki 4 cacat yang ditemukan tinjauan atas kerja hari ini sendiri:** (1) halaman 404 kehilangan SELURUH navigasi akibat pembalikan denylist→allowlist — terukur di produksi, nol navbar & nol bar bawah; (2) kotak cari kerangka `/discover` MATI tepat di jendela ia terlihat (sebelum hydration React belum memasang penangan) dan Enter malah memuat-ulang sambil menghilangkan ketikan; (3) klaim "sumber dikunci satu" ternyata masih 3-4 salinan (`chromeKatalog`, alamat pencarian, posisi menempel); (4) tiga penjaga tes PALSU. Dual push atas izin owner, cermin dulu baru produksi, keduanya **fast-forward**.
 
 **Gerbang §6:** build **exit 0** + tabel status halaman **IDENTIK** dengan build sebelumnya → `tsc` **exit 0 / 0 error** → **821 tes / 55 berkas** (dari 801) → **mutation check 9 arah semuanya MERAH** → nol berkas env/kunci → push → verifikasi tayang. **Nol SQL, nol env baru.**

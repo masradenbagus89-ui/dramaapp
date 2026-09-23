@@ -13,9 +13,13 @@
 
 ## ⚡ KEADAAN SEKARANG (baca ini dulu — 30 detik)
 
-`HEAD` = `origin/main` = `dramaku/main` = **`0ab70ad`** (dibaca lewat `git fetch` ke kedua server, 2026-09-23 sore revisi ke-3). Antrean **KOSONG**.
+**Antrean KOSONG.** `origin/main` = `dramaku/main`, lokal ahead 0.
 
-> Baris di atas sempat tertinggal satu commit: ia menyebut `2af96b6`, padahal commit docs `0ab70ad` yang MENULIS baris itu sendiri sudah membuatnya basi begitu di-push. Jebakan ini berulang tiap kali catatan rilis ditulis SEBELUM commit terakhirnya jadi — sebutkan hash sesudah `git fetch`, bukan hash yang ada di kepala saat mengetik.
+**Rilis terakhir yang mengubah KODE/DATA:** `2af96b6` (tombol DOWNLOAD dihapus) · `4e0c464` (tahun 34 serial disebar — perubahan DATA, lihat peringatan di bawah).
+
+> **🪤 Jangan tulis hash `HEAD` di baris ini — itu mustahil benar.** Commit paling akhir di kedua remote SELALU commit CATATAN, dan commit catatan itu sendiri baru lahir SESUDAH baris ini diketik — jadi angka apa pun yang ditulis di sini basi begitu di-push. Sudah terjadi dua kali berturut-turut (`2af96b6` ditulis padahal `0ab70ad`, lalu `0ab70ad` ditulis padahal `a654919`), dan menambalnya dengan angka baru cuma mengulang lingkarannya. **Yang benar: sebut hash rilis KODE/DATA di atas (stabil, tidak ikut bergeser oleh commit catatan), lalu baca posisi sebenarnya langsung dari server** — `git fetch origin && git fetch dramaku && git rev-parse origin/main dramaku/main`. Dua baris hash yang keluar sama = antrean kosong.
+>
+> ⚠️ Jangan tambahkan `--short` di perintah itu: `git rev-parse --short A B` membalas `fatal: Needed a single revision` — bendera itu hanya melayani SATU revisi. Diuji 2026-09-23; versi pertama baris ini memuat `--short` dan memang gagal dijalankan. Perlu hash pendek? Baca satu per satu, atau ambil 7 huruf pertamanya.
 
 **⛔ TOMBOL "DOWNLOAD EP 1" SUDAH DIHAPUS (`2af96b6`) — JANGAN DIPASANG LAGI TANPA PERMINTAAN OWNER.** Owner melihatnya di halaman detail, menandainya dengan kotak merah, dan meminta dihapus: *"mungkin semua film ada poster tombol merah muda DOWNLOAD EP 1 jadi kamu hapus saja yah"*. Dihapus TUNTAS (komponen + tes + 3 fungsi pembantu di `lib/video.ts`), bukan disembunyikan. Klaim rekan bahwa tombol ini "keputusan owner 2026-09-21" **tidak punya jejak** di dokumen mana pun sebelum commit `f65ccd6` — sudah dicari. **Yang TETAP ADA:** tombol unduh di dalam pemutar video (`downloadUrl()` + `app/api/download/route.ts`, dipakai `FeedPlayer.tsx:429`) — fitur lain, owner tidak meminta itu dihapus.
 

@@ -128,11 +128,25 @@ describe("Poster — keempat pojok benar-benar tergambar", () => {
   it("halaman detail tetap bisa mematikan lencana kanan-atas tanpa lencana lain ikut mati", () => {
     // `showBadge={false}` dipakai app/drama/[id]/page.tsx karena halaman itu
     // sudah memajang lencananya sendiri di sebelah judul.
-    const html = render(
-      stub({ premium: true, quality: "WEB-DL", year: "2026", imdbRating: "9.0" }),
-      { showBadge: false },
-    );
-    const teks = isiTeks(html);
+    //
+    // Dramanya sengaja `exclusive` dan BUKAN `premium`. Sesudah chip Premium
+    // dihapus, Exclusive tinggal satu-satunya lencana yang masih dijaga
+    // `showBadge` — dan syaratnya `showBadge && !premium && exclusive`. Kalau
+    // stub-nya dibuat `premium: true` seperti versi sebelumnya, tes ini jadi
+    // VAKUM: tak ada apa pun yang tergambar di KEDUA keadaan, jadi ia lulus
+    // hijau walau prop `showBadge` dihapus total dari komponen.
+    const ciri: Partial<Drama> = {
+      exclusive: true,
+      quality: "WEB-DL",
+      year: "2026",
+      imdbRating: "9.0",
+    };
+
+    // Pembanding wajib: tanpa dimatikan, lencananya MEMANG tergambar. Tanpa
+    // baris ini, "tidak muncul" tak bisa dibedakan dari "tak pernah ada".
+    expect(isiTeks(render(stub(ciri))).join(" ")).toMatch(/Exclusive/i);
+
+    const teks = isiTeks(render(stub(ciri), { showBadge: false }));
     expect(teks.join(" ")).not.toMatch(/Premium|Exclusive/i);
     expect(teks).toContain("WEB-DL");
     expect(teks).toContain("2026");

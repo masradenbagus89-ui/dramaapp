@@ -3,6 +3,20 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
+**Terakhir dicek:** 2026-09-23 siang (**✅ RILIS CHIP PREMIUM, antrean KOSONG**). **`HEAD` = `origin/main` = `dramaku/main` = `fa328b7`**, lokal ahead 0. Dua commit: `c954e6f` menghapus chip "🪙 Premium" dari poster kartu (permintaan owner lewat tangkapan layar beranda) + `fa328b7` memperbaiki tes penjaga yang jadi **VAKUM** akibat commit pertama. Dual push atas izin owner, **cermin dulu baru produksi**, keduanya **fast-forward** (`8fdab6e..fa328b7`).
+
+**Gerbang §6:** `rm -rf .next` → build **exit 0** → `tsc` **exit 0 / 0 error** → **897 tes / 62 berkas** (jumlahnya tetap; 1 tes lama diperbaiki, 1 tes baru ditambah, 1 tes lama dipecah) → **mutation check 2 arah keduanya MERAH** → nol berkas env/kunci → push → **verifikasi tayang**: chip Premium **47 → 0** di `/` dan `/beranda`, 0 juga di `/shorts` & `/discover`; lencana rating+kualitas utuh (146 / 132 / 118); halaman detail drama berbayar tetap memajang `🪙 PREMIUM` di sebelah judul. **Nol SQL, nol env baru.**
+
+**🪤 Pelajaran alat dari rilis ini — pola "penjaga tes PALSU" KAMBUH lagi (sudah tercatat 2026-09-22).** Menghapus satu chip membuat tes TETANGGA-nya vakum tanpa ada yang merah: tes `showBadge` memakai stub `premium: true`, padahal sesudah chip Premium hilang satu-satunya elemen yang dijaga `showBadge` adalah Exclusive dengan syarat `showBadge && !premium && exclusive` — jadi nol elemen tergambar di KEDUA keadaan dan tesnya lulus walau prop-nya dihapus total. **Aturan yang lahir dari sini: tes "X tidak muncul" WAJIB punya baris pembanding yang membuktikan X MEMANG muncul di keadaan sebaliknya** — tanpa itu, "tidak muncul" tak bisa dibedakan dari "tak pernah ada". Ditemukan oleh audit pra-rilis, bukan oleh `npm test` (897 tes hijau di kedua versi).
+
+**🪤 Jebakan build yang menipu lagi:** `npm run build` PERTAMA gagal `worker exited with code: 4294967295` didahului `[playly] katalog publik gagal: kunci API belum dipasang`. **Bukan** akibat perubahan kode — diuji `git stash` (bersih exit 0) lalu `git stash pop` + build ulang (**juga exit 0**). Penarikan katalog Playly yang gagal di komputer lokal kadang menjatuhkan build worker. Exit code yang bertentangan dengan isi log = ukur ulang, jangan langsung menyalahkan diff.
+
+**🟡 Temuan sampingan, DI LUAR rilis ini:** `.gitignore` tidak menjaring `.env.production` / `.env.staging` / `.env.development` (`git check-ignore -v` membuktikan ketiganya TIDAK diabaikan; pola yang ada cuma `.env` polos :7, `.env*.local` :8, `.env.local.*` :13, `.env.*.bak` :14). `@next/env` (next 16.2.9) memuat `.env.production` sebagai nama resmi, dan repo ini publik. Dampak hari ini NOL (berkasnya belum ada; masih dicegat `.git/hooks/pre-commit:27` + `.github/workflows/secret-guard.yml:42`). Menunggu keputusan owner.
+
+**Rollback rilis ini:** `git revert --no-edit fa328b7 c954e6f && git push origin main && git push dramaku main`.
+
+---
+
 **Terakhir dicek:** 2026-09-23 (**✅ KERJA REKAN DITARIK & DIRILIS, antrean KOSONG**). **`HEAD` = `origin/main` = `dramaku/main` = `a8db3ca`**, lokal ahead 0. Cermin `dramaku` ternyata membawa **4 commit rekan** yang belum sampai ke produksi — ditarik fast-forward (nol pekerjaan tertimpa), ditemukan **commit `f65ccd6` tidak pernah memasang tombol Unduh-nya** (komponen + 7 tes hijau, tapi nol berkas mengimpornya), diperbaiki di `a8db3ca` lalu dirilis. Dual push dari komputer owner **berhasil di kedua repo**, keduanya fast-forward.
 
 **Gerbang §6:** `rm -rf .next` → build **exit 0** (`/drama/[id]` tetap `● SSG`, `/` tetap `○ Static` 1m 1y) → `tsc` **exit 0 / 0 error** → **896 tes / 62 berkas** (dari 881/60) → **mutation check 3 arah semuanya MERAH** → nol berkas env/kunci → push → **verifikasi tayang**: film menggambar `DOWNLOAD`, serial menggambar `DOWNLOAD EP 1`, 13 halaman produksi semuanya 200. **Nol SQL, nol env baru.**

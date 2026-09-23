@@ -9,11 +9,13 @@
 >
 > **📦 Berkas ini sudah 2.980 baris / ±240 KB** dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-09-23 (revisi ke-13).
+**Terakhir diisi:** 2026-09-23 (revisi ke-14).
 
 ## ⚡ KEADAAN SEKARANG (baca ini dulu — 30 detik)
 
-`HEAD` = `origin/main` = `dramaku/main` = **`a8db3ca`** (dibaca lewat `git ls-remote` langsung ke kedua server). Antrean **KOSONG**, semua kerja rekan + perbaikannya **SUDAH TAYANG & TERVERIFIKASI** di **https://dramaapp.vercel.app**.
+`HEAD` = `origin/main` = `dramaku/main` = **`fa328b7`** (dibaca lewat `git fetch` ke kedua server sesudah push). Antrean **KOSONG**.
+
+**Rilis 2026-09-23 siang (2 commit):** `c954e6f` chip "🪙 Premium" dihapus dari poster kartu (permintaan owner) + `fa328b7` memperbaiki tes penjaga yang jadi VAKUM akibat commit pertama (ditemukan audit pra-rilis). **Terverifikasi tayang:** chip Premium **47 → 0** di HTML produksi, lencana lain utuh, paywall nol tersentuh. Rinciannya di seksi "2026-09-23 (siang)" di bawah.
 
 **Rilis 2026-09-23 pagi (5 commit, urut lama->baru):**
 1. `2fbb8b0` Playly mewajibkan API key di `/api/catalog` (kerja rekan)
@@ -69,8 +71,38 @@ Catatan 2026-09-21 menulis "sebabnya belum terjelaskan dan JANGAN ditebak". Seka
 
 ---
 
+## 2026-09-23 (siang) — tulisan "🪙 Premium" DIHAPUS dari poster kartu (`c954e6f` + `fa328b7`, ✅ TAYANG & TERVERIFIKASI)
 
+**Permintaan owner** (lewat tangkapan layar beranda, puluhan chip kuning dilingkari merah): hilangkan tulisan Premium yang menempel di dalam poster film.
 
+**Yang diubah — 1 blok JSX di `app/components/Poster.tsx`.** Chip kuning `🪙 Premium` di pojok kanan-atas kartu dihapus, berikut `import { PAYWALL_ENABLED }` yang jadi tak terpakai di berkas itu. Karena SEMUA kartu situs memakai komponen `Poster` (beranda, hasil cari, kategori, rekomendasi, riwayat, my-list, poster kecil di halaman detail), satu perubahan ini menutup seluruh halaman sekaligus — tak ada halaman yang tertinggal.
+
+**Yang SENGAJA TIDAK ikut diubah — jangan dikira terlewat:**
+- **Paywall tetap menyala.** `PAYWALL_ENABLED = true` di `lib/coins.ts` tidak disentuh. Episode berbayar tetap terkunci dan tetap minta koin; yang hilang cuma penanda di kartu. Akibat yang perlu diketahui owner: penonton sekarang baru tahu sebuah judul berbayar SETELAH mengklik, bukan sebelum.
+- **Lencana PREMIUM di halaman detail drama tetap ada** (`app/drama/[id]/page.tsx`, di sebelah judul). Itu di luar poster, jadi di luar permintaan. Owner tinggal bilang kalau mau itu ikut dihapus.
+- **Lencana lain utuh**: rating IMDb, kualitas (CAM merah / HD hijau), tahun, durasi/jumlah episode, ONGOING/TAMAT, Exclusive.
+
+**Penjaga permanen dipasang** di `tests/poster-lencana-render.test.ts`: tes baru *"kartu drama berbayar TIDAK memajang tulisan Premium di poster"* merender `Poster` dengan `premium: true` lalu memastikan tak ada tulisan Premium maupun emoji koin, SEKALIGUS memastikan lencana lain tidak ikut hilang. Kenapa perlu: chip itu cuma muncul pada judul yang ditandai `premium`, jadi kalau seseorang memasangnya kembali, poster contoh yang kebetulan dibuka saat memeriksa belum tentu yang berbayar — kambuhnya SENYAP.
+
+**🔴 Commit kedua `fa328b7` memperbaiki cacat di commit pertama — ditemukan audit pra-rilis, bukan dugaan.** Tes tetangga *"halaman detail tetap bisa mematikan lencana kanan-atas"* menjadi **VAKUM** begitu chip Premium dihapus: stub-nya `premium: true`, sedangkan satu-satunya lencana yang masih dijaga `showBadge` adalah Exclusive dengan syarat `showBadge && !premium && exclusive`. Dengan `premium: true` dan `exclusive` tak pernah diisi, **tak ada apa pun yang tergambar di KEDUA keadaan** → tesnya lulus hijau bahkan kalau prop `showBadge` dihapus total dari komponen. Namanya terbaca seperti penjaga, isinya tidak menjaga apa-apa. Diperbaiki: stub jadi `exclusive: true` (bukan premium) + ditambah baris pembanding yang memastikan lencananya MEMANG tergambar saat tidak dimatikan — tanpa pembanding, *"tidak muncul"* tak bisa dibedakan dari *"tak pernah ada"*. **Ini kekambuhan pola "penjaga tes PALSU" yang sudah tercatat di `antrean-deploy.md` rilis 2026-09-22.**
+
+**Gerbang §6 (dijalankan, bukan dibaca):** `rm -rf .next` → `npm run build` **exit 0** → `npx tsc --noEmit` **exit 0** → **897 tes / 62 berkas hijau** → **mutation check 2 arah keduanya MERAH** → nol berkas env/kunci ter-stage → dual push → verifikasi tayang. **Nol SQL, nol env baru.**
+
+**Mutation check (bukti penjaganya menggigit, bukan hiasan):** (a) chip Premium dipasang kembali → tes MERAH di baris 120, `Received: "9.0 WEB-DL 🪙 Premium 2026 10 EPS"`; (b) `showBadge` dilepas dari syarat Exclusive → tes versi BARU merah di baris 150, sedangkan tes versi LAMA tetap hijau pada mutasi yang sama — itulah buktinya versi lama vakum. Kode dipulihkan `git checkout --` lalu gerbang penuh diulang.
+
+**Verifikasi TAYANG di produksi (diukur, bukan diasumsikan):** `https://dramaapp.vercel.app` — chip Premium **47 → 0** di `/` dan `/beranda` (dihitung dari HTML produksi sebelum & sesudah deployment), 0 juga di `/shorts` dan `/discover`; lencana lain **utuh**: 146 ikon rating + 146 chip kualitas di `/`, 132 di `/beranda`, 118 di `/shorts`. Halaman detail drama berbayar: chip di poster **0**, lencana `🪙 PREMIUM` di sebelah judul **masih ada**, tombol Nonton/Unduh utuh. Catatan: `/discover` memulangkan 0 lencana di HTML awal — itu **normal**, kartunya diisi client-side (5 penanda kerangka, 0 poster di HTML awal), bukan regresi.
+
+**Paywall terbukti tidak tersentuh:** `git diff --name-only 8fdab6e..fa328b7` = **hanya 2 berkas** (`app/components/Poster.tsx`, `tests/poster-lencana-render.test.ts`); nol berkas `coins`/`unlock`/`paywall`/`FeedPlayer`. Tripwire `tests/coins.test.ts` (`expect(PAYWALL_ENABLED).toBe(true)`) **hijau**. ❓ Yang TIDAK bisa dibuktikan dari luar: layar paywall di pemutar tidak muncul di HTML mentah karena `FeedPlayer` merendernya client-side setelah sesi login dibaca — jadi buktinya di sini bersifat "kodenya nol tersentuh + tripwire hijau", BUKAN "sudah dicoba dengan akun sungguhan". Jangan mengklaim lebih dari itu.
+
+**⚠️ Catatan jebakan build (buat sesi berikutnya).** Percobaan `npm run build` yang PERTAMA gagal dengan `Next.js build worker exited with code: 4294967295`, didahului `[playly] katalog publik gagal: ... kunci API belum dipasang`. Itu **bukan** akibat perubahan ini: diuji dengan `git stash` (build bersih exit 0), lalu `git stash pop` dan build ulang dengan perubahan terpasang → **juga exit 0**. Penyebabnya penarikan katalog Playly yang memang gagal di komputer lokal karena kunci API belum dipasang — gagalnya tidak konsisten, kadang menjatuhkan worker. Jangan buru-buru menyalahkan perubahan kode saat melihat pesan ini.
+
+**Status rilis: ✅ SUDAH TAYANG.** Owner memberi izin, dual push dijalankan **cermin dulu baru produksi**: `git push dramaku main` → `8fdab6e..fa328b7` fast-forward, lalu `git push origin main` → `8fdab6e..fa328b7` fast-forward. Keduanya nol pekerjaan tertimpa. Ketiga titik kini sama: `HEAD` = `origin/main` = `dramaku/main` = **`fa328b7`**.
+
+**Rollback rilis ini:** `git revert --no-edit fa328b7 c954e6f && git push origin main && git push dramaku main`.
+
+**🟡 Temuan sampingan dari audit, DI LUAR rilis ini — belum dikerjakan, perlu keputusan owner.** `.gitignore` tidak menjaring varian `.env` tanpa sufiks `.local`: `git check-ignore -v` membuktikan `.env.production`, `.env.staging`, `.env.development` **TIDAK diabaikan** (pola yang ada cuma `.env` polos di baris 7, `.env*.local` baris 8, `.env.local.*` baris 13, `.env.*.bak` baris 14). Sementara `@next/env` versi terpasang (next 16.2.9) memuat `.env.production` sebagai nama resmi, dan repo ini **publik**. Hari ini dampaknya NOL — berkas begitu memang belum ada (`ls -a | grep '^\.env'` cuma `.env.example` + `.env.local`), dan rantainya masih dicegat 2 lapis: `.git/hooks/pre-commit:27` (regex `(^|/)\.env(\.[A-Za-z0-9_-]+)?$`, exit 1) + `.github/workflows/secret-guard.yml:42`. Jadi bukan pemblokir, tapi lubangnya nyata kalau suatu saat ada yang membuat `.env.production` berisi `service_role` asli.
+
+---
 
 ## 2026-09-23 (pagi) — tombol Unduh rekan dipasang & dirilis; 7 film ternyata tanpa video (`a8db3ca`)
 

@@ -31,6 +31,12 @@ import { readFileSync } from "node:fs";
 const JALANKAN = process.argv.includes("--jalankan");
 
 const RATING_BARU = "7.8";
+// ⚠️ SUDAH TIDAK BERLAKU sebagai keadaan katalog. Nilai tetap "2024" di bawah ini
+// membuat 34 serial memajang tahun yang sama persis, dan owner memintanya disebar
+// 2026-09-23 → dikerjakan `scripts/acak-tahun-serial.mjs` (sebaran 2020-2024).
+// Angka ini DIBIARKAN apa adanya karena skrip ini hanya mengisi yang MASIH KOSONG,
+// dan sesudah penyebaran itu tak ada lagi tahun yang kosong — jadi ia tidak akan
+// pernah menyeragamkan ulang. Jangan dibaca sebagai "tahun katalog = 2024".
 const TAHUN_BARU = "2024";
 const DURASI_BARU = "119 min"; // 1 jam 59 menit -> lencana "01:59"
 const TAHUN_MASIH_BIOSKOP = "2026";

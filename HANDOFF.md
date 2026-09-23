@@ -9,13 +9,15 @@
 >
 > **📦 Berkas ini sudah 2.980 baris / ±240 KB** dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-09-23 (revisi ke-14).
+**Terakhir diisi:** 2026-09-23 (revisi ke-15).
 
 ## ⚡ KEADAAN SEKARANG (baca ini dulu — 30 detik)
 
 `HEAD` = `origin/main` = `dramaku/main` = **`fa328b7`** (dibaca lewat `git fetch` ke kedua server sesudah push). Antrean **KOSONG**.
 
 **Rilis 2026-09-23 siang (2 commit):** `c954e6f` chip "🪙 Premium" dihapus dari poster kartu (permintaan owner) + `fa328b7` memperbaiki tes penjaga yang jadi VAKUM akibat commit pertama (ditemukan audit pra-rilis). **Terverifikasi tayang:** chip Premium **47 → 0** di HTML produksi, lencana lain utuh, paywall nol tersentuh. Rinciannya di seksi "2026-09-23 (siang)" di bawah.
+
+**⚠️ PERUBAHAN DATA PRODUKSI 2026-09-23 sore (bukan kode, jadi `git revert` TIDAK memulihkannya):** tahun 34 serial disebar dari seragam `2024` menjadi 2020-2024 atas permintaan owner. Sudah tayang & terverifikasi. **Rollback:** `node scripts/acak-tahun-serial.mjs --kembalikan`. Rinciannya di seksi "2026-09-23 (sore)" di bawah.
 
 **Rilis 2026-09-23 pagi (5 commit, urut lama->baru):**
 1. `2fbb8b0` Playly mewajibkan API key di `/api/catalog` (kerja rekan)
@@ -68,6 +70,40 @@ Yang BENAR dan sudah terverifikasi: **nama remote berbeda per komputer.** Di kom
 Catatan 2026-09-21 menulis "sebabnya belum terjelaskan dan JANGAN ditebak". Sekarang sudah diukur dan **direproduksi di tes**: `usePathname()` di `TopNav`/`BottomNav` menerima nilai yang **bukan** `/` saat pra-render alamat akar; `?? "/"` tidak menangkapnya (operator `??` hanya menangkap `null`/`undefined`, **bukan string kosong**); dan logikanya berbentuk **denylist** sehingga nilai apa pun yang tak dikenali membuat navbar **MUNCUL**. Rinciannya di seksi 2026-09-22 di bawah.
 
 ⚠️ **Koreksi atas catatan 2026-09-21 itu sendiri.** Kalimat *"`TopNav` menggambar menunya dalam keadaan tidak ada yang aktif, yang justru konsisten dengan `pathname === "/"`"* **menyimpulkan ke arah yang salah**. Keadaan "tak ada satu pun menu aktif" justru konsisten dengan `pathname` yang **BUKAN** `/` — sebab kalau nilainya benar-benar `/`, penyaring `PUBLIC_PATHS` sudah memulangkan `null` dan navbarnya tak tergambar sama sekali. Petunjuk itu sebenarnya sudah menunjuk jawabannya sejak semalam, cuma dibaca terbalik.
+
+---
+
+## 2026-09-23 (sore) — tahun 34 serial disebar 2020-2024 (⚠️ PERUBAHAN DATA, bukan kode — ✅ TAYANG & TERVERIFIKASI)
+
+**Permintaan owner** (tangkapan layar /discover, baris tahun dilingkari merah): *"tahunnya sama semuanya 2024, coba buat random"*, dengan daftar angka: **2024, 2023, 2021, 2022, 2020, 2020**.
+
+**Owner benar, dan penyebabnya ketemu.** `scripts/isi-lencana-lewat-rest.mjs:33` mengisi kolom `year` yang masih kosong dengan satu nilai tetap `TAHUN_BARU = "2024"` (2026-09-22). Komentar skrip itu sendiri menyatakan nilainya **"DARI OWNER, bukan dari sumber teknis mana pun"**. Hasilnya 34 serial memajang tahun identik.
+
+**⚠️ INI PERUBAHAN DATABASE, BUKAN KODE — konsekuensinya beda total.** Tahun tersimpan di kolom `dramaapp.dramas.year` (tipe `text`), bukan di berkas kode. Jadi: (a) perubahannya **tayang sendiri dalam ~60 detik tanpa commit/push/deploy** (`CATALOG_TTL_SECONDS = 60` di lib/dramas.ts + `revalidate = 60` di halaman); (b) `git revert` **TIDAK bisa** memulihkannya — rollback-nya lewat skrip, lihat bawah; (c) `npm test` tidak akan pernah memerahkannya, sebab semua tes memakai data buatan sendiri.
+
+**Yang diubah:** 34 serial yang syaratnya DUA-duanya terpenuhi — bukan film **DAN** tahunnya masih persis `"2024"`.
+**Yang TIDAK disentuh:** 7 film. Tahun mereka (2006, 2008, 2017, 2025, 2026×3) adalah tahun rilis **sungguhan** dari metadata IMDb — mengacaknya berarti merusak data yang benar. Penyaring dua syarat itu yang menjamin film tak pernah ikut.
+
+**Sebaran hasil** (persis daftar owner; `2020` disebut dua kali dan pengulangan itu dipertahankan sebagai bobot, bukan dianggap salah ketik): **2020 = 10 judul · 2021 = 6 · 2022 = 6 · 2023 = 6 · 2024 = 6**.
+
+**Kenapa pengacaknya BER-BENIH, bukan `Math.random()`:** hasil simulasi harus sama persis dengan hasil eksekusi. Dengan `Math.random()` rencana yang dilihat saat simulasi bukan rencana yang dikirim — dan tak ada yang bisa memeriksanya. Benih tetap `20260923` di `scripts/acak-tahun-serial.mjs`. Pembagian berputar saja tidak cukup: tanpa diacak, urutannya jadi pola berulang (2024, 2023, 2021, 2022, 2020, 2020, 2024, ...) yang justru terbaca **lebih** palsu daripada seragam.
+
+**ROLLBACK (satu perintah, sudah disiapkan):** `node scripts/acak-tahun-serial.mjs --kembalikan` — membaca `scripts/cadangan/2026-09-23-tahun-serial.json` (ditulis SEBELUM PATCH pertama) lalu mengembalikan ke-34 judul ke `"2024"`.
+
+**Bukti (diukur, bukan diasumsikan):** simulasi dulu (`tanpa --jalankan`) → 5 PATCH berpenyaring daftar id eksplisit → dibaca ULANG dari database: `2020=10, 2021=6, 2022=6, 2023=6, 2024=6` + film tetap `2017, 2026, 2026, 2025, 2026, 2006, 2008`. Di situs sungguhan: `/`, `/beranda`, `/shorts` semuanya memajang kelima tahun. Gerbang §6 tetap dijalankan walau kode aplikasi nol berubah: build **exit 0** · tsc **exit 0** · **897 tes / 62 berkas** hijau.
+
+**🪤 Pelajaran operasional — API menyegarkan LEBIH DULU daripada halaman.** Sesudah PATCH, `/api/dramas` langsung memulangkan tahun baru, tapi `/`, `/beranda`, `/shorts` masih menyajikan HTML lama: tiap halaman statis punya cache ISR sendiri dan baru berganti sesudah ada permintaan melewati 60 detik. Sempat terbaca seperti "perubahannya tidak masuk". `?cb=<angka>` **tidak** menembusnya untuk halaman statis. Cara benar: minta halamannya berulang sampai berganti, dan pakai `/api/dramas` sebagai sumber kebenaran.
+
+**Yang ikut bergeser bagi penonton (semuanya membaca `year`, jadi berubah sendiri tanpa ubah kode):**
+- **Baris rekomendasi bergeser.** `lib/recommend.ts:58-63` memberi nilai berdasarkan kedekatan tahun (selisih 0 = +3, ≤1 tahun = +2). Selama semua serial 2024, bonus itu rata untuk semua dan praktis tidak membedakan; sekarang ia benar-benar membedakan.
+- **Urutan "Tahun Terbaru" bergeser** (`lib/discover.ts:274-279`) — dulu semua seri seri, sekarang berurut sungguhan.
+- **SEO ikut berubah.** `lib/structured-data.ts:32` mengirim `datePublished = drama.year` ke Google. Angka ini jadi klaim publik soal tahun terbit.
+- **Dropdown/tab tahun bertambah isinya sendiri** — daftarnya dihitung dari katalog (`lib/nav-katalog.ts:203`), jadi 2020-2023 muncul otomatis.
+- **TIDAK ikut menyesuaikan:** dua pintu nav bertulisan tetap `"2025"`/`"2026"` (`lib/nav-katalog.ts:277-278`). Kalau owner mau pintu "2023"/"2022", itu **perubahan kode terpisah** yang belum dikerjakan.
+
+**❓ Batas kejujuran data — jangan diklaim lebih dari ini.** Tahun 2020-2024 yang baru ini **bukan** tahun rilis terverifikasi, sama seperti 2024 yang lama juga bukan. Keduanya angka dari owner. Drama pendek China ini **tidak punya sumber tahun** — catatan 2026-09-22 sudah membuktikan judul-judul ini tidak ada di IMDb (`app_data` juga nol dokumen rating). Jadi yang berubah adalah "salah seragam" menjadi "salah bervariasi"; tidak ada data benar yang hilang, tapi sesi berikutnya **jangan** mengira angka ini terverifikasi.
+
+**`data/dramas.json` SENGAJA tidak disentuh.** Berkas cadangan itu memang sudah basi sejak sebelum perubahan ini: 34 entrinya bertahun **KOSONG** (ia mendahului pengisian massal 2026-09-22). Menyamakan hanya kolom tahun akan membuatnya setengah-benar dan makin menyesatkan. Sumber kebenaran katalog tetap `GET /api/dramas` (`AGENTS.local.md` aturan 4).
 
 ---
 

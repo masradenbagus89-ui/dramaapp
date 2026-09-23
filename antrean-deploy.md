@@ -17,6 +17,16 @@
 
 ---
 
+**Terakhir dicek:** 2026-09-23 sore (**✅ TOMBOL DOWNLOAD DIHAPUS & DIRILIS, antrean KOSONG**). **`HEAD` = `origin/main` = `dramaku/main` = `2af96b6`**, lokal ahead 0. Owner menandai tombol merah muda "DOWNLOAD EP 1" di halaman detail dengan kotak merah dan meminta dihapus; dihapus TUNTAS (komponen + tes + 3 fungsi pembantu), bukan disembunyikan. Tombol unduh di dalam PEMUTAR video sengaja tidak disentuh.
+
+**Gerbang §6:** `rm -rf .next` → build **exit 0** (`/drama/[id]` tetap `● SSG`, `/` tetap `○ Static` 1m 1y) → `tsc` **exit 0 / 0 error** → **887 tes / 61 berkas** (dari 897/62, turun tepat sebesar fitur yang dihapus) → pemeriksaan VAKUM atas 2 berkas tes yang menyentuh halaman detail → nol berkas env/kunci → dual push fast-forward. **Nol SQL, nol env baru.**
+
+**🚨 CATATAN KOORDINASI:** `main` maju **4 commit** di tengah sesi ini tanpa peringatan — dua sesi AI berjalan bersamaan di komputer owner. Tidak ada yang rusak (berkasnya tak beririsan, semua push fast-forward), tapi `HANDOFF.md` ditulis kedua sesi. `git fetch` + `git log --oneline -3` sebelum tiap commit, dan jangan andalkan hasil build/tes yang diukur 10 menit lalu.
+
+**Rollback rilis ini:** `git revert --no-edit 2af96b6 && git push origin main && git push dramaku main` (mengembalikan tombolnya).
+
+---
+
 **Terakhir dicek:** 2026-09-23 (**✅ KERJA REKAN DITARIK & DIRILIS, antrean KOSONG**). **`HEAD` = `origin/main` = `dramaku/main` = `a8db3ca`**, lokal ahead 0. Cermin `dramaku` ternyata membawa **4 commit rekan** yang belum sampai ke produksi — ditarik fast-forward (nol pekerjaan tertimpa), ditemukan **commit `f65ccd6` tidak pernah memasang tombol Unduh-nya** (komponen + 7 tes hijau, tapi nol berkas mengimpornya), diperbaiki di `a8db3ca` lalu dirilis. Dual push dari komputer owner **berhasil di kedua repo**, keduanya fast-forward.
 
 **Gerbang §6:** `rm -rf .next` → build **exit 0** (`/drama/[id]` tetap `● SSG`, `/` tetap `○ Static` 1m 1y) → `tsc` **exit 0 / 0 error** → **896 tes / 62 berkas** (dari 881/60) → **mutation check 3 arah semuanya MERAH** → nol berkas env/kunci → push → **verifikasi tayang**: film menggambar `DOWNLOAD`, serial menggambar `DOWNLOAD EP 1`, 13 halaman produksi semuanya 200. **Nol SQL, nol env baru.**

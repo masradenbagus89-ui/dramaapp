@@ -9,11 +9,15 @@
 >
 > **📦 Berkas ini sudah 2.980 baris / ±240 KB** dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-09-23 (revisi ke-15).
+**Terakhir diisi:** 2026-09-23 (revisi ke-16).
 
 ## ⚡ KEADAAN SEKARANG (baca ini dulu — 30 detik)
 
-`HEAD` = `origin/main` = `dramaku/main` = **`fa328b7`** (dibaca lewat `git fetch` ke kedua server sesudah push). Antrean **KOSONG**.
+`HEAD` = `origin/main` = `dramaku/main` = **`2af96b6`** (dibaca lewat `git ls-remote` ke kedua server sesudah push). Antrean **KOSONG**.
+
+**⛔ TOMBOL "DOWNLOAD EP 1" SUDAH DIHAPUS (`2af96b6`) — JANGAN DIPASANG LAGI TANPA PERMINTAAN OWNER.** Owner melihatnya di halaman detail, menandainya dengan kotak merah, dan meminta dihapus: *"mungkin semua film ada poster tombol merah muda DOWNLOAD EP 1 jadi kamu hapus saja yah"*. Dihapus TUNTAS (komponen + tes + 3 fungsi pembantu di `lib/video.ts`), bukan disembunyikan. Klaim rekan bahwa tombol ini "keputusan owner 2026-09-21" **tidak punya jejak** di dokumen mana pun sebelum commit `f65ccd6` — sudah dicari. **Yang TETAP ADA:** tombol unduh di dalam pemutar video (`downloadUrl()` + `app/api/download/route.ts`, dipakai `FeedPlayer.tsx:429`) — fitur lain, owner tidak meminta itu dihapus.
+
+**🚨 DUA SESI AI BERJALAN BERSAMAAN DI KOMPUTER INI HARI INI — dan `main` sempat maju 4 commit di tengah kerja sesi lain tanpa peringatan apa pun.** Sesi "tombol Unduh" (pagi) mendapati `HEAD` berubah sendiri dari `8fdab6e` jadi `4e0c464` saat sedang bekerja, gara-gara sesi "poster/tahun" (siang-sore) meng-commit + push di sela-selanya. Tidak ada yang rusak kali ini (berkas yang disentuh kedua sesi tidak beririsan, dan semua push fast-forward), tapi **`HANDOFF.md` ditulis oleh KEDUA sesi** dan itu titik bentrok yang paling mungkin meledak. Kalau membuka dua tab sekaligus: `git fetch` + `git log --oneline -3` **sebelum** tiap commit, dan jangan anggap hasil build/tes yang diukur 10 menit lalu masih berlaku.
 
 **Rilis 2026-09-23 siang (2 commit):** `c954e6f` chip "🪙 Premium" dihapus dari poster kartu (permintaan owner) + `fa328b7` memperbaiki tes penjaga yang jadi VAKUM akibat commit pertama (ditemukan audit pra-rilis). **Terverifikasi tayang:** chip Premium **47 → 0** di HTML produksi, lencana lain utuh, paywall nol tersentuh. Rinciannya di seksi "2026-09-23 (siang)" di bawah.
 
@@ -70,6 +74,24 @@ Yang BENAR dan sudah terverifikasi: **nama remote berbeda per komputer.** Di kom
 Catatan 2026-09-21 menulis "sebabnya belum terjelaskan dan JANGAN ditebak". Sekarang sudah diukur dan **direproduksi di tes**: `usePathname()` di `TopNav`/`BottomNav` menerima nilai yang **bukan** `/` saat pra-render alamat akar; `?? "/"` tidak menangkapnya (operator `??` hanya menangkap `null`/`undefined`, **bukan string kosong**); dan logikanya berbentuk **denylist** sehingga nilai apa pun yang tak dikenali membuat navbar **MUNCUL**. Rinciannya di seksi 2026-09-22 di bawah.
 
 ⚠️ **Koreksi atas catatan 2026-09-21 itu sendiri.** Kalimat *"`TopNav` menggambar menunya dalam keadaan tidak ada yang aktif, yang justru konsisten dengan `pathname === "/"`"* **menyimpulkan ke arah yang salah**. Keadaan "tak ada satu pun menu aktif" justru konsisten dengan `pathname` yang **BUKAN** `/` — sebab kalau nilainya benar-benar `/`, penyaring `PUBLIC_PATHS` sudah memulangkan `null` dan navbarnya tak tergambar sama sekali. Petunjuk itu sebenarnya sudah menunjuk jawabannya sejak semalam, cuma dibaca terbalik.
+
+---
+
+## 2026-09-23 (sore, revisi ke-2) — tombol "DOWNLOAD EP 1" DIHAPUS atas permintaan owner (`2af96b6`)
+
+**Permintaan owner, lengkap dengan tangkapan layar berkotak merah:** *"tolong kamu hapus yang saya kasih kotak merah mungkin semua film ada poster tombol merah muda DOWNLOAD EP 1 jadi kamu hapus saja yah"*.
+
+**Latar belakangnya (kenapa tombol itu sempat ada).** Owner bertanya lebih dulu *"siapa yang buat tulisan DOWNLOAD ini"*. Jawabannya dari `git blame`: tulisannya lahir di `f65ccd6` (2026-09-22 20:18, kerja rekan, masuk lewat cermin `ojokesusu/dramaku`); yang memasangnya ke halaman cuma `a8db3ca` pagi ini. **Riwayat git TIDAK bisa membuktikan siapa yang mengetiknya** — nama author kedua commit itu sama persis (`masradenbagus89-ui <zyyherlambang@gmail.com>`) karena identitas git belum dipisah antar-komputer (`AGENTS.local.md` aturan 7). Yang membedakan bukan namanya, melainkan: commitnya hanya ada di cermin, dan catatan di dalamnya menjelaskan komputer ber-kredensial `yusufscorpio`. **Dan pencarian jejak "keputusan owner 2026-09-21" yang diklaim rekan: NIHIL** — semua sebutan "tombol Unduh" yang lebih lama merujuk tombol di dalam PEMUTAR, bukan halaman detail.
+
+**Dihapus TUNTAS, bukan disembunyikan** (§3.1 — dead code dilarang): `app/components/DownloadButton.tsx` dihapus · `tests/download-button.test.ts` dihapus (mengunci fitur yang sudah tiada) · `DETAIL_DOWNLOAD_EP`, `detailDownloadUrl`, `downloadFileName` dibuang dari `lib/video.ts` sesudah diperiksa **nol pemakai lain** · `app/drama/[id]/page.tsx` dipulihkan PERSIS ke versi `da8d7a1`, jadi tata letaknya kembali seperti sebelum tombol itu ada (Nonton di kiri, Favorit + Suka + Bagikan di kanan, satu baris).
+
+**⚠️ YANG SENGAJA TIDAK IKUT DIHAPUS — jangan ikut dibersihkan di sesi berikutnya:** `downloadUrl()` di `lib/video.ts` dan `app/api/download/route.ts`. Keduanya milik **tombol unduh di dalam pemutar video** (`FeedPlayer.tsx:429`), fitur berbeda yang owner tidak minta dihapus. Membuangnya akan merusak pemutar.
+
+**PEMERIKSAAN VAKUM — langsung memakai pelajaran `fa328b7` yang ditulis sesi lain beberapa jam sebelumnya** (*menghapus elemen bisa membuat tes tetangga lulus tanpa menguji apa pun*). Dua berkas tes yang menyentuh halaman detail diperiksa satu per satu: `tests/drama-prerender-build.test.ts` seluruhnya soal `generateStaticParams`/`dynamicParams`/`revalidate`, dan `tests/poster-lencana-render.test.ts` soal `showBadge`. **Nol tes yang bergantung pada keberadaan tombol ini**, jadi nol yang menjadi vakum.
+
+**🪤 Pelajaran sesi ini:** **selisih hitungan tes 1 buah ternyata bukan tes flaky, melainkan `main` yang maju di bawah kaki sendiri.** Perkiraan 896 − 10 = 886 tapi terukur 887; ditelusuri, ternyata baseline-nya sudah berubah jadi 897 karena sesi lain menambah 1 tes dan mem-push-nya di tengah sesi ini. **Angka yang meleset 1 tetap wajib dijelaskan** — kalau diabaikan, penjelasan yang benar (ada sesi lain menulis ke repo yang sama) tidak akan pernah ditemukan.
+
+**Bukti:** `rm -rf .next` lalu build **exit 0** (`/drama/[id]` TETAP `● SSG`, `/` tetap `○ Static` 1m 1y) lalu `tsc` **exit 0 / 0 error** lalu **887 tes / 61 berkas** (dari 897/62 — turun tepat 1 berkas + 10 tes milik fitur yang dihapus) lalu nol berkas rahasia lalu dual push fast-forward `4e0c464..2af96b6` ke kedua repo.
 
 ---
 
@@ -141,6 +163,8 @@ Catatan 2026-09-21 menulis "sebabnya belum terjelaskan dan JANGAN ditebak". Seka
 ---
 
 ## 2026-09-23 (pagi) — tombol Unduh rekan dipasang & dirilis; 7 film ternyata tanpa video (`a8db3ca`)
+
+> ⛔ **SUDAH DIBATALKAN ATAS PERMINTAAN OWNER (`2af96b6`, seksi di atas).** Tombolnya dihapus tuntas beberapa jam kemudian. Seksi ini tetap disimpan karena **temuan 7 film tanpa berkas video masih berlaku** dan belum diputuskan owner.
 
 **Duduk perkaranya.** Repo cermin berisi 4 commit rekan yang belum sampai ke produksi. Ditarik fast-forward (nol pekerjaan tertimpa), lalu ketahuan **commit `f65ccd6` tidak pernah memasang tombolnya**: komponen `DownloadButton`, fungsi pembantu di `lib/video.ts`, dan 7 tes semuanya ada dan HIJAU — tapi **nol berkas mengimpornya**, dan `app/drama/[id]/page.tsx` nol sentuhan. Dead code yang dari luar terlihat seperti fitur jadi. Kemungkinan besar suntingan halamannya hilang saat rekan pindah basis lalu membuang stash.
 

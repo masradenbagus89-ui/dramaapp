@@ -59,32 +59,3 @@ export function decideVideoError(input: {
   }
   return "menyerah";
 }
-
-/** Episode yang ditawarkan tombol Unduh di halaman DETAIL drama. */
-export const DETAIL_DOWNLOAD_EP = 1;
-
-// Alamat unduh untuk tombol di halaman DETAIL drama (/drama/[id]).
-//
-// KENAPA SELALU lewat /api/download, tidak pernah menempel alamat tunnel
-// seperti downloadUrl() di atas: halaman detail di-cache (`revalidate = 60` +
-// generateStaticParams), jadi alamat tunnel yang ikut dibakar ke HTML bisa
-// jauh lebih basi daripada umur tunnel itu sendiri — dan alamatnya berganti
-// tiap PC backup restart. Route /api/download `force-dynamic`, jadi ia selalu
-// menanyakan alamat terbaru, lalu membalas 307 (menunjuk, bukan menyalurkan)
-// sehingga tak ada byte video yang lewat server kita.
-//
-// KENAPA ep 1 dan bukan pilihan penonton: ep 1..FREE_EPISODES gratis untuk
-// semua orang (lib/coins.ts:17), jadi tombol ini TIDAK bisa dipakai melewati
-// paywall koin. Menaikkannya ke episode berbayar = membuka bypass — dijaga
-// tes di tests/download-button.test.ts.
-export function detailDownloadUrl(
-  dramaId: string,
-  ep: number = DETAIL_DOWNLOAD_EP,
-): string {
-  return `/api/download?id=${encodeURIComponent(dramaId)}&ep=${ep}`;
-}
-
-/** Nama berkas yang disodorkan ke browser. Seragam dengan tombol unduh di player. */
-export function downloadFileName(dramaId: string, ep: number): string {
-  return `${dramaId}-ep${ep}.mp4`;
-}

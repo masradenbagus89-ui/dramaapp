@@ -15,7 +15,6 @@ import EpisodeList from "@/app/components/EpisodeList";
 import AdBanner from "@/app/components/AdBanner";
 import RatingStars from "@/app/components/RatingStars";
 import ShareButton from "@/app/components/ShareButton";
-import DownloadButton from "@/app/components/DownloadButton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, Captions } from "lucide-react";
@@ -176,21 +175,13 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
       </div>
 
       <div className="mt-20 px-4 md:mt-24 md:px-8 md:max-w-3xl">
-        {/* Baris 1 = dua aksi utama. Unduh sengaja SEBARIS dengan Nonton, dan
-            Simpan/Suka/Bagikan diturunkan ke baris sendiri: lima tombol dalam
-            satu baris saling berdesakan di layar HP. */}
         <div className="flex flex-col gap-2 sm:flex-row">
           <WatchCta dramaId={drama.id} className="flex-1" />
-          <DownloadButton
-            dramaId={drama.id}
-            episodes={drama.episodes}
-            className="flex-1"
-          />
-        </div>
-        <div className="mt-2 flex gap-2">
-          <SaveButton id={drama.id} />
-          <LikeButton dramaId={drama.id} />
-          <ShareButton title={drama.title} />
+          <div className="flex flex-1 gap-2">
+            <SaveButton id={drama.id} />
+            <LikeButton dramaId={drama.id} />
+            <ShareButton title={drama.title} />
+          </div>
         </div>
 
         {drama.subtitles && drama.subtitles.length > 0 && (

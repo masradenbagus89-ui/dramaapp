@@ -9,11 +9,13 @@
 >
 > **📦 Berkas ini sudah 2.980 baris / ±240 KB** dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-09-23 (revisi ke-16).
+**Terakhir diisi:** 2026-09-23 (revisi ke-17).
 
 ## ⚡ KEADAAN SEKARANG (baca ini dulu — 30 detik)
 
-`HEAD` = `origin/main` = `dramaku/main` = **`2af96b6`** (dibaca lewat `git ls-remote` ke kedua server sesudah push). Antrean **KOSONG**.
+`HEAD` = `origin/main` = `dramaku/main` = **`0ab70ad`** (dibaca lewat `git fetch` ke kedua server, 2026-09-23 sore revisi ke-3). Antrean **KOSONG**.
+
+> Baris di atas sempat tertinggal satu commit: ia menyebut `2af96b6`, padahal commit docs `0ab70ad` yang MENULIS baris itu sendiri sudah membuatnya basi begitu di-push. Jebakan ini berulang tiap kali catatan rilis ditulis SEBELUM commit terakhirnya jadi — sebutkan hash sesudah `git fetch`, bukan hash yang ada di kepala saat mengetik.
 
 **⛔ TOMBOL "DOWNLOAD EP 1" SUDAH DIHAPUS (`2af96b6`) — JANGAN DIPASANG LAGI TANPA PERMINTAAN OWNER.** Owner melihatnya di halaman detail, menandainya dengan kotak merah, dan meminta dihapus: *"mungkin semua film ada poster tombol merah muda DOWNLOAD EP 1 jadi kamu hapus saja yah"*. Dihapus TUNTAS (komponen + tes + 3 fungsi pembantu di `lib/video.ts`), bukan disembunyikan. Klaim rekan bahwa tombol ini "keputusan owner 2026-09-21" **tidak punya jejak** di dokumen mana pun sebelum commit `f65ccd6` — sudah dicari. **Yang TETAP ADA:** tombol unduh di dalam pemutar video (`downloadUrl()` + `app/api/download/route.ts`, dipakai `FeedPlayer.tsx:429`) — fitur lain, owner tidak meminta itu dihapus.
 

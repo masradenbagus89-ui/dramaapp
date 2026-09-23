@@ -3,6 +3,22 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
+**Terakhir dicek:** 2026-09-23 sore, revisi ke-3 (**antrean KOSONG**). **`HEAD` = `origin/main` = `dramaku/main` = `0ab70ad`**, lokal ahead 0 (dibaca lewat `git fetch` ke kedua server, bukan dari ingatan).
+
+**⚠️ ENTRI INI MENAMBAL LUBANG: commit `4e0c464` sebelumnya TIDAK tercatat di berkas ini sama sekali** — daftarnya meloncat dari `fa328b7` (entri "siang") langsung ke `2af96b6`, sehingga pembaca yang menelusuri riwayat rilis tidak akan pernah tahu ada perubahan DATA produksi di antaranya, apalagi cara membatalkannya. Dicatat sekarang supaya riwayatnya utuh.
+
+**`4e0c464` — sebar tahun 34 serial dari seragam `2024` jadi 2020-2024 (permintaan owner).** ⚠️ **Ini PERUBAHAN DATA DATABASE, bukan kode** — commit-nya hanya membawa skrip + catatan; yang benar-benar mengubah tampilan adalah PATCH ke kolom `dramaapp.dramas.year` yang sudah dijalankan. Tiga akibat yang beda dari rilis biasa: (a) **tayang sendiri ~60 detik tanpa deploy**; (b) **`git revert` TIDAK memulihkannya**; (c) **`npm test` mustahil memerahkannya** (semua tes memakai data buatan sendiri). Sebaran hasil: `2020=10, 2021=6, 2022=6, 2023=6, 2024=6`; **7 film tidak disentuh** sebab tahunnya tahun rilis SUNGGUHAN dari IMDb (2006, 2008, 2017, 2025, 2026).
+
+**Gerbang §6 (tetap dijalankan walau kode aplikasi nol berubah):** `rm -rf .next` → build **exit 0** → `tsc` **exit 0** → **897 tes / 62 berkas** hijau → nol berkas env/kunci → dual push cermin-dulu-baru-produksi (`492763f..4e0c464`, keduanya fast-forward) → **verifikasi tayang**: `/`, `/beranda`, `/shorts` semuanya memajang kelima tahun; `/api/dramas` memulangkan sebaran yang sama persis.
+
+**🪤 Pelajaran alat: API menyegarkan LEBIH DULU daripada halaman.** Sesudah PATCH, `/api/dramas` langsung memulangkan tahun baru sementara halaman masih menyajikan HTML lama — tiap halaman statis punya cache ISR sendiri dan baru berganti sesudah ada permintaan melewati 60 detik. `?cb=<angka>` **tidak** menembusnya untuk halaman statis. Sempat terbaca persis seperti "perubahannya tidak masuk". Cara benar: minta halamannya berulang sampai berganti, pakai `/api/dramas` sebagai sumber kebenaran.
+
+**Rollback perubahan data ini (BUKAN `git revert`):** `node scripts/acak-tahun-serial.mjs --kembalikan` — membaca `scripts/cadangan/2026-09-23-tahun-serial.json` (ditulis SEBELUM PATCH pertama) lalu mengembalikan ke-34 judul ke `"2024"`.
+
+**📑 Urutan entri di berkas ini sedang TIDAK rapi** — entri `2af96b6` ("sore", hapus tombol DOWNLOAD) ada di BAWAH entri `fa328b7` ("siang"), padahal konvensinya terbaru-di-atas. Jangan berhenti membaca di entri pertama; telusuri sampai `2026-09-22`. Tidak dirapikan sendiri di sini supaya tulisan sesi lain tidak digeser tanpa sepengetahuannya.
+
+---
+
 **Terakhir dicek:** 2026-09-23 siang (**✅ RILIS CHIP PREMIUM, antrean KOSONG**). **`HEAD` = `origin/main` = `dramaku/main` = `fa328b7`**, lokal ahead 0. Dua commit: `c954e6f` menghapus chip "🪙 Premium" dari poster kartu (permintaan owner lewat tangkapan layar beranda) + `fa328b7` memperbaiki tes penjaga yang jadi **VAKUM** akibat commit pertama. Dual push atas izin owner, **cermin dulu baru produksi**, keduanya **fast-forward** (`8fdab6e..fa328b7`).
 
 **Gerbang §6:** `rm -rf .next` → build **exit 0** → `tsc` **exit 0 / 0 error** → **897 tes / 62 berkas** (jumlahnya tetap; 1 tes lama diperbaiki, 1 tes baru ditambah, 1 tes lama dipecah) → **mutation check 2 arah keduanya MERAH** → nol berkas env/kunci → push → **verifikasi tayang**: chip Premium **47 → 0** di `/` dan `/beranda`, 0 juga di `/shorts` & `/discover`; lencana rating+kualitas utuh (146 / 132 / 118); halaman detail drama berbayar tetap memajang `🪙 PREMIUM` di sebelah judul. **Nol SQL, nol env baru.**

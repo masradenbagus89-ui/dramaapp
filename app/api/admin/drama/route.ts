@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
+  parseDownloadProviders,
   parseDramaQuality,
   parseDramaStatus,
   resolveKindRules,
@@ -14,6 +15,7 @@ import {
   pickRandomGradient,
 } from "@/lib/dramas";
 import { simpanKualitas } from "@/lib/kualitas-drama";
+import { simpanUnduhan } from "@/lib/unduhan";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -28,6 +30,7 @@ type DramaBody = Partial<{
   kind: string;
   status: string;
   quality: string;
+  downloadProviders: unknown;
   posterImage: string;
   heroImage: string;
   gradient: string;
@@ -164,6 +167,14 @@ export async function POST(req: NextRequest) {
     const qualityProvided = typeof body.quality === "string";
     const quality = parseDramaQuality(body.quality);
 
+    // Provider unduhan: aturan "dikirim vs sah" sama dengan quality di atas,
+    // tapi penandanya Array (bukan string) karena bentuk datanya daftar.
+    // Kiriman array kosong = perintah MENGOSONGKAN daftar, bukan ditolak.
+    // Penyaringnya duduk di lib/types.ts — termasuk pagar yang menolak alamat
+    // selain http/https; itu pagar keamanan, bukan kerapian (lihat isHttpUrl).
+    const providersProvided = Array.isArray(body.downloadProviders);
+    const providers = parseDownloadProviders(body.downloadProviders);
+
     const rules = resolveKindRules(body);
     const isFilm = rules.kind === "movie";
     if (rules.episodes === null) {
@@ -206,6 +217,7 @@ export async function POST(req: NextRequest) {
         ...(isFilm ? { kind: rules.kind } : {}),
         ...(status ? { status } : {}),
         ...(quality ? { quality } : {}),
+        ...(providers.length ? { downloadProviders: providers } : {}),
         views: body.views?.trim() || "1.0K",
         synopsis: body.synopsis?.trim() || "",
         gradient: body.gradient?.trim() || pickRandomGradient(),
@@ -248,6 +260,10 @@ export async function POST(req: NextRequest) {
         if (quality) drama.quality = quality;
         else delete drama.quality;
       }
+      if (providersProvided) {
+        if (providers.length) drama.downloadProviders = providers;
+        else delete drama.downloadProviders;
+      }
       if (typeof premium === "boolean") {
         if (premium) drama.premium = true;
         else delete drama.premium;
@@ -261,6 +277,9 @@ export async function POST(req: NextRequest) {
     // DIKIRIM, mengikuti aturan yang sama dengan `status` di atas: alat lain
     // yang mengirim body tanpa `quality` tidak boleh diam-diam menghapusnya.
     if (qualityProvided) await simpanKualitas(drama.id, quality);
+    // Provider unduhan juga disimpan TERPISAH di app_data, alasan & aturan
+    // "hanya kalau dikirim" sama persis dengan kualitas di atas.
+    if (providersProvided) await simpanUnduhan(drama.id, providers);
 
     const action = isNew ? "added" : "updated";
     return NextResponse.json({ ok: true, id: drama.id, action, drama });

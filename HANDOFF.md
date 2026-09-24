@@ -9,7 +9,7 @@
 >
 > **📦 Berkas ini sudah 2.980 baris / ±240 KB** dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-09-22 (revisi ke-12).
+**Terakhir diisi:** 2026-09-23 (revisi ke-2).
 
 ## ⚡ KEADAAN SEKARANG (baca ini dulu — 30 detik)
 
@@ -20,6 +20,7 @@
 - `/drama/transformers-the-last-knight` → **200**, dirender penuh ("Mulai Nonton" ada), tapi penanda `DOWNLOAD` dan `api/download?id=` **NOL** pada 22 pengukuran selama 15 menit.
 - Header halaman itu: `X-Vercel-Cache: HIT` · **`Age: 53`** · `X-Nextjs-Prerender: 1`. Artinya HTML-nya **baru diregenerasi kurang dari semenit sebelumnya dan TETAP tanpa tombol** — dan regenerasi ISR selalu memakai kode **deployment yang aktif**. Jadi deployment aktif masih versi lama; ini **bukan** soal cache basi yang tinggal ditunggu.
 - Kesimpulan yang bisa ditarik dari luar: **Vercel belum membangun `8e1c880`** (antre / build gagal / auto-deploy mati / kuota). **Tidak bisa dipastikan tanpa dashboard Vercel** — itu hanya ada pada owner.
+- **⛔ KOREKSI 2026-09-23 — kesimpulan di atas TIDAK didukung buktinya; jangan berburu build gagal dulu.** Penanda `DOWNLOAD` nol di produksi **bukan** tanda deploy gagal: tombolnya memang TIDAK PERNAH ADA di halaman mana pun. `f65ccd6` cuma menambah 3 berkas (`DownloadButton.tsx`, `lib/video.ts`, tesnya) — **nol halaman** mengimpornya, jadi penanda itu akan tetap nol walau deploy-nya sukses sempurna. Dibuktikan: `git log --all -S "<DownloadButton" -- app/` **kosong**, dan di `origin/main` nama itu cuma muncul di berkasnya sendiri. Rincian + perbaikannya di seksi 2026-09-23 di bawah.
 
 **Langkah owner:** buka dashboard Vercel proyek dramaapp → lihat Deployments. Kalau build `8e1c880` **merah**, salin pesan errornya. Kalau **tidak ada sama sekali**, berarti auto-deploy dari `ojokesusu/dramaku` tidak aktif. Repo ini **pernah mati total karena kuota Vercel jebol** — periksa itu juga.
 
@@ -65,6 +66,54 @@ Catatan 2026-09-21 menulis "sebabnya belum terjelaskan dan JANGAN ditebak". Seka
 ⚠️ **Koreksi atas catatan 2026-09-21 itu sendiri.** Kalimat *"`TopNav` menggambar menunya dalam keadaan tidak ada yang aktif, yang justru konsisten dengan `pathname === "/"`"* **menyimpulkan ke arah yang salah**. Keadaan "tak ada satu pun menu aktif" justru konsisten dengan `pathname` yang **BUKAN** `/` — sebab kalau nilainya benar-benar `/`, penyaring `PUBLIC_PATHS` sudah memulangkan `null` dan navbarnya tak tergambar sama sekali. Petunjuk itu sebenarnya sudah menunjuk jawabannya sejak semalam, cuma dibaca terbalik.
 
 ---
+
+## 2026-09-23 (revisi ke-2) — tombol DOWNLOAD pindah ke bawah badge Subtitle + **melayang**, dan ikon Unduh baru di dalam pemutar
+
+**Belum di-commit, belum di-push.** Owner yang memutuskan rilis. Melanjutkan seksi 2026-09-23 di bawah (modal provider) — perubahan ini menumpang di atasnya, bukan menggantikannya.
+
+**⛔ Dua premis permintaan owner dikoreksi lebih dulu, karena keduanya menyetir hasil.**
+
+1. *"Tombol DOWNLOAD sejajar Lanjut Nonton, Tambah Favorit di bawahnya."* **Tidak.** Di kode, tombol itu sudah berada di baris sendiri **di bawah** deretan Favorit/Suka/Bagikan. Yang memang belum sesuai keinginan owner hanyalah posisinya masih DI ATAS badge subtitle. Akibatnya permintaan owner nomor 3 (*"baris Lanjut Nonton jadi full-width sendirian"*) **tidak menyisakan pekerjaan** — baris itu memang sudah tidak berisi tombol unduh, jadi sengaja TIDAK disentuh.
+2. *"Pastikan tombolnya di atas overlay player pakai z-index tinggi."* **Tidak ada player di halaman detail sama sekali.** Menekan "Lanjut Nonton" **berpindah halaman penuh** ke `/feed/[id]` (`app/feed/[id]/page.tsx:22` merender `FeedPlayer` setinggi `100dvh`) — halaman detailnya lenyap, bukan tertutup lapisan. z-index setinggi apa pun tak menolong. Satu-satunya cara memenuhi maksudnya: menaruh jalan masuk unduhan **di dalam pemutar**. Ditanyakan ke owner, owner memilih ikon di rail kanan.
+
+**Yang dikerjakan.** (a) Tombol DOWNLOAD halaman detail pindah ke **bawah baris badge Subtitle/Indonesia, tepat di atas heading SINOPSIS**, dan sekarang **melayang** di tepi bawah layar selama penonton menggulung — dari badge sampai kolom komentar. (b) Rail ikon kanan di pemutar `/feed` dapat ikon **Unduh** baru yang membuka modal provider yang sama, jadi penonton tak perlu keluar dari video. Fungsi tombolnya **tidak diubah** sama sekali, hanya posisi + kepersistenan.
+
+**🔑 Jebakan CSS yang dikunci tes — jangan dibongkar tanpa membaca ini.** **`position: sticky` SELALU membuat stacking context**, begitu juga `absolute` + `z-index`. `DownloadModal` dirender sebagai **saudara** tombol, jadi kalau tombolnya dibungkus `<div className="sticky">`, modal `z-50` itu ikut terkurung dan **kalah dari `BottomNav` z-30 yang berada di luar** — modal tertimbun menu bawah, dan cacatnya **hanya kelihatan di HP**. Karena itu: di halaman detail kelas sticky menempel di **tombolnya langsung**, dan di `ActionRail` modal dirender **di luar** div rail (dibungkus fragment). Keduanya dijaga tes yang sudah diuji-balik.
+
+**Angka yang bukan selera:** `bottom-20` di HP karena BottomNav setinggi ~64px menempel di dasar layar (`layout.tsx:55` `pb-16`) — `bottom-4` saja membuat tombol tertimbun menu; `md:bottom-4` karena di >=md BottomNav disembunyikan. `flex` + `sm:w-fit` dipakai supaya sticky berperilaku konsisten tanpa membuat tombol melebar penuh di desktop.
+
+**Catatan paywall (sengaja, bukan kelalaian).** Ikon Unduh di pemutar TIDAK disembunyikan saat episode terkunci, dan hanya muncul kalau dramanya punya daftar provider. Daftar provider = tautan pihak luar yang diisi owner sendiri, dan daftar yang sama sudah tampil tanpa syarat di halaman detail yang publik — satu ketukan dari pemutar lewat ikon poster di puncak rail. Jalur berbayar yang sesungguhnya (`/api/download` ke berkas server sendiri) **tidak disentuh** dan tetap terkunci di episode gratis oleh `tests/download-button.test.ts`. Kalau owner mau ikonnya hilang saat paywall menyala: tambah `&& !lockedActive`, nilainya sudah ada di `FeedPlayer.tsx:125`.
+
+**Berkas.** Diubah: `app/drama/[id]/page.tsx` · `app/components/ActionRail.tsx` · `app/components/FeedPlayer.tsx` · `app/feed/[id]/page.tsx` · `tests/unduhan-pemasangan.test.ts` (+8 penjaga) · `tests/download-modal-render.test.ts` (+3 penjaga). Tidak ada berkas baru.
+
+**Bukti (gerbang §6 penuh, urutan benar).** `rm -rf .next` → `npm run build` **exit 0** → `npx tsc --noEmit` **exit 0** → `npm test` **950 tes / 65 berkas hijau** (naik dari 939). Dibuktikan **tayang**, bukan cuma ditulis: server hasil build di `:3099`, `/drama/over-your-dead-body` → 200 dan urutan di HTML nyata **badge Subtitle (24272) → tombol DOWNLOAD (25048) → heading Sinopsis (26135)**; kelas yang benar-benar terkirim ke browser `... sticky bottom-20 z-30 mt-4 flex w-full shadow-lg shadow-black/50 sm:w-fit md:bottom-4` (perhatikan `inline-flex` bawaan Button sudah digantikan `flex` oleh tailwind-merge, persis seperti dirancang); CSS hasil build memuat `.sticky{position:sticky}`, `.bottom-20{...}`, `.w-fit{width:fit-content}` jadi kelasnya tidak menguap dari bundel. Penjaga **diuji-balik 4×**: `md:bottom-4` dihapus → 1 merah · `providers={providers}` dilepas dari FeedPlayer → 1 merah · tombol dikembalikan ke atas badge → 1 merah · modal dipindah ke DALAM div rail → 1 merah; semua dipulihkan → 38/38 hijau.
+
+**❓ Yang BELUM terbukti.** (1) **Ikon Unduh di pemutar belum pernah terlihat di layar** — bukan karena rusak, tapi karena **0 dari 42** judul punya daftar provider (diukur lewat `/api/dramas` di server hasil build). Yang terbukti: komponennya menggambar ikon itu saat diberi provider (tes render), dan datanya mengalir utuh halaman → FeedPlayer → ActionRail (tes pemasangan). Owner bisa membuktikannya penuh dengan mengisi satu provider di panel admin. (2) Perilaku sticky di HP sungguhan belum diketuk jari. (3) `npm run lint` **tidak ada** di project ini dan tak ada konfigurasi ESLint sama sekali — penggantinya `next build` + `tsc --noEmit`, dua-duanya exit 0.
+
+**Rencana lengkap + cara owner mencoba sendiri:** `docs/lintasai/rencana/2026-09-23-tombol-unduh-melayang.md`.
+
+---
+
+## 2026-09-23 — tombol DOWNLOAD jadi modal pilihan provider + **tombolnya baru benar-benar terpasang**
+
+**Belum di-commit, belum di-push.** Owner yang memutuskan rilis.
+
+**⛔ Temuan yang mengoreksi catatan 2026-09-22 di atas.** `DownloadButton` adalah **kode mati** sejak dibuat: `f65ccd6` menambah komponen + helper + tes, tapi **tidak ada satu halaman pun** yang mengimpornya. Jadi pengukuran "penanda `DOWNLOAD` nol di produksi" **tidak membuktikan apa-apa soal Vercel** — hasilnya akan sama persis andai deploy-nya sukses. Bukti: `git log --all -S "<DownloadButton" -- app/` kosong di SEMUA cabang; `git grep DownloadButton origin/main -- app/` cuma memulangkan berkasnya sendiri. (Ini **tidak** membuktikan deploy-nya berhasil — cuma membuktikan bukti yang dipakai kemarin tidak nyambung.)
+
+**Yang dikerjakan (permintaan owner):** tombol DOWNLOAD tidak lagi langsung mengunduh satu berkas, melainkan membuka **modal daftar provider** (Google Share / Telegram / Cast / Mega) berbentuk tabel — kepala tabel pink, tombol per baris biru/oranye, banner catatan biru muda + link tutorial. Daftar kosong = **kembali ke perilaku unduh lama**, jadi 42 judul yang belum diisi tidak kehilangan apa pun.
+
+**Di mana datanya.** Kolom database **tidak bisa** dibuat (akses DDL masih tertutup, sama seperti kasus `quality`), jadi daftar provider disimpan sebagai satu dokumen di `app_data` key **`unduhan`** — preseden `lib/kualitas-drama.ts` diikuti persis. Pintu masuknya **kotak isian baru di panel admin** (form drama), karena tanpa itu fiturnya cuma jadi modal yang tak pernah terisi.
+
+**Keamanan (jangan dilonggarkan).** Alamat provider dipasang ke atribut `href`, dan `app_data` tidak dijaga CHECK constraint — jadi `parseDownloadProviders` (`lib/types.ts`) **menolak skema selain http/https**. `javascript:` yang lolos ke href = kode asing berjalan di halaman penonton. Disaring **tiap kali dibaca**, termasuk isi `data/dramas.json` (berkas itu ikut tayang saat Supabase mati lewat `getAllDramasCachedSafe`).
+
+**Berkas.** Baru: `lib/unduhan.ts` · `app/components/DownloadModal.tsx` · `app/components/admin/DownloadProviderFields.tsx` · 3 berkas tes. Diubah: `lib/types.ts` · `lib/dramas.ts` (4 jalur baca) · `app/components/DownloadButton.tsx` · `app/drama/[id]/page.tsx` · `app/api/admin/drama/route.ts` · `app/components/admin/DramaForm.tsx` · `app/admin/page.tsx`.
+
+**Bukti (gerbang §6 dijalankan penuh, urutan benar).** `rm -rf .next` → `npm run build` **exit 0** → `npx tsc --noEmit` **exit 0** → `npm test` **939 tes / 65 berkas hijau** (naik dari 912). Tombolnya dibuktikan **benar-benar tayang**, bukan cuma ditulis: server hasil build dijalankan di `:3099`, `/drama/over-your-dead-body` → 200 dan HTML-nya memuat `DOWNLOAD` + `href="/api/download?id=over-your-dead-body&ep=1"` + `bg-pink-600`. Penjaga **diuji-balik**: pagar URL dilemahkan → 5 tes MERAH; `<DownloadButton` dilepas dari halaman → 2 tes MERAH; keduanya dikembalikan → hijau.
+
+**❓ Yang BELUM terbukti:** perjalanan data penuh (isi form admin → `app_data` → modal terisi di halaman). Membuktikannya berarti menulis ke data produksi, jadi sengaja tidak dilakukan tanpa izin. Cara owner membuktikannya sendiri ada di rencana: `docs/lintasai/rencana/2026-09-23-modal-provider-unduhan.md`.
+
+---
+
 
 
 

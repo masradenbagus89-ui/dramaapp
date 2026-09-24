@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import {
   MOVIE_EPISODE_COUNT,
   type Drama,
+  type DownloadProvider,
   type DramaKind,
   type DramaQuality,
   type DramaStatus,
@@ -42,6 +43,11 @@ export default function AdminPage() {
   const [status, setStatus] = useState<DramaStatus | "">("");
   // "" = belum diisi -> lencana kualitas tidak digambar di poster.
   const [quality, setQuality] = useState<DramaQuality | "">("");
+  // Daftar kosong = tombol DOWNLOAD di halaman detail kembali ke perilaku
+  // unduh lama. Itu keadaan normal untuk judul yang belum diisi providernya.
+  const [downloadProviders, setDownloadProviders] = useState<
+    DownloadProvider[]
+  >([]);
   const [posterImage, setPosterImage] = useState("");
   const [heroImage, setHeroImage] = useState("");
   const [subtitles, setSubtitles] = useState<string[]>([]);
@@ -197,6 +203,7 @@ export default function AdminPage() {
           kind,
           status,
           quality,
+          downloadProviders,
           posterImage: posterImage.trim(),
           heroImage: heroImage.trim(),
           subtitles,
@@ -236,6 +243,7 @@ export default function AdminPage() {
       setKind("series");
       setStatus("");
       setQuality("");
+      setDownloadProviders([]);
       setPosterImage("");
       setHeroImage("");
       setSubtitles([]);
@@ -302,6 +310,7 @@ export default function AdminPage() {
     setKind(d.kind ?? "series");
     setStatus(d.status ?? "");
     setQuality(d.quality ?? "");
+    setDownloadProviders(d.downloadProviders ?? []);
     setPosterImage(d.posterImage ?? "");
     setHeroImage(d.heroImage ?? "");
     setSubtitles(d.subtitles ?? []);
@@ -382,6 +391,8 @@ export default function AdminPage() {
           setStatus={setStatus}
           quality={quality}
           setQuality={setQuality}
+          downloadProviders={downloadProviders}
+          setDownloadProviders={setDownloadProviders}
           setKind={setKind}
           posterImage={posterImage}
           setPosterImage={setPosterImage}

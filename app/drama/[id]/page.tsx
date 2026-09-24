@@ -15,6 +15,7 @@ import EpisodeList from "@/app/components/EpisodeList";
 import AdBanner from "@/app/components/AdBanner";
 import RatingStars from "@/app/components/RatingStars";
 import ShareButton from "@/app/components/ShareButton";
+import DownloadButton from "@/app/components/DownloadButton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, Captions } from "lucide-react";
@@ -201,6 +202,46 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
             ))}
           </div>
         )}
+
+        {/* Tombol unduh: DI BAWAH baris badge subtitle, DI ATAS Sinopsis, dan
+            MELAYANG di tepi bawah layar selama penonton menggulung halaman.
+            Keputusan owner 2026-09-23.
+
+            KENAPA `sticky`, BUKAN `fixed` + JavaScript: sticky menahan tombol
+            di tepi bawah layar selama induknya (blok konten sampai <Comments/>)
+            masih tergulung, lalu melepasnya sendiri di ujung halaman — tanpa
+            IntersectionObserver, tanpa tombol kembar, dan halaman ini tetap
+            Server Component. Jalur `fixed` memaksa tombol KEDUA, dan tombol
+            kedua berarti state modal kedua yang ikut lenyap saat tombolnya
+            di-unmount di tengah pemakaian.
+
+            KENAPA kelas sticky menempel di TOMBOLNYA, bukan di div pembungkus:
+            `position: sticky` SELALU membuat stacking context. DownloadModal
+            dirender sebagai SAUDARA tombol (DownloadButton.tsx), jadi kalau
+            tombolnya dibungkus div sticky, modal `z-50` itu ikut terkurung di
+            dalamnya lalu kalah dari BottomNav `z-30` yang berada di luar —
+            modalnya tertimbun menu bawah di HP. Sebagai anak langsung, modal
+            tetap berada di stacking context halaman.
+
+            `bottom-20` di HP (bukan `bottom-4`) karena BottomNav setinggi
+            ~64px menempel di dasar layar (BottomNav.tsx:69, layout.tsx:55
+            `pb-16`); tanpa jarak itu tombol tertimbun menu. Di >=md BottomNav
+            disembunyikan, jadi turun ke `bottom-4`.
+
+            `flex` + `sm:w-fit` (bukan `sm:w-auto`): `flex` mengubah tombol
+            dari inline-flex jadi block-level supaya sticky-nya berperilaku
+            konsisten, dan block-level dengan `w-auto` justru melebar penuh —
+            `w-fit` yang mengembalikannya ke selebar isi di layar besar.
+
+            Isi modalnya datang dari drama.downloadProviders — kosong =
+            tombolnya kembali ke perilaku unduh satu berkas lewat /api/download. */}
+        <DownloadButton
+          dramaId={drama.id}
+          episodes={drama.episodes}
+          title={drama.title}
+          providers={drama.downloadProviders}
+          className="sticky bottom-20 z-30 mt-4 flex w-full shadow-lg shadow-black/50 sm:w-fit md:bottom-4"
+        />
 
         <h2 className="mt-6 text-sm font-semibold uppercase tracking-wider text-zinc-300">
           Sinopsis

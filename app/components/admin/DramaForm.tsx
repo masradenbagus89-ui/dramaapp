@@ -15,12 +15,14 @@ import {
   DRAMA_STATUS_OPTIONS,
   MOVIE_EPISODE_COUNT,
   SUBTITLE_LANGS,
+  type DownloadProvider,
   type DramaKind,
   type DramaQuality,
   type DramaStatus,
 } from "@/lib/types";
 import { CATEGORY_OPTIONS } from "@/app/admin/constants";
 import type { ScanResult } from "@/lib/admin-api";
+import DownloadProviderFields from "./DownloadProviderFields";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -96,6 +98,8 @@ export default function DramaForm({
   setStatus,
   quality,
   setQuality,
+  downloadProviders,
+  setDownloadProviders,
   posterImage,
   setPosterImage,
   heroImage,
@@ -159,6 +163,9 @@ export default function DramaForm({
   /** "" = belum diisi; lencana kualitas tidak akan digambar di poster. */
   quality: DramaQuality | "";
   setQuality: Dispatch<SetStateAction<DramaQuality | "">>;
+  /** Daftar kosong = tombol DOWNLOAD memakai perilaku unduh lama. */
+  downloadProviders: DownloadProvider[];
+  setDownloadProviders: Dispatch<SetStateAction<DownloadProvider[]>>;
   posterImage: string;
   setPosterImage: Dispatch<SetStateAction<string>>;
   heroImage: string;
@@ -1037,6 +1044,11 @@ export default function DramaForm({
             )}
           </p>
         </div>
+
+        <DownloadProviderFields
+          providers={downloadProviders}
+          setProviders={setDownloadProviders}
+        />
 
         <div className="mt-6 flex flex-wrap items-center gap-3">
           <Button

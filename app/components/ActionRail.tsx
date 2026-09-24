@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Heart, MessageCircle, Bookmark, Share2, Clapperboard } from "lucide-react";
+import { Heart, MessageCircle, Bookmark, Share2, Clapperboard, Download } from "lucide-react";
 import { isLiked, setLiked } from "@/lib/myLikes";
 import { isSaved, toggleSaved } from "@/lib/myList";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import type { DownloadProvider } from "@/lib/types";
+import DownloadModal from "./DownloadModal";
 
 // Rail ikon vertikal ala Melolo/TikTok yang menempel di sisi kanan feed.
 // Pakai ulang store like (/api/likes) + myList (simpan) yang sudah ada.
@@ -15,16 +17,25 @@ export default function ActionRail({
   title,
   posterImage,
   onComment,
+  providers = [],
 }: {
   dramaId: string;
   title: string;
   posterImage?: string;
   onComment?: () => void;
+  /**
+   * Daftar sumber unduhan drama ini. KOSONG = ikon Unduh tidak digambar sama
+   * sekali — bukan digambar lalu membuka modal kosong. Penonton yang dramanya
+   * belum punya daftar provider tetap bisa mengunduh lewat menu gerigi
+   * (PlayerSettings.tsx:153), jadi tidak ada yang hilang.
+   */
+  providers?: DownloadProvider[];
 }) {
   const [liked, setLikedState] = useState(false);
   const [saved, setSavedState] = useState(false);
   const [count, setCount] = useState<number | null>(null);
   const [pending, setPending] = useState(false);
+  const [downloadOpen, setDownloadOpen] = useState(false);
 
   useEffect(() => {
     setLikedState(isLiked(dramaId));
@@ -93,43 +104,63 @@ export default function ActionRail({
   };
 
   return (
-    <div className="pointer-events-auto absolute bottom-32 right-2 z-20 flex flex-col items-center gap-5">
-      <Link
-        href={`/drama/${dramaId}`}
-        className="h-11 w-11 overflow-hidden rounded-full border-2 border-amber-400/80 bg-zinc-800 shadow-lg ring-2 ring-black/20 transition-transform hover:scale-105"
-        aria-label="Detail drama"
-      >
-        {posterImage ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={posterImage} alt={title} className="h-full w-full object-cover" />
-        ) : (
-          <span className="flex h-full w-full items-center justify-center text-amber-400">
-            <Clapperboard className="h-5 w-5" />
-          </span>
+    <>
+      <div className="pointer-events-auto absolute bottom-32 right-2 z-20 flex flex-col items-center gap-5">
+        <Link
+          href={`/drama/${dramaId}`}
+          className="h-11 w-11 overflow-hidden rounded-full border-2 border-amber-400/80 bg-zinc-800 shadow-lg ring-2 ring-black/20 transition-transform hover:scale-105"
+          aria-label="Detail drama"
+        >
+          {posterImage ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={posterImage} alt={title} className="h-full w-full object-cover" />
+          ) : (
+            <span className="flex h-full w-full items-center justify-center text-amber-400">
+              <Clapperboard className="h-5 w-5" />
+            </span>
+          )}
+        </Link>
+
+        <RailButton
+          label={count && count > 0 ? String(count) : "Suka"}
+          onClick={onLike}
+          active={liked}
+          activeColor="text-rose-500"
+        >
+          <Heart className="h-7 w-7" fill={liked ? "currentColor" : "none"} />
+        </RailButton>
+
+        <RailButton label="Komen" onClick={() => onComment?.()}>
+          <MessageCircle className="h-7 w-7" />
+        </RailButton>
+
+        <RailButton label={saved ? "Tersimpan" : "Simpan"} onClick={onSave} active={saved} activeColor="text-amber-400">
+          <Bookmark className="h-7 w-7" fill={saved ? "currentColor" : "none"} />
+        </RailButton>
+
+        <RailButton label="Bagikan" onClick={onShare}>
+          <Share2 className="h-7 w-7" />
+        </RailButton>
+
+        {providers.length > 0 && (
+          <RailButton label="Unduh" onClick={() => setDownloadOpen(true)}>
+            <Download className="h-7 w-7" />
+          </RailButton>
         )}
-      </Link>
+      </div>
 
-      <RailButton
-        label={count && count > 0 ? String(count) : "Suka"}
-        onClick={onLike}
-        active={liked}
-        activeColor="text-rose-500"
-      >
-        <Heart className="h-7 w-7" fill={liked ? "currentColor" : "none"} />
-      </RailButton>
-
-      <RailButton label="Komen" onClick={() => onComment?.()}>
-        <MessageCircle className="h-7 w-7" />
-      </RailButton>
-
-      <RailButton label={saved ? "Tersimpan" : "Simpan"} onClick={onSave} active={saved} activeColor="text-amber-400">
-        <Bookmark className="h-7 w-7" fill={saved ? "currentColor" : "none"} />
-      </RailButton>
-
-      <RailButton label="Bagikan" onClick={onShare}>
-        <Share2 className="h-7 w-7" />
-      </RailButton>
-    </div>
+      {/* Modal SENGAJA di luar div rail di atas, bukan di dalamnya: div itu
+          `absolute ... z-20` sehingga membuat stacking context, dan `z-50`
+          milik modal hanya berlaku DI DALAM stacking context induknya —
+          dipasang di dalam, modalnya tetap tertimbun lapisan lain yang
+          angkanya lebih kecil tapi berada di luar (mis. BottomNav `z-30`). */}
+      <DownloadModal
+        open={downloadOpen}
+        onClose={() => setDownloadOpen(false)}
+        providers={providers}
+        title={title}
+      />
+    </>
   );
 }
 

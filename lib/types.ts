@@ -74,6 +74,108 @@ export function parseDramaQuality(value: unknown): DramaQuality | undefined {
   return DRAMA_QUALITY_OPTIONS.find((q) => q === value);
 }
 
+// --- Provider unduhan (Google Share / Telegram / Mega / ...) ---------------
+
+/**
+ * Warna tombol unduh tiap provider.
+ *
+ * Sengaja daftar TERTUTUP, bukan teks bebas: nilainya dipakai memilih kelas
+ * Tailwind, dan Tailwind memindai KODE (bukan isi database) untuk memutuskan
+ * kelas mana yang ikut dibundel. Kelas yang dirakit dari teks sembarang —
+ * `bg-${warna}-600` — tidak akan ada di CSS hasil build, jadi tombolnya
+ * tergambar tanpa warna sama sekali. Karena itu pemetaan warna -> kelas ditulis
+ * utuh di komponennya (app/components/DownloadModal.tsx).
+ */
+export const DOWNLOAD_BUTTON_COLORS = ["blue", "orange"] as const;
+
+export type DownloadButtonColor = (typeof DOWNLOAD_BUTTON_COLORS)[number];
+
+/**
+ * Satu baris pilihan unduhan di modal tombol DOWNLOAD halaman detail.
+ *
+ * `quality` di sini BEDA arti dari `Drama.quality` di bawah, dan keduanya
+ * sengaja tidak disatukan: `Drama.quality` = mutu SUMBER video (CAM/WEB-DL/
+ * BluRay — daftar tertutup, dipajang di lencana poster), sedangkan `quality`
+ * ini = resolusi berkas yang ditawarkan provider ("1080p", "480p") dan memang
+ * teks bebas, karena tiap provider menamainya sendiri-sendiri.
+ */
+export type DownloadProvider = {
+  /** Nama yang dibaca penonton di kolom PROVIDER, mis. "Google Share". */
+  name: string;
+  /** Tulisan di tombol, mis. "1080p". Bebas — lihat catatan di atas. */
+  quality: string;
+  /** Alamat EKSTERNAL milik provider. Wajib http/https (lihat `isHttpUrl`). */
+  url: string;
+  /** Warna tombol. Kosong = biru. */
+  buttonColor?: DownloadButtonColor;
+  /** Kalimat penjelasan; tergambar jadi banner biru muda di atas tabel. */
+  note?: string;
+  /** Alamat video tutorial; dipasang sebagai link di dalam banner `note`. */
+  tutorialUrl?: string;
+};
+
+/**
+ * Batas panjang teks yang disimpan. Nama & kualitas pendek karena keduanya
+ * duduk di dalam satu baris tabel yang sempit di layar HP; catatan lebih
+ * panjang karena memang satu kalimat utuh.
+ */
+const PROVIDER_NAMA_MAX = 60;
+const PROVIDER_CATATAN_MAX = 300;
+
+/**
+ * Hanya http/https yang boleh masuk atribut `href`.
+ *
+ * INI PAGAR KEAMANAN, bukan kerapian. Daftar provider disimpan di dokumen
+ * `app_data` yang TIDAK dijaga CHECK constraint database (alasannya di
+ * lib/unduhan.ts), jadi isinya diperlakukan sebagai data tak-tepercaya.
+ * Alamat berawalan `javascript:` yang lolos ke href berarti kode asing
+ * berjalan di halaman penonton (XSS) — kerusakan yang tidak memunculkan error
+ * apa pun.
+ */
+function isHttpUrl(value: unknown): value is string {
+  if (typeof value !== "string") return false;
+  try {
+    const u = new URL(value.trim());
+    return u.protocol === "http:" || u.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function teksSah(value: unknown, maks: number): string {
+  return typeof value === "string" ? value.trim().slice(0, maks) : "";
+}
+
+/**
+ * SATU tempat yang memutuskan daftar provider sah atau tidak — saudara
+ * `parseDramaQuality` di atas, dengan alasan yang sama (UI bukan pagar)
+ * ditambah alasan keamanan di `isHttpUrl`.
+ *
+ * Entri yang tidak lengkap DIBUANG, bukan ditambal nilai default: baris
+ * provider tanpa alamat sah adalah tombol yang tidak mengunduh apa pun — lebih
+ * buruk daripada baris yang tidak ada.
+ */
+export function parseDownloadProviders(value: unknown): DownloadProvider[] {
+  if (!Array.isArray(value)) return [];
+  const out: DownloadProvider[] = [];
+  for (const raw of value) {
+    if (!raw || typeof raw !== "object") continue;
+    const r = raw as Record<string, unknown>;
+    const name = teksSah(r.name, PROVIDER_NAMA_MAX);
+    const quality = teksSah(r.quality, PROVIDER_NAMA_MAX);
+    if (!name || !quality || !isHttpUrl(r.url)) continue;
+
+    const p: DownloadProvider = { name, quality, url: r.url.trim() };
+    const warna = DOWNLOAD_BUTTON_COLORS.find((c) => c === r.buttonColor);
+    if (warna) p.buttonColor = warna;
+    const note = teksSah(r.note, PROVIDER_CATATAN_MAX);
+    if (note) p.note = note;
+    if (isHttpUrl(r.tutorialUrl)) p.tutorialUrl = r.tutorialUrl.trim();
+    out.push(p);
+  }
+  return out;
+}
+
 export type Drama = {
   id: string;
   title: string;
@@ -118,6 +220,14 @@ export type Drama = {
    * Lihat parseDramaQuality di atas.
    */
   quality?: DramaQuality;
+  /**
+   * Pilihan unduhan lewat provider LUAR (Google Share, Telegram, Mega, ...)
+   * yang dipajang modal tombol DOWNLOAD di halaman detail. Boleh KOSONG, dan
+   * itu keadaan normal: drama tanpa daftar ini jatuh ke perilaku lama (unduh
+   * langsung satu berkas lewat /api/download), bukan menampilkan modal kosong.
+   * Disimpan TERPISAH dari tabel `dramas` — alasannya di lib/unduhan.ts.
+   */
+  downloadProviders?: DownloadProvider[];
   /** Metadata IMDb (opsional; dari OMDb). Drama lama tanpa field ini = valid. */
   imdbId?: string;
   year?: string;

@@ -9,6 +9,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { parseDramaStatus, type Drama } from "./types";
 import { ambilPetaKualitas, gabungKualitas } from "./kualitas-drama";
+import { ambilPetaUnduhan, gabungUnduhan } from "./unduhan";
 import { useSupabase, sbSelect, sbUpsert, sbDelete, eq } from "./supabase";
 import { slugify } from "./format";
 
@@ -141,7 +142,12 @@ function dramaToRow(d: Drama, sortIndex: number): DramaRow {
 // --- Akses file lokal -------------------------------------------------------
 function readLocalDramas(): Drama[] {
   try {
-    return JSON.parse(readFileSync(DATA_FILE, "utf-8")) as Drama[];
+    const mentah = JSON.parse(readFileSync(DATA_FILE, "utf-8")) as Drama[];
+    // Disaring, tidak dipakai apa adanya. Berkas ini BUKAN cuma mode dev:
+    // getAllDramasCachedSafe jatuh ke sini saat Supabase tak terjangkau, jadi
+    // isinya bisa benar-benar tergambar di situs. Yang disaring alamat provider
+    // unduhan — satu-satunya isi katalog yang dipasang mentah ke atribut href.
+    return gabungUnduhan(mentah, {});
   } catch {
     return [];
   }
@@ -173,22 +179,31 @@ async function seedDramasIfEmpty(): Promise<void> {
 export async function getAllDramas(): Promise<Drama[]> {
   if (useSupabase) {
     await seedDramasIfEmpty();
-    const [rows, peta] = await Promise.all([
+    const [rows, petaKualitas, petaUnduhan] = await Promise.all([
       sbSelect<DramaRow>("dramas?select=*&order=sort_index.asc"),
       ambilPetaKualitas(),
+      ambilPetaUnduhan(),
     ]);
-    return gabungKualitas(rows.map(rowToDrama), peta);
+    return gabungUnduhan(
+      gabungKualitas(rows.map(rowToDrama), petaKualitas),
+      petaUnduhan,
+    );
   }
   return readLocalDramas();
 }
 
 export async function getDrama(id: string): Promise<Drama | undefined> {
   if (useSupabase) {
-    const [rows, peta] = await Promise.all([
+    const [rows, petaKualitas, petaUnduhan] = await Promise.all([
       sbSelect<DramaRow>(`dramas?id=${eq(id)}&select=*&limit=1`),
       ambilPetaKualitas(),
+      ambilPetaUnduhan(),
     ]);
-    return rows.length ? gabungKualitas([rowToDrama(rows[0])], peta)[0] : undefined;
+    if (!rows.length) return undefined;
+    return gabungUnduhan(
+      gabungKualitas([rowToDrama(rows[0])], petaKualitas),
+      petaUnduhan,
+    )[0];
   }
   return readLocalDramas().find((d) => d.id === id);
 }
@@ -212,15 +227,19 @@ export const CATALOG_TTL_SECONDS = 60;
  */
 export async function getAllDramasCached(): Promise<Drama[]> {
   if (useSupabase) {
-    // KEDUA pembacaan WAJIB ber-cache. Satu saja yang tidak, seluruh halaman
+    // KETIGA pembacaan WAJIB ber-cache. Satu saja yang tidak, seluruh halaman
     // pemanggil dibangun ulang untuk tiap pengunjung (lib/supabase.ts:204).
-    const [rows, peta] = await Promise.all([
+    const [rows, petaKualitas, petaUnduhan] = await Promise.all([
       sbSelect<DramaRow>("dramas?select=*&order=sort_index.asc", {
         revalidate: CATALOG_TTL_SECONDS,
       }),
       ambilPetaKualitas({ revalidate: CATALOG_TTL_SECONDS }),
+      ambilPetaUnduhan({ revalidate: CATALOG_TTL_SECONDS }),
     ]);
-    return gabungKualitas(rows.map(rowToDrama), peta);
+    return gabungUnduhan(
+      gabungKualitas(rows.map(rowToDrama), petaKualitas),
+      petaUnduhan,
+    );
   }
   return readLocalDramas();
 }
@@ -254,13 +273,19 @@ export async function getAllDramasCachedSafe(): Promise<Drama[]> {
 /** Versi ber-cache dari `getDrama` untuk halaman publik. Lihat catatan di atas. */
 export async function getDramaCached(id: string): Promise<Drama | undefined> {
   if (useSupabase) {
-    const [rows, peta] = await Promise.all([
+    // Ketiganya WAJIB ber-cache — lihat catatan di getAllDramasCached.
+    const [rows, petaKualitas, petaUnduhan] = await Promise.all([
       sbSelect<DramaRow>(`dramas?id=${eq(id)}&select=*&limit=1`, {
         revalidate: CATALOG_TTL_SECONDS,
       }),
       ambilPetaKualitas({ revalidate: CATALOG_TTL_SECONDS }),
+      ambilPetaUnduhan({ revalidate: CATALOG_TTL_SECONDS }),
     ]);
-    return rows.length ? gabungKualitas([rowToDrama(rows[0])], peta)[0] : undefined;
+    if (!rows.length) return undefined;
+    return gabungUnduhan(
+      gabungKualitas([rowToDrama(rows[0])], petaKualitas),
+      petaUnduhan,
+    )[0];
   }
   return readLocalDramas().find((d) => d.id === id);
 }

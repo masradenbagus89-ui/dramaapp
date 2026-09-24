@@ -7,7 +7,7 @@ import ActionRail from "./ActionRail";
 import EpisodeSheet from "./EpisodeSheet";
 import { getProgressEntry, resumePosition, setProgress } from "@/lib/progress";
 import { setLiked } from "@/lib/myLikes";
-import { subtitleLabel } from "@/lib/types";
+import { subtitleLabel, type DownloadProvider } from "@/lib/types";
 import {
   OFF,
   initialSubtitle,
@@ -42,6 +42,7 @@ export default function FeedPlayer({
   premium = false,
   resumeFromHistory = false,
   isMovie = false,
+  providers = [],
 }: {
   dramaId: string;
   title: string;
@@ -54,6 +55,12 @@ export default function FeedPlayer({
   resumeFromHistory?: boolean;
   /** Film = 1 video utuh: tanpa slide berikutnya & tanpa tombol episode. */
   isMovie?: boolean;
+  /**
+   * Sumber unduhan drama ini, diteruskan apa adanya ke ActionRail supaya
+   * penonton bisa membuka daftarnya TANPA keluar dari video. Kosong = ikon
+   * Unduh di rail tidak digambar (lihat ActionRail).
+   */
+  providers?: DownloadProvider[];
 }) {
   const eps = Array.from({ length: episodes }, (_, i) => i + 1);
   const [active, setActive] = useState(startEp - 1);
@@ -622,6 +629,7 @@ export default function FeedPlayer({
         title={title}
         posterImage={posterImage}
         onComment={() => setCommentsOpen(true)}
+        providers={providers}
       />
 
       {/* Panel bawah: judul, episode, subtitle, kontrol — komponen sendiri

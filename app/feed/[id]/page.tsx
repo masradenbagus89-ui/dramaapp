@@ -30,6 +30,10 @@ export default async function FeedPage(props: PageProps<"/feed/[id]">) {
       premium={drama.premium ?? false}
       resumeFromHistory={!hasEpQuery}
       isMovie={isMovie(drama)}
+      // Daftar sumber unduhan sudah ditempelkan getDrama lewat gabungUnduhan
+      // (lib/dramas.ts) — di sini tinggal diteruskan supaya ikon Unduh muncul
+      // di rail pemutar, bukan cuma di halaman detail.
+      providers={drama.downloadProviders ?? []}
     />
   );
 }

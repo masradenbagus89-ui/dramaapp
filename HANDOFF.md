@@ -9,7 +9,7 @@
 >
 > **📦 Berkas ini sudah 2.980 baris / ±240 KB** dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-09-23 (revisi ke-17).
+**Terakhir diisi:** 2026-09-24.
 
 ## ⚡ KEADAAN SEKARANG (baca ini dulu — 30 detik)
 
@@ -21,7 +21,15 @@
 >
 > ⚠️ Jangan tambahkan `--short` di perintah itu: `git rev-parse --short A B` membalas `fatal: Needed a single revision` — bendera itu hanya melayani SATU revisi. Diuji 2026-09-23; versi pertama baris ini memuat `--short` dan memang gagal dijalankan. Perlu hash pendek? Baca satu per satu, atau ambil 7 huruf pertamanya.
 
+**✅ TOMBOL DOWNLOAD DIPASANG KEMBALI 2026-09-24 atas permintaan BARU owner — larangan di bawah SUDAH TERCABUT, jangan dihapus lagi.** Owner mengirim tangkapan layar `/drama/over-your-dead-body` dengan tombol pink DOWNLOAD dilingkari merah dan meminta dimunculkan kembali. Larangan lama memang mensyaratkan "tanpa permintaan owner" — permintaan itu sekarang ADA, jadi syaratnya terpenuhi. **Owner juga sudah memilih cakupannya lewat popup:** tombol muncul di **semua 42 judul**, dan serial **tetap** berlabel `DOWNLOAD EP 1` (bukan `DOWNLOAD` polos) — sebab jalur ini memang hanya mengambil episode 1, dan label polos di serial 56 episode menjanjikan yang tidak diberikan. Jadi label `DOWNLOAD EP 1` yang kemarin dikeluhkan itu **disengaja dan disetujui owner**, bukan kelalaian yang perlu "dibetulkan" sesi berikutnya.
+
+**Catatan riwayat (jangan dipakai menyalahkan siapa pun):** commit penghapusan `2af96b6` ber-author identitas owner dan bertuliskan "permintaan owner", sementara owner mengingatnya sebagai kerja rekan. Riwayat git memang **tidak bisa** menjawabnya — identitas git belum dipisah antar-komputer (`AGENTS.local.md` aturan 7) dan `0ab70ad` mencatat **dua sesi AI berjalan bersamaan** hari itu. Dugaan terkuat: yang dihapus adalah tombol versi LAMA (sebaris dengan Mulai Nonton), sedangkan yang owner inginkan adalah versi MELAYANG di bawah badge Subtitle — versi itu belum pernah masuk git saat penghapusan terjadi.
+
+<details><summary>Larangan lama 2026-09-23 (sudah tercabut, disimpan sebagai riwayat)</summary>
+
 **⛔ TOMBOL "DOWNLOAD EP 1" SUDAH DIHAPUS (`2af96b6`) — JANGAN DIPASANG LAGI TANPA PERMINTAAN OWNER.** Owner melihatnya di halaman detail, menandainya dengan kotak merah, dan meminta dihapus: *"mungkin semua film ada poster tombol merah muda DOWNLOAD EP 1 jadi kamu hapus saja yah"*. Dihapus TUNTAS (komponen + tes + 3 fungsi pembantu di `lib/video.ts`), bukan disembunyikan. Klaim rekan bahwa tombol ini "keputusan owner 2026-09-21" **tidak punya jejak** di dokumen mana pun sebelum commit `f65ccd6` — sudah dicari. **Yang TETAP ADA:** tombol unduh di dalam pemutar video (`downloadUrl()` + `app/api/download/route.ts`, dipakai `FeedPlayer.tsx:429`) — fitur lain, owner tidak meminta itu dihapus.
+
+</details>
 
 **🚨 DUA SESI AI BERJALAN BERSAMAAN DI KOMPUTER INI HARI INI — dan `main` sempat maju 4 commit di tengah kerja sesi lain tanpa peringatan apa pun.** Sesi "tombol Unduh" (pagi) mendapati `HEAD` berubah sendiri dari `8fdab6e` jadi `4e0c464` saat sedang bekerja, gara-gara sesi "poster/tahun" (siang-sore) meng-commit + push di sela-selanya. Tidak ada yang rusak kali ini (berkas yang disentuh kedua sesi tidak beririsan, dan semua push fast-forward), tapi **`HANDOFF.md` ditulis oleh KEDUA sesi** dan itu titik bentrok yang paling mungkin meledak. Kalau membuka dua tab sekaligus: `git fetch` + `git log --oneline -3` **sebelum** tiap commit, dan jangan anggap hasil build/tes yang diukur 10 menit lalu masih berlaku.
 
@@ -80,6 +88,35 @@ Yang BENAR dan sudah terverifikasi: **nama remote berbeda per komputer.** Di kom
 Catatan 2026-09-21 menulis "sebabnya belum terjelaskan dan JANGAN ditebak". Sekarang sudah diukur dan **direproduksi di tes**: `usePathname()` di `TopNav`/`BottomNav` menerima nilai yang **bukan** `/` saat pra-render alamat akar; `?? "/"` tidak menangkapnya (operator `??` hanya menangkap `null`/`undefined`, **bukan string kosong**); dan logikanya berbentuk **denylist** sehingga nilai apa pun yang tak dikenali membuat navbar **MUNCUL**. Rinciannya di seksi 2026-09-22 di bawah.
 
 ⚠️ **Koreksi atas catatan 2026-09-21 itu sendiri.** Kalimat *"`TopNav` menggambar menunya dalam keadaan tidak ada yang aktif, yang justru konsisten dengan `pathname === "/"`"* **menyimpulkan ke arah yang salah**. Keadaan "tak ada satu pun menu aktif" justru konsisten dengan `pathname` yang **BUKAN** `/` — sebab kalau nilainya benar-benar `/`, penyaring `PUBLIC_PATHS` sudah memulangkan `null` dan navbarnya tak tergambar sama sekali. Petunjuk itu sebenarnya sudah menunjuk jawabannya sejak semalam, cuma dibaca terbalik.
+
+---
+
+## 2026-09-24 — tombol DOWNLOAD DIPASANG KEMBALI + kerja semalam yang nyaris hilang diselamatkan
+
+**Belum di-push. Owner yang memutuskan rilis.** Lokal = `origin/main` + 2 commit.
+
+**Yang sebenarnya terjadi (bukan seperti dugaan awal).** Owner mengira tombolnya dihapus rekan. Faktanya ada DUA hal terpisah yang kebetulan bertabrakan: (a) di `origin/main`, tombol versi LAMA memang dihapus `2af96b6`; (b) di komputer owner, tombol versi BARU (melayang di bawah badge Subtitle + modal provider) sudah SELESAI dikerjakan 2026-09-23 tapi **tak pernah di-commit** — ia cuma duduk di working tree, 8 berkas modified + 8 untracked. Jadi tak ada yang benar-benar "hilang"; yang ada adalah kerja yang belum diamankan bertemu produksi yang sudah bergerak 10 commit.
+
+**🪤 JEBAKAN YANG PALING MAHAL DI SESI INI — `git merge` MENERIMA PENGHAPUSAN TANPA MENANDAINYA SEBAGAI BENTROK.** `2af96b6` menghapus `DETAIL_DOWNLOAD_EP` + `detailDownloadUrl()` + `downloadFileName()` dari `lib/video.ts`. Kerja lokal **tidak menyentuh berkas itu** — jadi dari sudut pandang git, "tidak ada yang menentang penghapusan" dan ia diterima **diam-diam**. Git melaporkan 3 bentrok (`HANDOFF.md`, `DownloadButton.tsx`, `INDEX.md`) dan **nol** peringatan soal `lib/video.ts`, padahal `DownloadButton.tsx` mengimpor ketiga nama itu. Kalau langsung di-push sesudah bentrok terlihat "selesai", situs error. **Aturan yang lahir: sesudah merge yang melibatkan berkas TERHAPUS di satu sisi, jangan percaya daftar bentrok — telusuri siapa yang mengimpor isi berkas itu.** Yang menangkapnya di sini bukan git dan bukan `npm test`, melainkan membaca daftar berkas yang dihapus commit lawan lebih dulu.
+
+**Yang dikerjakan.** (1) Kerja semalam di-commit (`af839e1`) + branch cadangan `cadangan/tombol-unduh-melayang-2026-09-24` sebelum apa pun disentuh. (2) Merge `origin/main`, 3 bentrok diselesaikan. (3) `lib/video.ts` dipulihkan dari `ef59e4a` — sudah diperiksa `origin/main` **nol menambah baris** di berkas itu, jadi pemulihan tidak membuang apa pun milik produksi. (4) `tests/download-button.test.ts` dipulihkan **sebagian**: penjaga paywall + alamat unduh + nama berkas kembali (tak ada duanya di repo), tapi 3 penjaga "terpasang" **sengaja tidak** ikut sebab `tests/unduhan-pemasangan.test.ts` sudah menjaganya lebih ketat — menyalinnya lagi cuma membuat dua berkas yang harus disunting bersamaan tiap tata letaknya bergeser.
+
+**Keputusan owner lewat popup:** tombol muncul di **semua 42 judul**; serial **tetap** `DOWNLOAD EP 1`, film `DOWNLOAD`. Alasan owner memilih ini walau label itulah yang kemarin dikeluhkan: jalur `/api/download` memang cuma mengambil episode 1, jadi label polos di serial 56 episode berbohong. **Jangan "dibetulkan" sesi berikutnya.**
+
+**Bukti (gerbang §6 penuh, urutan benar).** `rm -rf .next` → `npm run build` **exit 0** → `npx tsc --noEmit` **exit 0** → `npm test` **951 tes / 65 berkas hijau** (dari 887/61 di produksi). `/drama/[id]` **tetap `● SSG`**, `/` tetap `○ Static` — nol kemunduran rendering.
+
+**⚠️ Build GAGAL di percobaan pertama** dengan `worker exited with code: 4294967295`, lalu **exit 0** di percobaan kedua atas kode yang sama persis. Ini kekambuhan jebakan yang sudah tercatat di `INDEX.md` (pelajaran 2026-09-23 siang): exit code itu gangguan lokal, bukan cacat kode. **Ukur ulang sebelum berburu penyebab.** Catatan tambahan: `${PIPESTATUS[0]}` sesudah `echo` membaca status `echo`, bukan status build — sempat melaporkan `127` palsu.
+
+**Bukti TAYANG, bukan sekadar "sudah ditulis"** (server hasil build di `:3099`):
+- `/drama/over-your-dead-body` **200**. Urutan NYATA di HTML: badge `Subtitle` (24272) → tombol `DOWNLOAD` (26045) → heading `Sinopsis` (26135).
+- Kelas yang benar-benar terkirim: `... bg-pink-600 ... sticky bottom-20 z-30 mt-4 flex w-full shadow-lg shadow-black/50 sm:w-fit md:bottom-4`.
+- Aturan CSS-nya ADA di bundel yang diunduh browser: `.sticky{position:sticky}` · `.bottom-20` · `.w-fit` · `.z-30` · `.md\:bottom-4` di dalam `@media (min-width:48rem)`. **Catatan alat:** berkas CSS Next.js 16 ada di `.next/static/chunks/`, **bukan** `.next/static/css/` — grep ke folder lama memulangkan kosong dan sempat terbaca seperti "kelasnya menguap dari bundel".
+- Serial 56 episode `/drama/diremehkan-sebagai-gadis-desa-...` **200**, labelnya `DOWNLOAD EP 1` — sesuai pilihan owner.
+- **13 halaman diperiksa, nol rusak:** `/` `/beranda` `/shorts` `/discover` `/playly` `/my-list` `/profile` `/history` `/admin` `/video-eksternal` `/feed/[id]` `/api/dramas` semuanya **200**; `/watch/[id]/[ep]` **307** (pengalihan normal ke pemutar).
+
+**Penjaga DIUJI-BALIK** (tes yang tak pernah merah bukan penjaga): `DETAIL_DOWNLOAD_EP` dinaikkan ke episode berbayar (99) → **2 tes MERAH**; `<DownloadButton>` dilepas dari halaman detail → **6 tes MERAH**. Keduanya dipulihkan, working tree kembali **identik byte-per-byte**, 951 tes hijau lagi.
+
+**❓ Yang BELUM terbukti (jujur).** (1) **Sticky di HP sungguhan belum diketuk jari** — yang terbukti kelasnya ada di HTML dan aturan CSS-nya ada di bundel. (2) **Modal provider belum pernah terlihat berisi** — masih **0 dari 42** judul punya daftar provider, jadi semua tombol sekarang memakai jalur lama `/api/download`; owner bisa membuktikannya dengan mengisi satu provider di panel admin. (3) **Belum tayang di produksi** — belum di-push.
 
 ---
 

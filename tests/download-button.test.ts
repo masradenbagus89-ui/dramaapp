@@ -15,6 +15,18 @@
 //
 // Route /api/download sendiri sudah punya penjaga terpisah di
 // tests/download-redirect.test.ts (wajib menunjuk, bukan menyalurkan).
+//
+// DIPULIHKAN 2026-09-24. Berkas ini sempat dihapus utuh oleh 2af96b6 bersama
+// tombolnya; owner meminta tombolnya kembali, jadi penjaganya ikut kembali —
+// fitur yang hidup tanpa penjaga adalah persis keadaan yang melahirkan cacat
+// 2026-09-22 (komponen ada, tes hijau, tapi tak pernah tergambar).
+//
+// SENGAJA TIDAK IKUT DIPULIHKAN: tiga tes "tombolnya benar-benar terpasang"
+// yang dulu ada di bawah berkas ini. Penggantinya sudah ada dan LEBIH ketat di
+// tests/unduhan-pemasangan.test.ts — ia menjaga import + render + prop provider
+// + posisi (di bawah badge subtitle) + kelas sticky sekaligus. Menyalinnya ke
+// sini lagi cuma membuat dua berkas yang harus disunting bersamaan tiap kali
+// tata letaknya bergeser.
 import { describe, it, expect } from "vitest";
 import { FREE_EPISODES, PAYWALL_ENABLED, isEpisodeLocked } from "@/lib/coins";
 import {

@@ -9,33 +9,49 @@
 >
 > **📦 Berkas ini sudah 2.980 baris / ±240 KB** dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-09-23 (revisi ke-2).
+**Terakhir diisi:** 2026-09-23 (revisi ke-17).
 
 ## ⚡ KEADAAN SEKARANG (baca ini dulu — 30 detik)
 
-`HEAD` = `origin/main` = **`8e1c880`** (dikonfirmasi lewat `git ls-remote` langsung ke server).
+**Antrean KOSONG.** `origin/main` = `dramaku/main`, lokal ahead 0.
 
-**🔴 SUDAH DI-PUSH TAPI BELUM TERBUKTI TAYANG — jangan dibaca sebagai "rilis selesai".** Commit `2fbb8b0` + `f65ccd6` + `8e1c880` naik ke `origin main` pukul ~20.27, tapi **15 menit sesudahnya produksi masih menyajikan kode LAMA**. Bukti bahwa ini bukan sekadar "tunggu sebentar":
+**Rilis terakhir yang mengubah KODE/DATA:** `2af96b6` (tombol DOWNLOAD dihapus) · `4e0c464` (tahun 34 serial disebar — perubahan DATA, lihat peringatan di bawah).
 
-- `/drama/transformers-the-last-knight` → **200**, dirender penuh ("Mulai Nonton" ada), tapi penanda `DOWNLOAD` dan `api/download?id=` **NOL** pada 22 pengukuran selama 15 menit.
-- Header halaman itu: `X-Vercel-Cache: HIT` · **`Age: 53`** · `X-Nextjs-Prerender: 1`. Artinya HTML-nya **baru diregenerasi kurang dari semenit sebelumnya dan TETAP tanpa tombol** — dan regenerasi ISR selalu memakai kode **deployment yang aktif**. Jadi deployment aktif masih versi lama; ini **bukan** soal cache basi yang tinggal ditunggu.
-- Kesimpulan yang bisa ditarik dari luar: **Vercel belum membangun `8e1c880`** (antre / build gagal / auto-deploy mati / kuota). **Tidak bisa dipastikan tanpa dashboard Vercel** — itu hanya ada pada owner.
-- **⛔ KOREKSI 2026-09-23 — kesimpulan di atas TIDAK didukung buktinya; jangan berburu build gagal dulu.** Penanda `DOWNLOAD` nol di produksi **bukan** tanda deploy gagal: tombolnya memang TIDAK PERNAH ADA di halaman mana pun. `f65ccd6` cuma menambah 3 berkas (`DownloadButton.tsx`, `lib/video.ts`, tesnya) — **nol halaman** mengimpornya, jadi penanda itu akan tetap nol walau deploy-nya sukses sempurna. Dibuktikan: `git log --all -S "<DownloadButton" -- app/` **kosong**, dan di `origin/main` nama itu cuma muncul di berkasnya sendiri. Rincian + perbaikannya di seksi 2026-09-23 di bawah.
+> **🪤 Jangan tulis hash `HEAD` di baris ini — itu mustahil benar.** Commit paling akhir di kedua remote SELALU commit CATATAN, dan commit catatan itu sendiri baru lahir SESUDAH baris ini diketik — jadi angka apa pun yang ditulis di sini basi begitu di-push. Sudah terjadi dua kali berturut-turut (`2af96b6` ditulis padahal `0ab70ad`, lalu `0ab70ad` ditulis padahal `a654919`), dan menambalnya dengan angka baru cuma mengulang lingkarannya. **Yang benar: sebut hash rilis KODE/DATA di atas (stabil, tidak ikut bergeser oleh commit catatan), lalu baca posisi sebenarnya langsung dari server** — `git fetch origin && git fetch dramaku && git rev-parse origin/main dramaku/main`. Dua baris hash yang keluar sama = antrean kosong.
+>
+> ⚠️ Jangan tambahkan `--short` di perintah itu: `git rev-parse --short A B` membalas `fatal: Needed a single revision` — bendera itu hanya melayani SATU revisi. Diuji 2026-09-23; versi pertama baris ini memuat `--short` dan memang gagal dijalankan. Perlu hash pendek? Baca satu per satu, atau ambil 7 huruf pertamanya.
 
-**Langkah owner:** buka dashboard Vercel proyek dramaapp → lihat Deployments. Kalau build `8e1c880` **merah**, salin pesan errornya. Kalau **tidak ada sama sekali**, berarti auto-deploy dari `ojokesusu/dramaku` tidak aktif. Repo ini **pernah mati total karena kuota Vercel jebol** — periksa itu juga.
+**⛔ TOMBOL "DOWNLOAD EP 1" SUDAH DIHAPUS (`2af96b6`) — JANGAN DIPASANG LAGI TANPA PERMINTAAN OWNER.** Owner melihatnya di halaman detail, menandainya dengan kotak merah, dan meminta dihapus: *"mungkin semua film ada poster tombol merah muda DOWNLOAD EP 1 jadi kamu hapus saja yah"*. Dihapus TUNTAS (komponen + tes + 3 fungsi pembantu di `lib/video.ts`), bukan disembunyikan. Klaim rekan bahwa tombol ini "keputusan owner 2026-09-21" **tidak punya jejak** di dokumen mana pun sebelum commit `f65ccd6` — sudah dicari. **Yang TETAP ADA:** tombol unduh di dalam pemutar video (`downloadUrl()` + `app/api/download/route.ts`, dipakai `FeedPlayer.tsx:429`) — fitur lain, owner tidak meminta itu dihapus.
 
-**Rollback kalau perlu:** `git revert --no-edit 8e1c880 f65ccd6 2fbb8b0 && git push origin main`.
+**🚨 DUA SESI AI BERJALAN BERSAMAAN DI KOMPUTER INI HARI INI — dan `main` sempat maju 4 commit di tengah kerja sesi lain tanpa peringatan apa pun.** Sesi "tombol Unduh" (pagi) mendapati `HEAD` berubah sendiri dari `8fdab6e` jadi `4e0c464` saat sedang bekerja, gara-gara sesi "poster/tahun" (siang-sore) meng-commit + push di sela-selanya. Tidak ada yang rusak kali ini (berkas yang disentuh kedua sesi tidak beririsan, dan semua push fast-forward), tapi **`HANDOFF.md` ditulis oleh KEDUA sesi** dan itu titik bentrok yang paling mungkin meledak. Kalau membuka dua tab sekaligus: `git fetch` + `git log --oneline -3` **sebelum** tiap commit, dan jangan anggap hasil build/tes yang diukur 10 menit lalu masih berlaku.
 
-**🚨 CERMIN TIDAK BISA DI-PUSH DARI KOMPUTER INI — 403, dan inilah akar semua kerancuan remote hari ini.** `git push dramaapp main` dibalas `Permission to masradenbagus89-ui/dramaapp.git denied to **yusufscorpio**`. Kredensial GitHub yang tersimpan di komputer ini milik **rekan**, bukan owner. Itu menjelaskan kenapa cermin tertinggal 35 commit (memang **tidak bisa** di-push dari sini) dan kenapa deploy pindah ke repo yang bisa. `HANDOFF.md:1879` mencatat 403 yang sama pernah terjadi 2026-08-26. **Hanya owner yang bisa membereskan** (pakai kredensial sendiri, atau beri akses ke akun `yusufscorpio`). Dual push tetap MUSTAHIL sampai itu beres — jangan buang waktu mencobanya lagi.
+**Rilis 2026-09-23 siang (2 commit):** `c954e6f` chip "🪙 Premium" dihapus dari poster kartu (permintaan owner) + `fa328b7` memperbaiki tes penjaga yang jadi VAKUM akibat commit pertama (ditemukan audit pra-rilis). **Terverifikasi tayang:** chip Premium **47 → 0** di HTML produksi, lencana lain utuh, paywall nol tersentuh. Rinciannya di seksi "2026-09-23 (siang)" di bawah.
 
-**🚨 NAMA REMOTE SUDAH BERGESER — `AGENTS.local.md` §5 BASI SOAL INI (temuan 2026-09-22 malam).** Di komputer ini remote-nya sekarang:
+**⚠️ PERUBAHAN DATA PRODUKSI 2026-09-23 sore (bukan kode, jadi `git revert` TIDAK memulihkannya):** tahun 34 serial disebar dari seragam `2024` menjadi 2020-2024 atas permintaan owner. Sudah tayang & terverifikasi. **Rollback:** `node scripts/acak-tahun-serial.mjs --kembalikan`. Rinciannya di seksi "2026-09-23 (sore)" di bawah.
 
-| Nama remote | URL | Perannya SEKARANG |
-|---|---|---|
-| `origin` | `github.com/ojokesusu/dramaku` | **PRODUKSI** — inilah yang di-deploy Vercel |
-| `dramaapp` | `github.com/masradenbagus89-ui/dramaapp` | tertinggal **35 commit**, bukan lagi sumber deploy |
+**Rilis 2026-09-23 pagi (5 commit, urut lama->baru):**
+1. `2fbb8b0` Playly mewajibkan API key di `/api/catalog` (kerja rekan)
+2. `f65ccd6` komponen tombol Unduh (kerja rekan) — **tidak pernah terpasang**, lihat no. 4
+3. `8e1c880` + `ef59e4a` catatan rekan
+4. `a8db3ca` **memperbaiki no. 2: tombolnya dipasang ke halaman detail + 3 penjaga permanen**
 
-Remote bernama `dramaku` **sudah tidak ada** — catatan lama yang menulis "`origin/main` = `dramaku/main`" mengacu ke penamaan yang sudah pensiun. `AGENTS.local.md` §5 masih menulis kebalikannya (`origin` = dramaapp = produksi); **kalimat itu sekarang keliru dan berbahaya** — mengikutinya berarti mendorong rilis ke repo yang tidak di-deploy. **Cara membuktikan tanpa menebak** (dipakai malam ini): ambil penanda teks dari commit yang hanya ada di satu remote (mis. `SERIES UNGGULAN` dari `5d37465`), lalu `curl` situs produksi dan cari penanda itu — ia **tampil** di `dramaapp.vercel.app`, padahal `SERIES UNGGULAN` **tidak ada** di `dramaapp/main`. Jadi Vercel jelas menarik dari `origin`.
+**⛔ KOREKSI ATAS CATATAN REKAN — jangan diikuti, buktinya runtuh.** Catatan sebelumnya di blok ini menyimpulkan *"`AGENTS.local.md` §5 BASI: `origin` = ojokesusu/dramaku = PRODUKSI, dramaapp tertinggal 35 commit"*. Diuji ulang dari komputer owner, **salah**: `git merge-base --is-ancestor 5d37465 origin/main` memulangkan **YA** — penanda `SERIES UNGGULAN` memang ADA di `masradenbagus89-ui/dramaapp`, jadi dasar kesimpulan itu tidak berdiri.
+
+Yang BENAR dan sudah terverifikasi: **nama remote berbeda per komputer.** Di komputer owner `origin` = dramaapp, `dramaku` = cermin — persis seperti tertulis di `AGENTS.local.md` §5. Di komputer rekan `origin` menunjuk cermin. Jadi "push ke origin" di komputer rekan **tidak pernah menyentuh repo produksi**, dan itulah sebab sebenarnya kerja mereka tidak tayang selama 11 jam — bukan build gagal, bukan kuota Vercel, bukan auto-deploy mati.
+
+**❓ Yang MASIH belum terbukti (jangan diklaim ke arah mana pun):** repo mana persisnya yang ditarik Vercel. Dual push membuat kedua repo identik, jadi pertanyaannya tak bisa dijawab dari luar — dan selama dual push dipatuhi, pertanyaannya juga tidak perlu dijawab. Yang terbukti: push ke kedua repo pukul 08.0x lalu deployment baru hidup beberapa menit kemudian (`X-Vercel-Cache: MISS`, `Age: 0`, Etag `9kmhs6ru5u1f0s` menjadi `hc3slsy8ur1g8s`).
+
+**🔴 TEMUAN BARU YANG PERLU KEPUTUSAN OWNER: 7 film di katalog TIDAK punya berkas video sama sekali.** Diukur langsung ke PC backup, 41 judul satu per satu: **34 serial memulangkan 200 OK, 7 film memulangkan 404**. Daftar yang kosong: `transformers-the-last-knight`, `spider-man-brand-new-day`, `avengers-doomsday`, `predator-badlands`, `28-years-later-the-bone-temple`, `fireworks-wednesday`, `the-dark-knight`. Akibatnya ketujuh film itu **tidak bisa ditonton MAUPUN diunduh** — tombol "Mulai Nonton" dan "DOWNLOAD" sama-sama berujung 404. Ini **bukan** akibat rilis hari ini (berkasnya memang tak pernah ada di sumber); tombol Unduh cuma membuatnya kelihatan. Pilihan owner: unggah videonya ke PC backup, atau sembunyikan ketujuh judul itu dari katalog.
+
+**⚠️ Catatan proses (bukan teguran, tapi harus dicatat):** rekan menulis ke `HANDOFF.md` dan `docs/lintasai/INDEX.md` — dua dari tiga berkas yang `AGENTS.local.md` aturan 1 tetapkan milik owner. Kali ini tidak bentrok karena owner kebetulan belum menyentuhnya. Tempat yang benar: `docs/serah-terima/YYYY-MM-DD-<topik>.md`.
+
+**⛔ AKSES DATABASE — batas yang masih berlaku:** password di `C:/Users/user18/Downloads/password.txt` tidak berlaku lagi, tidak ada Supabase CLI maupun Personal Access Token, owner tidak punya akses dashboard Supabase. Mengubah **STRUKTUR** tabel TIDAK BISA; mengubah **ISI** bisa lewat PostgREST (`scripts/isi-lencana-lewat-rest.mjs`).
+
+**Yang menunggu OWNER (opsional, bukan penghalang):** centang "Tandai sebagai Unggulan" · status "Masih tayang" · kolom Views · rating asli per drama.
+
+**Sisa yang masih menggantung:** (a) 21 berkas `app/api` masih meneruskan pesan error mesin ke browser penonton; (b) ❓ fokus keyboard saat kerangka `/discover` ditukar isi sungguhan — belum diukur; (c) ❓ 404 halaman drama badannya KOSONG; (d) **paywall koin sifatnya HANYA tampilan** — `app/api/download/route.ts` tidak memeriksa jatah gratis sama sekali dan `videoSrc` menunjuk langsung ke tunnel, jadi mengganti `ep=1` jadi `ep=50` di alamat tetap dilayani. Lubang LAMA (route-nya nol sentuhan hari ini), belum diputuskan owner.
+
+**🚨 CERMIN TIDAK BISA DI-PUSH DARI KOMPUTER REKAN — 403.** `git push dramaapp main` di komputer rekan dibalas `Permission to masradenbagus89-ui/dramaapp.git denied to yusufscorpio`. Kredensial di sana milik rekan. **Dari komputer OWNER dual push berjalan normal** (dibuktikan hari ini: `ef59e4a..a8db3ca` ke cermin, `da8d7a1..a8db3ca` ke produksi, dua-duanya fast-forward). Jadi alurnya: rekan push ke cermin, owner menarik lalu merilis.
 
 **⚠️ KOREKSI ALAMAT:** `dramaku.vercel.app` **BUKAN** DramaKu (aplikasi React lain). Produksi = **`dramaapp.vercel.app`** (`lib/site.ts:8`). Di komputer owner juga ada Playly di `localhost:3072`/`:3074` (biru gelap + carousel) dan DramaKu versi LAMA di `localhost:3000` — dua-duanya sering tertukar.
 
@@ -115,8 +131,112 @@ Catatan 2026-09-21 menulis "sebabnya belum terjelaskan dan JANGAN ditebak". Seka
 ---
 
 
+## 2026-09-23 (sore, revisi ke-2) — tombol "DOWNLOAD EP 1" DIHAPUS atas permintaan owner (`2af96b6`)
 
+**Permintaan owner, lengkap dengan tangkapan layar berkotak merah:** *"tolong kamu hapus yang saya kasih kotak merah mungkin semua film ada poster tombol merah muda DOWNLOAD EP 1 jadi kamu hapus saja yah"*.
 
+**Latar belakangnya (kenapa tombol itu sempat ada).** Owner bertanya lebih dulu *"siapa yang buat tulisan DOWNLOAD ini"*. Jawabannya dari `git blame`: tulisannya lahir di `f65ccd6` (2026-09-22 20:18, kerja rekan, masuk lewat cermin `ojokesusu/dramaku`); yang memasangnya ke halaman cuma `a8db3ca` pagi ini. **Riwayat git TIDAK bisa membuktikan siapa yang mengetiknya** — nama author kedua commit itu sama persis (`masradenbagus89-ui <zyyherlambang@gmail.com>`) karena identitas git belum dipisah antar-komputer (`AGENTS.local.md` aturan 7). Yang membedakan bukan namanya, melainkan: commitnya hanya ada di cermin, dan catatan di dalamnya menjelaskan komputer ber-kredensial `yusufscorpio`. **Dan pencarian jejak "keputusan owner 2026-09-21" yang diklaim rekan: NIHIL** — semua sebutan "tombol Unduh" yang lebih lama merujuk tombol di dalam PEMUTAR, bukan halaman detail.
+
+**Dihapus TUNTAS, bukan disembunyikan** (§3.1 — dead code dilarang): `app/components/DownloadButton.tsx` dihapus · `tests/download-button.test.ts` dihapus (mengunci fitur yang sudah tiada) · `DETAIL_DOWNLOAD_EP`, `detailDownloadUrl`, `downloadFileName` dibuang dari `lib/video.ts` sesudah diperiksa **nol pemakai lain** · `app/drama/[id]/page.tsx` dipulihkan PERSIS ke versi `da8d7a1`, jadi tata letaknya kembali seperti sebelum tombol itu ada (Nonton di kiri, Favorit + Suka + Bagikan di kanan, satu baris).
+
+**⚠️ YANG SENGAJA TIDAK IKUT DIHAPUS — jangan ikut dibersihkan di sesi berikutnya:** `downloadUrl()` di `lib/video.ts` dan `app/api/download/route.ts`. Keduanya milik **tombol unduh di dalam pemutar video** (`FeedPlayer.tsx:429`), fitur berbeda yang owner tidak minta dihapus. Membuangnya akan merusak pemutar.
+
+**PEMERIKSAAN VAKUM — langsung memakai pelajaran `fa328b7` yang ditulis sesi lain beberapa jam sebelumnya** (*menghapus elemen bisa membuat tes tetangga lulus tanpa menguji apa pun*). Dua berkas tes yang menyentuh halaman detail diperiksa satu per satu: `tests/drama-prerender-build.test.ts` seluruhnya soal `generateStaticParams`/`dynamicParams`/`revalidate`, dan `tests/poster-lencana-render.test.ts` soal `showBadge`. **Nol tes yang bergantung pada keberadaan tombol ini**, jadi nol yang menjadi vakum.
+
+**🪤 Pelajaran sesi ini:** **selisih hitungan tes 1 buah ternyata bukan tes flaky, melainkan `main` yang maju di bawah kaki sendiri.** Perkiraan 896 − 10 = 886 tapi terukur 887; ditelusuri, ternyata baseline-nya sudah berubah jadi 897 karena sesi lain menambah 1 tes dan mem-push-nya di tengah sesi ini. **Angka yang meleset 1 tetap wajib dijelaskan** — kalau diabaikan, penjelasan yang benar (ada sesi lain menulis ke repo yang sama) tidak akan pernah ditemukan.
+
+**Bukti:** `rm -rf .next` lalu build **exit 0** (`/drama/[id]` TETAP `● SSG`, `/` tetap `○ Static` 1m 1y) lalu `tsc` **exit 0 / 0 error** lalu **887 tes / 61 berkas** (dari 897/62 — turun tepat 1 berkas + 10 tes milik fitur yang dihapus) lalu nol berkas rahasia lalu dual push fast-forward `4e0c464..2af96b6` ke kedua repo.
+
+---
+
+## 2026-09-23 (sore) — tahun 34 serial disebar 2020-2024 (⚠️ PERUBAHAN DATA, bukan kode — ✅ TAYANG & TERVERIFIKASI)
+
+**Permintaan owner** (tangkapan layar /discover, baris tahun dilingkari merah): *"tahunnya sama semuanya 2024, coba buat random"*, dengan daftar angka: **2024, 2023, 2021, 2022, 2020, 2020**.
+
+**Owner benar, dan penyebabnya ketemu.** `scripts/isi-lencana-lewat-rest.mjs:33` mengisi kolom `year` yang masih kosong dengan satu nilai tetap `TAHUN_BARU = "2024"` (2026-09-22). Komentar skrip itu sendiri menyatakan nilainya **"DARI OWNER, bukan dari sumber teknis mana pun"**. Hasilnya 34 serial memajang tahun identik.
+
+**⚠️ INI PERUBAHAN DATABASE, BUKAN KODE — konsekuensinya beda total.** Tahun tersimpan di kolom `dramaapp.dramas.year` (tipe `text`), bukan di berkas kode. Jadi: (a) perubahannya **tayang sendiri dalam ~60 detik tanpa commit/push/deploy** (`CATALOG_TTL_SECONDS = 60` di lib/dramas.ts + `revalidate = 60` di halaman); (b) `git revert` **TIDAK bisa** memulihkannya — rollback-nya lewat skrip, lihat bawah; (c) `npm test` tidak akan pernah memerahkannya, sebab semua tes memakai data buatan sendiri.
+
+**Yang diubah:** 34 serial yang syaratnya DUA-duanya terpenuhi — bukan film **DAN** tahunnya masih persis `"2024"`.
+**Yang TIDAK disentuh:** 7 film. Tahun mereka (2006, 2008, 2017, 2025, 2026×3) adalah tahun rilis **sungguhan** dari metadata IMDb — mengacaknya berarti merusak data yang benar. Penyaring dua syarat itu yang menjamin film tak pernah ikut.
+
+**Sebaran hasil** (persis daftar owner; `2020` disebut dua kali dan pengulangan itu dipertahankan sebagai bobot, bukan dianggap salah ketik): **2020 = 10 judul · 2021 = 6 · 2022 = 6 · 2023 = 6 · 2024 = 6**.
+
+**Kenapa pengacaknya BER-BENIH, bukan `Math.random()`:** hasil simulasi harus sama persis dengan hasil eksekusi. Dengan `Math.random()` rencana yang dilihat saat simulasi bukan rencana yang dikirim — dan tak ada yang bisa memeriksanya. Benih tetap `20260923` di `scripts/acak-tahun-serial.mjs`. Pembagian berputar saja tidak cukup: tanpa diacak, urutannya jadi pola berulang (2024, 2023, 2021, 2022, 2020, 2020, 2024, ...) yang justru terbaca **lebih** palsu daripada seragam.
+
+**ROLLBACK (satu perintah, sudah disiapkan):** `node scripts/acak-tahun-serial.mjs --kembalikan` — membaca `scripts/cadangan/2026-09-23-tahun-serial.json` (ditulis SEBELUM PATCH pertama) lalu mengembalikan ke-34 judul ke `"2024"`.
+
+**Bukti (diukur, bukan diasumsikan):** simulasi dulu (`tanpa --jalankan`) → 5 PATCH berpenyaring daftar id eksplisit → dibaca ULANG dari database: `2020=10, 2021=6, 2022=6, 2023=6, 2024=6` + film tetap `2017, 2026, 2026, 2025, 2026, 2006, 2008`. Di situs sungguhan: `/`, `/beranda`, `/shorts` semuanya memajang kelima tahun. Gerbang §6 tetap dijalankan walau kode aplikasi nol berubah: build **exit 0** · tsc **exit 0** · **897 tes / 62 berkas** hijau.
+
+**🪤 Pelajaran operasional — API menyegarkan LEBIH DULU daripada halaman.** Sesudah PATCH, `/api/dramas` langsung memulangkan tahun baru, tapi `/`, `/beranda`, `/shorts` masih menyajikan HTML lama: tiap halaman statis punya cache ISR sendiri dan baru berganti sesudah ada permintaan melewati 60 detik. Sempat terbaca seperti "perubahannya tidak masuk". `?cb=<angka>` **tidak** menembusnya untuk halaman statis. Cara benar: minta halamannya berulang sampai berganti, dan pakai `/api/dramas` sebagai sumber kebenaran.
+
+**Yang ikut bergeser bagi penonton (semuanya membaca `year`, jadi berubah sendiri tanpa ubah kode):**
+- **Baris rekomendasi bergeser.** `lib/recommend.ts:58-63` memberi nilai berdasarkan kedekatan tahun (selisih 0 = +3, ≤1 tahun = +2). Selama semua serial 2024, bonus itu rata untuk semua dan praktis tidak membedakan; sekarang ia benar-benar membedakan.
+- **Urutan "Tahun Terbaru" bergeser** (`lib/discover.ts:274-279`) — dulu semua seri seri, sekarang berurut sungguhan.
+- **SEO ikut berubah.** `lib/structured-data.ts:32` mengirim `datePublished = drama.year` ke Google. Angka ini jadi klaim publik soal tahun terbit.
+- **Dropdown/tab tahun bertambah isinya sendiri** — daftarnya dihitung dari katalog (`lib/nav-katalog.ts:203`), jadi 2020-2023 muncul otomatis.
+- **TIDAK ikut menyesuaikan:** dua pintu nav bertulisan tetap `"2025"`/`"2026"` (`lib/nav-katalog.ts:277-278`). Kalau owner mau pintu "2023"/"2022", itu **perubahan kode terpisah** yang belum dikerjakan.
+
+**❓ Batas kejujuran data — jangan diklaim lebih dari ini.** Tahun 2020-2024 yang baru ini **bukan** tahun rilis terverifikasi, sama seperti 2024 yang lama juga bukan. Keduanya angka dari owner. Drama pendek China ini **tidak punya sumber tahun** — catatan 2026-09-22 sudah membuktikan judul-judul ini tidak ada di IMDb (`app_data` juga nol dokumen rating). Jadi yang berubah adalah "salah seragam" menjadi "salah bervariasi"; tidak ada data benar yang hilang, tapi sesi berikutnya **jangan** mengira angka ini terverifikasi.
+
+**`data/dramas.json` SENGAJA tidak disentuh.** Berkas cadangan itu memang sudah basi sejak sebelum perubahan ini: 34 entrinya bertahun **KOSONG** (ia mendahului pengisian massal 2026-09-22). Menyamakan hanya kolom tahun akan membuatnya setengah-benar dan makin menyesatkan. Sumber kebenaran katalog tetap `GET /api/dramas` (`AGENTS.local.md` aturan 4).
+
+---
+
+## 2026-09-23 (siang) — tulisan "🪙 Premium" DIHAPUS dari poster kartu (`c954e6f` + `fa328b7`, ✅ TAYANG & TERVERIFIKASI)
+
+**Permintaan owner** (lewat tangkapan layar beranda, puluhan chip kuning dilingkari merah): hilangkan tulisan Premium yang menempel di dalam poster film.
+
+**Yang diubah — 1 blok JSX di `app/components/Poster.tsx`.** Chip kuning `🪙 Premium` di pojok kanan-atas kartu dihapus, berikut `import { PAYWALL_ENABLED }` yang jadi tak terpakai di berkas itu. Karena SEMUA kartu situs memakai komponen `Poster` (beranda, hasil cari, kategori, rekomendasi, riwayat, my-list, poster kecil di halaman detail), satu perubahan ini menutup seluruh halaman sekaligus — tak ada halaman yang tertinggal.
+
+**Yang SENGAJA TIDAK ikut diubah — jangan dikira terlewat:**
+- **Paywall tetap menyala.** `PAYWALL_ENABLED = true` di `lib/coins.ts` tidak disentuh. Episode berbayar tetap terkunci dan tetap minta koin; yang hilang cuma penanda di kartu. Akibat yang perlu diketahui owner: penonton sekarang baru tahu sebuah judul berbayar SETELAH mengklik, bukan sebelum.
+- **Lencana PREMIUM di halaman detail drama tetap ada** (`app/drama/[id]/page.tsx`, di sebelah judul). Itu di luar poster, jadi di luar permintaan. Owner tinggal bilang kalau mau itu ikut dihapus.
+- **Lencana lain utuh**: rating IMDb, kualitas (CAM merah / HD hijau), tahun, durasi/jumlah episode, ONGOING/TAMAT, Exclusive.
+
+**Penjaga permanen dipasang** di `tests/poster-lencana-render.test.ts`: tes baru *"kartu drama berbayar TIDAK memajang tulisan Premium di poster"* merender `Poster` dengan `premium: true` lalu memastikan tak ada tulisan Premium maupun emoji koin, SEKALIGUS memastikan lencana lain tidak ikut hilang. Kenapa perlu: chip itu cuma muncul pada judul yang ditandai `premium`, jadi kalau seseorang memasangnya kembali, poster contoh yang kebetulan dibuka saat memeriksa belum tentu yang berbayar — kambuhnya SENYAP.
+
+**🔴 Commit kedua `fa328b7` memperbaiki cacat di commit pertama — ditemukan audit pra-rilis, bukan dugaan.** Tes tetangga *"halaman detail tetap bisa mematikan lencana kanan-atas"* menjadi **VAKUM** begitu chip Premium dihapus: stub-nya `premium: true`, sedangkan satu-satunya lencana yang masih dijaga `showBadge` adalah Exclusive dengan syarat `showBadge && !premium && exclusive`. Dengan `premium: true` dan `exclusive` tak pernah diisi, **tak ada apa pun yang tergambar di KEDUA keadaan** → tesnya lulus hijau bahkan kalau prop `showBadge` dihapus total dari komponen. Namanya terbaca seperti penjaga, isinya tidak menjaga apa-apa. Diperbaiki: stub jadi `exclusive: true` (bukan premium) + ditambah baris pembanding yang memastikan lencananya MEMANG tergambar saat tidak dimatikan — tanpa pembanding, *"tidak muncul"* tak bisa dibedakan dari *"tak pernah ada"*. **Ini kekambuhan pola "penjaga tes PALSU" yang sudah tercatat di `antrean-deploy.md` rilis 2026-09-22.**
+
+**Gerbang §6 (dijalankan, bukan dibaca):** `rm -rf .next` → `npm run build` **exit 0** → `npx tsc --noEmit` **exit 0** → **897 tes / 62 berkas hijau** → **mutation check 2 arah keduanya MERAH** → nol berkas env/kunci ter-stage → dual push → verifikasi tayang. **Nol SQL, nol env baru.**
+
+**Mutation check (bukti penjaganya menggigit, bukan hiasan):** (a) chip Premium dipasang kembali → tes MERAH di baris 120, `Received: "9.0 WEB-DL 🪙 Premium 2026 10 EPS"`; (b) `showBadge` dilepas dari syarat Exclusive → tes versi BARU merah di baris 150, sedangkan tes versi LAMA tetap hijau pada mutasi yang sama — itulah buktinya versi lama vakum. Kode dipulihkan `git checkout --` lalu gerbang penuh diulang.
+
+**Verifikasi TAYANG di produksi (diukur, bukan diasumsikan):** `https://dramaapp.vercel.app` — chip Premium **47 → 0** di `/` dan `/beranda` (dihitung dari HTML produksi sebelum & sesudah deployment), 0 juga di `/shorts` dan `/discover`; lencana lain **utuh**: 146 ikon rating + 146 chip kualitas di `/`, 132 di `/beranda`, 118 di `/shorts`. Halaman detail drama berbayar: chip di poster **0**, lencana `🪙 PREMIUM` di sebelah judul **masih ada**, tombol Nonton/Unduh utuh. Catatan: `/discover` memulangkan 0 lencana di HTML awal — itu **normal**, kartunya diisi client-side (5 penanda kerangka, 0 poster di HTML awal), bukan regresi.
+
+**Paywall terbukti tidak tersentuh:** `git diff --name-only 8fdab6e..fa328b7` = **hanya 2 berkas** (`app/components/Poster.tsx`, `tests/poster-lencana-render.test.ts`); nol berkas `coins`/`unlock`/`paywall`/`FeedPlayer`. Tripwire `tests/coins.test.ts` (`expect(PAYWALL_ENABLED).toBe(true)`) **hijau**. ❓ Yang TIDAK bisa dibuktikan dari luar: layar paywall di pemutar tidak muncul di HTML mentah karena `FeedPlayer` merendernya client-side setelah sesi login dibaca — jadi buktinya di sini bersifat "kodenya nol tersentuh + tripwire hijau", BUKAN "sudah dicoba dengan akun sungguhan". Jangan mengklaim lebih dari itu.
+
+**⚠️ Catatan jebakan build (buat sesi berikutnya).** Percobaan `npm run build` yang PERTAMA gagal dengan `Next.js build worker exited with code: 4294967295`, didahului `[playly] katalog publik gagal: ... kunci API belum dipasang`. Itu **bukan** akibat perubahan ini: diuji dengan `git stash` (build bersih exit 0), lalu `git stash pop` dan build ulang dengan perubahan terpasang → **juga exit 0**. Penyebabnya penarikan katalog Playly yang memang gagal di komputer lokal karena kunci API belum dipasang — gagalnya tidak konsisten, kadang menjatuhkan worker. Jangan buru-buru menyalahkan perubahan kode saat melihat pesan ini.
+
+**Status rilis: ✅ SUDAH TAYANG.** Owner memberi izin, dual push dijalankan **cermin dulu baru produksi**: `git push dramaku main` → `8fdab6e..fa328b7` fast-forward, lalu `git push origin main` → `8fdab6e..fa328b7` fast-forward. Keduanya nol pekerjaan tertimpa. Ketiga titik kini sama: `HEAD` = `origin/main` = `dramaku/main` = **`fa328b7`**.
+
+**Rollback rilis ini:** `git revert --no-edit fa328b7 c954e6f && git push origin main && git push dramaku main`.
+
+**🟡 Temuan sampingan dari audit, DI LUAR rilis ini — belum dikerjakan, perlu keputusan owner.** `.gitignore` tidak menjaring varian `.env` tanpa sufiks `.local`: `git check-ignore -v` membuktikan `.env.production`, `.env.staging`, `.env.development` **TIDAK diabaikan** (pola yang ada cuma `.env` polos di baris 7, `.env*.local` baris 8, `.env.local.*` baris 13, `.env.*.bak` baris 14). Sementara `@next/env` versi terpasang (next 16.2.9) memuat `.env.production` sebagai nama resmi, dan repo ini **publik**. Hari ini dampaknya NOL — berkas begitu memang belum ada (`ls -a | grep '^\.env'` cuma `.env.example` + `.env.local`), dan rantainya masih dicegat 2 lapis: `.git/hooks/pre-commit:27` (regex `(^|/)\.env(\.[A-Za-z0-9_-]+)?$`, exit 1) + `.github/workflows/secret-guard.yml:42`. Jadi bukan pemblokir, tapi lubangnya nyata kalau suatu saat ada yang membuat `.env.production` berisi `service_role` asli.
+
+---
+
+## 2026-09-23 (pagi) — tombol Unduh rekan dipasang & dirilis; 7 film ternyata tanpa video (`a8db3ca`)
+
+> ⛔ **SUDAH DIBATALKAN ATAS PERMINTAAN OWNER (`2af96b6`, seksi di atas).** Tombolnya dihapus tuntas beberapa jam kemudian. Seksi ini tetap disimpan karena **temuan 7 film tanpa berkas video masih berlaku** dan belum diputuskan owner.
+
+**Duduk perkaranya.** Repo cermin berisi 4 commit rekan yang belum sampai ke produksi. Ditarik fast-forward (nol pekerjaan tertimpa), lalu ketahuan **commit `f65ccd6` tidak pernah memasang tombolnya**: komponen `DownloadButton`, fungsi pembantu di `lib/video.ts`, dan 7 tes semuanya ada dan HIJAU — tapi **nol berkas mengimpornya**, dan `app/drama/[id]/page.tsx` nol sentuhan. Dead code yang dari luar terlihat seperti fitur jadi. Kemungkinan besar suntingan halamannya hilang saat rekan pindah basis lalu membuang stash.
+
+**Kenapa lolos semua gerbang:** tes menguji fungsi MURNI (buta terhadap siapa yang memanggil) · `tsc` tak menganggap komponen tak terpakai sebagai error · `next build` tak mengeluh soal berkas tak diimpor · catatan handoff-nya sendiri menyatakan sudah terpasang. **Gerbang §6 memeriksa "kodenya sehat", BUKAN "fiturnya ada".**
+
+**Yang dikerjakan:** `DownloadButton` dipasang ke halaman detail — DOWNLOAD sebaris dengan Mulai Nonton, Simpan/Suka/Bagikan turun ke baris kedua (lima tombol sebaris berdesakan di HP). Ditambah **3 penjaga permanen** di `tests/download-button.test.ts` yang membaca sumber halaman dari disk dan menuntut: pernyataan import UTUH · elemennya benar-benar dirender · prop `dramaId` dan `episodes` ikut dikirim. **Uji-balik 3 arah semuanya MERAH.**
+
+**🪤 Pelajaran alat dari sesi ini:**
+- **Mutation check-nya sendiri bisa cacat.** Mutasi pertama menukar `<DownloadButton` jadi `<DownloadButtonXX` dan tetap HIJAU — sempat terbaca "penjaganya palsu", padahal `toContain("<DownloadButton")` memang masih cocok dengan nama yang lebih panjang. Mutasi benar = hapus elemennya utuh.
+- **Skrip gerbang yang dijalankan terdetach bisa melaporkan exit code PALSU.** `npm run build` di dalam skrip latar belakang mencatat **exit 127** padahal lognya tuntas tanpa satu pun baris error; diukur ulang langsung memulangkan **exit 0**. Angka exit yang bertentangan dengan isi log = ukur ulang, jangan percaya salah satunya.
+- **Jebakan escape-sequence heredoc terulang untuk ketiga kalinya** (tercatat 2026-09-22, kena lagi hari ini): menulis escape-sequence lewat heredoc python menghasilkan karakter SUNGGUHAN di berkas dan tesnya gagal parse. Obatnya: jangan tulis escape-sequence apa pun ke dalam teks yang dihasilkan — pakai potongan teks utuh.
+- **Klaim di catatan serah-terima wajib diuji, bukan dipercaya.** "Tombolnya berdampingan dengan Nonton" bisa dibantah dalam 5 detik lewat `git diff --name-only` (apakah halamannya ikut berubah?).
+
+**Bukti rilis:** `rm -rf .next` lalu build **exit 0** (`/drama/[id]` TETAP `● SSG`, `/` tetap `○ Static` 1m 1y) lalu `tsc` **exit 0 / 0 error** lalu **896 tes / 62 berkas** (dari 881/60) lalu mutation check 3 arah MERAH lalu nol berkas rahasia lalu dual push fast-forward lalu **terverifikasi tayang**: film menggambar `DOWNLOAD`, serial 56 episode menggambar `DOWNLOAD EP 1`, keduanya menunjuk `/api/download?id=...&ep=1`; 13 halaman produksi semuanya 200.
+
+**Yang TIDAK dibangun (sengaja):** tombol tidak disembunyikan untuk judul tanpa berkas video. Memeriksanya butuh panggilan ke PC backup per judul di halaman yang di-cache — dan perilakunya konsisten dengan tombol "Mulai Nonton" yang sudah lebih dulu gagal untuk ketujuh film yang sama. Keputusan owner: isi videonya, atau sembunyikan judulnya.
+
+---
 
 ## 2026-09-22 (malam, revisi ke-4) — Playly menutup `/api/catalog` + tombol Unduh di halaman detail
 
@@ -144,6 +264,8 @@ Playly mengirim pemberitahuan. **Tidak dipercaya mentah — diuji langsung ke se
 Penjaga: `tests/playly-katalog-kunci.test.ts` (5 tes) — termasuk pagar **"kunci tidak pernah bocor ke query string"** dan pagar arah sebaliknya (jalur mitra tetap didahulukan). **Diuji-balik:** header dilepas → 2 tes MERAH; dikembalikan → hijau.
 
 ### 2. `f65ccd6` — tombol Unduh di `/drama/[id]` (keputusan owner 2026-09-21)
+
+> ⛔ **KOREKSI 2026-09-23: klaim di bawah ini KELIRU.** `f65ccd6` membuat komponennya tapi **tidak pernah memasangnya** — `app/drama/[id]/page.tsx` nol sentuhan, nol berkas mengimpor `DownloadButton`, jadi tombolnya tidak pernah tergambar. Baru benar-benar terpasang di `a8db3ca` (seksi 2026-09-23 di atas), lengkap dengan 3 penjaga permanen.
 
 Tombol **DOWNLOAD** berdampingan dengan Nonton; Save/Suka/Bagikan turun ke baris sendiri (lima tombol satu baris berdesakan di HP). **Hanya episode 1**, dan ep 1..`FREE_EPISODES`(=3) memang gratis — jadi **tidak bisa dipakai melewati paywall koin**, dan batas itu dikunci tes (`tests/download-button.test.ts`), termasuk tes yang memverifikasi premisnya (`PAYWALL_ENABLED` memang menyala).
 

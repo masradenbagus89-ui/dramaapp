@@ -105,15 +105,49 @@ describe("Poster — keempat pojok benar-benar tergambar", () => {
     }
   });
 
-  it("halaman detail boleh mematikan chip PREMIUM tanpa ikut mematikan lencana lain", () => {
-    // `showBadge={false}` dipakai app/drama/[id]/page.tsx karena halaman itu
-    // sudah memajang lencana PREMIUM sendiri di sebelah judul.
+  it("kartu drama berbayar TIDAK memajang tulisan Premium di poster", () => {
+    // Chip "🪙 Premium" dihapus dari poster atas permintaan owner 2026-09-23:
+    // puluhan kartu berjajar di beranda membuat posternya terlalu penuh.
+    //
+    // Penjaga ini sengaja dipasang karena kambuhnya SENYAP — chip itu cuma
+    // muncul pada drama yang ditandai `premium`, jadi kalau seseorang
+    // memasangnya kembali, poster contoh yang dibuka saat memeriksa belum tentu
+    // yang berbayar. Tidak ada error, cuma tulisan yang balik lagi.
     const html = render(
       stub({ premium: true, quality: "WEB-DL", year: "2026", imdbRating: "9.0" }),
-      { showBadge: false },
     );
     const teks = isiTeks(html);
     expect(teks.join(" ")).not.toMatch(/Premium/i);
+    expect(html).not.toContain("🪙");
+    // Lencana lain TIDAK ikut hilang — yang dibuang hanya penanda berbayarnya.
+    expect(teks).toContain("WEB-DL");
+    expect(teks).toContain("2026");
+    expect(teks).toContain("9.0");
+  });
+
+  it("halaman detail tetap bisa mematikan lencana kanan-atas tanpa lencana lain ikut mati", () => {
+    // `showBadge={false}` dipakai app/drama/[id]/page.tsx karena halaman itu
+    // sudah memajang lencananya sendiri di sebelah judul.
+    //
+    // Dramanya sengaja `exclusive` dan BUKAN `premium`. Sesudah chip Premium
+    // dihapus, Exclusive tinggal satu-satunya lencana yang masih dijaga
+    // `showBadge` — dan syaratnya `showBadge && !premium && exclusive`. Kalau
+    // stub-nya dibuat `premium: true` seperti versi sebelumnya, tes ini jadi
+    // VAKUM: tak ada apa pun yang tergambar di KEDUA keadaan, jadi ia lulus
+    // hijau walau prop `showBadge` dihapus total dari komponen.
+    const ciri: Partial<Drama> = {
+      exclusive: true,
+      quality: "WEB-DL",
+      year: "2026",
+      imdbRating: "9.0",
+    };
+
+    // Pembanding wajib: tanpa dimatikan, lencananya MEMANG tergambar. Tanpa
+    // baris ini, "tidak muncul" tak bisa dibedakan dari "tak pernah ada".
+    expect(isiTeks(render(stub(ciri))).join(" ")).toMatch(/Exclusive/i);
+
+    const teks = isiTeks(render(stub(ciri), { showBadge: false }));
+    expect(teks.join(" ")).not.toMatch(/Premium|Exclusive/i);
     expect(teks).toContain("WEB-DL");
     expect(teks).toContain("2026");
     expect(teks).toContain("9.0");

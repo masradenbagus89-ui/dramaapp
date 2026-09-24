@@ -3,6 +3,60 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
+**Terakhir dicek:** 2026-09-23 sore, revisi ke-3 (**antrean KOSONG**). **`HEAD` = `origin/main` = `dramaku/main` = `0ab70ad`**, lokal ahead 0 (dibaca lewat `git fetch` ke kedua server, bukan dari ingatan).
+
+**⚠️ ENTRI INI MENAMBAL LUBANG: commit `4e0c464` sebelumnya TIDAK tercatat di berkas ini sama sekali** — daftarnya meloncat dari `fa328b7` (entri "siang") langsung ke `2af96b6`, sehingga pembaca yang menelusuri riwayat rilis tidak akan pernah tahu ada perubahan DATA produksi di antaranya, apalagi cara membatalkannya. Dicatat sekarang supaya riwayatnya utuh.
+
+**`4e0c464` — sebar tahun 34 serial dari seragam `2024` jadi 2020-2024 (permintaan owner).** ⚠️ **Ini PERUBAHAN DATA DATABASE, bukan kode** — commit-nya hanya membawa skrip + catatan; yang benar-benar mengubah tampilan adalah PATCH ke kolom `dramaapp.dramas.year` yang sudah dijalankan. Tiga akibat yang beda dari rilis biasa: (a) **tayang sendiri ~60 detik tanpa deploy**; (b) **`git revert` TIDAK memulihkannya**; (c) **`npm test` mustahil memerahkannya** (semua tes memakai data buatan sendiri). Sebaran hasil: `2020=10, 2021=6, 2022=6, 2023=6, 2024=6`; **7 film tidak disentuh** sebab tahunnya tahun rilis SUNGGUHAN dari IMDb (2006, 2008, 2017, 2025, 2026).
+
+**Gerbang §6 (tetap dijalankan walau kode aplikasi nol berubah):** `rm -rf .next` → build **exit 0** → `tsc` **exit 0** → **897 tes / 62 berkas** hijau → nol berkas env/kunci → dual push cermin-dulu-baru-produksi (`492763f..4e0c464`, keduanya fast-forward) → **verifikasi tayang**: `/`, `/beranda`, `/shorts` semuanya memajang kelima tahun; `/api/dramas` memulangkan sebaran yang sama persis.
+
+**🪤 Pelajaran alat: API menyegarkan LEBIH DULU daripada halaman.** Sesudah PATCH, `/api/dramas` langsung memulangkan tahun baru sementara halaman masih menyajikan HTML lama — tiap halaman statis punya cache ISR sendiri dan baru berganti sesudah ada permintaan melewati 60 detik. `?cb=<angka>` **tidak** menembusnya untuk halaman statis. Sempat terbaca persis seperti "perubahannya tidak masuk". Cara benar: minta halamannya berulang sampai berganti, pakai `/api/dramas` sebagai sumber kebenaran.
+
+**Rollback perubahan data ini (BUKAN `git revert`):** `node scripts/acak-tahun-serial.mjs --kembalikan` — membaca `scripts/cadangan/2026-09-23-tahun-serial.json` (ditulis SEBELUM PATCH pertama) lalu mengembalikan ke-34 judul ke `"2024"`.
+
+**📑 Urutan entri di berkas ini sedang TIDAK rapi** — entri `2af96b6` ("sore", hapus tombol DOWNLOAD) ada di BAWAH entri `fa328b7` ("siang"), padahal konvensinya terbaru-di-atas. Jangan berhenti membaca di entri pertama; telusuri sampai `2026-09-22`. Tidak dirapikan sendiri di sini supaya tulisan sesi lain tidak digeser tanpa sepengetahuannya.
+
+---
+
+**Terakhir dicek:** 2026-09-23 siang (**✅ RILIS CHIP PREMIUM, antrean KOSONG**). **`HEAD` = `origin/main` = `dramaku/main` = `fa328b7`**, lokal ahead 0. Dua commit: `c954e6f` menghapus chip "🪙 Premium" dari poster kartu (permintaan owner lewat tangkapan layar beranda) + `fa328b7` memperbaiki tes penjaga yang jadi **VAKUM** akibat commit pertama. Dual push atas izin owner, **cermin dulu baru produksi**, keduanya **fast-forward** (`8fdab6e..fa328b7`).
+
+**Gerbang §6:** `rm -rf .next` → build **exit 0** → `tsc` **exit 0 / 0 error** → **897 tes / 62 berkas** (jumlahnya tetap; 1 tes lama diperbaiki, 1 tes baru ditambah, 1 tes lama dipecah) → **mutation check 2 arah keduanya MERAH** → nol berkas env/kunci → push → **verifikasi tayang**: chip Premium **47 → 0** di `/` dan `/beranda`, 0 juga di `/shorts` & `/discover`; lencana rating+kualitas utuh (146 / 132 / 118); halaman detail drama berbayar tetap memajang `🪙 PREMIUM` di sebelah judul. **Nol SQL, nol env baru.**
+
+**🪤 Pelajaran alat dari rilis ini — pola "penjaga tes PALSU" KAMBUH lagi (sudah tercatat 2026-09-22).** Menghapus satu chip membuat tes TETANGGA-nya vakum tanpa ada yang merah: tes `showBadge` memakai stub `premium: true`, padahal sesudah chip Premium hilang satu-satunya elemen yang dijaga `showBadge` adalah Exclusive dengan syarat `showBadge && !premium && exclusive` — jadi nol elemen tergambar di KEDUA keadaan dan tesnya lulus walau prop-nya dihapus total. **Aturan yang lahir dari sini: tes "X tidak muncul" WAJIB punya baris pembanding yang membuktikan X MEMANG muncul di keadaan sebaliknya** — tanpa itu, "tidak muncul" tak bisa dibedakan dari "tak pernah ada". Ditemukan oleh audit pra-rilis, bukan oleh `npm test` (897 tes hijau di kedua versi).
+
+**🪤 Jebakan build yang menipu lagi:** `npm run build` PERTAMA gagal `worker exited with code: 4294967295` didahului `[playly] katalog publik gagal: kunci API belum dipasang`. **Bukan** akibat perubahan kode — diuji `git stash` (bersih exit 0) lalu `git stash pop` + build ulang (**juga exit 0**). Penarikan katalog Playly yang gagal di komputer lokal kadang menjatuhkan build worker. Exit code yang bertentangan dengan isi log = ukur ulang, jangan langsung menyalahkan diff.
+
+**🟡 Temuan sampingan, DI LUAR rilis ini:** `.gitignore` tidak menjaring `.env.production` / `.env.staging` / `.env.development` (`git check-ignore -v` membuktikan ketiganya TIDAK diabaikan; pola yang ada cuma `.env` polos :7, `.env*.local` :8, `.env.local.*` :13, `.env.*.bak` :14). `@next/env` (next 16.2.9) memuat `.env.production` sebagai nama resmi, dan repo ini publik. Dampak hari ini NOL (berkasnya belum ada; masih dicegat `.git/hooks/pre-commit:27` + `.github/workflows/secret-guard.yml:42`). Menunggu keputusan owner.
+
+**Rollback rilis ini:** `git revert --no-edit fa328b7 c954e6f && git push origin main && git push dramaku main`.
+
+---
+
+**Terakhir dicek:** 2026-09-23 sore (**✅ TOMBOL DOWNLOAD DIHAPUS & DIRILIS, antrean KOSONG**). **`HEAD` = `origin/main` = `dramaku/main` = `2af96b6`**, lokal ahead 0. Owner menandai tombol merah muda "DOWNLOAD EP 1" di halaman detail dengan kotak merah dan meminta dihapus; dihapus TUNTAS (komponen + tes + 3 fungsi pembantu), bukan disembunyikan. Tombol unduh di dalam PEMUTAR video sengaja tidak disentuh.
+
+**Gerbang §6:** `rm -rf .next` → build **exit 0** (`/drama/[id]` tetap `● SSG`, `/` tetap `○ Static` 1m 1y) → `tsc` **exit 0 / 0 error** → **887 tes / 61 berkas** (dari 897/62, turun tepat sebesar fitur yang dihapus) → pemeriksaan VAKUM atas 2 berkas tes yang menyentuh halaman detail → nol berkas env/kunci → dual push fast-forward. **Nol SQL, nol env baru.**
+
+**🚨 CATATAN KOORDINASI:** `main` maju **4 commit** di tengah sesi ini tanpa peringatan — dua sesi AI berjalan bersamaan di komputer owner. Tidak ada yang rusak (berkasnya tak beririsan, semua push fast-forward), tapi `HANDOFF.md` ditulis kedua sesi. `git fetch` + `git log --oneline -3` sebelum tiap commit, dan jangan andalkan hasil build/tes yang diukur 10 menit lalu.
+
+**Rollback rilis ini:** `git revert --no-edit 2af96b6 && git push origin main && git push dramaku main` (mengembalikan tombolnya).
+
+---
+
+**Terakhir dicek:** 2026-09-23 (**✅ KERJA REKAN DITARIK & DIRILIS, antrean KOSONG**). **`HEAD` = `origin/main` = `dramaku/main` = `a8db3ca`**, lokal ahead 0. Cermin `dramaku` ternyata membawa **4 commit rekan** yang belum sampai ke produksi — ditarik fast-forward (nol pekerjaan tertimpa), ditemukan **commit `f65ccd6` tidak pernah memasang tombol Unduh-nya** (komponen + 7 tes hijau, tapi nol berkas mengimpornya), diperbaiki di `a8db3ca` lalu dirilis. Dual push dari komputer owner **berhasil di kedua repo**, keduanya fast-forward.
+
+**Gerbang §6:** `rm -rf .next` → build **exit 0** (`/drama/[id]` tetap `● SSG`, `/` tetap `○ Static` 1m 1y) → `tsc` **exit 0 / 0 error** → **896 tes / 62 berkas** (dari 881/60) → **mutation check 3 arah semuanya MERAH** → nol berkas env/kunci → push → **verifikasi tayang**: film menggambar `DOWNLOAD`, serial menggambar `DOWNLOAD EP 1`, 13 halaman produksi semuanya 200. **Nol SQL, nol env baru.**
+
+**⛔ KOREKSI atas catatan rekan:** kesimpulan mereka bahwa `AGENTS.local.md` §5 basi (`origin` = ojokesusu/dramaku = produksi) **tidak berdiri** — buktinya diuji ulang dan salah (`SERIES UNGGULAN` memang ADA di `masradenbagus89-ui/dramaapp`). Yang benar: **nama remote berbeda per komputer**, jadi "push ke origin" di komputer rekan tak pernah menyentuh repo produksi. Di komputer owner penamaan tetap seperti tertulis di `AGENTS.local.md`.
+
+**🔴 Temuan yang perlu keputusan owner:** 41 judul diuji satu per satu ke PC backup → **34 serial 200 OK, 7 film 404**. Ketujuh film tidak bisa ditonton maupun diunduh; berkas videonya memang tidak ada di sumber. Bukan akibat rilis ini.
+
+**🪤 Pelajaran alat:** (a) **mutation check bisa cacat sendiri** — menukar `<DownloadButton` jadi `<DownloadButtonXX` tetap hijau sebab `toContain` masih cocok; mutasi benar = hapus elemennya utuh; (b) **skrip gerbang yang dijalankan terdetach melaporkan exit 127 PALSU** untuk build yang lognya tuntas tanpa error — diukur ulang langsung: exit 0; exit code yang bertentangan dengan isi log = ukur ulang; (c) **gerbang §6 memeriksa "kodenya sehat", BUKAN "fiturnya ada"** — build/tsc/tes semuanya hijau untuk komponen yang tak pernah dipakai siapa pun.
+
+**Rollback rilis ini:** `git revert --no-edit a8db3ca && git push origin main && git push dramaku main`.
+
+---
+
 **Terakhir dicek:** 2026-09-22 (**✅ EMPAT RILIS HARI INI, antrean KOSONG**). **`HEAD` = `origin/main` = `dramaku/main` = `64d36ec`**, lokal ahead 0. **Rilis ke-4 memperbaiki 4 cacat yang ditemukan tinjauan atas kerja hari ini sendiri:** (1) halaman 404 kehilangan SELURUH navigasi akibat pembalikan denylist→allowlist — terukur di produksi, nol navbar & nol bar bawah; (2) kotak cari kerangka `/discover` MATI tepat di jendela ia terlihat (sebelum hydration React belum memasang penangan) dan Enter malah memuat-ulang sambil menghilangkan ketikan; (3) klaim "sumber dikunci satu" ternyata masih 3-4 salinan (`chromeKatalog`, alamat pencarian, posisi menempel); (4) tiga penjaga tes PALSU. Dual push atas izin owner, cermin dulu baru produksi, keduanya **fast-forward**.
 
 **Gerbang §6:** build **exit 0** + tabel status halaman **IDENTIK** dengan build sebelumnya → `tsc` **exit 0 / 0 error** → **821 tes / 55 berkas** (dari 801) → **mutation check 9 arah semuanya MERAH** → nol berkas env/kunci → push → verifikasi tayang. **Nol SQL, nol env baru.**

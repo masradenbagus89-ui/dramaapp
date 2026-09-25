@@ -15,7 +15,7 @@
 
 **Antrean KOSONG.** `origin/main` = `dramaku/main`, lokal ahead 0.
 
-**Rilis terakhir yang mengubah KODE:** `af839e1` (tombol DOWNLOAD melayang + modal provider — DIRILIS 2026-09-25). **Perubahan DATA terakhir:** `4e0c464` (tahun 34 serial disebar — lihat peringatan di bawah; `git revert` TIDAK memulihkan yang ini).
+**Rilis terakhir yang mengubah KODE:** `00a69b4` (navbar dirampingkan — menu Discover · Shorts · My List dilepas dari tampilan; DIRILIS & terverifikasi tayang 2026-09-25 sore). Sebelumnya `af839e1` (tombol DOWNLOAD melayang + modal provider). **Perubahan DATA terakhir:** `4e0c464` (tahun 34 serial disebar — lihat peringatan di bawah; `git revert` TIDAK memulihkan yang ini).
 
 > **🪤 Jangan tulis hash `HEAD` di baris ini — itu mustahil benar.** Commit paling akhir di kedua remote SELALU commit CATATAN, dan commit catatan itu sendiri baru lahir SESUDAH baris ini diketik — jadi angka apa pun yang ditulis di sini basi begitu di-push. Sudah terjadi dua kali berturut-turut (`2af96b6` ditulis padahal `0ab70ad`, lalu `0ab70ad` ditulis padahal `a654919`), dan menambalnya dengan angka baru cuma mengulang lingkarannya. **Yang benar: sebut hash rilis KODE/DATA di atas (stabil, tidak ikut bergeser oleh commit catatan), lalu baca posisi sebenarnya langsung dari server** — `git fetch origin && git fetch dramaku && git rev-parse origin/main dramaku/main`. Dua baris hash yang keluar sama = antrean kosong.
 >
@@ -93,7 +93,7 @@ Catatan 2026-09-21 menulis "sebabnya belum terjelaskan dan JANGAN ditebak". Seka
 
 ---
 
-## 2026-09-25 (sore) — navbar dirampingkan: Discover · Shorts · My List DILEPAS dari tampilan (⚠️ BELUM di-commit, BELUM dirilis)
+## 2026-09-25 (sore) — navbar dirampingkan: Discover · Shorts · My List DILEPAS dari tampilan (`00a69b4`, ✅ DIRILIS & TERVERIFIKASI TAYANG)
 
 **Permintaan owner:** kepala situs dibuat lebih mirip Layarkaca21 — hapus menu **Discover**, **Shorts**, **My List** dari tampilan, dengan syarat tegas *"jangan hapus fitur di belakangnya"* dan jangan menyentuh API / Supabase / sistem video.
 
@@ -114,7 +114,9 @@ Catatan 2026-09-21 menulis "sebabnya belum terjelaskan dan JANGAN ditebak". Seka
 
 **Uji-rusak penjaga baru (bukti tesnya sungguh menggigit, bukan lulus kosong):** mengembalikan `grid-cols-4` → **1 tes merah**; memasang balik menu Discover ke `LINKS` → **2 tes merah**; dipulihkan → 89 hijau lagi.
 
-**Status:** perubahan ada di working tree, **belum di-commit dan belum di-push**. Rilis = keputusan owner. Kalau dirilis, jalankan gerbang pra-rilis `AGENTS.local.md` aturan 6 (`rm -rf .next` → `build` → `tsc` → `test` → dual push ke `origin` **dan** `dramaku`).
+**Status: ✅ DIRILIS 2026-09-25 sore (`00a69b4`).** Gerbang §6 penuh dijalankan dengan urutan benar (`rm -rf .next` → build **exit 0** → `tsc` **exit 0** → **964 tes hijau** → nol berkas env ter-stage), lalu dual push `f0f6a66..00a69b4` — cermin (`dramaku`) dulu baru produksi (`origin`), dua-duanya fast-forward. **Terbukti tayang ~30 detik sesudah push** (Etag `svw0k6og5r2lc7` → `baab3ad691a144964f476ee57e20700a`): navbar produksi tinggal `/beranda · /playly · /profile` dengan **0 kemunculan** teks Discover/Shorts/My List, bar bawah **2 tab**, dan `/discover` `/shorts` `/my-list` `/discover?q=naga` semuanya balas **200**. Rinciannya + cara rollback ada di `antrean-deploy.md` entri teratas.
+
+**⚠️ `next-env.d.ts` SENGAJA tidak ikut di-commit.** `next dev` mengubah isinya jadi menunjuk `./.next/dev/types/…`; kalau versi itu ter-commit, `tsc` di mesin yang hanya menjalankan `build` akan mencari folder yang tak pernah dibuat — varian baru jebakan TS2304 di aturan 6. `npm run build` mengembalikannya sendiri (terbukti: working tree bersih lagi sesudah build).
 
 ---
 

@@ -11,6 +11,26 @@
 
 **Terakhir diisi:** 2026-09-25.
 
+## 2026-09-25 (malam, komputer OWNER) — Kerja rekan ditarik & DUAL PUSH DITUNTASKAN (`35fd43d..625fe95`)
+
+**✅ Produksi `origin` (`masradenbagus89-ui/dramaapp`) sekarang di `625fe95`.** Diukur, bukan diasumsikan: `git ls-remote origin refs/heads/main` dan `git ls-remote dramaku refs/heads/main` **dua-duanya** memulangkan `625fe954daa1f0eabf602f5608a95ad14b16d5de`, sama dengan `main` lokal. Push fast-forward, nol paksaan. Ini menutup 403 yang menghalangi rekan.
+
+**🪤 KOREKSI ATAS CATATAN SEKSI DI BAWAH — jangan diulang, nama remote BERBEDA ARTI di dua komputer.** Seksi berikutnya menulis *"SUDAH DIDORONG KE PRODUKSI `origin`"*. Itu benar **menurut komputer rekan**, di mana `origin` menunjuk ke `ojokesusu/dramaku` — repo **cermin**, yang tidak merilis apa pun. Di komputer owner, `origin` justru repo **produksi**. Akibat nyatanya: sepanjang malam produksi masih tertinggal di `35fd43d` padahal catatan berbunyi "sudah dirilis", dan tidak ada yang tahu sampai hash-nya benar-benar dibaca. **Aturan yang lahir: di berkas catatan, JANGAN menyebut remote dengan nama pendeknya (`origin`/`dramaku`) — tulis nama repo lengkapnya** (`masradenbagus89-ui/dramaapp` = produksi · `ojokesusu/dramaku` = cermin). Nama pendek adalah setelan lokal tiap komputer, bukan fakta bersama.
+
+**🔎 Aturan 7 lebih parah dari yang tercatat: KEDUA komputer memakai identitas git yang SAMA PERSIS.** `git config user.name` + `user.email` di komputer **owner** juga `masradenbagus89-ui <zyyherlambang@gmail.com>` — identik dengan komputer rekan. Jadi bukan cuma "commit rekan ber-author owner"; **riwayat git sama sekali tidak menyimpan pembeda** antara kedua orang, dan tidak ada cara membedakannya setelah kejadian. Satu-satunya jejak yang sempat terbaca adalah pesan error push (`denied to yusufscorpio`). Setelan ini tidak kuubah — itu milik owner; kalau mau dibereskan, jalankan di komputer owner: `git config user.email "dokterbrutal@gmail.com"`.
+
+**Yang ditarik (4 commit, author tertulis identitas owner tapi yang mengerjakan rekan — kekambuhan `AGENTS.local.md` aturan 7):** `0a04e2b` catatan sesi 24-09 yang ternyata tak pernah ter-push · `4b014df` fitur kotak info Playly · `c61ccbb` merge dengan rilis navbar · `625fe95` catatan serah-terima.
+
+**Branch rekan: nol yang tertinggal.** Kelima branch di cermin (`chore/gitignore-claude-memory`, `feat/playly-integrasi`, `feat/playly-webhook`, `fix/playly-otomatis`, `redesign/playly-card`) sudah jadi nenek-moyang `main` — `git rev-list --count main..dramaku/<branch>` = **0** untuk semuanya. Kerja kali ini memang dilakukan langsung di `main` cermin, bukan lewat branch.
+
+**Bukti gerbang pra-rilis (`AGENTS.local.md` aturan 6, dijalankan ulang di komputer owner — bukan menyalin angka rekan):** `rm -rf .next` → `npm run build` **exit 0** → `npx tsc --noEmit` **exit 0** → `npm test` **986 tes / 67 berkas hijau** → saringan berkas sensitif **nol** `.env`/kunci di 14 berkas yang didorong. Angka tes berbeda dari "973" di catatan rekan; yang berlaku adalah **986**, hasil pengukuran di repo sesudah merge.
+
+**✔️ Jebakan dev-server dihindari kali ini.** Sebelum `npm run build`, port 3000/3001/3099 diperiksa lebih dulu (pelajaran `docs/lintasai/INDEX.md` 2026-09-25). Port 3001 memang dipakai sebuah `node.exe`, tapi ia membalas **HTTP 000** (koneksi gagal) dan folder `.next/dev` tidak ada — jadi bukan dev server dramaapp, dan build aman dijalankan. **Cara memeriksanya: bukan sekadar "port terpakai atau tidak", tapi apakah port itu benar-benar melayani aplikasi ini.**
+
+**❓ BELUM terbukti tayang di situs sungguhan.** Push ≠ tayang: Vercel masih perlu membangun ulang. **Sengaja TIDAK di-polling** (pelajaran 2026-09-24: loop `curl` memicu Vercel Security Checkpoint dan memblokir komputer sendiri). Owner yang membuktikan — buka `https://dramaapp.vercel.app/playly`, di bawah pemutar harus muncul kotak putih berisi judul + tombol DOWNLOAD/Bagikan/Simpan. Dashboard Vercel → Deployments → cari `625fe95` menjawabnya dalam sedetik.
+
+---
+
 ## 2026-09-25 — Kotak info + tombol Download/Bagikan/Simpan di bawah pemutar Playly (`4b014df` → dirilis `c61ccbb`)
 
 **✅ SUDAH DIDORONG KE PRODUKSI `origin` (`35fd43d..c61ccbb`, fast-forward). ❌ DUAL PUSH TIDAK TUNTAS: `dramaapp` menolak 403** karena kredensial GitHub di komputer ini milik `yusufscorpio`, bukan owner — `dramaapp/main` masih di `35fd43d`. Rinciannya + cara membereskan ada di `antrean-deploy.md`. **Belum diverifikasi tayang di situs sungguhan** — sengaja TIDAK di-polling otomatis (pelajaran 2026-09-24: loop `curl` memicu Vercel Security Checkpoint dan memblokir komputer sendiri); owner yang membuka browser.
@@ -49,9 +69,9 @@
 
 ## ⚡ KEADAAN SEKARANG (baca ini dulu — 30 detik)
 
-**Antrean KOSONG.** `origin/main` = `dramaku/main`, lokal ahead 0.
+**Antrean KOSONG** per 2026-09-25 malam — ketiganya (`main` lokal · produksi `masradenbagus89-ui/dramaapp` · cermin `ojokesusu/dramaku`) terukur sama di `625fe95`.
 
-**Rilis terakhir yang mengubah KODE:** `00a69b4` (navbar dirampingkan — menu Discover · Shorts · My List dilepas dari tampilan; DIRILIS & terverifikasi tayang 2026-09-25 sore). Sebelumnya `af839e1` (tombol DOWNLOAD melayang + modal provider). **Perubahan DATA terakhir:** `4e0c464` (tahun 34 serial disebar — lihat peringatan di bawah; `git revert` TIDAK memulihkan yang ini).
+**Rilis terakhir yang mengubah KODE:** `4b014df` (kotak info Playly + tombol DOWNLOAD/Bagikan/Simpan di bawah pemutar, masuk lewat merge `c61ccbb`; dirilis ke produksi 2026-09-25 malam, **belum diverifikasi tayang** — owner yang membuka browser). Sebelumnya `00a69b4` (navbar dirampingkan — menu Discover · Shorts · My List dilepas dari tampilan; DIRILIS & terverifikasi tayang 2026-09-25 sore). Sebelumnya `af839e1` (tombol DOWNLOAD melayang + modal provider). **Perubahan DATA terakhir:** `4e0c464` (tahun 34 serial disebar — lihat peringatan di bawah; `git revert` TIDAK memulihkan yang ini).
 
 > **🪤 Jangan tulis hash `HEAD` di baris ini — itu mustahil benar.** Commit paling akhir di kedua remote SELALU commit CATATAN, dan commit catatan itu sendiri baru lahir SESUDAH baris ini diketik — jadi angka apa pun yang ditulis di sini basi begitu di-push. Sudah terjadi dua kali berturut-turut (`2af96b6` ditulis padahal `0ab70ad`, lalu `0ab70ad` ditulis padahal `a654919`), dan menambalnya dengan angka baru cuma mengulang lingkarannya. **Yang benar: sebut hash rilis KODE/DATA di atas (stabil, tidak ikut bergeser oleh commit catatan), lalu baca posisi sebenarnya langsung dari server** — `git fetch origin && git fetch dramaku && git rev-parse origin/main dramaku/main`. Dua baris hash yang keluar sama = antrean kosong.
 >

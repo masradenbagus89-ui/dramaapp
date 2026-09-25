@@ -3,7 +3,21 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-09-25 (malam) — **✅ KOTAK INFO PLAYLY DIRILIS ke produksi, TAPI DUAL PUSH TIDAK TUNTAS.** `35fd43d..c61ccbb` masuk ke **`origin`** (`ojokesusu/dramaku`, fast-forward, nol paksaan). Push ke **`dramaapp`** (`masradenbagus89-ui/dramaapp`) **GAGAL 403** — `dramaapp/main` masih tertinggal di `35fd43d`.
+**Terakhir dicek:** 2026-09-25 (malam, **komputer OWNER**) — **✅ ANTREAN KOSONG, DUAL PUSH TUNTAS.** `35fd43d..625fe95` didorong ke produksi `masradenbagus89-ui/dramaapp` (fast-forward, nol paksaan). Cermin `ojokesusu/dramaku` sudah lebih dulu memuatnya dari rekan. Terukur sama persis di ketiga tempat: `625fe954daa1f0eabf602f5608a95ad14b16d5de`.
+
+> **🪤 PELAJARAN UTAMA MALAM INI: nama pendek remote (`origin`, `dramaku`) BERBEDA ARTI di komputer owner dan komputer rekan — dan itu membuat catatan rilis terbaca terbalik.** Entri di bawah menulis "DIRILIS ke produksi `origin`"; di komputer rekan `origin` = `ojokesusu/dramaku` = **cermin**, yang tidak merilis apa pun. Di komputer owner `origin` justru **produksi**. Kenyataannya produksi tertinggal di `35fd43d` semalaman sementara catatan berbunyi "sudah dirilis". **Aturan: di berkas catatan tulis nama repo LENGKAP** — `masradenbagus89-ui/dramaapp` (produksi, push ke `main` = tombol rilis) · `ojokesusu/dramaku` (cermin, tidak merilis). Nama pendek adalah setelan lokal tiap komputer, bukan fakta bersama. Catatan "remote `dramaku` sudah tidak ada" di bawah juga hanya berlaku di komputer rekan — **di komputer owner ketiga remote (`origin`, `dramaku`, `official`) masih terpasang**, dan `official` (`projectraden/backup-dramaapp`) memulangkan `Repository not found` saat fetch.
+
+**Apa yang dirilis:** kotak info Playly + tombol DOWNLOAD/Bagikan/Simpan di bawah pemutar (kerja rekan, `4b014df` lewat merge `c61ccbb`), plus 2 commit catatan. Rincian fitur & tiga pagar yang gampang dirusak ada di `HANDOFF.md`.
+
+**Gerbang §6 dijalankan ULANG di komputer owner** (bukan menyalin angka rekan): `rm -rf .next` → `npm run build` **exit 0** → `npx tsc --noEmit` **exit 0** → `npm test` **986 tes / 67 berkas hijau** → nol berkas `.env`/kunci di 14 berkas yang didorong. Angka rekan menulis 973; yang berlaku **986**. Sebelum build, port 3000/3001/3099 diperiksa lebih dulu (pelajaran dev-server 2026-09-25): port 3001 dipakai `node.exe` tapi membalas **HTTP 000** dan `.next/dev` tidak ada → bukan dev server dramaapp, build aman.
+
+**❓ Belum diverifikasi tayang** — sengaja tanpa polling (pelajaran Vercel Security Checkpoint 2026-09-24). Owner membuka `https://dramaapp.vercel.app/playly` atau dashboard Vercel → Deployments → `625fe95`.
+
+**Rollback rilis ini:** `git revert --no-edit 4b014df && git push origin main && git push dramaku main`. **Nol SQL, nol env baru** — revert saja memulihkan sepenuhnya.
+
+---
+
+**Sebelumnya, 2026-09-25 (malam, komputer REKAN)** — **⚠️ catatan ini memakai arti `origin` versi komputer rekan, baca koreksi di atas.** **KOTAK INFO PLAYLY DIRILIS ke cermin, DUAL PUSH TIDAK TUNTAS.** `35fd43d..c61ccbb` masuk ke **`origin`** (`ojokesusu/dramaku`, fast-forward, nol paksaan). Push ke **`dramaapp`** (`masradenbagus89-ui/dramaapp`) **GAGAL 403** — `dramaapp/main` masih tertinggal di `35fd43d`.
 
 > **🔑 Sebabnya bukan salah perintah: kredensial GitHub di komputer ini milik `yusufscorpio`, bukan owner.** Pesan aslinya: `Permission to masradenbagus89-ui/dramaapp.git denied to yusufscorpio`. Akun itu memang hanya punya akses tulis ke repo cermin (`AGENTS.local.md` pembagian kerja). **Akibatnya aturan dual-push MUSTAHIL dituntaskan dari komputer ini** sampai kredensialnya diganti milik owner (`gh auth login` atau Windows Credential Manager). Jangan diakali dengan `--force` atau mengganti URL remote.
 >

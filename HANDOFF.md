@@ -11,7 +11,9 @@
 
 **Terakhir diisi:** 2026-09-25.
 
-## 2026-09-25 — Kotak info + tombol Download/Bagikan/Simpan di bawah pemutar Playly (`4b014df`)
+## 2026-09-25 — Kotak info + tombol Download/Bagikan/Simpan di bawah pemutar Playly (`4b014df` → dirilis `c61ccbb`)
+
+**✅ SUDAH DIDORONG KE PRODUKSI `origin` (`35fd43d..c61ccbb`, fast-forward). ❌ DUAL PUSH TIDAK TUNTAS: `dramaapp` menolak 403** karena kredensial GitHub di komputer ini milik `yusufscorpio`, bukan owner — `dramaapp/main` masih di `35fd43d`. Rinciannya + cara membereskan ada di `antrean-deploy.md`. **Belum diverifikasi tayang di situs sungguhan** — sengaja TIDAK di-polling otomatis (pelajaran 2026-09-24: loop `curl` memicu Vercel Security Checkpoint dan memblokir komputer sendiri); owner yang membuka browser.
 
 **Status: di-commit `4b014df`, lalu di-merge dengan `origin/main` yang sudah maju 3 commit.** Saat hendak push, kedua remote ternyata sudah di `35fd43d` — ada rilis navbar (`00a69b4`, menu Discover/Shorts/My List dilepas) yang masuk **di tengah** sesi ini. **Kode nol bertabrakan** (mereka navbar, kita Playly); satu-satunya bentrok di `HANDOFF.md`, dan sisi `origin` kosong di posisi itu sehingga tidak ada catatan siapa pun yang tertimpa — diperiksa dengan membandingkan daftar judul seksi sebelum & sesudah merge, **nol judul hilang** (pelajaran 2026-09-24: merge menerima penghapusan tanpa menandainya sebagai bentrok). Branch cadangan sebelum merge: `cadangan/kotak-info-playly-2026-09-25`.
 

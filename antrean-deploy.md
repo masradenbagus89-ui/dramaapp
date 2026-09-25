@@ -3,7 +3,15 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-09-25 (sore) — **✅ NAVBAR DIRAMPINGKAN & DIRILIS, antrean KOSONG.** Satu commit `00a69b4` dikirim ke **kedua** repo (`f0f6a66..00a69b4`, dua-duanya fast-forward, nol paksaan). Urutannya cermin dulu (`dramaku`) baru produksi (`origin`), supaya masalah otentikasi ketahuan sebelum tombol rilis ditekan. Posisi sebenarnya: baca `git fetch origin && git fetch dramaku && git rev-parse origin/main dramaku/main`.
+**Terakhir dicek:** 2026-09-25 (malam) — **✅ KOTAK INFO PLAYLY DIRILIS ke produksi, TAPI DUAL PUSH TIDAK TUNTAS.** `35fd43d..c61ccbb` masuk ke **`origin`** (`ojokesusu/dramaku`, fast-forward, nol paksaan). Push ke **`dramaapp`** (`masradenbagus89-ui/dramaapp`) **GAGAL 403** — `dramaapp/main` masih tertinggal di `35fd43d`.
+
+> **🔑 Sebabnya bukan salah perintah: kredensial GitHub di komputer ini milik `yusufscorpio`, bukan owner.** Pesan aslinya: `Permission to masradenbagus89-ui/dramaapp.git denied to yusufscorpio`. Akun itu memang hanya punya akses tulis ke repo cermin (`AGENTS.local.md` pembagian kerja). **Akibatnya aturan dual-push MUSTAHIL dituntaskan dari komputer ini** sampai kredensialnya diganti milik owner (`gh auth login` atau Windows Credential Manager). Jangan diakali dengan `--force` atau mengganti URL remote.
+>
+> **⚠️ Ketidakcocokan identitas yang ikut ketahuan (`AGENTS.local.md` aturan 7):** `git config user.name` di sini = `masradenbagus89-ui <zyyherlambang@gmail.com>`, jadi commit `4b014df` & `c61ccbb` ber-**author owner** padahal yang **mendorong** akun rekan. Riwayat git tetap tidak bisa menjawab "siapa mengerjakan ini".
+>
+> **⚠️ Remote bernama `dramaku` SUDAH TIDAK ADA** di komputer ini — `git remote -v` cuma memulangkan `origin` + `dramaapp`. Perintah di baris atas yang menyebut `git fetch dramaku` akan gagal; pakai `git fetch origin && git fetch dramaapp && git rev-parse origin/main dramaapp/main`.
+
+**Sebelumnya, 2026-09-25 (sore) — ✅ NAVBAR DIRAMPINGKAN & DIRILIS, antrean KOSONG.** Satu commit `00a69b4` dikirim ke **kedua** repo (`f0f6a66..00a69b4`, dua-duanya fast-forward, nol paksaan). Urutannya cermin dulu (`dramaku`) baru produksi (`origin`), supaya masalah otentikasi ketahuan sebelum tombol rilis ditekan. Posisi sebenarnya: baca `git fetch origin && git fetch dramaku && git rev-parse origin/main dramaku/main`.
 
 **Apa yang dirilis:** menu **Discover · Shorts · My List** dilepas dari tampilan atas permintaan owner (kepala situs dirampingkan meniru Layarkaca21). Tiga tempat diubah serentak — navbar hitam (`TopNav.LINKS`), menu garis-tiga di `/beranda` & `/discover` (`KepalaKatalog.TUJUAN`), dan bar bawah HP (`BottomNav.TABS`, 4 tab → 2, dipilih owner lewat popup). **Yang dilepas HANYA tombolnya** — route ketiganya tetap hidup, dan `AKAR_BERNAVBAR_ATAS` sengaja tidak ikut dipangkas supaya halamannya tetap punya navigasi saat dibuka.
 

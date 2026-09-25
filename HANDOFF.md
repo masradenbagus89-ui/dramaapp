@@ -9,19 +9,21 @@
 >
 > **📦 Berkas ini sudah 2.980 baris / ±240 KB** dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-09-24.
+**Terakhir diisi:** 2026-09-25.
 
 ## ⚡ KEADAAN SEKARANG (baca ini dulu — 30 detik)
 
 **Antrean KOSONG.** `origin/main` = `dramaku/main`, lokal ahead 0.
 
-**Rilis terakhir yang mengubah KODE/DATA:** `2af96b6` (tombol DOWNLOAD dihapus) · `4e0c464` (tahun 34 serial disebar — perubahan DATA, lihat peringatan di bawah).
+**Rilis terakhir yang mengubah KODE:** `af839e1` (tombol DOWNLOAD melayang + modal provider — DIRILIS 2026-09-25). **Perubahan DATA terakhir:** `4e0c464` (tahun 34 serial disebar — lihat peringatan di bawah; `git revert` TIDAK memulihkan yang ini).
 
 > **🪤 Jangan tulis hash `HEAD` di baris ini — itu mustahil benar.** Commit paling akhir di kedua remote SELALU commit CATATAN, dan commit catatan itu sendiri baru lahir SESUDAH baris ini diketik — jadi angka apa pun yang ditulis di sini basi begitu di-push. Sudah terjadi dua kali berturut-turut (`2af96b6` ditulis padahal `0ab70ad`, lalu `0ab70ad` ditulis padahal `a654919`), dan menambalnya dengan angka baru cuma mengulang lingkarannya. **Yang benar: sebut hash rilis KODE/DATA di atas (stabil, tidak ikut bergeser oleh commit catatan), lalu baca posisi sebenarnya langsung dari server** — `git fetch origin && git fetch dramaku && git rev-parse origin/main dramaku/main`. Dua baris hash yang keluar sama = antrean kosong.
 >
 > ⚠️ Jangan tambahkan `--short` di perintah itu: `git rev-parse --short A B` membalas `fatal: Needed a single revision` — bendera itu hanya melayani SATU revisi. Diuji 2026-09-23; versi pertama baris ini memuat `--short` dan memang gagal dijalankan. Perlu hash pendek? Baca satu per satu, atau ambil 7 huruf pertamanya.
 
 **✅ TOMBOL DOWNLOAD DIPASANG KEMBALI 2026-09-24 atas permintaan BARU owner — larangan di bawah SUDAH TERCABUT, jangan dihapus lagi.** Owner mengirim tangkapan layar `/drama/over-your-dead-body` dengan tombol pink DOWNLOAD dilingkari merah dan meminta dimunculkan kembali. Larangan lama memang mensyaratkan "tanpa permintaan owner" — permintaan itu sekarang ADA, jadi syaratnya terpenuhi. **Owner juga sudah memilih cakupannya lewat popup:** tombol muncul di **semua 42 judul**, dan serial **tetap** berlabel `DOWNLOAD EP 1` (bukan `DOWNLOAD` polos) — sebab jalur ini memang hanya mengambil episode 1, dan label polos di serial 56 episode menjanjikan yang tidak diberikan. Jadi label `DOWNLOAD EP 1` yang kemarin dikeluhkan itu **disengaja dan disetujui owner**, bukan kelalaian yang perlu "dibetulkan" sesi berikutnya.
+
+**🔴 KOREKSI 2026-09-25 atas paragraf di atas — dua angka & satu dasar keputusan di situ TIDAK akurat.** (a) **Dasar izinnya bukan tangkapan layar 24 September.** Ditanya langsung 2026-09-25, owner menjawab *"saya kurang paham jadi apa yang saya harus lakukan"* — klaim itu tak pernah ia konfirmasi ulang maupun bantah. Yang sah: owner memilih **"Ya, pasang ke situs asli"** setelah dibuatkan gambar perbandingan dua layar HP. (b) **Bukan 42 judul, melainkan 34 — dan NOL film.** `GET /api/dramas` produksi hari ini memulangkan 34 judul yang semuanya serial, jadi **tidak ada satu pun tombol berlabel `DOWNLOAD` polos**; semua berlabel `DOWNLOAD EP 1`. Sudah DIRILIS & terbukti tayang 2026-09-25 — lihat seksi 2026-09-25 di bawah.
 
 **Catatan riwayat (jangan dipakai menyalahkan siapa pun):** commit penghapusan `2af96b6` ber-author identitas owner dan bertuliskan "permintaan owner", sementara owner mengingatnya sebagai kerja rekan. Riwayat git memang **tidak bisa** menjawabnya — identitas git belum dipisah antar-komputer (`AGENTS.local.md` aturan 7) dan `0ab70ad` mencatat **dua sesi AI berjalan bersamaan** hari itu. Dugaan terkuat: yang dihapus adalah tombol versi LAMA (sebaris dengan Mulai Nonton), sedangkan yang owner inginkan adalah versi MELAYANG di bawah badge Subtitle — versi itu belum pernah masuk git saat penghapusan terjadi.
 
@@ -88,6 +90,22 @@ Yang BENAR dan sudah terverifikasi: **nama remote berbeda per komputer.** Di kom
 Catatan 2026-09-21 menulis "sebabnya belum terjelaskan dan JANGAN ditebak". Sekarang sudah diukur dan **direproduksi di tes**: `usePathname()` di `TopNav`/`BottomNav` menerima nilai yang **bukan** `/` saat pra-render alamat akar; `?? "/"` tidak menangkapnya (operator `??` hanya menangkap `null`/`undefined`, **bukan string kosong**); dan logikanya berbentuk **denylist** sehingga nilai apa pun yang tak dikenali membuat navbar **MUNCUL**. Rinciannya di seksi 2026-09-22 di bawah.
 
 ⚠️ **Koreksi atas catatan 2026-09-21 itu sendiri.** Kalimat *"`TopNav` menggambar menunya dalam keadaan tidak ada yang aktif, yang justru konsisten dengan `pathname === "/"`"* **menyimpulkan ke arah yang salah**. Keadaan "tak ada satu pun menu aktif" justru konsisten dengan `pathname` yang **BUKAN** `/` — sebab kalau nilainya benar-benar `/`, penyaring `PUBLIC_PATHS` sudah memulangkan `null` dan navbarnya tak tergambar sama sekali. Petunjuk itu sebenarnya sudah menunjuk jawabannya sejak semalam, cuma dibaca terbalik.
+
+---
+
+## 2026-09-25 — tombol DOWNLOAD DIRILIS & TERBUKTI TAYANG + dasar persetujuannya dikoreksi
+
+**✅ SUDAH DI-PUSH DAN SUDAH TAYANG.** `b173e7f..26c7415` ke `origin` (fast-forward). `dramaku` sudah memuat ketiganya lebih dulu, jadi rilis ini menyusulkan produksi — tidak ada push kedua. Rincian gerbang + bukti lengkap ada di `antrean-deploy.md` entri teratas.
+
+**⚠️ IZIN RILISNYA BUKAN DARI KLAIM TANGKAPAN LAYAR 24 SEPTEMBER — jangan salah rujuk.** Seksi 2026-09-24 di bawah menulis larangan dicabut karena "owner mengirim tangkapan layar 2026-09-24". Ketika ditanya langsung hari ini, owner menjawab **"saya kurang paham jadi apa yang saya harus lakukan"** — klaim itu **tidak pernah ia konfirmasi ulang, dan tidak juga ia bantah**. Yang benar-benar menjadi dasar rilis: AI membuatkan gambar perbandingan dua layar HP (situs asli tanpa tombol ↔ versi bertombol), owner melihatnya, lalu memilih **"Ya, pasang ke situs asli"**. **Rujuk keputusan 2026-09-25 atas bukti visual, jangan rujuk klaim yang tak berjejak itu.** Pelajaran prosesnya: owner non-programmer tidak bisa menjawab pertanyaan berisi istilah teknis — begitu pertanyaan diganti menjadi **gambar "sekarang begini ↔ nanti begini"**, keputusannya keluar dalam satu langkah.
+
+**🪤 ANGKA "42 JUDUL / 7 FILM" TERNYATA TIDAK COCOK DENGAN KENYATAAN — jangan diulang tanpa mengukur.** `GET https://dramaapp.vercel.app/api/dramas` hari ini memulangkan **34 judul, NOL berepisode 1** (semuanya serial); katalog lokal memulangkan 34/0 yang sama persis, jadi ini bukan data lokal basi. **Akibat nyata: SEMUA judul memakai label `DOWNLOAD EP 1`, dan cabang label `DOWNLOAD` polos untuk film tidak pernah tergambar sama sekali.** Sebabnya BELUM diselidiki — ukur dulu lewat REST Supabase (`Accept-Profile: dramaapp`), jangan tebak.
+
+**❓ Belum terbukti, diwarisi dari 24 September:** modal pilihan provider masih **0 dari 34 judul** terisi → semua tombol memakai jalur lama `/api/download`; owner harus mengisi manual lewat panel admin kalau mau fitur itu hidup. Sticky di HP sungguhan juga belum diketuk jari.
+
+**🔧 Screenshot situs TANPA memasang playwright/puppeteer** (terbukti jalan di komputer ini): `"/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe" --headless=new --disable-gpu --no-sandbox --hide-scrollbars --user-data-dir=<profil sementara> --virtual-time-budget=10000 --window-size=390,844 --screenshot=<keluaran.png> <url>`. Sisi kanan gambar SELALU terpotong di lebar 390 — terbukti terpotong sama persis di produksi yang belum diubah, **jadi artefak alat, bukan kerusakan tata letak**. Berguna untuk menanyakan keputusan visual ke owner.
+
+**Rollback:** `git revert --no-edit 26c7415 571cb02 af839e1 && git push origin main && git push dramaku main`. Nol SQL, nol env baru.
 
 ---
 

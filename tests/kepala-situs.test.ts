@@ -61,8 +61,10 @@ describe("navbar hitam (TopNav)", () => {
         `${path} kehilangan navbar padahal tidak punya bar cari — ` +
           `di layar komputer halaman ini jadi tak punya navigasi sama sekali`,
       ).toContain("<header");
-      // Pagar isi: bukan cuma ada, tapi memang membawa jalannya.
-      expect(html).toContain("/discover");
+      // Pagar isi: bukan cuma ada, tapi memang membawa jalannya. Dulu memakai
+      // "/discover"; menunya dilepas 2026-09-25 jadi patokannya dipindah ke
+      // tujuan yang masih tersisa di navbar.
+      expect(html).toContain("/beranda");
       expect(html).toContain("/playly");
     });
   }
@@ -81,10 +83,7 @@ describe("menu garis-tiga (pengganti navbar di halaman berkatalog)", () => {
     // selalu memulangkan "tidak ada" — dan itu bukan bug.
     expect(TUJUAN.map((t) => t.href)).toEqual([
       "/beranda",
-      "/discover",
-      "/shorts",
       "/playly",
-      "/my-list",
       "/profile",
       "/admin",
     ]);
@@ -431,4 +430,100 @@ describe("susunan kepala katalog punya SATU sumber", () => {
       ).not.toMatch(/brand:\s*<MenuAplikasi/);
     });
   }
+});
+
+// ===========================================================================
+// PENJAGA 2026-09-25 — "menu dilepas, HALAMANNYA tetap hidup".
+//
+// Owner meminta Discover · Shorts · My List hilang dari tampilan, dengan syarat
+// tegas: fitur di belakangnya JANGAN ikut dihapus. Dua arah kerusakan yang
+// sama-sama SENYAP dijaga di sini:
+//
+//  (a) Ada yang "merapikan" dengan menghapus route-nya. /discover paling
+//      berbahaya: ia mesin di balik SELURUH penyaring katalog (kotak cari,
+//      menu genre/negara, tiap "Lihat semua"), jadi membuangnya mematikan
+//      pencarian seluruh situs — dan tak satu pun tes navigasi lama menangkap
+//      itu, sebab mereka cuma memeriksa siapa yang MENGGAMBAR navigasi.
+//  (b) Ada yang memasang balik tombolnya tanpa sadar itu keputusan owner.
+// ===========================================================================
+const { existsSync } = await import("node:fs");
+const { alamatCari } = await import("../lib/nav-katalog");
+
+/** Yang tombolnya dilepas, beserta berkas halaman yang WAJIB tetap ada. */
+const DILEPAS_TAPI_HIDUP = [
+  { alamat: "/discover", berkas: "app/discover/page.tsx" },
+  { alamat: "/shorts", berkas: "app/shorts/page.tsx" },
+  { alamat: "/my-list", berkas: "app/my-list/page.tsx" },
+];
+
+describe("menu dilepas dari tampilan, halamannya TETAP hidup", () => {
+  for (const { alamat, berkas } of DILEPAS_TAPI_HIDUP) {
+    it(`${alamat} masih punya halamannya`, () => {
+      expect(
+        existsSync(berkas),
+        `${berkas} hilang. Owner 2026-09-25 meminta TOMBOLNYA saja yang ` +
+          `dilepas dari navbar — halamannya sengaja dibiarkan hidup dan ` +
+          `masih dicapai dari tempat lain`,
+      ).toBe(true);
+    });
+
+    it(`${alamat} tetap punya navigasi saat dibuka`, () => {
+      // Dibuka lewat alamat langsung, hasil Google, atau tautan dari halaman
+      // lain — penonton yang sampai ke sana tidak boleh terkurung tanpa jalan
+      // pulang hanya karena tombolnya dilepas dari navbar.
+      expect(
+        punyaNavbarAtas(alamat) || punyaNavigasiBawah(alamat),
+        `${alamat} kehilangan SELURUH navigasi bawaan`,
+      ).toBe(true);
+    });
+
+    it(`${alamat} TIDAK muncul lagi sebagai menu`, () => {
+      // Kalau suatu saat dipasang balik, ini merah lebih dulu — memasangnya
+      // kembali harus keputusan owner yang sadar, bukan sisipan diam-diam.
+      expect(LINKS.map((l) => l.href)).not.toContain(alamat);
+      expect(TUJUAN.map((t) => t.href)).not.toContain(alamat);
+    });
+  }
+
+  it("kotak cari masih bermuara ke /discover", () => {
+    // Jalan UTAMA yang tersisa menuju /discover. Kalau ini putus, melepas
+    // tombolnya berubah jadi benar-benar mematikan fiturnya.
+    expect(alamatCari("naga")).toBe("/discover?q=naga");
+    expect(alamatCari("")).toBe("/discover");
+  });
+
+  it("/profile masih menyimpan jalan ke /my-list", () => {
+    // Diperiksa dari sumbernya: keduanya komponen dasbor yang butuh data
+    // penonton, jadi merendernya di sini berarti menyeret seluruh lapisan
+    // pengambilan data ke dalam tes navigasi.
+    const dasbor = readFileSync("app/components/profile/DashboardMenu.tsx", "utf-8");
+    const favorit = readFileSync("app/components/profile/FavoritesRow.tsx", "utf-8");
+    expect(
+      dasbor.includes('"/my-list"') || favorit.includes('"/my-list"'),
+      "tak ada lagi jalan ke /my-list dari /profile — sesudah tombolnya " +
+        "dilepas dari navbar & bar bawah HP, inilah jalan terakhirnya",
+    ).toBe(true);
+  });
+});
+
+describe("bar bawah HP ikut dirampingkan", () => {
+  const html = render("/beranda", BottomNav);
+
+  it("tinggal 2 tab, tanpa Shorts & My List", () => {
+    expect(html).not.toContain('href="/shorts"');
+    expect(html).not.toContain('href="/my-list"');
+    expect(html).toContain('href="/beranda"');
+    expect(html).toContain('href="/profile"');
+  });
+
+  it("jumlah kolom MENGIKUTI jumlah tab, bukan angka tulis-tangan", () => {
+    // Bug senyap yang dicegah: penanda aktif memakai `100 / TABS.length`,
+    // sedangkan gridnya dulu dipatok `grid-cols-4`. Begitu jumlah tab turun
+    // jadi 2, tombol cuma mengisi separuh kiri layar dan penanda kuningnya
+    // melayang di atas ruang kosong — tanpa satu pun error.
+    const jumlahTab = (html.match(/<a\b/g) ?? []).length;
+    expect(jumlahTab).toBe(2);
+    expect(html).toContain(`repeat(${jumlahTab},`);
+    expect(html).not.toContain("grid-cols-4");
+  });
 });

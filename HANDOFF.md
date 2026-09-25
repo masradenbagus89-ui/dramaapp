@@ -93,6 +93,31 @@ Catatan 2026-09-21 menulis "sebabnya belum terjelaskan dan JANGAN ditebak". Seka
 
 ---
 
+## 2026-09-25 (sore) — navbar dirampingkan: Discover · Shorts · My List DILEPAS dari tampilan (⚠️ BELUM di-commit, BELUM dirilis)
+
+**Permintaan owner:** kepala situs dibuat lebih mirip Layarkaca21 — hapus menu **Discover**, **Shorts**, **My List** dari tampilan, dengan syarat tegas *"jangan hapus fitur di belakangnya"* dan jangan menyentuh API / Supabase / sistem video.
+
+**Yang dikerjakan (4 berkas, semuanya TAMPILAN):**
+- `app/components/TopNav.tsx` — `LINKS` tinggal Beranda · Playly · Profile · Admin. Cabang `/discover` di `isActive()` ikut dibuang sebab tak punya pemanggil lagi.
+- `app/components/beranda/KepalaKatalog.tsx` — `TUJUAN` (menu garis-tiga di `/beranda` & `/discover`) dirampingkan **sama persis**. Wajib serentak: `tests/kepala-situs.test.ts` memaksa kedua daftar identik, dan kalau hanya navbar yang dipangkas, menu garis-tiga masih memajang ketiganya di halaman yang paling sering dibuka.
+- `app/components/BottomNav.tsx` — tab **Shorts** & **My List** dilepas (4 → 2 tab) atas pilihan owner lewat popup. Kalau hanya navbar komputer yang dirampingkan, pengguna HP masih melihat tombol yang sudah tidak ada di komputer.
+- `tests/kepala-situs.test.ts` — 2 patokan lama disesuaikan + **13 penjaga baru**.
+
+**🪤 Bug senyap yang ikut ketahuan & diperbaiki:** `BottomNav` menghitung penanda aktif dengan `100 / TABS.length` (dinamis) tapi gridnya dipatok `grid-cols-4` (tulis tangan). Begitu jumlah tab turun jadi 2, tombol cuma mengisi separuh kiri layar dan penanda kuningnya melayang di atas ruang kosong — **tanpa satu pun error**. Sekarang jumlah kolom mengikuti `TABS.length` lewat style inline (Tailwind memindai nama kelas secara STATIS, jadi `grid-cols-${n}` tidak pernah ikut ter-build). Penjaganya sudah dipasang.
+
+**⚠️ FITURNYA TIDAK DIHAPUS — jangan "merapikan" dengan membuang route-nya.** `/discover` adalah mesin di balik SELURUH penyaring katalog: kotak cari (`lib/nav-katalog.ts:75`), tiap menu genre/negara, tiap baris "Lihat semua". Membuangnya = mematikan pencarian seluruh situs. Jalan yang tersisa ke tiap halaman:
+- `/discover` — kotak cari, menu genre/negara, "Lihat semua" di beranda, tombol "Jelajahi drama" di `/history`, `/my-list`, `/playly`, dan halaman 404.
+- `/my-list` — `/profile` (`profile/DashboardMenu.tsx:41`, `FavoritesRow.tsx:58`) + baris "Favorit Saya" di beranda (`PersonalRows.tsx:155`).
+- `/shorts` — **TIDAK ADA lagi dari dalam situs.** Hanya lewat alamat langsung atau hasil Google (masih terdaftar di `app/sitemap.ts:13`). Ini konsekuensi yang disadari, bukan kelalaian — owner memang meminta tombolnya hilang. Kalau suatu saat `/shorts` perlu dijangkau lagi, itu keputusan owner, bukan tambalan diam-diam.
+
+**Bukti (dijalankan, bukan dibaca):** `npm run build` sukses — daftar route hasil build **masih memuat** `/discover`, `/shorts`, `/my-list` · `npx tsc --noEmit` **exit 0** · `npm test` **964 tes hijau (65 berkas)** · `git diff --name-only` = **nol** berkas `api/`, Supabase, migration, atau video tersentuh.
+
+**Uji-rusak penjaga baru (bukti tesnya sungguh menggigit, bukan lulus kosong):** mengembalikan `grid-cols-4` → **1 tes merah**; memasang balik menu Discover ke `LINKS` → **2 tes merah**; dipulihkan → 89 hijau lagi.
+
+**Status:** perubahan ada di working tree, **belum di-commit dan belum di-push**. Rilis = keputusan owner. Kalau dirilis, jalankan gerbang pra-rilis `AGENTS.local.md` aturan 6 (`rm -rf .next` → `build` → `tsc` → `test` → dual push ke `origin` **dan** `dramaku`).
+
+---
+
 ## 2026-09-25 — tombol DOWNLOAD DIRILIS & TERBUKTI TAYANG + dasar persetujuannya dikoreksi
 
 **✅ SUDAH DI-PUSH DAN SUDAH TAYANG.** `b173e7f..26c7415` ke `origin` (fast-forward). `dramaku` sudah memuat ketiganya lebih dulu, jadi rilis ini menyusulkan produksi — tidak ada push kedua. Rincian gerbang + bukti lengkap ada di `antrean-deploy.md` entri teratas.

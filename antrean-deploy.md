@@ -11,7 +11,7 @@
 
 **Gerbang §6 dijalankan ULANG di komputer owner** (bukan menyalin angka rekan): `rm -rf .next` → `npm run build` **exit 0** → `npx tsc --noEmit` **exit 0** → `npm test` **986 tes / 67 berkas hijau** → nol berkas `.env`/kunci di 14 berkas yang didorong. Angka rekan menulis 973; yang berlaku **986**. Sebelum build, port 3000/3001/3099 diperiksa lebih dulu (pelajaran dev-server 2026-09-25): port 3001 dipakai `node.exe` tapi membalas **HTTP 000** dan `.next/dev` tidak ada → bukan dev server dramaapp, build aman.
 
-**❓ Belum diverifikasi tayang** — sengaja tanpa polling (pelajaran Vercel Security Checkpoint 2026-09-24). Owner membuka `https://dramaapp.vercel.app/playly` atau dashboard Vercel → Deployments → `625fe95`.
+**✅ TERBUKTI TER-DEPLOY** (tanpa polling, ±15 permintaan sekali jalan). Fitur yang dirender di browser tidak muncul di HTML, jadi dibuktikan lewat **berkas JavaScript-nya**: `chunks/2ae9em56a8giz.js` memuat utuh `Unduhan untuk video ini belum tersedia. Fiturnya sedang disiapkan.` — kalimat yang satu-satunya sumbernya `InfoVideoPlayly.tsx:194`. Penanda harus **unik**: "Bagikan"/"DOWNLOAD" sudah ada sejak `ShareButton`/`DownloadButton` lama, jadi keduanya bukan bukti. Rincian metodenya di `HANDOFF.md`. Sisa yang belum: **tampilannya belum dilihat mata manusia** — owner klik satu kartu di `/playly`.
 
 **Rollback rilis ini:** `git revert --no-edit 4b014df && git push origin main && git push dramaku main`. **Nol SQL, nol env baru** — revert saja memulihkan sepenuhnya.
 

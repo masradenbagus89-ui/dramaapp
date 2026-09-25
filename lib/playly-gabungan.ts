@@ -61,6 +61,10 @@ export type PlaylyGabunganResult = {
  *   katalog mitra, jadi video yang HANYA masuk lewat webhook memang belum punya
  *   kaitan yang bisa dibaca.
  * - rating — Playly tidak pernah mengirimnya, di jalur mana pun.
+ * - contentRating/quality — keduanya milik KATALOG KITA (rating usia dari OMDb,
+ *   mutu sumber video), bukan kiriman Playly. Sumbernya hanya lewat kaitan
+ *   video->drama, dan jalur webhook belum punya kaitan itu. Diisi null supaya
+ *   kotak keterangan di bawah pemutar DIAM, bukan memajang tebakan.
  */
 export function webhookKeKartu(v: PlaylyWebhookVideo): PlaylyVideoPublik {
   return {
@@ -85,6 +89,8 @@ export function webhookKeKartu(v: PlaylyWebhookVideo): PlaylyVideoPublik {
     year: v.year === null ? null : String(v.year),
     genre: v.genre,
     rating: null,
+    contentRating: null,
+    quality: null,
   };
 }
 

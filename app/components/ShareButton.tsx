@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Check, Share2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 /** Berapa lama tulisan "Link disalin" bertahan sebelum kembali normal. */
 const FEEDBACK_MS = 2000;
@@ -14,7 +15,18 @@ const FEEDBACK_MS = 2000;
  * Preview yang muncul di WhatsApp/Facebook berasal dari metadata OG di
  * app/drama/[id]/page.tsx — jadi tombol ini tak perlu mengurus gambar.
  */
-export default function ShareButton({ title }: { title: string }) {
+export default function ShareButton({
+  title,
+  className,
+}: {
+  title: string;
+  /**
+   * Penyesuaian ukuran/warna untuk pemakai di luar halaman detail drama.
+   * Kosong = tampilan lama persis, jadi halaman yang sudah ada tidak berubah;
+   * kotak info video Playly memakainya untuk versi yang lebih kecil.
+   */
+  className?: string;
+}) {
   const [copied, setCopied] = useState(false);
 
   const onClick = async () => {
@@ -46,7 +58,10 @@ export default function ShareButton({ title }: { title: string }) {
       type="button"
       variant="outline"
       onClick={onClick}
-      className="h-auto w-full rounded-full border border-zinc-700 bg-zinc-900 py-3 text-sm font-semibold text-zinc-200 transition-colors hover:border-amber-500 hover:text-amber-400"
+      className={cn(
+        "h-auto w-full rounded-full border border-zinc-700 bg-zinc-900 py-3 text-sm font-semibold text-zinc-200 transition-colors hover:border-amber-500 hover:text-amber-400",
+        className,
+      )}
     >
       {copied ? <Check className="size-4" /> : <Share2 className="size-4" />}
       {copied ? "Link disalin" : "Bagikan"}

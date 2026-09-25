@@ -115,6 +115,8 @@ describe("rakitVideoPublik — video mana yang boleh dilihat penonton", () => {
       year: null,
       genre: null,
       rating: null,
+      contentRating: null,
+      quality: null,
     });
   });
 
@@ -132,6 +134,8 @@ describe("rakitVideoPublik — video mana yang boleh dilihat penonton", () => {
       year: null,
       genre: null,
       rating: null,
+      contentRating: null,
+      quality: null,
     });
   });
 

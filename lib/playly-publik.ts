@@ -47,6 +47,19 @@ export type PlaylyVideoPublik = PlaylyVideo & {
   year: string | null;
   genre: string | null;
   rating: string | null;
+  /**
+   * Rating usia ("PG-13", "TV-MA", ...) dari OMDb, lewat drama yang dikaitkan.
+   * Boleh null dan itu wajar — video yang belum dikaitkan admin ke drama tidak
+   * punya sumbernya. Tampilan WAJIB diam saat null: menebak "13+" sendiri sama
+   * dengan menjanjikan kelayakan tonton yang tidak pernah dinilai siapa pun.
+   */
+  contentRating: string | null;
+  /**
+   * Mutu sumber video ("HD", "WEB-DL", "CAM", ...) dari katalog kita.
+   * Aturannya sama dengan lencana poster (lib/types.ts:214-221): null = jangan
+   * digambar, JANGAN diisi tebakan "HD".
+   */
+  quality: string | null;
 };
 
 export type PlaylyPublikResult = {
@@ -76,6 +89,8 @@ type DramaRingkas = {
   genre?: string;
   imdbRating?: string;
   category?: string;
+  contentRating?: string;
+  quality?: string;
 };
 
 /**
@@ -112,6 +127,8 @@ export function rakitVideoPublik(
         // tidak sering separuh hampa.
         genre: drama?.genre ?? drama?.category ?? null,
         rating: drama?.imdbRating ?? null,
+        contentRating: drama?.contentRating ?? null,
+        quality: drama?.quality ?? null,
       };
     },
   };

@@ -9,7 +9,39 @@
 >
 > **📦 Berkas ini sudah 2.980 baris / ±240 KB** dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-09-24.
+**Terakhir diisi:** 2026-09-25.
+
+## 2026-09-25 — Kotak info + tombol Download/Share/Save di bawah pemutar Playly (BELUM di-commit)
+
+**Status: kode selesai & terbukti lulus gerbang, TAPI belum di-commit maupun di-push.** Owner belum meminta rilis.
+
+**Revisi 2026-09-25 sore (owner, lewat popup pilihan):** kotaknya kini **BERLATAR PUTIH** (halaman sekitarnya tetap gelap - owner memilih "kotak saja", bukan seluruh halaman jadi terang), baris keterangan memakai **pemisah garis tegak** ("17+ | BluRay | 1h 39m") bukan kotak-kotak lencana, chip genre **seragam merah muda** (bukan warna per-genre: peta di `lib/genre-accent.ts` seluruhnya dirancang untuk latar GELAP, `bg-*-950`, jadi dipakai di kotak putih hasilnya chip gelap yang tidak menyatu), dan batas genre 3 → 4 (mengikuti contoh owner: France · Mexico · Drama · Thriller).
+
+**❗ Kenapa baris "17+ | BluRay | 1080p" MASIH KOSONG di layar — ini keadaan DATA, bukan kode rusak.** Dihitung dari server yang jalan 2026-09-25: **0 dari 46** video Playly dikaitkan admin ke drama (kaitan itulah satu-satunya sumber rating usia/kualitas/genre bagi video Playly), dan kolom `quality` terisi **0 dari 42** judul katalog. Jadi kotaknya memang baru menampilkan judul + durasi + tombol. Mengisinya = pekerjaan di `/admin/videos/playly` (kaitkan video → drama) + form drama (isi Kualitas), **bukan** perbaikan kode. Dua hal dari contoh owner yang **tidak punya sumber data sama sekali**: `1080p` (resolusi — Playly hanya menyediakan satu kualitas per video, sudah dicek ke API mereka) dan format `17+` (data kita ikut OMDb: `PG-13`/`R`/`Not Rated`; pemetaan ke `17+` belum diputuskan owner). **Seluruh warna di berkas itu kini untuk latar TERANG** - kalau dikembalikan ke tema gelap, ganti semuanya sekaligus, jangan sebagian.
+
+**Apa yang berubah bagi penonton:** di bawah pemutar video Playly (halaman `/playly` dan baris Playly di `/discover`), baris teks abu-abu berisi nama kreator "coklat" + durasi **diganti** kotak sempit (`max-w-sm` ≈ 384px, rata kiri, BUKAN selebar player) berisi judul, lencana rating usia/kualitas/durasi, chip genre berwarna, dan tiga tombol: DOWNLOAD (pink, utama) · Bagikan · Simpan. Tautan ke drama induk **tetap dipertahankan** di bawah kotak — itu satu-satunya jalan ke halaman drama dari situ.
+
+**Berkas:**
+- BARU `app/components/player/InfoVideoPlayly.tsx` — kotaknya.
+- BARU `tests/playly-info-video.test.ts` — 15 tes (jsdom): isi kotak, larangan mengarang lencana, toggle Simpan yang benar-benar berubah, warna tombol utuh di kode.
+- `app/components/PlaylyVideoGrid.tsx` — memasang kotak, melepas baris kreator+durasi lama.
+- `lib/playly-publik.ts` + `lib/playly-gabungan.ts` — `PlaylyVideoPublik` kini juga membawa `contentRating` (rating usia) & `quality` (mutu sumber). Keduanya sudah ada di katalog drama tapi belum pernah ikut ke video Playly.
+- `app/components/ShareButton.tsx` — tambah prop `className` opsional (aditif; tanpa prop, tampilannya di `/drama/[id]` persis seperti sebelumnya).
+- 4 berkas tes menyesuaikan helper karena bentuk `PlaylyVideoPublik` bertambah 2 field.
+
+**⚠️ Tiga hal yang GAMPANG dirusak sesi berikutnya:**
+
+1. **JANGAN menuliskan "HD" atau "720p" sebagai teks tetap di kotak ini.** Lencana kualitas & rating usia SENGAJA hilang saat datanya kosong — aturan yang sama dengan lencana poster (`lib/types.ts:214-221`). Mayoritas video Playly memang belum dikaitkan admin ke drama, jadi kotaknya sering hanya berisi judul + durasi + tombol, **dan itu normal, bukan kerusakan.** Sudah dikunci tes.
+2. **Tombol DOWNLOAD-nya masih placeholder** (`alert` "belum tersedia") — permintaan owner, logic provider/kualitas menyusul. **Jangan menyambungkannya ke `DownloadButton`/`/api/download`**: berkas Playly beda domain dengan alamat bertanda tangan yang kedaluwarsa ~6 jam, jadi atribut `download` diabaikan browser (keputusan owner 2026-09-21, `DownloadButton.tsx:44-47`).
+3. **Tombol Simpan hanya `useState`, sengaja TIDAK memakai `lib/myList.ts`.** Isi `myList` dibaca `/my-list` sebagai daftar **dramaId**; memasukkan videoId Playly ke sana melahirkan baris yang dramanya tak pernah ketemu.
+
+**Bukti (dijalankan, bukan dibaca):** `npm run build` sukses → `npx tsc --noEmit` exit 0 → `npm test` **969 tes / 67 berkas** hijau. Urutan build-dulu sesuai `AGENTS.local.md` aturan 6. Dev server juga diperiksa langsung: `/`, `/playly`, `/discover` semuanya **HTTP 200**, halaman `/playly` memuat **46 kartu video**.
+
+**🪤 JEBAKAN YANG TERJADI DI SESI INI — jangan diulang: `npm run build` dijalankan padahal dev server owner sedang hidup di port 3000.** Keduanya berebut folder `.next/`; build menghapus berkas yang sedang dipakai dev server, dan **semua** halaman localhost jadi "Internal Server Error" (bukan cuma `/playly`). Terbaca persis seperti kode rusak, padahal bukan. Obat: hentikan dev server → `rm -rf .next` → `npm run dev`. Sudah dipulihkan. Rincian + cara mengenalinya dalam 10 detik ada di `docs/lintasai/INDEX.md` (pelajaran 2026-09-25).
+
+**Catatan koreksi premis:** permintaan owner menyebut halaman ini memakai iframe Playly + punya sidebar rekomendasi di kanan. Keduanya tidak sesuai kode: iframe sudah diganti pemutar sendiri sejak 2026-09-09, dan layoutnya bertumpuk (player di atas, grid di bawah), bukan dua kolom. Karena itu "kotak di kolom kiri" diwujudkan sebagai kotak sempit rata kiri di bawah player.
+
+---
 
 ## ⚡ KEADAAN SEKARANG (baca ini dulu — 30 detik)
 

@@ -145,6 +145,8 @@ describe("pencarian video Playly", () => {
       year: null,
       genre: null,
       rating: null,
+      contentRating: null,
+      quality: null,
       ...partial,
     };
   }

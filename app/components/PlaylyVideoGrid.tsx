@@ -12,6 +12,7 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import { Film, Play, Star } from "lucide-react";
 import PlaylyPlayer from "./player/PlaylyPlayer";
+import InfoVideoPlayly from "./player/InfoVideoPlayly";
 import type { PlaylyVideoPublik } from "@/lib/playly-publik";
 
 export default function PlaylyVideoGrid({
@@ -48,17 +49,30 @@ export default function PlaylyVideoGrid({
               title={aktif.title}
               poster={aktif.thumbnail}
             />
-            <h3 className="mt-3 text-base font-semibold text-white">{aktif.title}</h3>
-            <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-400">
-              {aktif.creator && <span>{aktif.creator}</span>}
-              {aktif.durationLabel !== "-" && <span>{aktif.durationLabel}</span>}
+            {/* Keterangan + aksi SENGAJA sempit dan rata kiri, tidak selebar
+                player (permintaan owner 2026-09-25). Judul & durasi pindah ke
+                dalam kotak; nama kreator dilepas karena penonton tidak
+                memakainya untuk memutuskan apa pun. Tautan drama TETAP di sini
+                — itu satu-satunya jalan ke halaman drama induk, dan kotaknya
+                tidak mengurus navigasi. */}
+            <div className="mt-3 max-w-sm">
+              <InfoVideoPlayly
+                key={aktif.id}
+                title={aktif.title}
+                contentRating={aktif.contentRating}
+                quality={aktif.quality}
+                durationLabel={aktif.durationLabel}
+                genre={aktif.genre}
+              />
               {aktif.dramaHref && aktif.dramaTitle && (
-                <Link href={aktif.dramaHref} className="text-amber-400 underline">
-                  {aktif.dramaTitle}
-                  {aktif.episode ? ` · Episode ${aktif.episode}` : ""}
-                </Link>
+                <p className="mt-2 text-xs text-zinc-400">
+                  <Link href={aktif.dramaHref} className="text-amber-400 underline">
+                    {aktif.dramaTitle}
+                    {aktif.episode ? ` · Episode ${aktif.episode}` : ""}
+                  </Link>
+                </p>
               )}
-            </p>
+            </div>
           </div>
         )}
       </div>

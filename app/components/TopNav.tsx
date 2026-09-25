@@ -39,11 +39,28 @@ type NavLink = {
  * Diekspor supaya bisa diadu dengan `TUJUAN` di
  * app/components/beranda/KepalaKatalog.tsx — keduanya navigasi yang sama dan
  * tidak boleh menyimpang. Penjaganya: tests/kepala-situs.test.ts.
+ *
+ * ⚠️ Discover · Shorts · My List SENGAJA TIDAK ADA DI SINI (owner 2026-09-25:
+ * kepala situs dirampingkan meniru situs katalog pembanding). Yang dilepas
+ * HANYA tombolnya — ketiga halamannya TETAP HIDUP dan tetap mendapat navbar
+ * saat dibuka; `AKAR_BERNAVBAR_ATAS` di lib/navigasi-halaman.ts sengaja TIDAK
+ * ikut dipangkas.
+ *
+ * JANGAN hapus route-nya untuk "merapikan": /discover adalah mesin di balik
+ * SELURUH penyaring katalog — kotak cari (lib/nav-katalog.ts:75), tiap menu
+ * genre/negara, dan tiap baris "Lihat semua" bermuara ke sana, jadi
+ * membuangnya mematikan pencarian seluruh situs.
+ *
+ * Jalan yang TERSISA sesudah tombolnya dilepas:
+ *   /discover — kotak cari, menu genre/negara, "Lihat semua" di beranda
+ *   /my-list  — /profile (profile/DashboardMenu.tsx:41, FavoritesRow.tsx:58)
+ *               dan baris "Favorit Saya" di beranda (PersonalRows.tsx:155)
+ *   /shorts   — TIDAK ADA lagi dari dalam situs; hanya lewat alamat langsung
+ *               atau hasil Google (masih terdaftar di app/sitemap.ts:13).
+ * Penjaganya: tests/kepala-situs.test.ts → "menu dilepas, halamannya tetap hidup".
  */
 export const LINKS: NavLink[] = [
   { href: "/beranda", label: "Beranda", adminOnly: false },
-  { href: "/discover", label: "Discover", adminOnly: false },
-  { href: "/shorts", label: "Shorts", adminOnly: false },
   {
     href: "/playly",
     label: "Playly",
@@ -55,7 +72,6 @@ export const LINKS: NavLink[] = [
     warnaAktif: "text-blue-700",
     warnaDiam: "text-blue-400 hover:text-blue-300",
   },
-  { href: "/my-list", label: "My List", adminOnly: false },
   { href: "/profile", label: "Profile", adminOnly: false },
   { href: "/admin", label: "Admin", adminOnly: true },
 ];
@@ -103,7 +119,6 @@ export default function TopNav() {
     (href: string) => {
       if (href === "/beranda")
         return pathname === "/beranda" || pathname.startsWith("/drama");
-      if (href === "/discover") return pathname.startsWith("/discover");
       return pathname.startsWith(href);
     },
     [pathname],

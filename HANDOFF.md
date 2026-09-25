@@ -11,9 +11,11 @@
 
 **Terakhir diisi:** 2026-09-25.
 
-## 2026-09-25 — Kotak info + tombol Download/Share/Save di bawah pemutar Playly (BELUM di-commit)
+## 2026-09-25 — Kotak info + tombol Download/Bagikan/Simpan di bawah pemutar Playly (`4b014df`)
 
-**Status: kode selesai & terbukti lulus gerbang, TAPI belum di-commit maupun di-push.** Owner belum meminta rilis.
+**Status: di-commit `4b014df`, lalu di-merge dengan `origin/main` yang sudah maju 3 commit.** Saat hendak push, kedua remote ternyata sudah di `35fd43d` — ada rilis navbar (`00a69b4`, menu Discover/Shorts/My List dilepas) yang masuk **di tengah** sesi ini. **Kode nol bertabrakan** (mereka navbar, kita Playly); satu-satunya bentrok di `HANDOFF.md`, dan sisi `origin` kosong di posisi itu sehingga tidak ada catatan siapa pun yang tertimpa — diperiksa dengan membandingkan daftar judul seksi sebelum & sesudah merge, **nol judul hilang** (pelajaran 2026-09-24: merge menerima penghapusan tanpa menandainya sebagai bentrok). Branch cadangan sebelum merge: `cadangan/kotak-info-playly-2026-09-25`.
+
+**⚠️ Temuan yang layak dicatat: `0a04e2b` (catatan sesi 2026-09-24) ternyata TIDAK PERNAH di-push** walau HANDOFF menyatakan "antrean kosong, lokal ahead 0". Ia ikut terbawa merge ini. Kalimat "antrean kosong" di berkas ini **bukan bukti** — yang membuktikan cuma `git fetch` + membandingkan hash, persis yang diperintahkan peringatan di seksi KEADAAN SEKARANG.
 
 **Revisi 2026-09-25 sore (owner, lewat popup pilihan):** kotaknya kini **BERLATAR PUTIH** (halaman sekitarnya tetap gelap - owner memilih "kotak saja", bukan seluruh halaman jadi terang), baris keterangan memakai **pemisah garis tegak** ("17+ | BluRay | 1h 39m") bukan kotak-kotak lencana, chip genre **seragam merah muda** (bukan warna per-genre: peta di `lib/genre-accent.ts` seluruhnya dirancang untuk latar GELAP, `bg-*-950`, jadi dipakai di kotak putih hasilnya chip gelap yang tidak menyatu), dan batas genre 3 → 4 (mengikuti contoh owner: France · Mexico · Drama · Thriller).
 
@@ -23,7 +25,7 @@
 
 **Berkas:**
 - BARU `app/components/player/InfoVideoPlayly.tsx` — kotaknya.
-- BARU `tests/playly-info-video.test.ts` — 15 tes (jsdom): isi kotak, larangan mengarang lencana, toggle Simpan yang benar-benar berubah, warna tombol utuh di kode.
+- BARU `tests/playly-info-video.test.ts` — 18 tes (jsdom): isi kotak, larangan mengarang lencana, toggle Simpan yang benar-benar berubah, warna tombol utuh di kode.
 - `app/components/PlaylyVideoGrid.tsx` — memasang kotak, melepas baris kreator+durasi lama.
 - `lib/playly-publik.ts` + `lib/playly-gabungan.ts` — `PlaylyVideoPublik` kini juga membawa `contentRating` (rating usia) & `quality` (mutu sumber). Keduanya sudah ada di katalog drama tapi belum pernah ikut ke video Playly.
 - `app/components/ShareButton.tsx` — tambah prop `className` opsional (aditif; tanpa prop, tampilannya di `/drama/[id]` persis seperti sebelumnya).
@@ -35,7 +37,7 @@
 2. **Tombol DOWNLOAD-nya masih placeholder** (`alert` "belum tersedia") — permintaan owner, logic provider/kualitas menyusul. **Jangan menyambungkannya ke `DownloadButton`/`/api/download`**: berkas Playly beda domain dengan alamat bertanda tangan yang kedaluwarsa ~6 jam, jadi atribut `download` diabaikan browser (keputusan owner 2026-09-21, `DownloadButton.tsx:44-47`).
 3. **Tombol Simpan hanya `useState`, sengaja TIDAK memakai `lib/myList.ts`.** Isi `myList` dibaca `/my-list` sebagai daftar **dramaId**; memasukkan videoId Playly ke sana melahirkan baris yang dramanya tak pernah ketemu.
 
-**Bukti (dijalankan, bukan dibaca):** `npm run build` sukses → `npx tsc --noEmit` exit 0 → `npm test` **969 tes / 67 berkas** hijau. Urutan build-dulu sesuai `AGENTS.local.md` aturan 6. Dev server juga diperiksa langsung: `/`, `/playly`, `/discover` semuanya **HTTP 200**, halaman `/playly` memuat **46 kartu video**.
+**Bukti (dijalankan, bukan dibaca):** `npm run build` sukses → `npx tsc --noEmit` exit 0 → `npm test` **973 tes / 67 berkas** hijau. Urutan build-dulu sesuai `AGENTS.local.md` aturan 6. Dev server juga diperiksa langsung: `/`, `/playly`, `/discover` semuanya **HTTP 200**, halaman `/playly` memuat **46 kartu video**.
 
 **🪤 JEBAKAN YANG TERJADI DI SESI INI — jangan diulang: `npm run build` dijalankan padahal dev server owner sedang hidup di port 3000.** Keduanya berebut folder `.next/`; build menghapus berkas yang sedang dipakai dev server, dan **semua** halaman localhost jadi "Internal Server Error" (bukan cuma `/playly`). Terbaca persis seperti kode rusak, padahal bukan. Obat: hentikan dev server → `rm -rf .next` → `npm run dev`. Sudah dipulihkan. Rincian + cara mengenalinya dalam 10 detik ada di `docs/lintasai/INDEX.md` (pelajaran 2026-09-25).
 
@@ -47,13 +49,15 @@
 
 **Antrean KOSONG.** `origin/main` = `dramaku/main`, lokal ahead 0.
 
-**Rilis terakhir yang mengubah KODE/DATA:** `2af96b6` (tombol DOWNLOAD dihapus) · `4e0c464` (tahun 34 serial disebar — perubahan DATA, lihat peringatan di bawah).
+**Rilis terakhir yang mengubah KODE:** `00a69b4` (navbar dirampingkan — menu Discover · Shorts · My List dilepas dari tampilan; DIRILIS & terverifikasi tayang 2026-09-25 sore). Sebelumnya `af839e1` (tombol DOWNLOAD melayang + modal provider). **Perubahan DATA terakhir:** `4e0c464` (tahun 34 serial disebar — lihat peringatan di bawah; `git revert` TIDAK memulihkan yang ini).
 
 > **🪤 Jangan tulis hash `HEAD` di baris ini — itu mustahil benar.** Commit paling akhir di kedua remote SELALU commit CATATAN, dan commit catatan itu sendiri baru lahir SESUDAH baris ini diketik — jadi angka apa pun yang ditulis di sini basi begitu di-push. Sudah terjadi dua kali berturut-turut (`2af96b6` ditulis padahal `0ab70ad`, lalu `0ab70ad` ditulis padahal `a654919`), dan menambalnya dengan angka baru cuma mengulang lingkarannya. **Yang benar: sebut hash rilis KODE/DATA di atas (stabil, tidak ikut bergeser oleh commit catatan), lalu baca posisi sebenarnya langsung dari server** — `git fetch origin && git fetch dramaku && git rev-parse origin/main dramaku/main`. Dua baris hash yang keluar sama = antrean kosong.
 >
 > ⚠️ Jangan tambahkan `--short` di perintah itu: `git rev-parse --short A B` membalas `fatal: Needed a single revision` — bendera itu hanya melayani SATU revisi. Diuji 2026-09-23; versi pertama baris ini memuat `--short` dan memang gagal dijalankan. Perlu hash pendek? Baca satu per satu, atau ambil 7 huruf pertamanya.
 
 **✅ TOMBOL DOWNLOAD DIPASANG KEMBALI 2026-09-24 atas permintaan BARU owner — larangan di bawah SUDAH TERCABUT, jangan dihapus lagi.** Owner mengirim tangkapan layar `/drama/over-your-dead-body` dengan tombol pink DOWNLOAD dilingkari merah dan meminta dimunculkan kembali. Larangan lama memang mensyaratkan "tanpa permintaan owner" — permintaan itu sekarang ADA, jadi syaratnya terpenuhi. **Owner juga sudah memilih cakupannya lewat popup:** tombol muncul di **semua 42 judul**, dan serial **tetap** berlabel `DOWNLOAD EP 1` (bukan `DOWNLOAD` polos) — sebab jalur ini memang hanya mengambil episode 1, dan label polos di serial 56 episode menjanjikan yang tidak diberikan. Jadi label `DOWNLOAD EP 1` yang kemarin dikeluhkan itu **disengaja dan disetujui owner**, bukan kelalaian yang perlu "dibetulkan" sesi berikutnya.
+
+**🔴 KOREKSI 2026-09-25 atas paragraf di atas — dua angka & satu dasar keputusan di situ TIDAK akurat.** (a) **Dasar izinnya bukan tangkapan layar 24 September.** Ditanya langsung 2026-09-25, owner menjawab *"saya kurang paham jadi apa yang saya harus lakukan"* — klaim itu tak pernah ia konfirmasi ulang maupun bantah. Yang sah: owner memilih **"Ya, pasang ke situs asli"** setelah dibuatkan gambar perbandingan dua layar HP. (b) **Bukan 42 judul, melainkan 34 — dan NOL film.** `GET /api/dramas` produksi hari ini memulangkan 34 judul yang semuanya serial, jadi **tidak ada satu pun tombol berlabel `DOWNLOAD` polos**; semua berlabel `DOWNLOAD EP 1`. Sudah DIRILIS & terbukti tayang 2026-09-25 — lihat seksi 2026-09-25 di bawah.
 
 **Catatan riwayat (jangan dipakai menyalahkan siapa pun):** commit penghapusan `2af96b6` ber-author identitas owner dan bertuliskan "permintaan owner", sementara owner mengingatnya sebagai kerja rekan. Riwayat git memang **tidak bisa** menjawabnya — identitas git belum dipisah antar-komputer (`AGENTS.local.md` aturan 7) dan `0ab70ad` mencatat **dua sesi AI berjalan bersamaan** hari itu. Dugaan terkuat: yang dihapus adalah tombol versi LAMA (sebaris dengan Mulai Nonton), sedangkan yang owner inginkan adalah versi MELAYANG di bawah badge Subtitle — versi itu belum pernah masuk git saat penghapusan terjadi.
 
@@ -120,6 +124,49 @@ Yang BENAR dan sudah terverifikasi: **nama remote berbeda per komputer.** Di kom
 Catatan 2026-09-21 menulis "sebabnya belum terjelaskan dan JANGAN ditebak". Sekarang sudah diukur dan **direproduksi di tes**: `usePathname()` di `TopNav`/`BottomNav` menerima nilai yang **bukan** `/` saat pra-render alamat akar; `?? "/"` tidak menangkapnya (operator `??` hanya menangkap `null`/`undefined`, **bukan string kosong**); dan logikanya berbentuk **denylist** sehingga nilai apa pun yang tak dikenali membuat navbar **MUNCUL**. Rinciannya di seksi 2026-09-22 di bawah.
 
 ⚠️ **Koreksi atas catatan 2026-09-21 itu sendiri.** Kalimat *"`TopNav` menggambar menunya dalam keadaan tidak ada yang aktif, yang justru konsisten dengan `pathname === "/"`"* **menyimpulkan ke arah yang salah**. Keadaan "tak ada satu pun menu aktif" justru konsisten dengan `pathname` yang **BUKAN** `/` — sebab kalau nilainya benar-benar `/`, penyaring `PUBLIC_PATHS` sudah memulangkan `null` dan navbarnya tak tergambar sama sekali. Petunjuk itu sebenarnya sudah menunjuk jawabannya sejak semalam, cuma dibaca terbalik.
+
+---
+
+## 2026-09-25 (sore) — navbar dirampingkan: Discover · Shorts · My List DILEPAS dari tampilan (`00a69b4`, ✅ DIRILIS & TERVERIFIKASI TAYANG)
+
+**Permintaan owner:** kepala situs dibuat lebih mirip Layarkaca21 — hapus menu **Discover**, **Shorts**, **My List** dari tampilan, dengan syarat tegas *"jangan hapus fitur di belakangnya"* dan jangan menyentuh API / Supabase / sistem video.
+
+**Yang dikerjakan (4 berkas, semuanya TAMPILAN):**
+- `app/components/TopNav.tsx` — `LINKS` tinggal Beranda · Playly · Profile · Admin. Cabang `/discover` di `isActive()` ikut dibuang sebab tak punya pemanggil lagi.
+- `app/components/beranda/KepalaKatalog.tsx` — `TUJUAN` (menu garis-tiga di `/beranda` & `/discover`) dirampingkan **sama persis**. Wajib serentak: `tests/kepala-situs.test.ts` memaksa kedua daftar identik, dan kalau hanya navbar yang dipangkas, menu garis-tiga masih memajang ketiganya di halaman yang paling sering dibuka.
+- `app/components/BottomNav.tsx` — tab **Shorts** & **My List** dilepas (4 → 2 tab) atas pilihan owner lewat popup. Kalau hanya navbar komputer yang dirampingkan, pengguna HP masih melihat tombol yang sudah tidak ada di komputer.
+- `tests/kepala-situs.test.ts` — 2 patokan lama disesuaikan + **13 penjaga baru**.
+
+**🪤 Bug senyap yang ikut ketahuan & diperbaiki:** `BottomNav` menghitung penanda aktif dengan `100 / TABS.length` (dinamis) tapi gridnya dipatok `grid-cols-4` (tulis tangan). Begitu jumlah tab turun jadi 2, tombol cuma mengisi separuh kiri layar dan penanda kuningnya melayang di atas ruang kosong — **tanpa satu pun error**. Sekarang jumlah kolom mengikuti `TABS.length` lewat style inline (Tailwind memindai nama kelas secara STATIS, jadi `grid-cols-${n}` tidak pernah ikut ter-build). Penjaganya sudah dipasang.
+
+**⚠️ FITURNYA TIDAK DIHAPUS — jangan "merapikan" dengan membuang route-nya.** `/discover` adalah mesin di balik SELURUH penyaring katalog: kotak cari (`lib/nav-katalog.ts:75`), tiap menu genre/negara, tiap baris "Lihat semua". Membuangnya = mematikan pencarian seluruh situs. Jalan yang tersisa ke tiap halaman:
+- `/discover` — kotak cari, menu genre/negara, "Lihat semua" di beranda, tombol "Jelajahi drama" di `/history`, `/my-list`, `/playly`, dan halaman 404.
+- `/my-list` — `/profile` (`profile/DashboardMenu.tsx:41`, `FavoritesRow.tsx:58`) + baris "Favorit Saya" di beranda (`PersonalRows.tsx:155`).
+- `/shorts` — **TIDAK ADA lagi dari dalam situs.** Hanya lewat alamat langsung atau hasil Google (masih terdaftar di `app/sitemap.ts:13`). Ini konsekuensi yang disadari, bukan kelalaian — owner memang meminta tombolnya hilang. Kalau suatu saat `/shorts` perlu dijangkau lagi, itu keputusan owner, bukan tambalan diam-diam.
+
+**Bukti (dijalankan, bukan dibaca):** `npm run build` sukses — daftar route hasil build **masih memuat** `/discover`, `/shorts`, `/my-list` · `npx tsc --noEmit` **exit 0** · `npm test` **964 tes hijau (65 berkas)** · `git diff --name-only` = **nol** berkas `api/`, Supabase, migration, atau video tersentuh.
+
+**Uji-rusak penjaga baru (bukti tesnya sungguh menggigit, bukan lulus kosong):** mengembalikan `grid-cols-4` → **1 tes merah**; memasang balik menu Discover ke `LINKS` → **2 tes merah**; dipulihkan → 89 hijau lagi.
+
+**Status: ✅ DIRILIS 2026-09-25 sore (`00a69b4`).** Gerbang §6 penuh dijalankan dengan urutan benar (`rm -rf .next` → build **exit 0** → `tsc` **exit 0** → **964 tes hijau** → nol berkas env ter-stage), lalu dual push `f0f6a66..00a69b4` — cermin (`dramaku`) dulu baru produksi (`origin`), dua-duanya fast-forward. **Terbukti tayang ~30 detik sesudah push** (Etag `svw0k6og5r2lc7` → `baab3ad691a144964f476ee57e20700a`): navbar produksi tinggal `/beranda · /playly · /profile` dengan **0 kemunculan** teks Discover/Shorts/My List, bar bawah **2 tab**, dan `/discover` `/shorts` `/my-list` `/discover?q=naga` semuanya balas **200**. Rinciannya + cara rollback ada di `antrean-deploy.md` entri teratas.
+
+**⚠️ `next-env.d.ts` SENGAJA tidak ikut di-commit.** `next dev` mengubah isinya jadi menunjuk `./.next/dev/types/…`; kalau versi itu ter-commit, `tsc` di mesin yang hanya menjalankan `build` akan mencari folder yang tak pernah dibuat — varian baru jebakan TS2304 di aturan 6. `npm run build` mengembalikannya sendiri (terbukti: working tree bersih lagi sesudah build).
+
+---
+
+## 2026-09-25 — tombol DOWNLOAD DIRILIS & TERBUKTI TAYANG + dasar persetujuannya dikoreksi
+
+**✅ SUDAH DI-PUSH DAN SUDAH TAYANG.** `b173e7f..26c7415` ke `origin` (fast-forward). `dramaku` sudah memuat ketiganya lebih dulu, jadi rilis ini menyusulkan produksi — tidak ada push kedua. Rincian gerbang + bukti lengkap ada di `antrean-deploy.md` entri teratas.
+
+**⚠️ IZIN RILISNYA BUKAN DARI KLAIM TANGKAPAN LAYAR 24 SEPTEMBER — jangan salah rujuk.** Seksi 2026-09-24 di bawah menulis larangan dicabut karena "owner mengirim tangkapan layar 2026-09-24". Ketika ditanya langsung hari ini, owner menjawab **"saya kurang paham jadi apa yang saya harus lakukan"** — klaim itu **tidak pernah ia konfirmasi ulang, dan tidak juga ia bantah**. Yang benar-benar menjadi dasar rilis: AI membuatkan gambar perbandingan dua layar HP (situs asli tanpa tombol ↔ versi bertombol), owner melihatnya, lalu memilih **"Ya, pasang ke situs asli"**. **Rujuk keputusan 2026-09-25 atas bukti visual, jangan rujuk klaim yang tak berjejak itu.** Pelajaran prosesnya: owner non-programmer tidak bisa menjawab pertanyaan berisi istilah teknis — begitu pertanyaan diganti menjadi **gambar "sekarang begini ↔ nanti begini"**, keputusannya keluar dalam satu langkah.
+
+**🪤 ANGKA "42 JUDUL / 7 FILM" TERNYATA TIDAK COCOK DENGAN KENYATAAN — jangan diulang tanpa mengukur.** `GET https://dramaapp.vercel.app/api/dramas` hari ini memulangkan **34 judul, NOL berepisode 1** (semuanya serial); katalog lokal memulangkan 34/0 yang sama persis, jadi ini bukan data lokal basi. **Akibat nyata: SEMUA judul memakai label `DOWNLOAD EP 1`, dan cabang label `DOWNLOAD` polos untuk film tidak pernah tergambar sama sekali.** Sebabnya BELUM diselidiki — ukur dulu lewat REST Supabase (`Accept-Profile: dramaapp`), jangan tebak.
+
+**❓ Belum terbukti, diwarisi dari 24 September:** modal pilihan provider masih **0 dari 34 judul** terisi → semua tombol memakai jalur lama `/api/download`; owner harus mengisi manual lewat panel admin kalau mau fitur itu hidup. Sticky di HP sungguhan juga belum diketuk jari.
+
+**🔧 Screenshot situs TANPA memasang playwright/puppeteer** (terbukti jalan di komputer ini): `"/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe" --headless=new --disable-gpu --no-sandbox --hide-scrollbars --user-data-dir=<profil sementara> --virtual-time-budget=10000 --window-size=390,844 --screenshot=<keluaran.png> <url>`. Sisi kanan gambar SELALU terpotong di lebar 390 — terbukti terpotong sama persis di produksi yang belum diubah, **jadi artefak alat, bukan kerusakan tata letak**. Berguna untuk menanyakan keputusan visual ke owner.
+
+**Rollback:** `git revert --no-edit 26c7415 571cb02 af839e1 && git push origin main && git push dramaku main`. Nol SQL, nol env baru.
 
 ---
 

@@ -33,11 +33,11 @@ import type { SearchBarChrome } from "./SearchBar";
  * katalog pembanding: cukup DUA baris (bar cari + strip kuning). Navbar hitam
  * karena itu disembunyikan di kedua halaman, dan isinya pindah ke sini.
  *
- * ⚠️ Menu aplikasi TIDAK boleh sekadar dibuang. Di layar komputer navbar itu
- * satu-satunya jalan menuju Discover, Playly, Admin, dan tombol Keluar —
- * BottomNav hanya muncul di HP (`md:hidden`) dan cuma memuat empat tujuan.
- * Membuangnya berarti halaman-halaman itu hanya bisa dibuka dengan mengetik
- * alamatnya sendiri, dan tidak ada error apa pun yang memberi tahu.
+ * ⚠️ Menu aplikasi TIDAK boleh sekadar dibuang. Di layar komputer inilah
+ * satu-satunya jalan menuju Playly, Admin, dan tombol Keluar — `BottomNav`
+ * hanya muncul di HP (`md:hidden`) dan cuma memuat dua tujuan. Membuangnya
+ * berarti halaman-halaman itu hanya bisa dibuka dengan mengetik alamatnya
+ * sendiri, dan tidak ada error apa pun yang memberi tahu.
  */
 
 /** Satu tujuan di menu aplikasi. */
@@ -67,13 +67,16 @@ export const TAUTAN_AKUN = [
  * Diekspor supaya kewajiban itu bisa DIUJI, bukan sekadar dijanjikan komentar:
  * lihat tests/kepala-situs.test.ts. Isi dropdown Radix tidak tergambar di HTML
  * sampai menunya dibuka, jadi memeriksanya dari hasil render mustahil.
+ *
+ * ⚠️ Discover · Shorts · My List sengaja DILEPAS dari daftar ini bersamaan
+ * dengan `LINKS` (owner 2026-09-25). Alasan lengkap + daftar jalan yang tersisa
+ * menuju ketiga halaman itu ditulis SEKALI di app/components/TopNav.tsx, di
+ * atas `LINKS` — jangan disalin ke sini supaya tak ada dua versi yang bisa
+ * menyimpang. Route ketiganya TETAP hidup; yang hilang hanya tombolnya.
  */
 export const TUJUAN: Tujuan[] = [
   { href: "/beranda", label: "Beranda" },
-  { href: "/discover", label: "Discover" },
-  { href: "/shorts", label: "Shorts" },
   { href: "/playly", label: "Playly" },
-  { href: "/my-list", label: "My List" },
   { href: "/profile", label: "Profile" },
   { href: "/admin", label: "Admin", adminOnly: true },
 ];

@@ -11,17 +11,21 @@ type Tab = {
   icon: (active: boolean) => React.ReactElement;
 };
 
+/**
+ * Tab bar bawah HP.
+ *
+ * ⚠️ Shorts & My List sengaja DILEPAS dari sini (owner 2026-09-25) bersamaan
+ * dengan hilangnya ketiga menu dari navbar komputer — kalau hanya navbar yang
+ * dirampingkan, pengguna HP masih melihat tombol yang sudah tidak ada di
+ * komputer, dan satu situs terasa seperti dua versi. Halaman /shorts &
+ * /my-list TETAP hidup; alasan lengkap + jalan yang tersisa ke sana ditulis
+ * sekali di app/components/TopNav.tsx di atas `LINKS`.
+ *
+ * Tab "Beranda" sengaja ikut menyala di /discover, /drama, dan /watch: ketiganya
+ * cabang dari menelusuri katalog, jadi tanpa ini bar bawah terlihat mati begitu
+ * penonton membuka hasil pencarian.
+ */
 const TABS: Tab[] = [
-  {
-    href: "/shorts",
-    label: "Shorts",
-    match: (p) => p.startsWith("/shorts"),
-    icon: (active) => (
-      <svg viewBox="0 0 24 24" className={`h-6 w-6 ${active ? "fill-amber-400" : "fill-zinc-400"}`}>
-        <path d="M4 4h12l4 4v12a2 2 0 01-2 2H4a2 2 0 01-2-2V6a2 2 0 012-2zm5 5v6l5-3-5-3z" />
-      </svg>
-    ),
-  },
   {
     href: "/beranda",
     label: "Beranda",
@@ -29,16 +33,6 @@ const TABS: Tab[] = [
     icon: (active) => (
       <svg viewBox="0 0 24 24" className={`h-6 w-6 ${active ? "fill-amber-400" : "fill-zinc-400"}`}>
         <path d="M12 2l9 4.5v11L12 22l-9-4.5v-11L12 2zm0 2.236L5 7.618v8.764l7 3.382 7-3.382V7.618L12 4.236zM12 8l3 5h-2v3h-2v-3H9l3-5z" />
-      </svg>
-    ),
-  },
-  {
-    href: "/my-list",
-    label: "My List",
-    match: (p) => p.startsWith("/my-list"),
-    icon: (active) => (
-      <svg viewBox="0 0 24 24" className={`h-6 w-6 ${active ? "fill-amber-400" : "fill-zinc-400"}`}>
-        <path d="M6 2h12a2 2 0 012 2v18l-8-4-8 4V4a2 2 0 012-2z" />
       </svg>
     ),
   },
@@ -78,7 +72,17 @@ export default function BottomNav() {
           </div>
         )}
 
-        <div className="grid grid-cols-4">
+        {/* Jumlah kolom mengikuti `TABS`, BUKAN angka tulis-tangan. Penanda
+            aktif di atas memakai `tabWidth = 100 / TABS.length`, jadi patokan
+            `grid-cols-4` yang dulu ada di sini membuat penanda meleset dari
+            tombolnya begitu jumlah tab berubah — persis yang terjadi saat
+            Shorts & My List dilepas (4 → 2). Ditulis sebagai style inline
+            karena Tailwind memindai nama kelas secara STATIS: kelas rakitan
+            seperti `grid-cols-${TABS.length}` tidak pernah ikut ter-build. */}
+        <div
+          className="grid"
+          style={{ gridTemplateColumns: `repeat(${TABS.length}, minmax(0, 1fr))` }}
+        >
           {TABS.map((tab) => {
             const active = tab.match(pathname);
             return (

@@ -11,6 +11,25 @@
 
 **Terakhir diisi:** 2026-09-26.
 
+## 2026-09-26 (INSIDEN) — video hilang dari /beranda & /film sesudah rilis `8ac3d61`: halaman MEMBEKUKAN hasil pengambilan yang gagal
+
+**Gejala (diukur di produksi, bukan dilaporkan orang):** `/beranda` → baris "Film Terbaru" **0**, tautan `/tonton/` **0**. `/film` → **0 kartu** + pesan "Daftar video sedang tidak bisa dimuat". `/tonton/<id sah>` → **404** (40 menit sebelumnya 200). `sitemap.xml` → entri `/tonton/` **0**.
+
+**🟢 YANG TERBUKTI SEHAT — jangan buang waktu menyelidiki ini lagi:**
+- **Daftar videonya sendiri terbaca sempurna.** 3 id berbeda diuji lewat `/api/thumb/<id>` → ketiganya **307** dan mengantar ke gambar sungguhan (PNG 908.130 byte). Jalur itu `force-dynamic`, jadi ia membaca saat permintaan.
+- **`/discover` punya 4 kartu video** — halaman static yang TIDAK disentuh rilis ini, memakai sumber yang sama persis, dan BERHASIL.
+- Katalog drama sehat (`/api/dramas` → 35 judul), tombol FILTER ada, `/playly` → 308 → `/film` jalan.
+
+**Diagnosis:** kegagalannya bukan pada DATA melainkan pada MOMEN halaman dibangun. Sebagian halaman kebetulan dibangun saat pengambilan daftar video gagal, lalu **hasil kosong itu tersimpan dan MEMBEKU** — `/film` diminta 4× berturut, semuanya `X-Vercel-Cache: HIT` dengan isi kosong yang sama; `/beranda` melewati siklus `STALE → HIT → STALE` dan tetap kosong. Bahwa `/discover` berhasil sementara `/beranda` & `/film` gagal membuktikan ini gangguan SESAAT, bukan kode yang salah.
+
+**Kekambuhan pelajaran 2026-09-19** ("pembacaan ber-`revalidate` tumbang saat prerender walau sumbernya sehat; `no-store` di build yang sama lolos"). Yang baru: dulu akibatnya build GAGAL (terlihat keras), sekarang akibatnya halaman TERSIMPAN KOSONG (senyap, dan bertahan sampai regenerasi berikutnya kebetulan berhasil).
+
+**⚠️ SEBAB PEMICUNYA RILIS, BUKAN ISI PERUBAHANNYA.** Tak satu pun perubahan `8ac3d61` menyentuh pengambilan daftar video. Tapi **tiap deploy membangun ulang SELURUH halaman static dari nol**, jadi tiap rilis adalah lemparan dadu: halaman yang tidak beruntung menyimpan hasil gagal. **Aturan yang lahir: sesudah tiap rilis yang menyentuh halaman berdata-luar, JANGAN cuma cek "fitur barunya muncul" — cek juga halaman LAMA yang memakai data yang sama masih berisi.**
+
+**Tindakan (owner memilih):** (1) picu pembangunan ulang — commit ini sendiri yang memicunya; (2) perbaiki akarnya supaya tidak jadi lemparan dadu tiap rilis — dikerjakan & diuji dulu, rilisnya minta izin terpisah.
+
+---
+
 ## 2026-09-26 (putaran keempat) — CACAT SENDIRI: alamat gambar mati 6 jam, diperbaiki dengan alamat tetap
 
 **🪤 PELAJARAN PALING TAJAM SESI INI — kelalaian yang RAPI: alasan ditulis panjang, lalu dilanggar di baris berikutnya.** Putaran ketiga sengaja TIDAK mengirim `contentUrl` ke Google, dengan alasan tertulis lengkap: "alamat berkas videonya bertanda tangan & berumur ~6 jam, sudah mati saat Google mengunjunginya". Lalu di objek yang sama dikirimlah **`thumbnailUrl` yang punya masalah PERSIS SAMA** — tanpa sekali pun diperiksa. Ketahuan saat verifikasi produksi: alamat sampulnya `...r2.cloudflarestorage.com/...?X-Amz-Signature=...&`**`X-Amz-Expires=21600`** = **6 jam**.

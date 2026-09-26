@@ -54,6 +54,14 @@ Tiap kali mengambil daftar, DramaKu menembak fungsi Vercel Playly **47 kali** (1
 
 **Keputusan owner 2026-09-26 (mengoreksi rencana sebelumnya):** paket perbaikan DIRILIS **sebelum** Playly hidup, justru supaya saat mereka kembali kita tidak langsung menembaki dengan laju lama. Menunda rilis = jatah mereka berpeluang habis lagi seketika.
 
+## 2b. ✅ STATUS RILIS — semua pekerjaan hari ini SUDAH TAYANG (`6c27f41`)
+
+Produksi · cermin · `main` lokal ketiganya di **`6c27f41`** (dibaca ulang lewat `git ls-remote`). Cek cepat: `git log origin/main..main --oneline` → kosong = tak ada yang tertinggal.
+
+Diverifikasi sesudah rilis: `/` `/beranda` `/film` `/discover` semuanya **200**, `/playly` → **308**, tombol FILTER ada, 3 baris kategori drama tergambar. **Baris "Film Terbaru" masih 0 — itu DIHARAPKAN**, bukan kemunduran: Playly masih mati (diketuk sesudah rilis, tetap `402 DEPLOYMENT_DISABLED`).
+
+**Beban DramaKu ke jatah Vercel Playly turun ~24× dalam satu hari** (~552 → ~23 panggilan/jam). Begitu project mereka hidup, video kembali sendiri dalam beberapa menit **tanpa rilis apa pun dari kita**.
+
 ## 3. Pekerjaan berikutnya yang dipilih owner
 
 **Pangkas beban ke Playly sampai AKARNYA.** TTL hanya memperjarang; bentuk dasarnya tetap 1 panggilan detail per video hanya untuk tahu sampul + apakah berkasnya ada (`lib/playly-publik.ts`, blok `fetchPlaylyDetailPublik` per video). Sasaran: menghilangkan sebagian besar panggilan itu, bukan sekadar memperjarangnya.

@@ -21,6 +21,7 @@ import { STRIP_KATALOG, buildNavMenus } from "@/lib/nav-katalog";
 import type { PlaylyVideoPublik } from "@/lib/playly-publik";
 import CatalogCard from "./CatalogCard";
 import FeaturedRow from "./FeaturedRow";
+import FilterKatalog from "./FilterKatalog";
 import StripKatalog from "./StripKatalog";
 import { chromeKatalog } from "./KepalaKatalog";
 import HasilPlayly, { cariVideoPlayly } from "./HasilPlayly";
@@ -183,8 +184,17 @@ export default function CatalogBrowser({
 
       {/* ============ 2. STRIP KATALOG ======================================
           Daftar TETAP milik owner (lib/nav-katalog.ts `STRIP_KATALOG`), sama
-          persis di ketiga halaman berkatalog. */}
-      <StripKatalog items={STRIP_KATALOG} />
+          persis di ketiga halaman berkatalog.
+
+          Tombol FILTER di ujung kanannya ditambahkan 2026-09-26 atas permintaan
+          owner. Komponennya SAMA dengan yang dipakai baris tab halaman depan —
+          owner mengira filternya belum ada justru karena tombol itu cuma
+          terpasang di `/`, sedangkan siapa pun yang sudah login selalu
+          dilempar ke halaman ini (app/components/RedirectIfAuthed.tsx:9). */}
+      <StripKatalog
+        items={STRIP_KATALOG}
+        aksiKanan={<FilterKatalog dramas={dramas} />}
+      />
 
       {/* ============ 3. BANNER UNGGULAN (ramping) ========================== */}
       {heroSlot}

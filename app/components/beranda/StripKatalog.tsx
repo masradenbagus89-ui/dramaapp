@@ -14,6 +14,16 @@ type Props = {
    * tidak menyaring di tempat (mis. halaman depan) cukup mengosongkannya.
    */
   activeHref?: string;
+  /**
+   * Isi ujung KANAN strip — dipakai /beranda untuk tombol FILTER hijau
+   * (owner 2026-09-26, meniru situs katalog pembanding: daftar pintasan di
+   * kiri, tombol filter di kanan, dalam satu baris).
+   *
+   * Opsional, jadi halaman lain yang memakai strip ini (/ dan /discover) tidak
+   * berubah sama sekali — halaman depan sudah punya tombol filternya sendiri di
+   * baris tab, dan /discover memang halaman penyaring itu sendiri.
+   */
+  aksiKanan?: React.ReactNode;
 };
 
 const ITEM_CLASS =
@@ -35,36 +45,39 @@ const ITEM_CLASS =
  * Penyaringan genre di tempat pada /beranda TIDAK hilang — masih ada di
  * dropdown "Semua genre" pada bar cari halaman itu.
  */
-export default function StripKatalog({ items, activeHref }: Props) {
+export default function StripKatalog({ items, activeHref, aksiKanan }: Props) {
   if (items.length === 0) return null;
 
   return (
     <div className="border-b-2 border-amber-600 bg-gradient-to-r from-amber-400 to-yellow-400">
-      {/* Digeser ke samping kalau tak muat (layar sempit), bukan membungkus:
-          daftar ini sengaja dijaga pendek oleh owner supaya muat satu baris di
-          layar lebar, dan strip yang berbaris-baris akan mendorong poster
-          pertama turun keluar layar pertama. */}
-      <div
-        className={cn(
-          SHELL,
-          "no-scrollbar flex items-center overflow-x-auto px-2 md:px-4",
-        )}
-      >
-        {items.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            aria-current={item.href === activeHref ? "page" : undefined}
-            className={cn(
-              ITEM_CLASS,
-              item.href === activeHref
-                ? "bg-zinc-950 text-amber-400"
-                : "text-zinc-900 hover:bg-amber-300",
-            )}
-          >
-            {item.label}
-          </Link>
-        ))}
+      <div className={cn(SHELL, "flex items-center gap-2 px-2 md:px-4")}>
+        {/* Digeser ke samping kalau tak muat (layar sempit), bukan membungkus:
+            daftar ini sengaja dijaga pendek oleh owner supaya muat satu baris di
+            layar lebar, dan strip yang berbaris-baris akan mendorong poster
+            pertama turun keluar layar pertama.
+
+            Area geser dibatasi ke chip saja (`flex-1`), TIDAK mencakup tombol
+            di kanan: kalau tombolnya ikut di dalam area geser, di layar HP ia
+            terdorong keluar pandangan dan penonton mengira filternya tidak ada. */}
+        <div className="no-scrollbar flex flex-1 items-center overflow-x-auto">
+          {items.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={item.href === activeHref ? "page" : undefined}
+              className={cn(
+                ITEM_CLASS,
+                item.href === activeHref
+                  ? "bg-zinc-950 text-amber-400"
+                  : "text-zinc-900 hover:bg-amber-300",
+              )}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </div>
+
+        {aksiKanan && <div className="shrink-0 py-1">{aksiKanan}</div>}
       </div>
     </div>
   );

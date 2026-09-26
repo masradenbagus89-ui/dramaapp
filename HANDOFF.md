@@ -11,6 +11,21 @@
 
 **Terakhir diisi:** 2026-09-26.
 
+## 2026-09-26 (lanjutan) — Tombol FILTER dipasang di /beranda — SELESAI & TERUJI, menunggu izin rilis
+
+**🪤 PELAJARAN UTAMA SESI INI: "komponennya ADA dan teruji" ≠ "orangnya bisa MELIHATNYA".** Owner melapor "di LK21 ada filter, dramaku belum ada". Ternyata tombol FILTER hijau **sudah dibuat 2026-09-22** dan berfungsi sempurna — bentuknya pun sudah persis contoh owner (hijau `bg-emerald-600`, ikon `SlidersHorizontal`, teks "Filter" + panah). Masalahnya ia **cuma terpasang di halaman depan `/`**, sedangkan `RedirectIfAuthed` (app/components/RedirectIfAuthed.tsx:9) melempar siapa pun yang **sudah login** dari `/` ke `/beranda` — dan `/beranda` nol tab, nol filter. Owner selalu login, jadi tombol itu **tidak pernah sekali pun terbuka untuknya** selama 4 hari. Diukur di produksi sebelum diperbaiki: `/` → `bg-emerald-600` **2 kemunculan** + deret tab lengkap; `/beranda` → **0 dan 0**. **Aturan yang lahir: sebelum membangun fitur yang "belum ada", cek dulu apakah ia sudah ada di halaman LAIN yang tidak dilihat pelapor** — `RedirectIfAuthed` membuat halaman depan praktis tak terjangkau owner, jadi apa pun yang hanya dipasang di sana sama saja tidak ada.
+
+**Yang dikerjakan (owner memilih lewat popup: "Filter di ujung strip genre"):**
+- `app/components/beranda/FilterKatalog.tsx` **(BARU)** — tombol + isinya diekstrak dari dalam `TabKatalogTampilan.tsx`. Sekarang SATU sumber untuk dua pemakai; menyalinnya ke tempat kedua akan melahirkan dua tombol yang isinya pelan-pelan berbeda. Sengaja tanpa penanda `"use client"` supaya sah dirender dari komponen server (baris tab `/`) maupun client (`CatalogBrowser` di `/beranda`).
+- `StripKatalog.tsx` — prop OPSIONAL `aksiKanan`. Area geser dipersempit ke chip saja (`flex-1 overflow-x-auto`), tombolnya di LUAR area itu: kalau ikut masuk, di layar HP ia terdorong keluar pandangan dan penonton mengira filternya tidak ada — bentuk lain dari masalah yang sedang diperbaiki. `/` dan `/discover` tidak mengisi slot ini, jadi keduanya nol perubahan.
+- `CatalogBrowser.tsx` — mengisi `aksiKanan` dengan `<FilterKatalog dramas={dramas} />`.
+
+**Isi filter (tidak diubah, sudah benar):** Urutkan (populer · rating · judul A-Z) · Genre · Tahun · "Buka katalog lengkap". Genre & tahun **dihitung dari katalog**, bukan daftar tulis-tangan — pilihan kosong yang diklik lalu memulangkan halaman hampa sudah jadi aturan terlarang sejak 2026-09-21.
+
+**Bukti:** build **exit 0** (`/beranda` tetap `○ (Static) 1m 1y` — nol kemunduran) · tsc **exit 0** · **1088 tes / 75 berkas hijau** · **mutation check 4 arah semuanya MERAH**. Dari server hasil build `:3099`: `/beranda` menggambar `bg-emerald-600` **1×** dan teks "Filter" **1×**, berada di dalam strip kuning (`from-amber-400 to-yellow-400`) dengan chip di `flex flex-1 … overflow-x-auto` dan tombol di luarnya.
+
+---
+
 ## 2026-09-26 (komputer OWNER) — DramaKu jadi "isinya film": navbar ramping + video masuk beranda — ✅ TAYANG & TERBUKTI (`19e30ee`)
 
 **Status: SUDAH DIRILIS atas izin owner, dual push tuntas, dan terbukti tayang di situs sungguhan.** Ketiganya di `19e30ee` (dibaca ulang lewat `git ls-remote`, bukan diasumsikan): produksi `masradenbagus89-ui/dramaapp` · cermin `ojokesusu/dramaku` · `main` lokal. Push fast-forward, nol paksaan. Rencana lengkap: `docs/lintasai/rencana/2026-09-26-dramaku-isinya-film.md`.

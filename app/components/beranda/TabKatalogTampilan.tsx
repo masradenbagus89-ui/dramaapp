@@ -6,21 +6,11 @@ import {
   TAB_ROW_ITEMS,
   type TabKey,
 } from "@/lib/tab-katalog";
-import { availableGenres } from "@/lib/beranda-catalog";
-import { getYearOptions } from "@/lib/discover";
 import CatalogCard from "./CatalogCard";
 import FeaturedRow from "./FeaturedRow";
+import FilterKatalog from "./FilterKatalog";
 import { GRID_CLASS, ROW_KATEGORI_CARD_CLASS, SHELL } from "./shell";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { ChevronDown, SlidersHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
@@ -155,80 +145,5 @@ export default function TabKatalogTampilan({
         </div>
       )}
     </section>
-  );
-}
-
-/**
- * Tombol FILTER di ujung kanan deret tab.
- *
- * Isinya HANYA pilihan yang benar-benar ada di katalog (genre & tahun dihitung
- * dari data, bukan daftar tetap) dan semuanya menuju /discover yang memang
- * menyaring. Aturan project sejak 2026-09-21: tombol yang diklik lalu
- * menampilkan seluruh katalog seolah bekerja LEBIH menyesatkan daripada tombol
- * yang tidak ada.
- */
-function FilterKatalog({ dramas }: { dramas: Drama[] }) {
-  const genre = availableGenres(dramas);
-  const tahun = getYearOptions(dramas);
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          size="sm"
-          className="h-9 shrink-0 gap-1.5 rounded-sm bg-emerald-600 px-3 text-[11px] font-extrabold uppercase tracking-wide text-white hover:bg-emerald-500 md:text-xs"
-        >
-          <SlidersHorizontal className="size-3.5" />
-          Filter
-          <ChevronDown className="size-3.5" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="end"
-        className="max-h-[70vh] w-56 overflow-y-auto border-zinc-800 bg-zinc-950 text-zinc-200"
-      >
-        <DropdownMenuLabel className="text-amber-400">Urutkan</DropdownMenuLabel>
-        <DropdownMenuItem asChild>
-          <Link href="/discover?sort=populer">Paling banyak ditonton</Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link href="/discover?sort=rating">Rating tertinggi</Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link href="/discover?sort=judul">Judul A-Z</Link>
-        </DropdownMenuItem>
-
-        {genre.length > 0 && (
-          <>
-            <DropdownMenuSeparator className="bg-zinc-800" />
-            <DropdownMenuLabel className="text-amber-400">Genre</DropdownMenuLabel>
-            {genre.map((g) => (
-              <DropdownMenuItem key={g} asChild>
-                <Link href={`/discover?cat=${encodeURIComponent(g)}`}>{g}</Link>
-              </DropdownMenuItem>
-            ))}
-          </>
-        )}
-
-        {tahun.length > 0 && (
-          <>
-            <DropdownMenuSeparator className="bg-zinc-800" />
-            <DropdownMenuLabel className="text-amber-400">Tahun</DropdownMenuLabel>
-            {tahun.map((t) => (
-              <DropdownMenuItem key={t} asChild>
-                <Link href={`/discover?year=${encodeURIComponent(t)}`}>{t}</Link>
-              </DropdownMenuItem>
-            ))}
-          </>
-        )}
-
-        <DropdownMenuSeparator className="bg-zinc-800" />
-        <DropdownMenuItem asChild>
-          <Link href="/discover" className="font-bold text-amber-400">
-            Buka katalog lengkap →
-          </Link>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
   );
 }

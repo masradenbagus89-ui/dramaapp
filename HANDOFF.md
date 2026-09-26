@@ -11,9 +11,19 @@
 
 **Terakhir diisi:** 2026-09-26.
 
-## 2026-09-26 (komputer OWNER) — DramaKu jadi "isinya film": navbar ramping + video Playly masuk beranda — SELESAI, BELUM DI-PUSH
+## 2026-09-26 (komputer OWNER) — DramaKu jadi "isinya film": navbar ramping + video masuk beranda — ✅ TAYANG & TERBUKTI (`19e30ee`)
 
-**Status: kode selesai & teruji, MENUNGGU IZIN RILIS owner.** Belum di-commit, belum di-push ke mana pun. Rencana lengkap: `docs/lintasai/rencana/2026-09-26-dramaku-isinya-film.md`.
+**Status: SUDAH DIRILIS atas izin owner, dual push tuntas, dan terbukti tayang di situs sungguhan.** Ketiganya di `19e30ee` (dibaca ulang lewat `git ls-remote`, bukan diasumsikan): produksi `masradenbagus89-ui/dramaapp` · cermin `ojokesusu/dramaku` · `main` lokal. Push fast-forward, nol paksaan. Rencana lengkap: `docs/lintasai/rencana/2026-09-26-dramaku-isinya-film.md`.
+
+**🟢 BUKTI TAYANG (diukur dari `https://dramaapp.vercel.app`, ±2,5 menit sesudah push):**
+- `/drama/<id>` → `href="/playly"` **0 kemunculan**; isi `<nav>` atas tinggal satu tautan: `href="/beranda">Beranda`. (Sebelum rilis: 1 kemunculan.)
+- `/beranda` → baris **"Film Terbaru" ada di urutan PERTAMA**, di atas "Drama Terbaru", dan membawa **40 tautan `/tonton/`** (= `ROW_MAX_ITEMS`, batas yang benar).
+- `/tonton/arcadian-1790342663839` → **200**, `<title>` = "Nonton Arcadian | DramaKu".
+- `/tonton/tebakan-11111` → **404**. Gerbang IDOR bekerja di produksi, bukan cuma di tes.
+
+**Ini SEKALIGUS mematahkan kekhawatiran yang tercatat sebelum rilis** ("daftar video mungkin kosong"): kosongnya memang cuma di lokal karena `.env.local` tak memuat kunci API Playly. Di Vercel kuncinya ada, dan 40 video langsung tergambar.
+
+**🔴 SISA YANG BELUM TUNTAS — alamat `/playly` masih bocor ke penonton.** Tulisan "Playly" memang nol di layar, TAPI tautan "Lihat semua" di ujung kanan baris "Film Terbaru" masih menuju `href="/playly"`. Penonton yang mengkliknya akan melihat kata "playly" di kotak alamat browser — dan itu persis yang owner minta hilang. Halaman tujuannya sendiri sudah dinetralkan judulnya ("Film & Video"). **Cara membereskannya kalau owner mau:** pindahkan route `app/playly/` → `app/film/`, lalu pasang redirect permanen `/playly` → `/film` di `next.config.ts` supaya tautan lama & hasil Google tidak mati. Belum dikerjakan — menunggu keputusan owner.
 
 **Yang diminta owner:** navbar halaman film seperti LK21 (Playly & Profile dilepas, Profile pindah ke avatar), dan semua video Playly langsung masuk beranda sesuai genre — "viewer tidak perlu tahu darimana asal video di upload".
 

@@ -215,20 +215,30 @@ describe("beban panggilan ke Playly ditekan", () => {
   it("detail per-video disimpan JAUH lebih lama daripada daftarnya", () => {
     // Sekali mengambil daftar = 1 panggilan daftar + 1 panggilan detail per
     // video (46). Sisi detail itulah pemakai kuota terbesar; TTL yang sama
-    // dengan daftar berarti 46 panggilan tiap 5 menit.
+    // dengan daftar berarti 46 panggilan tiap 5 menit (~400.000 sebulan) —
+    // dan panggilan itu membebani jatah Vercel Playly, yang pada 2026-09-26
+    // habis sampai project mereka dinonaktifkan.
     expect(PLAYLY_DETAIL_TTL_SECONDS).toBeGreaterThan(PLAYLY_PUBLIK_TTL_SECONDS);
-    expect(PLAYLY_DETAIL_TTL_SECONDS).toBeGreaterThanOrEqual(1800);
+    // Keputusan owner 2026-09-26: 2 jam (~23 panggilan/jam, ~17.000 sebulan).
+    expect(PLAYLY_DETAIL_TTL_SECONDS).toBeGreaterThanOrEqual(7200);
   });
 
-  it("TTL detail TIDAK melewati umur tanda tangan sampul (6 jam)", () => {
-    // Sampul dari Playly bertanda tangan dan mati setelah 21600 detik
-    // (diukur di produksi 2026-09-26). Menyimpannya lebih lama berarti
-    // menyajikan alamat yang sudah mati.
+  it("TTL detail menyisakan JARAK AMAN dari umur tanda tangan sampul", () => {
+    // Sampul dari Playly bertanda tangan dan mati setelah 21600 detik (6 jam,
+    // diukur di produksi 2026-09-26). Menyimpannya sampai mepet batas itu
+    // berarti sebagian penonton menerima alamat yang sudah mati — jadi yang
+    // dijaga bukan sekadar "< 21600", melainkan ada jarak amannya.
+    const UMUR_TANDA_TANGAN = 21600;
     expect(
       PLAYLY_DETAIL_TTL_SECONDS,
       "TTL detail melewati umur tanda tangan sampul — sampulnya akan mati " +
         "sebelum disegarkan",
-    ).toBeLessThan(21600);
+    ).toBeLessThan(UMUR_TANDA_TANGAN);
+    expect(
+      UMUR_TANDA_TANGAN - PLAYLY_DETAIL_TTL_SECONDS,
+      "jarak amannya menipis di bawah 2 jam — sampul yang diambil di awal " +
+        "periode berisiko mati sebelum periodenya habis",
+    ).toBeGreaterThanOrEqual(7200);
   });
 
   it("fungsi detail memakai TTL-nya sendiri, bukan TTL daftar", () => {

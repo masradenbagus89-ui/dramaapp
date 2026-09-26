@@ -40,10 +40,17 @@ X-Vercel-Error: DEPLOYMENT_DISABLED
 
 Tiap kali mengambil daftar, DramaKu menembak fungsi Vercel Playly **47 kali** (1 daftar + 1 detail per video × 46). Itulah kenapa pemangkasan kuota di repo ini **bukan sekadar optimasi — ia bagian dari mencegah Playly mati lagi**:
 
-| | Panggilan/jam | Perkiraan sebulan |
-|---|---|---|
-| Sebelum perbaikan | ~552 | ~400.000 |
-| Sesudah `PLAYLY_DETAIL_TTL_SECONDS = 1800` | ~92 | ~66.000 |
+| `PLAYLY_DETAIL_TTL_SECONDS` | Panggilan/jam | Perkiraan sebulan | Video rusak tampil paling lama |
+|---|---|---|---|
+| 300 (asli) | ~552 | ~400.000 | 5 menit |
+| 1800 (tahap 1) | ~92 | ~66.000 | 30 menit |
+| **7200 (sekarang, pilihan owner 2026-09-26)** | **~23** | **~17.000** | **2 jam** |
+
+**Harga yang dipilih owner dengan sadar:** video yang berkasnya tak pernah sampai di Playly (upload putus) baru tersaring dari halaman penonton paling lambat **2 jam** — keluhan aslinya datang 2026-08-29. Risikonya kini lebih kecil daripada dulu karena `playly:cadangan` membuat situs tak lagi kosong saat Playly tersendat.
+
+**❓ BELUM TERUKUR (Playly mati saat ini):** apakah jalur katalog-publik sebenarnya SUDAH mengirim sampul di daftarnya. Kalau ya, detail tak perlu dipanggil untuk video yang sampulnya sudah ada — **penghematan tambahan yang bisa diambil cuma-cuma**. Periksa ini begitu Playly hidup.
+
+**🪤 Yang SUDAH dicoret sebagai jalan buntu — jangan diulang:** memindahkan sampul ke alamat tetap `/api/thumb` supaya daftar tak perlu memanggil detail. Dihitung ulang dan hasilnya **nol penghematan** — 46 panggilan di muka hanya berpindah jadi 46 panggilan saat gambar dimuat. Satu-satunya pengungkit nyata adalah seberapa JARANG detail diambil, yaitu konstanta di atas.
 
 **Keputusan owner 2026-09-26 (mengoreksi rencana sebelumnya):** paket perbaikan DIRILIS **sebelum** Playly hidup, justru supaya saat mereka kembali kita tidak langsung menembaki dengan laju lama. Menunda rilis = jatah mereka berpeluang habis lagi seketika.
 

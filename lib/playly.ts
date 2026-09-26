@@ -1063,25 +1063,40 @@ export const PLAYLY_PUBLIK_TTL_SECONDS = 300;
 /**
  * Berapa lama DETAIL per-video (sampul + status berkas) boleh dipakai ulang.
  *
- * SENGAJA jauh lebih lama dari daftarnya, dan inilah pemangkas kuota terbesar.
- * Sekali mengambil daftar berarti SATU panggilan untuk daftarnya + SATU
- * panggilan detail untuk TIAP video — dengan 46 video itu 47 panggilan. Dengan
- * TTL yang sama (300 detik), sisi detail sendirian menghabiskan ~552 panggilan
- * per jam; pada 1800 detik ia turun jadi ~92. Latar belakangnya insiden
- * 2026-09-26: Playly membalas HTTP 402 (Payment Required) dan seluruh video
- * hilang dari situs.
+ * SENGAJA jauh lebih lama dari daftarnya, dan inilah SATU-SATUNYA pengungkit
+ * nyata atas beban kita ke Playly. Sekali mengambil daftar berarti SATU
+ * panggilan untuk daftarnya + SATU panggilan detail untuk TIAP video — dengan
+ * 46 video itu 47 panggilan, dan sisi detail-lah yang menguasai angkanya.
  *
- * Kenapa aman dipanjangkan: isi yang dibawanya nyaris tak pernah berubah —
- * sebuah video sudah punya berkas atau belum, dan sampulnya tetap. Kalau ada
- * yang berubah, paling lambat 30 menit sudah terbaca.
+ * KENAPA INI PENTING, bukan sekadar optimasi (insiden 2026-09-26): Playly
+ * di-host di Vercel, dan project mereka DINONAKTIFKAN Vercel
+ * (`X-Vercel-Error: DEPLOYMENT_DISABLED`, HTTP 402) karena batas pemakaian.
+ * Panggilan kita ikut membebani jatah itu. Seluruh video hilang dari situs
+ * selama berjam-jam, dan tak satu pun baris kode bisa memperbaikinya.
+ *
+ *   300 detik  (asli)      -> ~552 panggilan/jam  (~400.000 sebulan)
+ *   1800 detik (tahap 1)   ->  ~92 panggilan/jam  (~66.000 sebulan)
+ *   7200 detik (sekarang)  ->  ~23 panggilan/jam  (~17.000 sebulan)
+ *
+ * HARGANYA, dan owner memilihnya dengan sadar 2026-09-26: video yang berkasnya
+ * tak pernah sampai di Playly (upload putus) baru tersaring dari halaman
+ * penonton paling lambat 2 JAM sesudahnya — sebelumnya 30 menit. Keluhan asli
+ * yang melahirkan pemeriksaan ini datang 2026-08-29 (dua video 35 menit yang
+ * diklik lalu memberi layar gagal). Risikonya kini lebih kecil daripada dulu
+ * karena `playly:cadangan` membuat situs tak lagi kosong saat Playly tersendat.
  *
  * ⚠️ BATAS ATAS YANG TIDAK BOLEH DILEWATI: sampul dari Playly BERTANDA TANGAN
  * dan mati setelah 6 jam (`X-Amz-Expires=21600`, diukur di produksi
  * 2026-09-26). Menyimpannya melebihi itu berarti menyajikan alamat yang sudah
- * mati. 1800 detik memberi jarak aman yang lebar; penjaganya
- * tests/playly-cadangan.test.ts.
+ * mati. 7200 detik menyisakan jarak aman 4 jam; penjaganya
+ * tests/playly-cadangan.test.ts, yang MERAH kalau nilainya mendekati batas.
+ *
+ * ❓ BELUM TERUKUR (Playly mati saat ini): apakah jalur katalog-publik
+ * sebenarnya SUDAH mengirim sampul di daftarnya. Kalau ya, detail tak perlu
+ * dipanggil untuk video yang sampulnya sudah ada — penghematan tambahan yang
+ * bisa diambil cuma-cuma. Periksa ini begitu Playly hidup lagi.
  */
-export const PLAYLY_DETAIL_TTL_SECONDS = 1800;
+export const PLAYLY_DETAIL_TTL_SECONDS = 7200;
 
 export type PlaylyMitraResult = {
   videos: PlaylyVideo[];

@@ -54,13 +54,24 @@ Tiap kali mengambil daftar, DramaKu menembak fungsi Vercel Playly **47 kali** (1
 
 **Keputusan owner 2026-09-26 (mengoreksi rencana sebelumnya):** paket perbaikan DIRILIS **sebelum** Playly hidup, justru supaya saat mereka kembali kita tidak langsung menembaki dengan laju lama. Menunda rilis = jatah mereka berpeluang habis lagi seketika.
 
-## 2b. ✅ STATUS RILIS — semua pekerjaan hari ini SUDAH TAYANG (`6c27f41`)
+## 2b. ✅ STATUS RILIS — SELURUH pekerjaan hari ini SUDAH TAYANG (`f95c11e`)
 
-Produksi · cermin · `main` lokal ketiganya di **`6c27f41`** (dibaca ulang lewat `git ls-remote`). Cek cepat: `git log origin/main..main --oneline` → kosong = tak ada yang tertinggal.
+Produksi · cermin · `main` lokal ketiganya di **`f95c11e`** (dibaca ulang lewat `git ls-remote`). Cek cepat: `git log origin/main..main --oneline` → **kosong** = tak ada yang tertinggal.
 
-Diverifikasi sesudah rilis: `/` `/beranda` `/film` `/discover` semuanya **200**, `/playly` → **308**, tombol FILTER ada, 3 baris kategori drama tergambar. **Baris "Film Terbaru" masih 0 — itu DIHARAPKAN**, bukan kemunduran: Playly masih mati (diketuk sesudah rilis, tetap `402 DEPLOYMENT_DISABLED`).
+**Sembilan rilis hari ini, semuanya terverifikasi tayang:**
+1. Navbar halaman film dirampingkan; urusan akun pindah ke avatar (`MenuAkun`)
+2. Video tampil sebagai film biasa di /beranda + halaman tonton per video (`/tonton/…`)
+3. Kolom Kategori video di panel admin (`playly:genre`, nol SQL untuk owner)
+4. Tombol FILTER di /beranda
+5. `/playly` → `/film` + pengalihan permanen 308
+6. Penanda VideoObject untuk Google + alamat gambar tetap (`/api/thumb/…`)
+7. Situs tahan saat Playly bermasalah (`playly:cadangan`) + kuota dipangkas **~24×**
+8. Deret tab katalog di /beranda
+9. Tab pindah halaman (`/katalog`) + rekomendasi kembar dilepas + kotak pembatas
 
-**Beban DramaKu ke jatah Vercel Playly turun ~24× dalam satu hari** (~552 → ~23 panggilan/jam). Begitu project mereka hidup, video kembali sendiri dalam beberapa menit **tanpa rilis apa pun dari kita**.
+**Diverifikasi di produksi sesudah rilis terakhir:** `/` `/beranda` `/film` `/katalog` `/katalog?tab=terpopuler` semuanya **200**, `/playly` → **308**; `/beranda` punya **6 tautan `/katalog…`**, kotak pembatas tergambar, isi tab **0**, "Rekomendasi Untuk Kamu" **0**; `/katalog` menggambar **35 kartu**.
+
+**Baris "Film Terbaru" masih 0 — itu DIHARAPKAN**, bukan kemunduran: Playly masih mati (diketuk sesudah rilis, tetap `402 DEPLOYMENT_DISABLED`).
 
 ## 2c. Deret tab katalog dipasang di /beranda (2026-09-26, putaran kedua)
 
@@ -77,6 +88,10 @@ Diverifikasi sesudah rilis: `/` `/beranda` `/film` `/discover` semuanya **200**,
 **🪤 Penjaga PALSU yang tertangkap mutation check:** tes "mengoper basePath" versi pertama cuma mencari teks `basePath="/beranda"` di berkas halaman — dan LOLOS saat basePath dilepas dari `<TabKatalog>`, sebab isi `<Suspense fallback>` memuat teks yang sama. Diperbaiki jadi memeriksa ELEMEN-nya (`<TabKatalog … />`), lalu diuji-balik lagi: merah. **Pelajaran: kalau satu berkas memuat dua pemakaian prop yang sama, pencocokan teks tingkat-berkas bukan penjaga.**
 
 **Bukti:** build exit 0 (`/` dan `/beranda` sama-sama tetap `○ Static`) · tsc exit 0 · **1154 tes / 79 berkas hijau** · mutation check 5 arah semuanya MERAH. Dari server hasil build: `/beranda` menggambar **5 label tab**, 5 tujuan `href="/beranda?tab=…"`, **nol** yang menunjuk `/`, tombol Semua ada, dan `?tab=terpopuler` benar-benar mengganti judul bagian jadi "Paling Banyak Ditonton". Halaman depan tidak berubah (5 tab tetap `/?tab=`). Tombol hijau terhitung 2 di HTML **kedua halaman** — itu pola `<Suspense>` (kerangka + isi), bukan dobel; kalau benar dobel, beranda akan 3.
+
+**🔴 KOREKSI atas kalimat di atas — DUA klaim di blok ini SUDAH TIDAK BERLAKU, jangan dipercaya mentah:**
+1. **"`?tab=terpopuler` benar-benar mengganti judul bagian jadi 'Paling Banyak Ditonton'" — ITU SALAH BACA.** Yang ketemu di HTML ternyata nama BARIS KATEGORI di bawah halaman, bukan judul tabnya. Kenyataannya **HTML dari server SELALU menampilkan tab bawaan**; `?tab=` dibaca di BROWSER, bukan oleh halaman (itu disengaja supaya halaman tetap statis). Artinya `curl` — dan alat pemeriksa apa pun yang tak menjalankan JavaScript — selalu melihat "Terbaru" berapa kali pun alamatnya diganti. Penjaganya sekarang `tests/tab-katalog-pembaca.test.ts`, yang menjalankan pembacanya sungguhan dengan alamat tiruan.
+2. **`basePath="/beranda"` sudah TIDAK dipakai lagi** — diganti `"/katalog"` di putaran ketiga (blok 2d), sebab tab kini PINDAH HALAMAN. Begitu pula penanda `#daftar-katalog` dan tombol "Semua" di beranda: keduanya peninggalan perilaku lama.
 
 ## 2d. Baris tab dirombak sesudah owner melihatnya di localhost (2026-09-26, putaran ketiga)
 
@@ -97,9 +112,17 @@ Diverifikasi sesudah rilis: `/` `/beranda` `/film` `/discover` semuanya **200**,
 
 **Bukti:** build exit 0 (`/katalog` tercatat `○ Static`; `/`, `/beranda`, `/film` tetap `○`) · tsc exit 0 · **1179 tes / 80 berkas hijau** · mutation check 5 arah (sesudah penjaga palsunya diperbaiki) semuanya MERAH. Dari server lokal hasil build: `/beranda` punya **6 tautan `/katalog…`**, kotak pembatas tergambar, isi tab **0**, "Rekomendasi Untuk Kamu" **0**; `/katalog` menggambar **35 kartu** + navbar.
 
-## 3. Pekerjaan berikutnya yang dipilih owner
+**✅ TERVERIFIKASI TAYANG (`f95c11e`)** — diukur ulang di produksi sesudah rilis: angka yang sama persis, plus `/playly` → 308, `/film` → 200, `/` → 200 (nol kemunduran).
 
-**Pangkas beban ke Playly sampai AKARNYA.** TTL hanya memperjarang; bentuk dasarnya tetap 1 panggilan detail per video hanya untuk tahu sampul + apakah berkasnya ada (`lib/playly-publik.ts`, blok `fetchPlaylyDetailPublik` per video). Sasaran: menghilangkan sebagian besar panggilan itu, bukan sekadar memperjarangnya.
+**Pelajaran alur kerja yang layak dipertahankan:** ketiga masukan owner di putaran ini muncul HANYA karena ia memeriksa di `localhost:3000` sebelum rilis. Tak satu pun bisa ditangkap tes, build, atau pembacaan HTML — semuanya soal rasa memakai. Untuk perubahan TAMPILAN, tawarkan localhost dulu sebelum minta izin rilis.
+
+## 3. Pemangkasan beban ke Playly — SUDAH dikerjakan, dan batasnya sudah diukur
+
+**Dikerjakan:** `PLAYLY_DETAIL_TTL_SECONDS` 300 → 1800 → **7200** (2 jam). Beban ~552 → **~23** panggilan/jam.
+
+**🪤 SATU JALAN BUNTU SUDAH DICORET — jangan diulang.** Sempat dirancang memindahkan sampul ke alamat tetap `/api/thumb` supaya pengambilan daftar tak perlu memanggil detail. Dihitung ulang: **NOL penghematan** — 46 panggilan di muka cuma berpindah jadi 46 panggilan saat gambar dimuat. **Satu-satunya pengungkit nyata adalah seberapa JARANG detail diambil**, yaitu konstanta di atas. Menaikkannya lagi ada harganya: video yang upload-nya putus tampil lebih lama (sekarang paling lama 2 jam; keluhan aslinya 2026-08-29).
+
+**❓ YANG BELUM TERUKUR, periksa begitu Playly hidup:** apakah jalur katalog-publik sebenarnya SUDAH mengirim sampul di daftarnya. Kalau ya, detail tak perlu dipanggil untuk video yang sampulnya sudah ada — **penghematan tambahan yang bisa diambil cuma-cuma**. Cara mengeceknya: panggil endpoint katalog Playly sekali, lihat apakah tiap baris membawa field sampul (`THUMB_KEYS` di lib/playly.ts:393).
 
 ## 4. Utang teknis yang ikut tercatat (belum dikerjakan, tidak mendesak)
 

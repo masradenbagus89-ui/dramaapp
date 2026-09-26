@@ -29,6 +29,7 @@
 import { formatDuration } from "./playly";
 import { getPlaylyVideosPublik, type PlaylyVideoPublik } from "./playly-publik";
 import {
+  getPlaylyCadanganCached,
   getPlaylyGenresCached,
   getPlaylyHiddenIdsCached,
   getPublishedPlaylyWebhookVideos,
@@ -38,6 +39,12 @@ import {
 
 export type PlaylyGabunganResult = {
   videos: PlaylyVideoPublik[];
+  /**
+   * true = daftarnya datang dari SALINAN terakhir, bukan dari pengambilan
+   * barusan. Halaman boleh memakainya untuk menyebut kesegarannya; yang
+   * penting daftarnya tidak kosong saat Playly sedang menolak.
+   */
+  dariCadangan?: boolean;
   /**
    * null = kedua sumber terbaca. Terisi = ADA sumber yang bermasalah.
    *
@@ -235,17 +242,51 @@ async function rakitGabungan(
   // umumnya juga sudah kosong.
   const webhookAman = hiddenIds.terbaca ? webhook.videos : [];
 
-  return {
-    videos: gabungVideoPlayly(
-      katalog.videos,
-      webhookAman,
-      hiddenIds.ids,
-      genres,
-    ),
-    // Katalog didahulukan karena ia sumber utama halaman ini; kalau dua-duanya
-    // bermasalah, satu kalimat sudah cukup untuk pengunjung.
-    error: katalog.error ?? webhook.error,
-  };
+  const videos = gabungVideoPlayly(
+    katalog.videos,
+    webhookAman,
+    hiddenIds.ids,
+    genres,
+  );
+  // Katalog didahulukan karena ia sumber utama halaman ini; kalau dua-duanya
+  // bermasalah, satu kalimat sudah cukup untuk pengunjung.
+  const error = katalog.error ?? webhook.error;
+
+  // JARING TERAKHIR (insiden 2026-09-26, Playly membalas HTTP 402): kalau
+  // pengambilan BERMASALAH dan hasilnya kosong, sajikan salinan terakhir yang
+  // pernah berhasil. Tanpa ini, satu gangguan di pihak Playly menghapus
+  // SELURUH video dari /beranda, /film, /discover sekaligus, dan tiap halaman
+  // tonton membalas 404 — terukur hari itu.
+  //
+  // Dua syarat, dan keduanya wajib:
+  //   - `error` terisi → jangan pakai salinan saat pengambilannya BERHASIL
+  //     tapi memang belum ada video (mis. akun baru). Salinan yang menimpa
+  //     keadaan sah "belum ada video" akan menghidupkan kembali video yang
+  //     sudah sengaja ditarik.
+  //   - daftarnya kosong → kalau satu sumber masih membawa video, itu yang
+  //     dipakai; salinan tidak boleh menggeser data yang lebih baru.
+  if (error && videos.length === 0) {
+    const cadangan = await getPlaylyCadanganCached<PlaylyVideoPublik>().catch(
+      () => null,
+    );
+    if (cadangan && cadangan.videos.length > 0) {
+      // Daftar sembunyi admin TETAP berlaku atas salinan — kalau tidak, video
+      // yang sengaja disembunyikan bisa muncul lagi lewat pintu ini. Aturan
+      // yang sama dengan jalur webhook di `gabungVideoPlayly`.
+      const disembunyikan = new Set(hiddenIds.ids);
+      const aman = hiddenIds.terbaca
+        ? cadangan.videos.filter((v) => !disembunyikan.has(v.id))
+        : [];
+      if (aman.length > 0) {
+        console.warn(
+          `[playly] memakai salinan ${aman.length} video (disimpan ${cadangan.disimpanPada}) — pengambilan gagal: ${error}`,
+        );
+        return { videos: aman, error, dariCadangan: true };
+      }
+    }
+  }
+
+  return { videos, error };
 }
 
 /**

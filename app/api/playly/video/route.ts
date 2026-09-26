@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fetchPlaylyVideoUrl } from "@/lib/playly";
 import { getPlaylyVideosGabungan } from "@/lib/playly-gabungan";
+import { setPlaylyCadangan } from "@/lib/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -48,9 +49,36 @@ export async function GET(req: NextRequest) {
   // lolos verifikasi kunci (lib/playly-webhook.ts), berstatus published, dan
   // tidak ada di daftar sembunyi admin. Kalau gerbang ini tetap membaca katalog
   // saja, video webhook akan TAMPIL di halaman tapi membalas 404 saat diklik.
-  const { videos } = await getPlaylyVideosGabungan();
+  const { videos, error, dariCadangan } = await getPlaylyVideosGabungan();
   if (!videos.some((v) => v.id === id)) {
     return gagal(404, "Video tidak tersedia.");
+  }
+
+  // SIMPAN SALINAN — sengaja di SINI, eksplisit, bukan diselipkan ke dalam
+  // fungsi pembacanya (§3.7: yang mengubah data jangan sekaligus jadi sumber
+  // jawaban; halaman tidak boleh diam-diam menulis ke database tiap digambar).
+  //
+  // Kenapa endpoint INI yang dipilih sebagai penulis: ia satu-satunya jalur
+  // yang (a) sudah `force-dynamic`, (b) sudah membaca daftar SEGAR, dan
+  // (c) dipanggil tiap kali ada penonton memutar video — jadi salinannya ikut
+  // segar mengikuti pemakaian nyata, tanpa menambah satu pun panggilan ke
+  // Playly.
+  //
+  // Dua pagar: hanya menyimpan saat pengambilan benar-benar bersih (`error`
+  // null), dan tidak menyimpan ulang daftar yang ASALNYA dari salinan — kalau
+  // tidak, salinan lama akan terus memperbarui tanggalnya sendiri dan terlihat
+  // segar padahal isinya basi.
+  //
+  // `void` + `catch`: menyimpan salinan TIDAK boleh menunda atau menggagalkan
+  // pemutaran video. Kegagalannya cukup dicatat di log server.
+  if (!error && !dariCadangan) {
+    void setPlaylyCadangan(videos).catch((err: unknown) => {
+      console.warn(
+        `[playly] salinan daftar gagal disimpan: ${
+          err instanceof Error ? err.message : String(err)
+        }`,
+      );
+    });
   }
 
   const videoUrl = await fetchPlaylyVideoUrl(id);

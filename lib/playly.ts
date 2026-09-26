@@ -779,6 +779,22 @@ async function ambilJsonPlayly(
       502,
     );
   }
+  // 402 = Payment Required. Ditangani terpisah karena ia SATU-SATUNYA kode
+  // yang tak bisa diperbaiki dari sisi kita sama sekali — bukan kunci salah,
+  // bukan jaringan, bukan alamat. Terjadi sungguhan 2026-09-26 dan seluruh
+  // video hilang dari situs; waktu itu panel admin hanya menulis "Playly
+  // membalas error (HTTP 402)", yang tidak memberi tahu apa pun tentang apa
+  // yang harus dilakukan. Pesan ini menyebut langkahnya, bukan cuma kodenya.
+  if (res.status === 402) {
+    throw new PlaylyError(
+      "Playly menolak karena urusan pembayaran/kuota akun (HTTP 402). " +
+        "Tidak ada yang bisa diperbaiki dari sisi DramaKu — buka dashboard " +
+        "Playly dan cek status langganan, sisa kuota API, atau tagihan yang " +
+        "belum dibayar. Daftar video akan kembali sendiri begitu Playly " +
+        "melayani lagi.",
+      402,
+    );
+  }
   if (!res.ok) {
     throw new PlaylyError(`Playly membalas error (HTTP ${res.status}).`, 502);
   }
@@ -1033,6 +1049,29 @@ export async function fetchPlaylyVideos(
 /** Berapa lama daftar video Playly boleh dipakai ulang di halaman publik. */
 export const PLAYLY_PUBLIK_TTL_SECONDS = 300;
 
+/**
+ * Berapa lama DETAIL per-video (sampul + status berkas) boleh dipakai ulang.
+ *
+ * SENGAJA jauh lebih lama dari daftarnya, dan inilah pemangkas kuota terbesar.
+ * Sekali mengambil daftar berarti SATU panggilan untuk daftarnya + SATU
+ * panggilan detail untuk TIAP video — dengan 46 video itu 47 panggilan. Dengan
+ * TTL yang sama (300 detik), sisi detail sendirian menghabiskan ~552 panggilan
+ * per jam; pada 1800 detik ia turun jadi ~92. Latar belakangnya insiden
+ * 2026-09-26: Playly membalas HTTP 402 (Payment Required) dan seluruh video
+ * hilang dari situs.
+ *
+ * Kenapa aman dipanjangkan: isi yang dibawanya nyaris tak pernah berubah —
+ * sebuah video sudah punya berkas atau belum, dan sampulnya tetap. Kalau ada
+ * yang berubah, paling lambat 30 menit sudah terbaca.
+ *
+ * ⚠️ BATAS ATAS YANG TIDAK BOLEH DILEWATI: sampul dari Playly BERTANDA TANGAN
+ * dan mati setelah 6 jam (`X-Amz-Expires=21600`, diukur di produksi
+ * 2026-09-26). Menyimpannya melebihi itu berarti menyajikan alamat yang sudah
+ * mati. 1800 detik memberi jarak aman yang lebar; penjaganya
+ * tests/playly-cadangan.test.ts.
+ */
+export const PLAYLY_DETAIL_TTL_SECONDS = 1800;
+
 export type PlaylyMitraResult = {
   videos: PlaylyVideo[];
   /**
@@ -1202,7 +1241,7 @@ export type PlaylyDetailPublik = {
 export async function fetchPlaylyDetailPublik(
   videoId: string,
   config: PlaylyConfig = readPlaylyConfig(),
-  revalidateSeconds: number = PLAYLY_PUBLIK_TTL_SECONDS,
+  revalidateSeconds: number = PLAYLY_DETAIL_TTL_SECONDS,
 ): Promise<PlaylyDetailPublik> {
   const TIDAK_TAHU: PlaylyDetailPublik = { thumbnail: null, punyaFile: null };
   const url = `${config.baseUrl}${PLAYLY_PUBLIC_VIDEO_PATH}?id=${encodeURIComponent(videoId)}`;

@@ -811,6 +811,8 @@ type PlaylyFile = {
   webhook?: PlaylyWebhookVideo[];
   /** Kategori pilihan admin per video (opsional: file lama tak punya). */
   genre?: Record<string, string>;
+  /** Salinan daftar video terakhir yang berhasil (opsional: file lama tak punya). */
+  cadangan?: PlaylyCadangan;
 };
 const EMPTY_PLAYLY: PlaylyFile = {
   key: null,
@@ -971,6 +973,90 @@ export async function setPlaylyVideoHidden(
     writeLocal("playly.json", file);
   }
   return baru;
+}
+
+// ===========  SALINAN DAFTAR VIDEO (playly:cadangan)  ======================
+//
+// KENAPA ADA (insiden 2026-09-26): Playly membalas **HTTP 402** (Payment
+// Required — urusan pembayaran/kuota di akun kita, bukan kesalahan kode), dan
+// seketika SELURUH video hilang dari /beranda, /film, /discover, serta setiap
+// halaman tonton membalas 404. Tak ada satu pun kode yang bisa memperbaiki 402;
+// yang bisa kita kendalikan adalah AKIBATNYA.
+//
+// Dokumen ini menyimpan daftar video terakhir yang berhasil diambil. Saat
+// Playly menolak atau tersendat, halaman menyajikan salinan ini — jadi
+// gangguan di pihak mereka berubah dari "video hilang total" menjadi "video
+// tetap ada, cuma tidak bertambah". Pola `stale-if-error` dari
+// skills/tahan-gagal/SKILL.md §2 lapis 2: "jangan hapus cache hanya karena
+// sumbernya gagal; data basi yang jujur jauh lebih berguna daripada layar
+// kosong".
+//
+// ⚠️ BATAS JUJUR — salinan ini TIDAK menggantikan gerbang izin. Ia dipakai
+// HANYA untuk menggambar daftar. Izin memutar sebuah video tetap ditentukan
+// daftar SEGAR (app/api/playly/video/route.ts), jadi video yang baru
+// disembunyikan admin tidak bisa ditonton lewat salinan ini — paling jauh
+// kartunya sempat terlihat.
+const PLAYLY_CADANGAN_DOC = "playly:cadangan";
+
+/** Isi salinan: daftar video + kapan disimpan (untuk menilai kesegarannya). */
+export type PlaylyCadangan<T = unknown> = {
+  videos: T[];
+  /** ISO UTC. Dipakai log & panel admin untuk menyebut umur salinannya. */
+  disimpanPada: string;
+};
+
+/**
+ * Baca salinan terakhir. Memulangkan daftar KOSONG kalau belum pernah ada —
+ * dan itu keadaan normal, bukan kerusakan.
+ *
+ * Sengaja versi BER-CACHE: pembacanya halaman penonton, dan satu pembacaan
+ * tanpa cache membuat seluruh halaman pemanggilnya jadi dinamis
+ * (lib/supabase.ts:204) — persis kemunduran yang dihindari 2026-09-18.
+ */
+export async function getPlaylyCadanganCached<T = unknown>(): Promise<
+  PlaylyCadangan<T>
+> {
+  const kosong: PlaylyCadangan<T> = { videos: [], disimpanPada: "" };
+  if (!useSupabase) {
+    return (
+      (readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY)
+        .cadangan as PlaylyCadangan<T> | undefined) ?? kosong
+    );
+  }
+  const rec = await sbDocGet<PlaylyCadangan<T>>(PLAYLY_CADANGAN_DOC, {
+    revalidate: CATALOG_TTL_SECONDS,
+  });
+  return rec && Array.isArray(rec.videos) ? rec : kosong;
+}
+
+/**
+ * Simpan salinan baru.
+ *
+ * ⚠️ Ini PERINTAH (mengubah), dan sengaja dipisah dari pembacanya (§3.7:
+ * fungsi yang mengubah data jangan sekaligus jadi sumber jawaban). Pemanggil
+ * memanggilnya SECARA EKSPLISIT sesudah tahu pengambilannya berhasil — jangan
+ * pernah menyelipkannya ke dalam fungsi baca, supaya tidak ada halaman yang
+ * diam-diam menulis ke database setiap kali digambar.
+ *
+ * Daftar KOSONG ditolak diam-diam: menyimpan kosong berarti menimpa salinan
+ * bagus dengan hasil gangguan — kebalikan dari gunanya dokumen ini.
+ */
+export async function setPlaylyCadangan<T = unknown>(
+  videos: T[],
+): Promise<void> {
+  if (!Array.isArray(videos) || videos.length === 0) return;
+
+  const isi: PlaylyCadangan<T> = {
+    videos,
+    disimpanPada: new Date().toISOString(),
+  };
+  if (useSupabase) {
+    await sbDocSet(PLAYLY_CADANGAN_DOC, isi);
+    return;
+  }
+  const file = readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY);
+  file.cadangan = isi as PlaylyCadangan;
+  writeLocal("playly.json", file);
 }
 
 // ===========  KATEGORI VIDEO PLAYLY (playly:genre)  ========================

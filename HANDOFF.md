@@ -11,7 +11,80 @@
 
 **Terakhir diisi:** 2026-09-26.
 
-## 2026-09-26 (INSIDEN) — video hilang dari /beranda & /film sesudah rilis `8ac3d61`: halaman MEMBEKUKAN hasil pengambilan yang gagal
+---
+
+# ⏳ TINDAKAN TERTUNDA — BACA INI DULU (2026-09-26)
+
+## 1. Yang HARUS owner lakukan: beresin akun Playly
+
+**Situs sedang kehilangan seluruh 46 video.** `/beranda` tanpa baris "Film Terbaru", `/film` menulis "Daftar video sedang tidak bisa dimuat", tiap halaman tonton balas 404.
+
+**Sebabnya BUKAN kode DramaKu.** Panel admin (`/admin/videos/playly`) menulis: **"Playly membalas error (HTTP 402)"**. 402 = *Payment Required* — Playly menolak melayani kita karena **urusan pembayaran/kuota di akun Playly**.
+
+👉 **Buka dashboard Playly, cek: status langganan · sisa kuota API · tagihan yang belum dibayar.** Tidak ada baris kode yang bisa menggantikan langkah ini.
+
+**Yang MASIH normal (jangan panik):** katalog drama 35 judul, pencarian, navbar, tombol FILTER, semua halaman drama, pengalihan `/playly` → `/film`.
+
+## 2. Cara tahu Playly sudah beres
+
+Buka **`/admin/videos/playly`**. Kalau kotak merah "HTTP 402" sudah hilang dan daftar 46 video muncul → Playly sudah melayani lagi. Halaman penonton pulih sendiri dalam beberapa menit (tanpa deploy).
+
+## 3. Yang harus dikerjakan AI SESUDAH Playly beres
+
+**Ada paket perbaikan yang SUDAH SELESAI & TERUJI tapi SENGAJA BELUM DIRILIS** — owner memilih menunggu supaya tidak menambah rilis saat situs sedang bermasalah (hari ini sudah 7 rilis + 1 insiden).
+
+**Lokasinya: sudah di-commit lokal, BELUM di-push.** Cek dengan `git log origin/main..main --oneline` — kalau ada commit di situ, itulah paketnya.
+
+**Isi paketnya:**
+- `playly:cadangan` — salinan daftar video terakhir yang berhasil. Saat Playly bermasalah, halaman menyajikan salinan itu, jadi video **tidak hilang total** seperti hari ini.
+- `PLAYLY_DETAIL_TTL_SECONDS = 1800` — pemakaian kuota Playly turun ~552 → ~92 panggilan/jam. **Ini relevan langsung dengan 402**: kalau penyebabnya kuota habis, perbaikan ini memperlambat habisnya secara drastis.
+- Pesan 402 yang menyebut langkahnya, bukan cuma kode angka.
+
+**Langkah rilisnya (jangan dilewati):**
+1. Pastikan Playly sudah melayani (butir 2 di atas).
+2. Gerbang `AGENTS.local.md` §6 URUT: `rm -rf .next` → `npm run build` → `npx tsc --noEmit` → `npm test`.
+   *(Sudah lulus 2026-09-26: build exit 0 · tsc exit 0 · 1141 tes / 78 berkas · mutation check 7 arah semuanya MERAH. Ulangi tetap, karena basisnya bisa bergeser.)*
+3. **Minta izin owner dulu** — push ke `origin main` = tombol rilis.
+4. Dual push: `git push origin main` **dan** `git push dramaku main`.
+5. Verifikasi: `/beranda` punya baris "Film Terbaru" + tautan `/tonton/`, `/film` berisi kartu.
+
+**Setelah rilis, salinan pertama terisi otomatis** begitu ada satu penonton memutar video (penulisnya `app/api/playly/video/route.ts`). Sebelum itu salinannya masih kosong — itu normal, bukan kerusakan.
+
+## 4. Utang teknis yang ikut tercatat (belum dikerjakan, tidak mendesak)
+
+- **Tanggal unggah video untuk Google.** Penanda video di halaman tonton sengaja tanpa `uploadDate` — datanya memang tidak ada dari Playly. Akibatnya kartu video besar di hasil pencarian belum tentu muncul. Cara menutupnya **tanpa mengarang**: catat kapan sebuah video PERTAMA KALI terlihat oleh situs kita (itu memang arti `uploadDate` menurut schema.org: "diunggah ke situs INI").
+- **47 panggilan per pengambilan daftar.** Sudah diringankan lewat TTL, tapi bentuk dasarnya (1 panggilan detail per video) tetap mahal. Kalau kuota masih jadi masalah, di sinilah pemangkasan berikutnya.
+
+---
+
+## 2026-09-26 (INSIDEN — PENYEBAB TERJAWAB) — Playly membalas **HTTP 402**, bukan kesalahan kode
+
+**🔴 PENYEBABNYA DIJAWAB PANEL ADMIN, BUKAN OLEH PENYELIDIKAN DARI LUAR.** `/admin/videos/playly` menulis: **"Playly membalas error (HTTP 402)."** 402 = *Payment Required* — Playly menolak melayani kita karena **urusan pembayaran/kuota di akun Playly**. **Tidak ada satu pun baris kode yang bisa memperbaiki ini.** Pemulihan hanya lewat dashboard Playly (status langganan / sisa kuota API / tagihan).
+
+**🪤 DUA DUGAAN SAYA SEBELUMNYA TERBUKTI SALAH — jangan diulang sesi berikutnya:**
+1. **"Waktu habis saat membangun halaman"** — salah. Angkanya memang mencurigakan (47 panggilan, ~18 detik terburuk, nol `maxDuration`), tapi itu bukan penyebabnya.
+2. **"Kunci Playly tak terbaca dari database"** — salah. Kuncinya terbaca; Playly-lah yang menolak.
+3. **"`/discover` berhasil sementara yang lain gagal"** — salah baca. "4 kartu aspect-video" yang saya hitung BUKAN kartu video Playly (penanda grid `minmax(240px` = 0). Semua halaman kosong seragam.
+4. **"`/api/thumb` berhasil = data sehat"** — salah tafsir. Waktunya 0,18-0,85 detik = dilayani **cache yang masih hangat**, bukan bukti pengambilan berhasil.
+
+**ATURAN YANG LAHIR: kalau gejalanya "pengambilan dari pihak ketiga gagal", BUKA PANEL ADMIN DULU** (`/admin/videos/playly` menampilkan pesan error apa adanya) sebelum menyusun teori dari luar. Owner butuh 1 detik untuk membukanya; saya menghabiskan ~8 putaran menebak dan tiga tebakan pertama meleset.
+
+**Yang dikerjakan sebagai tindak lanjut (owner memilih "bikin situs tahan"):**
+- **`playly:cadangan` (BARU, `app_data`)** — salinan daftar video terakhir yang berhasil. Saat pengambilan BERMASALAH **dan** hasilnya kosong, halaman menyajikan salinan ini. Pola `stale-if-error` (skills/tahan-gagal/SKILL.md §2 lapis 2). Gangguan Playly berubah dari "video hilang total" jadi "video tetap ada, cuma tidak bertambah".
+  - **Dua syarat wajib**, dijaga tes: `error` terisi (jangan menimpa keadaan SAH "memang belum ada video" — itu akan menghidupkan kembali video yang sengaja ditarik) **dan** daftar kosong (sumber yang masih membawa video selalu menang).
+  - **Daftar sembunyi admin TETAP berlaku** atas salinan, dan **GAGAL-AMAN**: daftar sembunyi tak terbaca → salinan ditahan seluruhnya. Salinan adalah pintu KETIGA ke penonton (sesudah katalog & webhook); bug "video sembunyi tetap tayang" sudah pernah lolos lewat pintu kedua.
+  - **Salinan TIDAK memberi izin menonton.** Gerbang pemutar tetap memakai daftar SEGAR — dijaga tes yang melarang `getPlaylyVideosGabunganCached` muncul di route itu.
+- **Penulisnya `app/api/playly/video/route.ts`, EKSPLISIT** (§3.7: yang mengubah jangan sekaligus jadi sumber jawaban). Dipilih karena ia satu-satunya jalur yang sudah `force-dynamic`, sudah membaca daftar SEGAR, dan dipanggil tiap penonton memutar video — jadi salinannya ikut segar **tanpa menambah satu pun panggilan ke Playly**. Ada tes yang MERAH kalau pembacaan ikut menulis.
+- **`PLAYLY_DETAIL_TTL_SECONDS = 1800` (BARU)** — pemangkas kuota terbesar. Detail per-video (sampul + status berkas) dulu ikut TTL daftar (300 dtk), padahal isinya nyaris tak pernah berubah: **~552 panggilan/jam → ~92**. Batas atasnya dikunci tes < 21600 detik, sebab sampul Playly bertanda tangan dan mati setelah 6 jam.
+- **Pesan 402 ditangani terpisah** dan menyebut LANGKAHNYA ("buka dashboard Playly, cek langganan/kuota/tagihan"), bukan cuma kode angka yang tak memberi tahu apa pun.
+
+**⚠️ BATAS JUJUR: perbaikan ini TIDAK memulihkan situs sekarang.** Belum ada salinan tersimpan (dokumennya baru lahir hari ini), dan Playly masih menolak sehingga tak ada yang bisa disimpan. Ia melindungi ke DEPAN. Salinan pertama terisi otomatis begitu Playly melayani lagi dan ada satu penonton memutar video.
+
+**Bukti:** build **exit 0** (semua route tetap seperti sebelumnya) · tsc **exit 0** · **1141 tes / 78 berkas hijau** · **mutation check 7 arah semuanya MERAH**.
+
+---
+
+## 2026-09-26 (INSIDEN — catatan awal, penyebabnya sudah terjawab di seksi di atas) — video hilang dari /beranda & /film sesudah rilis `8ac3d61`
 
 **Gejala (diukur di produksi, bukan dilaporkan orang):** `/beranda` → baris "Film Terbaru" **0**, tautan `/tonton/` **0**. `/film` → **0 kartu** + pesan "Daftar video sedang tidak bisa dimuat". `/tonton/<id sah>` → **404** (40 menit sebelumnya 200). `sitemap.xml` → entri `/tonton/` **0**.
 

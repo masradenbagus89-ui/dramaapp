@@ -69,6 +69,11 @@ vi.mock("../lib/store", () => ({
     if (state.genreGagal) throw new Error("supabase tidak bisa dihubungi");
     return state.genre;
   },
+  // Salinan daftar terakhir (insiden HTTP 402, 2026-09-26). Tiruan ini SENGAJA
+  // memulangkan daftar KOSONG: berkas ini menguji aturan PENGGABUNGAN, dan
+  // salinan yang berisi akan menutupi hasil gabungan yang justru sedang diuji.
+  // Perilaku salinannya sendiri diuji terpisah di tests/playly-cadangan.test.ts.
+  getPlaylyCadanganCached: async () => ({ videos: [], disimpanPada: "" }),
 }));
 
 const {

@@ -33,7 +33,12 @@
  */
 export const AKAR_BERNAVBAR_ATAS = [
   "/shorts",
-  "/playly",
+  // Daftar lengkap film & video. Alamatnya pindah dari "/playly" 2026-09-26
+  // (owner: nama penyedia tak boleh terlihat penonton, termasuk di kotak
+  // alamat browser). Alamat lama tetap hidup lewat redirect permanen di
+  // next.config.ts, jadi ia TIDAK perlu didaftarkan lagi di sini — permintaan
+  // ke /playly tidak pernah sampai ke komponen navigasi.
+  "/film",
   "/my-list",
   "/profile",
   "/history",

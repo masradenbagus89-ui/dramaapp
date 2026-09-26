@@ -97,7 +97,7 @@ export default async function PlaylyVideosPage() {
             , dan tiap video punya halaman tontonnya sendiri yang alamatnya bisa
             dibagikan. Penonton tidak melihat nama &quot;Playly&quot; di mana pun
             (owner 2026-09-26) — halaman{" "}
-            <Link href="/playly" className="text-amber-400 underline">
+            <Link href="/film" className="text-amber-400 underline">
               daftar lengkapnya
             </Link>{" "}
             tetap ada tapi tidak lagi punya tombol di navbar.

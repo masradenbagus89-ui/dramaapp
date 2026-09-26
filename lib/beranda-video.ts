@@ -116,7 +116,7 @@ export function barisBerandaGabungan(
   const barisVideo: BarisBeranda = {
     key: KUNCI_BARIS_VIDEO,
     title: JUDUL_BARIS_VIDEO,
-    href: "/playly",
+    href: "/film",
     items: videos.slice(0, ROW_MAX_ITEMS).map(bungkusVideo),
   };
 

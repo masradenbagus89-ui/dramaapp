@@ -38,7 +38,7 @@ const PUNYA_BAR_CARI = ["/beranda", "/discover"];
  */
 const WAJIB_ADA_NAVBAR = [
   "/shorts",
-  "/playly",
+  "/film",
   "/my-list",
   "/profile",
   "/history",
@@ -63,7 +63,7 @@ describe("navbar hitam (TopNav)", () => {
       ).toContain("<header");
       // Pagar isi: bukan cuma ada, tapi memang membawa jalannya. Patokannya
       // sudah dua kali dipindah mengikuti menu yang dilepas owner — "/discover"
-      // (dilepas 2026-09-25), lalu "/playly" (dilepas 2026-09-26). Sekarang
+      // (dilepas 2026-09-25), lalu "/playly" (dilepas 2026-09-26, alamatnya kini /film). Sekarang
       // memakai "/beranda", satu-satunya tujuan katalog yang tersisa; kalau
       // suatu hari ia ikut dilepas, tes ini merah lebih dulu dan pemindahannya
       // jadi keputusan sadar, bukan navbar yang diam-diam kosong.
@@ -254,7 +254,7 @@ describe("perilaku 19 halaman tidak berubah dari yang diukur di produksi", () =>
   // satu-satunya yang sengaja BERUBAH adalah `/` (itulah bug-nya).
   const DIUKUR_BERNAVBAR = [
     "/shorts",
-    "/playly",
+    "/film",
     "/my-list",
     "/profile",
     "/history",
@@ -457,7 +457,7 @@ const DILEPAS_TAPI_HIDUP = [
   // Dilepas owner 2026-09-26 ("viewer hanya melihat film/video saja").
   // /playly sengaja tak punya jalan lagi dari dalam situs — videonya kini
   // tampil sebagai film biasa di /beranda; /profile pindah ke menu avatar.
-  { alamat: "/playly", berkas: "app/playly/page.tsx" },
+  { alamat: "/film", berkas: "app/film/page.tsx" },
   { alamat: "/profile", berkas: "app/profile/page.tsx" },
 ];
 

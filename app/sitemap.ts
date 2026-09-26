@@ -12,6 +12,10 @@ const STATIC_PATHS = [
   { path: "/", priority: 1 },
   { path: "/beranda", priority: 0.9 },
   { path: "/discover", priority: 0.8 },
+  // Daftar lengkap film & video. Didaftarkan 2026-09-26 bersamaan dengan
+  // pindahnya alamat /playly -> /film: halaman ini tak lagi punya tombol di
+  // navbar, jadi tanpa sitemap ia praktis tak punya jalan masuk dari luar.
+  { path: "/film", priority: 0.8 },
   { path: "/shorts", priority: 0.7 },
 ];
 

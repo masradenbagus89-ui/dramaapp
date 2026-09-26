@@ -90,7 +90,7 @@ export default function HasilPlayly({ videos, ketikan }: Props) {
             batas sudah dilepas — semua yang cocok sudah tampil di sini. */}
         {!mencari && videos.length > BATAS_JELAJAH && (
           <Link
-            href="/playly"
+            href="/film"
             className="shrink-0 text-sm font-semibold text-amber-400 underline"
           >
             Lihat semua

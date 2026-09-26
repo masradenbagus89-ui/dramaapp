@@ -11,6 +11,30 @@
 
 **Terakhir diisi:** 2026-09-26.
 
+## 2026-09-26 (putaran ketiga) — Alamat `/playly` → `/film` + penanda VIDEO untuk Google
+
+**Dua sisa yang digantung di putaran sebelumnya, dikerjakan sekaligus atas permintaan owner ("kerjakan keduanya").**
+
+**A. Halaman daftar video pindah `/playly` → `/film`.** Sebabnya: membuang kata "Playly" dari LAYAR saja belum cukup — penonton yang mengklik "Lihat semua" tetap melihatnya di **kotak alamat browser**. Yang ikut berubah: `git mv app/playly app/film` (riwayat git terjaga), canonical → `/film`, `AKAR_BERNAVBAR_ATAS`, `lib/beranda-video.ts`, `HasilPlayly.tsx`, dua tautan di panel admin, dan `/film` didaftarkan ke `app/sitemap.ts` (halaman ini tak punya tombol navbar, jadi tanpa sitemap ia praktis tak punya jalan masuk dari luar).
+
+**⚠️ `next.config.ts` sekarang punya blok `redirects()` — sebelumnya berkas itu tidak punya.** `/playly` → `/film` dengan **`permanent: true` (HTTP 308)**. Bukan sekadar teknis: 308-lah yang memberi tahu Google "halaman ini PINDAH" sehingga nilai pencarian yang sudah dikumpulkan alamat lama ikut berpindah; dengan 307 (sementara) Google menahan nilainya di alamat lama dan pemindahannya sia-sia. **Konsekuensi yang disetujui owner sesudah diberi tahu: 308 disimpan browser penonton**, jadi membatalkannya tidak seketika — orang yang sudah pernah membuka `/playly` tetap dilempar ke `/film` sampai cache browsernya dibersihkan.
+
+**Yang SENGAJA tidak ikut pindah** (dijaga tes, arah sebaliknya juga): alamat panel admin (`/admin/videos/playly`, `/admin/webhooks/playly`) dan SELURUH endpoint API (`/api/playly/*`, `/api/admin/playly/*`). Admin memang perlu tahu nama penyedianya, dan mengubah alamat API berarti menyentuh pemanggil di banyak berkas tanpa satu pun manfaat bagi penonton.
+
+**B. Penanda VIDEO (JSON-LD `VideoObject`) di halaman tonton.** Fungsi baru `videoJsonLd()` + `durasiIso8601()` di `lib/structured-data.ts`, ditanam lewat `toJsonLdScript` yang sudah ada (meng-escape `</script>` — judul video datang dari pihak luar, dan `JSON.stringify` polos di situ = lubang XSS).
+
+**🔴 BATAS JUJUR yang WAJIB diteruskan — DUA field yang Google minta SENGAJA TIDAK dikirim, dan itu keputusan sadar:**
+- **`uploadDate` — datanya memang TIDAK ADA.** `PlaylyVideo` (lib/playly.ts:398) tak membawa tanggal apa pun; satu-satunya angka waktu yang ada (`receivedAt` jalur webhook) berarti "kapan notifikasi tiba pada kita", bukan kapan video diunggah. Mengarang tanggal ke Google = pernyataan palsu yang berisiko penalti.
+- **`contentUrl`/`embedUrl` — alamatnya bertanda tangan & berumur ~6 jam** (app/api/playly/video/route.ts:64), jadi alamat yang dikirim hari ini sudah mati besok saat Google mengunjunginya; markup yang menunjuk alamat mati dinilai rusak.
+
+**Akibatnya, jangan sampai ada sesi yang mengklaim lebih: Google akan mengenali halamannya sebagai video (masuk tab Video, judul & gambar dikenali), TAPI kartu video besar berikut durasinya di hasil pencarian belum tentu muncul selama kedua field itu kosong.** Cara menutupnya nanti **tanpa mengarang**: catat tanggal saat sebuah video PERTAMA KALI terlihat oleh situs kita — itu justru arti `uploadDate` menurut schema.org ("diunggah ke situs INI"), dan nilainya jujur karena kita amati sendiri. Belum dikerjakan; butuh tempat penyimpanan baru dan tak boleh ditulis dari jalur baca halaman statis.
+
+**Bukti:** build **exit 0** (`/film` tercatat `○ (Static) 1m 1y` — sama persis dengan `/playly` dulu, nol kemunduran; admin & API playly utuh) · tsc **exit 0** · **1107 tes / 76 berkas hijau** · **mutation check 6 arah semuanya MERAH**. Dari server hasil build `:3099`: **`/playly` → HTTP 308 menuju `/film`**, `/film` → 200, dan `sitemap.xml` memuat `https://dramaapp.vercel.app/film`.
+
+**Belum terbukti di lokal (sama seperti putaran sebelumnya, sebab yang sama):** isi penanda video di halaman tonton — `.env.local` tak memuat kunci API Playly, jadi daftar videonya kosong dan `/tonton/...` membalas 404 secara lokal. Harus diperiksa di produksi.
+
+---
+
 ## 2026-09-26 (lanjutan) — Tombol FILTER dipasang di /beranda — ✅ TAYANG & TERBUKTI (`8e9d82a`)
 
 **Status: DIRILIS atas izin owner, dual push tuntas, terbukti tayang.** Ketiganya di `8e9d82a` (dibaca ulang lewat `git ls-remote`): produksi `masradenbagus89-ui/dramaapp` · cermin `ojokesusu/dramaku` · `main` lokal.

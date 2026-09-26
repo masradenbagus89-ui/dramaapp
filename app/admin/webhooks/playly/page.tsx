@@ -193,7 +193,7 @@ export default async function PlaylyWebhookPage() {
         <p className="text-xs text-zinc-500">
           Video di daftar ini digabung dengan katalog Playly biasa saat ditampilkan
           di halaman{" "}
-          <Link href="/playly" className="text-amber-400 underline">
+          <Link href="/film" className="text-amber-400 underline">
             Video Playly
           </Link>
           . Untuk mengatur video katalog, buka{" "}

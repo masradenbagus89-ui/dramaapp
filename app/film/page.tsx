@@ -12,13 +12,19 @@ export const revalidate = 300;
 
 // Sebutan "Playly" sengaja DIBUANG dari seluruh tulisan yang dilihat penonton
 // (owner 2026-09-26): itu nama penyedia video, bukan sesuatu yang berarti bagi
-// mereka. Alamat halamannya tetap /playly supaya tautan lama & hasil Google
-// yang sudah terlanjur ada tidak mati.
+// mereka.
+//
+// ALAMATNYA ikut pindah /playly -> /film pada hari yang sama. Alasannya:
+// membuang kata itu dari layar saja belum cukup — penonton yang mengklik
+// "Lihat semua" tetap melihatnya di kotak alamat browser. Tautan lama TIDAK
+// mati: `next.config.ts` memasang redirect PERMANEN /playly -> /film, jadi
+// tautan yang sudah tersebar dan hasil Google yang sudah terindeks tetap
+// mendarat di sini, dan Google memindahkan nilai halamannya ke alamat baru.
 export const metadata: Metadata = {
   title: "Film & Video — Bisa Langsung Diputar",
   description:
     "Kumpulan film dan video di DramaKu yang bisa langsung diputar tanpa unduh.",
-  alternates: { canonical: "/playly" },
+  alternates: { canonical: "/film" },
 };
 
 export default async function PlaylyPage() {

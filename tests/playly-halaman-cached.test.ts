@@ -31,7 +31,7 @@ const PINTU_SEGAR = /getPlaylyVideosGabungan(?!Cached)/;
 const PINTU_CACHED = /getPlaylyVideosGabunganCached/;
 
 const HALAMAN_PENONTON = [
-  "app/playly/page.tsx",
+  "app/film/page.tsx",
   "app/beranda/page.tsx",
   "app/discover/page.tsx",
 ];

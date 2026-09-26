@@ -5,6 +5,7 @@ import { ChevronLeft } from "lucide-react";
 import { getPlaylyVideosGabunganCached } from "@/lib/playly-gabungan";
 import { cariVideoDariSegmen } from "@/lib/tonton";
 import { SITE_URL, absoluteUrl } from "@/lib/site";
+import { toJsonLdScript, videoJsonLd } from "@/lib/structured-data";
 import PlaylyPlayer from "@/app/components/player/PlaylyPlayer";
 import InfoVideoPlayly from "@/app/components/player/InfoVideoPlayly";
 
@@ -66,6 +67,14 @@ async function cariVideo(segmen: string) {
   return cariVideoDariSegmen(videos, decodeURIComponent(segmen));
 }
 
+/**
+ * Kalimat keterangan halaman — SATU sumber untuk dua pemakai: meta description
+ * yang dibaca Google, dan penanda video (JSON-LD) di badan halaman. Ditulis
+ * sekali supaya keduanya tidak pernah berbeda; Google membandingkan keduanya.
+ */
+const keteranganVideo = (judul: string) =>
+  `Nonton ${judul} gratis di DramaKu — langsung diputar tanpa unduh.`;
+
 export async function generateMetadata(
   props: PageProps<"/tonton/[id]">,
 ): Promise<Metadata> {
@@ -74,7 +83,7 @@ export async function generateMetadata(
   if (!video) return { title: "Video tidak ditemukan" };
 
   const title = `Nonton ${video.title}`;
-  const description = `Nonton ${video.title} gratis di DramaKu — langsung diputar tanpa unduh.`;
+  const description = keteranganVideo(video.title);
   const path = `/tonton/${id}`;
 
   return {
@@ -147,6 +156,31 @@ export default async function TontonPage(props: PageProps<"/tonton/[id]">) {
           )}
         </div>
       </div>
+
+      {/* Penanda VIDEO untuk Google — keterangan tersembunyi yang memberi tahu
+          mesin pencari bahwa isi halaman ini video, lengkap dengan judul,
+          gambar, dan panjangnya. Tanpa ini Google cuma melihat tulisan biasa.
+
+          Ditanam lewat `toJsonLdScript`, BUKAN JSON.stringify polos: judul
+          video datang dari pihak luar dan bisa memuat "</script>" yang menutup
+          tag lebih awal lalu menyuntikkan HTML (XSS). Fungsi itu meng-escape
+          kurung-buka jadi bentuk yang tetap JSON sah.
+
+          Dua field yang Google minta sengaja TIDAK ada (uploadDate &
+          contentUrl) — alasannya, dan akibat jujurnya, ditulis lengkap di
+          lib/structured-data.ts di atas `videoJsonLd`. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: toJsonLdScript(
+            videoJsonLd(
+              video,
+              `${SITE_URL}/tonton/${id}`,
+              keteranganVideo(video.title),
+            ),
+          ),
+        }}
+      />
     </main>
   );
 }

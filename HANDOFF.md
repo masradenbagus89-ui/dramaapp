@@ -13,42 +13,43 @@
 
 ---
 
-# ⏳ TINDAKAN TERTUNDA — BACA INI DULU (2026-09-26)
+# ⏳ STATUS — BACA INI DULU (2026-09-26)
 
-## 1. Yang HARUS owner lakukan: beresin akun Playly
+## 1. Situs kehilangan 46 video — sebabnya DI LUAR DramaKu, sudah TERBUKTI
 
-**Situs sedang kehilangan seluruh 46 video.** `/beranda` tanpa baris "Film Terbaru", `/film` menulis "Daftar video sedang tidak bisa dimuat", tiap halaman tonton balas 404.
+`/beranda` tanpa baris "Film Terbaru", `/film` menulis "Daftar video sedang tidak bisa dimuat", tiap halaman tonton balas 404.
 
-**Sebabnya BUKAN kode DramaKu.** Panel admin (`/admin/videos/playly`) menulis: **"Playly membalas error (HTTP 402)"**. 402 = *Payment Required* — Playly menolak melayani kita karena **urusan pembayaran/kuota di akun Playly**.
+**Sebabnya diukur, bukan ditebak.** Mengetuk `https://playly-dashboard.vercel.app/` membalas:
 
-👉 **Buka dashboard Playly, cek: status langganan · sisa kuota API · tagihan yang belum dibayar.** Tidak ada baris kode yang bisa menggantikan langkah ini.
+```
+status = 402
+Server: Vercel
+X-Vercel-Error: DEPLOYMENT_DISABLED
+"Payment required"
+```
+
+**`DEPLOYMENT_DISABLED` = Vercel menonaktifkan SELURUH project Playly** karena batas pemakaian/pembayaran. Bukan aplikasi Playly yang error, bukan kunci kita, bukan kode DramaKu. Dikonfirmasi juga oleh rekan owner (pemilik Playly): limit Vercel-nya kena. **DramaKu sendiri pernah kena hal yang sama 2026-08-26.**
+
+👉 **Yang bisa memulihkan: pemilik Playly membereskan batas pemakaian/tagihan Vercel-nya.** Tidak ada baris kode yang bisa menggantikan itu. Begitu project mereka hidup, halaman penonton pulih sendiri dalam beberapa menit — tanpa deploy.
+
+**Cara mengecek sudah hidup:** buka `/admin/videos/playly`. Kotak merah HTTP 402 hilang + 46 video muncul = sudah.
 
 **Yang MASIH normal (jangan panik):** katalog drama 35 judul, pencarian, navbar, tombol FILTER, semua halaman drama, pengalihan `/playly` → `/film`.
 
-## 2. Cara tahu Playly sudah beres
+## 2. ⚠️ PEMAKAIAN KITA IKUT MEMBEBANI JATAH VERCEL MEREKA
 
-Buka **`/admin/videos/playly`**. Kalau kotak merah "HTTP 402" sudah hilang dan daftar 46 video muncul → Playly sudah melayani lagi. Halaman penonton pulih sendiri dalam beberapa menit (tanpa deploy).
+Tiap kali mengambil daftar, DramaKu menembak fungsi Vercel Playly **47 kali** (1 daftar + 1 detail per video × 46). Itulah kenapa pemangkasan kuota di repo ini **bukan sekadar optimasi — ia bagian dari mencegah Playly mati lagi**:
 
-## 3. Yang harus dikerjakan AI SESUDAH Playly beres
+| | Panggilan/jam | Perkiraan sebulan |
+|---|---|---|
+| Sebelum perbaikan | ~552 | ~400.000 |
+| Sesudah `PLAYLY_DETAIL_TTL_SECONDS = 1800` | ~92 | ~66.000 |
 
-**Ada paket perbaikan yang SUDAH SELESAI & TERUJI tapi SENGAJA BELUM DIRILIS** — owner memilih menunggu supaya tidak menambah rilis saat situs sedang bermasalah (hari ini sudah 7 rilis + 1 insiden).
+**Keputusan owner 2026-09-26 (mengoreksi rencana sebelumnya):** paket perbaikan DIRILIS **sebelum** Playly hidup, justru supaya saat mereka kembali kita tidak langsung menembaki dengan laju lama. Menunda rilis = jatah mereka berpeluang habis lagi seketika.
 
-**Lokasinya: sudah di-commit lokal, BELUM di-push.** Cek dengan `git log origin/main..main --oneline` — kalau ada commit di situ, itulah paketnya.
+## 3. Pekerjaan berikutnya yang dipilih owner
 
-**Isi paketnya:**
-- `playly:cadangan` — salinan daftar video terakhir yang berhasil. Saat Playly bermasalah, halaman menyajikan salinan itu, jadi video **tidak hilang total** seperti hari ini.
-- `PLAYLY_DETAIL_TTL_SECONDS = 1800` — pemakaian kuota Playly turun ~552 → ~92 panggilan/jam. **Ini relevan langsung dengan 402**: kalau penyebabnya kuota habis, perbaikan ini memperlambat habisnya secara drastis.
-- Pesan 402 yang menyebut langkahnya, bukan cuma kode angka.
-
-**Langkah rilisnya (jangan dilewati):**
-1. Pastikan Playly sudah melayani (butir 2 di atas).
-2. Gerbang `AGENTS.local.md` §6 URUT: `rm -rf .next` → `npm run build` → `npx tsc --noEmit` → `npm test`.
-   *(Sudah lulus 2026-09-26: build exit 0 · tsc exit 0 · 1141 tes / 78 berkas · mutation check 7 arah semuanya MERAH. Ulangi tetap, karena basisnya bisa bergeser.)*
-3. **Minta izin owner dulu** — push ke `origin main` = tombol rilis.
-4. Dual push: `git push origin main` **dan** `git push dramaku main`.
-5. Verifikasi: `/beranda` punya baris "Film Terbaru" + tautan `/tonton/`, `/film` berisi kartu.
-
-**Setelah rilis, salinan pertama terisi otomatis** begitu ada satu penonton memutar video (penulisnya `app/api/playly/video/route.ts`). Sebelum itu salinannya masih kosong — itu normal, bukan kerusakan.
+**Pangkas beban ke Playly sampai AKARNYA.** TTL hanya memperjarang; bentuk dasarnya tetap 1 panggilan detail per video hanya untuk tahu sampul + apakah berkasnya ada (`lib/playly-publik.ts`, blok `fetchPlaylyDetailPublik` per video). Sasaran: menghilangkan sebagian besar panggilan itu, bukan sekadar memperjarangnya.
 
 ## 4. Utang teknis yang ikut tercatat (belum dikerjakan, tidak mendesak)
 

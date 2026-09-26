@@ -257,7 +257,12 @@ describe("pesan HTTP 402 memberi tahu LANGKAHNYA, bukan cuma kodenya", () => {
     const pesan = blok.slice(0, 700).replace(/"\s*\+\s*\n?\s*"/g, "");
 
     expect(pesan).toMatch(/pembayaran|kuota/i);
-    expect(pesan).toMatch(/dashboard Playly/i);
+    // SEBAB sesungguhnya, diukur 2026-09-26: balasan datang dari Vercel dengan
+    // `X-Vercel-Error: DEPLOYMENT_DISABLED` — seluruh project Playly
+    // dinonaktifkan, bukan aplikasinya yang rusak. Menyebutnya menghemat
+    // berjam-jam penyelidikan yang salah arah.
+    expect(pesan).toMatch(/DEPLOYMENT_DISABLED/);
+    expect(pesan).toMatch(/Vercel/);
     // Menyatakan terus terang bahwa ini di luar kendali kode — supaya sesi
     // berikutnya tidak membuang waktu memburu bug yang tidak ada.
     expect(pesan).toMatch(/tidak ada yang bisa diperbaiki dari sisi/i);

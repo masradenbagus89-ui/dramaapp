@@ -781,17 +781,28 @@ async function ambilJsonPlayly(
   }
   // 402 = Payment Required. Ditangani terpisah karena ia SATU-SATUNYA kode
   // yang tak bisa diperbaiki dari sisi kita sama sekali — bukan kunci salah,
-  // bukan jaringan, bukan alamat. Terjadi sungguhan 2026-09-26 dan seluruh
-  // video hilang dari situs; waktu itu panel admin hanya menulis "Playly
-  // membalas error (HTTP 402)", yang tidak memberi tahu apa pun tentang apa
-  // yang harus dilakukan. Pesan ini menyebut langkahnya, bukan cuma kodenya.
+  // bukan jaringan, bukan alamat.
+  //
+  // TERJADI SUNGGUHAN 2026-09-26 dan seluruh video hilang dari situs. Sebabnya
+  // DIUKUR, bukan ditebak: mengetuk https://playly-dashboard.vercel.app/
+  // membalas `402` dengan header `X-Vercel-Error: DEPLOYMENT_DISABLED` dan
+  // badan "Payment required" — artinya **Vercel menonaktifkan SELURUH project
+  // Playly** karena batas pemakaian/pembayaran, bukan aplikasi Playly yang
+  // error. DramaKu sendiri pernah kena hal yang sama 2026-08-26.
+  //
+  // Waktu itu panel admin hanya menulis "Playly membalas error (HTTP 402)",
+  // yang tak memberi tahu apa pun tentang apa yang harus dilakukan — dan AI
+  // menghabiskan delapan putaran menebak dari luar. Pesan ini menyebut
+  // SEBABNYA dan LANGKAHNYA.
   if (res.status === 402) {
     throw new PlaylyError(
       "Playly menolak karena urusan pembayaran/kuota akun (HTTP 402). " +
-        "Tidak ada yang bisa diperbaiki dari sisi DramaKu — buka dashboard " +
-        "Playly dan cek status langganan, sisa kuota API, atau tagihan yang " +
-        "belum dibayar. Daftar video akan kembali sendiri begitu Playly " +
-        "melayani lagi.",
+        "Balasan ini datang dari Vercel (DEPLOYMENT_DISABLED), artinya " +
+        "SELURUH project Playly sedang dinonaktifkan — bukan aplikasinya " +
+        "yang rusak. Tidak ada yang bisa diperbaiki dari sisi DramaKu: " +
+        "pemilik Playly yang harus membereskan batas pemakaian/tagihan " +
+        "Vercel-nya. Daftar video akan kembali sendiri begitu project itu " +
+        "hidup lagi.",
       402,
     );
   }

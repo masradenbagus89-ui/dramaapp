@@ -58,6 +58,27 @@ export function alamatTonton(video: { id: string; title: string }): string {
 }
 
 /**
+ * Alamat TETAP gambar sampul sebuah video.
+ *
+ * KENAPA tidak memakai alamat sampul apa adanya: alamat dari penyedia
+ * BERTANDA TANGAN dan mati setelah 6 jam (diukur di produksi 2026-09-26:
+ * `X-Amz-Expires=21600`). Itu tak terasa bagi penonton — halaman disegarkan
+ * jauh lebih sering — tapi Google dan pratinjau share menyimpan alamatnya
+ * berhari-hari, dan yang mereka temukan nanti cuma gambar mati.
+ *
+ * Alamat ini tidak pernah berubah; yang dicarikan alamat segar adalah
+ * `app/api/thumb/[id]/route.ts` tiap kali diminta.
+ *
+ * ⚠️ PAKAI INI HANYA untuk konsumen yang menyimpan alamat LAMA — `og:image`
+ * dan penanda video. JANGAN menggantikan `video.thumbnail` di kartu maupun
+ * pemutar: di sana alamat langsung sudah benar, lebih cepat (nol singgah di
+ * server kita), dan halamannya toh disegarkan jauh sebelum 6 jam.
+ */
+export function alamatGambarVideo(videoId: string): string {
+  return `/api/thumb/${encodeURIComponent(videoId)}`;
+}
+
+/**
  * Kebalikan `alamatTonton`: dari potongan alamat, video yang mana?
  *
  * Dicocokkan sebagai AKHIRAN, bukan dengan memotong di tanda hubung terakhir.

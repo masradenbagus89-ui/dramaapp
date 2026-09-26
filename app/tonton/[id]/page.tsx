@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { ChevronLeft } from "lucide-react";
 import { getPlaylyVideosGabunganCached } from "@/lib/playly-gabungan";
-import { cariVideoDariSegmen } from "@/lib/tonton";
+import { alamatGambarVideo, cariVideoDariSegmen } from "@/lib/tonton";
 import { SITE_URL, absoluteUrl } from "@/lib/site";
 import { toJsonLdScript, videoJsonLd } from "@/lib/structured-data";
 import PlaylyPlayer from "@/app/components/player/PlaylyPlayer";
@@ -95,12 +95,23 @@ export async function generateMetadata(
       title,
       description,
       url: `${SITE_URL}${path}`,
-      // Sampul dipakai apa adanya sebagai gambar preview share. Kosong =
-      // field-nya TIDAK ditulis, bukan diisi gambar cadangan yang tidak ada
-      // hubungannya — preview yang salah lebih menyesatkan daripada tanpa
-      // preview.
+      // Gambar pratinjau share memakai ALAMAT TETAP milik kita, bukan alamat
+      // sampul apa adanya: alamat dari penyedia bertanda tangan dan mati
+      // setelah 6 jam, sehingga tautan yang dikirim pagi lalu dibuka malam
+      // kehilangan gambarnya (lib/tonton.ts `alamatGambarVideo`).
+      //
+      // Kosong = field-nya TIDAK ditulis, bukan diisi gambar cadangan yang
+      // tidak ada hubungannya — pratinjau yang salah lebih menyesatkan
+      // daripada tanpa pratinjau.
       ...(video.thumbnail
-        ? { images: [{ url: absoluteUrl(video.thumbnail), alt: video.title }] }
+        ? {
+            images: [
+              {
+                url: absoluteUrl(alamatGambarVideo(video.id)),
+                alt: video.title,
+              },
+            ],
+          }
         : {}),
     },
   };
@@ -174,7 +185,17 @@ export default async function TontonPage(props: PageProps<"/tonton/[id]">) {
         dangerouslySetInnerHTML={{
           __html: toJsonLdScript(
             videoJsonLd(
-              video,
+              {
+                ...video,
+                // Alamat TETAP, bukan sampul apa adanya: Google menyimpan
+                // alamat ini saat memeriksa halaman lalu memakainya
+                // berhari-hari kemudian, sedangkan alamat dari penyedia mati
+                // dalam 6 jam. Dibuat absolut karena penanda dibaca mesin dari
+                // luar situs, yang tak punya acuan alamat relatif.
+                thumbnail: video.thumbnail
+                  ? absoluteUrl(alamatGambarVideo(video.id))
+                  : null,
+              },
               `${SITE_URL}/tonton/${id}`,
               keteranganVideo(video.title),
             ),

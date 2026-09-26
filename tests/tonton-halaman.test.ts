@@ -122,10 +122,22 @@ describe("keterangan halaman untuk Google & preview share", () => {
     state.videos = [video("98765", { thumbnail: null })];
     const meta = await generateMetadata(props("video-98765"));
     expect(meta.openGraph && "images" in meta.openGraph).toBe(false);
-    // Pembanding: video bersampul memang menempelkannya.
+
+    // Pembanding: video bersampul memang menempelkan gambar.
+    //
+    // ⚠️ Yang ditempel adalah ALAMAT TETAP milik kita (/api/thumb/<id>), BUKAN
+    // alamat sampul apa adanya. Sampai 2026-09-26 tes ini menuntut yang
+    // sebaliknya — dan justru itu cacatnya: alamat dari penyedia bertanda
+    // tangan dan mati setelah 6 jam (`X-Amz-Expires=21600`), jadi tautan yang
+    // dikirim pagi lalu dibuka malam kehilangan gambarnya.
     state.videos = [video("98765", { thumbnail: "https://contoh.test/s.jpg" })];
     const meta2 = await generateMetadata(props("video-98765"));
-    expect(JSON.stringify(meta2.openGraph)).toContain("https://contoh.test/s.jpg");
+    const og = JSON.stringify(meta2.openGraph);
+    expect(og).toContain("/api/thumb/98765");
+    expect(
+      og,
+      "og:image kembali memakai alamat penyedia yang berumur 6 jam",
+    ).not.toContain("https://contoh.test/s.jpg");
   });
 });
 

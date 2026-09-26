@@ -11,6 +11,26 @@
 
 **Terakhir diisi:** 2026-09-26.
 
+## 2026-09-26 (putaran keempat) — CACAT SENDIRI: alamat gambar mati 6 jam, diperbaiki dengan alamat tetap
+
+**🪤 PELAJARAN PALING TAJAM SESI INI — kelalaian yang RAPI: alasan ditulis panjang, lalu dilanggar di baris berikutnya.** Putaran ketiga sengaja TIDAK mengirim `contentUrl` ke Google, dengan alasan tertulis lengkap: "alamat berkas videonya bertanda tangan & berumur ~6 jam, sudah mati saat Google mengunjunginya". Lalu di objek yang sama dikirimlah **`thumbnailUrl` yang punya masalah PERSIS SAMA** — tanpa sekali pun diperiksa. Ketahuan saat verifikasi produksi: alamat sampulnya `...r2.cloudflarestorage.com/...?X-Amz-Signature=...&`**`X-Amz-Expires=21600`** = **6 jam**.
+
+**Kenapa lolos dari semua pemeriksaan:** gambarnya **selalu hidup saat diperiksa manusia**. Halaman disegarkan tiap 60-300 detik, jauh di bawah 6 jam, jadi di layar tidak pernah ada yang salah. Yang terdampak hanya pemakai yang menyimpan alamat jauh lebih lama: **Google** (berhari-hari) dan **pratinjau share WhatsApp** (tautan dikirim pagi, dibuka malam → gambar kosong). Kerusakan yang mustahil terlihat dari layar, dan tak satu pun tes lama menanyakannya.
+
+**ATURAN YANG LAHIR: sebelum mengirim alamat pihak ketiga ke konsumen yang MENYIMPANNYA LAMA (mesin pencari, pratinjau share, e-mail), periksa dulu query-nya — apakah alamat itu punya masa berlaku.** Jangan berasumsi "gambar pasti alamat tetap"; di penyimpanan objek modern (R2/S3) justru sebaliknya.
+
+**Perbaikannya (owner memilih dari 3 opsi):** `app/api/thumb/[id]/route.ts` **(BARU)** — alamat TETAP milik kita, `/api/thumb/<videoId>`, yang mencarikan alamat segar tiap kali diminta lalu **MENGALIHKAN (307)**.
+- ⚠️ **Mengalihkan, BUKAN menyalurkan byte.** Situs ini pernah mati total & di-pause Vercel karena `/api/teaser` menyalurkan byte video (29,71 GB dari jatah 10 GB, 2026-08-26). Yang keluar dari server kita cuma penunjuk arah ~300 byte; byte gambarnya mengalir langsung dari penyimpanan penyedia. Dijaga tes (`arrayBuffer`/`.body` dilarang muncul di route itu).
+- **Gerbang IDOR** sama dengan pemutar: id harus ada di daftar yang boleh tampil. "Tidak ada" dan "tidak boleh" dibalas SAMA (404) supaya balasan tak bisa dipakai menebak isi katalog. Terukur dari server hasil build: id asing → **404**, id ber-`../` → **400**.
+- **`CACHE_DETIK = 300`, dan tes memaksanya < 21600.** CDN yang menyimpan pengalihan lebih lama dari umur tanda tangan tujuannya akan menyajikan penunjuk arah ke alamat mati — masalah yang sama, cuma pindah satu lapis.
+- Dipakai **hanya** di `og:image` + penanda video. **Kartu & pemutar SENGAJA tetap memakai alamat langsung** (dijaga tes): di sana alamatnya sudah benar, lebih cepat, dan halamannya toh disegarkan jauh sebelum 6 jam — mengalihkan semuanya berarti 40 singgahan tambahan tiap pembukaan beranda tanpa manfaat.
+
+**Satu tes LAMA ikut diperbaiki, bukan dihapus:** `tonton-halaman.test.ts` dulu menuntut `og:image` memakai sampul apa adanya — tuntutan itulah cacatnya. Sekarang ia menuntut alamat tetap DAN melarang alamat penyedia muncul lagi.
+
+**Bukti:** build **exit 0** (`/api/thumb/[id]` terdaftar; `/film`, `/beranda`, `/sitemap.xml` tetap `○ Static`; `/tonton/[id]` tetap `●`) · tsc **exit 0** · **1122 tes / 77 berkas hijau** · **mutation check 5 arah semuanya MERAH**.
+
+---
+
 ## 2026-09-26 (putaran ketiga) — Alamat `/playly` → `/film` + penanda VIDEO untuk Google
 
 **Dua sisa yang digantung di putaran sebelumnya, dikerjakan sekaligus atas permintaan owner ("kerjakan keduanya").**

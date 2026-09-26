@@ -14,7 +14,6 @@ import { describe, it, expect } from "vitest";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { readFileSync } from "node:fs";
-import StripKatalog from "../app/components/beranda/StripKatalog";
 import FilterKatalog from "../app/components/beranda/FilterKatalog";
 import type { Drama } from "../lib/types";
 
@@ -89,38 +88,60 @@ describe("isi filter hanya menawarkan yang BENAR-BENAR ada di katalog", () => {
 // ===========================================================================
 // PEMASANGAN — inti berkas ini.
 // ===========================================================================
-describe("FILTER benar-benar terpasang di KEDUA halaman", () => {
-  const PEMASANG = [
-    {
-      berkas: "app/components/beranda/TabKatalogTampilan.tsx",
-      halaman: "halaman depan `/` (baris tab)",
-    },
-    {
-      berkas: "app/components/beranda/CatalogBrowser.tsx",
-      halaman: "`/beranda` (ujung kanan strip kuning)",
-    },
-  ];
+describe("FILTER menempel pada BARIS TAB, dan baris tab dipasang dua halaman", () => {
+  // Sejarah singkat, supaya tak ada yang memindahkannya lagi tanpa sadar:
+  //   2026-09-22  tombol lahir di dalam TabKatalogTampilan, cuma di `/`.
+  //   2026-09-26  owner melapor "belum ada" — ternyata RedirectIfAuthed
+  //               memantulkan yang sudah login dari `/`, jadi ia tak pernah
+  //               terlihat. Tombolnya lalu dipasang di ujung strip kuning.
+  //   2026-09-26  owner menunjuk contohnya lagi: yang dia mau SELURUH baris
+  //               tab. Baris tab dipasang di /beranda — dan tombol di strip
+  //               jadi DOBEL, jadi yang di strip dilepas.
+  it("baris tab merender tombolnya", () => {
+    const sumber = readFileSync(
+      "app/components/beranda/TabKatalogTampilan.tsx",
+      "utf-8",
+    );
+    const impor = sumber.match(/^import[\s\S]*?;$/gm)?.join(" ") ?? "";
+    expect(impor).toContain("FilterKatalog");
+    expect(sumber).toMatch(/<FilterKatalog\s+dramas=/);
+  });
 
-  for (const { berkas, halaman } of PEMASANG) {
-    it(`${halaman} memasangnya`, () => {
+  for (const { berkas, halaman } of [
+    { berkas: "app/page.tsx", halaman: "halaman depan `/`" },
+    { berkas: "app/beranda/page.tsx", halaman: "`/beranda`" },
+  ]) {
+    it(`${halaman} memasang baris tabnya`, () => {
       const sumber = readFileSync(berkas, "utf-8");
       const impor = sumber.match(/^import[\s\S]*?;$/gm)?.join(" ") ?? "";
-      expect(impor, `${berkas} tidak mengimpor FilterKatalog`).toContain(
-        "FilterKatalog",
+      expect(impor, `${berkas} tidak mengimpor TabKatalog`).toContain(
+        "TabKatalog",
       );
       expect(
         sumber,
         `${berkas} mengimpor tapi tidak merender — penonton di ${halaman} ` +
-          `tidak akan melihat tombol filter sama sekali, dan tidak ada error ` +
-          `apa pun yang memberi tahu`,
-      ).toMatch(/<FilterKatalog\s+dramas=/);
+          `tidak akan melihat baris tab MAUPUN tombol filternya, dan tidak ` +
+          `ada error apa pun yang memberi tahu`,
+      ).toMatch(/<TabKatalog\s+dramas=/);
     });
   }
 
+  it("TIDAK ada tombol FILTER kedua di strip kuning /beranda", () => {
+    // Dua tombol identik di satu halaman persis keluhan "dobel" yang owner
+    // sampaikan 2026-09-21. Di contoh yang owner tunjuk pun FILTER menempel
+    // pada baris tab, bukan pada strip.
+    const browser = readFileSync(
+      "app/components/beranda/CatalogBrowser.tsx",
+      "utf-8",
+    );
+    expect(
+      browser,
+      "tombol FILTER dipasang lagi di strip kuning — di /beranda ia jadi " +
+        "DOBEL dengan yang sudah ada di baris tab",
+    ).not.toContain("FilterKatalog");
+  });
+
   it("komponennya punya SATU sumber, bukan disalin ke dua tempat", () => {
-    // Sampai 2026-09-26 tombolnya ditulis langsung di dalam
-    // TabKatalogTampilan. Menyalinnya ke tempat kedua berarti dua tombol yang
-    // isinya pelan-pelan berbeda — dan yang satu pasti tertinggal.
     const tab = readFileSync(
       "app/components/beranda/TabKatalogTampilan.tsx",
       "utf-8",
@@ -129,41 +150,5 @@ describe("FILTER benar-benar terpasang di KEDUA halaman", () => {
       tab,
       "TabKatalogTampilan merakit tombol filternya sendiri lagi",
     ).not.toContain("SlidersHorizontal");
-  });
-});
-
-describe("strip kuning: tombol di kanan tidak ikut tergeser", () => {
-  const stripHtml = (aksiKanan?: React.ReactNode) =>
-    renderToStaticMarkup(
-      createElement(StripKatalog, {
-        items: [{ href: "/discover?cat=Action", label: "ACTION" }],
-        aksiKanan,
-      }),
-    );
-
-  it("menggambar isi slot kanan yang dioper", () => {
-    const html = stripHtml(createElement(FilterKatalog, { dramas: KATALOG }));
-    expect(html).toContain("ACTION");
-    expect(html).toContain("bg-emerald-600");
-  });
-
-  it("tanpa slot, strip persis seperti sebelumnya", () => {
-    // Penjaga untuk halaman depan & /discover yang TIDAK mengisi slot ini —
-    // keduanya tidak boleh ikut berubah.
-    const html = stripHtml();
-    expect(html).toContain("ACTION");
-    expect(html).not.toContain("bg-emerald-600");
-  });
-
-  it("area geser dibatasi ke chip saja, tombolnya di luar", () => {
-    // Kalau tombol ikut masuk area `overflow-x-auto`, di layar HP ia terdorong
-    // keluar pandangan dan penonton mengira filternya tidak ada — persis
-    // masalah yang sedang diperbaiki, cuma bentuk lain.
-    const sumber = readFileSync(
-      "app/components/beranda/StripKatalog.tsx",
-      "utf-8",
-    );
-    expect(sumber).toMatch(/flex flex-1 items-center overflow-x-auto/);
-    expect(sumber).toMatch(/aksiKanan && <div className="shrink-0/);
   });
 });

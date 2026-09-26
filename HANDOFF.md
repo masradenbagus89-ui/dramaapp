@@ -62,6 +62,22 @@ Diverifikasi sesudah rilis: `/` `/beranda` `/film` `/discover` semuanya **200**,
 
 **Beban DramaKu ke jatah Vercel Playly turun ~24× dalam satu hari** (~552 → ~23 panggilan/jam). Begitu project mereka hidup, video kembali sendiri dalam beberapa menit **tanpa rilis apa pun dari kita**.
 
+## 2c. Deret tab katalog dipasang di /beranda (2026-09-26, putaran kedua)
+
+**Owner menunjuk contohnya lagi dan ternyata yang dia mau lebih besar dari yang kupasang.** Kemarin aku cuma memasang TOMBOL FILTER di ujung strip kuning; kotak merah di tangkapan layarnya menandai **SELURUH baris tab** — TERBARU · SERIES UNGGULAN · SERIES UPDATE · TERPOPULER · REKOMENDASI · <tahun> · **FILTER**. Barisnya sendiri sudah ada sejak 2026-09-22, tapi cuma di halaman depan `/` yang tak pernah terbuka untuk owner (RedirectIfAuthed).
+
+**Yang dikerjakan:** `TabKatalogTampilan` + `TabKatalog` dapat prop `basePath` (bawaan `/`), lalu dipasang di `/beranda` lewat slot baru `tabSlot` di `CatalogBrowser` — posisinya tepat di bawah banner unggulan, titik yang owner tandai sendiri.
+
+**⚠️ `basePath="/beranda"` WAJIB, dan ini jebakannya:** tanpa itu tiap tab menunjuk `/`, lalu `RedirectIfAuthed` memantulkan penonton yang sudah login balik ke `/beranda` — **tabnya terlihat MATI tanpa satu pun error**. Bentuk lain dari bug yang justru sedang diperbaiki. Dijaga tes, dan fallback `<Suspense>`-nya ikut dijaga (kalau fallback memakai alamat berbeda, tab sempat menunjuk `/` sepersekian detik — cukup untuk diklik).
+
+**Perakitan alamat dirapikan:** dulu tanda sambung `?`/`&` ditebak dari `key === "terbaru"`. Begitu `basePath` bisa berbeda, tebakan itu menghasilkan alamat rusak `/beranda?tab=x?semua=1` — akibatnya cuma terlihat sebagai tombol yang diklik lalu tak terjadi apa-apa. Sekarang dirakit `URLSearchParams`.
+
+**🔴 TOMBOL FILTER DI STRIP KUNING DILEPAS** — begitu baris tab masuk, ia membawa FILTER-nya sendiri dan jadi DOBEL di satu halaman (persis keluhan "dobel" owner 2026-09-21). Di contoh owner pun FILTER menempel pada baris tab, bukan strip. Prop `aksiKanan` di `StripKatalog` ikut dibuang supaya tak meninggalkan kode mati. Ada tes yang MERAH kalau FILTER dipasang lagi di `CatalogBrowser`.
+
+**🪤 Penjaga PALSU yang tertangkap mutation check:** tes "mengoper basePath" versi pertama cuma mencari teks `basePath="/beranda"` di berkas halaman — dan LOLOS saat basePath dilepas dari `<TabKatalog>`, sebab isi `<Suspense fallback>` memuat teks yang sama. Diperbaiki jadi memeriksa ELEMEN-nya (`<TabKatalog … />`), lalu diuji-balik lagi: merah. **Pelajaran: kalau satu berkas memuat dua pemakaian prop yang sama, pencocokan teks tingkat-berkas bukan penjaga.**
+
+**Bukti:** build exit 0 (`/` dan `/beranda` sama-sama tetap `○ Static`) · tsc exit 0 · **1154 tes / 79 berkas hijau** · mutation check 5 arah semuanya MERAH. Dari server hasil build: `/beranda` menggambar **5 label tab**, 5 tujuan `href="/beranda?tab=…"`, **nol** yang menunjuk `/`, tombol Semua ada, dan `?tab=terpopuler` benar-benar mengganti judul bagian jadi "Paling Banyak Ditonton". Halaman depan tidak berubah (5 tab tetap `/?tab=`). Tombol hijau terhitung 2 di HTML **kedua halaman** — itu pola `<Suspense>` (kerangka + isi), bukan dobel; kalau benar dobel, beranda akan 3.
+
 ## 3. Pekerjaan berikutnya yang dipilih owner
 
 **Pangkas beban ke Playly sampai AKARNYA.** TTL hanya memperjarang; bentuk dasarnya tetap 1 panggilan detail per video hanya untuk tahu sampul + apakah berkasnya ada (`lib/playly-publik.ts`, blok `fetchPlaylyDetailPublik` per video). Sasaran: menghilangkan sebagian besar panggilan itu, bukan sekadar memperjarangnya.

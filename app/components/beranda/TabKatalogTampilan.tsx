@@ -3,6 +3,7 @@ import type { Drama } from "@/lib/types";
 import {
   daftarTab,
   isiTabLengkap,
+  TAB_BAWAAN,
   TAB_ROW_ITEMS,
   type TabKey,
 } from "@/lib/tab-katalog";
@@ -40,12 +41,23 @@ export default function TabKatalogTampilan({
   dramas,
   tab,
   semua,
+  basePath = "/",
 }: {
   dramas: Drama[];
   /** Tab yang sedang dibuka. Pemanggil yang menentukan dari mana asalnya. */
   tab: TabKey;
   /** true = tampilkan SELURUH isi tab sebagai grid, bukan baris geser. */
   semua: boolean;
+  /**
+   * Halaman tempat deret tab ini dipasang — tiap tab jadi tautan ke sini.
+   *
+   * ⚠️ WAJIB diisi `/beranda` saat dipakai di halaman itu, dan ini bukan
+   * kerapian belaka: `RedirectIfAuthed` (app/components/RedirectIfAuthed.tsx:9)
+   * melempar siapa pun yang SUDAH LOGIN dari `/` ke `/beranda`. Tab yang
+   * menunjuk `/` akan memantul balik untuk penonton yang login — tabnya
+   * terlihat tidak berfungsi, tanpa satu pun error.
+   */
+  basePath?: string;
 }) {
   const tabs = daftarTab(dramas);
   const aktif = tab;
@@ -58,7 +70,22 @@ export default function TabKatalogTampilan({
   const isi = isiTabLengkap(dramas, tabAktif.key);
   const tampil = semua ? isi : isi.slice(0, TAB_ROW_ITEMS);
 
-  const alamatTab = (key: TabKey) => (key === "terbaru" ? "/" : `/?tab=${key}`);
+  /**
+   * Alamat sebuah tab, dengan atau tanpa mode "Semua".
+   *
+   * Dirakit lewat `URLSearchParams`, BUKAN dengan menyambung "?" dan "&"
+   * sendiri. Versi sebelumnya menebak tanda sambungnya dari `key === "terbaru"`
+   * — begitu `basePath` bisa berbeda atau tabnya bertambah, tebakan itu
+   * menghasilkan alamat rusak seperti `/beranda?tab=x?semua=1`, dan akibatnya
+   * cuma terlihat sebagai tombol yang diklik lalu tidak terjadi apa-apa.
+   */
+  const alamatTab = (key: TabKey, semuanya = false) => {
+    const q = new URLSearchParams();
+    if (key !== TAB_BAWAAN) q.set("tab", key);
+    if (semuanya) q.set("semua", "1");
+    const teks = q.toString();
+    return teks ? `${basePath}?${teks}` : basePath;
+  };
 
   return (
     <section className="border-b border-zinc-900 bg-black pb-2 pt-3">
@@ -109,13 +136,7 @@ export default function TabKatalogTampilan({
             size="sm"
             className="h-8 shrink-0 rounded-sm bg-gradient-to-r from-fuchsia-600 to-rose-600 px-4 text-[11px] font-bold uppercase tracking-wide text-white hover:from-fuchsia-500 hover:to-rose-500"
           >
-            <Link
-              href={
-                semua
-                  ? alamatTab(tabAktif.key)
-                  : `${alamatTab(tabAktif.key)}${tabAktif.key === "terbaru" ? "?" : "&"}semua=1`
-              }
-            >
+            <Link href={alamatTab(tabAktif.key, !semua)}>
               {semua ? "Ringkas" : "Semua"}
             </Link>
           </Button>

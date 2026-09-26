@@ -21,7 +21,6 @@ import { STRIP_KATALOG, buildNavMenus } from "@/lib/nav-katalog";
 import type { PlaylyVideoPublik } from "@/lib/playly-publik";
 import CatalogCard from "./CatalogCard";
 import FeaturedRow from "./FeaturedRow";
-import FilterKatalog from "./FilterKatalog";
 import StripKatalog from "./StripKatalog";
 import { chromeKatalog } from "./KepalaKatalog";
 import HasilPlayly, { cariVideoPlayly } from "./HasilPlayly";
@@ -38,6 +37,16 @@ type Props = {
    * halaman supaya komponen ini tidak ikut mengurus teaser video.
    */
   heroSlot?: React.ReactNode;
+  /**
+   * Deret tab katalog (TERBARU · SERIES UNGGULAN · … · FILTER), digambar tepat
+   * di bawah banner unggulan — posisi yang ditunjuk owner 2026-09-26 saat
+   * meminta bentuk situs katalog pembanding.
+   *
+   * Dioper dari halaman, bukan dirakit di sini: isinya membaca alamat URL
+   * (`?tab=`) sehingga WAJIB dibungkus `<Suspense>` oleh pemanggilnya — syarat
+   * Next untuk `useSearchParams()`, dan tanpa itu `next build` GAGAL.
+   */
+  tabSlot?: React.ReactNode;
   /** Blok bebas di antara banner dan hitungan halaman (iklan + baris personal). */
   beforeGridSlot?: React.ReactNode;
   /**
@@ -84,6 +93,7 @@ const TANPA_PENYARING = {
 export default function CatalogBrowser({
   dramas,
   heroSlot,
+  tabSlot,
   beforeGridSlot,
   playlyVideos = [],
 }: Props) {
@@ -186,18 +196,28 @@ export default function CatalogBrowser({
           Daftar TETAP milik owner (lib/nav-katalog.ts `STRIP_KATALOG`), sama
           persis di ketiga halaman berkatalog.
 
-          Tombol FILTER di ujung kanannya ditambahkan 2026-09-26 atas permintaan
-          owner. Komponennya SAMA dengan yang dipakai baris tab halaman depan —
-          owner mengira filternya belum ada justru karena tombol itu cuma
-          terpasang di `/`, sedangkan siapa pun yang sudah login selalu
-          dilempar ke halaman ini (app/components/RedirectIfAuthed.tsx:9). */}
-      <StripKatalog
-        items={STRIP_KATALOG}
-        aksiKanan={<FilterKatalog dramas={dramas} />}
-      />
+          Tombol FILTER SENGAJA TIDAK di sini (2026-09-26, putaran kedua). Ia
+          sempat dipasang di ujung strip ini, lalu deret tab di bawah — yang
+          bentuknya persis contoh owner — membawa tombol FILTER-nya sendiri.
+          Dua tombol identik di satu halaman persis keluhan "dobel" yang owner
+          sampaikan 2026-09-21, jadi yang di strip dilepas dan yang di baris
+          tab dipertahankan (di contoh owner pun FILTER memang menempel pada
+          baris tab, bukan pada strip). */}
+      <StripKatalog items={STRIP_KATALOG} />
 
       {/* ============ 3. BANNER UNGGULAN (ramping) ========================== */}
       {heroSlot}
+
+      {/* ============ 4. DERET TAB KATALOG =================================
+          TERBARU · SERIES UNGGULAN · SERIES UPDATE · TERPOPULER ·
+          REKOMENDASI · <tahun>, dengan tombol FILTER hijau di ujung kanan —
+          bentuk situs katalog pembanding yang ditunjuk owner 2026-09-26.
+
+          Posisinya SENGAJA di sini (tepat di bawah banner, di atas baris
+          personal "Lanjut Menonton"): itu titik yang owner tandai sendiri di
+          tangkapan layarnya. Komponennya SAMA dengan yang dipakai halaman
+          depan — bukan salinan kedua yang bisa menyimpang. */}
+      {tabSlot}
 
       {/* ============ 4. ISI HALAMAN ======================================= */}
       <div className={SHELL}>

@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { getAllDramasCachedSafe } from "@/lib/dramas";
+import { TAB_BAWAAN } from "@/lib/tab-katalog";
 import { getPlaylyVideosGabunganCached } from "@/lib/playly-gabungan";
 import { featuredHeroSlides } from "@/lib/hero-teaser";
 import { FEATURED_ROW_COUNT } from "@/lib/beranda-catalog";
 import CatalogBrowser from "../components/beranda/CatalogBrowser";
 import FeaturedRow from "../components/beranda/FeaturedRow";
 import PersonalRows from "../components/beranda/PersonalRows";
+import TabKatalog from "../components/beranda/TabKatalog";
+import TabKatalogTampilan from "../components/beranda/TabKatalogTampilan";
 
 // Disimpan & dipakai ulang, disegarkan tiap 60 detik (menggantikan force-dynamic
 // yang membangun ulang halaman untuk tiap pengunjung).
@@ -71,6 +75,34 @@ export default async function BerandaPage() {
         dramas={dramas}
         playlyVideos={playlyVideos}
         heroSlot={<FeaturedRow dramas={slides} />}
+        /* Deret tab katalog + tombol FILTER — bentuk situs katalog pembanding
+           yang diminta owner 2026-09-26. Komponennya SAMA dengan yang dipakai
+           halaman depan `/`, bukan salinan kedua.
+
+           `basePath="/beranda"` WAJIB: tanpa itu tiap tab menunjuk `/`, dan
+           penonton yang sudah login akan dipantulkan balik ke sini oleh
+           `RedirectIfAuthed` — tabnya terlihat tidak berfungsi tanpa satu pun
+           error. Justru karena pantulan itulah owner tak pernah melihat baris
+           tab yang sudah ada di halaman depan.
+
+           <Suspense> WAJIB: isinya membaca `?tab=` lewat `useSearchParams()`,
+           dan tanpa pembungkus ini `next build` GAGAL. Isi fallback-nya sengaja
+           bentuk yang SAMA (tab bawaan) supaya halaman tidak melompat saat
+           bagian browsernya menyusul. */
+        tabSlot={
+          <Suspense
+            fallback={
+              <TabKatalogTampilan
+                dramas={dramas}
+                tab={TAB_BAWAAN}
+                semua={false}
+                basePath="/beranda"
+              />
+            }
+          >
+            <TabKatalog dramas={dramas} basePath="/beranda" />
+          </Suspense>
+        }
         beforeGridSlot={
           <div className="pt-6">
             {/* Baris personal (Lanjut Menonton dsb). Menghilang sendiri untuk

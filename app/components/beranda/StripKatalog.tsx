@@ -14,16 +14,6 @@ type Props = {
    * tidak menyaring di tempat (mis. halaman depan) cukup mengosongkannya.
    */
   activeHref?: string;
-  /**
-   * Isi ujung KANAN strip — dipakai /beranda untuk tombol FILTER hijau
-   * (owner 2026-09-26, meniru situs katalog pembanding: daftar pintasan di
-   * kiri, tombol filter di kanan, dalam satu baris).
-   *
-   * Opsional, jadi halaman lain yang memakai strip ini (/ dan /discover) tidak
-   * berubah sama sekali — halaman depan sudah punya tombol filternya sendiri di
-   * baris tab, dan /discover memang halaman penyaring itu sendiri.
-   */
-  aksiKanan?: React.ReactNode;
 };
 
 const ITEM_CLASS =
@@ -45,7 +35,7 @@ const ITEM_CLASS =
  * Penyaringan genre di tempat pada /beranda TIDAK hilang — masih ada di
  * dropdown "Semua genre" pada bar cari halaman itu.
  */
-export default function StripKatalog({ items, activeHref, aksiKanan }: Props) {
+export default function StripKatalog({ items, activeHref }: Props) {
   if (items.length === 0) return null;
 
   return (
@@ -56,9 +46,9 @@ export default function StripKatalog({ items, activeHref, aksiKanan }: Props) {
             layar lebar, dan strip yang berbaris-baris akan mendorong poster
             pertama turun keluar layar pertama.
 
-            Area geser dibatasi ke chip saja (`flex-1`), TIDAK mencakup tombol
-            di kanan: kalau tombolnya ikut di dalam area geser, di layar HP ia
-            terdorong keluar pandangan dan penonton mengira filternya tidak ada. */}
+            Pembungkus `flex-1` dipertahankan walau ujung kanannya kini kosong:
+            ia yang menjaga chip tetap satu baris yang bisa digeser kalau suatu
+            saat ada yang dipasang di sebelahnya lagi. */}
         <div className="no-scrollbar flex flex-1 items-center overflow-x-auto">
           {items.map((item) => (
             <Link
@@ -76,8 +66,6 @@ export default function StripKatalog({ items, activeHref, aksiKanan }: Props) {
             </Link>
           ))}
         </div>
-
-        {aksiKanan && <div className="shrink-0 py-1">{aksiKanan}</div>}
       </div>
     </div>
   );

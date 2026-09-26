@@ -23,13 +23,25 @@ import TabKatalogTampilan from "./TabKatalogTampilan";
  * WAJIB dibungkus `<Suspense>` oleh pemanggil — syarat Next untuk
  * `useSearchParams()`. Tanpa itu `next build` GAGAL.
  */
-export default function TabKatalog({ dramas }: { dramas: Drama[] }) {
+export default function TabKatalog({
+  dramas,
+  basePath,
+}: {
+  dramas: Drama[];
+  /**
+   * Halaman tempat deret tab ini dipasang. Diteruskan apa adanya ke tampilan —
+   * alasan kenapa ini WAJIB diisi di /beranda ada di sana (RedirectIfAuthed
+   * memantulkan penonton yang sudah login dari `/`).
+   */
+  basePath?: string;
+}) {
   const sp = useSearchParams();
   return (
     <TabKatalogTampilan
       dramas={dramas}
       tab={parseTab(sp.get("tab"))}
       semua={sp.get("semua") === "1"}
+      basePath={basePath}
     />
   );
 }

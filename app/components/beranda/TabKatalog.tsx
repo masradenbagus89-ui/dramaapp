@@ -26,6 +26,8 @@ import TabKatalogTampilan from "./TabKatalogTampilan";
 export default function TabKatalog({
   dramas,
   basePath,
+  hanyaMenu,
+  paksaSemua,
 }: {
   dramas: Drama[];
   /**
@@ -34,14 +36,25 @@ export default function TabKatalog({
    * memantulkan penonton yang sudah login dari `/`).
    */
   basePath?: string;
+  /** Gambar baris tabnya saja (dipakai /beranda sebagai menu). */
+  hanyaMenu?: boolean;
+  /**
+   * true = selalu tampilkan grid penuh, apa pun isi `?semua=`.
+   *
+   * Dipakai halaman /katalog, yang memang ada supaya satu tab terbuka PENUH
+   * dalam satu halaman. Tanpa ini, membuka /katalog tanpa `?semua=1` cuma
+   * memberi sebaris poster — persis yang TIDAK diminta owner.
+   */
+  paksaSemua?: boolean;
 }) {
   const sp = useSearchParams();
   return (
     <TabKatalogTampilan
       dramas={dramas}
       tab={parseTab(sp.get("tab"))}
-      semua={sp.get("semua") === "1"}
+      semua={paksaSemua || sp.get("semua") === "1"}
       basePath={basePath}
+      hanyaMenu={hanyaMenu}
     />
   );
 }

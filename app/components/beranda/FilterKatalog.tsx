@@ -48,7 +48,10 @@ export default function FilterKatalog({ dramas }: { dramas: Drama[] }) {
       <DropdownMenuTrigger asChild>
         <Button
           size="sm"
-          className="h-9 shrink-0 gap-1.5 rounded-sm bg-emerald-600 px-3 text-[11px] font-extrabold uppercase tracking-wide text-white hover:bg-emerald-500 md:text-xs"
+          // Bayangan hijau senada tombolnya — sepadan dengan tab aktif di
+          // sebelahnya, supaya keduanya terbaca sebagai satu baris kontrol
+          // yang terangkat (owner 2026-09-26: "kasih shadow biar nampak pro").
+          className="h-9 shrink-0 gap-1.5 rounded-sm bg-emerald-600 px-3 text-[11px] font-extrabold uppercase tracking-wide text-white shadow-lg shadow-emerald-600/30 transition-all duration-200 hover:-translate-y-0.5 hover:bg-emerald-500 hover:shadow-xl md:text-xs"
         >
           <SlidersHorizontal className="size-3.5" />
           Filter

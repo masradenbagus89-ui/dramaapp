@@ -39,6 +39,10 @@ export const AKAR_BERNAVBAR_ATAS = [
   // next.config.ts, jadi ia TIDAK perlu didaftarkan lagi di sini — permintaan
   // ke /playly tidak pernah sampai ke komponen navigasi.
   "/film",
+  // Halaman katalog per-tab (owner 2026-09-26): tiap tab di beranda
+  // membuka halaman ini. Butuh navbar — penonton yang mendarat dari sana
+  // harus punya jalan pulang.
+  "/katalog",
   "/my-list",
   "/profile",
   "/history",

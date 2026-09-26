@@ -60,48 +60,47 @@ export function tahunTerbaru(dramas: Drama[]): string | null {
  * Susunan tab. Tab tahun hanya ikut kalau katalog punya tahun — lihat alasannya
  * di `tahunTerbaru`.
  */
+/**
+ * Judul bagian = NAMA TAB-nya, cuma diubah dari huruf besar semua jadi kapital
+ * di awal kata. "SERIES UNGGULAN" → "Series Unggulan".
+ *
+ * ⚠️ DIHITUNG, bukan diketik ulang (owner 2026-09-26: "nama seperti series
+ * unggulan harus sama dengan yang dibawah juga"). Sebelumnya keduanya ditulis
+ * terpisah dan sudah menyimpang di EMPAT dari enam tab — tab "TERBARU"
+ * berjudul "Terbaru Ditambahkan", "TERPOPULER" berjudul "Paling Banyak
+ * Ditonton", dan seterusnya. Penonton mengklik satu nama lalu mendarat di
+ * nama lain, dan mengira tabnya salah. Dengan diturunkan seperti ini, dua
+ * nama itu MUSTAHIL berbeda lagi.
+ *
+ * Angka lewat apa adanya: "2024" tidak punya huruf untuk dikapitalkan.
+ */
+export function judulDariLabel(label: string): string {
+  return label
+    .toLowerCase()
+    .split(" ")
+    .map((kata) => (kata ? kata[0].toUpperCase() + kata.slice(1) : kata))
+    .join(" ");
+}
+
 export function daftarTab(dramas: Drama[]): TabKatalog[] {
+  /** Keterangan tetap menjelaskan isinya — yang WAJIB sama cuma judulnya. */
+  const buat = (
+    key: TabKey,
+    label: string,
+    keterangan: string,
+  ): TabKatalog => ({ key, label, judul: judulDariLabel(label), keterangan });
+
   const tab: TabKatalog[] = [
-    {
-      key: "terbaru",
-      label: "TERBARU",
-      judul: "Terbaru Ditambahkan",
-      keterangan: "Judul yang paling baru masuk katalog DramaKu.",
-    },
-    {
-      key: "unggulan",
-      label: "SERIES UNGGULAN",
-      judul: "Series Unggulan",
-      keterangan: "Serial pilihan — ditandai sendiri oleh admin.",
-    },
-    {
-      key: "update",
-      label: "SERIES UPDATE",
-      judul: "Series Baru Update",
-      keterangan: "Serial yang episodenya masih bertambah.",
-    },
-    {
-      key: "terpopuler",
-      label: "TERPOPULER",
-      judul: "Paling Banyak Ditonton",
-      keterangan: "Diurutkan dari jumlah penonton terbanyak.",
-    },
-    {
-      key: "rekomendasi",
-      label: "REKOMENDASI",
-      judul: "Rekomendasi Untuk Kamu",
-      keterangan: "Diurutkan dari rating tertinggi.",
-    },
+    buat("terbaru", "TERBARU", "Judul yang paling baru masuk katalog DramaKu."),
+    buat("unggulan", "SERIES UNGGULAN", "Serial pilihan — ditandai sendiri oleh admin."),
+    buat("update", "SERIES UPDATE", "Serial yang episodenya masih bertambah."),
+    buat("terpopuler", "TERPOPULER", "Diurutkan dari jumlah penonton terbanyak."),
+    buat("rekomendasi", "REKOMENDASI", "Diurutkan dari rating tertinggi."),
   ];
 
   const th = tahunTerbaru(dramas);
   if (th) {
-    tab.push({
-      key: "tahun",
-      label: th,
-      judul: `Rilis ${th}`,
-      keterangan: `Judul yang tahun tayangnya ${th}.`,
-    });
+    tab.push(buat("tahun", th, `Judul yang tahun tayangnya ${th}.`));
   }
   return tab;
 }

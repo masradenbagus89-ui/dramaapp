@@ -37,11 +37,20 @@ import { cn } from "@/lib/utils";
  * `useSearchParams()`. Tanpa itu build gagal (pelajaran yang sudah tercatat di
  * /discover).
  */
+/**
+ * Penanda tujuan lompat tiap tab. Dipakai DUA kali di berkas ini — di `href`
+ * tab dan di elemen tujuannya — jadi ditulis sekali supaya keduanya mustahil
+ * menyimpang (salah ketik di salah satunya = klik tab yang tidak mendarat di
+ * mana-mana, tanpa error apa pun).
+ */
+export const ID_DAFTAR = "daftar-katalog";
+
 export default function TabKatalogTampilan({
   dramas,
   tab,
   semua,
   basePath = "/",
+  hanyaMenu = false,
 }: {
   dramas: Drama[];
   /** Tab yang sedang dibuka. Pemanggil yang menentukan dari mana asalnya. */
@@ -58,6 +67,15 @@ export default function TabKatalogTampilan({
    * terlihat tidak berfungsi, tanpa satu pun error.
    */
   basePath?: string;
+  /**
+   * true = gambar BARIS TABNYA SAJA, tanpa judul & daftar poster di bawahnya.
+   *
+   * Dipakai /beranda (owner 2026-09-26): di sana baris tab berfungsi sebagai
+   * MENU — tiap tab membuka halaman katalognya sendiri. Menggambar isinya di
+   * beranda juga berarti daftar yang sama muncul dua kali di satu halaman,
+   * persis keluhan "ada 2 rekomendasi" yang owner sampaikan.
+   */
+  hanyaMenu?: boolean;
 }) {
   const tabs = daftarTab(dramas);
   const aktif = tab;
@@ -88,9 +106,16 @@ export default function TabKatalogTampilan({
   };
 
   return (
-    <section className="border-b border-zinc-900 bg-black pb-2 pt-3">
+    <section className="bg-black py-3">
       {/* ===== Deret tab + tombol FILTER ===== */}
-      <div className={cn(SHELL, "flex items-center gap-2")}>
+      {/* ===== Deret tab + tombol FILTER, dalam SATU kotak berpembatas =====
+             Owner 2026-09-26: "aku mau jadi satu shadow ... seperti LK21 (jadi
+             ada seperti pembatas)". Sebelumnya tiap tab punya bayangannya
+             sendiri dan barisnya terbaca sebagai tombol-tombol yang berserakan;
+             sekarang satu panel bergaris + satu bayangan, jadi seluruh baris
+             terbaca sebagai SATU alat kendali. */}
+      <div className={cn(SHELL)}>
+        <div className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-950/80 p-2 shadow-[0_6px_20px_-6px_rgba(0,0,0,0.9)]">
         <div className="no-scrollbar flex flex-1 items-center gap-2 overflow-x-auto">
           {tabs.map((t) => {
             const sedangDipakai = t.key === tabAktif.key;
@@ -100,10 +125,13 @@ export default function TabKatalogTampilan({
                 href={alamatTab(t.key)}
                 aria-current={sedangDipakai ? "page" : undefined}
                 className={cn(
-                  "shrink-0 rounded-sm border px-3 py-2 text-[11px] font-extrabold uppercase tracking-wide transition-colors md:text-xs",
+                  "shrink-0 rounded-sm border px-3 py-2 text-[11px] font-extrabold uppercase tracking-wide transition-all duration-200 md:text-xs",
                   sedangDipakai
-                    ? "border-amber-400 bg-amber-400 text-black"
-                    : "border-zinc-700 text-zinc-300 hover:border-amber-400 hover:text-amber-400",
+                    // Bayangan kuning pada tab aktif: memberi kesan tombolnya
+                    // TERANGKAT dari halaman, bukan sekadar berganti warna
+                    // (owner 2026-09-26: "kasih shadow biar nampak pro").
+                    ? "border-amber-400 bg-amber-400 text-black shadow-md shadow-amber-400/40"
+                    : "border-zinc-700 text-zinc-300 hover:border-amber-400 hover:bg-zinc-900 hover:text-amber-400",
                 )}
               >
                 {t.label}
@@ -113,15 +141,27 @@ export default function TabKatalogTampilan({
         </div>
 
         <FilterKatalog dramas={dramas} />
+        </div>
       </div>
 
+      {/* Mode MENU (dipakai /beranda): berhenti di sini — judul & daftarnya
+          tinggal di halaman katalognya sendiri, supaya daftar yang sama tidak
+          muncul dua kali dalam satu halaman. */}
+      {hanyaMenu ? null : (
+        <>
       {/* ===== Judul bagian + tombol SEMUA =====
              "SEMUA" sengaja TAUTAN ke halaman yang sama (`?semua=1`), bukan
              tombol yang membuka halaman lain: isinya memang sudah ada di layar,
              jadi memindahkan penonton ke halaman lain cuma menambah langkah.
              Bentuk tautan juga membuat keadaan "sedang dibuka semua" ikut di
              alamat — bisa dibagikan, dan tombol Kembali mengembalikannya. */}
-      <div className={cn(SHELL, "mt-3 flex items-end justify-between gap-3")}>
+      <div
+        id={ID_DAFTAR}
+        /* scroll-mt menahan judul dari balik bar cari yang menempel di atas.
+           Tanpa ini, lompatan mendarat tepat di bawah bar dan baris judulnya
+           tertutup — terlihat seperti mendarat di tempat yang salah. */
+        className={cn(SHELL, "mt-3 flex scroll-mt-28 items-end justify-between gap-3")}
+      >
         <div className="min-w-0">
           <h2 className="truncate text-base font-bold text-white md:text-lg">
             {tabAktif.judul}
@@ -164,6 +204,8 @@ export default function TabKatalogTampilan({
             tombolBawah={false}
           />
         </div>
+      )}
+        </>
       )}
     </section>
   );

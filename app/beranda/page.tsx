@@ -79,11 +79,14 @@ export default async function BerandaPage() {
            yang diminta owner 2026-09-26. Komponennya SAMA dengan yang dipakai
            halaman depan `/`, bukan salinan kedua.
 
-           `basePath="/beranda"` WAJIB: tanpa itu tiap tab menunjuk `/`, dan
-           penonton yang sudah login akan dipantulkan balik ke sini oleh
-           `RedirectIfAuthed` — tabnya terlihat tidak berfungsi tanpa satu pun
-           error. Justru karena pantulan itulah owner tak pernah melihat baris
-           tab yang sudah ada di halaman depan.
+           `hanyaMenu` + `basePath="/katalog"` (owner 2026-09-26): di sini
+           baris tab berfungsi sebagai MENU — tiap tab MEMBUKA HALAMAN sendiri
+           yang isinya daftar itu saja. Isinya sengaja TIDAK digambar di sini;
+           kalau digambar, daftar yang sama muncul dua kali dalam satu halaman
+           (persis keluhan "ada 2 rekomendasi").
+
+           Jangan kembalikan basePath ke `/`: `RedirectIfAuthed` memantulkan
+           penonton yang sudah login dari sana, dan tabnya terlihat mati.
 
            <Suspense> WAJIB: isinya membaca `?tab=` lewat `useSearchParams()`,
            dan tanpa pembungkus ini `next build` GAGAL. Isi fallback-nya sengaja
@@ -96,11 +99,12 @@ export default async function BerandaPage() {
                 dramas={dramas}
                 tab={TAB_BAWAAN}
                 semua={false}
-                basePath="/beranda"
+                basePath="/katalog"
+                hanyaMenu
               />
             }
           >
-            <TabKatalog dramas={dramas} basePath="/beranda" />
+            <TabKatalog dramas={dramas} basePath="/katalog" hanyaMenu />
           </Suspense>
         }
         beforeGridSlot={

@@ -65,60 +65,88 @@ describe("bentuk baris tab sesuai contoh owner", () => {
   });
 });
 
-describe("alamat tab mengikuti halaman tempatnya dipasang", () => {
-  it("di /beranda, tiap tab menunjuk /beranda — BUKAN /", () => {
-    // Inti perbaikannya. Tab yang menunjuk `/` akan dipantulkan
-    // RedirectIfAuthed untuk penonton yang sudah login, dan tabnya terlihat
-    // mati tanpa error apa pun.
-    const html = render({ basePath: "/beranda" });
-    expect(html).toContain('href="/beranda?tab=unggulan"');
-    expect(html).toContain('href="/beranda?tab=terpopuler"');
-    // Tab bawaan tidak perlu parameter — alamatnya halaman itu sendiri.
-    expect(html).toContain('href="/beranda"');
+describe("tab adalah MENU yang PINDAH HALAMAN (owner, putaran ketiga)", () => {
+  // Owner: "aku maunya pindah halaman (jadi halaman baru hanya berisi,
+  // contohnya klik film terbaru satu halaman film terbaru semua)".
+  // Sebelumnya tab mengganti isi DI TEMPAT lalu menggulir turun.
+  it("di /beranda, tiap tab menuju halaman katalognya sendiri", () => {
+    const html = render({ basePath: "/katalog" });
+    expect(html).toContain('href="/katalog?tab=unggulan"');
+    expect(html).toContain('href="/katalog?tab=terpopuler"');
+    // Tab bawaan: halaman katalog tanpa parameter.
+    expect(html).toContain('href="/katalog"');
+  });
+
+  it("alamatnya POLOS — tidak lagi menggulir di halaman yang sama", () => {
+    const html = render({ basePath: "/katalog" });
     expect(
       html,
-      "masih ada tab yang menunjuk halaman depan — akan memantul untuk " +
-        "penonton yang sudah login",
-    ).not.toMatch(/href="\/\?tab=/);
+      "tab masih memakai penanda lompat — itu perilaku LAMA yang owner minta " +
+        "diganti jadi pindah halaman",
+    ).not.toContain("#daftar-katalog");
+  });
+
+  it("TIDAK menunjuk `/` — itu memantul untuk penonton yang sudah login", () => {
+    expect(render({ basePath: "/katalog" })).not.toMatch(/href="\/\?tab=/);
   });
 
   it("tanpa basePath, perilaku halaman depan TIDAK berubah", () => {
-    // Pembanding wajib: halaman depan `/` memakai bawaannya dan harus tetap
-    // seperti sebelum hari ini.
     const html = render();
     expect(html).toContain('href="/?tab=unggulan"');
     expect(html).toContain('href="/"');
   });
 });
 
-describe("tombol SEMUA merakit alamat yang SAH", () => {
-  // Versi lama menyambung "?" / "&" dengan menebak dari `key === "terbaru"`.
-  // Begitu basePath berbeda atau tab bertambah, tebakan itu menghasilkan
-  // alamat rusak seperti `/beranda?tab=x?semua=1` — dan akibatnya cuma
-  // terlihat sebagai tombol yang diklik lalu tidak terjadi apa-apa.
-  it("pada tab bawaan: satu tanda tanya, bukan dua", () => {
-    const html = render({ basePath: "/beranda" });
-    expect(html).toContain('href="/beranda?semua=1"');
-    expect(html).not.toMatch(/href="[^"]*\?[^"]*\?/);
+describe("mode MENU: baris tab saja, isinya tinggal di halaman katalog", () => {
+  // Kalau isinya ikut digambar di beranda, daftar yang sama muncul DUA KALI
+  // dalam satu halaman — persis keluhan "ada 2 rekomendasi".
+  const menu = renderToStaticMarkup(
+    createElement(TabKatalogTampilan, {
+      dramas: KATALOG,
+      tab: TAB_BAWAAN,
+      semua: false,
+      basePath: "/katalog",
+      hanyaMenu: true,
+    }),
+  );
+
+  it("barisnya tetap tergambar lengkap", () => {
+    for (const t of daftarTab(KATALOG)) {
+      expect(menu, `tab ${t.label} hilang`).toContain(t.label);
+    }
+    expect(menu).toContain("Filter");
   });
 
-  it("pada tab lain: parameter disambung dengan &, bukan ?", () => {
-    const html = renderToStaticMarkup(
-      createElement(TabKatalogTampilan, {
-        dramas: KATALOG,
-        tab: "terpopuler",
-        semua: false,
-        basePath: "/beranda",
-      }),
-    );
-    expect(html).toContain('href="/beranda?tab=terpopuler&amp;semua=1"');
-    expect(html).not.toMatch(/href="[^"]*\?[^"]*\?/);
+  it("judul & daftar poster TIDAK ikut", () => {
+    expect(menu).not.toContain("<h2");
+    expect(menu).not.toContain("Judul yang paling baru masuk katalog");
   });
 
-  it("saat sedang 'Semua', tombolnya kembali ke bentuk ringkas", () => {
-    const html = render({ basePath: "/beranda", semua: true });
-    expect(html).toContain("Ringkas");
-    expect(html).toContain('href="/beranda"');
+  it("pembanding: tanpa mode menu, judul & daftarnya MEMANG digambar", () => {
+    // Tanpa baris ini, "tidak muncul" tak bisa dibedakan dari "tak pernah ada".
+    const penuh = render({ basePath: "/katalog" });
+    expect(penuh).toContain("<h2");
+    expect(penuh).toContain(">Terbaru<");
+  });
+});
+
+describe("3. baris tab jadi SATU kotak berpembatas", () => {
+  // Owner: "aku mau jadi satu shadow ... seperti LK21 (jadi ada seperti
+  // pembatas)". Sebelumnya tiap tab punya bayangan sendiri dan barisnya
+  // terbaca sebagai tombol berserakan.
+  const html = render({ basePath: "/katalog" });
+
+  it("seluruh baris dibungkus kotak bergaris + satu bayangan", () => {
+    expect(html).toMatch(/rounded-lg border border-zinc-800[^"]*shadow-/);
+  });
+
+  it("tab yang sedang dibuka tetap menonjol di dalam kotak", () => {
+    expect(html).toMatch(/bg-amber-400[^"]*shadow-md/);
+  });
+
+  it("tab yang diam TIDAK lagi punya bayangan sendiri", () => {
+    // Itu yang dulu membuat barisnya terlihat berserakan.
+    expect(html).not.toMatch(/border-zinc-700 text-zinc-300 shadow-md/);
   });
 });
 
@@ -151,7 +179,12 @@ describe("deret tab benar-benar DIPASANG di /beranda", () => {
       elemen![0],
       'tab di /beranda menunjuk "/" — penonton yang sudah login akan ' +
         "dipantulkan RedirectIfAuthed dan tabnya terlihat mati",
-    ).toMatch(/basePath="\/beranda"/);
+    ).toMatch(/basePath="\/katalog"/);
+    expect(
+      elemen![0],
+      "baris tab di beranda menggambar isinya juga — daftar yang sama akan " +
+        "muncul dua kali dalam satu halaman",
+    ).toContain("hanyaMenu");
   });
 
   it("fallback-nya JUGA memakai basePath yang sama", () => {
@@ -160,7 +193,8 @@ describe("deret tab benar-benar DIPASANG di /beranda", () => {
     // diklik dan memantul.
     const fb = halaman.match(/<TabKatalogTampilan[\s\S]*?\/>/);
     expect(fb, "<TabKatalogTampilan … /> di fallback tidak ditemukan").toBeTruthy();
-    expect(fb![0]).toMatch(/basePath="\/beranda"/);
+    expect(fb![0]).toMatch(/basePath="\/katalog"/);
+    expect(fb![0]).toContain("hanyaMenu");
   });
 
   it("dibungkus <Suspense> — syarat Next untuk useSearchParams", () => {
@@ -191,5 +225,126 @@ describe("halaman depan TIDAK ikut berubah", () => {
     const depan = readFileSync("app/page.tsx", "utf-8");
     expect(depan).toContain("<TabKatalog dramas={dramas} />");
     expect(depan).not.toContain('basePath="/beranda"');
+  });
+});
+
+// ===========================================================================
+// TIGA MASUKAN OWNER sesudah melihat hasilnya di localhost (2026-09-26).
+// ===========================================================================
+const { judulDariLabel } = await import("../lib/tab-katalog");
+
+describe("2. nama tab SAMA dengan judul bagiannya", () => {
+  // Owner: "untuk nama seperti series unggulan harus sama dengan yang dibawah
+  // juga (sekarang nama tidak sama)". Dulu menyimpang di 4 dari 6 tab.
+  it("judul diturunkan dari label, bukan diketik terpisah", () => {
+    expect(judulDariLabel("SERIES UNGGULAN")).toBe("Series Unggulan");
+    expect(judulDariLabel("TERBARU")).toBe("Terbaru");
+    expect(judulDariLabel("TERPOPULER")).toBe("Terpopuler");
+    // Angka tidak punya huruf untuk dikapitalkan — lewat apa adanya.
+    expect(judulDariLabel("2026")).toBe("2026");
+  });
+
+  it("TIAP tab: judulnya sama dengan namanya, hanya beda huruf besar-kecil", () => {
+    for (const t of daftarTab(KATALOG)) {
+      expect(
+        t.judul.toLowerCase(),
+        `tab "${t.label}" berjudul "${t.judul}" — penonton mengklik satu nama ` +
+          `lalu mendarat di nama lain`,
+      ).toBe(t.label.toLowerCase());
+    }
+  });
+
+  it("judul yang tergambar memang nama tab yang sedang dibuka", () => {
+    // Pembanding lewat render sungguhan, bukan cuma daftarnya.
+    expect(render({ basePath: "/beranda" })).toContain(">Terbaru<");
+  });
+});
+
+
+
+// ===========================================================================
+// HALAMAN KATALOG (owner 2026-09-26, putaran ketiga) — tujuan tiap tab.
+// ===========================================================================
+describe("halaman /katalog: satu tab, satu halaman penuh", () => {
+  const halaman = readFileSync("app/katalog/page.tsx", "utf-8");
+
+  it("halamannya ada dan memasang baris tabnya", () => {
+    expect(halaman).toMatch(/<TabKatalog\s+dramas=/);
+    expect(halaman).toMatch(/basePath="\/katalog"/);
+  });
+
+  it("SELALU grid penuh — bukan sebaris poster", () => {
+    // Inti permintaan owner: "satu halaman film terbaru SEMUA". Tanpa paksaan
+    // ini, membuka /katalog tanpa ?semua=1 cuma memberi sebaris poster.
+    //
+    // ⚠️ Diperiksa dari ELEMEN-nya, bukan dari "apakah kata itu ada di
+    // berkas". Versi pertama tes ini cuma mencari teks dan LOLOS saat propnya
+    // dilepas — sebab komentar di halaman itu sendiri menyebut "paksaSemua".
+    // Kekambuhan kelemahan yang sama persis dengan penjaga `basePath` di atas,
+    // dan dengan jebakan komentar 2026-09-22 di halaman 404.
+    const elemen = halaman.match(/<TabKatalog\s[\s\S]*?\/>/);
+    expect(elemen, "<TabKatalog … /> tidak ditemukan").toBeTruthy();
+    expect(
+      elemen![0],
+      "halaman katalog tidak memaksa grid penuh — membukanya cuma memberi " +
+        "sebaris poster, bukan seluruh judul",
+    ).toContain("paksaSemua");
+  });
+
+  it("dibungkus <Suspense> — tanpa itu build GAGAL", () => {
+    expect(halaman).toContain("<Suspense");
+    expect(halaman).toContain("fallback=");
+  });
+
+  it("fallback-nya juga grid penuh & basePath yang sama", () => {
+    const fb = halaman.match(/<TabKatalogTampilan[\s\S]*?\/>/);
+    expect(fb).toBeTruthy();
+    expect(fb![0]).toMatch(/basePath="\/katalog"/);
+    expect(fb![0]).toMatch(/\bsemua\b/);
+  });
+
+  it("TIDAK menyeret isi beranda ke sini", () => {
+    // Halaman ini ada supaya satu tab terbuka BERSIH. Menambahkan banner,
+    // baris personal, atau baris kategori mengingkari alasan ia dibuat.
+    for (const jangan of ["PersonalRows", "FeaturedRow", "CatalogBrowser"]) {
+      expect(halaman, `${jangan} tidak boleh ada di halaman katalog`).not.toContain(
+        jangan,
+      );
+    }
+  });
+
+  it("punya navigasi — penonton yang mendarat bisa pulang", async () => {
+    const { punyaNavbarAtas } = await import("../lib/navigasi-halaman");
+    expect(punyaNavbarAtas("/katalog")).toBe(true);
+  });
+});
+
+describe("2b. baris 'Rekomendasi Untuk Kamu' dilepas dari beranda", () => {
+  // Owner 2026-09-26: "ada 2 rekomendasi (jadikan satu saja pilih salah satu)".
+  // Yang dipertahankan tabnya; baris personal dilepas.
+  const personal = readFileSync(
+    "app/components/beranda/PersonalRows.tsx",
+    "utf-8",
+  );
+  const kode = personal
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/^\s*\/\/.*$/gm, "");
+
+  it("jaring pengaman penyaring komentarnya sendiri", () => {
+    expect(kode).toContain("ContentRow");
+  });
+
+  it("tidak ada lagi baris bernama 'Rekomendasi Untuk Kamu'", () => {
+    expect(
+      kode,
+      "baris rekomendasi personal dipasang lagi — isinya kembar dengan tab " +
+        "REKOMENDASI selama katalog masih kecil",
+    ).not.toContain("Rekomendasi Untuk Kamu");
+  });
+
+  it("baris personal LAIN tetap hidup — yang dilepas hanya satu", () => {
+    // Pembanding wajib: tanpa ini, menghapus seluruh PersonalRows juga lulus.
+    expect(kode).toContain("Lanjut Menonton");
+    expect(kode).toContain("Favorit Saya");
   });
 });

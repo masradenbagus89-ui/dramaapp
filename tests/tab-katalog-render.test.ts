@@ -115,10 +115,14 @@ describe("mengganti tab BENAR-BENAR mengganti isinya", () => {
   });
 
   it("judul bagian ikut berganti, bukan tetap 'Terbaru'", () => {
-    expect(render("terbaru")).toContain(">Terbaru Ditambahkan<");
+    // Judul bagian kini SAMA PERSIS dengan nama tabnya, cuma tidak huruf
+    // besar semua (owner 2026-09-26: "nama seperti series unggulan harus sama
+    // dengan yang dibawah juga"). Dulu keduanya ditulis terpisah dan sudah
+    // menyimpang di empat dari enam tab.
+    expect(render("terbaru")).toContain(">Terbaru<");
     expect(render("unggulan")).toContain(">Series Unggulan<");
-    expect(render("terpopuler")).toContain(">Paling Banyak Ditonton<");
-    expect(render("tahun")).toContain(">Rilis 2026<");
+    expect(render("terpopuler")).toContain(">Terpopuler<");
+    expect(render("tahun")).toContain(">2026<");
   });
 
   it("tab SERIES UNGGULAN hanya menggambar serial yang ditandai/berbayar", () => {

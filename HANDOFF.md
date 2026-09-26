@@ -78,6 +78,25 @@ Diverifikasi sesudah rilis: `/` `/beranda` `/film` `/discover` semuanya **200**,
 
 **Bukti:** build exit 0 (`/` dan `/beranda` sama-sama tetap `○ Static`) · tsc exit 0 · **1154 tes / 79 berkas hijau** · mutation check 5 arah semuanya MERAH. Dari server hasil build: `/beranda` menggambar **5 label tab**, 5 tujuan `href="/beranda?tab=…"`, **nol** yang menunjuk `/`, tombol Semua ada, dan `?tab=terpopuler` benar-benar mengganti judul bagian jadi "Paling Banyak Ditonton". Halaman depan tidak berubah (5 tab tetap `/?tab=`). Tombol hijau terhitung 2 di HTML **kedua halaman** — itu pola `<Suspense>` (kerangka + isi), bukan dobel; kalau benar dobel, beranda akan 3.
 
+## 2d. Baris tab dirombak sesudah owner melihatnya di localhost (2026-09-26, putaran ketiga)
+
+**Owner memeriksa di `localhost:3000` SEBELUM rilis dan memberi tiga masukan.** Alur ini terbukti berharga — ketiganya tak mungkin ketahuan dari tes atau dari HTML.
+
+**1. Tab harus PINDAH HALAMAN, bukan menggulir.** Versi sebelumnya mengganti isi di tempat lalu meloncat turun lewat penanda `#`. Owner: *"aku maunya pindah halaman (jadi halaman baru hanya berisi, contohnya klik film terbaru satu halaman film terbaru semua)"*.
+- **`app/katalog/page.tsx` (BARU)** — `/katalog?tab=x`. Isinya SENGAJA cuma dua: baris tab + grid penuh judul tab itu. Nol banner, nol baris personal, nol baris kategori; ada tes yang MERAH kalau `PersonalRows`/`FeaturedRow`/`CatalogBrowser` menyusup ke sana.
+- `paksaSemua` di `TabKatalog` membuat halaman itu SELALU grid penuh — tanpa itu, membukanya cuma memberi sebaris poster (bukan "semua" yang diminta).
+- Penanda `#daftar-katalog` di alamat tab DIBUANG; ia peninggalan perilaku lama.
+
+**2. Baris tab di /beranda jadi MENU saja** (`hanyaMenu`). Judul & posternya tidak lagi digambar di sana — kalau digambar, daftar yang sama muncul dua kali dalam satu halaman.
+
+**3. Dua "Rekomendasi" dijadikan satu.** Owner melihat bagian tab "Rekomendasi" (rating tertinggi) DAN baris personal "Rekomendasi Untuk Kamu" (dari riwayat tontonan) berisi poster yang sama persis. **Yang dilepas: baris personalnya** (owner memilih mempertahankan tab, sesuai bentuk situs pembanding). ⚠️ **Yang HILANG dan wajib diketahui:** saran yang menyesuaikan diri dengan tontonan tiap penonton. Keduanya kembar HANYA karena katalog masih 35 judul; kalau katalog sudah besar, baris itu layak dihidupkan lagi **dengan nama berbeda**. `recommended` sengaja tidak ikut dihapus — masih dipakai baris "Trending di <genre>".
+
+**4. Bayangan jadi SATU kotak berpembatas.** Owner: *"aku mau jadi satu shadow ... seperti LK21 (jadi ada seperti pembatas)"*. Sebelumnya tiap tab punya bayangan sendiri dan barisnya terbaca sebagai tombol berserakan.
+
+**🪤 PENJAGA PALSU DUA KALI DALAM SATU SESI, sebabnya SAMA — cocok-teks tingkat-berkas.** (a) tes `basePath` lolos saat prop dilepas dari `<TabKatalog>`, sebab isi `<Suspense fallback>` memuat teks yang sama; (b) tes `paksaSemua` lolos saat propnya dilepas, sebab **komentar di halaman itu sendiri** menyebut kata itu. **Keduanya diperbaiki jadi memeriksa ELEMEN-nya** (`html.match(/<TabKatalog\s[\s\S]*?\/>/)`), lalu diuji-balik lagi: merah. **Aturan: kalau satu berkas memuat kata yang sama di lebih dari satu tempat — prop kedua, komentar, fallback — `toContain` tingkat-berkas BUKAN penjaga.** Ini kekambuhan ketiga pola yang sama di repo ini (2026-09-22 halaman 404, 2026-09-26 dua kali).
+
+**Bukti:** build exit 0 (`/katalog` tercatat `○ Static`; `/`, `/beranda`, `/film` tetap `○`) · tsc exit 0 · **1179 tes / 80 berkas hijau** · mutation check 5 arah (sesudah penjaga palsunya diperbaiki) semuanya MERAH. Dari server lokal hasil build: `/beranda` punya **6 tautan `/katalog…`**, kotak pembatas tergambar, isi tab **0**, "Rekomendasi Untuk Kamu" **0**; `/katalog` menggambar **35 kartu** + navbar.
+
 ## 3. Pekerjaan berikutnya yang dipilih owner
 
 **Pangkas beban ke Playly sampai AKARNYA.** TTL hanya memperjarang; bentuk dasarnya tetap 1 panggilan detail per video hanya untuk tahu sampul + apakah berkasnya ada (`lib/playly-publik.ts`, blok `fetchPlaylyDetailPublik` per video). Sasaran: menghilangkan sebagian besar panggilan itu, bukan sekadar memperjarangnya.

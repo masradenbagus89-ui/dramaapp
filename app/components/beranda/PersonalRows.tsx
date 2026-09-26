@@ -127,19 +127,21 @@ export default function PersonalRows({ dramas }: { dramas: Drama[] }) {
         />
       )}
 
-      {!similar.base && recommended.items.length > 0 && (
-        <ContentRow
-          title={
-            recommended.genre
-              ? `Karena kamu suka ${recommended.genre}`
-              : "Rekomendasi Untuk Kamu"
-          }
-          subtitle={recommended.genre ? "Rekomendasi Untuk Kamu" : undefined}
-          accent={recommended.genre ?? undefined}
-          dramas={recommended.items}
-          href="/discover"
-        />
-      )}
+      {/* ⚠️ BARIS "Rekomendasi Untuk Kamu" DIHAPUS (owner 2026-09-26: "ada 2
+          rekomendasi, jadikan satu saja pilih salah satu").
+
+          Kenapa YANG INI yang dilepas, bukan tabnya: baris tab REKOMENDASI
+          adalah bentuk yang owner minta ditiru dari situs katalog pembanding,
+          dan di katalog 35 judul kedua daftar ini praktis sama isinya —
+          "rating tertinggi" dan "saran dari riwayat tontonan" menghasilkan
+          poster yang itu-itu juga, jadi penonton melihat dua bagian kembar.
+
+          Yang HILANG dan harus diketahui: saran yang menyesuaikan diri dengan
+          tontonan tiap penonton. Kalau suatu hari katalog sudah besar dan
+          keduanya tak lagi kembar, baris ini layak dihidupkan lagi — dengan
+          NAMA yang berbeda dari tabnya. `recommended` sengaja TIDAK ikut
+          dihapus: nilainya masih dipakai baris "Trending di <genre>" di bawah.
+          Penjaganya: tests/tab-katalog-beranda.test.ts. */}
 
       {trendingGenre.length > 0 && recommended.genre && (
         <ContentRow

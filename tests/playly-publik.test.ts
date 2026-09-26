@@ -114,6 +114,10 @@ describe("rakitVideoPublik — video mana yang boleh dilihat penonton", () => {
       episode: null,
       year: null,
       genre: null,
+      // Belum dikaitkan drama DAN admin belum memilih kategori → null. Video
+      // tetap tampil di beranda (baris "Film Terbaru"), cuma belum ikut ke
+      // baris genre mana pun.
+      kategori: null,
       rating: null,
       contentRating: null,
       quality: null,
@@ -133,10 +137,62 @@ describe("rakitVideoPublik — video mana yang boleh dilihat penonton", () => {
       episode: 3,
       year: null,
       genre: null,
+      // `dramas` di berkas ini tidak mengisi `category`, jadi cadangannya pun
+      // kosong — lihat blok "kategori video untuk baris beranda" di bawah
+      // untuk kasus yang benar-benar terisi.
+      kategori: null,
       rating: null,
       contentRating: null,
       quality: null,
     });
+  });
+
+  // =======================================================================
+  // KATEGORI VIDEO untuk baris beranda (owner 2026-09-26).
+  //
+  // Kenapa dijaga: owner meminta video Playly masuk beranda "sesuai genre",
+  // padahal diukur di produksi hari itu NOL dari 46 video punya genre —
+  // `PlaylyVideo` memang tidak punya field itu. Jalur pilihan admin di bawah
+  // adalah SATU-SATUNYA sumbernya; kalau putus, baris genre beranda selalu
+  // kosong dan tak ada error apa pun yang melaporkannya.
+  // =======================================================================
+  it("kategori pilihan admin menempel ke videonya", () => {
+    const { labelUntuk } = rakitVideoPublik([video("1")], [], [], dramas, {
+      "1": "Action",
+    });
+    expect(labelUntuk("1").kategori).toBe("Action");
+  });
+
+  it("video yang TIDAK dipilihkan kategori tetap null (bukan menebak)", () => {
+    // Pembanding untuk tes di atas: tanpa ini, "kategori terisi" tak bisa
+    // dibedakan dari "kategorinya selalu terisi apa pun masukannya".
+    const { labelUntuk } = rakitVideoPublik([video("1"), video("2")], [], [], dramas, {
+      "1": "Action",
+    });
+    expect(labelUntuk("2").kategori).toBeNull();
+  });
+
+  it("pilihan admin MENANG atas kategori drama yang dikaitkan", () => {
+    const { labelUntuk } = rakitVideoPublik(
+      [video("1")],
+      [],
+      [{ videoId: "1", dramaId: "drama-b", episode: null }],
+      [{ id: "drama-b", title: "Drama B", category: "Romance" }],
+      { "1": "Action" },
+    );
+    expect(labelUntuk("1").kategori).toBe("Action");
+  });
+
+  it("kategori drama dipakai sebagai CADANGAN kalau admin belum memilih", () => {
+    // Supaya video yang sudah dikaitkan admin ke drama tidak perlu diisi ulang
+    // satu per satu dengan tangan.
+    const { labelUntuk } = rakitVideoPublik(
+      [video("1")],
+      [],
+      [{ videoId: "1", dramaId: "drama-b", episode: null }],
+      [{ id: "drama-b", title: "Drama B", category: "Romance" }],
+    );
+    expect(labelUntuk("1").kategori).toBe("Romance");
   });
 
   // Kartu video menampilkan "2026 · Action, Sci-Fi" di bawah judul. Playly TIDAK

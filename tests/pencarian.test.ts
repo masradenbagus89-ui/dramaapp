@@ -144,6 +144,7 @@ describe("pencarian video Playly", () => {
       episode: null,
       year: null,
       genre: null,
+      kategori: null,
       rating: null,
       contentRating: null,
       quality: null,

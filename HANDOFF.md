@@ -9,7 +9,34 @@
 >
 > **📦 Berkas ini sudah 2.980 baris / ±240 KB** dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-09-25.
+**Terakhir diisi:** 2026-09-26.
+
+## 2026-09-26 (komputer OWNER) — DramaKu jadi "isinya film": navbar ramping + video Playly masuk beranda — SELESAI, BELUM DI-PUSH
+
+**Status: kode selesai & teruji, MENUNGGU IZIN RILIS owner.** Belum di-commit, belum di-push ke mana pun. Rencana lengkap: `docs/lintasai/rencana/2026-09-26-dramaku-isinya-film.md`.
+
+**Yang diminta owner:** navbar halaman film seperti LK21 (Playly & Profile dilepas, Profile pindah ke avatar), dan semua video Playly langsung masuk beranda sesuai genre — "viewer tidak perlu tahu darimana asal video di upload".
+
+**🪤 PREMIS OWNER DIKOREKSI SEBELUM DIKERJAKAN — "sesuai genre" mustahil apa adanya.** `PlaylyVideo` dari API Playly (`lib/playly.ts:398-410`) **tidak punya field genre sama sekali**; satu-satunya sumbernya kaitan admin video→drama. Diukur dari HTML produksi `https://dramaapp.vercel.app/playly` hari itu: **46 video, NOL punya genre, NOL punya kaitan drama, NOL punya rating** — pembandingnya penanda durasi = **45**, jadi cara bacanya terbukti benar, dan angkanya cocok dengan pengakuan kode sendiri di `app/components/player/InfoVideoPlayly.tsx:26-29`. Owner ditawari 3 jalan lewat popup dan memilih **"tampil sekarang tanpa genre, kategori menyusul"**. Karena itu baris "Film Terbaru" memuat **SELURUH** video: kalau hanya yang berkategori, ke-46 video hari ini akan hilang dari beranda.
+
+**Yang berubah (ringkas):**
+- **Navbar** — `LINKS` di `TopNav` tinggal `[Beranda, Admin]`; `TUJUAN` di `KepalaKatalog` disamakan. Komponen BARU `app/components/MenuAkun.tsx` (avatar → Profile · Riwayat · Admin · Keluar) dipasang di **DUA** kepala situs; wajib dua-duanya, sebab melepas "Profile" dari kedua daftar membuat /beranda kehilangan satu-satunya jalan ke Profil di layar komputer. Hook `usePenonton` diekstrak ke berkas sendiri — dulu tiga salinan.
+- **Beranda** — `lib/beranda-video.ts` (BARU) membungkus `homeCatalogRows` **tanpa menyentuhnya**, jadi `/` dan `/shorts` nol perubahan (dijaga tes). `FeaturedRow` dapat prop opsional `items`; lima pemanggil lama tak berubah.
+- **Halaman tonton** — `/tonton/<slug>-<id>` (BARU), memakai gerbang daftar-izin yang sama dengan `/api/playly/video`. Alamatnya dirakit+dibaca sepasang di `lib/tonton.ts`.
+- **Kategori admin** — dokumen `app_data` `playly:genre` + `/api/admin/playly/genre` + dropdown di panel admin. **Owner tidak perlu menjalankan SQL apa pun.**
+- **Kata "Playly" dilepas dari layar penonton** — judul halaman `/playly` dan bagian hasil video jadi netral. Route `/playly` TETAP hidup (tautan lama & hasil Google tidak mati), cuma tak lagi punya tombol.
+
+**🪤 Jebakan alat yang memakan waktu, jangan diulang:**
+1. **`ƒ (Dynamic)` vs `● (SSG)` ditentukan ADA-TIDAKNYA `generateStaticParams`, bukan isinya.** Versi pertama halaman tonton sengaja tidak memakainya (mengira keberadaannya = prerender), dan build menandainya `ƒ` — artinya tiap pembukaan halaman menembak API video, dan halamannya ikut mati saat API itu lambat. Memasangnya kembali dengan daftar **KOSONG** + `dynamicParams = true` memberi ISR tanpa prerender, persis pola `app/drama/[id]`. **Ukur dari keluaran `npm run build`, jangan dari niat.**
+2. **Tes cocok-teks ikut menangkap KOMENTAR** (kekambuhan pelajaran 2026-09-22 di halaman 404): tes "halaman tonton tidak memakai generateStaticParams" MERAH karena komentar berkas itu sendiri menyebut namanya. Saring komentar dulu, lalu pasang jaring pengaman untuk penyaringnya (kalau ia mengosongkan berkas, tesnya lulus tanpa memeriksa apa pun).
+3. **`npm test` hijau ≠ tipe benar.** 1075 tes lulus sementara `npx tsc --noEmit` menemukan **3 berkas tes** yang kehilangan field baru `kategori`. Gerbang `build → tsc → test` wajib lengkap, jangan dipotong.
+4. **Port 3010 di komputer ini BUKAN dramaapp** melainkan "Football Bot Dashboard". Sempat kusangka dev server proyek ini dan nyaris membuatku menghindari `npm run build`. Ketuk dulu portnya (`curl` + baca `<title>`) sebelum menyimpulkan.
+
+**Bukti gerbang (AGENTS.local.md §6, urutannya dipatuhi):** `rm -rf .next` → `npm run build` **exit 0** → `npx tsc --noEmit` **exit 0** → `npm test` **1077 tes / 74 berkas hijau**. Kolom build: `/tonton/[id]` **● (SSG)**, sementara `/beranda`, `/playly`, `/shorts`, `/sitemap.xml` tetap **○ (Static)** — nol kemunduran. **Mutation check 9 arah, semuanya MERAH** lalu pulih hijau.
+
+**⚠️ BATAS JUJUR — yang BELUM terbukti tayang.** Baris "Film Terbaru" dan halaman tonton **belum bisa dibuktikan di lokal**: `.env.local` tidak memuat kunci API Playly (kuncinya di Vercel + database produksi), jadi di server hasil build daftar videonya kosong (`"playlyVideos":[]` di HTML) dan barisnya memang tidak tergambar. Itu keadaan LINGKUNGAN, bukan bug — kekambuhan jebakan `AGENTS.local.md` aturan 8. Yang **sudah** terbukti dari server hasil build (`next start :3099`): navbar `/drama/<id>` tinggal satu menu (`<nav>` isinya hanya `href="/beranda"`, **nol** `href="/playly"`), dan `/tonton/tebakan-11111` balas **404** sementara `/drama/<id sah>` balas 200. Sisanya harus diperiksa owner di situs sungguhan sesudah rilis.
+
+---
 
 ## 2026-09-25 (malam, komputer OWNER) — Kerja rekan ditarik & DUAL PUSH DITUNTASKAN (`35fd43d..625fe95`)
 

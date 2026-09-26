@@ -1,5 +1,7 @@
 import type { MetadataRoute } from "next";
 import { getAllDramasCached } from "@/lib/dramas";
+import { getPlaylyVideosGabunganCached } from "@/lib/playly-gabungan";
+import { alamatTonton } from "@/lib/tonton";
 import { SITE_URL } from "@/lib/site";
 
 /** Sitemap dibangun ulang tiap jam supaya drama baru ikut terdaftar tanpa deploy. */
@@ -38,5 +40,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     console.error("[sitemap] gagal ambil katalog drama:", err);
   }
 
-  return [...staticEntries, ...dramaEntries];
+  // Halaman tonton per video (owner 2026-09-26). Dibungkus try/catch SENDIRI,
+  // terpisah dari katalog di atas: kedua sumbernya beda (Supabase vs API
+  // Playly), dan satu blok bersama berarti Playly yang bermasalah ikut
+  // membuang seluruh daftar drama dari sitemap.
+  let videoEntries: MetadataRoute.Sitemap = [];
+  try {
+    const { videos } = await getPlaylyVideosGabunganCached();
+    videoEntries = videos.map((v) => ({
+      url: `${SITE_URL}${alamatTonton(v)}`,
+      lastModified: now,
+      changeFrequency: "weekly",
+      priority: 0.6,
+    }));
+  } catch (err) {
+    console.error("[sitemap] gagal ambil daftar video:", err);
+  }
+
+  return [...staticEntries, ...dramaEntries, ...videoEntries];
 }

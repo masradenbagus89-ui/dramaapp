@@ -325,3 +325,36 @@ export const CATEGORIES: Category[] = [
   "Comedy",
   "Fantasy",
 ];
+
+/**
+ * Kategori NYATA — `CATEGORIES` tanpa "Semua".
+ *
+ * "Semua" bukan kategori melainkan pilihan penyaring yang berarti "jangan
+ * saring apa pun". Menyimpannya sebagai kategori sebuah judul akan membuat
+ * baris beranda bernama "Drama Semua" yang tak berarti apa-apa.
+ *
+ * Diturunkan dari `CATEGORIES`, bukan diketik ulang: dua daftar yang harus
+ * sama persis pasti menyimpang cepat atau lambat.
+ */
+export const KATEGORI_ISI = CATEGORIES.filter(
+  (c): c is Exclude<Category, "Semua"> => c !== "Semua",
+);
+
+/**
+ * SATU tempat yang memutuskan kategori kiriman sah atau tidak.
+ *
+ * Dipakai di SERVER. Panel admin memang cuma menyediakan pilihan yang benar,
+ * tapi UI bukan pagar — siapa pun bisa mengirim body apa saja ke endpoint
+ * admin. Nilai di luar daftar dipulangkan `null` (dianggap "kosongkan"), bukan
+ * disimpan apa adanya: kategori berisi teks ngawur tidak cocok dengan baris
+ * genre mana pun, jadi videonya diam-diam berhenti muncul di sana tanpa satu
+ * pun error yang memberi tahu.
+ *
+ * Bentuknya sengaja sama dengan `parseDramaStatus` di atas.
+ */
+export function parseKategoriVideo(
+  value: unknown,
+): Exclude<Category, "Semua"> | null {
+  const teks = typeof value === "string" ? value.trim() : "";
+  return KATEGORI_ISI.find((c) => c === teks) ?? null;
+}

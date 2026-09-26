@@ -49,6 +49,7 @@ const VIDEO: PlaylyVideoPublik = {
   episode: 3,
   year: "2026",
   genre: "Action, Sci-Fi",
+  kategori: "Action",
   rating: "8.1",
   contentRating: "PG-13",
   quality: "WEB-DL",

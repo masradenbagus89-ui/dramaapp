@@ -17,6 +17,16 @@ import PlaylyVideoGrid from "../PlaylyVideoGrid";
 export const BATAS_JELAJAH = 8;
 
 /**
+ * Judul bagian ini. SENGAJA tidak menyebut "Playly" (owner 2026-09-26: "viewer
+ * tidak perlu tahu darimana asal video di upload") — itu nama penyedia video,
+ * bukan sesuatu yang berarti bagi penonton. Judul lamanya "Video dari Playly".
+ *
+ * Diekspor supaya penjaga tes bisa mengadu HTML yang benar-benar dirender
+ * dengan nilai ini, bukan dengan teks tulis-tangan yang bisa basi sendiri.
+ */
+export const JUDUL_BAGIAN = "Film & Video Lainnya";
+
+/**
  * Video Playly mana yang cocok dengan ketikan penonton.
  *
  * Empat field yang dicari dipilih dari sudut pandang penonton: dia mengingat
@@ -68,12 +78,12 @@ export default function HasilPlayly({ videos, ketikan }: Props) {
       <div className="flex items-end justify-between gap-4">
         <div>
           <h2 id="judul-video-playly" className="text-lg font-bold text-white">
-            Video dari Playly
+            {JUDUL_BAGIAN}
           </h2>
           <p className="mt-1 text-sm text-zinc-400">
             {mencari
               ? `${videos.length} video cocok dengan "${ketikan}".`
-              : "Diputar langsung dari pemutar milik Playly."}
+              : "Bisa langsung diputar di sini."}
           </p>
         </div>
         {/* Tautan "Lihat semua" hanya masuk akal di mode jelajah. Saat mencari,

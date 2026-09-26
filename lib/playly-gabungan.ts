@@ -29,6 +29,7 @@
 import { formatDuration } from "./playly";
 import { getPlaylyVideosPublik, type PlaylyVideoPublik } from "./playly-publik";
 import {
+  getPlaylyGenresCached,
   getPlaylyHiddenIdsCached,
   getPublishedPlaylyWebhookVideos,
   getPublishedPlaylyWebhookVideosCached,
@@ -66,7 +67,15 @@ export type PlaylyGabunganResult = {
  *   video->drama, dan jalur webhook belum punya kaitan itu. Diisi null supaya
  *   kotak keterangan di bawah pemutar DIAM, bukan memajang tebakan.
  */
-export function webhookKeKartu(v: PlaylyWebhookVideo): PlaylyVideoPublik {
+export function webhookKeKartu(
+  v: PlaylyWebhookVideo,
+  /**
+   * Kategori pilihan admin (videoId -> nama kategori). Opsional supaya
+   * pemanggil & tes lama tetap berlaku; kosong berarti video ini belum
+   * dipilihkan kategori dan hanya tampil di baris "Film Terbaru".
+   */
+  genres: Record<string, string> = {},
+): PlaylyVideoPublik {
   return {
     id: v.videoId,
     title: v.title,
@@ -88,6 +97,12 @@ export function webhookKeKartu(v: PlaylyWebhookVideo): PlaylyVideoPublik {
     // tahun 0 tidak ikut terbuang — kecil kemungkinannya, tapi salahnya senyap.
     year: v.year === null ? null : String(v.year),
     genre: v.genre,
+    // SENGAJA hanya dari pilihan admin, BUKAN dari `v.genre` di atas. Genre
+    // kiriman Playly adalah teks bebas ("Action, Sci-Fi" / "horror") yang
+    // belum tentu sama dengan nama kategori katalog kita, dan memaksakannya
+    // jadi kategori akan membuat baris beranda yang isinya tak pernah cocok —
+    // rusak yang senyap, sebab tak ada error, cuma baris yang selalu kosong.
+    kategori: genres[v.videoId] ?? null,
     rating: null,
     contentRating: null,
     quality: null,
@@ -135,6 +150,8 @@ export function gabungVideoPlayly(
   katalog: PlaylyVideoPublik[],
   webhook: PlaylyWebhookVideo[],
   hiddenIds: string[] = [],
+  /** Kategori pilihan admin; hanya dipakai sisi webhook — sisi katalog sudah membawanya sendiri. */
+  genres: Record<string, string> = {},
 ): PlaylyVideoPublik[] {
   const sudahDiKatalog = new Set(katalog.map((v) => v.id));
   const disembunyikan = new Set(hiddenIds);
@@ -152,7 +169,7 @@ export function gabungVideoPlayly(
     // memakai Date.parse: nilai rusak akan jadi NaN dan membuat hasil sort tak
     // menentu, sedangkan perbandingan teks selalu memberi urutan yang tetap.
     .sort((a, b) => b.receivedAt.localeCompare(a.receivedAt))
-    .map(webhookKeKartu);
+    .map((v) => webhookKeKartu(v, genres));
 
   return [...dariWebhook, ...katalog];
 }
@@ -173,7 +190,7 @@ export function gabungVideoPlayly(
 async function rakitGabungan(
   ambilWebhook: () => Promise<PlaylyWebhookVideo[]>,
 ): Promise<PlaylyGabunganResult> {
-  const [katalog, webhook, hiddenIds] = await Promise.all([
+  const [katalog, webhook, hiddenIds, genres] = await Promise.all([
     // Sudah menangkap kegagalannya sendiri: mengembalikan daftar kosong +
     // alasan, bukan melempar.
     getPlaylyVideosPublik(),
@@ -200,6 +217,10 @@ async function rakitGabungan(
       (ids) => ({ ids, terbaca: true }),
       () => ({ ids: [] as string[], terbaca: false }),
     ),
+    // Kategori pilihan admin untuk sisi WEBHOOK (sisi katalog sudah membawanya
+    // dari getPlaylyVideosPublik). Gagal baca = peta kosong, bukan halaman
+    // gagal: taruhannya cuma "video ini ikut baris genre atau tidak".
+    getPlaylyGenresCached().catch(() => ({}) as Record<string, string>),
   ]);
 
   // GAGAL-AMAN (skills/owasp/SKILL.md §1 A10 "jangan fail-open"): kalau daftar
@@ -215,7 +236,12 @@ async function rakitGabungan(
   const webhookAman = hiddenIds.terbaca ? webhook.videos : [];
 
   return {
-    videos: gabungVideoPlayly(katalog.videos, webhookAman, hiddenIds.ids),
+    videos: gabungVideoPlayly(
+      katalog.videos,
+      webhookAman,
+      hiddenIds.ids,
+      genres,
+    ),
     // Katalog didahulukan karena ia sumber utama halaman ini; kalau dua-duanya
     // bermasalah, satu kalimat sudah cukup untuk pengunjung.
     error: katalog.error ?? webhook.error,

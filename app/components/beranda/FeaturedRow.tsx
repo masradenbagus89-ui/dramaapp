@@ -3,7 +3,9 @@
 import { useRef } from "react";
 import Link from "next/link";
 import type { Drama } from "@/lib/types";
+import type { KartuKatalog } from "@/lib/beranda-video";
 import CatalogCard from "./CatalogCard";
+import KartuVideo from "./KartuVideo";
 import { ROW_CARD_CLASS } from "./shell";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -21,14 +23,27 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
  * setelah /, /beranda, dan /discover semuanya lepas darinya.
  */
 export default function FeaturedRow({
-  dramas,
+  dramas = [],
+  items,
   href = "/discover",
   title,
   cardHrefPrefix,
   cardClass = ROW_CARD_CLASS,
   tombolBawah = true,
 }: {
-  dramas: Drama[];
+  /** Baris berisi drama saja — bentuk lama, dipakai empat pemanggil. */
+  dramas?: Drama[];
+  /**
+   * Isi baris berupa CAMPURAN drama + video (lib/beranda-video.ts). Kalau
+   * diisi, inilah yang digambar dan `dramas` diabaikan.
+   *
+   * Kenapa prop tambahan dan bukan mengganti `dramas`: komponen ini dipakai
+   * lima halaman (/, /beranda, /shorts, tab katalog, baris unggulan). Bentuk
+   * opsional membuat kelimanya nol perubahan, sementara logika geser, panah,
+   * dan ukuran kartunya tetap SATU — tidak ada baris kedua yang bisa
+   * menyimpang diam-diam saat salah satunya diperbaiki.
+   */
+  items?: KartuKatalog[];
   /**
    * Awalan alamat tiap kartu; tautannya jadi `<awalan>/<id drama>`.
    * Mis. "/feed" -> /feed/<id>. Kosong = kartu memakai bawaannya (/drama/<id>).
@@ -68,7 +83,13 @@ export default function FeaturedRow({
 }) {
   const scroller = useRef<HTMLDivElement>(null);
 
-  if (dramas.length === 0) return null;
+  // Satu daftar untuk digambar. `items` menang kalau diisi; kalau tidak,
+  // `dramas` dibungkus di sini supaya pemanggil lama tak perlu tahu apa-apa
+  // soal bentuk campuran.
+  const kartu: KartuKatalog[] =
+    items ?? dramas.map((d) => ({ jenis: "drama", drama: d }));
+
+  if (kartu.length === 0) return null;
 
   const geser = (arah: -1 | 1) => {
     const el = scroller.current;
@@ -122,19 +143,32 @@ export default function FeaturedRow({
           ref={scroller}
           className="no-scrollbar flex gap-2 overflow-x-auto scroll-smooth md:gap-2.5"
         >
-          {dramas.map((d) => (
-            // Lebar dikunci di sini (bukan di CatalogCard) supaya kartunya tetap
+          {kartu.map((k) =>
+            // Lebar dikunci di sini (bukan di kartunya) supaya kartunya tetap
             // kartu yang SAMA dengan yang dipakai grid di bawah — lencana, hover,
             // dan cuplikannya tidak perlu dibuat versi kedua. Angkanya sendiri
             // ada di ./shell: ROW_CARD_CLASS (bawaan, sejajar lebar kolom grid)
             // atau ROW_KATEGORI_CARD_CLASS kalau pemanggil meminta yang kecil.
-            <div key={d.id} className={cardClass}>
-              <CatalogCard
-                drama={d}
-                href={cardHrefPrefix ? `${cardHrefPrefix}/${d.id}` : undefined}
-              />
-            </div>
-          ))}
+            //
+            // `cardHrefPrefix` sengaja TIDAK berlaku untuk kartu video: ia ada
+            // untuk halaman Shorts yang melempar ke /feed/<id drama>, dan video
+            // tidak punya halaman feed. Alamatnya selalu halaman tonton miliknya
+            // sendiri (lib/tonton.ts).
+            k.jenis === "drama" ? (
+              <div key={`d-${k.drama.id}`} className={cardClass}>
+                <CatalogCard
+                  drama={k.drama}
+                  href={
+                    cardHrefPrefix ? `${cardHrefPrefix}/${k.drama.id}` : undefined
+                  }
+                />
+              </div>
+            ) : (
+              <div key={`v-${k.video.id}`} className={cardClass}>
+                <KartuVideo video={k.video} />
+              </div>
+            ),
+          )}
         </div>
 
         {!title && tombolBawah && (

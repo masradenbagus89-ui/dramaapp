@@ -2,15 +2,11 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
-import {
-  clearUser,
-  fetchUserRole,
-  needsAdminRelogin,
-  readUser,
-  type User,
-} from "@/lib/auth";
+import { useCallback } from "react";
+import { clearUser } from "@/lib/auth";
 import CoinChip from "../CoinChip";
+import MenuAkun from "../MenuAkun";
+import { usePenonton } from "../usePenonton";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -68,60 +64,20 @@ export const TAUTAN_AKUN = [
  * lihat tests/kepala-situs.test.ts. Isi dropdown Radix tidak tergambar di HTML
  * sampai menunya dibuka, jadi memeriksanya dari hasil render mustahil.
  *
- * ⚠️ Discover · Shorts · My List sengaja DILEPAS dari daftar ini bersamaan
- * dengan `LINKS` (owner 2026-09-25). Alasan lengkap + daftar jalan yang tersisa
- * menuju ketiga halaman itu ditulis SEKALI di app/components/TopNav.tsx, di
- * atas `LINKS` — jangan disalin ke sini supaya tak ada dua versi yang bisa
- * menyimpang. Route ketiganya TETAP hidup; yang hilang hanya tombolnya.
+ * ⚠️ Discover · Shorts · My List · Playly · Profile sengaja DILEPAS dari daftar
+ * ini bersamaan dengan `LINKS` (tiga yang pertama owner 2026-09-25, dua
+ * terakhir owner 2026-09-26). Alasan lengkap + daftar jalan yang tersisa menuju
+ * kelima halaman itu ditulis SEKALI di app/components/TopNav.tsx, di atas
+ * `LINKS` — jangan disalin ke sini supaya tak ada dua versi yang bisa
+ * menyimpang. Route kelimanya TETAP hidup; yang hilang hanya tombolnya.
+ *
+ * Khusus Profile: jalannya TIDAK putus, ia pindah ke menu di balik avatar
+ * (`MenuAkun`) yang dipasang `TombolAkun` di dasar berkas ini.
  */
 export const TUJUAN: Tujuan[] = [
   { href: "/beranda", label: "Beranda" },
-  { href: "/playly", label: "Playly" },
-  { href: "/profile", label: "Profile" },
   { href: "/admin", label: "Admin", adminOnly: true },
 ];
-
-/**
- * Siapa yang sedang membuka situs. Dipakai bersama oleh kedua komponen di
- * berkas ini supaya aturan "kapan menu Admin muncul" cuma ditulis sekali.
- *
- * `mounted` wajib: `readUser()` membaca localStorage yang tidak ada di server,
- * jadi render pertama HARUS sama dengan hasil server (belum login) — kalau
- * tidak, React membuang seluruh pohon dan tampilannya berkedip.
- */
-function usePenonton() {
-  const [user, setUser] = useState<User | null>(null);
-  const [mounted, setMounted] = useState(false);
-  const [perluMasukUlang, setPerluMasukUlang] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    let batal = false;
-    const terapkan = () => {
-      const u = readUser();
-      setUser(u);
-      if (!u || u.role === "admin") {
-        setPerluMasukUlang(false);
-        return;
-      }
-      void fetchUserRole(u.email).then((role) => {
-        if (batal) return;
-        const terbaru = readUser();
-        if (!terbaru || terbaru.email !== u.email) return;
-        setPerluMasukUlang(needsAdminRelogin(terbaru, role === "admin"));
-      });
-    };
-    terapkan();
-    const dengar = () => terapkan();
-    window.addEventListener("dramaku:auth-changed", dengar);
-    return () => {
-      batal = true;
-      window.removeEventListener("dramaku:auth-changed", dengar);
-    };
-  }, []);
-
-  return { user, mounted, perluMasukUlang };
-}
 
 const ITEM_CLASS = "cursor-pointer text-sm focus:bg-zinc-800 focus:text-amber-400";
 
@@ -260,20 +216,31 @@ export function MenuAplikasi() {
 }
 
 /**
- * Ujung KANAN bar cari (`SearchBarChrome.trailing`): saldo koin, dan HANYA itu.
+ * Ujung KANAN bar cari (`SearchBarChrome.trailing`): saldo koin + avatar akun.
  *
- * Masuk · Daftar · Keluar semuanya ada di dalam menu garis-tiga, bukan di sini.
- * Owner 2026-09-21: tombol Masuk/Daftar di bar cari dobel dengan ajakan yang
- * sudah ada di badan halaman, dan bar ini harus seringkas situs katalog
- * pembanding. Saldo koin tetap di luar karena ia ANGKA yang perlu dilihat
- * sekilas — menyembunyikannya di balik satu klik membuat penonton tidak tahu
- * sisa koinnya sebelum membuka episode berbayar.
+ * Tombol Masuk · Daftar tetap TIDAK di sini, melainkan di menu garis-tiga.
+ * Owner 2026-09-21: keduanya dobel dengan ajakan yang sudah ada di badan
+ * halaman, dan bar ini harus seringkas situs katalog pembanding. Saldo koin
+ * tetap di luar menu karena ia ANGKA yang perlu dilihat sekilas —
+ * menyembunyikannya di balik satu klik membuat penonton tidak tahu sisa
+ * koinnya sebelum membuka episode berbayar.
+ *
+ * Avatar ditambahkan 2026-09-26 dan itu WAJIB, bukan hiasan: "Profile" dilepas
+ * dari `TUJUAN` pada hari yang sama, jadi tanpa avatar di sini halaman
+ * berkatalog kehilangan satu-satunya jalan ke halaman Profil di layar komputer
+ * (`BottomNav` cuma muncul di HP). `MenuAkun` diam sendiri saat belum login,
+ * jadi bar tetap seringkas sebelumnya untuk pengunjung baru.
  */
 export function TombolAkun() {
   const { user, mounted } = usePenonton();
 
   if (!mounted || !user) return null;
-  return <CoinChip />;
+  return (
+    <div className="flex items-center gap-2">
+      <CoinChip />
+      <MenuAkun />
+    </div>
+  );
 }
 
 /**

@@ -39,6 +39,13 @@ export const AKAR_BERNAVBAR_ATAS = [
   "/history",
   "/admin",
   "/drama",
+  // Halaman tonton satu video (owner 2026-09-26). Masuk daftar ini, BUKAN
+  // dibiarkan tanpa navigasi seperti /watch & /feed: keduanya layar pemutar
+  // penuh yang navigasinya akan menutupi video, sedangkan halaman ini berbentuk
+  // halaman biasa — pemutar di tengah, keterangan di bawahnya. Tanpa navbar,
+  // penonton yang mendarat dari Google atau tautan WhatsApp tidak punya satu
+  // pun jalan menuju katalog.
+  "/tonton",
   "/video-eksternal",
   "/lupa-password",
 ] as const;

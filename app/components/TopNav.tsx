@@ -3,21 +3,13 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import {
-  clearUser,
-  fetchUserRole,
-  getAvatarClass,
-  needsAdminRelogin,
-  readUser,
-  type User,
-} from "@/lib/auth";
 import CoinChip from "./CoinChip";
+import MenuAkun from "./MenuAkun";
+import { usePenonton } from "./usePenonton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import { LogOut, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { punyaNavbarAtas } from "@/lib/navigasi-halaman";
 import { alamatCari } from "@/lib/nav-katalog";
 import { TEKS_KOTAK_CARI } from "./beranda/SearchBar";
@@ -40,11 +32,13 @@ type NavLink = {
  * app/components/beranda/KepalaKatalog.tsx — keduanya navigasi yang sama dan
  * tidak boleh menyimpang. Penjaganya: tests/kepala-situs.test.ts.
  *
- * ⚠️ Discover · Shorts · My List SENGAJA TIDAK ADA DI SINI (owner 2026-09-25:
- * kepala situs dirampingkan meniru situs katalog pembanding). Yang dilepas
- * HANYA tombolnya — ketiga halamannya TETAP HIDUP dan tetap mendapat navbar
- * saat dibuka; `AKAR_BERNAVBAR_ATAS` di lib/navigasi-halaman.ts sengaja TIDAK
- * ikut dipangkas.
+ * ⚠️ Discover · Shorts · My List · Playly · Profile SENGAJA TIDAK ADA DI SINI.
+ * Tiga yang pertama dilepas owner 2026-09-25, dua terakhir owner 2026-09-26
+ * ("viewer hanya melihat film/video saja"): baris menu ini hanya boleh berisi
+ * jalan menuju FILM, meniru situs katalog pembanding. Yang dilepas HANYA
+ * tombolnya — kelima halamannya TETAP HIDUP dan tetap mendapat navbar saat
+ * dibuka; `AKAR_BERNAVBAR_ATAS` di lib/navigasi-halaman.ts sengaja TIDAK ikut
+ * dipangkas.
  *
  * JANGAN hapus route-nya untuk "merapikan": /discover adalah mesin di balik
  * SELURUH penyaring katalog — kotak cari (lib/nav-katalog.ts:75), tiap menu
@@ -57,22 +51,17 @@ type NavLink = {
  *               dan baris "Favorit Saya" di beranda (PersonalRows.tsx:155)
  *   /shorts   — TIDAK ADA lagi dari dalam situs; hanya lewat alamat langsung
  *               atau hasil Google (masih terdaftar di app/sitemap.ts:13).
+ *   /profile  — menu akun di balik avatar (app/components/MenuAkun.tsx) dan
+ *               tab Profile di bar bawah HP (app/components/BottomNav.tsx:38).
+ *   /playly   — TIDAK ADA lagi dari dalam situs, dan itu memang MAKSUDNYA:
+ *               videonya kini tampil sebagai film biasa di /beranda, sedangkan
+ *               "Playly" adalah nama penyedia yang tak perlu diketahui
+ *               penonton. Halamannya dibiarkan hidup supaya tautan lama dan
+ *               hasil Google tidak mati.
  * Penjaganya: tests/kepala-situs.test.ts → "menu dilepas, halamannya tetap hidup".
  */
 export const LINKS: NavLink[] = [
   { href: "/beranda", label: "Beranda", adminOnly: false },
-  {
-    href: "/playly",
-    label: "Playly",
-    adminOnly: false,
-    // Permintaan owner: teks Playly biru terang. Saat menu ini aktif, teksnya
-    // duduk di atas kotak kuning yang meluncur, jadi dipakai biru yang cukup
-    // pekat supaya tetap terbaca di sana; saat diam dipakai biru muda agar
-    // menonjol di latar gelap.
-    warnaAktif: "text-blue-700",
-    warnaDiam: "text-blue-400 hover:text-blue-300",
-  },
-  { href: "/profile", label: "Profile", adminOnly: false },
   { href: "/admin", label: "Admin", adminOnly: true },
 ];
 
@@ -82,38 +71,14 @@ export default function TopNav() {
   // apa adanya, sebab penyaring tampil/tidak di bawah ini ALLOWLIST.
   const pathname = usePathname() ?? "";
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  const [mounted, setMounted] = useState(false);
-  const [promptAdminRelogin, setPromptAdminRelogin] = useState(false);
+  // Dibaca dari hook bersama (app/components/usePenonton.ts) — aturan yang SAMA
+  // dipakai bar merah beranda dan menu akun. Dulu disalin di sini dan di
+  // KepalaKatalog, dan dua salinan yang bisa menyimpang berarti satu kepala
+  // situs menganggap penonton sudah login sementara yang lain belum.
+  const { user, mounted, perluMasukUlang } = usePenonton();
   const [searchQuery, setSearchQuery] = useState("");
   const linkRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
   const [pill, setPill] = useState<{ left: number; width: number } | null>(null);
-
-  useEffect(() => {
-    setMounted(true);
-    let cancelled = false;
-    const apply = () => {
-      const u = readUser();
-      setUser(u);
-      if (!u || u.role === "admin") {
-        setPromptAdminRelogin(false);
-        return;
-      }
-      void fetchUserRole(u.email).then((role) => {
-        if (cancelled) return;
-        const latest = readUser();
-        if (!latest || latest.email !== u.email) return;
-        setPromptAdminRelogin(needsAdminRelogin(latest, role === "admin"));
-      });
-    };
-    apply();
-    const handler = () => apply();
-    window.addEventListener("dramaku:auth-changed", handler);
-    return () => {
-      cancelled = true;
-      window.removeEventListener("dramaku:auth-changed", handler);
-    };
-  }, []);
 
   const isActive = useCallback(
     (href: string) => {
@@ -154,12 +119,6 @@ export default function TopNav() {
   // penonton melihat dua baris kepala lalu berkedip. JANGAN dibalik lagi;
   // penjaganya tests/kepala-situs.test.ts.
   if (!punyaNavbarAtas(pathname)) return null;
-
-  const onLogout = () => {
-    if (!confirm("Yakin mau keluar dari akun?")) return;
-    clearUser();
-    router.push("/");
-  };
 
   const onSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -249,41 +208,14 @@ export default function TopNav() {
 
         <div className="flex items-center gap-2">
           {mounted && user ? (
+            // Saldo koin sengaja TETAP di luar menu — ia ANGKA yang perlu
+            // dilihat sekilas; menyembunyikannya di balik satu klik membuat
+            // penonton tidak tahu sisa koinnya sebelum membuka episode
+            // berbayar. Sisanya (nama, peran, Profile, Riwayat, Keluar) pindah
+            // ke dalam `MenuAkun` atas permintaan owner 2026-09-26.
             <div className="flex items-center gap-2">
               <CoinChip />
-              <div className="hidden items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900 px-3 py-1 sm:flex">
-                <Avatar size="sm">
-                  <AvatarFallback
-                    className={cn(
-                      "bg-gradient-to-br text-xs font-bold text-black",
-                      getAvatarClass(user),
-                    )}
-                  >
-                    {user.name.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="text-xs text-zinc-300">{user.name}</span>
-                <Badge
-                  className={cn(
-                    "rounded px-1.5 py-0.5 text-[9px] font-bold uppercase",
-                    user.role === "admin"
-                      ? "bg-amber-400/20 text-amber-300"
-                      : "bg-zinc-700 text-zinc-300",
-                  )}
-                >
-                  {user.role}
-                </Badge>
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={onLogout}
-                className="rounded-full border-zinc-700 bg-transparent text-xs text-zinc-300 hover:border-red-500 hover:text-red-400"
-              >
-                <LogOut className="size-3.5" />
-                Keluar
-              </Button>
+              <MenuAkun />
             </div>
           ) : mounted ? (
             <div className="flex items-center gap-2">
@@ -307,7 +239,7 @@ export default function TopNav() {
         </div>
       </div>
     </header>
-    {promptAdminRelogin && (
+    {perluMasukUlang && (
       <div className="border-b border-amber-900/50 bg-amber-950/40 px-4 py-2 text-center text-xs text-amber-200">
         Akun ini sudah diangkat jadi admin, tapi sesinya masih penonton.{" "}
         <Link href="/login" className="font-semibold text-amber-400 underline">

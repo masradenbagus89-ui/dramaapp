@@ -17,12 +17,17 @@
 import { useState } from "react";
 import { AlertTriangle, Eye, EyeOff, Info, Loader2 } from "lucide-react";
 import type { PlaylyVideo, PlaylySumber } from "@/lib/playly";
+import { KATEGORI_ISI } from "@/lib/types";
 
 type Pesan = { jenis: "ok" | "gagal"; teks: string };
+
+/** Nilai dropdown yang berarti "belum dipilihkan kategori". */
+const KOSONG = "";
 
 export default function PlaylyVisibilityManager({
   videos,
   initialHidden,
+  initialGenres = {},
   belumSiapIds,
   fetchError,
   source,
@@ -31,6 +36,14 @@ export default function PlaylyVisibilityManager({
   /** Seluruh video milik akun kita, termasuk yang sedang disembunyikan. */
   videos: PlaylyVideo[];
   initialHidden: string[];
+  /**
+   * Kategori yang sudah dipilih admin (videoId -> nama kategori).
+   *
+   * Bawaannya peta kosong supaya pemanggil lama tidak wajib berubah — dan itu
+   * keadaan yang benar-benar terjadi hari ini: per 2026-09-26 belum satu pun
+   * video punya kategori.
+   */
+  initialGenres?: Record<string, string>;
   /** Video yang berkasnya belum ada di Playly — tidak tampil ke penonton. */
   belumSiapIds: string[];
   /** Terisi kalau daftar gagal diambil dari Playly. */
@@ -40,7 +53,9 @@ export default function PlaylyVisibilityManager({
   creator: string;
 }) {
   const [hidden, setHidden] = useState<Set<string>>(new Set(initialHidden));
+  const [genres, setGenres] = useState<Record<string, string>>(initialGenres);
   const [sedangProses, setSedangProses] = useState<string | null>(null);
+  const [sedangGenre, setSedangGenre] = useState<string | null>(null);
   const [pesan, setPesan] = useState<Pesan | null>(null);
 
   const ubah = async (videoId: string, jadikanTersembunyi: boolean) => {
@@ -76,6 +91,51 @@ export default function PlaylyVisibilityManager({
     }
   };
 
+  /**
+   * Pasang/kosongkan kategori sebuah video.
+   *
+   * Kategori inilah yang menentukan video ikut tampil di baris genre beranda
+   * (mis. "Drama Action"). Video tanpa kategori TIDAK hilang — ia tetap ada di
+   * baris "Film Terbaru" di atas beranda.
+   */
+  const ubahGenre = async (videoId: string, genre: string) => {
+    setSedangGenre(videoId);
+    setPesan(null);
+    try {
+      const res = await fetch("/api/admin/playly/genre", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // String kosong dikirim sebagai null supaya maksud "kosongkan" tidak
+        // bergantung pada tafsiran server terhadap teks kosong.
+        body: JSON.stringify({ videoId, genre: genre || null }),
+      });
+      const data = (await res.json()) as {
+        genres?: Record<string, string>;
+        error?: string;
+      };
+      if (!res.ok) {
+        setPesan({ jenis: "gagal", teks: data.error ?? "Gagal menyimpan kategori." });
+        return;
+      }
+      // Peta terbaru datang dari server, dipakai apa adanya — layar tidak
+      // pernah menebak hasilnya sendiri dan ikut benar walau ada admin lain.
+      setGenres(data.genres ?? {});
+      setPesan({
+        jenis: "ok",
+        teks: genre
+          ? `Kategori disimpan. Video ini akan muncul di baris "${genre}" di beranda dalam ±1 menit.`
+          : "Kategori dikosongkan. Videonya tetap tampil di baris Film Terbaru.",
+      });
+    } catch {
+      setPesan({
+        jenis: "gagal",
+        teks: "Tidak bisa menghubungi server. Cek koneksi internet lalu coba lagi.",
+      });
+    } finally {
+      setSedangGenre(null);
+    }
+  };
+
   if (fetchError) {
     return (
       <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-5">
@@ -105,6 +165,20 @@ export default function PlaylyVisibilityManager({
           ? "Belum ada video di akun Playly kita. Upload dulu di dashboard Playly — begitu ter-upload, video langsung muncul di sini dan di halaman penonton."
           : `${jumlahTampil} dari ${videos.length} video tampil. Semua video tampil otomatis; sembunyikan yang tidak ingin ditayangkan.`}
       </p>
+
+      {videos.length > 0 && (
+        // Keterangan kategori ditulis di sini, bukan di sebelah tiap dropdown:
+        // aturannya sama untuk semua baris, dan mengulangnya 46 kali cuma
+        // membuat daftar jadi padat tanpa menambah kejelasan.
+        <p className="mt-2 text-sm text-zinc-400">
+          <strong className="text-zinc-200">Kategori</strong> menentukan video
+          ikut muncul di baris genre beranda (mis. &quot;Drama Action&quot;).
+          Dibiarkan <em>Tanpa kategori</em> pun videonya{" "}
+          <strong className="text-zinc-200">tetap tampil</strong> di baris
+          &quot;Film Terbaru&quot; di atas beranda — jadi tidak ada video yang
+          hilang karena belum diisi. Perubahan terlihat di situs dalam ±1 menit.
+        </p>
+      )}
 
       {belumSiap.size > 0 && (
         <p className="mt-3 flex items-start gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-100">
@@ -184,6 +258,34 @@ export default function PlaylyVisibilityManager({
                   </div>
                   <p className="mt-0.5 text-xs text-zinc-500">{catatan}</p>
                 </div>
+
+                {/* Kategori untuk baris beranda. Memakai <select> bawaan,
+                    bukan dropdown berhias: daftarnya 8 pilihan tetap, dan
+                    di HP select bawaan membuka pemilih layar-penuh yang jauh
+                    lebih enak dipakai daripada daftar kecil buatan sendiri. */}
+                <label className="flex shrink-0 items-center gap-1.5">
+                  <span className="sr-only">Kategori untuk {v.title}</span>
+                  <select
+                    value={genres[v.id] ?? KOSONG}
+                    onChange={(e) => ubahGenre(v.id, e.target.value)}
+                    disabled={sedangGenre === v.id}
+                    className="min-h-9 rounded-full border border-zinc-700 bg-zinc-900 px-3 text-xs text-zinc-200 outline-none transition focus-visible:border-amber-400 disabled:opacity-50"
+                  >
+                    <option value={KOSONG}>Tanpa kategori</option>
+                    {KATEGORI_ISI.map((k) => (
+                      <option key={k} value={k}>
+                        {k}
+                      </option>
+                    ))}
+                  </select>
+                  {sedangGenre === v.id && (
+                    <Loader2
+                      className="h-3.5 w-3.5 animate-spin text-zinc-400"
+                      aria-hidden="true"
+                    />
+                  )}
+                </label>
+
                 <button
                   type="button"
                   onClick={() => ubah(v.id, !tersembunyi)}

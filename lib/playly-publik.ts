@@ -26,7 +26,11 @@ import {
   type PlaylyVideo,
 } from "./playly";
 import { getAllDramasCached } from "./dramas";
-import { getPlaylyEmbedsCached, getPlaylyHiddenIdsCached } from "./store";
+import {
+  getPlaylyEmbedsCached,
+  getPlaylyGenresCached,
+  getPlaylyHiddenIdsCached,
+} from "./store";
 
 /** Satu video Playly + label drama, kalau admin memang mengaitkannya. */
 export type PlaylyVideoPublik = PlaylyVideo & {
@@ -46,6 +50,23 @@ export type PlaylyVideoPublik = PlaylyVideo & {
    */
   year: string | null;
   genre: string | null;
+  /**
+   * Kategori katalog DramaKu (Action, Romance, …) yang DIPILIH ADMIN untuk
+   * video ini — dipakai beranda untuk menaruhnya di baris genre yang tepat.
+   *
+   * SENGAJA terpisah dari `genre` di atas walau namanya bersaudara, dan
+   * perbedaannya penting: `genre` adalah teks bebas dari OMDb yang bisa
+   * berisi DAFTAR ("Action, Sci-Fi") dan datang lewat kaitan video->drama,
+   * sedangkan yang dibutuhkan baris beranda adalah SATU nilai yang cocok
+   * persis dengan `Drama.category`. Menumpuk keduanya di satu field berarti
+   * kotak keterangan di bawah pemutar ikut berubah arti tiap kali admin
+   * memilih kategori.
+   *
+   * null = admin belum memilih, dan itu keadaan NORMAL (per 2026-09-26 seluruh
+   * 46 video begitu). Videonya tetap tampil di beranda — di baris "Film
+   * Terbaru" — cuma belum ikut ke baris genre mana pun.
+   */
+  kategori: string | null;
   rating: string | null;
   /**
    * Rating usia ("PG-13", "TV-MA", ...) dari OMDb, lewat drama yang dikaitkan.
@@ -103,6 +124,12 @@ export function rakitVideoPublik(
   hiddenIds: string[],
   embeds: KaitanRingkas[],
   dramas: DramaRingkas[],
+  /**
+   * Kategori pilihan admin (videoId -> nama kategori). OPSIONAL dan bawaannya
+   * kosong: fitur ini baru ada 2026-09-26, dan bentuk opsional membuat seluruh
+   * pemanggil serta tes lama tetap berlaku apa adanya.
+   */
+  genres: Record<string, string> = {},
 ): { tampil: PlaylyVideo[]; labelUntuk: (videoId: string) => Omit<PlaylyVideoPublik, keyof PlaylyVideo> } {
   const disembunyikan = new Set(hiddenIds);
   const dramaById = new Map(dramas.map((d) => [d.id, d] as const));
@@ -126,6 +153,12 @@ export function rakitVideoPublik(
         // selalu terisi, jadi dipakai sebagai cadangan supaya baris tahun-genre
         // tidak sering separuh hampa.
         genre: drama?.genre ?? drama?.category ?? null,
+        // Pilihan admin MENANG atas kategori drama yang dikaitkan: admin
+        // memilihnya dengan sadar untuk video ini, sedangkan kategori drama
+        // cuma warisan dari kaitan yang dibuat untuk keperluan lain. Kalau
+        // admin belum memilih, kategori drama dipakai sebagai cadangan supaya
+        // video yang sudah dikaitkan tidak perlu diisi ulang dengan tangan.
+        kategori: genres[videoId] ?? drama?.category ?? null,
         rating: drama?.imdbRating ?? null,
         contentRating: drama?.contentRating ?? null,
         quality: drama?.quality ?? null,
@@ -158,11 +191,14 @@ export function bolehTampilKePenonton(detail: PlaylyDetailPublik | undefined): b
  * supaya satu gangguan di Playly tidak merusak halaman DramaKu.
  */
 export async function getPlaylyVideosPublik(): Promise<PlaylyPublikResult> {
-  const [mitra, hiddenIds, embeds, dramas] = await Promise.all([
+  const [mitra, hiddenIds, embeds, dramas, genres] = await Promise.all([
     fetchPlaylyVideosKita(),
     getPlaylyHiddenIdsCached().catch(() => [] as string[]),
     getPlaylyEmbedsCached().catch(() => []),
     getAllDramasCached().catch(() => []),
+    // Gagal baca = peta kosong, BUKAN halaman gagal: kategori cuma menentukan
+    // video ini ikut baris genre atau tidak. Videonya sendiri tetap tampil.
+    getPlaylyGenresCached().catch(() => ({}) as Record<string, string>),
   ]);
 
   if (mitra.error) {
@@ -174,6 +210,7 @@ export async function getPlaylyVideosPublik(): Promise<PlaylyPublikResult> {
     hiddenIds,
     embeds,
     dramas,
+    genres,
   );
 
   // Detail diambil satu panggilan per video karena jalur mitra tidak mengirim

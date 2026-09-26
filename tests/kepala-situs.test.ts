@@ -61,11 +61,16 @@ describe("navbar hitam (TopNav)", () => {
         `${path} kehilangan navbar padahal tidak punya bar cari — ` +
           `di layar komputer halaman ini jadi tak punya navigasi sama sekali`,
       ).toContain("<header");
-      // Pagar isi: bukan cuma ada, tapi memang membawa jalannya. Dulu memakai
-      // "/discover"; menunya dilepas 2026-09-25 jadi patokannya dipindah ke
-      // tujuan yang masih tersisa di navbar.
+      // Pagar isi: bukan cuma ada, tapi memang membawa jalannya. Patokannya
+      // sudah dua kali dipindah mengikuti menu yang dilepas owner — "/discover"
+      // (dilepas 2026-09-25), lalu "/playly" (dilepas 2026-09-26). Sekarang
+      // memakai "/beranda", satu-satunya tujuan katalog yang tersisa; kalau
+      // suatu hari ia ikut dilepas, tes ini merah lebih dulu dan pemindahannya
+      // jadi keputusan sadar, bukan navbar yang diam-diam kosong.
       expect(html).toContain("/beranda");
-      expect(html).toContain("/playly");
+      // Kotak cari ikut dijaga: sesudah menunya tinggal satu, kotak inilah
+      // jalan utama penonton mencari film dari halaman non-katalog.
+      expect(html).toContain('type="search"');
     });
   }
 
@@ -81,12 +86,7 @@ describe("menu garis-tiga (pengganti navbar di halaman berkatalog)", () => {
     // Diperiksa dari DAFTARNYA, bukan dari HTML: isi dropdown Radix baru
     // dirender saat menunya dibuka, jadi memeriksanya lewat render statis
     // selalu memulangkan "tidak ada" — dan itu bukan bug.
-    expect(TUJUAN.map((t) => t.href)).toEqual([
-      "/beranda",
-      "/playly",
-      "/profile",
-      "/admin",
-    ]);
+    expect(TUJUAN.map((t) => t.href)).toEqual(["/beranda", "/admin"]);
   });
 
   it("daftarnya TIDAK menyimpang dari navbar hitam", () => {
@@ -454,6 +454,11 @@ const DILEPAS_TAPI_HIDUP = [
   { alamat: "/discover", berkas: "app/discover/page.tsx" },
   { alamat: "/shorts", berkas: "app/shorts/page.tsx" },
   { alamat: "/my-list", berkas: "app/my-list/page.tsx" },
+  // Dilepas owner 2026-09-26 ("viewer hanya melihat film/video saja").
+  // /playly sengaja tak punya jalan lagi dari dalam situs — videonya kini
+  // tampil sebagai film biasa di /beranda; /profile pindah ke menu avatar.
+  { alamat: "/playly", berkas: "app/playly/page.tsx" },
+  { alamat: "/profile", berkas: "app/profile/page.tsx" },
 ];
 
 describe("menu dilepas dari tampilan, halamannya TETAP hidup", () => {

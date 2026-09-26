@@ -11,12 +11,12 @@ import {
   GENRE_SEMUA as SEMUA,
   PAGE_GAP,
   URUTAN_BAWAAN,
-  homeCatalogRows,
   pageNumbers,
   pageOfCatalog,
   sedangMenyaring,
   sortCatalog,
 } from "@/lib/beranda-catalog";
+import { barisBerandaGabungan } from "@/lib/beranda-video";
 import { STRIP_KATALOG, buildNavMenus } from "@/lib/nav-katalog";
 import type { PlaylyVideoPublik } from "@/lib/playly-publik";
 import CatalogCard from "./CatalogCard";
@@ -116,15 +116,21 @@ export default function CatalogBrowser({
   );
 
   /**
-   * Baris kategori gaya Layarkaca21 (Drama Terbaru, Drama Action, …) — bentuk
-   * halaman saat penonton TIDAK sedang mencari. Dihitung dari katalog PENUH,
-   * bukan `hasil`: barisnya punya urutan & pengelompokannya sendiri.
+   * Baris kategori gaya Layarkaca21 (Film Terbaru, Drama Terbaru, Drama
+   * Action, …) — bentuk halaman saat penonton TIDAK sedang mencari. Dihitung
+   * dari katalog PENUH, bukan `hasil`: barisnya punya urutan &
+   * pengelompokannya sendiri.
    *
-   * Fungsinya yang SAMA dipakai halaman depan `/`, jadi kedua halaman
-   * menampilkan kategori yang sama persis tanpa aturan kembar yang bisa
-   * menyimpang diam-diam.
+   * Sejak 2026-09-26 isinya CAMPURAN drama + video (owner: "semua video yang
+   * di-upload dari playly langsung masuk ke beranda"). Pembungkusnya
+   * `barisBerandaGabungan` memakai `homeCatalogRows` yang SAMA di dalamnya,
+   * jadi halaman depan `/` dan `/shorts` yang masih memanggil fungsi itu
+   * langsung tidak berubah sama sekali.
    */
-  const baris = useMemo(() => homeCatalogRows(dramas), [dramas]);
+  const baris = useMemo(
+    () => barisBerandaGabungan(dramas, playlyVideos),
+    [dramas, playlyVideos],
+  );
 
   const menyaring = sedangMenyaring({ query, ...TANPA_PENYARING });
 
@@ -220,7 +226,7 @@ export default function CatalogBrowser({
             <FeaturedRow
               key={row.key}
               title={row.title}
-              dramas={row.items}
+              items={row.items}
               href={row.href}
               cardClass={ROW_KATEGORI_CARD_CLASS}
             />
@@ -345,14 +351,22 @@ export default function CatalogBrowser({
       </div>
       )}
 
-      {/* Video Playly digambar di LUAR percabangan: kedua bentuk halaman
-          sama-sama menampilkannya. Judul seperti "Beyond The Last Signal" hanya
-          ada di gudang Playly dan tidak pernah muncul di katalog drama, jadi
-          menyembunyikannya di salah satu bentuk = video yang jelas tayang di
-          situs jadi tak bisa ditemukan. */}
-      <div className={SHELL}>
-        <HasilPlayly videos={videoPlayly} ketikan={query} />
-      </div>
+      {/* Bagian video di dasar halaman kini HANYA untuk HASIL PENCARIAN.
+          Sampai 2026-09-25 ia juga digambar saat penonton sedang menjelajah,
+          sebab video tidak punya tempat lain di halaman ini. Sejak videonya
+          naik jadi baris kartu biasa di atas (barisBerandaGabungan), menggambar
+          bagian ini lagi berarti daftar yang sama muncul DUA KALI di satu
+          halaman.
+
+          Saat MENCARI ia tetap wajib: grid di atas hanya menyaring katalog
+          drama Supabase, sedangkan judul seperti "Beyond The Last Signal" cuma
+          ada di gudang video. Tanpa bagian ini, mencarinya dibalas "tidak ada
+          yang cocok" padahal videonya jelas tayang di situs. */}
+      {menyaring && (
+        <div className={SHELL}>
+          <HasilPlayly videos={videoPlayly} ketikan={query} />
+        </div>
+      )}
     </section>
   );
 }

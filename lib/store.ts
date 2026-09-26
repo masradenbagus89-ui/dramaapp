@@ -809,8 +809,16 @@ type PlaylyFile = {
   hidden?: string[];
   /** Video yang DIDORONG Playly lewat webhook (opsional: file lama tak punya). */
   webhook?: PlaylyWebhookVideo[];
+  /** Kategori pilihan admin per video (opsional: file lama tak punya). */
+  genre?: Record<string, string>;
 };
-const EMPTY_PLAYLY: PlaylyFile = { key: null, embeds: [], hidden: [], webhook: [] };
+const EMPTY_PLAYLY: PlaylyFile = {
+  key: null,
+  embeds: [],
+  hidden: [],
+  webhook: [],
+  genre: {},
+};
 
 /** Record kunci Playly tersimpan, atau null kalau admin belum memasangnya. */
 export async function getPlaylyKeyRecord(): Promise<PlaylyKeyRecord | null> {
@@ -960,6 +968,75 @@ export async function setPlaylyVideoHidden(
   } else {
     const file = readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY);
     file.hidden = baru;
+    writeLocal("playly.json", file);
+  }
+  return baru;
+}
+
+// ===========  KATEGORI VIDEO PLAYLY (playly:genre)  ========================
+//
+// KENAPA ADA (owner 2026-09-26): owner meminta video Playly tampil di beranda
+// "sesuai dengan genre". Ternyata datanya TIDAK ADA — `PlaylyVideo`
+// (lib/playly.ts:398) tidak punya field genre sama sekali, dan diukur di
+// produksi hari itu NOL dari 46 video punya genre. Satu-satunya jalan jujur
+// adalah admin yang memilihnya; dokumen inilah tempat pilihan itu disimpan.
+//
+// Bentuknya PETA videoId -> nama kategori, bukan daftar seperti playly:hidden:
+// pertanyaannya di sini "video ini kategorinya apa?", bukan "video ini ada di
+// daftar atau tidak".
+//
+// Nilainya WAJIB salah satu kategori katalog DramaKu (lib/types.ts `Category`).
+// Pemeriksaannya ada di route admin, bukan di sini — lapisan penyimpanan tidak
+// boleh ikut memutuskan aturan isi, dan `Category` adalah tipe UI yang tak
+// pantas diseret ke modul data. Kategori asing yang lolos masuk tidak merusak
+// apa pun: ia sekadar tak cocok dengan baris genre mana pun di beranda.
+const PLAYLY_GENRE_DOC = "playly:genre";
+
+/** Peta videoId -> kategori pilihan admin. Video tanpa entri = belum diisi. */
+export type PlaylyGenreMap = Record<string, string>;
+
+export async function getPlaylyGenres(): Promise<PlaylyGenreMap> {
+  if (useSupabase) {
+    return (await sbDocGet<PlaylyGenreMap>(PLAYLY_GENRE_DOC)) ?? {};
+  }
+  return readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY).genre ?? {};
+}
+
+/** Versi ber-cache untuk HALAMAN PUBLIK — alasannya sama dengan getPlaylyEmbedsCached. */
+export async function getPlaylyGenresCached(): Promise<PlaylyGenreMap> {
+  if (useSupabase) {
+    return (
+      (await sbDocGet<PlaylyGenreMap>(PLAYLY_GENRE_DOC, {
+        revalidate: CATALOG_TTL_SECONDS,
+      })) ?? {}
+    );
+  }
+  return readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY).genre ?? {};
+}
+
+/**
+ * Pasang kategori satu video, atau KOSONGKAN dengan mengirim null.
+ * Mengembalikan peta terbaru supaya pemanggil tak perlu membaca ulang.
+ *
+ * Mengosongkan berarti MENGHAPUS kuncinya, bukan menyimpan string kosong:
+ * dokumen ini dibaca sebagai "ada entri = sudah diisi", dan nilai kosong yang
+ * tersimpan akan terbaca sebagai kategori bernama "" yang tak cocok dengan
+ * apa pun — sulit dilacak justru karena tidak salah secara teknis.
+ */
+export async function setPlaylyVideoGenre(
+  videoId: string,
+  genre: string | null,
+): Promise<PlaylyGenreMap> {
+  const sekarang = await getPlaylyGenres();
+  const baru = { ...sekarang };
+  if (genre) baru[videoId] = genre;
+  else delete baru[videoId];
+
+  if (useSupabase) {
+    await sbDocSet(PLAYLY_GENRE_DOC, baru);
+  } else {
+    const file = readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY);
+    file.genre = baru;
     writeLocal("playly.json", file);
   }
   return baru;

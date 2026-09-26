@@ -15,7 +15,11 @@ import {
   readPlaylyConfig,
 } from "@/lib/playly";
 import { getAllDramas } from "@/lib/dramas";
-import { getPlaylyEmbeds, getPlaylyHiddenIds } from "@/lib/store";
+import {
+  getPlaylyEmbeds,
+  getPlaylyGenres,
+  getPlaylyHiddenIds,
+} from "@/lib/store";
 import AdminAccessDenied from "@/app/components/admin/AdminAccessDenied";
 import AdminSidebar from "@/app/components/admin/AdminSidebar";
 import PlaylyVideoPicker from "@/app/components/admin/PlaylyVideoPicker";
@@ -42,12 +46,13 @@ export default async function PlaylyVideosPage() {
   // revalidateSeconds = 0 -> jalur admin selalu minta data SEGAR ke Playly,
   // supaya video yang baru di-upload langsung kelihatan di sini. Halaman
   // penonton yang memakai versi ber-cache.
-  const [status, dramas, embeds, mitra, hidden] = await Promise.all([
+  const [status, dramas, embeds, mitra, hidden, genres] = await Promise.all([
     getPlaylyKeyStatus(),
     getAllDramas(),
     getPlaylyEmbeds(),
     fetchPlaylyVideosKita(konfigurasi, 0),
     getPlaylyHiddenIds(),
+    getPlaylyGenres(),
   ]);
 
   // Video yang catatannya ada di Playly tapi BERKASNYA tidak (upload putus di
@@ -83,18 +88,27 @@ export default async function PlaylyVideosPage() {
           <p className="text-xs uppercase tracking-wider text-zinc-500">Konten</p>
           <h1 className="mt-1 text-2xl font-bold text-white">Video dari Playly</h1>
           <p className="mt-2 max-w-2xl text-sm text-zinc-400">
-            Video di akun Playly kita tampil <strong className="text-zinc-200">otomatis</strong>{" "}
-            di halaman{" "}
-            <Link href="/playly" className="text-amber-400 underline">
-              Video Playly
-            </Link>{" "}
-            dan di{" "}
-            <Link href="/discover" className="text-amber-400 underline">
-              Discover
+            Video di akun Playly kita tampil{" "}
+            <strong className="text-zinc-200">otomatis</strong> sebagai film
+            biasa di{" "}
+            <Link href="/beranda" className="text-amber-400 underline">
+              Beranda
             </Link>
-            , memakai pemutar milik Playly (embed) — tidak perlu dikaitkan ke drama
-            dulu. Mengaitkan ke drama sifatnya opsional, hanya untuk memberi label
-            "bagian dari drama X". Video DramaKu sendiri tetap berjalan seperti biasa.
+            , dan tiap video punya halaman tontonnya sendiri yang alamatnya bisa
+            dibagikan. Penonton tidak melihat nama &quot;Playly&quot; di mana pun
+            (owner 2026-09-26) — halaman{" "}
+            <Link href="/playly" className="text-amber-400 underline">
+              daftar lengkapnya
+            </Link>{" "}
+            tetap ada tapi tidak lagi punya tombol di navbar.
+          </p>
+          <p className="mt-2 max-w-2xl text-sm text-zinc-400">
+            Mengaitkan video ke drama (panel di bawah) sifatnya{" "}
+            <strong className="text-zinc-200">opsional</strong> — hanya untuk
+            memberi label &quot;bagian dari drama X&quot;. Yang menentukan video
+            masuk baris genre beranda adalah{" "}
+            <strong className="text-zinc-200">Kategori</strong> di panel berikut
+            ini. Video DramaKu sendiri tetap berjalan seperti biasa.
           </p>
         </header>
 
@@ -104,6 +118,7 @@ export default async function PlaylyVideosPage() {
         <PlaylyVisibilityManager
           videos={mitra.videos}
           initialHidden={hidden}
+          initialGenres={genres}
           belumSiapIds={belumSiapIds}
           fetchError={mitra.error}
           source={mitra.source}

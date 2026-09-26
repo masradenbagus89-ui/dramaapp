@@ -10,10 +10,14 @@ import PlaylyVideoGrid from "@/app/components/PlaylyVideoGrid";
 // literal yang bisa dibaca saat build. Ubah keduanya bersamaan.
 export const revalidate = 300;
 
+// Sebutan "Playly" sengaja DIBUANG dari seluruh tulisan yang dilihat penonton
+// (owner 2026-09-26): itu nama penyedia video, bukan sesuatu yang berarti bagi
+// mereka. Alamat halamannya tetap /playly supaya tautan lama & hasil Google
+// yang sudah terlanjur ada tidak mati.
 export const metadata: Metadata = {
-  title: "Video Playly — Trailer & Video Pilihan",
+  title: "Film & Video — Bisa Langsung Diputar",
   description:
-    "Kumpulan video dan trailer dari Playly yang bisa langsung diputar di DramaKu.",
+    "Kumpulan film dan video di DramaKu yang bisa langsung diputar tanpa unduh.",
   alternates: { canonical: "/playly" },
 };
 
@@ -28,13 +32,15 @@ export default async function PlaylyPage() {
     <main className="min-h-screen bg-zinc-950 pb-16">
       <div className="mx-auto max-w-7xl px-4 pt-8 md:px-6">
         <header>
-          <p className="text-xs uppercase tracking-wider text-zinc-500">Partner</p>
+          <p className="text-xs uppercase tracking-wider text-zinc-500">
+            Katalog
+          </p>
           <h1 className="mt-1 text-2xl font-bold text-white md:text-3xl">
-            Video dari Playly
+            Film &amp; Video
           </h1>
           <p className="mt-2 max-w-2xl text-sm text-zinc-400">
-            Video di halaman ini diputar langsung lewat pemutar milik Playly.
-            Klik salah satu untuk mulai menonton.
+            Semua judul di halaman ini bisa langsung diputar. Klik salah satu
+            untuk mulai menonton.
           </p>
         </header>
 
@@ -53,8 +59,8 @@ export default async function PlaylyPage() {
               <Film className="mx-auto h-10 w-10 text-zinc-700" aria-hidden="true" />
               <p className="mt-4 text-sm font-medium text-zinc-300">
                 {error
-                  ? "Video Playly sedang tidak bisa dimuat."
-                  : "Belum ada video dari Playly."}
+                  ? "Daftar video sedang tidak bisa dimuat."
+                  : "Belum ada video di sini."}
               </p>
               <p className="mt-1 text-sm text-zinc-500">
                 {error

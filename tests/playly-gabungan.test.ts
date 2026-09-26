@@ -24,9 +24,12 @@ const state = {
   katalog: { videos: [] as PlaylyVideoPublik[], hiddenCount: 0, error: null as string | null },
   webhook: [] as PlaylyWebhookVideo[],
   hidden: [] as string[],
+  /** Kategori pilihan admin per video (videoId -> nama kategori). */
+  genre: {} as Record<string, string>,
   /** Dinyalakan untuk meniru Supabase yang tidak bisa dihubungi. */
   webhookGagal: false,
   hiddenGagal: false,
+  genreGagal: false,
   /**
    * Berapa kali tiap JALUR baca webhook dipakai. Inilah yang membedakan kedua
    * pintu keluar: keduanya menghasilkan daftar yang sama, jadi isi daftar saja
@@ -58,6 +61,14 @@ vi.mock("../lib/store", () => ({
     if (state.hiddenGagal) throw new Error("supabase tidak bisa dihubungi");
     return state.hidden;
   },
+  // Kategori pilihan admin per video (owner 2026-09-26). Tiruan ini SENGAJA
+  // memulangkan isi `state.genre` alih-alih peta kosong tetap: aturan "pilihan
+  // admin ikut menempel ke video jalur webhook" diuji di berkas ini, dan tiruan
+  // yang selalu kosong akan membuat tes itu lulus tanpa membuktikan apa pun.
+  getPlaylyGenresCached: async () => {
+    if (state.genreGagal) throw new Error("supabase tidak bisa dihubungi");
+    return state.genre;
+  },
 }));
 
 const {
@@ -82,6 +93,7 @@ function kartuKatalog(id: string, ubah: Partial<PlaylyVideoPublik> = {}): Playly
     episode: null,
     year: null,
     genre: null,
+    kategori: null,
     rating: null,
     contentRating: null,
     quality: null,
@@ -114,8 +126,10 @@ beforeEach(() => {
   state.katalog = { videos: [], hiddenCount: 0, error: null };
   state.webhook = [];
   state.hidden = [];
+  state.genre = {};
   state.webhookGagal = false;
   state.hiddenGagal = false;
+  state.genreGagal = false;
   state.dibaca = { segar: 0, cached: 0 };
 });
 
@@ -325,6 +339,36 @@ describe("webhookKeKartu — baris webhook dipaskan ke bentuk yang dikenal kartu
     expect(kartu.thumbnail).toBe("https://contoh.test/sampul.jpg"); // thumbnailUrl -> thumbnail
     expect(kartu.year).toBe("2026"); // angka -> teks, seperti sisi katalog
     expect(kartu.genre).toBe("Action");
+  });
+
+  // ====================================================================
+  // KATEGORI untuk baris beranda (owner 2026-09-26) — jalur webhook.
+  // ====================================================================
+  it("kategori HANYA dari pilihan admin, bukan dari genre kiriman Playly", () => {
+    // Jebakan yang dijaga: `genre` kiriman Playly adalah teks bebas yang belum
+    // tentu sama dengan nama kategori katalog kita. Memakainya sebagai
+    // kategori akan menghasilkan baris beranda yang isinya tak pernah cocok —
+    // rusak SENYAP: tak ada error, cuma baris yang selalu kosong.
+    const kartu = webhookKeKartu(barisWebhook("w1", { genre: "sci-fi thriller" }));
+    expect(kartu.genre).toBe("sci-fi thriller");
+    expect(kartu.kategori).toBeNull();
+  });
+
+  it("kategori pilihan admin menempel ke video jalur webhook", () => {
+    // Pembanding untuk tes di atas — tanpa ini, "kategori null" tak bisa
+    // dibedakan dari "kategorinya tak pernah bisa terisi sama sekali".
+    const kartu = webhookKeKartu(barisWebhook("w1", { genre: "sci-fi thriller" }), {
+      w1: "Action",
+    });
+    expect(kartu.kategori).toBe("Action");
+  });
+
+  it("pilihan admin ikut terbawa lewat pintu gabungan, bukan cuma di perakitnya", () => {
+    // Penjaga SAMBUNGAN: `webhookKeKartu` bisa benar sendirian sementara
+    // `gabungVideoPlayly` lupa mengoper petanya — dan hasilnya video webhook
+    // tak pernah punya kategori walau admin sudah mengisinya.
+    const hasil = gabungVideoPlayly([], [barisWebhook("w1")], [], { w1: "Comedy" });
+    expect(hasil.map((v) => v.kategori)).toEqual(["Comedy"]);
   });
 
   it("durasi dihitung jadi label siap tampil", () => {

@@ -11,7 +11,11 @@
 
 **Terakhir diisi:** 2026-09-26.
 
-## 2026-09-26 (lanjutan) — Tombol FILTER dipasang di /beranda — SELESAI & TERUJI, menunggu izin rilis
+## 2026-09-26 (lanjutan) — Tombol FILTER dipasang di /beranda — ✅ TAYANG & TERBUKTI (`8e9d82a`)
+
+**Status: DIRILIS atas izin owner, dual push tuntas, terbukti tayang.** Ketiganya di `8e9d82a` (dibaca ulang lewat `git ls-remote`): produksi `masradenbagus89-ui/dramaapp` · cermin `ojokesusu/dramaku` · `main` lokal.
+
+**🟢 Bukti tayang (diukur dari `https://dramaapp.vercel.app/beranda`, ±2,5 menit sesudah push):** `bg-emerald-600` **1×** · teks "Filter" **1×** · strip kuning **1×**. **Nol kemunduran pada rilis sebelumnya:** baris "Film Terbaru" **masih ada** dan tautan `/tonton/` **masih 40** — jadi perubahan tata letak strip tidak menyenggol apa pun.
 
 **🪤 PELAJARAN UTAMA SESI INI: "komponennya ADA dan teruji" ≠ "orangnya bisa MELIHATNYA".** Owner melapor "di LK21 ada filter, dramaku belum ada". Ternyata tombol FILTER hijau **sudah dibuat 2026-09-22** dan berfungsi sempurna — bentuknya pun sudah persis contoh owner (hijau `bg-emerald-600`, ikon `SlidersHorizontal`, teks "Filter" + panah). Masalahnya ia **cuma terpasang di halaman depan `/`**, sedangkan `RedirectIfAuthed` (app/components/RedirectIfAuthed.tsx:9) melempar siapa pun yang **sudah login** dari `/` ke `/beranda` — dan `/beranda` nol tab, nol filter. Owner selalu login, jadi tombol itu **tidak pernah sekali pun terbuka untuknya** selama 4 hari. Diukur di produksi sebelum diperbaiki: `/` → `bg-emerald-600` **2 kemunculan** + deret tab lengkap; `/beranda` → **0 dan 0**. **Aturan yang lahir: sebelum membangun fitur yang "belum ada", cek dulu apakah ia sudah ada di halaman LAIN yang tidak dilihat pelapor** — `RedirectIfAuthed` membuat halaman depan praktis tak terjangkau owner, jadi apa pun yang hanya dipasang di sana sama saja tidak ada.
 

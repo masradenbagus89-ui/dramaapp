@@ -13,6 +13,75 @@
 
 ---
 
+## 2026-09-28 — Pemutar Playly: susunan tombol disamakan dengan LK21
+
+**Pemicu:** tim Playly mengirim `PlaylyEmbedPlayer.tsx` + `CARA-PASANG.md`, mengusulkan
+halaman pemutar kembali memakai embed mereka. **Owner menolak embed**; yang diminta:
+susunan tombol pemutar DramaKu disamakan dengan pemutar pembanding (Playly, lalu LK21).
+
+### Susunan akhir baris kontrol
+
+```
+▶  ⟲10  ⟳10  🔊  0:00/115:58          CC  ⏱  ⧉  ⋮  ⤢
+```
+
+**Yang berubah di `app/components/player/PlaylyPlayer.tsx`:**
+1. Tombol **loncat ±10 detik** (baru) + fungsi murni `posisiSesudahLoncat()` yang diekspor.
+2. **PiP, Terjemahan (CC), Kecepatan NAIK** dari menu titik tiga jadi tombol langsung.
+3. **Volume** di kiri bersama kontrol putar; garis pengaturnya **muncul ke ATAS**
+   (dulu memanjang ke samping dan memakan lebar baris kontrol di layar sempit).
+4. Ikon layar penuh: `Maximize` → **`Maximize2`** (panah diagonal), dipindah ke **ujung kanan**.
+5. Kecepatan = **klik berputar** (Normal → 1,25× → 1,5× → 2× → 0,5×), nilainya tampil di tombol.
+6. Tombol **CC digambar tapi mati** — Playly tidak mengirim berkas subtitle (kosong di 9 dari 9
+   video, dicek 2026-09-09). Sengaja tidak disembunyikan supaya penonton tahu fiturnya ada.
+
+**`app/components/player/PlayerMenu.tsx` dirampingkan:** props `pip`/`terjemahan`/`kecepatan`
+dibuang beserta UI-nya, `BarisAksi` ikut dihapus (tak ada pemakai tersisa — jangan tinggalkan
+dead code). Menu kini 4 baris: Volume Stabil, Penguat suara, Pencahayaan sinematik, Kualitas.
+**PlayerMenu hanya dipakai PlaylyPlayer**, jadi pemutar drama berepisode tidak tersenggol.
+
+**Penjaga baru:** `tests/player-loncat.test.ts` (4 tes — penjagaan tepi: mundur tak boleh
+negatif, maju tak boleh melewati durasi) · di `tests/player-menu.test.ts` ditambah **penjaga
+anti-dobel** (merah kalau PiP/Terjemahan/Kecepatan muncul lagi di menu) + penjaga submenu
+Kualitas (kini satu-satunya submenu, jadi jalur buka→pilih→kirim hanya teruji di situ).
+
+**Rollback 1-baris:** `git revert <hash rilis>` lalu push ke `origin main` — perubahan ini
+murni tampilan pemutar, tidak menyentuh DB, env, maupun endpoint.
+
+### ⚠️ Embed Playly TIDAK BISA dipakai — terukur, bukan dugaan
+
+Tiga `videoId` dari produksi (`/film`) diuji ke `playly-dashboard.vercel.app/id/<id>/embed`
+dengan header `Referer` yang benar. **Ketiganya membalas HTTP 200 berisi halaman
+"This page could not be found."** — bukan video, dan bukan pesan "Situs ini belum diizinkan"
+yang dijanjikan panduan mereka. Pembanding `/embed/<id>` dan `/v/<id>` balas 404 murni, jadi
+**pola alamatnya benar; yang tidak dikenali adalah id-nya.**
+
+### Dua hal yang HILANG kalau suatu saat pindah ke embed
+
+1. **Gerbang IDOR di `app/api/playly/video/route.ts:56`** — video yang disembunyikan admin
+   ditolak di server. Embed bicara langsung ke Playly, jadi gerbang itu **terlewat**. Belum
+   diketahui apakah Playly punya penggantinya; tanyakan sebelum memutuskan.
+2. **Pencahayaan Sinematik** — satu-satunya menu kita yang hidup dan tidak ada di Playly.
+   (Volume Stabil & Penguat Suara sudah mati sejak awal untuk video Playly: R2 tanpa header
+   CORS — jadi keduanya bukan kerugian nyata.)
+
+Komponen mereka juga **merakit ulang alamat embed dari `videoId`**, padahal `lib/playly.ts:408`
+sudah menyimpan `embedUrl` yang lolos validasi domain, dan alamat Playly di komponen itu
+ditulis mati (DramaKu memakai setelan `PLAYLY_API_URL`).
+
+**Surat balasan ke Playly:** `docs/surat-mitra/2026-09-28-balasan-playly-embed.md`
+(134 baris: tabel hasil uji 404 + tabel 7 menu untuk mereka centang). **Belum dikirim.**
+
+### 🔧 Koreksi panduan: video Playly BISA diuji di localhost
+
+`docs/panduan-lokal-rekan.md:70` menyatakan "Video Playly tidak mau diputar" di localhost.
+**Itu sudah tidak berlaku.** Catatan itu ditulis 2026-08-25 saat halaman masih memakai iframe
+embed — dan iframe-lah yang menolak localhost. Sejak 2026-09-09 pemutarnya milik sendiri dan
+mengambil berkas langsung. Terukur hari ini: `/api/playly/video` balas 200 + berkasnya balas
+**206** (Range request jalan). `/film` lokal menampilkan 47 video dari cadangan Supabase.
+Baris itu **belum dibetulkan** — menunggu keputusan owner.
+
+---
 # ⏳ STATUS — BACA INI DULU (2026-09-28)
 
 ## 0. 🟢 PLAYLY HIDUP LAGI & SITUS PULIH — seksi 1 di bawah SUDAH TIDAK BERLAKU (2026-09-28)

@@ -21,11 +21,15 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   AlertTriangle,
   LoaderCircle,
-  Maximize,
-  Minimize,
+  Captions,
+  Gauge,
+  Maximize2,
+  Minimize2,
+  PictureInPicture2,
   Pause,
   Play,
   RotateCcw,
+  RotateCw,
   Volume2,
   VolumeX,
 } from "lucide-react";
@@ -49,6 +53,31 @@ const FILTER_SINEMATIK = "contrast(1.18) saturate(1.35) brightness(1.06)";
 
 /** Detik kontrol tetap terlihat setelah penonton berhenti menggerakkan kursor. */
 const KONTROL_HILANG_MS = 3000;
+
+/** Detik yang dilompati tombol maju/mundur. 10 detik = pola yang sudah dikenali penonton. */
+const LONCAT_DETIK = 10;
+
+/**
+ * Posisi video sesudah tombol loncat ditekan, dijaga tetap di dalam durasi.
+ *
+ * Dipisah dari komponen supaya bisa diuji tanpa merakit pemutar. Yang mudah
+ * salah di sini bukan menggambar tombolnya, melainkan penjagaan tepinya:
+ * mundur saat baru berjalan 3 detik tidak boleh menghasilkan angka negatif,
+ * dan maju di ujung video tidak boleh melewati durasi — browser menganggap
+ * posisi melewati durasi sebagai "selesai" lalu memicu 'ended'.
+ *
+ * Durasi 0/NaN terjadi sebelum metadata video terbaca; di situ tepi atas
+ * belum diketahui, jadi cukup dijaga agar tidak negatif.
+ */
+export function posisiSesudahLoncat(
+  sekarang: number,
+  delta: number,
+  durasi: number,
+): number {
+  const maju = sekarang + delta;
+  if (!Number.isFinite(durasi) || durasi <= 0) return Math.max(0, maju);
+  return Math.min(Math.max(maju, 0), durasi);
+}
 
 export default function PlaylyPlayer({
   videoId,
@@ -180,6 +209,14 @@ export default function PlaylyPlayer({
     }
   }, []);
 
+  const loncat = (delta: number) => {
+    const v = videoRef.current;
+    if (!v) return;
+    const baru = posisiSesudahLoncat(v.currentTime, delta, v.duration);
+    v.currentTime = baru;
+    setCurTime(baru);
+  };
+
   const geserKe = (e: React.PointerEvent<HTMLDivElement>) => {
     const bar = seekRef.current;
     const v = videoRef.current;
@@ -193,6 +230,14 @@ export default function PlaylyPlayer({
   const ubahSpeed = (nilai: string) => {
     setSpeed(nilai);
     if (videoRef.current) videoRef.current.playbackRate = Number(nilai);
+  };
+
+  // Tombol kecepatan di baris kontrol memutar pilihan berurutan tiap diklik.
+  // Dipakai (bukan membuka daftar) karena pilihannya cuma lima dan nilainya
+  // langsung terlihat di tombol — penonton tak perlu membuka apa pun.
+  const siklusKecepatan = () => {
+    const i = KECEPATAN.findIndex((k) => k.nilai === speed);
+    ubahSpeed(KECEPATAN[(i + 1) % KECEPATAN.length].nilai);
   };
 
   const ubahVolume = (nilai: number) => {
@@ -357,35 +402,117 @@ export default function PlaylyPlayer({
 
             <button
               type="button"
-              onClick={toggleMute}
-              aria-label={muted || volume === 0 ? "Nyalakan suara" : "Bisukan"}
-              className="flex size-9 items-center justify-center rounded-full text-white transition hover:bg-white/15"
+              onClick={() => loncat(-LONCAT_DETIK)}
+              aria-label={`Mundur ${LONCAT_DETIK} detik`}
+              className="relative flex size-9 items-center justify-center rounded-full text-white transition hover:bg-white/15"
             >
-              {muted || volume === 0 ? (
-                <VolumeX className="size-5" />
-              ) : (
-                <Volume2 className="size-5" />
-              )}
+              <RotateCcw className="size-5" />
+              <span className="absolute text-[8px] font-bold tabular-nums">
+                {LONCAT_DETIK}
+              </span>
             </button>
-            <input
-              type="range"
-              min={0}
-              max={1}
-              step={0.05}
-              value={muted ? 0 : volume}
-              onChange={(e) => ubahVolume(Number(e.target.value))}
-              aria-label="Volume"
-              className="hidden h-1 w-16 cursor-pointer accent-amber-400 sm:block"
-            />
 
-            <span className="ml-1 text-[11px] tabular-nums text-white/80">
+            <button
+              type="button"
+              onClick={() => loncat(LONCAT_DETIK)}
+              aria-label={`Maju ${LONCAT_DETIK} detik`}
+              className="relative flex size-9 items-center justify-center rounded-full text-white transition hover:bg-white/15"
+            >
+              <RotateCw className="size-5" />
+              <span className="absolute text-[8px] font-bold tabular-nums">
+                {LONCAT_DETIK}
+              </span>
+            </button>
+
+            {/* Volume: tombolnya di kiri bersama kontrol putar, garis
+                pengaturnya MUNCUL KE ATAS saat disentuh (owner 2026-09-28).
+                Dulu garis itu memanjang ke samping dan memakan lebar baris
+                kontrol — di layar sempit ia mendorong tombol lain keluar.
+                focus-within ikut dipakai supaya bisa dijangkau lewat tombol
+                Tab, bukan cuma kursor. */}
+            <div className="group/vol relative flex items-center">
+              <button
+                type="button"
+                onClick={toggleMute}
+                aria-label={muted || volume === 0 ? "Nyalakan suara" : "Bisukan"}
+                className="flex size-9 items-center justify-center rounded-full text-white transition hover:bg-white/15"
+              >
+                {muted || volume === 0 ? (
+                  <VolumeX className="size-5" />
+                ) : (
+                  <Volume2 className="size-5" />
+                )}
+              </button>
+
+              <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 pb-2 opacity-0 transition-opacity group-focus-within/vol:pointer-events-auto group-focus-within/vol:opacity-100 group-hover/vol:pointer-events-auto group-hover/vol:opacity-100">
+                <div className="flex h-24 w-9 items-center justify-center rounded-full bg-black/85 ring-1 ring-white/10">
+                  <input
+                    type="range"
+                    min={0}
+                    max={1}
+                    step={0.05}
+                    value={muted ? 0 : volume}
+                    onChange={(e) => ubahVolume(Number(e.target.value))}
+                    aria-label="Volume"
+                    className="h-1 w-20 -rotate-90 cursor-pointer accent-amber-400"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <span className="ml-2 text-[11px] tabular-nums text-white/80">
               {fmtTime(curTime)} / {fmtTime(dur)}
             </span>
 
+            {/* Susunan sisi kanan sengaja meniru pemutar Playly (owner
+                2026-09-28): kontrol yang paling sering dipakai penonton naik
+                jadi tombol langsung, dan yang naik DIKELUARKAN dari menu titik
+                tiga supaya tidak ada dua jalan ke pengaturan yang sama. */}
             <div className="ml-auto flex items-center gap-1">
+              {/* Tombol terjemahan tetap DIGAMBAR walau mati, supaya penonton
+                  tahu fitur ini ada dan kenapa tidak bisa dipakai — bukan
+                  hilang tanpa penjelasan. Playly tidak mengirim berkas subtitle
+                  (kosong di 9 dari 9 video, dicek 2026-09-09). */}
+              <button
+                type="button"
+                disabled
+                aria-label="Terjemahan tidak tersedia untuk video ini"
+                title="Sumber video ini tidak menyertakan berkas terjemahan."
+                className="flex size-9 cursor-not-allowed items-center justify-center rounded-full text-white/35"
+              >
+                <Captions className="size-5" />
+              </button>
+
+              <button
+                type="button"
+                onClick={siklusKecepatan}
+                aria-label={`Kecepatan ${KECEPATAN.find((k) => k.nilai === speed)?.label ?? speed}`}
+                className="relative flex size-9 items-center justify-center rounded-full text-white transition hover:bg-white/15"
+              >
+                <Gauge className="size-5" />
+                {speed !== "1" && (
+                  <span className="absolute -bottom-0.5 text-[8px] font-bold tabular-nums">
+                    {speed}×
+                  </span>
+                )}
+              </button>
+
+              {pipDidukung && (
+                <button
+                  type="button"
+                  onClick={togglePip}
+                  aria-label={pipAktif ? "Keluar dari Pop-up" : "Putar di Pop-up"}
+                  className={cn(
+                    "flex size-9 items-center justify-center rounded-full transition hover:bg-white/15",
+                    pipAktif ? "text-amber-400" : "text-white",
+                  )}
+                >
+                  <PictureInPicture2 className="size-5" />
+                </button>
+              )}
+
               <PlayerMenu
                 onTerbukaChange={setMenuTerbuka}
-                pip={{ didukung: pipDidukung, aktif: pipAktif, onToggle: togglePip }}
                 volumeStabil={{
                   aktif: false,
                   onUbah: () => undefined,
@@ -397,18 +524,11 @@ export default function PlaylyPlayer({
                   alasanMati: alasanSuaraMati,
                 }}
                 sinematik={{ aktif: sinematik, onUbah: setSinematik }}
-                // Terjemahan & Kualitas tampil apa adanya (keputusan owner
-                // 2026-09-09). Playly TIDAK mengirim berkas subtitle maupun
-                // varian resolusi — dicek ke API mereka, kosong di 9 dari 9
-                // video. Daftar pilihannya sengaja tidak dikarang supaya tidak
-                // ada tombol yang diklik lalu tidak terjadi apa-apa.
-                terjemahan={{
-                  nilai: "mati",
-                  opsi: [{ nilai: "mati", label: "Mati" }],
-                  onPilih: () => undefined,
-                  catatan: "Sumber video ini tidak menyertakan berkas terjemahan.",
-                }}
-                kecepatan={{ nilai: speed, opsi: KECEPATAN, onPilih: ubahSpeed }}
+                // Kualitas tampil apa adanya (keputusan owner 2026-09-09):
+                // Playly TIDAK mengirim varian resolusi — dicek ke API mereka,
+                // kosong di 9 dari 9 video. Daftar pilihannya sengaja tidak
+                // dikarang supaya tidak ada tombol yang diklik lalu tidak
+                // terjadi apa-apa.
                 kualitas={{
                   nilai: "auto",
                   opsi: [{ nilai: "auto", label: "Auto" }],
@@ -424,7 +544,7 @@ export default function PlaylyPlayer({
                 aria-label={fullscreen ? "Keluar layar penuh" : "Layar penuh"}
                 className="flex size-9 items-center justify-center rounded-full text-white transition hover:bg-white/15"
               >
-                {fullscreen ? <Minimize className="size-5" /> : <Maximize className="size-5" />}
+                {fullscreen ? <Minimize2 className="size-5" /> : <Maximize2 className="size-5" />}
               </button>
             </div>
           </div>

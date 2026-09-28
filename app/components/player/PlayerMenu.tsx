@@ -15,14 +15,11 @@
 import { useEffect, useRef, useState } from "react";
 import {
   AudioLines,
-  Captions,
   Check,
   ChevronLeft,
   ChevronRight,
   EllipsisVertical,
-  Gauge,
   MonitorPlay,
-  PictureInPicture2,
   Sun,
   Volume2,
 } from "lucide-react";
@@ -56,13 +53,14 @@ export type PilihanMenu = {
   catatan?: string;
 };
 
+// PiP, Terjemahan, dan Kecepatan SENGAJA tidak ada di sini (owner 2026-09-28):
+// ketiganya naik jadi tombol langsung di baris kontrol, meniru susunan pemutar
+// Playly. Menaruhnya di dua tempat sekaligus membuat penonton menebak-nebak
+// mana yang berlaku saat keduanya menampilkan keadaan berbeda.
 export type PlayerMenuProps = {
-  pip: { didukung: boolean; aktif: boolean; onToggle: () => void };
   volumeStabil: SakelarMenu;
   penguatSuara: SakelarMenu;
   sinematik: SakelarMenu;
-  terjemahan: PilihanMenu;
-  kecepatan: PilihanMenu;
   kualitas: PilihanMenu;
   /**
    * Dipanggil tiap menu dibuka/ditutup. Pemutar memakainya untuk menahan baris
@@ -72,21 +70,16 @@ export type PlayerMenuProps = {
 };
 
 /** Halaman yang sedang ditampilkan di dalam popup. */
-type Laman = "utama" | "terjemahan" | "kecepatan" | "kualitas";
+type Laman = "utama" | "kualitas";
 
 const JUDUL_LAMAN: Record<Exclude<Laman, "utama">, string> = {
-  terjemahan: "Terjemahan",
-  kecepatan: "Kecepatan",
   kualitas: "Kualitas",
 };
 
 export default function PlayerMenu({
-  pip,
   volumeStabil,
   penguatSuara,
   sinematik,
-  terjemahan,
-  kecepatan,
   kualitas,
   onTerbukaChange,
 }: PlayerMenuProps) {
@@ -124,7 +117,7 @@ export default function PlayerMenu({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [terbuka]);
 
-  const submenu = laman === "utama" ? null : { terjemahan, kecepatan, kualitas }[laman];
+  const submenu = laman === "utama" ? null : { kualitas }[laman];
 
   return (
     <div ref={wadahRef} className="relative">
@@ -156,19 +149,6 @@ export default function PlayerMenu({
             />
           ) : (
             <>
-              <BarisAksi
-                ikon={<PictureInPicture2 className="size-4" />}
-                // Label ikut keadaan: penonton bisa menutup jendela PiP lewat
-                // tombol browser, jadi menu harus menunjukkan keadaan saat ini,
-                // bukan mengajak masuk PiP yang sudah menyala.
-                label={pip.aktif ? "Keluar dari PiP" : "PiP / Picture in Picture"}
-                nonaktif={!pip.didukung}
-                keterangan={pip.didukung ? undefined : "tidak didukung browser ini"}
-                onClick={() => {
-                  pip.onToggle();
-                  ubahTerbuka(false);
-                }}
-              />
               <BarisSakelar
                 ikon={<AudioLines className="size-4" />}
                 label="Volume Stabil"
@@ -187,18 +167,6 @@ export default function PlayerMenu({
 
               <div className="my-1 h-px bg-white/10" />
 
-              <BarisSubmenu
-                ikon={<Captions className="size-4" />}
-                label="Terjemahan"
-                pilihan={terjemahan}
-                onBuka={() => setLaman("terjemahan")}
-              />
-              <BarisSubmenu
-                ikon={<Gauge className="size-4" />}
-                label="Kecepatan"
-                pilihan={kecepatan}
-                onBuka={() => setLaman("kecepatan")}
-              />
               <BarisSubmenu
                 ikon={<MonitorPlay className="size-4" />}
                 label="Kualitas"
@@ -220,41 +188,6 @@ function labelNilai(pilihan: PilihanMenu): string {
 
 const KELAS_BARIS =
   "flex w-full items-center gap-3 px-3 py-2.5 text-left text-[13px] text-white/90 transition-colors";
-
-function BarisAksi({
-  ikon,
-  label,
-  keterangan,
-  nonaktif,
-  onClick,
-}: {
-  ikon: React.ReactNode;
-  label: string;
-  keterangan?: string;
-  nonaktif?: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      role="menuitem"
-      disabled={nonaktif}
-      onClick={onClick}
-      className={cn(KELAS_BARIS, nonaktif ? "opacity-40" : "hover:bg-white/10")}
-    >
-      <span className="shrink-0 text-white/70">{ikon}</span>
-      <span className="flex-1 truncate">
-        {label}
-        {keterangan && (
-          <span className="mt-0.5 block text-[11px] leading-tight text-white/40">
-            {keterangan}
-          </span>
-        )}
-      </span>
-      {!nonaktif && <ChevronRight className="size-4 shrink-0 text-white/40" />}
-    </button>
-  );
-}
 
 function BarisSakelar({
   ikon,

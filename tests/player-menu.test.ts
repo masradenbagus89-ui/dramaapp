@@ -35,25 +35,9 @@ afterEach(() => {
 /** Props lengkap dengan aksi tiruan; tiap tes menimpa yang ia perlukan saja. */
 function propsDasar(timpa: Partial<PlayerMenuProps> = {}): PlayerMenuProps {
   return {
-    pip: { didukung: true, aktif: false, onToggle: vi.fn() },
     volumeStabil: { aktif: false, onUbah: vi.fn() },
     penguatSuara: { aktif: false, onUbah: vi.fn() },
     sinematik: { aktif: false, onUbah: vi.fn() },
-    terjemahan: {
-      nilai: "mati",
-      opsi: [{ nilai: "mati", label: "Mati" }],
-      onPilih: vi.fn(),
-      catatan: "Sumber video ini tidak menyertakan berkas terjemahan.",
-    },
-    kecepatan: {
-      nilai: "1",
-      opsi: [
-        { nilai: "0.5", label: "0,5×" },
-        { nilai: "1", label: "Normal" },
-        { nilai: "2", label: "2×" },
-      ],
-      onPilih: vi.fn(),
-    },
     kualitas: {
       nilai: "auto",
       opsi: [{ nilai: "auto", label: "Auto" }],
@@ -96,32 +80,33 @@ describe("PlayerMenu — popup titik tiga", () => {
     expect(container.querySelector('[role="menu"]')).not.toBeNull();
   });
 
-  it("menampilkan KETUJUH fitur yang diminta", () => {
+  it("menampilkan KEEMPAT fitur yang tersisa di menu", () => {
     render(propsDasar());
     klik(tombolMenu());
 
     const teks = container.textContent ?? "";
     for (const label of [
-      "PiP / Picture in Picture",
       "Volume Stabil",
       "Penguat suara",
       "Pencahayaan sinematik",
-      "Terjemahan",
-      "Kecepatan",
       "Kualitas",
     ]) {
       expect(teks).toContain(label);
     }
   });
 
-  it("PiP benar-benar memanggil aksinya lalu menutup menu", () => {
-    const onToggle = vi.fn();
-    render(propsDasar({ pip: { didukung: true, aktif: false, onToggle } }));
+  it("TIDAK lagi memuat kontrol yang naik jadi tombol langsung", () => {
+    // Penjaga anti-dobel (owner 2026-09-28): PiP, Terjemahan, dan Kecepatan
+    // sekarang ada di baris kontrol pemutar. Kalau suatu saat ada yang
+    // menambahkannya kembali ke sini, penonton punya dua jalan ke pengaturan
+    // yang sama — dan keduanya bisa menampilkan keadaan yang berbeda.
+    render(propsDasar());
     klik(tombolMenu());
-    klik(tombolBerteks("PiP / Picture in Picture"));
 
-    expect(onToggle).toHaveBeenCalledTimes(1);
-    expect(container.querySelector('[role="menu"]')).toBeNull();
+    const teks = container.textContent ?? "";
+    for (const label of ["PiP", "Terjemahan", "Kecepatan"]) {
+      expect(teks).not.toContain(label);
+    }
   });
 
   it("Pencahayaan sinematik mengirim nilai KEBALIKAN dari keadaan sekarang", () => {
@@ -130,20 +115,6 @@ describe("PlayerMenu — popup titik tiga", () => {
     klik(tombolMenu());
     klik(tombolBerteks("Pencahayaan sinematik"));
     expect(onUbah).toHaveBeenCalledWith(true);
-  });
-
-  it("Kecepatan membuka submenu dan pilihannya benar-benar terkirim", () => {
-    const onPilih = vi.fn();
-    const props = propsDasar();
-    render(propsDasar({ kecepatan: { ...props.kecepatan, onPilih } }));
-
-    klik(tombolMenu());
-    // Nilai sekarang tampil di baris menu, jadi penonton tahu tanpa membuka.
-    expect(tombolBerteks("Kecepatan")?.textContent).toContain("Normal");
-
-    klik(tombolBerteks("Kecepatan"));
-    klik(tombolBerteks("2×"));
-    expect(onPilih).toHaveBeenCalledWith("2");
   });
 
   it("fitur yang tidak tersedia: TIDAK bisa diklik dan alasannya ditulis apa adanya", () => {
@@ -169,16 +140,22 @@ describe("PlayerMenu — popup titik tiga", () => {
     expect(container.textContent).toContain("hanya menyediakan satu kualitas");
   });
 
-  it("PiP ditandai mati kalau browser penonton tidak mendukungnya", () => {
-    const onToggle = vi.fn();
-    render(propsDasar({ pip: { didukung: false, aktif: false, onToggle } }));
-    klik(tombolMenu());
+  it("Kualitas: nilai sekarang terlihat tanpa membuka, dan pilihan terkirim", () => {
+    // Kualitas kini SATU-SATUNYA submenu, jadi jalur buka -> pilih -> kirim
+    // hanya teruji di sini. Sebelumnya jalur itu ikut terjaga lewat submenu
+    // Kecepatan yang sudah pindah ke baris kontrol.
+    const onPilih = vi.fn();
+    render(propsDasar({ kualitas: { nilai: "auto", opsi: [
+      { nilai: "auto", label: "Auto" },
+      { nilai: "720", label: "720p" },
+    ], onPilih } }));
 
-    const baris = tombolBerteks("PiP / Picture in Picture");
-    expect(baris?.disabled).toBe(true);
-    expect(baris?.textContent).toContain("tidak didukung browser ini");
-    klik(baris);
-    expect(onToggle).not.toHaveBeenCalled();
+    klik(tombolMenu());
+    expect(tombolBerteks("Kualitas")?.textContent).toContain("Auto");
+
+    klik(tombolBerteks("Kualitas"));
+    klik(tombolBerteks("720p"));
+    expect(onPilih).toHaveBeenCalledWith("720");
   });
 
   it("menutup saat tombol Escape ditekan", () => {

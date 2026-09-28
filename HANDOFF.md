@@ -43,6 +43,26 @@
 
 ---
 
+## 0b. Verifikasi pasca-rilis `a701892` + drama baru tak bisa diputar (2026-09-28, putaran kedua)
+
+**A. Rilis `a701892` terbukti tayang, nol kemunduran.** Diukur sesudah penanda deploy berubah: `/beranda` 40 tautan `/tonton/` · "Film Terbaru" 2 · 6 tautan `/katalog` · `/katalog` 35 kartu · `/film` nol pesan gagal · `/` `/beranda` `/film` `/katalog` `/discover` semua 200 · `/playly` 308. Angka yang sama persis dengan sebelum rilis, KECUALI satu hal di bawah.
+
+**✅ DUGAAN ARCADIAN TERBUKTI — poster pulih SENDIRI, nol perbaikan kode.** Sebelum rilis, video terbaru `arcadian-1790342663839` posternya `null` sehingga halaman tontonnya tanpa `og:image`/`thumbnailUrl`. Dugaan waktu itu: detailnya terlanjur diambil saat Playly masih 402 lalu membeku 2 jam. Sesudah rilis memicu pembangunan ulang (= pengambilan segar), keduanya **ADA**. **Pelajaran: kalau gejalanya menimpa SATU data sementara puluhan lain sehat, curigai data tersimpan yang membeku saat sumbernya sedang rusak — jangan langsung menyalahkan kode.**
+
+**⚠️ Satu video Playly HILANG sesudah rebuild, dan ini BUKAN kemunduran rilis.** `/film` turun 46 → 45; yang lenyap "The Tomb Raider Awakened Something That Should Have Never Been Awakened" (31:04, id `1788234998400`). Hilangnya KONSISTEN — lenyap dari `/film`, dari `/beranda`, dan `/api/thumb/1788234998400` balas **404** sementara dua pembanding balas **307**. Jadi ia dikeluarkan dari daftar-yang-boleh-tampil, bukan halaman setengah rusak. Bukan akibat `a701892` (perubahannya murni komentar, disaring dari diff). Mekanisme paling masuk akal, **belum terbukti**: rebuild memaksa pengambilan segar sehingga keadaan sebenarnya video itu langsung terungkap — rebuild yang sama memulihkan poster Arcadian. **Sebabnya hanya panel admin yang bisa menjawab** (naik jadi "4 video belum siap" = upload rusak · judul hilang dari daftar = dihapus di Playly · bertanda tersembunyi = disembunyikan admin).
+
+**B. Drama baru tak bisa diputar — sebabnya NAMA FOLDER, dan seluruh rantai ternyata SEHAT.** Owner menambahkan drama `satu-pukulan-menantu-lemah-jadi-legenda` (81 episode), lalu "Scan & auto-hardlink" membalas merah: *"Folder tidak ditemukan: C:\Users\USER\Downloads\video\satu-pukulan-menantu-lemah-jadi-legenda atau …\_raw_satu-pukulan-…"*.
+
+**🪤 PESAN ITU JUSTRU BUKTI RANTAINYA SEHAT — jangan diperlakukan seperti tunnel mati.** Tunnel mati memberi `Unexpected token '<'` (situs menerima halaman error, bukan JSON). Kalimat rapi berbahasa Indonesia = **jawaban asli agent di PC backup**, artinya alamat video terbaca, `HARDLINK_AGENT_SECRET` terpasang, tunnel hidup, dan agent benar-benar mencari. Diukur: akar tunnel **200**, tiga drama lain `1.mp4` **200** (28/40/15 MB), drama ini **404**.
+
+**Sebab sebenarnya: folder di PC backup bernama `dihina-keluarga-istri-kekuatan-aslinya-terbongkar` — judul asli sumbernya — sedangkan agent mencocokkan nama folder PERSIS dengan id drama.** Isinya sudah sempurna (81 berkas, `1.mp4`–`81.mp4`, nol bolong). Perbaikannya sekadar `Rename-Item` di PC backup; nol unggah ulang, nol kode, nol deploy. Sesudah diganti: episode 1/2/40/81 semua **200** (32/32/29/6 MB), episode 82 **404**, `Content-Type: video/mp4`, `Accept-Ranges: bytes` + permintaan sebagian balas **206** (geser-waktu jalan). Alamat yang diuji diambil DARI HTML `/feed/<id>`, jadi yang terbukti bukan "berkas ada di suatu tempat" melainkan "berkas yang diminta halaman benar-benar dilayani".
+
+**🔧 JALAN PINTAS DIAGNOSA YANG BARU DITEMUKAN — hemat berjam-jam:** Caddy di PC backup **menyajikan daftar folder** di akar tunnel. Jadi SELURUH isi PC backup bisa diperiksa dari luar tanpa membuka komputernya: `curl -s "<tunnel-url>/"` lalu baca `href="./…/"`. Dari situ ketahuan dalam hitungan detik bahwa folder yang dicari tak ada dan folder mirip bernama lain. Membandingkan daftar itu dengan id di `/api/dramas` juga memastikan **hanya drama ini** yang folder-nya hilang (35 lainnya lengkap) — tanpa itu, mudah mengira kerusakannya menyeluruh.
+
+**❗ Bahaya yang ikut ketahuan: drama bisa TAYANG ke penonton tanpa satu pun berkas video.** Halaman `/drama/<id>` balas 200 dan kartunya muncul di `/beranda` + `/katalog` begitu datanya disimpan, walau videonya nol. Selama masalah ini berlangsung, siapa pun yang mengkliknya dapat pemutar mati. Belum ada penjaga untuk ini — keputusan owner kalau mau ditutup.
+
+---
+
 ## 1. ~~Situs kehilangan 46 video~~ — SUDAH PULIH 2026-09-28, baca seksi 0 (arsip insiden)
 
 > 🟢 **SELESAI.** Gejala di bawah sudah TIDAK ada lagi sejak 2026-09-28; Playly membalas 200. Seksi ini ditahan sebagai catatan insiden, bukan status berjalan.

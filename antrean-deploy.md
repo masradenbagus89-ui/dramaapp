@@ -3,7 +3,17 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-09-25 (malam, **komputer OWNER**) — **✅ ANTREAN KOSONG, DUAL PUSH TUNTAS.** `35fd43d..625fe95` didorong ke produksi `masradenbagus89-ui/dramaapp` (fast-forward, nol paksaan). Cermin `ojokesusu/dramaku` sudah lebih dulu memuatnya dari rekan. Terukur sama persis di ketiga tempat: `625fe954daa1f0eabf602f5608a95ad14b16d5de`.
+**Terakhir dicek:** 2026-09-28 (**komputer OWNER**) — **✅ ANTREAN KOSONG.** Ketiga tempat di **`1f895314505df8c31c994bee877e28e76c028f76`**, dibaca lewat `git ls-remote` (bukan `git log` lokal): `main` lokal · produksi **`masradenbagus89-ui/dramaapp`** · cermin **`ojokesusu/dramaku`**. Tak ada yang tertinggal belum terkirim.
+
+**⚠️ 17 commit tak pernah tercatat di berkas ini** — `625fe95..1f89531`, seluruhnya kerja 2026-09-26 dan seluruhnya **sudah tayang**. Berkas ini melompat dari 25 ke 28 September karena sesi 26 September memperbarui `HANDOFF.md` saja. Rincian sembilan rilis hari itu (navbar, halaman tonton per video, kolom Kategori, tombol FILTER, `/playly` → `/film` 308, penanda VideoObject + `/api/thumb/[id]`, `playly:cadangan` + pangkas kuota 24×, deret tab katalog, `/katalog` + kotak pembatas) ada di `HANDOFF.md` seksi 2b. **Aturan yang lahir: sentuh rilis → perbarui KEDUA berkas, bukan salah satu.**
+
+**Yang dikerjakan 2026-09-28: NOL rilis fitur, hanya catatan.** Playly pulih sendiri (402 → 200), situs kembali berisi tanpa deploy apa pun — 46 dari 49 video tampil. Pertanyaan hemat kuota yang digantung sejak 26 September **ditutup sebagai jalan buntu**, dan premis "sampul Playly mati 6 jam" terbukti **sudah tidak berlaku** (diukur: 16 alamat stabil, 0 bertanda tangan). Keduanya tercatat di `HANDOFF.md` seksi 0 + `lib/playly.ts` di atas `PLAYLY_DETAIL_TTL_SECONDS`.
+
+**Rollback catatan ini:** murni dokumentasi + satu blok komentar di `lib/playly.ts` — **nol perubahan perilaku, nol SQL, nol env**. `git revert` saja cukup, dan tidak ada yang perlu dipulihkan di situs.
+
+---
+
+**Sebelumnya, 2026-09-25 (malam, komputer OWNER)** — **✅ ANTREAN KOSONG, DUAL PUSH TUNTAS.** `35fd43d..625fe95` didorong ke produksi `masradenbagus89-ui/dramaapp` (fast-forward, nol paksaan). Cermin `ojokesusu/dramaku` sudah lebih dulu memuatnya dari rekan. Terukur sama persis di ketiga tempat: `625fe954daa1f0eabf602f5608a95ad14b16d5de`.
 
 > **🪤 PELAJARAN UTAMA MALAM INI: nama pendek remote (`origin`, `dramaku`) BERBEDA ARTI di komputer owner dan komputer rekan — dan itu membuat catatan rilis terbaca terbalik.** Entri di bawah menulis "DIRILIS ke produksi `origin`"; di komputer rekan `origin` = `ojokesusu/dramaku` = **cermin**, yang tidak merilis apa pun. Di komputer owner `origin` justru **produksi**. Kenyataannya produksi tertinggal di `35fd43d` semalaman sementara catatan berbunyi "sudah dirilis". **Aturan: di berkas catatan tulis nama repo LENGKAP** — `masradenbagus89-ui/dramaapp` (produksi, push ke `main` = tombol rilis) · `ojokesusu/dramaku` (cermin, tidak merilis). Nama pendek adalah setelan lokal tiap komputer, bukan fakta bersama. Catatan "remote `dramaku` sudah tidak ada" di bawah juga hanya berlaku di komputer rekan — **di komputer owner ketiga remote (`origin`, `dramaku`, `official`) masih terpasang**, dan `official` (`projectraden/backup-dramaapp`) memulangkan `Repository not found` saat fetch.
 

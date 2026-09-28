@@ -1085,16 +1085,27 @@ export const PLAYLY_PUBLIK_TTL_SECONDS = 300;
  * diklik lalu memberi layar gagal). Risikonya kini lebih kecil daripada dulu
  * karena `playly:cadangan` membuat situs tak lagi kosong saat Playly tersendat.
  *
- * ⚠️ BATAS ATAS YANG TIDAK BOLEH DILEWATI: sampul dari Playly BERTANDA TANGAN
- * dan mati setelah 6 jam (`X-Amz-Expires=21600`, diukur di produksi
- * 2026-09-26). Menyimpannya melebihi itu berarti menyajikan alamat yang sudah
- * mati. 7200 detik menyisakan jarak aman 4 jam; penjaganya
- * tests/playly-cadangan.test.ts, yang MERAH kalau nilainya mendekati batas.
+ * ⚠️ BATAS ATAS 6 JAM — PREMISNYA SUDAH BERUBAH, penjaganya SENGAJA DIPERTAHANKAN.
+ * Catatan 2026-09-26 menetapkan plafon ini karena sampul Playly saat itu berupa
+ * alamat R2 BERTANDA TANGAN yang mati setelah 6 jam (`X-Amz-Expires=21600`);
+ * menyimpannya lebih lama berarti menyajikan alamat mati. Diukur ulang dari HTML
+ * produksi /film 2026-09-28: Playly kini mengirim alamat STABIL miliknya sendiri
+ * (`/api/thumb?k=thumbs/<id>-<hash>.<ext>`) yang membalas 302 ke R2 dengan tanda
+ * tangan dibuat ULANG tiap permintaan — 16 sampul bentuk stabil, NOL bentuk
+ * bertanda tangan, NOL `X-Amz-Expires`. Jadi plafon itu tidak lagi mengikat.
+ * Penjaganya (tests/playly-cadangan.test.ts, MERAH kalau nilainya mendekati
+ * 21600) tetap dibiarkan: bentuk alamat itu milik Playly, bisa mereka balikkan
+ * kapan saja tanpa memberi tahu kita, dan penjaga ini murah.
  *
- * ❓ BELUM TERUKUR (Playly mati saat ini): apakah jalur katalog-publik
- * sebenarnya SUDAH mengirim sampul di daftarnya. Kalau ya, detail tak perlu
- * dipanggil untuk video yang sampulnya sudah ada — penghematan tambahan yang
- * bisa diambil cuma-cuma. Periksa ini begitu Playly hidup lagi.
+ * ✅ TERJAWAB 2026-09-28 — TIDAK ADA HEMAT GRATIS DI SINI, jangan diselidiki ulang.
+ * Pertanyaan lamanya: apakah jalur katalog-publik sudah mengirim sampul di
+ * daftarnya, sehingga detail tak perlu dipanggil. Dijawab dari panel admin
+ * (/admin/videos/playly, 46 dari 49 video tampil): kotak biru "katalog publik"
+ * TIDAK muncul, artinya kita berjalan di jalur MITRA — dan jalur itu memang tak
+ * mengirim sampul (diperiksa ke Playly 2026-08-26, lihat fetchPlaylyDetailPublik).
+ * Alasan KEDUA yang lebih kuat: panggilan detail bukan cuma untuk sampul, ia juga
+ * satu-satunya sumber `punyaFile` yang menyaring video ber-upload putus (3 video
+ * saat diukur). Daftar yang membawa sampul pun TIDAK akan menghapus panggilan ini.
  */
 export const PLAYLY_DETAIL_TTL_SECONDS = 7200;
 

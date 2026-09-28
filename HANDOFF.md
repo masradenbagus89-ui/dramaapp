@@ -9,13 +9,43 @@
 >
 > **📦 Berkas ini sudah 2.980 baris / ±240 KB** dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-09-26.
+**Terakhir diisi:** 2026-09-28.
 
 ---
 
-# ⏳ STATUS — BACA INI DULU (2026-09-26)
+# ⏳ STATUS — BACA INI DULU (2026-09-28)
 
-## 1. Situs kehilangan 46 video — sebabnya DI LUAR DramaKu, sudah TERBUKTI
+## 0. 🟢 PLAYLY HIDUP LAGI & SITUS PULIH — seksi 1 di bawah SUDAH TIDAK BERLAKU (2026-09-28)
+
+**Diukur ulang dari situs sungguhan, bukan dibaca dari catatan.** Ketukan ke `playly-dashboard.vercel.app` membalas **200**; `X-Vercel-Error: DEPLOYMENT_DISABLED` **hilang**. Insiden HTTP 402 yang mengosongkan video sejak 2026-09-26 selesai dari pihak Playly, persis seperti yang diperkirakan — nol baris kode kita yang ikut campur.
+
+| Diperiksa di produksi | Hasil |
+|---|---|
+| `/film` | 200 · **46 kartu** (dihitung dari label durasi) · nol pesan gagal |
+| `/beranda` | 200 · **40 tautan** `/tonton/` · baris "Film Terbaru" ada · 6 tautan `/katalog` |
+| `/katalog` · `/api/dramas` | 200 · **35 kartu** · **35 judul** |
+| `/` · `/discover` · `/playly` | 200 · 200 · **308** |
+| Panel admin | **46 dari 49 video tampil**, 3 belum siap (upload putus), **nol** kotak error |
+
+**🪤 Jangan ulangi salah hitung saya:** `grep -c aspect-video` di `/film` memulangkan **47**, dan itu SALAH — satu di antaranya milik pemutar, bukan kartu. Penghitung yang benar adalah **label durasi** (`>1:31:46<`), yang memulangkan 46 dan cocok persis dengan panel admin. Penanda yang dipakai dua komponen berbeda bukan penghitung.
+
+**Posisi rilis: antrean KOSONG.** `main` lokal · produksi `masradenbagus89-ui/dramaapp` · cermin `ojokesusu/dramaku` ketiganya di **`1f89531`** (dibaca lewat `git ls-remote`, bukan dari `git log` lokal).
+
+**✅ PERTANYAAN HEMAT KUOTA DITUTUP — jalan buntu, jangan diselidiki ulang.** Pertanyaan yang digantung di seksi 2 & 3 ("apakah jalur katalog-publik sudah mengirim sampul di daftarnya") terjawab dari panel admin: **tidak ada kotak biru**, artinya kita berjalan di jalur **mitra**, dan jalur itu memang tak mengirim sampul (sudah diperiksa 2026-08-26). Alasan kedua yang lebih kuat: panggilan detail juga satu-satunya sumber status `punyaFile` yang menyaring 3 video ber-upload putus — **daftar yang membawa sampul pun tak akan menghapusnya**. Rinciannya di `lib/playly.ts` tepat di atas `PLAYLY_DETAIL_TTL_SECONDS`.
+
+**🔴 SATU PREMIS DI CATATAN LAMA SUDAH TIDAK BERLAKU — plafon "sampul mati 6 jam".** Diukur dari HTML produksi `/film` hari ini: **16** sampul bentuk **stabil** (`playly-dashboard…/api/thumb?k=`), **0** bentuk bertanda tangan (`r2.cloudflarestorage.com`), **0** `X-Amz-Expires`. Playly sekarang memakai alamat stabil miliknya sendiri yang membalas 302 ke R2 dengan tanda tangan dibuat ULANG tiap permintaan (`Cache-Control: max-age=300`) — pola yang sama dengan `/api/thumb/[id]` kita. **Akibatnya `PLAYLY_DETAIL_TTL_SECONDS` tidak lagi terkunci di bawah 21600.** Penjaga tesnya SENGAJA dibiarkan: bentuk alamat itu milik Playly dan bisa mereka balikkan tanpa memberi tahu.
+
+**💡 Hemat yang MASIH tersedia, belum dikerjakan (owner memilih "catat dulu" 2026-09-28):** menaikkan TTL 7200 → 21600 memangkas **~37 → ~20 panggilan/jam (~45%)**. Harganya tetap ada dan bukan yang tertulis dulu: video rusak baru hilang dari halaman penonton paling lambat 6 jam. **Panel admin & video BARU tidak terpengaruh** — panel dipaksa `revalidateSeconds = 0`, dan video yang belum pernah diambil selalu dijemput segar. Catatan: sesudah pemangkasan ini **pengambilan DAFTAR** (tiap 300 detik) yang jadi penyumbang terbesar, bukan detailnya lagi.
+
+**💰 Biaya tersembunyi yang baru ketahuan:** tiap kali panel admin dibuka, situs menembak Playly **±50 kali sekaligus** (1 daftar + 1 detail × 49 video), sebab panel sengaja selalu minta data segar supaya jujur. Bukan bug, tapi kalau dibuka berkali-kali sehari biayanya sebanding dengan seluruh lalu lintas penonton.
+
+**❓ Satu sisa yang BELUM terbukti:** video terbaru **Arcadian** (`1790342663839`) posternya `null`, jadi halaman tontonnya tanpa `og:image`/`thumbnailUrl` — 4 video lain yang diperiksa lengkap. `/api/thumb/1790342663839` sendiri **sehat (307)**. Dugaan (BELUM terbukti): detailnya terlanjur diambil saat Playly masih 402 lalu membeku 2 jam. Kalau benar ia pulih sendiri. **Cara memastikan: buka lagi halaman itu dan lihat apakah posternya muncul** — jangan diperbaiki sebelum terbukti rusak.
+
+---
+
+## 1. ~~Situs kehilangan 46 video~~ — SUDAH PULIH 2026-09-28, baca seksi 0 (arsip insiden)
+
+> 🟢 **SELESAI.** Gejala di bawah sudah TIDAK ada lagi sejak 2026-09-28; Playly membalas 200. Seksi ini ditahan sebagai catatan insiden, bukan status berjalan.
 
 `/beranda` tanpa baris "Film Terbaru", `/film` menulis "Daftar video sedang tidak bisa dimuat", tiap halaman tonton balas 404.
 

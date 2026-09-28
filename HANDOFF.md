@@ -13,11 +13,18 @@
 
 ---
 
-## 2026-09-28 — Pemutar Playly: susunan tombol disamakan dengan LK21
+## 2026-09-28 — Pemutar Playly: susunan tombol disamakan dengan LK21 (RILIS 39be664)
 
 **Pemicu:** tim Playly mengirim `PlaylyEmbedPlayer.tsx` + `CARA-PASANG.md`, mengusulkan
 halaman pemutar kembali memakai embed mereka. **Owner menolak embed**; yang diminta:
 susunan tombol pemutar DramaKu disamakan dengan pemutar pembanding (Playly, lalu LK21).
+
+**STATUS: SUDAH TAYANG.** Rilis `39be664`, dual push `c42811b..39be664` ke `origin` +
+`dramaku`. Gerbang pra-rilis lolos semua: `rm -rf .next` → `npm run build` sukses →
+`npx tsc --noEmit` exit 0 → `npm test` 81 berkas / 1182 tes hijau → nol berkas env ter-stage.
+**Smoke test di situs sungguhan (bukan localhost):** `/` `/beranda` `/film` `/tonton/<id>`
+`/discover` `/katalog` semua 200 · `/api/playly/video` 200 dengan `ok:true` · katalog
+`/film` tetap 47 video · penanda tombol baru terverifikasi ADA di bundle JS produksi.
 
 ### Susunan akhir baris kontrol
 
@@ -45,7 +52,7 @@ negatif, maju tak boleh melewati durasi) · di `tests/player-menu.test.ts` ditam
 anti-dobel** (merah kalau PiP/Terjemahan/Kecepatan muncul lagi di menu) + penjaga submenu
 Kualitas (kini satu-satunya submenu, jadi jalur buka→pilih→kirim hanya teruji di situ).
 
-**Rollback 1-baris:** `git revert <hash rilis>` lalu push ke `origin main` — perubahan ini
+**Rollback 1-baris:** `git revert 39be664` lalu push ke `origin main` — perubahan ini
 murni tampilan pemutar, tidak menyentuh DB, env, maupun endpoint.
 
 ### ⚠️ Embed Playly TIDAK BISA dipakai — terukur, bukan dugaan

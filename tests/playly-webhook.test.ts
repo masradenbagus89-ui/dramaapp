@@ -119,9 +119,13 @@ describe("embedUrlDariKode — hanya alamat player Playly yang boleh lolos", () 
     ).toBe("https://playly-dashboard.vercel.app/id/9/embed");
   });
 
-  it("alamat relatif dilengkapi dengan alamat dasar Playly", () => {
+  // Inilah yang membuat pindah-alamat 2026-09-29 tidak menyentuh jalur webhook:
+  // Playly mengirim potongan relatif ("/id/77/embed"), dan yang melengkapinya
+  // jadi alamat penuh adalah alamat dasar MILIK KITA. Ganti satu konstanta,
+  // seluruh video webhook ikut pindah — tanpa data apa pun disentuh.
+  it("alamat relatif dilengkapi dengan alamat dasar Playly yang sedang berlaku", () => {
     expect(embedUrlDariKode("/id/77/embed", CONFIG)).toBe(
-      "https://playly-dashboard.vercel.app/id/77/embed",
+      "https://playly-hosting-video.up.railway.app/id/77/embed",
     );
   });
 
@@ -430,7 +434,7 @@ describe("parseWebhookPayload — bentuk PIPIH (data video langsung di badan)", 
   it("alamat embed relatif dari Playly dilengkapi jadi alamat penuh", () => {
     const hasil = parseWebhookPayload(payloadPipih({ embedUrl: "/id/900/embed" }), CONFIG);
     expect(hasil.ok && hasil.payload.embedUrl).toBe(
-      "https://playly-dashboard.vercel.app/id/900/embed",
+      "https://playly-hosting-video.up.railway.app/id/900/embed",
     );
   });
 

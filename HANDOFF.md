@@ -9,7 +9,63 @@
 >
 > **📦 Berkas ini sudah 2.980 baris / ±240 KB** dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-09-28.
+**Terakhir diisi:** 2026-09-29.
+
+---
+
+## 2026-09-29 — Playly pindah alamat: Vercel → Railway
+
+**Pemicu:** rekan Playly (cantika) mengabarkan alamat Playly berpindah. API, kunci API,
+dan cara pakainya **tidak berubah sama sekali** — hanya alamatnya.
+Lama `https://playly-dashboard.vercel.app` → baru `https://playly-hosting-video.up.railway.app`.
+
+**STATUS: kode selesai + gerbang lolos, BELUM di-commit dan BELUM di-push** (menunggu
+owner). Rincian lengkap: `docs/lintasai/rencana/2026-09-29-pindah-alamat-playly.md`.
+
+**Yang diubah — 4 berkas, inti perubahannya 2 konstanta di `lib/playly.ts`:**
+`DEFAULT_PLAYLY_API_URL` ke alamat Railway, dan `DEFAULT_PLAYLY_EMBED_HOSTS` memuat
+**kedua** host (bukan tukar-ganti). Sisanya tes + dokumentasi.
+
+**Nol migrasi data, nol SQL untuk owner — dan ini DIHITUNG, bukan dikira.** Pertanyaan
+rekan "apakah kalian menyimpan `embedUrlFull` ke database?" dijawab dengan membaca isi
+`app_data` produksi: `playly:embeds` dan `playly:webhook` **belum pernah ada isinya**;
+satu-satunya yang menyimpan alamat adalah `playly:cadangan` (48 video, 93 alamat lama),
+dan dokumen itu **ditulis ulang tiap pengambilan berhasil** sehingga pulih sendiri.
+
+**Host lama SENGAJA dipertahankan di daftar izin `<iframe>`.** Dua alasan, dua-duanya
+rusak senyap kalau dilanggar: (a) salinan darurat 48 video masih memakainya; (b) **sampul
+video lama masih beralamat lama walau diminta lewat alamat BARU** — itu data dari Playly,
+bukan simpanan kita. Di `/film` produksi, 90 dari 138 kemunculan alamat lama adalah sampul.
+
+**🔑 ENV VERCEL TIDAK BISA DISUNTING SIAPA PUN — jadi ditambal dari kode.** Owner
+menyatakan tak punya akses ke panel Vercel, dan sesi AI juga tidak (nol kredensial; login
+Vercel butuh browser). Ini **bukan risiko hipotetis**: bagian "Video terbaru" tampil di
+`/discover` produksi, dan itu hanya mungkin kalau `DASHBOARD_API_URL` terisi
+(`app/discover/page.tsx:41`) — nilainya yang tercatat dipasang adalah alamat **lama**
+(`HANDOFF.md:3967`). Env selalu menang atas kode, jadi mengganti konstanta saja tidak
+menolong jalur itu.
+
+Penambalnya: **`lib/playly-alamat.ts`** (berkas baru, fungsi murni, nol import) memegang
+alamat aktif + daftar alamat pensiun; `pindahkanAlamatPlaylyPensiun()` menukar **host**
+saja — jalur/query dipertahankan, karena `DASHBOARD_API_URL` menunjuk endpoint
+`/api/videos`, bukan akar. Dipasang di `readPlaylyConfig` + `readDashboardConfig`.
+**Batas yang disengaja: ia MENAMBAL, bukan memaksakan** — alamat env yang bukan alamat
+pensiun tetap dihormati apa adanya. Begitu panel hosting bisa disunting lagi, bereskan
+env-nya dan berkas ini boleh disederhanakan.
+
+**🔴 SATU HAL YANG MASIH BUTUH MANUSIA:** kabari rekan Playly soal **sampul** (temuan §4
+di berkas rencana) — hanya mereka yang bisa memperbaikinya, dan mematikan alamat lama
+sebelum itu = **90 poster jadi kotak kosong** walau videonya tetap jalan.
+
+**Belum bisa diverifikasi dari sini (jujur):** dokumentasi baru Playly menulis `imdbId`
+atau `title` sebagai "salah satu wajib" di `/api/videos`, sedangkan kode kita memanggil
+tanpa keduanya (terbukti jalan 2026-09-14: 42 video). Kunci API-nya terenkripsi di
+database produksi dan `PLAYLY_ENCRYPTION_KEY` tidak ada di mesin lokal → buktikan sesudah
+rilis lewat `/admin/videos/playly`. Kalaupun berubah, video tidak hilang total: jalur
+katalog + salinan darurat menahannya.
+
+**Bukti gerbang pra-rilis:** `rm -rf .next` → `npm run build` sukses → `npx tsc --noEmit`
+exit 0 → `npm test` **82 berkas / 1193 tes hijau** → nol berkas env/kunci ter-stage. Uji-balik penjaga: melumpuhkan penambal alamat → **5 merah**; melepas sambungannya dari jalur dashboard → **1 merah**.
 
 ---
 

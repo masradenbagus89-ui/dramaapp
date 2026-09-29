@@ -125,11 +125,15 @@ describe("parseAllowedHosts & readDashboardConfig", () => {
     expect(parseAllowedHosts("https://A.co/x, b.co")).toEqual(["a.co", "b.co"]);
   });
 
-  it("garis miring di ujung alamat API dipotong", () => {
+  // Alamat contohnya sengaja BUKAN alamat Playly: sejak 2026-09-29 alamat Playly
+  // yang pensiun ikut ditukar host-nya (lib/playly-alamat.ts), dan itu akan
+  // mengaburkan apa yang sebenarnya diuji di sini — perapian spasi & garis
+  // miring. Penukaran hostnya punya tes sendiri di tests/playly-alamat.test.ts.
+  it("spasi dan garis miring di ujung alamat API dirapikan", () => {
     const cfg = readDashboardConfig({
-      DASHBOARD_API_URL: " https://playly-dashboard.vercel.app/api/videos/ ",
+      DASHBOARD_API_URL: " https://dashboard-lain.example.com/api/videos/ ",
     });
-    expect(cfg.apiUrl).toBe("https://playly-dashboard.vercel.app/api/videos");
+    expect(cfg.apiUrl).toBe("https://dashboard-lain.example.com/api/videos");
   });
 
   it("env kosong -> apiUrl kosong (nanti dibalas 503 oleh route)", () => {

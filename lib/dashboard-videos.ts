@@ -16,6 +16,7 @@
 // beberapa nama yang lazim dicoba satu per satu. Kalau nanti berbeda, cukup
 // tambahkan namanya di daftar konstanta di bawah.
 // -------------------------------------------------------------------------
+import { pindahkanAlamatPlaylyPensiun } from "./playly-alamat";
 
 /** Bentuk standar yang dipakai WebMovie, apa pun bentuk JSON dashboard. */
 export type DashboardVideo = {
@@ -219,7 +220,14 @@ export function readDashboardConfig(
   env: Record<string, string | undefined> = process.env,
 ): DashboardConfig {
   return {
-    apiUrl: (env.DASHBOARD_API_URL ?? "").trim().replace(/\/+$/, ""),
+    // DASHBOARD_API_URL di Vercel masih berisi alamat Playly yang LAMA, dan tak
+    // seorang pun di tim ini bisa menyuntingnya. Penukaran di bawah membuat
+    // jalur "Video terbaru" ikut pindah tanpa menyentuh panel hosting —
+    // alasan lengkapnya di lib/playly-alamat.ts. Alamat selain yang pensiun
+    // lewat tanpa diubah, jadi setelan dashboard lain tidak ikut terpengaruh.
+    apiUrl: pindahkanAlamatPlaylyPensiun(env.DASHBOARD_API_URL ?? "")
+      .trim()
+      .replace(/\/+$/, ""),
     apiKey: (env.DASHBOARD_API_KEY ?? "").trim(),
     keyHeader: (env.DASHBOARD_API_KEY_HEADER ?? "").trim(),
     allowedHosts: parseAllowedHosts(env.DASHBOARD_VIDEO_HOSTS),

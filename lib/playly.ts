@@ -28,18 +28,50 @@ import {
   clearPlaylyKeyRecord,
   type PlaylyKeyRecord,
 } from "./store";
+import { PLAYLY_BASE_URL, pindahkanAlamatPlaylyPensiun } from "./playly-alamat";
 
 /** Awalan wajib kunci Playly. Kunci contoh: plyk_a1b2c3d4e5f6json */
 export const PLAYLY_KEY_PREFIX = "plyk_";
 
-/** Alamat dasar Playly kalau env tidak diisi (partner yang sudah disepakati). */
-export const DEFAULT_PLAYLY_API_URL = "https://playly-dashboard.vercel.app";
+/**
+ * Alamat dasar Playly kalau env tidak diisi (partner yang sudah disepakati).
+ *
+ * PINDAH 2026-09-29: Playly memindahkan layanannya dari Vercel ke Railway.
+ * API, kunci, dan cara pakainya TIDAK berubah sama sekali — hanya alamatnya.
+ * Diverifikasi hari itu juga, bukan dari kabar: alamat baru membalas 200,
+ * /api/videos membalas 401 missing_key (artinya endpoint-nya memang ada), dan
+ * /api/public-video?id=<id> untuk id yang sama memulangkan video yang sama
+ * persis dari kedua alamat — jadi keduanya melayani satu database.
+ */
+export const DEFAULT_PLAYLY_API_URL = PLAYLY_BASE_URL;
 
 /** Nama header yang DIPERIKSA Playly. Playly mengabaikan "Authorization: Bearer". */
 export const PLAYLY_KEY_HEADER = "X-Playly-Key";
 
-/** Domain player yang boleh dipasang di <iframe> tanpa perlu setelan tambahan. */
-export const DEFAULT_PLAYLY_EMBED_HOSTS = ["playly-dashboard.vercel.app"];
+/**
+ * Domain player yang boleh dipasang di <iframe> tanpa perlu setelan tambahan.
+ *
+ * KEDUANYA sengaja dipertahankan selama masa pindah, dan ini BUKAN kelebihan
+ * longgar yang lupa dibersihkan:
+ *   1. Alamat lama MASIH HIDUP sampai Playly mematikannya (dikonfirmasi rekan
+ *      Playly 2026-09-29 + diukur: membalas 200 hari itu). Kalau host lama
+ *      dibuang sekarang, video yang alamatnya sudah terlanjur tersimpan —
+ *      salinan darurat `playly:cadangan`, 48 video — langsung ditolak pagar
+ *      ini dan hilang dari situs, padahal alamatnya masih bisa dibuka.
+ *   2. SAMPUL video lama masih beralamat lama walau diminta lewat alamat baru
+ *      (diukur 2026-09-29: /api/public-video di Railway memulangkan
+ *      "thumb": "https://playly-dashboard.vercel.app/api/thumb?k=..."). Itu
+ *      data dari Playly, bukan simpanan kita — hanya mereka yang bisa
+ *      mengubahnya.
+ *
+ * Ditulis LENGKAP sampai subdomain, bukan "up.railway.app": pencocokannya
+ * memakai akhiran (`hostAllowed`), jadi menulis induknya saja akan
+ * meloloskan SEMUA aplikasi Railway milik siapa pun ke dalam <iframe> kita.
+ */
+export const DEFAULT_PLAYLY_EMBED_HOSTS = [
+  "playly-hosting-video.up.railway.app",
+  "playly-dashboard.vercel.app",
+];
 
 /** Pola alamat pemutar Playly. Terverifikasi dari katalog asli 2026-08-25. */
 export const DEFAULT_PLAYLY_EMBED_PATH = "/id/{id}/embed";
@@ -669,7 +701,13 @@ export type PlaylyConfig = {
 export function readPlaylyConfig(
   env: Record<string, string | undefined> = process.env,
 ): PlaylyConfig {
-  const baseUrl = (env.PLAYLY_API_URL?.trim() || DEFAULT_PLAYLY_API_URL).replace(/\/+$/, "");
+  // `pindahkanAlamatPlaylyPensiun` ada di sini karena env MENANG atas bawaan di
+  // kode: kalau PLAYLY_API_URL di Vercel masih berisi alamat Playly yang sudah
+  // pensiun, mengganti konstanta di atas tidak akan menolong apa pun. Nilai env
+  // selain alamat pensiun tetap dihormati apa adanya.
+  const baseUrl = pindahkanAlamatPlaylyPensiun(
+    env.PLAYLY_API_URL?.trim() || DEFAULT_PLAYLY_API_URL,
+  ).replace(/\/+$/, "");
   const dariEnv = parseAllowedHosts(env.PLAYLY_EMBED_HOSTS);
   // Domain Playly resmi selalu ikut diizinkan; env hanya MENAMBAH (mis. kalau
   // Playly memakai domain CDN lain untuk playernya).

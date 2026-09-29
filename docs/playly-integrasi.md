@@ -114,10 +114,15 @@ didaftarkan di `.gitignore`.
 3. **Alamat player diambil ulang dari Playly**, bukan dari browser admin. Saat
    menyimpan kaitan, browser hanya mengirim `videoId` + `dramaId`; alamat embed,
    judul, durasi, dan kreator diambil server langsung dari Playly.
-4. **Pagar domain.** Hanya `playly-dashboard.vercel.app` (dan subdomainnya) yang
-   boleh masuk `<iframe>`, dan wajib `https`. Domain lain dibuang beserta
-   alasannya. Kalau Playly memakai domain lain untuk playernya, tambahkan di
-   `PLAYLY_EMBED_HOSTS` — daftar itu **menambah**, tidak menghapus domain resmi.
+4. **Pagar domain.** Hanya `playly-hosting-video.up.railway.app` (alamat baru)
+   dan `playly-dashboard.vercel.app` (alamat lama, masih hidup selama masa
+   pindah) — berikut subdomainnya — yang boleh masuk `<iframe>`, dan wajib
+   `https`. Domain lain dibuang beserta alasannya. Kalau Playly memakai domain
+   lain untuk playernya, tambahkan di `PLAYLY_EMBED_HOSTS` — daftar itu
+   **menambah**, tidak menghapus domain resmi.
+   ⚠️ Tulis host **lengkap sampai subdomain**. Pencocokannya memakai akhiran,
+   jadi mendaftarkan `up.railway.app` saja akan meloloskan aplikasi Railway
+   milik siapa pun ke dalam `<iframe>` kita.
 
 Ditambah pagar yang sudah dipakai endpoint lain di project ini: sesi admin
 bertanda-tangan (cookie HttpOnly), penolakan permintaan lintas-domain (anti-CSRF),
@@ -128,7 +133,7 @@ dan pembatas laju per-IP.
 | Nama | Wajib? | Kalau kosong |
 |---|---|---|
 | `PLAYLY_ENCRYPTION_KEY` | **ya** (kalau fitur dipakai) | halaman setelan menolak menyimpan kunci, dengan pesan + perintah pembuatnya |
-| `PLAYLY_API_URL` | tidak | pakai `https://playly-dashboard.vercel.app` |
+| `PLAYLY_API_URL` | tidak | pakai `https://playly-hosting-video.up.railway.app` (alamat baru sejak 2026-09-29; sebelumnya `playly-dashboard.vercel.app`). Env ini MENANG atas bawaan di kode — **kecuali** kalau isinya alamat Playly yang sudah pensiun, yang otomatis ditukar ke alamat baru oleh `lib/playly-alamat.ts` (jalur, query, dan tanda pagarnya dipertahankan). Alasan penambalan itu ada di kepala berkas tersebut |
 | `PLAYLY_API_KEY` | tidak | tidak apa-apa; ini hanya jalan pintas. Kunci di database selalu menang |
 | `PLAYLY_EMBED_HOSTS` | tidak | hanya domain Playly resmi yang diizinkan |
 | `PLAYLY_EMBED_PATH` | tidak | pola `/embed/{id}` |

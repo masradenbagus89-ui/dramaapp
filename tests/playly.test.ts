@@ -346,9 +346,34 @@ describe("normalizePlaylyVideos — terjemahkan balasan Playly", () => {
 describe("readPlaylyConfig — setelan dari env", () => {
   it("tanpa env apa pun, pakai alamat Playly bawaan", () => {
     const c = readPlaylyConfig({});
-    expect(c.baseUrl).toBe("https://playly-dashboard.vercel.app");
-    expect(c.videosUrl).toBe("https://playly-dashboard.vercel.app/api/videos");
-    expect(c.allowedHosts).toContain("playly-dashboard.vercel.app");
+    expect(c.baseUrl).toBe("https://playly-hosting-video.up.railway.app");
+    expect(c.videosUrl).toBe(
+      "https://playly-hosting-video.up.railway.app/api/videos",
+    );
+    expect(c.allowedHosts).toContain("playly-hosting-video.up.railway.app");
+  });
+
+  // PENJAGA PINDAH ALAMAT (2026-09-29). Ketiganya menahan kemunduran yang
+  // masing-masing rusak SENYAP — tak ada error, cuma video/sampul yang hilang.
+  it("domain Playly LAMA tetap diterima selama masa pindah", () => {
+    // Alamat lama masih hidup dan masih dipakai sampul video lama. Menghapusnya
+    // dari daftar = video tersimpan & sampul lama ditolak pagar <iframe>.
+    expect(readPlaylyConfig({}).allowedHosts).toContain(
+      "playly-dashboard.vercel.app",
+    );
+  });
+
+  it("aplikasi Railway milik orang lain TIDAK ikut lolos", () => {
+    // Pencocokan host memakai akhiran. Kalau yang didaftarkan "up.railway.app",
+    // situs Railway siapa pun bisa disisipkan ke <iframe> kita.
+    const c = readPlaylyConfig({});
+    expect(isAllowedPlaylyEmbedUrl("https://situs-lain.up.railway.app/x", c.allowedHosts)).toBe(false);
+    expect(
+      isAllowedPlaylyEmbedUrl(
+        "https://playly-hosting-video.up.railway.app/id/1/embed",
+        c.allowedHosts,
+      ),
+    ).toBe(true);
   });
 
   it("PLAYLY_API_URL dipakai, garis miring di ujung dirapikan", () => {
@@ -501,7 +526,7 @@ describe("normalizeThumbnail — sampul boleh data URI, tapi bukan SVG", () => {
 describe("readPlaylyConfig — katalog publik & pola bawaan", () => {
   it("alamat katalog publik ikut disusun dari alamat dasar", () => {
     expect(readPlaylyConfig({}).catalogUrl).toBe(
-      "https://playly-dashboard.vercel.app/api/catalog",
+      "https://playly-hosting-video.up.railway.app/api/catalog",
     );
   });
 

@@ -67,6 +67,33 @@ katalog + salinan darurat menahannya.
 **Bukti gerbang pra-rilis:** `rm -rf .next` → `npm run build` sukses → `npx tsc --noEmit`
 exit 0 → `npm test` **82 berkas / 1193 tes hijau** → nol berkas env/kunci ter-stage. Uji-balik penjaga: melumpuhkan penambal alamat → **5 merah**; melepas sambungannya dari jalur dashboard → **1 merah**.
 
+**✅ TAYANG & TERVERIFIKASI — rilis `60b75d1`, dual push `1733bb6..60b75d1` ke `origin` +
+`dramaku` (selisih NOL).** Diukur dari situs sungguhan ±4 menit sesudah push, bukan dibaca
+dari catatan:
+
+| Halaman | Pemutar (`/id/<id>/embed`) | Sampul (`/api/thumb?k=`) |
+|---|---|---|
+| `/film` (200) | **49 — semuanya alamat BARU** | 90 masih alamat lama |
+| `/discover` (200) | **49 — semuanya alamat BARU** | 45 masih alamat lama |
+
+**Nol pemutar tersisa di alamat lama.** Sampul yang tertinggal itu **data dari Playly**,
+bukan simpanan kita — lihat temuan §4 di berkas rencana; hanya mereka yang bisa
+memperbaikinya.
+
+**Penambal env TERBUKTI BEKERJA di produksi:** `/api/videos` (jalur yang memakai
+`DASHBOARD_API_URL`, env berisi alamat lama yang tak bisa disunting siapa pun) membalas
+`{"ok":true,"count":0,"videos":[],"skipped":20}` — **`ok:true` + 20 item diterima**
+membuktikan alamat & kunci tersambung; alamat yang rusak akan membalas 502/503.
+
+**⚠️ Yang ikut ketahuan, dan ini KONDISI LAMA — bukan kemunduran rilis ini:** ke-20 item
+itu semuanya dibuang karena jalur `lib/dashboard-videos.ts` mewajibkan `videoUrl` (alamat
+berkas `.mp4` mentah), sedangkan dokumentasi Playly menyatakan `/api/videos` **sengaja
+tidak mengirim** `videoUrl` — "yang dijual Playly adalah pemutarnya, bukan berkasnya".
+Buktinya bukan dugaan: sebelum rilis `/discover` menunjukkan **93** alamat lama = **45
+sampul + 48 pemutar**, jadi jalur dashboard **sudah nol video sebelum rilis ini**.
+Akibatnya bagian **"Video terbaru" di `/discover` menampilkan judul tapi kosong isinya**.
+Belum disentuh — menunggu keputusan owner (lihat tawaran di akhir sesi).
+
 ---
 
 ## 2026-09-28 — Pemutar Playly: susunan tombol disamakan dengan LK21 (RILIS 39be664)

@@ -1,5 +1,14 @@
 # Balasan ke tim Playly — usulan embed di halaman pemutar
 
+> ⚠️ **DIGANTIKAN — JANGAN KIRIM YANG INI.** Draf ini tidak pernah dikirim. Isinya sudah digabung,
+> diperbarui, dan diukur ulang ke dalam **`2026-10-01-surat-ke-playly.md`** (siap kirim). Berkas ini
+> disimpan hanya sebagai riwayat — supaya terlihat apa yang sudah ditanyakan sejak kapan.
+>
+> Yang berubah di versi baru: hasil uji embed **diukur ulang di alamat Railway** (draf ini menguji
+> alamat Vercel yang sudah pensiun), ditambah temuan 1 Oktober bahwa daftar video dashboard **tidak
+> memuat alamat berkas** sehingga 20 dari 20 video kami tolak — itu kini jadi pertanyaan nomor satu,
+> karena tidak tergantung urusan embed sama sekali.
+>
 > Draf 2026-09-28. Status: BELUM dikirim. Nol kode DramaKu diubah.
 > Konteks: Playly mengusulkan halaman pemutar kembali memakai embed mereka.
 > Keputusan owner: tanya balik dulu sebelum menyentuh kode.

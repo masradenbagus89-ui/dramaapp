@@ -65,8 +65,15 @@ Gerbang §6 urutan benar: `npm run build` sukses → `npx tsc --noEmit` exit 0 �
 **⚠️ Baseline tes diukur TERPISAH, jangan pakai selisih antar-run.** Run pertama melaporkan
 83 berkas/1201 tes; run bersih 84/1210; baseline sebenarnya **83/1199**, diukur dengan
 **menyingkirkan** berkas tes sendiri lalu menjalankan `npm test` penuh. Selisihnya persis +1 berkas
-/+11 tes milik sendiri → **nol tes lama yang rusak**. Angka 82/1193 di catatan rilis sebelumnya sudah
-basi terhadap repo hari ini.
+/+11 tes milik sendiri → **nol tes lama yang rusak**.
+
+**Kenapa angkanya bergerak di tengah sesi — penting untuk sesi berikutnya.** SESI LAIN bekerja di
+folder yang sama hari ini dan men-commit `9a868ca` (`tests/pemutar-panggung.test.ts`, +6 tes) selagi
+sesi ini berjalan. Jadi rantainya: **82/1193** (rilis `585cfaa`) → **83/1199** (sesudah `9a868ca`) →
+**84/1210** (sesudah commit ini). Angka "1210 tes" yang tercatat di `antrean-deploy.md` sebagai bukti
+rilis `9a868ca` **sudah termasuk 11 tes milik commit ini** — sesi itu jujur menandainya sendiri.
+**Aturan: kalau angka tes melompat tanpa sebab yang kamu kenali, cek `git log` dulu — bisa jadi ada
+sesi lain di komputer yang sama, bukan tes yang beranak sendiri.**
 
 **🪤 Tiga jebakan alat yang kambuh hari ini:** (1) **`npm run build` gagal ACAK selagi database
 bermasalah** — `worker exited with code: 4294967295`, lalu percobaan kedua atas kode yang **sama

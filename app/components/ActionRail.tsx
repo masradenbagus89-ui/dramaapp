@@ -105,10 +105,10 @@ export default function ActionRail({
 
   return (
     <>
-      <div className="pointer-events-auto absolute bottom-32 right-2 z-20 flex flex-col items-center gap-5">
+      <div className="pointer-events-auto absolute bottom-32 right-2 z-20 flex flex-col items-center gap-4">
         <Link
           href={`/drama/${dramaId}`}
-          className="h-11 w-11 overflow-hidden rounded-full border-2 border-amber-400/80 bg-zinc-800 shadow-lg ring-2 ring-black/20 transition-transform hover:scale-105"
+          className="h-9 w-9 overflow-hidden rounded-full border-2 border-amber-400/80 bg-zinc-800 shadow-lg ring-2 ring-black/20 transition-transform hover:scale-105"
           aria-label="Detail drama"
         >
           {posterImage ? (
@@ -116,7 +116,7 @@ export default function ActionRail({
             <img src={posterImage} alt={title} className="h-full w-full object-cover" />
           ) : (
             <span className="flex h-full w-full items-center justify-center text-amber-400">
-              <Clapperboard className="h-5 w-5" />
+              <Clapperboard className="h-4 w-4" />
             </span>
           )}
         </Link>
@@ -127,24 +127,24 @@ export default function ActionRail({
           active={liked}
           activeColor="text-rose-500"
         >
-          <Heart className="h-7 w-7" fill={liked ? "currentColor" : "none"} />
+          <Heart fill={liked ? "currentColor" : "none"} />
         </RailButton>
 
         <RailButton label="Komen" onClick={() => onComment?.()}>
-          <MessageCircle className="h-7 w-7" />
+          <MessageCircle />
         </RailButton>
 
         <RailButton label={saved ? "Tersimpan" : "Simpan"} onClick={onSave} active={saved} activeColor="text-amber-400">
-          <Bookmark className="h-7 w-7" fill={saved ? "currentColor" : "none"} />
+          <Bookmark fill={saved ? "currentColor" : "none"} />
         </RailButton>
 
         <RailButton label="Bagikan" onClick={onShare}>
-          <Share2 className="h-7 w-7" />
+          <Share2 />
         </RailButton>
 
         {providers.length > 0 && (
           <RailButton label="Unduh" onClick={() => setDownloadOpen(true)}>
-            <Download className="h-7 w-7" />
+            <Download />
           </RailButton>
         )}
       </div>
@@ -178,7 +178,7 @@ function RailButton({
   activeColor?: string;
 }) {
   return (
-    <div className="flex flex-col items-center gap-1">
+    <div className="flex flex-col items-center gap-0.5">
       <Button
         type="button"
         variant="ghost"
@@ -187,13 +187,18 @@ function RailButton({
         aria-pressed={active}
         aria-label={label}
         className={cn(
-          "h-12 w-12 rounded-full bg-black/30 backdrop-blur-sm transition-transform hover:scale-110 hover:bg-black/45 active:scale-95 [&_svg:not([class*='size-'])]:size-7",
-          active ? activeColor : "text-white drop-shadow-lg",
+          // Tanpa lingkaran gelap: ikon telanjang + bayangan, mengikuti acuan
+          // pemutar Playly. Kotak sentuhnya tetap 44px (ambang nyaman di HP)
+          // walau gambarnya 24px, jadi mengecilkan tampilan tidak membuat
+          // tombolnya jadi susah ditekan.
+          "h-11 w-11 rounded-full transition-transform hover:scale-110 hover:bg-white/10 active:scale-95 [&_svg:not([class*='size-'])]:size-6",
+          "drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]",
+          active ? activeColor : "text-white",
         )}
       >
         {children}
       </Button>
-      <span className="text-[11px] font-medium text-white drop-shadow-lg">{label}</span>
+      <span className="text-[10px] font-medium text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">{label}</span>
     </div>
   );
 }

@@ -9,7 +9,93 @@
 >
 > **📦 Berkas ini sudah 2.980 baris / ±240 KB** dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-09-29.
+**Terakhir diisi:** 2026-10-01.
+
+---
+
+## 2026-10-01 — Tombol pemutar feed masuk ke DALAM bingkai video
+
+**Pemicu:** owner mengirim 2 tangkapan layar. Di layar lebar, rail Suka/Komen/Simpan/
+Bagikan, baris kontrol bawah, dan tombol gerigi nongol di **pita hitam** di kiri-kanan
+video, bukan menempel di videonya — terlihat lepas. Target yang owner mau = gambar ke-2:
+semua tombol duduk di dalam bingkai video.
+
+**STATUS: kode selesai + gerbang lolos, BELUM di-commit dan BELUM di-push** (menunggu owner).
+
+**Sebabnya (terverifikasi, bukan dugaan):** di `app/components/FeedPlayer.tsx` wadah pemutar
+selebar **layar** (`h-[100dvh] w-full`) sementara videonya `object-contain`. Di layar lebar
+video 9:16 menyusut jadi kolom di tengah; semua overlay (`absolute right-2`, `inset-x-0
+bottom-0`) menempel ke tepi **layar**, jadi mendarat di pita hitam. Di HP tidak kelihatan
+karena di sana video memenuhi layar — makanya bug ini lolos lama.
+
+**Perbaikannya — 1 berkas, `app/components/FeedPlayer.tsx`:** ditambah **panggung**, yaitu div
+tak terlihat seukuran gambar video yang benar-benar tampil, dan semua overlay dipindah ke
+dalamnya. Ukurannya memakai rumus `object-contain` itu sendiri:
+`maxWidth: calc(100dvh * rasio)` + `maxHeight: calc(100vw / rasio)`, dipusatkan dengan
+`inset-0 m-auto`. Rasionya **dibaca dari videonya sendiri** (`videoWidth/videoHeight` saat
+`onLoadedMetadata`), bukan dipatok 9:16, supaya film berorientasi mendatar tidak ikut
+dipaksa masuk kolom sempit; 9/16 cuma nilai awal sebelum metadata terbaca.
+
+**Yang SENGAJA tidak dimasukkan ke panggung:** `EpisodePaywall`, `EpisodeSheet`,
+`CommentsDrawer`, `RewardedAdModal`, `DownloadModal`. Kelimanya panel/modal penuh, bukan
+tombol yang menempel di video — perilakunya dibiarkan persis seperti sebelumnya.
+
+**Jebakan yang perlu diingat kalau menambah overlay baru:** panggung dipasang
+`pointer-events-none` supaya ketuk play/pause dan ketuk-ganda (like) tetap tembus ke
+`<video>` di bawahnya. Artinya **tiap tombol baru di dalam panggung wajib menyalakan
+`pointer-events-auto` sendiri**, kalau tidak ia tampil tapi tidak bisa diklik — rusak
+senyap. `ActionRail` dan `PlayerControls` sudah punya; tombol Kembali dan tombol putar
+besar ditambahi pada perubahan ini.
+
+**Putaran ke-2 sesudah owner melihat hasilnya di localhost (2026-10-01).** Dua koreksi:
+
+1. **Tombol rail terlalu besar.** Akar masalahnya BUKAN ukuran ikonnya (24-28px, wajar),
+melainkan **lingkaran gelap** `bg-black/30 backdrop-blur-sm` yang membungkus tiap ikon —
+acuan yang owner kirim (pemutar Playly) memakai ikon telanjang tanpa lingkaran. Lingkaran
+dibuang, keterbacaan di adegan terang dijaga `drop-shadow`; ikon 28px → 24px, label 11px →
+10px, jarak `gap-5` → `gap-4`, avatar 44px → 36px. **Kotak sentuh tetap 44px** (`h-11 w-11`)
+walau gambarnya mengecil — itu ambang nyaman jempol di HP, jangan diturunkan.
+Sekalian: ukuran ikon dulu ditulis **dua kali** (di tiap pemanggil `className="h-7 w-7"` DAN
+dan di selector svg milik `RailButton`); sekarang satu tempat saja, di `RailButton`.
+
+2. **Tombol play besar diturunkan ke 58% tinggi video** (dulu tepat di tengah). Owner yang
+memilih ini lewat popup — tafsir "play" ambigu antara lingkaran tengah vs baris kontrol
+bawah, jadi ditanyakan dulu, tidak ditebak. Dipasang `absolute top-[58%]` (persen = ikut
+tinggi video) alih-alih padding, supaya proporsinya sama di layar mana pun; tombolnya
+sendiri tetap `inset-0` agar ketuk di mana saja tetap memutar. **Jangan lewat ~60%** —
+panel judul + kontrol memakan sekitar sepertiga bawah, lebih dari itu lingkarannya menimpa judul.
+
+**Cara menguji tampilan di lokal walau tunnel video mati** (dipakai 2026-10-01, berguna lagi
+nanti): tunnel PC backup sering mati, dan tanpa gambar video tata letak tak bisa dinilai —
+layarnya hitam semua. Jalan keluarnya tanpa menyentuh database maupun `.env`:
+`SUPABASE_URL= SUPABASE_SERVICE_ROLE_KEY= NEXT_PUBLIC_VIDEO_BASE_URL= npx next dev`,
+lalu taruh video uji di `public/videos/<id-drama>/<ep>.mp4` (`lib/video.ts:12` — base kosong =
+ambil dari folder publik). Video uji dibuat dengan ffmpeg yang sudah ada di komputer owner
+(`C:/Users/user18/AppData/Local/GoTeam/ffmpeg.exe`):
+`-f lavfi -i testsrc2=size=540x960:rate=15 -t 60 -c:v libx264 -pix_fmt yuv420p`.
+`public/videos/` sudah diblokir `.gitignore` baris 35, jadi tidak mungkin ikut ter-commit.
+Catatan: dengan Supabase dimatikan, katalog jatuh ke `data/dramas.json` — **judul produksi
+terbaru tidak ada di sana**, jadi pilih judul yang memang ada di cadangan itu.
+
+**⚠️ JANGAN tulis contoh nama kelas Tailwind utuh di berkas `.md` mana pun.** Terbukti
+2026-10-01: satu contoh selector yang memakai kurung siku ditulis di catatan ini, dan Tailwind v4
+— yang memindai **seluruh** berkas project, markdown termasuk — mengiranya nama kelas sungguhan
+lalu membuat selector CSS tak sah. Akibatnya `app/globals.css` gagal diproses dan **seluruh situs**
+tumbang ("Parsing CSS source code failed"), bukan cuma halaman pemutar. Tulis deskriptif saja,
+jangan sintaks utuhnya. Pelajaran kedua yang lebih penting: `npm test` dan `npx tsc --noEmit`
+**TIDAK** menangkap kerusakan ini — keduanya tidak menyentuh CSS. Hanya `npm run build` (atau dev
+server) yang melihatnya, jadi build wajib dijalankan ulang bahkan sesudah mengubah berkas yang
+"cuma" dokumentasi.
+
+**⚠️ `next-env.d.ts` berubah sendiri setiap `next dev` dijalankan** (`./.next/types/routes.d.ts`
+→ `./.next/dev/types/routes.d.ts`). Berkas itu ditulis mesin, **jangan di-commit**; ia pulih
+sendiri begitu `npm run build` jalan. Ini bersaudara dengan jebakan urutan build-sebelum-tsc
+di AGENTS.local.md §6.
+
+**Bukti (dijalankan, bukan dikira):** `npm run build` sukses · `npx tsc --noEmit` exit 0 ·
+`npm test` 82 berkas / 1193 tes hijau. Urutan build-dulu-baru-tsc sesuai AGENTS.local.md §6.
+**Belum ada bukti visual** — project ini tidak punya Playwright/Puppeteer, jadi tampilannya
+harus dilihat owner sendiri di layar lebar.
 
 ---
 

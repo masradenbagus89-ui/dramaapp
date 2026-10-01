@@ -28,6 +28,9 @@ const DOUBLE_TAP_MS = 280; // ambang ketuk-ganda (double tap) untuk like
 const CONTROLS_AUTO_HIDE_MS = 3500; // sembunyikan kontrol setelah diam beberapa detik
 const HEART_ANIM_MS = 700; // durasi animasi hati saat like
 const SAVE_PROGRESS_MS = 5000; // jangan tulis localStorage tiap frame timeupdate
+// Rasio bingkai video sebelum metadata aslinya terbaca. 9:16 = potret ala
+// Melolo/TikTok, bentuk mayoritas episode di sini.
+const DEFAULT_VIDEO_RATIO = 9 / 16;
 
 // Feed vertikal ala Melolo: tiap episode = 1 slide full-screen, geser ke atas =
 // episode berikutnya, autoplay saat slide terlihat, video habis = auto lanjut.
@@ -84,6 +87,9 @@ export default function FeedPlayer({
   // Episode yang sumbernya benar-benar gagal dimuat (mis. PC backup / tunnel
   // mati). Ditampilkan sebagai pesan + tombol Coba lagi, BUKAN layar hitam.
   const [failedEps, setFailedEps] = useState<Set<number>>(new Set());
+  // Rasio (lebar/tinggi) video episode aktif, dibaca dari berkasnya sendiri
+  // supaya panggung overlay berukuran persis sebesar gambar yang tampil.
+  const [videoRatio, setVideoRatio] = useState(DEFAULT_VIDEO_RATIO);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const pendingSeek = useRef<number | null>(null); // simpan posisi saat ganti resolusi
@@ -540,6 +546,11 @@ export default function FeedPlayer({
                     if (idx !== active) return;
                     const v = e.currentTarget;
                     setDur(v.duration || 0);
+                    // Ukuran asli video baru diketahui di sini — dipakai untuk
+                    // mengukur panggung overlay (lihat komentar panggung).
+                    if (v.videoWidth > 0 && v.videoHeight > 0) {
+                      setVideoRatio(v.videoWidth / v.videoHeight);
+                    }
                     v.playbackRate = speed;
                     v.volume = volume;
                     v.muted = muted;
@@ -615,82 +626,127 @@ export default function FeedPlayer({
         })}
       </div>
 
-      {/* Overlay tetap di atas slide aktif */}
-      <Link
-        href={`/drama/${dramaId}`}
-        className="absolute left-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-white"
-        aria-label="Kembali"
+      {/* PANGGUNG — kotak tak terlihat seukuran gambar video yang BENAR-BENAR
+          tampil. Video dirender object-contain, jadi di layar lebar video 9:16
+          menyusut jadi kolom di tengah dan sisanya pita hitam; overlay yang
+          menempel ke tepi LAYAR akan mendarat di pita hitam itu. Dibungkus di
+          sini, semua tombol menempel ke tepi VIDEO.
+          Rumusnya = aturan object-contain itu sendiri: lebar dibatasi
+          tinggi x rasio, tinggi dibatasi lebar / rasio — yang lebih kecil yang
+          mengikat. Di layar sempit (HP) tak ada yang mengikat, panggung = satu
+          layar penuh, jadi tampilan HP tidak berubah.
+          pointer-events-none supaya ketukan play/pause & ketuk-ganda like tetap
+          sampai ke <video> di bawahnya; tiap anak yang bisa diklik menyalakan
+          pointer-events-auto sendiri.
+          Paywall, sheet episode, drawer komentar & modal SENGAJA di luar
+          panggung: ketiganya panel penuh, bukan tombol yang menempel di video. */}
+      <div
+        className="pointer-events-none absolute inset-0 z-20 m-auto"
+        style={{
+          maxWidth: `calc(100dvh * ${videoRatio})`,
+          maxHeight: `calc(100vw / ${videoRatio})`,
+        }}
       >
-        <ChevronLeft className="h-5 w-5" />
-      </Link>
-
-      <ActionRail
-        dramaId={dramaId}
-        title={title}
-        posterImage={posterImage}
-        onComment={() => setCommentsOpen(true)}
-        providers={providers}
-      />
-
-      {/* Panel bawah: judul, episode, subtitle, kontrol — komponen sendiri
-          (PlayerControls). Semua data + aksi disuplai dari sini lewat prop. */}
-      <PlayerControls
-        title={title}
-        currentEp={active + 1}
-        episodes={episodes}
-        isMovie={isMovie}
-        cueText={cueText}
-        lockedActive={lockedActive}
-        controlsVisible={controlsVisible}
-        paused={paused}
-        curTime={curTime}
-        dur={dur}
-        seekBarRef={seekRef}
-        onSeekDown={onSeekDown}
-        onSeekMove={onSeekMove}
-        onSeekUp={onSeekUp}
-        onTogglePlay={togglePlay}
-        onOpenEpisodes={() => setEpisodesOpen(true)}
-        onPrev={goPrev}
-        onNext={goNext}
-        hasPrev={active > 0}
-        hasNext={active < episodes - 1}
-        volume={volume}
-        muted={muted}
-        onVolume={(n) => {
-          setVolume(n);
-          setMuted(n === 0);
-        }}
-        onToggleMute={() => setMuted((m) => !m)}
-        settings={{
-          open: settingsOpen,
-          speed,
-          resolution,
-          subtitles,
-          subLang,
-          isFullscreen,
-          onToggle: () => setSettingsOpen((v) => !v),
-          onSpeed: setSpeedTo,
-          onResolution: chooseRes,
-          onSubtitle: chooseSub,
-          onDownload,
-          onToggleFullscreen: toggleFullscreen,
-        }}
-      />
-
-      {paused && !lockedActive && (
-        <button
-          onClick={togglePlay}
-          className="absolute inset-0 z-10 flex items-center justify-center"
-          aria-label="Putar"
+        {/* Overlay tetap di atas slide aktif */}
+        <Link
+          href={`/drama/${dramaId}`}
+          className="pointer-events-auto absolute left-3 top-3 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-black/50 text-white"
+          aria-label="Kembali"
         >
-          <span className="flex h-16 w-16 items-center justify-center rounded-full bg-black/50">
-            <svg viewBox="0 0 24 24" className="h-8 w-8 fill-white">
-              <path d="M8 5v14l11-7z" />
+          <ChevronLeft className="h-5 w-5" />
+        </Link>
+
+        <ActionRail
+          dramaId={dramaId}
+          title={title}
+          posterImage={posterImage}
+          onComment={() => setCommentsOpen(true)}
+          providers={providers}
+        />
+
+        {/* Panel bawah: judul, episode, subtitle, kontrol — komponen sendiri
+            (PlayerControls). Semua data + aksi disuplai dari sini lewat prop. */}
+        <PlayerControls
+          title={title}
+          currentEp={active + 1}
+          episodes={episodes}
+          isMovie={isMovie}
+          cueText={cueText}
+          lockedActive={lockedActive}
+          controlsVisible={controlsVisible}
+          paused={paused}
+          curTime={curTime}
+          dur={dur}
+          seekBarRef={seekRef}
+          onSeekDown={onSeekDown}
+          onSeekMove={onSeekMove}
+          onSeekUp={onSeekUp}
+          onTogglePlay={togglePlay}
+          onOpenEpisodes={() => setEpisodesOpen(true)}
+          onPrev={goPrev}
+          onNext={goNext}
+          hasPrev={active > 0}
+          hasNext={active < episodes - 1}
+          volume={volume}
+          muted={muted}
+          onVolume={(n) => {
+            setVolume(n);
+            setMuted(n === 0);
+          }}
+          onToggleMute={() => setMuted((m) => !m)}
+          settings={{
+            open: settingsOpen,
+            speed,
+            resolution,
+            subtitles,
+            subLang,
+            isFullscreen,
+            onToggle: () => setSettingsOpen((v) => !v),
+            onSpeed: setSpeedTo,
+            onResolution: chooseRes,
+            onSubtitle: chooseSub,
+            onDownload,
+            onToggleFullscreen: toggleFullscreen,
+          }}
+        />
+
+        {paused && !lockedActive && (
+          <button
+            onClick={togglePlay}
+            className="pointer-events-auto absolute inset-0 z-10"
+            aria-label="Putar"
+          >
+            {/* Lingkaran play SENGAJA tidak di tengah persis (dulu begitu):
+                digeser ke 58% tinggi video atas permintaan owner. Dipasang
+                absolut dengan persen — bukan padding — supaya pergeserannya
+                ikut tinggi VIDEO, jadi proporsinya tetap sama di layar mana
+                pun. Tombolnya sendiri tetap inset-0 agar ketuk di mana saja
+                tetap memutar. Batas bawahnya: panel judul + kontrol memakan
+                sekitar sepertiga bagian bawah, jadi angka ini jangan dinaikkan
+                melewati ~60% kalau tak mau lingkarannya menimpa judul. */}
+            <span className="absolute left-1/2 top-[58%] flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-black/50">
+              <svg viewBox="0 0 24 24" className="h-8 w-8 fill-white">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+            </span>
+          </button>
+        )}
+
+        {heart && (
+          <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center">
+            <svg viewBox="0 0 24 24" className="h-28 w-28 animate-ping fill-rose-500/90">
+              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
             </svg>
-          </span>
-        </button>
-      )}
+          </div>
+        )}
+
+        {/* Petunjuk geser hanya masuk akal kalau memang ada episode berikutnya. */}
+        {!isMovie && active === 0 && !cueText && controlsVisible && (
+          <div className="pointer-events-none absolute bottom-60 left-1/2 z-10 -translate-x-1/2 text-center text-[11px] text-white/70">
+            Geser ke atas untuk episode berikutnya ↑
+          </div>
+        )}
+      </div>
 
       {/* Paywall: episode terkunci */}
       {lockedActive && (
@@ -728,21 +784,6 @@ export default function FeedPlayer({
         dramaId={dramaId}
         onClose={() => setCommentsOpen(false)}
       />
-
-      {heart && (
-        <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center">
-          <svg viewBox="0 0 24 24" className="h-28 w-28 animate-ping fill-rose-500/90">
-            <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
-          </svg>
-        </div>
-      )}
-
-      {/* Petunjuk geser hanya masuk akal kalau memang ada episode berikutnya. */}
-      {!isMovie && active === 0 && !cueText && controlsVisible && (
-        <div className="pointer-events-none absolute bottom-60 left-1/2 z-10 -translate-x-1/2 text-center text-[11px] text-white/70">
-          Geser ke atas untuk episode berikutnya ↑
-        </div>
-      )}
     </div>
   );
 }

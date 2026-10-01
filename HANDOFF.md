@@ -38,8 +38,21 @@ bisa basi"**. Berkas: `lib/katalog-status.ts` (fungsi murni) · `lib/dramas.ts` 
 · `app/api/admin/status-katalog/route.ts` · `app/components/admin/KatalogStatusCard.tsx` ·
 `AdminDashboard.tsx` (+1 kartu) · `tests/katalog-status.test.ts`. **Halaman publik NOL disentuh.**
 
-**STATUS: belum di-commit, belum di-push.** Rincian lengkap:
-`docs/lintasai/rencana/2026-10-01-penjaga-katalog-cadangan.md`.
+**STATUS: ✅ SUDAH DIRILIS 2026-10-01 sebagai `342d069` + `21271fe`** ke produksi
+`masradenbagus89-ui/dramaapp` + cermin `ojokesusu/dramaku` (dual push tuntas, fast-forward, ketiga
+tempat terbaca sama lewat `git ls-remote`: `21271fe6e5dab9269b38f4273d2fab60d6dc7629`).
+Rincian lengkap: `docs/lintasai/rencana/2026-10-01-penjaga-katalog-cadangan.md`.
+
+**✅ TERBUKTI TAYANG, bukan diasumsikan.** Penanda rilisnya `GET /api/admin/status-katalog`:
+**404 sebelum** (route belum ada) → **401 sesudah** (route ada, menolak non-admin). Penanda ini aman
+dipakai tanpa login dan unik untuk rilis ini. Smoke test: `/` `/beranda` `/film` `/katalog`
+`/discover` `/admin` semua **200** · `/api/dramas` `/api/likes` `/api/ads` semua **200** · `/film`
+tetap **46 video** nol pesan gagal · `/beranda` tetap **40** tautan `/tonton/` → **nol kemunduran**.
+
+**🔎 Bukti sampingan yang memperkuat diagnosa insiden di atas: `/katalog` kini menampilkan 39 judul,
+bukan 42.** Saat database mati ia menampilkan **42** (dari `data/dramas.json`); sekarang database
+hidup dan angkanya turun ke **39** — angka database yang sebenarnya. Jadi "angka yang NAIK = tanda
+sumbernya salah" bukan teori, sudah terukur dua arah.
 
 **🔴 JEBAKAN TERBESAR yang nyaris membuat fitur ini sia-sia — penjaga admin IKUT MATI bersama
 database.** `isAdminRequest` → `getAdmins()` → `sbDocGetOrSeed` (lib/store.ts:116) membaca database

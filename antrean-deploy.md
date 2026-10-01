@@ -4,9 +4,54 @@
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
 **Terakhir dicek:** 2026-10-01 (**komputer OWNER**) — **✅ ANTREAN KOSONG, DUAL PUSH TUNTAS.**
+`d2b30c9..21271fe` fast-forward ke **kedua** repo, nol paksaan. Ketiga tempat terbaca sama lewat
+`git ls-remote` (bukan `git log` lokal): **`21271fe6e5dab9269b38f4273d2fab60d6dc7629`**.
+Urutannya cermin dulu baru produksi, supaya masalah otentikasi ketahuan sebelum tombol rilis ditekan.
+
+**Apa yang dirilis (`342d069` + `21271fe`):** kartu **"Katalog drama — sumber data"** di Dashboard
+admin. Ia menjawab satu hal yang sebelumnya MUSTAHIL diketahui: judul yang dilihat penonton datang
+dari database, atau dari berkas cadangan di dalam aplikasi. Hijau "Dari database — N judul" vs
+**merah "Memakai cadangan — isinya bisa basi"**. Pemicunya insiden hari ini: database Supabase mati
+berjam-jam, `/film` kosong, tapi `/katalog` tetap tampil "sehat" dengan 42 judul dari cadangan
+berumur 20 hari — **nol pesan, nol tanda di layar**. Pengaman yang membuat itu terjadi
+(`getAllDramasCachedSafe`) **TIDAK diubah sebaris pun**; yang ditambal cuma kebisuannya.
+**Halaman publik nol disentuh — penonton tidak melihat apa pun yang baru.**
+
+**Gerbang §6 penuh, urutan benar (`build` sebelum `tsc`):** hapus `.next` → `npm run build`
+**sukses** → `npx tsc --noEmit` **exit 0** → `npm test` **84 berkas / 1210 tes hijau** → **nol**
+berkas env/kunci ter-stage (9 berkas didorong). Build dijalankan **ulang** sesudah menyentuh berkas
+`.md`, sesuai pelajaran Tailwind-memindai-markdown; CSS hasil build terbentuk normal (164 KB).
+
+**⚠️ Baseline tes: 83 berkas / 1199 tes**, diukur terpisah dengan MENYINGKIRKAN berkas tes sendiri
+lalu menjalankan `npm test` penuh. Selisihnya persis +1 berkas / +11 tes milik rilis ini → **nol tes
+lama yang rusak**. Rantai angka hari ini: 82/1193 (`585cfaa`) → 83/1199 (`9a868ca`, sesi lain) →
+84/1210 (rilis ini). **Angka "1210 tes" yang tercatat di bawah sebagai bukti `9a868ca` memang sudah
+termasuk 11 tes rilis ini** — sesi itu sudah menandainya sendiri, dan di sini dikonfirmasi.
+
+**Diuji di 4 cabang, dengan database sungguhan DAN diarahkan ke host mati** (bukan cuma jalur
+bahagia): admin sah + database hidup → **200** `status:"database", jumlahTampil:39` · admin sah +
+**database mati → 401 dalam 12,4 dtk, bukan 500** (terbukti di log server) · dua cabang tanpa sesi →
+jalur cadangan lewat `/api/dramas`. **Jebakan yang ditutup:** penjaga admin IKUT MATI bersama
+database (`isAdminRequest` → `getAdmins()` → `sbDocGetOrSeed`, lib/store.ts:116, membaca database
+tanpa penangkap → MELEMPAR, bukan memulangkan `false`). Ditutup dua lapis **tanpa melonggarkan
+keamanan**: tangkap-lalu-TOLAK (owasp A10 default-deny) + jalur cadangan lewat endpoint yang sudah
+publik. Owner memilih itu di atas usul melonggarkan cek admin.
+
+**Penanda verifikasi tayang:** `GET /api/admin/status-katalog` → **404 = belum tayang** (route belum
+ada) · **401 = sudah tayang** (route ada, menolak non-admin). Penanda ini aman dipakai tanpa login.
+
+**Rollback:** `git revert --no-edit 21271fe 342d069` + dual push. **Nol SQL, nol env baru** — halaman
+publik tidak disentuh, jadi tidak ada yang perlu dipulihkan di sisi penonton.
+
+**Sisa yang BELUM dikerjakan (layak ditawarkan terpisah):** `getAdmins()` yang melempar membuat
+**SELURUH** panel admin tak bisa dipakai justru saat ada gangguan. Menyentuh auth = titik risiko,
+bukan yang disetujui hari ini.
+
+---
+
+**Sebelumnya, 2026-10-01 — `585cfaa` + `9a868ca`:**
 `e192714..585cfaa` fast-forward ke **kedua** repo, nol paksaan: produksi **`masradenbagus89-ui/dramaapp`**
-dan cermin **`ojokesusu/dramaku`**. Urutannya cermin dulu baru produksi, supaya masalah otentikasi
-ketahuan sebelum tombol rilis ditekan.
+dan cermin **`ojokesusu/dramaku`**.
 
 **Apa yang dirilis (`585cfaa`):** tombol pemutar feed dipindah ke DALAM bingkai video. Di layar lebar
 video tegak menyusut jadi kolom di tengah, tapi rail Suka/Komen/Simpan/Bagikan, kontrol bawah, dan

@@ -20,7 +20,10 @@ Bagikan, baris kontrol bawah, dan tombol gerigi nongol di **pita hitam** di kiri
 video, bukan menempel di videonya — terlihat lepas. Target yang owner mau = gambar ke-2:
 semua tombol duduk di dalam bingkai video.
 
-**STATUS: kode selesai + gerbang lolos, BELUM di-commit dan BELUM di-push** (menunggu owner).
+**STATUS: ✅ SUDAH DIRILIS 2026-10-01 sebagai `585cfaa`** ke produksi
+`masradenbagus89-ui/dramaapp` + cermin `ojokesusu/dramaku` (dual push tuntas, fast-forward).
+Terbukti tayang lewat smoke test 6 halaman — rinciannya di `antrean-deploy.md`.
+Rollback: `git revert --no-edit 585cfaa` + dual push. Nol SQL, nol env baru.
 
 **Sebabnya (terverifikasi, bukan dugaan):** di `app/components/FeedPlayer.tsx` wadah pemutar
 selebar **layar** (`h-[100dvh] w-full`) sementara videonya `object-contain`. Di layar lebar

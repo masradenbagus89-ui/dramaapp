@@ -3,7 +3,43 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-09-28 (**komputer OWNER**) — **✅ ANTREAN KOSONG.** Ketiga tempat di **`1f895314505df8c31c994bee877e28e76c028f76`**, dibaca lewat `git ls-remote` (bukan `git log` lokal): `main` lokal · produksi **`masradenbagus89-ui/dramaapp`** · cermin **`ojokesusu/dramaku`**. Tak ada yang tertinggal belum terkirim.
+**Terakhir dicek:** 2026-10-01 (**komputer OWNER**) — **✅ ANTREAN KOSONG, DUAL PUSH TUNTAS.**
+`e192714..585cfaa` fast-forward ke **kedua** repo, nol paksaan: produksi **`masradenbagus89-ui/dramaapp`**
+dan cermin **`ojokesusu/dramaku`**. Urutannya cermin dulu baru produksi, supaya masalah otentikasi
+ketahuan sebelum tombol rilis ditekan.
+
+**Apa yang dirilis (`585cfaa`):** tombol pemutar feed dipindah ke DALAM bingkai video. Di layar lebar
+video tegak menyusut jadi kolom di tengah, tapi rail Suka/Komen/Simpan/Bagikan, kontrol bawah, dan
+tombol gerigi menempel ke tepi **layar** sehingga mendarat di pita hitam. Semua overlay kini dibungkus
+"panggung" seukuran gambar video yang benar-benar tampil, dan rasionya dibaca dari videonya sendiri
+supaya film mendatar tidak ikut dipaksa masuk kolom sempit. Dua koreksi lanjutan atas permintaan owner:
+lingkaran gelap pembungkus ikon rail dibuang (ikon 28px → 24px, kotak sentuh tetap 44px) dan tombol
+play besar turun ke 58% tinggi video. **Posisi di HP tidak berubah.**
+
+**Gerbang §6 penuh, urutan benar (`build` sebelum `tsc`):** hapus `.next` → `npm run build` **sukses** →
+`npx tsc --noEmit` **exit 0** → `npm test` **1193 tes / 82 berkas hijau** → **nol** berkas env/kunci
+ter-stage (3 berkas didorong: dua komponen + `HANDOFF.md`) → dual push → verifikasi tayang.
+
+**✅ TERBUKTI TAYANG**, bukan diasumsikan. Smoke test sesudah deploy: `/` · `/katalog` · `/film` ·
+`/api/dramas` · `/drama/<id>` · `/feed/<id>` semuanya **200**. Penanda versi baru yang dicek di HTML
+produksi: aturan lebar panggung `max-width:calc(100dvh * 0.5625)` **muncul**, pembungkus gelap ikon rail
+**0 kemunculan** (versi lama punya 1), keempat tombol rail lengkap. Sisa yang belum: **tampilannya belum
+dilihat mata manusia di layar lebar** — owner buka satu drama di situs produksi.
+
+**Rollback rilis ini:** `git revert --no-edit 585cfaa && git push origin main && git push dramaku main`.
+**Nol SQL, nol env baru** — murni tampilan, revert saja memulihkan sepenuhnya.
+
+> **🪤 Pelajaran mahal dari sesi ini: `npm test` + `npx tsc --noEmit` TIDAK menyentuh CSS sama sekali.**
+> Satu contoh nama kelas Tailwind yang ditulis utuh di dalam berkas `.md` membuat Tailwind v4 — yang
+> memindai **seluruh** berkas project, markdown termasuk — menghasilkan selector tak sah, `app/globals.css`
+> gagal diproses, dan **seluruh situs** tumbang. Tes hijau dan tipe bersih sepanjang itu terjadi. Hanya
+> `npm run build` (atau dev server) yang melihatnya. Dua aturan yang lahir: (a) jangan tulis sintaks nama
+> kelas utuh di dokumentasi, tulis deskriptif; (b) sesudah mengubah berkas apa pun — **termasuk yang
+> "cuma" dokumentasi** — jalankan `npm run build`, jangan berhenti di tes + tipe.
+
+---
+
+**Sebelumnya, 2026-09-28 (**komputer OWNER**) — **✅ ANTREAN KOSONG.** Ketiga tempat di **`1f895314505df8c31c994bee877e28e76c028f76`**, dibaca lewat `git ls-remote` (bukan `git log` lokal): `main` lokal · produksi **`masradenbagus89-ui/dramaapp`** · cermin **`ojokesusu/dramaku`**. Tak ada yang tertinggal belum terkirim.
 
 **⚠️ 17 commit tak pernah tercatat di berkas ini** — `625fe95..1f89531`, seluruhnya kerja 2026-09-26 dan seluruhnya **sudah tayang**. Berkas ini melompat dari 25 ke 28 September karena sesi 26 September memperbarui `HANDOFF.md` saja. Rincian sembilan rilis hari itu (navbar, halaman tonton per video, kolom Kategori, tombol FILTER, `/playly` → `/film` 308, penanda VideoObject + `/api/thumb/[id]`, `playly:cadangan` + pangkas kuota 24×, deret tab katalog, `/katalog` + kotak pembatas) ada di `HANDOFF.md` seksi 2b. **Aturan yang lahir: sentuh rilis → perbarui KEDUA berkas, bukan salah satu.**
 

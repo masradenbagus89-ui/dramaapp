@@ -13,6 +13,83 @@
 
 ---
 
+## 2026-10-01 — Database Supabase mati berjam-jam + penjaga "katalog diam-diam basi"
+
+**Pemicu:** owner minta memeriksa 3 berkas kiriman rekan Playly (CARA-PASANG.md,
+PlaylyEmbedPlayer.tsx, PEMUTAR-TEGAK.md). Saat menguji, ketahuan situs sedang rusak sebagian.
+
+**A. INSIDEN — database Supabase mati, lalu PULIH SENDIRI.** Nol baris kode kita yang ikut campur.
+Terukur: `rest/v1` **HTTP 522** konsisten 3× (±19,7 dtk), sementara `auth/v1/health` 401 dan
+`storage/v1/bucket` 400 di project yang **sama** tetap hidup → yang mati khusus databasenya, bukan
+seluruh Supabase. `/film` 0 video · `/beranda` 0 tautan `/tonton/` · `/api/dramas`+`/api/likes`+
+`/api/ads` serempak 500. Beberapa jam kemudian ketiganya 200 lagi, `/film` kembali **46 video**,
+`/beranda` **40 tautan**. Halaman tonton sempat 404 sebentar — itu halaman tersimpan (ISR 300 dtk)
+dari masa gangguan; permintaan pertama memicu penyegaran, permintaan kedua langsung 200.
+
+**🔴 Yang jauh lebih berbahaya daripada matinya: /katalog tampil "SEHAT" dengan 42 judul** padahal
+database tak terjangkau. `getAllDramasCachedSafe` (lib/dramas.ts:264) diam-diam jatuh ke
+`data/dramas.json`. Database sebenarnya berisi **39**, cadangan **42**, catatan 28 Sep mencatat
+**35** — angka yang **NAIK** justru tanda sumbernya salah, bukan tanda sehat. Cadangan terakhir
+disegarkan **11 September, 20 hari**. Nol pesan, nol tanda di layar.
+
+**B. PENJAGA DIBANGUN (owner menyetujui).** Kartu "Katalog drama — sumber data" di Dashboard admin,
+tepat di bawah kartu Playly: hijau "Dari database — N judul" vs **merah "Memakai cadangan — isinya
+bisa basi"**. Berkas: `lib/katalog-status.ts` (fungsi murni) · `lib/dramas.ts` (+`periksaKatalogHidup`)
+· `app/api/admin/status-katalog/route.ts` · `app/components/admin/KatalogStatusCard.tsx` ·
+`AdminDashboard.tsx` (+1 kartu) · `tests/katalog-status.test.ts`. **Halaman publik NOL disentuh.**
+
+**STATUS: belum di-commit, belum di-push.** Rincian lengkap:
+`docs/lintasai/rencana/2026-10-01-penjaga-katalog-cadangan.md`.
+
+**🔴 JEBAKAN TERBESAR yang nyaris membuat fitur ini sia-sia — penjaga admin IKUT MATI bersama
+database.** `isAdminRequest` → `getAdmins()` → `sbDocGetOrSeed` (lib/store.ts:116) membaca database
+**tanpa penangkap**, jadi ia **MELEMPAR** (bukan memulangkan `false`) tepat ketika database mati —
+satu-satunya saat kartu ini dibutuhkan — dan endpoint membalas **500 tanpa penjelasan**. Ditutup dua
+lapis **tanpa melonggarkan keamanan sedikit pun**: (a) lemparan ditangkap lalu **MENOLAK** (rak owasp
+A10 default-deny) → **401 dalam 12,4 dtk**, terbukti di log server; (b) kartu punya jalur cadangan
+lewat `/api/dramas` yang **sudah publik sejak lama** → nol data baru terbuka. **Owner memilih (b) di
+atas usul melonggarkan cek admin** — usul itu akan membuat admin yang baru dicabut tetap bisa membuka
+kartu ini selama database mati.
+
+**Sisa yang BELUM dikerjakan, layak ditawarkan terpisah:** `getAdmins()` yang melempar membuat
+**SELURUH** panel admin tak bisa dipakai justru saat ada gangguan. Menyentuh auth = titik risiko,
+bukan yang disetujui hari ini.
+
+**Bukti (dijalankan, bukan dikira).** Empat cabang diuji di server lokal, database sungguhan DAN
+diarahkan ke host mati: database hidup + admin sah → **200** `status:"database", jumlahTampil:39` ·
+database hidup tanpa sesi → 401 + `/api/dramas` 200 → kartu hijau · **database mati + admin sah →
+401 (bukan 500)** + `/api/dramas` 500 → kartu merah · database mati tanpa sesi → sama.
+Gerbang §6 urutan benar: `npm run build` sukses → `npx tsc --noEmit` exit 0 → `npm test`
+**84 berkas / 1210 tes hijau** → nol berkas env ter-stage.
+
+**⚠️ Baseline tes diukur TERPISAH, jangan pakai selisih antar-run.** Run pertama melaporkan
+83 berkas/1201 tes; run bersih 84/1210; baseline sebenarnya **83/1199**, diukur dengan
+**menyingkirkan** berkas tes sendiri lalu menjalankan `npm test` penuh. Selisihnya persis +1 berkas
+/+11 tes milik sendiri → **nol tes lama yang rusak**. Angka 82/1193 di catatan rilis sebelumnya sudah
+basi terhadap repo hari ini.
+
+**🪤 Tiga jebakan alat yang kambuh hari ini:** (1) **`npm run build` gagal ACAK selagi database
+bermasalah** — `worker exited with code: 4294967295`, lalu percobaan kedua atas kode yang **sama
+persis** sukses; kekambuhan KETIGA (tercatat 2026-09-23 & 09-24), ukur ulang sebelum berburu
+penyebab. (2) `next dev` mengubah `next-env.d.ts` lagi — dipulihkan `git checkout --`, jangan
+di-commit. (3) Port uji **tidak langsung bebas** sesudah task dihentikan; proses `node`-nya masih
+LISTENING → periksa pemilik proses + jam mulainya sebelum menghentikan apa pun.
+
+**Soal kiriman rekan Playly (jawaban atas pertanyaan owner):** tampilan "pemutar tegak" yang mereka
+tawarkan **sudah kita punya semua** dan lebih lengkap (FeedPlayer + ActionRail + PlayerControls +
+EpisodeSheet; kita juga punya koin/paywall, iklan berhadiah, pilih resolusi, unduh, lanjut-tonton).
+Yang benar-benar belum ada: jembatan `postMessage` (hanya berguna kalau memakai embed mereka) + 5 hal
+kecil yang bisa dikerjakan sendiri (lanjut-tonton di /tonton, auto-next di /tonton, pintasan keyboard,
+angka ringkas "12,4rb", jumlah komentar di ikon). **Embed mereka MASIH menolak video kita di alamat
+Railway yang BARU** — diuji ulang hari ini, id 1790342663839, Referer benar → HTTP 200 berjudul
+"Playly Embed" tapi isinya "could not be found", sama persis dengan hasil 28 Sep di alamat lama.
+Server mereka juga sangat lambat (halaman depan 31-72 dtk, embed 98 dtk). Kiriman itu juga
+bertentangan sendiri: CARA-PASANG.md:38 mengaku drama berepisode di luar cakupan (benar — video kita
+dari tunnel, lib/video.ts:12), tapi PEMUTAR-TEGAK.md:110 mencontohkan `episode.playlyId`.
+Surat pertanyaan kita **masih belum dikirim**: `docs/surat-mitra/2026-09-28-balasan-playly-embed.md`.
+
+---
+
 ## 2026-10-01 — Tombol pemutar feed masuk ke DALAM bingkai video
 
 **Pemicu:** owner mengirim 2 tangkapan layar. Di layar lebar, rail Suka/Komen/Simpan/

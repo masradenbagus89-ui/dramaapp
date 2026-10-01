@@ -270,6 +270,55 @@ export async function getAllDramasCachedSafe(): Promise<Drama[]> {
   }
 }
 
+/**
+ * Apakah database katalog MENJAWAB SEKARANG.
+ *
+ * KENAPA ADA (2026-10-01): `getAllDramasCachedSafe` di atas sengaja menelan
+ * kegagalan supaya situs tidak mati total — dan itu benar. Tapi ia menelannya
+ * sampai tak bersisa: pada 1 Oktober 2026 database Supabase mati (HTTP 522),
+ * halaman publik diam-diam beralih ke `data/dramas.json` yang terakhir
+ * disegarkan 11 September, dan /katalog tetap terlihat sehat dengan 42 judul.
+ * Tak ada satu pun tanda di layar. Fungsi ini yang membuat keadaan itu bisa
+ * DITANYAKAN, dipakai kartu status di Dashboard admin.
+ *
+ * ⚠️ SENGAJA tidak lewat `getAllDramas`: fungsi itu memanggil
+ * `seedDramasIfEmpty` yang bisa MENULIS ke database (baris 169). Sebuah
+ * pemeriksaan status tidak boleh punya efek samping — yang bertanya jangan
+ * sekaligus mengubah (§3.7).
+ *
+ * Pembacaannya paling ringan yang mungkin (satu kolom, satu baris) dan TANPA
+ * cache: `sbSelect` tanpa `revalidate` memakai `cache: "no-store"`
+ * (lib/supabase.ts:213). Itu syarat mutlak di sini — status ber-cache akan
+ * melaporkan "hidup" memakai jawaban lama padahal database sudah mati, dan
+ * kartu yang berbohong lebih buruk daripada tidak ada kartu sama sekali.
+ *
+ * Terburuk ~12,3 detik (2 percobaan × batas 6 detik, lib/supabase.ts:109-112).
+ *
+ * Mode lokal/dev tanpa Supabase memulangkan `true`: di sana `data/dramas.json`
+ * memang sumber yang sah, bukan cadangan darurat — melaporkannya "mati" akan
+ * menyalakan peringatan palsu di tiap sesi pengembangan.
+ */
+export async function periksaKatalogHidup(): Promise<boolean> {
+  if (!useSupabase) return true;
+  try {
+    await sbSelect<{ id: string }>("dramas?select=id&limit=1");
+    return true;
+  } catch (err) {
+    // GAGAL-AMAN (rak owasp A10:2025): ragu = dilaporkan MATI, tidak pernah
+    // sebaliknya. Fungsi ini memang menelan error — itu tugasnya, karena
+    // pemanggilnya hanya bertanya "hidup atau tidak". Tapi menelan TANPA JEJAK
+    // melanggar rak backend §4, dan di sinilah satu-satunya tempat sebab
+    // aslinya masih utuh: dicatat ke log server, TIDAK ikut ke balasan API —
+    // pesan Supabase bisa memuat alamat & detail dalam server (rak backend §1).
+    console.warn(
+      `[dramas] database katalog tidak menjawab: ${
+        err instanceof Error ? err.message : String(err)
+      }`,
+    );
+    return false;
+  }
+}
+
 /** Versi ber-cache dari `getDrama` untuk halaman publik. Lihat catatan di atas. */
 export async function getDramaCached(id: string): Promise<Drama | undefined> {
   if (useSupabase) {

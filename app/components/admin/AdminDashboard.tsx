@@ -12,6 +12,7 @@ import { formatViews } from "@/lib/format";
 import { CATEGORY_COLORS } from "@/app/admin/constants";
 import StatCard from "@/app/components/admin/StatCard";
 import PlaylyStatusCard from "@/app/components/admin/PlaylyStatusCard";
+import KatalogStatusCard from "@/app/components/admin/KatalogStatusCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
@@ -68,6 +69,16 @@ export default function AdminDashboard({ dramas }: { dramas: Drama[] }) {
             karena ini kondisi sambungan (hidup/mati), bukan statistik
             katalog drama. */}
         <PlaylyStatusCard />
+
+        {/* Sumber data katalog. Dipasang TEPAT di bawah kartu Playly karena
+            keduanya sejenis — kondisi hidup/mati, bukan statistik. Kartu ini
+            menjawab satu hal yang sebelumnya MUSTAHIL diketahui: apakah judul
+            yang dilihat penonton datang dari database, atau dari berkas
+            cadangan di dalam aplikasi yang bisa tertinggal jauh. Angka
+            "Total Drama" di atas sengaja TIDAK dipakai untuk itu — ia
+            menghitung daftar yang sudah terlanjur dipilihkan, jadi ia tetap
+            terlihat wajar justru saat sumbernya salah. */}
+        <KatalogStatusCard />
       </section>
 
       <Card className="rounded-2xl border-zinc-800 bg-zinc-900/40">

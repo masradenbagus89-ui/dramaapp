@@ -108,12 +108,26 @@ export default function PlaylyStatusCard() {
             </p>
           )}
 
-          {/* Video yang ditolak penjaga alamat (mis. bukan https / host tak
-              terdaftar). Disebut supaya admin tak bingung "kok jumlahnya kurang". */}
+          {/* Video yang ditolak sebelum tampil. Disebut supaya admin tak bingung
+              "kok jumlahnya kurang".
+
+              ⚠️ SEBABNYA DITAMPILKAN APA ADANYA, JANGAN DITEBAK LAGI. Sampai
+              2026-10-01 baris ini menulis "alamatnya tidak memenuhi syarat
+              keamanan" untuk SETIAP video yang dilewati — kalimat yang dipatok
+              mati, padahal ada empat alasan berbeda dan tiga di antaranya sama
+              sekali bukan soal keamanan (lib/dashboard-videos.ts baris
+              135/140/145/148). Owner melihat kata "keamanan" lalu mencari
+              kebocoran yang tidak ada, sementara sebab aslinya hanya tercatat di
+              log server Vercel yang tak bisa diakses siapa pun di tim ini.
+
+              Kalau server tidak mengirim rinciannya, katakan terus terang bahwa
+              sebabnya belum dilaporkan — JANGAN kembali menebak. */}
           {hasil?.status === "tersambung" && hasil.dilewati > 0 && (
             <p className="mt-1 text-xs text-amber-300">
-              {hasil.dilewati} video dilewati karena alamatnya tidak memenuhi
-              syarat keamanan.
+              {hasil.dilewati} video dilewati
+              {hasil.rincianDilewati
+                ? ` — ${hasil.rincianDilewati}.`
+                : ". Sebabnya belum dilaporkan server."}
             </p>
           )}
 

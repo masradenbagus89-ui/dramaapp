@@ -9,6 +9,8 @@ export type BalasanVideos = {
   ok?: boolean;
   count?: number;
   skipped?: number;
+  /** Jumlah video yang dilewati PER ALASAN, mis. `{ "tidak ada alamat video": 20 }`. */
+  alasanDilewati?: Record<string, number>;
   error?: string;
 };
 
@@ -18,6 +20,17 @@ export type RingkasanPlayly = {
   status: StatusPlayly;
   jumlahVideo: number;
   dilewati: number;
+  /**
+   * Sebab video dilewati, siap tampil. Kosong kalau tidak ada yang dilewati.
+   *
+   * KENAPA ADA (2026-10-01): kartu dulu menulis "alamatnya tidak memenuhi syarat
+   * keamanan" untuk SETIAP video yang dilewati — kalimat yang dipatok mati,
+   * padahal ada empat alasan berbeda dan tiga di antaranya bukan soal keamanan
+   * (lib/dashboard-videos.ts baris 135/140/145/148). Owner diberi tahu masalah
+   * yang salah, lalu mencari kerusakan di tempat yang tidak rusak.
+   */
+  rincianDilewati: string;
+  /** Kalimat utama yang dibaca admin; kosong kalau semuanya normal. */
   pesan: string;
 };
 
@@ -26,6 +39,28 @@ function angkaAman(nilai: unknown): number {
   return typeof nilai === "number" && Number.isFinite(nilai) && nilai > 0
     ? Math.floor(nilai)
     : 0;
+}
+
+/**
+ * Ubah hitungan per-alasan jadi satu kalimat apa adanya, mis.
+ * "tidak ada alamat video (20)" atau "bukan https (3) · domain belum diizinkan (2)".
+ *
+ * Diurutkan dari yang TERBANYAK supaya sebab utama terbaca lebih dulu — kalau
+ * 18 dari 20 video gagal karena satu hal, itu yang perlu dibereskan duluan.
+ *
+ * Pulang string KOSONG kalau server tidak mengirim rinciannya (balasan versi
+ * lama). Pemanggil WAJIB menangani kemungkinan itu dengan kalimat netral —
+ * JANGAN kembali menebak sebabnya; menebak persis itulah yang membuat kartu ini
+ * salah memberi tahu selama ini.
+ */
+function rincikanAlasan(alasan: unknown): string {
+  if (!alasan || typeof alasan !== "object" || Array.isArray(alasan)) return "";
+  const baris = Object.entries(alasan as Record<string, unknown>)
+    .map(([sebab, jumlah]) => ({ sebab: String(sebab).trim(), jumlah: angkaAman(jumlah) }))
+    .filter((b) => b.sebab !== "" && b.jumlah > 0)
+    .sort((a, b) => b.jumlah - a.jumlah)
+    .map((b) => `${b.sebab} (${b.jumlah})`);
+  return baris.join(" · ");
 }
 
 /**
@@ -46,6 +81,7 @@ export function ringkasStatusPlayly(
       status: "belum-diatur",
       jumlahVideo: 0,
       dilewati: 0,
+      rincianDilewati: "",
       pesan:
         data?.error ??
         "Sambungan ke dashboard Playly belum diatur (DASHBOARD_API_URL kosong).",
@@ -58,6 +94,7 @@ export function ringkasStatusPlayly(
       status: "gagal",
       jumlahVideo: 0,
       dilewati: 0,
+      rincianDilewati: "",
       pesan:
         data?.error ?? `Dashboard tidak bisa dihubungi (HTTP ${httpStatus}).`,
     };
@@ -65,13 +102,25 @@ export function ringkasStatusPlayly(
 
   const jumlahVideo = angkaAman(data?.count);
   const dilewati = angkaAman(data?.skipped);
+
+  // "Nol video" punya DUA arti yang berlawanan, dan membedakannya menentukan
+  // admin memperbaiki apa. Dashboard yang memang masih kosong = tidak ada yang
+  // rusak, tinggal unggah. Dashboard yang mengirim video lalu SEMUANYA kita
+  // tolak = ada yang rusak di sini, dan kalimat "belum berisi video" akan
+  // menyuruh admin mengunggah ulang video yang sebenarnya sudah ada.
+  // Terjadi di produksi 2026-10-01: count 0, skipped 20.
+  const pesan =
+    jumlahVideo === 0
+      ? dilewati > 0
+        ? `Dashboard mengirim ${dilewati} video, tapi SEMUANYA ditolak sebelum sempat tampil.`
+        : "Sambungan hidup, tapi dashboard belum berisi video."
+      : "";
+
   return {
     status: "tersambung",
     jumlahVideo,
     dilewati,
-    pesan:
-      jumlahVideo === 0
-        ? "Sambungan hidup, tapi dashboard belum berisi video."
-        : "",
+    rincianDilewati: rincikanAlasan(data?.alasanDilewati),
+    pesan,
   };
 }

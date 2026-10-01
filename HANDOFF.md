@@ -24,6 +24,10 @@ semua tombol duduk di dalam bingkai video.
 `masradenbagus89-ui/dramaapp` + cermin `ojokesusu/dramaku` (dual push tuntas, fast-forward).
 Terbukti tayang lewat smoke test 6 halaman — rinciannya di `antrean-deploy.md`.
 Rollback: `git revert --no-edit 585cfaa` + dual push. Nol SQL, nol env baru.
+**Disusul `9a868ca`:** penjaga permanen `tests/pemutar-panggung.test.ts` — mengunci agar tombol
+pemutar tidak keluar dari bingkai video lagi, dan agar tiap tombol di dalamnya tetap menyalakan
+pointer-events-auto (tanpa itu tombolnya tampil tapi mati saat diklik — rusak tanpa suara).
+Penjaganya sudah dibuktikan MERAH untuk ketiga skenario kerusakan, bukan sekadar lolos hijau.
 
 **Sebabnya (terverifikasi, bukan dugaan):** di `app/components/FeedPlayer.tsx` wadah pemutar
 selebar **layar** (`h-[100dvh] w-full`) sementara videonya `object-contain`. Di layar lebar

@@ -26,6 +26,20 @@ produksi: aturan lebar panggung `max-width:calc(100dvh * 0.5625)` **muncul**, pe
 **0 kemunculan** (versi lama punya 1), keempat tombol rail lengkap. Sisa yang belum: **tampilannya belum
 dilihat mata manusia di layar lebar** — owner buka satu drama di situs produksi.
 
+**Menyusul hari yang sama: `9a868ca` — penjaga permanen untuk rilis di atas.** Satu berkas tes
+(`tests/pemutar-panggung.test.ts`), **nol perubahan yang dilihat penonton** — berkas tes tidak ikut ke
+situs. Gerbang §6 dijalankan penuh lagi: build sukses · tipe exit 0 · **1210 tes / 84 berkas hijau**.
+Penjaganya **diuji dengan merusak kode sengaja**, bukan cuma dibiarkan hijau: tombol yang lupa
+menyalakan pointer-events-auto, rail yang keluar bingkai video, dan panel penuh yang tersedot masuk —
+ketiganya memerahkan tes dengan pesan yang menyebut tombol persisnya.
+
+> **⚠️ Saat rilis ini dikerjakan, ADA SESI LAIN yang sedang membangun fitur "status katalog"** di
+> folder kerja yang sama (`lib/katalog-status.ts`, `app/components/admin/KatalogStatusCard.tsx`,
+> `app/api/admin/status-katalog/`, plus suntingan di `lib/dramas.ts` & `AdminDashboard.tsx`).
+> Berkas-berkas itu **sengaja tidak ikut di-commit** — yang didorong hanya berkas tes. Siapa pun yang
+> melanjutkan: pekerjaan itu masih menggantung sebagai perubahan lokal, belum pernah lewat gerbang,
+> dan angka "1210 tes" di atas **sudah termasuk tes milik mereka**, bukan seluruhnya punya rilis ini.
+
 **Rollback rilis ini:** `git revert --no-edit 585cfaa && git push origin main && git push dramaku main`.
 **Nol SQL, nol env baru** — murni tampilan, revert saja memulihkan sepenuhnya.
 

@@ -4,9 +4,72 @@
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
 **Terakhir dicek:** 2026-10-01 (**komputer OWNER**) — **✅ ANTREAN KOSONG, DUAL PUSH TUNTAS.**
-`d2b30c9..21271fe` fast-forward ke **kedua** repo, nol paksaan. Ketiga tempat terbaca sama lewat
-`git ls-remote` (bukan `git log` lokal): **`21271fe6e5dab9269b38f4273d2fab60d6dc7629`**.
+`d5a3592..4b6e916` fast-forward ke **kedua** repo, nol paksaan. Ketiga tempat terbaca sama lewat
+`git ls-remote` (bukan `git log` lokal): **`4b6e916`**.
 Urutannya cermin dulu baru produksi, supaya masalah otentikasi ketahuan sebelum tombol rilis ditekan.
+
+**Apa yang dirilis (`4b6e916`):** kartu Playly di `/admin` berhenti MENEBAK sebab video dilewati.
+Owner mengirim tangkapan layar: "Tersambung — **0 video**" + "20 video dilewati karena alamatnya
+tidak memenuhi syarat keamanan", padahal `/film` berisi 46 video. Dua jalur berbeda — `/film` pakai
+katalog mitra (sehat), kartu ini pakai `DASHBOARD_API_URL` (0 lolos, 20 ditolak).
+
+**Kalimat "syarat keamanan" itu DIPATOK MATI** di `PlaylyStatusCard.tsx`, padahal ada **empat**
+alasan penolakan (`lib/dashboard-videos.ts` baris 135/140/145/148) dan tiga di antaranya bukan soal
+keamanan. Owner diberi tahu masalah yang salah lalu mencari kebocoran yang tidak ada. Sebab aslinya
+memang dicatat — tapi **hanya ke log Vercel yang tak bisa diakses siapa pun di tim ini**.
+Perbaikannya: `/api/videos` ikut memulangkan `alasanDilewati` (hitungan PER ALASAN; **hanya teks
+alasan**, `value` mentah sengaja tidak ikut karena bisa memuat alamat bertanda tangan / nama host),
+lalu kartu menampilkannya apa adanya — dan bila server tak mengirim rincian, kartu berkata terus
+terang "sebabnya belum dilaporkan server", **tidak kembali menebak**.
+
+**Satu pesan keliru lain ikut dibetulkan: "nol video" punya DUA arti berlawanan.** Dashboard yang
+memang kosong = tinggal unggah. Dashboard yang mengirim video lalu SEMUANYA kita tolak = ada yang
+rusak di sisi kita. Kalimat lama ("belum berisi video") memakai arti pertama untuk kedua keadaan —
+menyuruh admin mengunggah ulang video yang sebenarnya sudah ada.
+
+**Dampak ke penonton yang ikut ketahuan (BELUM diperbaiki):** `/discover` menggambar seksi "Video
+terbaru" lalu kotak **"Belum ada video yang di-upload dari dashboard."** (`DashboardVideoGrid.tsx`),
+padahal ada 20 video yang ditolak. Pesan ke penonton juga keliru — **layak ditawarkan terpisah**.
+
+**Gerbang §6 penuh:** build sukses · `tsc` exit 0 · `npm test` **84 berkas / 1215 tes hijau**
+(baseline 1210 → **+5 tes, nol tes lama rusak**). **Uji-balik 2 arah:** pembedaan "ditolak vs kosong"
+dihapus → **1 MERAH**; kalimat tebakan "keamanan" dikembalikan → **3 MERAH**.
+
+**🪤 Build menangkap kesalahan yang `npm test` lewatkan:** saat menambah field baru ke tipe
+`RingkasanPlayly`, field `pesan` tak sengaja terhapus. Tes tetap hijau; `next build` yang menolak
+(`Property 'pesan' does not exist`). Bukti lagi bahwa urutan **build → tsc → test** bukan formalitas.
+
+**✅ TERBUKTI TAYANG + SEBABNYA LANGSUNG TERSINGKAP.** Dibaca dari produksi tanpa perlu login,
+dua kali berjarak ~100 detik dengan hasil identik:
+
+```
+{"ok":true,"count":0,"videos":[],"skipped":20,"alasanDilewati":{"tidak ada alamat video":20}}
+```
+
+**Jadi sebabnya BUKAN keamanan sama sekali** — 20 dari 20 ditolak karena **tidak ada alamat video**.
+Artinya daftar yang dikirim Playly tidak memuat satu pun dari 11 nama field alamat yang dicari
+penerjemah kita (`VIDEO_URL_KEYS`, `lib/dashboard-videos.ts:40`). Selama ini kartu menuduh "syarat
+keamanan", dan **tiga sesi bisa saja terbuang memburu kebocoran yang tidak pernah ada.**
+
+Smoke test pasca-rilis: `/` `/beranda` `/film` `/katalog` `/discover` `/admin` semua **200** ·
+`/film` tetap **46 video** nol pesan gagal · `/beranda` tetap **40** tautan `/tonton/` ·
+`/api/admin/status-katalog` tetap **401** (rilis sebelumnya utuh) → **nol kemunduran**.
+
+**🔎 DUGAAN OBATNYA — BELUM TERBUKTI, jangan dikerjakan sebelum dipastikan.** Playly tampaknya
+memang tidak pernah mengirim alamat berkas di DAFTAR: alamatnya bertanda tangan dan berumur pendek,
+jadi hanya diberikan saat video benar-benar diputar — pola yang sama sudah kita pakai sendiri di
+`app/api/playly/video/route.ts` (alamat diambil saat diputar, bukan saat halaman dirender). Kalau
+benar, maka jalur `/api/videos` ini **mensyaratkan sesuatu yang memang tidak akan pernah ada**, dan
+menolak 100% daftar adalah perilaku yang benar menurut aturannya sendiri — yang salah aturannya.
+Cara memastikan tanpa menebak: bandingkan satu baris mentah dari dashboard Playly dengan
+`VIDEO_URL_KEYS`. **Butuh `DASHBOARD_API_KEY` yang hanya ada di Vercel.**
+
+**Rollback:** `git revert --no-edit 4b6e916` + dual push. Nol SQL, nol env baru.
+
+---
+
+**Sebelumnya, 2026-10-01 — `342d069` + `21271fe` (kartu sumber data katalog):**
+`d2b30c9..21271fe` fast-forward ke kedua repo, nol paksaan.
 
 **Apa yang dirilis (`342d069` + `21271fe`):** kartu **"Katalog drama — sumber data"** di Dashboard
 admin. Ia menjawab satu hal yang sebelumnya MUSTAHIL diketahui: judul yang dilihat penonton datang

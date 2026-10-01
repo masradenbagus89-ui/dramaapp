@@ -13,6 +13,77 @@
 
 ---
 
+## 2026-10-01 — Kartu Playly "0 video": sebabnya BUKAN keamanan, dan selama ini salah dituduhkan
+
+**Pemicu:** owner mengirim tangkapan layar `/admin`. Kartu Playly berbunyi "Tersambung — **0 video**"
++ "**20 video dilewati karena alamatnya tidak memenuhi syarat keamanan**", padahal `/film` berisi
+46 video.
+
+**STATUS: ✅ DIRILIS `4b6e916`** (dual push tuntas, fast-forward, ketiga tempat di `4b6e916`).
+
+**Pertama-tama, bedakan DUA jalur yang sama-sama mengambil video Playly** — ini sumber kebingungan:
+
+| Jalur | Dipakai di | Keadaan |
+|---|---|---|
+| Katalog mitra (`getPlaylyVideosGabunganCached`) | `/film`, `/beranda` | ✅ sehat, **46 video** |
+| Dashboard upload (`DASHBOARD_API_URL` → `/api/videos`) | kartu admin + "Video terbaru" di `/discover` | ❌ **0 lolos, 20 ditolak** |
+
+Situs TIDAK kehilangan video. Yang kosong hanya bagian "Video terbaru" di `/discover`.
+
+**🔴 TEMUAN UTAMA — kartunya MENEBAK, dan tebakannya salah.** Kalimat "tidak memenuhi syarat
+keamanan" **dipatok mati** di `PlaylyStatusCard.tsx`, padahal ada **empat** alasan penolakan
+(`lib/dashboard-videos.ts` baris 135/140/145/148) dan tiga di antaranya bukan soal keamanan. Sebab
+aslinya memang dicatat — tapi **hanya ke log Vercel**, yang tak bisa diakses siapa pun di tim ini.
+Jadi satu-satunya keterangan yang bisa dibaca manusia adalah tuduhan yang kebetulan salah.
+
+**✅ SEBAB SEBENARNYA, kini terbaca dari produksi** (dua kali berjarak ~100 detik, identik):
+
+```
+{"ok":true,"count":0,"videos":[],"skipped":20,"alasanDilewati":{"tidak ada alamat video":20}}
+```
+
+**20 dari 20 ditolak karena TIDAK ADA ALAMAT VIDEO.** Nol hubungannya dengan keamanan.
+
+**Yang diubah:** `/api/videos` ikut memulangkan `alasanDilewati` (hitungan PER ALASAN). **Hanya teks
+alasannya** — field `value` sengaja tidak ikut karena isinya data mentah pihak luar (potongan alamat
+bertanda tangan / nama host). `ringkasStatusPlayly` menerjemahkannya, diurutkan terbanyak dulu. Kalau
+server tak mengirim rincian, kartu berkata terus terang "sebabnya belum dilaporkan server" — **tidak
+kembali menebak** (dikunci tes).
+
+**Pesan keliru KEDUA yang ikut dibetulkan: "nol video" punya DUA arti berlawanan.** Dashboard yang
+memang kosong = tinggal unggah. Dashboard yang mengirim video lalu SEMUANYA kita tolak = ada yang
+rusak di sisi kita. Kalimat lama ("belum berisi video") memakai arti pertama untuk kedua keadaan —
+menyuruh admin mengunggah ulang video yang sebenarnya **sudah ada**.
+
+**🔎 DUGAAN OBATNYA — BELUM TERBUKTI, jangan dikerjakan sebelum dipastikan.** Playly tampaknya memang
+tidak pernah mengirim alamat berkas di DAFTAR: alamatnya bertanda tangan & berumur pendek, jadi baru
+diberikan saat video diputar — pola yang **sudah kita pakai sendiri** di
+`app/api/playly/video/route.ts`. Kalau benar, jalur `/api/videos` ini mensyaratkan sesuatu yang
+memang tidak akan pernah ada, dan menolak 100% daftar justru perilaku yang BENAR menurut aturannya
+sendiri — yang salah aturannya. Memastikannya butuh membandingkan satu baris mentah dari dashboard
+Playly dengan `VIDEO_URL_KEYS` (`lib/dashboard-videos.ts:40`), dan itu **butuh `DASHBOARD_API_KEY`
+yang hanya ada di Vercel**.
+
+**⚠️ DAMPAK KE PENONTON, BELUM DIPERBAIKI:** `/discover` menggambar seksi "Video terbaru" lalu kotak
+**"Belum ada video yang di-upload dari dashboard."** (`DashboardVideoGrid.tsx:102`) — pesan yang sama
+kelirunya, karena videonya ADA, cuma ditolak. Menyentuh halaman yang dilihat penonton, jadi
+**ditawarkan terpisah**, tidak dikerjakan diam-diam.
+
+**Bukti gerbang §6:** build sukses · `tsc` exit 0 · `npm test` **84 berkas / 1215 tes hijau**
+(baseline 1210 → **+5 tes, nol tes lama rusak**). **Uji-balik 2 arah:** pembedaan "ditolak vs kosong"
+dihapus → **1 MERAH**; kalimat tebakan "keamanan" dikembalikan → **3 MERAH**. Smoke test pasca-rilis:
+6 halaman 200 · `/film` tetap 46 video · `/beranda` tetap 40 tautan · `/api/admin/status-katalog`
+tetap 401 → nol kemunduran.
+
+**🪤 Build menangkap kesalahan yang `npm test` LEWATKAN.** Saat menambah field baru ke tipe
+`RingkasanPlayly`, field `pesan` tak sengaja terhapus. Seluruh tes tetap hijau; `next build` yang
+menolak (`Property 'pesan' does not exist`). Bukti lagi bahwa urutan **build → tsc → test** bukan
+formalitas — tes menguji perilaku, build yang menguji bentuk.
+
+**Cara membaca sebabnya lain kali, tanpa login:** `GET /api/videos` → lihat `alasanDilewati`.
+
+---
+
 ## 2026-10-01 — Database Supabase mati berjam-jam + penjaga "katalog diam-diam basi"
 
 **Pemicu:** owner minta memeriksa 3 berkas kiriman rekan Playly (CARA-PASANG.md,

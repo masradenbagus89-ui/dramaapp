@@ -77,7 +77,12 @@ describe("DownloadModal — tabel provider", () => {
     expect(html).toContain(">Download<");
     // Latar pink dipasang di BARIS kepala, bukan di tiap sel — kalau kelasnya
     // pindah/hilang, tabelnya kehilangan pembeda kepala sama sekali.
-    expect(html).toMatch(/<tr[^>]*class="[^"]*bg-pink-600[^"]*"/);
+    //
+    // Warnanya #e50b4b sejak 2026-09-30 (keputusan owner), menggantikan
+    // `bg-pink-600`. Nilainya hidup di app/components/unduhan-kelas.ts dan
+    // dipakai BERSAMA popup provider video Playly, jadi tes ini juga yang
+    // menangkap kalau berkas bersama itu berubah tanpa sengaja.
+    expect(html).toMatch(/<tr[^>]*class="[^"]*bg-\[#e50b4b\][^"]*"/);
   });
 
   it("tiap provider punya satu baris: nama di kiri, tombol kualitas di kanan", () => {
@@ -90,9 +95,17 @@ describe("DownloadModal — tabel provider", () => {
   });
 
   it("warna tombol: default biru, oranye kalau diminta — kelas UTUH di kode", () => {
+    // Bergradasi sejak 2026-09-30 (keputusan owner), sebelumnya warna rata
+    // `bg-blue-600`/`bg-orange-500`. Yang diuji tetap sama intinya: kelas
+    // Tailwind-nya UTUH di kode sumber, bukan dirakit saat program berjalan —
+    // kelas rakitan tidak ikut dibundel dan tombolnya tergambar pucat tanpa
+    // error apa pun.
     const html = renderModal();
-    expect(html).toContain("bg-blue-600");
-    expect(html).toContain("bg-orange-500");
+    expect(html).toContain("from-blue-500");
+    expect(html).toContain("to-blue-700");
+    expect(html).toContain("from-orange-400");
+    expect(html).toContain("to-orange-600");
+    expect(html).toContain("bg-gradient-to-b");
   });
 
   it("tombol menunjuk ke alamat provider, dibuka aman di tab baru", () => {

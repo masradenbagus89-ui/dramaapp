@@ -35,6 +35,14 @@ const LABEL_WARNA: Record<DownloadButtonColor, string> = {
 const KELAS_INPUT =
   "rounded-lg border-zinc-700 bg-zinc-900 text-sm text-white focus-visible:border-amber-400 focus-visible:ring-0";
 
+/** Teks bawaan, dipakai jalur DRAMA (halaman detail drama). */
+const KETERANGAN_DRAMA =
+  "Dibiarkan KOSONG = tombol DOWNLOAD di halaman detail tetap bekerja seperti " +
+  "sebelumnya (mengunduh satu berkas dari PC backup). Begitu ada minimal satu " +
+  "baris terisi lengkap, tombol itu berubah jadi pembuka daftar pilihan ini. " +
+  "Baris yang nama/kualitas/alamatnya belum lengkap akan dibuang saat disimpan " +
+  "— bukan disimpan setengah jadi.";
+
 /** Baris kosong untuk entri baru. */
 function barisBaru(): DownloadProvider {
   return { name: "", quality: "", url: "" };
@@ -43,9 +51,22 @@ function barisBaru(): DownloadProvider {
 export default function DownloadProviderFields({
   providers,
   setProviders,
+  judul = "Provider unduhan (isi modal tombol DOWNLOAD)",
+  keterangan = KETERANGAN_DRAMA,
+  kualitasOpsional = false,
 }: {
   providers: DownloadProvider[];
   setProviders: Dispatch<SetStateAction<DownloadProvider[]>>;
+  /** Kepala kotak. Default = kalimat jalur DRAMA, supaya pemakai lama tak berubah. */
+  judul?: string;
+  /** Penjelasan di bawah judul; beda jalur beda akibat, jadi teksnya ikut beda. */
+  keterangan?: string;
+  /**
+   * `true` = baris tanpa kualitas TETAP disimpan (tombolnya jadi "Download"
+   * polos). Di sini hanya mengubah TULISAN isian; yang benar-benar memutuskan
+   * tetap penyaring di server (`parseDownloadProviders`) — UI bukan pagar.
+   */
+  kualitasOpsional?: boolean;
 }) {
   const ubah = (i: number, tambalan: Partial<DownloadProvider>) =>
     setProviders((daftar) =>
@@ -57,16 +78,8 @@ export default function DownloadProviderFields({
 
   return (
     <div className="mt-4 rounded-xl border border-pink-500/30 bg-pink-950/10 p-4">
-      <p className="text-sm font-semibold text-pink-200">
-        Provider unduhan (isi modal tombol DOWNLOAD)
-      </p>
-      <p className="mt-0.5 text-xs text-zinc-500">
-        Dibiarkan KOSONG = tombol DOWNLOAD di halaman detail tetap bekerja
-        seperti sebelumnya (mengunduh satu berkas dari PC backup). Begitu ada
-        minimal satu baris terisi lengkap, tombol itu berubah jadi pembuka
-        daftar pilihan ini. Baris yang nama/kualitas/alamatnya belum lengkap
-        akan dibuang saat disimpan — bukan disimpan setengah jadi.
-      </p>
+      <p className="text-sm font-semibold text-pink-200">{judul}</p>
+      <p className="mt-0.5 text-xs text-zinc-500">{keterangan}</p>
 
       <div className="mt-3 space-y-3">
         {providers.map((p, i) => (
@@ -96,15 +109,24 @@ export default function DownloadProviderFields({
                   htmlFor={`provider-kualitas-${i}`}
                   className="text-xs text-zinc-400"
                 >
-                  Kualitas (tulisan di tombol)
+                  {kualitasOpsional
+                    ? "Kualitas (opsional)"
+                    : "Kualitas (tulisan di tombol)"}
                 </Label>
                 <Input
                   id={`provider-kualitas-${i}`}
-                  value={p.quality}
+                  value={p.quality ?? ""}
                   onChange={(e) => ubah(i, { quality: e.target.value })}
                   placeholder="1080p"
                   className={KELAS_INPUT}
                 />
+                {kualitasOpsional && (
+                  <p className="text-xs text-zinc-500">
+                    Boleh dikosongkan kalau resolusinya belum diketahui —
+                    tombolnya jadi &quot;Download&quot; polos. Jangan diisi
+                    tebakan.
+                  </p>
+                )}
               </div>
 
               <div className="space-y-1.5 md:col-span-2">

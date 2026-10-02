@@ -30,10 +30,12 @@ import { formatDuration } from "./playly";
 import { getPlaylyVideosPublik, type PlaylyVideoPublik } from "./playly-publik";
 import {
   getPlaylyHiddenIdsCached,
+  getPlaylyUnduhanCached,
   getPublishedPlaylyWebhookVideos,
   getPublishedPlaylyWebhookVideosCached,
   type PlaylyWebhookVideo,
 } from "./store";
+import { tempelUnduhanPlayly } from "./playly-unduhan";
 
 export type PlaylyGabunganResult = {
   videos: PlaylyVideoPublik[];
@@ -173,7 +175,7 @@ export function gabungVideoPlayly(
 async function rakitGabungan(
   ambilWebhook: () => Promise<PlaylyWebhookVideo[]>,
 ): Promise<PlaylyGabunganResult> {
-  const [katalog, webhook, hiddenIds] = await Promise.all([
+  const [katalog, webhook, hiddenIds, petaUnduhan] = await Promise.all([
     // Sudah menangkap kegagalannya sendiri: mengembalikan daftar kosong +
     // alasan, bukan melempar.
     getPlaylyVideosPublik(),
@@ -200,6 +202,12 @@ async function rakitGabungan(
       (ids) => ({ ids, terbaca: true }),
       () => ({ ids: [] as string[], terbaca: false }),
     ),
+    // Provider unduhan per video. Kegagalannya SENGAJA tidak menular ke mana
+    // pun: peta kosong = tombol DOWNLOAD kembali ke perilaku lamanya, dan itu
+    // jauh lebih baik daripada halaman video yang ikut kosong gara-gara daftar
+    // unduhan tak terbaca. Ini bukan pagar keamanan (tak ada yang bocor kalau
+    // peta hilang), jadi aturan gagal-aman di bawah tidak berlaku di sini.
+    getPlaylyUnduhanCached().catch(() => ({})),
   ]);
 
   // GAGAL-AMAN (skills/owasp/SKILL.md §1 A10 "jangan fail-open"): kalau daftar
@@ -215,7 +223,13 @@ async function rakitGabungan(
   const webhookAman = hiddenIds.terbaca ? webhook.videos : [];
 
   return {
-    videos: gabungVideoPlayly(katalog.videos, webhookAman, hiddenIds.ids),
+    // Provider ditempel SESUDAH penggabungan, di satu tempat saja: dengan
+    // begitu video dari katalog MAUPUN dari webhook memakai aturan yang sama
+    // persis, dan tak ada sumber yang diam-diam tertinggal tanpa tombol.
+    videos: tempelUnduhanPlayly(
+      gabungVideoPlayly(katalog.videos, webhookAman, hiddenIds.ids),
+      petaUnduhan,
+    ),
     // Katalog didahulukan karena ia sumber utama halaman ini; kalau dua-duanya
     // bermasalah, satu kalimat sudah cukup untuk pengunjung.
     error: katalog.error ?? webhook.error,

@@ -4,19 +4,12 @@ import { useEffect } from "react";
 import { Download, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import type { DownloadButtonColor, DownloadProvider } from "@/lib/types";
-
-/**
- * Pemetaan warna -> kelas Tailwind, ditulis UTUH dan sengaja tidak dirakit
- * (`bg-` + warna + `-600`): Tailwind memindai kode sumber untuk memutuskan
- * kelas mana yang ikut dibundel, jadi kelas yang baru terbentuk saat program
- * berjalan tidak akan ada di CSS hasil build — tombolnya tergambar tanpa warna
- * sama sekali. Kegagalannya senyap: tak ada error, cuma tombol pucat.
- */
-const KELAS_WARNA: Record<DownloadButtonColor, string> = {
-  blue: "bg-blue-600 hover:bg-blue-500",
-  orange: "bg-orange-500 hover:bg-orange-400",
-};
+import {
+  KELAS_KEPALA_TABEL,
+  KELAS_WARNA_TOMBOL,
+  labelTombolProvider,
+} from "@/app/components/unduhan-kelas";
+import type { DownloadProvider } from "@/lib/types";
 
 /**
  * Modal daftar provider unduhan untuk tombol DOWNLOAD di halaman detail.
@@ -25,6 +18,11 @@ const KELAS_WARNA: Record<DownloadButtonColor, string> = {
  * BUKAN Radix/shadcn Dialog: berkas components/ui/dialog.tsx memang ada di repo
  * tapi nol pemakai, jadi memakainya berarti memperkenalkan pola kedua untuk hal
  * yang sama.
+ *
+ * Warna kepala tabel, warna tombol, dan label kualitasnya datang dari
+ * app/components/unduhan-kelas.ts — SATU sumber bersama dengan popup provider
+ * video Playly. Sebelum 2026-09-30 ketiganya disalin di kedua berkas, dan
+ * warna yang berbeda di dua halaman tidak memunculkan error apa pun.
  *
  * Alamat provider dibuka LANGSUNG ke situs mereka (Telegram/Mega/...), tidak
  * lewat /api/download — route itu cuma tahu berkas video di PC backup sendiri.
@@ -122,7 +120,7 @@ export default function DownloadModal({
 
           <table className="w-full border-collapse overflow-hidden rounded-lg">
             <thead>
-              <tr className="bg-pink-600 text-white">
+              <tr className={KELAS_KEPALA_TABEL}>
                 <th className="px-3 py-2 text-left text-xs font-bold uppercase tracking-wide">
                   Provider
                 </th>
@@ -146,12 +144,12 @@ export default function DownloadModal({
                       size="sm"
                       className={cn(
                         "h-8 rounded-md px-3 text-xs font-bold text-white",
-                        KELAS_WARNA[p.buttonColor ?? "blue"],
+                        KELAS_WARNA_TOMBOL[p.buttonColor ?? "blue"],
                       )}
                     >
                       <a href={p.url} target="_blank" rel="noopener noreferrer">
                         <Download className="size-3.5" />
-                        DOWNLOAD {p.quality}
+                        {labelTombolProvider(p.quality)}
                       </a>
                     </Button>
                   </td>

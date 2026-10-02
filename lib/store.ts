@@ -33,6 +33,12 @@ import {
   eq,
 } from "./supabase";
 import { CATALOG_TTL_SECONDS } from "./dramas";
+import {
+  bacaPetaUnduhanPlayly,
+  KUNCI_UNDUHAN_PLAYLY,
+  type PetaUnduhanPlayly,
+} from "./playly-unduhan";
+import { parseDownloadProviders, type DownloadProvider } from "./types";
 
 export type Admin = { email: string; name: string; addedAt: string };
 export type AdminsFile = { admins: Admin[] };
@@ -801,6 +807,8 @@ const PLAYLY_KEY_DOC = "playly:key";
 const PLAYLY_EMBEDS_DOC = "playly:embeds";
 const PLAYLY_HIDDEN_DOC = "playly:hidden";
 const PLAYLY_WEBHOOK_DOC = "playly:webhook";
+/** Dokumen provider unduhan per video. Kuncinya dipusatkan di lib/playly-unduhan.ts. */
+const PLAYLY_UNDUHAN_DOC = KUNCI_UNDUHAN_PLAYLY;
 
 type PlaylyFile = {
   key: PlaylyKeyRecord | null;
@@ -809,8 +817,16 @@ type PlaylyFile = {
   hidden?: string[];
   /** Video yang DIDORONG Playly lewat webhook (opsional: file lama tak punya). */
   webhook?: PlaylyWebhookVideo[];
+  /** Provider unduhan per videoId (opsional: file lama tak punya). */
+  unduhan?: PetaUnduhanPlayly;
 };
-const EMPTY_PLAYLY: PlaylyFile = { key: null, embeds: [], hidden: [], webhook: [] };
+const EMPTY_PLAYLY: PlaylyFile = {
+  key: null,
+  embeds: [],
+  hidden: [],
+  webhook: [],
+  unduhan: {},
+};
 
 /** Record kunci Playly tersimpan, atau null kalau admin belum memasangnya. */
 export async function getPlaylyKeyRecord(): Promise<PlaylyKeyRecord | null> {
@@ -963,6 +979,68 @@ export async function setPlaylyVideoHidden(
     writeLocal("playly.json", file);
   }
   return baru;
+}
+
+// ---- Provider unduhan per video Playly (playly:unduhan) ----
+//
+// Bentuknya peta videoId -> daftar provider, DISIMPAN SEBAGAI SATU DOKUMEN.
+// Alasan & batasnya (termasuk kenapa bukan kolom database sungguhan) ada di
+// lib/playly-unduhan.ts; di sini cuma pintu baca/tulisnya.
+//
+// TIAP PEMBACAAN MENYARING ULANG lewat `bacaPetaUnduhanPlayly`. Itu bukan
+// pengulangan yang mubazir: alamatnya berakhir di atribut `href` penonton,
+// dokumen `app_data` tidak dijaga database, dan isinya bisa saja ditulis versi
+// kode lama atau tangan manusia.
+
+/** Peta provider unduhan seluruh video. Jalur ADMIN — selalu data terbaru. */
+export async function getPlaylyUnduhan(): Promise<PetaUnduhanPlayly> {
+  const raw = useSupabase
+    ? await sbDocGet<unknown>(PLAYLY_UNDUHAN_DOC)
+    : readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY).unduhan;
+  return bacaPetaUnduhanPlayly(raw);
+}
+
+/** Versi ber-cache untuk HALAMAN PUBLIK — alasannya sama dengan getPlaylyHiddenIdsCached. */
+export async function getPlaylyUnduhanCached(): Promise<PetaUnduhanPlayly> {
+  const raw = useSupabase
+    ? await sbDocGet<unknown>(PLAYLY_UNDUHAN_DOC, {
+        revalidate: CATALOG_TTL_SECONDS,
+      })
+    : readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY).unduhan;
+  return bacaPetaUnduhanPlayly(raw);
+}
+
+/**
+ * Simpan/hapus daftar provider SATU video. Mengembalikan peta TERBARU supaya
+ * layar admin tak perlu membaca ulang (pola yang sama dengan setPlaylyVideoHidden).
+ *
+ * Daftar kosong = HAPUS entrinya (kembali "belum diisi"), bukan menyimpan array
+ * kosong — lihat alasannya di lib/playly-unduhan.ts.
+ *
+ * BATAS JUJUR: baca-ubah-tulis pada SATU dokumen bersama, sama seperti dokumen
+ * "unduhan"/"ads"/"admins". Dua admin yang menyimpan video berbeda dalam jeda
+ * milidetik yang sama bisa membuat satu tulisan tertimpa. Sangat jarang (panel
+ * admin dipakai satu orang) dan hilang sendiri begitu naik ke kolom asli.
+ */
+export async function setPlaylyUnduhanVideo(
+  videoId: string,
+  providers: DownloadProvider[],
+): Promise<PetaUnduhanPlayly> {
+  const peta = await getPlaylyUnduhan();
+  // Disaring di sini juga, bukan hanya di route: fungsi ini publik, dan yang
+  // dipertaruhkan alamat yang akan dipasang di `href` penonton.
+  const bersih = parseDownloadProviders(providers, { kualitasOpsional: true });
+  if (bersih.length) peta[videoId] = bersih;
+  else delete peta[videoId];
+
+  if (useSupabase) {
+    await sbDocSet(PLAYLY_UNDUHAN_DOC, peta);
+  } else {
+    const file = readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY);
+    file.unduhan = peta;
+    writeLocal("playly.json", file);
+  }
+  return peta;
 }
 
 // =========  VIDEO YANG DIDORONG PLAYLY LEWAT WEBHOOK (playly:webhook)  =====

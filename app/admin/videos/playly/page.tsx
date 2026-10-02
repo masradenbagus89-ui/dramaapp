@@ -19,11 +19,13 @@ import {
   getPlaylyEmbeds,
   getPlaylyGenres,
   getPlaylyHiddenIds,
+  getPlaylyUnduhan,
 } from "@/lib/store";
 import AdminAccessDenied from "@/app/components/admin/AdminAccessDenied";
 import AdminSidebar from "@/app/components/admin/AdminSidebar";
 import PlaylyVideoPicker from "@/app/components/admin/PlaylyVideoPicker";
 import PlaylyVisibilityManager from "@/app/components/admin/PlaylyVisibilityManager";
+import PlaylyUnduhanManager from "@/app/components/admin/PlaylyUnduhanManager";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, KeyRound } from "lucide-react";
 
@@ -46,14 +48,18 @@ export default async function PlaylyVideosPage() {
   // revalidateSeconds = 0 -> jalur admin selalu minta data SEGAR ke Playly,
   // supaya video yang baru di-upload langsung kelihatan di sini. Halaman
   // penonton yang memakai versi ber-cache.
-  const [status, dramas, embeds, mitra, hidden, genres] = await Promise.all([
-    getPlaylyKeyStatus(),
-    getAllDramas(),
-    getPlaylyEmbeds(),
-    fetchPlaylyVideosKita(konfigurasi, 0),
-    getPlaylyHiddenIds(),
-    getPlaylyGenres(),
-  ]);
+  const [status, dramas, embeds, mitra, hidden, genres, unduhan] =
+    await Promise.all([
+      getPlaylyKeyStatus(),
+      getAllDramas(),
+      getPlaylyEmbeds(),
+      fetchPlaylyVideosKita(konfigurasi, 0),
+      getPlaylyHiddenIds(),
+      getPlaylyGenres(),
+      // Jalur admin -> versi TANPA cache: begitu owner menyimpan link, layar ini
+      // harus menampilkan keadaan sekarang, bukan salinan 5 menit lalu.
+      getPlaylyUnduhan(),
+    ]);
 
   // Video yang catatannya ada di Playly tapi BERKASNYA tidak (upload putus di
   // tengah / file dihapus). Halaman penonton sudah membuangnya sendiri
@@ -124,6 +130,12 @@ export default async function PlaylyVideosPage() {
           source={mitra.source}
           creator={konfigurasi.creator}
         />
+
+        {/* Diletakkan SESUDAH panel tampil/sembunyi: urutan kerjanya memang
+            begitu — tentukan dulu video mana yang tayang, baru isi link
+            unduhannya. Sengaja tidak dibungkus syarat "kunci sudah dipasang",
+            alasannya sama dengan panel di atas. */}
+        <PlaylyUnduhanManager videos={mitra.videos} initialUnduhan={unduhan} />
 
         {status.configured ? (
           <PlaylyVideoPicker dramas={pilihanDrama} initialEmbeds={embeds} />

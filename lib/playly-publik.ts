@@ -26,6 +26,7 @@ import {
   type PlaylyVideo,
 } from "./playly";
 import { getAllDramasCached } from "./dramas";
+import type { DownloadProvider } from "./types";
 import {
   getPlaylyEmbedsCached,
   getPlaylyGenresCached,
@@ -81,6 +82,19 @@ export type PlaylyVideoPublik = PlaylyVideo & {
    * digambar, JANGAN diisi tebakan "HD".
    */
   quality: string | null;
+  /**
+   * Pilihan unduhan lewat provider luar (Google Share / Telegram / Mega / ...)
+   * untuk video INI. Diisi belakangan di titik gabung kedua sumber video
+   * (lib/playly-gabungan.ts), BUKAN di sini: video dari webhook juga berhak
+   * punya provider, dan menempelkannya di dua tempat = dua aturan yang bisa
+   * berbeda diam-diam.
+   *
+   * OPSIONAL dengan sengaja. Tidak ada field = "belum diisi admin", dan di
+   * keadaan itu tombol DOWNLOAD tetap berperilaku seperti sebelumnya. Kalau
+   * dibuat wajib, kelima berkas tampilan yang memakai tipe ini plus
+   * `webhookKeKartu` harus ikut diubah hanya untuk menuliskan array kosong.
+   */
+  downloadProviders?: DownloadProvider[];
 };
 
 export type PlaylyPublikResult = {

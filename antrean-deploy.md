@@ -3,34 +3,39 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-10-02 (**komputer OWNER**) — **⏸️ ANTREAN BERISI 3 COMMIT, BELUM DIRILIS.**
-Diverifikasi lewat `git ls-remote` (bukan `git log` lokal):
+**Terakhir dicek:** 2026-10-02 (**komputer OWNER**) — **✅ ANTREAN KOSONG, DUAL PUSH TUNTAS.**
+`5d49e3b..0a42110` fast-forward ke **kedua** repo, nol paksaan. Ketiga tempat terbaca sama lewat
+`git ls-remote` (bukan `git log` lokal): **`0a42110`**.
+Urutannya cermin dulu baru produksi, supaya masalah otentikasi ketahuan sebelum tombol rilis ditekan.
 
-| Tempat | Commit | Keterangan |
+**Rilis ini membawa 3 commit (izin owner: "a. Rilis dulu"):**
+
+| Commit | Isi | Dampak penonton |
 |---|---|---|
-| `origin/main` (PRODUKSI) | `5d49e3b` | yang sedang tayang |
-| `dramaku/main` (cermin) | `5d49e3b` | sama dengan produksi |
-| `main` lokal | `b617fd9` | **1 commit docs belum di-push ke mana pun** |
-| `merge/playly-modal-unduhan` lokal | `67a924e` | hasil gabungan branch rekan, **belum di-push** |
-| `dramaku/feat/playly-modal-unduhan` | `74f8324` | branch rekan di cermin, sudah ditarik |
+| `b617fd9` | tandai surat ke Playly DITUNDA (dokumentasi) | nol |
+| `74f8324` | **kerja rekan**: popup pilihan provider unduhan Playly + panel admin | nol SAMPAI link diisi |
+| `0a42110` | merge + penyelamatan 2 fitur yang hampir mundur + catatan | nol |
 
-**Yang akan terbawa kalau owner memberi izin rilis (3 commit):** `b617fd9` (docs surat Playly
-DITUNDA) + `74f8324` (kerja rekan: popup provider unduhan) + `67a924e` (merge + penyelamatan 2
-fitur yang hampir mundur). Rinciannya di `HANDOFF.md` seksi paling atas.
+**Kenapa dampak penonton NOL hari ini.** Dokumen `playly:unduhan` belum ada di produksi dan
+dokumen `unduhan` (halaman drama) isinya `{}` kosong — diperiksa lewat REST Supabase.
+`DownloadModal.tsx:61` tidak menggambar modal kalau daftar provider kosong, jadi tombol DOWNLOAD
+masih berperilaku lama dan warna barunya pun belum terlihat. Owner masih harus mengisi link di
+`/admin/videos/playly` supaya fiturnya terasa.
 
-**⏸️ KENAPA BELUM DIRILIS:** menunggu izin owner — push ke `origin main` = **tombol rilis**
-(`AGENTS.md` §5.5). Gerbang butir 6 sudah dijalankan lengkap dan LULUS semua (build exit 0 → tsc
-exit 0 → 1276 tes hijau → nol berkas rahasia ter-stage), jadi yang kurang **bukan** bukti teknis,
-melainkan keputusan owner + mata owner di browser sungguhan.
+**Smoke test sesudah tayang — SEMUA SEHAT:** `/` `/film` `/login` `/katalog` `/admin` `/discover`
+→ 200 semua · `/playly` → 308 ke `/film` · **nol video hilang** (`/film` tetap menampilkan Furiosa,
+Despicable Me 4, Deadpool & Wolverine dst, 92 penanda durasi) · `/api/dramas` → 39 drama ·
+`/drama/<slug>` → 200. **Terbukti TAYANG, bukan cuma ter-push:** kelas `e50b4b` ada di CSS produksi
+`/_next/static/chunks/*.css` — kelas itu hanya ada di versi baru.
 
-**Urutan aman saat izin turun:** cermin `dramaku` dulu, lalu produksi `origin`, supaya masalah
-otentikasi ketahuan sebelum tombol rilis ditekan. Jangan `git push` polos di komputer owner — itu
-menembak `dramaku`, bukan produksi (`AGENTS.local.md` butir 5). Branch JANGAN didorong langsung ke
-main mana pun; gabungkan dulu ke `main` lokal secara fast-forward.
+**RENCANA ROLLBACK (1 baris, tanpa force-push):**
+`git revert -m 1 --no-edit 67a924e && git push dramaku main && git push origin main`
+Dashboard Vercel BUKAN jalan rollback di sini — owner tidak punya aksesnya.
 
 **🔴 Catatan yang wajib diteruskan:** uji-balik membuktikan fitur `genres` (kategori pilihan admin
-di jalur webhook) **TIDAK dijaga tes mana pun** — dilepas pun 1276 tes tetap hijau dan `tsc` exit 0.
-Jaring-terakhir anti-gangguan Playly **terjaga** (2 tes merah saat dirusak). Penjaga untuk `genres`
+di jalur webhook) **TIDAK dijaga tes mana pun** — dilepas pun 1276 tes tetap hijau, `tsc` exit 0,
+`build` exit 0. Jaring-terakhir anti-gangguan Playly **terjaga** (2 tes merah saat dirusak).
+Penjaga untuk `genres` belum dipasang, menunggu keputusan owner.
 belum dipasang, menunggu keputusan owner.
 
 **Tiga rilis berurutan hari ini, satu rantai penyelidikan:**

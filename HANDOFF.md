@@ -13,11 +13,30 @@
 
 ---
 
-## 2026-10-02 — Branch rekan digabung: popup provider unduhan Playly (BELUM DIRILIS)
+## 2026-10-02 — Branch rekan digabung + DIRILIS: popup provider unduhan Playly
 
-**STATUS: ⏸️ MENUNGGU IZIN OWNER.** Tergabung di branch lokal `merge/playly-modal-unduhan`
-commit **`67a924e`**. **Belum di-push ke mana pun** — `main` juga masih menyimpan `b617fd9`
-yang belum di-push ke kedua repo (dual push belum tuntas untuk commit itu).
+**STATUS: ✅ DIRILIS `0a42110`** (izin owner 2026-10-02: "a. Rilis dulu"). Dual push TUNTAS,
+fast-forward `5d49e3b..0a42110` ke **kedua** repo, nol paksaan. Ketiga tempat terbaca sama lewat
+`git ls-remote`: **`0a42110`**. Urutannya cermin `dramaku` dulu baru produksi `origin`, supaya
+masalah otentikasi ketahuan sebelum tombol rilis ditekan.
+
+**SMOKE TEST produksi sesudah tayang (rak devops §3 butir 5) — SEMUA SEHAT:**
+`/` `/film` `/login` `/katalog` `/admin` `/discover` → **200** semua · `/playly` → **308** dialihkan
+ke `/film` · **nol video hilang**: `/film` tetap menampilkan Furiosa, Despicable Me 4, Deadpool &
+Wolverine dst (92 penanda durasi) · `/api/dramas` → **39 drama** · `/drama/<slug>` → 200.
+**Versi baru terbukti TAYANG, bukan cuma ter-push:** kelas `e50b4b` ditemukan di CSS produksi
+`/_next/static/chunks/*.css` — kelas itu hanya ada di versi baru.
+
+**RENCANA ROLLBACK (1 baris, tanpa force-push):**
+`git revert -m 1 --no-edit 67a924e && git push dramaku main && git push origin main`
+Dipakai kalau fiturnya ternyata bermasalah. Dashboard Vercel BUKAN jalan rollback di sini —
+owner tidak punya aksesnya.
+
+**DAMPAK KE PENONTON HARI INI: NOL.** Dokumen `playly:unduhan` belum ada di produksi dan dokumen
+`unduhan` (halaman drama) isinya `{}` kosong — diperiksa lewat REST Supabase. `DownloadModal.tsx:61`
+tidak menggambar modal sama sekali kalau daftar provider kosong, jadi tombol DOWNLOAD masih
+berperilaku lama dan **warna barunya pun belum terlihat penonton**. Perubahan baru terasa setelah
+owner mengisi link lewat `/admin/videos/playly`.
 
 **Apa yang digabung.** Branch rekan `dramaku/feat/playly-modal-unduhan` (1 commit `74f8324`,
 21 berkas, +1897 baris): tombol DOWNLOAD di kotak info bawah pemutar Playly — yang sebelumnya
@@ -72,8 +91,14 @@ pesan generik, **tapi** itu pola yang sudah ada di route tetangga
 **BELUM diuji, tidak diklaim:** unduhan sungguhan (seluruh link contoh masih `example.com`) dan
 tampilan di browser sungguhan — termasuk apakah popupnya tergambar DI DEPAN pemutar.
 
-**Langkah berikutnya (butuh owner):** izin push. Urutan aman = cermin `dramaku` dulu, lalu
-produksi `origin`, lalu verifikasi di situs sungguhan.
+**Langkah berikutnya (butuh owner, SESUDAH rilis):** isi link provider di
+`/admin/videos/playly` → panel "Provider download per video" → "Atur provider" → Nama provider +
+Kualitas (boleh kosong) + Alamat (wajib `http://`/`https://`) → Simpan. Baris yang ditolak
+dilaporkan apa adanya di layar, tidak hilang diam-diam. Penonton melihatnya paling lama 5 menit
+kemudian (`/film` ber-revalidate 300). SEBELUM diisi, tombol DOWNLOAD tetap berperilaku lama.
+
+**Masih terbuka:** tawaran tes penjaga untuk `genres` (lihat temuan di atas) — belum dikerjakan,
+menunggu keputusan owner.
 
 ---
 

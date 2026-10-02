@@ -71,6 +71,27 @@ keempat tes lain akan hijau PALSU selamanya tanpa ada yang menyadarinya.
 sebelum perubahan ini — dead code lama, sengaja tidak ikut dihapus karena di luar cakupan yang
 disetujui owner.
 
+### ⛔ Surat ke Playly: DITUNDA, keputusan owner 2026-10-02
+
+**Jangan kirim `docs/surat-mitra/2026-10-01-surat-ke-playly.md` apa adanya, dan jangan menyelidiki
+ulang isinya.** Dari 4 pertanyaan di sana, **tiga sudah tidak relevan** sesudah pekerjaan hari ini:
+(1) daftar tanpa alamat berkas — pemakainya sudah dilepas di `b2a9289`; (2) embed menolak videoId —
+owner sudah memilih pemutar sendiri sejak 2026-09-09 dan punya kita lebih lengkap; (3) server lambat
+— menguntungkan Playly, bukan kebutuhan kita.
+
+**Yang tersisa bernilai cuma SATU: subtitle.** Itu satu-satunya kekurangan situs yang **tidak bisa
+kita buat sendiri** — hanya Playly yang punya datanya; terakhir diukur (2026-09-09) kosong di 9 dari
+9 video. Kalau owner mau menanyakannya lagi: **beberapa kalimat lewat chat, bukan surat 170 baris.**
+
+Suratnya sendiri **tidak dihapus** — ia merekam apa yang sudah pernah diukur dan kapan, berguna
+sebagai pembanding kalau Playly mengubah sesuatu. Tabel relevansinya ada di kepala berkas itu.
+
+**Pelajaran yang layak diteruskan:** surat itu ditulis pagi hari dan setengah isinya sudah basi
+sebelum sore — bukan karena salah tulis, melainkan karena masalahnya keburu selesai sendiri dari sisi
+kita. **Sebelum mengirim pertanyaan ke pihak ketiga, periksa ulang mana yang masih benar-benar
+menghalangi.** Menanyakan hal yang jawabannya tak akan dipakai membuang waktu dua pihak dan
+memperkecil peluang pertanyaan yang BENAR-BENAR penting ikut terbaca.
+
 ---
 
 ## 2026-10-01 — Kartu Playly "0 video": sebabnya BUKAN keamanan, dan selama ini salah dituduhkan

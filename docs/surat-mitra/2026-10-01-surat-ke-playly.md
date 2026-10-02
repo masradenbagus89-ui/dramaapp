@@ -1,9 +1,28 @@
-# Surat ke tim Playly — SIAP KIRIM (1 Oktober 2026)
+# Surat ke tim Playly — DITUNDA, JANGAN DIKIRIM APA ADANYA (1 Oktober 2026)
 
-> **Untuk owner:** berkas ini sudah lengkap, tinggal **salin bagian di bawah garis** lalu kirim ke
-> rekan Playly (chat/email). Menggantikan draf `2026-09-28-balasan-playly-embed.md` yang belum pernah
-> dikirim — pertanyaan yang masih relevan dari draf itu sudah ikut digabung ke sini, jadi cukup
-> kirim yang ini saja.
+> ## ⛔ KEPUTUSAN OWNER 2026-10-02: TIDAK JADI DIKIRIM. Jangan kirim surat ini tanpa menanyakan ulang ke owner.
+>
+> **Bukan karena isinya salah — karena sebagian besar pertanyaannya sudah TIDAK RELEVAN** sesudah
+> pekerjaan 1-2 Oktober. Sesi berikutnya: baca tabel ini dulu sebelum menyentuh berkas ini.
+>
+> | Pertanyaan di surat | Masih relevan? | Sebab |
+> |---|---|---|
+> | 1. Daftar video tanpa alamat berkas | ❌ **TIDAK** | Satu-satunya pemakainya — seksi "Video terbaru" di `/discover` — sudah **dilepas** (`b2a9289`). Tak ada lagi yang menunggu jawaban ini. |
+> | 2. Embed menolak semua videoId | ❌ **TIDAK** | Owner sudah memutuskan memakai pemutar sendiri sejak 2026-09-09, dan pemutar kita lebih lengkap daripada embed mereka. |
+> | 3. Server Playly lambat (31-98 dtk) | 🟡 informatif | Menguntungkan Playly, bukan kebutuhan kita. |
+> | 4. **Subtitle & kualitas sudah terisi?** | ✅ **YA — satu-satunya yang masih bernilai** | Subtitle satu-satunya hal yang kurang di situs dan **tidak bisa kita buat sendiri**. Terakhir diukur (2026-09-09) kosong di 9 dari 9 video. |
+>
+> **Kalau suatu saat owner mau bertanya lagi, cukup poin 4** — beberapa kalimat lewat chat, bukan
+> surat 170 baris ini. Sisanya simpan sebagai arsip: ia merekam apa yang sudah pernah diukur dan
+> kapan, berguna kalau Playly mengubah sesuatu lalu kita perlu membandingkan.
+>
+> **JANGAN selidiki ulang poin 1 & 2.** Keduanya sudah ditutup dengan bukti terukur, bukan dugaan —
+> rinciannya di `HANDOFF.md` 2026-10-01 dan 2026-10-02.
+
+---
+
+> **Catatan asal (1 Okt):** berkas ini menggantikan draf `2026-09-28-balasan-playly-embed.md` yang
+> belum pernah dikirim — pertanyaan yang masih relevan dari draf itu sudah digabung ke sini.
 >
 > **Nol rahasia di dalamnya:** tidak ada kunci API, token, atau alamat bertanda tangan. Hanya `videoId`
 > yang memang tampil publik di katalog kita sendiri, dan angka hasil pengukuran.

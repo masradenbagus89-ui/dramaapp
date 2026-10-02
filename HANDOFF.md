@@ -13,6 +13,70 @@
 
 ---
 
+## 2026-10-02 — Branch rekan digabung: popup provider unduhan Playly (BELUM DIRILIS)
+
+**STATUS: ⏸️ MENUNGGU IZIN OWNER.** Tergabung di branch lokal `merge/playly-modal-unduhan`
+commit **`67a924e`**. **Belum di-push ke mana pun** — `main` juga masih menyimpan `b617fd9`
+yang belum di-push ke kedua repo (dual push belum tuntas untuk commit itu).
+
+**Apa yang digabung.** Branch rekan `dramaku/feat/playly-modal-unduhan` (1 commit `74f8324`,
+21 berkas, +1897 baris): tombol DOWNLOAD di kotak info bawah pemutar Playly — yang sebelumnya
+hanya bisa mengaku "belum tersedia" — kini membuka popup tabel PROVIDER | DOWNLOAD. Video yang
+belum diisi mempertahankan perilaku lama. Datanya di `app_data` kunci `playly:unduhan`, diisi
+owner lewat panel `/admin/videos/playly`. **Nol SQL migrasi, nol env baru.**
+
+**Branch itu tertinggal 37 commit → 5 berkas bentrok.** Pola yang sama dengan
+`redesign/playly-card` dulu. Semua diselesaikan dengan mempertahankan **KEDUA** niat, bukan
+memilih sisi — karena sisi rekan ditulis sebelum dua rilis yang sudah tayang dan memilihnya akan
+menghapus: (a) kategori pilihan admin di jalur webhook, (b) **jaring-terakhir anti-gangguan
+Playly** (insiden HTTP 402 2026-09-26) yang mencegah seluruh video hilang dari `/beranda`,
+`/film`, `/discover`.
+
+**🔴 TEMUAN yang wajib diteruskan — `genres` TIDAK dijaga tes mana pun.** Uji-balik: jaring-
+terakhir dimatikan → **2 tes MERAH** (terjaga); `genres` dilepas dari `gabungVideoPlayly` →
+**1276 tes HIJAU**, `tsc` exit 0, `build` exit 0. Jadi hilangnya kategori jalur webhook
+**sepenuhnya senyap** — tak ada yang melapor. Komentar di `tests/playly-gabungan.test.ts:69`
+mengklaim aturan itu "diuji di berkas ini"; klaim itu **tidak benar** — `state.genre` cuma
+di-reset dan dipulangkan tiruan, hasilnya tak pernah di-assert. Penjaga belum dipasang,
+menunggu keputusan owner.
+
+**Yang saya tambahkan di atas kerja rekan:** `tempelUnduhanPlayly` ikut dipasang di jalur
+CADANGAN (petanya dari `app_data`, sumber yang tidak mati saat Playly bermasalah — tanpa itu
+tombol DOWNLOAD justru hilang saat halaman sedang bertahan hidup); tiruan
+`getPlaylyUnduhanCached` dilengkapi di `tests/playly-cadangan.test.ts` (tanpa itu 8 tes gagal —
+tiruannya ditulis sebelum fungsi itu ada, bukan bug kode); langkah coba-sendiri di berkas
+serah-terima rekan `/playly` → `/film`.
+
+**Rute `/playly` sudah pindah ke `/film`** (`47b307a`, 2026-09-26) — rekan bekerja di atas kode
+sebelum pemindahan itu. Alamat lama **tetap jalan**: `next.config.ts:52` mengalihkannya permanen.
+Uji merge juga membuktikan `app/playly/` **tidak** hidup kembali.
+
+**Klaim rekan yang TIDAK berjejak di catatan owner:** "warna kepala tabel ikut berubah di halaman
+drama — disetujui owner secara eksplisit". Dicari `#e50b4b` di `HANDOFF.md`, `antrean-deploy.md`,
+`docs/lintasai/INDEX.md` → **nol jejak**. Perubahannya sendiri kecil (`bg-pink-600` #db2777 →
+`#e50b4b`) dan terpusat di satu baris `app/components/unduhan-kelas.ts`, jadi bisa dibalik cepat.
+
+**Gerbang pra-rilis (butir 6) dijalankan lengkap, urutan build → tsc → test:**
+`rm -rf .next` bersih · `npm run build` **exit 0** (`/film` tetap Static) · `npx tsc --noEmit`
+**exit 0** · `npm test` **1276 tes / 87 berkas LULUS** · nol berkas env/kunci ter-stage.
+
+**Keamanan diverifikasi dengan membaca kode, bukan percaya catatan** (rak owasp + backend):
+otorisasi ada DI DALAM route (`isAdminRequest`/`getAdminEmail`), bukan menumpang middleware
+(CVE-2025-29927) · `guardMutation` memberi anti-CSRF same-origin + rate-limit 60/menit + 429
+ber-`Retry-After` · `parseDownloadProviders` menolak alamat non-http/https lewat
+`new URL().protocol`, jadi `javascript:` tak bisa sampai ke `href` penonton · field di-allowlist
+(anti mass assignment). Catatan: `err.message` ikut keluar di respons 500 — rak backend minta
+pesan generik, **tapi** itu pola yang sudah ada di route tetangga
+(`app/api/admin/playly/hidden/route.ts:34,82`), jadi bukan kemunduran baru; endpoint-nya admin-only.
+
+**BELUM diuji, tidak diklaim:** unduhan sungguhan (seluruh link contoh masih `example.com`) dan
+tampilan di browser sungguhan — termasuk apakah popupnya tergambar DI DEPAN pemutar.
+
+**Langkah berikutnya (butuh owner):** izin push. Urutan aman = cermin `dramaku` dulu, lalu
+produksi `origin`, lalu verifikasi di situs sungguhan.
+
+---
+
 ## 2026-10-02 — Seksi "Video terbaru" dilepas: duplikat yang rusak, bukan fitur hilang
 
 **STATUS: ✅ DIRILIS `b2a9289`** (dual push tuntas, fast-forward). Lanjutan langsung dari

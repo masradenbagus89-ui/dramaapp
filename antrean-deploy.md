@@ -3,10 +3,35 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-10-02 (**komputer OWNER**) — **✅ ANTREAN KOSONG, DUAL PUSH TUNTAS.**
-`8ffd0ef..b2a9289` fast-forward ke **kedua** repo, nol paksaan. Ketiga tempat terbaca sama lewat
-`git ls-remote` (bukan `git log` lokal): **`b2a9289`**.
-Urutannya cermin dulu baru produksi, supaya masalah otentikasi ketahuan sebelum tombol rilis ditekan.
+**Terakhir dicek:** 2026-10-02 (**komputer OWNER**) — **⏸️ ANTREAN BERISI 3 COMMIT, BELUM DIRILIS.**
+Diverifikasi lewat `git ls-remote` (bukan `git log` lokal):
+
+| Tempat | Commit | Keterangan |
+|---|---|---|
+| `origin/main` (PRODUKSI) | `5d49e3b` | yang sedang tayang |
+| `dramaku/main` (cermin) | `5d49e3b` | sama dengan produksi |
+| `main` lokal | `b617fd9` | **1 commit docs belum di-push ke mana pun** |
+| `merge/playly-modal-unduhan` lokal | `67a924e` | hasil gabungan branch rekan, **belum di-push** |
+| `dramaku/feat/playly-modal-unduhan` | `74f8324` | branch rekan di cermin, sudah ditarik |
+
+**Yang akan terbawa kalau owner memberi izin rilis (3 commit):** `b617fd9` (docs surat Playly
+DITUNDA) + `74f8324` (kerja rekan: popup provider unduhan) + `67a924e` (merge + penyelamatan 2
+fitur yang hampir mundur). Rinciannya di `HANDOFF.md` seksi paling atas.
+
+**⏸️ KENAPA BELUM DIRILIS:** menunggu izin owner — push ke `origin main` = **tombol rilis**
+(`AGENTS.md` §5.5). Gerbang butir 6 sudah dijalankan lengkap dan LULUS semua (build exit 0 → tsc
+exit 0 → 1276 tes hijau → nol berkas rahasia ter-stage), jadi yang kurang **bukan** bukti teknis,
+melainkan keputusan owner + mata owner di browser sungguhan.
+
+**Urutan aman saat izin turun:** cermin `dramaku` dulu, lalu produksi `origin`, supaya masalah
+otentikasi ketahuan sebelum tombol rilis ditekan. Jangan `git push` polos di komputer owner — itu
+menembak `dramaku`, bukan produksi (`AGENTS.local.md` butir 5). Branch JANGAN didorong langsung ke
+main mana pun; gabungkan dulu ke `main` lokal secara fast-forward.
+
+**🔴 Catatan yang wajib diteruskan:** uji-balik membuktikan fitur `genres` (kategori pilihan admin
+di jalur webhook) **TIDAK dijaga tes mana pun** — dilepas pun 1276 tes tetap hijau dan `tsc` exit 0.
+Jaring-terakhir anti-gangguan Playly **terjaga** (2 tes merah saat dirusak). Penjaga untuk `genres`
+belum dipasang, menunggu keputusan owner.
 
 **Tiga rilis berurutan hari ini, satu rantai penyelidikan:**
 

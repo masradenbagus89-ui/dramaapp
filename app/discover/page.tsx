@@ -3,7 +3,6 @@ import { Suspense } from "react";
 import { getAllDramasCachedSafe } from "@/lib/dramas";
 import { getPlaylyVideosGabunganCached } from "@/lib/playly-gabungan";
 import DramaBrowser from "../components/DramaBrowser";
-import DashboardVideoGrid from "../components/DashboardVideoGrid";
 import KerangkaKepalaKatalog from "../components/beranda/KerangkaKepalaKatalog";
 import { buildNavMenus } from "@/lib/nav-katalog";
 
@@ -35,11 +34,6 @@ export default async function DiscoverPage() {
   // saat menjelajah ada di HasilPlayly.tsx.
   const { videos: playlyVideos } = await getPlaylyVideosGabunganCached();
 
-  // Bagian "Video terbaru" hanya muncul kalau sambungan ke dashboard sudah
-  // dikonfigurasi. Tanpa penjaga ini, halaman publik akan menampilkan pesan
-  // error hanya karena env belum diisi.
-  const dashboardAktif = Boolean(process.env.DASHBOARD_API_URL?.trim());
-
   // Isi menu dihitung DI SERVER supaya kerangka kepala di bawah sudah membawa
   // menunya sejak HTML pertama. Hasilnya cuma label + alamat — jauh lebih
   // ringan dikirim ke browser daripada seluruh katalog. Pola yang sama dipakai
@@ -61,15 +55,28 @@ export default async function DiscoverPage() {
           isi `fallback` inilah SATU-SATUNYA yang dilihat penonton sebelum
           JavaScript aktif. Tulisan polos di layar hitam membuat halaman
           katalog utama terbaca seperti situs rusak. */}
+      {/* Seksi "Video terbaru" (DashboardVideoGrid) DILEPAS 2026-10-02 atas
+          keputusan owner. Ia memanggil jalur DASHBOARD UPLOAD Playly, dan jalur
+          itu menolak SELURUH daftar: terukur di produksi 20 dari 20 video gagal
+          dengan alasan "tidak ada alamat video" — Playly tidak menyertakan
+          alamat berkas di daftarnya, hanya saat video diputar.
+
+          Yang membuat seksi ini layak DIBUANG, bukan diperbaiki: ke-20 video itu
+          TERBUKTI video yang SAMA dengan yang sudah tampil sehat di /film dan
+          /beranda lewat jalur katalog (dicocokkan per judul: Furiosa, Despicable
+          Me 4, Deadpool & Wolverine, Badland Hunters, Bad Boys Ride or Die).
+          Jadi memperbaikinya cuma akan menampilkan ulang video yang sudah ada,
+          sementara membiarkannya berarti penonton terus melihat kotak kosong
+          bertulisan "Belum ada video yang di-upload dari dashboard" — kalimat
+          yang keliru, karena videonya ada dan cuma ditolak.
+
+          Jalur dashboard-nya SENDIRI tidak ikut dibuang: /api/videos masih
+          dipakai kartu status Playly di /admin (PlaylyStatusCard), jadi owner
+          tetap bisa memantau sambungannya. Yang hilang hanya penampilnya di
+          halaman penonton. Riwayat lengkap: HANDOFF.md 2026-10-01/02. */}
       <Suspense fallback={<KerangkaKepalaKatalog menus={menus} />}>
         <DramaBrowser dramas={dramas} playlyVideos={playlyVideos} />
       </Suspense>
-
-      {/* shell-wide — WAJIB sama dengan pembatas isi DramaBrowser & navbar,
-          kalau tidak tepi kiri seksi di bawah ini meleset dari grid di atasnya. */}
-      <div className="shell-wide mx-auto px-4 md:px-6">
-        {dashboardAktif && <DashboardVideoGrid />}
-      </div>
     </div>
   );
 }

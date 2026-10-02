@@ -29,7 +29,13 @@ export type DashboardVideo = {
   createdAt: string | null;
 };
 
-export type RejectedVideo = { reason: string; value: string };
+export type RejectedVideo = {
+  reason: string;
+  /** Data mentah penyebabnya — untuk LOG SERVER saja, bisa memuat alamat. */
+  value: string;
+  /** Judul/id video, aman ditampilkan ke admin. Kosong kalau tak terbaca. */
+  nama?: string;
+};
 
 export type VideoResult = {
   videos: DashboardVideo[];
@@ -124,6 +130,26 @@ function findList(raw: unknown): unknown[] {
   return [];
 }
 
+/**
+ * Nama video yang ditolak, untuk ditunjukkan ke admin.
+ *
+ * KENAPA ADA (2026-10-01): sebelumnya tiap penolakan cuma dicatat "item ke-3",
+ * jadi ketika 20 dari 20 video ditolak, tak seorang pun bisa tahu video MANA
+ * yang bermasalah — termasuk owner yang mengunggahnya sendiri. Dengan judulnya
+ * terbaca, admin bisa langsung mencocokkan dengan dashboard Playly miliknya.
+ *
+ * ⚠️ HANYA judul atau id. Keduanya memang sudah tampil publik di katalog. Yang
+ * TIDAK boleh ikut: alamat berkasnya — itu bertanda tangan dan berlaku beberapa
+ * jam, jadi menampilkannya di layar sama saja membagikan kunci pintu videonya.
+ */
+function namaVideoDitolak(rec: Record<string, unknown>, index: number): string {
+  return (
+    pickString(rec, TITLE_KEYS) ??
+    pickString(rec, ID_KEYS) ??
+    `item ke-${index + 1}`
+  );
+}
+
 /** Ubah satu baris JSON dashboard jadi bentuk standar kita. */
 function normalizeOne(
   item: unknown,
@@ -135,17 +161,21 @@ function normalizeOne(
     return { rejected: { reason: "bentuk data tidak dikenali", value: `item ke-${index + 1}` } };
   }
 
+  const nama = namaVideoDitolak(rec, index);
+
   const rawUrl = pickString(rec, VIDEO_URL_KEYS);
   if (!rawUrl) {
-    return { rejected: { reason: "tidak ada alamat video", value: `item ke-${index + 1}` } };
+    return { rejected: { reason: "tidak ada alamat video", value: `item ke-${index + 1}`, nama } };
   }
 
   const url = toHttpsUrl(rawUrl);
   if (!url) {
-    return { rejected: { reason: "alamat video harus https", value: rawUrl.slice(0, 120) } };
+    // `value` memuat potongan alamat — sengaja TIDAK pernah ikut ke balasan API
+    // (lihat app/api/videos/route.ts). Hanya `nama` yang boleh tampil.
+    return { rejected: { reason: "alamat video harus https", value: rawUrl.slice(0, 120), nama } };
   }
   if (!hostAllowed(url.hostname, allowedHosts)) {
-    return { rejected: { reason: "domain video belum diizinkan", value: url.hostname } };
+    return { rejected: { reason: "domain video belum diizinkan", value: url.hostname, nama } };
   }
 
   const thumbRaw = pickString(rec, THUMB_KEYS);
@@ -161,6 +191,56 @@ function normalizeOne(
       createdAt: pickString(rec, DATE_KEYS),
     },
   };
+}
+
+/**
+ * Hitung video yang dilewati PER ALASAN, mis. `{ "tidak ada alamat video": 20 }`.
+ *
+ * KENAPA ADA (2026-10-01): balasan /api/videos dulu cuma memulangkan
+ * `skipped: 20` — angka tanpa sebab. Akibatnya kartu admin menebak, dan
+ * tebakannya dipatok mati ke satu kalimat: "alamatnya tidak memenuhi syarat
+ * keamanan". Padahal ada EMPAT alasan berbeda dan tiga di antaranya bukan soal
+ * keamanan. Owner jadi diberi tahu masalah yang salah.
+ */
+export function ringkasAlasanDilewati(
+  rejected: RejectedVideo[],
+): Record<string, number> {
+  const hitung: Record<string, number> = {};
+  for (const r of rejected) {
+    const kunci =
+      typeof r?.reason === "string" && r.reason ? r.reason : "sebab tidak diketahui";
+    hitung[kunci] = (hitung[kunci] ?? 0) + 1;
+  }
+  return hitung;
+}
+
+/** Sebanyak apa pun yang ditolak, hanya segini nama yang ikut ke balasan. */
+const MAKS_CONTOH_NAMA = 5;
+
+/**
+ * Judul video yang ditolak, untuk ditunjukkan ke admin.
+ *
+ * KENAPA ADA (2026-10-01): owner mengunggah videonya sendiri lewat dashboard
+ * Playly, 20 dari 20 ditolak, dan tak seorang pun bisa tahu video MANA —
+ * catatan penolakan hanya berbunyi "item ke-3". Tahu jumlah dan sebab masih
+ * belum bisa ditindaklanjuti; yang menentukan adalah videonya yang mana,
+ * karena hanya owner yang bisa mencocokkannya dengan dashboard miliknya.
+ *
+ * 🔒 HANYA `nama` yang boleh keluar. Field `value` SENGAJA tidak pernah ikut:
+ * untuk alasan "alamat video harus https" isinya potongan alamat berkas, dan
+ * alamat Playly bertanda tangan — menampilkannya di layar sama saja
+ * membagikan kunci pintu videonya. Pembatas ini ditegakkan di SATU tempat,
+ * bukan dititipkan ke tiap pemanggil. Dikunci tes.
+ */
+export function contohNamaDilewati(rejected: RejectedVideo[]): string[] {
+  const nama: string[] = [];
+  for (const r of rejected) {
+    if (nama.length >= MAKS_CONTOH_NAMA) break;
+    if (typeof r?.nama === "string" && r.nama.trim()) {
+      nama.push(r.nama.trim().slice(0, 80));
+    }
+  }
+  return nama;
 }
 
 /** PENERJEMAH daftar: JSON dashboard (bentuk apa pun) -> daftar standar. */

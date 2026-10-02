@@ -103,6 +103,45 @@ describe("ringkasStatusPlayly", () => {
     }
   });
 
+  // ===== JUDUL VIDEO YANG DILEWATI =====
+  // Tahu "20 ditolak" belum bisa ditindaklanjuti; yang menentukan video MANA,
+  // karena hanya owner yang bisa mencocokkannya dengan dashboard miliknya.
+  it("judul video yang ditolak diteruskan ke tampilan", () => {
+    const r = ringkasStatusPlayly(200, {
+      ok: true,
+      count: 0,
+      skipped: 2,
+      contohDilewati: ["Despicable Me 4", "Film B"],
+    });
+    expect(r.contohDilewati).toEqual(["Despicable Me 4", "Film B"]);
+  });
+
+  it("daftar judul dibatasi 5 + isi ngawur disaring", () => {
+    const r = ringkasStatusPlayly(200, {
+      ok: true,
+      count: 0,
+      skipped: 20,
+      contohDilewati: [
+        "A", "B", "C", "D", "E", "F", "G",
+        "", "   ", 42 as never, null as never,
+      ],
+    });
+    expect(r.contohDilewati).toEqual(["A", "B", "C", "D", "E"]);
+  });
+
+  it("server tidak mengirim judul -> daftar kosong, bukan error", () => {
+    for (const buruk of [undefined, null, "bukan array", 42, {}]) {
+      const r = ringkasStatusPlayly(200, {
+        ok: true,
+        count: 0,
+        skipped: 3,
+        contohDilewati: buruk as never,
+      });
+      expect(r.contohDilewati).toEqual([]);
+      expect(r.status).toBe("tersambung");
+    }
+  });
+
   it("angka ngawur dari luar tidak bocor ke tampilan", () => {
     const r = ringkasStatusPlayly(200, {
       ok: true,

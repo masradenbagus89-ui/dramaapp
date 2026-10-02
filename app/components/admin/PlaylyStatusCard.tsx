@@ -123,12 +123,26 @@ export default function PlaylyStatusCard() {
               Kalau server tidak mengirim rinciannya, katakan terus terang bahwa
               sebabnya belum dilaporkan — JANGAN kembali menebak. */}
           {hasil?.status === "tersambung" && hasil.dilewati > 0 && (
-            <p className="mt-1 text-xs text-amber-300">
-              {hasil.dilewati} video dilewati
-              {hasil.rincianDilewati
-                ? ` — ${hasil.rincianDilewati}.`
-                : ". Sebabnya belum dilaporkan server."}
-            </p>
+            <>
+              <p className="mt-1 text-xs text-amber-300">
+                {hasil.dilewati} video dilewati
+                {hasil.rincianDilewati
+                  ? ` — ${hasil.rincianDilewati}.`
+                  : ". Sebabnya belum dilaporkan server."}
+              </p>
+
+              {/* JUDULNYA, bukan cuma jumlahnya. Tahu "20 ditolak" belum bisa
+                  ditindaklanjuti; yang menentukan adalah video MANA, karena
+                  hanya owner yang bisa mencocokkannya dengan dashboard Playly
+                  miliknya sendiri lalu mengunggah ulang yang bermasalah. */}
+              {hasil.contohDilewati.length > 0 && (
+                <p className="mt-1 text-xs text-zinc-400">
+                  Contoh: {hasil.contohDilewati.join(" · ")}
+                  {hasil.dilewati > hasil.contohDilewati.length &&
+                    ` … (+${hasil.dilewati - hasil.contohDilewati.length} lagi)`}
+                </p>
+              )}
+            </>
           )}
 
           {jamCek && (

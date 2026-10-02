@@ -11,6 +11,8 @@ export type BalasanVideos = {
   skipped?: number;
   /** Jumlah video yang dilewati PER ALASAN, mis. `{ "tidak ada alamat video": 20 }`. */
   alasanDilewati?: Record<string, number>;
+  /** Beberapa JUDUL video yang dilewati, supaya admin tahu video mana. */
+  contohDilewati?: string[];
   error?: string;
 };
 
@@ -30,6 +32,15 @@ export type RingkasanPlayly = {
    * yang salah, lalu mencari kerusakan di tempat yang tidak rusak.
    */
   rincianDilewati: string;
+  /**
+   * Judul beberapa video yang dilewati, supaya admin tahu video MANA.
+   *
+   * KENAPA ADA (2026-10-01): owner mengunggah videonya sendiri lewat dashboard
+   * Playly dan 20 dari 20 ditolak. Mengetahui JUMLAH dan SEBAB masih belum
+   * cukup untuk bertindak — yang menentukan adalah video mana, karena hanya
+   * owner yang bisa mencocokkannya dengan dashboard miliknya.
+   */
+  contohDilewati: string[];
   /** Kalimat utama yang dibaca admin; kosong kalau semuanya normal. */
   pesan: string;
 };
@@ -63,6 +74,25 @@ function rincikanAlasan(alasan: unknown): string {
   return baris.join(" · ");
 }
 
+/** Sebanyak apa pun yang dikirim server, kartu hanya menyebut segini. */
+const MAKS_NAMA_TAMPIL = 5;
+
+/**
+ * Saring daftar judul video yang ditolak sebelum masuk tampilan.
+ *
+ * Isinya datang dari dashboard pihak luar, jadi tidak dipercaya buta: yang
+ * bukan teks dibuang, yang kosong dibuang, yang kepanjangan dipotong, dan
+ * jumlahnya dibatasi supaya kartu tidak berubah jadi dinding teks saat yang
+ * ditolak puluhan.
+ */
+function daftarNamaAman(nilai: unknown): string[] {
+  if (!Array.isArray(nilai)) return [];
+  return nilai
+    .filter((n): n is string => typeof n === "string" && n.trim() !== "")
+    .slice(0, MAKS_NAMA_TAMPIL)
+    .map((n) => n.trim().slice(0, 80));
+}
+
 /**
  * Ubah (status HTTP + body) dari /api/videos jadi ringkasan siap tampil.
  *
@@ -82,6 +112,7 @@ export function ringkasStatusPlayly(
       jumlahVideo: 0,
       dilewati: 0,
       rincianDilewati: "",
+      contohDilewati: [],
       pesan:
         data?.error ??
         "Sambungan ke dashboard Playly belum diatur (DASHBOARD_API_URL kosong).",
@@ -95,6 +126,7 @@ export function ringkasStatusPlayly(
       jumlahVideo: 0,
       dilewati: 0,
       rincianDilewati: "",
+      contohDilewati: [],
       pesan:
         data?.error ?? `Dashboard tidak bisa dihubungi (HTTP ${httpStatus}).`,
     };
@@ -121,6 +153,7 @@ export function ringkasStatusPlayly(
     jumlahVideo,
     dilewati,
     rincianDilewati: rincikanAlasan(data?.alasanDilewati),
+    contohDilewati: daftarNamaAman(data?.contohDilewati),
     pesan,
   };
 }

@@ -3,10 +3,54 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-10-01 (**komputer OWNER**) — **✅ ANTREAN KOSONG, DUAL PUSH TUNTAS.**
-`d5a3592..4b6e916` fast-forward ke **kedua** repo, nol paksaan. Ketiga tempat terbaca sama lewat
-`git ls-remote` (bukan `git log` lokal): **`4b6e916`**.
+**Terakhir dicek:** 2026-10-02 (**komputer OWNER**) — **✅ ANTREAN KOSONG, DUAL PUSH TUNTAS.**
+`8ffd0ef..b2a9289` fast-forward ke **kedua** repo, nol paksaan. Ketiga tempat terbaca sama lewat
+`git ls-remote` (bukan `git log` lokal): **`b2a9289`**.
 Urutannya cermin dulu baru produksi, supaya masalah otentikasi ketahuan sebelum tombol rilis ditekan.
+
+**Tiga rilis berurutan hari ini, satu rantai penyelidikan:**
+
+| Commit | Isi | Dampak penonton |
+|---|---|---|
+| `9f399a7` | surat siap-kirim ke Playly (dokumentasi) | nol |
+| `923ddcd` | kartu admin sebut **judul** video yang ditolak | nol (halaman admin) |
+| `b2a9289` | **lepas seksi "Video terbaru"** dari `/discover` | satu kotak kosong hilang |
+
+**Kenapa seksi itu dibuang, bukan diperbaiki.** `923ddcd` membuat `/api/videos` menyebut judul video
+yang dilewati. Produksi langsung menjawab: `{"tidak ada alamat video":20}` + judul **Furiosa ·
+Despicable Me 4 · Deadpool & Wolverine · Badland Hunters · Bad Boys Ride or Die**. Kelimanya **ADA dan
+sehat di `/film` + `/beranda`** — owner sendiri sudah memutar Despicable Me 4 dari sana. Jadi seksi itu
+duplikat yang kebetulan rusak: memperbaikinya cuma menampilkan ulang video yang sudah tampil,
+membiarkannya berarti penonton terus membaca "Belum ada video yang di-upload dari dashboard" —
+kalimat yang keliru. **NOL video hilang.**
+
+**Yang SENGAJA tidak ikut dibuang:** `/api/videos` + `lib/dashboard-videos.ts` tetap hidup, masih
+dipakai kartu status Playly di `/admin`.
+
+**🔴 KOREKSI yang wajib diteruskan:** di tengah sesi saya sempat menyimpulkan kedua jalur melihat
+video BERBEDA, berdasarkan `/api/videos/<id>` yang membalas 404. **Salah** — dashboard memakai sistem
+penomoran id sendiri. **"Id tidak dikenali" ≠ "datanya tidak ada".** Ini juga petunjuk gratis untuk
+masalah embed yang buntu: kemungkinan embed menuntut id versi dashboard, sementara kita selalu
+mengirim id katalog. Belum diuji; sudah masuk surat.
+
+**Gerbang §6 penuh:** build sukses · `tsc` exit 0 · `npm test` **85 berkas / 1233 tes hijau**
+(baseline 1228 → +5 tes, nol tes lama rusak). Uji-balik: jalur dashboard dikembalikan → **MERAH**.
+
+**🪤 Pelajaran tes yang langsung terbukti:** penjaga baru menyaring komentar lebih dulu (berkas yang
+diuji sengaja menyimpan penjelasan yang menyebut nama komponen terbuang), dan penyaring itu diberi
+**jaring pengamannya sendiri** — jaring itu LANGSUNG merah, karena versi pertama penyaring melewatkan
+komentar yang menempel di ujung baris kode. Tanpa jaring itu, empat tes lain akan hijau PALSU.
+
+**Cara verifikasi tayang:** buka `/discover` → gulir ke paling bawah; seksi "Video terbaru" dan kotak
+"Belum ada video yang di-upload dari dashboard" harus **nol kemunculan**.
+
+**Rollback:** `git revert --no-edit b2a9289` + dual push — seksi itu pulih persis seperti semula.
+Nol SQL, nol env baru.
+
+---
+
+**Sebelumnya, 2026-10-01 — `4b6e916` (kartu Playly berhenti menebak):**
+`d5a3592..4b6e916` fast-forward ke kedua repo, nol paksaan.
 
 **Apa yang dirilis (`4b6e916`):** kartu Playly di `/admin` berhenti MENEBAK sebab video dilewati.
 Owner mengirim tangkapan layar: "Tersambung — **0 video**" + "20 video dilewati karena alamatnya

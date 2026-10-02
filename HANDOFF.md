@@ -9,7 +9,67 @@
 >
 > **📦 Berkas ini sudah 2.980 baris / ±240 KB** dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-10-01.
+**Terakhir diisi:** 2026-10-02.
+
+---
+
+## 2026-10-02 — Seksi "Video terbaru" dilepas: duplikat yang rusak, bukan fitur hilang
+
+**STATUS: ✅ DIRILIS `b2a9289`** (dual push tuntas, fast-forward). Lanjutan langsung dari
+penyelidikan 2026-10-01 di seksi bawah — baca itu dulu untuk konteksnya.
+
+**Keputusan owner:** buang seksi "Video terbaru" di paling bawah `/discover`
+(`DashboardVideoGrid`). **Nol video hilang bagi penonton.**
+
+**🔑 KUNCI YANG MEMBUKA SEMUANYA — judul video yang ditolak.** Rilis `923ddcd` membuat balasan
+`/api/videos` ikut menyebut JUDUL video yang dilewati, bukan cuma jumlahnya. Begitu tayang,
+produksi langsung menjawab:
+
+```
+"alasanDilewati":{"tidak ada alamat video":20}
+"contohDilewati":["Furiosa: A Mad Max Saga","Despicable Me 4","Deadpool & Wolverine",
+                  "Badland Hunters","Bad Boys Ride or Die"]
+```
+
+Kelimanya **ADA dan sehat di `/film` maupun `/beranda`** (dicocokkan per judul ke HTML produksi),
+dan owner sendiri sudah memutar Despicable Me 4 dari sana. **Jadi dua "pintu" itu melihat video yang
+SAMA** — seksi dashboard cuma duplikat yang kebetulan rusak. Memperbaikinya hanya akan menampilkan
+ulang video yang sudah tampil; membiarkannya berarti penonton terus melihat kotak kosong bertulisan
+"Belum ada video yang di-upload dari dashboard" — kalimat yang keliru.
+
+**🔴 KOREKSI ATAS KESIMPULAN SAYA SENDIRI DI SESI YANG SAMA — jangan ikut tersesat.** Di tengah jalan
+saya sempat menyimpulkan kedua pintu melihat video BERBEDA, berdasarkan `/api/videos/<id>` yang
+membalas 404 untuk id dari katalog. **Itu salah.** Sebabnya dashboard memakai **sistem penomoran id
+sendiri**, bukan video yang berbeda — terbukti begitu judulnya terbaca. **Pelajaran: "id tidak
+dikenali" ≠ "datanya tidak ada".** Pada integrasi pihak ketiga, dua sistem id yang hidup berdampingan
+itu lumrah, dan menyamakan keduanya menghasilkan kesimpulan yang terbalik.
+
+**💡 Petunjuk gratis untuk masalah EMBED yang selama ini buntu:** kalau dashboard punya penomoran id
+sendiri, besar kemungkinan embed juga menuntut id versi dashboard — sementara kita selalu mengirim id
+katalog. Itu menjelaskan kenapa `/id/<id>/embed` konsisten membalas "could not be found" untuk id yang
+videonya jelas hidup. **Belum diuji** (butuh satu id dashboard yang sah dari Playly); sudah masuk
+surat `docs/surat-mitra/2026-10-01-surat-ke-playly.md`.
+
+**Yang SENGAJA tidak ikut dibuang:** `/api/videos` + `lib/dashboard-videos.ts` tetap hidup karena
+masih dipakai kartu status Playly di `/admin`. Yang hilang hanya penampilnya di halaman penonton.
+
+**Penjaga permanen:** `tests/discover-tanpa-dashboard.test.ts` (5 tes). Uji-balik: jalur dashboard
+dikembalikan ke halaman → **MERAH**.
+
+**🪤 PELAJARAN TES YANG LANGSUNG TERBUKTI DI SESI INI — beri penyaring komentar JARING PENGAMANNYA
+SENDIRI.** Berkas `/discover` sengaja menyimpan penjelasan panjang yang menyebut nama komponen yang
+dibuang (supaya sesi berikutnya tahu alasannya), jadi penjaganya WAJIB menyaring komentar dulu — pola
+"tes cocok-teks tertipu komentar" sudah kambuh 3× di project ini. Saya tambahkan satu tes yang
+memeriksa penyaringnya sendiri, dan **tes itu langsung merah**: versi pertama penyaring hanya membuang
+komentar yang berdiri di awal baris, melewatkan yang menempel di ujung baris kode. Tanpa jaring itu,
+keempat tes lain akan hijau PALSU selamanya tanpa ada yang menyadarinya.
+
+**Bukti:** build sukses · tsc exit 0 · `npm test` **85 berkas / 1233 tes hijau** (baseline 1228 →
++5 tes, nol tes lama rusak).
+
+**Sisa yang dicatat, BELUM dikerjakan:** route `/api/videos/[id]` sudah tidak punya pemakai bahkan
+sebelum perubahan ini — dead code lama, sengaja tidak ikut dihapus karena di luar cakupan yang
+disetujui owner.
 
 ---
 

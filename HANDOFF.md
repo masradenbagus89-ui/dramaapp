@@ -97,8 +97,24 @@ Kualitas (boleh kosong) + Alamat (wajib `http://`/`https://`) → Simpan. Baris 
 dilaporkan apa adanya di layar, tidak hilang diam-diam. Penonton melihatnya paling lama 5 menit
 kemudian (`/film` ber-revalidate 300). SEBELUM diisi, tombol DOWNLOAD tetap berperilaku lama.
 
-**Masih terbuka:** tawaran tes penjaga untuk `genres` (lihat temuan di atas) — belum dikerjakan,
-menunggu keputusan owner.
+**✅ SUDAH DIKERJAKAN (owner setuju 2026-10-03) — penjaga `genres` dipasang, commit `83c1500`.**
+Celahnya ternyata lebih spesifik dari dugaan awal: tiga tes genre memang SUDAH ada, tapi ketiganya
+mengoper peta genre sebagai ARGUMEN ke `webhookKeKartu`/`gabungVideoPlayly`. Tak satu pun menguji
+apakah `rakitGabungan` — pintu yang sebenarnya dipakai halaman — benar-benar MENGAMBIL peta itu
+dari store lalu mengopernya. Salah satu tes bahkan menamai dirinya "Penjaga SAMBUNGAN", dan
+komentar di `tests/playly-gabungan.test.ts:69` mengklaim aturan itu "diuji di berkas ini" —
+klaim itu TIDAK benar: `state.genre` cuma di-reset dan dipulangkan tiruan, hasilnya tak pernah
+di-assert.
+
+Ditutup `describe (g)` dengan 3 tes yang masuk lewat PINTU TERLUAR: jalur ber-cache (halaman
+penonton), jalur segar (gerbang izin pemutar), dan cabang gagal-baca (peta tak terbaca -> kategori
+null, BUKAN daftar video ikut kosong). **UJI-BALIK sesudahnya: kerusakan yang sama persis diulang
+-> 2 tes MERAH.** Jadi penjaganya nyata, bukan hijau palsu. Kode produksi dipulihkan dan
+diverifikasi IDENTIK dengan commit yang tayang.
+
+Gerbang lengkap LULUS: build exit 0 · tsc exit 0 · **1279 tes / 87 berkas** (naik dari 1276) ·
+nol berkas rahasia. **Yang berubah HANYA berkas tes** — nol berkas produksi tersentuh, jadi
+dampak ke penonton nol.
 
 ---
 

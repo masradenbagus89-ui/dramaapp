@@ -553,3 +553,49 @@ describe("(f) provider unduhan menempel ke KEDUA sumber video", () => {
     expect(videos[0].downloadProviders?.[0].name).toBe("Telegram");
   });
 });
+
+// ====  (g) KATEGORI PILIHAN ADMIN — SAMPAI PINTU YANG DIPAKAI HALAMAN  ====
+
+describe("(g) kategori pilihan admin menempel lewat KEDUA pintu", () => {
+  // KENAPA ADA (celah ketahuan 2026-10-02 saat menggabungkan branch rekan):
+  // tiga tes genre di atas sudah menguji `webhookKeKartu` dan `gabungVideoPlayly`,
+  // tapi ketiganya mengoper peta genre sebagai ARGUMEN. Tak satu pun menguji
+  // apakah `rakitGabungan` — pintu yang sebenarnya dipakai halaman — benar-benar
+  // MENGAMBIL peta itu dari store lalu mengopernya ke bawah.
+  //
+  // Dibuktikan dengan merusak sengaja: argumen `genres` dilepas dari panggilan
+  // di dalam rakitGabungan -> 1276 tes tetap HIJAU, `tsc` exit 0, `build` exit 0.
+  // Jadi hilangnya kategori jalur webhook rusak SENYAP, dan penggabungan branch
+  // nyaris menghapusnya tanpa ada satu pun yang melapor.
+
+  it("jalur BER-CACHE (halaman penonton) mengambil peta genre dari store", async () => {
+    state.webhook = [barisWebhook("w1")];
+    state.genre = { w1: "Drama Action" };
+
+    const { videos } = await getPlaylyVideosGabunganCached();
+
+    expect(videos.map((v) => v.kategori)).toEqual(["Drama Action"]);
+  });
+
+  it("jalur SEGAR (gerbang izin pemutar) juga mengambilnya", async () => {
+    state.webhook = [barisWebhook("w1")];
+    state.genre = { w1: "Komedi" };
+
+    const { videos } = await getPlaylyVideosGabungan();
+
+    expect(videos[0].kategori).toBe("Komedi");
+  });
+
+  it("peta genre tak terbaca -> kategori null, BUKAN daftar video ikut kosong", async () => {
+    // Taruhannya cuma "video ini ikut baris genre di beranda atau tidak", jadi
+    // gagal membacanya tidak boleh menular ke daftar videonya.
+    state.webhook = [barisWebhook("w1")];
+    state.genreGagal = true;
+
+    const { videos, error } = await getPlaylyVideosGabunganCached();
+
+    expect(videos).toHaveLength(1);
+    expect(videos[0].kategori).toBeNull();
+    expect(error).toBeNull();
+  });
+});

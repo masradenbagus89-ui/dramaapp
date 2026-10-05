@@ -32,7 +32,7 @@ import {
   getPlaylyCadanganCached,
   getPlaylyGenresCached,
   getPlaylyHiddenIdsCached,
-  getPlaylyUnduhanCached,
+  getPlaylyLinkUnduhanCached,
   getPublishedPlaylyWebhookVideos,
   getPublishedPlaylyWebhookVideosCached,
   type PlaylyWebhookVideo,
@@ -199,7 +199,7 @@ export function gabungVideoPlayly(
 async function rakitGabungan(
   ambilWebhook: () => Promise<PlaylyWebhookVideo[]>,
 ): Promise<PlaylyGabunganResult> {
-  const [katalog, webhook, hiddenIds, genres, petaUnduhan] = await Promise.all([
+  const [katalog, webhook, hiddenIds, genres, linkUnduhan] = await Promise.all([
     // Sudah menangkap kegagalannya sendiri: mengembalikan daftar kosong +
     // alasan, bukan melempar.
     getPlaylyVideosPublik(),
@@ -230,12 +230,12 @@ async function rakitGabungan(
     // dari getPlaylyVideosPublik). Gagal baca = peta kosong, bukan halaman
     // gagal: taruhannya cuma "video ini ikut baris genre atau tidak".
     getPlaylyGenresCached().catch(() => ({}) as Record<string, string>),
-    // Provider unduhan per video. Kegagalannya SENGAJA tidak menular ke mana
-    // pun: peta kosong = tombol DOWNLOAD kembali ke perilaku lamanya, dan itu
+    // Link unduhan per video. Kegagalannya SENGAJA tidak menular ke mana
+    // pun: daftar kosong = popup DOWNLOAD menyebut "belum tersedia", dan itu
     // jauh lebih baik daripada halaman video yang ikut kosong gara-gara daftar
     // unduhan tak terbaca. Ini bukan pagar keamanan (tak ada yang bocor kalau
-    // peta hilang), jadi aturan gagal-aman di bawah tidak berlaku di sini.
-    getPlaylyUnduhanCached().catch(() => ({})),
+    // daftar hilang), jadi aturan gagal-aman di bawah tidak berlaku di sini.
+    getPlaylyLinkUnduhanCached().catch(() => []),
   ]);
 
   // GAGAL-AMAN (skills/owasp/SKILL.md §1 A10 "jangan fail-open"): kalau daftar
@@ -255,7 +255,7 @@ async function rakitGabungan(
   // tak ada sumber yang diam-diam tertinggal tanpa tombol.
   const videos = tempelUnduhanPlayly(
     gabungVideoPlayly(katalog.videos, webhookAman, hiddenIds.ids, genres),
-    petaUnduhan,
+    linkUnduhan,
   );
   // Katalog didahulukan karena ia sumber utama halaman ini; kalau dua-duanya
   // bermasalah, satu kalimat sudah cukup untuk pengunjung.
@@ -294,7 +294,7 @@ async function rakitGabungan(
         // sumber yang TIDAK ikut mati saat Playly bermasalah. Tanpa baris ini
         // tombol DOWNLOAD justru hilang di saat halaman sedang bertahan hidup.
         return {
-          videos: tempelUnduhanPlayly(aman, petaUnduhan),
+          videos: tempelUnduhanPlayly(aman, linkUnduhan),
           error,
           dariCadangan: true,
         };

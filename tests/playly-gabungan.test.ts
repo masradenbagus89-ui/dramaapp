@@ -18,7 +18,7 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import type { PlaylyVideoPublik } from "../lib/playly-publik";
 import type { PlaylyWebhookVideo } from "../lib/store";
-import type { PetaUnduhanPlayly } from "../lib/playly-unduhan";
+import type { LinkUnduhan } from "../lib/playly-unduhan";
 
 /** Keadaan palsu kedua sumber, diatur per-tes tanpa menyentuh jaringan/Supabase. */
 const state = {
@@ -27,8 +27,8 @@ const state = {
   hidden: [] as string[],
   /** Kategori pilihan admin per video (videoId -> nama kategori). */
   genre: {} as Record<string, string>,
-  /** Peta videoId -> provider unduhan (dokumen playly:unduhan). */
-  unduhan: {} as PetaUnduhanPlayly,
+  /** Baris link unduhan (dokumen playly:link-unduhan). */
+  unduhan: [] as LinkUnduhan[],
   /** Dinyalakan untuk meniru Supabase yang tidak bisa dihubungi. */
   webhookGagal: false,
   hiddenGagal: false,
@@ -78,7 +78,7 @@ vi.mock("../lib/store", () => ({
   // salinan yang berisi akan menutupi hasil gabungan yang justru sedang diuji.
   // Perilaku salinannya sendiri diuji terpisah di tests/playly-cadangan.test.ts.
   getPlaylyCadanganCached: async () => ({ videos: [], disimpanPada: "" }),
-  getPlaylyUnduhanCached: async () => {
+  getPlaylyLinkUnduhanCached: async () => {
     if (state.unduhanGagal) throw new Error("supabase tidak bisa dihubungi");
     return state.unduhan;
   },
@@ -140,7 +140,7 @@ beforeEach(() => {
   state.webhook = [];
   state.hidden = [];
   state.genre = {};
-  state.unduhan = {};
+  state.unduhan = [];
   state.webhookGagal = false;
   state.hiddenGagal = false;
   state.genreGagal = false;
@@ -499,38 +499,45 @@ describe("(e) dua pintu keluar — halaman wajib lewat jalur ber-cache", () => {
 // tidak menghasilkan error apa pun, cuma tombol yang tidak pernah aktif.
 // ---------------------------------------------------------------------------
 describe("(f) provider unduhan menempel ke KEDUA sumber video", () => {
-  const TELEGRAM = { name: "Telegram", quality: "1080p", url: "https://t.me/a/1" };
+  const telegram = (videoId: string): LinkUnduhan => ({
+    videoId,
+    provider: "telegram",
+    quality: "1080p",
+    url: "https://t.me/a/1",
+    createdAt: "",
+    updatedAt: "",
+  });
 
   it("video dari KATALOG dapat daftar providernya", async () => {
     state.katalog.videos = [kartuKatalog("k1")];
-    state.unduhan = { k1: [TELEGRAM] };
+    state.unduhan = [telegram("k1")];
 
     const { videos } = await getPlaylyVideosGabunganCached();
 
-    expect(videos[0].downloadProviders?.[0].url).toBe("https://t.me/a/1");
+    expect(videos[0].linkUnduhan?.[0].url).toBe("https://t.me/a/1");
   });
 
   it("video dari WEBHOOK juga dapat — inilah yang gampang tertinggal", async () => {
     state.webhook = [barisWebhook("w1")];
-    state.unduhan = { w1: [TELEGRAM] };
+    state.unduhan = [telegram("w1")];
 
     const { videos } = await getPlaylyVideosGabunganCached();
 
     expect(videos.map((v) => v.id)).toEqual(["w1"]);
-    expect(videos[0].downloadProviders?.[0].name).toBe("Telegram");
+    expect(videos[0].linkUnduhan?.[0].provider).toBe("telegram");
   });
 
-  it("video yang tidak ada di peta tetap tanpa provider (bukan array kosong)", async () => {
+  it("video yang tanpa link tetap tanpa field (bukan array kosong)", async () => {
     state.katalog.videos = [kartuKatalog("k1"), kartuKatalog("k2")];
-    state.unduhan = { k2: [TELEGRAM] };
+    state.unduhan = [telegram("k2")];
 
     const { videos } = await getPlaylyVideosGabunganCached();
 
-    expect(videos.find((v) => v.id === "k1")?.downloadProviders).toBeUndefined();
-    expect(videos.find((v) => v.id === "k2")?.downloadProviders).toHaveLength(1);
+    expect(videos.find((v) => v.id === "k1")?.linkUnduhan).toBeUndefined();
+    expect(videos.find((v) => v.id === "k2")?.linkUnduhan).toHaveLength(1);
   });
 
-  it("peta unduhan gagal dibaca TIDAK mengosongkan halaman", async () => {
+  it("daftar link unduhan gagal dibaca TIDAK mengosongkan halaman", async () => {
     // Beda dari daftar sembunyi (aturan gagal-aman di atas): peta yang hilang
     // tidak membocorkan apa pun — paling buruk tombol DOWNLOAD kembali ke
     // perilaku lamanya. Mengosongkan halaman video karenanya jauh lebih rugi.
@@ -540,17 +547,17 @@ describe("(f) provider unduhan menempel ke KEDUA sumber video", () => {
     const { videos, error } = await getPlaylyVideosGabunganCached();
 
     expect(videos.map((v) => v.id)).toEqual(["k1"]);
-    expect(videos[0].downloadProviders).toBeUndefined();
+    expect(videos[0].linkUnduhan).toBeUndefined();
     expect(error).toBeNull();
   });
 
   it("jalur SEGAR (gerbang izin pemutar) juga ikut menempel", async () => {
     state.katalog.videos = [kartuKatalog("k1")];
-    state.unduhan = { k1: [TELEGRAM] };
+    state.unduhan = [telegram("k1")];
 
     const { videos } = await getPlaylyVideosGabungan();
 
-    expect(videos[0].downloadProviders?.[0].name).toBe("Telegram");
+    expect(videos[0].linkUnduhan?.[0].provider).toBe("telegram");
   });
 });
 

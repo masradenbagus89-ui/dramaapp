@@ -41,10 +41,10 @@ vi.mock("../lib/store", () => ({
   },
   getPlaylyGenresCached: async () => ({}),
   // Peta KOSONG tetap, alasannya sama dengan getPlaylyGenresCached di atas:
-  // berkas ini menguji perilaku SALINAN, dan peta unduhan kosong membuat
+  // berkas ini menguji perilaku SALINAN, dan daftar link unduhan kosong membuat
   // tempelUnduhanPlayly tidak mengubah apa pun — jadi yang diuji tetap murni
   // aturan salinannya. Perilaku provider-nya diuji di tests/playly-unduhan.test.ts.
-  getPlaylyUnduhanCached: async () => ({}),
+  getPlaylyLinkUnduhanCached: async () => [],
   getPlaylyCadanganCached: async () => {
     if (state.cadanganGagal) throw new Error("supabase tidak bisa dihubungi");
     return state.cadangan;

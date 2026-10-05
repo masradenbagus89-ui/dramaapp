@@ -34,11 +34,16 @@ import {
 } from "./supabase";
 import { CATALOG_TTL_SECONDS } from "./dramas";
 import {
-  bacaPetaUnduhanPlayly,
-  KUNCI_UNDUHAN_PLAYLY,
-  type PetaUnduhanPlayly,
+  bacaDaftarLinkUnduhan,
+  gantiLinkVideo,
+  KUNCI_LINK_UNDUHAN,
+  terapkanLinkUnduhan,
+  validasiLinkUnduhan,
+  type LinkUnduhan,
+  type LinkUnduhanMasuk,
+  type StatusTulis,
 } from "./playly-unduhan";
-import { parseDownloadProviders, type DownloadProvider } from "./types";
+import { bacaDomainUnduhan } from "./playly-unduhan-domain";
 
 export type Admin = { email: string; name: string; addedAt: string };
 export type AdminsFile = { admins: Admin[] };
@@ -807,8 +812,8 @@ const PLAYLY_KEY_DOC = "playly:key";
 const PLAYLY_EMBEDS_DOC = "playly:embeds";
 const PLAYLY_HIDDEN_DOC = "playly:hidden";
 const PLAYLY_WEBHOOK_DOC = "playly:webhook";
-/** Dokumen provider unduhan per video. Kuncinya dipusatkan di lib/playly-unduhan.ts. */
-const PLAYLY_UNDUHAN_DOC = KUNCI_UNDUHAN_PLAYLY;
+/** Dokumen link unduhan per video. Kuncinya dipusatkan di lib/playly-unduhan.ts. */
+const PLAYLY_LINK_UNDUHAN_DOC = KUNCI_LINK_UNDUHAN;
 
 type PlaylyFile = {
   key: PlaylyKeyRecord | null;
@@ -821,8 +826,8 @@ type PlaylyFile = {
   genre?: Record<string, string>;
   /** Salinan daftar video terakhir yang berhasil (opsional: file lama tak punya). */
   cadangan?: PlaylyCadangan;
-  /** Provider unduhan per videoId (opsional: file lama tak punya). */
-  unduhan?: PetaUnduhanPlayly;
+  /** Baris link unduhan videoId × provider × kualitas (opsional: file lama tak punya). */
+  linkUnduhan?: LinkUnduhan[];
 };
 const EMPTY_PLAYLY: PlaylyFile = {
   key: null,
@@ -830,7 +835,7 @@ const EMPTY_PLAYLY: PlaylyFile = {
   hidden: [],
   webhook: [],
   genre: {},
-  unduhan: {},
+  linkUnduhan: [],
 };
 
 /** Record kunci Playly tersimpan, atau null kalau admin belum memasangnya. */
@@ -1139,66 +1144,105 @@ export async function setPlaylyVideoGenre(
   return baru;
 }
 
-// ---- Provider unduhan per video Playly (playly:unduhan) ----
+// ---- Link unduhan per video Playly (playly:link-unduhan) ----
 //
-// Bentuknya peta videoId -> daftar provider, DISIMPAN SEBAGAI SATU DOKUMEN.
-// Alasan & batasnya (termasuk kenapa bukan kolom database sungguhan) ada di
+// Bentuknya DAFTAR BARIS (videoId × provider × kualitas = unik), disimpan
+// sebagai SATU dokumen. Aturan & alasan kenapa belum tabel sungguhan ada di
 // lib/playly-unduhan.ts; di sini cuma pintu baca/tulisnya.
 //
-// TIAP PEMBACAAN MENYARING ULANG lewat `bacaPetaUnduhanPlayly`. Itu bukan
-// pengulangan yang mubazir: alamatnya berakhir di atribut `href` penonton,
-// dokumen `app_data` tidak dijaga database, dan isinya bisa saja ditulis versi
-// kode lama atau tangan manusia.
+// TIAP PEMBACAAN & PENULISAN MENYARING ULANG lewat `bacaDaftarLinkUnduhan`:
+// alamatnya berakhir di atribut `href` penonton, dokumen `app_data` tidak
+// dijaga database, dan daftar domain di env bisa berubah sesudah baris ditulis.
+//
+// BATAS JUJUR: baca-ubah-tulis pada SATU dokumen bersama, sama seperti dokumen
+// "unduhan"/"ads"/"admins". Dua penulis (mis. webhook + admin) dalam jeda
+// milidetik yang sama bisa membuat satu tulisan tertimpa. Hilang sendiri begitu
+// naik ke tabel ber-UNIQUE (supabase_migrations/2026-10-05_playly_link_unduhan.sql).
 
-/** Peta provider unduhan seluruh video. Jalur ADMIN — selalu data terbaru. */
-export async function getPlaylyUnduhan(): Promise<PetaUnduhanPlayly> {
+function bacaMentahLinkUnduhan(raw: unknown): LinkUnduhan[] {
+  return bacaDaftarLinkUnduhan(raw, bacaDomainUnduhan());
+}
+
+/** Seluruh baris link unduhan. Jalur ADMIN/TULIS — selalu data terbaru. */
+export async function getPlaylyLinkUnduhan(): Promise<LinkUnduhan[]> {
   const raw = useSupabase
-    ? await sbDocGet<unknown>(PLAYLY_UNDUHAN_DOC)
-    : readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY).unduhan;
-  return bacaPetaUnduhanPlayly(raw);
+    ? await sbDocGet<unknown>(PLAYLY_LINK_UNDUHAN_DOC)
+    : readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY).linkUnduhan;
+  return bacaMentahLinkUnduhan(raw);
 }
 
 /** Versi ber-cache untuk HALAMAN PUBLIK — alasannya sama dengan getPlaylyHiddenIdsCached. */
-export async function getPlaylyUnduhanCached(): Promise<PetaUnduhanPlayly> {
+export async function getPlaylyLinkUnduhanCached(): Promise<LinkUnduhan[]> {
   const raw = useSupabase
-    ? await sbDocGet<unknown>(PLAYLY_UNDUHAN_DOC, {
+    ? await sbDocGet<unknown>(PLAYLY_LINK_UNDUHAN_DOC, {
         revalidate: CATALOG_TTL_SECONDS,
       })
-    : readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY).unduhan;
-  return bacaPetaUnduhanPlayly(raw);
+    : readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY).linkUnduhan;
+  return bacaMentahLinkUnduhan(raw);
+}
+
+async function simpanLinkUnduhan(daftar: LinkUnduhan[]): Promise<void> {
+  // Disaring sekali lagi tepat sebelum ditulis: fungsi pemanggilnya publik, dan
+  // yang dipertaruhkan alamat yang akan dipasang di `href` penonton.
+  const bersih = bacaMentahLinkUnduhan(daftar);
+  if (useSupabase) {
+    await sbDocSet(PLAYLY_LINK_UNDUHAN_DOC, bersih);
+    return;
+  }
+  const file = readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY);
+  file.linkUnduhan = bersih;
+  writeLocal("playly.json", file);
 }
 
 /**
- * Simpan/hapus daftar provider SATU video. Mengembalikan peta TERBARU supaya
- * layar admin tak perlu membaca ulang (pola yang sama dengan setPlaylyVideoHidden).
- *
- * Daftar kosong = HAPUS entrinya (kembali "belum diisi"), bukan menyimpan array
- * kosong — lihat alasannya di lib/playly-unduhan.ts.
- *
- * BATAS JUJUR: baca-ubah-tulis pada SATU dokumen bersama, sama seperti dokumen
- * "unduhan"/"ads"/"admins". Dua admin yang menyimpan video berbeda dalam jeda
- * milidetik yang sama bisa membuat satu tulisan tertimpa. Sangat jarang (panel
- * admin dipakai satu orang) dan hilang sendiri begitu naik ke kolom asli.
+ * Pastikan semua masukan lolos validasi; kalau ada yang tidak, MELEMPAR.
+ * Pemanggil (webhook/impor/admin) wajib menyaring lebih dulu dan melaporkan
+ * penolakannya sendiri — sampai sini lolos berarti ada bug di pemanggil, dan
+ * membuangnya diam-diam akan menyembunyikan bug itu.
  */
-export async function setPlaylyUnduhanVideo(
-  videoId: string,
-  providers: DownloadProvider[],
-): Promise<PetaUnduhanPlayly> {
-  const peta = await getPlaylyUnduhan();
-  // Disaring di sini juga, bukan hanya di route: fungsi ini publik, dan yang
-  // dipertaruhkan alamat yang akan dipasang di `href` penonton.
-  const bersih = parseDownloadProviders(providers, { kualitasOpsional: true });
-  if (bersih.length) peta[videoId] = bersih;
-  else delete peta[videoId];
+function wajibSah(masuk: LinkUnduhanMasuk[]): LinkUnduhanMasuk[] {
+  const domain = bacaDomainUnduhan();
+  return masuk.map((m) => {
+    const hasil = validasiLinkUnduhan(m, domain);
+    if (!hasil.ok) throw new Error(`Link unduhan tidak sah: ${hasil.alasan}`);
+    return hasil.link;
+  });
+}
 
-  if (useSupabase) {
-    await sbDocSet(PLAYLY_UNDUHAN_DOC, peta);
-  } else {
-    const file = readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY);
-    file.unduhan = peta;
-    writeLocal("playly.json", file);
+/**
+ * Upsert banyak baris SEKALIGUS (satu baca + satu tulis) — dipakai webhook &
+ * skrip impor. Kombinasi yang sudah ada diperbarui, bukan digandakan.
+ * Mengembalikan status per masukan (urutan sama dengan `masuk`).
+ */
+export async function upsertPlaylyLinkUnduhan(
+  masuk: LinkUnduhanMasuk[],
+): Promise<StatusTulis[]> {
+  if (masuk.length === 0) return [];
+  const sah = wajibSah(masuk);
+  const lama = await getPlaylyLinkUnduhan();
+  const { daftar, status } = terapkanLinkUnduhan(lama, sah, new Date().toISOString());
+  // Semua "sama" = tak ada yang berubah -> tak perlu menulis (webhook kiriman
+  // ulang tidak memicu tulisan sia-sia).
+  if (status.some((s) => s !== "sama")) await simpanLinkUnduhan(daftar);
+  return status;
+}
+
+/**
+ * Ganti SELURUH link satu video (panel admin). Kombinasi yang tak dikirim
+ * dihapus. Mengembalikan daftar TERBARU supaya layar admin tak membaca ulang.
+ */
+export async function gantiPlaylyLinkUnduhanVideo(
+  videoId: string,
+  masuk: LinkUnduhanMasuk[],
+): Promise<LinkUnduhan[]> {
+  const sah = wajibSah(masuk);
+  if (sah.some((m) => m.videoId !== videoId)) {
+    throw new Error("Semua link wajib milik video yang sedang diubah.");
   }
-  return peta;
+  const lama = await getPlaylyLinkUnduhan();
+  const daftar = gantiLinkVideo(lama, videoId, sah, new Date().toISOString());
+  await simpanLinkUnduhan(daftar);
+  return daftar;
 }
 
 // =========  VIDEO YANG DIDORONG PLAYLY LEWAT WEBHOOK (playly:webhook)  =====

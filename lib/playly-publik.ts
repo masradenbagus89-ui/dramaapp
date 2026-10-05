@@ -26,7 +26,7 @@ import {
   type PlaylyVideo,
 } from "./playly";
 import { getAllDramasCached } from "./dramas";
-import type { DownloadProvider } from "./types";
+import type { LinkUnduhanPublik } from "./playly-unduhan";
 import {
   getPlaylyEmbedsCached,
   getPlaylyGenresCached,
@@ -83,18 +83,15 @@ export type PlaylyVideoPublik = PlaylyVideo & {
    */
   quality: string | null;
   /**
-   * Pilihan unduhan lewat provider luar (Google Share / Telegram / Mega / ...)
-   * untuk video INI. Diisi belakangan di titik gabung kedua sumber video
-   * (lib/playly-gabungan.ts), BUKAN di sini: video dari webhook juga berhak
-   * punya provider, dan menempelkannya di dua tempat = dua aturan yang bisa
-   * berbeda diam-diam.
+   * Link unduhan video INI per provider × kualitas (lib/playly-unduhan.ts).
+   * Diisi belakangan di titik gabung kedua sumber video (lib/playly-gabungan.ts),
+   * BUKAN di sini: video dari webhook juga berhak punya link, dan menempelkannya
+   * di dua tempat = dua aturan yang bisa berbeda diam-diam.
    *
-   * OPSIONAL dengan sengaja. Tidak ada field = "belum diisi admin", dan di
-   * keadaan itu tombol DOWNLOAD tetap berperilaku seperti sebelumnya. Kalau
-   * dibuat wajib, kelima berkas tampilan yang memakai tipe ini plus
-   * `webhookKeKartu` harus ikut diubah hanya untuk menuliskan array kosong.
+   * OPSIONAL dengan sengaja: tidak ada field = belum ada link, dan popup
+   * DOWNLOAD menampilkan "Link unduhan belum tersedia".
    */
-  downloadProviders?: DownloadProvider[];
+  linkUnduhan?: LinkUnduhanPublik[];
 };
 
 export type PlaylyPublikResult = {

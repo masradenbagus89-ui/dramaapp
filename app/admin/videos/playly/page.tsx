@@ -19,8 +19,9 @@ import {
   getPlaylyEmbeds,
   getPlaylyGenres,
   getPlaylyHiddenIds,
-  getPlaylyUnduhan,
+  getPlaylyLinkUnduhan,
 } from "@/lib/store";
+import { bacaDomainUnduhan } from "@/lib/playly-unduhan-domain";
 import AdminAccessDenied from "@/app/components/admin/AdminAccessDenied";
 import AdminSidebar from "@/app/components/admin/AdminSidebar";
 import PlaylyVideoPicker from "@/app/components/admin/PlaylyVideoPicker";
@@ -58,7 +59,7 @@ export default async function PlaylyVideosPage() {
       getPlaylyGenres(),
       // Jalur admin -> versi TANPA cache: begitu owner menyimpan link, layar ini
       // harus menampilkan keadaan sekarang, bukan salinan 5 menit lalu.
-      getPlaylyUnduhan(),
+      getPlaylyLinkUnduhan(),
     ]);
 
   // Video yang catatannya ada di Playly tapi BERKASNYA tidak (upload putus di
@@ -135,7 +136,11 @@ export default async function PlaylyVideosPage() {
             begitu — tentukan dulu video mana yang tayang, baru isi link
             unduhannya. Sengaja tidak dibungkus syarat "kunci sudah dipasang",
             alasannya sama dengan panel di atas. */}
-        <PlaylyUnduhanManager videos={mitra.videos} initialUnduhan={unduhan} />
+        <PlaylyUnduhanManager
+          videos={mitra.videos}
+          initialLinks={unduhan}
+          domain={bacaDomainUnduhan()}
+        />
 
         {status.configured ? (
           <PlaylyVideoPicker dramas={pilihanDrama} initialEmbeds={embeds} />

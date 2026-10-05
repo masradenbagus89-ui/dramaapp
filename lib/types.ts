@@ -105,15 +105,13 @@ export type DownloadProvider = {
   /**
    * Tulisan tambahan di tombol, mis. "1080p". Bebas — lihat catatan di atas.
    *
-   * BOLEH KOSONG, dan itu keadaan yang sah: sebagian berkas provider tidak
-   * pernah disebutkan resolusinya oleh pengunggahnya. Yang kosong tergambar
-   * sebagai tombol "Download" polos — JANGAN ditambal tebakan "1080p", karena
-   * itu menjanjikan ketajaman yang belum pernah diperiksa siapa pun (aturan
-   * yang sama dengan lencana poster di baris 214-221 di bawah).
+   * `parseDownloadProviders` MEWAJIBKANNYA (baris tanpa kualitas dibuang).
+   * Tipenya tetap opsional karena tampilan (`labelTombolProvider`) juga
+   * menerima objek yang belum lewat penyaring; yang kosong tergambar
+   * "DOWNLOAD" polos, BUKAN tebakan "1080p".
    *
-   * Jalur DRAMA tetap MEWAJIBKANNYA lewat `parseDownloadProviders` tanpa opsi
-   * (lihat `kualitasOpsional`), jadi kelonggaran ini hanya berlaku di tempat
-   * yang memintanya.
+   * Video Playly TIDAK memakai tipe ini sejak 2026-10-05 — lihat
+   * lib/playly-unduhan.ts (provider & kualitas daftar tertutup).
    */
   quality?: string;
   /** Alamat EKSTERNAL milik provider. Wajib http/https (lihat `isHttpUrl`). */
@@ -167,21 +165,7 @@ function teksSah(value: unknown, maks: number): string {
  * provider tanpa alamat sah adalah tombol yang tidak mengunduh apa pun — lebih
  * buruk daripada baris yang tidak ada.
  */
-export function parseDownloadProviders(
-  value: unknown,
-  opts: {
-    /**
-     * `true` = baris tanpa kualitas TETAP diterima (tombolnya jadi "Download"
-     * polos). Dipakai jalur video Playly, yang berkas providernya sering tidak
-     * pernah disebutkan resolusinya.
-     *
-     * Default `false` supaya jalur DRAMA yang sudah jalan tidak berubah
-     * sedikit pun: di sana baris tanpa kualitas memang dibuang sejak awal, dan
-     * melonggarkannya diam-diam = mengubah perilaku yang tidak ada yang minta.
-     */
-    kualitasOpsional?: boolean;
-  } = {},
-): DownloadProvider[] {
+export function parseDownloadProviders(value: unknown): DownloadProvider[] {
   if (!Array.isArray(value)) return [];
   const out: DownloadProvider[] = [];
   for (const raw of value) {
@@ -189,8 +173,7 @@ export function parseDownloadProviders(
     const r = raw as Record<string, unknown>;
     const name = teksSah(r.name, PROVIDER_NAMA_MAX);
     const quality = teksSah(r.quality, PROVIDER_NAMA_MAX);
-    if (!name || !isHttpUrl(r.url)) continue;
-    if (!quality && !opts.kualitasOpsional) continue;
+    if (!name || !quality || !isHttpUrl(r.url)) continue;
 
     // Kualitas kosong TIDAK disimpan sebagai string kosong: field yang ada tapi
     // hampa memaksa tiap pembaca menulis dua pemeriksaan (`?.` lalu `!== ""`).

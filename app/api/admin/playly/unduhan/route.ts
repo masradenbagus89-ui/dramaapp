@@ -1,53 +1,65 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminRequest, getAdminEmail } from "@/lib/session";
 import { guardMutation } from "@/lib/request-guard";
-import { getPlaylyUnduhan, setPlaylyUnduhanVideo } from "@/lib/store";
-import { parseDownloadProviders } from "@/lib/types";
+import { getPlaylyLinkUnduhan, gantiPlaylyLinkUnduhanVideo } from "@/lib/store";
+import {
+  KUALITAS_UNDUHAN,
+  PROVIDER_UNDUHAN,
+  validasiLinkUnduhan,
+  type LinkUnduhanMasuk,
+} from "@/lib/playly-unduhan";
+import { bacaDomainUnduhan } from "@/lib/playly-unduhan-domain";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
+/** 4 provider × 2 kualitas — lebih dari ini pasti kiriman yang keliru. */
+const MAKS_LINK_PER_VIDEO = PROVIDER_UNDUHAN.length * KUALITAS_UNDUHAN.length;
+
 /**
- * Provider unduhan per video Playly (Google Share / Telegram / Mega / ...).
+ * Link unduhan per video Playly — CADANGAN MANUAL di samping skrip impor &
+ * webhook (owner 2026-10-05).
  *
- * Dijaga sesi admin karena ia MENGUBAH apa yang dilihat seluruh pengunjung —
- * dan lebih dari itu: isinya berakhir di atribut `href` halaman penonton, jadi
- * siapa pun yang bisa menulis ke sini bisa menaruh alamat di situs kita.
+ * Dijaga sesi admin karena isinya berakhir di atribut `href` halaman penonton.
  * Otorisasinya ada DI DALAM route ini, bukan menumpang middleware saja
- * (skills/owasp/SKILL.md §1 — CVE-2025-29927: cek yang hanya ada di middleware
- * bisa dilewati lewat satu header).
+ * (skills/owasp/SKILL.md §1 — CVE-2025-29927).
  *
  * Kontrak:
- *   GET  -> { ok: true, unduhan: { [videoId]: DownloadProvider[] } }
- *   POST { videoId: string, providers: DownloadProvider[] }
- *        -> { ok: true, unduhan, disimpan: number, dibuang: number }
+ *   GET  -> { ok: true, links: LinkUnduhan[] }
+ *   POST { videoId, links: [{ provider, quality, url }] }
+ *        -> 200 { ok: true, links, disimpan }            (link video itu DIGANTI seluruhnya)
+ *        -> 400 { error, ditolak: [{ index, alasan }] }  (NOL yang disimpan)
  *
- * POST mengembalikan peta TERBARU (pola yang sama dengan route hidden) supaya
- * layar admin tidak perlu memanggil GET lagi dan tak ada jendela waktu di mana
- * layarnya menampilkan keadaan usang.
+ * Satu link saja yang tak lolos = SELURUH simpanan ditolak, beda dengan
+ * impor/webhook yang meneruskan yang sah. Alasannya: simpanan admin MENGGANTI
+ * seluruh link video itu, jadi menyimpan sebagian berarti link lama di kotak
+ * yang salah ketik ikut TERHAPUS diam-diam. Admin melihat alasannya per kotak
+ * lalu membetulkannya.
  *
- * `disimpan`/`dibuang` dikirim APA ADANYA supaya admin tahu kalau ada baris
- * yang ditolak penyaring (alamat bukan http/https, nama kosong). Tanpa angka
- * ini, baris yang dibuang hilang diam-diam dan admin mengira sudah tersimpan.
- *
- * Catatan status: kegagalan validasi dibalas 400, mengikuti route Playly
- * tetangganya (app/api/admin/playly/hidden/route.ts:66). Rak backend
- * menganjurkan 422 untuk "terbaca tapi isinya salah", tapi yang lebih mahal
- * adalah DUA konvensi berbeda di satu keluarga endpoint — konsistensi kode yang
- * sudah ada menang (§4.3).
+ * Kegagalan validasi dibalas 400, bukan 422 seperti saran rak backend: seluruh
+ * keluarga route Playly memakai 400 (app/api/admin/playly/hidden/route.ts), dan
+ * dua konvensi di satu keluarga endpoint lebih mahal daripada angkanya.
  */
+
+/** Error tak terduga: rincian ke log server, layar admin cukup pesan umum. */
+function gagalServer(tahap: string, err: unknown) {
+  console.error(
+    `[admin/playly/unduhan] gagal ${tahap}: ${err instanceof Error ? err.message : String(err)}`,
+  );
+  return NextResponse.json(
+    { error: `Gagal ${tahap}. Coba lagi sebentar lagi.` },
+    { status: 500 },
+  );
+}
 
 export async function GET(req: NextRequest) {
   if (!(await isAdminRequest(req))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   try {
-    const unduhan = await getPlaylyUnduhan();
-    return NextResponse.json({ ok: true, unduhan });
+    return NextResponse.json({ ok: true, links: await getPlaylyLinkUnduhan() });
   } catch (err) {
-    const message =
-      err instanceof Error ? err.message : "Gagal membaca daftar provider unduhan.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return gagalServer("membaca link unduhan", err);
   }
 }
 
@@ -59,55 +71,62 @@ export async function POST(req: NextRequest) {
   });
   if (blocked) return blocked;
 
-  // Identitas dari cookie sesi yang ditandatangani server, BUKAN dari body —
-  // supaya pemanggil tidak bisa mengaku jadi admin dengan mengarang isi.
+  // Identitas dari cookie sesi yang ditandatangani server, BUKAN dari body.
   const email = await getAdminEmail(req);
   if (!email) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  let body: { videoId?: unknown; providers?: unknown };
+  let body: { videoId?: unknown; links?: unknown };
   try {
     body = (await req.json()) as typeof body;
   } catch {
-    return NextResponse.json(
-      { error: "Isi permintaan tidak bisa dibaca." },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "Isi permintaan tidak bisa dibaca." }, { status: 400 });
   }
 
-  const videoId = String(body.videoId ?? "").trim();
+  const videoId = typeof body.videoId === "string" ? body.videoId.trim() : "";
   if (!videoId) {
     return NextResponse.json({ error: "Video belum dipilih." }, { status: 400 });
   }
-  // Harus array ASLI. Daftar kosong SAH (artinya "hapus semua provider video
-  // ini"), tapi field yang hilang/salah bentuk bukan — itu tanda pemanggilnya
-  // keliru, dan menganggapnya "kosong" akan MENGHAPUS data yang sudah ada.
-  if (!Array.isArray(body.providers)) {
+  // Harus array ASLI. Daftar kosong SAH ("hapus semua link video ini"), tapi
+  // field yang hilang/salah bentuk bukan — menganggapnya kosong akan MENGHAPUS
+  // link yang sudah ada.
+  if (!Array.isArray(body.links)) {
+    return NextResponse.json({ error: "Daftar link harus berupa array." }, { status: 400 });
+  }
+  if (body.links.length > MAKS_LINK_PER_VIDEO) {
     return NextResponse.json(
-      { error: "Daftar provider harus berupa array." },
+      { error: `Maksimal ${MAKS_LINK_PER_VIDEO} link per video.` },
       { status: 400 },
     );
   }
 
-  // Disaring di sini, BUKAN disimpan mentah: penyaring hanya memungut field
-  // yang dikenalnya (nama/kualitas/alamat/warna/catatan/tutorial), jadi field
-  // asing yang diselipkan ke body tidak pernah ikut tersimpan (anti mass
-  // assignment), dan alamat non-http/https ditolak (anti XSS lewat `href`).
-  const diminta = body.providers.length;
-  const bersih = parseDownloadProviders(body.providers, { kualitasOpsional: true });
+  // videoId diambil dari body UTAMA, bukan dari tiap item — satu simpanan
+  // tidak boleh menulis link ke video lain. Hanya provider/quality/url yang
+  // dipungut dari item (anti mass assignment).
+  const domain = bacaDomainUnduhan();
+  const sah: LinkUnduhanMasuk[] = [];
+  const ditolak: { index: number; alasan: string }[] = [];
+  body.links.forEach((item, index) => {
+    const r = item && typeof item === "object" ? (item as Record<string, unknown>) : {};
+    const hasil = validasiLinkUnduhan(
+      { videoId, provider: r.provider, quality: r.quality, url: r.url },
+      domain,
+    );
+    if (hasil.ok) sah.push(hasil.link);
+    else ditolak.push({ index, alasan: hasil.alasan });
+  });
+  if (ditolak.length) {
+    return NextResponse.json(
+      { error: "Ada link yang tidak lolos pemeriksaan. Tidak ada yang disimpan.", ditolak },
+      { status: 400 },
+    );
+  }
 
   try {
-    const unduhan = await setPlaylyUnduhanVideo(videoId, bersih);
-    return NextResponse.json({
-      ok: true,
-      unduhan,
-      disimpan: bersih.length,
-      dibuang: diminta - bersih.length,
-    });
+    const links = await gantiPlaylyLinkUnduhanVideo(videoId, sah);
+    return NextResponse.json({ ok: true, links, disimpan: sah.length });
   } catch (err) {
-    const message =
-      err instanceof Error ? err.message : "Gagal menyimpan perubahan.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return gagalServer("menyimpan link unduhan", err);
   }
 }

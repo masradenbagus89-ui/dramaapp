@@ -9,7 +9,44 @@
 >
 > **📦 Berkas ini sudah 2.980 baris / ±240 KB** dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-10-02.
+**Terakhir diisi:** 2026-10-05.
+
+---
+
+## 2026-10-05 — Link unduhan Playly per provider × kualitas (impor CSV + webhook + popup + admin)
+
+**STATUS: ✅ SELESAI DI BRANCH, BELUM DIRILIS.** Branch `feat/link-unduhan-provider-kualitas`
+(dibuat dari `dramaapp/main` d02700b — branch lama `feat/playly-modal-unduhan` tertinggal 42 commit,
+jangan dipakai). 5 commit `b48b319..133fe8c`. **Belum di-push ke remote mana pun.**
+Rencana + keputusan owner: `docs/lintasai/rencana/2026-10-05-link-unduhan-provider-kualitas.md`.
+
+**Keputusan owner (popup):** cakupan Playly SAJA (drama tak disentuh) · CSV dicocokkan ID dulu lalu
+judul persis (judul ganda = dilewati) · aturan ketat berlaku untuk SEMUA data · satu komponen popup.
+
+**Yang berubah:**
+- Data: dokumen `app_data` BARU **`playly:link-unduhan`** = daftar baris
+  `{videoId, provider: google|telegram|cast|mega, quality: 1080p|480p, url, createdAt, updatedAt}`,
+  kombinasi unik. Dokumen lama `playly:unduhan` tak dibaca lagi (memang belum pernah ada di produksi).
+- Validasi diperketat: **wajib https + domain PERSIS milik provider-nya** (`lib/playly-unduhan-domain.ts`,
+  tambah lewat env `PLAYLY_UNDUHAN_DOMAIN_*`). **Cast bawaannya KOSONG → link Cast ditolak** sampai
+  env `PLAYLY_UNDUHAN_DOMAIN_CAST` diisi.
+- Webhook: field `downloads` opsional; `{ video_id, downloads }` tanpa embed = pembaruan link saja.
+- Skrip: `npm run impor:unduhan -- <berkas.csv> --dry-run` (contoh `scripts/contoh-link-unduhan.csv`).
+- Popup: tabel provider × tombol kualitas; kosong = "Link unduhan belum tersedia" (alert lama dibuang).
+  **Celah ikut ditutup:** `/tonton/[id]` dulu tidak mengoper link → DOWNLOAD di halaman detail mati.
+- Admin `/admin/videos/playly`: kotak URL 4 provider × 2 kualitas.
+
+**Bukti (2026-10-05):** `.next/dev/types` basi (dari `next dev` 10-04, masih memuat route `/playly`)
+membuat build gagal palsu `Cannot find module app/playly/page.js` — folder itu dikunci proses lain,
+jadi subfolder `types` di-RENAME (bukan dihapus) ke `.next/dev/types-basi-20261005`. Sesudahnya:
+`npm run build` exit 0 (`/film` ○ ISR 5m, `/tonton/[id]` ● SSG) → `npx tsc --noEmit` exit 0 →
+`npm test` **1338 tes / 90 berkas lulus** → nol berkas env ter-track. Skrip impor diuji NYATA (mode
+berkas lokal, `data/playly.json` dipulihkan): 57 video Playly terbaca, 3 baru + 1 ditolak, impor ulang
+= 3 "sama". **BELUM diuji:** tampilan di browser sungguhan / layar HP (hanya jsdom), dan unduhan nyata.
+
+**Sebelum rilis (owner):** isi `PLAYLY_UNDUHAN_DOMAIN_CAST` di Vercel kalau Cast dipakai · tak ada SQL
+wajib (`supabase_migrations/2026-10-05_playly_link_unduhan.sql` = jalur naik kelas, BELUM perlu) ·
+jalankan gerbang aturan 6 lagi · push ke `origin` = cermin di komputer ini, `dramaapp` = PRODUKSI.
 
 ---
 

@@ -58,6 +58,12 @@ import {
   readPlaylyConfig,
   type PlaylyConfig,
 } from "./playly";
+import {
+  validasiLinkUnduhan,
+  type DomainUnduhan,
+  type LinkUnduhanMasuk,
+} from "./playly-unduhan";
+import { bacaDomainUnduhan } from "./playly-unduhan-domain";
 
 /**
  * Header tempat Playly menitipkan kunci rahasia apa adanya (jalur A).
@@ -94,8 +100,29 @@ const DESCRIPTION_KEYS = [
   "description", "deskripsi", "summary", "sinopsis", "overview", "caption",
 ];
 
-/** Dua kejadian yang kita tangani. Selain ini diakui tapi tidak diproses. */
-export type PlaylyWebhookEvent = "video.published" | "video.unpublished";
+/**
+ * Kejadian yang kita tangani. Selain ini diakui tapi tidak diproses.
+ *
+ * `video.downloads` BUKAN nama yang dikirim Playly — itu sebutan internal untuk
+ * payload yang hanya membawa `downloads` tanpa alamat player (bentuk contoh
+ * owner 2026-10-05: `{ video_id, downloads: [...] }`). Payload seperti itu
+ * memperbarui link unduhan saja; data videonya tidak disentuh.
+ */
+export type PlaylyWebhookEvent = "video.published" | "video.unpublished" | "video.downloads";
+
+/**
+ * Batas item `downloads` per notifikasi. Isi yang bermakna paling banyak
+ * 4 provider × 2 kualitas = 8; batas longgar ini cuma mencegah satu kiriman
+ * raksasa membuat dokumen membengkak.
+ */
+export const MAKS_UNDUHAN_PER_WEBHOOK = 50;
+
+/** Hasil pemeriksaan array `downloads`: yang lolos + yang ditolak beserta alasannya. */
+export type UnduhanWebhook = {
+  sah: LinkUnduhanMasuk[];
+  /** `index` = posisi item di array `downloads` yang dikirim (mulai 0). */
+  ditolak: { index: number; alasan: string }[];
+};
 
 /** Bentuk siap-pakai hasil pembacaan payload — sudah bersih & tervalidasi. */
 export type PlaylyWebhookPayload = {
@@ -117,6 +144,12 @@ export type PlaylyWebhookPayload = {
   embedUrl: string | null;
   /** Sampul yang SUDAH lolos https / data-URI gambar; null kalau tak ada. */
   thumbnailUrl: string | null;
+  /**
+   * Link unduhan dari field `downloads` yang OPSIONAL. null = field tidak
+   * dikirim (payload lama) — dan itu berarti "jangan sentuh link apa pun",
+   * BUKAN "hapus semua link".
+   */
+  downloads: UnduhanWebhook | null;
 };
 
 export type PlaylyWebhookParse =
@@ -360,6 +393,7 @@ function ambilRecordVideo(
 export function parseWebhookPayload(
   rawBody: string,
   config: PlaylyConfig = readPlaylyConfig(),
+  domain: DomainUnduhan = bacaDomainUnduhan(),
 ): PlaylyWebhookParse {
   let json: unknown;
   try {
@@ -405,13 +439,42 @@ export function parseWebhookPayload(
         durationSeconds: null,
         embedUrl: null,
         thumbnailUrl: null,
+        // Video yang ditarik tidak perlu link unduhan; kalau ikut dikirim,
+        // diabaikan — menyimpannya cuma menambah link untuk video tersembunyi.
+        downloads: null,
       },
     };
   }
 
   // Alamat polos (EMBED_KEYS) DIDAHULUKAN dari kode tempel: kalau Playly sudah
   // mengirim alamatnya, tak ada gunanya mengupas HTML lebih dulu.
+  const unduhan = bacaUnduhanWebhook(rec, video, videoId, domain);
+  if (!unduhan.ok) return { ok: false, error: unduhan.error };
+
   const embedMentah = pickString(video, [...EMBED_KEYS, ...EMBED_CODE_KEYS]);
+
+  // Tanpa alamat player TAPI membawa `downloads` = pembaruan link saja. Dulu
+  // payload seperti ini selalu ditolak 400, jadi tidak ada perilaku sah lama
+  // yang berubah karenanya.
+  if (!embedMentah && unduhan.hasil) {
+    return {
+      ok: true,
+      payload: {
+        event: "video.downloads",
+        videoId,
+        title: "",
+        description: null,
+        year: null,
+        genre: null,
+        creator: null,
+        durationSeconds: null,
+        embedUrl: null,
+        thumbnailUrl: null,
+        downloads: unduhan.hasil,
+      },
+    };
+  }
+
   if (!embedMentah) {
     return { ok: false, error: "Field 'video.embed_code' (atau 'embedUrl') wajib ada." };
   }
@@ -452,6 +515,58 @@ export function parseWebhookPayload(
       ),
       embedUrl,
       thumbnailUrl,
+      downloads: unduhan.hasil,
     },
   };
+}
+
+/**
+ * Baca array `downloads` (opsional). Dicari di dalam objek video dulu, lalu di
+ * akar badan permintaan — bentuk pipih dan bersarang sama-sama didukung,
+ * seperti field video lainnya.
+ *
+ * Item yang tak lolos TIDAK menggugurkan notifikasinya: dicatat di `ditolak`
+ * dan dilaporkan di balasan. Mengulang kiriman tak akan memperbaiki link yang
+ * memang salah, jadi menolak seluruh notifikasi cuma membuat Playly mengetuk
+ * ulang selamanya. Yang menggugurkan hanya BENTUK yang salah total (bukan
+ * array, atau kebanyakan item).
+ *
+ * Validasinya `validasiLinkUnduhan` — gerbang yang SAMA dengan skrip impor &
+ * panel admin (https + domain per provider).
+ */
+function bacaUnduhanWebhook(
+  rec: Record<string, unknown>,
+  video: Record<string, unknown>,
+  videoId: string,
+  domain: DomainUnduhan,
+): { ok: true; hasil: UnduhanWebhook | null } | { ok: false; error: string } {
+  const mentah = video.downloads ?? rec.downloads;
+  if (mentah === undefined || mentah === null) return { ok: true, hasil: null };
+  if (!Array.isArray(mentah)) {
+    return { ok: false, error: "Field 'downloads' wajib berupa array." };
+  }
+  if (mentah.length > MAKS_UNDUHAN_PER_WEBHOOK) {
+    return {
+      ok: false,
+      error: `Field 'downloads' maksimal ${MAKS_UNDUHAN_PER_WEBHOOK} item per notifikasi.`,
+    };
+  }
+
+  const hasil: UnduhanWebhook = { sah: [], ditolak: [] };
+  mentah.forEach((item, index) => {
+    const r = asRecord(item);
+    if (!r) {
+      hasil.ditolak.push({ index, alasan: "item bukan objek" });
+      return;
+    }
+    // videoId SELALU dari notifikasinya, tak pernah dari item: satu notifikasi
+    // tidak boleh menulis link ke video lain.
+    const v = validasiLinkUnduhan(
+      { videoId, provider: r.provider, quality: r.quality, url: r.url },
+      domain,
+    );
+    if (v.ok) hasil.sah.push(v.link);
+    else hasil.ditolak.push({ index, alasan: v.alasan });
+  });
+  return { ok: true, hasil };
 }

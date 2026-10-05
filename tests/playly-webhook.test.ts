@@ -187,6 +187,9 @@ describe("parseWebhookPayload — isi payload tetap diperiksa walau pengirimnya 
       durationSeconds: null,
       embedUrl: "https://playly-dashboard.vercel.app/id/1/embed",
       thumbnailUrl: null,
+      // Keputusan sadar 2026-10-05: field `downloads` tidak dikirim = null
+      // ("jangan sentuh link apa pun"), BUKAN daftar kosong ("hapus semua").
+      downloads: null,
     });
   });
 
@@ -404,6 +407,7 @@ describe("parseWebhookPayload — bentuk PIPIH (data video langsung di badan)", 
       durationSeconds: null,
       embedUrl: "https://playly-dashboard.vercel.app/id/900/embed",
       thumbnailUrl: "https://playly-dashboard.vercel.app/thumb/900.jpg",
+      downloads: null,
     });
   });
 

@@ -3,9 +3,11 @@ import {
   parseWebhookPayload,
   readWebhookSecret,
   verifyWebhookRequest,
+  type UnduhanWebhook,
 } from "@/lib/playly-webhook";
 import {
   setPlaylyWebhookVideoStatus,
+  upsertPlaylyLinkUnduhan,
   upsertPlaylyWebhookVideo,
   type PlaylyWebhookVideo,
 } from "@/lib/store";
@@ -32,6 +34,29 @@ function balas(body: Record<string, unknown>, status = 200) {
 function catatError(tahap: string, err: unknown): void {
   const pesan = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
   console.error(`[playly-webhook] gagal di tahap ${tahap}: ${pesan}`);
+}
+
+/** Ringkasan hasil `downloads` untuk balasan — supaya Playly tahu item mana yang ditolak. */
+type LaporanUnduhan = {
+  baru: number;
+  diperbarui: number;
+  sama: number;
+  ditolak: UnduhanWebhook["ditolak"];
+};
+
+/**
+ * Simpan link unduhan yang sudah lolos validasi. Kiriman ulang aman: kombinasi
+ * video × provider × kualitas yang sama MEMPERBARUI barisnya (atau tak
+ * menyentuh apa pun kalau alamatnya sama), tidak pernah menggandakan.
+ */
+async function simpanUnduhan(unduhan: UnduhanWebhook): Promise<LaporanUnduhan> {
+  const status = await upsertPlaylyLinkUnduhan(unduhan.sah);
+  return {
+    baru: status.filter((s) => s === "baru").length,
+    diperbarui: status.filter((s) => s === "diperbarui").length,
+    sama: status.filter((s) => s === "sama").length,
+    ditolak: unduhan.ditolak,
+  };
 }
 
 // POST /api/webhooks/playly — dipanggil OLEH Playly saat ada video baru atau
@@ -131,6 +156,29 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    if (payload.event === "video.downloads") {
+      // Pembaruan link saja. Kalau TIDAK satu pun item lolos, notifikasinya
+      // tak menghasilkan apa-apa — dibalas 400 supaya kesalahan integrasi
+      // terlihat, bukan diaku "beres".
+      if (payload.downloads!.sah.length === 0) {
+        return balas(
+          {
+            ok: false,
+            error: "Tidak ada link unduhan yang sah di field 'downloads'.",
+            videoId: payload.videoId,
+            downloads: { baru: 0, diperbarui: 0, sama: 0, ditolak: payload.downloads!.ditolak },
+          },
+          400,
+        );
+      }
+      return balas({
+        ok: true,
+        event: payload.event,
+        videoId: payload.videoId,
+        downloads: await simpanUnduhan(payload.downloads!),
+      });
+    }
+
     // video.published — parseWebhookPayload menjamin embedUrl sudah terisi dan
     // lolos daftar domain, jadi tidak ada baris tanpa alamat player yang masuk.
     const video: PlaylyWebhookVideo = {
@@ -147,6 +195,10 @@ export async function POST(req: NextRequest) {
       receivedAt,
     };
     const aksi = await upsertPlaylyWebhookVideo(video);
+    // Link disimpan SESUDAH videonya. Kalau langkah ini gagal, Playly menerima
+    // 500 lalu mengirim ulang — dan pengiriman ulang itu aman di kedua langkah
+    // (video by videoId, link by kombinasi unik).
+    const downloads = payload.downloads ? await simpanUnduhan(payload.downloads) : undefined;
 
     // (4) Balasan pendek. Playly cuma perlu tahu "diterima"; isi panjang di sini
     // memperlambat balasan, dan balasan lambat membuat gateway mana pun
@@ -156,6 +208,9 @@ export async function POST(req: NextRequest) {
       event: payload.event,
       videoId: video.videoId,
       aksi,
+      // Field ini hanya ada kalau `downloads` dikirim — balasan untuk payload
+      // lama tetap persis seperti dulu.
+      ...(downloads ? { downloads } : {}),
     });
   } catch (err) {
     catatError("menyimpan video", err);

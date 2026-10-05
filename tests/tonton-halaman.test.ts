@@ -205,3 +205,34 @@ describe("halaman tonton tidak dibuat di muka saat build", () => {
     expect(kode).not.toMatch(/getPlaylyVideosGabungan\(/);
   });
 });
+
+// ---------------------------------------------------------------------------
+// SAMBUNGAN link unduhan (celah ketahuan 2026-10-05): halaman ini memanggil
+// InfoVideoPlayly TANPA link, sehingga tombol DOWNLOAD di halaman detail tak
+// pernah bisa membuka apa pun walau linknya sudah diisi. Diuji dari pohon
+// elemen yang BENAR-BENAR dikembalikan halaman — bukan dengan mengoper
+// argumen sendiri ke komponennya.
+// ---------------------------------------------------------------------------
+describe("tombol DOWNLOAD di halaman tonton menerima link videonya", () => {
+  type Simpul = { type?: unknown; props?: Record<string, unknown> };
+  function cariProps(simpul: unknown, nama: string): Record<string, unknown> | null {
+    if (!simpul || typeof simpul !== "object") return null;
+    if (Array.isArray(simpul)) {
+      for (const anak of simpul) {
+        const ketemu = cariProps(anak, nama);
+        if (ketemu) return ketemu;
+      }
+      return null;
+    }
+    const s = simpul as Simpul;
+    if (typeof s.type === "function" && s.type.name === nama) return s.props ?? null;
+    return cariProps(s.props?.children, nama);
+  }
+
+  it("linkUnduhan video diteruskan apa adanya ke InfoVideoPlayly", async () => {
+    const links = [{ provider: "mega" as const, quality: "480p" as const, url: "https://mega.nz/file/a" }];
+    state.videos = [video("v1", { linkUnduhan: links })];
+    const halaman = await TontonPage(props("v1"));
+    expect(cariProps(halaman, "InfoVideoPlayly")?.linkUnduhan).toEqual(links);
+  });
+});

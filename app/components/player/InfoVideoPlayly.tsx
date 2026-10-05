@@ -33,7 +33,7 @@ import { Button } from "@/components/ui/button";
 import ShareButton from "@/app/components/ShareButton";
 import ModalProviderPlayly from "./ModalProviderPlayly";
 import { cn } from "@/lib/utils";
-import type { DownloadProvider } from "@/lib/types";
+import type { LinkUnduhanPublik } from "@/lib/playly-unduhan";
 
 /**
  * Genre yang dipajang paling banyak segini. Kotaknya sempit, dan daftar OMDb
@@ -56,26 +56,12 @@ export type InfoVideoPlaylyProps = {
   /** Genre mentah dari katalog, mis. "Action, Sci-Fi". */
   genre?: string | null;
   /**
-   * Pilihan unduhan lewat provider luar untuk video INI (diisi admin di
-   * /admin/videos/playly). Terisi = tombol DOWNLOAD membuka/menutup POPUP
-   * pilihan provider yang mengambang di tengah layar.
-   *
-   * Default array kosong, BUKAN wajib: mayoritas video belum diisi providernya,
-   * dan di keadaan itu tombolnya harus tetap berperilaku seperti sebelumnya.
+   * Link unduhan video INI per provider × kualitas (lib/playly-unduhan.ts).
+   * Tombol DOWNLOAD SELALU membuka popup: ada link -> tabel provider; belum
+   * ada -> popup menyebut "Link unduhan belum tersedia" (permintaan owner
+   * 2026-10-05, menggantikan kotak peringatan browser yang dulu dipakai).
    */
-  providers?: DownloadProvider[];
-  /**
-   * Aksi tombol DOWNLOAD saat video ini BELUM punya provider.
-   *
-   * Jalur unduh langsung untuk video Playly memang tidak ada: berkasnya beda
-   * domain dengan alamat bertanda tangan yang kedaluwarsa ~6 jam, sehingga
-   * atribut `download` milik browser diabaikan (keputusan owner 2026-09-21,
-   * lihat app/components/DownloadButton.tsx:44-47). Selama providernya belum
-   * diisi, tombolnya mengaku belum siap — bukan diam-diam tidak melakukan apa
-   * pun. Sengaja DIPERTAHANKAN, bukan dihapus: menghilangkan tombol untuk
-   * video yang belum diisi = kemunduran yang tak ada yang minta.
-   */
-  onDownload?: () => void;
+  linkUnduhan?: LinkUnduhanPublik[];
   className?: string;
 };
 
@@ -85,8 +71,7 @@ export default function InfoVideoPlayly({
   quality,
   durationLabel,
   genre,
-  providers = [],
-  onDownload,
+  linkUnduhan = [],
   className,
 }: InfoVideoPlaylyProps) {
   // Sengaja HANYA di memori halaman (useState), tidak ditulis ke mana pun.
@@ -101,7 +86,6 @@ export default function InfoVideoPlayly({
   // sebelum ada yang memintanya.
   const [popupTerbuka, setPopupTerbuka] = useState(false);
 
-  const punyaProvider = providers.length > 0;
 
   const durasi = durationLabel && durationLabel !== DURASI_KOSONG ? durationLabel : null;
   const keterangan = [contentRating, quality, durasi].filter(
@@ -162,23 +146,18 @@ export default function InfoVideoPlayly({
         )}
 
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          {/* DUA PERILAKU, ditentukan ada-tidaknya provider — pola yang sama
-              dengan DownloadButton.tsx di halaman detail drama:
-              1. ADA provider  -> membuka/menutup popup pilihan provider.
-              2. BELUM diisi   -> perilaku lama (mengaku belum siap). */}
+          {/* SATU perilaku untuk semua video: membuka/menutup popup. Isinya
+              yang berbeda — tabel provider, atau "Link unduhan belum tersedia"
+              (popup memutuskannya sendiri dari `links`). */}
           <Button
             type="button"
-            onClick={
-              punyaProvider
-                ? () => setPopupTerbuka((t) => !t)
-                : (onDownload ?? unduhBelumSiap)
-            }
+            onClick={() => setPopupTerbuka((t) => !t)}
             // `aria-haspopup="dialog"` memberi tahu pembaca layar bahwa tombol
             // ini membuka jendela, bukan menyisipkan isi di halaman. `aria-controls`
-            // DILEPAS: popupnya bukan lagi anak kotak ini, dan menunjuk id yang
+            // DILEPAS: popupnya bukan anak kotak ini, dan menunjuk id yang
             // hidup-mati berpindah tempat justru menyesatkan.
-            aria-haspopup={punyaProvider ? "dialog" : undefined}
-            aria-expanded={punyaProvider ? popupTerbuka : undefined}
+            aria-haspopup="dialog"
+            aria-expanded={popupTerbuka}
             className="h-9 rounded-full bg-pink-600 px-4 text-xs font-bold tracking-wide text-white hover:bg-pink-500"
           >
             <Download className="size-4" />
@@ -212,17 +191,13 @@ export default function InfoVideoPlayly({
       </section>
 
       {/* DI LUAR kotak (alasannya di komentar fragment di atas). Popup sendiri
-          yang memutuskan menggambar atau tidak lewat prop `open` — penjagaan
-          `punyaProvider` tetap di sini supaya video tanpa provider tak pernah
-          memasang penangkap tombol Escape yang tak ada gunanya. */}
-      {punyaProvider && (
-        <ModalProviderPlayly
-          open={popupTerbuka}
-          providers={providers}
-          title={title}
-          onClose={() => setPopupTerbuka(false)}
-        />
-      )}
+          yang memutuskan menggambar atau tidak lewat prop `open`. */}
+      <ModalProviderPlayly
+        open={popupTerbuka}
+        links={linkUnduhan}
+        title={title}
+        onClose={() => setPopupTerbuka(false)}
+      />
     </>
   );
 }
@@ -241,14 +216,4 @@ export function pecahGenre(genre: string | null | undefined): string[] {
     .map((g) => g.trim())
     .filter((g) => g !== "")
     .slice(0, GENRE_MAKS);
-}
-
-/**
- * Perilaku bawaan tombol DOWNLOAD untuk video yang providernya BELUM diisi
- * admin (/admin/videos/playly). Bukan sisa pekerjaan yang terlupa: selama tidak
- * ada satu pun alamat yang sah untuk video itu, mengaku belum tersedia lebih
- * jujur daripada membuka panel kosong.
- */
-function unduhBelumSiap() {
-  alert("Unduhan untuk video ini belum tersedia. Fiturnya sedang disiapkan.");
 }

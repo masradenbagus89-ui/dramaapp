@@ -63,7 +63,7 @@ export default function PlaylyVideoGrid({
                 quality={aktif.quality}
                 durationLabel={aktif.durationLabel}
                 genre={aktif.genre}
-                providers={aktif.downloadProviders}
+                linkUnduhan={aktif.linkUnduhan}
               />
               {aktif.dramaHref && aktif.dramaTitle && (
                 <p className="mt-2 text-xs text-zinc-400">

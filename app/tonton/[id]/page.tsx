@@ -156,6 +156,10 @@ export default async function TontonPage(props: PageProps<"/tonton/[id]">) {
             quality={video.quality}
             durationLabel={video.durationLabel}
             genre={video.kategori ?? video.genre}
+            // Sampai 2026-10-05 baris ini TIDAK ada, sehingga tombol DOWNLOAD
+            // di halaman detail tak pernah bisa membuka link apa pun walau
+            // linknya sudah diisi — dijaga tests/tonton-halaman.test.ts.
+            linkUnduhan={video.linkUnduhan}
           />
           {video.dramaHref && video.dramaTitle && (
             <p className="mt-2 text-xs text-zinc-400">

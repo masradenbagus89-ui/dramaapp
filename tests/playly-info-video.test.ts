@@ -22,7 +22,7 @@
 //
 // JSX sengaja tidak dipakai (createElement langsung) supaya berkas ini tetap
 // .ts dan cocok dengan `include` di vitest.config.ts.
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { createElement as h, act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -172,18 +172,20 @@ describe("InfoVideoPlayly — tombol Simpan benar-benar berubah saat diklik", ()
 });
 
 describe("InfoVideoPlayly — tombol DOWNLOAD", () => {
-  it("memanggil handler yang dikirim pemanggil", () => {
-    let dipanggil = 0;
-    act(() =>
-      root.render(
-        h(InfoVideoPlayly, { ...LENGKAP, onDownload: () => { dipanggil++; } }),
-      ),
-    );
+  // Sampai 2026-10-05 tombol ini memanggil `alert()` untuk video tanpa link.
+  // Sekarang SELALU membuka popup (isi kosong diurus popup-nya sendiri —
+  // tests/playly-modal-provider.test.ts); yang dijaga di sini: tak ada lagi
+  // kotak peringatan browser yang menghentikan halaman.
+  it("membuka popup, bukan kotak peringatan browser", () => {
+    const alertPalsu = vi.spyOn(window, "alert").mockImplementation(() => {});
+    act(() => root.render(h(InfoVideoPlayly, LENGKAP)));
     const tombol = Array.from(container.querySelectorAll("button")).find((b) =>
       b.textContent?.includes("DOWNLOAD"),
     ) as HTMLButtonElement;
     act(() => tombol.click());
-    expect(dipanggil).toBe(1);
+    expect(alertPalsu).not.toHaveBeenCalled();
+    expect(document.querySelector('[role="dialog"]')).not.toBeNull();
+    alertPalsu.mockRestore();
   });
 });
 

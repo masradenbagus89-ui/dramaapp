@@ -18,8 +18,9 @@
 // 2) rel="noopener noreferrer". Tanpa `noopener`, situs provider yang dibuka
 //    bisa menyetir tab DramaKu lewat `window.opener` — kerusakan yang tidak
 //    memunculkan error apa pun.
-// 3) PERILAKU LAMA. Video yang providernya belum diisi HARUS tetap memakai
-//    jalur lamanya. Kalau hilang, itu kemunduran senyap untuk 46 video yang ada.
+// 3) ISI per KASUS (owner 2026-10-05): link lengkap, sebagian (baris/tombol
+//    yang tak ada linknya disembunyikan), dan kosong ("Link unduhan belum
+//    tersedia" — menggantikan kotak peringatan browser yang dulu dipakai).
 //
 // JSX sengaja tidak dipakai (createElement langsung) supaya berkas ini tetap
 // .ts dan cocok dengan `include` di vitest.config.ts — alasan yang sama dengan
@@ -29,7 +30,7 @@ import { createElement as h, act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import InfoVideoPlayly from "../app/components/player/InfoVideoPlayly";
 import { labelTombolProvider } from "../app/components/unduhan-kelas";
-import type { DownloadProvider } from "../lib/types";
+import type { LinkUnduhanPublik } from "../lib/playly-unduhan";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
@@ -48,19 +49,36 @@ afterEach(() => {
   container.remove();
 });
 
-const PROVIDERS: DownloadProvider[] = [
-  { name: "Google Share", quality: "1080p", url: "https://drive.test/a" },
-  { name: "Telegram", quality: "480p", url: "https://t.me/contoh/2" },
-  // Tanpa kualitas — keadaan yang sah, tombolnya harus jadi "DOWNLOAD" polos.
-  { name: "Sendcm", url: "https://sendcm.test/c" },
+/** LENGKAP: 4 provider × 2 kualitas, sengaja diacak urutannya. */
+const LENGKAP: LinkUnduhanPublik[] = (["mega", "cast", "telegram", "google"] as const).flatMap(
+  (provider) =>
+    (["480p", "1080p"] as const).map((quality) => ({
+      provider,
+      quality,
+      url: `https://${provider}.contoh/${quality}`,
+    })),
+);
+
+/** SEBAGIAN: Telegram cuma 480p, Mega cuma 1080p; Google & Cast tak punya link. */
+const SEBAGIAN: LinkUnduhanPublik[] = [
+  { provider: "mega", quality: "1080p", url: "https://mega.nz/file/a" },
+  { provider: "telegram", quality: "480p", url: "https://t.me/contoh/2" },
 ];
 
-function pasang(providers?: DownloadProvider[]) {
+function pasang(linkUnduhan?: LinkUnduhanPublik[]) {
   act(() =>
     root.render(
-      h(InfoVideoPlayly, { title: "Video Uji", durationLabel: "12:00", providers }),
+      h(InfoVideoPlayly, { title: "Video Uji", durationLabel: "12:00", linkUnduhan }),
     ),
   );
+}
+
+/** [label provider, label tombol...] per baris tabel. */
+function isiTabel(): string[][] {
+  return Array.from(popup()!.querySelectorAll("tbody tr")).map((tr) => [
+    tr.querySelector("td")!.textContent!.trim(),
+    ...Array.from(tr.querySelectorAll("a")).map((a) => a.textContent!.trim()),
+  ]);
 }
 
 /** Tombol DOWNLOAD utama di deretan tombol. */
@@ -95,27 +113,27 @@ function klik(el: Element) {
 
 describe("Popup provider — buka & tutup", () => {
   it("TERTUTUP saat kotak pertama digambar", () => {
-    pasang(PROVIDERS);
+    pasang(LENGKAP);
     expect(popup()).toBeNull();
     expect(tombolDownload().getAttribute("aria-expanded")).toBe("false");
   });
 
   it("klik DOWNLOAD membuka popup", () => {
-    pasang(PROVIDERS);
+    pasang(LENGKAP);
     klik(tombolDownload());
     expect(popup()).not.toBeNull();
     expect(tombolDownload().getAttribute("aria-expanded")).toBe("true");
   });
 
   it("klik DOWNLOAD lagi menutupnya", () => {
-    pasang(PROVIDERS);
+    pasang(LENGKAP);
     klik(tombolDownload());
     klik(tombolDownload());
     expect(popup()).toBeNull();
   });
 
   it("tombol × menutupnya", () => {
-    pasang(PROVIDERS);
+    pasang(LENGKAP);
     klik(tombolDownload());
     const tutup = container.querySelector('[aria-label="Tutup"]');
     expect(tutup).not.toBeNull();
@@ -124,7 +142,7 @@ describe("Popup provider — buka & tutup", () => {
   });
 
   it("Escape menutupnya", () => {
-    pasang(PROVIDERS);
+    pasang(LENGKAP);
     klik(tombolDownload());
     expect(popup()).not.toBeNull();
     act(() => {
@@ -134,7 +152,7 @@ describe("Popup provider — buka & tutup", () => {
   });
 
   it("klik area gelap di luar kotak menutupnya", () => {
-    pasang(PROVIDERS);
+    pasang(LENGKAP);
     klik(tombolDownload());
     klik(lapisGelap());
     expect(popup()).toBeNull();
@@ -144,7 +162,7 @@ describe("Popup provider — buka & tutup", () => {
     // Tanpa penjaga `stopPropagation`, klik tombol provider pun ikut menutup
     // popup sebelum tautannya sempat terbuka — kerusakan yang cuma terlihat
     // saat benar-benar dicoba, bukan di tangkapan layar.
-    pasang(PROVIDERS);
+    pasang(LENGKAP);
     klik(tombolDownload());
     klik(popup()!.querySelector("tbody a")!);
     expect(popup()).not.toBeNull();
@@ -156,7 +174,7 @@ describe("Popup provider — buka & tutup", () => {
     // luarnya memakai `fixed inset-0`. Bersarang di dalam kotak, popupnya
     // berisiko terkurung stacking context induk lalu tergambar di BELAKANG
     // pemutar — gagal tanpa error, cuma "tombolnya tidak berfungsi".
-    pasang(PROVIDERS);
+    pasang(LENGKAP);
     klik(tombolDownload());
     const p = popup()!;
     expect(container.querySelector("section")!.contains(p)).toBe(false);
@@ -165,7 +183,7 @@ describe("Popup provider — buka & tutup", () => {
   });
 
   it("memberi tahu pembaca layar bahwa ini jendela, bukan isi halaman", () => {
-    pasang(PROVIDERS);
+    pasang(LENGKAP);
     expect(tombolDownload().getAttribute("aria-haspopup")).toBe("dialog");
     klik(tombolDownload());
     expect(popup()!.getAttribute("role")).toBe("dialog");
@@ -173,9 +191,9 @@ describe("Popup provider — buka & tutup", () => {
   });
 });
 
-describe("Popup provider — isi tabel", () => {
+describe("Popup provider — link LENGKAP", () => {
   beforeEach(() => {
-    pasang(PROVIDERS);
+    pasang(LENGKAP);
     klik(tombolDownload());
   });
 
@@ -188,33 +206,25 @@ describe("Popup provider — isi tabel", () => {
     expect(kolom).toEqual(["Provider", "Download"]);
   });
 
-  it("menampilkan tiap nama provider apa adanya", () => {
-    const nama = Array.from(popup()!.querySelectorAll("tbody td:first-child")).map(
-      (td) => td.textContent?.trim(),
-    );
-    expect(nama).toEqual(["Google Share", "Telegram", "Sendcm"]);
-  });
-
-  it("tombol memakai kualitas video ini, dan 'DOWNLOAD' polos saat belum diketahui", () => {
-    const label = Array.from(popup()!.querySelectorAll("tbody a")).map((a) =>
-      a.textContent?.trim(),
-    );
-    expect(label).toEqual(["DOWNLOAD 1080p", "DOWNLOAD 480p", "DOWNLOAD"]);
-  });
-
-  it("tiap tombol menuju alamat providernya sendiri", () => {
-    const href = Array.from(popup()!.querySelectorAll("tbody a")).map((a) =>
-      a.getAttribute("href"),
-    );
-    expect(href).toEqual([
-      "https://drive.test/a",
-      "https://t.me/contoh/2",
-      "https://sendcm.test/c",
+  it("satu baris per provider (urutan tetap), satu tombol per kualitas", () => {
+    expect(isiTabel()).toEqual([
+      ["Google Share", "1080p", "480p"],
+      ["Telegram", "1080p", "480p"],
+      ["Cast", "1080p", "480p"],
+      ["Mega", "1080p", "480p"],
     ]);
   });
 
+  it("tiap tombol menuju alamat provider × kualitasnya sendiri", () => {
+    const baris = popup()!.querySelectorAll("tbody tr")[3];
+    const href = Array.from(baris.querySelectorAll("a")).map((a) => a.getAttribute("href"));
+    expect(href).toEqual(["https://mega.contoh/1080p", "https://mega.contoh/480p"]);
+  });
+
   it("tab baru dibuka dengan rel='noopener noreferrer'", () => {
-    for (const a of Array.from(popup()!.querySelectorAll("tbody a"))) {
+    const semua = Array.from(popup()!.querySelectorAll("tbody a"));
+    expect(semua).toHaveLength(8);
+    for (const a of semua) {
       expect(a.getAttribute("target")).toBe("_blank");
       expect(a.getAttribute("rel")).toBe("noopener noreferrer");
     }
@@ -225,36 +235,51 @@ describe("Popup provider — isi tabel", () => {
       expect(a.hasAttribute("download")).toBe(false);
     }
   });
+
+  it("isi popup bisa digulir di DALAM kotak (layar HP pendek)", () => {
+    expect(popup()!.className).toContain("max-h-");
+    expect(popup()!.querySelector(".overflow-y-auto")).not.toBeNull();
+  });
 });
 
-describe("Popup provider — video yang BELUM punya link", () => {
-  it("tombol DOWNLOAD tidak membuka popup apa pun", () => {
+describe("Popup provider — link SEBAGIAN", () => {
+  it("provider tanpa link tak punya baris; kualitas tanpa link tak punya tombol", () => {
+    pasang(SEBAGIAN);
+    klik(tombolDownload());
+    expect(isiTabel()).toEqual([
+      ["Telegram", "480p"],
+      ["Mega", "1080p"],
+    ]);
+    expect(popup()!.textContent).not.toContain("belum tersedia");
+  });
+});
+
+describe("Popup provider — video yang BELUM punya link (KOSONG)", () => {
+  it("DOWNLOAD tetap membuka popup, isinya 'Link unduhan belum tersedia'", () => {
     pasang([]);
     klik(tombolDownload());
-    expect(popup()).toBeNull();
+    expect(popup()).not.toBeNull();
+    expect(popup()!.textContent).toContain("Link unduhan belum tersedia");
+    expect(popup()!.querySelector("table")).toBeNull();
   });
 
-  it("tombolnya TETAP ada (bukan dihilangkan) dan memakai jalur lamanya", () => {
-    let dipanggil = 0;
-    act(() =>
-      root.render(
-        h(InfoVideoPlayly, {
-          title: "Video Uji",
-          onDownload: () => {
-            dipanggil++;
-          },
-        }),
-      ),
-    );
-    klik(tombolDownload());
-    expect(dipanggil).toBe(1);
-    expect(popup()).toBeNull();
-  });
-
-  it("props providers yang tidak dikirim sama sekali = perilaku lama", () => {
+  it("props linkUnduhan yang tidak dikirim sama sekali = sama dengan kosong", () => {
     pasang(undefined);
-    expect(tombolDownload()).toBeTruthy();
-    expect(tombolDownload().hasAttribute("aria-expanded")).toBe(false);
+    expect(tombolDownload().getAttribute("aria-haspopup")).toBe("dialog");
+    klik(tombolDownload());
+    expect(popup()!.textContent).toContain("Link unduhan belum tersedia");
+  });
+
+  it("popup kosong tetap bisa ditutup dengan × dan Escape", () => {
+    pasang([]);
+    klik(tombolDownload());
+    klik(container.querySelector('[aria-label="Tutup"]')!);
+    expect(popup()).toBeNull();
+    klik(tombolDownload());
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+    });
+    expect(popup()).toBeNull();
   });
 });
 
@@ -270,13 +295,13 @@ describe("Popup provider — aksi lain di kotak tidak rusak", () => {
     );
 
   it("Simpan & Bagikan tidak hilang gara-gara popup dipasang", () => {
-    pasang(PROVIDERS);
+    pasang(LENGKAP);
     expect(cariTombol("Simpan")).toBeTruthy();
     expect(container.textContent ?? "").toContain("Bagikan");
   });
 
   it("Simpan kembali berfungsi sesudah popup ditutup", () => {
-    pasang(PROVIDERS);
+    pasang(LENGKAP);
     klik(tombolDownload());
     klik(lapisGelap());
     expect(popup()).toBeNull();
@@ -289,7 +314,7 @@ describe("Popup provider — aksi lain di kotak tidak rusak", () => {
     // Popup dan tombol Simpan memakai state terpisah; kalau suatu saat
     // keduanya tertukar, "Tersimpan" akan menyala sendiri tanpa ada yang
     // menekannya — kerusakan senyap yang tak ada yang melapor.
-    pasang(PROVIDERS);
+    pasang(LENGKAP);
     klik(tombolDownload());
     expect(cariTombol("Tersimpan")).toBeUndefined();
     expect(cariTombol("Simpan")).toBeTruthy();

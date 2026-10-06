@@ -71,12 +71,23 @@ export const PLAYLY_SECRET_HEADER = "x-playly-secret";
 /**
  * Header tempat Playly menitipkan tanda-tangan HMAC (jalur B).
  *
- * BELUM TERVERIFIKASI ke Playly (2026-09-14): nama ini berasal dari spesifikasi
- * yang diberikan owner, bukan dari dokumentasi Playly — sampai hari ini tidak
- * ada satu pun jejak fitur webhook di sisi mereka. Kalau ternyata namanya lain,
- * CUKUP ganti di sini; sisa kode tidak perlu disentuh.
+ * TERVERIFIKASI 2026-10-06: Playly benar-benar mengirim header ini — kiriman
+ * pertama mereka ("Tulang Belulang Tulang (2024)", @ayy) tercatat masuk hari
+ * itu, lalu kita tolak 401 karena RUMUS kita yang keliru (lihat
+ * verifyWebhookSignature di bawah), bukan karena nama headernya salah.
  */
 export const PLAYLY_SIGNATURE_HEADER = "X-Playly-Signature";
+
+/**
+ * Header berisi detik UNIX saat Playly mengirim.
+ *
+ * Bukan sekadar keterangan waktu: nilainya IKUT DIHITUNG di dalam tanda-tangan
+ * (lihat verifyWebhookSignature). Sampai 2026-10-06 header ini tidak pernah
+ * dibaca sama sekali, dan itulah sebab setiap kiriman sah dari Playly ditolak
+ * 401 — tanda-tangan yang benar pun tak akan cocok kalau salah satu bahan
+ * perhitungannya hilang.
+ */
+export const PLAYLY_TIMESTAMP_HEADER = "X-Playly-Timestamp";
 
 /**
  * Nama field untuk KODE TEMPEL (HTML <iframe>, bukan alamat polos). Hanya
@@ -190,13 +201,42 @@ export function verifySharedSecret(
   return crypto.timingSafeEqual(a, b);
 }
 
+/** Adu dua nilai hex dengan waktu tetap. Panjang beda = langsung gagal. */
+function cocokHex(dikirim: string, dihitung: string): boolean {
+  const a = Buffer.from(dikirim, "hex");
+  const b = Buffer.from(dihitung, "hex");
+  // Panjang biasanya sudah sama (normalizeSignature memaksa 64 hex), tapi tetap
+  // dicek: timingSafeEqual MELEMPAR kalau panjangnya beda, dan lemparan itu
+  // akan terbaca sebagai 500 — bukan penolakan yang kita maksud.
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
 /**
  * JALUR B — benarkah badan permintaan ini ditandatangani pemegang secret kita?
  *
- * Rumusnya: HMAC-SHA256(secret, raw_body). HMAC = "sidik jari" isi pesan yang
- * hanya bisa dibuat oleh pihak yang memegang secret yang sama. Kita hitung
- * ulang sidik jari itu dari badan permintaan, lalu bandingkan dengan yang
- * dikirim. Cocok = pengirimnya memegang secret kita.
+ * Rumus Playly (dibuktikan 2026-10-06 dengan vektor uji dari mereka):
+ *   HMAC-SHA256(secret, `${timestamp}.${rawBody}`)
+ *
+ * TIMESTAMP IKUT DIHITUNG — ini yang dulu terlewat dan membuat SEMUA kiriman
+ * sah ditolak 401. Buktinya tidak perlu ditebak: dengan secret yang sama,
+ * timestamp 1790000000 dan badan contoh mereka, rumus "body saja" menghasilkan
+ * a653add4... sedangkan rumus ber-timestamp menghasilkan c4347f57... — dan
+ * c4347f57... itulah nilai yang Playly nyatakan benar.
+ *
+ * Bentuk LAMA (tanda-tangan atas badan saja) tetap diterima sebagai cadangan.
+ * Itu TIDAK melonggarkan apa pun: kedua bentuk sama-sama menuntut pemegang
+ * PLAYLY_WEBHOOK_SECRET, dan yang tak memegangnya gagal di dua-duanya. Gunanya
+ * supaya kiriman yang dibuat dengan kontrak lama — atau tanpa header timestamp
+ * sama sekali — tidak ikut tertolak.
+ *
+ * UMUR timestamp SENGAJA TIDAK diperiksa, dan ini keputusan sadar, bukan lupa:
+ * Playly menahan kiriman yang gagal lalu mengirimnya ULANG, dan kiriman tertunda
+ * itu membawa timestamp ASLI (saat video terbit, bisa berjam-jam sebelumnya).
+ * Menolak yang "kedaluwarsa" berarti 4 video yang sedang menunggu tidak akan
+ * pernah bisa masuk. Risikonya kecil karena penyimpanannya idempoten — mengirim
+ * ulang kiriman yang sama cuma menimpa baris yang sama. Kalau kelak ada aksi
+ * yang TIDAK idempoten di jalur ini (mis. mengirim notifikasi ke penonton),
+ * pemeriksaan umur WAJIB ditambahkan di sini lebih dulu.
  *
  * Dua aturan yang WAJIB dipatuhi pemanggil; kalau dilanggar, pengamanannya
  * cuma jadi pajangan:
@@ -214,6 +254,7 @@ export function verifyWebhookSignature(
   rawBody: string,
   headerValue: string | null | undefined,
   secret: string,
+  timestamp?: string | null,
 ): boolean {
   // Secret kosong = fitur belum dipasang. Tanpa baris ini kita akan menghitung
   // HMAC ber-secret "" — yang bisa ditiru siapa saja, alias pintu terbuka.
@@ -224,17 +265,13 @@ export function verifyWebhookSignature(
 
   // update(..., "utf8"): JSON dari req.text() sudah berupa teks UTF-8, dan
   // mengubahnya balik jadi byte UTF-8 menghasilkan byte yang persis sama.
-  const dihitung = crypto
-    .createHmac("sha256", secret)
-    .update(rawBody, "utf8")
-    .digest("hex");
+  const hmac = (pesan: string) =>
+    crypto.createHmac("sha256", secret).update(pesan, "utf8").digest("hex");
 
-  const a = Buffer.from(dikirim, "hex");
-  const b = Buffer.from(dihitung, "hex");
-  // Panjang sudah dijamin sama oleh normalizeSignature, tapi tetap dicek:
-  // kalau suatu saat pola hex-nya diubah, yang terjadi penolakan — bukan
-  // pengecualian yang menyamar jadi error server.
-  return a.length === b.length && crypto.timingSafeEqual(a, b);
+  const ts = timestamp?.trim();
+  if (ts && cocokHex(dikirim, hmac(`${ts}.${rawBody}`))) return true;
+
+  return cocokHex(dikirim, hmac(rawBody));
 }
 
 /**
@@ -256,7 +293,17 @@ export function verifyWebhookRequest(
 ): PlaylyWebhookVerifikasi {
   if (!secret) return { ok: false };
 
-  if (verifyWebhookSignature(rawBody, headers.get(PLAYLY_SIGNATURE_HEADER), secret)) {
+  // Timestamp diambil dari header lalu dioper apa adanya: ia BAHAN HITUNG
+  // tanda-tangan, bukan sekadar keterangan waktu.
+  const timestamp = headers.get(PLAYLY_TIMESTAMP_HEADER);
+  if (
+    verifyWebhookSignature(
+      rawBody,
+      headers.get(PLAYLY_SIGNATURE_HEADER),
+      secret,
+      timestamp,
+    )
+  ) {
     return { ok: true, cara: "signature" };
   }
   if (verifySharedSecret(headers.get(PLAYLY_SECRET_HEADER), secret)) {

@@ -15,8 +15,30 @@
 
 ## 2026-10-06 — Webhook Playly 401: rumus tanda tangan KITA yang melewatkan timestamp
 
-**STATUS: ⏸️ kode siap, BELUM DIRILIS.** Perbaikan ini cuma berguna setelah tayang — webhook hanya
-diketuk Playly di produksi.
+**STATUS: ✅ DIRILIS `1ff0e2a`** (izin owner 2026-10-06). Dual push TUNTAS, fast-forward
+`d02700b..1ff0e2a` ke KEDUA repo, nol paksaan; ketiga tempat terbaca sama lewat `git ls-remote`.
+Urutannya cermin `dramaku` dulu baru produksi `origin`.
+
+**TERBUKTI JALAN DI PRODUKSI, bukan cuma ter-push.** Uji ke endpoint sungguhan dengan tanda-tangan
+sah, memakai payload `video.unpublished` untuk videoId TAK DIKENAL supaya nol baris tertulis:
+
+| Kiriman | Hasil |
+|---|---|
+| rumus ber-timestamp (Playly) | **200** `hidden:false` |
+| rumus lama (cadangan kita) | **200** |
+| secret ngawur | **401** |
+| tanpa tanda-tangan | **401** |
+
+**Dan bukti yang jauh lebih kuat dari uji sendiri: kiriman ASLI Playly akhirnya masuk.** Dokumen
+`playly:webhook` yang sejak dipasang selalu KOSONG kini berisi **5 video @ayy** berstatus
+`published` (terbaru "The Shadow Strays (2024)", `receivedAt` 2026-10-06T10:16:46Z) — persis 4
+video yang Playly sebut tertahan, plus satu yang baru. Situs: **170 video** (ayy 59 · tbchairulm 58
+· coklat 53); `/` `/film` `/katalog` `/discover` `/admin` semua **200**.
+
+⚠️ Satu kiriman uji pertama sempat dibalas **500** "Gagal menyimpan video" beberapa detik sesudah
+deploy — gerbang verifikasinya SUDAH lolos (kalau tidak, 401), yang gagal tahap simpannya; percobaan
+berikutnya 200. Dugaan: fungsi dingin + Supabase. Perilakunya benar — 500 memang memberi tahu Playly
+untuk mengirim ulang.
 
 **GEJALA:** Playly mengirim kiriman webhook pertamanya (video @ayy "Tulang Belulang Tulang (2024)",
 09.35 UTC) dan kita balas **401**. Mereka melaporkan 4 video @ayy menunggu, dikirim ulang otomatis.

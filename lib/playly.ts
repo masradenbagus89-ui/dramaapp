@@ -708,7 +708,16 @@ export function normalizePlaylyVideos(
     const durationSeconds = parseDurationSeconds(
       DURATION_KEYS.map((k) => rec[k]).find((v) => v !== undefined && v !== null),
     );
-    const thumbMentah = pickString(rec, THUMB_KEYS);
+    // Sampul bisa datar ATAU bersarang di dalam "seo" — dan sejak dicek
+    // 2026-10-06, /api/videos justru memakai bentuk BERSARANG
+    // (`seo.thumbnailUrl`, terisi di 169 dari 172 video). Selama hanya bentuk
+    // datar yang dibaca, tiap sampul tampak "tidak ada" dan halaman terpaksa
+    // menanyakannya satu per satu ke /api/public-video — 172 panggilan tiap
+    // halaman dibangun ulang, yang justru membuat Playly timeout dan SELURUH
+    // poster jadi kosong. Keduanya dibaca dengan daftar nama yang SAMA supaya
+    // tak ada aturan kedua yang harus diingat.
+    const thumbMentah =
+      pickString(rec, THUMB_KEYS) ?? pickString(asRecord(rec.seo) ?? {}, THUMB_KEYS);
     const thumbnail = thumbMentah ? normalizeThumbnail(thumbMentah, pola.baseUrl) : null;
 
     videos.push({
@@ -1341,6 +1350,44 @@ export function punyaFileVideo(rec: Record<string, unknown>): boolean {
     }
   }
   return false;
+}
+
+/**
+ * Berapa panggilan ke Playly yang boleh berjalan BERSAMAAN.
+ *
+ * Angkanya dari tim Playly (2026-10-06): batas mereka 120 permintaan/menit per
+ * IP, dan mereka meminta maksimal 3-5 panggilan bersamaan. Sebelum batas ini
+ * ada, halaman melepas 172 panggilan serentak tiap kali dibangun ulang —
+ * permintaannya antre di sisi mereka, lewat batas tunggu 8 detik kita, lalu
+ * SELURUH sampul jadi kosong. Gejalanya menipu: videonya tetap tampil dan tetap
+ * bisa diputar, jadi kelihatan seperti "posternya memang belum ada".
+ */
+export const PLAYLY_MAKS_BERSAMAAN = 4;
+
+/**
+ * Jalankan `kerja` untuk tiap item, tapi paling banyak `maks` sekaligus.
+ * Urutan hasil mengikuti urutan masukan.
+ *
+ * Sengaja BUKAN Promise.all polos: Promise.all melepas semua panggilan pada
+ * saat yang sama, dan itu persis yang membanjiri Playly. Di sini jumlah yang
+ * "sedang jalan" tidak pernah lebih dari `maks`, berapa pun panjang daftarnya.
+ */
+export async function petaBerbatasPlayly<T, H>(
+  items: T[],
+  kerja: (item: T) => Promise<H>,
+  maks: number = PLAYLY_MAKS_BERSAMAAN,
+): Promise<H[]> {
+  const hasil = new Array<H>(items.length);
+  let berikut = 0;
+  async function pekerja(): Promise<void> {
+    while (berikut < items.length) {
+      const i = berikut++;
+      hasil[i] = await kerja(items[i]);
+    }
+  }
+  const jumlahPekerja = Math.max(1, Math.min(maks, items.length));
+  await Promise.all(Array.from({ length: jumlahPekerja }, () => pekerja()));
+  return hasil;
 }
 
 /** Detail satu video dari katalog publik Playly, sebatas yang kita butuhkan. */

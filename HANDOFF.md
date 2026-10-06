@@ -13,6 +13,59 @@
 
 ---
 
+## 2026-10-06 — Poster Playly kosong: datanya SUDAH ada di balasan, cuma bersarang
+
+**STATUS: ✅ DIRILIS `676ad0d`** (izin owner, pilihan A). Dual push TUNTAS, fast-forward
+`5020f43..676ad0d` ke kedua repo.
+
+**GEJALA:** sesudah 164→172 video masuk, SELURUH poster kosong. `r2.dev` muncul **0 kali** di HTML
+beranda — bukan sebagian, semua.
+
+**DUGAAN AWAL (benar sebagian, tapi obatnya salah):** endpoint sampul Playly `/api/public-video`
+membalas `500 TimeoutError` (2 dari 5 percobaan, ±8 dtk). Kalau berhenti di situ, perbaikannya jadi
+"batasi konkurensi + coba lagi" — kerja banyak untuk hasil setengah.
+
+**SEBAB SEBENARNYA, dari tim Playly + diperiksa sendiri:** `/api/videos` — endpoint yang **sudah
+kita panggil** — TERNYATA sudah membawa alamat poster, tapi BERSARANG: `seo.thumbnailUrl`.
+`THUMB_KEYS` cuma membaca field datar, jadi tiap sampul tampak "tidak ada" dan halaman menanyakannya
+satu per satu ke `/api/public-video`: **172 panggilan SERENTAK** tiap halaman dibangun ulang. Playly
+mengukur dari sisi mereka: satu per satu ~0,7 dtk, tapi 172 sekaligus bikin antre sampai lewat batas
+tunggu 8 dtk kita. **Panggilan yang dimaksudkan mengambil poster justru yang mengosongkannya.**
+Batas mereka: 120 permintaan/menit per IP, maksimal 3-5 bersamaan.
+
+**Diperiksa sendiri ke `/api/videos` dengan kunci mitra:** `seo.thumbnailUrl` terisi **169 dari 172**
+video; alamatnya polos — **0 dari 172** bertanda tangan, jadi tidak kedaluwarsa dan aman di-cache
+lama (beda dari `videoUrl` yang `X-Amz-Expires=21600`). Bonus yang belum dipakai: ada juga
+`seo.uploadDate`, yang dulu dicatat "tidak ada di data Playly" saat penanda VideoObject dibuat.
+
+**PERBAIKAN:** `normalizePlaylyVideos` membaca sampul datar DAN bersarang (daftar nama yang sama;
+datar menang kalau dua-duanya ada). Halaman penonton **tidak lagi memanggil `/api/public-video` sama
+sekali** — 172 panggilan jadi **nol tambahan**. Untuk panggilan yang masih perlu ada
+`petaBerbatasPlayly` + `PLAYLY_MAKS_BERSAMAAN = 4`; halaman admin memakainya (dulu juga
+`Promise.all` atas 172) dan kini memakai `bolehTampilKePenonton` yang sama dengan halaman penonton.
+
+⚠️ **KONSEKUENSI YANG DISENGAJA (pilihan owner):** penyaring "berkas video belum ada" **hilang dari
+daftar penonton**. Status itu HANYA ada di `/api/public-video`; `/api/videos` tidak membawanya —
+diperiksa 15 kemungkinan nama field, yang terisi penuh cuma `duration`, dan video yang upload-nya
+putus pun tetap punya durasi. Penonton tetap tidak dapat layar diam: gerbang pemutar
+(`app/api/playly/video`) menanyakan alamat video **saat diklik**. Penandanya tetap ada di halaman
+admin. Alasan memilih ini: penyaring tersebut **sudah tidak bekerja sejak endpoint itu timeout**, dan
+belum ada laporan video rusak. Kalau kelak sering, pasang lagi lewat `petaBerbatasPlayly` + simpan
+hasilnya — **JANGAN kembali ke `Promise.all` atas seluruh daftar.**
+
+**Bukti:** build bersih sukses · tsc exit 0 · **1299 tes / 87 berkas** · uji-balik: `seo` dilepas → 1
+MERAH, batas dilonggarkan → 1 MERAH. **Di produksi:** poster di HTML beranda **0 → 99 alamat**;
+kartu berposter **stabil 39/40** (8 pengukuran berturut, sisa 1 memang termasuk 3 video yang belum
+punya sampul di Playly); satu alamat poster diuji langsung → **200 image/png 854 KB**; `/` `/film`
+`/katalog` `/discover` `/admin` semua **200**.
+
+🪤 **Jebakan ukur yang hampir menyesatkan laporan:** pengukuran pertama sesudah rilis menunjukkan
+**9/40** berposter, dan hampir kusimpulkan "perbaikan cuma jalan sebagian". Itu halaman statis yang
+masih menyegarkan bertahap — 8 pengukuran berjarak 30 dtk menunjukkan angkanya diam di **39/40**.
+**Satu pengukuran sesudah rilis tidak cukup untuk halaman ber-ISR; ukur berulang sampai diam.**
+
+---
+
 ## 2026-10-06 — Webhook Playly 401: rumus tanda tangan KITA yang melewatkan timestamp
 
 **STATUS: ✅ DIRILIS `1ff0e2a`** (izin owner 2026-10-06). Dual push TUNTAS, fast-forward

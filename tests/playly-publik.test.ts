@@ -15,6 +15,7 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import {
   fetchPlaylyDetailPublik,
+  DEFAULT_PLAYLY_CREATORS,
   filterVideoMilikKreator,
   punyaFileVideo,
   readPlaylyConfig,
@@ -290,6 +291,72 @@ describe("filterVideoMilikKreator — katalog publik disaring ke akun kita", () 
 
   it("nama kreator yang tidak ada di katalog -> kosong, bukan error", () => {
     expect(filterVideoMilikKreator(katalogCampur, "tidak-ada")).toEqual([]);
+  });
+});
+
+describe("DUKUNGAN BANYAK AKUN — penjaga regresi 2026-10-06", () => {
+  // Latar: kunci yang terpasang sampai 6 Okt 2026 ternyata kunci PRIBADI milik
+  // @coklat, bukan kunci DramaKu. Akibatnya DramaKu cuma menerima 53 video dari
+  // satu akun, padahal ketiga akun mitra berisi 163. Setelah kunci DramaKu
+  // dipasang, ketiganya masuk lewat jalur mitra — jalur itu memang tidak
+  // menyaring nama akun.
+  //
+  // Yang dijaga di sini jalur CADANGAN (katalog publik), yang dipakai otomatis
+  // setiap kali kunci ditolak — dan kunci Playly TERBUKTI bisa ditolak
+  // sewaktu-waktu (2026-08-26: kunci sama, ok:true lalu invalid_key 20 menit
+  // kemudian). Selama daftar akunnya cuma "coklat", kejadian itu membuat video
+  // @ayy & @tbchairulm hilang dari situs TANPA error apa pun.
+  const katalogTigaAkun = [
+    video("1", "Punya coklat", "coklat"),
+    video("2", "Punya orang lain", "viozahra"),
+    video("3", "Punya ayy", "ayy"),
+    video("4", "Punya tbchairulm", "tbchairulm"),
+  ];
+
+  it("daftar nama: SEMUA akun kita lolos, akun orang lain tetap ditahan", () => {
+    const hasil = filterVideoMilikKreator(katalogTigaAkun, [
+      "coklat",
+      "ayy",
+      "tbchairulm",
+    ]);
+    expect(hasil.map((v) => v.id)).toEqual(["1", "3", "4"]);
+    expect(hasil.some((v) => v.creator === "viozahra")).toBe(false);
+  });
+
+  it("ketiga akun ikut secara bawaan — tanpa perlu Environment Variable", () => {
+    // INTI penjaga ini: kalau daftarnya suatu saat dikecilkan lagi jadi satu
+    // nama, tes ini MERAH sebelum perubahan itu sempat tayang ke penonton.
+    expect(DEFAULT_PLAYLY_CREATORS).toContain("coklat");
+    expect(DEFAULT_PLAYLY_CREATORS).toContain("ayy");
+    expect(DEFAULT_PLAYLY_CREATORS).toContain("tbchairulm");
+  });
+
+  it("PLAYLY_CREATOR lama berisi 'coklat' TIDAK membuang dua akun lainnya", () => {
+    // Jebakan yang ditutup di sini: isi Environment Variable MENANG atas kode.
+    // Kalau env dibiarkan MENGGANTIKAN daftar, satu setelan lama di Vercel
+    // membatalkan perbaikan ini diam-diam — tanpa error, tanpa ada yang lapor.
+    const c = readPlaylyConfig({ PLAYLY_CREATOR: "coklat" });
+    expect(c.creators).toEqual(
+      expect.arrayContaining(["coklat", "ayy", "tbchairulm"]),
+    );
+  });
+
+  it("env bisa MENAMBAH akun baru, dipisah koma, dan '@' diabaikan", () => {
+    const c = readPlaylyConfig({ PLAYLY_CREATOR: "@kreatorbaru, @satulagi" });
+    expect(c.creators).toContain("kreatorbaru");
+    expect(c.creators).toContain("satulagi");
+    expect(c.creators).toContain("coklat");
+  });
+
+  it("nama ditulis '@ayy' tetap cocok dengan creator 'ayy' dari Playly", () => {
+    expect(filterVideoMilikKreator(katalogTigaAkun, ["@ayy"]).map((v) => v.id)).toEqual(
+      ["3"],
+    );
+  });
+
+  it("daftar kosong -> TIDAK menampilkan apa pun (gagal-aman, seperti sebelumnya)", () => {
+    expect(filterVideoMilikKreator(katalogTigaAkun, [])).toEqual([]);
+    expect(filterVideoMilikKreator(katalogTigaAkun, ["", "  "])).toEqual([]);
   });
 });
 

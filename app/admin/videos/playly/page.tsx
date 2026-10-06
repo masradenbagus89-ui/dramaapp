@@ -128,7 +128,7 @@ export default async function PlaylyVideosPage() {
           belumSiapIds={belumSiapIds}
           fetchError={mitra.error}
           source={mitra.source}
-          creator={konfigurasi.creator}
+          creators={konfigurasi.creators}
         />
 
         {/* Diletakkan SESUDAH panel tampil/sembunyi: urutan kerjanya memang

@@ -99,11 +99,26 @@ export const PLAYLY_PUBLIC_VIDEO_PATH = "/api/public-video";
  * dibalas ok:true pagi itu lalu invalid_key 20 menit kemudian). Tanpa penanda
  * ini, kunci mati = video kita ikut hilang dari situs.
  *
+ * KENAPA JAMAK (2026-10-06): kunci DramaKu mencakup TIGA akun sekaligus,
+ * dikonfirmasi tim Playly hari itu — setelah ketahuan kunci yang terpasang
+ * selama ini ternyata kunci PRIBADI milik @coklat. Kunci pribadi cuma membuka
+ * video pemiliknya: 53 video, sementara ketiga akun berisi 163. Selama daftar
+ * ini cuma berisi SATU nama, tiap kali kunci ditolak dan situs turun ke katalog
+ * publik, video @ayy & @tbchairulm hilang dari halaman TANPA error apa pun —
+ * kerusakan senyap, tak ada yang melapor.
+ *
+ * EJAAN SUDAH TERVERIFIKASI (2026-10-06, sesudah kunci mitra diterima): kunci
+ * DramaKu diuji langsung ke /api/videos dan membalas 164 video dari TIGA akun —
+ * tbchairulm 58, coklat 53, ayy 53. Ketiga nama di bawah disalin dari field
+ * "creator" pada balasan itu, bukan dari pesan chat. Kalau daftar ini diubah
+ * lagi suatu saat, ambil ejaannya dari balasan API juga: nama yang salah eja
+ * membuat videonya terbuang diam-diam di jalur katalog publik, tanpa error.
+ *
  * Ditulis sebagai default supaya fitur ini hidup begitu di-deploy, tanpa
- * menunggu siapa pun mengisi Environment Variables lebih dulu. Ganti lewat
- * PLAYLY_CREATOR kalau nama akun Playly-nya berubah.
+ * menunggu siapa pun mengisi Environment Variables lebih dulu. PLAYLY_CREATOR
+ * bisa MENAMBAH akun (dipisah koma) — lihat gabungKreator di bawah.
  */
-export const DEFAULT_PLAYLY_CREATOR = "coklat";
+export const DEFAULT_PLAYLY_CREATORS: string[] = ["coklat", "ayy", "tbchairulm"];
 
 /** Spasi, tab, baris baru, dan karakter kontrol — tidak boleh ada di dalam kunci. */
 function adaSpasiAtauKontrol(s: string): boolean {
@@ -498,6 +513,38 @@ export function parseAllowedHosts(raw: string | undefined | null): string[] {
     .filter(Boolean);
 }
 
+/**
+ * Ubah daftar nama akun dari env jadi array rapi.
+ *
+ * "@" di depan dibuang: orang menulis akun sebagai "@coklat", sedangkan field
+ * "creator" dari Playly berisi "coklat" tanpa tanda itu.
+ */
+export function parseCreators(raw: string | undefined | null): string[] {
+  if (!raw) return [];
+  return raw
+    .split(/[,\s]+/)
+    .map((s) => s.trim().toLowerCase().replace(/^@+/, ""))
+    .filter(Boolean);
+}
+
+/**
+ * Daftar akun final: bawaan SELALU ikut, env hanya MENAMBAH.
+ *
+ * Sengaja menggabung, bukan menggantikan — pola yang sama dipakai allowedHosts
+ * di readPlaylyConfig, dan alasannya sama persis. Kalau env MENGGANTIKAN, satu
+ * PLAYLY_CREATOR lama berisi "coklat" yang terlanjur terpasang di Vercel akan
+ * diam-diam membatalkan dua akun lainnya, dan gejalanya cuma "video @ayy &
+ * @tbchairulm tidak muncul" tanpa error apa pun. Kita baru saja menghabiskan
+ * satu sesi penuh melacak kerusakan senyap yang persis seperti itu.
+ *
+ * Batasnya jujur: env TIDAK BISA mengurangi daftar. Kalau kerja sama dengan
+ * satu akun berhenti, hapus namanya dari DEFAULT_PLAYLY_CREATORS — bukan dari
+ * Environment Variables.
+ */
+function gabungKreator(dariEnv: string | undefined): string[] {
+  return Array.from(new Set([...DEFAULT_PLAYLY_CREATORS, ...parseCreators(dariEnv)]));
+}
+
 /** Domain cocok kalau sama persis ATAU subdomainnya (cdn.playly.app ⊂ playly.app). */
 function hostAllowed(host: string, allowedHosts: string[]): boolean {
   const h = host.toLowerCase();
@@ -693,8 +740,8 @@ export type PlaylyConfig = {
   catalogUrl: string;
   allowedHosts: string[];
   embedPattern: PlaylyEmbedPattern;
-  /** Nama kreator yang dianggap "milik kita" saat menyaring katalog publik. */
-  creator: string;
+  /** Nama akun yang dianggap "milik kita" saat menyaring katalog publik. */
+  creators: string[];
 };
 
 /** Setelan dari env — TANPA NEXT_PUBLIC_, jadi hanya hidup di server. */
@@ -722,7 +769,7 @@ export function readPlaylyConfig(
       baseUrl,
       pattern: env.PLAYLY_EMBED_PATH?.trim() || DEFAULT_PLAYLY_EMBED_PATH,
     },
-    creator: env.PLAYLY_CREATOR?.trim() || DEFAULT_PLAYLY_CREATOR,
+    creators: gabungKreator(env.PLAYLY_CREATOR),
   };
 }
 
@@ -741,18 +788,33 @@ export function buildPlaylyHeaders(apiKey: string): Record<string, string> {
   return { Accept: "application/json", [PLAYLY_KEY_HEADER]: apiKey };
 }
 
+/** Samakan bentuk nama akun sebelum dibandingkan — dipakai kedua sisi. */
+function normalkanKreator(nama: string): string {
+  return nama.trim().toLowerCase().replace(/^@+/, "");
+}
+
 /**
- * Ambil video milik kreator tertentu saja.
- * Perbandingan mengabaikan besar-kecil huruf dan spasi di ujung: nama akun
- * ditulis manusia, dan "Coklat" vs "coklat" tidak boleh membuat video hilang.
+ * Ambil video milik akun KITA saja.
+ *
+ * Menerima satu nama atau DAFTAR nama: katalog publik Playly memuat video semua
+ * kreator, dan akun kita lebih dari satu sejak 2026-10-06. Bentuk tunggal tetap
+ * diterima supaya pemanggil lama tidak perlu ikut diubah.
+ *
+ * Perbandingan mengabaikan besar-kecil huruf, spasi di ujung, dan "@" di depan:
+ * nama akun ditulis manusia, dan "Coklat" vs "coklat" tidak boleh membuat video
+ * hilang.
  */
 export function filterVideoMilikKreator(
   videos: PlaylyVideo[],
-  creator: string,
+  creator: string | string[],
 ): PlaylyVideo[] {
-  const target = creator.trim().toLowerCase();
-  if (!target) return []; // tanpa nama pembanding, lebih aman tidak menampilkan apa pun
-  return videos.filter((v) => v.creator.trim().toLowerCase() === target);
+  const target = new Set(
+    (Array.isArray(creator) ? creator : [creator]).map(normalkanKreator).filter(Boolean),
+  );
+  // Tanpa satu pun nama pembanding, lebih aman tidak menampilkan apa pun:
+  // menampilkan seluruh katalog berarti video orang lain terbit di situs kita.
+  if (target.size === 0) return [];
+  return videos.filter((v) => target.has(normalkanKreator(v.creator)));
 }
 
 /** Dari mana daftar video yang sedang ditampilkan berasal. */
@@ -1221,7 +1283,7 @@ export async function fetchPlaylyVideosKita(
     if (rejected.length > 0) {
       console.warn(`[playly] ${rejected.length} video katalog dilewati:`, rejected.slice(0, 5));
     }
-    const milikKita = filterVideoMilikKreator(videos, config.creator);
+    const milikKita = filterVideoMilikKreator(videos, config.creators);
     return {
       videos: milikKita,
       error: null,

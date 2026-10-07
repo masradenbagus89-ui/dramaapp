@@ -9,7 +9,66 @@
 >
 > **📦 Berkas ini sudah 2.980 baris / ±240 KB** dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-10-06.
+**Terakhir diisi:** 2026-10-07.
+
+---
+
+## 2026-10-07 — Link unduhan Playly per provider x kualitas: DIRILIS
+
+**STATUS: DIRILIS `abec24a`** (izin owner verbatim "RILIS KE PRODUKSI"). Dual push TUNTAS,
+fast-forward `6eb14b3..abec24a` ke kedua repo.
+
+**Asalnya kerja rekan** di branch `feat/link-unduhan-provider-kualitas` (9 commit, terakhir
+`3fc0e07`). Branch itu dibuat dari `d02700b` dan **tertinggal 5 commit** — ketiga perbaikan yang
+SUDAH TAYANG tidak ada di dalamnya: `1ff0e2a` (timestamp di tanda tangan webhook), `676ad0d`
+(poster dari `seo.thumbnailUrl`), `e3341eb` (jalur cadangan tiga akun). Digabung lewat **merge**
+(`be9f553`), BUKAN rebase: konflik diselesaikan sekali di satu titik, bukan berulang di 9 commit.
+
+**Konflik cuma 2 berkas, keduanya DOKUMEN** (`HANDOFF.md`, `docs/lintasai/INDEX.md`) -> diambil
+dari `main`; sisa tulisan rekan dari `4b7c034` ikut terbuang. **Empat berkas KODE tergabung
+otomatis** (`lib/playly-webhook.ts`, `lib/playly-publik.ts`, `app/admin/videos/playly/page.tsx`,
+`tests/playly-webhook.test.ts`) dan diverifikasi tidak mundur lewat PENANDA yang dicatat SEBELUM
+merge, bukan lewat perasaan: `PLAYLY_TIMESTAMP_HEADER` + `cocokHex` + `PLAYLY_MAKS_BERSAMAAN` +
+`DEFAULT_PLAYLY_CREATORS` semuanya masih ada sesudahnya.
+
+**Yang berubah:** dokumen `playly:link-unduhan` (baris videoId x provider x kualitas, kombinasi
+unik) - 5 provider (+ **Sendcm**, permintaan owner 2026-10-07 lewat gambar contoh) x 1080p/480p -
+tombol `DOWNLOAD 1080p` biru / `DOWNLOAD 480p` oranye - validasi https + domain PERSIS milik
+provider-nya - impor CSV - webhook `downloads` opsional - celah `/tonton/[id]` yang dulu tak
+mengoper link ikut tertutup.
+
+**Bukti (DIJALANKAN, bukan dibaca):** `npm test` **1359 lulus / 90 berkas** — naik dari 1339 di
+branch rekan, dan 87 berkas tes `main` TERBUKTI semuanya terbawa (dicocokkan satu-satu, 0 hilang) -
+`rm -rf .next` -> `npm run build` exit 0 -> `npx tsc --noEmit` exit 0 - nol berkas env ter-track -
+robot "Penjaga Kebocoran Rahasia" success.
+
+**Smoke test SESUDAH tayang — SEMUA SEHAT:** `/` `/film` `/login` `/discover` `/admin` `/katalog`
+semuanya **200**. **Kode baru TERBUKTI TAYANG, bukan sekadar build hijau:** teks `Link unduhan
+belum tersedia`, `Pilih provider download`, dan `Sendcm` ditemukan di chunk JS yang dilayani
+produksi (`/_next/static/chunks/1bqryy7o4co_h.js`). `send.cm` TIDAK ada di bundle browser — itu
+BENAR, daftar domain sengaja hidup di modul server (`lib/playly-unduhan-domain.ts`), jadi whitelist
+tidak bocor ke penonton.
+
+**Dampak penonton HARI INI: NOL.** Dokumen `playly:link-unduhan` sengaja DIKOSONGKAN sebelum rilis
+(2 link contoh uji dihapus lewat REST Supabase, diverifikasi `[]`). Tombol DOWNLOAD masih bilang
+"belum tersedia" sampai owner mengisi link.
+
+**Cara mengisi:** `/admin/videos/playly` -> scroll ke panel **"Link download per video"** (di BAWAH
+panel tampil/sembunyi) -> tombol **"Atur link"**.
+
+**Nama tombol "Atur link", BUKAN "Atur provider".** Berkas serah-terima rekan menyebut "Atur
+provider" di dua tempat; nama itu TIDAK ADA di layar dan membuat owner mencari tombol yang tak ada
+(terbukti memakan satu putaran bolak-balik 2026-10-07). Panduan tim konten memakai nama yang benar:
+`docs/panduan-isi-link-unduhan.md`.
+
+**Tak perlu SQL** (`supabase_migrations/2026-10-05_playly_link_unduhan.sql` = jalur naik kelas,
+BELUM perlu — terbukti: owner berhasil simpan+baca link tanpa menjalankan SQL apa pun).
+**5 env baru `PLAYLY_UNDUHAN_DOMAIN_*` semuanya OPSIONAL** (kosong = pakai domain bawaan).
+**Cast bawaannya KOSONG -> link Cast SELALU ditolak** sampai `PLAYLY_UNDUHAN_DOMAIN_CAST` diisi;
+itu perilaku yang diinginkan, bukan bug.
+
+**Rollback 1-baris:** Vercel -> deployment `6eb14b3` -> Instant Rollback. Lewat kode:
+`git revert -m 1 be9f553` lalu push.
 
 ---
 

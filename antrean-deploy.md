@@ -3,6 +3,52 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
+**Terakhir dicek:** 2026-10-07 (**komputer OWNER**) — **ANTREAN KOSONG, DUAL PUSH TUNTAS.**
+`6eb14b3..abec24a` fast-forward ke **kedua** repo, nol paksaan. Ketiga tempat terbaca sama lewat
+`git ls-remote` (bukan `git log` lokal): **`abec24a`**.
+
+**Rilis ini membawa 11 commit — 9 kerja rekan + 1 merge + 1 panduan:**
+
+| Commit | Isi | Dampak penonton |
+|---|---|---|
+| `b48b319..3fc0e07` | **kerja rekan** (9 commit): link unduhan per provider x kualitas, +Sendcm, warna tombol | nol SAMPAI link diisi |
+| `be9f553` | merge ke `main` terkini + penyelamatan 3 perbaikan yang hampir mundur | nol |
+| `abec24a` | panduan tim konten mengisi link | nol (dokumentasi) |
+
+**Kenapa dampak penonton NOL hari ini.** Dokumen `playly:link-unduhan` sengaja DIKOSONGKAN sebelum
+rilis — 2 link contoh yang dipakai owner menguji dihapus lewat REST Supabase, diverifikasi balasannya
+`[]`. Tombol DOWNLOAD masih bilang "Link unduhan belum tersedia" sampai owner mengisi link di
+`/admin/videos/playly` -> panel **"Link download per video"** -> tombol **"Atur link"**.
+
+**Yang hampir mundur dan tertangkap.** Branch rekan dibuat dari `d02700b`, tertinggal 5 commit.
+Tiga perbaikan yang SUDAH TAYANG tidak ada di dalamnya (`1ff0e2a` timestamp webhook, `676ad0d`
+poster bersarang, `e3341eb` jalur cadangan tiga akun), dan 6 berkas disentuh kedua sisi. Penanda
+tiap perbaikan dicatat SEBELUM merge lalu dicek lagi sesudahnya — semuanya utuh. Dokumen rekan
+sendiri masih menulis "bisa digabung fast-forward, tak ada bentrok": benar saat ditulis, sudah
+tidak berlaku saat ditarik.
+
+**Smoke test sesudah tayang — SEMUA SEHAT:** `/` `/film` `/login` `/discover` `/admin` `/katalog`
+-> **200** semua. **Terbukti TAYANG, bukan cuma ter-push:** teks `Link unduhan belum tersedia`,
+`Pilih provider download`, dan `Sendcm` ada di chunk JS produksi
+`/_next/static/chunks/1bqryy7o4co_h.js` — ketiganya hanya ada di versi baru. `send.cm` TIDAK ada di
+bundle browser, dan itu BENAR: daftar domain sengaja hidup di modul server.
+
+**Gerbang pra-rilis (aturan 6) dijalankan penuh:** `rm -rf .next` -> `npm run build` exit 0 ->
+`npx tsc --noEmit` exit 0 -> `npm test` **1359 lulus / 90 berkas** -> nol berkas env ter-stage.
+Robot "Penjaga Kebocoran Rahasia" di GitHub: success.
+
+**RENCANA ROLLBACK (1 baris):** Vercel -> deployment `6eb14b3` -> **Instant Rollback** (owner punya
+akses Vercel). Lewat kode: `git revert -m 1 --no-edit be9f553 && git push dramaku main && git push origin main`.
+
+**Tidak perlu SQL · tidak perlu env baru.** `supabase_migrations/2026-10-05_playly_link_unduhan.sql`
+= jalur naik kelas, BELUM perlu (terbukti: owner berhasil simpan+baca link tanpa SQL apa pun).
+5 env `PLAYLY_UNDUHAN_DOMAIN_*` semuanya opsional; **Cast bawaannya kosong -> link Cast selalu
+ditolak** sampai `PLAYLY_UNDUHAN_DOMAIN_CAST` diisi (perilaku yang diinginkan).
+
+---
+
+## Riwayat sebelumnya
+
 **Terakhir dicek:** 2026-10-02 (**komputer OWNER**) — **✅ ANTREAN KOSONG, DUAL PUSH TUNTAS.**
 `5d49e3b..0a42110` fast-forward ke **kedua** repo, nol paksaan. Ketiga tempat terbaca sama lewat
 `git ls-remote` (bukan `git log` lokal): **`0a42110`**.

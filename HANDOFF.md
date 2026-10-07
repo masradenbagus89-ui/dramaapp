@@ -9,44 +9,197 @@
 >
 > **📦 Berkas ini sudah 2.980 baris / ±240 KB** dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-10-05.
+**Terakhir diisi:** 2026-10-06.
 
 ---
 
-## 2026-10-05 — Link unduhan Playly per provider × kualitas (impor CSV + webhook + popup + admin)
+## 2026-10-06 — Poster Playly kosong: datanya SUDAH ada di balasan, cuma bersarang
 
-**STATUS: ✅ SELESAI DI BRANCH, BELUM DIRILIS.** Branch `feat/link-unduhan-provider-kualitas`
-(dibuat dari `dramaapp/main` d02700b — branch lama `feat/playly-modal-unduhan` tertinggal 42 commit,
-jangan dipakai). 5 commit `b48b319..133fe8c`. **Belum di-push ke remote mana pun.**
-Rencana + keputusan owner: `docs/lintasai/rencana/2026-10-05-link-unduhan-provider-kualitas.md`.
+**STATUS: ✅ DIRILIS `676ad0d`** (izin owner, pilihan A). Dual push TUNTAS, fast-forward
+`5020f43..676ad0d` ke kedua repo.
 
-**Keputusan owner (popup):** cakupan Playly SAJA (drama tak disentuh) · CSV dicocokkan ID dulu lalu
-judul persis (judul ganda = dilewati) · aturan ketat berlaku untuk SEMUA data · satu komponen popup.
+**GEJALA:** sesudah 164→172 video masuk, SELURUH poster kosong. `r2.dev` muncul **0 kali** di HTML
+beranda — bukan sebagian, semua.
 
-**Yang berubah:**
-- Data: dokumen `app_data` BARU **`playly:link-unduhan`** = daftar baris
-  `{videoId, provider: google|telegram|cast|mega, quality: 1080p|480p, url, createdAt, updatedAt}`,
-  kombinasi unik. Dokumen lama `playly:unduhan` tak dibaca lagi (memang belum pernah ada di produksi).
-- Validasi diperketat: **wajib https + domain PERSIS milik provider-nya** (`lib/playly-unduhan-domain.ts`,
-  tambah lewat env `PLAYLY_UNDUHAN_DOMAIN_*`). **Cast bawaannya KOSONG → link Cast ditolak** sampai
-  env `PLAYLY_UNDUHAN_DOMAIN_CAST` diisi.
-- Webhook: field `downloads` opsional; `{ video_id, downloads }` tanpa embed = pembaruan link saja.
-- Skrip: `npm run impor:unduhan -- <berkas.csv> --dry-run` (contoh `scripts/contoh-link-unduhan.csv`).
-- Popup: tabel provider × tombol kualitas; kosong = "Link unduhan belum tersedia" (alert lama dibuang).
-  **Celah ikut ditutup:** `/tonton/[id]` dulu tidak mengoper link → DOWNLOAD di halaman detail mati.
-- Admin `/admin/videos/playly`: kotak URL 4 provider × 2 kualitas.
+**DUGAAN AWAL (benar sebagian, tapi obatnya salah):** endpoint sampul Playly `/api/public-video`
+membalas `500 TimeoutError` (2 dari 5 percobaan, ±8 dtk). Kalau berhenti di situ, perbaikannya jadi
+"batasi konkurensi + coba lagi" — kerja banyak untuk hasil setengah.
 
-**Bukti (2026-10-05):** `.next/dev/types` basi (dari `next dev` 10-04, masih memuat route `/playly`)
-membuat build gagal palsu `Cannot find module app/playly/page.js` — folder itu dikunci proses lain,
-jadi subfolder `types` di-RENAME (bukan dihapus) ke `.next/dev/types-basi-20261005`. Sesudahnya:
-`npm run build` exit 0 (`/film` ○ ISR 5m, `/tonton/[id]` ● SSG) → `npx tsc --noEmit` exit 0 →
-`npm test` **1338 tes / 90 berkas lulus** → nol berkas env ter-track. Skrip impor diuji NYATA (mode
-berkas lokal, `data/playly.json` dipulihkan): 57 video Playly terbaca, 3 baru + 1 ditolak, impor ulang
-= 3 "sama". **BELUM diuji:** tampilan di browser sungguhan / layar HP (hanya jsdom), dan unduhan nyata.
+**SEBAB SEBENARNYA, dari tim Playly + diperiksa sendiri:** `/api/videos` — endpoint yang **sudah
+kita panggil** — TERNYATA sudah membawa alamat poster, tapi BERSARANG: `seo.thumbnailUrl`.
+`THUMB_KEYS` cuma membaca field datar, jadi tiap sampul tampak "tidak ada" dan halaman menanyakannya
+satu per satu ke `/api/public-video`: **172 panggilan SERENTAK** tiap halaman dibangun ulang. Playly
+mengukur dari sisi mereka: satu per satu ~0,7 dtk, tapi 172 sekaligus bikin antre sampai lewat batas
+tunggu 8 dtk kita. **Panggilan yang dimaksudkan mengambil poster justru yang mengosongkannya.**
+Batas mereka: 120 permintaan/menit per IP, maksimal 3-5 bersamaan.
 
-**Sebelum rilis (owner):** isi `PLAYLY_UNDUHAN_DOMAIN_CAST` di Vercel kalau Cast dipakai · tak ada SQL
-wajib (`supabase_migrations/2026-10-05_playly_link_unduhan.sql` = jalur naik kelas, BELUM perlu) ·
-jalankan gerbang aturan 6 lagi · push ke `origin` = cermin di komputer ini, `dramaapp` = PRODUKSI.
+**Diperiksa sendiri ke `/api/videos` dengan kunci mitra:** `seo.thumbnailUrl` terisi **169 dari 172**
+video; alamatnya polos — **0 dari 172** bertanda tangan, jadi tidak kedaluwarsa dan aman di-cache
+lama (beda dari `videoUrl` yang `X-Amz-Expires=21600`). Bonus yang belum dipakai: ada juga
+`seo.uploadDate`, yang dulu dicatat "tidak ada di data Playly" saat penanda VideoObject dibuat.
+
+**PERBAIKAN:** `normalizePlaylyVideos` membaca sampul datar DAN bersarang (daftar nama yang sama;
+datar menang kalau dua-duanya ada). Halaman penonton **tidak lagi memanggil `/api/public-video` sama
+sekali** — 172 panggilan jadi **nol tambahan**. Untuk panggilan yang masih perlu ada
+`petaBerbatasPlayly` + `PLAYLY_MAKS_BERSAMAAN = 4`; halaman admin memakainya (dulu juga
+`Promise.all` atas 172) dan kini memakai `bolehTampilKePenonton` yang sama dengan halaman penonton.
+
+⚠️ **KONSEKUENSI YANG DISENGAJA (pilihan owner):** penyaring "berkas video belum ada" **hilang dari
+daftar penonton**. Status itu HANYA ada di `/api/public-video`; `/api/videos` tidak membawanya —
+diperiksa 15 kemungkinan nama field, yang terisi penuh cuma `duration`, dan video yang upload-nya
+putus pun tetap punya durasi. Penonton tetap tidak dapat layar diam: gerbang pemutar
+(`app/api/playly/video`) menanyakan alamat video **saat diklik**. Penandanya tetap ada di halaman
+admin. Alasan memilih ini: penyaring tersebut **sudah tidak bekerja sejak endpoint itu timeout**, dan
+belum ada laporan video rusak. Kalau kelak sering, pasang lagi lewat `petaBerbatasPlayly` + simpan
+hasilnya — **JANGAN kembali ke `Promise.all` atas seluruh daftar.**
+
+**Bukti:** build bersih sukses · tsc exit 0 · **1299 tes / 87 berkas** · uji-balik: `seo` dilepas → 1
+MERAH, batas dilonggarkan → 1 MERAH. **Di produksi:** poster di HTML beranda **0 → 99 alamat**;
+kartu berposter **stabil 39/40** (8 pengukuran berturut, sisa 1 memang termasuk 3 video yang belum
+punya sampul di Playly); satu alamat poster diuji langsung → **200 image/png 854 KB**; `/` `/film`
+`/katalog` `/discover` `/admin` semua **200**.
+
+🪤 **Jebakan ukur yang hampir menyesatkan laporan:** pengukuran pertama sesudah rilis menunjukkan
+**9/40** berposter, dan hampir kusimpulkan "perbaikan cuma jalan sebagian". Itu halaman statis yang
+masih menyegarkan bertahap — 8 pengukuran berjarak 30 dtk menunjukkan angkanya diam di **39/40**.
+**Satu pengukuran sesudah rilis tidak cukup untuk halaman ber-ISR; ukur berulang sampai diam.**
+
+---
+
+## 2026-10-06 — Webhook Playly 401: rumus tanda tangan KITA yang melewatkan timestamp
+
+**STATUS: ✅ DIRILIS `1ff0e2a`** (izin owner 2026-10-06). Dual push TUNTAS, fast-forward
+`d02700b..1ff0e2a` ke KEDUA repo, nol paksaan; ketiga tempat terbaca sama lewat `git ls-remote`.
+Urutannya cermin `dramaku` dulu baru produksi `origin`.
+
+**TERBUKTI JALAN DI PRODUKSI, bukan cuma ter-push.** Uji ke endpoint sungguhan dengan tanda-tangan
+sah, memakai payload `video.unpublished` untuk videoId TAK DIKENAL supaya nol baris tertulis:
+
+| Kiriman | Hasil |
+|---|---|
+| rumus ber-timestamp (Playly) | **200** `hidden:false` |
+| rumus lama (cadangan kita) | **200** |
+| secret ngawur | **401** |
+| tanpa tanda-tangan | **401** |
+
+**Dan bukti yang jauh lebih kuat dari uji sendiri: kiriman ASLI Playly akhirnya masuk.** Dokumen
+`playly:webhook` yang sejak dipasang selalu KOSONG kini berisi **5 video @ayy** berstatus
+`published` (terbaru "The Shadow Strays (2024)", `receivedAt` 2026-10-06T10:16:46Z) — persis 4
+video yang Playly sebut tertahan, plus satu yang baru. Situs: **170 video** (ayy 59 · tbchairulm 58
+· coklat 53); `/` `/film` `/katalog` `/discover` `/admin` semua **200**.
+
+⚠️ Satu kiriman uji pertama sempat dibalas **500** "Gagal menyimpan video" beberapa detik sesudah
+deploy — gerbang verifikasinya SUDAH lolos (kalau tidak, 401), yang gagal tahap simpannya; percobaan
+berikutnya 200. Dugaan: fungsi dingin + Supabase. Perilakunya benar — 500 memang memberi tahu Playly
+untuk mengirim ulang.
+
+**GEJALA:** Playly mengirim kiriman webhook pertamanya (video @ayy "Tulang Belulang Tulang (2024)",
+09.35 UTC) dan kita balas **401**. Mereka melaporkan 4 video @ayy menunggu, dikirim ulang otomatis.
+
+**DUGAAN AWAL YANG SALAH** (dan sempat jadi tuduhan ke pihak lain): "secret-nya beda / salah tempel".
+Playly mengirim vektor uji yang menyelesaikannya dalam satu hitungan:
+
+```
+timestamp = 1790000000
+body      = {"event":"video.published","site":"DramaKu","video":{"id":1,"title":"Uji tanda tangan"}}
+benar     = c4347f57…(disamarkan)
+```
+
+Dihitung dengan secret yang terpasang:
+- rumus KITA (HMAC atas badan saja) -> `a653add4...`  **beda**
+- rumus PLAYLY (HMAC atas `${timestamp}.${badan}`) -> `c4347f57...`  **COCOK**
+
+**Jadi secretnya BENAR, badan mentah juga BENAR** (`req.text()` sudah dipakai sejak awal). Yang salah
+rumus kita: `lib/playly-webhook.ts` tidak pernah membaca header `X-Playly-Timestamp` sama sekali —
+satu-satunya jejaknya cuma komentar lama yang menyatakan "kontrak yang disepakati tidak memuat
+timestamp". Kontraknya ternyata lain, dan tanda-tangan yang SAH pun mustahil cocok kalau salah satu
+bahan hitungnya hilang.
+
+**PERBAIKAN:** `verifyWebhookSignature` kini menerima timestamp dan menghitung
+`HMAC(secret, timestamp + "." + rawBody)`. Bentuk LAMA (HMAC atas badan saja) **tetap diterima**
+sebagai cadangan — tidak melonggarkan apa pun karena kedua bentuk sama-sama menuntut pemegang
+`PLAYLY_WEBHOOK_SECRET`. `verifyWebhookRequest` mengoper `headers.get(PLAYLY_TIMESTAMP_HEADER)`.
+
+⚠️ **UMUR timestamp SENGAJA TIDAK diperiksa — keputusan sadar, menyimpang dari `skills/pembayaran`
+§2 butir 4c ("tolak event yang timestamp-nya kadaluarsa").** Alasannya konkret: Playly menahan
+kiriman gagal lalu mengirim ULANG, dan kiriman tertunda membawa timestamp ASLI (saat video terbit,
+bisa berjam-jam sebelumnya) — menolak yang "kedaluwarsa" berarti **4 video yang sedang menunggu tak
+akan pernah bisa masuk**. Pertahanan anti-replay tetap ada lewat jalur yang rak itu sendiri sebut
+lebih utama: penyimpanannya **idempoten** (`lib/store.ts:1342` — dicari per `videoId`, yang sudah ada
+diperbarui, bukan ditambah dobel). **Kalau kelak ada aksi TIDAK idempoten di jalur ini (mis. kirim
+notifikasi ke penonton), pemeriksaan umur WAJIB ditambahkan lebih dulu.**
+
+**Bukti:** build sukses · tsc exit 0 · **1292 tes / 87 berkas** · **uji-balik: timestamp dilepas dari
+perhitungan -> 2 tes MERAH**, dikembalikan -> hijau. 7 tes penjaga baru di
+`tests/playly-webhook.test.ts` (secret ASLI sengaja tidak masuk repo — tes memakai secret dummy).
+
+**BELUM TERBUKTI & cara membuktikannya sesudah rilis:** verifikasi end-to-end hanya sah kalau ada
+kiriman ASLI yang lolos. Uji yang aman: kirim `video.unpublished` bertanda-tangan sah untuk videoId
+yang TIDAK dikenal — route membalas 200 `hidden:false` **tanpa menulis apa pun** (`setPlaylyWebhookVideoStatus`
+memulangkan false untuk id tak dikenal). Atau cukup minta Playly menerbitkan satu video lalu periksa
+dokumen `playly:webhook` di `app_data` terisi.
+
+---
+
+## 2026-10-06 — Playly: ketahuan kunci yang terpasang adalah kunci PRIBADI @coklat + dukungan banyak akun
+
+**STATUS: ✅ ENV SUDAH DIPASANG & TERBUKTI (6 Okt, owner sendiri lewat dashboard Vercel — catatan
+lama yang menyebut owner tak punya akses Vercel itu KELIRU). Kode pengaman jalur cadangan ⏸️ belum
+dirilis.** Hasil terukur sesudah `PLAYLY_API_KEY` diganti ke kunci mitra: beranda produksi memuat
+**164 video** (naik dari 53), sebaran `tbchairulm` 58 · `coklat` 53 · `ayy` 53 — lalu **167** beberapa
+jam kemudian karena Playly menambah unggahan. Pemutaran diuji per akun lewat `/api/playly/video`:
+ketiganya `ok:true`. Salinan `playly:cadangan` ikut tersegarkan 53 -> 164. **Ejaan nama akun di kode
+TERBUKTI benar** (`tbchairulm`, `coklat`, `ayy`) — diambil dari balasan API, bukan dari pesan chat.
+
+**TEMUAN UTAMA (bukan bug kode kita).** Rekan Playly mengirim "paket integrasi" + klaim *"di
+dramaapp.vercel.app belum ada kode yang mengambil video dari Playly"*. **Klaim itu salah, dan sudah
+mereka akui.** Mereka menguji alamat contoh dari panduan sendiri: `/api/playly-hook` & `/api/drama`
+(dua-duanya memang 404). Milik kita `/api/webhooks/playly` → **401 "Tidak terverifikasi sebagai
+Playly"** dan `/api/dramas` → **200**. Verifikasi HMAC + paging `limit`/`offset` sudah terpasang
+sejak lama. **401 (bukan 503) membuktikan `PLAYLY_WEBHOOK_SECRET` sudah terisi** — kode membalas 503
+kalau secret kosong.
+
+**SEBAB ASLI "cuma sebagian film Playly bisa ditonton":** kunci yang terpasang di `PLAYLY_API_KEY`
+(`plyk_hi…3l2y`) ternyata **kunci PRIBADI milik akun @coklat**, bukan kunci mitra DramaKu. Kunci
+pribadi hanya membuka video pemiliknya → **53 video, 100% @coklat**, sementara ketiga akun mitra
+(@coklat + @ayy + @tbchairulm) berisi **163**. Dikonfirmasi tim Playly 2026-10-06. Kunci DramaKu
+yang benar berakhiran **`…mjzn`**, dikirim lewat jalur aman (JANGAN lewat chat).
+
+**Bukti yang diukur hari itu, tanpa perlu memegang kunci:** `/beranda` produksi memuat **53** video
+Playly; nama kreator dihitung dari HTML → `{"coklat":53}`, @ayy & @tbchairulm **nol**. Dokumen
+`playly:cadangan` di Supabase: 54 video, 100% @coklat. `playly:webhook`: **belum pernah ada isinya**
+= webhook memang belum pernah dipasang dari sisi Playly. `playly:hidden`: 2 video. Panel admin
+sendiri menulis "53 dari 53 video tampil" → **nol video tersaring di pihak kita**.
+
+**YANG MASIH HARUS DIISI DI VERCEL (owner tidak punya aksesnya — cari pemegangnya):**
+
+1. `PLAYLY_API_KEY` → kunci DramaKu `…mjzn` (menggantikan kunci pribadi @coklat)
+2. `PLAYLY_WEBHOOK_SECRET` → secret dari Playly; mereka memasang webhook 2026-10-06, jadi **sampai
+   ini diganti SEMUA kiriman mereka kita tolak 401** (tidak hilang permanen — Playly mengulang)
+3. (disarankan) `PLAYLY_ENCRYPTION_KEY` → tanpa ini form "Ganti kunci" di `/admin/settings/playly`
+   menolak menyimpan. Begitu terisi, kunci bisa diganti dari halaman admin **tanpa Vercel lagi**,
+   karena `getPlaylyKey()` mendahulukan database di atas env (`lib/playly.ts:356`).
+
+**YANG DIKERJAKAN DI KODE (siap, sudah lulus semua gerbang).** Jalur CADANGAN (katalog publik,
+dipakai otomatis tiap kunci ditolak) dulu menyaring **satu** nama akun. Begitu 163 video dari tiga
+akun masuk, satu penolakan kunci akan menghapus video @ayy & @tbchairulm dari situs **tanpa error
+apa pun** — dan penolakan kunci TERBUKTI pernah terjadi (2026-08-26). Sekarang:
+`DEFAULT_PLAYLY_CREATORS = ["coklat","ayy","tbchairulm"]`, `PlaylyConfig.creator` → `creators:
+string[]`, `filterVideoMilikKreator` menerima satu nama ATAU daftar, "@" di depan diabaikan.
+**`PLAYLY_CREATOR` kini MENAMBAH, bukan menggantikan** (pola yang sama dengan `allowedHosts`) —
+supaya setelan lama berisi "coklat" yang mungkin sudah terlanjur ada di Vercel tidak membatalkan
+perbaikan ini diam-diam. Batas jujur: env TIDAK bisa MENGURANGI daftar; untuk itu ubah konstantanya.
+
+⚠️ **EJAAN @ayy & @tbchairulm BELUM TERVERIFIKASI** — disalin dari pesan Playly, bukan dari balasan
+API (kuncinya belum terpasang). Yang terbukti lewat `/api/public-video` hanya "coklat". Sesudah
+kunci `…mjzn` dipasang, **cocokkan dua nama itu dengan field `creator` yang benar-benar dikirim**;
+nama salah eja membuat videonya terbuang senyap di jalur cadangan.
+
+**Bukti:** `npm run build` sukses · `npx tsc --noEmit` **exit 0** · **1285 tes / 87 berkas hijau** ·
+**uji-balik penjaga: daftar dikecilkan ke `["coklat"]` → 2 tes MERAH**, dikembalikan → hijau.
+
+**Berkas tersentuh:** `lib/playly.ts` · `app/components/admin/PlaylyVisibilityManager.tsx` ·
+`app/admin/videos/playly/page.tsx` · `tests/playly-publik.test.ts` (+6 tes penjaga).
 
 ---
 

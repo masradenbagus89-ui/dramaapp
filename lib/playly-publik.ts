@@ -20,7 +20,6 @@
 // SERVER-ONLY. Jangan di-import dari komponen "use client".
 // -------------------------------------------------------------------------
 import {
-  fetchPlaylyDetailPublik,
   fetchPlaylyVideosKita,
   type PlaylyDetailPublik,
   type PlaylyVideo,
@@ -224,33 +223,28 @@ export async function getPlaylyVideosPublik(): Promise<PlaylyPublikResult> {
     genres,
   );
 
-  // Detail diambil satu panggilan per video karena jalur mitra tidak mengirim
-  // sampul MAUPUN status berkasnya. Dijalankan berbarengan (bukan antre) supaya
-  // total tunggunya tetap sepanjang SATU panggilan, dan hasilnya ikut tersimpan
-  // 5 menit seperti daftar videonya -- jadi ini tidak berubah jadi panggilan
-  // per pengunjung. Yang menyeberang cuma JSON teks, bukan berkas videonya.
+  // Sampul sudah IKUT di balasan /api/videos (`seo.thumbnailUrl`, dibaca di
+  // normalizePlaylyVideos), jadi halaman ini tidak lagi menanyakannya satu per
+  // satu ke /api/public-video. Dulu di sini ada 172 panggilan SERENTAK tiap
+  // halaman dibangun ulang; itu membanjiri Playly sampai balasannya lewat batas
+  // tunggu 8 detik, dan hasilnya SEMUA poster kosong — persis kebalikan dari
+  // tujuan panggilan itu sendiri.
   //
-  // Sengaja dipanggil untuk SEMUA video, termasuk yang sampulnya sudah ada:
-  // status berkas cuma bisa diketahui dari balasan ini.
-  const detail = new Map(
-    await Promise.all(
-      tampil.map(async (v) => [v.id, await fetchPlaylyDetailPublik(v.id)] as const),
-    ),
-  );
-
-  const siap = tampil.filter((v) => bolehTampilKePenonton(detail.get(v.id)));
-  const belumSiap = tampil.length - siap.length;
-  if (belumSiap > 0) {
-    // Dicatat supaya kalau ada yang bertanya "kok videonya tidak muncul",
-    // jawabannya bisa dilacak tanpa menebak.
-    console.warn(
-      `[playly] ${belumSiap} video tidak ditampilkan: berkasnya belum ada di Playly.`,
-    );
-  }
-
-  const videos = siap.map<PlaylyVideoPublik>((v) => ({
+  // KONSEKUENSI YANG DISENGAJA (keputusan owner 2026-10-06): penyaring "berkas
+  // videonya belum ada di Playly" ikut hilang dari daftar penonton. Status itu
+  // HANYA ada di /api/public-video — /api/videos tidak membawanya (diperiksa 15
+  // kemungkinan nama field 2026-10-06; yang terisi penuh cuma `duration`, dan
+  // video yang upload-nya putus pun tetap punya durasi, jadi itu bukan penanda).
+  //
+  // Yang menahan penonton dari layar diam sekarang gerbang pemutar: route
+  // app/api/playly/video menanyakan alamat video ke Playly SAAT DIKLIK dan
+  // membalas pesan kalau tak ada. Jadi yang hilang perlindungan di DAFTAR, bukan
+  // di pemutarnya. Kalau kelak video rusak jadi sering, pasang lagi
+  // pemeriksaannya lewat petaBerbatasPlayly + simpan hasilnya di database —
+  // JANGAN kembali ke Promise.all atas seluruh daftar.
+  const videos = tampil.map<PlaylyVideoPublik>((v) => ({
     ...v,
-    thumbnail: v.thumbnail ?? detail.get(v.id)?.thumbnail ?? null,
+    thumbnail: v.thumbnail ?? null,
     ...labelUntuk(v.id),
   }));
 

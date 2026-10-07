@@ -21,6 +21,8 @@ import {
   maskPlaylyKey,
   DEFAULT_PLAYLY_EMBED_PATH,
   normalizePlaylyVideos,
+  petaBerbatasPlayly,
+  PLAYLY_MAKS_BERSAMAAN,
   normalizeThumbnail,
   parseAllowedHosts,
   parseDurationSeconds,
@@ -340,6 +342,123 @@ describe("normalizePlaylyVideos — terjemahkan balasan Playly", () => {
     );
     expect(videos[0].durationSeconds).toBeNull();
     expect(videos[0].durationLabel).toBe("-");
+  });
+});
+
+
+describe("SAMPUL DARI seo.thumbnailUrl — penjaga regresi 2026-10-06", () => {
+  // Latar: /api/videos TERNYATA sudah membawa alamat poster, tapi BERSARANG di
+  // dalam objek "seo" (diperiksa langsung ke Playly 2026-10-06: terisi di 169
+  // dari 172 video, alamatnya polos tanpa tanda tangan jadi tidak kedaluwarsa).
+  // Kode lama cuma membaca field DATAR, jadi tiap sampul tampak "tidak ada" dan
+  // halaman menanyakannya satu per satu ke /api/public-video — 172 panggilan
+  // serentak yang justru membuat Playly timeout dan mengosongkan SEMUA poster.
+  const POSTER = "https://pub-92310c1a9f1b4569a8c2a8c637651aa3.r2.dev/thumbs/x.jpg";
+
+  it("alamat poster di seo.thumbnailUrl ikut terbaca", () => {
+    const { videos } = normalizePlaylyVideos(
+      {
+        videos: [
+          {
+            id: "v1",
+            title: "Maryam",
+            embedUrl: "https://playly-dashboard.vercel.app/embed/v1",
+            seo: { thumbnailUrl: POSTER },
+          },
+        ],
+      },
+      IZIN,
+      POLA,
+    );
+    expect(videos[0].thumbnail).toBe(POSTER);
+  });
+
+  it("bentuk DATAR tetap menang kalau dua-duanya ada", () => {
+    // Field datar lebih spesifik; yang bersarang cuma cadangan. Kalau urutannya
+    // terbalik, balasan Playly versi lain bisa menimpa sampul yang sudah benar.
+    const datar = "https://playly-dashboard.vercel.app/t/datar.jpg";
+    const { videos } = normalizePlaylyVideos(
+      {
+        videos: [
+          {
+            id: "v1",
+            title: "Maryam",
+            embedUrl: "https://playly-dashboard.vercel.app/embed/v1",
+            thumbnail: datar,
+            seo: { thumbnailUrl: POSTER },
+          },
+        ],
+      },
+      IZIN,
+      POLA,
+    );
+    expect(videos[0].thumbnail).toBe(datar);
+  });
+
+  it("tanpa sampul di mana pun: null, bukan error", () => {
+    const { videos } = normalizePlaylyVideos(
+      {
+        videos: [
+          {
+            id: "v1",
+            title: "Tanpa poster",
+            embedUrl: "https://playly-dashboard.vercel.app/embed/v1",
+            seo: { uploadDate: "2026-10-02T14:27:49.478Z" },
+          },
+        ],
+      },
+      IZIN,
+      POLA,
+    );
+    expect(videos[0].thumbnail).toBeNull();
+  });
+});
+
+describe("petaBerbatasPlayly — jangan pernah membanjiri Playly lagi", () => {
+  // Latar: Promise.all atas 172 video melepas semuanya sekaligus. Tim Playly
+  // mengukurnya dari sisi mereka (2026-10-06): permintaan antre, sebagian lewat
+  // batas tunggu 8 detik kita, lalu seluruh sampul kosong. Batas mereka 120
+  // permintaan/menit per IP dan mereka minta maksimal 3-5 bersamaan.
+  it("jumlah yang berjalan BERSAMAAN tidak pernah lewat batas", async () => {
+    let sedangJalan = 0;
+    let puncak = 0;
+    const hasil = await petaBerbatasPlayly(
+      Array.from({ length: 50 }, (_, i) => i),
+      async (n) => {
+        sedangJalan++;
+        puncak = Math.max(puncak, sedangJalan);
+        await new Promise((r) => setTimeout(r, 1));
+        sedangJalan--;
+        return n * 2;
+      },
+      4,
+    );
+    expect(puncak).toBeLessThanOrEqual(4);
+    expect(hasil).toHaveLength(50);
+  });
+
+  it("urutan hasil mengikuti urutan masukan, bukan urutan selesai", async () => {
+    // Penting: pemanggil mencocokkan hasil dengan video lewat posisinya.
+    const hasil = await petaBerbatasPlayly(
+      [30, 1, 20, 2],
+      async (ms) => {
+        await new Promise((r) => setTimeout(r, ms));
+        return ms;
+      },
+      2,
+    );
+    expect(hasil).toEqual([30, 1, 20, 2]);
+  });
+
+  it("daftar kosong: tidak menggantung, memulangkan array kosong", async () => {
+    await expect(petaBerbatasPlayly([], async (x) => x)).resolves.toEqual([]);
+  });
+
+  it("bawaannya ikut PLAYLY_MAKS_BERSAMAAN, dan angkanya masuk akal", () => {
+    // Dijaga supaya tak ada yang diam-diam menaikkannya kembali ke "semua
+    // sekaligus" — yang membuat Playly timeout sejak awal.
+    expect(PLAYLY_MAKS_BERSAMAAN).toBeGreaterThanOrEqual(1);
+    expect(PLAYLY_MAKS_BERSAMAAN).toBeLessThanOrEqual(5);
   });
 });
 

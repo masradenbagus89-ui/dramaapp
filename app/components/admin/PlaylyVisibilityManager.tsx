@@ -31,7 +31,7 @@ export default function PlaylyVisibilityManager({
   belumSiapIds,
   fetchError,
   source,
-  creator,
+  creators,
 }: {
   /** Seluruh video milik akun kita, termasuk yang sedang disembunyikan. */
   videos: PlaylyVideo[];
@@ -49,8 +49,9 @@ export default function PlaylyVisibilityManager({
   /** Terisi kalau daftar gagal diambil dari Playly. */
   fetchError: string | null;
   source: PlaylySumber;
-  /** Nama akun Playly yang dipakai menyaring saat jalur kunci tidak terpakai. */
-  creator: string;
+  /** Nama akun Playly yang dipakai menyaring saat jalur kunci tidak terpakai.
+   * Jamak sejak 2026-10-06: kunci DramaKu mencakup tiga akun sekaligus. */
+  creators: string[];
 }) {
   const [hidden, setHidden] = useState<Set<string>>(new Set(initialHidden));
   const [genres, setGenres] = useState<Record<string, string>>(initialGenres);
@@ -200,10 +201,12 @@ export default function PlaylyVisibilityManager({
         <p className="mt-3 flex items-start gap-2 rounded-lg border border-sky-500/30 bg-sky-500/10 p-3 text-xs text-sky-100">
           <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
           <span>
-            Daftar ini diambil dari katalog publik Playly dan disaring ke nama akun{" "}
-            <strong>{creator}</strong>, karena kunci mitra sedang tidak diterima
-            Playly. Videonya tetap hanya milik akun kita. Kalau nama akun Playly
-            berubah, ganti lewat Environment Variable <code>PLAYLY_CREATOR</code>.
+            Daftar ini diambil dari katalog publik Playly dan disaring ke akun{" "}
+            <strong>{creators.join(", ")}</strong>, karena kunci mitra sedang tidak
+            diterima Playly. Videonya tetap hanya milik akun kita. Kalau ada akun
+            Playly baru, tambahkan lewat Environment Variable{" "}
+            <code>PLAYLY_CREATOR</code> (dipisah koma) — isinya MENAMBAH daftar
+            bawaan, bukan menggantikannya.
           </span>
         </p>
       )}

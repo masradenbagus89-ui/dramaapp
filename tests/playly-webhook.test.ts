@@ -27,6 +27,7 @@ import {
   parseWebhookPayload,
   readWebhookSecret,
   verifySharedSecret,
+  PLAYLY_TIMESTAMP_HEADER,
   verifyWebhookRequest,
   verifyWebhookSignature,
 } from "../lib/playly-webhook";
@@ -88,6 +89,75 @@ describe("verifyWebhookSignature — membedakan Playly asli dari pengaku-ngaku",
     const tanda = tandaTangani(body);
     expect(verifyWebhookSignature(body, `sha256=${tanda}`, SECRET)).toBe(true);
     expect(verifyWebhookSignature(body, tanda.toUpperCase(), SECRET)).toBe(true);
+  });
+});
+
+describe("TANDA-TANGAN BER-TIMESTAMP — penjaga regresi 2026-10-06", () => {
+  // Latar: Playly mengirim kiriman pertamanya 6 Okt 2026 (video @ayy "Tulang
+  // Belulang Tulang (2024)") dan kita TOLAK 401 — bukan karena secretnya salah,
+  // melainkan karena rumus kita cuma menghitung HMAC dari badan permintaan,
+  // sedangkan Playly menghitungnya dari `${timestamp}.${badan}`.
+  //
+  // Terbukti dengan vektor uji dari mereka: dengan secret yang sama, rumus
+  // "badan saja" keluar a653add4... sementara rumus ber-timestamp keluar
+  // c4347f57... — dan c4347f57... itulah yang Playly nyatakan benar. Secret
+  // ASLI sengaja TIDAK ditaruh di tes ini: rahasia tidak boleh masuk repo.
+  const body = JSON.stringify({ event: "video.published", video: { id: "abc" } });
+  const TS = "1790000000";
+
+  function tandaTanganiDenganWaktu(ts: string, isi: string, secret = SECRET): string {
+    return crypto.createHmac("sha256", secret).update(`${ts}.${isi}`, "utf8").digest("hex");
+  }
+
+  it("rumus Playly (timestamp + titik + badan): DITERIMA", () => {
+    expect(
+      verifyWebhookSignature(body, tandaTanganiDenganWaktu(TS, body), SECRET, TS),
+    ).toBe(true);
+  });
+
+  it("timestamp IKUT dihitung — timestamp lain untuk tanda-tangan yang sama: DITOLAK", () => {
+    // Inti penjaga: kalau timestamp dilepas lagi dari perhitungan, tanda-tangan
+    // di bawah akan lolos padahal waktunya beda — dan tes ini MERAH duluan.
+    const tanda = tandaTanganiDenganWaktu(TS, body);
+    expect(verifyWebhookSignature(body, tanda, SECRET, "1790009999")).toBe(false);
+  });
+
+  it("bentuk LAMA (tanda-tangan atas badan saja) tetap diterima", () => {
+    // Cadangan yang disengaja: kiriman tanpa header timestamp, atau yang dibuat
+    // dengan kontrak lama, tidak boleh ikut tertolak. Tetap menuntut secret.
+    expect(verifyWebhookSignature(body, tandaTangani(body), SECRET, TS)).toBe(true);
+    expect(verifyWebhookSignature(body, tandaTangani(body), SECRET)).toBe(true);
+  });
+
+  it("secret beda tetap DITOLAK walau rumusnya benar", () => {
+    expect(
+      verifyWebhookSignature(body, tandaTanganiDenganWaktu(TS, body, SECRET_LAIN), SECRET, TS),
+    ).toBe(false);
+  });
+
+  it("badan diubah sesudah ditandatangani: DITOLAK", () => {
+    const tanda = tandaTanganiDenganWaktu(TS, body);
+    const diubah = JSON.stringify({ event: "video.published", video: { id: "LAIN" } });
+    expect(verifyWebhookSignature(diubah, tanda, SECRET, TS)).toBe(false);
+  });
+
+  it("lewat gerbang: header timestamp + tanda-tangan Playly lolos sebagai signature", () => {
+    const h = new Headers({
+      [PLAYLY_TIMESTAMP_HEADER]: TS,
+      [PLAYLY_SIGNATURE_HEADER]: `sha256=${tandaTanganiDenganWaktu(TS, body)}`,
+    });
+    expect(verifyWebhookRequest(body, h, SECRET)).toEqual({
+      ok: true,
+      cara: "signature",
+    });
+  });
+
+  it("lewat gerbang: tanda-tangan ber-timestamp TANPA header timestamp: DITOLAK", () => {
+    // Membuktikan gerbang benar-benar MEMBACA headernya, bukan menebak isinya.
+    const h = new Headers({
+      [PLAYLY_SIGNATURE_HEADER]: `sha256=${tandaTanganiDenganWaktu(TS, body)}`,
+    });
+    expect(verifyWebhookRequest(body, h, SECRET)).toEqual({ ok: false });
   });
 });
 

@@ -10,10 +10,14 @@ import { cookies } from "next/headers";
 import { ADMIN_COOKIE, verifyAdminSessionToken } from "@/lib/session";
 import {
   fetchPlaylyDetailPublik,
+  petaBerbatasPlayly,
   fetchPlaylyVideosKita,
   getPlaylyKeyStatus,
   readPlaylyConfig,
 } from "@/lib/playly";
+// Aturan "boleh tampil / belum" sengaja diambil dari sumber yang SAMA dengan
+// halaman penonton, bukan disalin ulang — satu konsep, satu tempat.
+import { bolehTampilKePenonton } from "@/lib/playly-publik";
 import { getAllDramas } from "@/lib/dramas";
 import {
   getPlaylyEmbeds,
@@ -63,19 +67,24 @@ export default async function PlaylyVideosPage() {
     ]);
 
   // Video yang catatannya ada di Playly tapi BERKASNYA tidak (upload putus di
-  // tengah / file dihapus). Halaman penonton sudah membuangnya sendiri
-  // (lib/playly-publik.ts), jadi tanpa penanda di sini hilangnya terasa seperti
-  // bug DramaKu -- padahal yang perlu dilakukan adalah upload ulang di Playly.
+  // tengah / file dihapus). Sejak 2026-10-06 halaman penonton TIDAK lagi
+  // membuangnya sendiri (lihat lib/playly-publik.ts), jadi penanda di sini
+  // berubah fungsi: dulu menjelaskan "kenapa videoku hilang dari situs",
+  // sekarang memperingatkan "video ini tampil tapi akan gagal saat diklik —
+  // upload ulang di Playly".
+  //
+  // Dibatasi petaBerbatasPlayly, BUKAN Promise.all: melepas 172 panggilan
+  // sekaligus membuat Playly timeout (terukur 2026-10-06). Halaman admin jarang
+  // dibuka, tapi kalau membanjiri ia merusak sampul di halaman PENONTON juga —
+  // batas yang sama, server yang sama.
   //
   // revalidateSeconds = 0 mengikuti pemanggilan di atas: admin harus melihat
   // keadaan SEKARANG, bukan salinan 5 menit lalu.
   const belumSiapIds = (
-    await Promise.all(
-      mitra.videos.map(async (v) =>
-        (await fetchPlaylyDetailPublik(v.id, konfigurasi, 0)).punyaFile === false
-          ? v.id
-          : null,
-      ),
+    await petaBerbatasPlayly(mitra.videos, async (v) =>
+      bolehTampilKePenonton(await fetchPlaylyDetailPublik(v.id, konfigurasi, 0))
+        ? null
+        : v.id,
     )
   ).filter((id): id is string => id !== null);
 
@@ -129,7 +138,7 @@ export default async function PlaylyVideosPage() {
           belumSiapIds={belumSiapIds}
           fetchError={mitra.error}
           source={mitra.source}
-          creator={konfigurasi.creator}
+          creators={konfigurasi.creators}
         />
 
         {/* Diletakkan SESUDAH panel tampil/sembunyi: urutan kerjanya memang

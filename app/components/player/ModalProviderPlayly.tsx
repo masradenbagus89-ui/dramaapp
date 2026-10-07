@@ -20,7 +20,7 @@
 // senada kotak keterangan Playly. Warna kepala tabel & tombol tetap dari
 // app/components/unduhan-kelas.ts.
 //
-// ALAMATNYA MILIK PIHAK LUAR (Drive/Telegram/Cast/Mega), bukan server DramaKu:
+// ALAMATNYA MILIK PIHAK LUAR (Drive/Telegram/Cast/Mega/Sendcm), bukan server DramaKu:
 //   - `target="_blank"` + `rel="noopener noreferrer"`. Tanpa `noopener`,
 //     halaman tujuan bisa menyetir tab kita lewat `window.opener`.
 //   - TANPA atribut `download`: browser mengabaikannya untuk alamat beda
@@ -29,8 +29,27 @@ import { useEffect } from "react";
 import { Download, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { KELAS_KEPALA_TABEL, KELAS_WARNA_TOMBOL } from "@/app/components/unduhan-kelas";
-import { kelompokkanPerProvider, type LinkUnduhanPublik } from "@/lib/playly-unduhan";
+import {
+  KELAS_KEPALA_TABEL,
+  KELAS_WARNA_TOMBOL,
+  labelTombolProvider,
+} from "@/app/components/unduhan-kelas";
+import {
+  kelompokkanPerProvider,
+  type KualitasUnduhan,
+  type LinkUnduhanPublik,
+} from "@/lib/playly-unduhan";
+import type { DownloadButtonColor } from "@/lib/types";
+
+/**
+ * Warna tombol per kualitas (owner 2026-10-07, contoh gambar): 1080p biru,
+ * 480p oranye — penonton membedakan ketajaman dari warnanya sebelum membaca.
+ * Record bertipe KualitasUnduhan: kualitas baru tanpa warna = error tsc.
+ */
+const WARNA_KUALITAS: Record<KualitasUnduhan, DownloadButtonColor> = {
+  "1080p": "blue",
+  "480p": "orange",
+};
 
 export default function ModalProviderPlayly({
   open,
@@ -69,7 +88,7 @@ export default function ModalProviderPlayly({
         role="dialog"
         aria-modal="true"
         aria-label="Pilih provider download"
-        // max-h + gulir di DALAM kotak: di HP mendatar, tabel 4 provider bisa
+        // max-h + gulir di DALAM kotak: di HP mendatar, tabel 5 provider bisa
         // lebih tinggi dari layar — tanpa ini tombol × ikut terdorong keluar.
         className="flex max-h-[85dvh] w-full max-w-md flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-2xl"
         // Klik DI DALAM kotak tidak boleh ikut menutup popup — tanpa ini, klik
@@ -128,12 +147,12 @@ export default function ModalProviderPlayly({
                               size="sm"
                               className={cn(
                                 "h-8 whitespace-nowrap rounded-md px-3 text-xs font-bold text-white",
-                                KELAS_WARNA_TOMBOL.blue,
+                                KELAS_WARNA_TOMBOL[WARNA_KUALITAS[t.quality]],
                               )}
                             >
                               <a href={t.url} target="_blank" rel="noopener noreferrer">
                                 <Download className="size-3.5" />
-                                {t.quality}
+                                {labelTombolProvider(t.quality)}
                               </a>
                             </Button>
                           ))}

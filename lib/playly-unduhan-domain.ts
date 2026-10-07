@@ -8,6 +8,7 @@
 // MENAMBAH ke daftar bawaan, tidak menggantinya. Pisahkan dengan koma.
 //   PLAYLY_UNDUHAN_DOMAIN_GOOGLE   PLAYLY_UNDUHAN_DOMAIN_TELEGRAM
 //   PLAYLY_UNDUHAN_DOMAIN_CAST     PLAYLY_UNDUHAN_DOMAIN_MEGA
+//   PLAYLY_UNDUHAN_DOMAIN_SENDCM
 // Domain dicocokkan PERSIS (lihat periksaUrlUnduhan) — subdomain yang mau
 // diizinkan wajib ditulis satu-satu.
 // -------------------------------------------------------------------------
@@ -26,6 +27,7 @@ export const DOMAIN_UNDUHAN_BAWAAN: Readonly<Record<ProviderUnduhan, readonly st
   telegram: ["t.me", "telegram.me"],
   cast: [],
   mega: ["mega.nz"],
+  sendcm: ["send.cm"],
 };
 
 export function bacaDomainUnduhan(

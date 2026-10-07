@@ -7,7 +7,7 @@
 //               tidak menyimpan apa pun. Jalankan ini DULU.
 //   --format    paksa format; bawaannya ditebak dari akhiran nama berkas.
 //
-// Kolom: video (ID atau judul), provider (google|telegram|cast|mega),
+// Kolom: video (ID atau judul), provider (google|telegram|cast|mega|sendcm),
 // quality (1080p|480p), url. Contoh: scripts/contoh-link-unduhan.csv.
 // Bentuk JSON: array objek dengan kunci yang sama.
 //

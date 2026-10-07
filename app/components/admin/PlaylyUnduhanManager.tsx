@@ -1,6 +1,6 @@
 "use client";
 
-// Atur LINK UNDUHAN tiap video Playly: 4 provider × 2 kualitas. Ini CADANGAN
+// Atur LINK UNDUHAN tiap video Playly: 5 provider × 2 kualitas. Ini CADANGAN
 // MANUAL — jalur utamanya skrip impor CSV (scripts/impor-link-unduhan.ts) dan
 // webhook Playly (field `downloads`). Ketiganya memakai validasi yang SAMA
 // (lib/playly-unduhan.ts `validasiLinkUnduhan`).

@@ -13,7 +13,7 @@ import { bacaDomainUnduhan } from "@/lib/playly-unduhan-domain";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-/** 4 provider × 2 kualitas — lebih dari ini pasti kiriman yang keliru. */
+/** 5 provider × 2 kualitas — lebih dari ini pasti kiriman yang keliru. */
 const MAKS_LINK_PER_VIDEO = PROVIDER_UNDUHAN.length * KUALITAS_UNDUHAN.length;
 
 /**

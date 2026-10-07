@@ -112,7 +112,7 @@ export type PlaylyWebhookEvent = "video.published" | "video.unpublished" | "vide
 
 /**
  * Batas item `downloads` per notifikasi. Isi yang bermakna paling banyak
- * 4 provider × 2 kualitas = 8; batas longgar ini cuma mencegah satu kiriman
+ * 5 provider × 2 kualitas = 10; batas longgar ini cuma mencegah satu kiriman
  * raksasa membuat dokumen membengkak.
  */
 export const MAKS_UNDUHAN_PER_WEBHOOK = 50;

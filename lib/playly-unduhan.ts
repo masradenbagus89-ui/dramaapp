@@ -4,7 +4,7 @@
 // lib/playly-unduhan-domain.ts (server-only, karena membaca env).
 //
 // BENTUK DATA (owner 2026-10-05): satu BARIS = satu kombinasi
-//   videoId × provider (google|telegram|cast|mega) × kualitas (1080p|480p)
+//   videoId × provider (google|telegram|cast|mega|sendcm) × kualitas (1080p|480p)
 // dan kombinasi itu UNIK. Mengirim kombinasi yang sama lagi (impor ulang,
 // webhook dikirim ulang) MEMPERBARUI barisnya, bukan menambah kembaran — itu
 // yang membuat impor & webhook aman diulang.
@@ -22,7 +22,7 @@
 // -------------------------------------------------------------------------
 
 /** Urutan di sini = urutan baris di popup. */
-export const PROVIDER_UNDUHAN = ["google", "telegram", "cast", "mega"] as const;
+export const PROVIDER_UNDUHAN = ["google", "telegram", "cast", "mega", "sendcm"] as const;
 export type ProviderUnduhan = (typeof PROVIDER_UNDUHAN)[number];
 
 /** Nama yang dibaca penonton. Kodenya (`google`) tetap dipakai di data. */
@@ -31,6 +31,7 @@ export const LABEL_PROVIDER: Record<ProviderUnduhan, string> = {
   telegram: "Telegram",
   cast: "Cast",
   mega: "Mega",
+  sendcm: "Sendcm",
 };
 
 /** Urutan di sini = urutan tombol dalam satu baris provider. */
@@ -87,6 +88,9 @@ const ALIAS_PROVIDER: Record<string, ProviderUnduhan> = {
   cast: "cast",
   mega: "mega",
   "mega.nz": "mega",
+  sendcm: "sendcm",
+  "send cm": "sendcm",
+  "send.cm": "sendcm",
 };
 
 /** "Google_Share" / " GOOGLE  drive " -> kode provider, atau null. */

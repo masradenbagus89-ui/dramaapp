@@ -93,7 +93,7 @@ const CSV_CAMPUR = [
   `Rahasia Keluarga,google,1080p,${GDRIVE}`, // 5: judul ganda
   `vid-1,mega,1080p,http://mega.nz/file/a`, // 6: bukan https
   `vid-1,telegram,1080p,${GDRIVE}`, // 7: domain bukan milik provider
-  `vid-1,sendcm,1080p,${GDRIVE}`, // 8: provider tak dikenal
+  `vid-1,dropbox,1080p,${GDRIVE}`, // 8: provider tak dikenal
   `vid-1,google,720p,${GDRIVE}`, // 9: kualitas tak dikenal
   `vid-2,mega,480p,https://mega.nz/file/b`, // 10: sah, SESUDAH baris-baris rusak
 ].join("\n");

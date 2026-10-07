@@ -96,6 +96,7 @@ describe("periksaUrlUnduhan — domain WAJIB milik provider-nya", () => {
 
 describe("bacaDomainUnduhan — konfigurasi, bukan hardcode tersebar", () => {
   it("tanpa env = bawaan persis", () => {
+    expect(DOMAIN.sendcm).toEqual(["send.cm"]);
     expect(DOMAIN.google).toEqual([...DOMAIN_UNDUHAN_BAWAAN.google]);
     expect(DOMAIN.cast).toEqual([]);
   });
@@ -112,10 +113,12 @@ describe("normalProvider & normalKualitas", () => {
     expect(normalProvider(" google_drive ")).toBe("google");
     expect(normalProvider("TELEGRAM")).toBe("telegram");
     expect(normalProvider("mega.nz")).toBe("mega");
+    expect(normalProvider("Sendcm")).toBe("sendcm");
+    expect(normalProvider("send.cm")).toBe("sendcm");
   });
 
-  it("menolak provider di luar empat yang resmi (termasuk nama properti objek)", () => {
-    expect(normalProvider("sendcm")).toBeNull();
+  it("menolak provider di luar lima yang resmi (termasuk nama properti objek)", () => {
+    expect(normalProvider("dropbox")).toBeNull();
     expect(normalProvider("constructor")).toBeNull();
     expect(normalProvider("__proto__")).toBeNull();
     expect(normalProvider(1)).toBeNull();
@@ -288,12 +291,12 @@ describe("tempelUnduhanPlayly — link menempel ke video yang BENAR", () => {
 });
 
 describe("kelompokkanPerProvider — bentuk tabel popup", () => {
-  it("lengkap: 4 provider × 2 kualitas, urutan tetap", () => {
-    const semua = (["mega", "cast", "telegram", "google"] as const).flatMap((provider) =>
+  it("lengkap: 5 provider × 2 kualitas, urutan tetap", () => {
+    const semua = (["sendcm", "mega", "cast", "telegram", "google"] as const).flatMap((provider) =>
       (["480p", "1080p"] as const).map((quality) => ({ provider, quality, url: `https://x/${provider}/${quality}` })),
     );
     const baris = kelompokkanPerProvider(semua);
-    expect(baris.map((b) => b.label)).toEqual(["Google Share", "Telegram", "Cast", "Mega"]);
+    expect(baris.map((b) => b.label)).toEqual(["Google Share", "Telegram", "Cast", "Mega", "Sendcm"]);
     expect(baris.every((b) => b.tombol.map((t) => t.quality).join() === "1080p,480p")).toBe(true);
   });
 

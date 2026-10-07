@@ -49,8 +49,8 @@ afterEach(() => {
   container.remove();
 });
 
-/** LENGKAP: 4 provider × 2 kualitas, sengaja diacak urutannya. */
-const LENGKAP: LinkUnduhanPublik[] = (["mega", "cast", "telegram", "google"] as const).flatMap(
+/** LENGKAP: 5 provider × 2 kualitas, sengaja diacak urutannya. */
+const LENGKAP: LinkUnduhanPublik[] = (["sendcm", "mega", "cast", "telegram", "google"] as const).flatMap(
   (provider) =>
     (["480p", "1080p"] as const).map((quality) => ({
       provider,
@@ -208,11 +208,18 @@ describe("Popup provider — link LENGKAP", () => {
 
   it("satu baris per provider (urutan tetap), satu tombol per kualitas", () => {
     expect(isiTabel()).toEqual([
-      ["Google Share", "1080p", "480p"],
-      ["Telegram", "1080p", "480p"],
-      ["Cast", "1080p", "480p"],
-      ["Mega", "1080p", "480p"],
+      ["Google Share", "DOWNLOAD 1080p", "DOWNLOAD 480p"],
+      ["Telegram", "DOWNLOAD 1080p", "DOWNLOAD 480p"],
+      ["Cast", "DOWNLOAD 1080p", "DOWNLOAD 480p"],
+      ["Mega", "DOWNLOAD 1080p", "DOWNLOAD 480p"],
+      ["Sendcm", "DOWNLOAD 1080p", "DOWNLOAD 480p"],
     ]);
+  });
+
+  it("1080p biru, 480p oranye (keputusan owner 2026-10-07)", () => {
+    const [t1080, t480] = Array.from(popup()!.querySelectorAll("tbody tr")[0].querySelectorAll("a"));
+    expect(t1080.className).toContain("from-blue-500");
+    expect(t480.className).toContain("from-orange-400");
   });
 
   it("tiap tombol menuju alamat provider × kualitasnya sendiri", () => {
@@ -223,7 +230,7 @@ describe("Popup provider — link LENGKAP", () => {
 
   it("tab baru dibuka dengan rel='noopener noreferrer'", () => {
     const semua = Array.from(popup()!.querySelectorAll("tbody a"));
-    expect(semua).toHaveLength(8);
+    expect(semua).toHaveLength(10);
     for (const a of semua) {
       expect(a.getAttribute("target")).toBe("_blank");
       expect(a.getAttribute("rel")).toBe("noopener noreferrer");
@@ -247,8 +254,8 @@ describe("Popup provider — link SEBAGIAN", () => {
     pasang(SEBAGIAN);
     klik(tombolDownload());
     expect(isiTabel()).toEqual([
-      ["Telegram", "480p"],
-      ["Mega", "1080p"],
+      ["Telegram", "DOWNLOAD 480p"],
+      ["Mega", "DOWNLOAD 1080p"],
     ]);
     expect(popup()!.textContent).not.toContain("belum tersedia");
   });

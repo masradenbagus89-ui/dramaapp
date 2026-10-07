@@ -9,26 +9,7 @@
 >
 > **📦 Berkas ini sudah 2.980 baris / ±240 KB** dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-10-07.
-
----
-
-## 2026-10-07 — Popup unduhan Playly: provider ke-5 Sendcm + tombol "DOWNLOAD 1080p" biru / 480p oranye
-
-**STATUS: ✅ DI WORKING TREE branch `feat/link-unduhan-provider-kualitas`, BELUM di-commit / di-push.**
-Owner minta tampilan persis gambar contoh: Google Share · Telegram · Cast · Mega · **Sendcm**.
-- `PROVIDER_UNDUHAN` + `LABEL_PROVIDER` + alias (`sendcm`, `send.cm`) di `lib/playly-unduhan.ts`;
-  domain bawaan **`send.cm`** (`lib/playly-unduhan-domain.ts`, env baru `PLAYLY_UNDUHAN_DOMAIN_SENDCM`).
-  ❓ `send.cm` diambil dari nama layanannya; situsnya di balik Cloudflare jadi format link belum
-  terbaca langsung — kalau link asli owner memakai domain lain, tambahkan lewat env itu.
-- Panel admin, rute admin, webhook, impor otomatis ikut 5 provider (semua membaca `PROVIDER_UNDUHAN`).
-- Popup: tulisan tombol `DOWNLOAD <kualitas>`; warna per kualitas `WARNA_KUALITAS`
-  (1080p biru, 480p oranye) di `app/components/player/ModalProviderPlayly.tsx`.
-- **Cast tetap KOSONG domainnya** → link Cast ditolak sampai `PLAYLY_UNDUHAN_DOMAIN_CAST` diisi.
-- Tombol hanya muncul kalau link-nya ADA — owner masih harus mengunggah berkas & mengisi link.
-
-**Bukti:** `npm test` 1339 lulus / 90 berkas → `rm -rf .next` + `npm run build` exit 0 →
-`npx tsc --noEmit` exit 0. Belum dilihat di browser sungguhan (hanya jsdom).
+**Terakhir diisi:** 2026-10-05.
 
 ---
 

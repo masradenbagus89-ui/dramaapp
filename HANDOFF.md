@@ -13,10 +13,22 @@
 
 ---
 
-## 2026-10-08 — Data IMDb untuk video Playly (Tahap 1): SIAP RILIS, belum di-commit
+## 2026-10-08 — Data IMDb untuk video Playly (Tahap 1): DIRILIS `457954d`
 
-**STATUS: belum di-commit, belum di-push.** Gerbang pra-rilis sudah lulus semua; menunggu izin
-owner.
+**STATUS: DIRILIS** (izin owner: "rilis dulu"). Dual push TUNTAS, fast-forward
+`6a1700b..457954d` ke kedua repo, ketiga ref terbaca sama.
+
+**Verifikasi SESUDAH tayang:** route `/api/admin/playly/imdb` membalas **401** sedangkan route
+karangan `/api/admin/playly/zzz-tidak-pernah-ada` membalas **404** — pembanding itu sengaja
+dipakai karena 401 saja tidak membuktikan route-nya ada. Smoke test 9 halaman (`/` `/film`
+`/beranda` `/discover` `/katalog` `/login` `/admin` `/admin/videos/playly` `/api/dramas`)
+semuanya **200**.
+
+**Rollback 1 baris:** Vercel -> Deployments -> promote `6a1700b` ke Production (tanpa build
+ulang). Alternatif: `git revert 457954d` lalu dual push.
+
+**⚠️ BELUM DIVERIFIKASI OWNER DI LAYAR.** Yang terbukti baru sisi mesin (route hidup, halaman
+200). Tombol "Cari di IMDb" belum pernah ditekan manusia di produksi.
 
 **Masalah yang dijawab (pertanyaan owner):** film dari pintu DramaKu bisa menarik poster/sinopsis
 dari IMDb, video dari pintu Playly tidak. Owner bertanya apakah mitra Playly harus memasang

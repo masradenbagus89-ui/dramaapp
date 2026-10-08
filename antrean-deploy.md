@@ -3,9 +3,23 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-10-07 (**komputer OWNER**) — **ANTREAN KOSONG, DUAL PUSH TUNTAS.**
-`6eb14b3..abec24a` fast-forward ke **kedua** repo, nol paksaan. Ketiga tempat terbaca sama lewat
-`git ls-remote` (bukan `git log` lokal): **`abec24a`**.
+**Terakhir dicek:** 2026-10-08 (**komputer OWNER**) — **ANTREAN KOSONG, DUAL PUSH TUNTAS.**
+`6a1700b..457954d` fast-forward ke **kedua** repo, nol paksaan. Ketiga ref terbaca sama:
+**`457954d`**.
+
+**Rilis 2026-10-08 — `457954d` data IMDb untuk video Playly (Tahap 1).** Satu commit, nol
+migrasi SQL, nol env baru. Dampak penonton: **nol sampai owner mencocokkan video** — dokumen
+`playly:imdb` masih kosong, jadi tiap kartu tampil persis seperti sebelumnya. Begitu owner
+memakai tombol "Cari di IMDb" di `/admin/videos/playly`, kartu video itu mendapat poster,
+tahun, genre, dan rating.
+
+Verifikasi sesudah tayang: route baru **401** vs route karangan **404** (pembanding dipakai
+karena 401 saja tidak membuktikan route-nya ada) · smoke test 9 halaman semuanya **200**.
+Rollback: promote `6a1700b` di Vercel.
+
+---
+
+**Rilis sebelumnya (2026-10-07) — `abec24a`:**
 
 **Rilis ini membawa 11 commit — 9 kerja rekan + 1 merge + 1 panduan:**
 

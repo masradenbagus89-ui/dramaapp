@@ -13,6 +13,7 @@ import Link from "next/link";
 import { Film, Play, Star } from "lucide-react";
 import PlaylyPlayer from "./player/PlaylyPlayer";
 import InfoVideoPlayly from "./player/InfoVideoPlayly";
+import { alamatTonton } from "@/lib/tonton";
 import type { PlaylyVideoPublik } from "@/lib/playly-publik";
 
 export default function PlaylyVideoGrid({
@@ -64,6 +65,11 @@ export default function PlaylyVideoGrid({
                 durationLabel={aktif.durationLabel}
                 genre={aktif.genre}
                 linkUnduhan={aktif.linkUnduhan}
+                // Jalan ke halaman video ini, tempat sinopsis & pemain tinggal.
+                // Alamatnya dirakit `alamatTonton` — fungsi yang sama yang
+                // dipakai pembacanya di halaman tonton, jadi keduanya tak bisa
+                // bergeser sendiri-sendiri (lib/tonton.ts:5-9).
+                detailHref={alamatTonton(aktif)}
               />
               {aktif.dramaHref && aktif.dramaTitle && (
                 <p className="mt-2 text-xs text-zinc-400">

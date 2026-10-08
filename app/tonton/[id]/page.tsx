@@ -8,6 +8,8 @@ import { SITE_URL, absoluteUrl } from "@/lib/site";
 import { toJsonLdScript, videoJsonLd } from "@/lib/structured-data";
 import PlaylyPlayer from "@/app/components/player/PlaylyPlayer";
 import InfoVideoPlayly from "@/app/components/player/InfoVideoPlayly";
+import DetailFilmPlayly from "@/app/components/player/DetailFilmPlayly";
+import { getPlaylyImdbCached } from "@/lib/store";
 
 // HALAMAN TONTON SATU VIDEO (owner 2026-09-26).
 //
@@ -122,6 +124,17 @@ export default async function TontonPage(props: PageProps<"/tonton/[id]">) {
   const video = await cariVideo(id);
   if (!video) notFound();
 
+  // Metadata IMDb dibaca LANGSUNG di sini, bukan lewat `PlaylyVideoPublik`.
+  // Alasannya: bentuk kartu itu dipakai 5 berkas tampilan lain, dan melebarkannya
+  // demi sinopsis + kredit berarti kelimanya harus ikut dipikirkan ulang padahal
+  // tak satu pun membutuhkannya (alasan yang sama sudah ditulis di
+  // lib/playly-gabungan.ts:63-65). Halaman detail yang butuh data detail, jadi
+  // halaman ini yang mengambilnya. Pembacaannya ber-cache, jadi tidak menambah
+  // beban — dan gagal baca TIDAK boleh mematikan halaman: pemutarnya yang utama.
+  const meta = await getPlaylyImdbCached()
+    .then((peta) => peta[video.id])
+    .catch(() => undefined);
+
   return (
     <main className="min-h-screen bg-zinc-950 pb-16">
       <div className="mx-auto max-w-5xl px-4 pt-6 md:px-6">
@@ -170,6 +183,12 @@ export default async function TontonPage(props: PageProps<"/tonton/[id]">) {
             </p>
           )}
         </div>
+
+        {/* Sinopsis + kredit. SENGAJA di luar pembungkus `max-w-sm` di atas:
+            kotak sempit itu bentuk pilihan owner untuk keterangan ringkas +
+            tombol, sedangkan paragraf sinopsis butuh lebar baca yang wajar.
+            Tidak digambar sama sekali kalau videonya belum dicocokkan ke IMDb. */}
+        {meta && <DetailFilmPlayly meta={meta} />}
       </div>
 
       {/* Penanda VIDEO untuk Google — keterangan tersembunyi yang memberi tahu

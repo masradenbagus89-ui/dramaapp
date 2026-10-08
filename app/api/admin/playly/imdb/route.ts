@@ -198,6 +198,14 @@ function keMeta(draft: Awaited<ReturnType<typeof fetchImdbDraft>>): PlaylyImdbMe
     contentRating: draft.contentRating,
     runtime: draft.runtime,
     synopsis: draft.synopsis,
+    // Kredit & asal — dipakai halaman /tonton/[id] supaya setara halaman film
+    // DramaKu. Tetap dipetakan satu per satu, bukan disebar dari draft.
+    director: draft.director,
+    writer: draft.writer,
+    stars: draft.stars,
+    country: draft.country,
+    language: draft.language,
+    imdbVotes: draft.imdbVotes,
     // Dipilih manusia dari daftar kandidat. Penanda ini yang kelak menahan
     // pencocokan massal (Tahap 2) menimpa koreksi yang dibuat dengan tangan.
     sumber: "manual",

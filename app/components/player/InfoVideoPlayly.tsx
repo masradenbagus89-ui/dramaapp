@@ -28,7 +28,8 @@
 // DATA, bukan kerusakan kode — barisnya terisi sendiri begitu admin mengaitkan
 // video ke drama lewat /admin/videos/playly.
 import { useState } from "react";
-import { Bookmark, Download } from "lucide-react";
+import Link from "next/link";
+import { Bookmark, ChevronRight, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import ShareButton from "@/app/components/ShareButton";
 import ModalProviderPlayly from "./ModalProviderPlayly";
@@ -62,6 +63,17 @@ export type InfoVideoPlaylyProps = {
    * 2026-10-05, menggantikan kotak peringatan browser yang dulu dipakai).
    */
   linkUnduhan?: LinkUnduhanPublik[];
+  /**
+   * Alamat halaman tonton video ini. Diisi HANYA saat kotak ini dipakai di
+   * halaman DAFTAR — di halaman tonton itu sendiri tombolnya tak digambar,
+   * karena menunjuk ke halaman yang sedang dibuka cuma membingungkan.
+   *
+   * Dipakai sejak 2026-10-08: sinopsis, pemain, dan sutradara tidak muat di
+   * kotak sempit ini (lebarnya pilihan owner), jadi isi lengkapnya tinggal di
+   * halaman tonton — dan sebelum ini TIDAK ADA satu pun tautan ke sana dari
+   * daftar, sehingga penonton praktis tak pernah sampai.
+   */
+  detailHref?: string | null;
   className?: string;
 };
 
@@ -72,6 +84,7 @@ export default function InfoVideoPlayly({
   durationLabel,
   genre,
   linkUnduhan = [],
+  detailHref,
   className,
 }: InfoVideoPlaylyProps) {
   // Sengaja HANYA di memori halaman (useState), tidak ditulis ke mana pun.
@@ -188,6 +201,19 @@ export default function InfoVideoPlayly({
             {tersimpan ? "Tersimpan" : "Simpan"}
           </Button>
         </div>
+
+        {detailHref && (
+          // Baris sendiri di bawah tombol, bukan tombol keempat yang berdesakan:
+          // tiga tombol di atas adalah AKSI pada video ini, sedangkan ini
+          // perpindahan halaman — beda jenis, jadi tidak disejajarkan.
+          <Link
+            href={detailHref}
+            className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-pink-600 underline-offset-2 hover:underline"
+          >
+            Detail film
+            <ChevronRight className="size-3.5" aria-hidden="true" />
+          </Link>
+        )}
       </section>
 
       {/* DI LUAR kotak (alasannya di komentar fragment di atas). Popup sendiri

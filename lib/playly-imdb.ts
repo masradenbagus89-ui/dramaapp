@@ -41,6 +41,23 @@ export type PlaylyImdbMeta = {
   runtime: string;
   synopsis: string;
   /**
+   * Kredit & asal film — ditambahkan 2026-10-08 sesudah owner membandingkan
+   * halaman video Playly dengan halaman film DramaKu dan menemukan yang pertama
+   * jauh lebih miskin.
+   *
+   * SEMUANYA OPSIONAL, dan itu disengaja: baris yang sudah tersimpan sebelum
+   * hari ini tidak punya field ini. Menandainya wajib berarti tiap pembacaan
+   * baris lama harus diperlakukan sebagai data rusak, padahal ia baik-baik saja
+   * — cuma lebih sedikit. Tampilan sudah tahu cara diam saat nilainya kosong.
+   */
+  director?: string;
+  writer?: string;
+  stars?: string;
+  country?: string;
+  language?: string;
+  /** Jumlah pemilih di IMDb ("105,613") — dipajang di samping nilai ratingnya. */
+  imdbVotes?: string;
+  /**
    * Siapa yang memilih baris ini.
    *
    * WAJIB ADA: pencocokan massal (Tahap 2) hanya boleh menimpa baris

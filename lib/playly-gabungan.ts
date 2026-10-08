@@ -106,10 +106,11 @@ export function webhookKeKartu(
     // tergambar sebagai tulisan "null" di bawah judul pemutar.
     creator: v.creator ?? "",
     embedUrl: v.embedUrl,
-    // Sampul kiriman Playly didahulukan; poster IMDb hanya mengisi yang kosong.
-    // Sampul Playly diambil dari isi videonya sendiri sehingga selalu benar,
-    // sedangkan poster IMDb bergantung kecocokan judul yang bisa meleset.
-    thumbnail: v.thumbnailUrl ?? (m?.poster || null),
+    // POSTER IMDb MENANG atas sampul kiriman Playly — aturan yang sama persis
+    // dengan jalur katalog di lib/playly-publik.ts (keputusan owner 2026-10-08).
+    // Dua jalur ini WAJIB sepakat: kalau tidak, video yang sama bisa berganti
+    // sampul tergantung pintu mana yang kebetulan membawanya hari itu.
+    thumbnail: m?.poster || v.thumbnailUrl || null,
     dramaTitle: null,
     dramaHref: null,
     episode: null,

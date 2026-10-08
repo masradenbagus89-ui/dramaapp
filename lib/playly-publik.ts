@@ -268,16 +268,20 @@ export async function getPlaylyVideosPublik(): Promise<PlaylyPublikResult> {
   // JANGAN kembali ke Promise.all atas seluruh daftar.
   const videos = tampil.map<PlaylyVideoPublik>((v) => ({
     ...v,
-    // Sampul Playly didahulukan; poster IMDb hanya MENGISI yang kosong, tidak
-    // menggantikan yang sudah ada. Alasannya: sampul Playly diambil dari isi
-    // videonya sendiri, jadi ia selalu benar untuk video itu — sedangkan poster
-    // IMDb bergantung pada kecocokan judul yang bisa meleset. Dalam praktik
-    // cabang ini hampir selalu terpakai: diukur 2026-10-08, thumbnail null pada
-    // video katalog, sehingga kartunya cuma menampilkan ikon film abu-abu.
-    // `|| null` di dalam, bukan `??`: poster yang host-nya tak lolos pagar
-    // tersimpan sebagai string KOSONG, dan string kosong harus jadi null —
-    // bukan diteruskan sebagai alamat gambar yang pasti gagal dimuat.
-    thumbnail: v.thumbnail ?? (imdb[v.id]?.poster || null),
+    // POSTER IMDb MENANG atas sampul Playly (keputusan owner 2026-10-08, sesudah
+    // melihat hasilnya di produksi). Sampul Playly adalah cuplikan acak dari isi
+    // video — sering gelap, kadang cuma logo studio — sedangkan poster film
+    // memang dibuat untuk mengundang orang menonton.
+    //
+    // Video yang BELUM dicocokkan tidak berubah sama sekali: tanpa entri di peta
+    // imdb, cabang pertama kosong dan sampul Playly tetap dipakai. Jadi aturan
+    // ini hanya berlaku pada video yang admin pilih sendiri, dan bisa dibatalkan
+    // per video lewat tombol Lepas.
+    //
+    // Rantainya memakai `||`, bukan `??`: poster yang host-nya tak lolos pagar
+    // tersimpan sebagai string KOSONG, dan string kosong harus ikut jatuh ke
+    // cadangan — bukan diteruskan sebagai alamat gambar yang pasti gagal dimuat.
+    thumbnail: imdb[v.id]?.poster || v.thumbnail || null,
     ...labelUntuk(v.id),
   }));
 

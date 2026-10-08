@@ -391,6 +391,71 @@ describe("webhookKeKartu — baris webhook dipaskan ke bentuk yang dikenal kartu
     expect(kartu.kategori).toBe("Action");
   });
 
+  // ====================================================================
+  // SAMPUL KARTU (owner 2026-10-08, sesudah melihat hasilnya di produksi).
+  //
+  // Urutan ini SUDAH PERNAH SALAH dan lolos ke produksi: versi pertama
+  // mendahulukan sampul Playly, karena `playly:cadangan` memperlihatkan
+  // thumbnail null — padahal salinan itu BASI dan data hidup punya sampul.
+  // Akibatnya poster IMDb yang sudah dipasang owner tidak pernah terpakai,
+  // dan tak ada error apa pun yang memberitahu. Tes ini yang menahannya
+  // kembali terbalik.
+  // ====================================================================
+  const metaImdb = {
+    imdbId: "tt15314262",
+    title: "The Beekeeper",
+    year: "2024",
+    poster: "https://m.media-amazon.com/images/M/poster.jpg",
+    genre: "Action, Crime, Thriller",
+    rating: "6.3",
+    contentRating: "R",
+    runtime: "105 min",
+    synopsis: "…",
+    sumber: "manual" as const,
+    dicocokkanPada: "2026-10-08T00:00:00.000Z",
+  };
+
+  it("poster IMDb MENANG atas sampul kiriman Playly", () => {
+    const kartu = webhookKeKartu(
+      barisWebhook("w1", { thumbnailUrl: "https://playly.test/cuplikan.jpg" }),
+      {},
+      { w1: metaImdb },
+    );
+    expect(kartu.thumbnail).toBe(metaImdb.poster);
+  });
+
+  it("video yang BELUM dicocokkan tetap memakai sampul Playly", () => {
+    // Pagar paling penting di blok ini: aturan baru tidak boleh menyentuh
+    // video yang admin belum pilih. Tanpa tes ini, kesalahan di rantai
+    // pemilihan bisa mengosongkan sampul 186 video sekaligus.
+    const kartu = webhookKeKartu(
+      barisWebhook("w1", { thumbnailUrl: "https://playly.test/cuplikan.jpg" }),
+      {},
+      {},
+    );
+    expect(kartu.thumbnail).toBe("https://playly.test/cuplikan.jpg");
+  });
+
+  it("poster yang KOSONG jatuh ke sampul Playly, bukan jadi kartu tanpa gambar", () => {
+    // Poster tersimpan kosong kalau host-nya tak lolos pagar `posterAman`.
+    // Nilai kosong harus ikut jatuh ke cadangan — kalau dipakai apa adanya,
+    // kartunya kehilangan gambar yang sebenarnya masih ada.
+    const kartu = webhookKeKartu(
+      barisWebhook("w1", { thumbnailUrl: "https://playly.test/cuplikan.jpg" }),
+      {},
+      { w1: { ...metaImdb, poster: "" } },
+    );
+    expect(kartu.thumbnail).toBe("https://playly.test/cuplikan.jpg");
+  });
+
+  it("rating & rating usia ikut dari metadata IMDb", () => {
+    // Keduanya dulu SELALU null di jalur webhook karena satu-satunya sumbernya
+    // adalah kaitan video->drama, yang tak pernah dibuat untuk satu video pun.
+    const kartu = webhookKeKartu(barisWebhook("w1"), {}, { w1: metaImdb });
+    expect(kartu.rating).toBe("6.3");
+    expect(kartu.contentRating).toBe("R");
+  });
+
   it("pilihan admin ikut terbawa lewat pintu gabungan, bukan cuma di perakitnya", () => {
     // Penjaga SAMBUNGAN: `webhookKeKartu` bisa benar sendirian sementara
     // `gabungVideoPlayly` lupa mengoper petanya — dan hasilnya video webhook

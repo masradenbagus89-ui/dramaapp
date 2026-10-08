@@ -73,6 +73,26 @@ export type PlaylyImdbMeta = {
 export type PlaylyImdbMap = Record<string, PlaylyImdbMeta>;
 
 /**
+ * Video mana yang boleh ikut pencocokan MASSAL: yang belum punya data saja.
+ *
+ * PAGAR TERPENTING di fitur pencocokan massal, dan sebabnya bukan teori —
+ * tanpa ini, sekali tombol "Cocokkan semua" ditekan, seluruh baris yang sudah
+ * diperbaiki admin dengan tangan ikut tertimpa tebakan mesin. Tidak ada error
+ * yang muncul saat itu terjadi, dan tidak ada jalan mengembalikannya: nilai
+ * lamanya sudah hilang.
+ *
+ * Dipisah jadi fungsi murni (bukan dibiarkan sebagai `.filter()` di dalam
+ * komponen) justru supaya aturan ini punya tempat yang bisa diuji langsung,
+ * tanpa merender React — project ini belum punya @testing-library/react.
+ */
+export function videoBelumDicocokkan<T extends { id: string }>(
+  videos: T[],
+  imdb: PlaylyImdbMap,
+): T[] {
+  return videos.filter((v) => !imdb[v.id]);
+}
+
+/**
  * Host gambar yang boleh disimpan sebagai poster.
  *
  * PAGAR KEAMANAN, bukan kerapian — dua sebab, keduanya nyata:

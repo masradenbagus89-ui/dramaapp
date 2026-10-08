@@ -20,6 +20,7 @@ import type { PlaylyVideo, PlaylySumber } from "@/lib/playly";
 import type { PlaylyImdbMap } from "@/lib/playly-imdb";
 import { KATEGORI_ISI } from "@/lib/types";
 import PlaylyImdbPicker from "./PlaylyImdbPicker";
+import PlaylyCocokkanSemua from "./PlaylyCocokkanSemua";
 
 type Pesan = { jenis: "ok" | "gagal"; teks: string };
 
@@ -209,6 +210,13 @@ export default function PlaylyVisibilityManager({
           </strong>
           .
         </p>
+      )}
+
+      {/* Pencocokan massal. Diletakkan SESUDAH keterangan dan SEBELUM daftar:
+          urutan kerjanya memang begitu — pahami dulu apa yang diisi, kerjakan
+          borongan, baru rapikan sisanya satu per satu di daftar di bawah. */}
+      {!fetchError && (
+        <PlaylyCocokkanSemua videos={videos} imdb={imdb} onPerbarui={setImdb} />
       )}
 
       {belumSiap.size > 0 && (

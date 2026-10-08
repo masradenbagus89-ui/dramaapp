@@ -108,7 +108,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  let body: { videoId?: unknown; imdbId?: unknown };
+  let body: { videoId?: unknown; imdbId?: unknown; otomatis?: unknown };
   try {
     body = (await req.json()) as typeof body;
   } catch {
@@ -131,9 +131,15 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // Penanda asal-usul baris. Dibaca sebagai boolean murni (`=== true`), bukan
+  // nilai yang dipercaya apa adanya — ini satu-satunya field dari body yang
+  // tidak lewat validasi bentuk lain, dan nilai aneh tidak boleh lolos jadi
+  // string. Hanya menandai; tidak mengubah data yang diambil maupun pagarnya.
+  const sumber = body.otomatis === true ? "otomatis" : "manual";
+
   try {
     const draft = await fetchImdbDraft(imdbId);
-    const imdb = await setPlaylyVideoImdb(videoId, keMeta(draft));
+    const imdb = await setPlaylyVideoImdb(videoId, keMeta(draft, sumber));
     return NextResponse.json({ ok: true, imdb });
   } catch (err) {
     return balasError(err, "Gagal mengambil data dari OMDb.");
@@ -183,7 +189,10 @@ export async function DELETE(req: NextRequest) {
  * lib/imdb-tool.ts dikembangkan. Memetakan eksplisit membuat isi dokumen ini
  * tidak ikut berubah diam-diam (rak owasp §4 mass assignment).
  */
-function keMeta(draft: Awaited<ReturnType<typeof fetchImdbDraft>>): PlaylyImdbMeta {
+function keMeta(
+  draft: Awaited<ReturnType<typeof fetchImdbDraft>>,
+  sumber: PlaylyImdbMeta["sumber"],
+): PlaylyImdbMeta {
   return {
     imdbId: draft.imdbId,
     title: draft.title,
@@ -206,9 +215,10 @@ function keMeta(draft: Awaited<ReturnType<typeof fetchImdbDraft>>): PlaylyImdbMe
     country: draft.country,
     language: draft.language,
     imdbVotes: draft.imdbVotes,
-    // Dipilih manusia dari daftar kandidat. Penanda ini yang kelak menahan
-    // pencocokan massal (Tahap 2) menimpa koreksi yang dibuat dengan tangan.
-    sumber: "manual",
+    // "manual" = dipilih manusia dari daftar kandidat · "otomatis" = hasil
+    // tebakan pencocokan massal. Penanda ini yang menahan pencocokan massal
+    // menimpa koreksi yang sudah dibuat dengan tangan.
+    sumber,
     dicocokkanPada: new Date().toISOString(),
   };
 }

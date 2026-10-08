@@ -14,7 +14,13 @@
 // bukan contoh karangan. Itu disengaja: aturan ini dibuat dari data nyata, jadi
 // yang menjaganya harus data yang sama.
 import { describe, it, expect } from "vitest";
-import { bersihkanJudulRilis, posterAman } from "../lib/playly-imdb";
+import {
+  bersihkanJudulRilis,
+  posterAman,
+  videoBelumDicocokkan,
+  type PlaylyImdbMap,
+  type PlaylyImdbMeta,
+} from "../lib/playly-imdb";
 
 describe("bersihkanJudulRilis — potong di tahun", () => {
   it("membuang embel-embel rilis yang menempel SESUDAH tahun", () => {
@@ -138,5 +144,51 @@ describe("posterAman — gagal-aman, bukan fail-open", () => {
     // Yang tak bisa diurai TIDAK boleh diloloskan "karena mungkin benar".
     expect(posterAman("bukan-alamat")).toBe("");
     expect(posterAman("")).toBe("");
+  });
+});
+
+describe("videoBelumDicocokkan — pagar pencocokan massal", () => {
+  const meta = (title: string, sumber: PlaylyImdbMeta["sumber"]): PlaylyImdbMeta => ({
+    imdbId: "tt0000001",
+    title,
+    year: "2024",
+    poster: "",
+    genre: "",
+    rating: "",
+    contentRating: "",
+    runtime: "",
+    synopsis: "",
+    sumber,
+    dicocokkanPada: "2026-10-08T00:00:00.000Z",
+  });
+
+  const videos = [{ id: "a" }, { id: "b" }, { id: "c" }];
+
+  it("hanya memulangkan video yang BELUM punya data", () => {
+    const imdb: PlaylyImdbMap = { b: meta("Film B", "manual") };
+    expect(videoBelumDicocokkan(videos, imdb).map((v) => v.id)).toEqual(["a", "c"]);
+  });
+
+  it("baris MANUAL tidak pernah ikut diproses ulang", () => {
+    // Inilah kerusakan yang dicegah: koreksi tangan admin tertimpa tebakan
+    // mesin, tanpa error dan tanpa jalan kembali — nilai lamanya sudah hilang.
+    const imdb: PlaylyImdbMap = { a: meta("Pilihan admin", "manual") };
+    expect(videoBelumDicocokkan(videos, imdb).map((v) => v.id)).not.toContain("a");
+  });
+
+  it("baris OTOMATIS juga tidak ikut diproses ulang", () => {
+    // Sengaja sama perlakuannya: menjalankan tombol dua kali tidak boleh
+    // menghasilkan panggilan OMDb berulang untuk video yang sudah terisi —
+    // jatah harian akun gratis terbatas (1.000/hari).
+    const imdb: PlaylyImdbMap = { c: meta("Tebakan mesin", "otomatis") };
+    expect(videoBelumDicocokkan(videos, imdb).map((v) => v.id)).toEqual(["a", "b"]);
+  });
+
+  it("peta kosong = semua video ikut", () => {
+    expect(videoBelumDicocokkan(videos, {})).toHaveLength(3);
+  });
+
+  it("daftar video kosong aman", () => {
+    expect(videoBelumDicocokkan([], { a: meta("X", "manual") })).toEqual([]);
   });
 });

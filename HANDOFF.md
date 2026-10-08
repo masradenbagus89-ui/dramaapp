@@ -27,8 +27,30 @@ semuanya **200**.
 **Rollback 1 baris:** Vercel -> Deployments -> promote `6a1700b` ke Production (tanpa build
 ulang). Alternatif: `git revert 457954d` lalu dual push.
 
-**⚠️ BELUM DIVERIFIKASI OWNER DI LAYAR.** Yang terbukti baru sisi mesin (route hidup, halaman
-200). Tombol "Cari di IMDb" belum pernah ditekan manusia di produksi.
+**✅ TERVERIFIKASI OWNER DI PRODUKSI.** Owner memakai tombolnya dan mencocokkan **The Beekeeper
+(2024)** → `tt15314262`. Tersimpan lengkap: rating 6.3, R, 105 min, genre, sinopsis 373 karakter,
+poster hidup (200, 117 KB). Genre & rating terbukti tampil di kartu halaman `/film`.
+
+### Susulan `4cd6661` — poster IMDb MENANG atas sampul Playly (pembetulan asumsi yang SALAH)
+
+**Apa yang salah di `457954d`:** urutannya mendahulukan sampul Playly, poster IMDb hanya mengisi
+yang kosong. Dasarnya keliru — dokumen `playly:cadangan` memperlihatkan `thumbnail: null`, lalu
+disimpulkan kartu katalog memang tanpa sampul. **Salinan itu BASI**: data hidup Playly punya
+sampul (`playly-hosting-video.up.railway.app/api/thumb?k=…`), jadi poster yang sudah dipasang
+owner TIDAK PERNAH terpakai — tanpa satu pun error. Ketahuan hanya karena owner melihat layar
+produksi.
+
+**Pelajaran, dan ini pengulangan:** `AGENTS.local.md` poin 4 sudah memperingatkan hal yang sama
+untuk `data/dramas.json` — cadangan BUKAN sumber kebenaran. Perlakukan `playly:cadangan` sama.
+
+**Sesudah dibetulkan (keputusan owner):** video yang SUDAH dicocokkan memakai poster filmnya;
+video yang BELUM dicocokkan tidak tersentuh. Dibuktikan di produksi: 1 poster Amazon (cocok
+PERSIS dengan yang tersimpan untuk The Beekeeper) berdampingan dengan **370 sampul Playly** yang
+tetap utuh. Diubah di KEDUA jalur (katalog + webhook) supaya tak berbeda tergantung pintu.
+
+**+4 tes penjaga** di `tests/playly-gabungan.test.ts`: poster menang · video belum dicocokkan tak
+tersentuh · poster kosong jatuh ke sampul Playly · rating & rating usia ikut. `npm test` **1377
+lulus / 91 berkas**.
 
 **Masalah yang dijawab (pertanyaan owner):** film dari pintu DramaKu bisa menarik poster/sinopsis
 dari IMDb, video dari pintu Playly tidak. Owner bertanya apakah mitra Playly harus memasang

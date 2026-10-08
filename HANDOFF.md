@@ -52,6 +52,38 @@ tetap utuh. Diubah di KEDUA jalur (katalog + webhook) supaya tak berbeda tergant
 tersentuh · poster kosong jatuh ke sampul Playly · rating & rating usia ikut. `npm test` **1377
 lulus / 91 berkas**.
 
+### Susulan `e183b4f` — halaman tonton punya sinopsis, pemain, sutradara
+
+**Pemicu:** owner membandingkan `/film` dengan `/drama/meg-2-the-trench` di produksi — *"disana
+terlihat jelas ada sinopsis, cast jadi filmnya jelas"*. Perbandingannya separuh apel-jeruk
+(halaman DAFTAR vs halaman DETAIL), tapi kekurangannya nyata.
+
+**Dua kekurangan, keduanya milik AI:**
+1. **Data** — `keMeta()` cuma menyimpan 9 kolom. Ditambah `director`, `writer`, `stars`,
+   `country`, `language`, `imdbVotes`. Semuanya OPSIONAL supaya baris lama tetap sah tanpa migrasi.
+2. **Tampilan** — sinopsis SUDAH tersimpan sejak `457954d` tapi tak pernah digambar; tak ada
+   tempatnya.
+
+**Letaknya halaman tonton sendiri (pilihan owner).** `/tonton/[id]` sudah ada sejak 2026-09-26
+tapi **TIDAK ADA satu pun tautan ke sana dari daftar** — penonton praktis tak pernah sampai.
+Sekarang ada tombol **"Detail film"** di kotak bawah pemutar, alamatnya dirakit `alamatTonton()`
+yang sudah ada (bukan dirakit ulang; perakit & pembacanya wajib sepasang — `lib/tonton.ts:5-9`).
+
+Komponen BARU `app/components/player/DetailFilmPlayly.tsx` meniru bentuk
+`app/drama/[id]/page.tsx:246-300`. Halaman tonton membaca `playly:imdb` LANGSUNG, bukan lewat
+`PlaylyVideoPublik` — bentuk kartu itu dipakai 5 berkas tampilan yang tak satu pun butuh sinopsis.
+
+**Data The Beekeeper dilengkapi lewat REST** (baris itu dibuat sebelum kolom barunya ada):
+David Ayer · Kurt Wimmer · Jason Statham dkk · United Kingdom, United States · 187.281 votes.
+Cadangan sebelum menulis ada di scratchpad sesi.
+
+**Bukti SESUDAH tayang** di `/tonton/the-beekeeper-2024-1791444230645`: Sinopsis · David Ayer ·
+Kurt Wimmer · Jason Statham · United Kingdom · IMDb 6.3 · tt15314262 · 187,281 · 105 min —
+**sembilan-sembilannya MUNCUL**. Tombol "Detail film" tak terlihat di HTML awal `/film` (kotaknya
+baru dirender sesudah video diklik) → dibuktikan lewat bundle JS produksi, dan teksnya ADA.
+Halaman tonton untuk video yang BELUM dicocokkan tetap **200** — blok detail tidak digambar,
+bukan error.
+
 **Masalah yang dijawab (pertanyaan owner):** film dari pintu DramaKu bisa menarik poster/sinopsis
 dari IMDb, video dari pintu Playly tidak. Owner bertanya apakah mitra Playly harus memasang
 sesuatu. **Tidak.** Metadata IMDb milik katalog kita, bukan kiriman Playly — sudah tertulis di

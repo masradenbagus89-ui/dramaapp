@@ -125,9 +125,36 @@ terdaftar di hasil build · server produksi lokal port 3047: GET/GET?cari/POST t
 belum mengenal `getPlaylyImdbCached`. Ketahuan hanya saat `npm test` PENUH dijalankan — menjalankan
 6 berkas tes terpilih saja tidak menangkapnya.
 
-**Tahap berikutnya (BELUM dikerjakan):** tombol "Cocokkan semua" otomatis. Field `sumber`
-("manual"/"otomatis") sudah disiapkan di `PlaylyImdbMeta` justru untuk itu — pencocokan massal
-hanya boleh menimpa baris `"otomatis"`, kalau tidak koreksi tangan owner ikut tertimpa diam-diam.
+### Susulan `c87a35f` — tombol "Cocokkan semua" (Tahap 2, SELESAI)
+
+**Alur:** tekan sekali → sistem mencari untuk tiap video yang BELUM punya data → hasilnya
+**ditahan di layar** dengan centang → owner membuang yang salah → "Simpan N yang dicentang".
+
+**KENAPA TINJAU DULU, bukan langsung simpan:** diukur pada 60 judul nyata, pencocokan otomatis
+meleset pada kasus seperti `Darkness of Man (2025)` → tercocok ke film 2024. Poster & sinopsis
+film YANG SALAH tayang ke penonton = kerusakan SENYAP, tak ada yang melapor.
+
+**TIGA PAGAR:**
+1. `videoBelumDicocokkan()` di `lib/playly-imdb.ts` — video yang sudah punya data TIDAK ikut
+   diproses. Tanpa ini, sekali tombol ditekan seluruh koreksi tangan owner tertimpa tebakan
+   mesin, tanpa error dan tanpa jalan kembali. SENGAJA fungsi murni (bukan `.filter()` di dalam
+   komponen) supaya bisa diuji tanpa merender React — project belum punya @testing-library/react.
+2. Baris tersimpan ditandai `sumber: "otomatis"` (POST menerima flag `otomatis`, dibaca
+   `=== true` bukan dipercaya apa adanya).
+3. Menjalankan tombol dua kali tidak memanggil OMDb ulang untuk video yang sudah terisi — jatah
+   akun gratis 1.000/hari.
+
+**SATU PER SATU, bukan satu permintaan besar:** 186 panggilan OMDb dalam satu permintaan pasti
+melewati batas waktu fungsi server. Dipecah begini tiap permintaan kecil, kemajuannya terlihat,
+dan bisa dihentikan di tengah. Endpoint pencarian yang sudah ada dipakai ulang — yang
+benar-benar baru hanya layar peninjauannya (`PlaylyCocokkanSemua.tsx`).
+
+**Bukti:** build exit 0 · tsc exit 0 · `npm test` **1382 lulus / 91 berkas** (+5 penjaga) ·
+teks tombol terbukti ada di bundle JS produksi · smoke test 8 halaman semuanya 200 · endpoint
+admin tetap **401** tanpa login.
+
+**⚠️ BELUM DIPAKAI OWNER.** Tombolnya tayang dan pagarnya terbukti, tapi belum pernah dijalankan
+atas 185 video sungguhan.
 
 ---
 

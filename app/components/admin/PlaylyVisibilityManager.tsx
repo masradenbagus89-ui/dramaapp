@@ -17,7 +17,9 @@
 import { useState } from "react";
 import { AlertTriangle, Eye, EyeOff, Info, Loader2 } from "lucide-react";
 import type { PlaylyVideo, PlaylySumber } from "@/lib/playly";
+import type { PlaylyImdbMap } from "@/lib/playly-imdb";
 import { KATEGORI_ISI } from "@/lib/types";
+import PlaylyImdbPicker from "./PlaylyImdbPicker";
 
 type Pesan = { jenis: "ok" | "gagal"; teks: string };
 
@@ -28,6 +30,7 @@ export default function PlaylyVisibilityManager({
   videos,
   initialHidden,
   initialGenres = {},
+  initialImdb = {},
   belumSiapIds,
   fetchError,
   source,
@@ -44,6 +47,13 @@ export default function PlaylyVisibilityManager({
    * video punya kategori.
    */
   initialGenres?: Record<string, string>;
+  /**
+   * Data IMDb yang sudah dicocokkan admin (videoId -> metadata).
+   *
+   * Bawaannya peta kosong dengan alasan yang sama seperti `initialGenres`:
+   * fitur ini baru ada 2026-10-08, jadi pemanggil lama tetap berlaku apa adanya.
+   */
+  initialImdb?: PlaylyImdbMap;
   /** Video yang berkasnya belum ada di Playly — tidak tampil ke penonton. */
   belumSiapIds: string[];
   /** Terisi kalau daftar gagal diambil dari Playly. */
@@ -55,6 +65,7 @@ export default function PlaylyVisibilityManager({
 }) {
   const [hidden, setHidden] = useState<Set<string>>(new Set(initialHidden));
   const [genres, setGenres] = useState<Record<string, string>>(initialGenres);
+  const [imdb, setImdb] = useState<PlaylyImdbMap>(initialImdb);
   const [sedangProses, setSedangProses] = useState<string | null>(null);
   const [sedangGenre, setSedangGenre] = useState<string | null>(null);
   const [pesan, setPesan] = useState<Pesan | null>(null);
@@ -181,6 +192,25 @@ export default function PlaylyVisibilityManager({
         </p>
       )}
 
+      {videos.length > 0 && (
+        // Keterangan IMDb ditulis sekali di sini, bukan di sebelah tiap tombol —
+        // alasan yang sama dengan keterangan kategori di atas.
+        <p className="mt-2 text-sm text-zinc-400">
+          <strong className="text-zinc-200">Cari di IMDb</strong> mengisi poster,
+          sinopsis, genre, tahun, dan rating untuk video itu. Playly tidak pernah
+          mengirim data ini, jadi tanpa diisi kartunya memang tampil polos —
+          itulah kenapa video di sini terlihat beda dari film yang kamu tambahkan
+          sendiri. Kotak pencariannya{" "}
+          <strong className="text-zinc-200">sudah terisi otomatis</strong> dari
+          judul videonya, jadi biasanya tinggal tekan <em>Cari</em> lalu pilih
+          film yang benar. Sudah terisi:{" "}
+          <strong className="text-zinc-200">
+            {videos.filter((v) => imdb[v.id]).length} dari {videos.length}
+          </strong>
+          .
+        </p>
+      )}
+
       {belumSiap.size > 0 && (
         <p className="mt-3 flex items-start gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-100">
           <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
@@ -241,7 +271,11 @@ export default function PlaylyVisibilityManager({
             return (
               <li
                 key={v.id}
-                className="flex items-center justify-between gap-4 py-3"
+                // flex-wrap sejak picker IMDb ditambahkan: panel pencariannya
+                // jauh lebih lebar dari tombol lain, jadi di layar sempit ia
+                // harus boleh turun ke baris sendiri — bukan memaksa seluruh
+                // baris menyusut sampai judulnya tak terbaca.
+                className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3"
               >
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
@@ -288,6 +322,16 @@ export default function PlaylyVisibilityManager({
                     />
                   )}
                 </label>
+
+                {/* Data IMDb (poster, sinopsis, rating) untuk video ini.
+                    Playly tidak pernah mengirimnya, jadi inilah satu-satunya
+                    pintu masuknya. */}
+                <PlaylyImdbPicker
+                  videoId={v.id}
+                  judulVideo={v.title}
+                  meta={imdb[v.id]}
+                  onPerbarui={setImdb}
+                />
 
                 <button
                   type="button"

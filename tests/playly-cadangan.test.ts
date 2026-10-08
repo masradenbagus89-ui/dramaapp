@@ -40,6 +40,10 @@ vi.mock("../lib/store", () => ({
     return state.hidden;
   },
   getPlaylyGenresCached: async () => ({}),
+  // Metadata IMDb (owner 2026-10-08). Peta KOSONG tetap, alasannya sama dengan
+  // getPlaylyGenresCached di atas: berkas ini menguji aturan SALINAN, dan data
+  // tambahan apa pun cuma mengaburkan apa yang sebenarnya sedang dibuktikan.
+  getPlaylyImdbCached: async () => ({}),
   // Peta KOSONG tetap, alasannya sama dengan getPlaylyGenresCached di atas:
   // berkas ini menguji perilaku SALINAN, dan daftar link unduhan kosong membuat
   // tempelUnduhanPlayly tidak mengubah apa pun — jadi yang diuji tetap murni

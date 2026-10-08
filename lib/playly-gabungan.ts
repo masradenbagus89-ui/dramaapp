@@ -32,11 +32,13 @@ import {
   getPlaylyCadanganCached,
   getPlaylyGenresCached,
   getPlaylyHiddenIdsCached,
+  getPlaylyImdbCached,
   getPlaylyLinkUnduhanCached,
   getPublishedPlaylyWebhookVideos,
   getPublishedPlaylyWebhookVideosCached,
   type PlaylyWebhookVideo,
 } from "./store";
+import type { PlaylyImdbMap } from "./playly-imdb";
 import { tempelUnduhanPlayly } from "./playly-unduhan";
 
 export type PlaylyGabunganResult = {
@@ -66,15 +68,19 @@ export type PlaylyGabunganResult = {
  * Menambah field di sana berarti kelimanya harus ikut dipikirkan ulang, padahal
  * yang berubah cuma asal datanya.
  *
- * Tiga field sengaja null, bukan dikarang:
+ * Yang sengaja null, bukan dikarang:
  * - dramaTitle/dramaHref/episode — kaitan video->drama dibuat admin dari daftar
  *   katalog mitra, jadi video yang HANYA masuk lewat webhook memang belum punya
  *   kaitan yang bisa dibaca.
- * - rating — Playly tidak pernah mengirimnya, di jalur mana pun.
- * - contentRating/quality — keduanya milik KATALOG KITA (rating usia dari OMDb,
- *   mutu sumber video), bukan kiriman Playly. Sumbernya hanya lewat kaitan
- *   video->drama, dan jalur webhook belum punya kaitan itu. Diisi null supaya
- *   kotak keterangan di bawah pemutar DIAM, bukan memajang tebakan.
+ * - quality — mutu SUMBER VIDEO (HD/WEB-DL/CAM) milik katalog kita, bukan sifat
+ *   filmnya. Tak ada sumbernya di jalur ini, dan menebak "HD" sama dengan
+ *   menjanjikan mutu yang tak pernah diperiksa siapa pun.
+ *
+ * Sejak 2026-10-08 rating & contentRating PUNYA sumber: peta `playly:imdb`
+ * (metadata yang dicocokkan admin per video). Dulu keduanya hanya bisa datang
+ * lewat kaitan video->drama — yang tak pernah dibuat untuk satu video pun —
+ * sehingga selalu null. Kalau video ini belum dicocokkan, nilainya tetap null
+ * dan kotak keterangan tetap DIAM; itu perilaku lama yang sengaja dipertahankan.
  */
 export function webhookKeKartu(
   v: PlaylyWebhookVideo,
@@ -84,7 +90,10 @@ export function webhookKeKartu(
    * dipilihkan kategori dan hanya tampil di baris "Film Terbaru".
    */
   genres: Record<string, string> = {},
+  /** Metadata IMDb per video. Opsional dengan alasan yang sama seperti `genres`. */
+  imdb: PlaylyImdbMap = {},
 ): PlaylyVideoPublik {
+  const m = imdb[v.videoId];
   return {
     id: v.videoId,
     title: v.title,
@@ -97,23 +106,26 @@ export function webhookKeKartu(
     // tergambar sebagai tulisan "null" di bawah judul pemutar.
     creator: v.creator ?? "",
     embedUrl: v.embedUrl,
-    thumbnail: v.thumbnailUrl,
+    // Sampul kiriman Playly didahulukan; poster IMDb hanya mengisi yang kosong.
+    // Sampul Playly diambil dari isi videonya sendiri sehingga selalu benar,
+    // sedangkan poster IMDb bergantung kecocokan judul yang bisa meleset.
+    thumbnail: v.thumbnailUrl ?? (m?.poster || null),
     dramaTitle: null,
     dramaHref: null,
     episode: null,
     // Webhook mengirim tahun sebagai ANGKA (2026), kartu memakai TEKS ("2026").
     // Dibandingkan dengan null secara eksplisit, bukan dengan !v.year, supaya
     // tahun 0 tidak ikut terbuang — kecil kemungkinannya, tapi salahnya senyap.
-    year: v.year === null ? null : String(v.year),
-    genre: v.genre,
+    year: v.year === null ? m?.year || null : String(v.year),
+    genre: v.genre ?? (m?.genre || null),
     // SENGAJA hanya dari pilihan admin, BUKAN dari `v.genre` di atas. Genre
     // kiriman Playly adalah teks bebas ("Action, Sci-Fi" / "horror") yang
     // belum tentu sama dengan nama kategori katalog kita, dan memaksakannya
     // jadi kategori akan membuat baris beranda yang isinya tak pernah cocok —
     // rusak yang senyap, sebab tak ada error, cuma baris yang selalu kosong.
     kategori: genres[v.videoId] ?? null,
-    rating: null,
-    contentRating: null,
+    rating: m?.rating || null,
+    contentRating: m?.contentRating || null,
     quality: null,
   };
 }
@@ -161,6 +173,8 @@ export function gabungVideoPlayly(
   hiddenIds: string[] = [],
   /** Kategori pilihan admin; hanya dipakai sisi webhook — sisi katalog sudah membawanya sendiri. */
   genres: Record<string, string> = {},
+  /** Metadata IMDb; sama seperti `genres`, hanya dipakai sisi webhook. */
+  imdb: PlaylyImdbMap = {},
 ): PlaylyVideoPublik[] {
   const sudahDiKatalog = new Set(katalog.map((v) => v.id));
   const disembunyikan = new Set(hiddenIds);
@@ -178,7 +192,7 @@ export function gabungVideoPlayly(
     // memakai Date.parse: nilai rusak akan jadi NaN dan membuat hasil sort tak
     // menentu, sedangkan perbandingan teks selalu memberi urutan yang tetap.
     .sort((a, b) => b.receivedAt.localeCompare(a.receivedAt))
-    .map((v) => webhookKeKartu(v, genres));
+    .map((v) => webhookKeKartu(v, genres, imdb));
 
   return [...dariWebhook, ...katalog];
 }
@@ -199,7 +213,7 @@ export function gabungVideoPlayly(
 async function rakitGabungan(
   ambilWebhook: () => Promise<PlaylyWebhookVideo[]>,
 ): Promise<PlaylyGabunganResult> {
-  const [katalog, webhook, hiddenIds, genres, linkUnduhan] = await Promise.all([
+  const [katalog, webhook, hiddenIds, genres, imdb, linkUnduhan] = await Promise.all([
     // Sudah menangkap kegagalannya sendiri: mengembalikan daftar kosong +
     // alasan, bukan melempar.
     getPlaylyVideosPublik(),
@@ -230,6 +244,12 @@ async function rakitGabungan(
     // dari getPlaylyVideosPublik). Gagal baca = peta kosong, bukan halaman
     // gagal: taruhannya cuma "video ini ikut baris genre atau tidak".
     getPlaylyGenresCached().catch(() => ({}) as Record<string, string>),
+    // Metadata IMDb untuk sisi WEBHOOK (sisi katalog sudah membawanya dari
+    // getPlaylyVideosPublik). Diambil lagi di sini karena sumbernya ber-cache,
+    // jadi panggilan kedua tidak menambah beban — pola yang sama dengan
+    // hiddenIds di atas. Gagal baca = peta kosong: kartunya tampil seperti
+    // sebelum fitur ini ada, bukan halaman yang gagal.
+    getPlaylyImdbCached().catch(() => ({}) as PlaylyImdbMap),
     // Link unduhan per video. Kegagalannya SENGAJA tidak menular ke mana
     // pun: daftar kosong = popup DOWNLOAD menyebut "belum tersedia", dan itu
     // jauh lebih baik daripada halaman video yang ikut kosong gara-gara daftar
@@ -254,7 +274,7 @@ async function rakitGabungan(
   // video dari katalog MAUPUN dari webhook memakai aturan yang sama persis, dan
   // tak ada sumber yang diam-diam tertinggal tanpa tombol.
   const videos = tempelUnduhanPlayly(
-    gabungVideoPlayly(katalog.videos, webhookAman, hiddenIds.ids, genres),
+    gabungVideoPlayly(katalog.videos, webhookAman, hiddenIds.ids, genres, imdb),
     linkUnduhan,
   );
   // Katalog didahulukan karena ia sumber utama halaman ini; kalau dua-duanya

@@ -23,6 +23,7 @@ import {
   getPlaylyEmbeds,
   getPlaylyGenres,
   getPlaylyHiddenIds,
+  getPlaylyImdb,
   getPlaylyLinkUnduhan,
 } from "@/lib/store";
 import { bacaDomainUnduhan } from "@/lib/playly-unduhan-domain";
@@ -53,7 +54,7 @@ export default async function PlaylyVideosPage() {
   // revalidateSeconds = 0 -> jalur admin selalu minta data SEGAR ke Playly,
   // supaya video yang baru di-upload langsung kelihatan di sini. Halaman
   // penonton yang memakai versi ber-cache.
-  const [status, dramas, embeds, mitra, hidden, genres, unduhan] =
+  const [status, dramas, embeds, mitra, hidden, genres, imdb, unduhan] =
     await Promise.all([
       getPlaylyKeyStatus(),
       getAllDramas(),
@@ -61,6 +62,9 @@ export default async function PlaylyVideosPage() {
       fetchPlaylyVideosKita(konfigurasi, 0),
       getPlaylyHiddenIds(),
       getPlaylyGenres(),
+      // Versi TANPA cache, alasan sama dengan getPlaylyLinkUnduhan di bawah:
+      // begitu owner memasang data IMDb, layar ini harus menampilkannya.
+      getPlaylyImdb(),
       // Jalur admin -> versi TANPA cache: begitu owner menyimpan link, layar ini
       // harus menampilkan keadaan sekarang, bukan salinan 5 menit lalu.
       getPlaylyLinkUnduhan(),
@@ -135,6 +139,7 @@ export default async function PlaylyVideosPage() {
           videos={mitra.videos}
           initialHidden={hidden}
           initialGenres={genres}
+          initialImdb={imdb}
           belumSiapIds={belumSiapIds}
           fetchError={mitra.error}
           source={mitra.source}

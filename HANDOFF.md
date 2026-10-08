@@ -9,7 +9,59 @@
 >
 > **📦 Berkas ini sudah 2.980 baris / ±240 KB** dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-10-07.
+**Terakhir diisi:** 2026-10-08.
+
+---
+
+## 2026-10-08 — Data IMDb untuk video Playly (Tahap 1): SIAP RILIS, belum di-commit
+
+**STATUS: belum di-commit, belum di-push.** Gerbang pra-rilis sudah lulus semua; menunggu izin
+owner.
+
+**Masalah yang dijawab (pertanyaan owner):** film dari pintu DramaKu bisa menarik poster/sinopsis
+dari IMDb, video dari pintu Playly tidak. Owner bertanya apakah mitra Playly harus memasang
+sesuatu. **Tidak.** Metadata IMDb milik katalog kita, bukan kiriman Playly — sudah tertulis di
+`lib/playly-publik.ts:42-50` sejak awal. Playly hanya mengirim judul + kreator + embedUrl; diukur
+hari ini: **186 video, field `year`/`genre`/`rating`/`contentRating`/`thumbnail` null SEMUA.**
+
+**Kenapa jalur lama tak terpakai:** kaitan video->drama (`playly:embeds`) sebenarnya bisa membawa
+data itu, tapi menuntut 1 entri drama per video. Dokumen `playly:embeds` **tidak ada** di
+`app_data` produksi — nol kaitan pernah dibuat sejak fitur itu ada.
+
+**⚠️ TEMUAN YANG MENGUBAH DESAIN: imdb.com DIBLOKIR dari jaringan owner** (CloudFront 403,
+dilaporkan hari ini). Diuji dari sisi AI: situs DramaKu, poster Amazon, dan OMDb semuanya 200 —
+jadi yang terhalang hanya imdb.com. Akibatnya pencarian **WAJIB berbasis JUDUL, bukan ID IMDb**:
+owner tak punya cara mencari kode `tt…` sendiri. Jangan dibalik lagi di sesi berikutnya.
+
+**Yang dibangun:** dokumen `app_data` baru `playly:imdb` (peta videoId -> metadata), meniru pola
+`playly:genre` — **tanpa migrasi SQL**. Kotak cari di `/admin/videos/playly` sudah TERISI otomatis
+judul video yang dibersihkan dari embel-embel rilis, jadi biasanya tinggal tekan Cari lalu pilih.
+Poster IMDb juga mengisi sampul kartu yang selama ini kosong (`<img>` biasa, bukan `next/image` —
+pola yang sudah dipakai `PlaylyVideoGrid`).
+
+**Berkas:** BARU `lib/playly-imdb.ts`, `app/api/admin/playly/imdb/route.ts`,
+`app/components/admin/PlaylyImdbPicker.tsx`, `tests/playly-imdb.test.ts` · DIUBAH `lib/imdb-tool.ts`
+(+`cariJudulOmdb`), `lib/store.ts`, `lib/playly-publik.ts`, `lib/playly-gabungan.ts`,
+`app/components/admin/PlaylyVisibilityManager.tsx`, `app/admin/videos/playly/page.tsx`.
+
+**Aturan pembersih judul — SATU aturan: potong di TAHUN.** Diukur pada 60 judul nyata, embel-embel
+rilis (`YIFY`, `1080p`, `-compressed`, `AMZN`, `(Unknown Year)`) SELALU sesudah tahun. Daftar
+kata-buangan sengaja TIDAK dipakai: ia selalu tertinggal di belakang nama grup rilis baru.
+Pelindungnya: tahun dibatasi 1900-2035 supaya "Blade Runner 2049" tidak terpotong jadi "Blade
+Runner" — itu akan memasang poster film 1982, salah yang SENYAP.
+
+**Bukti (DIJALANKAN, bukan dibaca):** `rm -rf .next` -> `npm run build` sukses -> `npx tsc --noEmit`
+**exit 0** -> `npm test` **1373 lulus / 91 berkas** (naik dari 1359) · route `/api/admin/playly/imdb`
+terdaftar di hasil build · server produksi lokal port 3047: GET/GET?cari/POST tanpa login semuanya
+**401** (pagar owasp §1 terbukti, bukan diasumsikan) · nol berkas env ter-stage.
+
+**Dua tes lama ikut diperbaiki** (`playly-gabungan`, `playly-cadangan`): tiruan `../lib/store`-nya
+belum mengenal `getPlaylyImdbCached`. Ketahuan hanya saat `npm test` PENUH dijalankan — menjalankan
+6 berkas tes terpilih saja tidak menangkapnya.
+
+**Tahap berikutnya (BELUM dikerjakan):** tombol "Cocokkan semua" otomatis. Field `sumber`
+("manual"/"otomatis") sudah disiapkan di `PlaylyImdbMeta` justru untuk itu — pencocokan massal
+hanya boleh menimpa baris `"otomatis"`, kalau tidak koreksi tangan owner ikut tertimpa diam-diam.
 
 ---
 

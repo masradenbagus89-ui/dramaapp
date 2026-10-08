@@ -371,3 +371,100 @@ export async function fetchImdbDraft(imdbId: string): Promise<OmdbDramaDraft> {
 
   return mapOmdbPayloadToDraft(data, { banner, episodeCount });
 }
+
+// ---------------------------------------------------------------------------
+// PENCARIAN BERDASARKAN JUDUL
+//
+// KENAPA ADA (owner 2026-10-08): jalur yang sudah ada menuntut ID IMDb
+// (`tt9224104`), dan satu-satunya tempat wajar mencarinya — imdb.com — DIBLOKIR
+// dari jaringan owner (CloudFront 403, dilaporkan hari itu). Menyuruh owner
+// mengisi kode yang tak bisa ia cari sama dengan tidak memberi jalan sama
+// sekali. OMDb sendiri tetap terjangkau (diuji 200 hari yang sama), jadi
+// pencarian dialihkan ke judul: owner mengetik nama film, memilih dari daftar,
+// dan ID-nya diurus di belakang layar.
+// ---------------------------------------------------------------------------
+
+/** Satu kandidat hasil pencarian judul, sebatas yang dibutuhkan layar admin. */
+export type KandidatOmdb = {
+  imdbId: string;
+  title: string;
+  year: string;
+  /** Poster kecil untuk pratinjau. MENTAH — pemanggil wajib memeriksa host-nya. */
+  poster: string;
+  kind: OmdbTitleKind;
+};
+
+/** Bentuk balasan OMDb untuk `?s=` — hanya field yang dipakai. */
+type OmdbSearchPayload = {
+  Response?: string;
+  Search?: {
+    Title?: string;
+    Year?: string;
+    imdbID?: string;
+    Type?: string;
+    Poster?: string;
+  }[];
+};
+
+/** Jumlah kandidat yang disodorkan ke admin. OMDb membalas 10 per halaman. */
+const MAKS_KANDIDAT = 10;
+
+/**
+ * Cari film/serial berdasarkan judul. Mengembalikan daftar kandidat untuk
+ * DIPILIH manusia — sengaja bukan satu jawaban otomatis.
+ *
+ * Dua jalur, berurutan, karena keduanya menemukan hal yang berbeda:
+ *   1. `?s=` — pencarian daftar. Jalur utama: admin butuh melihat pilihan.
+ *   2. `?t=` — judul persis. Cadangan saat `s=` kosong; OMDb kadang mengenali
+ *      judul lengkap yang tidak muncul di hasil pencariannya sendiri.
+ *
+ * Tidak pernah melempar karena "tidak ketemu" — daftar kosong adalah jawaban
+ * yang sah dan harus bisa ditampilkan apa adanya ke admin. Yang tetap melempar
+ * hanya kegagalan nyata (kunci belum ada, kunci ditolak, OMDb tak terjangkau),
+ * karena ketiganya butuh tindakan berbeda dan tak boleh terlihat sama dengan
+ * "filmnya memang tidak ada".
+ */
+export async function cariJudulOmdb(
+  judul: string,
+  tahun = "",
+): Promise<KandidatOmdb[]> {
+  const q = judul.trim();
+  if (!q) return [];
+
+  const params: Record<string, string> = { s: q };
+  if (tahun.trim()) params.y = tahun.trim();
+
+  const hasil = (await fetchOmdbJson(params)) as OmdbSearchPayload;
+  const daftar = Array.isArray(hasil.Search) ? hasil.Search : [];
+
+  if (daftar.length > 0) {
+    return daftar.slice(0, MAKS_KANDIDAT).map(keKandidat);
+  }
+
+  // Jalur cadangan. Tahun SENGAJA tidak ikut: kalau `s=` dengan tahun sudah
+  // kosong, menambah batasan yang sama lagi tak mungkin menghasilkan apa pun —
+  // dan tahun pada nama berkas unggahan sering tahun unggah, bukan tahun rilis.
+  const tunggal = (await fetchOmdbJson({ t: q })) as OmdbTitlePayload;
+  if (tunggal.Response === "False" || !tunggal.imdbID) return [];
+  return [
+    {
+      imdbId: tunggal.imdbID,
+      title: omdbText(tunggal.Title),
+      year: omdbText(tunggal.Year),
+      poster: enlargeOmdbImage(omdbText(tunggal.Poster), 300),
+      kind: parseOmdbKind(tunggal.Type),
+    },
+  ];
+}
+
+function keKandidat(r: NonNullable<OmdbSearchPayload["Search"]>[number]): KandidatOmdb {
+  return {
+    imdbId: omdbText(r.imdbID),
+    title: omdbText(r.Title),
+    year: omdbText(r.Year),
+    // 300px cukup untuk pratinjau sebesar perangko di layar admin; poster
+    // ukuran penuh baru diambil saat kandidatnya benar-benar dipilih.
+    poster: enlargeOmdbImage(omdbText(r.Poster), 300),
+    kind: parseOmdbKind(r.Type),
+  };
+}

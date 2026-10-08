@@ -19,6 +19,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import type { PlaylyVideoPublik } from "../lib/playly-publik";
 import type { PlaylyWebhookVideo } from "../lib/store";
 import type { LinkUnduhan } from "../lib/playly-unduhan";
+import type { PlaylyImdbMap } from "../lib/playly-imdb";
 
 /** Keadaan palsu kedua sumber, diatur per-tes tanpa menyentuh jaringan/Supabase. */
 const state = {
@@ -27,12 +28,15 @@ const state = {
   hidden: [] as string[],
   /** Kategori pilihan admin per video (videoId -> nama kategori). */
   genre: {} as Record<string, string>,
+  /** Metadata IMDb per video (dokumen playly:imdb, owner 2026-10-08). */
+  imdb: {} as PlaylyImdbMap,
   /** Baris link unduhan (dokumen playly:link-unduhan). */
   unduhan: [] as LinkUnduhan[],
   /** Dinyalakan untuk meniru Supabase yang tidak bisa dihubungi. */
   webhookGagal: false,
   hiddenGagal: false,
   genreGagal: false,
+  imdbGagal: false,
   unduhanGagal: false,
   /**
    * Berapa kali tiap JALUR baca webhook dipakai. Inilah yang membedakan kedua
@@ -72,6 +76,13 @@ vi.mock("../lib/store", () => ({
   getPlaylyGenresCached: async () => {
     if (state.genreGagal) throw new Error("supabase tidak bisa dihubungi");
     return state.genre;
+  },
+  // Metadata IMDb per video (owner 2026-10-08). Alasan tiruan ini memulangkan
+  // isi `state.imdb` sama dengan genre di atas: aturan "metadata menempel ke
+  // video jalur webhook" diuji di berkas ini.
+  getPlaylyImdbCached: async () => {
+    if (state.imdbGagal) throw new Error("supabase tidak bisa dihubungi");
+    return state.imdb;
   },
   // Salinan daftar terakhir (insiden HTTP 402, 2026-09-26). Tiruan ini SENGAJA
   // memulangkan daftar KOSONG: berkas ini menguji aturan PENGGABUNGAN, dan
@@ -140,10 +151,12 @@ beforeEach(() => {
   state.webhook = [];
   state.hidden = [];
   state.genre = {};
+  state.imdb = {};
   state.unduhan = [];
   state.webhookGagal = false;
   state.hiddenGagal = false;
   state.genreGagal = false;
+  state.imdbGagal = false;
   state.unduhanGagal = false;
   state.dibaca = { segar: 0, cached: 0 };
 });

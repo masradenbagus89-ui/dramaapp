@@ -30,7 +30,9 @@ import {
   getPlaylyEmbedsCached,
   getPlaylyGenresCached,
   getPlaylyHiddenIdsCached,
+  getPlaylyImdbCached,
 } from "./store";
+import type { PlaylyImdbMap } from "./playly-imdb";
 
 /** Satu video Playly + label drama, kalau admin memang mengaitkannya. */
 export type PlaylyVideoPublik = PlaylyVideo & {
@@ -140,6 +142,12 @@ export function rakitVideoPublik(
    * pemanggil serta tes lama tetap berlaku apa adanya.
    */
   genres: Record<string, string> = {},
+  /**
+   * Metadata IMDb per video (videoId -> data). OPSIONAL dengan alasan yang
+   * sama seperti `genres`: fitur ini baru ada 2026-10-08, dan seluruh pemanggil
+   * serta tes lama harus tetap berlaku tanpa diubah.
+   */
+  imdb: PlaylyImdbMap = {},
 ): { tampil: PlaylyVideo[]; labelUntuk: (videoId: string) => Omit<PlaylyVideoPublik, keyof PlaylyVideo> } {
   const disembunyikan = new Set(hiddenIds);
   const dramaById = new Map(dramas.map((d) => [d.id, d] as const));
@@ -154,23 +162,35 @@ export function rakitVideoPublik(
     labelUntuk: (videoId: string) => {
       const e = kaitan.get(videoId);
       const drama = e ? dramaById.get(e.dramaId) : undefined;
+      // Metadata IMDb video ini MENANG atas data drama yang dikaitkan: ia
+      // dipilih admin untuk video INI, sedangkan data drama cuma warisan dari
+      // kaitan yang dibuat untuk keperluan lain. Kaitan tetap jadi cadangan,
+      // jadi video yang sudah dikaitkan sebelum fitur ini ada tidak kehilangan
+      // label apa pun. `|| undefined` dipakai, bukan `??`: field OMDb yang
+      // kosong bernilai string kosong (bukan null), dan string kosong harus
+      // ikut jatuh ke cadangan — kalau tidak, barisnya tergambar hampa.
+      const m = imdb[videoId];
       return {
         dramaTitle: drama?.title ?? null,
         dramaHref: e ? `/drama/${e.dramaId}` : null,
         episode: e?.episode ?? null,
-        year: drama?.year ?? null,
+        year: m?.year || drama?.year || null,
         // `genre` berasal dari OMDb dan sering kosong; `category` katalog kita
         // selalu terisi, jadi dipakai sebagai cadangan supaya baris tahun-genre
         // tidak sering separuh hampa.
-        genre: drama?.genre ?? drama?.category ?? null,
+        genre: m?.genre || drama?.genre || drama?.category || null,
         // Pilihan admin MENANG atas kategori drama yang dikaitkan: admin
         // memilihnya dengan sadar untuk video ini, sedangkan kategori drama
         // cuma warisan dari kaitan yang dibuat untuk keperluan lain. Kalau
         // admin belum memilih, kategori drama dipakai sebagai cadangan supaya
         // video yang sudah dikaitkan tidak perlu diisi ulang dengan tangan.
         kategori: genres[videoId] ?? drama?.category ?? null,
-        rating: drama?.imdbRating ?? null,
-        contentRating: drama?.contentRating ?? null,
+        rating: m?.rating || drama?.imdbRating || null,
+        contentRating: m?.contentRating || drama?.contentRating || null,
+        // SENGAJA tidak diambil dari IMDb: `quality` adalah mutu SUMBER VIDEO
+        // (HD/WEB-DL/CAM) milik katalog kita, bukan sifat filmnya. OMDb tidak
+        // tahu berkas mana yang kita simpan, jadi mengisinya dari sana sama
+        // dengan menjanjikan mutu yang tak pernah diperiksa siapa pun.
         quality: drama?.quality ?? null,
       };
     },
@@ -201,7 +221,7 @@ export function bolehTampilKePenonton(detail: PlaylyDetailPublik | undefined): b
  * supaya satu gangguan di Playly tidak merusak halaman DramaKu.
  */
 export async function getPlaylyVideosPublik(): Promise<PlaylyPublikResult> {
-  const [mitra, hiddenIds, embeds, dramas, genres] = await Promise.all([
+  const [mitra, hiddenIds, embeds, dramas, genres, imdb] = await Promise.all([
     fetchPlaylyVideosKita(),
     getPlaylyHiddenIdsCached().catch(() => [] as string[]),
     getPlaylyEmbedsCached().catch(() => []),
@@ -209,6 +229,9 @@ export async function getPlaylyVideosPublik(): Promise<PlaylyPublikResult> {
     // Gagal baca = peta kosong, BUKAN halaman gagal: kategori cuma menentukan
     // video ini ikut baris genre atau tidak. Videonya sendiri tetap tampil.
     getPlaylyGenresCached().catch(() => ({}) as Record<string, string>),
+    // Alasan sama: metadata IMDb hanya MENAMBAH label pada kartu. Kalau tak
+    // terbaca, kartunya tampil seperti sebelum fitur ini ada — bukan gagal.
+    getPlaylyImdbCached().catch(() => ({}) as PlaylyImdbMap),
   ]);
 
   if (mitra.error) {
@@ -221,6 +244,7 @@ export async function getPlaylyVideosPublik(): Promise<PlaylyPublikResult> {
     embeds,
     dramas,
     genres,
+    imdb,
   );
 
   // Sampul sudah IKUT di balasan /api/videos (`seo.thumbnailUrl`, dibaca di
@@ -244,7 +268,16 @@ export async function getPlaylyVideosPublik(): Promise<PlaylyPublikResult> {
   // JANGAN kembali ke Promise.all atas seluruh daftar.
   const videos = tampil.map<PlaylyVideoPublik>((v) => ({
     ...v,
-    thumbnail: v.thumbnail ?? null,
+    // Sampul Playly didahulukan; poster IMDb hanya MENGISI yang kosong, tidak
+    // menggantikan yang sudah ada. Alasannya: sampul Playly diambil dari isi
+    // videonya sendiri, jadi ia selalu benar untuk video itu — sedangkan poster
+    // IMDb bergantung pada kecocokan judul yang bisa meleset. Dalam praktik
+    // cabang ini hampir selalu terpakai: diukur 2026-10-08, thumbnail null pada
+    // video katalog, sehingga kartunya cuma menampilkan ikon film abu-abu.
+    // `|| null` di dalam, bukan `??`: poster yang host-nya tak lolos pagar
+    // tersimpan sebagai string KOSONG, dan string kosong harus jadi null —
+    // bukan diteruskan sebagai alamat gambar yang pasti gagal dimuat.
+    thumbnail: v.thumbnail ?? (imdb[v.id]?.poster || null),
     ...labelUntuk(v.id),
   }));
 

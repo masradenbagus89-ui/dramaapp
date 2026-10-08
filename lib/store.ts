@@ -44,6 +44,7 @@ import {
   type StatusTulis,
 } from "./playly-unduhan";
 import { bacaDomainUnduhan } from "./playly-unduhan-domain";
+import type { PlaylyImdbMap, PlaylyImdbMeta } from "./playly-imdb";
 
 export type Admin = { email: string; name: string; addedAt: string };
 export type AdminsFile = { admins: Admin[] };
@@ -824,6 +825,8 @@ type PlaylyFile = {
   webhook?: PlaylyWebhookVideo[];
   /** Kategori pilihan admin per video (opsional: file lama tak punya). */
   genre?: Record<string, string>;
+  /** Metadata IMDb per video (opsional: file lama tak punya). */
+  imdb?: PlaylyImdbMap;
   /** Salinan daftar video terakhir yang berhasil (opsional: file lama tak punya). */
   cadangan?: PlaylyCadangan;
   /** Baris link unduhan videoId × provider × kualitas (opsional: file lama tak punya). */
@@ -835,6 +838,7 @@ const EMPTY_PLAYLY: PlaylyFile = {
   hidden: [],
   webhook: [],
   genre: {},
+  imdb: {},
   linkUnduhan: [],
 };
 
@@ -1139,6 +1143,71 @@ export async function setPlaylyVideoGenre(
   } else {
     const file = readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY);
     file.genre = baru;
+    writeLocal("playly.json", file);
+  }
+  return baru;
+}
+
+// ===========  METADATA IMDb VIDEO PLAYLY (playly:imdb)  ====================
+//
+// KENAPA ADA (owner 2026-10-08): video Playly tidak punya poster, sinopsis,
+// genre, maupun rating — Playly tak pernah mengirimnya (diukur: 186 video,
+// seluruh field itu null). Jalur lama untuk membawanya adalah kaitan
+// video->drama, tapi itu menuntut satu entri drama per video, dan dokumen
+// `playly:embeds` memang kosong di produksi: nol kaitan pernah dibuat.
+//
+// Bentuknya PETA videoId -> metadata, sama seperti playly:genre di atas:
+// pertanyaannya "video ini datanya apa?", bukan "video ini ada di daftar atau
+// tidak". Pola, nama fungsi, dan pasangan cached/tak-cached sengaja disalin
+// dari blok genre supaya dua pintu ke data Playly tidak berbeda bentuk.
+//
+// Aturan isi (termasuk pagar host poster) ada di lib/playly-imdb.ts, BUKAN di
+// sini — lapisan penyimpanan tidak memutuskan apa yang sah, persis alasan yang
+// sudah ditulis untuk playly:genre.
+const PLAYLY_IMDB_DOC = "playly:imdb";
+
+export async function getPlaylyImdb(): Promise<PlaylyImdbMap> {
+  if (useSupabase) {
+    return (await sbDocGet<PlaylyImdbMap>(PLAYLY_IMDB_DOC)) ?? {};
+  }
+  return readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY).imdb ?? {};
+}
+
+/** Versi ber-cache untuk HALAMAN PUBLIK — alasannya sama dengan getPlaylyGenresCached. */
+export async function getPlaylyImdbCached(): Promise<PlaylyImdbMap> {
+  if (useSupabase) {
+    return (
+      (await sbDocGet<PlaylyImdbMap>(PLAYLY_IMDB_DOC, {
+        revalidate: CATALOG_TTL_SECONDS,
+      })) ?? {}
+    );
+  }
+  return readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY).imdb ?? {};
+}
+
+/**
+ * Pasang metadata satu video, atau HAPUS dengan mengirim null.
+ * Mengembalikan peta terbaru supaya pemanggil tak perlu membaca ulang.
+ *
+ * Menghapus berarti MENGHILANGKAN kuncinya, bukan menyimpan objek kosong —
+ * alasan yang sama dengan setPlaylyVideoGenre: dokumen ini dibaca sebagai
+ * "ada entri = sudah dicocokkan", dan entri kosong akan terbaca sebagai film
+ * tanpa judul yang sulit dilacak justru karena tidak salah secara teknis.
+ */
+export async function setPlaylyVideoImdb(
+  videoId: string,
+  meta: PlaylyImdbMeta | null,
+): Promise<PlaylyImdbMap> {
+  const sekarang = await getPlaylyImdb();
+  const baru = { ...sekarang };
+  if (meta) baru[videoId] = meta;
+  else delete baru[videoId];
+
+  if (useSupabase) {
+    await sbDocSet(PLAYLY_IMDB_DOC, baru);
+  } else {
+    const file = readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY);
+    file.imdb = baru;
     writeLocal("playly.json", file);
   }
   return baru;

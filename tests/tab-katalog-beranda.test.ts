@@ -223,7 +223,17 @@ describe("halaman depan TIDAK ikut berubah", () => {
     // Di sana `/` memang alamat yang benar, dan RedirectIfAuthed baru bekerja
     // SESUDAH halaman terbuka — jadi pengunjung yang belum login tetap wajar.
     const depan = readFileSync("app/page.tsx", "utf-8");
-    expect(depan).toContain("<TabKatalog dramas={dramas} />");
+    // Dicocokkan ke POLA pemanggilannya, bukan ke teksnya huruf-per-huruf.
+    // Versi lama menuntut persis "<TabKatalog dramas={dramas} />", sehingga
+    // menambah prop yang sah (mis. seksiLengkap, 2026-10-09) membuatnya MERAH
+    // PALSU — padahal yang berbahaya cuma basePath. Tes yang merah karena hal
+    // benar akan dimatikan orang, dan pagar yang dimatikan tidak menjaga apa
+    // pun. Pagarnya justru DITAMBAH: sekarang basePath apa pun ditolak, bukan
+    // cuma "/beranda".
+    expect(depan).toContain("<TabKatalog dramas={dramas}");
+    // Halaman depan tidak boleh menyebut basePath SAMA SEKALI — lebih ketat
+    // daripada versi lama yang hanya menolak nilai "/beranda".
+    expect(depan).not.toContain("basePath");
     expect(depan).not.toContain('basePath="/beranda"');
   });
 });

@@ -4,6 +4,23 @@
 @custom-variant dark (&:is(.dark *));
 
 /* ============================================================
+   Varian `terang:` — warna ALTERNATIF yang hanya menyala di dalam
+   pembungkus ber-class `tema-terang` (saat ini: badan halaman depan `/`).
+
+   KENAPA varian, bukan mengganti warnanya langsung: kartu poster, baris
+   geser, dan deret tab dipakai BERSAMA oleh /beranda, /discover, /shorts.
+   Mengganti `bg-black` jadi putih di komponen itu akan memutihkan halaman
+   lain juga — tanpa satu pun error, jadi tak ada yang melapor. Dengan
+   varian ini, di luar pembungkus `tema-terang` seluruh aturan terang MATI
+   total: halaman lain mustahil ikut berubah.
+
+   Polanya sengaja SAMA dengan `dark` di atas supaya tak ada mekanisme
+   kedua yang harus dihafal. Mau batal? Hapus satu kata `tema-terang` di
+   pembungkus app/page.tsx — seluruh situs balik gelap.
+   ============================================================ */
+@custom-variant terang (&:is(.tema-terang *));
+
+/* ============================================================
    Tema DramaKu — dark + emas (default gelap, tanpa toggle).
    Nilai token diset di :root agar app selalu gelap tanpa perlu
    class .dark. Blok .dark disediakan identik untuk jaga-jaga

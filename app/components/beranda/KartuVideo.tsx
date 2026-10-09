@@ -43,7 +43,7 @@ export default function KartuVideo({ video }: { video: PlaylyVideoPublik }) {
       className="group/kartu block focus-visible:outline-none"
     >
       <div className="relative overflow-hidden rounded-sm ring-1 ring-white/10 transition duration-200 group-hover/kartu:ring-2 group-hover/kartu:ring-amber-400 group-focus-visible/kartu:ring-2 group-focus-visible/kartu:ring-amber-400">
-        <div className="relative flex aspect-[2/3] w-full items-center justify-center overflow-hidden bg-zinc-900">
+        <div className="relative flex aspect-[2/3] w-full items-center justify-center overflow-hidden bg-zinc-900 terang:bg-zinc-200">
           {video.thumbnail ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -56,7 +56,7 @@ export default function KartuVideo({ video }: { video: PlaylyVideoPublik }) {
             // Sampul gagal/tidak ada: kotak berikon, BUKAN gambar rusak.
             // Judulnya tetap terbaca di bawah kartu, jadi videonya tidak
             // berubah jadi kartu tanpa identitas.
-            <Film className="size-8 text-zinc-700" aria-hidden="true" />
+            <Film className="size-8 text-zinc-700 terang:text-zinc-400" aria-hidden="true" />
           )}
 
           {/* Durasi di pojok kanan-bawah — posisi yang sama dengan lencana
@@ -74,11 +74,11 @@ export default function KartuVideo({ video }: { video: PlaylyVideoPublik }) {
         </span>
       </div>
 
-      <h3 className="mt-1.5 line-clamp-2 text-[13px] font-bold leading-snug text-white transition-colors group-hover/kartu:text-amber-400 md:text-sm">
+      <h3 className="mt-1.5 line-clamp-2 text-[13px] font-bold leading-snug text-white terang:text-zinc-900 transition-colors group-hover/kartu:text-amber-400 terang:group-hover/kartu:text-amber-700 md:text-sm">
         {video.title}
       </h3>
       {label && (
-        <p className="mt-0.5 line-clamp-1 text-[11px] text-zinc-500 md:text-xs">
+        <p className="mt-0.5 line-clamp-1 text-[11px] text-zinc-500 terang:text-zinc-600 md:text-xs">
           {label}
         </p>
       )}

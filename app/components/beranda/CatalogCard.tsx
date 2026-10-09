@@ -37,7 +37,7 @@ export default function CatalogCard({
       href={href ?? `/drama/${drama.id}`}
       className="group/kartu block focus-visible:outline-none"
     >
-      <div className="relative overflow-hidden rounded-sm ring-1 ring-white/10 transition duration-200 group-hover/kartu:ring-2 group-hover/kartu:ring-amber-400 group-focus-visible/kartu:ring-2 group-focus-visible/kartu:ring-amber-400">
+      <div className="relative overflow-hidden rounded-sm ring-1 ring-white/10 terang:ring-black/10 transition duration-200 group-hover/kartu:ring-2 group-hover/kartu:ring-amber-400 group-focus-visible/kartu:ring-2 group-focus-visible/kartu:ring-amber-400">
         <Poster
           drama={drama}
           previewSrc={teaserSrc(drama.id)}
@@ -51,10 +51,10 @@ export default function CatalogCard({
         </span>
       </div>
 
-      <h3 className="mt-1.5 line-clamp-2 text-[13px] font-bold leading-snug text-white transition-colors group-hover/kartu:text-amber-400 md:text-sm">
+      <h3 className="mt-1.5 line-clamp-2 text-[13px] font-bold leading-snug text-white terang:text-zinc-900 transition-colors group-hover/kartu:text-amber-400 terang:group-hover/kartu:text-amber-700 md:text-sm">
         {drama.title}
       </h3>
-      <p className="mt-0.5 line-clamp-1 text-[11px] text-zinc-500 md:text-xs">
+      <p className="mt-0.5 line-clamp-1 text-[11px] text-zinc-500 terang:text-zinc-600 md:text-xs">
         {drama.category}
       </p>
     </Link>

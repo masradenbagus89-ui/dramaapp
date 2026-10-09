@@ -100,17 +100,17 @@ export default function FeaturedRow({
   return (
     <section
       aria-label={title ?? "Film unggulan"}
-      className="group/unggulan relative border-b border-zinc-900 bg-black py-4"
+      className="group/unggulan relative border-b border-zinc-900 bg-black py-4 terang:border-zinc-200 terang:bg-zinc-100"
     >
       <div className="shell-wide relative mx-auto px-4 md:px-6">
         {title && (
           <div className="mb-2 flex items-end justify-between gap-3">
-            <h2 className="text-base font-bold text-white md:text-lg">
+            <h2 className="text-base font-bold text-white terang:text-zinc-900 md:text-lg">
               {title}
             </h2>
             <Link
               href={href}
-              className="shrink-0 text-[11px] font-bold uppercase tracking-wide text-amber-400 hover:underline"
+              className="shrink-0 text-[11px] font-bold uppercase tracking-wide text-amber-400 terang:text-amber-700 hover:underline"
             >
               Lihat semua
             </Link>

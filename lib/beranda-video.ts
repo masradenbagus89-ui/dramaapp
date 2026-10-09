@@ -52,8 +52,18 @@ export const KUNCI_BARIS_VIDEO = "video-terbaru";
 /** Awalan kunci baris genre milik `homeCatalogRows` (mis. "genre-Action"). */
 const AWALAN_GENRE = "genre-";
 
-const bungkusDrama = (d: Drama): KartuKatalog => ({ jenis: "drama", drama: d });
-const bungkusVideo = (v: PlaylyVideoPublik): KartuKatalog => ({
+/**
+ * Pembungkus satu drama / satu video jadi kartu katalog.
+ *
+ * Di-export sejak 2026-10-09: seksi grid halaman depan memakai bentuk kartu
+ * yang SAMA dengan baris beranda. Menyalin dua baris ini ke sana berarti dua
+ * tempat yang harus diperbaiki setiap kali bentuk kartu berubah.
+ */
+export const bungkusDrama = (d: Drama): KartuKatalog => ({
+  jenis: "drama",
+  drama: d,
+});
+export const bungkusVideo = (v: PlaylyVideoPublik): KartuKatalog => ({
   jenis: "video",
   video: v,
 });

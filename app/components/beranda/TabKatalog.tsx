@@ -2,6 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import type { Drama } from "@/lib/types";
+import type { PlaylyVideoPublik } from "@/lib/playly-publik";
 import { parseTab } from "@/lib/tab-katalog";
 import TabKatalogTampilan from "./TabKatalogTampilan";
 
@@ -28,6 +29,8 @@ export default function TabKatalog({
   basePath,
   hanyaMenu,
   paksaSemua,
+  seksiLengkap,
+  videos,
 }: {
   dramas: Drama[];
   /**
@@ -46,6 +49,10 @@ export default function TabKatalog({
    * memberi sebaris poster — persis yang TIDAK diminta owner.
    */
   paksaSemua?: boolean;
+  /** Gambar semua tab sebagai seksi grid (halaman depan). Lihat tampilannya. */
+  seksiLengkap?: boolean;
+  /** Film untuk seksi "Film Terbaru". Lihat tampilannya untuk aturannya. */
+  videos?: PlaylyVideoPublik[];
 }) {
   const sp = useSearchParams();
   return (
@@ -55,6 +62,8 @@ export default function TabKatalog({
       semua={paksaSemua || sp.get("semua") === "1"}
       basePath={basePath}
       hanyaMenu={hanyaMenu}
+      seksiLengkap={seksiLengkap}
+      videos={videos}
     />
   );
 }

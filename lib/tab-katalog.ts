@@ -32,6 +32,20 @@ export type TabKey =
 /** Berapa poster yang tampil di baris geser sebuah tab (sebelum "SEMUA" ditekan). */
 export const TAB_ROW_ITEMS = 14;
 
+/**
+ * Berapa poster yang tampil di SATU SEKSI GRID halaman depan (owner 2026-10-09,
+ * menyamakan dengan situs katalog pembanding).
+ *
+ * 20 dipilih supaya seksinya mengisi DUA baris penuh di layar desktop umum —
+ * pada 1920px grid memuat ~10 kolom (lihat GRID_CLASS di components/beranda/
+ * shell.ts). Satu baris terasa seperti baris geser yang lama; tiga baris
+ * mendorong seksi berikutnya keluar layar sebelum penonton tahu ada seksi lain.
+ *
+ * Lebih besar dari TAB_ROW_ITEMS di atas dengan sengaja: baris geser dibatasi
+ * oleh lebar layar, grid tidak.
+ */
+export const TAB_GRID_ITEMS = 20;
+
 export type TabKatalog = {
   key: TabKey;
   /** Tulisan di tombol tab. */

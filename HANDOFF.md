@@ -13,9 +13,29 @@
 
 ---
 
-## 2026-10-09 — Webhook Playly `video.deleted`: SIAP, BELUM DIRILIS
+## 2026-10-09 — Webhook Playly `video.deleted`: DIRILIS `c403aaf`
 
-**STATUS: belum di-commit, belum di-push.** Menunggu izin owner. Semua gerbang sudah hijau.
+**STATUS: DIRILIS & TERBUKTI TAYANG** (izin owner: "commit + dual push"). Dual push TUNTAS,
+fast-forward `07912f4..c403aaf` ke **kedua** repo, nol paksaan. Ketiga ref terbaca sama lewat
+`git ls-remote`: **`c403aaf`**.
+
+**Verifikasi SESUDAH tayang — penanda teks di bundle produksi, bukan perasaan.** Teks lencana
+baru `dihapus kreator` ditemukan di chunk **`1mbw3l0-y_1k2.js`**, sedangkan sebelum deploy teks
+lama `ditarik Playly` ada di chunk **`3zkrutzq4wny6.js`** yang berbeda. Nama chunk yang berganti
+itulah buktinya versi baru, bukan cache lama. **Pembanding dipakai lebih dulu dan itu yang
+menyelamatkan kesimpulan:** pada menit pertama penanda baru TIDAK ketemu, dan tanpa pembanding
+itu bisa dibaca "fitur gagal" — padahal teks lama ADA di chunk yang sama, jadi yang benar adalah
+"deploy belum selesai". Ulangi pola ini: penanda yang hilang wajib diuji dengan penanda lama
+dari komponen yang sama sebelum disimpulkan rusak.
+
+Smoke test 7 halaman (`/` `/film` `/beranda` `/discover` `/katalog` `/login` `/admin`) semuanya
+**200**. Endpoint webhook diuji dengan payload `video.deleted` SUNGGUHAN tanpa tanda tangan →
+**401** `Tidak terverifikasi sebagai Playly` (gerbang menolak SEBELUM menyentuh penyimpanan),
+sedangkan route karangan `/api/webhooks/zzz-tidak-pernah-ada` → **404**. Pembanding 404 itu perlu
+karena 401 saja tidak membuktikan route-nya benar-benar ada.
+
+**Rollback 1 baris:** Vercel → Deployments → promote `07912f4` ke Production (tanpa build ulang).
+Alternatif: `git revert c403aaf` lalu dual push.
 
 **Pemicunya pesan tim Playly ke owner:** mereka akan menyalakan jenis kiriman webhook baru
 `video.deleted` — untuk video yang PERNAH kita terima lewat `video.published`, lalu dihapus

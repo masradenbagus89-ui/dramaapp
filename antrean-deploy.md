@@ -3,11 +3,34 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-10-08 (**komputer OWNER**) — **ANTREAN KOSONG, DUAL PUSH TUNTAS.**
-`6a1700b..457954d` fast-forward ke **kedua** repo, nol paksaan. Ketiga ref terbaca sama:
-**`457954d`**.
+**Terakhir dicek:** 2026-10-09 (**komputer OWNER**) — **ANTREAN KOSONG, DUAL PUSH TUNTAS.**
+`07912f4..c403aaf` fast-forward ke **kedua** repo, nol paksaan. Ketiga ref terbaca sama:
+**`c403aaf`**.
 
-**Rilis 2026-10-08 — `457954d` data IMDb untuk video Playly (Tahap 1).** Satu commit, nol
+**Rilis 2026-10-09 — `c403aaf` webhook Playly `video.deleted`.** Satu commit, **nol migrasi SQL,
+nol env baru** (daftar webhook disimpan sebagai dokumen JSON, bukan tabel berkolom ketat; tanda
+tangannya sama persis dengan `video.published`). **Dampak penonton: nol hari ini** — Playly belum
+menyalakan kiriman `video.deleted`. Begitu mereka menyalakannya, film yang dihapus kreatornya
+turun sendiri dari situs, dan di `/admin/webhooks/playly` tercoret dengan lencana merah
+**"dihapus kreator"** (dibedakan dari "ditarik Playly" yang abu, atas keputusan owner).
+
+Pemicunya pesan tim Playly: dari 3 syarat kesiapan yang mereka minta, **2 sudah terpenuhi sejak
+lama** (kolom `event` memang dibaca, id tak dikenal sudah dibalas 2xx) — yang kurang hanya
+penanganannya.
+
+Verifikasi sesudah tayang: penanda `dihapus kreator` ada di chunk **baru** `1mbw3l0-y_1k2.js`
+(sebelum deploy, teks lama `ditarik Playly` ada di chunk berbeda `3zkrutzq4wny6.js`) · smoke test
+7 halaman semuanya **200** · webhook diuji dengan payload `video.deleted` tanpa tanda tangan →
+**401**, route karangan → **404** (pembanding dipakai karena 401 saja tak membuktikan route ada).
+Gerbang pra-rilis: build sukses → tsc exit 0 → **1388 tes / 91 berkas**.
+
+**Batas jujur yang masih terbuka:** salinan cadangan katalog (dipakai hanya saat pengambilan ke
+Playly gagal) BELUM ikut disaring status `deleted`, jadi dalam keadaan itu film terhapus masih
+bisa tampil. Sudah ditawarkan ke owner, **belum dikerjakan** — bukan kelalaian, menunggu putusan.
+
+Rollback: promote `07912f4` di Vercel.
+
+**Rilis sebelumnya (2026-10-08) — `457954d` data IMDb untuk video Playly (Tahap 1).** Satu commit, nol
 migrasi SQL, nol env baru. Dampak penonton: **nol sampai owner mencocokkan video** — dokumen
 `playly:imdb` masih kosong, jadi tiap kartu tampil persis seperti sebelumnya. Begitu owner
 memakai tombol "Cari di IMDb" di `/admin/videos/playly`, kartu video itu mendapat poster,

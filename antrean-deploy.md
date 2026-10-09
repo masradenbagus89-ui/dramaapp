@@ -4,6 +4,31 @@
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
 **Terakhir dicek:** 2026-10-09 (**komputer OWNER**) — **ANTREAN KOSONG, DUAL PUSH TUNTAS.**
+`acd79df..76eab86` fast-forward ke **kedua** repo, nol paksaan. Ketiga ref terbaca sama:
+**`76eab86`**.
+
+> ⚠️ **RUMAH PROJECT PINDAH: `E:\dramaapp`** (bukan lagi `D:\Users\user18\dramaapp`). Drive D:
+> mencapai 0 byte sampai git mati total. Rinciannya di `HANDOFF.md` paling atas.
+
+**Rilis 2026-10-09 — `2e14034` + `76eab86`: halaman depan ala LK21.** Hero hitam satu baris di
+atas, badan halaman jadi terang, tombol Masuk/Daftar disembunyikan ke bar **Lanjutkan Menonton**,
+baris geser diganti **seksi grid per tab**, plus seksi **Film Terbaru** (film Playly, bukan
+drama). **Nol migrasi SQL, nol env baru** — diperiksa sebelum push, jadi tak ada yang perlu
+didahulukan owner di Supabase/Vercel.
+
+Verifikasi sesudah tayang: empat penanda yang HANYA ada di commit ini terbaca di HTML produksi
+(`tema-terang`, `panel-lanjut-menonton`, "Film layar lebar", h1 sr-only), **dengan pembanding** —
+penanda lama "Siap memulai marathon drama?" & tombol "Daftar Gratis" terbaca **0**, hilang persis
+seperti yang dijanjikan. Halaman depan produksi: 6/6 seksi tab, 121 kartu poster, nol tombol
+login terbuka. `/discover` diuji terpisah: **nol** `tema-terang` — tema terang tidak merembet ke
+halaman lain. Smoke test 8 halaman (`/`, `/beranda`, `/discover`, `/film`, `/katalog`,
+`/shorts`, `/login`, `/daftar`) semuanya **200**.
+
+Gerbang pra-rilis: build sukses (22/22 halaman) → tsc **exit 0** → **1395 tes / 93 berkas** → nol
+berkas env ter-stage. 🪤 `tsc` menangkap 1 error tipe di berkas tes yang **build dan vitest
+sama-sama lewatkan** — bukti urutan gerbang tidak boleh dipangkas.
+
+**Rilis sebelumnya 2026-10-09 — `c403aaf`:**
 `07912f4..c403aaf` fast-forward ke **kedua** repo, nol paksaan. Ketiga ref terbaca sama:
 **`c403aaf`**.
 

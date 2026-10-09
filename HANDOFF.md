@@ -53,7 +53,25 @@ kunci hanya katalog Playly. Lokal membaca 27 film, produksi 164.
 `homeCatalogRows()` **TETAP** dipakai /beranda & /shorts — hanya berhenti dipakai di
 `app/page.tsx`. Jangan dihapus dari lib (dijaga `tests/beranda-video-render.test.ts`).
 
-**STATUS: DI-COMMIT, BELUM DI-PUSH.** Dual push ke `origin` + `dramaku` menunggu izin owner.
+**STATUS: DIRILIS & TERBUKTI TAYANG** (izin owner: "pus lalu deploy"). Dual push TUNTAS,
+fast-forward `acd79df..76eab86` ke **kedua** repo, nol paksaan; ketiga ref terbaca sama lewat
+`git ls-remote`: **`76eab86`**. Vercel auto-deploy dari `origin main`.
+
+**Verifikasi SESUDAH tayang — penanda teks khusus commit ini, dengan pembanding.** Empat penanda
+yang HANYA lahir di `2e14034` ditemukan di HTML produksi: `tema-terang`, `panel-lanjut-menonton`,
+"Film layar lebar", dan h1 sr-only "Nonton Drama China Sub Indo Gratis". Pembanding dipakai
+supaya kesimpulan tidak menggantung: penanda LAMA "Siap memulai marathon drama?" dan tombol
+"Daftar Gratis" terbaca **0** — hilang persis seperti yang dijanjikan. Halaman depan produksi:
+6/6 seksi tab, seksi Film Terbaru ada, 121 kartu poster, nol tombol login terbuka.
+`/discover` diuji terpisah: **nol** `tema-terang` — tema terang TIDAK merembet ke halaman lain.
+
+Bonus di produksi: poster film jauh lebih lengkap daripada lokal (Monkey Man, Furiosa, Deadpool
+& Wolverine, Godzilla x Kong) karena kunci API Playly aktif di Vercel. Di lokal hanya 27 film
+dari webhook yang terbaca, di produksi katalog penuh ikut masuk.
+
+Tidak ada SQL maupun env baru yang perlu didahulukan — rilis ini murni tampilan (diperiksa
+sebelum push: nol berkas di `supabase_migrations/`, nol `process.env` baru).
+
 Gerbang pra-rilis dijalankan lengkap di E:: `next build` sukses (22/22 halaman), `tsc --noEmit`
 **exit 0**, `vitest` **93 berkas / 1395 tes lulus**, nol berkas env ter-stage. `tsc` menangkap 1
 error tipe di berkas tes yang **build dan vitest sama-sama lewatkan** — bukti urutan gerbang

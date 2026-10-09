@@ -13,6 +13,54 @@
 
 ---
 
+## 2026-10-09 — ⚠️ PROJECT PINDAH KE `E:\dramaapp` + halaman depan ala LK21 `2e14034`
+
+**BACA INI DULU SEBELUM APA PUN. Rumah project sekarang `E:\dramaapp`, BUKAN lagi
+`D:\Users\user18\dramaapp`.** Buka sesi AI dari sana. Di luar folder yang memuat `.lintasai/`,
+seluruh aturan kit TIDAK termuat — tanpa pesan error apa pun.
+
+**Kenapa pindah:** drive D: mencapai **0 byte** dan tidak sanggup menulis 1 KB pun; git mati
+total (`index.lock` gagal ditulis). Penyebab ~346 GB **belum terbukti** — `D:\$RECYCLE.BIN`
+(puluhan akun; mesin ini punya ~85 user) dan `System Volume Information` menolak akses tanpa hak
+admin, `fsutil`/`vssadmin` juga ditolak. Semua cara non-destruktif sudah dicoba dan GAGAL: hapus
+artefak project (cuma 180 KB), kompresi NTFS `compact` (butuh ruang sementara yang tak ada),
+junction `.next` ke C: (merusak resolusi `node_modules`). E: dipilih karena punya 81 GB bebas;
+C: cuma 26 GB dan itu drive sistem. Pagefile BUKAN penyebab — ukurannya dikunci tetap.
+
+Project **DISALIN**, bukan dipindah — `D:\Users\user18\dramaapp` sengaja DIBIARKAN utuh sebagai
+cadangan sampai owner yakin. Menghapusnya nanti membebaskan 575 MB, tapi **tidak menyembuhkan
+D:** — 346 GB-nya butuh administrator mesin.
+
+🪤 **Pelajaran mahal: JANGAN jalankan perintah git yang menulis saat disk penuh.**
+`git checkout -- docs/lintasai/INDEX.md` di disk 0 byte **mengosongkan** berkas itu jadi 0 byte:
+git men-truncate dulu lalu menulis isinya, dan langkah kedua gagal. Sudah dipulihkan dari `HEAD`,
+85 baris utuh. Periksa ruang lebih dulu sebelum perintah git apa pun.
+
+**Isi commit `2e14034`** (16 berkas, +642/-163) — empat permintaan owner dalam satu alur: badan
+halaman depan jadi terang lewat `@custom-variant terang` yang hanya menyala di dalam pembungkus
+`.tema-terang` (kartu & baris dipakai BERSAMA /beranda, /discover, /shorts — cara ini membuat
+halaman lain MUSTAHIL ikut berubah; terbukti /discover tetap gelap); hero hitam satu baris naik
+ke atas; tombol Masuk/Daftar disembunyikan ke bar **Lanjutkan Menonton** (ajakan daftar tadinya
+muncul 3× di satu halaman; `<h1>` dipindah ke `sr-only` supaya SEO tidak ikut hilang); baris
+geser diganti **seksi grid per tab** + seksi **Film Terbaru**. Menyembunyikan tombol login BUKAN
+pengamanan — `/login` & `/daftar` tetap terbuka lewat alamat langsung, penjagaan tetap di server.
+
+**Catatan data yang mengoreksi asumsi:** "164 film" owner **bukan** dari tabel `dramas` (isinya
+40 judul, cuma **1** ber-`kind: "movie"`) melainkan dari **Playly** — sumber yang sama dengan
+halaman `/film`. Film webhook terbaca **tanpa** kunci API (tersimpan di DB sendiri); yang butuh
+kunci hanya katalog Playly. Lokal membaca 27 film, produksi 164.
+
+`homeCatalogRows()` **TETAP** dipakai /beranda & /shorts — hanya berhenti dipakai di
+`app/page.tsx`. Jangan dihapus dari lib (dijaga `tests/beranda-video-render.test.ts`).
+
+**STATUS: DI-COMMIT, BELUM DI-PUSH.** Dual push ke `origin` + `dramaku` menunggu izin owner.
+Gerbang pra-rilis dijalankan lengkap di E:: `next build` sukses (22/22 halaman), `tsc --noEmit`
+**exit 0**, `vitest` **93 berkas / 1395 tes lulus**, nol berkas env ter-stage. `tsc` menangkap 1
+error tipe di berkas tes yang **build dan vitest sama-sama lewatkan** — bukti urutan gerbang
+`build` → `tsc` → `test` memang tidak boleh dipangkas.
+
+---
+
 ## 2026-10-09 — Webhook Playly `video.deleted`: DIRILIS `c403aaf`
 
 **STATUS: DIRILIS & TERBUKTI TAYANG** (izin owner: "commit + dual push"). Dual push TUNTAS,

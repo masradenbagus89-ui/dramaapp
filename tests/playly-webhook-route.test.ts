@@ -269,6 +269,78 @@ describe("POST /api/webhooks/playly — video ditarik Playly (unpublish)", () =>
   });
 });
 
+// Event `video.deleted` — dikirim Playly saat sumber videonya HILANG di sana
+// (dihapus kreatornya, dijadikan privat/draf, sematannya dimatikan, atau
+// diturunkan admin mereka). Pemberitahuan tim Playly ke owner, 2026-10-09.
+//
+// Payload contoh dari mereka dipakai APA ADANYA di tes pertama, termasuk dua
+// detail yang gampang terlewat dan dua-duanya pernah jadi sumber bug nyata:
+//   - `id` berupa ANGKA, bukan teks;
+//   - ada field `site` yang tak kita kenal — harus diabaikan, bukan menggugurkan.
+describe("POST /api/webhooks/playly — video dihapus di Playly (deleted)", () => {
+  const ID_ANGKA = 1787642113102;
+  const payloadHapus = (id: unknown = ID_ANGKA) =>
+    JSON.stringify({ event: "video.deleted", site: "dramaku", video: { id } });
+
+  it("video yang sudah tersimpan turun dari situs dan ditandai 'deleted'", async () => {
+    await kirim(payloadTerbit({ id: ID_ANGKA }));
+    expect(await getPublishedPlaylyWebhookVideos()).toHaveLength(1);
+
+    const res = await kirim(payloadHapus());
+    expect(res.status).toBe(200);
+    expect((await res.json()).hidden).toBe(true);
+
+    // Hilang dari daftar yang boleh tampil...
+    expect(await getPublishedPlaylyWebhookVideos()).toEqual([]);
+    // ...tapi catatannya tetap ada, dengan sebab yang JUJUR — dibedakan dari
+    // "unpublished" supaya admin tahu ini kecil kemungkinan kembali.
+    const semua = await getPlaylyWebhookVideos();
+    expect(semua).toHaveLength(1);
+    expect(semua[0].status).toBe("deleted");
+  });
+
+  it("TIDAK diperlakukan sebagai video baru (permintaan Playly butir 1)", async () => {
+    // Inilah ketakutan utama tim Playly: kalau kolom `event` tak dibaca,
+    // notifikasi "video dihapus" malah MENAMBAH video ke situs.
+    const res = await kirim(payloadHapus("vid-belum-pernah-ada"));
+
+    expect(res.status).toBe(200);
+    expect(await getPlaylyWebhookVideos()).toEqual([]);
+    expect(await getPublishedPlaylyWebhookVideos()).toEqual([]);
+  });
+
+  it("id yang tak dikenal tetap dibalas 2xx (permintaan Playly butir 3)", async () => {
+    const res = await kirim(payloadHapus("tidak-pernah-ada"));
+    // Bukan 404: kalau dibalas error, Playly akan mengirim ulang selamanya
+    // untuk video yang memang sudah tidak ada di sisi kita.
+    expect(res.status).toBe(200);
+    expect((await res.json()).hidden).toBe(false);
+  });
+
+  it("dikirim dua kali: hasilnya sama, tidak menggandakan", async () => {
+    // skills/pembayaran/SKILL.md §4 — event sama 2× harus berefek 1×.
+    await kirim(payloadTerbit({ id: ID_ANGKA }));
+    await kirim(payloadHapus());
+    const kedua = await kirim(payloadHapus());
+
+    expect(kedua.status).toBe(200);
+    expect(await getPublishedPlaylyWebhookVideos()).toEqual([]);
+    expect(await getPlaylyWebhookVideos()).toHaveLength(1);
+  });
+
+  it("video yang diterbitkan ulang muncul lagi", async () => {
+    // Playly menyatakan video yang diterbitkan lagi dikirim ulang sebagai
+    // video.published biasa — jadi status "deleted" tidak boleh jadi vonis mati.
+    await kirim(payloadTerbit({ id: ID_ANGKA }));
+    await kirim(payloadHapus());
+    await kirim(payloadTerbit({ id: ID_ANGKA }));
+
+    const tampil = await getPublishedPlaylyWebhookVideos();
+    expect(tampil).toHaveLength(1);
+    expect(tampil[0].videoId).toBe(String(ID_ANGKA));
+  });
+});
+
 describe("POST /api/webhooks/playly — payload sah tapi isinya bermasalah", () => {
   it("embed_code dari domain asing: 400 dan tidak tersimpan", async () => {
     const res = await kirim(

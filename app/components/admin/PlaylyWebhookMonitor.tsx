@@ -18,6 +18,36 @@ import type { WebhookVideoTampil } from "@/lib/playly-webhook-status";
 
 type Pesan = { jenis: "ok" | "gagal"; teks: string };
 
+/**
+ * Lencana untuk video yang TIDAK tampil lagi atas kabar Playly.
+ *
+ * Dua sebabnya sengaja dibedakan karena artinya beda bagi admin:
+ *   - "dihapus kreator" (event video.deleted) — sumbernya hilang di Playly:
+ *     dihapus kreatornya, dijadikan privat/draf, sematannya dimatikan, atau
+ *     diturunkan admin mereka. Kecil kemungkinan kembali → layak dicarikan
+ *     pengganti.
+ *   - "ditarik Playly" (event video.unpublished) — sering cuma sementara.
+ * Warnanya ikut dibedakan supaya daftar bisa dipindai sekilas, tanpa membaca
+ * tulisan di tiap baris.
+ *
+ * Kuncinya SELURUH status selain "published". Ditulis sebagai peta, bukan
+ * rantai if: status penarikan baru akan ditolak TypeScript di sini sampai
+ * labelnya diisi — jauh lebih baik daripada diam-diam tampil tanpa lencana.
+ */
+const LENCANA_PENARIKAN = {
+  unpublished: {
+    teks: "ditarik Playly",
+    kelas: "border-zinc-600 bg-zinc-800 text-zinc-400",
+  },
+  deleted: {
+    teks: "dihapus kreator",
+    kelas: "border-rose-500/40 bg-rose-500/10 text-rose-300",
+  },
+} as const satisfies Record<
+  Exclude<WebhookVideoTampil["status"], "published">,
+  { teks: string; kelas: string }
+>;
+
 export default function PlaylyWebhookMonitor({
   videos,
   initialHidden,
@@ -123,7 +153,10 @@ export default function PlaylyWebhookMonitor({
       <ul className="mt-4 divide-y divide-zinc-800">
         {videos.map((v) => {
           const tersembunyi = hidden.has(v.videoId);
-          const ditarik = v.status === "unpublished";
+          // null = masih published. Selain itu, lencananya yang menjelaskan
+          // kenapa video ini tidak tampil.
+          const lencana =
+            v.status === "published" ? null : LENCANA_PENARIKAN[v.status];
           const proses = sedangProses === v.videoId;
           // Status bisa menumpuk (ditarik Playly DAN disembunyikan admin), jadi
           // catatannya dirangkai dari daftar — rantai ternary akan menutupi
@@ -145,16 +178,18 @@ export default function PlaylyWebhookMonitor({
                 <div className="flex items-center gap-2">
                   <p
                     className={`truncate text-sm font-medium ${
-                      tersembunyi || ditarik
+                      tersembunyi || lencana
                         ? "text-zinc-500 line-through"
                         : "text-zinc-100"
                     }`}
                   >
                     {v.title}
                   </p>
-                  {ditarik && (
-                    <span className="inline-flex shrink-0 items-center rounded-full border border-zinc-600 bg-zinc-800 px-2 py-0.5 text-[11px] font-semibold text-zinc-400">
-                      ditarik Playly
+                  {lencana && (
+                    <span
+                      className={`inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold ${lencana.kelas}`}
+                    >
+                      {lencana.teks}
                     </span>
                   )}
                 </div>

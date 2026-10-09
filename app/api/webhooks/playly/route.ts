@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   parseWebhookPayload,
   readWebhookSecret,
+  statusPenarikan,
   verifyWebhookRequest,
   type UnduhanWebhook,
 } from "@/lib/playly-webhook";
@@ -139,15 +140,22 @@ export async function POST(req: NextRequest) {
   // bukan 200 yang membuat mereka menganggap video sudah masuk padahal tidak.
   // Kegagalan senyap di sini berarti video hilang tanpa ada yang tahu.
   try {
-    if (payload.event === "video.unpublished") {
+    // Penarikan: "video.unpublished" (ditarik Playly) dan "video.deleted"
+    // (sumbernya hilang di Playly) diperlakukan sama — videonya diturunkan dari
+    // situs. Yang berbeda hanya status yang tercatat, supaya admin bisa melihat
+    // mana yang kecil kemungkinan kembali. Pemetaannya satu pintu di
+    // statusPenarikan, jadi route tak bisa berbeda pendapat dengan parser.
+    const penarikan = statusPenarikan(payload.event);
+    if (penarikan) {
       const ketemu = await setPlaylyWebhookVideoStatus(
         payload.videoId,
-        "unpublished",
+        penarikan.status,
         receivedAt,
       );
       // Tidak ketemu pun tetap 200: tak ada yang perlu disembunyikan berarti
       // keadaannya SUDAH seperti yang Playly minta. Membalas 404 malah membuat
-      // mereka mengirim ulang selamanya untuk sesuatu yang sudah beres.
+      // mereka mengirim ulang selamanya untuk sesuatu yang sudah beres — dan
+      // tim Playly secara khusus memintanya (pemberitahuan 2026-10-09 butir 3).
       return balas({
         ok: true,
         event: payload.event,

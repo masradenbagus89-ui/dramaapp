@@ -1362,19 +1362,33 @@ export type PlaylyWebhookVideo = {
   /** Sampul — SUDAH lolos https / data-URI gambar; null kalau tak ada. */
   thumbnailUrl: string | null;
   /**
-   * "published" = boleh tampil. "unpublished" = Playly sudah menariknya.
+   * "published" = boleh tampil. Dua sisanya sama-sama TIDAK tampil, dan
+   * dibedakan hanya untuk dibaca admin — mesin memperlakukannya identik:
+   *   - "unpublished" = Playly menarik video (bisa kembali sewaktu-waktu).
+   *   - "deleted"     = sumbernya hilang di Playly: dihapus kreatornya,
+   *                     dijadikan privat/draf, sematannya dimatikan, atau
+   *                     diturunkan admin mereka (event `video.deleted`).
+   * Bedanya berarti bagi admin: "deleted" kecil kemungkinan kembali, jadi
+   * layak dicarikan pengganti; "unpublished" sering cuma sementara.
    *
-   * Baris unpublish sengaja DISIMPAN, bukan dihapus, karena dua alasan:
+   * Baris penarikan sengaja DISIMPAN, bukan dihapus, karena dua alasan:
    * (1) kalau video yang sama diterbitkan lagi nanti, catatannya tidak hilang;
-   * (2) notifikasi unpublish yang datang dua kali tetap berakhir di keadaan
+   * (2) notifikasi penarikan yang datang dua kali tetap berakhir di keadaan
    *     yang sama — tidak ada bedanya diproses sekali atau sepuluh kali.
    */
-  status: "published" | "unpublished";
+  status: "published" | "unpublished" | "deleted";
   /** Kapan notifikasi TERAKHIR untuk video ini diterima (ISO). */
   receivedAt: string;
 };
 
-/** Aturan "baris webhook ini boleh tampil" — satu tempat, dipakai kedua pembaca. */
+/**
+ * Aturan "baris webhook ini boleh tampil" — satu tempat, dipakai kedua pembaca.
+ *
+ * Sengaja DAFTAR-PUTIH (sebut yang boleh), bukan daftar-hitam (sebut yang
+ * dilarang): tiap status penarikan baru dari Playly otomatis ikut tersembunyi
+ * tanpa ada yang perlu ingat memperbarui baris ini. Kalau ditulis terbalik
+ * (`!== "unpublished"`), status "deleted" akan lolos tampil diam-diam.
+ */
 const bolehTampil = (v: PlaylyWebhookVideo) => v.status === "published";
 
 /**

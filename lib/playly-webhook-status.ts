@@ -44,7 +44,14 @@ export type RingkasanWebhook = {
   jumlahTampil: number;
   /** Published tapi disembunyikan admin. */
   jumlahDisembunyikan: number;
-  /** Sudah ditarik Playly (unpublished). Barisnya sengaja disimpan, bukan dihapus. */
+  /**
+   * Sudah turun dari situs atas kabar Playly — "unpublished" (ditarik) maupun
+   * "deleted" (sumbernya hilang di sana). Keduanya dihitung bersama supaya
+   * angka-angka di panel tetap berjumlah utuh; bedanya terlihat per-video di
+   * daftar, bukan di angka ringkasan ini.
+   *
+   * Barisnya sengaja disimpan, bukan dihapus.
+   */
   jumlahDitarik: number;
   /** Notifikasi terakhir yang pernah diterima (sudah diformat WIB); null = belum pernah. */
   terakhirLabel: string | null;
@@ -127,7 +134,12 @@ export function ringkasWebhookPlayly(
   const published = videos.filter((v) => v.status === "published");
   const jumlahDisembunyikan = published.filter((v) => hidden.has(v.videoId)).length;
   const jumlahTampil = published.length - jumlahDisembunyikan;
-  const jumlahDitarik = videos.filter((v) => v.status === "unpublished").length;
+  // Ditulis sebagai "bukan published", BUKAN "== unpublished": status penarikan
+  // baru dari Playly (mis. "deleted") otomatis ikut terhitung. Kalau ditulis
+  // menyebut satu nama saja, video terhapus tak masuk hitungan mana pun —
+  // tidak di jumlahTampil, tidak di sini — dan angka di panel jadi tak
+  // berjumlah utuh tanpa ada pesan error yang memberi tahu.
+  const jumlahDitarik = videos.filter((v) => v.status !== "published").length;
 
   // Notifikasi TERAKHIR = receivedAt terbesar. Dihitung dari seluruh baris
   // (termasuk yang ditarik), sebab notifikasi unpublish juga bukti pintunya

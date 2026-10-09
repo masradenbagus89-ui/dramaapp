@@ -9,7 +9,61 @@
 >
 > **📦 Berkas ini sudah 2.980 baris / ±240 KB** dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-10-08.
+**Terakhir diisi:** 2026-10-09.
+
+---
+
+## 2026-10-09 — Webhook Playly `video.deleted`: SIAP, BELUM DIRILIS
+
+**STATUS: belum di-commit, belum di-push.** Menunggu izin owner. Semua gerbang sudah hijau.
+
+**Pemicunya pesan tim Playly ke owner:** mereka akan menyalakan jenis kiriman webhook baru
+`video.deleted` — untuk video yang PERNAH kita terima lewat `video.published`, lalu dihapus
+kreatornya / dijadikan privat-draf / sematannya dimatikan / diturunkan admin mereka. Bentuknya
+`{ "event": "video.deleted", "site": "dramaku", "video": { "id": 1787642113102 } }`, tanda tangan
+& header sama persis dengan `video.published`.
+
+**Dari 3 syarat kesiapan yang mereka minta, 2 ternyata sudah terpenuhi sejak lama** — penting
+dicatat supaya sesi berikutnya tidak mengerjakan ulang:
+1. Kolom `event` memang dibaca (`lib/playly-webhook.ts`, penjaga event) → kiriman `video.deleted`
+   TIDAK pernah berisiko ditafsirkan sebagai video baru. Ini ketakutan utama mereka.
+2. Menyembunyikan video dengan id itu → **ini satu-satunya yang kurang**, dan inilah yang dikerjakan.
+3. Balas 2xx untuk id tak dikenal → sudah, sejak jalur unpublish.
+
+**Keputusan owner (popup):** label di panel admin DIBEDAKAN — "dihapus kreator" (merah) vs
+"ditarik Playly" (abu), supaya film yang kecil kemungkinan kembali bisa dicarikan pengganti.
+
+**Nol biaya infrastruktur:** tak ada SQL yang perlu owner jalankan (daftar webhook disimpan
+sebagai dokumen JSON lewat `sbDocSet`, bukan tabel berkolom ketat), tak ada env baru.
+
+**Berkas yang disentuh:** `lib/playly-webhook.ts` (tipe event + `statusPenarikan` satu pintu),
+`app/api/webhooks/playly/route.ts` (satu cabang untuk kedua jenis penarikan),
+`lib/store.ts` (status `"deleted"`), `lib/playly-webhook-status.ts` (hitungan),
+`app/components/admin/PlaylyWebhookMonitor.tsx` (lencana), 2 berkas tes.
+
+**Dua pelajaran yang layak diteruskan:**
+- **Daftar-putih menyelamatkan seluruh pekerjaan.** Penyaring tampil ditulis `status === "published"`
+  sejak awal, jadi status baru otomatis tidak tampil — nol halaman penonton disentuh. Kalau dulu
+  ditulis `!== "unpublished"`, film terhapus akan lolos tampil diam-diam. Pola yang sama dipakai
+  ulang di `jumlahDitarik` (`!== "published"`).
+- **Tes hijau tidak membuktikan tipe benar.** Mengganti penjaga event ke bentuk berbasis variabel
+  membuat TypeScript kehilangan penyempitan tipe di jalur publish; 141 tes tetap lulus, yang menolak
+  `next build`. Penyempitan tipe hanya mengikuti bentuk nilai yang diperiksa — begitu kesimpulannya
+  pindah ke variabel lain, tulis nilainya literal.
+
+**Bukti gerbang pra-rilis (urutan benar: build dulu, baru tsc):** `rm -rf .next` → `npm run build`
+sukses → `npx tsc --noEmit` exit 0 → `npm test` **1388 tes / 91 berkas** semua lulus (+6 penjaga
+baru, salah satunya memakai payload contoh Playly apa adanya termasuk id ANGKA dan field `site`
+yang tak kita kenal).
+
+**Batas jujur:** belum diuji terhadap kiriman SUNGGUHAN dari Playly — mereka belum menyalakannya.
+Yang terbukti adalah rangkaian utuh route dari badan mentah sampai isi penyimpanan. Juga: hilangnya
+film dari situs tidak detik itu juga, ada cache katalog 60 detik (`CATALOG_TTL_SECONDS`).
+
+**Anti-replay masih utang teknis lama** (tercatat jujur di `lib/playly-webhook.ts`) dan TIDAK
+diperburuk: menyembunyikan video itu idempoten, diulang sepuluh kali hasilnya sama.
+
+**Rencana lengkap:** `docs/lintasai/rencana/2026-10-09-webhook-video-deleted.md`
 
 ---
 

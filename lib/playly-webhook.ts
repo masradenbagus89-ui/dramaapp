@@ -118,8 +118,53 @@ const DESCRIPTION_KEYS = [
  * payload yang hanya membawa `downloads` tanpa alamat player (bentuk contoh
  * owner 2026-10-05: `{ video_id, downloads: [...] }`). Payload seperti itu
  * memperbarui link unduhan saja; data videonya tidak disentuh.
+ *
+ * `video.deleted` dikirim Playly untuk video yang PERNAH kita terima lewat
+ * `video.published`, lalu sumbernya hilang di sana — dihapus kreatornya,
+ * dijadikan privat/draf, sematannya dimatikan, atau diturunkan admin mereka
+ * (pemberitahuan tim Playly ke owner, 2026-10-09). Bentuknya
+ * `{ event, site, video: { id } }` dengan `id` berupa ANGKA, bukan teks —
+ * pickString sudah mengubah angka jadi teks (lib/playly.ts:472), jadi tak ada
+ * penanganan khusus yang perlu di sini.
  */
-export type PlaylyWebhookEvent = "video.published" | "video.unpublished" | "video.downloads";
+export type PlaylyWebhookEvent =
+  | "video.published"
+  | "video.unpublished"
+  | "video.deleted"
+  | "video.downloads";
+
+/**
+ * Kejadian yang artinya "turunkan video ini dari situs", dengan status tujuan
+ * masing-masing. Dikumpulkan di SATU tempat supaya parser dan route tak bisa
+ * berbeda pendapat soal daftarnya — kalau Playly menambah nama penarikan baru,
+ * cukup objek ini yang diubah.
+ *
+ * Keduanya sama-sama menyembunyikan video; yang membedakan hanya status yang
+ * tercatat, supaya admin bisa melihat mana yang hilang permanen (lihat
+ * PlaylyWebhookVideo["status"] di lib/store.ts).
+ */
+const EVENT_PENARIKAN = {
+  "video.unpublished": "unpublished",
+  "video.deleted": "deleted",
+} as const satisfies Record<string, "unpublished" | "deleted">;
+
+type EventPenarikan = keyof typeof EVENT_PENARIKAN;
+
+/**
+ * Event ini menandakan penarikan? null = bukan.
+ *
+ * Mengembalikan nama event-nya SEKALIGUS status tujuannya supaya pemanggil
+ * tidak perlu memetakan ulang sendiri — pemetaan ganda di dua tempat adalah
+ * persis cara kedua daftar itu bisa diam-diam berbeda isi.
+ */
+export function statusPenarikan(event: string): {
+  event: EventPenarikan;
+  status: (typeof EVENT_PENARIKAN)[EventPenarikan];
+} | null {
+  if (!(event in EVENT_PENARIKAN)) return null;
+  const nama = event as EventPenarikan;
+  return { event: nama, status: EVENT_PENARIKAN[nama] };
+}
 
 /**
  * Batas item `downloads` per notifikasi. Isi yang bermakna paling banyak
@@ -456,7 +501,8 @@ export function parseWebhookPayload(
   // notifikasi "ada video baru terbit", jadi diperlakukan sebagai publish.
   // Yang tidak boleh diam-diam lolos adalah event yang DISEBUT tapi asing.
   const event = bacaTeks(rec, "event") ?? "video.published";
-  if (event !== "video.published" && event !== "video.unpublished") {
+  const penarikan = statusPenarikan(event);
+  if (event !== "video.published" && !penarikan) {
     // Playly boleh menambah jenis kejadian baru kapan saja. Itu BUKAN error di
     // sisi kita: route membalas 200 supaya Playly berhenti mengirim ulang.
     return { ok: false, abaikan: true, error: `Event '${event}' tidak ditangani.` };
@@ -469,14 +515,16 @@ export function parseWebhookPayload(
   const videoId = pickString(video, ID_KEYS);
   if (!videoId) return { ok: false, error: "Field 'video.id' wajib ada." };
 
-  // Unpublish hanya butuh id — video yang mau ditarik tidak perlu alamat player
-  // maupun judul. Memaksakan keduanya ada justru membuat penarikan gagal saat
-  // Playly mengirim payload ringkas, dan video yang seharusnya hilang tetap tampil.
-  if (event === "video.unpublished") {
+  // Penarikan (unpublish/deleted) hanya butuh id — video yang mau diturunkan
+  // tidak perlu alamat player maupun judul. Memaksakan keduanya ada justru
+  // membuat penarikan gagal saat Playly mengirim payload ringkas, dan video
+  // yang seharusnya hilang tetap tampil. Contoh nyata payload `video.deleted`
+  // memang cuma `{ event, site, video: { id } }`.
+  if (penarikan) {
     return {
       ok: true,
       payload: {
-        event,
+        event: penarikan.event,
         videoId,
         title: "",
         description: null,
@@ -550,7 +598,13 @@ export function parseWebhookPayload(
   return {
     ok: true,
     payload: {
-      event,
+      // Ditulis literal, bukan meneruskan `event`. Di titik ini cuma SATU nilai
+      // yang mungkin tersisa: penjaga di atas sudah memulangkan event asing,
+      // dan jalur penarikan sudah return lebih dulu. Menuliskannya apa adanya
+      // membuat TypeScript ikut yakin — `event` sendiri masih bertipe string
+      // lebar karena kesimpulan itu datang dari variabel `penarikan`, bukan
+      // dari bentuk `event`-nya.
+      event: "video.published",
       videoId,
       title: pickString(video, TITLE_KEYS) ?? "(tanpa judul)",
       description: pickString(video, DESCRIPTION_KEYS),

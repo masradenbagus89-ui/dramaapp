@@ -80,6 +80,27 @@ describe("ringkasWebhookPlayly — hitungan yang ditampilkan ke admin", () => {
     expect(r.jumlahDitarik).toBe(1);
   });
 
+  // Video yang DIHAPUS di Playly (event video.deleted) harus ikut terhitung.
+  // Kalau hitungannya ditulis menyebut "unpublished" saja, baris deleted tak
+  // masuk kelompok mana pun — tidak di jumlahTampil, tidak di jumlahDitarik —
+  // sehingga angka di panel tidak berjumlah utuh, dan tak ada pesan error yang
+  // memberi tahu admin bahwa ada video yang "hilang" dari hitungan.
+  it("video yang dihapus kreator ikut dihitung sebagai turun dari situs", () => {
+    const r = ringkasWebhookPlayly(
+      true,
+      [
+        video({ videoId: "a" }),
+        video({ videoId: "b", status: "unpublished" }),
+        video({ videoId: "c", status: "deleted" }),
+      ],
+      [],
+    );
+    expect(r.jumlahTampil).toBe(1);
+    expect(r.jumlahDitarik).toBe(2);
+    // Ketiganya harus terhitung habis — tak ada baris yang menguap.
+    expect(r.jumlahTampil + r.jumlahDisembunyikan + r.jumlahDitarik).toBe(3);
+  });
+
   // Video bisa ditarik Playly DAN disembunyikan admin sekaligus. Kalau
   // jumlahDisembunyikan ikut menghitung baris unpublished, angka di layar bisa
   // melebihi jumlah video yang benar-benar ada.

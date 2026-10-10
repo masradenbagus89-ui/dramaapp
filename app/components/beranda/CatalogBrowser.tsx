@@ -9,9 +9,7 @@ import {
   // Dipakai sebagai `SEMUA` di bawah. Di-alias supaya nilainya punya SATU
   // sumber (lib) tanpa mengganti nama yang sudah dipakai di sepanjang berkas.
   GENRE_SEMUA as SEMUA,
-  PAGE_GAP,
   URUTAN_BAWAAN,
-  pageNumbers,
   pageOfCatalog,
   sedangMenyaring,
   sortCatalog,
@@ -19,6 +17,7 @@ import {
 import { barisBerandaGabungan } from "@/lib/beranda-video";
 import { STRIP_KATALOG, buildNavMenus } from "@/lib/nav-katalog";
 import type { PlaylyVideoPublik } from "@/lib/playly-publik";
+import NomorHalaman from "@/app/components/NomorHalaman";
 import CatalogCard from "./CatalogCard";
 import FeaturedRow from "./FeaturedRow";
 import StripKatalog from "./StripKatalog";
@@ -27,8 +26,7 @@ import HasilPlayly, { cariVideoPlayly } from "./HasilPlayly";
 import SearchBar, { KELAS_MENEMPEL_KEPALA } from "./SearchBar";
 import { GRID_CLASS, ROW_KATEGORI_CARD_CLASS, SHELL } from "./shell";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { ChevronLeft, ChevronRight, Home, Search, X } from "lucide-react";
+import { Home, Search, X } from "lucide-react";
 
 type Props = {
   dramas: Drama[];
@@ -323,61 +321,12 @@ export default function CatalogBrowser({
           )}
         </div>
 
-        {halaman.totalPages > 1 && (
-          <nav
-            aria-label="Halaman katalog"
-            className="mt-6 flex flex-wrap items-center justify-center gap-1"
-          >
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              disabled={halaman.page <= 1}
-              onClick={() => gantiHalaman(halaman.page - 1)}
-              aria-label="Halaman sebelumnya"
-              className="size-8 rounded-sm border-zinc-700 bg-zinc-900 text-zinc-300 hover:border-amber-400 hover:text-amber-400 disabled:opacity-30"
-            >
-              <ChevronLeft className="size-4" />
-            </Button>
-
-            {pageNumbers(halaman.page, halaman.totalPages).map((n, i) =>
-              n === PAGE_GAP ? (
-                <span key={`gap-${i}`} className="px-1.5 text-xs text-zinc-600">
-                  {PAGE_GAP}
-                </span>
-              ) : (
-                <Button
-                  key={n}
-                  type="button"
-                  size="sm"
-                  variant={n === halaman.page ? "default" : "outline"}
-                  onClick={() => gantiHalaman(n)}
-                  aria-current={n === halaman.page ? "page" : undefined}
-                  className={cn(
-                    "size-8 rounded-sm p-0 text-xs",
-                    n === halaman.page
-                      ? "font-bold"
-                      : "border-zinc-700 bg-zinc-900 text-zinc-300 hover:border-amber-400 hover:text-amber-400",
-                  )}
-                >
-                  {n}
-                </Button>
-              ),
-            )}
-
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              disabled={halaman.page >= halaman.totalPages}
-              onClick={() => gantiHalaman(halaman.page + 1)}
-              aria-label="Halaman berikutnya"
-              className="size-8 rounded-sm border-zinc-700 bg-zinc-900 text-zinc-300 hover:border-amber-400 hover:text-amber-400 disabled:opacity-30"
-            >
-              <ChevronRight className="size-4" />
-            </Button>
-          </nav>
-        )}
+        <NomorHalaman
+          halaman={halaman.page}
+          totalHalaman={halaman.totalPages}
+          onPindah={gantiHalaman}
+          label="Halaman katalog"
+        />
       </div>
       )}
 

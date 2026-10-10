@@ -105,7 +105,19 @@ export function daftarTab(dramas: Drama[]): TabKatalog[] {
   ): TabKatalog => ({ key, label, judul: judulDariLabel(label), keterangan });
 
   const tab: TabKatalog[] = [
-    buat("terbaru", "TERBARU", "Judul yang paling baru masuk katalog DramaKu."),
+    // "SERIES" di depan sejak 2026-10-10 (owner): di halaman depan tab ini
+    // bersebelahan dengan seksi "Film Terbaru", dan dua judul bernama "Terbaru"
+    // berurutan terbaca seperti daftar yang sama tercetak dua kali. Yang diubah
+    // LABEL-nya, bukan judul seksinya — judul diturunkan dari label (lihat
+    // judulDariLabel di atas), jadi keduanya tetap mustahil menyimpang.
+    buat(
+      "terbaru",
+      "SERIES TERBARU",
+      // Keterangan sengaja TETAP "judul", bukan "serial": isi tab ini belum
+      // disaring serial-saja, jadi 1 drama ber-kind "movie" di katalog masih
+      // ikut. Menulis "serial" di sini = janji yang tidak ditepati datanya.
+      "Judul yang paling baru masuk katalog DramaKu.",
+    ),
     buat("unggulan", "SERIES UNGGULAN", "Serial pilihan — ditandai sendiri oleh admin."),
     buat("update", "SERIES UPDATE", "Serial yang episodenya masih bertambah."),
     buat("terpopuler", "TERPOPULER", "Diurutkan dari jumlah penonton terbanyak."),

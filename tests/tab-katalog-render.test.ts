@@ -60,7 +60,7 @@ describe("TabKatalogTampilan — deret tab tergambar", () => {
   it("keenam tab yang diminta owner ada di HTML", () => {
     const html = render("terbaru");
     for (const label of [
-      "TERBARU",
+      "SERIES TERBARU",
       "SERIES UNGGULAN",
       "SERIES UPDATE",
       "TERPOPULER",
@@ -114,12 +114,12 @@ describe("mengganti tab BENAR-BENAR mengganti isinya", () => {
     expect(new Set(hasil).size).toBe(kunci.length);
   });
 
-  it("judul bagian ikut berganti, bukan tetap 'Terbaru'", () => {
+  it("judul bagian ikut berganti, bukan tetap 'Series Terbaru'", () => {
     // Judul bagian kini SAMA PERSIS dengan nama tabnya, cuma tidak huruf
     // besar semua (owner 2026-09-26: "nama seperti series unggulan harus sama
     // dengan yang dibawah juga"). Dulu keduanya ditulis terpisah dan sudah
     // menyimpang di empat dari enam tab.
-    expect(render("terbaru")).toContain(">Terbaru<");
+    expect(render("terbaru")).toContain(">Series Terbaru<");
     expect(render("unggulan")).toContain(">Series Unggulan<");
     expect(render("terpopuler")).toContain(">Terpopuler<");
     expect(render("tahun")).toContain(">2026<");

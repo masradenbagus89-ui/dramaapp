@@ -84,11 +84,17 @@ export function sortCatalog(dramas: Drama[], sort: CatalogSort): Drama[] {
 }
 
 // =============================  PAGINASI  ================================
-export type CatalogPage = {
+/**
+ * Satu halaman hasil potongan. BERGENERIK `<T>` sejak 2026-10-10 supaya alat
+ * paginasi yang sama bisa memotong daftar FILM (`PlaylyVideoPublik`), bukan
+ * cuma drama. Pemanggil lama tidak berubah sama sekali — TypeScript
+ * menyimpulkan `T` dari daftar yang dioper.
+ */
+export type CatalogPage<T = Drama> = {
   /** Nomor halaman yang BENAR-BENAR dipakai (sudah dijepit ke rentang sah). */
   page: number;
   totalPages: number;
-  items: Drama[];
+  items: T[];
   /** Nomor poster pertama & terakhir di halaman ini (1-based), untuk teks "1-24 dari 120". */
   from: number;
   to: number;
@@ -101,11 +107,11 @@ export type CatalogPage = {
  * genre, dan grid kosong tanpa penjelasan lebih membingungkan daripada
  * dikembalikan ke halaman terakhir yang masih ada.
  */
-export function pageOfCatalog(
-  items: Drama[],
+export function pageOfCatalog<T>(
+  items: T[],
   page: number,
   perPage: number = CATALOG_PER_PAGE,
-): CatalogPage {
+): CatalogPage<T> {
   const total = items.length;
   const size = Math.max(1, Math.floor(perPage));
   const totalPages = Math.max(1, Math.ceil(total / size));

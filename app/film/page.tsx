@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Film } from "lucide-react";
 import { getPlaylyVideosGabunganCached } from "@/lib/playly-gabungan";
-import PlaylyVideoGrid from "@/app/components/PlaylyVideoGrid";
+import DaftarFilmBerhalaman from "@/app/components/film/DaftarFilmBerhalaman";
 
 // Halaman disimpan & dipakai ulang, disegarkan tiap 300 detik — sama dengan
 // PLAYLY_PUBLIK_TTL_SECONDS di lib/playly.ts. Ditulis sebagai angka, bukan
@@ -52,7 +52,7 @@ export default async function PlaylyPage() {
 
         <div className="mt-8">
           {videos.length > 0 ? (
-            <PlaylyVideoGrid videos={videos} />
+            <DaftarFilmBerhalaman videos={videos} />
           ) : (
             // Sengaja SELALU ada yang tampil saat daftarnya kosong. Versi
             // sebelumnya menghilangkan seluruh bagian ini tanpa jejak, dan itu

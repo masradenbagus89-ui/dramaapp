@@ -7,12 +7,11 @@ import RedirectIfAuthed from "@/app/components/RedirectIfAuthed";
 import FeaturedRow from "@/app/components/beranda/FeaturedRow";
 import PublicTopBars from "@/app/components/beranda/PublicTopBars";
 import LanjutMenonton from "@/app/components/beranda/LanjutMenonton";
+import FooterSitus from "@/app/components/beranda/FooterSitus";
 import TabKatalog from "@/app/components/beranda/TabKatalog";
 import TabKatalogTampilan from "@/app/components/beranda/TabKatalogTampilan";
 import { TAB_BAWAAN, TAB_GRID_ITEMS } from "@/lib/tab-katalog";
-import {
-  FEATURED_ROW_COUNT,
-} from "@/lib/beranda-catalog";
+import { availableGenres, FEATURED_ROW_COUNT } from "@/lib/beranda-catalog";
 import { buildNavMenus } from "@/lib/nav-katalog";
 
 // Disimpan & dipakai ulang, disegarkan tiap 60 detik (menggantikan force-dynamic
@@ -39,6 +38,10 @@ export default async function LandingPage() {
   const { videos } = await getPlaylyVideosGabunganCached();
   const filmTerbaru = videos.slice(0, TAB_GRID_ITEMS);
   const heroSlides = featuredHeroSlides(dramas, FEATURED_ROW_COUNT);
+  // Genre yang BENAR-BENAR berisi, untuk kolom "Genre Populer" di kaki situs.
+  // Dihitung di server dari katalog yang sudah di tangan — nol pembacaan
+  // tambahan, dan yang terkirim ke browser cuma daftar nama.
+  const genres = availableGenres(dramas);
   // Isi menu dihitung DI SERVER: hasilnya cuma label + alamat, jauh lebih
   // ringan dikirim ke browser daripada seluruh katalog. Isi strip kuning tidak
   // ikut dihitung — sejak 2026-09-21 daftarnya TETAP, ditentukan owner.
@@ -133,13 +136,13 @@ export default async function LandingPage() {
       {/* ^ tutup BADAN TERANG — footer di bawah sengaja tetap gelap,
           menutup halaman dengan warna yang sama seperti hero di atas. */}
 
-      {/* Footer */}
-      <footer className="border-t border-zinc-900 px-4 py-8 md:px-6">
-        <div className="mx-auto flex max-w-7xl items-center justify-center text-xs text-zinc-500">
-          <p>© 2026 DramaKu · Prototype</p>
-          {/* Tautan Masuk/Daftar DIBUANG 2026-10-09 — pintu akun tunggal. */}
-        </div>
-      </footer>
+      {/* ===== KAKI SITUS — empat kolom (owner 2026-10-10, mencontoh situs
+             katalog pembanding): tentang, jelajahi, genre populer, disclaimer.
+
+             Menggantikan kaki lama satu baris "© 2026 DramaKu · Prototype".
+             Kata "Prototype" ikut hilang — situs ini sudah tayang dan dipakai
+             penonton sungguhan, jadi label itu justru menyesatkan. ===== */}
+      <FooterSitus genres={genres} />
     </div>
   );
 }

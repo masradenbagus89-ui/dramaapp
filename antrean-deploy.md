@@ -3,7 +3,44 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-10-09 (**komputer OWNER**) — **ANTREAN KOSONG, DUAL PUSH TUNTAS.**
+**Terakhir dicek:** 2026-10-10 (**komputer OWNER**) — **ANTREAN KOSONG, DUAL PUSH TUNTAS.**
+`2c888bd..8f07e23` fast-forward ke **kedua** repo, nol paksaan. Ketiga ref terbaca sama:
+**`8f07e23`**.
+
+> ⚠️ **RUMAH PROJECT: `E:\dramaapp`** (bukan lagi `D:\Users\user18\dramaapp`). Sesi 2026-10-10
+> sempat dibuka dari folder D: yang tertinggal 3 commit — terbaca normal, tanpa satu pun error.
+> Rinciannya di `HANDOFF.md` paling atas.
+
+**Rilis 2026-10-10 — `8f07e23`: seksi halaman depan jadi baris geser berpanah + kaki situs 4
+kolom + nomor halaman `/film`.** Tiga permintaan owner: (1) tiap seksi jadi SATU baris poster
+yang bisa digeser dengan panah di kedua ujungnya — mekanisme gesernya diangkat keluar dari
+`FeaturedRow` jadi `BarisGeser` supaya seksi & baris unggulan memakai satu sumber; (2) kaki situs
+4 kolom (tentang/jelajahi/genre populer/disclaimer) menggantikan baris "Prototype", genrenya
+dihitung dari katalog nyata; (3) nomor halaman di `/film`, 24 per halaman. Label tab `TERBARU` →
+**`SERIES TERBARU`** supaya beda dengan seksi "Film Terbaru" — yang diubah LABEL-nya, bukan judul
+seksinya, sebab judul diturunkan dari label. **Nol migrasi SQL, nol env baru** — diperiksa
+sebelum push, jadi tak ada yang perlu didahulukan owner di Supabase/Vercel.
+
+Verifikasi sesudah tayang, **dengan pembanding**: penanda BARU terbaca di HTML produksi
+(`>SERIES TERBARU<`, "Tentang DramaKu", "Genre Populer", `opacity-90 hover:opacity-100` 14x,
+"Geser ke kanan" 8x, `>Semua<` 7x), sedangkan penanda LAMA `>TERBARU<`, "Prototype", "Lainnya",
+`grid-baris-penuh` semuanya **0**. Halaman depan: 7/7 seksi, 121 kartu poster. Smoke test 8
+halaman (`/`, `/beranda`, `/discover`, `/film`, `/katalog`, `/shorts`, `/login`, `/daftar`)
+semuanya **200**. `/film`: **"Menampilkan 1-24 dari 267 judul"**, tepat 24 kartu, nav nomor
+halaman ada.
+
+Gerbang pra-rilis: `rm -rf .next` → build sukses (`/` & `/film` tetap **Static**) → `tsc`
+**exit 0** → **1416 tes / 96 berkas** → nol berkas env ter-stage.
+
+🪤 **Pelajaran putaran ini: bentuk seksi halaman depan berganti EMPAT kali dalam dua hari**
+(baris geser → grid → grid dipotong → baris geser + panah → tombol naik sejajar judul). Riwayat
+lengkap + alasan tiap pergantian ditulis di komentar `SeksiKatalog.tsx` supaya sesi berikutnya
+tidak memutar balik ke bentuk yang sudah ditolak owner.
+
+**Rollback 1-baris:** `git revert 8f07e23 && git push origin main`, atau promote deployment
+`76eab86` dari dashboard Vercel.
+
+**Cek sebelumnya: 2026-10-09** (**komputer OWNER**) — **ANTREAN KOSONG, DUAL PUSH TUNTAS.**
 `acd79df..76eab86` fast-forward ke **kedua** repo, nol paksaan. Ketiga ref terbaca sama:
 **`76eab86`**.
 

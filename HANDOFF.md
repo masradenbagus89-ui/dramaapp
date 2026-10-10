@@ -9,7 +9,101 @@
 >
 > **📦 Berkas ini sudah 2.980 baris / ±240 KB** dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-10-09.
+**Terakhir diisi:** 2026-10-10.
+
+---
+
+## 2026-10-10 — Seksi halaman depan jadi baris geser berpanah + kaki situs 4 kolom: DIRILIS `8f07e23`
+
+**⚠️ Sesi ini sempat dibuka dari `D:\Users\user18\dramaapp`** — folder cadangan yang tertinggal
+**3 commit** dan berisi sisa kerja setengah jadi yang versi lengkapnya sudah tayang (`2e14034`).
+Ketahuan karena HTML produksi memuat `<section id="seksi-video-terbaru">` yang **tidak ada** di
+kode lokal. Seluruh pekerjaan dipindah ke `E:\dramaapp`. Peringatan pindah rumah di catatan
+2026-10-09 di bawah **sudah benar — tetap buka sesi dari E:**.
+
+### 🪤 PELAJARAN UTAMA: bentuk seksi halaman depan sudah berputar EMPAT kali dalam dua hari
+
+| Kapan | Bentuk | Kenapa diganti |
+|---|---|---|
+| 2026-10-09 | baris geser → **grid bertumpuk** | owner: "sama persis seperti LK21"; poster ke-8 dst tak terlihat tanpa menekan panah |
+| 2026-10-10 pagi | grid **dipotong satu baris penuh** | kolom grid mengikuti lebar layar sedangkan isinya tetap 20 → baris terakhir selalu sisa separuh (17 lalu 3); owner: "tidak rapi" |
+| 2026-10-10 sore | **kembali ke baris geser** + panah dua ujung | owner: "diujung kasih tanda panah agar bisa geser ke kanan/kiri" |
+| 2026-10-10 sore (lagi) | tombol **"Semua" naik SEJAJAR judul** | di baris yang bisa digeser, tombol di bawah terseret jauh dari judulnya; owner: "kata semua kamu letakan sejajar dengan rekomendasi" |
+
+**Yang ditinggalkan putaran ini, jangan dihidupkan lagi tanpa perintah baru:** utility CSS
+`.grid-baris-penuh` (sudah DIHAPUS dari `app/globals.css`) dan tulisan tombol **"Lainnya"**
+(dikembalikan ke **"Semua"** atas permintaan owner pada hari yang sama).
+
+**Yang IKUT SELESAI karena putaran ketiga:** utang teknis potongan grid. Saat grid dipotong,
+poster yang tidak muat **tetap ada di HTML** dan masih bisa dijangkau tombol Tab walau tak
+terlihat. Dengan baris geser tidak ada lagi yang disembunyikan — semua poster terjangkau dengan
+digeser.
+
+### Isi perubahan
+
+1. **`BarisGeser.tsx` (BARU)** — mekanisme geser + panah diangkat KELUAR dari `FeaturedRow`
+   supaya seksi halaman depan dan baris unggulan memakai SATU sumber. Disalin, dua baris itu
+   pasti menyimpang pelan-pelan tanpa satu pun error yang memberi tahu. Prop `panahSelalu`
+   membedakan keduanya: seksi memakai panah yang **selalu terlihat** di layar lebar (barisnya
+   padat poster, tanpa tanda penonton tak tahu masih ada judul di kanan), baris unggulan tetap
+   memakai panah yang muncul saat kursor lewat supaya poster besarnya tidak tertutup.
+2. **`FeaturedRow.tsx`** — tinggal pembungkus (judul + tautan + tombol bawah). `"use client"`
+   DILEPAS: setelah `useRef` pindah, berkas ini tak punya hook maupun penangan klik, jadi
+   memaksanya dirakit di browser cuma menambah JavaScript yang tidak dipakai. API ke kelima
+   pemanggilnya tidak berubah sama sekali.
+3. **Tab `TERBARU` → `SERIES TERBARU`** (owner: "agar ada bedanya dengan film"). Yang diubah
+   **LABEL**-nya, bukan judul seksinya — judul diturunkan dari label lewat `judulDariLabel`,
+   jadi nama di tab dan nama di seksi tetap mustahil menyimpang (aturan owner 2026-09-26).
+   ⚠️ Keterangannya SENGAJA tetap berbunyi "Judul yang paling baru…", bukan "Serial…": isi tab
+   ini belum disaring serial-saja, jadi 1 drama ber-`kind: "movie"` di katalog masih ikut.
+4. **Kaki situs 4 kolom** (`FooterSitus.tsx` BARU) — tentang · jelajahi · genre populer ·
+   disclaimer. Genre **dihitung dari katalog nyata** (`availableGenres`), bukan daftar tetap:
+   genre kosong yang diklik memulangkan halaman hampa dan terbaca seperti situs rusak. Kaki lama
+   "© 2026 DramaKu · Prototype" dibuang — kata "Prototype" menyesatkan untuk situs yang sudah
+   dipakai penonton sungguhan. Dipasang di halaman depan SAJA, bukan di `layout.tsx` (itu akan
+   ikut menempelkannya ke admin, pemutar, dan shorts yang sengaja layar penuh).
+5. **Nomor halaman di `/film`** (owner: "ketika diklik lainnya semua berfungsi") — 24 film per
+   halaman. `pageOfCatalog` digenerikkan `<T>` supaya alat paginasi yang sama bisa memotong
+   daftar film, dan markup nomor halaman diangkat dari `CatalogBrowser` jadi komponen bersama
+   `app/components/NomorHalaman.tsx`.
+
+**Yang SENGAJA tidak dibangun:** nomor halaman di `/katalog` (40 judul, selalu muat satu halaman
+→ angka "1" sendirian terbaca seperti fitur palsu) · `?page=` di alamat (`/film` punya
+`revalidate = 300`; membaca `searchParams` membuatnya dibangun ulang tiap pengunjung, dan
+halaman terberat di situs ini justru kehilangan simpanannya).
+
+**BUKTI (gerbang pra-rilis, urutan build → tsc → test):** `rm -rf .next && npm run build` sukses,
+`/` dan `/film` tetap **○ Static** · `npx tsc --noEmit` **exit 0** · `npm test` **96 berkas /
+1416 tes lulus**. Server produksi lokal `:3123`: panah geser **8 pasang** (7 seksi + hero),
+tombol ">Semua<" **7×**, "Lainnya" **0×**, `grid-baris-penuh` **0×**, tab ">SERIES TERBARU<" +
+judul seksi ">Series Terbaru<" masing-masing 1×, kaki situs 4 kolom tergambar, "Prototype" 0×.
+`/film`: "Menampilkan 1–24 dari 89 judul", tepat 24 kartu, nav nomor halaman lengkap.
+**Pembanding supaya kesimpulan tidak menggantung** — halaman lain yang ikut memakai `FeaturedRow`
+diuji terpisah dan semuanya **200**: `/beranda` (7 panah), `/shorts` (5 panah), `/discover`,
+`/film`.
+
+**STATUS: DIRILIS & TERBUKTI TAYANG** (izin owner: "commit ,push,deploy"). Dual push TUNTAS,
+fast-forward `2c888bd..8f07e23` ke **kedua** repo, nol paksaan; ketiga ref terbaca sama lewat
+`git ls-remote`: **`8f07e23`**. Vercel auto-deploy dari `origin main`, tayang ~30 detik.
+
+**Verifikasi SESUDAH tayang — penanda teks khusus commit ini, DENGAN PEMBANDING.** Yang BARU
+terbaca di HTML produksi: `>SERIES TERBARU<` 1x, `>Series Terbaru<` 1x, "Tentang DramaKu",
+"Genre Populer", "Disclaimer", `opacity-90 hover:opacity-100` **14x** (7 seksi x 2 panah),
+"Geser ke kanan" 8x (7 seksi + hero), `>Semua<` **7x**. Pembanding dipakai supaya kesimpulan
+tidak menggantung: penanda LAMA `>TERBARU<`, "Prototype", "Lainnya", dan `grid-baris-penuh`
+semuanya terbaca **0** — hilang persis seperti yang dijanjikan. Halaman depan: 7/7 seksi,
+121 kartu poster.
+
+**Smoke test 8 halaman** (`/`, `/beranda`, `/discover`, `/film`, `/katalog`, `/shorts`, `/login`,
+`/daftar`) semuanya **200**. `/film` produksi: **"Menampilkan 1-24 dari 267 judul"**, tepat 24
+kartu, nav nomor halaman ada. (267 film di produksi — jauh di atas 89 yang terbaca lokal, sebab
+kunci API Playly hanya ada di Vercel. Tanpa paginasi, halaman itu menumpuk 267 kartu sekaligus.)
+
+**Rollback 1-baris:** `git revert 8f07e23 && git push origin main` — atau promote deployment
+sebelumnya (`76eab86`) dari dashboard Vercel. **Nol migrasi SQL, nol env baru**, jadi tak ada
+yang perlu didahulukan owner di Supabase/Vercel dan rollback-nya murni kode.
+
+Rencana lengkap: `docs/lintasai/rencana/2026-10-10-seksi-baris-geser-footer.md`.
 
 ---
 

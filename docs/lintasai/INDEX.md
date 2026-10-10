@@ -84,3 +84,4 @@
 - [2026-08-14-imdb-metadata-json.md](./rencana/2026-08-14-imdb-metadata-json.md) — generate JSON metadata dari IMDb ID (OMDb + banner opsional TMDB)
 - [2026-08-13-imdb-detail-drama.md](./rencana/2026-08-13-imdb-detail-drama.md) — detail film dari ID IMDb (OMDb), simpan metadata, tampil di halaman drama
 - [2026-10-09 Halaman depan ala LK21 + pindah ke E:](rencana/2026-10-09-halaman-depan-ala-lk21.md) — tema terang ber-scope, hero, bar akun, seksi grid, seksi Film Terbaru; project pindah ke E:\dramaapp
+- [2026-10-10 Seksi baris geser + kaki situs 4 kolom](rencana/2026-10-10-seksi-baris-geser-footer.md) — seksi halaman depan jadi baris geser berpanah (bentuknya berputar 3x dalam 2 hari), tombol Semua, tab SERIES TERBARU, nomor halaman di /film

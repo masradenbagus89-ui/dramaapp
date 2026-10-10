@@ -7,7 +7,7 @@
 >
 > **⚠️ Cara menyisipkan catatan baru (dibetulkan 2026-09-21).** Sisipkan **satu** judul `## ` saja, lalu isinya, lalu `---`. JANGAN menulis ulang judul seksi lama sebagai penanda posisi — itu menghasilkan **judul kembar/yatim**, dan sesi 2026-09-21 meninggalkan **4 judul yatim + 2 judul kembar** sebelum ketahuan. Kalau satu topik perlu dua blok (status rilis + rincian), beri judul kedua akhiran **` — rincian`**.
 >
-> **📦 Berkas ini sudah 2.980 baris / ±240 KB** dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
+> **📦 Berkas ini sudah 5.224 baris / ±472 KB** (diukur 2026-10-10; angka lama "2.980 baris / 240 KB" sudah basi separuh — ia hampir DUA KALI lipat sejak itu) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
 **Terakhir diisi:** 2026-10-10.
 
@@ -81,6 +81,20 @@ judul seksi ">Series Terbaru<" masing-masing 1×, kaki situs 4 kolom tergambar, 
 **Pembanding supaya kesimpulan tidak menggantung** — halaman lain yang ikut memakai `FeaturedRow`
 diuji terpisah dan semuanya **200**: `/beranda` (7 panah), `/shorts` (5 panah), `/discover`,
 `/film`.
+
+**Pola kerja yang terbukti berguna hari ini — layak diulang: owner MENOLAK deploy buta.** Dia
+meminta "aku mau tes dulu sebelum deploy", jadi dibuatkan preview lokal dari build produksi
+(`rm -rf .next && npm run build` lalu `npx next start -p 3123`), bukan mode `dev`. Dari situ
+lahir DUA koreksi yang kalau tidak ketahuan akan tayang apa adanya: panah geser belum ada, dan
+tombol "Semua" duduk di tempat yang salah. Ongkosnya cuma satu build; ongkos memperbaikinya
+sesudah tayang jauh lebih mahal.
+
+⚠️ **Yang perlu diketahui kalau preview lokal mati sendiri:** sore itu servernya berhenti total
+dan log terakhirnya berisi `Supabase select 525: SSL handshake failed` berulang — sambungan aman
+ke database gagal terbentuk. **Itu gangguan jaringan/Supabase sesaat, BUKAN akibat kode.** Sudah
+pulih sendiri (Supabase membalas 401 normal pada 3 percobaan berikutnya) dan produksi tidak
+pernah terdampak (tetap 200). Kalau terulang: nyalakan ulang `npx next start -p 3123`, jangan
+mengejar bug di kode.
 
 **STATUS: DIRILIS & TERBUKTI TAYANG** (izin owner: "commit ,push,deploy"). Dual push TUNTAS,
 fast-forward `2c888bd..8f07e23` ke **kedua** repo, nol paksaan; ketiga ref terbaca sama lewat

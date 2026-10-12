@@ -40,6 +40,81 @@ Nilai berawalan `NEXT_PUBLIC_` disematkan **saat build**, jadi mengubahnya nanti
 
 ---
 
+## ✅ TAHAP 3 SELESAI — Railway HIDUP & TERBUKTI (2026-10-12)
+
+**Project Railway:** `ravishing-adaptation` · workspace `jalurlangit-ops` · service `dramaapp`
+**Alamat uji:** `https://dramaapp-production-9e88.up.railway.app`
+**Region:** Southeast Asia · **Replicas:** 1 · **Repo:** `masradenbagus89-ui/dramaapp`
+
+### Gerbang bukti — semua hijau, diuji dari luar
+
+| Gerbang | Hasil |
+|---|---|
+| `/api/health` | `{"ok":true,"sumberData":"database"}` — **stabil 3× pengukuran** |
+| Katalog | **64 judul**, identik dengan Vercel (cadangan hanya 42 → terbukti dari database) |
+| Smoke test | 12 halaman semuanya HTTP 200 |
+| Kunci Playly | **bekerja** — 112 sampul film, angka identik dengan produksi |
+| `/playly` → `/film` | HTTP 308, pengalihan lama masih bekerja |
+| Fitur rilis terakhir | kaki situs + tab "SERIES TERBARU" ikut tayang |
+| Perlindungan SEO | canonical & `robots.txt` menunjuk Vercel — **sesuai rancangan** |
+| Kuota bandwidth | sampul film diambil langsung dari server Playly, **tidak lewat Railway** |
+
+### Riwayat build — dua kegagalan yang BENAR
+
+Build #1 dan #2 **gagal**, dan itu hasil yang diinginkan: pagar `periksaSetelanSupabase`
+(rilis `8514427`) menolak menyala tanpa env Supabase. Pesannya muncul sebagai
+`Failed to collect page data for /api/admin/playly/imdb` — rantainya route → `@/lib/store` →
+`lib/supabase` → lempar saat modul dievaluasi. Tanpa pagar itu, build akan **berhasil** dan
+situs menyala sambil diam-diam membuang data penonton.
+
+### Keputusan teknis saat eksekusi
+
+⚠️ **`NODE_ENV` sengaja TIDAK diset di Railway.** Sempat dimasukkan lalu dibuang: `tailwindcss`
+dan `typescript` ada di `devDependencies` dan dibutuhkan saat build, sedangkan `NODE_ENV=production`
+bisa membuat `npm ci` melewatinya → build gagal. Tidak ada yang hilang: build #1 terbukti sudah
+berjalan dalam mode produksi (pagar memicu) padahal `NODE_ENV` belum diset sama sekali — Next.js
+menyetelnya sendiri.
+
+### Dari mana 13 nilai didapat
+
+`vercel env pull` **hanya bisa menarik 3** (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`,
+`NEXT_PUBLIC_VIDEO_BASE_URL`) — sisanya bertipe **Secret** di Vercel yang memang write-only
+("You can't reveal this value after saving"). Selebihnya:
+
+- `AUTH_SECRET`, `ADMIN_PASSWORD`, `OMDB_API_KEY` ← `.env.local` komputer owner
+  ⚠️ **Nilainya mungkin BERBEDA dari produksi Vercel.** Akibatnya password admin di Railway
+  adalah yang dari komputer, bukan yang di situs lama. Bukan bug — tapi kalau login admin
+  ditolak, inilah sebabnya.
+- `DASHBOARD_API_URL`, `DASHBOARD_API_KEY_HEADER` ← `docs/sambungan-dashboard-webmovie.md`
+  (diperiksa: `DASHBOARD_API_KEY` di dokumen itu KOSONG, jadi nol kunci asli bocor ke repo)
+- `PLAYLY_API_KEY`, `PLAYLY_WEBHOOK_SECRET` ← salinan milik owner
+  `DASHBOARD_API_KEY` diisi SAMA dengan `PLAYLY_API_KEY` (nama lama, `lib/playly.ts:315`)
+- `PLAYLY_ENCRYPTION_KEY`, `HARDLINK_AGENT_SECRET` ← **dibuat acak baru**
+
+### 🔑 Kenapa `PLAYLY_ENCRYPTION_KEY` boleh dibuat baru — diverifikasi, bukan diasumsikan
+
+`getPlaylyKey()` (`lib/playly.ts`) mendahulukan database atas env:
+`const rec = await getPlaylyKeyRecord(); if (rec) return decryptSecret(rec.secret);`
+Jadi kalau ada baris tersimpan, env TIDAK dipakai dan kunci lama wajib ada.
+
+Diperiksa langsung ke Supabase: `app_data?key=eq.playly:key` membalas **`[]`** — kosong.
+Maka `readPlaylyKeyFromEnv()` yang dipakai, dan kunci enkripsi lama tidak dibutuhkan sama sekali.
+Kunci baru tetap diisi supaya fitur "simpan kunci lewat panel admin" tetap hidup.
+
+⚠️ **`HARDLINK_AGENT_SECRET` kini BERBEDA antara Railway dan PC backup.** Aman sekarang: agent
+tetap melapor ke Vercel, dan Railway membaca alamat tunnel dari dokumen `videobase` di database
+yang sama. **Wajib disamakan sebelum Vercel dipensiunkan**, kalau tidak alamat tunnel berhenti
+diperbarui tanpa satu pun gejala (`lib/store.ts:758-765`).
+
+### Berkas berisi kunci asli yang HARUS dihapus setelah tidak dipakai
+
+`.env.railway.local` dan `.env.vercel.local` (keduanya sudah terabaikan git — Vercel CLI ikut
+menambahkan pola `.env*` ke `.gitignore`, menutup celah yang dicatat di Tahap 1).
+⚠️ `.env.railway.local` adalah **satu-satunya tempat** `PLAYLY_ENCRYPTION_KEY` dan
+`HARDLINK_AGENT_SECRET` yang baru — salin ke pengelola password SEBELUM menghapusnya.
+
+---
+
 ## HASIL PENDATAAN PANEL VERCEL — 2026-10-12
 
 Panel Vercel memuat **21 variabel**. Setelah dicocokkan ke kode: **13 dipakai, 8 pensiun.**

@@ -82,3 +82,5 @@ migrasi-dramaapp.zip
 # Sampah kompilasi Python dari skrip di scripts/ (mis. jalankan_sql_dramaapp.py).
 __pycache__/
 *.pyc
+.vercel
+.env*

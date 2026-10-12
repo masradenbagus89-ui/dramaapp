@@ -40,6 +40,77 @@ Nilai berawalan `NEXT_PUBLIC_` disematkan **saat build**, jadi mengubahnya nanti
 
 ---
 
+## HASIL PENDATAAN PANEL VERCEL — 2026-10-12
+
+Panel Vercel memuat **21 variabel**. Setelah dicocokkan ke kode: **13 dipakai, 8 pensiun.**
+
+### 13 yang WAJIB dipindah ke Railway
+
+| Nama | Scope di Vercel | Tipe |
+|---|---|---|
+| `SUPABASE_URL` | Production **and Preview** | Config |
+| `SUPABASE_SERVICE_ROLE_KEY` | Production **and Preview** | Config ⚠️ (lihat catatan bawah) |
+| `AUTH_SECRET` | Production and Preview | 🔒 Secret |
+| `ADMIN_PASSWORD` | Production and Preview | 🔒 Secret |
+| `HARDLINK_AGENT_SECRET` | Production and Preview | 🔒 Secret |
+| `NEXT_PUBLIC_VIDEO_BASE_URL` | Production and Preview | Config |
+| `OMDB_API_KEY` | Production and Preview | 🔒 Secret |
+| `PLAYLY_ENCRYPTION_KEY` | Production and Preview | 🔒 Secret |
+| `PLAYLY_API_KEY` | **Production saja** | 🔒 Secret |
+| `PLAYLY_WEBHOOK_SECRET` | **Production saja** | 🔒 Secret |
+| `DASHBOARD_API_URL` | Production and Preview | 🔒 Secret |
+| `DASHBOARD_API_KEY` | Production and Preview | 🔒 Secret |
+| `DASHBOARD_API_KEY_HEADER` | Production and Preview | 🔒 Secret |
+
+### 8 yang PENSIUN — JANGAN dipindah ke Railway
+
+Diverifikasi 2026-10-12: **nol pemakai** di `app/`, `lib/`, `components/`, `scripts/`.
+
+- `GITHUB_TOKEN`, `GITHUB_REPO_NAME`, `GITHUB_REPO_OWNER` — dulu panel admin menyimpan drama
+  lewat GitHub API; sejak pindah ke Supabase tidak dipakai lagi (`SUPABASE_MIGRATION.md:57`).
+- `KV_REST_API_URL`, `KV_REST_API_TOKEN`, `KV_REST_API_READ_ONLY_TOKEN`, `KV_URL`, `REDIS_URL` —
+  sisa Upstash Redis sebelum pindah ke Supabase.
+
+Jangan dihapus dari Vercel selama Vercel masih jadi jalur mundur. Cukup jangan disalin.
+
+### Yang dipakai kode tapi TIDAK ADA di Vercel (artinya memang kosong di produksi)
+
+`NEXT_PUBLIC_SITE_URL` (→ jatuh ke default `https://dramaapp.vercel.app`, lihat aturan 3) ·
+`TMDB_API_KEY` · `MIDTRANS_SERVER_KEY` · `MIDTRANS_CLIENT_KEY` · `MIDTRANS_IS_PRODUCTION` ·
+`ENABLE_DEMO_TOPUP` · `NEXT_PUBLIC_ADSENSE_*` · `EXTERNAL_VIDEO_*` · `DASHBOARD_VIDEO_HOSTS` ·
+`VIDEO_BASE_ALLOWED_SUFFIXES` · `PLAYLY_API_URL` · `PLAYLY_EMBED_HOSTS` · `PLAYLY_EMBED_PATH` ·
+`PLAYLY_CREATOR` · `PLAYLY_UNDUHAN_DOMAIN_*`
+
+Semuanya opsional dan punya nilai bawaan di kode. **Biarkan kosong juga di Railway** — kecuali
+`ENABLE_DEMO_TOPUP` yang memang tidak boleh ada (aturan 1).
+
+### ✅ Scope Preview — pertanyaan yang sudah tertutup
+
+`SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` **aktif di Production DAN Preview**. Itu syarat
+pagar `periksaSetelanSupabase` (rilis `8514427`): build preview Vercel tidak akan gagal.
+
+### ⚠️ Utang yang diketahui — `SUPABASE_SERVICE_ROLE_KEY` tersimpan sebagai Config, bukan Secret
+
+Vercel menandainya "Needs Attention": *"looks like a secret, but its value is visible to anyone
+with access."* Ini kunci service_role — menembus seluruh RLS — tapi justru satu-satunya yang
+tersimpan dalam mode yang nilainya bisa dibaca di panel.
+
+Penilaian jujur: **tidak darurat.** Project Vercel berpaket **Hobby** (personal), jadi "anyone
+with access" praktis = owner sendiri. Risiko tersisa: kalau akun Vercel diakses orang lain,
+kunci terbaca tanpa hambatan.
+
+⛔ **JANGAN klik "Rotate Variable" selama migrasi.** Kunci ini dipakai di `.env.local`,
+`.github/workflows/backup-schemas.yml`, skrip Python di `scripts/`, dan nanti Railway —
+mengganti di satu tempat mematikan yang lain. Dan "rotating at the source" berarti di dashboard
+Supabase, sementara project `nvblmpkwyzbpdbshyvzw` **milik Kang Dedi, bukan owner**
+(`docs/lintasai/INDEX.md:55`). Rotasi kunci + migrasi hosting bersamaan = dua perubahan berisiko
+bertumpuk; kalau rusak, penyebabnya tak bisa dibedakan.
+
+Di Railway masalah ini **membaik sendiri**: Railway menyembunyikan nilai variabel secara bawaan.
+Rotasi terencana bisa dikerjakan belakangan, terpisah dari migrasi.
+
+---
+
 ## A. Wajib — tanpa ini website tidak berfungsi benar
 
 | Nama | Untuk apa | Kalau kosong | Ada di Vercel? | Sudah di Railway? |
@@ -151,6 +222,35 @@ Nilai berawalan `NEXT_PUBLIC_` disematkan **saat build**, jadi mengubahnya nanti
 
 ---
 
+## Region Railway — KEPUTUSAN 2026-10-12
+
+**Pakai Singapore (`asia-southeast1`).**
+
+Region Supabase **tidak bisa dipastikan** — owner tidak punya akses dashboard project
+`nvblmpkwyzbpdbshyvzw` (milik Kang Dedi, `docs/lintasai/INDEX.md:55`), dan dua catatan internal
+saling bertentangan: `INDEX.md` + `docs/permintaan-restart-supabase.md` menyebut pooler
+`aws-0-ap-northeast-1` (**Tokyo**, koneksi BERHASIL 74 ms), sedangkan `HANDOFF.md:2117` menyebut
+`aws-1-ap-southeast-1` (**Singapore**, koneksi GAGAL — password tidak berlaku, jadi host-nya pun
+belum tentu benar). Bukti lebih berat ke Tokyo, tapi **tidak terverifikasi**.
+
+Singapore dipilih karena **benar di kedua kemungkinan**:
+- Paling dekat dengan penonton Indonesia — manfaat pasti, tak bergantung lokasi database.
+- Kalau database di Tokyo: Singapore→Tokyo ±70 ms, masih jauh di dalam margin.
+- Kalau database di Singapore: pilihan terbaik.
+
+⚠️ **Kenapa region tidak boleh asal pilih — margin lebih tipis dari dugaan.** Diukur 2026-10-12
+dari komputer owner, query paling ringan (`dramas?select=id&limit=1`) berayun **0,26 – 3,32
+detik**. Batas tunggu kode adalah 6 detik per percobaan (`lib/supabase.ts`), angka yang dulu
+dipilih khusus agar muat dalam batas 20 detik Vercel. Jadi puncak 3,3 detik sudah memakan lebih
+dari separuh jatah. Cocok dengan `INDEX.md`: Supabase tercatat berayun antara 0,02 dtk dan
+timeout total dalam hitungan menit (`PGRST002`). Region yang jauh akan menggerus sisa margin itu.
+
+**Cara memastikan belakangan (opsional):** minta Kang Dedi membuka Supabase Dashboard → Settings
+→ General → Region. Kalau ternyata Tokyo dan terbukti bermasalah, region Railway bisa dipindah —
+itu setelan panel, bukan perubahan kode.
+
+---
+
 ## Catatan tambahan untuk langkah 4 Tahap 2
 
 Saat membuka panel Vercel, catat juga **scope** dua variabel ini — Production, Preview, atau
@@ -166,7 +266,18 @@ mengganggu Vercel, dan dicek **sebelum** push, bukan sesudah.
 
 ## Dua hal lain yang dicatat di langkah yang sama
 
-- **Nama repo GitHub yang di-deploy Vercel** (Settings → Git): ................
-  Railway harus disambungkan ke repo yang **sama**.
-- **Versi Node** (log build terakhir, baris paling atas): ................
-  Supaya Railway memakai versi yang sama persis. Proyek ini tidak mengunci versi Node di mana pun.
+- **Nama repo GitHub yang di-deploy Vercel** (Settings → Git):
+  ✅ **`masradenbagus89-ui/dramaapp`** — dipastikan owner 2026-10-12.
+  Ini sama dengan remote `origin` di komputer owner, dan dikonfirmasi silang oleh
+  rilis `8514427`: push ke `origin` diikuti `/api/health` tayang di produksi.
+  **Railway WAJIB disambungkan ke repo ini**, bukan ke cermin `ojokesusu/dramaku`.
+- **Versi Node**:
+  ⚠️ **Tidak tercetak di mana pun** — dicari owner 2026-10-12 di Build Logs (133 baris; log
+  melompat dari "Installing dependencies" langsung ke `Running "npm run build"`) maupun di
+  Settings. Vercel memakai pengaturan bawaan dan tidak mencetaknya.
+  **Keputusan: pakai Node 22 di Railway.** Dasarnya bukan tebakan — `next@16.2.9` mensyaratkan
+  `node >=20.9.0` (`package-lock.json`), proyek tidak mengunci versi di mana pun (tidak ada
+  `engines`, `.nvmrc`, `.node-version`), dan tidak ada kode yang bergantung pada versi tertentu.
+  Node 22 = versi LTS yang didukung penuh.
+  **Cara memastikan sesudah deploy pertama Railway:** baca baris versi Node di log build Railway;
+  kalau di bawah 20.9, build akan gagal dengan pesan yang jelas — bukan rusak diam-diam.

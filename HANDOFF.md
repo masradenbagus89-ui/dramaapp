@@ -9,7 +9,69 @@
 >
 > **📦 Berkas ini sudah 5.224 baris / ±472 KB** (diukur 2026-10-10; angka lama "2.980 baris / 240 KB" sudah basi separuh — ia hampir DUA KALI lipat sejak itu) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-10-10.
+**Terakhir diisi:** 2026-10-12.
+
+---
+
+## 2026-10-12 — RUMAH PROJECT KEMBALI KE `D:\Users\user18\dramaapp` + pagar mode-berkas & `/api/health`: DIRILIS `8514427`
+
+**⚠️ BACA INI DULU — catatan 2026-10-10 di bawah sudah TIDAK BERLAKU soal folder.** Entri itu
+memerintahkan "sesi wajib dibuka dari `E:\dramaapp`". **Owner membatalkannya 2026-10-12**: rumah
+project kembali ke **`D:\Users\user18\dramaapp`**, dan folder D sudah **disejajarkan penuh** ke
+`63c67e1` (0 commit tertinggal dari `origin` maupun `dramaku`). Folder E masih ada di disk tapi
+**bukan lagi rumah**; owner akan menghapusnya sendiri (penghapusan dari sesi AI diblokir pengaman
+karena E di luar working directory).
+
+Cara membuktikan folder mana yang tayang, kalau keraguan ini muncul lagi: ambil penanda teks dari
+komponen yang cuma ada di salah satu folder, lalu `curl` produksi dan cari penanda itu. Hari ini
+`FooterSitus.tsx` ("Genre Populer", "Disclaimer") hanya ada di E dan terbukti ada di HTML produksi
+— itulah yang membuktikan E yang tayang, sebelum D disejajarkan. **Jumlah commit saja tidak cukup:
+D dan E sama-sama terbaca normal, dan git tidak pernah memperingatkan.**
+
+Draft 9-Okt yang menggantung di D (6 berkas diubah + 2 baru) sudah diperiksa satu per satu dan
+**seluruhnya sudah tercakup** commit `2e14034`+`8f07e23` — mekanisme geser `FeaturedRow` pindah ke
+`BarisGeser.tsx`, prop `hanyaMenu` pindah ke `TabKatalog.tsx`, `app/page.tsx` sengaja diganti desain
+LK21. Disimpan di `git stash` (`stash@{0}`), bukan dibuang.
+
+**Yang dirilis (`8514427`)** — dua pengaman khusus hosting container, nol perubahan yang dilihat
+penonton:
+
+1. **`lib/supabase.ts` menolak menyala** kalau KEDUA env Supabase kosong saat `NODE_ENV=production`.
+   Dulu tak perlu dijaga: filesystem Vercel read-only, jadi `writeLocal()` gagal keras sendiri. Di
+   container (Railway/VPS) folder `data/` BISA ditulis → tulisan BERHASIL lalu lenyap tiap redeploy
+   (koin, komentar, akun penonton, rahasia 2FA) **tanpa satu pun error**. Pintu keluar untuk build di
+   komputer tanpa database: `ALLOW_FILE_MODE=1`.
+2. **`GET /api/health`** — satu-satunya cara dari luar menanyakan `useSupabase`. 200 saat sehat,
+   503 + `Retry-After` saat mode berkas. Sengaja TIDAK menyentuh database (kalau ia menanyai
+   Supabase, hosting akan me-restart aplikasi sehat berulang kali saat Supabase lambat).
+
+**Kenapa pagar ini penting — tiga alat deteksi yang ada semuanya BUTA** terhadap mode berkas:
+kartu status katalog melaporkan `"database"` (`lib/dramas.ts:302` mengembalikan `true` saat
+`!useSupabase`), robot `keep-db-awake` melaporkan "OK 42 drama", dan `/api/dramas` memang membalas
+42 judul dari cadangan. ⚠️ `lib/dramas.ts:302` **masih berbohong** — pagar menutup penyebabnya di
+produksi, tapi kartunya sendiri belum diperbaiki. Sudah ditawarkan ke owner, belum dijawab.
+
+**Bukti sesudah tayang:** `/api/health` → `{"ok":true,"sumberData":"database"}` diukur **3× berturut
+hasilnya diam** · header `Cache-Control: no-store` · smoke test 8 halaman semuanya 200 · penanda
+rilis sebelumnya utuh (Genre Populer, Disclaimer, SERIES TERBARU masing-masing 2×) · `/api/dramas`
+**64 judul** (cadangan cuma 42 — jadi terbukti dari database) · `robots.txt` tetap melarang `/api/`.
+Sebelum push: build exit 0, tsc exit 0, **1426 tes / 97 berkas**, uji-balik **4 arah semuanya MERAH**.
+
+**Konteks: ini Tahap 2 dari migrasi Vercel → Railway** (owner minta 2026-10-12). Tahap 1 (laporan
+kesiapan) selesai; temuan utamanya proyek ini hampir **nol ketergantungan Vercel** — nol
+`vercel.json`, nol `middleware.ts`, nol `runtime = 'edge'` (semua 48 deklarasi `"nodejs"`), nol cron
+Vercel. Daftar periksa 41 env ada di `docs/migrasi-railway-daftar-env.md`.
+
+⚠️ **Dua jebakan migrasi yang WAJIB dibaca sebelum menyiapkan Railway:**
+- **JANGAN salin `.env.local` apa adanya ke panel hosting.** Berkas itu berisi `ENABLE_DEMO_TOPUP=1`
+  tanpa `MIDTRANS_SERVER_KEY` → `app/api/coins/topup/route.ts:87-89` memberi koin **tanpa
+  pembayaran**, permanen ke database produksi.
+- **`PLAYLY_ENCRYPTION_KEY` harus nilai yang SAMA PERSIS.** Kunci Playly tersimpan terenkripsi di
+  database; mengisi kunci baru yang diacak sendiri sama rusaknya dengan mengosongkannya
+  (`lib/playly.ts:273-276`) — gejalanya film terlihat penuh tapi tak satu pun bisa diputar.
+
+**Berikutnya (Tahap 3, menunggu owner):** catat dari panel Vercel — nama repo yang di-deploy, versi
+Node di log build, daftar env lengkap, scope env Supabase; dari dashboard Supabase — region.
 
 ---
 

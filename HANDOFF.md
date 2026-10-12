@@ -9,7 +9,73 @@
 >
 > **📦 Berkas ini sudah 5.224 baris / ±472 KB** (diukur 2026-10-10; angka lama "2.980 baris / 240 KB" sudah basi separuh — ia hampir DUA KALI lipat sejak itu) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-10-12.
+**Terakhir diisi:** 2026-10-12 (sore).
+
+---
+
+## 2026-10-12 sore — RAILWAY HIDUP: Tahap 3 migrasi SELESAI, video terbukti jalan
+
+**TITIK LANJUT BESOK: Putaran 2 & 3 pengujian owner** (daftar lengkap di bawah). Jangan ulang
+Tahap 1-3, semuanya sudah selesai dan tercatat.
+
+**Yang sudah berdiri:**
+- Project Railway **`ravishing-adaptation`** · workspace **`jalurlangit-ops`** (PRO, akun kerja
+  atasan) · service **`dramaapp`** · region **Southeast Asia** · **1 replica**
+- Alamat uji: **`https://dramaapp-production-9e88.up.railway.app`**
+- Tersambung ke repo **`masradenbagus89-ui/dramaapp`** (dikonfirmasi dari baris `Cloning` di log
+  build Railway, bukan dari ingatan)
+- **13 environment variable** terpasang. Rincian asal tiap nilai + semua keputusannya ada di
+  `docs/migrasi-railway-daftar-env.md` — **BACA ITU DULU** sebelum menyentuh env apa pun.
+
+**Bukti yang sudah dikumpulkan (diuji dari luar, bukan dari klaim panel):**
+`/api/health` → `{"ok":true,"sumberData":"database"}` **stabil 3× pengukuran** · katalog **64
+judul** identik Vercel (cadangan cuma 42 → terbukti dari database, bukan berkas) · **12 halaman
+200** · kunci Playly bekerja (**112 sampul**, angka identik produksi) · `/playly` → `/film` masih
+**308** · canonical & `robots.txt` menunjuk Vercel **sesuai rancangan** (situs uji sengaja
+men-de-duplikasi diri supaya tak mencuri peringkat) · sampul film diambil **langsung dari server
+Playly**, nol byte lewat Railway.
+
+**Diuji owner sendiri (Putaran 1), LOLOS:** poster halaman depan tampil penuh · tab + baris
+"Film Terbaru" + "Lanjutkan Menonton" tergambar · **video drama JALAN** (`/feed/diremehkan-istana-bangkit-sebagai-dewa-abadi`, Eps 1/43 memutar).
+Itu membuktikan seluruh rantai: database → dokumen `videobase` → tunnel PC backup → pemutar.
+
+**Vercel TIDAK tersentuh dan tetap melayani penonton.** Diuji berdampingan sepanjang proses.
+
+### ⏭️ Yang menunggu besok
+
+**Putaran 2 — admin** (butuh kredensial owner): login admin · Dashboard → kartu status katalog
+harus berkata **"dari database"**, bukan "cadangan" · Admin → Videos → Playly harus **terisi** ·
+Admin → Webhooks → Playly harus berkata kunci **terpasang**.
+
+**Putaran 3 — uji jebakan senyap, PALING PENTING:** daftar akun penonton uji di Railway → klik
+**Redeploy** di Railway → tunggu selesai → **login ulang dengan akun uji itu**. Harus **berhasil
+masuk**. Kalau "akun tidak ditemukan", artinya akun tadi tersimpan ke berkas di dalam container
+dan ikut terhapus — pagar belum benar-benar menutup. Ini satu-satunya uji yang membuktikan
+perangkap mode-berkas sungguh tertutup.
+
+**Belum dikonfirmasi terpasang** (owner bilang "sudah hijau" tapi tak dipastikan eksplisit):
+Healthcheck Path = `/api/health` dengan timeout **30 detik** (bukan bawaan — satu permintaan
+Supabase bisa makan 12,3 detik saat lambat), dan **batas biaya / usage alert** di workspace.
+
+### ⚠️ Tiga utang yang sudah diketahui — jangan dikira beres
+
+1. **`HARDLINK_AGENT_SECRET` BERBEDA antara Railway dan PC backup.** Aman sekarang (agent tetap
+   lapor ke Vercel, Railway baca alamat tunnel dari dokumen `videobase` di database yang sama),
+   tapi **wajib disamakan sebelum Vercel dipensiunkan** — kalau tidak, alamat tunnel berhenti
+   diperbarui tanpa satu pun gejala (`lib/store.ts:758-765`).
+2. **`ADMIN_PASSWORD` di Railway diambil dari `.env.local` komputer**, bukan dari Vercel (nilai
+   Secret di sana write-only). Bisa **berbeda** dari password situs lama. Kalau login admin
+   ditolak di Putaran 2, inilah tersangka pertama — bukan bug.
+3. **Dua berkas berisi kunci asli masih ada di disk:** `.env.railway.local` dan
+   `.env.vercel.local`. Keduanya sudah terabaikan git, tapi `.env.railway.local` adalah
+   **satu-satunya tempat** `PLAYLY_ENCRYPTION_KEY` + `HARDLINK_AGENT_SECRET` yang baru dibuat —
+   **salin ke pengelola password SEBELUM menghapusnya.**
+
+**Keputusan penyegelan variabel ditunda sampai sesudah pengujian** (sengaja): penyegelan Railway
+bersifat permanen, jadi satu salah ketik di antara 13 nilai tak akan bisa diperiksa. Lihat
+`docs/migrasi-railway-daftar-env.md`.
+
+**Tahap 6 (pindah domain) BELUM dimulai dan jangan dimulai** sebelum Putaran 2 & 3 lolos.
 
 ---
 

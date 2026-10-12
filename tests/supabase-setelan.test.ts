@@ -63,4 +63,31 @@ describe("periksaSetelanSupabase", () => {
   it("http ke localhost: sah — Supabase yang dijalankan di komputer sendiri", () => {
     expect(periksaSetelanSupabase("http://localhost:54321", KEY_SAH)).toBeNull();
   });
+
+  // Pagar hosting-bisa-ditulis. Dulu mode berkas di produksi gagal dengan
+  // sendirinya karena filesystem Vercel read-only. Di hosting berbasis container
+  // (Railway/VPS) folder data/ BISA ditulis, jadi writeLocal() berhasil dan
+  // saldo koin + komentar + akun penonton lenyap tiap redeploy TANPA error.
+  it("kedua env kosong DI PRODUKSI: ditolak — data penonton akan hilang tiap redeploy", () => {
+    const pesan = periksaSetelanSupabase("", "", { produksi: true });
+    expect(pesan).toContain("kosong di produksi");
+    expect(pesan).toContain("SUPABASE_URL");
+  });
+
+  it("kedua env kosong di produksi TAPI mode berkas diizinkan: sah", () => {
+    expect(
+      periksaSetelanSupabase("", "", { produksi: true, izinModeBerkas: true }),
+    ).toBeNull();
+  });
+
+  it("kedua env kosong di LUAR produksi: tetap sah — dev & tes tak terganggu", () => {
+    expect(periksaSetelanSupabase("", "", { produksi: false })).toBeNull();
+  });
+
+  // Pengunci bentuk panggilan lama: 9 kasus di atas memanggil dengan 2 argumen.
+  // Kalau parameter ketiga suatu saat dibuat wajib, tes ini yang merah duluan.
+  it("tanpa argumen konteks: perilakunya identik dengan sebelum pagar ada", () => {
+    expect(periksaSetelanSupabase("", "")).toBeNull();
+    expect(periksaSetelanSupabase(URL_SAH, KEY_SAH)).toBeNull();
+  });
 });

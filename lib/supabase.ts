@@ -28,16 +28,42 @@ const SUPABASE_SCHEMA = "dramaapp";
  *
  * Kosong = pilihan sadar: seluruh lib jatuh ke file JSON di data/ (mode dev).
  * Terisi-tapi-salah = salah ketik atau placeholder .env.example yang lupa
- * diganti. Yang kedua TIDAK boleh ikut jalur fallback: di produksi folder data/
- * read-only, jadi tiap tulisan gagal tanpa ada yang melapor — penonton melihat
- * situs "jalan" sementara komentar & koin menguap. Lebih baik berhenti di sini
- * dengan pesan yang menyebut langkah perbaikannya.
+ * diganti. Yang kedua TIDAK boleh ikut jalur fallback: tiap tulisan gagal tanpa
+ * ada yang melapor — penonton melihat situs "jalan" sementara komentar & koin
+ * menguap. Lebih baik berhenti di sini dengan pesan yang menyebut langkah
+ * perbaikannya.
+ *
+ * `konteks.produksi` menutup lubang yang BARU ADA sejak hosting bisa ditulis.
+ * Dulu asumsinya "di produksi folder data/ read-only" (Vercel), jadi mode berkas
+ * di produksi gagal keras dengan sendirinya dan tak perlu dijaga. Asumsi itu
+ * MATI di hosting berbasis container (Railway/VPS): folder data/ bisa ditulis,
+ * jadi `writeLocal()` BERHASIL — saldo koin, komentar, akun penonton, dan
+ * rahasia 2FA tersimpan ke disk container lalu LENYAP tiap redeploy, tanpa satu
+ * pun error. Tiga alat deteksi yang ada semuanya buta terhadap keadaan ini
+ * (kartu status katalog, robot keep-db-awake, dan /api/dramas sama-sama
+ * melaporkan "sehat"), jadi pagarnya harus di sini — di satu-satunya tempat
+ * `useSupabase` lahir.
  *
  * Batasnya jujur: yang diperiksa cuma BENTUKNYA. Host yang salah ketik tapi
  * bentuknya sah (...dbshyvzw vs ...dbshyvzx) baru ketahuan saat request pertama.
  */
-export function periksaSetelanSupabase(url: string, key: string): string | null {
-  if (!url && !key) return null; // sengaja kosong = mode file lokal, sah
+export function periksaSetelanSupabase(
+  url: string,
+  key: string,
+  konteks: { produksi?: boolean; izinModeBerkas?: boolean } = {},
+): string | null {
+  if (!url && !key) {
+    // Sengaja kosong = mode file lokal. Sah di dev & tes, TIDAK di produksi.
+    if (konteks.produksi && !konteks.izinModeBerkas) {
+      return (
+        "KEDUA env Supabase kosong di produksi — aplikasi akan menulis data penonton " +
+        "ke berkas di dalam server dan datanya hilang tiap kali aplikasi di-deploy ulang. " +
+        "Isi SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY. Kalau mode berkas memang yang " +
+        "diinginkan (mis. membangun di komputer tanpa database), set ALLOW_FILE_MODE=1"
+      );
+    }
+    return null;
+  }
 
   if (!url || !key) {
     const terisi = url ? "SUPABASE_URL" : "SUPABASE_SERVICE_ROLE_KEY";
@@ -71,13 +97,15 @@ export function periksaSetelanSupabase(url: string, key: string): string | null 
   return null;
 }
 
-const masalahSetelan = periksaSetelanSupabase(SUPABASE_URL, SUPABASE_KEY);
+const masalahSetelan = periksaSetelanSupabase(SUPABASE_URL, SUPABASE_KEY, {
+  produksi: process.env.NODE_ENV === "production",
+  izinModeBerkas: process.env.ALLOW_FILE_MODE === "1",
+});
 if (masalahSetelan) {
   throw new Error(
     `[supabase] Setelan database belum benar: ${masalahSetelan}. ` +
-      "Perbaiki di .env.local (lokal) atau Vercel -> Settings -> Environment Variables " +
-      "(produksi); nilainya ada di Supabase Dashboard -> Settings -> API. " +
-      "Kalau memang mau jalan TANPA database (pakai file di data/), kosongkan KEDUA baris itu.",
+      "Perbaiki di .env.local (lokal) atau panel hosting -> Environment Variables " +
+      "(produksi); nilainya ada di Supabase Dashboard -> Settings -> API.",
   );
 }
 

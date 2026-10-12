@@ -222,6 +222,53 @@ Rotasi terencana bisa dikerjakan belakangan, terpisah dari migrasi.
 
 ---
 
+## Workspace Railway & penyegelan variabel — KEPUTUSAN 2026-10-12
+
+**Workspace: `jalurlangit-ops` (paket PRO).** Ini akun kerja milik atasan owner; 18 project rekan
+lain sudah ada di sana, jadi menaruh DramaKu di situ wajar secara organisasi dan kapasitasnya
+sudah ditanggung.
+
+**Yang perlu disadari:** workspace itu punya ±10 Admin, dan **pembatasan per-project TIDAK BISA
+menolong** — dokumentasi Railway menyatakan *"Workspace admins can access every project, whether
+or not they belong to a group"*, dan fitur Access Groups pun hanya ada di paket Enterprise
+(<https://docs.railway.com/enterprise/access-groups>). Jadi tiap Admin di sana bisa membuka tab
+Variables DramaKu dan membaca kunci induk database.
+
+**Penangkalnya ada: Sealed Variables** (<https://docs.railway.com/guides/managing-secrets-on-railway>)
+— variabel write-only. Railway tetap menyuntikkan nilainya ke aplikasi, tapi tak pernah
+menampilkannya di UI dan menolak mengembalikannya lewat API. Bukan cuma 10 Admin itu yang tak
+bisa membacanya — **tak seorang pun bisa**, termasuk owner.
+
+### ⚠️ URUTANNYA PENTING — JANGAN segel di awal
+
+**Tahap 3: isi variabel BIASA, jangan segel apa pun.** Penyegelan bersifat **permanen** (nilai
+bisa diganti, tapi tak pernah bisa dibaca lagi, dan tak bisa dikembalikan ke mode biasa). Kalau
+disegel sebelum terbukti, satu salah ketik di antara 13 nilai tidak bisa diperiksa — yang tersisa
+cuma menebak dan menimpa satu per satu.
+
+**Segel baru dipertimbangkan SESUDAH Tahap 5**, saat seluruh nilai sudah terbukti benar lewat
+pengujian. Kandidat yang layak disegel saat itu: `SUPABASE_SERVICE_ROLE_KEY`, `AUTH_SECRET`,
+`ADMIN_PASSWORD`, `HARDLINK_AGENT_SECRET`, `OMDB_API_KEY`, `PLAYLY_ENCRYPTION_KEY`,
+`PLAYLY_API_KEY`, `PLAYLY_WEBHOOK_SECRET`, `DASHBOARD_API_KEY`. Tidak perlu disegel:
+`SUPABASE_URL` (cuma alamat) dan `NEXT_PUBLIC_VIDEO_BASE_URL` (memang dikirim ke browser).
+
+⚠️ **`PLAYLY_ENCRYPTION_KEY` paling berbahaya untuk disegel.** Ia membuka kunci API Playly yang
+tersimpan terenkripsi di database. Disegel + salinannya hilang = tidak akan pernah bisa dibuka
+lagi, dan gejalanya menipu (daftar film penuh, nol yang bisa diputar).
+
+**Kalau akhirnya memilih TIDAK menyegel — itu sah.** Yang dilepas: ±10 Admin bisa membaca semua
+kunci, dan risikonya tumbuh sendiri tiap ada anggota baru di workspace. Penggantinya yang murah
+dan tidak permanen: **nyalakan 2FA di akun Railway** (layar People 2026-10-12 menunjukkan kolom
+2FA **Off** untuk semua anggota, termasuk owner).
+
+### WAJIB dikerjakan sebelum mengisi Railway
+
+**Salin semua nilai dari panel Vercel ke pengelola password milik owner sendiri.** Bukan demi
+penyegelan — tapi karena saat ini satu-satunya tempat sebagian kunci berada adalah panel Vercel.
+Hilang akses ke sana = `PLAYLY_ENCRYPTION_KEY` hilang bersamanya, dan ia tak bisa dibuat ulang.
+
+---
+
 ## Region Railway — KEPUTUSAN 2026-10-12
 
 **Pakai Singapore (`asia-southeast1`).**

@@ -20,6 +20,17 @@ export type StatusKatalog =
   | "database"
   /** Database tak menjawab; penonton melihat berkas cadangan yang bisa basi. */
   | "cadangan"
+  /**
+   * Aplikasi berjalan TANPA database sama sekali (env Supabase kosong).
+   *
+   * Sengaja dipisah dari "cadangan" (2026-10-13): keduanya sama-sama membaca
+   * `data/dramas.json`, tapi artinya bertolak belakang. "cadangan" = darurat,
+   * ada database tapi sedang tak menjawab, admin harus bertindak. Ini =
+   * memang tak ada database — normal di laptop pengembang, GAWAT di server
+   * produksi. Menyatukan keduanya memaksa memilih antara peringatan merah
+   * palsu tiap sesi dev, atau hijau palsu di produksi. Keduanya pernah terjadi.
+   */
+  | "mode-berkas"
   /** Database tak menjawab DAN cadangan kosong — halaman publik melompong. */
   | "kosong"
   /** Server kita sendiri tak terjangkau, jadi keadaannya belum bisa dipastikan. */
@@ -64,9 +75,35 @@ export function ringkasStatusKatalog(input: {
    * KOSONG — tuduhan yang jauh lebih menakutkan daripada keadaan sebenarnya.
    */
   jumlahTerukur?: boolean;
+  /**
+   * Aplikasi berjalan tanpa env Supabase sama sekali. Bawaan: tidak.
+   *
+   * Hanya route SERVER yang bisa mengisinya — ia satu-satunya yang melihat
+   * `useSupabase`. Jalur cadangan di sisi browser (yang menyimpulkan keadaan
+   * dari /api/dramas) TIDAK bisa membedakan ini dari database-mati, jadi ia
+   * memang tidak mengirimnya; default `false` membuatnya jatuh ke penilaian
+   * lama yang sudah benar untuk jalur itu.
+   */
+  modeBerkas?: boolean;
 }): RingkasanKatalog {
   const terukur = input.jumlahTerukur !== false;
   const jumlahTampil = terukur ? angkaAman(input.jumlahTampil) : 0;
+
+  // Didahulukan dari SEMUA cabang lain, `databaseHidup` apa pun isinya: kalau
+  // database tak pernah dipasang, "hidup atau mati" bukan pertanyaan yang punya
+  // jawaban — menjawabnya tetap saja yang melahirkan kebohongan lama.
+  if (input.modeBerkas) {
+    return {
+      status: "mode-berkas",
+      jumlahTampil,
+      pesan:
+        "Aplikasi ini berjalan TANPA database — judul diambil dari berkas " +
+        "`data/dramas.json` di dalam aplikasi. Normal kalau ini komputer " +
+        "pengembang. Tapi kalau ini server sungguhan, data penonton (akun, " +
+        "saldo koin, komentar) ikut ditulis ke berkas di dalam server dan " +
+        "AKAN HILANG setiap aplikasi di-deploy ulang — periksa env Supabase.",
+    };
+  }
 
   if (input.databaseHidup === null) {
     return {

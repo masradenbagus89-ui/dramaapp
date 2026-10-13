@@ -3,10 +3,16 @@
 // KENAPA DIJAGA: endpoint ini adalah satu-satunya alat yang bisa membedakan
 // "aplikasi tersambung database" dari "aplikasi diam-diam menulis ke berkas di
 // dalam container". Tiga alat lain yang ada di project ini semuanya BUTA
-// terhadap keadaan itu — kartu status katalog melaporkan "database"
-// (lib/dramas.ts `periksaKatalogHidup` memulangkan true saat !useSupabase),
-// robot keep-db-awake melaporkan "OK 42 drama", dan /api/dramas memang membalas
-// 42 judul dari cadangan. Kalau endpoint ini ikut berbohong, nol alat tersisa.
+// terhadap keadaan itu: robot keep-db-awake melaporkan "OK 42 drama", dan
+// /api/dramas memang membalas 42 judul dari cadangan. Kalau endpoint ini ikut
+// berbohong, nol alat tersisa.
+//
+// Pembaruan 2026-10-13: alat KETIGA yang dulu ikut buta — kartu status katalog
+// — sudah dibetulkan (lib/dramas.ts `periksaSumberKatalog`, dijaga
+// tests/sumber-katalog.test.ts). Jadi sekarang ada DUA alat yang bisa melihat
+// keadaan ini, bukan satu. Endpoint ini tetap yang utama: ia satu-satunya yang
+// bisa ditanya dari LUAR tanpa sesi admin, dan satu-satunya yang dibaca
+// healthcheck hosting.
 //
 // Empat hal yang dikunci di sini:
 //   1. Sehat -> 200. Kalau bukan 200, healthcheck hosting menolak deploy yang

@@ -44,6 +44,16 @@ const GAYA: Record<StatusKatalog, { titik: string; teks: string; label: string }
     teks: "text-zinc-300",
     label: "Belum bisa dipastikan",
   },
+  // Amber, bukan hijau maupun merah — dan itu memang arti keadaannya. Di
+  // komputer pengembang ini normal (merah akan jadi peringatan palsu yang
+  // mengajari admin mengabaikan kartu); di server sungguhan ini gawat (hijau
+  // akan menyembunyikan data penonton yang hilang tiap deploy). Satu-satunya
+  // warna yang jujur untuk keduanya adalah yang menyuruh membaca pesannya.
+  "mode-berkas": {
+    titik: "bg-amber-400",
+    teks: "text-amber-300",
+    label: "Tanpa database — mode berkas",
+  },
 };
 
 /** Status yang perlu admin bertindak — dipakai memilih ikon peringatan. */

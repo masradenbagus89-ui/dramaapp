@@ -294,19 +294,42 @@ export async function getAllDramasCachedSafe(): Promise<Drama[]> {
  *
  * Terburuk ~12,3 detik (2 percobaan × batas 6 detik, lib/supabase.ts:109-112).
  *
- * Mode lokal/dev tanpa Supabase memulangkan `true`: di sana `data/dramas.json`
- * memang sumber yang sah, bukan cadangan darurat — melaporkannya "mati" akan
- * menyalakan peringatan palsu di tiap sesi pengembangan.
+ * ⚠️ KENAPA BUKAN BOOLEAN (dibetulkan 2026-10-13): sampai hari ini fungsi ini
+ * bernama `periksaKatalogHidup` dan memulangkan `true` saat `!useSupabase`.
+ * Alasannya waktu itu masuk akal — di dev `data/dramas.json` memang sumber yang
+ * sah, dan melaporkannya "mati" menyalakan peringatan palsu tiap sesi
+ * pengembangan. Tapi akibatnya fungsi ini BERBOHONG (§3.7): "tanpa database
+ * sama sekali" dilaporkan dengan jawaban yang sama persis seperti "database
+ * sehat", dan kartu admin menampilkan hijau "Dari database" untuk keduanya.
+ *
+ * Sebabnya bukan logikanya, melainkan BENTUK jawabannya: ada TIGA keadaan nyata
+ * dan boolean cuma sanggup membawa dua. Yang ketiga ikut terdesak ke salah satu
+ * tetangganya, dan yang kebagian adalah tetangga yang salah. Memaksanya
+ * `return false` bukan perbaikan — itu cuma memindah kebohongan ke sisi
+ * sebaliknya (peringatan merah palsu di tiap sesi dev, yang mengajari admin
+ * mengabaikan kartunya — persis yang membunuh gunanya).
+ *
+ * Jadi yang dilebarkan jawabannya, bukan ditukar.
  */
-export async function periksaKatalogHidup(): Promise<boolean> {
-  if (!useSupabase) return true;
+export type SumberKatalog =
+  /** Supabase dipakai DAN menjawab. Satu-satunya keadaan yang sah hijau. */
+  | "database"
+  /** Supabase dipakai tapi tidak menjawab -> halaman publik jatuh ke cadangan. */
+  | "database-mati"
+  /** Supabase tidak dipasang sama sekali. Normal di dev; GAWAT di produksi. */
+  | "mode-berkas";
+
+export async function periksaSumberKatalog(): Promise<SumberKatalog> {
+  // Database tidak pernah ditanya di cabang ini — dan itu memang jawabannya,
+  // bukan kekurangan: tak ada database untuk ditanya.
+  if (!useSupabase) return "mode-berkas";
   try {
     await sbSelect<{ id: string }>("dramas?select=id&limit=1");
-    return true;
+    return "database";
   } catch (err) {
     // GAGAL-AMAN (rak owasp A10:2025): ragu = dilaporkan MATI, tidak pernah
     // sebaliknya. Fungsi ini memang menelan error — itu tugasnya, karena
-    // pemanggilnya hanya bertanya "hidup atau tidak". Tapi menelan TANPA JEJAK
+    // pemanggilnya hanya bertanya dari mana katalog datang. Tapi menelan TANPA JEJAK
     // melanggar rak backend §4, dan di sinilah satu-satunya tempat sebab
     // aslinya masih utuh: dicatat ke log server, TIDAK ikut ke balasan API —
     // pesan Supabase bisa memuat alamat & detail dalam server (rak backend §1).
@@ -315,7 +338,7 @@ export async function periksaKatalogHidup(): Promise<boolean> {
         err instanceof Error ? err.message : String(err)
       }`,
     );
-    return false;
+    return "database-mati";
   }
 }
 

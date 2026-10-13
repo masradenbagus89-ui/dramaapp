@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/session";
-import { getAllDramasCachedSafe, periksaKatalogHidup } from "@/lib/dramas";
+import { getAllDramasCachedSafe, periksaSumberKatalog } from "@/lib/dramas";
 import { ringkasStatusKatalog } from "@/lib/katalog-status";
 
 export const runtime = "nodejs";
@@ -26,7 +26,7 @@ export const dynamic = "force-dynamic";
  *            database mati bukan "endpoint error" melainkan JAWABAN yang sah.
  *   Rahasia: pesan asli dari Supabase TIDAK pernah ikut keluar — ia bisa memuat
  *            alamat & detail dalam server. Sebabnya hanya masuk log server
- *            (lib/dramas.ts `periksaKatalogHidup`).
+ *            (lib/dramas.ts `periksaSumberKatalog`).
  *
  * 401 dipakai juga untuk "login tapi bukan admin" — rak backend §1 memisahkan
  * 401 dari 403, tapi 11 route admin lain di project ini sudah memakai 401 untuk
@@ -72,7 +72,7 @@ export async function GET(req: NextRequest) {
   // dan admin tidak perlu menunggu dua kali selama itu untuk satu jawaban.
   //
   // Keduanya menjawab pertanyaan BERBEDA dan sengaja tidak digabung:
-  //   - periksaKatalogHidup   : apakah database menjawab DETIK INI (tanpa cache)
+  //   - periksaSumberKatalog  : dari mana katalog datang DETIK INI (tanpa cache)
   //   - getAllDramasCachedSafe: berapa judul yang BENAR-BENAR dilihat penonton
   //     sekarang — fungsi yang sama persis dengan yang dipakai 5 halaman publik,
   //     jadi angkanya bukan perkiraan melainkan isi layar mereka.
@@ -82,13 +82,20 @@ export async function GET(req: NextRequest) {
   // Di jendela sempit itu kartu memperingatkan sedikit lebih awal daripada
   // keadaan sebenarnya. Arah kesalahannya disengaja — memperingatkan terlalu
   // cepat tidak merugikan siapa pun, terlambat memperingatkan merugikan.
-  const [databaseHidup, dramas] = await Promise.all([
-    periksaKatalogHidup(),
+  const [sumber, dramas] = await Promise.all([
+    periksaSumberKatalog(),
     getAllDramasCachedSafe(),
   ]);
 
+  // Route inilah satu-satunya tempat yang melihat ketiga keadaan sekaligus,
+  // jadi di sini pula enum itu diterjemahkan. `databaseHidup: false` saat
+  // mode-berkas tidak menyesatkan: `modeBerkas` dibaca lebih dulu dan menang.
   return NextResponse.json({
     ok: true,
-    ...ringkasStatusKatalog({ databaseHidup, jumlahTampil: dramas.length }),
+    ...ringkasStatusKatalog({
+      databaseHidup: sumber === "database",
+      modeBerkas: sumber === "mode-berkas",
+      jumlahTampil: dramas.length,
+    }),
   });
 }

@@ -99,4 +99,78 @@ describe("ringkasStatusKatalog", () => {
       expect(r.jumlahTampil).toBe(0);
     }
   });
+
+  // -----------------------------------------------------------------------
+  // Mode berkas (ditambahkan 2026-10-13).
+  //
+  // Bug yang dikunci di sini TIDAK PERNAH terlihat di layar produksi, jadi
+  // tes inilah satu-satunya bukti yang mungkin: sampai hari ini kartu berkata
+  // hijau "Dari database" padahal aplikasi berjalan tanpa database sama
+  // sekali. Di hosting berbasis container keadaan itu berarti akun penonton,
+  // saldo koin, dan komentar ditulis ke berkas di dalam server lalu lenyap
+  // tiap deploy — tanpa satu pun error.
+  // -----------------------------------------------------------------------
+  describe("mode berkas (tanpa database sama sekali)", () => {
+    it("TIDAK BOLEH dilaporkan sebagai database — ini bug 2026-10-13", () => {
+      const r = ringkasStatusKatalog({
+        databaseHidup: false,
+        modeBerkas: true,
+        jumlahTampil: 42,
+      });
+      expect(r.status).toBe("mode-berkas");
+      expect(r.status).not.toBe("database");
+    });
+
+    it("menang atas databaseHidup apa pun isinya", () => {
+      // Penjaga paling penting di berkas ini. Kalau suatu saat pemanggil
+      // mengirim `databaseHidup: true` sekaligus `modeBerkas: true` (mudah
+      // terjadi saat enum di route diterjemahkan keliru), yang BOLEH menang
+      // cuma mode-berkas — kebalikannya mengembalikan persis bug lama.
+      for (const hidup of [true, false, null]) {
+        const r = ringkasStatusKatalog({
+          databaseHidup: hidup,
+          modeBerkas: true,
+          jumlahTampil: 42,
+        });
+        expect(r.status).toBe("mode-berkas");
+      }
+    });
+
+    it("dibedakan dari cadangan — artinya bertolak belakang", () => {
+      const berkas = ringkasStatusKatalog({
+        databaseHidup: false,
+        modeBerkas: true,
+        jumlahTampil: 42,
+      });
+      const cadangan = ringkasStatusKatalog({
+        databaseHidup: false,
+        jumlahTampil: 42,
+      });
+      expect(berkas.status).not.toBe(cadangan.status);
+      expect(berkas.pesan).not.toBe(cadangan.pesan);
+    });
+
+    it("pesannya menyebut akibat yang paling mahal: data penonton hilang", () => {
+      const r = ringkasStatusKatalog({
+        databaseHidup: false,
+        modeBerkas: true,
+        jumlahTampil: 42,
+      });
+      // Bukan mencocokkan kalimat utuh (itu mengunci gaya bahasa, bukan
+      // maksud) — cuma memastikan akibatnya tidak pernah hilang dari pesan.
+      expect(r.pesan.toLowerCase()).toContain("hilang");
+      expect(r.pesan.toLowerCase()).toContain("koin");
+    });
+
+    it("tidak disebut = perilaku lama persis, pemanggil lama tidak tersenggol", () => {
+      const tanpa = ringkasStatusKatalog({ databaseHidup: true, jumlahTampil: 35 });
+      const eksplisitMati = ringkasStatusKatalog({
+        databaseHidup: true,
+        modeBerkas: false,
+        jumlahTampil: 35,
+      });
+      expect(tanpa).toEqual(eksplisitMati);
+      expect(tanpa.status).toBe("database");
+    });
+  });
 });

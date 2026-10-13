@@ -9,7 +9,86 @@
 >
 > **📦 Berkas ini sudah 5.224 baris / ±472 KB** (diukur 2026-10-10; angka lama "2.980 baris / 240 KB" sudah basi separuh — ia hampir DUA KALI lipat sejak itu) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-10-12 (sore).
+**Terakhir diisi:** 2026-10-13.
+
+---
+
+## 2026-10-13 — PUTARAN 3 LOLOS: perangkap mode-berkas terbukti TERTUTUP di Railway
+
+**TITIK LANJUT: Putaran 2 (admin) — satu-satunya yang tersisa sebelum Tahap 6.** Putaran 1 & 3
+sudah selesai, jangan diulang.
+
+### ✅ Bukti Putaran 3 (uji paling menentukan di seluruh migrasi)
+
+Urutannya benar dan dikonfirmasi owner: **daftar akun penonton uji → klik Redeploy di Railway →
+login ulang → BERHASIL MASUK.**
+
+**Kenapa satu uji login ini membuktikan jauh lebih banyak dari kelihatannya** — ditelusuri dari
+kode, bukan disimpulkan: route pendaftaran (`app/api/auth/register/route.ts:94`) memanggil
+`setViewerAccount()`, dan fungsi itu (`lib/store.ts:616`) bercabang di saklar `useSupabase`.
+Cabang `false` menulis ke `viewers.json` **di dalam container** — yang dibuat ulang dari nol tiap
+redeploy. Akun selamat melewati redeploy ⇒ saklar itu bernilai **`true`** di Railway.
+
+Saklar `useSupabase` **lahir di satu tempat saja** (`lib/supabase.ts`) dan mengatur SELURUH
+penyimpanan di `lib/store.ts`: akun penonton · **saldo koin** · komentar · rating · **rahasia
+2FA** · akun admin. Jadi uji ini menutup semuanya sekaligus, bukan cuma login. Diperiksa juga:
+tak ada satu pun `writeLocal`/`readLocal` di `lib/store.ts` yang berada di LUAR percabangan
+saklar itu — tidak ada jalur tulis yang menyelinap.
+
+⚠️ **Yang uji ini TIDAK buktikan:** `/api/health` hijau tidak pernah bisa membuktikan hal ini
+(ia sengaja tak menyentuh database), dan kartu status katalog tetap buta (lihat utang di bawah).
+Hanya redeploy-lalu-login yang bisa.
+
+### 📋 Fakta panel Railway (dibaca dari layar 2026-10-13, bukan dari rencana)
+
+Project `ravishing-adaptation` / service `dramaapp` / env `production` / Southeast Asia /
+1 replica — semua cocok catatan. **Kecuali satu: `node@24.21.0`, BUKAN Node 22.**
+**Tidak perlu diperbaiki** — `next@16.2.9` minta `node >=20.9.0` (dibaca dari `package-lock.json`)
+dan proyek tak mengunci versi di mana pun. Koreksi + alasannya sudah ditulis di
+`docs/migrasi-railway-daftar-env.md` (seksi "Versi Node"). Riwayat deployment juga memuat 1 entri
+**FAILED** 14 jam lalu yang sudah terlewati deployment sukses berikutnya.
+
+### 📊 Ukuran ulang 2026-10-13 (sesudah redeploy)
+
+`/api/health` Railway **dan** Vercel sama-sama `{"ok":true,"sumberData":"database"}` · 8 halaman
+Railway **200** (`/`, `/beranda`, `/film`, `/katalog`, `/shorts`, `/login`, `/daftar`, `/admin`) ·
+katalog Railway **40 judul**, Vercel **40 judul**, **selisih nol di kedua arah** (dicocokkan
+per-`id`, bukan cuma dihitung) · cadangan `data/dramas.json` isinya **42** — beda angka inilah
+yang membuktikan keduanya baca database, bukan berkas.
+
+🪤 **KOREKSI catatan kemarin:** entri 2026-10-12 menulis katalog "**64 judul**". Hari ini **40**,
+di **kedua** situs. Jadi ini bukan gejala Railway. Sebabnya **belum ditelusuri** — jangan pakai
+angka 64 sebagai patokan. Cara memeriksa yang sah tetap `GET /api/dramas` dari aplikasi yang
+jalan (bukan dari `data/dramas.json`, lihat `AGENTS.local.md` butir 4).
+
+### ⏭️ Putaran 2 — admin (butuh kredensial owner, BELUM dijalankan)
+
+Login admin di Railway → Dashboard: kartu status katalog harus berkata **"dari database"** →
+Admin → Videos → Playly harus **terisi** → Admin → Webhooks → Playly harus berkata kunci
+**terpasang**. Login ditolak? Tersangka pertama **bukan bug**: `ADMIN_PASSWORD` di Railway
+diambil dari `.env.local` komputer, bukan dari Vercel (Secret di sana write-only), jadi memang
+bisa beda.
+
+### ⚠️ Utang yang BELUM berubah statusnya — jangan dikira ikut beres
+
+1. **`HARDLINK_AGENT_SECRET` masih BERBEDA** antara Railway dan PC backup. Aman selama Vercel
+   hidup; **wajib disamakan sebelum Vercel dipensiunkan** (`lib/store.ts:758-765`).
+2. **Dua berkas kunci asli masih di disk:** `.env.railway.local` + `.env.vercel.local`.
+   `.env.railway.local` adalah **satu-satunya tempat** `PLAYLY_ENCRYPTION_KEY` +
+   `HARDLINK_AGENT_SECRET` baru — **salin ke pengelola password SEBELUM menghapus.**
+3. **`lib/dramas.ts:302` masih berbohong** — memulangkan `true` ("katalog hidup") tiap kali
+   aplikasi jalan tanpa Supabase. Risiko kini kecil (pagar `lib/supabase.ts` menolak produksi
+   menyala dalam mode berkas), tapi kartunya sendiri belum jujur. **Sudah ditawarkan 2× ke owner,
+   belum dijawab.** Gratis: nol SQL, nol env baru.
+4. **Healthcheck Path + batas biaya Railway belum dikonfirmasi eksplisit.** Owner bilang "sudah
+   hijau", tapi `/api/health` dengan timeout **30 detik** (bukan bawaan — satu permintaan Supabase
+   bisa makan 12,3 detik) belum dipastikan terpasang.
+
+**Penyegelan 13 variabel tetap DITUNDA** sampai Putaran 2 lolos (sengaja: penyegelan permanen,
+satu salah ketik tak akan bisa diperiksa lagi). **Tahap 6 (pindah domain) jangan dimulai** sebelum
+Putaran 2 lolos.
+
+**Vercel tetap melayani penonton, tidak tersentuh sama sekali.**
 
 ---
 

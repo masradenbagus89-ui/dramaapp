@@ -403,3 +403,14 @@ mengganggu Vercel, dan dicek **sebelum** push, bukan sesudah.
   Node 22 = versi LTS yang didukung penuh.
   **Cara memastikan sesudah deploy pertama Railway:** baca baris versi Node di log build Railway;
   kalau di bawah 20.9, build akan gagal dengan pesan yang jelas — bukan rusak diam-diam.
+
+  ✅ **HASIL NYATA (dibaca 2026-10-13 dari panel Railway, bukan dari rencana): `node@24.21.0`,
+  BUKAN Node 22.** Railway memilih sendiri versi terbarunya karena proyek ini memang tidak
+  mengunci versi di mana pun. **Tidak perlu diperbaiki** — syaratnya `next@16.2.9` →
+  `node >=20.9.0` (dibaca dari `package-lock.json`), dan 24.21.0 memenuhinya dengan lebar.
+  Terbukti empiris, bukan teori: build sukses · `/api/health` → `{"ok":true,"sumberData":"database"}`
+  · 8 halaman 200 · katalog identik Vercel (nol selisih per-`id`).
+  **Yang dikoreksi di sini adalah CATATANNYA, bukan Railway-nya** — supaya sesi berikutnya tidak
+  membuang waktu mencari "kenapa Node 22 tidak terpasang" atau, lebih buruk, memaksa turun ke 22
+  tanpa alasan. Kalau suatu hari versi Node perlu dikunci, caranya tambahkan `engines` di
+  `package.json` — jangan andalkan ingatan panel.

@@ -9,7 +9,129 @@
 >
 > **📦 Berkas ini sudah 5.224 baris / ±472 KB** (diukur 2026-10-10; angka lama "2.980 baris / 240 KB" sudah basi separuh — ia hampir DUA KALI lipat sejak itu) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-10-14 (19:00 WIB).
+**Terakhir diisi:** 2026-10-15.
+
+---
+
+## 2026-10-15 — `NEXT_PUBLIC_SITE_URL`: KEPUTUSAN OWNER = TUNGGU DOMAIN SENDIRI + pagar salah-ketik dipasang di `lib/site.ts`
+
+**TITIK LANJUT: tidak ada pekerjaan teknis yang menunggu di blocker ini.** Yang
+menunggu adalah **keputusan beli domain** — milik owner, bukan AI.
+
+⏳ **BELUM DI-COMMIT** (menunggu izin owner): 7 dokumen + `lib/site.ts` +
+`tests/site-url-pagar.test.ts`. Nol migrasi SQL, nol env baru, **nol yang dilihat
+penonton** — canonical & `robots.txt` di hasil build terbukti identik sebelum vs
+sesudah. **Gerbang §6 sudah dijalankan, urutan benar** (`rm -rf .next` → build
+**exit 0** → tsc **exit 0** → **99 berkas / 1447 tes hijau**, naik dari 98/1436 =
+tepat +1 berkas & +11 tes) · nol env ter-stage.
+
+✅ **Keputusan owner 2026-10-15: beli domain sendiri dulu.** `NEXT_PUBLIC_SITE_URL`
+di Railway **dibiarkan KOSONG** sampai domain itu aktif & menunjuk Railway. Ini
+**keadaan aman, bukan pekerjaan tertunda** — jangan diperlakukan sebagai blocker
+yang harus dicoret buru-buru.
+
+**Dua pilihan yang DITOLAK — jangan ditawarkan lagi:** (a) isi alamat
+`dramaapp-production-9e88.up.railway.app` sekarang lalu pindah lagi nanti → ongkos
+SEO dibayar DUA KALI (Google mengindeks alamat panjang itu, lalu seluruh pemindahan
+canonical + 301 diulang dari nol); (b) pakai alamat `railway.app` permanen →
+alamat penonton tak bisa diingat **dan** terikat ke Railway (pindah hosting lagi =
+ganti alamat penonton lagi).
+
+📄 **Prosedur lengkapnya sudah ditulis: `docs/migrasi-railway-tahap6-pindah-domain.md`**
+— 7 langkah berurutan + siapa pengerjanya, 5 perintah verifikasi dengan kriteria
+lulus berangka, dan cara rollback (hapus variabel → deploy ulang, nol commit).
+
+### 🔴 Temuan 1: urutan di daftar periksa lama SALAH dan berbahaya
+
+`docs/migrasi-railway-pesan-ke-playly.md` menaruh **"matikan situs lama" SEBELUM
+mengisi `NEXT_PUBLIC_SITE_URL`**. Kalau diikuti: Railway bilang "yang asli itu
+Vercel", sedangkan Vercel sudah mengalihkan 301 ke Railway → **dua sinyal
+bertabrakan**, Google menganggapnya kesalahan dan bisa menjatuhkan halaman dari
+hasil pencarian. **Nol pesan error, nol gejala di layar** — ketahuan
+berminggu-minggu kemudian dari trafik yang turun. Sudah **dibetulkan** + diberi
+peringatan kenapa.
+
+⛔ **Aturan tetap: isi variabel DULU → verifikasi → baru 301 → 301 hidup beberapa
+minggu → baru Vercel dimatikan.**
+
+### 🔴 Temuan 2: sebab "wajib deploy ulang" selama ini salah dicatat
+
+Catatan lama (termasuk baris di berkas INI) menulis *"`NEXT_PUBLIC_*` dipanggang
+saat BUILD"*. Kesimpulannya benar, **sebabnya salah**. Diukur di hasil build
+sungguhan: potongan kode **server** masih membaca `process.env` saat request. Yang
+membekukan adalah **prerender statis** — 16 halaman dicetak jadi berkas HTML saat
+build dengan alamatnya sudah jadi teks mati (`.next/server/app/index.html`,
+`robots.txt`).
+
+**Kenapa ini penting:** kalau nanti ada yang mengusulkan "ganti saja nama
+variabelnya supaya tak dipanggang" — **itu TIDAK akan menolong.** Yang menolong
+hanya build baru. Pengecualian: `sitemap.xml` punya `revalidate = 3600`
+(`app/sitemap.ts:8`) → menyegarkan diri ≤1 jam tanpa deploy.
+
+### 🪤 Temuan 3: jebakan senyap di `lib/site.ts` → PAGAR DIPASANG (atas persetujuan owner)
+
+Variabel hilang / salah ketik → kode **tidak error**, ia jatuh ke nilai bawaan
+`https://dramaapp.vercel.app`. Sesudah Vercel pensiun itu berarti canonical
+menunjuk alamat **mati**, tanpa satu pun gejala.
+
+✅ **Setengahnya sudah ditutup.** Fungsi `periksaAlamatSitus` di `lib/site.ts`
+**mengikuti pola `periksaSetelanSupabase` (`lib/supabase.ts:50`)** — nol mekanisme
+baru. Nilai yang **diisi tapi rusak** menggagalkan build dengan pesan yang menyebut
+nama variabelnya, menggantikan `Invalid URL` buntu dari `new URL()` di
+`app/layout.tsx:23` (jadi ini **bukan** gerbang baru — kegagalannya sudah ada,
+pesannya saja yang dulu tak berguna).
+
+**Diuji 6 kondisi env di proses terpisah, dan pagarnya TERBUKTI MEMBEDAKAN
+(4 lolos, 2 ditolak)** — bukan sekadar hijau:
+
+| Nilai env | Hasil |
+|---|---|
+| kosong (keadaan Railway & Vercel sekarang) | LOLOS → `https://dramaapp.vercel.app` |
+| blank/spasi (variabel dibuat tapi dibiarkan kosong) | LOLOS → nilai bawaan |
+| `https://dramaku.com/` | LOLOS → `https://dramaku.com` (miring dibuang) |
+| `http://localhost:3000` (`next dev`) | LOLOS |
+| `dramaku.com` (lupa `https://`) | **DITOLAK** |
+| `http://dramaku.com` | **DITOLAK** |
+
+**Yang sengaja MASIH terbuka:** nilai **kosong** tidak diperingatkan. Kosong memang
+BENAR selama Tahap 2-5, dan pagar yang berbunyi di tiap build hari ini akan berhenti
+dibaca orang sebelum migrasi sungguhan — penyakit `KEEPALIVE_SITES`. Dan alamat yang
+**bentuknya sah tapi salah situs** tak bisa ketahuan dari dalam kode. Keduanya
+ditutup oleh verifikasi `curl` di langkah 3 prosedur, yang karena itu **wajib**.
+
+🪤 **`tsc` menangkap bug di tes saya sendiri:** versi pertama memakai
+`import("../lib/site?rusak")` — jalan di vitest (vite mengerti query) tapi
+`TS2307` di typecheck. Tes yang tak lolos typecheck = tes rusak; dibetulkan ke
+`vi.resetModules()`. **Catatan: gerbang menangkapnya, bukan mata saya.**
+
+### ✏️ Koreksi catatan yang keliru
+
+`docs/migrasi-railway-daftar-env.md` (aturan 3) menulis *"tombol Bagikan di situs uji
+akan menampilkan alamat vercel"*. **Salah.** `app/components/ShareButton.tsx:32` memakai
+`window.location.href` = alamat yang sedang dibuka penonton; tombol Bagikan tidak
+menyentuh variabel ini sama sekali. Sudah dibetulkan.
+
+### Keadaan terukur 2026-10-15 (diukur dari luar, bukan dari catatan)
+
+| Yang diperiksa | Hasil |
+|---|---|
+| `/api/health` Railway & Vercel | keduanya `{"ok":true,"sumberData":"database"}` |
+| canonical beranda Railway | `https://dramaapp.vercel.app` |
+| `robots.txt` Railway | `Sitemap: https://dramaapp.vercel.app/sitemap.xml` |
+| `sitemap.xml` Railway | **377 URL, semuanya beralamat Vercel** |
+| `NEXT_PUBLIC_SITE_URL` di Railway | tidak ada |
+
+Jadi klaim catatan 2026-10-14 **terbukti benar**, bukan asumsi.
+
+### Blocker tersisa sebelum Vercel boleh ditutup
+
+1. ⏸️ **Domain final belum dibeli** (keputusan owner, tak bisa dikerjakan AI).
+2. `KEEPALIVE_SITES` masih memuat alamat Vercel → satu kolom di panel GitHub,
+   **nol commit, nol deploy**. Robot sengaja GAGAL kalau ADA SATU alamat sakit →
+   Vercel mati = email gagal tiap hari = alarm berubah jadi kebisingan.
+3. Putaran 2 (login admin) — pagar yang dipasang owner sendiri sebelum Tahap 6.
+
+---
 
 ---
 
@@ -18,7 +140,10 @@
 **TITIK LANJUT sebelum Vercel boleh ditutup — 3 blocker tersisa:**
 1. `NEXT_PUBLIC_SITE_URL` belum diisi di Railway → canonical, `sitemap.xml`, dan
    `robots.txt` Railway MASIH menunjuk `dramaapp.vercel.app` (diukur 2026-10-14).
-   ⚠️ `NEXT_PUBLIC_*` dipanggang saat BUILD → mengisinya WAJIB diikuti deploy ulang.
+   ⚠️ Mengisinya WAJIB diikuti deploy ulang. (**Sebabnya dikoreksi 2026-10-15:**
+   bukan awalan `NEXT_PUBLIC_`, melainkan prerender statis — lihat entri teratas.)
+   **Status 2026-10-15: sengaja dibiarkan KOSONG** atas keputusan owner, menunggu
+   domain sendiri. Bukan lagi pekerjaan yang menunggu.
 2. `KEEPALIVE_SITES` masih memuat alamat Vercel. Robot sengaja GAGAL kalau ADA SATU
    alamat sakit → Vercel mati = email gagal tiap hari = alarm berubah jadi kebisingan.
    Perbaikannya satu kolom di panel GitHub: **nol commit, nol deploy**.
@@ -183,7 +308,7 @@ Itu jalan buntu — jangan dikerjakan, jangan ditawarkan lagi ke owner.
 
 `nvblmpkwyzbpdbshyvzw` milik pihak lain, dipakai bersama beberapa aplikasi;
 dramaapp menempati schema `dramaapp`. Sudah tercatat di `antrean-deploy.md:732`
-dan `docs/migrasi-railway-daftar-env.md:180` — sesi ini sempat melewatkannya dan
+dan `docs/migrasi-railway-daftar-env.md`, seksi "Utang yang diketahui — SUPABASE_SERVICE_ROLE_KEY" — sesi ini sempat melewatkannya dan
 terlanjur menyuruh owner membuka Settings -> Database yang memang tak terbuka
 untuknya. **Diverifikasi ulang langsung ke database, bukan dari catatan:** 5 dari
 7 bucket milik aplikasi lain · 3 fungsi di schema `public` nol dipakai kode kita ·

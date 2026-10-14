@@ -3,8 +3,25 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-10-14 malam (**komputer OWNER**) — **ANTREAN KOSONG.** Ketiganya di
-`00872a2`, fast-forward `1965528..00872a2`, nol paksaan. Dokumentasi saja; nol kode aplikasi.
+**Terakhir dicek:** 2026-10-15 (**komputer OWNER**) — **ANTREAN KOSONG.** Ketiganya di `00872a2`.
+Perubahan hari ini **BELUM di-commit**: 7 dokumen + **1 berkas kode** (`lib/site.ts`, pagar
+`NEXT_PUBLIC_SITE_URL`) + **1 berkas tes baru**. Nol migrasi SQL, nol env baru, **nol yang dilihat
+penonton** (canonical & `robots.txt` di hasil build terbukti identik sebelum-sesudah).
+
+**Gerbang §6 SUDAH dijalankan, urutan benar** (`build` → `tsc` → `test`): `rm -rf .next` →
+build **exit 0** · tsc **exit 0** · **99 berkas / 1447 tes hijau** (naik dari 98/1436 = tepat
++1 berkas, +11 tes) · nol env ter-stage. Pagar diuji 6 kondisi env di proses terpisah dan
+**terbukti MEMBEDAKAN: 4 lolos, 2 ditolak** — bukan sekadar hijau.
+
+🔴 **`NEXT_PUBLIC_SITE_URL` — keputusan owner 2026-10-15: TUNGGU DOMAIN SENDIRI.** Variabel
+**dibiarkan KOSONG** di Railway; itu keadaan **aman**, bukan blocker yang menunggu dikerjakan.
+Prosedur 7 langkah + 5 perintah verifikasi: `docs/migrasi-railway-tahap6-pindah-domain.md`.
+⛔ **Urutan yang tak boleh dibalik: isi variabel DULU → verifikasi → baru Vercel jadi 301.**
+Dibalik = Railway bilang "yang asli Vercel" sementara Vercel mengalihkan ke Railway → dua sinyal
+bertabrakan → halaman bisa jatuh dari Google **tanpa pesan error**. Urutan salah ini SUDAH TERTULIS
+di daftar periksa lama dan sudah dibetulkan hari ini.
+🪤 Sebab "wajib deploy ulang" **dikoreksi**: bukan awalan `NEXT_PUBLIC_`, melainkan **prerender
+statis** 16 halaman. Artinya **mengganti nama variabel tidak akan menolong** — jangan ditawarkan.
 
 **✅ MIGRASI PC BACKUP SELESAI & LULUS UJI RESTART (`00872a2`).** Agent kini melapor ke Railway.
 Bukti: restart PC backup → agent yang dijalankan Task Scheduler **sebagai SYSTEM** melaporkan
@@ -18,9 +35,9 @@ tujuannya Railway, dan SYSTEM memang membaca env tingkat `Machine`.
 berikutnya keluar `instance lain sedang berjalan` (terjadi 2× berturut). Senyap: video tetap hidup
 sampai tunnel mati, lalu tak ada yang memulihkan. **Belum diperbaiki di kode**, sengaja.
 
-🔴 **SISA BLOCKER sebelum Vercel boleh ditutup:** `NEXT_PUBLIC_SITE_URL` di Railway (canonical/
-sitemap/robots masih menunjuk Vercel — dan `NEXT_PUBLIC_*` dipanggang saat BUILD, jadi wajib deploy
-ulang) · `KEEPALIVE_SITES` buang alamat Vercel · Putaran 2 admin.
+🔴 **SISA BLOCKER sebelum Vercel boleh ditutup** (diperbarui 2026-10-15): **domain final belum
+dibeli** — keputusan owner, bukan kerja AI · `KEEPALIVE_SITES` buang alamat Vercel · Putaran 2
+admin. `NEXT_PUBLIC_SITE_URL` **tidak lagi dihitung blocker**: sengaja kosong sampai domain ada.
 
 **Rollback 1-baris:** `git revert --no-edit 00872a2 && git push origin main && git push dramaku main`.
 

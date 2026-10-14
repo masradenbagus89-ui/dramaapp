@@ -129,7 +129,7 @@ kali, permanen, tak bisa ditarik kembali.
 Project Supabase `nvblmpkwyzbpdbshyvzw` **bukan milik owner dramaapp.** Ia milik
 pihak lain dan dipakai bersama beberapa aplikasi; dramaapp menempati schema
 `dramaapp`. Tercatat di `antrean-deploy.md:732`, `HANDOFF.md`, dan
-`docs/migrasi-railway-daftar-env.md:180`.
+`docs/migrasi-railway-daftar-env.md`, seksi "Utang yang diketahui — SUPABASE_SERVICE_ROLE_KEY".
 
 Akibatnya menu **Settings → Database → Connection string** tidak terbuka untuk
 owner. Dan memintanya ke pemilik project bukan permintaan kecil: connection

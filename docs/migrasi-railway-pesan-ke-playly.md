@@ -165,11 +165,23 @@ Terima kasih.
 
 ## Daftar periksa owner setelah Pesan 2 dikirim
 
+> ⚠️ **URUTAN DIBETULKAN 2026-10-15 — dulu salah dan berbahaya.** Versi lama
+> menaruh "matikan situs lama" **sebelum** mengisi `NEXT_PUBLIC_SITE_URL`. Itu
+> menghasilkan tabrakan sinyal ke Google: Railway bilang "yang asli itu Vercel",
+> sedangkan Vercel sudah mengalihkan ke Railway. Akibatnya halaman bisa jatuh dari
+> hasil pencarian, **tanpa pesan error apa pun**. Urutan lengkap + cara
+> membuktikannya: `docs/migrasi-railway-tahap6-pindah-domain.md`.
+
 - [ ] Mitra konfirmasi alamat sudah ditambahkan/diganti
 - [ ] Tunggu satu film baru dari Playly → cek Admin → Webhooks, kiriman masuk
-- [ ] Baru matikan situs lama
-- [ ] Isi `NEXT_PUBLIC_SITE_URL` di Railway dengan alamat baru — kalau lupa,
+- [ ] Samakan `HARDLINK_AGENT_SECRET` Railway dengan PC backup — SELESAI & lulus
+      uji restart 2026-10-14 (`00872a2`), tapi periksa ulang sebelum lanjut
+- [ ] **Isi `NEXT_PUBLIC_SITE_URL` di Railway dengan domain baru** — kalau lupa,
       canonical & sitemap menunjuk alamat mati dan Google diarahkan ke sana
-      (`docs/migrasi-railway-daftar-env.md:290`)
-- [ ] Samakan `HARDLINK_AGENT_SECRET` Railway dengan PC backup sebelum situs
-      lama dipensiunkan (`HANDOFF.md`, utang nomor 1)
+      (`docs/migrasi-railway-daftar-env.md`, seksi "I. Khusus")
+- [ ] Verifikasi canonical/`robots.txt`/`sitemap.xml` sudah menyebut domain baru —
+      salah ketik TIDAK memunculkan error, hanya ketahuan dari pengukuran
+      (perintahnya di `docs/migrasi-railway-tahap6-pindah-domain.md`)
+- [ ] Buang alamat Vercel dari `KEEPALIVE_SITES` di panel GitHub
+- [ ] Ubah Vercel jadi **pengalihan 301** ke domain baru (**bukan** dimatikan)
+- [ ] Biarkan 301 hidup beberapa minggu — **baru** situs lama dimatikan

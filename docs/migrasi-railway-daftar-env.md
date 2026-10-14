@@ -33,10 +33,18 @@ bisa diputar.
 
 **3. `NEXT_PUBLIC_SITE_URL` JANGAN diisi selama Tahap 2-5.**
 Biarkan kosong supaya situs uji Railway memberi tahu Google "aku bukan yang asli" — itu yang
-melindungi peringatan pencarian situs lama selama pengujian. Akibat yang harus diketahui: tombol
-Bagikan di situs uji akan menampilkan alamat vercel. **Itu benar, bukan bug.**
-Nilai berawalan `NEXT_PUBLIC_` disematkan **saat build**, jadi mengubahnya nanti wajib diikuti
-**redeploy**, bukan sekadar restart.
+melindungi peringkat pencarian situs lama selama pengujian.
+Mengubahnya nanti wajib diikuti **deploy ulang**, bukan sekadar restart — tapi sebabnya **bukan**
+awalan `NEXT_PUBLIC_` seperti yang tertulis di sini sampai 2026-10-15. Sebab sebenarnya:
+16 halaman situs ini **prerender statis**, alamatnya sudah tercetak jadi teks mati di dalam berkas
+HTML saat build. Akibat praktisnya: **mengganti nama variabel tidak akan menolong** — jangan
+tawarkan "solusi" itu. Rinciannya + bukti terukur:
+`docs/migrasi-railway-tahap6-pindah-domain.md`.
+
+> 🔴 **Dikoreksi 2026-10-15:** baris ini dulu menulis *"tombol Bagikan di situs uji akan
+> menampilkan alamat vercel"*. **Salah.** `app/components/ShareButton.tsx:32` memakai
+> `window.location.href` — yaitu alamat yang sedang dibuka penonton. Tombol Bagikan di Railway
+> membagikan alamat Railway, dan sama sekali tidak menyentuh variabel ini.
 
 ---
 
@@ -287,7 +295,7 @@ Rotasi terencana bisa dikerjakan belakangan, terpisah dari migrasi.
 
 | Nama | Keterangan |
 |---|---|
-| `NEXT_PUBLIC_SITE_URL` | ⛔ **Jangan diisi selama Tahap 2-5** (aturan 3). Baru diisi di Tahap 6 |
+| `NEXT_PUBLIC_SITE_URL` | ⛔ **Masih KOSONG & itu memang benar** (keputusan owner 2026-10-15: tunggu domain sendiri). Diisi di Tahap 6 dengan **domain final**, bukan alamat `railway.app` — prosedur + urutan yang tak boleh dibalik: `docs/migrasi-railway-tahap6-pindah-domain.md` |
 | `NODE_ENV` | Diisi platform otomatis. Pastikan Railway menyetelnya `production` — kalau tidak, cookie login dikirim tanpa penanda aman |
 | `PORT` | Diisi Railway otomatis. `next start` membacanya sendiri — jangan disetel manual |
 | `IZINKAN_MODE_BERKAS` | **Baru**, dipasang bersama pagar Tahap 2. Jangan diisi di Railway. Hanya untuk komputer pengembang yang perlu `npm run build` tanpa database |

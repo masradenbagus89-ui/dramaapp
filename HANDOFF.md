@@ -9,7 +9,59 @@
 >
 > **📦 Berkas ini sudah 5.224 baris / ±472 KB** (diukur 2026-10-10; angka lama "2.980 baris / 240 KB" sudah basi separuh — ia hampir DUA KALI lipat sejak itu) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-10-14 (15:20 WIB).
+**Terakhir diisi:** 2026-10-14 (19:00 WIB).
+
+---
+
+## 2026-10-14 19:00 WIB — MIGRASI PC BACKUP SELESAI & LULUS UJI RESTART
+
+**TITIK LANJUT sebelum Vercel boleh ditutup: `NEXT_PUBLIC_SITE_URL` di Railway ·
+`KEEPALIVE_SITES` buang alamat Vercel · Putaran 2 admin.**
+Blocker "video mati kalau Vercel ditutup" sudah **TERCORET**.
+
+### ✅ Bukti terkuat: uji RESTART
+
+Restart memaksa semuanya mulai dari nol. Agent yang saat booting dijalankan Task
+Scheduler **sebagai SYSTEM — bukan oleh manusia** — melaporkan alamat tunnel baru,
+dan laporannya **DITERIMA**.
+
+| | Sebelum restart | Sesudah restart |
+|---|---|---|
+| Alamat tunnel | `break-removal-weekend-dicke…` | **`dark-rugby-businesses-cradle…`** |
+| Stempel laporan | `11:16:14.248Z` | **`11:53:04.770Z`** |
+| Video 2 situs | 206 | **206 `video/mp4`** |
+
+Rantainya rapat: alamat berganti → agent jalan dari boot · laporan diterima →
+secret benar · secret 43 karakter **hanya berlaku di Railway** (Vercel memakai 32,
+akan menolak 401) → **tujuannya pasti Railway** · SYSTEM membacanya → **`Machine`
+memang terbaca Task Scheduler**, bukan sekadar teori.
+
+**Tanpa uji restart, yang terbukti baru "jalan saat dijalankan manual"** — jenis
+bukti setengah yang sudah dua kali menipu di hari yang sama.
+
+### 🪤 Temuan baru di skrip: mutex tak pernah dilepas
+
+`start-video-services.ps1` memakai mutex `Global\DramaAppVideoServices`, tapi
+**`ReleaseMutex` tidak pernah dipanggil** dan tidak ada blok `finally`. Mutex
+dipegang **proses**, bukan skrip — jadi saat manusia menjalankannya manual,
+`exit 0` hanya mengakhiri skripnya sementara **jendela PowerShell tetap memegang
+kunci**. Akibatnya SEMUA run terjadwal berikutnya keluar dengan
+`instance lain sedang berjalan` — terjadi nyata 2× berturut (18:20, 18:35).
+
+**Berbahayanya senyap:** video tetap hidup selama tunnel yang sekarang sehat,
+tapi begitu tunnel mati tak ada yang memulihkannya. Obat: tutup jendelanya, atau
+restart (sekalian menguji jalur boot). ❓ Belum diperbaiki di kode — kandidat
+perbaikan kecil: bungkus dengan `try/finally` + `ReleaseMutex`.
+
+### Catatan operasional
+
+- Nilai lama tersimpan di `secret-lama-20261014.txt` (32 karakter) di PC backup —
+  jalan mundur masih ada. ⚠️ Mundur WAJIB mengembalikan **alamat DAN secret**.
+- `docs/migrasi-railway-pc-backup.md` ditulis ulang total (106 → 300+ baris):
+  status, 3 prasyarat, 3 cara transfer yang GAGAL beserta sebabnya, cara yang
+  berhasil (Notepad), dan cara membuktikan tanpa menampilkan nilai.
+
+---
 
 ---
 

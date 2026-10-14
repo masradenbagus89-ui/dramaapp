@@ -3,7 +3,28 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-10-14 sore (**komputer OWNER**) — **ANTREAN KOSONG.** Push dokumentasi
+**Terakhir dicek:** 2026-10-14 malam (**komputer OWNER**) — **ANTREAN KOSONG.** Ketiganya di
+`00872a2`, fast-forward `1965528..00872a2`, nol paksaan. Dokumentasi saja; nol kode aplikasi.
+
+**✅ MIGRASI PC BACKUP SELESAI & LULUS UJI RESTART (`00872a2`).** Agent kini melapor ke Railway.
+Bukti: restart PC backup → agent yang dijalankan Task Scheduler **sebagai SYSTEM** melaporkan
+alamat tunnel BARU (`break-removal-weekend` → `dark-rugby-businesses`, stempel `11:16:14Z` →
+`11:53:04Z`) dan laporannya **DITERIMA**; video `206 video/mp4` di kedua situs. Secret 43 karakter
+hanya berlaku di Railway (Vercel memakai 32, menolak 401) → diterimanya laporan membuktikan
+tujuannya Railway, dan SYSTEM memang membaca env tingkat `Machine`.
+
+🪤 **Temuan: `start-video-services.ps1` tak pernah memanggil `ReleaseMutex`** dan tak punya blok
+`finally`. Dijalankan manual, jendela PowerShell tetap memegang kunci → SEMUA run terjadwal
+berikutnya keluar `instance lain sedang berjalan` (terjadi 2× berturut). Senyap: video tetap hidup
+sampai tunnel mati, lalu tak ada yang memulihkan. **Belum diperbaiki di kode**, sengaja.
+
+🔴 **SISA BLOCKER sebelum Vercel boleh ditutup:** `NEXT_PUBLIC_SITE_URL` di Railway (canonical/
+sitemap/robots masih menunjuk Vercel — dan `NEXT_PUBLIC_*` dipanggang saat BUILD, jadi wajib deploy
+ulang) · `KEEPALIVE_SITES` buang alamat Vercel · Putaran 2 admin.
+
+**Rollback 1-baris:** `git revert --no-edit 00872a2 && git push origin main && git push dramaku main`.
+
+**Cek sebelumnya:** 2026-10-14 sore (**komputer OWNER**) — **ANTREAN KOSONG.** Push dokumentasi
 saja; nol kode aplikasi, nol migrasi SQL, nol env baru.
 
 **Perubahan OPERASIONAL hari ini (bukan rilis kode, tapi wajib diketahui):**

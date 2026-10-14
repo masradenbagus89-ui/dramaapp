@@ -15,9 +15,21 @@
 
 ## 2026-10-14 19:00 WIB — MIGRASI PC BACKUP SELESAI & LULUS UJI RESTART
 
-**TITIK LANJUT sebelum Vercel boleh ditutup: `NEXT_PUBLIC_SITE_URL` di Railway ·
-`KEEPALIVE_SITES` buang alamat Vercel · Putaran 2 admin.**
+**TITIK LANJUT sebelum Vercel boleh ditutup — 3 blocker tersisa:**
+1. `NEXT_PUBLIC_SITE_URL` belum diisi di Railway → canonical, `sitemap.xml`, dan
+   `robots.txt` Railway MASIH menunjuk `dramaapp.vercel.app` (diukur 2026-10-14).
+   ⚠️ `NEXT_PUBLIC_*` dipanggang saat BUILD → mengisinya WAJIB diikuti deploy ulang.
+2. `KEEPALIVE_SITES` masih memuat alamat Vercel. Robot sengaja GAGAL kalau ADA SATU
+   alamat sakit → Vercel mati = email gagal tiap hari = alarm berubah jadi kebisingan.
+   Perbaikannya satu kolom di panel GitHub: **nol commit, nol deploy**.
+3. Putaran 2 (login admin) — pagar yang dipasang owner sendiri sebelum Tahap 6.
+
+⚪ Belum diputuskan: domain final, dan **jangan "matikan" Vercel — ubah jadi
+pengalihan 301** dulu beberapa minggu, supaya bookmark, link yang pernah dibagikan,
+dan peringkat Google tidak putus mendadak.
+
 Blocker "video mati kalau Vercel ditutup" sudah **TERCORET**.
+✅ **DIRILIS `00872a2`** — dual push `1965528..00872a2`, fast-forward, nol paksaan.
 
 ### ✅ Bukti terkuat: uji RESTART
 

@@ -9,14 +9,99 @@
 >
 > **📦 Berkas ini sudah 5.224 baris / ±472 KB** (diukur 2026-10-10; angka lama "2.980 baris / 240 KB" sudah basi separuh — ia hampir DUA KALI lipat sejak itu) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-10-14 (11:30 WIB).
+**Terakhir diisi:** 2026-10-14 (15:20 WIB).
+
+---
+
+## 2026-10-14 15:20 WIB — WEBHOOK PLAYLY PINDAH KE RAILWAY (terverifikasi) + video penonton sempat MATI 30 menit
+
+**TITIK LANJUT: migrasi PC backup BELUM selesai** (dikembalikan ke keadaan aman) ·
+Putaran 2 admin · uji pulihkan backup (pending).
+
+### ✅ Webhook Playly: SELESAI
+
+Mitra mengganti alamat ke Railway. **Dua hal di luar dugaan kita:**
+1. **Sistem mitra hanya bisa SATU alamat** -> Vercel dicabut, tidak bisa berdampingan.
+   Rencana "tambahkan di samping yang lama" gugur.
+2. **Sistem mitra otomatis membuat secret BARU tiap alamat diganti.** Temuan sesi ini
+   bahwa `PLAYLY_WEBHOOK_SECRET` Railway == Vercel (terbukti: `400` vs kontrol `401`)
+   jadi **tidak berguna** — secret lama mati begitu alamat diganti.
+3. ✅ **Mitra mengonfirmasi kiriman tertolak di-RETRY otomatis.** Ini menjawab risiko
+   yang dicatat `docs/migrasi-railway-pesan-ke-playly.md:88` ("banyak sistem webhook
+   TIDAK me-retry 4xx"). Terbukti benar: nol kiriman hilang selama jeda ~1,5 jam.
+
+**Bukti tayang (dari database, bukan layar admin):** `playly:webhook` **176 -> 178**
+video · dua film baru `Disclosure Day` (08:07:02Z) + `Avatar Aang: The Last Airbender
+(2026)` (08:19:27Z) · keduanya `published`. `receivedAt` dicap server kita sendiri
+(`lib/playly-gabungan.ts:191`), jadi ini bukti diterima & diproses, bukan klaim mitra.
+
+🪤 **Jebakan yang memakan satu putaran: "sudah redeploy" != "deployment yang HIDUP lahir
+sesudah perubahan".** Sesudah owner memasang secret baru + redeploy, uji tetap menjawab
+`400` (secret lama masih diterima) — nilai lama masih dipakai. Baru setelah dibereskan
+lagi, `401` muncul. **Cara ujinya yang layak diulang: kirim secret LAMA; `401` =
+sudah berganti, `400` = belum.** Nol rahasia perlu berpindah tangan untuk membuktikannya.
+
+### 🔴 Video penonton MATI ~30 menit (14:00-14:24 WIB) — dan perbaikan separuh memperburuknya
+
+Tunnel Cloudflare mati sendiri (DNS `stock-location-...trycloudflare.com` ->
+**Non-existent domain**; `/api/teaser` kedua situs -> **HTTP 000, 0 byte**).
+
+**Normalnya ini sembuh sendiri**: tunnel mati -> agent menyalakan yang baru -> melapor ->
+video hidup. Yang menghalangi: `HARDLINK_AGENT_SECRET` di PC backup sedang berisi **1
+karakter** akibat langkah migrasi yang ditinggal separuh oleh sesi ini. Laporan akan
+ditolak `401` dan alamat mati tetap tersimpan.
+
+**Dibereskan dengan MUNDUR, bukan meneruskan**: secret dikembalikan ke 32 + alamat
+kembali Vercel (keduanya sekaligus — setengah rollback sama matinya), lalu
+`start-video-services.ps1` dijalankan. Hasil: alamat baru
+`vista-dry-flavor-stay.trycloudflare.com` tersimpan 14:24 WIB, dan **kedua situs
+mengirim potongan video sungguhan** (`HTTP 206`, `video/mp4`, 1024 byte).
+
+**Pelajaran: saat produksi sedang mati, pulihkan ke keadaan yang TERBUKTI bekerja —
+jangan menyelesaikan migrasi yang sedang setengah jalan.**
+
+### 🪤 Tiga cara memindahkan secret yang GAGAL, dan kenapa
+
+Dicatat supaya tak diulang — ketiganya terlihat masuk akal saat ditulis:
+1. **`Get-Clipboard` di dalam perintah yang harus disalin.** Menyalin perintahnya
+   MENIMPA clipboard -> yang tersimpan ke env justru teks perintah itu sendiri
+   (**378 karakter**). Mustahil berhasil, bukan nasib buruk.
+2. **Ctrl+V di `Read-Host -AsSecureString`.** Console Windows memasukkannya sebagai
+   **satu karakter kendali** -> panjang **1**. Tempel di prompt bertopeng tidak bekerja.
+3. **Menyebut panjang dari berkas env yang salah.** `.env.vercel.local` ternyata berisi
+   **placeholder** (pola `.AAAAAAAAA.`), bukan nilai asli -> sesi ini melaporkan
+   "harusnya 11" padahal kenyataannya **32**. ⚠️ **Berkas `.env.*.local` bukan sumber
+   kebenaran — buktikan ke sistem yang hidup.**
+   **Cara yang akhirnya dipakai & berhasil: Notepad -> simpan ke berkas -> perintah
+   membaca berkas -> berkas dihapus.** Clipboard dan perintah tak lagi berebut.
+
+### ⚠️ Utang baru dari hari ini
+
+1. **`.env.railway.local` memuat `PLAYLY_WEBHOOK_SECRET` yang SUDAH MATI** (mitra
+   menggantinya). Tandai basi, atau sesi berikutnya tertipu persis seperti sesi ini
+   tertipu `.env.vercel.local`.
+2. **Migrasi PC backup belum selesai** — alamat & secret masih menunjuk Vercel. Wajib
+   beres **sebelum** Vercel dipensiunkan. Jalur yang sudah terbukti: Notepad (di atas).
+   Nilai Railway 43 karakter, sidik jari SHA-256
+   `501FE64328D5AA7525C0ABECA6DFCEB33AC1F058E98535CDD2FF5E896A2E9FF6` — pakai itu untuk
+   membuktikan tanpa menampilkan nilainya.
+3. **Mitra bertanya: apakah domain penonton pindah ke Railway?** Dijawab "belum, akan
+   dikabari". Saat domain final dipasang, **wajib dikonfirmasi ulang ke mereka** (daftar
+   sematan). Situs kita saat ini TIDAK memakai embed Playly untuk penonton (iframe hanya
+   di halaman admin) — jadi belum relevan hari ini, tapi jangan dianggap selamanya.
+
+---
 
 ---
 
 ## 2026-10-14 11:30 WIB — BACKUP HARIAN AKHIRNYA JALAN (lewat REST, bukan pg_dump) + script export terbukti menghasilkan backup yang TAK BISA DIPULIHKAN
 
-**TITIK LANJUT: UJI PULIHKAN** — satu-satunya yang tersisa, dan satu-satunya yang
-membedakan "ada berkas backup" dari "punya backup". Butuh satu Supabase project kosong.
+**⏸️ UJI PULIHKAN = PENDING (keputusan owner 2026-10-14).** Ditunda, bukan dilupakan —
+owner memilih lanjut ke tahap berikutnya dulu. Prosedur siap-jalan + kriteria lulus (angka
+baris per tabel, cek kolom `status`, cek 3 fungsi RPC) disimpan di
+`docs/uji-pulihkan-backup.md`. Yang menahan: butuh SATU Supabase project kosong.
+**Sampai itu dikerjakan, kalimat jujurnya "ada berkas backup yang konsisten", BUKAN "punya
+backup yang terbukti pulih"** — jangan tulis "backup aman" di catatan mana pun sebelum itu.
 
 ✅ **DIRILIS `13ccc06`** (dual push tuntas, `ef4bc04..13ccc06`, nol paksaan). Workflow
 **dijalankan sungguhan di GitHub** — run `38512319033`, **8/8 langkah hijau**:

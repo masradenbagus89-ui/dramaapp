@@ -3,7 +3,28 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-10-14 siang (**komputer OWNER**) — **ANTREAN KOSONG, DUAL PUSH TUNTAS.**
+**Terakhir dicek:** 2026-10-14 sore (**komputer OWNER**) — **ANTREAN KOSONG.** Push dokumentasi
+saja; nol kode aplikasi, nol migrasi SQL, nol env baru.
+
+**Perubahan OPERASIONAL hari ini (bukan rilis kode, tapi wajib diketahui):**
+
+1. ✅ **Webhook Playly PINDAH ke Railway** — alamat lama (Vercel) **dicabut mitra**; sistem mereka
+   hanya bisa satu alamat. `PLAYLY_WEBHOOK_SECRET` di Railway **diganti nilai baru** (mitra
+   otomatis membuat secret baru tiap alamat diganti). **Terbukti jalan:** `playly:webhook`
+   **176 -> 178** video, dua film uji masuk (`Disclosure Day` 08:07:02Z, `Avatar Aang` 08:19:27Z),
+   `receivedAt` dicap server kita sendiri. ⚠️ Vercel **tidak lagi menerima webhook** — film baru
+   hanya lewat Railway (tetap tampil di kedua situs karena database bersama).
+2. 🔴 **Video penonton MATI ~30 menit (14:00-14:24 WIB)** — tunnel Cloudflare mati sendiri, dan
+   perbaikan migrasi PC backup yang ditinggal separuh **menghalangi pemulihan otomatisnya**.
+   Dibereskan dengan MUNDUR ke keadaan yang terbukti bekerja. Pulih terverifikasi: `HTTP 206`,
+   `video/mp4` di kedua situs.
+3. ⏸️ **Migrasi PC backup BELUM selesai** — dikembalikan ke Vercel + secret 32. Wajib beres
+   sebelum Vercel dipensiunkan. Rincian + jalur yang terbukti: `HANDOFF.md` entri 15:20 WIB.
+
+**Rollback 1-baris** (hanya membalik catatan, tak menyentuh apa pun yang hidup):
+`git revert --no-edit <sha> && git push origin main && git push dramaku main`.
+
+**Cek sebelumnya:** 2026-10-14 siang (**komputer OWNER**) — **ANTREAN KOSONG, DUAL PUSH TUNTAS.**
 Fast-forward `ef4bc04..13ccc06` ke **kedua** repo, nol paksaan. Ketiganya (lokal, `origin/main`,
 `dramaku/main`) duduk di `13ccc06`.
 

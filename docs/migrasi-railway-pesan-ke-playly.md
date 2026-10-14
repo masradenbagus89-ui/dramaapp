@@ -137,6 +137,32 @@ Terima kasih.
 
 ---
 
+## JADWAL DIUNDUR ke 14.00 WIB (keputusan owner 2026-10-14)
+
+Dari 10.00 ke **14.00 WIB**. Justru lebih aman: jadwal 10.00 cuma menyisakan 30
+menit sampai putaran retry harian mitra (10.30), sementara memasang secret baru
+di Railway memicu **redeploy** yang makan beberapa menit — durasinya belum
+pernah diukur.
+
+**Konsekuensi yang harus disebut ke mitra:** jam 14.00 sudah melewati putaran
+harian 10.30, jadi kiriman yang tertolak selama jeda redeploy **tidak akan
+otomatis terulang hari itu** — bergantung pada pemicu manual yang mereka
+tawarkan, atau menunggu putaran 10.30 besoknya. Mitra sudah menyatakan bisa
+memicu manual, jadi ini bukan penghalang; tapi jangan sampai tidak disebut.
+
+### PESAN — minta undur jadwal
+
+Halo, mohon maaf — boleh jadwalnya diundur ke 14.00 WIB hari ini?
+
+Urutannya tetap sama seperti yang Anda sebutkan.
+
+Satu catatan: karena 14.00 sudah lewat putaran harian 10.30, kami mungkin perlu
+bantuan pemicu kiriman manual seperti yang Anda tawarkan.
+
+Terima kasih.
+
+---
+
 ## Daftar periksa owner setelah Pesan 2 dikirim
 
 - [ ] Mitra konfirmasi alamat sudah ditambahkan/diganti

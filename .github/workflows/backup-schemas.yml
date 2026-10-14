@@ -4,15 +4,43 @@
 # Backup tiap schema staff (contoh: schema_a, schema_b, dst. — GANTI dengan nama schema proyekmu) terpisah → upload ke Supabase Storage.
 # Restore selective per-schema kalau ada accidental DROP TABLE.
 #
+# ═══════════════════════════════════════════════════════════════════════════
+# 🔴 REPO INI PUBLIK — BACA INI SEBELUM MEMASANG SECRET APA PUN
+# (ditemukan 2026-10-14; sebelum ini workflow belum pernah berhasil sekali pun)
+#
+# Isi dump schema `dramaapp` memuat DATA PRIBADI PENONTON: hash password, rahasia
+# 2FA, email, saldo koin, riwayat buka episode. Artifact GitHub Actions mengikuti
+# izin baca repo — dan repo ini PUBLIC, jadi daftar artifact-nya terbaca TANPA
+# LOGIN (diuji 2026-10-14: GET /actions/artifacts anonim -> HTTP 200).
+#
+# Karena itu langkah upload-artifact di bawah kini DIPAGARI: hanya berjalan kalau
+# repo berstatus private. Di repo publik, satu-satunya tujuan yang sah adalah
+# Supabase Storage (bucket PRIVAT).
+#
+# ⚠️ JANGAN melonggarkan pagar itu "biar backup-nya jalan dulu". Workflow yang
+# gagal tidak membocorkan apa pun; workflow yang sukses ke tempat yang salah
+# membocorkan SEMUANYA, satu kali, permanen, dan tak bisa ditarik kembali.
+# ═══════════════════════════════════════════════════════════════════════════
+#
 # SETUP (sekali, owner):
-# 1. Tambah secret GitHub di Settings → Secrets:
-#    - DATABASE_URL_BACKUP: connection string dengan role yang punya akses ke semua schema
-#                            (pakai postgres superuser atau role dedicated 'backup_runner')
-#    - SUPABASE_STORAGE_BUCKET: nama bucket Supabase Storage untuk upload (mis. 'db-backups')
-#    - SUPABASE_SERVICE_ROLE_KEY: untuk upload via Supabase API (owner-only)
-# 2. Update env SCHEMAS_TO_BACKUP di workflow ini sesuai schema yang ada.
+# 1. Buat bucket PRIVAT di Supabase Dashboard → Storage (mis. 'db-backups').
+#    WAJIB privat. Bucket publik = dump data penonton bisa diunduh siapa saja.
+# 2. Tambah secret GitHub di Settings → Secrets and variables → Actions:
+#    - DATABASE_URL_BACKUP   : connection string ke database (Supabase Dashboard →
+#                              Settings → Database → Connection string → URI).
+#                              Role harus bisa membaca schema `dramaapp`.
+#    - SUPABASE_PROJECT_REF  : ref project (bagian sebelum `.supabase.co`)
+#    - SUPABASE_SERVICE_ROLE_KEY : untuk upload via Supabase API (owner-only)
+#    - SUPABASE_STORAGE_BUCKET   : nama bucket dari langkah 1
+#    Keempatnya WAJIB di repo publik. Tanpa tujuan simpan yang aman, workflow
+#    sengaja GAGAL daripada diam-diam membuang backup (atau menaruhnya di
+#    tempat publik).
 # 3. Workflow jalan otomatis tiap hari 03:00 WIB (20:00 UTC malam sebelumnya).
-# 4. Manual trigger via "Actions" tab → "Backup Schemas" → "Run workflow".
+# 4. Manual trigger via "Actions" tab → "Backup Schemas Daily" → "Run workflow".
+#
+# ⚠️ BACKUP YANG TAK PERNAH DIUJI PULIHKAN BUKAN BACKUP. Sesudah backup pertama
+# berhasil, unduh satu berkas .gz lalu coba `pg_restore`/`psql` ke database
+# kosong. Tanpa itu, yang dimiliki cuma berkas yang DISANGKA backup.
 
 name: Backup Schemas Daily
 
@@ -29,8 +57,16 @@ jobs:
   backup:
     runs-on: ubuntu-latest
     env:
-      # Schemas yang akan di-backup. SESUAIKAN dengan setup tim.
-      SCHEMAS_TO_BACKUP: 'schema_a schema_b'   # CONTOH — GANTI dengan nama schema proyekmu (pisah spasi)
+      # Schema aplikasi DramaApp. Diisi 2026-10-14 — sebelumnya masih nilai CONTOH
+      # bawaan template (`schema_a schema_b`), yang membuat workflow ini gagal
+      # 20 kali berturut-turut tanpa pernah menghasilkan satu backup pun.
+      # Sumber kebenaran: lib/supabase.ts:24 (`SUPABASE_SCHEMA = "dramaapp"`).
+      SCHEMAS_TO_BACKUP: 'dramaapp'
+      # Tabel yang WAJIB ada di dalam dump. Kalau salah satu hilang, backupnya
+      # tidak berguna untuk memulihkan dan itu harus jadi kegagalan KERAS —
+      # bukan berkas .gz yang terlihat baik-baik saja. Sumber: migrasi
+      # supabase_migrations/2026-08-29_schema_lengkap_dramaapp.sql
+      TABEL_WAJIB: 'app_data dramas likes wallets unlocks'
       RETENTION_DAYS: 30
 
     steps:
@@ -84,6 +120,26 @@ jobs:
               exit 1
             fi
 
+            # ── Isi dump diperiksa, bukan cuma ukurannya (ditambah 2026-10-14) ──
+            # "Berkas tidak kosong" adalah ambang yang terlalu rendah: schema yang
+            # ADA tapi kehilangan tabelnya tetap menghasilkan dump berisi header
+            # SQL beberapa ratus byte. Hijau, ada berkas, nol data di dalamnya —
+            # dan itu baru ketahuan di hari backupnya dibutuhkan.
+            JML_TABEL=$(grep -c "^CREATE TABLE" "$DUMP_FILE" || true)
+            echo "Tabel terbaca di dump: ${JML_TABEL}"
+
+            HILANG=""
+            for t in $TABEL_WAJIB; do
+              if ! grep -qE "^CREATE TABLE (\"?${schema}\"?\.)?\"?${t}\"? " "$DUMP_FILE"; then
+                HILANG="${HILANG} ${t}"
+              fi
+            done
+            if [ -n "$HILANG" ]; then
+              echo "::error::Dump $schema TIDAK memuat tabel wajib:${HILANG}. Backup ini tidak bisa dipakai memulihkan data — periksa hak akses role di DATABASE_URL_BACKUP, atau perbarui TABEL_WAJIB kalau skemanya memang sengaja berubah."
+              exit 1
+            fi
+            echo "✓ Semua tabel wajib ada: $TABEL_WAJIB"
+
             SIZE=$(du -h "$DUMP_FILE" | cut -f1)
             echo "✓ Backup $schema selesai: $DUMP_FILE ($SIZE)"
 
@@ -101,10 +157,21 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
           SUPABASE_STORAGE_BUCKET: ${{ secrets.SUPABASE_STORAGE_BUCKET }}
+          REPO_PRIVAT: ${{ github.event.repository.private }}
         run: |
           if [ -z "$SUPABASE_SERVICE_ROLE_KEY" ] || [ -z "$SUPABASE_PROJECT_REF" ] || [ -z "$SUPABASE_STORAGE_BUCKET" ]; then
-            echo "::warning::Supabase upload secrets belum lengkap, skip upload. Backup tersimpan sebagai artifact GitHub Actions."
-            exit 0
+            # Di repo PRIVAT masih ada jaring: artifact. Di repo PUBLIK tidak ada
+            # satu pun tujuan yang aman, jadi ini GAGAL — bukan peringatan.
+            # Lolos diam-diam di sini berarti workflow berwarna hijau sementara
+            # nol backup tersimpan di mana pun; itu lebih buruk daripada gagal,
+            # karena memberi rasa aman yang palsu persis pada hal yang dibuat
+            # untuk menyelamatkan keadaan terburuk.
+            if [ "$REPO_PRIVAT" = "true" ]; then
+              echo "::warning::Supabase upload secrets belum lengkap, skip upload. Repo privat, jadi backup masih tersimpan sebagai artifact GitHub Actions."
+              exit 0
+            fi
+            echo "::error::Supabase upload secrets belum lengkap DAN repo ini PUBLIK, jadi tidak ada tempat simpan yang aman. Artifact TIDAK dipakai di repo publik karena isinya data pribadi penonton (hash password, rahasia 2FA, saldo koin) dan artifact mengikuti izin baca repo. Lengkapi SUPABASE_PROJECT_REF + SUPABASE_SERVICE_ROLE_KEY + SUPABASE_STORAGE_BUCKET (bucket WAJIB privat)."
+            exit 1
           fi
 
           for file in backups/*.gz; do
@@ -125,8 +192,19 @@ jobs:
             fi
           done
 
-      - name: Upload backups as GitHub Actions artifact (fallback)
-        if: always()
+      # Jaring pengaman HANYA untuk repo privat.
+      #
+      # 🔴 `if` di bawah adalah pagar keamanan, BUKAN optimasi — jangan dilepas.
+      # Artifact GitHub Actions mengikuti izin baca repo. Di repo publik itu
+      # berarti dump berisi hash password penonton, rahasia 2FA, email, dan
+      # saldo koin bisa diambil siapa pun; daftar artifact repo ini bahkan
+      # terbaca TANPA LOGIN (diuji 2026-10-14, GET /actions/artifacts -> 200).
+      #
+      # `always()` juga dibuang: versi lama mengunggah artifact bahkan ketika
+      # dump GAGAL di tengah, sehingga berkas separuh jadi ikut tersimpan dan
+      # terlihat seperti backup yang sah.
+      - name: Upload backups as GitHub Actions artifact (hanya repo PRIVAT)
+        if: success() && github.event.repository.private
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: schema-backups-${{ github.run_id }}

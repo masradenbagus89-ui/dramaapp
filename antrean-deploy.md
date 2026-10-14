@@ -3,7 +3,66 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-10-14 sore (**komputer OWNER**) — **ANTREAN KOSONG, DUAL PUSH TUNTAS.**
+**Terakhir dicek:** 2026-10-14 siang (**komputer OWNER**) — **ANTREAN KOSONG, DUAL PUSH TUNTAS.**
+Fast-forward `ef4bc04..13ccc06` ke **kedua** repo, nol paksaan. Ketiganya (lokal, `origin/main`,
+`dramaku/main`) duduk di `13ccc06`.
+
+**Rilis 2026-10-14 siang — `13ccc06`: backup database AKHIRNYA JALAN.** Nol kode aplikasi
+tersentuh, nol migrasi SQL, nol env baru, nol perubahan yang dilihat penonton. 5 berkas:
+1 workflow BARU, 1 workflow dimatikan jadwalnya, 1 script diperbaiki, 2 dokumen.
+
+🔴 **Jalur `pg_dump` dinyatakan BUNTU — jangan ditawarkan lagi ke owner.** Project Supabase
+`nvblmpkwyzbpdbshyvzw` **bukan milik owner** (sudah tercatat di baris 732 berkas ini sejak
+2026-09-18; sesi pagi ini sempat melewatkannya dan terlanjur menyuruh owner membuka
+Settings → Database yang memang tak terbuka untuknya). Connection string role `postgres`
+membuka SELURUH database pihak lain → keputusan sejenis sudah ditolak 2026-08-31 (PAT).
+Gantinya: REST + kunci `service_role` milik dramaapp sendiri. **Nol kredensial baru.**
+
+🔴 **Bug yang ditemukan di tengah jalan lebih besar dari tugas aslinya:**
+`scripts/export-dramaapp-sql.mjs` menghasilkan backup yang **TIDAK BISA DIPULIHKAN**, tanpa
+satu pun gejala (berkas utuh, ukuran wajar, `exit 0`). Ia menyalin struktur dari
+`supabase_migrations/` yang sudah menyimpang dari produksi → `dramas` dibuat **28 kolom** →
+`insert` menyebut kolom ke-29 (`status`) → Postgres menolak `42703` → seluruh data ada dalam
+satu `begin; … commit;` → **NOL baris pulih.** Diukur sebelum/sesudah pada berkas sungguhan:
+28 vs **29** kolom. Struktur kini dibaca dari **database hidup**, jadi tak bisa menyimpang lagi.
+
+⚠️ **Koreksi angka sesi ini sendiri:** sempat dilaporkan "14 kolom hilang" — **salah**,
+perbandingan pertama melewatkan baris `add column if not exists` di berkas yang sama. Yang
+benar **1 kolom**. Kesimpulan tak berubah, besarannya yang keliru.
+
+**TERBUKTI TAYANG — workflow dijalankan sungguhan di GitHub** (run `38512319033`, 8/8 langkah
+hijau): `✓ 3 secret terbaca` → `app_data: 36 · dramas: 40 · likes: 46 · wallets: 3 baris`
+(tiap angka dicocokkan dengan hitungan server) → `✓ isi terverifikasi` → `101K` →
+`✓ terunggah: dramaapp-20261014-043718.sql.gz` → `✓ terbukti ada di bucket (103.101 byte)` →
+`total berkas di bucket: 2`.
+
+Gerbang pra-rilis §6 dijalankan penuh, urutan benar: `rm -rf .next` → `npm run build`
+**exit 0** → `npx tsc --noEmit` **exit 0** (0 error) → `npm test` **exit 0**
+(**98 berkas / 1436 tes**, cocok baseline) → **nol** berkas env/kunci ter-stage → sapuan diff
+untuk bentuk kunci & connection string **0 kecocokan**. YAML kedua workflow di-parse, keenam
+blok `run` lolos `bash -n`.
+
+**7 gerbang pengaman diuji dengan sengaja DIRUSAK, ketujuhnya menolak:** kolom hilang · baris
+hilang · paginasi berhenti dini · tabel kosong · struktur hilang · kunci bocor ke berkas ·
+berkas tak ada di bucket.
+🪤 **Satu gerbang sempat LOLOS saat diuji** — ia membandingkan jumlah `insert` dengan daftar di
+memori, dua angka dari sumber yang SAMA; satu baris dibuang, keduanya ikut turun, hijau terus.
+Diperbaiki dengan pembanding dari LUAR (`Content-Range` PostgREST). **Gerbang yang belum pernah
+terlihat MENOLAK belum membuktikan apa pun.**
+
+⚠️ **BELUM selesai — UJI PULIHKAN.** Yang terbukti baru pemeriksaan **statis** (tiap kolom yang
+dipakai `insert` sudah dideklarasikan, 29/29). Belum dijalankan ke database kosong sungguhan.
+Sampai itu terjadi, kalimat jujurnya "ada berkas backup yang konsisten", **bukan** "punya backup
+yang terbukti pulih". Butuh satu Supabase project kosong; tidak menyentuh produksi.
+
+📅 **Dua peringatan runner dari GitHub (bukan error, tapi berjangka waktu):** `ubuntu-latest`
+pindah ke **Ubuntu 26 mulai 19 Oktober 2026** (5 hari lagi) — berlaku untuk SEMUA workflow repo
+ini, bukan cuma yang baru. Dan Node.js 20 sudah deprecated di Actions; `node-version: '20'`
+masih jalan (terbukti hari ini) tapi layak dinaikkan ke 22.
+
+**Rollback 1-baris:** `git revert --no-edit 13ccc06 && git push origin main && git push dramaku main`.
+
+**Cek sebelumnya:** 2026-10-14 sore (**komputer OWNER**) — **ANTREAN KOSONG, DUAL PUSH TUNTAS.**
 Fast-forward dari `c64128a`, nol paksaan. **Rilis kedua hari ini: `dd19287`** (commit catatan ini
 duduk di atasnya).
 

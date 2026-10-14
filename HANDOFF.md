@@ -16,7 +16,16 @@
 ## 2026-10-14 11:30 WIB — BACKUP HARIAN AKHIRNYA JALAN (lewat REST, bukan pg_dump) + script export terbukti menghasilkan backup yang TAK BISA DIPULIHKAN
 
 **TITIK LANJUT: UJI PULIHKAN** — satu-satunya yang tersisa, dan satu-satunya yang
-membedakan "ada berkas backup" dari "punya backup". Lalu: izin owner untuk push.
+membedakan "ada berkas backup" dari "punya backup". Butuh satu Supabase project kosong.
+
+✅ **DIRILIS `13ccc06`** (dual push tuntas, `ef4bc04..13ccc06`, nol paksaan). Workflow
+**dijalankan sungguhan di GitHub** — run `38512319033`, **8/8 langkah hijau**:
+`dramas: 40 baris` → `✓ terunggah` → `✓ terbukti ada di bucket (103.101 byte)`.
+Gerbang §6: build **0** · tsc **0** · **98 berkas / 1436 tes** · nol env ter-stage.
+
+📅 **Berjangka waktu:** `ubuntu-latest` pindah ke **Ubuntu 26 pada 19 Oktober 2026** (SEMUA
+workflow repo ini), dan Node 20 sudah deprecated di Actions — `node-version: '20'` masih
+jalan, layak dinaikkan ke 22.
 
 🔴 **BATALKAN titik-lanjut catatan sebelumnya** ("owner tempel `DATABASE_URL_BACKUP`").
 Itu jalan buntu — jangan dikerjakan, jangan ditawarkan lagi ke owner.

@@ -193,7 +193,14 @@ curl -s https://<DOMAIN>/api/health
 ```
 
 **Kriteria lulus:** (1) & (2) menyebut domain baru · (3) menjawab **0** ·
-(4) ±377 · (5) `{"ok":true,"sumberData":"database"}`.
+(4) **ratusan, dan TIDAK jauh di bawah hitungan hari itu** · (5)
+`{"ok":true,"sumberData":"database"}`.
+
+> ⚠️ Angka (4) **memang naik sendiri** — tiap film baru dari webhook Playly
+> menambah URL. Terukur **377** pada 2026-10-15 pagi dan **384** sore hari yang
+> sama, tanpa satu pun deploy di antaranya. Jadi angka yang berbeda dari catatan
+> **bukan** tanda gagal; yang jadi tanda bahaya adalah angka yang **jatuh drastis**
+> atau tinggal belasan (itu berarti sitemap kehilangan katalog).
 
 Kalau (3) tidak nol padahal deploy sudah `Active`: tunggu ≤1 jam (sitemap
 menyegarkan per jam), lalu ukur ulang. Masih tidak nol → variabelnya salah ketik.

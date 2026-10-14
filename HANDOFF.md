@@ -9,7 +9,102 @@
 >
 > **📦 Berkas ini sudah 5.224 baris / ±472 KB** (diukur 2026-10-10; angka lama "2.980 baris / 240 KB" sudah basi separuh — ia hampir DUA KALI lipat sejak itu) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-10-13.
+**Terakhir diisi:** 2026-10-14.
+
+---
+
+## 2026-10-14 — DUA ALAMAT VERCEL YANG DITULIS MATI DICABUT + kartu status katalog berhenti bohong: DIRILIS `8ff94d9`
+
+**TITIK LANJUT: Putaran 2 (login admin + Admin→Videos→Playly) — tinggal itu sebelum Tahap 6.**
+Butir "kartu status katalog harus berkata dari database" di Putaran 2 **boleh dilewati**: sudah
+dibuktikan jauh lebih kuat oleh Putaran 3, dan butir Webhooks juga sudah terbukti (lihat bawah).
+
+### 🔴 Temuan utama: dua tempat menembak `dramaapp.vercel.app` secara hardcode
+
+Ditemukan dengan menyisir SELURUH repo, bukan dari daftar utang mana pun — keduanya terlewat di
+Tahap 1-3. **Yang membuatnya berbahaya: keduanya jalan DI LUAR Vercel**, jadi saat Vercel
+dipensiunkan mereka tidak ikut mati sebagai petunjuk. Mereka terus menembak alamat mati.
+
+1. **`.github/workflows/keep-db-awake.yml`** — robot harian penjaga database. Supabase gratis
+   menidurkan project yang menganggur ~7 hari; sekali tertidur **alamatnya dicabut dan SELURUH
+   situs mati** (kejadian nyata 13 Juli 2026). Robot jalan di GitHub Actions, jadi gejalanya cuma
+   email gagal harian yang gampang dikira "robotnya saja yang rewel".
+   **Sekarang:** alamat dari GitHub **Variables `KEEPALIVE_SITES`** (Settings → Secrets and
+   variables → Actions → Variables), fallback ke nilai lama. Pergantian domain = ubah satu kolom,
+   **nol commit nol deploy**. Menerima beberapa alamat dipisah koma; **GAGAL kalau ADA SATU** yang
+   sakit, bukan hanya kalau semua sakit.
+2. **`pc-backup-agent/start-video-services.ps1`** — `$SITUS_URL`. Dipakai MELAPORKAN alamat tunnel
+   ke situs. Tunnel **berganti alamat tiap restart layanan**, jadi laporan yang menembak situs
+   pensiun = situs tetap memakai alamat tunnel yang sudah lenyap → **SEMUA video mati**, nol gejala
+   sampai ada yang menekan play.
+   **Sekarang:** dari env Machine **`DRAMAAPP_SITUS_URL`**, fallback ke nilai lama.
+   **Panduan operasionalnya: `docs/migrasi-railway-pc-backup.md`** — BELUM dikerjakan di PC backup.
+
+⚠️ **PC backup butuh DUA perubahan, bukan satu:** alamat **DAN** `HARDLINK_AGENT_SECRET` (utang
+lama: nilainya berbeda antara Railway dan PC backup). Alamat benar + secret salah = ditolak, sama
+matinya. Boleh dikerjakan **sekarang**, tak perlu menunggu Playly — justru lebih aman selagi Vercel
+masih hidup sebagai jaring pengaman.
+
+### 🪤 Dua cacat yang ketahuan hanya karena skrip robot DIJALANKAN, bukan dibaca
+
+Keduanya lolos pembacaan mata dan akan membuat robot berbohong dengan tenang:
+- **Hitungan gagal hilang di subshell.** `while` yang diberi makan lewat pipe jalan di subshell →
+  variabel yang dinaikkan di dalamnya kembali ke nol begitu loop selesai → robot **selamanya
+  melapor "0 gagal"** sambil hijau. Ditulis ke berkas, bukan variabel.
+- **`jq` yang hilang dilaporkan sebagai "database kosong"** (`|| echo 0`) — menuduh database atas
+  kerusakan ALAT. Terbukti: diuji di mesin tanpa `jq`, dua situs SEHAT dilaporkan mati. Dua sebab
+  itu kini dipisah.
+
+### Kartu status katalog berhenti berbohong (`b4aff3b`)
+
+`periksaKatalogHidup()` memulangkan `true` untuk DUA keadaan berbeda: "database sehat" dan "tak ada
+database sama sekali". **Tiga keadaan nyata, boolean cuma sanggup bawa dua** → yang ketiga terdesak
+ke tetangga yang salah. Jawabannya **dilebarkan, bukan ditukar**:
+`periksaSumberKatalog(): "database" | "database-mati" | "mode-berkas"` + status `"mode-berkas"`
+(amber) di `lib/katalog-status.ts`.
+🪤 **`return false` BUKAN perbaikan** — itu memindahkan kebohongan ke sisi sebaliknya (merah palsu
+tiap sesi dev → admin belajar mengabaikan kartunya).
+🔴 **Perbaikan ini TIDAK terlihat di layar produksi** (di sana `useSupabase` = `true`, kartu tetap
+hijau). Ditemukan lewat PRE-MORTEM sebelum menulis kode, dan itu yang mengubah rencananya:
+**satu-satunya bukti yang mungkin adalah tes.** Penjaga: `tests/sumber-katalog.test.ts` + 5 tes
+mode-berkas; uji-balik **2 arah MERAH** (2 gagal & 4 gagal).
+
+### ✅ Butir Putaran 2 yang sudah terbukti tanpa login admin
+
+**`PLAYLY_WEBHOOK_SECRET` terpasang & bekerja di Railway.** POST badan kosong ke
+`/api/webhooks/playly` dijawab **401**, bukan 503. 503 = secret belum di-set; 401 = secret ada dan
+menolak tanda tangan palsu. Vercel menjawab identik.
+
+### 📨 Negosiasi mitra Playly — SUDAH ADA KESEPAKATAN, tinggal jadwal
+
+Jejak lengkap + draf pesan: **`docs/migrasi-railway-pesan-ke-playly.md`**. Yang disepakati:
+- Sistem Playly **hanya bisa SATU alamat** webhook per mitra → tak bisa berdampingan, harus dijadwalkan
+- **Secret webhook BERGANTI OTOMATIS** saat alamat diganti → draf lama kita yang menulis "secret
+  tidak berubah" **salah, mitra yang benar**
+- Mitra memastikan **401 ikut dicoba ulang** (bukan cuma 5xx/timeout) + bisa memicu kiriman manual
+  → jeda redeploy aman, tak ada video hilang
+- Jadwal **10.00 WIB**, putaran retry harian mereka 10.30 WIB
+
+⚠️ **KOREKSI PREMIS yang penting:** mengalihkan webhook **TIDAK** menghentikan video masuk ke
+`dramaapp.vercel.app`. Webhook menyimpan ke **database bersama** (`lib/store.ts:1449-1451`), dan
+kedua situs membacanya. Satu-satunya cara Vercel berhenti menampilkan film baru adalah
+**mematikan Vercel**.
+
+⚠️ **Memasang secret baru di Railway memicu REDEPLOY** (`lib/playly-webhook.ts:227` membaca dari
+env, bukan panel admin) — beberapa menit, bukan instan. **Owner perlu mengukur durasi redeploy
+dari riwayat panel Railway** sebelum hari-H: jadwal 10.00 cuma menyisakan 30 menit ke 10.30.
+⚠️ **Tidak ada cara membuktikan secret benar sebelum kiriman asli datang.** POST kosong menjawab
+401 baik sebelum maupun sesudah ganti. "Siap" = redeploy selesai, BUKAN "secret terbukti benar".
+
+### Sisa utang (tak berubah)
+
+`HARDLINK_AGENT_SECRET` beda Railway↔PC backup (lihat di atas) · `.env.railway.local` +
+`.env.vercel.local` masih di disk, **salin ke pengelola password sebelum dihapus** · Healthcheck
+Path + batas biaya Railway belum dikonfirmasi eksplisit · penyegelan 13 variabel ditunda sampai
+Putaran 2 lolos · `NEXT_PUBLIC_SITE_URL` diisi di Tahap 6 · katalog **64→40 judul** belum
+ditelusuri (bukan gejala Railway — angka sama di kedua situs).
+
+**Vercel tetap melayani penonton.** Tahap 6 jangan dimulai sebelum Putaran 2 lolos.
 
 ---
 

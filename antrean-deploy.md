@@ -3,7 +3,41 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-10-10 (**komputer OWNER**) — **ANTREAN KOSONG, DUAL PUSH TUNTAS.**
+**Terakhir dicek:** 2026-10-14 (**komputer OWNER**) — **ANTREAN KOSONG, DUAL PUSH TUNTAS.**
+Fast-forward dari `e688292` ke **kedua** repo, nol paksaan. **Rilis kodenya `8ff94d9`**; commit
+catatan ini duduk tepat di atasnya, jadi ref akhir kedua repo = commit catatan, bukan `8ff94d9`
+(angka pastinya terbaca lewat `git log --oneline -1`).
+
+> ⚠️ **RUMAH PROJECT: `D:\Users\user18\dramaapp`** (dikembalikan owner 2026-10-12; catatan
+> 2026-10-10 di bawah yang menyebut `E:\dramaapp` **sudah TIDAK berlaku**).
+
+**Rilis 2026-10-14 — tiga commit, nol perubahan yang dilihat penonton.** `2d20e35` catatan
+Putaran 3 migrasi · `b4aff3b` kartu status katalog berhenti melaporkan "dari database" saat
+aplikasi jalan tanpa database · `8ff94d9` mencabut alamat `dramaapp.vercel.app` yang ditulis mati
+di **robot penjaga database** (`keep-db-awake.yml` → kini dari GitHub Variables `KEEPALIVE_SITES`)
+dan di **agent PC backup** (`start-video-services.ps1` → kini dari env Machine
+`DRAMAAPP_SITUS_URL`). **Nol migrasi SQL, nol env baru yang WAJIB** — keduanya punya fallback ke
+nilai lama, jadi tanpa tindakan apa pun perilakunya sama persis seperti sebelum rilis.
+
+⚠️ **Dua tindakan manual yang MENUNGGU owner** (bukan prasyarat rilis ini, tapi prasyarat sebelum
+Vercel dipensiunkan): isi `KEEPALIVE_SITES` di panel GitHub, dan jalankan
+`docs/migrasi-railway-pc-backup.md` di PC backup (ubah alamat **DAN** `HARDLINK_AGENT_SECRET`).
+
+Gerbang pra-rilis: `rm -rf .next` → build **exit 0** → `tsc` **exit 0** → **98 berkas / 1436 tes**
+→ nol berkas env ter-stage. Skrip robot **diekstrak lalu DIJALANKAN** 4 skenario (dua alamat sehat
+→ exit 0 · satu alamat mati → exit 1 · satu alamat → exit 0 · isi ngawur → exit 1); parser
+PowerShell 0 error; logika pemilihan alamat diuji 4 kondisi, 0 gagal. Uji-balik perbaikan kartu
+status: **2 arah MERAH**.
+
+🪤 **Pelajaran putaran ini: menjalankan skrip menangkap apa yang membaca skrip tidak bisa.** Dua
+cacat lolos pembacaan mata dan baru ketahuan saat dijalankan — hitungan gagal yang hilang di
+subshell (robot selamanya melapor "0 gagal" sambil hijau) dan `jq` tak terpasang yang dilaporkan
+sebagai "database kosong" (menuduh database atas kerusakan alat).
+
+**Rollback 1-baris:** `git revert 8ff94d9 && git push origin main` (atau `b4aff3b` / `2d20e35`
+masing-masing berdiri sendiri), atau promote deployment `e688292` dari dashboard Vercel.
+
+**Cek sebelumnya: 2026-10-10 (**komputer OWNER**) — **ANTREAN KOSONG, DUAL PUSH TUNTAS.**
 `2c888bd..8f07e23` fast-forward ke **kedua** repo, nol paksaan. Ketiga ref terbaca sama:
 **`8f07e23`**.
 

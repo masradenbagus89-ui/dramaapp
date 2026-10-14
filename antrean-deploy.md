@@ -3,7 +3,36 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-10-14 (**komputer OWNER**) — **ANTREAN KOSONG, DUAL PUSH TUNTAS.**
+**Terakhir dicek:** 2026-10-14 sore (**komputer OWNER**) — **ANTREAN KOSONG, DUAL PUSH TUNTAS.**
+Fast-forward dari `c64128a`, nol paksaan. **Rilis kedua hari ini: `dd19287`** (commit catatan ini
+duduk di atasnya).
+
+**Rilis 2026-10-14 sore — `dd19287`: backup database.** Nol perubahan yang dilihat penonton, nol
+kode aplikasi tersentuh — hanya `.github/workflows/backup-schemas.yml` + 2 dokumen.
+🔴 **Temuannya lebih besar dari perbaikannya: repo produksi PUBLIC**, dan workflow lama mengunggah
+dump database (hash password penonton, rahasia 2FA, email, saldo koin) sebagai artifact dengan
+`if: always()`. Artifact mengikuti izin baca repo; `GET /actions/artifacts` repo ini dijawab
+**HTTP 200 tanpa login**. Backup yang gagal 20/20 kali itulah yang selama ini menahan kebocoran —
+**memperbaikinya separuh lebih berbahaya daripada membiarkannya rusak.**
+Ditutup: artifact dipagari `success() && github.event.repository.private`, Supabase-secret-tak-
+lengkap + repo publik kini **GAGAL** bukan warning, dan isi dump diverifikasi (5 tabel wajib), bukan
+cuma ukurannya.
+
+⚠️ **Backup MASIH BELUM menyala** — butuh owner memasang 4 secret, lihat
+`docs/backup-database-setup.md`. Yang dirilis ini pagar + kesiapannya, bukan backupnya sendiri.
+
+Gerbang pra-rilis: build **exit 0** → `tsc` **exit 0** → **98 berkas / 1436 tes** → nol berkas env.
+YAML parse OK · `bash -n` keenam blok `run` 0 bermasalah · logika verifikasi tabel diuji **5 sampel
+dump** (sehat LOLOS · berkutip LOLOS · kosong TOLAK · `wallets`-hilang TOLAK · schema-salah-nama
+TOLAK).
+
+🪤 **`pre-commit penjaga-rahasia` menolak commit DUA KALI dan keduanya benar** (contoh connection
+string di panduan; kedua kalinya justru di kalimat yang menjelaskan kenapa contohnya tak ditulis).
+**Tidak di-bypass** — teksnya yang diubah. `--no-verify` tidak dipakai di repo ini.
+
+**Rollback 1-baris:** `git revert dd19287 && git push origin main`.
+
+**Cek sebelumnya: 2026-10-14 pagi (**komputer OWNER**) — **ANTREAN KOSONG, DUAL PUSH TUNTAS.**
 Fast-forward dari `e688292` ke **kedua** repo, nol paksaan. **Rilis kodenya `8ff94d9`**; commit
 catatan ini duduk tepat di atasnya, jadi ref akhir kedua repo = commit catatan, bukan `8ff94d9`
 (angka pastinya terbaca lewat `git log --oneline -1`).

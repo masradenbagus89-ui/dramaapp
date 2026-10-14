@@ -9,7 +9,83 @@
 >
 > **📦 Berkas ini sudah 5.224 baris / ±472 KB** (diukur 2026-10-10; angka lama "2.980 baris / 240 KB" sudah basi separuh — ia hampir DUA KALI lipat sejak itu) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-10-14.
+**Terakhir diisi:** 2026-10-14 (sore).
+
+---
+
+## 2026-10-14 sore — BACKUP DATABASE TIDAK PERNAH JALAN (20/20 GAGAL), dan memperbaikinya setengah jalan = KEBOCORAN DATA PENONTON
+
+**TITIK LANJUT: owner pasang 4 secret backup** (`docs/backup-database-setup.md`) ·
+**Putaran 2 admin** · **PC backup** (`docs/migrasi-railway-pc-backup.md`) ·
+**hari-H webhook Playly 14.00 WIB**.
+
+### 🔴 Temuan terbesar hari ini: repo produksi `masradenbagus89-ui/dramaapp` berstatus **PUBLIC**
+
+`Backup Schemas Daily` **gagal 20 dari 20 run** sejak terpasang — nol backup pernah dihasilkan.
+Sebabnya dua: `DATABASE_URL_BACKUP` tak pernah di-set (daftar secret repo **KOSONG**), dan
+`SCHEMAS_TO_BACKUP` masih berisi nilai contoh bawaan template `schema_a schema_b` alih-alih schema
+sungguhan `dramaapp` (`lib/supabase.ts:24`).
+
+🪤 **Tapi memperbaikinya seperti kelihatannya JUSTRU menyebabkan bencana.** Workflow lama
+mengunggah hasil dump sebagai **GitHub Actions artifact** dengan `if: always()`. Dump schema
+`dramaapp` memuat **hash password penonton, rahasia 2FA, email, saldo koin, riwayat buka episode**.
+Artifact mengikuti izin baca repo — dan repo ini PUBLIC. **Diuji:** `GET /actions/artifacts` repo
+ini dijawab **HTTP 200 TANPA LOGIN**.
+
+**Kegagalan 20 kali itulah yang selama ini menahan kebocoran.** Kalau nama schema dibetulkan lalu
+owner memasang secret, besok paginya dump lengkap data penonton tersedia diunduh siapa saja.
+**Rusak lebih aman daripada diperbaiki separuh** — catat polanya, bukan cuma kasusnya.
+
+### Yang sudah ditutup (`dd19287`)
+
+`SCHEMAS_TO_BACKUP` → `dramaapp` · langkah artifact dipagari
+`success() && github.event.repository.private` (di repo publik **tidak pernah jalan**; `always()`
+dibuang karena dulu mengunggah bahkan saat dump gagal di tengah) · Supabase secret tak lengkap +
+repo publik = **GAGAL**, bukan warning (hijau-tanpa-backup = rasa aman palsu pada hal yang justru
+dibuat untuk keadaan terburuk) · **isi dump diverifikasi**, bukan cuma ukurannya — kelima tabel
+`app_data dramas likes wallets unlocks` wajib ada.
+
+Verifikasi isi itu lahir dari PRE-MORTEM: schema yang ADA tapi kehilangan tabel tetap menghasilkan
+dump berisi header beberapa ratus byte — hijau, ada berkas, nol data, ketahuan di hari backup itu
+dibutuhkan. Diuji **5 sampel**: sehat LOLOS · sehat-berkutip LOLOS · schema-kosong TOLAK ·
+`wallets`-hilang TOLAK · **schema-salah-nama TOLAK** (punya 5 `CREATE TABLE` jadi lolos uji jumlah,
+tertangkap karena nama schemanya beda).
+
+🪤 **`pre-commit penjaga-rahasia` menolak panduan DUA KALI dan keduanya BENAR** — kedua kalinya
+karena kalimat yang menjelaskan *kenapa contoh connection string tidak ditulis* malah menuliskan
+polanya. **Tidak di-bypass**; teksnya yang diubah. Jangan pakai `--no-verify` di repo ini.
+
+### ⏭️ Menunggu owner (saya tak punya kredensialnya)
+
+Panduan lengkap: **`docs/backup-database-setup.md`**. Ringkas: bucket Supabase **PRIVAT** → ambil
+connection string → pasang 4 secret (`DATABASE_URL_BACKUP`, `SUPABASE_PROJECT_REF`,
+`SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_STORAGE_BUCKET`) → jalankan manual.
+
+⚠️ **Langkah terakhir yang paling sering dilewati: UJI PULIHKAN.** Backup yang tak pernah dicoba
+dipulihkan bukan backup — itu berkas yang disangka backup, dan bedanya baru ketahuan di hari paling
+buruk untuk mengetahuinya.
+
+### ✅ Sudah dikerjakan AI hari ini lewat `gh` (tak perlu diulang owner)
+
+**`KEEPALIVE_SITES` sudah terpasang di KEDUA repo** berisi kedua alamat dipisah koma. Robotnya
+**dijalankan dan terbukti**: `Alamat yang akan disapa: 2` → Vercel 200/40 drama OK → Railway 200 OK
+→ `Ringkasan: 2 sehat, 0 gagal` → job ✓ 6 detik.
+
+### ⚠️ Repo cermin `ojokesusu/dramaku`: SEMUA workflow MATI karena tagihan
+
+> *"The job was not started because recent account payments have failed or your spending limit
+> needs to be increased."*
+
+Berlaku untuk **seluruh** workflow di sana, bukan cuma satu. Dampak nyata **kecil** karena repo
+produksi menjalankan yang sama dan sehat — tapi kalau selama ini dikira cermin jadi cadangan robot,
+**ia tidak berfungsi sama sekali**. Variable sudah dipasang di sana juga, jadi begitu tagihannya
+beres ia langsung benar.
+
+### 📅 Hari-H webhook Playly: **14.00 WIB** (diundur dari 10.00, sudah dikirim ke mitra)
+
+Mengundur justru lebih aman — tekanan 30 menit ke putaran retry 10.30 hilang. Konsekuensi: putaran
+otomatis hari itu sudah lewat, jadi bergantung pemicu manual mitra (sudah mereka tawarkan, dan
+sudah disebut di pesan). Urutan + cara baca log: `docs/migrasi-railway-pesan-ke-playly.md`.
 
 ---
 

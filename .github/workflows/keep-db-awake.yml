@@ -20,6 +20,27 @@
 # TIDAK BUTUH PASSWORD/KUNCI RAHASIA apa pun — cuma membuka halaman publik.
 #
 # JALANKAN MANUAL: tab "Actions" → "Penjaga Anti-Tidur Database" → "Run workflow".
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# ALAMAT YANG DISAPA — diatur dari panel GitHub, BUKAN dari berkas ini
+# (diubah 2026-10-14, saat migrasi Vercel → Railway)
+#
+#   Settings → Secrets and variables → Actions → Variables → KEEPALIVE_SITES
+#   Isinya satu alamat, atau beberapa dipisah KOMA.
+#   Belum dibuat / kosong = pakai bawaan di bawah.
+#
+# KENAPA tidak di-hardcode lagi: alamat situs dulu ditulis langsung di berkas
+# ini. Saat hosting pindah, robot akan terus menyapa alamat MATI tiap hari — dan
+# karena ia jalan di GitHub Actions (bukan di hosting yang pindah), tak ada yang
+# ikut mati bersamanya sebagai petunjuk. Gejalanya cuma email gagal harian yang
+# gampang dikira "robotnya saja yang rewel", sementara database sebenarnya TIDAK
+# tersentuh dan berjalan menuju tidur 7 hari. Lewat Variables, pergantian alamat
+# = ubah satu kolom di panel, berlaku seketika: nol commit, nol deploy.
+#
+# MASA TRANSISI: isi KEDUA alamat dipisah koma. Semua disapa, dan langkah ini
+# GAGAL kalau ADA SATU saja yang sakit — alarmnya tidak ditumpulkan hanya karena
+# saudaranya sehat. Begitu situs lama dipensiunkan, hapus dari daftar.
+# ─────────────────────────────────────────────────────────────────────────────
 
 name: Penjaga Anti-Tidur Database
 
@@ -37,36 +58,89 @@ jobs:
   sapa-database:
     name: Sapa database supaya tidak tertidur
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - name: Panggil endpoint yang membaca database
         env:
-          # Ganti kalau domain situs berubah.
-          SITE: https://dramaapp.vercel.app
+          SITES: ${{ vars.KEEPALIVE_SITES || 'https://dramaapp.vercel.app' }}
         run: |
           set -euo pipefail
-          # Query param acak = pemutus cache, jaring pengaman kalau suatu saat
-          # ada lapisan cache baru di depan situs.
-          URL="${SITE}/api/dramas?keepalive=$(date +%s)"
-          echo "Menyapa: ${URL}"
 
-          CODE=$(curl -sS -o resp.json -w "%{http_code}" \
-                   --max-time 30 --retry 3 --retry-delay 15 --retry-all-errors \
-                   "${URL}")
-          echo "Kode balasan HTTP: ${CODE}"
+          # Koma jadi baris supaya tiap alamat diproses sendiri-sendiri. Spasi
+          # dan garis miring di ujung dibuang — keduanya lazim ikut tersalin
+          # saat mengisi kolom di panel, dan tanpa dirapikan di sini alamat yang
+          # sebenarnya BENAR akan ditolak dengan pesan yang membingungkan.
+          echo "${SITES}" | tr ',' '\n' | sed 's#^[[:space:]]*##; s#[[:space:]]*$##; s#/*$##' | grep -v '^$' > daftar.txt || true
 
-          if [ "${CODE}" != "200" ]; then
-            echo "::error::Situs/database TIDAK sehat (HTTP ${CODE}). Cek apakah project Supabase tertidur: https://supabase.com/dashboard"
+          JUMLAH=$(wc -l < daftar.txt)
+          if [ "${JUMLAH}" -lt 1 ]; then
+            echo "::error::KEEPALIVE_SITES terisi tapi tak satu pun alamat sah terbaca."
+            exit 1
+          fi
+          echo "Alamat yang akan disapa: ${JUMLAH}"
+
+          # Hitungan ditulis ke BERKAS, bukan ke variabel shell. Sebabnya `while`
+          # yang diberi makan lewat pipe berjalan di subshell, sehingga variabel
+          # yang dinaikkan di dalamnya kembali ke nilai semula begitu loop
+          # selesai — bug klasik yang membuat robot selalu melapor "0 gagal".
+          : > gagal.txt
+
+          while read -r SITE; do
+            echo "──────────────────────────────────────────"
+            # Query param acak = pemutus cache, jaring pengaman kalau suatu saat
+            # ada lapisan cache baru di depan situs.
+            URL="${SITE}/api/dramas?keepalive=$(date +%s)"
+            echo "Menyapa: ${URL}"
+
+            # `|| true` supaya curl yang gagal total (DNS mati, host tak ada)
+            # tidak menghentikan skrip lewat `set -e`. Alamat BERIKUTNYA tetap
+            # harus disapa — justru itu yang menjaga database tetap bangun saat
+            # salah satu situs sedang mati.
+            CODE=$(curl -sS -o resp.json -w "%{http_code}" \
+                     --max-time 30 --retry 3 --retry-delay 15 --retry-all-errors \
+                     "${URL}" || true)
+            CODE=${CODE:-000}
+            echo "Kode balasan HTTP: ${CODE}"
+
+            if [ "${CODE}" != "200" ]; then
+              echo "::error::${SITE} TIDAK sehat (HTTP ${CODE}). Kalau situs ini memang sudah dipensiunkan, hapus dari Variables KEEPALIVE_SITES. Kalau tidak, cek apakah project Supabase tertidur: https://supabase.com/dashboard"
+              echo "${SITE}" >> gagal.txt
+              continue
+            fi
+
+            # Halaman balas 200 belum tentu datanya mengalir — pastikan isinya nyata.
+            #
+            # Kegagalan `jq` SENGAJA dipisahkan dari "data kosong". Versi
+            # sebelumnya menulis `|| echo 0`, yang membuat jq-tak-terpasang
+            # dilaporkan sebagai "database membalas KOSONG" — menuduh database
+            # atas kerusakan alat. Terbukti 2026-10-14 saat skrip ini diuji di
+            # mesin tanpa jq: dua situs yang SEHAT dilaporkan mati.
+            if ! COUNT=$(jq 'if type == "array" then length else 0 end' resp.json 2>/dev/null); then
+              echo "::error::jq gagal membaca balasan ${SITE}. Ini kerusakan ALAT/format balasan, BUKAN bukti database kosong — jangan menyalakan alarm Supabase karenanya."
+              echo "${SITE}" >> gagal.txt
+              continue
+            fi
+            echo "Jumlah drama yang terbaca dari database: ${COUNT}"
+
+            if [ "${COUNT}" -lt 1 ]; then
+              echo "::error::${SITE} membalas KOSONG. Situs hidup tapi data tidak terbaca — perlu diperiksa."
+              echo "${SITE}" >> gagal.txt
+              continue
+            fi
+
+            echo "OK — ${SITE}: database tersentuh & membalas ${COUNT} drama."
+          done < daftar.txt
+
+          GAGAL=$(wc -l < gagal.txt)
+          echo "──────────────────────────────────────────"
+          echo "Ringkasan: $((JUMLAH - GAGAL)) sehat, ${GAGAL} gagal, dari ${JUMLAH} alamat."
+
+          # Gagal kalau ADA SATU yang sakit, bukan cuma kalau SEMUA sakit. Alarm
+          # yang baru berbunyi setelah seluruh situs mati sudah terlambat: yang
+          # ingin diketahui justru situs PERTAMA yang tumbang.
+          if [ "${GAGAL}" -gt 0 ]; then
+            echo "::error::${GAGAL} dari ${JUMLAH} alamat bermasalah — lihat rincian di atas."
             exit 1
           fi
 
-          # Halaman balas 200 belum tentu datanya mengalir — pastikan isinya nyata.
-          COUNT=$(jq 'if type == "array" then length else 0 end' resp.json)
-          echo "Jumlah drama yang terbaca dari database: ${COUNT}"
-
-          if [ "${COUNT}" -lt 1 ]; then
-            echo "::error::Database membalas KOSONG. Situs hidup tapi data tidak terbaca — perlu diperiksa."
-            exit 1
-          fi
-
-          echo "OK — database tersentuh & membalas ${COUNT} drama. Tidak akan ditidurkan."
+          echo "Semua sehat. Database tidak akan ditidurkan."

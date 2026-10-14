@@ -60,7 +60,26 @@ $CLOUDFLARED_CANDIDATES = @(
   "C:\Program Files (x86)\cloudflared\cloudflared.exe"
 )
 # Alamat situs yang akan diberi tahu alamat tunnel (kedua mode).
-$SITUS_URL = "https://dramaapp.vercel.app"
+#
+# Diambil dari env Machine DRAMAAPP_SITUS_URL kalau ada; kalau tidak, pakai
+# bawaan di bawah. Dibuat begini 2026-10-14 saat migrasi Vercel -> Railway.
+#
+# KENAPA bukan ditulis mati seperti dulu: alamat ini dipakai MELAPORKAN lokasi
+# tunnel ke situs. Tunnel berganti alamat tiap kali layanan restart, jadi kalau
+# laporannya menembak situs yang sudah dipensiunkan, situs TETAP memakai alamat
+# tunnel lama yang sudah lenyap - dan SEMUA video mati. Tak ada gejala sampai
+# ada yang menekan play; env var, status service, dan curl ke tunnel baru
+# semuanya tetap terlihat hijau (pola kerusakan senyap yang sama dengan
+# $NAMED_URL di bawah, audit 2026-08-22).
+#
+# Ganti alamat tanpa menyunting berkas ini (jalankan PowerShell sebagai Admin):
+#   [Environment]::SetEnvironmentVariable('DRAMAAPP_SITUS_URL','https://<alamat-baru>','Machine')
+# lalu TUTUP dan buka ulang PowerShell - env Machine hanya terbaca oleh proses
+# yang lahir sesudah nilainya diubah.
+$SITUS_URL = [Environment]::GetEnvironmentVariable("DRAMAAPP_SITUS_URL", "Machine")
+if (-not $SITUS_URL) { $SITUS_URL = $env:DRAMAAPP_SITUS_URL }
+if (-not $SITUS_URL) { $SITUS_URL = "https://dramaapp.vercel.app" }
+$SITUS_URL = $SITUS_URL.Trim().TrimEnd('/')
 # Drama yang dipakai untuk membuktikan rantai situs -> tunnel -> Caddy -> berkas.
 # HARUS drama yang berkas 1.mp4-nya memang ada di folder video.
 $DRAMA_UJI = "ahli-bela-diri-terkuat-mengguncang-keluarga-besar"

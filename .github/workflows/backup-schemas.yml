@@ -45,10 +45,26 @@
 name: Backup Schemas Daily
 
 on:
-  schedule:
-    # 20:00 UTC = 03:00 WIB next day
-    - cron: '0 20 * * *'
-  workflow_dispatch:  # manual trigger via UI
+  # ── JADWAL HARIAN DIMATIKAN 2026-10-14 ──────────────────────────────────
+  # Workflow ini TIDAK PERNAH berhasil (gagal 20 dari 20 run) dan tidak akan
+  # pernah bisa dengan keadaan sekarang: ia butuh `DATABASE_URL_BACKUP`,
+  # sedangkan project Supabase `nvblmpkwyzbpdbshyvzw` BUKAN milik owner
+  # dramaapp — connection string role `postgres` cuma bisa diambil pemiliknya,
+  # dan kunci sebesar itu membuka SELURUH database milik pihak lain.
+  #
+  # Dibiarkan berjadwal = email gagal tiap hari. Kegagalan yang rutin berhenti
+  # dibaca orang, dan itu justru menumpulkan peringatan yang SUNGGUHAN nanti.
+  #
+  # TIDAK dihapus, sengaja: begitu pemilik project bersedia membuat role
+  # read-only khusus schema `dramaapp`, jalur pg_dump ini yang dipakai — ia
+  # lebih kuat daripada jalur REST (tidak bergantung PostgREST, dan membaca
+  # definisi fungsi langsung dari database). Hidupkan lagi dengan
+  # mengembalikan blok `schedule` di bawah.
+  #
+  # Backup yang BENAR-BENAR berjalan harian: .github/workflows/backup-dramaapp.yml
+  #   schedule:
+  #     - cron: '0 20 * * *'   # 20:00 UTC = 03:00 WIB
+  workflow_dispatch:  # manual trigger via UI — tetap bisa dijalankan tangan
 
 permissions:
   contents: read

@@ -12,7 +12,7 @@
 // Kenapa satu file .sql (bukan pg_dump): teman pemilik Supabase baru cukup
 // buka SQL Editor -> paste -> Run. Tidak perlu install psql apa pun.
 import { readFileSync, writeFileSync, existsSync } from "node:fs";
-import { join, dirname } from "node:path";
+import { join, dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -70,6 +70,170 @@ async function fetchAll(table) {
   }
 }
 
+// --- struktur tabel dari DATABASE HIDUP ------------------------------------
+// KENAPA bukan dari supabase_migrations/: folder itu TIDAK menggambarkan
+// produksi, dan itu terbukti (2026-10-14), bukan dugaan:
+//   - `2026-08-29_schema_lengkap_dramaapp.sql` mendefinisikan `dramas` 15 kolom,
+//     sedangkan yang hidup 29 -> 14 kolom hilang (imdb_*, kind, status, genre,
+//     year, country, director, language, runtime, stars, writer, ...).
+//   - `mark_existing_movies.sql` masih menyebut `public.dramas` = schema sebelum
+//     pindah; dijalankan di database kosong ia ERROR dan membatalkan pemulihan.
+//   - `2026-10-05_playly_link_unduhan.sql` membuat tabel yang di produksi TIDAK
+//     ADA (dijawab PGRST205), sebab owner tak punya akses DDL ke project ini.
+// Akibat kalau struktur diambil dari berkas basi: tabel dibuat kurang kolom ->
+// `insert` menyebut kolom yang tak dikenal -> SELURUH transaksi batal -> nol
+// data pulih, padahal berkasnya terlihat utuh. Itu "berkas yang disangka backup".
+async function fetchSpec() {
+  const res = await fetch(`${URL}/rest/v1/`, {
+    headers: {
+      apikey: KEY,
+      Authorization: `Bearer ${KEY}`,
+      "Accept-Profile": SCHEMA,
+    },
+  });
+  if (!res.ok)
+    throw new Error(`spec PostgREST: ${res.status} ${await res.text()}`);
+  return res.json();
+}
+
+// Default dari spec -> literal SQL. SENGAJA hanya bentuk yang sudah terbukti
+// muncul di project ini; bentuk lain dilewati + ditandai komentar. Menebak
+// default yang salah lebih berbahaya daripada tidak menyalinnya, sebab salahnya
+// baru terasa pada baris yang dimasukkan JAUH sesudah pemulihan.
+function defaultLiteral(d) {
+  if (d === undefined || d === null) return null;
+  if (typeof d === "boolean") return d ? "true" : "false";
+  if (typeof d === "number") return String(d);
+  if (typeof d === "string") {
+    if (d === "now()") return "now()";
+    if (d.includes("(")) return null; // ekspresi tak dikenal -> jangan tebak
+    return sqlString(d);
+  }
+  return null;
+}
+
+// Dijalankan SESUDAH berkas migrasi dasar, dan sengaja berbentuk
+// `add column if not exists` — bukan `create table` kedua. Alasannya:
+//   - berkas migrasi membawa default & index yang TIDAK dilaporkan spec
+//     PostgREST (mis. dramas.subtitles default '{}'); menimpanya dengan
+//     `create table` versi spec justru MENGHILANGKAN default itu;
+//   - kolom yang sudah ada jadi no-op, yang belum ada ditambahkan -> hanya
+//     selisihnya yang ditambal, dan hasilnya sama untuk berapa kali pun
+//     berkas ini dijalankan ulang.
+// `create table` kerangka tetap ditulis sebagai jaring: kalau suatu saat ada
+// tabel baru di produksi yang belum masuk berkas migrasi, `alter table` atas
+// tabel yang belum ada akan error dan membatalkan seluruh pemulihan.
+// Catatan NOT NULL: aman karena blok ini berjalan saat tabel masih KOSONG
+// (data dimasukkan sesudahnya). Dijalankan ulang di tabel berisi, kolom lama
+// jadi no-op; kolom benar-benar baru akan GAGAL keras — itu memang disengaja,
+// lebih baik berhenti daripada diam-diam melewatkan kolom.
+function ddlFromSpec(spec) {
+  const out = [];
+  for (const t of TABLES) {
+    const def = spec?.definitions?.[t];
+    if (!def) throw new Error(`definisi tabel ${t} tidak ada di spec PostgREST`);
+    const wajib = new Set(def.required ?? []);
+    const pk = [];
+    const kolom = [];
+    const catatan = [];
+    for (const [c, meta] of Object.entries(def.properties ?? {})) {
+      if (!meta.format) throw new Error(`${t}.${c}: tipe tak terbaca dari spec`);
+      if (/<pk\/>/.test(meta.description ?? "")) pk.push(c);
+      const dv = defaultLiteral(meta.default);
+      if (dv === null && meta.default !== undefined) {
+        catatan.push(
+          `-- [!] ${t}.${c}: default asli ${JSON.stringify(meta.default)} TIDAK disalin (bentuk tak dikenali).`,
+        );
+      }
+      kolom.push({ c, tipe: meta.format, dv, wajib: wajib.has(c) });
+    }
+    if (pk.length === 0) throw new Error(`${t}: primary key tak terbaca dari spec`);
+
+    const kerangka = kolom
+      .filter((k) => pk.includes(k.c))
+      .map((k) => `  ${k.c} ${k.tipe} not null`);
+    out.push(...catatan);
+    out.push(
+      `create table if not exists ${SCHEMA}.${t} (`,
+      [...kerangka, `  primary key (${pk.join(", ")})`].join(",\n"),
+      ");",
+    );
+    for (const k of kolom) {
+      out.push(
+        `alter table ${SCHEMA}.${t} add column if not exists ${k.c} ${k.tipe}` +
+          (k.dv ? ` default ${k.dv}` : "") +
+          (k.wajib ? " not null" : "") +
+          ";",
+      );
+    }
+    out.push("");
+  }
+  return out.join("\n");
+}
+
+// Gerbang: berkas hasil WAJIB membuktikan dirinya sendiri sebelum disebut
+// backup. "Ada berkas, ukurannya wajar" adalah ambang yang terlalu rendah —
+// itu persis bentuk kegagalan yang baru ketahuan di hari ia dibutuhkan.
+function periksaHasil(sql, spec, data, hitungServer) {
+  const masalah = [];
+  for (const t of TABLES) {
+    const kolom = Object.keys(spec?.definitions?.[t]?.properties ?? {});
+    if (!sql.includes(`create table if not exists ${SCHEMA}.${t} (`)) {
+      masalah.push(`blok "create table ${t}" tidak ada di hasil`);
+      continue;
+    }
+    for (const c of kolom) {
+      if (
+        !sql.includes(
+          `alter table ${SCHEMA}.${t} add column if not exists ${c} `,
+        )
+      ) {
+        masalah.push(
+          `kolom ${t}.${c} ada di database hidup tapi TIDAK ikut ke struktur hasil`,
+        );
+      }
+    }
+    const jml = (
+      sql.match(new RegExp(`(?:^|\\n)insert into ${SCHEMA}\\.${t} `, "g")) ?? []
+    ).length;
+    if (jml !== data[t].length) {
+      masalah.push(
+        `${t}: ${data[t].length} baris ditarik dari database, tapi ${jml} baris insert tertulis`,
+      );
+    }
+    // Pembanding dari LUAR: hitungan server sendiri. Inilah yang menangkap
+    // penarikan yang berhenti di tengah — kecocokan dua angka milik kita
+    // sendiri (atas) tidak membuktikan apa pun soal kelengkapan.
+    if (hitungServer[t] !== data[t].length) {
+      masalah.push(
+        `${t}: server punya ${hitungServer[t]} baris, tapi yang tertarik ${data[t].length} — penarikan tidak lengkap`,
+      );
+    }
+  }
+  return masalah;
+}
+
+// Jumlah baris menurut SERVER — pembanding independen untuk hasil tarikan.
+// Tanpa ini, "125 baris ditarik, 125 insert tertulis" cuma membuktikan kita
+// konsisten dengan diri sendiri; penarikan yang berhenti di tengah tetap lolos.
+async function countRows(table) {
+  const res = await fetch(`${URL}/rest/v1/${table}?select=*&limit=1`, {
+    headers: {
+      apikey: KEY,
+      Authorization: `Bearer ${KEY}`,
+      "Accept-Profile": SCHEMA,
+      Prefer: "count=exact",
+    },
+  });
+  if (!res.ok) throw new Error(`hitung ${table}: ${res.status}`);
+  const cr = res.headers.get("content-range"); // contoh: "0-0/36" atau "*/0"
+  const n = Number((cr ?? "").split("/")[1]);
+  if (!Number.isInteger(n)) {
+    throw new Error(`hitung ${table}: Content-Range tak terbaca (${cr})`);
+  }
+  return n;
+}
+
 // --- escaping literal SQL --------------------------------------------------
 const sqlString = (v) => "'" + String(v).replace(/'/g, "''") + "'";
 
@@ -104,10 +268,22 @@ function insertRows(table, rows) {
 async function main() {
   // 1) Tarik data live
   const data = {};
-  for (const t of TABLES) data[t] = await fetchAll(t);
+  const hitungServer = {};
+  for (const t of TABLES) {
+    hitungServer[t] = await countRows(t);
+    data[t] = await fetchAll(t);
+  }
 
-  // 2) Skema DDL = file migrasi lengkap yang sama dengan yang dipakai saat
-  //    migrasi 2026-08-29 (idempoten), supaya definisi tabel+fungsi tak menyimpang.
+  // 2) Struktur tabel dibangun dari DATABASE HIDUP (lihat ddlFromSpec).
+  //    Berkas migrasi dasar tetap disertakan SESUDAHNYA sebagai pelengkap: ia
+  //    idempoten, jadi `create table`-nya jadi no-op, dan yang benar-benar ia
+  //    sumbangkan adalah index + fungsi RPC (coin_add, coin_spend_unlock,
+  //    like_change) — badan fungsi TIDAK terbaca dari spec PostgREST.
+  //    Batas yang jujur: kalau fungsi diubah langsung di SQL Editor tanpa
+  //    memperbarui berkas itu, versi fungsi di hasil backup ikut basi. Naik
+  //    kelasnya: minta pemilik project membuat role read-only khusus schema
+  //    `dramaapp`, lalu pakai pg_dump yang membaca definisi aslinya.
+  const spec = await fetchSpec();
   const schemaFile = join(
     root,
     "supabase_migrations",
@@ -138,8 +314,14 @@ async function main() {
   p("");
   p(`create schema if not exists ${SCHEMA};`);
   p("");
-  p("-- ---------- Skema tabel + fungsi RPC ----------");
+  p("-- ---------- Tabel, index & fungsi RPC (berkas migrasi dasar) ----------");
   p(ddl);
+  p("");
+  p("-- ---------- Penyelaras: kolom apa adanya dari database HIDUP ----------");
+  p("-- Berkas migrasi di atas sudah menyimpang dari produksi (owner tak punya");
+  p("-- akses DDL ke project ini), jadi blok inilah yang menjamin struktur hasil");
+  p("-- pemulihan sama persis dengan yang hidup saat backup diambil.");
+  p(ddlFromSpec(spec));
   p("");
   p("-- ---------- Izin akses untuk API Supabase ----------");
   p(`grant usage on schema ${SCHEMA} to service_role;`);
@@ -160,10 +342,32 @@ async function main() {
   p("commit;");
   p("");
 
-  const target = join(root, "supabase_export_dramaapp.sql");
-  writeFileSync(target, out.join("\n"), "utf-8");
+  const teks = out.join("\n");
+
+  // Gerbang: tolak menulis berkas yang tidak lolos periksa. Lebih baik GAGAL
+  // keras sekarang daripada menyimpan berkas hijau yang ternyata tak bisa
+  // dipulihkan — kegagalan diam-diam itulah yang membuat backup jadi sia-sia.
+  const masalah = periksaHasil(teks, spec, data, hitungServer);
+  if (masalah.length > 0) {
+    console.error("GAGAL: hasil export tidak lolos periksa isi.");
+    for (const m of masalah) console.error(`  - ${m}`);
+    process.exit(1);
+  }
+
+  const target = process.argv[2]
+    ? resolve(process.argv[2])
+    : join(root, "supabase_export_dramaapp.sql");
+  writeFileSync(target, teks, "utf-8");
   console.log(`OK -> ${target}`);
-  for (const t of TABLES) console.log(`  ${t}=${data[t].length} baris`);
+  let total = 0;
+  for (const t of TABLES) {
+    console.log(`  ${t}=${data[t].length} baris (server: ${hitungServer[t]})`);
+    total += data[t].length;
+  }
+  console.log(`  TOTAL=${total} baris`);
+  console.log(
+    `  kolom dramas=${Object.keys(spec.definitions.dramas.properties).length}`,
+  );
 }
 
 main().catch((e) => {

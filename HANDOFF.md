@@ -9,7 +9,161 @@
 >
 > **📦 Berkas ini sudah 5.224 baris / ±472 KB** (diukur 2026-10-10; angka lama "2.980 baris / 240 KB" sudah basi separuh — ia hampir DUA KALI lipat sejak itu) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-10-14 (sore).
+**Terakhir diisi:** 2026-10-14 (11:30 WIB).
+
+---
+
+## 2026-10-14 11:30 WIB — BACKUP HARIAN AKHIRNYA JALAN (lewat REST, bukan pg_dump) + script export terbukti menghasilkan backup yang TAK BISA DIPULIHKAN
+
+**TITIK LANJUT: UJI PULIHKAN** — satu-satunya yang tersisa, dan satu-satunya yang
+membedakan "ada berkas backup" dari "punya backup". Lalu: izin owner untuk push.
+
+🔴 **BATALKAN titik-lanjut catatan sebelumnya** ("owner tempel `DATABASE_URL_BACKUP`").
+Itu jalan buntu — jangan dikerjakan, jangan ditawarkan lagi ke owner.
+
+### Kenapa buntu: project Supabase BUKAN milik owner
+
+`nvblmpkwyzbpdbshyvzw` milik pihak lain, dipakai bersama beberapa aplikasi;
+dramaapp menempati schema `dramaapp`. Sudah tercatat di `antrean-deploy.md:732`
+dan `docs/migrasi-railway-daftar-env.md:180` — sesi ini sempat melewatkannya dan
+terlanjur menyuruh owner membuka Settings -> Database yang memang tak terbuka
+untuknya. **Diverifikasi ulang langsung ke database, bukan dari catatan:** 5 dari
+7 bucket milik aplikasi lain · 3 fungsi di schema `public` nol dipakai kode kita ·
+schema `goteam` dijawab `406` (ada, tak dibuka untuk kunci kita).
+
+Connection string role `postgres` membuka **seluruh** database pihak lain, jadi
+memintanya = keputusan sejenis yang sudah ditolak 2026-08-31 (Personal Access
+Token). **Jalan sopannya kalau mau naik kelas:** minta pemilik project membuat
+role read-only khusus schema `dramaapp`. Presedennya ada — beliau pernah
+menjalankan `grant usage on schema dramaapp to service_role` untuk kita.
+
+### 🔴 Temuan terbesar: `scripts/export-dramaapp-sql.mjs` menghasilkan backup yang TIDAK BISA DIPULIHKAN
+
+Tanpa gejala apa pun — berkasnya utuh, ukurannya wajar, `exit 0`. Ia menyalin
+struktur tabel dari `supabase_migrations/`, padahal folder itu sudah menyimpang
+dari produksi (owner tak punya akses DDL, jadi migrasi tak pernah terpasang).
+
+Akibat: `dramas` dibuat **28 kolom**, lalu `insert` menyebut kolom ke-29
+(`status`, migrasi 7 September) -> Postgres menolak `42703` -> seluruh data ada
+di dalam satu `begin; ... commit;` -> **SELURUH pemulihan dibatalkan, nol baris
+masuk.** Diukur pada berkas sungguhan, sebelum vs sesudah: 28 vs 29 kolom.
+
+⚠️ **Koreksi angka sesi ini sendiri:** sempat dilaporkan "14 kolom hilang".
+**Salah** — perbandingan pertama cuma memeriksa baris di dalam `create table` dan
+melewatkan baris `add column if not exists` di berkas yang sama. Yang benar
+**1 kolom**. Kesimpulannya tak berubah (1 kolom hilang tetap membatalkan semua),
+besarannya yang keliru.
+
+**Perbaikan:** struktur kini dibaca dari **database hidup** — spec PostgREST
+memuat tipe, default, NOT NULL, dan primary key (termasuk PK gabungan
+`unlocks`). Berkas migrasi tetap dipakai SESUDAHNYA: idempoten, dan ia menyumbang
+index + badan fungsi RPC yang tak terbaca dari spec.
+
+### Folder migrasi ≠ gambaran produksi (3 fakta terukur)
+
+1. `2026-08-29_schema_lengkap_dramaapp.sql` tak memuat `dramas.status`.
+2. `mark_existing_movies.sql:27` masih menyebut **`public.dramas`** (schema
+   sebelum pindah) — di database kosong ia ERROR.
+3. `2026-10-05_playly_link_unduhan.sql` membuat tabel yang di produksi **tidak
+   ada** (`PGRST205`).
+
+### Yang sudah berjalan & terbukti
+
+- **`.github/workflows/backup-dramaapp.yml`** (BARU) — harian 03:00 WIB lewat
+  REST + kunci `service_role` sendiri. **Nol kredensial baru.** Tanpa langkah
+  upload-artifact sama sekali (repo PUBLIK), isi berkas tak pernah dicetak ke log.
+- **`backup-schemas.yml`** — jadwal harian **dimatikan** (gagal 20/20 dan tak akan
+  bisa), `workflow_dispatch` dipertahankan. **Tidak dihapus**: jalur pg_dump lebih
+  kuat dan akan dipakai kalau role read-only tersedia.
+- **Backup pertama SUDAH ADA di bucket:** `dramaapp-20261014-041514.sql.gz`,
+  **103.093 byte**, dibaca ulang dari sisi server. Isi: `app_data` 36 · `dramas`
+  40 · `likes` 46 · `wallets` 3 · `unlocks` 0 — tiap angka dicocokkan dengan
+  hitungan server sendiri.
+
+### 7 gerbang, semuanya diuji dengan sengaja dirusak
+
+kolom hilang · baris hilang · paginasi berhenti dini · tabel kosong · struktur
+hilang · kunci rahasia bocor ke berkas · berkas tak ada di bucket — **ketujuhnya
+menolak, exit 1.**
+
+🪤 **Satu gerbang sempat LOLOS saat diuji — pelajaran yang layak diulang.** Versi
+pertama membandingkan jumlah `insert` dengan daftar baris di memori: dua angka
+dari sumber yang SAMA. Satu baris dibuang, keduanya ikut turun, gerbang tetap
+hijau — bug paginasi akan lolos tanpa gejala. Diperbaiki dengan pembanding dari
+LUAR: hitungan baris milik server (`Content-Range` PostgREST). **Gerbang yang
+belum pernah terlihat MENOLAK belum membuktikan apa pun.**
+
+### Belum selesai
+
+1. **UJI PULIHKAN** — belum dijalankan (butuh database kosong). Sampai itu
+   terjadi, yang dimiliki project ini adalah berkas backup yang **secara statis**
+   terbukti konsisten, bukan backup yang terbukti pulih. Pemeriksaan statis yang
+   sudah dijalankan: tiap kolom yang disebut `insert` terbukti sudah
+   dideklarasikan (29/29 untuk `dramas`).
+2. **Belum di-commit, belum di-push.** 4 berkas berubah + 1 baru.
+3. **Repo masih PUBLIC** — keputusan owner, bukan AI.
+
+**Rollback 1-baris** kalau rilis ini bermasalah: `git revert --no-edit <sha> &&
+git push origin main` — nol kode aplikasi tersentuh, nol migrasi SQL, nol env baru.
+
+---
+
+---
+
+## 2026-10-14 10:30 WIB — BACKUP: bucket privat + 3 dari 4 secret TERPASANG. Tinggal `DATABASE_URL_BACKUP` (owner)
+
+~~**TITIK LANJUT: owner tempel SATU secret** (`DATABASE_URL_BACKUP`), lalu AI jalankan
+`Backup Schemas Daily` manual + baca log.~~
+🔴 **DIBATALKAN 11:30 WIB — jalan buntu.** Project Supabase bukan milik owner, jadi
+connection string itu memang tak bisa diambil. Lihat catatan paling atas. Panduan sudah diperbarui: kotak status di atas
+"## Langkah" pada `docs/backup-database-setup.md`.
+
+⏰ **Hari-H webhook Playly 14.00 WIB = HARI INI, ±3,5 jam lagi** (dicek `date`: sekarang
+10:27 WIB). Catatan sebelumnya berlabel "sore" — **label itu keliru**, commit `ef4bc04`
+berstempel 10:07 WIB. Sesi ini sempat mengira tenggatnya sudah lewat.
+
+### Yang dikerjakan AI (tak perlu diulang owner)
+
+| Butir | Bukti |
+|---|---|
+| Bucket `db-backups` dibuat **privat** | dibaca ulang -> `"public": false`; **uji anonim 3 cara semua ditolak**: info bucket `400`, daftar isi `400`, jalur publik `Bucket not found` |
+| `SUPABASE_PROJECT_REF` | `nvblmpkwyzbpdbshyvzw` (bukan rahasia — ikut terkirim ke browser lewat `NEXT_PUBLIC_*`) |
+| `SUPABASE_STORAGE_BUCKET` | `db-backups` |
+| `SUPABASE_SERVICE_ROLE_KEY` | dari `.env.local`, dialirkan ke `gh secret set` lewat variabel shell — nilai tak pernah tercetak |
+| Kaki unggah **diuji**, bukan diasumsikan | perintah identik dengan langkah upload robot: unggah `HTTP 200` -> berkas uji dihapus -> bucket dipastikan kosong (`[]`) |
+
+Konsekuensi uji terakhir: kalau run nanti masih merah, sebabnya **pasti di sisi
+`pg_dump`/koneksi**, bukan penyimpanan. Itu memangkas separuh ruang tebakan sebelum
+run pertama dijalankan.
+
+### Fakta yang diverifikasi sepanjang jalan (bukan dari catatan lama)
+
+- Daftar secret repo saat mulai: **benar-benar kosong** (0 dari 4) · repo **masih PUBLIC** ·
+  3 run terakhir `failure`.
+- **Ketiga** `.env*.local` menunjuk project Supabase yang **SAMA** (`nvblmpkwyzbpdbshyvzw`) →
+  tak ada risiko salah-database meski project ini punya riwayat database pensiun.
+- **Nol** connection string tersimpan di komputer owner (0 var `DATABASE_URL`/`POSTGRES_URL`/
+  `DIRECT_URL` di ketiganya) → `DATABASE_URL_BACKUP` memang **wajib** dari dashboard.
+- **Aplikasi tidak punya koneksi Postgres langsung**: nol paket `pg`/`prisma`/`drizzle`/`knex`
+  di `package.json`, nol import klien Postgres di `lib/` & `app/`; semua lewat PostgREST
+  (`lib/supabase.ts`). **Artinya reset password database AMAN** — tidak memutus situs yang tayang.
+  (Dicek karena owner mungkin lupa password DB saat mengambil connection string.)
+
+### ⚠️ Dua jebakan yang BELUM bisa diuji (butuh `DATABASE_URL_BACKUP` dulu)
+
+1. **IPv6.** Supabase gratis memberi `Direct connection` alamat IPv6 saja; runner GitHub
+   Actions IPv4 saja. Gejala: `Network is unreachable` / `could not translate host name`.
+   Obat: connection string mode **Session pooler**. *(Belum diverifikasi di project ini.)*
+2. **Versi `pg_dump`.** Runner memasang `postgresql-client` bawaan Ubuntu; server lebih baru →
+   `aborting because of server version mismatch`. Obat: tambah repo PGDG di
+   `.github/workflows/backup-schemas.yml`.
+
+Sengaja **tidak** ditambal di depan (menambal yang belum tentu rusak = utang perawatan permanen).
+
+### Belum selesai
+
+**UJI PULIHKAN belum dijalankan** — belum bisa, belum ada satu pun berkas backup. Sampai itu
+terjadi, yang dimiliki project ini masih **nol backup yang terbukti**, bukan "backup sudah jalan".
 
 ---
 

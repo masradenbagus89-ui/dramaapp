@@ -1,0 +1,210 @@
+# .github/workflows/backup-dramaapp.yml
+#
+# Backup harian schema `dramaapp` LEWAT REST API, bukan pg_dump.
+#
+# ═══════════════════════════════════════════════════════════════════════════
+# KENAPA BUKAN pg_dump (dan kenapa ini bukan jalan pintas malas)
+#
+# Project Supabase `nvblmpkwyzbpdbshyvzw` BUKAN milik owner dramaapp — ia milik
+# pihak lain dan dipakai bersama beberapa aplikasi (dramaapp menempati schema
+# `dramaapp`). Owner tidak punya akses Dashboard -> Settings -> Database, jadi
+# connection string untuk pg_dump tidak bisa diambil. Memintanya pun bukan
+# permintaan kecil: connection string role `postgres` membuka SELURUH database
+# milik pihak lain, bukan cuma bagian kita. Keputusan senada sudah diambil
+# 2026-08-31 (menolak meminta Personal Access Token pemilik project).
+#
+# Yang dipakai di sini: kunci `service_role` milik dramaapp sendiri, lewat
+# PostgREST. Nol kredensial baru, nol ketergantungan ke pihak lain.
+#
+# BATAS YANG JUJUR — supaya tak ada yang mengira ini setara pg_dump:
+#   - Ia bergantung pada PostgREST. Kalau PostgREST ngadat (project ini punya
+#     riwayat `PGRST002`), backup hari itu GAGAL — dan memang harus gagal keras,
+#     bukan menghasilkan berkas separuh.
+#   - Badan fungsi RPC diambil dari berkas migrasi di repo, bukan dari database.
+#     Fungsi yang diubah langsung lewat SQL Editor tanpa memperbarui berkas itu
+#     akan ikut basi di hasil backup.
+#   - Naik kelasnya kalau suatu saat memungkinkan: minta pemilik project membuat
+#     role read-only khusus schema `dramaapp`, lalu pakai pg_dump dengan role itu
+#     (bukan role `postgres`). Workflow `backup-schemas.yml` menyiapkan jalurnya
+#     dan menunggu di situ.
+#
+# 🔴 REPO INI PUBLIK. Isi backup memuat DATA PRIBADI PENONTON (hash password,
+# rahasia 2FA, email, saldo koin, riwayat buka episode). Karena itu:
+#   - TIDAK ADA langkah upload-artifact di sini, sengaja. Artifact mengikuti izin
+#     baca repo; di repo publik daftarnya terbaca TANPA LOGIN (diuji 2026-10-14).
+#   - Isi berkas TIDAK PERNAH dicetak ke log.
+#   - Satu-satunya tujuan simpan = bucket Supabase PRIVAT.
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# SECRET yang dipakai (ketiganya sudah terpasang 2026-10-14):
+#   SUPABASE_PROJECT_REF        ref project (bagian sebelum `.supabase.co`)
+#   SUPABASE_SERVICE_ROLE_KEY   kunci service_role dramaapp
+#   SUPABASE_STORAGE_BUCKET     nama bucket PRIVAT tujuan simpan
+#
+# ⚠️ BACKUP YANG TAK PERNAH DIUJI PULIHKAN BUKAN BACKUP. Sesudah berkas pertama
+# jadi, unduh satu `.gz` lalu jalankan isinya di database kosong dan hitung
+# barisnya. Panduan: docs/backup-database-setup.md
+
+name: Backup DramaApp Harian
+
+on:
+  schedule:
+    # 20:00 UTC = 03:00 WIB keesokan harinya
+    - cron: '0 20 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    env:
+      SCHEMA: dramaapp
+      # Tabel yang WAJIB ada isinya di hasil. `unlocks` sengaja TIDAK di sini:
+      # ia memang kosong di produksi, jadi mewajibkannya akan membuat backup
+      # yang sehat ditolak tiap hari.
+      TABEL_WAJIB: 'app_data dramas likes wallets'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Siapkan Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '20'
+
+      - name: Periksa secret lengkap
+        env:
+          REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+          KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          BUCKET: ${{ secrets.SUPABASE_STORAGE_BUCKET }}
+        run: |
+          kurang=""
+          [ -z "$REF" ]    && kurang="$kurang SUPABASE_PROJECT_REF"
+          [ -z "$KEY" ]    && kurang="$kurang SUPABASE_SERVICE_ROLE_KEY"
+          [ -z "$BUCKET" ] && kurang="$kurang SUPABASE_STORAGE_BUCKET"
+          if [ -n "$kurang" ]; then
+            echo "::error::Secret belum lengkap:${kurang}. Tanpa tujuan simpan yang aman, workflow ini sengaja GAGAL — bukan lewat diam-diam. Panduan: docs/backup-database-setup.md"
+            exit 1
+          fi
+          echo "✓ 3 secret terbaca"
+
+      - name: Tarik isi database jadi satu berkas .sql
+        env:
+          SUPABASE_URL: https://${{ secrets.SUPABASE_PROJECT_REF }}.supabase.co
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          # Ditulis ke RUNNER_TEMP, di LUAR pohon kerja repo — supaya berkas
+          # berisi data pribadi tak mungkin ikut terbawa langkah lain yang
+          # membaca direktori repo.
+          SQL="$RUNNER_TEMP/dramaapp-$(date -u +%Y%m%d-%H%M%S).sql"
+          echo "BACKUP_SQL=$SQL" >> "$GITHUB_ENV"
+          node scripts/export-dramaapp-sql.mjs "$SQL"
+
+      - name: Buktikan isinya, bukan cuma ukurannya
+        env:
+          KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          SQL="$BACKUP_SQL"
+          if [ ! -s "$SQL" ]; then
+            echo "::error::Berkas hasil kosong atau tidak ada."
+            exit 1
+          fi
+
+          # Struktur tiap tabel wajib ada.
+          for t in $TABEL_WAJIB unlocks; do
+            if ! grep -q "create table if not exists ${SCHEMA}.${t} (" "$SQL"; then
+              echo "::error::Struktur tabel ${t} tidak ada di hasil."
+              exit 1
+            fi
+          done
+
+          # Data tiap tabel wajib ada isinya. Schema yang ADA tapi kehilangan
+          # isinya tetap menghasilkan berkas yang terlihat wajar — itu bentuk
+          # kegagalan yang baru ketahuan pada hari backup dibutuhkan.
+          for t in $TABEL_WAJIB; do
+            n=$(grep -c "^insert into ${SCHEMA}.${t} " "$SQL" || true)
+            echo "  ${t}: ${n} baris"
+            if [ "$n" -lt 1 ]; then
+              echo "::error::Tabel ${t} nol baris di hasil backup. Periksa izin baca kunci service_role atau kesehatan PostgREST."
+              exit 1
+            fi
+          done
+
+          # Pagar kebocoran: kunci rahasia TIDAK boleh ikut terbawa ke dalam
+          # berkas hasil. -F = cocokkan apa adanya; nilainya tak pernah tercetak.
+          if grep -qF "$KEY" "$SQL"; then
+            echo "::error::Kunci service_role ikut tertulis ke dalam berkas backup. Dihentikan — jangan diunggah ke mana pun."
+            exit 1
+          fi
+          echo "✓ isi terverifikasi"
+
+      - name: Mampatkan
+        run: |
+          gzip -9 "$BACKUP_SQL"
+          echo "BACKUP_GZ=${BACKUP_SQL}.gz" >> "$GITHUB_ENV"
+          ls -lh "${BACKUP_SQL}.gz" | awk '{print "  ukuran terkompresi: "$5}'
+
+      - name: Unggah ke bucket Supabase PRIVAT
+        env:
+          REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+          KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          BUCKET: ${{ secrets.SUPABASE_STORAGE_BUCKET }}
+        run: |
+          NAMA=$(basename "$BACKUP_GZ")
+          KODE=$(curl -s -o "$RUNNER_TEMP/jawaban.txt" -w "%{http_code}" \
+            -X POST "https://${REF}.supabase.co/storage/v1/object/${BUCKET}/${NAMA}" \
+            -H "Authorization: Bearer ${KEY}" \
+            -H "Content-Type: application/gzip" \
+            --data-binary @"$BACKUP_GZ")
+          # Unggah gagal = GAGAL, bukan peringatan. Versi lama workflow backup di
+          # repo ini hanya memberi ::warning:: di sini, sehingga job tetap hijau
+          # sementara nol backup tersimpan di mana pun — rasa aman palsu persis
+          # pada hal yang dibuat untuk keadaan terburuk.
+          if [ "$KODE" != "200" ] && [ "$KODE" != "201" ]; then
+            echo "::error::Unggah gagal (HTTP $KODE):"
+            cat "$RUNNER_TEMP/jawaban.txt"
+            exit 1
+          fi
+          echo "✓ terunggah: $NAMA"
+          echo "NAMA_BERKAS=$NAMA" >> "$GITHUB_ENV"
+
+      - name: Buktikan berkasnya benar-benar ada di bucket
+        env:
+          REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+          KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          BUCKET: ${{ secrets.SUPABASE_STORAGE_BUCKET }}
+        run: |
+          # "HTTP 200 saat mengunggah" belum sama dengan "berkasnya ada di sana".
+          # Dibaca ulang dari sisi server supaya klaim selesai punya bukti.
+          curl -s --max-time 30 -X POST \
+            "https://${REF}.supabase.co/storage/v1/object/list/${BUCKET}" \
+            -H "Authorization: Bearer ${KEY}" \
+            -H "Content-Type: application/json" \
+            -d '{"prefix":"","limit":200}' -o "$RUNNER_TEMP/isi-bucket.json"
+
+          node -e '
+            const fs = require("node:fs");
+            const daftar = JSON.parse(fs.readFileSync(`${process.env.RUNNER_TEMP}/isi-bucket.json`, "utf-8"));
+            const nama = process.env.NAMA_BERKAS;
+            const ketemu = daftar.find((f) => f.name === nama);
+            if (!ketemu) {
+              console.log(`::error::${nama} TIDAK ditemukan di bucket meski unggah dijawab sukses.`);
+              process.exit(1);
+            }
+            const ukuran = ketemu.metadata?.size ?? 0;
+            if (ukuran < 1024) {
+              console.log(`::error::${nama} ada di bucket tapi hanya ${ukuran} byte — tidak masuk akal untuk backup.`);
+              process.exit(1);
+            }
+            console.log(`✓ terbukti ada di bucket: ${nama} (${ukuran} byte)`);
+            console.log(`  total berkas di bucket: ${daftar.length}`);
+            // Pembersihan otomatis SENGAJA tidak dipasang: logika hapus-berdasar-
+            // tanggal yang salah bisa membuang justru backup yang masih dibutuhkan.
+            // Yang dipasang di sini cuma pengingat, supaya penumpukan terlihat.
+            if (daftar.length > 60) {
+              console.log(`::warning::Bucket sudah berisi ${daftar.length} berkas (>60 hari). Hapus yang lama lewat Supabase Dashboard -> Storage.`);
+            }
+          '

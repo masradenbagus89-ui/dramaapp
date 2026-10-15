@@ -1,0 +1,163 @@
+# .github/workflows/pengingat-tutup-vercel.yml
+#
+# Pengingat sekali-pakai: buka 1 Issue saat tanggal boleh-tutup Vercel tiba.
+#
+# ═══════════════════════════════════════════════════════════════════════════
+# KENAPA ADA
+#
+# `https://dramaapp.vercel.app` sekarang cuma mengalihkan (308) ke Railway, dan
+# baru boleh ditutup paling cepat 2026-11-26 (≥6 minggu sejak 2026-10-15, supaya
+# Google sempat memindahkan peringkatnya). Enam minggu itu lama — dan satu-satunya
+# tempat tanggal itu dicatat adalah `HANDOFF.md`, yang sudah 6.600 baris dan
+# direncanakan dipangkas. Catatan yang dipangkas = pengingat yang hilang.
+#
+# Robot ini CUMA mengingatkan. Ia TIDAK menutup apa pun — penutupan Vercel
+# adalah keputusan + klik manusia.
+#
+# ═══════════════════════════════════════════════════════════════════════════
+# KENAPA MINGGUAN, BUKAN SEKALI TEPAT DI 26 NOVEMBER
+#
+# Cron GitHub tidak punya kolom TAHUN, jadi `0 2 26 11 *` akan berbunyi tiap
+# 26 November selamanya. Lebih buruk: ia cuma menembak SEKALI. Kalau run hari itu
+# gagal — runner error, atau jadwal sedang dinonaktifkan GitHub — pengingatnya
+# hilang tanpa ada yang tahu, persis kegagalan senyap yang mau dicegah.
+#
+# Yang dipakai: jalan tiap Senin, lalu BANDINGKAN TANGGAL di dalamnya. Sebelum
+# ambang ia keluar diam-diam (nol Issue, nol berisik); sesudah ambang ia membuka
+# Issue. Jadi terlewat satu minggu pun masih tertangkap minggu berikutnya.
+#
+# ⚠️ GitHub menonaktifkan jadwal otomatis kalau repo TIDAK ada commit selama
+#    60 hari. Repo ini aktif, tapi kalau sempat sepi: picu manual sekali
+#    (Actions -> Run workflow) untuk menyalakannya lagi.
+#
+# ⚠️ Hanya hidup di repo produksi `masradenbagus89-ui/dramaapp`. Di repo cermin
+#    `ojokesusu/dramaku` seluruh Actions MATI karena tagihan — jangan menunggu
+#    pengingat dari sana.
+#
+# 🧹 HAPUS BERKAS INI setelah Vercel benar-benar ditutup. Issue yang dibuatnya
+#    sudah memuat pengingat itu di langkah terakhir.
+# ═══════════════════════════════════════════════════════════════════════════
+
+name: Pengingat Tutup Vercel
+
+on:
+  schedule:
+    # Tiap Senin 02:00 UTC (sekitar 09:00 WIB).
+    - cron: '0 2 * * 1'
+  workflow_dispatch: {}
+
+# Hak akses minimum: cuma boleh membuat/menulis Issue. Tidak boleh menyentuh
+# kode, secret, maupun setelan apa pun.
+permissions:
+  issues: write
+
+jobs:
+  ingatkan:
+    name: Cek tanggal, buka Issue kalau sudah waktunya
+    runs-on: ubuntu-latest
+    steps:
+      - name: Buka pengingat kalau sudah lewat ambang
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            // Ambang = 2026-10-15 (pengalihan 308 mulai hidup) + 6 minggu.
+            // Dasarnya ada di HANDOFF.md seksi "⏰ PENGINGAT: MATIKAN ...".
+            const AMBANG = '2026-11-26';
+            const JUDUL = '[Rilis] Sudah waktunya evaluasi penutupan dramaapp.vercel.app';
+            const ALAMAT_LAMA = 'https://dramaapp.vercel.app';
+
+            const hariIni = new Date().toISOString().slice(0, 10);
+            if (hariIni < AMBANG) {
+              // Keluar diam-diam. Pengingat yang berbunyi sebelum waktunya akan
+              // berhenti dibaca sebelum hari-H tiba.
+              core.info(`Belum waktunya: ${hariIni} < ${AMBANG}. Tidak ada Issue dibuat.`);
+              return;
+            }
+
+            const { owner, repo } = context.repo;
+
+            // state 'all', BUKAN 'open'. Judulnya tetap sama tiap minggu, jadi
+            // kalau hanya Issue terbuka yang dicek, Issue yang sudah DITUTUP owner
+            // akan dibuatkan ulang tiap Senin — pengingat berubah jadi gangguan.
+            // Pakai listForRepo, bukan search: search punya jeda pengindeksan
+            // (pelajaran dari audit-access.yml).
+            const semua = await github.paginate(github.rest.issues.listForRepo, {
+              owner, repo, state: 'all', per_page: 100,
+            });
+            const sudahAda = semua.find((i) => !i.pull_request && i.title === JUDUL);
+            if (sudahAda) {
+              core.info(`Sudah ada (#${sudahAda.number}, ${sudahAda.state}) — tidak membuat duplikat.`);
+              return;
+            }
+
+            // Ukur keadaan sekarang supaya Issue-nya berisi fakta, bukan cuma alarm.
+            // Sengaja hanya alamat Vercel yang disebut: itu alamat yang mau DITUTUP,
+            // jadi ia tidak ikut berubah kalau nanti pindah ke domain sendiri.
+            // Alamat tujuannya dibaca dari header Location, tidak ditulis di sini —
+            // satu nilai cadangan lebih sedikit yang bisa basi.
+            let keadaan = '_tidak terukur (pengukuran gagal — periksa manual)_';
+            try {
+              const r = await fetch(ALAMAT_LAMA + '/', { redirect: 'manual' });
+              const tujuan = r.headers.get('location') ?? '(tidak ada header Location)';
+              keadaan = `HTTP **${r.status}** → \`${tujuan}\``;
+            } catch (e) {
+              core.warning(`Pengukuran gagal (${e.message}) — Issue tetap dibuat.`);
+            }
+
+            const body = [
+              '## Tanggal paling cepat untuk menutup Vercel sudah lewat',
+              '',
+              `Ambang: **${AMBANG}** (6 minggu sejak pengalihan 308 hidup, 2026-10-15).`,
+              `Diperiksa robot: **${hariIni}**.`,
+              '',
+              `Keadaan \`${ALAMAT_LAMA}\` saat Issue ini dibuat: ${keadaan}`,
+              '',
+              '> ⚠️ **Lewatnya tanggal BUKAN izin menutup.** Tanggal baru syarat ke-1',
+              '> dari tiga. Dua sisanya belum dicek robot — hanya manusia yang bisa.',
+              '',
+              '### Syarat 2 — Google sudah memindahkan alamatnya (WAJIB dicek manual)',
+              '',
+              'Cari di Google:',
+              '',
+              '```',
+              'site:dramaapp-production-9e88.up.railway.app   -> harus muncul BANYAK halaman',
+              'site:dramaapp.vercel.app                       -> harus tinggal sedikit/nol',
+              '```',
+              '',
+              'Masih kebalikannya? **Tunggu lagi, jangan tutup.** Menutup sekarang',
+              'membuang peringkat yang belum pindah. Robot sengaja tidak mengukur ini:',
+              'hasil pencarian Google tidak bisa dibaca andal dari dalam Actions.',
+              '',
+              '### Syarat 3 — daftar "WAJIB sebelum menutup"',
+              '',
+              'Ada di `HANDOFF.md` seksi **"⏰ PENGINGAT: MATIKAN https://dramaapp.vercel.app"**.',
+              'Termasuk: **bersihkan secret dorman di panel Vercel** (`SUPABASE_SERVICE_ROLE_KEY`,',
+              '`PLAYLY_ENCRYPTION_KEY`, `AUTH_SECRET`, `ADMIN_PASSWORD`, dst). Project yang',
+              'tak dipakai tapi masih menyimpan kunci produksi = permukaan risiko yang menganggur.',
+              '',
+              '### Urutan menutup — mengikat, jangan dibalik',
+              '',
+              '1. Kerjakan daftar "WAJIB" → dorong → verifikasi.',
+              '2. **Jangan hapus project Vercel langsung.** Matikan dulu dengan membuang',
+              '   domain/aliasnya, lalu **amati 1-2 minggu**. Kalau ternyata masih ada yang',
+              '   memanggilnya, alias tinggal dipasang kembali.',
+              '3. Baru hapus project + secret-nya.',
+              '',
+              '### Sesudah Vercel benar-benar ditutup',
+              '',
+              '- [ ] Hapus berkas `.github/workflows/pengingat-tutup-vercel.yml` — tugas robot ini selesai.',
+              '- [ ] Catat hasilnya di `HANDOFF.md`.',
+              '- [ ] Tutup Issue ini.',
+              '',
+              '> Robot tidak akan membuat Issue kedua: selama Issue berjudul sama ini ada',
+              '> (terbuka **maupun** tertutup), ia keluar diam-diam tiap minggu.',
+            ].join('\n');
+
+            try {
+              const dibuat = await github.rest.issues.create({ owner, repo, title: JUDUL, body });
+              core.info(`Issue dibuat: #${dibuat.data.number}`);
+            } catch (e) {
+              // Jangan bikin workflow merah menakutkan kalau API-nya yang error —
+              // tapi jangan diam juga: minggu depan ia mencoba lagi.
+              core.warning(`Gagal membuat Issue (${e.message}). Akan dicoba lagi Senin depan.`);
+            }

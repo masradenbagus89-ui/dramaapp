@@ -23,26 +23,62 @@ Terukur sesudah deploy: canonical beranda **`https://dramaapp-production-9e88.up
 canonical + `og:url` ikut pindah (**prerender SSG**, jadi ini membuktikan seluruh
 situs dibangun ulang) · **Vercel tidak tersentuh**, masih melayani.
 
-**TITIK LANJUT — giliran OWNER, 1 langkah di panel GitHub:**
+**TITIK LANJUT — tinggal MENUNGGU, nol pekerjaan teknis:**
 
-**`KEEPALIVE_SITES` → GANTI ISINYA jadi `https://dramaapp-production-9e88.up.railway.app`.**
-⚠️ **Jangan dikosongkan.** `.github/workflows/keep-db-awake.yml:65` berbunyi
-`${{ vars.KEEPALIVE_SITES || 'https://dramaapp.vercel.app' }}` — tanda `||` itu
-artinya **kolom kosong = robot jatuh balik ke alamat Vercel**, tanpa gejala.
-Instruksi "buang alamat Vercel" yang sempat AI tulis itu **menyesatkan**.
+Biarkan pengalihan hidup **beberapa minggu**, baru Vercel ditutup. Google butuh
+waktu memindahkan peringkat ke alamat Railway; menutup terlalu cepat = trafik
+hilang. Yang masih terbuka: **Putaran 2 (login admin)**, dan beli domain
+(menunggu persetujuan atasan owner, **bukan** blocker).
 
-Sesudah itu kabari AI → AI mendorong `vercel.json` (sudah siap, lihat di bawah) →
-Vercel mulai mengalihkan → smoke test → tunggu beberapa minggu → baru Vercel
-ditutup.
+### ✅ LANGKAH 4 SELESAI — `KEEPALIVE_SITES` diganti & TERBUKTI
 
-### ⏸️ `vercel.json` SUDAH SIAP tapi SENGAJA BELUM DIDORONG
+Dikerjakan AI lewat `gh` API atas permintaan owner. Nilai lama → baru:
 
-Berkas pengalihan Vercel → Railway sudah dibuat dan **lolos gerbang** (build 0 ·
-tsc 0 · 99 berkas / 1447 tes). **Ditahan** karena mendorongnya = mengaktifkan
-pengalihan seketika, dan robot keepalive memanggil `/api/dramas` dengan `curl`
-**tanpa `-L`** (`keep-db-awake.yml:99`) → ia tak mengikuti pengalihan → dapat
-`308`, bukan `200` → melapor `::error:: TIDAK sehat` **tiap hari**. Alarm harian
-= alarm yang berhenti dibaca. **Karena itu langkah panel di atas wajib duluan.**
+```
+https://dramaapp.vercel.app,https://dramaapp-production-9e88.up.railway.app
+    ↓
+https://dramaapp-production-9e88.up.railway.app
+```
+
+Isinya ternyata memuat **dua** alamat, bukan cuma Vercel — jadi database memang
+sudah disapa lewat Railway juga, dan membuang Vercel tak membuatnya kehilangan
+penyapa. **Dibuktikan dengan menjalankan robotnya sungguhan** (run `38666826653`):
+`success` · `Alamat yang akan disapa: 1` · `HTTP 200`. Dijalankan **sekali lagi
+SESUDAH** pengalihan hidup (run `38667529441`): tetap `success`.
+
+⚠️ Jebakannya tetap berlaku untuk siapa pun yang menyentuhnya lagi:
+`keep-db-awake.yml:65` berbunyi
+`${{ vars.KEEPALIVE_SITES || 'https://dramaapp.vercel.app' }}` — **kolom kosong =
+robot jatuh balik ke alamat Vercel**, tanpa gejala. **Ganti isinya, jangan
+dikosongkan.**
+
+### ✅ LANGKAH 5 SELESAI — Vercel sekarang MENGALIHKAN (308) ke Railway
+
+Dirilis `254d47d`, diperbaiki `982a98a`. Vercel **tidak dimatikan** — ia jadi
+penunjuk jalan, supaya bookmark, link yang pernah dibagikan, dan peringkat Google
+tidak putus mendadak.
+
+Smoke test penuh, semuanya lolos: 10 path di Vercel (`/` · `/?x=1` · `/beranda` ·
+`/film` · `/shorts` · `/discover` · `/drama/meg-2-the-trench` · `/robots.txt` ·
+`/sitemap.xml` · `/api/dramas`) **semua 308** · diikuti sampai tujuan = **1
+lompatan, 200**, path & query terbawa utuh · Railway **tidak ikut teralihkan**
+(200 OK, canonical miliknya sendiri) · keepalive tetap hijau.
+
+### 🔴 TEMUAN: `/:path*` TIDAK mencocokkan akar `/` — lubang di contoh RESMI Vercel
+
+Rilis pertama (`254d47d`) memakai `/:path*` saja, persis contoh dokumentasi
+Vercel. Hasilnya **semua path dialihkan KECUALI akar** — halaman yang paling
+banyak dibuka dan paling penting bagi Google justru satu-satunya yang lolos
+(`/` dan `/?x=1` menjawab **200**, sisanya 308). Sebabnya path-to-regexp:
+`/:path*` butuh **minimal satu segmen**, dan akar tak punya segmen.
+
+Diperbaiki `982a98a` dengan aturan eksplisit `"source": "/"` yang ditaruh **lebih
+dulu** (Vercel menilai berurutan).
+
+🪤 **Pelajaran:** build **hijau**, status deploy **success**, konfigurasi **sama
+persis dengan contoh resmi** — ketiganya **tidak** menangkap lubang ini. Yang
+menangkapnya **smoke test per-path**. Memeriksa bahwa langkahnya sudah dijalankan
+≠ memeriksa hasilnya.
 
 🔴 **KOREKSI ISTILAH: yang benar 308, bukan 301.** Catatan-catatan sebelumnya di
 repo ini (AI yang menulis, berulang kali) menyebut "301". Dari dokumentasi Vercel:
@@ -64,6 +100,26 @@ asli"** dengan isi identik — di mata Google itu **duplicate content**. Keadaan
 tak terhindarkan (urutan lain lebih buruk), tapi hitungannya **hari, bukan
 minggu**. Kalimat "tunggu beberapa minggu" berlaku **sesudah** 301 terpasang —
 yaitu sebelum Vercel dimatikan total, bukan sebelum 301 dipasang.
+
+### 🔴 TEMUAN TERPISAH: GitHub Actions di repo CERMIN `ojokesusu/dramaku` MATI
+
+Ketahuan saat memeriksa `KEEPALIVE_SITES`. Robot keepalive di repo cermin
+**gagal di SETIAP run** (13 & 14 Oktober, terjadwal). Sebabnya **bukan**
+konfigurasi kita — pesan GitHub:
+
+> *"The job was not started because recent account payments have failed or your
+> spending limit needs to be increased."*
+
+Artinya job-nya **tak pernah mulai**. Enam workflow di sana berstatus `active`
+tapi praktis mati — termasuk **`Penjaga Kebocoran Rahasia`** dan
+**`Backup DramaApp Harian`**.
+
+**Tidak mendesak**, karena yang menjaga produksi adalah repo owner
+(`masradenbagus89-ui/dramaapp`) dan di sana semuanya hijau — backup harian
+terbukti jalan, secret guard terbukti jalan di tiap push hari ini. Tapi: **jangan
+mengandalkan robot apa pun di repo cermin**, dan kalau rekan mengira backup-nya
+jalan di sana, dia keliru. Perbaikannya ada di akun rekan (Billing & plans), di
+luar jangkauan owner.
 
 ### ⚠️ `npm test` pernah ambruk TOTAL sekali lalu hijau lagi — ini FLAKE, bukan kode
 

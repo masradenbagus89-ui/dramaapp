@@ -55,19 +55,28 @@ sesudah owner menyimpannya. Terukur: canonical + `robots.txt` + `og:url` pindah 
 **0** URL ber-vercel di sitemap (dari 384) · 384 URL utuh · health ok · halaman detail SSG ikut
 pindah (bukti seluruh situs dibangun ulang) · Vercel tidak tersentuh.
 
-🟡 **SISA LANGKAH, JANGAN ditunda lama:** (1) **OWNER** — `KEEPALIVE_SITES` di panel GitHub
-**DIGANTI ISINYA** jadi alamat Railway. ⚠️ **Jangan dikosongkan**: `keep-db-awake.yml:65` berbunyi
-`${{ vars.KEEPALIVE_SITES || 'https://dramaapp.vercel.app' }}`, jadi kolom kosong = robot jatuh
-balik ke Vercel tanpa gejala. (2) **AI** — dorong `vercel.json` (sudah siap, lolos gerbang, SENGAJA
-BELUM didorong) → Vercel mengalihkan ke Railway → smoke test. (3) tunggu beberapa minggu → baru
-Vercel ditutup. Putaran 2 admin masih terbuka.
+✅ **LANGKAH 4 & 5 SELESAI — VERCEL SUDAH MENGALIHKAN KE RAILWAY (308).**
+`KEEPALIVE_SITES` diganti jadi alamat Railway saja (nilai lama ternyata memuat **dua** alamat, jadi
+database sudah disapa lewat Railway juga) — dibuktikan dengan menjalankan robotnya: run
+`38666826653` **success**, `Alamat yang akan disapa: 1`, `HTTP 200`; diulang **sesudah** pengalihan
+hidup (run `38667529441`) tetap **success**. Lalu `254d47d` + `982a98a` dirilis.
 
-⏸️ **`vercel.json` ADA di komputer owner tapi BELUM di repo.** Ditahan karena robot keepalive
-memanggil `/api/dramas` dengan `curl` **tanpa `-L`** (`keep-db-awake.yml:99`) → tidak mengikuti
-pengalihan → dapat `308` bukan `200` → melapor gagal **tiap hari**. Langkah (1) wajib duluan.
-🔴 **Koreksi istilah: 308, bukan 301** — 301 boleh mengubah POST jadi GET (dok Vercel), dan situs
-ini punya endpoint webhook. Dipakai `vercel.json` bukan `next.config.ts` karena yang kedua dibaca
-Railway juga → risiko loop tak berujung.
+**Smoke test penuh lolos:** 10 path Vercel semuanya **308** · diikuti sampai tujuan = **1 lompatan,
+200**, path & query utuh · Railway **tidak ikut teralihkan** (200 OK, canonical miliknya sendiri).
+
+🔴 **TEMUAN — `/:path*` TIDAK mencocokkan akar `/`, lubang di contoh RESMI Vercel.** Rilis pertama
+`254d47d` membuat SEMUA path dialihkan **kecuali** `/` dan `/?x=1` (keduanya 200 = masih menyajikan
+situs Vercel) — yaitu halaman paling penting. Sebabnya path-to-regexp butuh minimal satu segmen.
+Diperbaiki `982a98a`. 🪤 **Build hijau + deploy success + konfigurasi sama persis dengan contoh
+resmi, ketiganya TIDAK menangkapnya** — yang menangkap smoke test per-path.
+
+🔴 **TEMUAN TERPISAH — Actions di repo cermin `ojokesusu/dramaku` MATI** karena tagihan akun rekan
+(*"The job was not started because recent account payments have failed"*). Enam workflow `active`
+tapi tak pernah mulai, termasuk secret-guard & backup harian. Produksi **tidak terdampak** (repo
+owner hijau semua), tapi **jangan mengandalkan robot apa pun di repo cermin**.
+
+🟡 **SISA: tunggu beberapa minggu → baru Vercel ditutup.** Putaran 2 admin masih terbuka. Beli
+domain menunggu persetujuan atasan owner, bukan blocker.
 **Kenapa jangan ditunda:** sekarang dua situs sama-sama mengaku "akulah yang asli" dengan isi
 identik = **duplicate content** di mata Google. Tak terhindarkan (urutan lain lebih buruk), tapi
 hitungannya **hari, bukan minggu**.

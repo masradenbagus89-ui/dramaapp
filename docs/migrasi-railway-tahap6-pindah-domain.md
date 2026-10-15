@@ -293,6 +293,32 @@ Project ini sudah memakai pola yang sama di `next.config.ts:52` (`/playly` →
 deployment Vercel (hostname-nya berbeda) tidak ikut teralihkan, dan supaya tujuan
 tidak mengalihkan balik ke dirinya sendiri.
 
+### 🔴 `/:path*` TIDAK mencocokkan akar `/` — lubang di contoh resmi Vercel
+
+**Ini sebabnya ada DUA aturan di berkas itu, bukan satu.** Rilis pertama
+(`254d47d`) hanya memakai `/:path*` — persis seperti contoh di dokumentasi Vercel.
+Hasil smoke test per-path, dengan pemutus cache di tiap permintaan:
+
+| Path | Hasil |
+|---|---|
+| `/` | **200 OK** ← LOLOS, masih menyajikan situs Vercel |
+| `/?x=1` | **200 OK** ← LOLOS |
+| `/beranda` · `/film` · `/shorts` · `/discover` | 308 ✅ |
+| `/robots.txt` · `/sitemap.xml` | 308 ✅ |
+
+Sebabnya pola path-to-regexp: `/:path*` mencocokkan **satu segmen atau lebih**,
+dan akar tidak punya segmen sama sekali. Jadi halaman yang **paling banyak dibuka
+dan paling penting bagi Google** justru satu-satunya yang lolos.
+
+Diperbaiki di `982a98a` dengan menambah aturan eksplisit `"source": "/"`,
+ditaruh **lebih dulu** (Vercel menilai aturan berurutan).
+
+> 🪤 **Pelajaran yang layak diulang caranya:** build **hijau**, status deploy
+> **success**, dan konfigurasinya **sama persis dengan contoh resmi** — ketiganya
+> tidak menangkap lubang ini. Yang menangkapnya **smoke test per-path**. Inilah
+> arti "selesai = terbukti": memeriksa HASILNYA, bukan memeriksa bahwa langkahnya
+> sudah dijalankan.
+
 ⚠️ **Mendorong `vercel.json` = aksi rilis.** Ia ikut ter-deploy ke Vercel dan
 langsung aktif. **Jangan didorong sebelum langkah 4 selesai.**
 

@@ -315,10 +315,23 @@ sama, dan risikonya lebih besar daripada sisa pekerjaan migrasi mana pun.
 2. **Uji pulihkan backup** pending — butuh satu Supabase project kosong. Sampai
    itu dikerjakan, kalimat jujurnya "ada berkas backup yang konsisten", **bukan**
    "punya backup yang terbukti pulih" (`docs/uji-pulihkan-backup.md`).
-3. **`start-video-services.ps1` tak pernah memanggil `ReleaseMutex`** dan tak
-   punya blok `finally` → run terjadwal berikutnya keluar "instance lain sedang
-   berjalan". Senyap: video tetap hidup sampai tunnel mati, lalu tak ada yang
-   memulihkan.
+3. ✅ **`ReleaseMutex` DIPERBAIKI 2026-10-15** — seluruh sisa script dibungkus
+   `try { ... } finally { ReleaseMutex }`, 44 baris ditambah, **0 dihapus**,
+   indentasi isi sengaja tak diubah supaya perbaikan sekecil ini tak tenggelam
+   saat ditinjau. Satu blok `finally` menutup **ketujuh** titik `exit` sekaligus;
+   menambah `ReleaseMutex` satu per satu berarti 8+ tempat dan satu terlewat =
+   bug kembali.
+   **Dua anggapan diuji langsung, bukan diasumsikan:** (a) `finally` tetap jalan
+   walau script memanggil `exit` → **terbukti**; (b) kuncinya benar-benar dilepas
+   → diuji dari **proses terpisah** (meniru tugas terjadwal): versi **lama**
+   menjawab `TERKUNCI`, versi **baru** menjawab `BISA`. **Ujinya MEMBEDAKAN.**
+   🪤 Uji pertama saya **gagal membuktikan apa pun** — ia memeriksa dari thread
+   yang sama, dan kunci Windows bersifat **re-entrant per-thread** sehingga
+   pemegangnya selalu bisa "mengambil" lagi. Keduanya lolos, jadi ujinya tautologi.
+   **Aturan: uji kunci/lock WAJIB dari proses lain — dari proses yang sama,
+   hasilnya selalu hijau dan tak membuktikan apa pun.**
+   ⏳ **BELUM hidup di PC backup** — script dijalankan dari salinan di sana yang
+   disalin manual. Langkah manusia, lihat "salin script ke PC backup".
 4. **Beli domain** menunggu persetujuan atasan owner — **bukan** blocker.
 5. **Mitra Playly** minta dikabari kalau domain penonton berubah. Belum perlu
    sekarang (alamat webhook tidak berubah), tapi **wajib** saat domain dipasang.

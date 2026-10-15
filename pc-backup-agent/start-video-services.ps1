@@ -331,6 +331,30 @@ if (-not $PUNYA_KUNCI) {
   exit 0
 }
 
+# Mulai di sini kunci SUDAH dipegang. Seluruh sisa script dibungkus try/finally
+# supaya kunci selalu dikembalikan, lewat jalur keluar mana pun (ada 7 `exit`
+# di bawah + fungsi Berhenti).
+#
+# KENAPA WAJIB (kerusakan SENYAP, terjadi nyata 2x berturut 2026-10-14 18:20 &
+# 18:35): versi lama tak pernah memanggil ReleaseMutex. Saat Task Scheduler yang
+# menjalankan, prosesnya ikut tutup di akhir sehingga Windows menarik kunci itu
+# sendiri - aman. Tapi saat MANUSIA menjalankannya di jendela PowerShell yang
+# sudah terbuka, `exit` cuma mengakhiri SCRIPT; jendelanya tetap hidup dan tetap
+# memegang kunci. Akibatnya SEMUA run terjadwal berikutnya keluar dengan
+# "instance lain sedang berjalan" tanpa mengerjakan apa pun. Video tetap hidup
+# selama tunnel sekarang sehat, jadi tak ada gejala - sampai tunnel mati dan
+# ternyata tak ada yang memulihkannya.
+#
+# `finally` dipilih karena ia TETAP dijalankan walau script memanggil `exit`
+# (diuji langsung 2026-10-15, bukan diasumsikan) - jadi satu blok menutup
+# ketujuh titik keluar sekaligus. Menambah ReleaseMutex satu per satu berarti
+# 8+ tempat, dan satu saja terlewat bugnya kembali.
+#
+# Indentasi isi script sengaja TIDAK diubah: PowerShell tak peduli indentasi,
+# dan mengubahnya akan membuat seluruh berkas terlihat berubah sehingga
+# perbaikan sekecil ini tenggelam saat ditinjau.
+try {
+
 # --- 1. Cek semua prasyarat DULU, sebelum ada yang di-start ---
 Catat "folder PATH terdaftar yang ikut dicari: $($PATH_TERDAFTAR.Count)"
 
@@ -710,3 +734,23 @@ Catat "di database masih ada - database SELALU menang atas env. Kalau ingin kemb
 Catat "memakai env, kosongkan dulu lewat DELETE /api/agent/video-base (login admin)."
 Catat "=== SELESAI DENGAN MASALAH - alamat tidak terkirim ==="
 exit 1
+
+}
+finally {
+  # Kembalikan kunci lewat jalur keluar MANA PUN. Lihat komentar panjang di
+  # dekat `try {` soal kenapa ini wajib.
+  #
+  # Dibungkus try/catch sendiri supaya kegagalan di sini TIDAK pernah menimpa
+  # hasil script: melepas kunci itu kerapian, menyalakan video itu tugasnya.
+  # Menukar kegagalan pelepasan kunci jadi script gagal = menukar masalah kecil
+  # dengan masalah besar.
+  try {
+    if ($PUNYA_KUNCI -and $MUTEX) {
+      $MUTEX.ReleaseMutex()
+      $MUTEX.Dispose()
+      Catat "kunci dilepas"
+    }
+  } catch {
+    Catat "PERINGATAN: gagal melepas kunci: $($_.Exception.Message)"
+  }
+}

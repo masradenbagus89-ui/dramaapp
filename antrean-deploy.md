@@ -129,8 +129,17 @@ password **tanpa menyegel** — nol permanen, nol risiko. Sebagian nilai kini cu
 (panel Railway + `.env.railway.local` di satu komputer). ⚠️ Ambil dari panel yang hidup, **jangan**
 dari `.env.railway.local` — 2 nilai di sana sudah BASI.
 
+✅ **`ReleaseMutex` DIPERBAIKI 2026-10-15** — seluruh sisa `start-video-services.ps1` dibungkus
+`try { ... } finally { ReleaseMutex }`. 44 baris tambah, **0 hapus**, indentasi isi sengaja tak diubah.
+Satu blok `finally` menutup **ketujuh** titik `exit` sekaligus. Dua anggapan diuji langsung: `finally`
+tetap jalan walau ada `exit` ✅, dan kuncinya benar-benar dilepas ✅ — diuji **dari proses terpisah**
+(meniru tugas terjadwal): versi lama `TERKUNCI`, versi baru `BISA`, jadi **ujinya MEMBEDAKAN**.
+🪤 Uji pertama tautologi: memeriksa dari thread yang SAMA, padahal mutex Windows **re-entrant
+per-thread** → keduanya lolos. **Uji lock WAJIB dari proses lain.**
+⏳ **Belum hidup di PC backup** — script dijalankan dari salinan yang disalin MANUAL ke sana.
+
 🟡 **Tertunda dari SEBELUM migrasi:** uji pulihkan backup (butuh 1 Supabase project kosong) ·
-`ReleaseMutex` di `start-video-services.ps1` · salin script ke PC backup · beli domain (menunggu
+**salin script terbaru ke PC backup** (kini membawa perbaikan ReleaseMutex) · beli domain (menunggu
 atasan, bukan blocker) · kabari mitra Playly saat domain dipasang.
 
 ✅ **Audit migrasi 2026-10-15 — 9 hal terbukti AMAN, jangan diperiksa ulang:** nol paket `@vercel/*` ·

@@ -194,8 +194,9 @@ minimum `issues: write`, dan robot **tetap tidak pernah mencabut akses siapa pun
 | | Temuan |
 |---|---|
 | ❓ | **`ojokesusu` ternyata ORGANISASI, bukan orang.** Pemilik/anggota org otomatis bisa mengakses repo di dalamnya **tanpa muncul di daftar collaborator**, dan daftar anggotanya tak terbaca token owner. Jadi *"siapa saja yang bisa melihat seluruh kode kita?"* **BELUM terjawab penuh** — hanya pemilik org yang bisa menjawab |
-| ⚠️ | **Remote `official` (`projectraden/backup-dramaapp`) menjawab 404.** Remote mati begini berbahaya: orang bisa mengira sudah mendorong cadangan padahal tidak. Hapus remote-nya, atau pulihkan repo-nya |
-| ⚠️ | **`ai-review.yml` tak bisa bekerja** — `ANTHROPIC_API_KEY` tidak ada, dan workflow itu belum pernah jalan sekali pun. Workflow yang tak pernah bisa jalan = **kepercayaan palsu** bahwa ada yang memeriksa. Putuskan: isi secret-nya, atau hapus |
+| ✅ | ~~Remote `official` 404~~ — **SUDAH DIHAPUS 2026-10-15** atas izin owner. Diperiksa dulu: **nol ref** pernah tertarik → nol data hilang. Sesudahnya `git fetch --all` **exit 0** (sebelumnya selalu error sejak 2026-09-02), dual push utuh. Yang dihapus **hanya catatan alamat di komputer owner, bukan repo di GitHub**. Pembalikan: `git remote add official https://github.com/projectraden/backup-dramaapp.git` |
+| 🔵 | **`ai-review.yml` DIPUTUSKAN TETAP DIPAKAI** (tidak dihapus). Koreksi atas penilaian AI sebelumnya: ia **gagal KERAS, bukan diam-diam** — `.github/scripts/ai-review.cjs:53` melempar `ANTHROPIC_API_KEY tidak diset` lalu `exit 1`, jadi muncul silang merah di PR dengan pesan jelas. Ongkos menyimpannya nol (hanya menyala saat ada PR ke `main` dari repo yang sama — tak pernah terjadi). ❓ Kalau suatu saat dinyalakan: `ai-review.cjs:26` masih memakai model `claude-opus-4-8` yang sudah ketinggalan |
+| ⚠️ | **`ai-review.yml` tak bisa bekerja** — `ANTHROPIC_API_KEY` tidak ada, dan belum pernah jalan sekali pun. ~~Kepercayaan palsu~~ → **dikoreksi**, lihat baris 🔵 di bawah: ia gagal KERAS, bukan diam-diam. Keputusan owner 2026-10-15: **tetap dipakai, jangan dihapus** |
 | ⚠️ | **Repo cermin nol secret** — jadi robotnya tetap mandul walau tagihan rekan dibayar |
 | 🔵 | **Repo produksi PUBLIK** (diketahui & disengaja). Secret aman di GitHub Secrets, tapi `HANDOFF.md` kini memuat banyak detail operasional yang **bisa dibaca siapa saja** |
 

@@ -20,7 +20,7 @@
 |---|---|---|---|
 | `masradenbagus89-ui/dramaapp` | `masradenbagus89-ui` (user) | **publik** | **PRODUKSI** — push ke `main` = tombol rilis (Vercel + Railway ikut build) |
 | `ojokesusu/dramaku` | `ojokesusu` (**organisasi**) | privat | Cermin. Tempat rekan bekerja |
-| `projectraden/backup-dramaapp` | — | — | ⚠️ remote `official` di komputer owner, tapi **404** (lihat §5) |
+| ~~`projectraden/backup-dramaapp`~~ | — | — | 🔴 **remote `official` DIHAPUS 2026-10-15** (lihat §5) |
 
 ### Siapa punya akses — hasil baca 2026-10-15
 
@@ -101,16 +101,38 @@ robotnya tetap tak bisa bekerja.
    kelemahan yang belum ditutup) dan **bisa dibaca siapa saja**. Secret-nya aman
    (ada di GitHub Secrets, bukan di repo), tapi pengetahuan operasionalnya terbuka.
 2. ❓ **Anggota organisasi `ojokesusu` tak terbaca** — lihat §1.
-3. ⚠️ **Remote `official` (`projectraden/backup-dramaapp`) menjawab 404** di
-   komputer owner. Entah repo-nya dihapus, atau owner tak punya akses lagi.
-   Remote mati begini berbahaya: orang bisa mengira sudah mendorong cadangan
-   padahal tidak. **Hapus remote-nya, atau pulihkan repo-nya.**
+3. ✅ **SELESAI 2026-10-15 — remote `official` DIHAPUS** (atas izin owner).
+   `projectraden/backup-dramaapp` menjawab **404** sejak 2026-09-02 dan membuat
+   `git fetch --all` selalu error. Diperiksa sebelum dihapus: **nol ref** pernah
+   tertarik darinya, jadi nol data hilang. Sesudah dihapus `git fetch --all`
+   **exit 0**, dan dual push (`origin` + `dramaku`) utuh.
+   **Yang dihapus hanya catatan alamat di komputer owner — bukan repo di GitHub.**
+   Kenapa dihapus, bukan dibiarkan: ia terdaftar sebagai "cadangan" di
+   `antrean-deploy.md`, jadi orang bisa mengira ada salinan ketiga yang aman
+   padahal push ke sana gagal sejak September. **Remote mati menyembunyikan
+   kenyataan, bukan melindunginya.**
+   Pembalikan 1 baris kalau repo-nya dipulihkan:
+   `git remote add official https://github.com/projectraden/backup-dramaapp.git`
 4. ⚠️ **Actions di repo cermin MATI** karena tagihan akun rekan ("The job was not
    started because recent account payments have failed"). Enam workflow `active`
    tapi tak pernah mulai.
-5. ⚠️ **`ai-review.yml` tak bisa bekerja** — `ANTHROPIC_API_KEY` tidak ada.
-   Putuskan: isi secret-nya, atau hapus workflow-nya. Workflow yang tak pernah
-   bisa jalan = kepercayaan palsu bahwa ada yang memeriksa.
+5. 🔵 **`ai-review.yml` tak bisa bekerja** — `ANTHROPIC_API_KEY` tidak ada, dan
+   workflow itu belum pernah jalan sekali pun.
+   **Keputusan owner 2026-10-15: TETAP DIPAKAI, jangan dihapus.**
+   🔴 **Koreksi penilaian AI sebelumnya** (sempat ditulis "kepercayaan palsu
+   bahwa ada yang memeriksa" — **berlebihan**): `.github/scripts/ai-review.cjs:53`
+   melempar `ANTHROPIC_API_KEY tidak diset` lalu `exit 1`, jadi ia **gagal KERAS
+   dan terlihat** (silang merah di PR + pesan yang menyebut persis apa yang
+   kurang), **bukan** diam-diam dilewati.
+   Ongkos menyimpannya nol: ia hanya menyala saat ada PR ke `main` **dari repo
+   yang sama** (`ai-review.yml:27`) — owner bekerja langsung di `main`, rekan di
+   repo cermin, jadi tak pernah terpicu.
+   Ongkos menghapusnya kecil tapi nyata: ia satu-satunya pemeriksa kode otomatis
+   yang ada, dan `AGENTS.local.md` butir 6 menyebut namanya — menghapusnya
+   membuat dokumen itu menunjuk berkas tak-ada, persis penyakit yang baru
+   dibereskan di pengingat cek-akses.
+   ❓ Kalau suatu saat dinyalakan: `ai-review.cjs:26` masih memakai model
+   `claude-opus-4-8` yang sudah ketinggalan — naikkan dulu.
 
 ---
 

@@ -924,7 +924,7 @@ Blok ini tadinya menyuruh memverifikasi dengan `?nocache=...`. **Itu keliru, dan
 
 **⚠️ PROSES REKAN — patuh penuh untuk kedua kalinya berturut-turut.** Nol sentuhan ke `HANDOFF.md` / `antrean-deploy.md` / `docs/lintasai/INDEX.md`; membawa berkas serah-terima sendiri yang **jujur soal batasnya** (menuliskan sendiri bahwa tampilan produksi belum dilihat, dan bahwa build lokal mendaftar `/playly` sebagai static HANYA karena `useSupabase=false` sehingga tidak bisa dipakai membantah temuan dynamic di produksi). Aturan 2 (branch berumur pendek) juga dipatuhi: tertinggal **0** commit dari `main`. **Yang masih menganggur: aturan 7** — author tetap `masradenbagus89-ui <zyyherlambang@gmail.com>`, jadi `git log --format=%an` masih menjawab "owner" untuk kerja rekan.
 
-**⚠️ Remote `official` RUSAK:** `https://github.com/projectraden/backup-dramaapp.git` -> **Repository not found**, membuat `git fetch --all` selalu keluar error. Dual push tak terpengaruh (hanya `origin` + `dramaku`). ❓ Belum dihapus, perlu izin owner.
+**⚠️ Remote `official` RUSAK:** `https://github.com/projectraden/backup-dramaapp.git` -> **Repository not found**, membuat `git fetch --all` selalu keluar error. Dual push tak terpengaruh (hanya `origin` + `dramaku`). ✅ **SUDAH DIHAPUS 2026-10-15** atas izin owner — `git fetch --all` kini exit 0.
 🔄 **KOREKSI — penghalang rilis BUKAN "database mati".** Diuji 4 layanan dengan kunci `service_role` yang sama: **Storage 200 / 1,48 dtk** dan mengembalikan baris ASLI dari `storage.buckets` (bucket `videos` 2026-07-08, `matchday-cards` 2026-07-23) · PostgREST `OPTIONS` **200 / 0,36 dtk** · tapi PostgREST baca tabel **timeout 25 dtk** dan Auth `admin/users` **timeout 25 dtk**. Jadi **PostgreSQL HIDUP**; yang tersendat jalur **PostgREST + Auth**. Tercoret: project di-pause (Storage jalan) · kunci tak sah (kunci sama diterima Storage) · jaringan owner (TCP ke pooler tersambung **74 ms**) · disk penuh. ❓ Dugaan tersisa: jatah koneksi habis / ada yang mengunci. Obat paling mungkin: **Restart project**. **Memburuk**: Storage 1,48 dtk -> **13,83 dtk** dalam sejam.
 
 🔴 **YANG MENAHAN RILIS SEKARANG BUKAN LAGI SOAL TEKNIS, TAPI AKSES.** Project `nvblmpkwyzbpdbshyvzw` **milik Kang Dedi**, bukan owner (HANDOFF.md:1668). Owner tidak bisa menekan tombol Restart sendiri. Selama PostgREST tersendat, `npm run build` tidak akan bisa lulus, jadi **3 commit lokal (`254ce47`, `a40caef`, `ddf5862`) tetap menunggu** dan `origin/main` tetap `a65bfbf`. ⚠️ **Jangan minta Personal Access Token Kang Dedi** (keputusan 2026-08-31, HANDOFF.md:1680).
@@ -1049,7 +1049,7 @@ Sebelumnya 2026-08-28 (deploy hero landing): **Lokal = `origin/main` = `dramaku/
 > |---|---|---|---|
 > | `masradenbagus89-ui/dramaapp` | **`origin`** | `dramaapp` | **Ya — ini tombol rilis** |
 > | `ojokesusu/dramaku` | **`dramaku`** | `origin` | Tidak — push ke sini TIDAK merilis apa pun |
-> | `projectraden/backup-dramaapp` | `official` | — | Tidak — cadangan |
+> | ~~`projectraden/backup-dramaapp`~~ | ~~`official`~~ | — | 🔴 **REMOTE DIHAPUS 2026-10-15** — repo 404 sejak 2026-09-02, nol ref pernah tertarik. BUKAN cadangan |
 >
 > **SELALU `git remote -v` dulu sebelum push. Jangan percaya kata "origin" di catatan mana pun.**
 
@@ -1091,7 +1091,7 @@ Sebelumnya 2026-08-28 (deploy hero landing): **Lokal = `origin/main` = `dramaku/
 |---|---|---|
 | `masradenbagus89-ui/dramaapp` | **`origin`** | **Ya** — `git push origin main` = tombol rilis |
 | `ojokesusu/dramaku` | **`dramaku`** | Tidak — cermin/tempat rekan commit. Push ke sini TIDAK merilis apa pun |
-| `projectraden/backup-dramaapp` | `official` | Tidak — cadangan |
+| ~~`projectraden/backup-dramaapp`~~ | ~~`official`~~ | 🔴 **REMOTE DIHAPUS 2026-10-15** — repo 404 sejak 2026-09-02. BUKAN cadangan |
 
 Produksi: https://dramaapp.vercel.app  
 Commit terbaru yang di-push: **`4954817`** (5 commit sekaligus: perbaikan layar hitam player, berkas autostart named tunnel, tes e2e Tahap 7, 2 dokumentasi) — di-push 2026-08-20 malam sesudah 265 tes lulus + `tsc` exit 0 + `next build` sukses. **TERVERIFIKASI TAYANG**: teks perbaikan player ditemukan di bundle produksi `/_next/static/chunks/27z9f9ucdybcg.js`.

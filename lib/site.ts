@@ -6,7 +6,20 @@
  * Prosedur + urutan yang tak boleh dibalik: docs/migrasi-railway-tahap6-pindah-domain.md
  */
 
-const DEFAULT_SITE_URL = "https://dramaapp.vercel.app";
+/**
+ * Alamat cadangan kalau NEXT_PUBLIC_SITE_URL tidak diisi.
+ *
+ * Diubah 2026-10-15 dari `https://dramaapp.vercel.app` ke alamat Railway.
+ * KENAPA: Vercel sejak 2026-10-15 hanya mengalihkan (308) ke Railway, dan akan
+ * DITUTUP. Alamat cadangan yang menunjuk situs mati = canonical, sitemap, dan
+ * robots.txt mengarahkan Google ke ketiadaan — tanpa satu pun gejala di layar.
+ *
+ * ⚠️ Ini SATU dari beberapa tempat yang menyimpan alamat situs sebagai nilai
+ * cadangan. Saat domain berganti lagi, ubah SEMUANYA sekaligus — daftar
+ * lengkapnya ada di docs/migrasi-railway-tahap6-pindah-domain.md
+ * ("Daftar nilai cadangan").
+ */
+const DEFAULT_SITE_URL = "https://dramaapp-production-9e88.up.railway.app";
 
 /**
  * Pagar untuk nilai NEXT_PUBLIC_SITE_URL. Mengembalikan pesan masalah, atau null

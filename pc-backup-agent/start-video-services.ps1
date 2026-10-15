@@ -78,7 +78,14 @@ $CLOUDFLARED_CANDIDATES = @(
 # yang lahir sesudah nilainya diubah.
 $SITUS_URL = [Environment]::GetEnvironmentVariable("DRAMAAPP_SITUS_URL", "Machine")
 if (-not $SITUS_URL) { $SITUS_URL = $env:DRAMAAPP_SITUS_URL }
-if (-not $SITUS_URL) { $SITUS_URL = "https://dramaapp.vercel.app" }
+# Alamat cadangan diubah 2026-10-15 dari Vercel ke Railway. KENAPA PENTING:
+# kalau env DRAMAAPP_SITUS_URL hilang (mis. PC di-install ulang) sementara
+# cadangan ini menunjuk situs MATI, agent melapor alamat tunnel ke ketiadaan ->
+# situs tetap memakai alamat tunnel lama yang sudah lenyap -> SELURUH VIDEO MATI,
+# dan semua indikator tetap terlihat hijau. Pola kerusakan senyap yang sama
+# dengan $NAMED_URL di bawah. Daftar semua tempat penyimpan alamat cadangan:
+# docs/migrasi-railway-tahap6-pindah-domain.md ("Daftar nilai cadangan").
+if (-not $SITUS_URL) { $SITUS_URL = "https://dramaapp-production-9e88.up.railway.app" }
 $SITUS_URL = $SITUS_URL.Trim().TrimEnd('/')
 # Drama yang dipakai untuk membuktikan rantai situs -> tunnel -> Caddy -> berkas.
 # HARUS drama yang berkas 1.mp4-nya memang ada di folder video.
@@ -660,9 +667,11 @@ if (-not (Lapor-Alamat $TUNNEL_URL "QUICK")) {
   # jatuh ke blok penanganan gagal di bawah
 } else {
   # Pembuktian ujung-ke-ujung dari jalur yang BENAR-BENAR dipakai penonton:
-  # situs -> tunnel -> Caddy -> berkas. Ini hanya butuh DNS ke dramaapp.vercel.app
+  # situs -> tunnel -> Caddy -> berkas. Ini hanya butuh DNS ke $SITUS_URL
   # (sudah terbukti bisa di langkah Tunggu-Jaringan), jadi tidak terhalang resolver
   # lokal yang belum mengenal hostname tunnel baru.
+  # Dulu komentar ini menyebut alamat Vercel secara harfiah; ditulis ulang
+  # 2026-10-15 memakai nama variabelnya supaya tidak basi lagi saat domain pindah.
   $UJI_URL = "$SITUS_URL/api/teaser?id=$DRAMA_UJI&ep=1"
   $TERBUKTI = $false
   for ($i = 1; $i -le 12; $i++) {

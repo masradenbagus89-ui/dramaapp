@@ -77,8 +77,19 @@ owner hijau semua), tapi **jangan mengandalkan robot apa pun di repo cermin**.
 
 ⏰ **PENGINGAT MATIKAN VERCEL — paling cepat 2026-11-26 (6 minggu), DAN hanya kalau 3 syarat
 terpenuhi.** Bukan sekadar tanggal: (1) ≥6 minggu lewat · (2) cek di Google `site:dramaapp-production-9e88.up.railway.app`
-sudah banyak & `site:dramaapp.vercel.app` sudah sedikit/nol · (3) 5 nilai cadangan yang masih
-menunjuk alamat Vercel sudah dibereskan. Rinciannya + cara menutup bertahap: `HANDOFF.md` seksi ⏰.
+sudah banyak & `site:dramaapp.vercel.app` sudah sedikit/nol · (3) ✅ **syarat ketiga SUDAH BERES
+2026-10-15** — 5 nilai cadangan tak lagi menunjuk Vercel. Rinciannya + cara menutup bertahap:
+`HANDOFF.md` seksi ⏰.
+
+✅ **5 NILAI CADANGAN BERES 2026-10-15.** `lib/site.ts` · `keep-db-awake.yml` ·
+`start-video-services.ps1` · `e2e-tahap7.mjs` · `KEEPALIVE_SITES` di **kedua** repo. Semua kini
+menunjuk alamat Railway. **Bukti:** build lokal dijalankan dengan env **sengaja kosong** (memaksa
+jalur cadangan) → canonical & `robots.txt` keluar beralamat Railway. Gerbang: build 0 · tsc 0 ·
+99 berkas / 1447 tes. Daftar rujukan tunggal untuk pergantian domain berikutnya:
+`docs/migrasi-railway-tahap6-pindah-domain.md` seksi "Daftar nilai cadangan".
+⚠️ **Sisa langkah MANUSIA:** `start-video-services.ps1` dijalankan dari salinan di PC backup yang
+disalin manual — edit di repo belum hidup di sana. Tidak mendesak (env `DRAMAAPP_SITUS_URL` di sana
+masih terisi benar, jadi cadangan ini belum terpakai), tapi wajib sebelum PC itu di-install ulang.
 
 ✅ **"UBUNTU 26 DALAM 3 HARI" SELESAI 2026-10-15 — DIUJI, ternyata TIDAK merusak.** Label
 `ubuntu-26.04` sudah tersedia hari ini, jadi masa depannya bisa diuji sekarang. Di branch

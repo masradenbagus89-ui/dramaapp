@@ -426,6 +426,43 @@ menyegarkan per jam), lalu ukur ulang. Masih tidak nol → variabelnya salah ket
 
 ---
 
+## Daftar nilai cadangan — WAJIB diubah SEMUA saat domain berganti
+
+Alamat situs tersimpan sebagai **nilai cadangan** (dipakai kalau env-nya kosong)
+di beberapa tempat berbeda. Semuanya **gagal senyap**: nol error, nol gejala,
+baru terasa dari akibatnya. Kalau domain berganti lagi, ubah **seluruh** daftar
+ini sekaligus — jangan sebagian.
+
+Semuanya sudah diubah dari alamat Vercel ke
+`https://dramaapp-production-9e88.up.railway.app` pada **2026-10-15**.
+
+| # | Tempat | Kalau cadangannya menunjuk alamat MATI |
+|---|---|---|
+| 1 | `lib/site.ts` → `DEFAULT_SITE_URL` | canonical + `sitemap.xml` + `robots.txt` mengarahkan Google ke ketiadaan |
+| 2 | `.github/workflows/keep-db-awake.yml` → `SITES` | robot menyapa situs mati → melapor gagal tiap hari, dan database bisa tertidur tanpa ada yang tahu |
+| 3 | `pc-backup-agent/start-video-services.ps1` → `$SITUS_URL` | **paling berbahaya**: agent melapor alamat tunnel ke ketiadaan → situs tetap memakai alamat tunnel lama yang sudah lenyap → **SELURUH VIDEO MATI**, semua indikator tetap hijau |
+| 4 | `scripts/e2e-tahap7.mjs` → `BASE` | uji E2E diam-diam menguji situs yang salah → "lulus" yang tak berarti apa-apa |
+| 5 | Variable `KEEPALIVE_SITES` di **kedua** repo GitHub | sama seperti #2. ⚠️ Ini **setelan di panel**, bukan di repo — jadi `git grep` tak akan menemukannya |
+
+Plus 2 yang kosmetik tapi menyesatkan orang (bukan pemblokir, tapi sudah ikut
+dibereskan 2026-10-15): `pc-backup-agent/optimalkan-film.ps1` (pesan ke operator
+menyuruh cek di alamat lama) dan `scripts/gen-supabase-sql.mjs` (komentar di
+berkas SQL hasil).
+
+> 🪤 **Jebakan #3 — edit di repo BELUM berarti hidup di PC backup.**
+> `start-video-services.ps1` dijalankan dari salinan di PC backup, yang
+> **disalin/di-`git pull` MANUAL** (lihat `start-dramaapp-web.ps1:21` dan
+> `docs/migrasi-railway-pc-backup.md:15`). Jadi mengubah berkas di repo saja
+> **tidak** mengubah apa pun di mesin yang sebenarnya. Wajib disalin ke sana,
+> dan itu langkah manusia.
+>
+> Kabar baiknya: selama env `DRAMAAPP_SITUS_URL` di PC backup masih terisi
+> benar (dan per 2026-10-14 ia terisi + lulus uji restart), nilai cadangan ini
+> **tidak pernah terpakai**. Ia jaring pengaman untuk hari ketika env itu hilang
+> — misalnya PC di-install ulang.
+
+---
+
 ## Rollback
 
 Hapus `NEXT_PUBLIC_SITE_URL` dari panel Railway → deploy ulang → semuanya kembali

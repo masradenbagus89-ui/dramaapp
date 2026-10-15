@@ -47,21 +47,50 @@ Tutup hanya kalau **ketiganya** benar:
 Kenapa pakai kriteria, bukan tanggal saja: lama perpindahan tergantung seberapa
 sering Google merayapi situs ini — tak ada yang bisa menjaminnya dari kalender.
 
-### 🔴 WAJIB dikerjakan SEBELUM menutup — 5 nilai cadangan yang akan menunjuk alamat MATI
+### ✅ SELESAI 2026-10-15 — 5 nilai cadangan sudah TIDAK lagi menunjuk Vercel
 
-Semuanya **gagal senyap**: nol error, nol gejala, baru terasa dari akibatnya.
+Semuanya dulu **gagal senyap**: nol error, nol gejala, baru terasa dari akibatnya.
+Kelimanya kini menunjuk `https://dramaapp-production-9e88.up.railway.app`.
 
-| # | Tempat | Yang terjadi kalau Vercel mati |
+| # | Tempat | Yang dicegah |
 |---|---|---|
-| 1 | `lib/site.ts:9` `DEFAULT_SITE_URL` | Kalau `NEXT_PUBLIC_SITE_URL` sewaktu-waktu hilang/salah ketik, canonical+sitemap+robots jatuh ke **alamat mati** → Google diarahkan ke ketiadaan |
-| 2 | `.github/workflows/keep-db-awake.yml:65` nilai cadangan | Kalau `KEEPALIVE_SITES` dikosongkan, robot menyapa **alamat mati** → database bisa tertidur tanpa ada yang tahu |
-| 3 | `pc-backup-agent/start-video-services.ps1:81` `SITUS_URL` | Kalau env di PC backup hilang, agent melapor alamat tunnel ke **alamat mati** → **video penonton mati** dan tak pulih sendiri |
-| 4 | `scripts/e2e-tahap7.mjs:33` `E2E_BASE` | Uji E2E diam-diam menguji **situs yang salah** → "lulus" yang tak berarti apa-apa |
-| 5 | `KEEPALIVE_SITES` di repo cermin `ojokesusu/dramaku` | Masih memuat Vercel. Tak berefek sekarang (Actions di sana mati karena tagihan), tapi kalau rekan membayar, robotnya langsung gagal tiap hari |
+| 1 | `lib/site.ts` `DEFAULT_SITE_URL` | canonical + sitemap + robots mengarahkan Google ke ketiadaan |
+| 2 | `.github/workflows/keep-db-awake.yml` `SITES` | robot menyapa situs mati → database bisa tertidur tanpa ada yang tahu |
+| 3 | `pc-backup-agent/start-video-services.ps1` `$SITUS_URL` | **paling berbahaya** — agent melapor ke ketiadaan → **seluruh video mati**, indikator tetap hijau |
+| 4 | `scripts/e2e-tahap7.mjs` `BASE` | uji diam-diam menguji situs salah → "lulus" yang tak berarti |
+| 5 | `KEEPALIVE_SITES` di **kedua** repo GitHub | sama seperti #2. Ini setelan **panel**, bukan repo — `git grep` tak menemukannya |
 
-Plus 2 yang **kosmetik tapi menyesatkan** (bukan pemblokir):
-`pc-backup-agent/optimalkan-film.ps1:184` (pesan ke operator menyuruh cek di
-alamat vercel) · `scripts/gen-supabase-sql.mjs:45` (komentar di berkas SQL).
+Plus 2 kosmetik ikut dibereskan: `optimalkan-film.ps1` (pesan ke operator) dan
+`gen-supabase-sql.mjs` (komentar di SQL hasil). Komentar di
+`start-video-services.ps1:670` yang menyebut alamat Vercel harfiah ditulis ulang
+memakai `$SITUS_URL` supaya tak basi lagi saat domain pindah.
+
+**Bukti:** build lokal dijalankan **dengan env sengaja kosong** (= memaksa jalur
+cadangan) → canonical `https://dramaapp-production-9e88.up.railway.app` ·
+`robots.txt` → sitemap Railway. Gerbang: build **0** · tsc **0** ·
+**99 berkas / 1447 tes**.
+
+⚠️ **#3 BELUM hidup di PC backup.** `start-video-services.ps1` dijalankan dari
+salinan di PC backup yang **disalin/`git pull` MANUAL**
+(`start-dramaapp-web.ps1:21`, `docs/migrasi-railway-pc-backup.md:15`). Mengubah
+berkas di repo **tidak** mengubah apa pun di mesin itu — **langkah manusia yang
+masih tersisa.** Tidak mendesak: selama env `DRAMAAPP_SITUS_URL` di sana masih
+terisi benar (per 2026-10-14 terisi + lulus uji restart), nilai cadangan ini
+tak pernah terpakai. Ia jaring pengaman untuk hari ketika env itu hilang.
+
+🪤 **Gerbang menangkap tes saya sendiri.** `tests/site-url-pagar.test.ts`
+mematok `"https://dramaapp.vercel.app"` apa adanya, jadi langsung merah begitu
+nilai bawaannya dipindah — padahal nol yang rusak. Dibetulkan **bukan** dengan
+menukar satu alamat jadi alamat lain (akan pecah lagi saat domain berganti),
+melainkan menguji **perilakunya**: hasilnya alamat `https` yang sah DAN bukan
+alamat Vercel yang sudah dipensiunkan.
+**Aturan: tes yang mematok alamat/versi apa adanya akan jadi beban tiap kali
+nilai itu sah berubah — kunci perilakunya, bukan nilainya.**
+
+📌 **Daftar rujukan tunggal** supaya pergantian domain berikutnya tidak jadi
+perburuan: `docs/migrasi-railway-tahap6-pindah-domain.md` seksi
+**"Daftar nilai cadangan"**. Tiap tempat di atas juga diberi komentar yang
+menunjuk ke sana.
 
 ### 🔐 Juga saat menutup: BERSIHKAN SECRET DORMAN DI PANEL VERCEL
 

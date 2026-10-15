@@ -62,7 +62,15 @@ jobs:
     steps:
       - name: Panggil endpoint yang membaca database
         env:
-          SITES: ${{ vars.KEEPALIVE_SITES || 'https://dramaapp.vercel.app' }}
+          # Nilai cadangan diubah 2026-10-15 dari alamat Vercel ke Railway: Vercel
+          # kini hanya mengalihkan dan akan DITUTUP, jadi cadangan lama = robot
+          # menyapa situs mati lalu melapor gagal tiap hari.
+          # ⚠️ Tanda `||` ini berarti MENGOSONGKAN variabel KEEPALIVE_SITES tidak
+          # mematikan pemantauan — ia jatuh ke alamat di bawah. Mau ganti situs
+          # yang dipantau? GANTI ISI variabelnya, jangan dikosongkan.
+          # Daftar semua tempat yang menyimpan alamat situs sebagai cadangan:
+          # docs/migrasi-railway-tahap6-pindah-domain.md ("Daftar nilai cadangan").
+          SITES: ${{ vars.KEEPALIVE_SITES || 'https://dramaapp-production-9e88.up.railway.app' }}
         run: |
           set -euo pipefail
 

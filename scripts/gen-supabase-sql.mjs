@@ -42,7 +42,7 @@ const p = (s = "") => out.push(s);
 
 p("-- =====================================================================");
 p("-- DramaApp  ->  Supabase (PostgreSQL) import");
-p("-- Dihasilkan otomatis dari data/*.json (https://dramaapp.vercel.app/)");
+p("-- Dihasilkan otomatis dari data/*.json (https://dramaapp-production-9e88.up.railway.app/)");
 p("-- Cara pakai: buka Supabase -> SQL Editor -> New query -> paste -> Run.");
 p("-- Idempoten: aman dijalankan ulang (drop & buat ulang tabel app).");
 p("-- =====================================================================");

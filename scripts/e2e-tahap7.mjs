@@ -30,7 +30,12 @@ if (existsSync(envPath)) {
   }
 }
 
-const BASE = (process.env.E2E_BASE ?? "https://dramaapp.vercel.app").replace(/\/+$/, "");
+// Alamat cadangan diubah 2026-10-15 dari Vercel ke Railway: Vercel kini hanya
+// mengalihkan dan akan DITUTUP, jadi cadangan lama = uji ini diam-diam menguji
+// situs yang salah lalu melaporkan "lulus" yang tak berarti apa-apa.
+// Daftar semua tempat penyimpan alamat cadangan:
+// docs/migrasi-railway-tahap6-pindah-domain.md ("Daftar nilai cadangan").
+const BASE = (process.env.E2E_BASE ?? "https://dramaapp-production-9e88.up.railway.app").replace(/\/+$/, "");
 const SB_URL = (process.env.SUPABASE_URL ?? "").replace(/\/+$/, "");
 const SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_KEY ?? "";
 

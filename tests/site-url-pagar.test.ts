@@ -94,7 +94,14 @@ describe("pagar benar-benar MELEMPAR saat modul dimuat, bukan cuma mengembalikan
     vi.resetModules();
     try {
       const modul = await import("../lib/site");
-      expect(modul.SITE_URL).toBe("https://dramaapp.vercel.app");
+      // Sengaja TIDAK mematok alamatnya. Versi pertama tes ini menulis
+      // "https://dramaapp.vercel.app" apa adanya, lalu langsung merah begitu
+      // nilai bawaannya dipindah ke Railway (2026-10-15) — padahal nol yang
+      // rusak. Yang perlu dikunci adalah PERILAKUNYA: env kosong tetap bisa
+      // diimpor (bukan tautologi), hasilnya alamat https yang sah, dan BUKAN
+      // alamat Vercel yang sudah dipensiunkan.
+      expect(modul.SITE_URL).toMatch(/^https:\/\/[^/]+$/);
+      expect(modul.SITE_URL).not.toContain("dramaapp.vercel.app");
     } finally {
       if (asli !== undefined) process.env.NEXT_PUBLIC_SITE_URL = asli;
       vi.resetModules();

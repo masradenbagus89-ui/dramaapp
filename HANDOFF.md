@@ -24,8 +24,39 @@ canonical + `og:url` ikut pindah (**prerender SSG**, jadi ini membuktikan seluru
 situs dibangun ulang) · **Vercel tidak tersentuh**, masih melayani.
 
 **TITIK LANJUT — tinggal MENUNGGU, nol pekerjaan teknis hari ini.**
-Tapi ada **1 hal MENDESAK yang tak ada hubungannya dengan migrasi** (Ubuntu 26,
-3 hari lagi) — lihat seksi ⏰ di bawah.
+
+✅ **SELURUH PAGAR MIGRASI TERTUTUP 2026-10-15.** Putaran 1, 2, 3 semuanya lolos ·
+5 nilai cadangan beres · Vercel mengalihkan 308 ke Railway · keepalive hijau ·
+webhook & video di Railway. Sisa: **menunggu ≥6 minggu sebelum Vercel ditutup**
+(syarat lengkap di seksi ⏰ di bawah).
+
+### 🔓 TERBUKA KEMBALI karena Putaran 2 lolos: penyegelan 13 variabel Railway
+
+Ini **sengaja ditunda** sampai Putaran 2 lolos — syaratnya kini terpenuhi.
+Keputusan lengkapnya di `docs/migrasi-railway-daftar-env.md` seksi "Workspace
+Railway & penyegelan variabel".
+
+**Kenapa ini keamanan, bukan kerapian:** workspace Railway `jalurlangit-ops` punya
+**±10 Admin** (akun kerja atasan owner, berisi 18 project rekan lain). Dokumentasi
+Railway menyatakan *"Workspace admins can access every project"*, dan pembatasan
+per-project **tidak bisa menolong** (Access Groups hanya ada di paket Enterprise).
+Artinya **saat ini ±10 orang bisa membuka tab Variables DramaKu dan membaca kunci
+induk database** (`SUPABASE_SERVICE_ROLE_KEY`). **Sealed Variables** membuatnya
+write-only: Railway tetap menyuntikkan nilainya ke aplikasi, tapi tak seorang pun
+bisa membacanya lagi — termasuk owner.
+
+⚠️ **PERMANEN & TAK BISA DIBATALKAN.** Nilai masih bisa ditimpa, tapi **tak pernah
+bisa dibaca lagi**, dan tak bisa dikembalikan ke mode biasa. Urutannya mengikat:
+
+1. **Salin dulu 13 nilainya ke pengelola password** — sesudah disegel, Railway
+   bukan lagi tempat mengambilnya.
+2. ⚠️ **Jangan percaya `.env.railway.local` sebagai sumber.** Dua nilai di sana
+   sudah BASI: `PLAYLY_WEBHOOK_SECRET` (mitra menggantinya 2026-10-14) dan
+   `HARDLINK_AGENT_SECRET` (dibuat ulang 43 karakter saat migrasi PC backup).
+   Ambil dari panel Railway yang hidup, selagi masih bisa dibaca.
+3. Baru segel.
+
+❓ Belum diputuskan owner. Nol biaya, nol commit — tapi sekali disegel, selamanya.
 
 ---
 
@@ -247,9 +278,15 @@ sama, dan risikonya lebih besar daripada sisa pekerjaan migrasi mana pun.
 
 ### ⏸️ Tertunda dari SEBELUM migrasi (bukan akibat migrasi)
 
-1. **Putaran 2 (login admin)** belum lolos → fitur admin di Railway (Playly
-   picker, dashboard videos) **belum pernah diuji di sana**. Pagar yang dipasang
-   owner sendiri.
+1. ✅ **Putaran 2 (login admin) LOLOS 2026-10-15** — pagar terakhir migrasi
+   tertutup. Diuji owner di **jendela incognito** (penting: incognito tak membawa
+   sesi lama, jadi ini login dari NOL di Railway, bukan sesi sisa dari Vercel) di
+   alamat `dramaapp-production-9e88.up.railway.app/admin/videos/playly`:
+   masuk sebagai "Mas radenbagus89" · **Admin → Videos → Playly terisi 339 video**.
+   Dicocokkan dengan sumber terpisah: sitemap Railway hidup memuat **339** halaman
+   `/tonton/` — **angka identik**, jadi panel itu membaca data produksi sungguhan.
+   Dua butir lain sudah lolos sebelumnya: kartu status katalog (dibuktikan Putaran
+   3) dan Webhooks Playly (`401` bukan `503`).
 2. **Uji pulihkan backup** pending — butuh satu Supabase project kosong. Sampai
    itu dikerjakan, kalimat jujurnya "ada berkas backup yang konsisten", **bukan**
    "punya backup yang terbukti pulih" (`docs/uji-pulihkan-backup.md`).
@@ -1070,7 +1107,7 @@ Path + batas biaya Railway belum dikonfirmasi eksplisit · penyegelan 13 variabe
 Putaran 2 lolos · `NEXT_PUBLIC_SITE_URL` diisi di Tahap 6 · katalog **64→40 judul** belum
 ditelusuri (bukan gejala Railway — angka sama di kedua situs).
 
-**Vercel tetap melayani penonton.** Tahap 6 jangan dimulai sebelum Putaran 2 lolos.
+~~**Vercel tetap melayani penonton.** Tahap 6 jangan dimulai sebelum Putaran 2 lolos.~~ 🔴 **SUDAH TIDAK BERLAKU** — Tahap 6 selesai 2026-10-15 dan Putaran 2 LOLOS hari yang sama (lihat entri teratas).
 
 ---
 
@@ -1145,9 +1182,12 @@ bisa beda.
    hijau", tapi `/api/health` dengan timeout **30 detik** (bukan bawaan — satu permintaan Supabase
    bisa makan 12,3 detik) belum dipastikan terpasang.
 
-**Penyegelan 13 variabel tetap DITUNDA** sampai Putaran 2 lolos (sengaja: penyegelan permanen,
+~~**Penyegelan 13 variabel tetap DITUNDA** sampai Putaran 2 lolos (sengaja: penyegelan permanen,
 satu salah ketik tak akan bisa diperiksa lagi). **Tahap 6 (pindah domain) jangan dimulai** sebelum
-Putaran 2 lolos.
+Putaran 2 lolos.~~
+🔓 **SYARATNYA TERPENUHI 2026-10-15** — Putaran 2 LOLOS, jadi penyegelan kini **terbuka untuk
+diputuskan** (belum dikerjakan). Tahap 6 juga sudah selesai hari yang sama. Rincian + urutan wajib
+sebelum menyegel: entri teratas berkas ini, seksi 🔓.
 
 **Vercel tetap melayani penonton, tidak tersentuh sama sekali.**
 
@@ -1215,7 +1255,7 @@ Supabase bisa makan 12,3 detik saat lambat), dan **batas biaya / usage alert** d
 bersifat permanen, jadi satu salah ketik di antara 13 nilai tak akan bisa diperiksa. Lihat
 `docs/migrasi-railway-daftar-env.md`.
 
-**Tahap 6 (pindah domain) BELUM dimulai dan jangan dimulai** sebelum Putaran 2 & 3 lolos.
+~~**Tahap 6 (pindah domain) BELUM dimulai dan jangan dimulai** sebelum Putaran 2 & 3 lolos.~~ 🔴 **SUDAH TIDAK BERLAKU** — ketiga putaran lolos, Tahap 6 selesai 2026-10-15.
 
 ---
 

@@ -110,9 +110,22 @@ github-script v7→**v9.0.0** · upload-artifact v4→**v7.0.2** · `node-versio
 jadwalnya sudah mati & gagal lebih dulu di `pg_dump`) dan wiring `ai-review.yml` (hanya jalan saat
 PR) — tapi kedua action di dalamnya sudah terbukti di workflow lain.
 
-🟡 **Tertunda dari SEBELUM migrasi:** Putaran 2 admin (fitur admin di Railway belum pernah diuji) ·
-uji pulihkan backup (butuh 1 Supabase project kosong) · `ReleaseMutex` di `start-video-services.ps1` ·
-beli domain (menunggu atasan, bukan blocker) · kabari mitra Playly saat domain dipasang.
+✅ **PUTARAN 2 LOLOS 2026-10-15 — SELURUH PAGAR MIGRASI (Putaran 1, 2, 3) TERTUTUP.** Diuji owner
+di **jendela incognito** (tak membawa sesi lama → login dari NOL di Railway, bukan sesi sisa Vercel)
+di `dramaapp-production-9e88.up.railway.app/admin/videos/playly`: login berhasil · **Playly terisi
+339 video**. Dicocokkan dari sumber terpisah: sitemap Railway hidup memuat **339** halaman
+`/tonton/` — angka identik.
+
+🔓 **TERBUKA KEMBALI: penyegelan 13 variabel Railway** (ditunda sejak 2026-10-12 menunggu Putaran 2).
+**Ini keamanan, bukan kerapian:** workspace `jalurlangit-ops` punya ±10 Admin dan dokumentasi
+Railway menyatakan *"Workspace admins can access every project"* — jadi **±10 orang kini bisa
+membaca `SUPABASE_SERVICE_ROLE_KEY`**. Sealed Variables menutupnya (write-only, tak seorang pun
+bisa membaca, termasuk owner). ⚠️ **PERMANEN**: salin dulu 13 nilainya ke pengelola password, dan
+**jangan** ambil dari `.env.railway.local` (2 nilai di sana sudah BASI). Belum diputuskan owner.
+
+🟡 **Tertunda dari SEBELUM migrasi:** uji pulihkan backup (butuh 1 Supabase project kosong) ·
+`ReleaseMutex` di `start-video-services.ps1` · salin script ke PC backup · beli domain (menunggu
+atasan, bukan blocker) · kabari mitra Playly saat domain dipasang.
 
 ✅ **Audit migrasi 2026-10-15 — 9 hal terbukti AMAN, jangan diperiksa ulang:** nol paket `@vercel/*` ·
 `vercel.json` cuma redirects · workflow backup memakai "dramaapp" sebagai nama SCHEMA bukan alamat

@@ -330,8 +330,30 @@ sama, dan risikonya lebih besar daripada sisa pekerjaan migrasi mana pun.
    pemegangnya selalu bisa "mengambil" lagi. Keduanya lolos, jadi ujinya tautologi.
    **Aturan: uji kunci/lock WAJIB dari proses lain — dari proses yang sama,
    hasilnya selalu hijau dan tak membuktikan apa pun.**
-   ⏳ **BELUM hidup di PC backup** — script dijalankan dari salinan di sana yang
-   disalin manual. Langkah manusia, lihat "salin script ke PC backup".
+   ✅ **SUDAH HIDUP DI PC BACKUP 2026-10-15** — dipasang owner, terbukti dari
+   log mesin itu sendiri, bukan dari klaim.
+
+   **Cara memasangnya (berguna untuk perubahan script berikutnya):** PC backup
+   **TIDAK punya folder repo** — hanya `C:\Users\USER\pc-backup-agent\`, jadi
+   `git pull` bukan pilihan. Diperiksa dulu bahwa salinan hidupnya belum pernah
+   disunting (`$AGENT_DIR`, `$VIDEO_ROOT`, `$NAMED_URL` ketiganya identik dengan
+   repo; selisih ukuran cuma **3 byte** = penanda BOM). Lalu: cadangkan ke
+   `cadangan\` → unduh dari **raw.githubusercontent** pada commit yang dipatok →
+   **cocokkan SHA-256** → baru timpa. Sidik jari `7858944`:
+   `DF2939FE6EE0976BB04726127009B9F196E34A07015C7DE77544992699C53C1A`.
+   ⚠️ Nama akun di PC backup memang **persis `USER`** — `C:\Users\USER\...` di
+   script itu alamat sungguhan, bukan placeholder yang perlu disesuaikan.
+
+   **BUKTI dari log PC backup — tiga hal sekaligus:**
+   | | |
+   |---|---|
+   | Perbaikan hidup | baris **`kunci dilepas`** muncul di run 13:57:25, dan **TIDAK ADA** di run 13:50:08 (versi lama) → log mesin itu sendiri yang membedakan |
+   | Jalur boot bekerja | `user: DESKTOP-8QD3L2G$` — akhiran `$` = **akun komputer (SYSTEM)**, jadi Task Scheduler yang menjalankan, bukan manusia |
+   | Rantai pemulihan utuh | restart mematikan tunnel lama → script membuat tunnel BARU `ment-subjects-ultram-votes` → melaporkannya ke situs → menguji sendiri. **Persis skenario yang dulu akan gagal** kalau kunci tersangkut |
+
+   **Diverifikasi ulang dari LUAR** (bukan dari log script): situs menjawab `307`
+   ke alamat tunnel baru, diikuti sampai ujung → **`206` · `video/mp4` · 1024
+   byte sungguhan**.
 4. **Beli domain** menunggu persetujuan atasan owner — **bukan** blocker.
 5. **Mitra Playly** minta dikabari kalau domain penonton berubah. Belum perlu
    sekarang (alamat webhook tidak berubah), tapi **wajib** saat domain dipasang.

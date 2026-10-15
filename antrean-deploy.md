@@ -136,11 +136,21 @@ tetap jalan walau ada `exit` ✅, dan kuncinya benar-benar dilepas ✅ — diuji
 (meniru tugas terjadwal): versi lama `TERKUNCI`, versi baru `BISA`, jadi **ujinya MEMBEDAKAN**.
 🪤 Uji pertama tautologi: memeriksa dari thread yang SAMA, padahal mutex Windows **re-entrant
 per-thread** → keduanya lolos. **Uji lock WAJIB dari proses lain.**
-⏳ **Belum hidup di PC backup** — script dijalankan dari salinan yang disalin MANUAL ke sana.
+✅ **SUDAH HIDUP DI PC BACKUP 2026-10-15**, dipasang owner & terbukti dari log mesin itu sendiri:
+baris **`kunci dilepas`** muncul di run 13:57:25 dan **TIDAK ADA** di run 13:50:08 (versi lama) ·
+`user: DESKTOP-8QD3L2G$` (akhiran `$` = akun komputer/SYSTEM) → **Task Scheduler** yang menjalankan,
+jadi jalur boot ikut terbukti · restart mematikan tunnel lama lalu script membuat tunnel BARU
+`ment-subjects-ultram-votes`, melaporkannya ke situs, dan mengujinya — **persis skenario yang dulu
+akan gagal** kalau kunci tersangkut. Diverifikasi dari LUAR (bukan dari log script): situs `307` ke
+tunnel baru → diikuti sampai ujung → **`206` `video/mp4` 1024 byte sungguhan**.
+🔑 **Cara memasang script ke PC backup** (berguna untuk perubahan berikutnya): PC itu **TIDAK punya
+folder repo**, jadi `git pull` bukan pilihan. Urutannya: periksa dulu salinan hidupnya belum
+disunting (`$AGENT_DIR`/`$VIDEO_ROOT`/`$NAMED_URL`) → cadangkan ke `cadangan\` → unduh dari
+raw.githubusercontent pada **commit yang dipatok** → **cocokkan SHA-256** → baru timpa.
+⚠️ Nama akun di PC backup memang **persis `USER`** — `C:\Users\USER\...` itu alamat sungguhan.
 
 🟡 **Tertunda dari SEBELUM migrasi:** uji pulihkan backup (butuh 1 Supabase project kosong) ·
-**salin script terbaru ke PC backup** (kini membawa perbaikan ReleaseMutex) · beli domain (menunggu
-atasan, bukan blocker) · kabari mitra Playly saat domain dipasang.
+beli domain (menunggu atasan, bukan blocker) · kabari mitra Playly saat domain dipasang.
 
 ✅ **Audit migrasi 2026-10-15 — 9 hal terbukti AMAN, jangan diperiksa ulang:** nol paket `@vercel/*` ·
 `vercel.json` cuma redirects · workflow backup memakai "dramaapp" sebagai nama SCHEMA bukan alamat

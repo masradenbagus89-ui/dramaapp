@@ -80,10 +80,24 @@ terpenuhi.** Bukan sekadar tanggal: (1) ≥6 minggu lewat · (2) cek di Google `
 sudah banyak & `site:dramaapp.vercel.app` sudah sedikit/nol · (3) 5 nilai cadangan yang masih
 menunjuk alamat Vercel sudah dibereskan. Rinciannya + cara menutup bertahap: `HANDOFF.md` seksi ⏰.
 
-🔴 **MENDESAK, DI LUAR MIGRASI — 3 HARI LAGI:** `ubuntu-latest` pindah ke **Ubuntu 26 pada
-19 Oktober 2026**, mengenai **SEMUA 6 workflow** termasuk **backup harian** yang baru berhasil
-2026-10-14. Node 20 juga sudah deprecated (`ai-review.yml`, `backup-dramaapp.yml`). Risikonya lebih
-besar daripada sisa pekerjaan migrasi mana pun — kalau pecah, backup berhenti diam-diam.
+✅ **"UBUNTU 26 DALAM 3 HARI" SELESAI 2026-10-15 — DIUJI, ternyata TIDAK merusak.** Label
+`ubuntu-26.04` sudah tersedia hari ini, jadi masa depannya bisa diuji sekarang. Di branch
+`ci/uji-ubuntu-26`: keep-db-awake **success** di Ubuntu 26 · backup-dramaapp **success** (125 baris,
+tiap tabel cocok hitungan server) · **kombinasi action-baru + Ubuntu 26** = **success**, Node
+**24.21.0**, `✓ terbukti ada di bucket (126.124 byte)`, **annotation KOSONG**.
+Karena terbukti aman, **`runs-on: ubuntu-latest` sengaja TIDAK dipin** — mem-pin = kerja rawat
+selamanya tanpa manfaat terukur.
+🪤 **Hampir tertipu:** run pertama melaporkan `Image: ubuntu-24.04` karena `ubuntu-latest` belum
+pindah → yang terbukti baru "action baru di Ubuntu 24". Wajib diuji sebagai **kombinasi** dengan
+`ubuntu-26.04` ditulis eksplisit.
+🔴 **Koreksi catatan lama:** "Node 20" yang diperingatkan GitHub = Node yang menjalankan
+**ACTION**-nya, **bukan** `node-version` untuk script kita. Catatan sebelumnya mencampur keduanya.
+**Yang diubah (10 baris, semua dipin SHA):** checkout v4→**v7.0.1** · setup-node v4→**v7.1.0** ·
+github-script v7→**v9.0.0** · upload-artifact v4→**v7.0.2** · `node-version` `'20'`→**`'24'`**
+(Node 20 EOL sejak April 2026). `keep-db-awake.yml` tak berubah — tak pakai action.
+❌ **Jujur, yang BELUM terbukti:** `upload-artifact@v7` (cuma dipakai `backup-schemas` yang
+jadwalnya sudah mati & gagal lebih dulu di `pg_dump`) dan wiring `ai-review.yml` (hanya jalan saat
+PR) — tapi kedua action di dalamnya sudah terbukti di workflow lain.
 
 🟡 **Tertunda dari SEBELUM migrasi:** Putaran 2 admin (fitur admin di Railway belum pernah diuji) ·
 uji pulihkan backup (butuh 1 Supabase project kosong) · `ReleaseMutex` di `start-video-services.ps1` ·

@@ -104,7 +104,73 @@ diperiksa ulang, buang waktu), dan yang **masih terbuka**.
 | Deployment Vercel lama | terlindungi SSO (`302` ke login) → tak bisa dibuka publik |
 | Webhook Playly · video PC backup · keepalive | ketiganya di Railway & **terbukti jalan** |
 
-### 🔴 MENDESAK — tak ada hubungannya dengan migrasi, tapi jatuh tempo 3 HARI LAGI
+### ✅ SELESAI 2026-10-15 — "Ubuntu 26 dalam 3 hari" DIUJI, ternyata TIDAK merusak
+
+Dikerjakan dengan **mengukur dulu**, bukan menambal karena takut tenggat.
+
+**1. Ubuntu 26 diuji sungguhan — AMAN, jadi `runs-on: ubuntu-latest` SENGAJA
+TIDAK diubah.** Label `ubuntu-26.04` ternyata **sudah tersedia hari ini**, jadi
+masa depan bisa diuji sekarang. Dijalankan di branch `ci/uji-ubuntu-26`:
+
+| Uji | Hasil |
+|---|---|
+| `keep-db-awake` di `ubuntu-26.04` | **success** (log: `Image: ubuntu-26.04`) |
+| `backup-dramaapp` di `ubuntu-26.04` | **success**, 125 baris, tiap tabel cocok hitungan server |
+| **Kombinasi sebenarnya**: action baru **+** `ubuntu-26.04` | **success** · Node **24.21.0** · `✓ terunggah` · `✓ terbukti ada di bucket (126.124 byte)` · **ANNOTATIONS KOSONG** |
+
+🪤 **Jebakan yang hampir menipu:** run pertama dengan action baru melaporkan
+`Image: ubuntu-24.04` — karena `ubuntu-latest` **belum** pindah (baru 19 Okt).
+Jadi yang terbukti baru "action baru di Ubuntu 24", **bukan** keadaan masa depan.
+Wajib diuji sebagai **kombinasi**, dengan `ubuntu-26.04` ditulis eksplisit.
+
+**Kenapa `ubuntu-latest` dibiarkan:** sudah terbukti jalan di Ubuntu 26, jadi
+mem-pin berarti menambah pekerjaan rawat selamanya tanpa manfaat terukur.
+❓ Batas jujur: image Ubuntu 26 pada 19 Okt bisa sedikit berbeda dari yang diuji
+hari ini — ini bukti kuat, bukan jaminan.
+
+**2. Peringatan "Node 20" DICABUT — dan catatan lama saya KELIRU soal ini.**
+Catatan sebelumnya menulis *"`node-version: '20'` layak dinaikkan ke 22"*. Itu
+**mencampur dua hal berbeda**. Pesan asli GitHub dari run sungguhan:
+
+> *"Node.js 20 is deprecated. The following actions target Node.js 20 but are
+> being **forced to run on Node.js 24**: actions/checkout, actions/setup-node"*
+
+Yang dimaksud GitHub = **Node yang menjalankan ACTION-nya**, bukan Node untuk
+script kita. Perbaikannya menaikkan versi action-nya, bukan `node-version`.
+Keduanya tetap dikerjakan (lihat di bawah), tapi sebabnya beda.
+
+**3. Yang diubah — 10 baris, semua dipin SHA:**
+
+| Action | Dari | Ke |
+|---|---|---|
+| `actions/checkout` | v4 | **v7.0.1** (node24) |
+| `actions/setup-node` | v4 | **v7.1.0** (node24) |
+| `actions/github-script` | v7 | **v9.0.0** (node24) |
+| `actions/upload-artifact` | v4 | **v7.0.2** (node24) |
+| `node-version` (script kita) | `'20'` | **`'24'`** |
+
+`node-version` dinaikkan karena **Node 20 sudah EOL sejak April 2026** — tak
+dapat tambalan keamanan lagi — dan komputer owner sendiri jalan Node 24
+(menyamakan dev & CI). `keep-db-awake.yml` **tidak** ikut berubah: ia tak memakai
+action sama sekali.
+
+**4. Cakupan uji — jujur apa yang BELUM terbukti:**
+
+| Action | Dibuktikan di |
+|---|---|
+| `checkout@v7` | ✅ `backup-dramaapp` **dan** `secret-guard` (3 run, semua success) |
+| `setup-node@v7` + Node 24 | ✅ `backup-dramaapp` (log: `node/24.21.0`) |
+| `github-script@v9` | ✅ `audit-access` — jumlah Issue **4 → 4**, nol duplikat → API pencarian memang jalan di v9 |
+| `upload-artifact@v7` | ❌ **BELUM diuji** — hanya dipakai `backup-schemas.yml`, yang jadwalnya memang sudah dimatikan dan gagal lebih dulu di langkah `pg_dump`. Risiko mendekati nol (tak akan jalan kecuali ada yang menyalakannya), tapi **jangan diklaim terbukti** |
+| `ai-review.yml` | ❌ tak bisa dijalankan manual (hanya saat PR) — tapi **kedua action di dalamnya sudah terbukti** di workflow lain |
+
+### 📌 Catatan sampingan dari pemeriksaan ini
+
+4 Issue **"[Keamanan] Cek-akses bulanan"** (Juli, Agustus, September, Oktober)
+semuanya masih **OPEN** — pengingat bulanan menumpuk tanpa pernah dikerjakan atau
+ditutup. Pengingat yang tak pernah ditindaklanjuti berhenti jadi pengingat.
+
+### ~~🔴 MENDESAK — tak ada hubungannya dengan migrasi, tapi jatuh tempo 3 HARI LAGI~~ (SUDAH DIKERJAKAN, lihat di atas)
 
 **`ubuntu-latest` pindah ke Ubuntu 26 pada 19 Oktober 2026.** Mengenai
 **SEMUA 6 workflow** repo ini — termasuk **backup harian** yang baru berhasil

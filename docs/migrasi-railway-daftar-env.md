@@ -307,6 +307,25 @@ Rotasi terencana bisa dikerjakan belakangan, terpisah dari migrasi.
 
 ## Workspace Railway & penyegelan variabel — KEPUTUSAN 2026-10-12
 
+> ⏸️ **STATUS TERBARU 2026-10-15: PENYEGELAN DITUNDA — keputusan owner.**
+> Syaratnya (Putaran 2 lolos) **sudah terpenuhi** hari itu, jadi secara teknis
+> penyegelan sudah boleh dikerjakan. Owner memilih menundanya sampai **domain
+> sendiri dibeli**, alasannya: belum terbiasa dengan Railway, dan menyegel secara
+> permanen di alat yang belum dikuasai berarti kehilangan kemampuan memeriksa
+> nilai justru saat paling butuh.
+>
+> **JANGAN tawarkan lagi sebelum domain dibeli.** Momen itu = titik evaluasi alami.
+>
+> Risiko yang tetap ada selama ditunda: ±10 Admin workspace masih bisa membaca
+> `SUPABASE_SERVICE_ROLE_KEY`. Menunda tidak memperbesarnya, tapi juga tidak
+> mengecilkannya.
+>
+> 💡 **Langkah separuh yang AMAN dan boleh kapan saja:** salin 13 nilai dari panel
+> Railway ke pengelola password **tanpa menyegel apa pun** — nol permanen, nol
+> risiko, bisa dibatalkan. ⚠️ Ambil dari panel yang HIDUP, jangan dari
+> `.env.railway.local`: dua nilai di sana sudah basi (`PLAYLY_WEBHOOK_SECRET`
+> diganti mitra 2026-10-14, `HARDLINK_AGENT_SECRET` dibuat ulang 43 karakter).
+
 **Workspace: `jalurlangit-ops` (paket PRO).** Ini akun kerja milik atasan owner; 18 project rekan
 lain sudah ada di sana, jadi menaruh DramaKu di situ wajar secara organisasi dan kapasitasnya
 sudah ditanggung.

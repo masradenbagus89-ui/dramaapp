@@ -116,12 +116,18 @@ di `dramaapp-production-9e88.up.railway.app/admin/videos/playly`: login berhasil
 339 video**. Dicocokkan dari sumber terpisah: sitemap Railway hidup memuat **339** halaman
 `/tonton/` — angka identik.
 
-🔓 **TERBUKA KEMBALI: penyegelan 13 variabel Railway** (ditunda sejak 2026-10-12 menunggu Putaran 2).
-**Ini keamanan, bukan kerapian:** workspace `jalurlangit-ops` punya ±10 Admin dan dokumentasi
-Railway menyatakan *"Workspace admins can access every project"* — jadi **±10 orang kini bisa
-membaca `SUPABASE_SERVICE_ROLE_KEY`**. Sealed Variables menutupnya (write-only, tak seorang pun
-bisa membaca, termasuk owner). ⚠️ **PERMANEN**: salin dulu 13 nilainya ke pengelola password, dan
-**jangan** ambil dari `.env.railway.local` (2 nilai di sana sudah BASI). Belum diputuskan owner.
+⏸️ **PENYEGELAN 13 VARIABEL — DITUNDA, keputusan owner 2026-10-15. JANGAN tawarkan lagi sebelum
+domain sendiri dibeli.** Alasan owner: belum terbiasa dengan Railway, dan menyegel permanen di alat
+yang belum dikuasai = kehilangan kemampuan memeriksa nilai saat paling butuh. Momen beli domain =
+titik evaluasi alami.
+**Risiko yang TETAP ADA selama ditunda** (jangan sampai hilang dari catatan): workspace
+`jalurlangit-ops` punya ±10 Admin dan dokumentasi Railway menyatakan *"Workspace admins can access
+every project"* → ±10 orang masih bisa membaca `SUPABASE_SERVICE_ROLE_KEY`. Menunda tidak
+memperbesar risikonya, tapi juga tidak mengecilkannya.
+💡 **Langkah separuh yang AMAN, bisa kapan saja:** salin 13 nilai dari panel Railway ke pengelola
+password **tanpa menyegel** — nol permanen, nol risiko. Sebagian nilai kini cuma ada di 2 tempat
+(panel Railway + `.env.railway.local` di satu komputer). ⚠️ Ambil dari panel yang hidup, **jangan**
+dari `.env.railway.local` — 2 nilai di sana sudah BASI.
 
 🟡 **Tertunda dari SEBELUM migrasi:** uji pulihkan backup (butuh 1 Supabase project kosong) ·
 `ReleaseMutex` di `start-video-services.ps1` · salin script ke PC backup · beli domain (menunggu

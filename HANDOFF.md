@@ -56,7 +56,32 @@ bisa dibaca lagi**, dan tak bisa dikembalikan ke mode biasa. Urutannya mengikat:
    Ambil dari panel Railway yang hidup, selagi masih bisa dibaca.
 3. Baru segel.
 
-❓ Belum diputuskan owner. Nol biaya, nol commit — tapi sekali disegel, selamanya.
+⏸️ **KEPUTUSAN OWNER 2026-10-15: TUNDA — jangan tawarkan lagi sebelum domain
+sendiri dibeli.** Alasannya: owner belum terbiasa dengan Railway, dan menyegel
+secara permanen di alat yang belum dikuasai berarti kehilangan kemampuan
+memeriksa nilai saat sedang paling butuh. Momen beli domain = titik evaluasi
+alami untuk membahasnya lagi.
+
+**Risiko yang TETAP ADA selama ditunda** (bukan untuk menakuti, tapi jangan
+sampai hilang dari catatan): ±10 Admin workspace masih bisa membaca
+`SUPABASE_SERVICE_ROLE_KEY`. Kalau salah satu akun mereka jebol, database
+dramaapp ikut terbuka. Memundurkan penyegelan **tidak memperbesar** risikonya —
+tapi juga **tidak mengecilkannya**.
+
+### 💡 Langkah separuh yang AMAN dan bisa dikerjakan kapan saja
+
+**Salin 13 nilai variabel Railway ke pengelola password — tanpa menyegel apa pun.**
+Ini langkah 1 dari penyegelan, tapi berdiri sendiri: **nol permanen, nol risiko,
+bisa dibatalkan**. Gunanya di luar penyegelan:
+
+- Saat ini sebagian nilai cuma ada di **dua** tempat: panel Railway + berkas
+  `.env.railway.local` di satu komputer. Komputer itu rusak + akses Railway
+  hilang = nilai itu hilang.
+- Kalau nanti jadi menyegel, pekerjaannya tinggal satu langkah, bukan tiga.
+
+⚠️ Jangan menyalin dari `.env.railway.local` — dua nilai di sana **basi**
+(`PLAYLY_WEBHOOK_SECRET` diganti mitra 2026-10-14, `HARDLINK_AGENT_SECRET`
+dibuat ulang 43 karakter). Ambil dari panel Railway yang hidup.
 
 ---
 

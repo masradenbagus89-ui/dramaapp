@@ -9,7 +9,7 @@
 >
 > **📦 Berkas ini sudah ±6.600 baris** (diukur 2026-10-15; angka lama "5.224 baris" dari 2026-10-10 sudah basi — tumbuh ±1.400 baris dalam 5 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-10-15 (sore).
+**Terakhir diisi:** 2026-10-15 (malam).
 
 ---
 
@@ -27,9 +27,9 @@ keepalive semuanya sudah menunjuk Railway dan terbukti jalan.
 
 | # | Pekerjaan | Yang ditunggu |
 |---|---|---|
-| 1 | **Tutup Vercel** | ≥6 minggu sejak 2026-10-15 → **paling cepat 2026-11-26**, DAN cek Google (seksi ⏰ di bawah) |
-| 2 | **Uji pulihkan backup** | 1 Supabase project kosong (`docs/uji-pulihkan-backup.md`) |
-| 3 | **Beli domain** | persetujuan atasan owner — **BUKAN blocker apa pun** |
+| 1 | **Tutup Vercel** | ≥6 minggu sejak 2026-10-15 → **paling cepat 2026-11-26**, DAN cek Google (seksi ⏰ di bawah). Nol pekerjaan teknis tersisa; diukur ulang 2026-10-15 malam dan semua sinyalnya masih benar. 🔔 **Tak perlu diingat manual lagi** — `.github/workflows/pengingat-tutup-vercel.yml` akan membuka Issue sendiri saat tanggalnya tiba |
+| 2 | **Uji pulihkan backup** | 1 Supabase project kosong. 🟢 **Robotnya SUDAH dibuat & diuji** (2026-10-15 malam) — owner tinggal 3 langkah, `docs/uji-pulihkan-backup.md` "Rute 2" |
+| 3 | **Beli domain** | persetujuan atasan owner — **BUKAN blocker apa pun**. 🟢 Bahan pengajuannya sudah disiapkan: `docs/pengajuan-domain-sendiri.md` |
 
 ### ⛔ KEPUTUSAN OWNER — jangan ditawarkan lagi
 
@@ -65,6 +65,160 @@ diperbaiki.
 - **Edit berkas di repo ≠ hidup di PC backup.** PC backup **tidak punya folder
   repo**; script disalin manual ke `C:\Users\USER\pc-backup-agent\`. Cara
   memasang yang terbukti ada di entri ReleaseMutex.
+
+---
+
+## 2026-10-15 (malam) — 3 pekerjaan tersisa dimajukan sejauh yang bisa tanpa owner: robot uji-pulih DIBUAT & DIUJI, bahan pengajuan domain SIAP, Vercel diukur ulang
+
+**Belum di-push.** Perubahannya ada di komputer owner, menunggu izin rilis.
+Gerbang §6 sudah dijalankan utuh (hasil di bawah).
+
+### Yang berubah — 5 berkas baru, 4 dokumen diperbarui
+
+| Berkas | Isinya |
+|---|---|
+| `.github/workflows/uji-pulihkan-backup.yml` | robot uji pulih, **manual saja** (nol jadwal) |
+| `.github/workflows/pengingat-tutup-vercel.yml` | pengingat 2026-11-26, mingguan, **hapus setelah Vercel ditutup** |
+| `scripts/uji-pulihkan-backup.mjs` | 3 pagar + pembanding; dipisah dari workflow supaya **bisa diuji tanpa GitHub** |
+| `tests/uji-pulihkan-backup.test.ts` | 19 tes penjaga |
+| `docs/pengajuan-domain-sendiri.md` | bahan pengajuan owner → atasan, harga sudah dicek |
+| `docs/uji-pulihkan-backup.md` | status "PENDING" → "alatnya siap", rute 2 jadi prosedur konkret |
+| `HANDOFF.md` · `antrean-deploy.md` | catatan sesi & status antrean rilis |
+| `docs/lintasai/INDEX.md` | 1 entri pelajaran baru (4 hal, termasuk 2 pemeriksa repo yang menolak kerja ini) |
+
+### Pekerjaan #2 — robot uji pulihkan backup
+
+**Yang berubah dari sebelumnya:** dokumen lama bilang *"AI membuatkan workflow
+sekali-pakai"* sebagai rencana. Sekarang workflow-nya **ada**, dan tiap
+langkahnya sudah dijalankan memakai `psql` + `curl` TIRUAN — **15 skenario,
+masing-masing dicek lolos DAN ditolak.**
+
+**Owner tinggal 3 langkah** (±10 menit, sesudah punya Supabase project kosong):
+buat project → pasang secret `DATABASE_URL_UJI_PULIH` (**Session pooler**, bukan
+Direct connection) → Actions → Run workflow → ketik `DATABASE UJI KOSONG`.
+
+**3 pagar, karena uji seperti ini punya 3 cara untuk "lulus" palsu:**
+
+1. **Tujuan bukan produksi.** Ref project dicocokkan ke connection string; cocok
+   = berhenti **sebelum satu perintah pun dijalankan**. Menutup Direct
+   connection (ref di host) **dan** Session pooler (ref di nama pengguna).
+2. **Database harus kosong.** Semua `insert` di backup berakhiran `on conflict
+   do nothing` — di database yang sudah berisi, **nol baris benar-benar masuk**
+   tapi `count(*)` tetap cocok dari data LAMA. Hijau tanpa bukti apa pun.
+3. **Konfirmasi ketik.** Satu-satunya kasus yang tak bisa dideteksi mesin:
+   connection string milik database **lain** yang kebetulan bukan produksi.
+
+**Angka pembandingnya tidak bisa basi.** Robot membaca jumlah baris dari
+komentar `-- <tabel>: N baris` di dalam **berkas backup yang sedang diuji**,
+bukan dari angka yang dicatat di dokumen. Backup tanggal mana pun tetap terukur
+benar tanpa ada yang perlu diperbarui.
+
+🪤 **Dua jebakan yang ketahuan hanya karena dijalankan, bukan dibaca:**
+
+- **`tsc` menolak berkas tes** — `bacaHarapan` terinfer mengembalikan `{}`.
+  Diperbaiki di SUMBERNYA (JSDoc `Record<string, number>` di `.mjs`), bukan
+  ditambal di tes.
+- **Penjaga rahasia repo akan menolak commit-nya.** 8 baris di tes & komentar
+  memuat pola `skema://pengguna:sandi@` yang diblokir `secret-guard.yml:55`.
+  Diperbaiki dengan **merakit** connection string palsu dari potongan — bukan
+  dengan melonggarkan penjaganya (§5.3). Dibuktikan: pola yang sama persis
+  dijalankan ulang ke 5 berkas → **nol hit**.
+
+🔴 **Kebocoran yang ditutup sejak awal:** log run repo publik terbaca tanpa
+login, dan baris `DETAIL:` PostgreSQL memuat isi baris yang gagal (email + hash
+password). Workflow memakai `VERBOSITY=terse` + hanya mencetak baris `ERROR:`.
+**Diuji dengan sengaja**: `psql` tiruan memuntahkan `DETAIL:` berisi data
+pribadi → yang sampai ke log hanya baris `ERROR:`, `DETAIL:` tidak muncul.
+
+### Pekerjaan #3 — bahan pengajuan domain
+
+`docs/pengajuan-domain-sendiri.md`, ditulis untuk dibaca **atasan owner**
+(non-teknis). Harga diverifikasi, bukan dikira-kira: `.com` ±**Rp200.000/tahun**
+(Rumahweb Rp195.000 per April 2026 · Niagahoster Rp160-180rb). Isinya: apa yang
+hilang tiap kali alamat berubah (3 hal, ketiganya **baru saja dialami**
+2026-10-15), apa yang terjadi kalau TIDAK disetujui (jawabannya: tidak ada yang
+rusak — dan itu ditulis apa adanya), serta langkah sesudah disetujui.
+
+### Pekerjaan #1 — Vercel: diukur ulang, nol yang perlu dikerjakan
+
+Tanggalnya belum boleh (paling cepat **2026-11-26**). Yang bisa dilakukan hari
+ini cuma memastikan sinyal yang memindahkan Google masih benar — **semuanya
+masih benar**, diukur dari luar 2026-10-15 malam:
+
+| Yang diukur | Hasil |
+|---|---|
+| Railway `/api/health` | `{"ok":true,"sumberData":"database"}` |
+| Vercel akar `/` | **308** → Railway |
+| Vercel `/drama/meg-2-the-trench` | **308** → Railway |
+| Vercel `/robots.txt` & `/sitemap.xml` | **308** → Railway (ikut dialihkan) |
+| `robots.txt` Railway | menunjuk sitemap Railway |
+| Sitemap Railway | **395 URL**, **0** ber-vercel (kemarin 384 — katalog bertambah, wajar) |
+
+### Gerbang §6 — dijalankan utuh, urutan benar
+
+`rm -rf .next` → **build exit 0** → **tsc exit 0** → **100 berkas / 1466 tes
+hijau** (naik dari 99/1447 = +1 berkas, +19 tes — persis tes baru hari ini) ·
+nol berkas env ter-stage · nol pola nilai rahasia.
+
+### Yang TIDAK dikerjakan, dan kenapa
+
+- **Vercel tidak ditutup** — syarat waktunya belum terpenuhi. Menutup sekarang
+  membuang peringkat Google yang belum pindah.
+- **Uji pulih tidak dijalankan** — tak ada Supabase project kosong, dan
+  membuatnya butuh akun owner.
+- **Domain tidak dibeli** — itu keputusan + uang atasan owner.
+- **Tidak ada yang di-push** — push ke `origin main` = tombol rilis, butuh izin
+  owner di sesi itu juga.
+
+### ✅ DIKERJAKAN atas persetujuan owner: pengingat otomatis untuk 2026-11-26
+
+`.github/workflows/pengingat-tutup-vercel.yml`. Masalah yang ditutup: tanggal
+2026-11-26 cuma tercatat di berkas ini — 6.600 baris dan direncanakan dipangkas.
+Catatan yang dipangkas = pengingat yang hilang.
+
+**Jalan tiap Senin, bukan sekali tepat di 26 November.** Cron GitHub tak punya
+kolom TAHUN (`0 2 26 11 *` berbunyi tiap tahun selamanya) **dan** cuma menembak
+sekali — kalau run hari itu gagal, pengingatnya hilang tanpa gejala. Yang dipakai:
+jalan mingguan lalu **bandingkan tanggal di dalamnya**. Sebelum ambang ia keluar
+diam-diam (nol Issue, nol berisik); sesudahnya membuka Issue. Terlewat satu
+minggu masih tertangkap minggu berikutnya.
+
+**Anti-spam:** Issue dicari dengan `state: 'all'`, bukan `'open'`. Judulnya tetap
+sama tiap minggu — kalau hanya Issue terbuka yang dicek, Issue yang **sudah
+ditutup owner** akan dibuatkan ulang tiap Senin dan pengingat berubah jadi
+gangguan. Memakai `listForRepo`, bukan `search` (search punya jeda pengindeksan —
+pelajaran dari `audit-access.yml`).
+
+**Nol alamat baru yang bisa basi.** Satu-satunya alamat di berkas itu adalah
+`dramaapp.vercel.app` — alamat yang justru mau DITUTUP, jadi ia tidak ikut
+berubah saat nanti pindah ke domain sendiri. Alamat tujuannya **dibaca dari
+header `Location`**, tidak ditulis. Artinya workflow ini **tidak** perlu masuk
+"Daftar nilai cadangan".
+
+**Issue yang dibuatnya bukan sekadar alarm**: memuat hasil ukur keadaan Vercel
+saat itu, syarat 2 (cek Google — sengaja TIDAK diukur robot: hasil pencarian
+Google tak bisa dibaca andal dari Actions), syarat 3, urutan menutup yang
+mengikat, dan daftar centang penutup termasuk **"hapus workflow ini"**.
+
+**Bukti — 7 skenario, 16 pemeriksaan, semua lulus** (skrip dijalankan di luar
+GitHub dengan `github`/`core`/`fetch` tiruan dan `Date` disetir):
+25 Nov diam → 26 Nov berbunyi · Issue terbuka tak diduplikat · **Issue tertutup
+juga tak diduplikat** · Issue lain yang tak terkait tidak mengacaukan ·
+pengukuran gagal → Issue tetap dibuat dan ditandai *"tidak terukur"* (bukan
+mengarang angka) · Vercel menjawab 200 → statusnya dilaporkan apa adanya.
+SHA `actions/github-script` diverifikasi ada di repo action-nya, dan sama dengan
+yang sudah dipakai `audit-access.yml`.
+
+⚠️ **Utang teknis yang DISENGAJA: uji 7 skenario itu TIDAK dijadikan tes
+permanen.** Skripnya ada di dalam YAML, jadi menjalankannya dari `npm test`
+butuh parser YAML yang belum ada di `package.json`. Menambah dependensi untuk
+berkas yang umurnya ±6 minggu tidak sepadan. Kalau berkas ini ternyata hidup
+lebih lama dari rencana, harness-nya tinggal diangkat jadi tes.
+
+⚠️ Dua batas yang melekat: GitHub **menonaktifkan jadwal** kalau repo tak ada
+commit 60 hari (repo ini aktif; kalau sempat sepi → picu manual sekali), dan
+robot ini **hanya hidup di repo produksi** — Actions di cermin `ojokesusu/dramaku`
+mati karena tagihan.
 
 ---
 

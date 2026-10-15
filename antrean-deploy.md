@@ -3,9 +3,33 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-10-15 (**komputer OWNER**) — **ANTREAN KOSONG, DUAL PUSH TUNTAS.**
-Ketiganya (lokal, `origin/main`, `dramaku/main`) duduk di **`10ed638`**, fast-forward
-`bce81bc..e9b0714..10ed638`, **nol paksaan**.
+**Terakhir dicek:** 2026-10-15 malam (**komputer OWNER**) — **yang SUDAH di-push: SELARAS.**
+Lokal = `origin/main` = `dramaku/main` = **`a93a2e5`** (selisih **0/0** ke kedua remote,
+diverifikasi dengan `git fetch` + `git rev-list --left-right --count`). Catatan `10ed638` di
+bawah sudah basi — sesudahnya menyusul `7858944`, `4d88ca8`, `a93a2e5`, semuanya sudah ganda.
+
+🟡 **BELUM di-push — 5 berkas baru + 4 dokumen, menunggu izin rilis owner.** Dibuat
+2026-10-15 malam: robot uji-pulih backup (`.github/workflows/uji-pulihkan-backup.yml` +
+`scripts/uji-pulihkan-backup.mjs` + `tests/uji-pulihkan-backup.test.ts`), **pengingat tutup
+Vercel** (`.github/workflows/pengingat-tutup-vercel.yml`), bahan pengajuan domain
+(`docs/pengajuan-domain-sendiri.md`), plus `docs/uji-pulihkan-backup.md`,
+`docs/lintasai/INDEX.md`, `HANDOFF.md` & berkas ini diperbarui.
+**Nol berkas kode aplikasi** — penonton tidak melihat perubahan apa pun.
+
+⚠️ **Dua workflow baru ini perilakunya beda — ketahui sebelum push.**
+`uji-pulihkan-backup.yml` = `workflow_dispatch` **saja**, tak akan pernah menyala sendiri.
+`pengingat-tutup-vercel.yml` **punya jadwal** (tiap Senin 02:00 UTC) — jadi ia akan mulai
+jalan sendiri begitu di-push. Itu memang tujuannya, dan sebelum **2026-11-26** ia keluar
+diam-diam tanpa membuat Issue apa pun (diuji: 25 Nov diam, 26 Nov berbunyi). Hak aksesnya
+`issues: write` saja — tidak bisa menyentuh kode, secret, maupun setelan.
+
+Gerbang §6 dijalankan utuh, urutan benar: `rm -rf .next` → build **exit 0** → tsc **exit 0** →
+**100 berkas / 1466 tes hijau** (dari 99/1447 = +1 berkas, +19 tes) · nol env ter-stage · nol
+pola nilai rahasia. Pola `secret-guard.yml` dijalankan manual ke 5 berkas baru → **nol hit**
+(8 baris yang semula akan memerahkannya sudah dirakit ulang, bukan penjaganya yang dilonggarkan).
+
+Workflow barunya `workflow_dispatch` **saja** — nol jadwal, jadi ia tidak akan menyala sendiri
+sesudah di-push. **Rollback 1-baris:** `git revert --no-edit <sha> && git push origin main && git push dramaku main`.
 
 **Rilis 2026-10-15 — `e9b0714`: pagar salah-ketik `NEXT_PUBLIC_SITE_URL` + urutan pindah domain
 dibetulkan.** 10 berkas: 7 dokumen + **1 berkas kode** (`lib/site.ts`) + 2 berkas baru

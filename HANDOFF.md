@@ -164,11 +164,44 @@ action sama sekali.
 | `upload-artifact@v7` | ❌ **BELUM diuji** — hanya dipakai `backup-schemas.yml`, yang jadwalnya memang sudah dimatikan dan gagal lebih dulu di langkah `pg_dump`. Risiko mendekati nol (tak akan jalan kecuali ada yang menyalakannya), tapi **jangan diklaim terbukti** |
 | `ai-review.yml` | ❌ tak bisa dijalankan manual (hanya saat PR) — tapi **kedua action di dalamnya sudah terbukti** di workflow lain |
 
-### 📌 Catatan sampingan dari pemeriksaan ini
+### ✅ SELESAI 2026-10-15 — tumpukan 4 Issue cek-akses dibereskan + robotnya disetel ulang
 
-4 Issue **"[Keamanan] Cek-akses bulanan"** (Juli, Agustus, September, Oktober)
-semuanya masih **OPEN** — pengingat bulanan menumpuk tanpa pernah dikerjakan atau
-ditutup. Pengingat yang tak pernah ditindaklanjuti berhenti jadi pengingat.
+**Akar masalahnya: tugasnya MUSTAHIL, bukan kelalaian.** Pengingat itu menyuruh
+membandingkan akses dengan `lintasai-portfolio.yml` dan membuka
+`docs/ACCESS_CONTROL_NREPO.md`. Dicari di seluruh repo termasuk folder kit:
+**keduanya tidak pernah ada** — satu-satunya tempat nama itu disebut adalah
+workflow pengingatnya sendiri. Jadi 4 bulan (Juli–Oktober) robot membuka tugas
+yang tak bisa diselesaikan siapa pun.
+
+> 🪤 **Pelajaran: pengingat yang menyuruh membuka berkas tak-ada akan SELALU jadi
+> tumpukan. Periksa rujukannya masih hidup sebelum menyalahkan orangnya.**
+
+**Cek-akses sungguhan DIJALANKAN** (baca-saja, nol akses dicabut), hasilnya
+ditulis di Issue #4 lalu keempat Issue ditutup. **Peta aksesnya sekarang punya
+rumah: `docs/akses-dan-kepemilikan.md`** — dibuat dari audit nyata, isinya NAMA
+saja (nol nilai secret), lengkap dengan 6 perintah salin-tempel untuk mengulang.
+
+**Robot disetel ulang (`0454ff9`)** — 2 perubahan perilaku, diuji sungguhan
+(run `38673774585`): isi Issue menunjuk berkas yang **benar-benar ada** · dan ia
+**menutup sendiri** pengingat bulan lain yang menggantung. Bukti: #1 #2 #3
+tertutup dengan komentar penunjuk, #4 dipertahankan, nol duplikat.
+Juga: dipakai `issues.listForRepo` **bukan `search`** (search punya jeda
+pengindeksan + kuota — versi lama sampai perlu menelan error-nya). Izin tetap
+minimum `issues: write`, dan robot **tetap tidak pernah mencabut akses siapa pun**.
+
+### 🔎 Temuan audit akses — 5 hal, lengkapnya di `docs/akses-dan-kepemilikan.md` §5
+
+| | Temuan |
+|---|---|
+| ❓ | **`ojokesusu` ternyata ORGANISASI, bukan orang.** Pemilik/anggota org otomatis bisa mengakses repo di dalamnya **tanpa muncul di daftar collaborator**, dan daftar anggotanya tak terbaca token owner. Jadi *"siapa saja yang bisa melihat seluruh kode kita?"* **BELUM terjawab penuh** — hanya pemilik org yang bisa menjawab |
+| ⚠️ | **Remote `official` (`projectraden/backup-dramaapp`) menjawab 404.** Remote mati begini berbahaya: orang bisa mengira sudah mendorong cadangan padahal tidak. Hapus remote-nya, atau pulihkan repo-nya |
+| ⚠️ | **`ai-review.yml` tak bisa bekerja** — `ANTHROPIC_API_KEY` tidak ada, dan workflow itu belum pernah jalan sekali pun. Workflow yang tak pernah bisa jalan = **kepercayaan palsu** bahwa ada yang memeriksa. Putuskan: isi secret-nya, atau hapus |
+| ⚠️ | **Repo cermin nol secret** — jadi robotnya tetap mandul walau tagihan rekan dibayar |
+| 🔵 | **Repo produksi PUBLIK** (diketahui & disengaja). Secret aman di GitHub Secrets, tapi `HANDOFF.md` kini memuat banyak detail operasional yang **bisa dibaca siapa saja** |
+
+Akses repo sendiri **bersih**: produksi cuma `masradenbagus89-ui` (admin), nol
+undangan tertunda, nol deploy key. Cermin: `yusufscorpio` + owner, keduanya
+`maintain`.
 
 ### ~~🔴 MENDESAK — tak ada hubungannya dengan migrasi, tapi jatuh tempo 3 HARI LAGI~~ (SUDAH DIKERJAKAN, lihat di atas)
 

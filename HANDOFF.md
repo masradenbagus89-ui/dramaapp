@@ -7,13 +7,68 @@
 >
 > **⚠️ Cara menyisipkan catatan baru (dibetulkan 2026-09-21).** Sisipkan **satu** judul `## ` saja, lalu isinya, lalu `---`. JANGAN menulis ulang judul seksi lama sebagai penanda posisi — itu menghasilkan **judul kembar/yatim**, dan sesi 2026-09-21 meninggalkan **4 judul yatim + 2 judul kembar** sebelum ketahuan. Kalau satu topik perlu dua blok (status rilis + rincian), beri judul kedua akhiran **` — rincian`**.
 >
-> **📦 Berkas ini sudah 5.224 baris / ±472 KB** (diukur 2026-10-10; angka lama "2.980 baris / 240 KB" sudah basi separuh — ia hampir DUA KALI lipat sejak itu) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
+> **📦 Berkas ini sudah ±6.600 baris** (diukur 2026-10-15; angka lama "5.224 baris" dari 2026-10-10 sudah basi — tumbuh ±1.400 baris dalam 5 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-10-15.
+**Terakhir diisi:** 2026-10-15 (sore).
 
 ---
 
-## 2026-10-15 — VERCEL BOLEH DITUTUP TANPA BELI DOMAIN (koreksi owner) + pagar salah-ketik `NEXT_PUBLIC_SITE_URL` dirilis
+## 🧭 BACA INI DULU — status & titik lanjut (2026-10-15)
+
+### Keadaan sekarang, satu paragraf
+
+**Situs penonton sudah pindah ke Railway dan seluruh pagar migrasinya tertutup.**
+Alamat resmi: `https://dramaapp-production-9e88.up.railway.app`.
+`dramaapp.vercel.app` **masih hidup tapi hanya mengalihkan (308)** ke Railway —
+**jangan dimatikan dulu**. Webhook Playly, sumber video PC backup, dan robot
+keepalive semuanya sudah menunjuk Railway dan terbukti jalan.
+
+### Yang tersisa — 3, semuanya TIDAK mendesak
+
+| # | Pekerjaan | Yang ditunggu |
+|---|---|---|
+| 1 | **Tutup Vercel** | ≥6 minggu sejak 2026-10-15 → **paling cepat 2026-11-26**, DAN cek Google (seksi ⏰ di bawah) |
+| 2 | **Uji pulihkan backup** | 1 Supabase project kosong (`docs/uji-pulihkan-backup.md`) |
+| 3 | **Beli domain** | persetujuan atasan owner — **BUKAN blocker apa pun** |
+
+### ⛔ KEPUTUSAN OWNER — jangan ditawarkan lagi
+
+Empat hal ini sudah diputuskan hari ini. Mengajukannya ulang membuang waktu owner:
+
+1. **"Beli domain" BUKAN prasyarat menutup Vercel.** `dramaapp.vercel.app` juga
+   subdomain gratis platform — situs ini sudah setahun hidup di alamat platform.
+   AI sempat menjadikannya blocker; **owner mengoreksi, dan owner benar.**
+2. **Penyegelan 13 variabel Railway: DITUNDA** sampai domain dibeli. Owner belum
+   terbiasa dengan Railway, dan penyegelan itu permanen.
+3. **`ai-review.yml` TETAP DIPAKAI** — jangan dihapus. Ia gagal keras & terlihat
+   (bukan senyap), jadi tuduhan "kepercayaan palsu" dari AI itu berlebihan.
+4. **Ganti nama alamat Railway: TIDAK dilakukan** — memaksa satu putaran mitra
+   Playly tambahan tanpa manfaat sepadan.
+
+### ✅ Selesai hari ini (rincian ada di entri-entri di bawah)
+
+`NEXT_PUBLIC_SITE_URL` diisi & terbukti · Vercel → pengalihan 308 (termasuk
+perbaikan akar `/` yang sempat lolos) · 5 nilai cadangan beralamat Vercel
+dibereskan · Putaran 2 admin LOLOS · 4 Issue cek-akses dibereskan + robotnya
+disetel ulang · audit akses (5 temuan) · 6 workflow dinaikkan ke runtime Node24
+sesudah Ubuntu 26 **diuji** aman · remote mati `official` dihapus ·
+**`ReleaseMutex` diperbaiki DAN sudah hidup di PC backup** · 1 tes flaky
+diperbaiki.
+
+### 🪤 Tiga jebakan yang paling mahal kalau terulang
+
+- **Uji lock/mutex WAJIB dari proses lain** — dari proses yang sama hasilnya
+  selalu hijau (mutex Windows re-entrant per-thread) dan tak membuktikan apa pun.
+- **`KEEPALIVE_SITES` jangan DIKOSONGKAN** — `keep-db-awake.yml` punya nilai
+  cadangan, jadi kolom kosong = robot jatuh balik ke alamat lama, tanpa gejala.
+  **Ganti isinya.**
+- **Edit berkas di repo ≠ hidup di PC backup.** PC backup **tidak punya folder
+  repo**; script disalin manual ke `C:\Users\USER\pc-backup-agent\`. Cara
+  memasang yang terbukti ada di entri ReleaseMutex.
+
+---
+
+## 2026-10-15 — MIGRASI RAILWAY TUNTAS: Vercel jadi pengalihan, seluruh pagar tertutup, utang video ditutup
 
 ✅ **`NEXT_PUBLIC_SITE_URL` SUDAH DIISI & TERBUKTI JALAN (2026-10-15).** Owner
 mengisinya di panel Railway; deploy ulang menyala **~60 detik** kemudian.

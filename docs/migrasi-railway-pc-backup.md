@@ -40,11 +40,13 @@ Tanpa uji restart, yang terbukti baru "jalan saat dijalankan manual" — jenis
 bukti setengah yang sudah dua kali menipu pada hari yang sama.
 
 > **Dampak ke penutupan Vercel:** blocker "video mati kalau Vercel dimatikan"
-> sudah **TERCORET**. Sisa blocker (diperbarui 2026-10-15): **domain final belum
-> dibeli** — keputusan owner, bukan kerja teknis · `KEEPALIVE_SITES` yang masih
-> memuat alamat Vercel. `NEXT_PUBLIC_SITE_URL` **tidak lagi dihitung blocker**:
-> sengaja dibiarkan kosong sampai domain itu ada, dan itu keadaan yang aman —
-> prosedurnya di `docs/migrasi-railway-tahap6-pindah-domain.md`.
+> sudah **TERCORET**. Sisa blocker (diperbarui 2026-10-15 sore): isi
+> `NEXT_PUBLIC_SITE_URL` dengan alamat Railway · `KEEPALIVE_SITES` buang alamat
+> Vercel · Putaran 2 admin. Ketiganya kerja di panel, **nol commit**.
+> 🔴 **"Beli domain" BUKAN blocker** — koreksi atas versi pagi berkas ini.
+> `dramaapp.vercel.app` juga subdomain gratis platform, jadi tak ada alasan
+> teknis mengharuskan domain beli sebelum Vercel ditutup. Prosedur:
+> `docs/migrasi-railway-tahap6-pindah-domain.md`.
 
 ---
 

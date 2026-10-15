@@ -27,9 +27,10 @@ bukan sekadar hijau (aturan dari pelajaran 2026-10-14).
 
 **Rollback 1-baris:** `git revert --no-edit e9b0714 && git push origin main && git push dramaku main`.
 
-🔴 **`NEXT_PUBLIC_SITE_URL` — keputusan owner 2026-10-15: TUNGGU DOMAIN SENDIRI.** Variabel
-**dibiarkan KOSONG** di Railway; itu keadaan **aman**, bukan blocker yang menunggu dikerjakan.
-Prosedur 7 langkah + 5 perintah verifikasi: `docs/migrasi-railway-tahap6-pindah-domain.md`.
+🔴 ~~**`NEXT_PUBLIC_SITE_URL` — keputusan owner 2026-10-15 pagi: TUNGGU DOMAIN SENDIRI.**~~
+**DIBATALKAN sore hari yang sama** (lihat blok SISA LANGKAH di atas) — variabel diisi dengan alamat
+Railway, beli domain BUKAN prasyarat. Paragraf ini disimpan sebagai riwayat, **bukan instruksi**.
+Prosedur yang berlaku: `docs/migrasi-railway-tahap6-pindah-domain.md`.
 ⛔ **Urutan yang tak boleh dibalik: isi variabel DULU → verifikasi → baru Vercel jadi 301.**
 Dibalik = Railway bilang "yang asli Vercel" sementara Vercel mengalihkan ke Railway → dua sinyal
 bertabrakan → halaman bisa jatuh dari Google **tanpa pesan error**. Urutan salah ini SUDAH TERTULIS
@@ -49,9 +50,24 @@ tujuannya Railway, dan SYSTEM memang membaca env tingkat `Machine`.
 berikutnya keluar `instance lain sedang berjalan` (terjadi 2× berturut). Senyap: video tetap hidup
 sampai tunnel mati, lalu tak ada yang memulihkan. **Belum diperbaiki di kode**, sengaja.
 
-🔴 **SISA BLOCKER sebelum Vercel boleh ditutup** (diperbarui 2026-10-15): **domain final belum
-dibeli** — keputusan owner, bukan kerja AI · `KEEPALIVE_SITES` buang alamat Vercel · Putaran 2
-admin. `NEXT_PUBLIC_SITE_URL` **tidak lagi dihitung blocker**: sengaja kosong sampai domain ada.
+✅ **`NEXT_PUBLIC_SITE_URL` SUDAH DIISI & TERBUKTI (2026-10-15).** Deploy ulang menyala ~60 detik
+sesudah owner menyimpannya. Terukur: canonical + `robots.txt` + `og:url` pindah ke alamat Railway ·
+**0** URL ber-vercel di sitemap (dari 384) · 384 URL utuh · health ok · halaman detail SSG ikut
+pindah (bukti seluruh situs dibangun ulang) · Vercel tidak tersentuh.
+
+🟡 **SISA LANGKAH — kerja di panel, nol commit, JANGAN ditunda lama:** `KEEPALIVE_SITES` buang
+alamat Vercel (**harus mendahului 301**) → Vercel jadi **301** (bukan dimatikan) → tunggu beberapa
+minggu → baru ditutup. Putaran 2 admin masih terbuka.
+**Kenapa jangan ditunda:** sekarang dua situs sama-sama mengaku "akulah yang asli" dengan isi
+identik = **duplicate content** di mata Google. Tak terhindarkan (urutan lain lebih buruk), tapi
+hitungannya **hari, bukan minggu**.
+
+🔴 **"Beli domain" BUKAN blocker — dikoreksi OWNER.** Versi pagi berkas ini menjadikannya blocker;
+itu salah. `dramaapp.vercel.app` juga subdomain gratis platform, dan situs ini sudah setahun hidup
+di alamat platform. Beli domain menunggu persetujuan atasan owner dan **tidak** menahan apa pun.
+✅ **Mitra Playly tidak disentuh** — webhook mereka sudah menunjuk alamat Railway ini sejak
+2026-10-14, jadi nol pesan & nol secret baru. Rincian + aturan "jangan jadikan blocker sesuatu yang
+sudah lama berjalan tanpa masalah": `HANDOFF.md` seksi KOREKSI OWNER.
 
 **Rollback 1-baris:** `git revert --no-edit 00872a2 && git push origin main && git push dramaku main`.
 

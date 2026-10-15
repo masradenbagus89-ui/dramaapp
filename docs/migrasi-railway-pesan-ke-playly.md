@@ -165,6 +165,15 @@ Terima kasih.
 
 ## Daftar periksa owner setelah Pesan 2 dikirim
 
+> ⏸️ **PESAN 2 DITUNDA (keputusan owner 2026-10-15 sore).** Alamat penonton
+> dipindah ke alamat bawaan Railway yang **webhook mitra SUDAH menunjuk** sejak
+> 2026-10-14, jadi **tidak ada alamat baru untuk dikabarkan** — mitra tidak
+> disentuh: nol pesan, nol secret baru, nol jeda. Pesan 2 baru dipakai nanti saat
+> domain sendiri dipasang (menunggu persetujuan atasan owner). Butir
+> `NEXT_PUBLIC_SITE_URL` di bawah **tetap dikerjakan sekarang**, hanya nilainya
+> yang alamat Railway, bukan domain beli. Lihat
+> `docs/migrasi-railway-tahap6-pindah-domain.md`.
+>
 > ⚠️ **URUTAN DIBETULKAN 2026-10-15 — dulu salah dan berbahaya.** Versi lama
 > menaruh "matikan situs lama" **sebelum** mengisi `NEXT_PUBLIC_SITE_URL`. Itu
 > menghasilkan tabrakan sinyal ke Google: Railway bilang "yang asli itu Vercel",

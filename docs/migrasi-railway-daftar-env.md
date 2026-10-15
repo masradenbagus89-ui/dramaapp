@@ -295,7 +295,7 @@ Rotasi terencana bisa dikerjakan belakangan, terpisah dari migrasi.
 
 | Nama | Keterangan |
 |---|---|
-| `NEXT_PUBLIC_SITE_URL` | ⛔ **Masih KOSONG & itu memang benar** (keputusan owner 2026-10-15: tunggu domain sendiri). Diisi di Tahap 6 dengan **domain final**, bukan alamat `railway.app` — prosedur + urutan yang tak boleh dibalik: `docs/migrasi-railway-tahap6-pindah-domain.md` |
+| `NEXT_PUBLIC_SITE_URL` | 🟡 **Siap diisi** (keputusan owner 2026-10-15 sore, DIREVISI): isi dengan alamat bawaan Railway `https://dramaapp-production-9e88.up.railway.app` — **tanpa** beli domain. Beli domain menunggu persetujuan atasan & BUKAN prasyarat menutup Vercel. Urutan yang tak boleh dibalik (isi variabel DULU, baru 301): `docs/migrasi-railway-tahap6-pindah-domain.md` |
 | `NODE_ENV` | Diisi platform otomatis. Pastikan Railway menyetelnya `production` — kalau tidak, cookie login dikirim tanpa penanda aman |
 | `PORT` | Diisi Railway otomatis. `next start` membacanya sendiri — jangan disetel manual |
 | `IZINKAN_MODE_BERKAS` | **Baru**, dipasang bersama pagar Tahap 2. Jangan diisi di Railway. Hanya untuk komputer pengembang yang perlu `npm run build` tanpa database |

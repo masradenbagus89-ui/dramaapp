@@ -9,20 +9,73 @@
 
 ---
 
-## Status & keputusan owner (2026-10-15)
+## Status & keputusan owner (2026-10-15, DIREVISI sore hari yang sama)
 
-**Keputusan: beli domain sendiri dulu.** `NEXT_PUBLIC_SITE_URL` di Railway
-**dibiarkan KOSONG** sampai domain itu aktif dan menunjuk Railway.
+**Keputusan owner: jalan seperti dulu di Vercel — pakai alamat bawaan platform
+apa adanya, TANPA beli domain.** `NEXT_PUBLIC_SITE_URL` diisi dengan:
 
-Ini keadaan **aman**, bukan pekerjaan yang tertunda. Alasannya di bawah ("Kenapa
-kosong justru aman sekarang").
+```
+https://dramaapp-production-9e88.up.railway.app
+```
 
-Dua pilihan yang DITOLAK, supaya sesi berikutnya tak menawarkannya lagi:
+Domain sendiri **menunggu persetujuan atasan owner**, bukan ditolak. Begitu
+disetujui: beli domain → pasang di Railway → ubah variabel → **baru** kabari
+mitra Playly, sekali, langsung ke alamat final.
 
-| Yang ditolak | Kenapa |
-|---|---|
-| Isi `dramaapp-production-9e88.up.railway.app` sekarang, domain nanti | Ongkos SEO dibayar **dua kali**: Google mulai mengindeks alamat panjang itu, lalu seluruh pemindahan canonical + 301 diulang dari nol saat domain asli datang |
-| Pakai alamat `railway.app` permanen | Alamat penonton panjang & tak bisa diingat, dan **terikat ke Railway** — pindah hosting lagi berarti ganti alamat penonton lagi |
+> 🔴 **KOREKSI dari versi pertama dokumen ini (pagi 2026-10-15).** Versi pertama
+> menyatakan "beli domain sendiri dulu, variabel dibiarkan KOSONG". **Itu salah
+> dan menghalangi tujuan owner** (cuma mau 1 hosting). Dua kekeliruan yang
+> dikoreksi owner sendiri:
+>
+> 1. **`dramaapp.vercel.app` juga subdomain gratis platform.** Situs ini sudah
+>    setahun hidup di alamat platform tanpa domain beli. Jadi "jangan biarkan
+>    Google mengindeks subdomain platform" adalah nasihat yang datang setahun
+>    terlambat — dan dipakai untuk menahan penutupan Vercel. Tak ada alasan
+>    teknis apa pun yang mengharuskan beli domain sebelum Vercel ditutup.
+> 2. **Hitungan "ongkos SEO dua kali" itu keliru menguntungkan pihak yang salah.**
+>    Jumlah pindah alamat SAMA di kedua jalur (2×), karena pindah
+>    Vercel→Railway memang tak terhindarkan kalau Vercel mau ditutup. Yang
+>    BERBEDA justru jumlah putaran mitra Playly — lihat tabel di bawah.
+
+### Kenapa ganti nama alamat Railway TIDAK dilakukan sekarang
+
+Alamat `*.up.railway.app` **bisa diganti namanya**, gratis, jadi mis.
+`dramaku.up.railway.app` (terverifikasi di dokumentasi CLI resmi Railway:
+`railway domain update <lama>.up.railway.app --domain <baru>`; `railway domain`
+disebut "generates a free `*.up.railway.app` domain"). Jadi alamat rapi setara
+`dramaapp.vercel.app` BISA didapat tanpa uang.
+
+Tapi tidak dipakai sekarang, karena ongkosnya jatuh ke tempat yang salah:
+
+| | Ganti nama sekarang | **Dipilih: lewati ganti nama** |
+|---|---|---|
+| Pindah alamat (ongkos SEO) | 2× (Vercel→railway, lalu railway→domain) | 2× — **sama** |
+| **Mitra Playly diubah** | **2×** | **1×**, nanti, langsung ke alamat final |
+| Biaya | 0 | 0 |
+| Alamat selama masa tunggu | rapi | panjang & jelek |
+
+Ganti nama cuma membeli alamat rapi **selama masa tunggu**, dengan harga satu
+putaran mitra tambahan. Karena domain menunggu persetujuan atasan — bukan
+"tidak akan pernah" — putaran itu mubazir.
+
+⚠️ **Kalau ternyata atasan TIDAK menyetujui beli domain**, ganti nama jadi layak
+dipertimbangkan lagi (alamat jelek selamanya vs satu putaran mitra). Keputusan
+owner, bukan AI.
+
+### Kenapa mitra Playly TIDAK disentuh di tahap ini
+
+Yang memaksa mitra berubah adalah **alamat webhook berubah**, bukan Vercel
+ditutup. Webhook mitra sudah menunjuk Railway sejak 2026-10-14 dan sudah
+terbukti jalan (`playly:webhook` 176→178 video). Selama alamat Railway tidak
+diganti nama, webhook itu **tidak tersentuh**: nol pesan, nol secret baru,
+nol jeda.
+
+Ongkos satu putaran mitra — kalau nanti dibutuhkan, supaya tahu yang ditunda apa:
+sistem mitra hanya bisa **satu alamat** (pasti ada jeda) dan **otomatis membuat
+secret BARU tiap alamat diganti**, jadi owner wajib menempel ulang
+`PLAYLY_WEBHOOK_SECRET` + deploy ulang. Risikonya rendah — mitra mengonfirmasi
+kiriman tertolak di-**retry otomatis**, terbukti nol film hilang selama jeda
+~1,5 jam pada 2026-10-14 — tapi kerjanya nyata.
 
 ---
 
@@ -49,15 +102,17 @@ curl -s https://dramaapp-production-9e88.up.railway.app/sitemap.xml | grep -c '<
 
 ---
 
-## Kenapa kosong justru aman sekarang
+## Kenapa kosong aman SELAMA Vercel masih melayani — dan berbahaya sesudahnya
 
 "Canonical" = baris di dalam halaman yang memberi tahu Google **alamat mana yang
 dianggap aslinya** kalau isi yang sama bisa dibuka dari beberapa alamat. Situs ini
 sekarang bisa dibuka dari dua alamat (Vercel & Railway) dengan database yang sama,
 jadi isinya **identik**.
 
-Selama Vercel masih **melayani penonton**, keadaan sekarang konsisten: Railway
+Selama Vercel masih **melayani penonton**, variabel kosong itu konsisten: Railway
 bilang "yang asli itu Vercel", dan Vercel memang yang asli. Google tak bingung.
+**Itu sebabnya keadaan kosong tidak perlu dikejar-kejar selama Tahap 2-5** — bukan
+sebabnya untuk menunda penutupan Vercel.
 
 **Bahayanya baru muncul kalau urutannya dibalik** — Vercel diubah jadi pengalihan
 301 ke Railway **sebelum** variabel ini diisi:
@@ -142,9 +197,13 @@ bukan opsional.**
 
 ## Prasyarat (ketiganya, sebelum langkah 1)
 
-1. **Domain sudah dibeli** dan DNS-nya menunjuk service Railway `dramaapp`
-   (project `ravishing-adaptation`, workspace `jalurlangit-ops`), dan dibuka di
-   browser sudah menampilkan situs.
+1. **Alamat tujuan sudah pasti & terbukti melayani.** Untuk jalur yang dipilih
+   owner: alamat bawaan Railway `https://dramaapp-production-9e88.up.railway.app`
+   (service `dramaapp`, project `ravishing-adaptation`, workspace
+   `jalurlangit-ops`) — sudah terbukti, `/api/health` menjawab
+   `{"ok":true,"sumberData":"database"}`. **Nol prasyarat beli domain.**
+   Kalau nanti pakai domain sendiri: DNS-nya menunjuk service yang sama dan
+   dibuka di browser sudah menampilkan situs.
 2. **`HARDLINK_AGENT_SECRET` Railway = PC backup.** Sudah SELESAI & lulus uji
    restart 2026-10-14 (`00872a2`) — tapi periksa ulang, karena kalau tak cocok,
    video penonton mati begitu tunnel berganti dan tak ada yang memulihkannya.
@@ -156,13 +215,19 @@ bukan opsional.**
 
 | # | Langkah | Siapa | Kenapa di posisi ini |
 |---|---|---|---|
-| 1 | Isi `NEXT_PUBLIC_SITE_URL` di panel Railway = domain baru, **tanpa garis miring di ujung** | owner | Harus mendahului 301, lihat "Kenapa kosong justru aman" |
-| 2 | Tunggu deploy ulang Railway selesai (status `Active`) | owner | Prerender = perubahan hanya ikut build baru |
-| 3 | **Verifikasi** (perintah di bawah) | AI/owner | Salah ketik tak memunculkan error — hanya ketahuan dari pengukuran |
-| 4 | `KEEPALIVE_SITES` di panel GitHub: buang alamat Vercel, isi domain baru | owner | Robot sengaja GAGAL kalau ada satu alamat sakit → Vercel pensiun = email gagal tiap hari |
-| 5 | Kirim Pesan 2 ke mitra Playly (domain penonton baru) | owner | `docs/migrasi-railway-pesan-ke-playly.md` |
-| 6 | Vercel diubah jadi **pengalihan 301** ke domain baru | owner | Bookmark, link yang pernah dibagikan, dan peringkat Google tidak putus mendadak |
-| 7 | Biarkan 301 hidup **beberapa minggu**, baru Vercel dimatikan | owner | Google butuh waktu memindahkan peringkat; mematikan terlalu cepat = trafik hilang |
+| 1 | ✅ **SELESAI 2026-10-15** — `NEXT_PUBLIC_SITE_URL` = `https://dramaapp-production-9e88.up.railway.app` | owner, panel Railway | Harus mendahului 301 — lihat seksi tabrakan sinyal di atas |
+| 2 | ✅ **SELESAI** — deploy ulang menyala **~60 detik** sesudah variabel disimpan | owner | Prerender = perubahan hanya ikut build baru |
+| 3 | ✅ **SELESAI & TERBUKTI** — 5 pemeriksaan + 3 tambahan, semuanya lolos (bukti di bawah) | AI | Salah ketik tak memunculkan error — hanya ketahuan dari pengukuran |
+| 4 | `KEEPALIVE_SITES` di panel GitHub: buang alamat Vercel, isi alamat Railway | owner | Robot sengaja GAGAL kalau ada satu alamat sakit → Vercel pensiun = email gagal tiap hari |
+| 5 | Vercel diubah jadi **pengalihan 301** ke alamat Railway | owner | Bookmark, link yang pernah dibagikan, dan peringkat Google tidak putus mendadak |
+| 6 | Biarkan 301 hidup **beberapa minggu**, baru Vercel dimatikan | owner | Google butuh waktu memindahkan peringkat; mematikan terlalu cepat = trafik hilang |
+
+> ✅ **Mitra Playly TIDAK ada di daftar ini — itu disengaja.** Webhook mereka sudah
+> menunjuk Railway sejak 2026-10-14 dan terbukti jalan, jadi selama alamat Railway
+> tidak diganti nama, mereka **tidak tersentuh**: nol pesan, nol secret baru, nol
+> jeda. Versi pertama dokumen ini menaruh "Kirim Pesan 2 ke mitra" di sini —
+> **dihapus 2026-10-15**, karena di jalur ini tak ada alamat baru untuk dikabarkan.
+> Pesan 2 baru dipakai nanti, saat domain sendiri dipasang.
 
 > ⚠️ Langkah 6 **bukan** "matikan situs lama". Daftar periksa lama di
 > `docs/migrasi-railway-pesan-ke-playly.md` sempat menaruh "matikan situs lama"
@@ -173,7 +238,9 @@ bukan opsional.**
 
 ## Verifikasi langkah 3 — selesai = terbukti
 
-Ganti `<DOMAIN>` dengan domain baru (tanpa garis miring di ujung).
+Untuk jalur yang dipilih owner, `<DOMAIN>` =
+`dramaapp-production-9e88.up.railway.app`. Kalau nanti pakai domain sendiri, ganti
+dengan domain itu (tanpa garis miring di ujung).
 
 ```bash
 # 1. canonical beranda harus menyebut domain baru, BUKAN vercel
@@ -191,6 +258,40 @@ curl -s https://<DOMAIN>/sitemap.xml | grep -c '<loc>'
 # 5. situs benar-benar melayani, bukan cuma halaman kosong
 curl -s https://<DOMAIN>/api/health
 ```
+
+### ✅ HASIL NYATA 2026-10-15 — langkah 1-3 LULUS
+
+Diukur sesudah deploy ulang menyala (~60 detik sesudah variabel disimpan):
+
+| Pemeriksaan | Sebelum | **Sesudah** |
+|---|---|---|
+| canonical beranda | `https://dramaapp.vercel.app` | **`https://dramaapp-production-9e88.up.railway.app`** |
+| `robots.txt` | Sitemap → vercel | **Sitemap → Railway** |
+| URL ber-vercel di sitemap | 384 | **0** |
+| Jumlah URL sitemap | 384 | **384** (utuh, nol katalog hilang) |
+| `/api/health` | ok | **ok**, `sumberData: database` |
+
+Tiga pemeriksaan **tambahan** di luar daftar wajib:
+
+- **Halaman detail drama ikut pindah** — `/drama/meg-2-the-trench` canonical &
+  `og:url` keduanya sudah beralamat Railway. Ini penting: halaman detail adalah
+  **prerender SSG**, jadi lolosnya membuktikan seluruh situs benar-benar dibangun
+  ulang, bukan cuma halaman dinamis.
+- **Vercel tidak tersentuh** — canonical-nya masih `https://dramaapp.vercel.app`,
+  `/api/health` ok. Ia masih melayani penonton seperti biasa.
+
+### 🟡 KEADAAN SEMENTARA YANG TIDAK BOLEH DIBIARKAN LAMA
+
+Sekarang **dua situs sama-sama mengaku "akulah yang asli"**, dengan isi identik
+(database yang sama). Di mata Google itu **duplicate content**.
+
+Ini tak terhindarkan — tak ada urutan lain yang mungkin, karena meng-301 Vercel
+lebih dulu justru menghasilkan tabrakan sinyal yang lebih buruk. Tapi artinya
+**langkah 4 & 5 jangan ditunda berlama-lama** — hitungan hari, bukan minggu.
+"Tunggu beberapa minggu" di langkah 6 berlaku **sesudah** 301 terpasang, bukan
+sebelumnya.
+
+---
 
 **Kriteria lulus:** (1) & (2) menyebut domain baru · (3) menjawab **0** ·
 (4) **ratusan, dan TIDAK jauh di bawah hitungan hari itu** · (5)
@@ -218,10 +319,23 @@ beberapa minggu.
 
 ## Yang masih terbuka
 
-- ❓ Domain final belum dibeli/ditentukan (per 2026-10-15).
-- ❓ Apakah akhiran acak `9e88` pada alamat `railway.app` dijamin tetap kalau
-  service Railway pernah dibuat ulang — **belum diverifikasi**. Tidak menghalangi
-  tahap ini (keputusannya memakai domain sendiri), tapi jangan diklaim tetap.
+- ⏸️ **Beli domain menunggu persetujuan atasan owner** — bukan ditolak, dan
+  **bukan prasyarat** menutup Vercel. Saat disetujui: pasang domain di Railway →
+  ubah `NEXT_PUBLIC_SITE_URL` → **baru** kirim Pesan 2 ke mitra Playly (sekali,
+  langsung ke alamat final).
+- ❓ **Apakah alamat `*.up.railway.app` bisa berubah sendiri** (mis. kalau service
+  Railway dibuat ulang, atau akhiran `9e88` dirotasi) — **belum diverifikasi**.
+  Sekarang alamat ini jadi alamat resmi penonton, jadi kalau ia berubah, canonical
+  & webhook ikut mati. **Jangan diklaim tetap**; kalau ada kesempatan, tanyakan ke
+  Railway atau uji di service percobaan.
+- ❓ **Nasib alamat lama sesudah ganti nama** — dokumentasi Railway menyebut
+  *"One Railway-provided domain per service"*, jadi nama lama hampir pasti mati,
+  tapi tak ada kalimat eksplisit soal itu. Relevan hanya kalau ganti nama
+  dipertimbangkan lagi (lihat seksi "Kenapa ganti nama ... TIDAK dilakukan").
+- ❓ **Cara ganti nama dari dashboard Railway** belum terverifikasi — dokumen
+  dashboard hanya menyebut tombol edit untuk *port*. Jalur yang terdokumentasi
+  adalah CLI: `npm i -g @railway/cli` → `railway login` →
+  `railway domain update <lama>.up.railway.app --domain <baru>`.
 - ❓ `start-video-services.ps1` tak pernah memanggil `ReleaseMutex` dan tak punya
   blok `finally` (temuan 2026-10-14, belum diperbaiki). Tak menghalangi Tahap 6,
   tapi memengaruhi pemulihan video otomatis.

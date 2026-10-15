@@ -13,10 +13,86 @@
 
 ---
 
-## 2026-10-15 — `NEXT_PUBLIC_SITE_URL`: KEPUTUSAN OWNER = TUNGGU DOMAIN SENDIRI + pagar salah-ketik dipasang di `lib/site.ts`
+## 2026-10-15 — VERCEL BOLEH DITUTUP TANPA BELI DOMAIN (koreksi owner) + pagar salah-ketik `NEXT_PUBLIC_SITE_URL` dirilis
 
-**TITIK LANJUT: tidak ada pekerjaan teknis yang menunggu di blocker ini.** Yang
-menunggu adalah **keputusan beli domain** — milik owner, bukan AI.
+✅ **`NEXT_PUBLIC_SITE_URL` SUDAH DIISI & TERBUKTI JALAN (2026-10-15).** Owner
+mengisinya di panel Railway; deploy ulang menyala **~60 detik** kemudian.
+Terukur sesudah deploy: canonical beranda **`https://dramaapp-production-9e88.up.railway.app`**
+· `robots.txt` → sitemap Railway · **0** URL ber-vercel di sitemap (dari 384) ·
+384 URL utuh · health ok. Tambahan: halaman detail `/drama/meg-2-the-trench`
+canonical + `og:url` ikut pindah (**prerender SSG**, jadi ini membuktikan seluruh
+situs dibangun ulang) · **Vercel tidak tersentuh**, masih melayani.
+
+**TITIK LANJUT — 2 langkah panel, nol commit, dan JANGAN ditunda lama:**
+
+1. `KEEPALIVE_SITES` di panel GitHub: buang alamat Vercel, isi alamat Railway.
+   **Harus mendahului 301** — kalau Vercel sudah mengalihkan sementara robot masih
+   memantaunya, robot melapor gagal tiap hari.
+2. Vercel diubah jadi **pengalihan 301** ke alamat Railway (**bukan** dimatikan).
+
+🟡 **KENAPA JANGAN DITUNDA:** sekarang **dua situs sama-sama mengaku "akulah yang
+asli"** dengan isi identik — di mata Google itu **duplicate content**. Keadaan ini
+tak terhindarkan (urutan lain lebih buruk), tapi hitungannya **hari, bukan
+minggu**. Kalimat "tunggu beberapa minggu" berlaku **sesudah** 301 terpasang —
+yaitu sebelum Vercel dimatikan total, bukan sebelum 301 dipasang.
+
+### ⚠️ `npm test` pernah ambruk TOTAL sekali lalu hijau lagi — ini FLAKE, bukan kode
+
+2026-10-15 sore, dengan **nol kode berubah**, satu run `npm test` keluar
+**"99 berkas GAGAL semua / no tests"** — seluruh berkas gagal dimuat, nol tes
+sempat jalan. Dua run berikutnya **99 berkas / 1447 tes hijau**, dan satu berkas
+yang diuji sendirian juga hijau. Jadi kodenya tidak pernah rusak.
+
+Gejala run yang ambruk: `transform 82,99s` (normalnya ~47s) dan `import 0ms` —
+pola beban/lock, bukan pola error kode. ❓ **Sebabnya belum dipastikan** — dugaan
+paling masuk akal: rebutan sumber daya di Windows tepat sesudah `npm run build`
+berat (file handle / pemindai antivirus). **Tidak diklaim terdiagnosa.**
+
+**Yang harus dilakukan kalau kambuh: JANGAN langsung simpulkan kode rusak, dan
+jangan "memperbaiki" apa pun.** Jalankan ulang sekali; kalau hijau, itu flake.
+Kalau merah lagi **dengan pesan error yang nyata** (bukan "no tests"), barulah itu
+masalah sungguhan.
+
+✅ **Mitra Playly TIDAK disentuh.** Webhook mereka sudah menunjuk alamat Railway
+ini sejak 2026-10-14, jadi tak ada alamat baru untuk dikabarkan: nol pesan, nol
+secret baru, nol jeda.
+
+### 🔴 KOREKSI OWNER atas rekomendasi AI — jangan diulang
+
+Pagi ini AI merekomendasikan **"beli domain dulu"** dan menjadikannya **blocker**
+penutupan Vercel. Owner membantah: *"dulu pakai vercel meski belum beli domain
+tetap bisa jalan kenapa sekarang tidak"* — **dan dia benar.**
+
+1. `dramaapp.vercel.app` **juga** subdomain gratis platform. Situs ini sudah
+   setahun hidup di alamat platform tanpa domain beli. Jadi nasihat "jangan
+   biarkan Google mengindeks subdomain platform" datang **setahun terlambat**, dan
+   dipakai untuk menahan tujuan owner sendiri (cuma mau 1 hosting).
+   **Aturan yang diambil: sebelum menjadikan sesuatu BLOCKER, cek apakah keadaan
+   yang mau dicegah SUDAH berjalan lama tanpa masalah di project ini. Kalau sudah,
+   itu preferensi — dan preferensi AI tak boleh menahan tujuan owner.**
+2. Hitungan "ongkos SEO dibayar dua kali" **keliru**. Jumlah pindah alamat SAMA
+   (2×) di kedua jalur, karena Vercel→Railway memang tak terhindarkan. Yang
+   berbeda justru **jumlah putaran mitra Playly**. Owner yang menemukan ini,
+   dengan bertanya *"kalau ganti nama nanti mitra playly perlu ubah alamat lagi
+   tidak"*:
+
+| | Ganti nama alamat Railway | **Dipilih: pakai apa adanya** |
+|---|---|---|
+| Pindah alamat (ongkos SEO) | 2× | 2× — **sama** |
+| **Mitra Playly diubah** | **2×** | **1×**, nanti, langsung ke alamat final |
+| Biaya | 0 | 0 |
+
+⏸️ **Beli domain menunggu persetujuan atasan owner** — bukan ditolak, dan **bukan
+prasyarat**. Saat disetujui: pasang domain di Railway → ubah variabel → **baru**
+kirim Pesan 2 ke mitra, sekali.
+
+💡 **Temuan teknis yang ikut lahir (berguna nanti, terverifikasi di docs CLI resmi
+Railway):** alamat `*.up.railway.app` **bisa diganti namanya, gratis** —
+`railway domain update <lama>.up.railway.app --domain <baru>`; `railway domain`
+disebut *"generates a free `*.up.railway.app` domain"*. Jadi alamat rapi setara
+`dramaapp.vercel.app` (mis. `dramaku.up.railway.app`) **tak perlu uang**. Tidak
+dipakai sekarang semata karena memaksa satu putaran mitra tambahan. Kalau atasan
+ternyata TIDAK menyetujui beli domain, ini layak dipertimbangkan lagi.
 
 ✅ **DIRILIS `e9b0714`** (+ `10ed638`, satu baris kriteria sitemap) — **dual push
 tuntas** `bce81bc..e9b0714..10ed638`, fast-forward, **nol paksaan**. Ketiganya
@@ -47,12 +123,19 @@ palsu di momen paling delicate migrasi.
 
 **Rollback 1-baris:** `git revert --no-edit e9b0714 && git push origin main && git push dramaku main`.
 
-✅ **Keputusan owner 2026-10-15: beli domain sendiri dulu.** `NEXT_PUBLIC_SITE_URL`
+> 🔴 **SEKSI DI BAWAH SUDAH DIBATALKAN — dikoreksi owner sore 2026-10-15.**
+> Disimpan sebagai riwayat penalaran yang salah, **bukan** instruksi. Yang berlaku
+> ada di seksi KOREKSI OWNER di entri teratas: isi `NEXT_PUBLIC_SITE_URL` dengan
+> alamat Railway, **beli domain BUKAN blocker**. Jangan kerjakan apa pun dari
+> paragraf-paragraf di bawah ini.
+
+~~**Keputusan owner 2026-10-15 (pagi, DIBATALKAN): beli domain sendiri dulu.**~~
+`NEXT_PUBLIC_SITE_URL`
 di Railway **dibiarkan KOSONG** sampai domain itu aktif & menunjuk Railway. Ini
 **keadaan aman, bukan pekerjaan tertunda** — jangan diperlakukan sebagai blocker
 yang harus dicoret buru-buru.
 
-**Dua pilihan yang DITOLAK — jangan ditawarkan lagi:** (a) isi alamat
+**Dua pilihan yang (pagi itu) DITOLAK — penilaian ini sendiri sudah dikoreksi:** (a) isi alamat
 `dramaapp-production-9e88.up.railway.app` sekarang lalu pindah lagi nanti → ongkos
 SEO dibayar DUA KALI (Google mengindeks alamat panjang itu, lalu seluruh pemindahan
 canonical + 301 diulang dari nol); (b) pakai alamat `railway.app` permanen →
@@ -147,11 +230,17 @@ Jadi klaim catatan 2026-10-14 **terbukti benar**, bukan asumsi.
 
 ### Blocker tersisa sebelum Vercel boleh ditutup
 
-1. ⏸️ **Domain final belum dibeli** (keputusan owner, tak bisa dikerjakan AI).
-2. `KEEPALIVE_SITES` masih memuat alamat Vercel → satu kolom di panel GitHub,
-   **nol commit, nol deploy**. Robot sengaja GAGAL kalau ADA SATU alamat sakit →
-   Vercel mati = email gagal tiap hari = alarm berubah jadi kebisingan.
+Ketiganya **kerja di panel, nol commit, nol deploy dari repo**:
+
+1. `NEXT_PUBLIC_SITE_URL` diisi alamat Railway (panel Railway) — nilai persisnya
+   ada di TITIK LANJUT di atas.
+2. `KEEPALIVE_SITES` masih memuat alamat Vercel → satu kolom di panel GitHub.
+   Robot sengaja GAGAL kalau ADA SATU alamat sakit → Vercel mati = email gagal
+   tiap hari = alarm berubah jadi kebisingan.
 3. Putaran 2 (login admin) — pagar yang dipasang owner sendiri sebelum Tahap 6.
+
+🔴 **"Beli domain" BUKAN blocker** (dikoreksi owner 2026-10-15 sore) — lihat seksi
+KOREKSI OWNER di atas. Jangan dimasukkan lagi ke daftar ini.
 
 ---
 

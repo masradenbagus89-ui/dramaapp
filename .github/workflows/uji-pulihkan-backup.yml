@@ -1,0 +1,272 @@
+# .github/workflows/uji-pulihkan-backup.yml
+#
+# UJI PULIHKAN BACKUP — jalankan backup harian ke database KOSONG, lalu hitung
+# barisnya. Dijalankan MANUAL saja (workflow_dispatch); tidak ada jadwal.
+#
+# ═══════════════════════════════════════════════════════════════════════════
+# KENAPA ADA
+#
+# Backup harian sudah terbukti MENGHASILKAN berkas. Yang belum pernah dibuktikan:
+# berkas itu benar-benar bisa dipulihkan. Bedanya bukan teori — 2026-10-14 script
+# export yang sama menghasilkan berkas yang terlihat sehat sempurna (exit 0, 125
+# baris, ukuran wajar) tapi NOL baris akan masuk saat dipulihkan.
+#
+# Sesudah workflow ini HIJAU sekali, kata "backup" boleh dipakai tanpa tanda
+# kutip. Sebelum itu, yang dimiliki adalah "berkas yang konsisten".
+#
+# YANG DIBUTUHKAN OWNER (3 langkah, sekali saja):
+#   1. Buat project Supabase BARU & KOSONG (paket gratis cukup). JANGAN pakai
+#      project produksi — workflow ini menolaknya, tapi jangan diandalkan.
+#   2. Settings -> Database -> Connection string -> **Session pooler**
+#      (BUKAN Direct connection: runner GitHub hanya punya IPv4, sedangkan
+#      Direct connection project gratis IPv6 saja -> gagal konek).
+#      Pasang sebagai secret repo: DATABASE_URL_UJI_PULIH
+#   3. Actions -> workflow ini -> Run workflow -> ketik konfirmasinya.
+#
+# SESUDAH HIJAU — dua langkah pembersihan yang TIDAK boleh dilewat:
+#   - Hapus secret DATABASE_URL_UJI_PULIH. Ia membuka database uji sepenuhnya.
+#   - Hapus/kosongkan project uji. Isinya DATA PRIBADI PENONTON SUNGGUHAN:
+#     hash password, rahasia 2FA, email, saldo koin.
+#
+# 🔴 REPO INI PUBLIK — log run terbaca TANPA LOGIN (diuji 2026-10-14). Karena itu
+# di bawah: nol upload-artifact, isi berkas tak pernah dicetak, dan keluaran psql
+# disaring (lihat komentar di langkah "Pulihkan ke database uji").
+#
+# Rollback: workflow ini tidak menyentuh produksi sama sekali (pagar pertama
+# menolaknya). "Mundur" = hapus secret DATABASE_URL_UJI_PULIH + hapus project uji.
+# ═══════════════════════════════════════════════════════════════════════════
+
+name: Uji Pulihkan Backup (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      konfirmasi:
+        description: 'Ketik persis: DATABASE UJI KOSONG'
+        required: true
+        default: ''
+      nama_berkas:
+        description: 'Nama berkas .gz di bucket. Kosongkan = pakai yang terbaru.'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+# Dua run sekaligus ke database uji yang sama akan saling menimpa dan membuat
+# hitungannya tak bisa dipercaya.
+concurrency:
+  group: uji-pulihkan-backup
+  cancel-in-progress: false
+
+jobs:
+  uji-pulih:
+    runs-on: ubuntu-latest
+    env:
+      SCHEMA: dramaapp
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Siapkan Node
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '24'
+
+      - name: Konfirmasi manusia
+        env:
+          KONFIRMASI: ${{ inputs.konfirmasi }}
+        run: |
+          if [ "$KONFIRMASI" != "DATABASE UJI KOSONG" ]; then
+            echo "::error::Konfirmasi tidak cocok. Ketik persis: DATABASE UJI KOSONG — ini menutup kasus yang tak bisa dideteksi mesin: connection string milik database lain yang kebetulan bukan produksi dramaapp."
+            exit 1
+          fi
+          echo "✓ konfirmasi diterima"
+
+      - name: Periksa secret lengkap
+        env:
+          REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+          KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          BUCKET: ${{ secrets.SUPABASE_STORAGE_BUCKET }}
+          DB: ${{ secrets.DATABASE_URL_UJI_PULIH }}
+        run: |
+          kurang=""
+          [ -z "$REF" ]    && kurang="$kurang SUPABASE_PROJECT_REF"
+          [ -z "$KEY" ]    && kurang="$kurang SUPABASE_SERVICE_ROLE_KEY"
+          [ -z "$BUCKET" ] && kurang="$kurang SUPABASE_STORAGE_BUCKET"
+          [ -z "$DB" ]     && kurang="$kurang DATABASE_URL_UJI_PULIH"
+          if [ -n "$kurang" ]; then
+            echo "::error::Secret belum lengkap:${kurang}. Cara memasang DATABASE_URL_UJI_PULIH ada di docs/uji-pulihkan-backup.md"
+            exit 1
+          fi
+          echo "✓ 4 secret terbaca"
+
+      # Pagar paling penting di berkas ini, dan sengaja PALING AWAL: dijalankan
+      # sebelum satu perintah pun menyentuh database mana pun.
+      - name: PAGAR — tujuan bukan database produksi
+        env:
+          DATABASE_URL_UJI_PULIH: ${{ secrets.DATABASE_URL_UJI_PULIH }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+        run: node scripts/uji-pulihkan-backup.mjs pagar
+
+      - name: Pastikan psql tersedia
+        run: |
+          if ! command -v psql >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq postgresql-client
+          fi
+          psql --version
+
+      # `on conflict do nothing` di seluruh insert membuat database yang SUDAH
+      # berisi menghasilkan hitungan yang cocok dari data LAMA — hijau tanpa
+      # membuktikan apa pun. Karena itu kekosongan diperiksa, bukan diasumsikan.
+      - name: PAGAR — database tujuan masih kosong
+        env:
+          DB: ${{ secrets.DATABASE_URL_UJI_PULIH }}
+        run: |
+          if ! ADA=$(psql "$DB" -At -c "select to_regclass('${SCHEMA}.dramas')" 2>"$RUNNER_TEMP/konek.err"); then
+            echo "::error::Tidak bisa konek ke database uji. Cek: connection string diambil dari **Session pooler** (bukan Direct connection — runner GitHub IPv4 saja), dan passwordnya ikut tersalin."
+            # Pesan koneksi psql tak memuat isi tabel. Nilai secret sendiri
+            # disensor otomatis oleh GitHub di log.
+            sed -n '1,5p' "$RUNNER_TEMP/konek.err"
+            exit 1
+          fi
+          node scripts/uji-pulihkan-backup.mjs kosong "$ADA"
+
+      - name: Unduh backup terbaru dari bucket
+        env:
+          REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+          KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          BUCKET: ${{ secrets.SUPABASE_STORAGE_BUCKET }}
+          PILIHAN: ${{ inputs.nama_berkas }}
+        run: |
+          curl -s --max-time 60 -X POST \
+            "https://${REF}.supabase.co/storage/v1/object/list/${BUCKET}" \
+            -H "Authorization: Bearer ${KEY}" \
+            -H "Content-Type: application/json" \
+            -d '{"prefix":"","limit":200}' -o "$RUNNER_TEMP/isi-bucket.json"
+
+          if ! NAMA=$(node -e '
+            const fs = require("node:fs");
+            const daftar = JSON.parse(fs.readFileSync(`${process.env.RUNNER_TEMP}/isi-bucket.json`, "utf-8"));
+            const gz = daftar.filter((f) => f.name && f.name.endsWith(".sql.gz"));
+            if (gz.length === 0) { console.error("bucket tak berisi satu pun .sql.gz"); process.exit(1); }
+            const pilihan = (process.env.PILIHAN || "").trim();
+            if (pilihan) {
+              if (!gz.some((f) => f.name === pilihan)) { console.error(`berkas ${pilihan} tak ada di bucket`); process.exit(1); }
+              console.log(pilihan);
+            } else {
+              // Nama berpola dramaapp-YYYYMMDD-HHMMSS.sql.gz -> urutan abjad = urutan waktu.
+              console.log(gz.map((f) => f.name).sort().at(-1));
+            }
+          '); then
+            echo "::error::Gagal memilih berkas backup dari bucket."
+            exit 1
+          fi
+
+          echo "  berkas diuji: $NAMA"
+          echo "NAMA_BERKAS=$NAMA" >> "$GITHUB_ENV"
+
+          # Ditulis ke RUNNER_TEMP, di LUAR pohon kerja repo — supaya berkas
+          # berisi data pribadi tak mungkin terbawa langkah lain yang membaca repo.
+          KODE=$(curl -s -o "$RUNNER_TEMP/backup.sql.gz" -w "%{http_code}" --max-time 120 \
+            "https://${REF}.supabase.co/storage/v1/object/${BUCKET}/${NAMA}" \
+            -H "Authorization: Bearer ${KEY}")
+          if [ "$KODE" != "200" ]; then
+            echo "::error::Unduh gagal (HTTP $KODE). Bucket privat butuh kunci service_role yang masih berlaku."
+            exit 1
+          fi
+
+          gzip -dc "$RUNNER_TEMP/backup.sql.gz" > "$RUNNER_TEMP/backup.sql"
+          if [ ! -s "$RUNNER_TEMP/backup.sql" ]; then
+            echo "::error::Berkas hasil ekstrak kosong."
+            exit 1
+          fi
+          ls -lh "$RUNNER_TEMP/backup.sql" | awk '{print "  ukuran .sql: "$5}'
+
+      - name: Pulihkan ke database uji
+        env:
+          DB: ${{ secrets.DATABASE_URL_UJI_PULIH }}
+        run: |
+          # Dua lapis penahan kebocoran, karena log repo PUBLIK terbaca tanpa login:
+          #   1. VERBOSITY=terse -> psql tidak mencetak baris DETAIL:/CONTEXT:, dan
+          #      DETAIL-lah yang memuat isi baris gagal ("Key (email)=(...)").
+          #   2. Seluruh keluaran ditahan di berkas; yang dicetak ke log hanya baris
+          #      ERROR: (pesan constraint, bukan nilai) — selebihnya tidak pernah.
+          # ON_ERROR_STOP=1 membuat satu kesalahan membatalkan seluruhnya; tanpa itu
+          # psql melanjutkan dan job bisa hijau di atas pemulihan yang separuh jadi.
+          set +e
+          psql "$DB" \
+            -v ON_ERROR_STOP=1 \
+            --set VERBOSITY=terse \
+            -q -f "$RUNNER_TEMP/backup.sql" > "$RUNNER_TEMP/psql.out" 2>&1
+          STATUS=$?
+          set -e
+          if [ "$STATUS" -ne 0 ]; then
+            echo "::error::Pemulihan GAGAL (psql keluar $STATUS). Inilah yang dicari uji ini — backup yang tak bisa dipulihkan. Baris ERROR:"
+            grep -E 'ERROR:' "$RUNNER_TEMP/psql.out" | head -10 || true
+            exit 1
+          fi
+          echo "✓ berkas backup dijalankan sampai habis tanpa error"
+
+      - name: Hitung baris & bandingkan dengan isi backup
+        env:
+          DB: ${{ secrets.DATABASE_URL_UJI_PULIH }}
+        run: |
+          # Angka pembandingnya diambil dari komentar "-- <tabel>: N baris" di
+          # dalam berkas backup itu sendiri, bukan dari catatan yang bisa basi.
+          HITUNG=$(psql "$DB" -At -F',' -c "
+            select 'app_data', count(*) from ${SCHEMA}.app_data
+            union all select 'dramas',  count(*) from ${SCHEMA}.dramas
+            union all select 'likes',   count(*) from ${SCHEMA}.likes
+            union all select 'wallets', count(*) from ${SCHEMA}.wallets
+            union all select 'unlocks', count(*) from ${SCHEMA}.unlocks
+          ")
+          node scripts/uji-pulihkan-backup.mjs banding "$RUNNER_TEMP/backup.sql" "$HITUNG"
+
+      - name: Periksa struktur — kolom & fungsi RPC ikut terpulihkan
+        env:
+          DB: ${{ secrets.DATABASE_URL_UJI_PULIH }}
+        run: |
+          # Keduanya pernah jadi sumber kerusakan senyap di project ini:
+          #   - dramas.status = kolom yang dulu hilang dan membatalkan pemulihan.
+          #   - 3 fungsi RPC diambil dari berkas migrasi di repo, BUKAN dari
+          #     database hidup, jadi justru bagian inilah yang paling mungkin basi.
+          # raise exception -> psql keluar != 0 -> langkah ini MERAH.
+          psql "$DB" -v ON_ERROR_STOP=1 --set VERBOSITY=terse -q -c "
+          do \$\$
+          begin
+            if to_regclass('${SCHEMA}.dramas') is null then
+              raise exception 'tabel ${SCHEMA}.dramas tidak ada sesudah pemulihan';
+            end if;
+            if not exists (
+              select 1 from information_schema.columns
+              where table_schema = '${SCHEMA}' and table_name = 'dramas' and column_name = 'status'
+            ) then
+              raise exception 'kolom dramas.status TIDAK ikut terpulihkan — inilah kolom yang dulu membatalkan seluruh pemulihan';
+            end if;
+            if to_regprocedure('${SCHEMA}.coin_add(text,integer)') is null then
+              raise exception 'fungsi RPC coin_add tidak ikut terpulihkan';
+            end if;
+            if to_regprocedure('${SCHEMA}.coin_spend_unlock(text,text,integer)') is null then
+              raise exception 'fungsi RPC coin_spend_unlock tidak ikut terpulihkan';
+            end if;
+            if to_regprocedure('${SCHEMA}.like_change(text,integer)') is null then
+              raise exception 'fungsi RPC like_change tidak ikut terpulihkan';
+            end if;
+          end \$\$;"
+          echo "✓ kolom dramas.status ada · 3 fungsi RPC ada"
+
+      - name: Ringkasan
+        if: always()
+        run: |
+          echo "### Uji pulihkan backup" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Berkas yang diuji: \`${NAMA_BERKAS:-(belum sempat dipilih)}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Sesudah run ini HIJAU, dua pembersihan WAJIB:**" >> "$GITHUB_STEP_SUMMARY"
+          echo "1. Hapus secret \`DATABASE_URL_UJI_PULIH\` (Settings -> Secrets and variables -> Actions)." >> "$GITHUB_STEP_SUMMARY"
+          echo "2. Hapus project Supabase uji — isinya data pribadi penonton sungguhan." >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "Lalu catat hasilnya di \`HANDOFF.md\`." >> "$GITHUB_STEP_SUMMARY"

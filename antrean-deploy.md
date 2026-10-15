@@ -55,9 +55,19 @@ sesudah owner menyimpannya. Terukur: canonical + `robots.txt` + `og:url` pindah 
 **0** URL ber-vercel di sitemap (dari 384) · 384 URL utuh · health ok · halaman detail SSG ikut
 pindah (bukti seluruh situs dibangun ulang) · Vercel tidak tersentuh.
 
-🟡 **SISA LANGKAH — kerja di panel, nol commit, JANGAN ditunda lama:** `KEEPALIVE_SITES` buang
-alamat Vercel (**harus mendahului 301**) → Vercel jadi **301** (bukan dimatikan) → tunggu beberapa
-minggu → baru ditutup. Putaran 2 admin masih terbuka.
+🟡 **SISA LANGKAH, JANGAN ditunda lama:** (1) **OWNER** — `KEEPALIVE_SITES` di panel GitHub
+**DIGANTI ISINYA** jadi alamat Railway. ⚠️ **Jangan dikosongkan**: `keep-db-awake.yml:65` berbunyi
+`${{ vars.KEEPALIVE_SITES || 'https://dramaapp.vercel.app' }}`, jadi kolom kosong = robot jatuh
+balik ke Vercel tanpa gejala. (2) **AI** — dorong `vercel.json` (sudah siap, lolos gerbang, SENGAJA
+BELUM didorong) → Vercel mengalihkan ke Railway → smoke test. (3) tunggu beberapa minggu → baru
+Vercel ditutup. Putaran 2 admin masih terbuka.
+
+⏸️ **`vercel.json` ADA di komputer owner tapi BELUM di repo.** Ditahan karena robot keepalive
+memanggil `/api/dramas` dengan `curl` **tanpa `-L`** (`keep-db-awake.yml:99`) → tidak mengikuti
+pengalihan → dapat `308` bukan `200` → melapor gagal **tiap hari**. Langkah (1) wajib duluan.
+🔴 **Koreksi istilah: 308, bukan 301** — 301 boleh mengubah POST jadi GET (dok Vercel), dan situs
+ini punya endpoint webhook. Dipakai `vercel.json` bukan `next.config.ts` karena yang kedua dibaca
+Railway juga → risiko loop tak berujung.
 **Kenapa jangan ditunda:** sekarang dua situs sama-sama mengaku "akulah yang asli" dengan isi
 identik = **duplicate content** di mata Google. Tak terhindarkan (urutan lain lebih buruk), tapi
 hitungannya **hari, bukan minggu**.

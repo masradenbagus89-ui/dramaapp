@@ -23,12 +23,41 @@ Terukur sesudah deploy: canonical beranda **`https://dramaapp-production-9e88.up
 canonical + `og:url` ikut pindah (**prerender SSG**, jadi ini membuktikan seluruh
 situs dibangun ulang) · **Vercel tidak tersentuh**, masih melayani.
 
-**TITIK LANJUT — 2 langkah panel, nol commit, dan JANGAN ditunda lama:**
+**TITIK LANJUT — giliran OWNER, 1 langkah di panel GitHub:**
 
-1. `KEEPALIVE_SITES` di panel GitHub: buang alamat Vercel, isi alamat Railway.
-   **Harus mendahului 301** — kalau Vercel sudah mengalihkan sementara robot masih
-   memantaunya, robot melapor gagal tiap hari.
-2. Vercel diubah jadi **pengalihan 301** ke alamat Railway (**bukan** dimatikan).
+**`KEEPALIVE_SITES` → GANTI ISINYA jadi `https://dramaapp-production-9e88.up.railway.app`.**
+⚠️ **Jangan dikosongkan.** `.github/workflows/keep-db-awake.yml:65` berbunyi
+`${{ vars.KEEPALIVE_SITES || 'https://dramaapp.vercel.app' }}` — tanda `||` itu
+artinya **kolom kosong = robot jatuh balik ke alamat Vercel**, tanpa gejala.
+Instruksi "buang alamat Vercel" yang sempat AI tulis itu **menyesatkan**.
+
+Sesudah itu kabari AI → AI mendorong `vercel.json` (sudah siap, lihat di bawah) →
+Vercel mulai mengalihkan → smoke test → tunggu beberapa minggu → baru Vercel
+ditutup.
+
+### ⏸️ `vercel.json` SUDAH SIAP tapi SENGAJA BELUM DIDORONG
+
+Berkas pengalihan Vercel → Railway sudah dibuat dan **lolos gerbang** (build 0 ·
+tsc 0 · 99 berkas / 1447 tes). **Ditahan** karena mendorongnya = mengaktifkan
+pengalihan seketika, dan robot keepalive memanggil `/api/dramas` dengan `curl`
+**tanpa `-L`** (`keep-db-awake.yml:99`) → ia tak mengikuti pengalihan → dapat
+`308`, bukan `200` → melapor `::error:: TIDAK sehat` **tiap hari**. Alarm harian
+= alarm yang berhenti dibaca. **Karena itu langkah panel di atas wajib duluan.**
+
+🔴 **KOREKSI ISTILAH: yang benar 308, bukan 301.** Catatan-catatan sebelumnya di
+repo ini (AI yang menulis, berulang kali) menyebut "301". Dari dokumentasi Vercel:
+*"301 Moved Permanently: Cached by client, the method **may or may not be changed
+to GET**"* — 301 boleh mengubah POST jadi GET, dan situs ini punya endpoint
+webhook. Vercel menganjurkan *"307 or 308 ... necessary when your application needs
+to redirect a public API"*. `permanent: true` = **308**. Project ini sudah memakai
+pola yang sama di `next.config.ts:52`.
+
+⚠️ **Dipakai `vercel.json`, BUKAN `next.config.ts`** — walau dokumentasi Vercel
+menganjurkan `next.config.js` untuk project Next.js. Sebabnya: `next.config.ts`
+dibaca **Railway juga**, dan satu salah ketik di syarat host membuat Railway
+mengalihkan ke dirinya sendiri = **loop tak berujung, situs mati**. `vercel.json`
+tak pernah dibaca Railway. Rincian + smoke test + rollback:
+`docs/migrasi-railway-tahap6-pindah-domain.md`.
 
 🟡 **KENAPA JANGAN DITUNDA:** sekarang **dua situs sama-sama mengaku "akulah yang
 asli"** dengan isi identik — di mata Google itu **duplicate content**. Keadaan ini

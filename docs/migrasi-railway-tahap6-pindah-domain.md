@@ -114,17 +114,17 @@ bilang "yang asli itu Vercel", dan Vercel memang yang asli. Google tak bingung.
 **Itu sebabnya keadaan kosong tidak perlu dikejar-kejar selama Tahap 2-5** — bukan
 sebabnya untuk menunda penutupan Vercel.
 
-**Bahayanya baru muncul kalau urutannya dibalik** — Vercel diubah jadi pengalihan
-301 ke Railway **sebelum** variabel ini diisi:
+**Bahayanya baru muncul kalau urutannya dibalik** — Vercel diubah jadi
+pengalihan permanen ke Railway **sebelum** variabel ini diisi:
 
 - Railway → "yang asli itu Vercel"
-- Vercel → 301 → Railway
+- Vercel → pengalihan permanen (308) → Railway
 
 Dua sinyal bertabrakan. Google menganggapnya kesalahan dan **bisa menjatuhkan
 halaman dari hasil pencarian**. Tak ada pesan error, tak ada yang melapor —
 ketahuan berminggu-minggu kemudian dari trafik yang turun.
 
-> ⛔ **Aturan yang tak boleh dibalik: isi variabel DULU, baru 301.**
+> ⛔ **Aturan yang tak boleh dibalik: isi variabel DULU, baru pengalihan permanen (308).**
 
 ---
 
@@ -215,12 +215,104 @@ bukan opsional.**
 
 | # | Langkah | Siapa | Kenapa di posisi ini |
 |---|---|---|---|
-| 1 | ✅ **SELESAI 2026-10-15** — `NEXT_PUBLIC_SITE_URL` = `https://dramaapp-production-9e88.up.railway.app` | owner, panel Railway | Harus mendahului 301 — lihat seksi tabrakan sinyal di atas |
+| 1 | ✅ **SELESAI 2026-10-15** — `NEXT_PUBLIC_SITE_URL` = `https://dramaapp-production-9e88.up.railway.app` | owner, panel Railway | Harus mendahului pengalihan — lihat seksi tabrakan sinyal di atas |
 | 2 | ✅ **SELESAI** — deploy ulang menyala **~60 detik** sesudah variabel disimpan | owner | Prerender = perubahan hanya ikut build baru |
 | 3 | ✅ **SELESAI & TERBUKTI** — 5 pemeriksaan + 3 tambahan, semuanya lolos (bukti di bawah) | AI | Salah ketik tak memunculkan error — hanya ketahuan dari pengukuran |
-| 4 | `KEEPALIVE_SITES` di panel GitHub: buang alamat Vercel, isi alamat Railway | owner | Robot sengaja GAGAL kalau ada satu alamat sakit → Vercel pensiun = email gagal tiap hari |
-| 5 | Vercel diubah jadi **pengalihan 301** ke alamat Railway | owner | Bookmark, link yang pernah dibagikan, dan peringkat Google tidak putus mendadak |
-| 6 | Biarkan 301 hidup **beberapa minggu**, baru Vercel dimatikan | owner | Google butuh waktu memindahkan peringkat; mematikan terlalu cepat = trafik hilang |
+| 4 | `KEEPALIVE_SITES` di panel GitHub: **ganti isinya** jadi alamat Railway (jangan dikosongkan — baca peringatan di bawah) | owner | Robot sengaja GAGAL kalau ada satu alamat sakit → Vercel dialihkan = email gagal tiap hari |
+| 5 | Vercel diubah jadi **pengalihan permanen (308)** ke alamat Railway | owner | Bookmark, link yang pernah dibagikan, dan peringkat Google tidak putus mendadak |
+| 6 | Biarkan pengalihan hidup **beberapa minggu**, baru Vercel dimatikan | owner | Google butuh waktu memindahkan peringkat; mematikan terlalu cepat = trafik hilang |
+
+### ⚠️ Langkah 4: `KEEPALIVE_SITES` harus DIGANTI ISINYA, bukan DIKOSONGKAN
+
+Jebakan senyap, dibaca langsung dari robotnya — `.github/workflows/keep-db-awake.yml:65`:
+
+```yaml
+SITES: ${{ vars.KEEPALIVE_SITES || 'https://dramaapp.vercel.app' }}
+```
+
+Tanda `||` itu artinya: **kalau variabelnya kosong, robot jatuh ke alamat Vercel.**
+Jadi "buang alamat Vercel" dengan cara mengosongkan kolomnya justru membuat robot
+**tetap** memantau Vercel — tanpa gejala apa pun. **Isi dengan alamat Railway**,
+jangan dikosongkan.
+
+Dan kenapa langkah 4 **wajib** mendahului langkah 5: robot memanggil
+`${SITE}/api/dramas` dengan `curl` **tanpa `-L`**
+(`.github/workflows/keep-db-awake.yml:99`), jadi ia **tidak mengikuti pengalihan**.
+Begitu Vercel mengalihkan, balasan yang diterima robot `308`, bukan `200` → ia
+melapor `::error:: TIDAK sehat` **tiap hari**. Alarm yang berbunyi tiap hari =
+alarm yang berhenti dibaca orang.
+
+---
+
+### Langkah 5: bentuk pengalihannya — `vercel.json`, dan **308 bukan 301**
+
+Berkas `vercel.json` di akar repo — **sudah dibuat & lolos gerbang 2026-10-15,
+tapi SENGAJA BELUM DIDORONG** sampai langkah 4 selesai:
+
+```json
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "dramaapp\\.vercel\\.app" }],
+      "destination": "https://dramaapp-production-9e88.up.railway.app/:path*",
+      "permanent": true
+    }
+  ]
+}
+```
+
+**Kenapa `vercel.json`, BUKAN `next.config.ts`.** Dokumentasi Vercel menganjurkan
+`next.config.js` untuk project Next.js — **tapi di kasus kita itu justru
+berbahaya**: `next.config.ts` dibaca **Railway juga**. Satu salah ketik di syarat
+host, dan Railway mengalihkan ke dirinya sendiri = **loop tak berujung, situs
+mati**. `vercel.json` **tidak pernah dibaca Railway** sama sekali, jadi risiko itu
+nol. Vercel sendiri mendokumentasikan resep ini persis untuk kasus ini, di seksi
+*"Redirect the production vercel.app hostname"*.
+
+**Kenapa `permanent: true` (= 308), bukan 301.** Dua alasan, keduanya dari
+dokumentasi Vercel:
+
+- *"301 Moved Permanently: Cached by client, the method **may or may not be changed
+  to GET**."* — 301 boleh mengubah POST jadi GET. Situs ini punya endpoint webhook
+  (`/api/webhooks/playly`), jadi itu risiko nyata.
+- *"We recommend using status code 307 or 308 to avoid the ambiguity of non-GET
+  methods, **which is necessary when your application needs to redirect a public
+  API**."* 308 = permanen **dan** metode tak pernah berubah.
+
+Project ini sudah memakai pola yang sama di `next.config.ts:52` (`/playly` →
+`/film`), lengkap dengan komentar yang menjelaskan `permanent: true` = 308.
+
+> 🔴 **KOREKSI ISTILAH:** catatan-catatan sebelumnya di repo ini menulis "301"
+> (AI yang menulisnya, berulang kali). Yang benar **308**. Kesimpulannya tidak
+> berubah — 308 sama permanennya di mata Google — tapi 301 berisiko mengubah POST
+> jadi GET dan itu tidak boleh di situs yang punya API publik.
+
+**Kenapa `has` host dibatasi persis `dramaapp.vercel.app`:** supaya preview
+deployment Vercel (hostname-nya berbeda) tidak ikut teralihkan, dan supaya tujuan
+tidak mengalihkan balik ke dirinya sendiri.
+
+⚠️ **Mendorong `vercel.json` = aksi rilis.** Ia ikut ter-deploy ke Vercel dan
+langsung aktif. **Jangan didorong sebelum langkah 4 selesai.**
+
+**Rollback 1-baris:**
+`git revert --no-edit <sha> && git push origin main && git push dramaku main`
+(atau hapus `vercel.json` lalu push — efeknya sama: Vercel berhenti mengalihkan).
+
+**Smoke test sesudah deploy** (bukan cuma "build hijau"):
+
+```bash
+curl -I "https://dramaapp.vercel.app/film?ref=test"      # harap: 308 + Location ke Railway, path & query ikut
+curl -I "https://dramaapp.vercel.app/api/dramas"         # harap: 308 (bukan 200)
+curl -sI "https://dramaapp-production-9e88.up.railway.app/film" | head -1  # harap: 200, TIDAK ikut teralihkan
+curl -s "https://dramaapp-production-9e88.up.railway.app/api/health"       # harap: ok
+```
+
+Yang paling penting di daftar itu adalah baris ke-3: ia membuktikan **Railway
+tidak ikut teralihkan** — yaitu bahwa `vercel.json` memang tak terbaca di sana.
+
+---
 
 > ✅ **Mitra Playly TIDAK ada di daftar ini — itu disengaja.** Webhook mereka sudah
 > menunjuk Railway sejak 2026-10-14 dan terbukti jalan, jadi selama alamat Railway
@@ -285,11 +377,11 @@ Tiga pemeriksaan **tambahan** di luar daftar wajib:
 Sekarang **dua situs sama-sama mengaku "akulah yang asli"**, dengan isi identik
 (database yang sama). Di mata Google itu **duplicate content**.
 
-Ini tak terhindarkan — tak ada urutan lain yang mungkin, karena meng-301 Vercel
+Ini tak terhindarkan — tak ada urutan lain yang mungkin, karena mengalihkan Vercel
 lebih dulu justru menghasilkan tabrakan sinyal yang lebih buruk. Tapi artinya
 **langkah 4 & 5 jangan ditunda berlama-lama** — hitungan hari, bukan minggu.
-"Tunggu beberapa minggu" di langkah 6 berlaku **sesudah** 301 terpasang, bukan
-sebelumnya.
+"Tunggu beberapa minggu" di langkah 6 berlaku **sesudah** pengalihan terpasang,
+bukan sebelumnya.
 
 ---
 

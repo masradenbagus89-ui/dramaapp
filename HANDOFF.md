@@ -23,12 +23,114 @@ Terukur sesudah deploy: canonical beranda **`https://dramaapp-production-9e88.up
 canonical + `og:url` ikut pindah (**prerender SSG**, jadi ini membuktikan seluruh
 situs dibangun ulang) · **Vercel tidak tersentuh**, masih melayani.
 
-**TITIK LANJUT — tinggal MENUNGGU, nol pekerjaan teknis:**
+**TITIK LANJUT — tinggal MENUNGGU, nol pekerjaan teknis hari ini.**
+Tapi ada **1 hal MENDESAK yang tak ada hubungannya dengan migrasi** (Ubuntu 26,
+3 hari lagi) — lihat seksi ⏰ di bawah.
 
-Biarkan pengalihan hidup **beberapa minggu**, baru Vercel ditutup. Google butuh
-waktu memindahkan peringkat ke alamat Railway; menutup terlalu cepat = trafik
-hilang. Yang masih terbuka: **Putaran 2 (login admin)**, dan beli domain
-(menunggu persetujuan atasan owner, **bukan** blocker).
+---
+
+## ⏰ PENGINGAT: MATIKAN `https://dramaapp.vercel.app` — JANGAN SEBELUM SYARATNYA TERPENUHI
+
+**Pengalihan 308 mulai hidup 2026-10-15.** Vercel sekarang cuma penunjuk jalan.
+
+### Kapan boleh ditutup — pakai KRITERIA, bukan sekadar tanggal
+
+Tutup hanya kalau **ketiganya** benar:
+
+1. ⏳ **Sudah lewat ≥6 minggu** sejak 2026-10-15 → paling cepat **2026-11-26**.
+2. 🔍 **Google sudah memindahkan alamatnya.** Cari di Google `site:dramaapp-production-9e88.up.railway.app`
+   — harus muncul banyak halaman. Lalu cari `site:dramaapp.vercel.app` — harus
+   tinggal sedikit/nol. Kalau masih kebalikannya, **tunggu lagi**; menutup
+   sekarang membuang peringkat yang belum pindah.
+3. ✅ **Daftar "WAJIB sebelum menutup" di bawah sudah dikerjakan semua.**
+
+Kenapa pakai kriteria, bukan tanggal saja: lama perpindahan tergantung seberapa
+sering Google merayapi situs ini — tak ada yang bisa menjaminnya dari kalender.
+
+### 🔴 WAJIB dikerjakan SEBELUM menutup — 5 nilai cadangan yang akan menunjuk alamat MATI
+
+Semuanya **gagal senyap**: nol error, nol gejala, baru terasa dari akibatnya.
+
+| # | Tempat | Yang terjadi kalau Vercel mati |
+|---|---|---|
+| 1 | `lib/site.ts:9` `DEFAULT_SITE_URL` | Kalau `NEXT_PUBLIC_SITE_URL` sewaktu-waktu hilang/salah ketik, canonical+sitemap+robots jatuh ke **alamat mati** → Google diarahkan ke ketiadaan |
+| 2 | `.github/workflows/keep-db-awake.yml:65` nilai cadangan | Kalau `KEEPALIVE_SITES` dikosongkan, robot menyapa **alamat mati** → database bisa tertidur tanpa ada yang tahu |
+| 3 | `pc-backup-agent/start-video-services.ps1:81` `SITUS_URL` | Kalau env di PC backup hilang, agent melapor alamat tunnel ke **alamat mati** → **video penonton mati** dan tak pulih sendiri |
+| 4 | `scripts/e2e-tahap7.mjs:33` `E2E_BASE` | Uji E2E diam-diam menguji **situs yang salah** → "lulus" yang tak berarti apa-apa |
+| 5 | `KEEPALIVE_SITES` di repo cermin `ojokesusu/dramaku` | Masih memuat Vercel. Tak berefek sekarang (Actions di sana mati karena tagihan), tapi kalau rekan membayar, robotnya langsung gagal tiap hari |
+
+Plus 2 yang **kosmetik tapi menyesatkan** (bukan pemblokir):
+`pc-backup-agent/optimalkan-film.ps1:184` (pesan ke operator menyuruh cek di
+alamat vercel) · `scripts/gen-supabase-sql.mjs:45` (komentar di berkas SQL).
+
+### 🔐 Juga saat menutup: BERSIHKAN SECRET DORMAN DI PANEL VERCEL
+
+Project Vercel masih menyimpan env produksi lengkap (`SUPABASE_SERVICE_ROLE_KEY`,
+`PLAYLY_ENCRYPTION_KEY`, `AUTH_SECRET`, `ADMIN_PASSWORD`, dst). Sesudah tak
+dipakai, itu **permukaan risiko yang menganggur**. Saat menutup: hapus
+project-nya, atau minimal kosongkan env-nya.
+✅ Sudah diperiksa 2026-10-15: **deployment Vercel yang lama TIDAK bisa dibuka
+publik** — diuji, dijawab `302` ke `vercel.com/sso-api` (Deployment Protection
+menyala). Jadi tak ada jalan pintas lewat URL deployment lama.
+
+### Cara menutup (urutannya mengikat)
+
+1. Kerjakan 5 butir "WAJIB" di atas → dorong → verifikasi.
+2. **Jangan hapus project Vercel langsung.** Matikan dulu dengan membuang
+   domain/aliasnya, **amati 1-2 minggu** — kalau ada yang ternyata masih
+   memanggilnya, masih bisa dikembalikan.
+3. Baru hapus project + secret-nya.
+
+Rollback selama tahap 2: pasang kembali aliasnya.
+
+---
+
+## 🔎 HASIL AUDIT MIGRASI VERCEL → RAILWAY (2026-10-15)
+
+Diperiksa menyeluruh atas permintaan owner. Dibagi: yang **terbukti aman** (jangan
+diperiksa ulang, buang waktu), dan yang **masih terbuka**.
+
+### ✅ Sudah diperiksa & AMAN — 9 hal
+
+| Yang diperiksa | Hasil |
+|---|---|
+| Paket khusus Vercel (`@vercel/*`) | **nol** → kode tak bergantung platform Vercel |
+| `vercel.json` | hanya `redirects` — nol cron, nol functions |
+| Workflow backup (`backup-dramaapp` / `backup-schemas`) | kata "dramaapp" di sana = **nama schema database**, bukan alamat situs → **tak terpengaruh** penutupan Vercel |
+| Supabase Auth | **tidak dipakai** (auth sendiri) → nol daftar "Redirect URL" yang perlu diubah |
+| Pengiriman email | **nol** → tak ada tautan lama tertanam di email penonton |
+| Iklan sponsor ber-link Vercel | ada di backup lama, tapi database hidup menjawab `{"ads":[]}` → **tidak ada** |
+| `DASHBOARD_API_URL` | dipanggil **server-side** (nol berkas `"use client"`) → CORS tak relevan |
+| Deployment Vercel lama | terlindungi SSO (`302` ke login) → tak bisa dibuka publik |
+| Webhook Playly · video PC backup · keepalive | ketiganya di Railway & **terbukti jalan** |
+
+### 🔴 MENDESAK — tak ada hubungannya dengan migrasi, tapi jatuh tempo 3 HARI LAGI
+
+**`ubuntu-latest` pindah ke Ubuntu 26 pada 19 Oktober 2026.** Mengenai
+**SEMUA 6 workflow** repo ini — termasuk **backup harian** yang baru berhasil
+dijalankan 2026-10-14 setelah perjuangan panjang. Kalau ada yang pecah, backup
+berhenti **diam-diam**.
+Juga: **Node 20 sudah deprecated** di Actions — dipakai `ai-review.yml` dan
+`backup-dramaapp.yml` (`node-version: '20'`), layak dinaikkan ke 22.
+
+⚠️ Ini **bukan** akibat migrasi. Ia hanya kebetulan jatuh tempo di minggu yang
+sama, dan risikonya lebih besar daripada sisa pekerjaan migrasi mana pun.
+
+### ⏸️ Tertunda dari SEBELUM migrasi (bukan akibat migrasi)
+
+1. **Putaran 2 (login admin)** belum lolos → fitur admin di Railway (Playly
+   picker, dashboard videos) **belum pernah diuji di sana**. Pagar yang dipasang
+   owner sendiri.
+2. **Uji pulihkan backup** pending — butuh satu Supabase project kosong. Sampai
+   itu dikerjakan, kalimat jujurnya "ada berkas backup yang konsisten", **bukan**
+   "punya backup yang terbukti pulih" (`docs/uji-pulihkan-backup.md`).
+3. **`start-video-services.ps1` tak pernah memanggil `ReleaseMutex`** dan tak
+   punya blok `finally` → run terjadwal berikutnya keluar "instance lain sedang
+   berjalan". Senyap: video tetap hidup sampai tunnel mati, lalu tak ada yang
+   memulihkan.
+4. **Beli domain** menunggu persetujuan atasan owner — **bukan** blocker.
+5. **Mitra Playly** minta dikabari kalau domain penonton berubah. Belum perlu
+   sekarang (alamat webhook tidak berubah), tapi **wajib** saat domain dipasang.
 
 ### ✅ LANGKAH 4 SELESAI — `KEEPALIVE_SITES` diganti & TERBUKTI
 
@@ -120,6 +222,32 @@ terbukti jalan, secret guard terbukti jalan di tiap push hari ini. Tapi: **janga
 mengandalkan robot apa pun di repo cermin**, dan kalau rekan mengira backup-nya
 jalan di sana, dia keliru. Perbaikannya ada di akun rekan (Billing & plans), di
 luar jangkauan owner.
+
+### 🪤 DITEMUKAN SAAT AUDIT: satu tes penjaga enkripsi memang FLAKY — sudah diperbaiki
+
+`tests/playly.test.ts` — *"data yang diubah orang di database → ditolak"* merah
+sendiri saat audit, **dengan nol kode berubah**. Bukan kebetulan: cacat di tesnya.
+
+Cara lama menimpa **2 huruf terakhir** hasil enkripsi dengan `"AA"` untuk
+berpura-pura jadi data yang diutak-atik orang. Tapi kalau hasil enkripsi
+**kebetulan sudah berakhir `"AA"`** (IV-nya acak, jadi tiap run beda), teks
+"diutak-atik" itu **identik dengan aslinya** → dekripsi wajar berhasil → tes
+merah padahal tak ada yang rusak.
+
+**Diukur, bukan diteorikan:** 200.000 percobaan → **31 kali** berakhir `"AA"` =
+**1 dari ~6.452 run**. Cukup jarang untuk tak pernah disadari, cukup sering untuk
+muncul di CI sesekali.
+
+Diperbaiki: huruf terakhir **diganti dengan yang pasti berbeda**, plus satu baris
+pagar `expect(isiDiutak).not.toBe(teracak)` supaya kalau cara mengutak-atiknya
+suatu saat jadi tak mengubah apa pun, yang merah adalah **pagar itu** — bukan
+diam-diam lolos. Cara baru diuji 200.000 percobaan: **0 gagal palsu**.
+
+**Kenapa ini penting, bukan sekadar rapi:** tes itu menjaga **deteksi data
+terenkripsi yang diutak-atik orang** — kalau orang mengabaikannya karena "ah,
+suka merah sendiri", kerusakan sungguhan ikut terabaikan. Dan catatan di bawah
+("ambruk total itu flake, jangan panik") memperbesar risiko itu, jadi
+membiarkannya justru berbahaya.
 
 ### ⚠️ `npm test` pernah ambruk TOTAL sekali lalu hijau lagi — ini FLAKE, bukan kode
 

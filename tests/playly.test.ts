@@ -140,7 +140,14 @@ describe("encryptSecret / decryptSecret — simpan kunci dalam keadaan teracak",
   it("data yang diubah orang di database -> ditolak (ada segel/auth tag)", () => {
     const teracak = encryptSecret(KUNCI_API, KUNCI_TES);
     const [v, iv, isi, tag] = teracak.split(".");
-    const isiDiutak = `${v}.${iv}.${isi.slice(0, -2)}AA.${tag}`;
+    // Huruf terakhir DIGANTI dengan yang pasti berbeda, bukan ditimpa "AA".
+    // Versi lama menimpa 2 huruf terakhir dengan "AA": kalau hasil enkripsi
+    // kebetulan SUDAH berakhir "AA" (IV acak -> terjadi 1 dari ~6.500 run,
+    // diukur 200.000 percobaan), teks "diutak-atik" itu identik dengan aslinya
+    // -> dekripsi wajar berhasil -> tes merah tanpa ada yang rusak. Tes penjaga
+    // yang bisa merah sendiri melatih orang mengabaikannya.
+    const isiDiutak = `${v}.${iv}.${isi.slice(0, -1)}${isi.endsWith("A") ? "B" : "A"}.${tag}`;
+    expect(isiDiutak).not.toBe(teracak); // pagar: pastikan memang ada yang diubah
     expect(() => decryptSecret(isiDiutak, KUNCI_TES)).toThrow(PlaylyError);
   });
 

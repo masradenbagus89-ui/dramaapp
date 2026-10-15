@@ -75,8 +75,25 @@ resmi, ketiganya TIDAK menangkapnya** — yang menangkap smoke test per-path.
 tapi tak pernah mulai, termasuk secret-guard & backup harian. Produksi **tidak terdampak** (repo
 owner hijau semua), tapi **jangan mengandalkan robot apa pun di repo cermin**.
 
-🟡 **SISA: tunggu beberapa minggu → baru Vercel ditutup.** Putaran 2 admin masih terbuka. Beli
-domain menunggu persetujuan atasan owner, bukan blocker.
+⏰ **PENGINGAT MATIKAN VERCEL — paling cepat 2026-11-26 (6 minggu), DAN hanya kalau 3 syarat
+terpenuhi.** Bukan sekadar tanggal: (1) ≥6 minggu lewat · (2) cek di Google `site:dramaapp-production-9e88.up.railway.app`
+sudah banyak & `site:dramaapp.vercel.app` sudah sedikit/nol · (3) 5 nilai cadangan yang masih
+menunjuk alamat Vercel sudah dibereskan. Rinciannya + cara menutup bertahap: `HANDOFF.md` seksi ⏰.
+
+🔴 **MENDESAK, DI LUAR MIGRASI — 3 HARI LAGI:** `ubuntu-latest` pindah ke **Ubuntu 26 pada
+19 Oktober 2026**, mengenai **SEMUA 6 workflow** termasuk **backup harian** yang baru berhasil
+2026-10-14. Node 20 juga sudah deprecated (`ai-review.yml`, `backup-dramaapp.yml`). Risikonya lebih
+besar daripada sisa pekerjaan migrasi mana pun — kalau pecah, backup berhenti diam-diam.
+
+🟡 **Tertunda dari SEBELUM migrasi:** Putaran 2 admin (fitur admin di Railway belum pernah diuji) ·
+uji pulihkan backup (butuh 1 Supabase project kosong) · `ReleaseMutex` di `start-video-services.ps1` ·
+beli domain (menunggu atasan, bukan blocker) · kabari mitra Playly saat domain dipasang.
+
+✅ **Audit migrasi 2026-10-15 — 9 hal terbukti AMAN, jangan diperiksa ulang:** nol paket `@vercel/*` ·
+`vercel.json` cuma redirects · workflow backup memakai "dramaapp" sebagai nama SCHEMA bukan alamat
+situs · nol Supabase Auth · nol pengiriman email · iklan ber-link Vercel sudah tak ada di database
+hidup (`{"ads":[]}`) · `DASHBOARD_API_URL` server-side (CORS tak relevan) · deployment Vercel lama
+terlindungi SSO · webhook/video/keepalive semua di Railway & terbukti.
 **Kenapa jangan ditunda:** sekarang dua situs sama-sama mengaku "akulah yang asli" dengan isi
 identik = **duplicate content** di mata Google. Tak terhindarkan (urutan lain lebih buruk), tapi
 hitungannya **hari, bukan minggu**.

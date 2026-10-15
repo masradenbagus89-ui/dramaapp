@@ -18,12 +18,34 @@
 **TITIK LANJUT: tidak ada pekerjaan teknis yang menunggu di blocker ini.** Yang
 menunggu adalah **keputusan beli domain** — milik owner, bukan AI.
 
-⏳ **BELUM DI-COMMIT** (menunggu izin owner): 7 dokumen + `lib/site.ts` +
-`tests/site-url-pagar.test.ts`. Nol migrasi SQL, nol env baru, **nol yang dilihat
-penonton** — canonical & `robots.txt` di hasil build terbukti identik sebelum vs
-sesudah. **Gerbang §6 sudah dijalankan, urutan benar** (`rm -rf .next` → build
+✅ **DIRILIS `e9b0714`** (+ `10ed638`, satu baris kriteria sitemap) — **dual push
+tuntas** `bce81bc..e9b0714..10ed638`, fast-forward, **nol paksaan**. Ketiganya
+(lokal, `origin/main`, `dramaku/main`) duduk di `10ed638`. 10 berkas: 7 dokumen +
+`lib/site.ts` + 2 berkas baru. Nol migrasi SQL, nol env baru, **nol yang dilihat
+penonton**.
+
+**Gerbang §6 dijalankan utuh dari nol, urutan benar** (`rm -rf .next` → build
 **exit 0** → tsc **exit 0** → **99 berkas / 1447 tes hijau**, naik dari 98/1436 =
-tepat +1 berkas & +11 tes) · nol env ter-stage.
+tepat +1 berkas & +11 tes) · nol berkas env ter-stage · nol pola nilai rahasia di
+seluruh diff.
+
+**Bukti TAYANG — status build dari GitHub, bukan tebakan:** commit `e9b0714`
+dilaporkan **`success` oleh KEDUA platform** — `Vercel` dan
+`ravishing-adaptation - dramaapp` (nama project Railway) — plus check
+`Penjaga Kebocoran Rahasia` **success**. `10ed638` menyusul **success** di kedua
+platform juga. Ini bukti yang penting di rilis ini: kalau pagar baru menolak nilai
+yang ada di salah satu panel, build-nya yang akan merah. Sesudah deploy, keduanya
+diukur ulang: `/api/health` **ok** di dua situs, canonical & `robots.txt`
+**identik** seperti sebelum rilis.
+
+🪤 **Catatan ukuran yang layak diingat:** sitemap terukur **377 URL pagi** dan
+**384 URL sore** di hari yang sama **tanpa satu pun deploy di antaranya** — tiap
+film baru dari webhook Playly menambah URL. Jadi jumlah URL yang berbeda dari
+catatan **bukan** tanda gagal; yang berbahaya adalah angka yang **jatuh drastis**.
+Kriteria lulus di prosedur sudah dibetulkan (`10ed638`) supaya tak memicu alarm
+palsu di momen paling delicate migrasi.
+
+**Rollback 1-baris:** `git revert --no-edit e9b0714 && git push origin main && git push dramaku main`.
 
 ✅ **Keputusan owner 2026-10-15: beli domain sendiri dulu.** `NEXT_PUBLIC_SITE_URL`
 di Railway **dibiarkan KOSONG** sampai domain itu aktif & menunjuk Railway. Ini

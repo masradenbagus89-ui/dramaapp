@@ -3,15 +3,29 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-10-15 (**komputer OWNER**) — **ANTREAN KOSONG.** Ketiganya di `00872a2`.
-Perubahan hari ini **BELUM di-commit**: 7 dokumen + **1 berkas kode** (`lib/site.ts`, pagar
-`NEXT_PUBLIC_SITE_URL`) + **1 berkas tes baru**. Nol migrasi SQL, nol env baru, **nol yang dilihat
-penonton** (canonical & `robots.txt` di hasil build terbukti identik sebelum-sesudah).
+**Terakhir dicek:** 2026-10-15 (**komputer OWNER**) — **ANTREAN KOSONG, DUAL PUSH TUNTAS.**
+Ketiganya (lokal, `origin/main`, `dramaku/main`) duduk di **`10ed638`**, fast-forward
+`bce81bc..e9b0714..10ed638`, **nol paksaan**.
 
-**Gerbang §6 SUDAH dijalankan, urutan benar** (`build` → `tsc` → `test`): `rm -rf .next` →
+**Rilis 2026-10-15 — `e9b0714`: pagar salah-ketik `NEXT_PUBLIC_SITE_URL` + urutan pindah domain
+dibetulkan.** 10 berkas: 7 dokumen + **1 berkas kode** (`lib/site.ts`) + 2 berkas baru
+(prosedur Tahap 6 + tes penjaga). Nol migrasi SQL, nol env baru, **nol yang dilihat penonton**.
+Disusul `10ed638` (satu baris kriteria sitemap).
+
+**Gerbang §6 dijalankan utuh dari nol, urutan benar** (`build` → `tsc` → `test`): `rm -rf .next` →
 build **exit 0** · tsc **exit 0** · **99 berkas / 1447 tes hijau** (naik dari 98/1436 = tepat
-+1 berkas, +11 tes) · nol env ter-stage. Pagar diuji 6 kondisi env di proses terpisah dan
-**terbukti MEMBEDAKAN: 4 lolos, 2 ditolak** — bukan sekadar hijau.
++1 berkas, +11 tes) · nol env ter-stage · nol pola nilai rahasia di diff.
+
+**Bukti TAYANG dari GitHub, bukan tebakan:** `e9b0714` dilaporkan **`success` oleh KEDUA
+platform** — `Vercel` + `ravishing-adaptation - dramaapp` (project Railway) — plus check
+`Penjaga Kebocoran Rahasia` success. Penting di rilis ini: kalau pagar baru menolak nilai yang
+ada di salah satu panel, build-nya yang jadi merah. Sesudah deploy keduanya diukur ulang:
+`/api/health` ok di dua situs, canonical & `robots.txt` **identik** seperti sebelum rilis.
+
+Pagar diuji 6 kondisi env di proses terpisah dan **terbukti MEMBEDAKAN: 4 lolos, 2 ditolak** —
+bukan sekadar hijau (aturan dari pelajaran 2026-10-14).
+
+**Rollback 1-baris:** `git revert --no-edit e9b0714 && git push origin main && git push dramaku main`.
 
 🔴 **`NEXT_PUBLIC_SITE_URL` — keputusan owner 2026-10-15: TUNGGU DOMAIN SENDIRI.** Variabel
 **dibiarkan KOSONG** di Railway; itu keadaan **aman**, bukan blocker yang menunggu dikerjakan.

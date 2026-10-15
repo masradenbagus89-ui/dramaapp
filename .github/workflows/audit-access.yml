@@ -1,10 +1,21 @@
 # .github/workflows/audit-access.yml
-# Pengingat Cek-Akses Bulanan - buka 1 catatan-tugas (Issue) tiap awal bulan.
+# Pengingat Cek-Akses Bulanan - buka 1 catatan-tugas (Issue) tiap awal bulan,
+# DAN tutup pengingat bulan-bulan sebelumnya supaya tidak menumpuk.
 #
 # Cara kerja:
-#   - Jalan otomatis tiap tanggal 1 (juga bisa dipicu manual lewat tab Actions -> Run workflow).
-#   - Membuka SATU Issue "waktunya cek-akses bulan ini" + langkah-langkahnya.
+#   - Jalan otomatis tiap tanggal 1 (juga bisa dipicu manual: Actions -> Run workflow).
+#   - Membuka SATU Issue berisi langkah cek-akses bulan ini.
+#   - Menutup Issue pengingat bulan LAIN yang masih terbuka, dengan komentar penunjuk.
 #   - Robot ini CUMA mengingatkan. TIDAK mencabut akses apa pun (pencabutan = keputusan manusia).
+#
+# DISETEL ULANG 2026-10-15, karena versi lama menumpuk jadi 4 Issue terbuka
+# (Juli-Oktober) yang tak satu pun bisa diselesaikan. Dua sebabnya:
+#   1. Ia menyuruh membandingkan dengan `lintasai-portfolio.yml` dan membuka
+#      `docs/ACCESS_CONTROL_NREPO.md` -- KEDUANYA TIDAK PERNAH ADA di repo ini.
+#      Tugas yang mustahil dikerjakan akan selalu jadi tumpukan, bukan kelalaian.
+#      Penggantinya: `docs/akses-dan-kepemilikan.md`, dibuat dari audit sungguhan.
+#   2. Tak ada yang menutup Issue lama, jadi tiap bulan menambah satu. Pengingat
+#      yang menumpuk berhenti dibaca -- dan saat itu ia berhenti jadi pengingat.
 #
 # Catatan: GitHub menonaktifkan jadwal otomatis kalau repo TIDAK ada commit selama 60 hari.
 #          Kalau repo jarang di-update, picu manual saja sesekali (Actions -> Run workflow).
@@ -17,7 +28,8 @@ on:
     - cron: '0 1 1 * *'
   workflow_dispatch: {}
 
-# Hak akses minimum: cuma boleh buat/menulis Issue. TIDAK boleh ubah kode atau akses.
+# Hak akses minimum: cuma boleh buat/menulis/menutup Issue.
+# TIDAK boleh ubah kode maupun mengubah akses siapa pun.
 permissions:
   issues: write
 
@@ -26,56 +38,92 @@ jobs:
     name: Buka pengingat cek-akses
     runs-on: ubuntu-latest
     steps:
-      - name: Buat catatan-tugas (Issue) cek-akses bulan ini
+      - name: Buat pengingat bulan ini + tutup pengingat bulan lalu
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         with:
           script: |
-            const ym = new Date().toISOString().slice(0, 7); // contoh: 2026-06
-            const marker = `Cek-akses bulanan ${ym}`;
-            const title = `[Keamanan] ${marker}`;
+            const PREFIX = '[Keamanan] Cek-akses bulanan';
+            const ym = new Date().toISOString().slice(0, 7); // contoh: 2026-10
+            const title = `${PREFIX} ${ym}`;
+            const { owner, repo } = context.repo;
 
-            // Hindari duplikat: kalau Issue dengan judul bulan ini sudah ada, jangan bikin lagi.
-            // Kalau pencarian gagal (mis. rate-limit), JANGAN batal -- lebih baik pengingat dobel
-            // daripada pengingat hilang. Jadi error pencarian ditelan + lanjut buat Issue.
-            let alreadyExists = false;
-            try {
-              const found = await github.rest.search.issuesAndPullRequests({
-                q: `repo:${context.repo.owner}/${context.repo.repo} is:issue in:title "${marker}"`,
-              });
-              alreadyExists = found.data.total_count > 0;
-            } catch (e) {
-              core.info(`Pencarian duplikat gagal (${e.message}) - lanjut buat Issue saja.`);
+            // Dipakai listForRepo, BUKAN search. Search punya jeda pengindeksan dan
+            // kuota tersendiri -- versi lama sampai perlu menelan error-nya. Daftar
+            // Issue terbuka selalu akurat seketika dan tak punya jeda itu.
+            const terbuka = await github.paginate(github.rest.issues.listForRepo, {
+              owner, repo, state: 'open', per_page: 100,
+            });
+            const pengingat = terbuka.filter(
+              (i) => !i.pull_request && i.title.startsWith(PREFIX),
+            );
+
+            const bulanIni = pengingat.find((i) => i.title === title);
+            let nomorBaru = bulanIni?.number;
+
+            if (bulanIni) {
+              core.info(`Pengingat ${ym} sudah ada (#${bulanIni.number}) - tidak membuat duplikat.`);
+            } else {
+              const body = [
+                '## Waktunya cek-akses bulanan (READ-ONLY)',
+                '',
+                'Pengingat otomatis. Pastikan siapa yang BISA mengakses repo & layanan kita',
+                'masih cocok dengan Buku Induk: **`docs/akses-dan-kepemilikan.md`**.',
+                '',
+                '**Semua langkah hanya MEMBACA - tidak ada akses yang dicabut otomatis.**',
+                '',
+                '### 1. Jalankan (salin-tempel ke terminal, atau minta Claude Code menjalankannya)',
+                '',
+                '```bash',
+                "gh api repos/masradenbagus89-ui/dramaapp/collaborators --jq '.[] | \"\\(.login) [\\(.role_name)]\"'",
+                "gh api repos/ojokesusu/dramaku/collaborators          --jq '.[] | \"\\(.login) [\\(.role_name)]\"'",
+                "gh api repos/masradenbagus89-ui/dramaapp/invitations  --jq '.[] | .invitee.login'",
+                "gh api repos/masradenbagus89-ui/dramaapp/keys         --jq '.[] | .title'",
+                "gh api repos/masradenbagus89-ui/dramaapp/actions/secrets   --jq '.secrets[].name'",
+                "gh api repos/masradenbagus89-ui/dramaapp/actions/variables --jq '.variables[] | \"\\(.name)=\\(.value)\"'",
+                '```',
+                '',
+                '### 2. Bandingkan dengan `docs/akses-dan-kepemilikan.md` bagian 1-3',
+                '',
+                '### 3. Ada yang tidak cocok?',
+                '',
+                '- Cabut manual: GitHub -> Settings -> Collaborators and teams -> Remove.',
+                '  **Pencabutan = keputusan manusia, robot ini tidak pernah melakukannya.**',
+                '- Lalu perbarui `docs/akses-dan-kepemilikan.md` supaya peta aksesnya tetap jujur.',
+                '',
+                '### 4. Yang masih terbuka dari audit terakhir',
+                '',
+                'Lihat `docs/akses-dan-kepemilikan.md` bagian 5 - jangan tutup Issue ini',
+                'sebelum membacanya sekali.',
+                '',
+                '> Tutup Issue ini kalau sudah dicek. Kalau lupa, robot akan menutupnya',
+                '> sendiri bulan depan sambil membuka yang baru.',
+              ].join('\n');
+
+              try {
+                const dibuat = await github.rest.issues.create({ owner, repo, title, body });
+                nomorBaru = dibuat.data.number;
+                core.info(`Issue "${title}" dibuat (#${nomorBaru}).`);
+              } catch (e) {
+                // Jangan bikin workflow "merah" menakutkan kalau API error.
+                core.warning(`Gagal membuat Issue pengingat (${e.message}). Cek-akses tetap bisa dijalankan manual - lihat docs/akses-dan-kepemilikan.md.`);
+                return;
+              }
             }
-            if (alreadyExists) {
-              core.info(`Sudah ada Issue "${marker}" - tidak membuat duplikat.`);
-              return;
-            }
 
-            const body = [
-              '## Waktunya cek-akses bulanan (READ-ONLY)',
-              '',
-              'Pengingat otomatis. Pastikan siapa yang BISA akses tiap repo masih cocok dengan Buku Induk (`lintasai-portfolio.yml`).',
-              '',
-              '**Langkah (semua cuma membaca - tidak ada akses yang dicabut otomatis):**',
-              '',
-              '1. Buka Claude Code, minta: *"Bandingkan siapa yang SEKARANG punya akses tiap repo (baca dari GitHub) dengan `lintasai-portfolio.yml`. Cetak SELISIH-nya. Mode baca-saja, jangan ubah apa pun."*',
-              '2. Kalau ada selisih (mis. staf sudah pindah tapi masih bisa akses backend) -> cabut manual: GitHub -> Settings -> Collaborators and teams -> Remove.',
-              '3. Perbarui Buku Induk biar peta akses tetap akurat.',
-              '',
-              'Panduan lengkap: `docs/ACCESS_CONTROL_NREPO.md` bagian "Cek-akses BULANAN".',
-              '',
-              '> Tutup Issue ini kalau sudah selesai dicek. Robot akan membuka yang baru bulan depan.',
-            ].join('\n');
-
-            try {
-              await github.rest.issues.create({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                title,
-                body,
-              });
-              core.info(`Issue "${title}" dibuat.`);
-            } catch (e) {
-              // Jangan bikin workflow "merah" menakutkan kalau API error -- cukup peringatan halus.
-              core.warning(`Gagal membuat Issue pengingat (${e.message}). Cek-akses tetap bisa dijalankan manual -- lihat docs/ACCESS_CONTROL_NREPO.md.`);
+            // Tutup pengingat bulan LAIN yang masih menggantung. Tanpa ini, tiap bulan
+            // menambah satu Issue dan tumpukannya berhenti dibaca orang.
+            const basi = pengingat.filter((i) => i.number !== nomorBaru);
+            for (const i of basi) {
+              try {
+                await github.rest.issues.createComment({
+                  owner, repo, issue_number: i.number,
+                  body: `Ditutup otomatis: sudah lewat bulannya. Pengingat yang berlaku sekarang: #${nomorBaru}.\n\nKalau cek-akses bulan itu memang belum pernah dijalankan, jalankan sekali di pengingat yang baru - bukan di sini.`,
+                });
+                await github.rest.issues.update({
+                  owner, repo, issue_number: i.number, state: 'closed',
+                });
+                core.info(`Pengingat basi #${i.number} ditutup.`);
+              } catch (e) {
+                core.warning(`Gagal menutup #${i.number} (${e.message}) - lanjut.`);
+              }
             }

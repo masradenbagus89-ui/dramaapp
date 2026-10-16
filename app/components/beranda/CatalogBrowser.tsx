@@ -167,6 +167,26 @@ export default function CatalogBrowser({
     gridRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
+  /**
+   * Tombol cari / Enter di bar pencarian.
+   *
+   * Halaman ini menyaring LANGSUNG saat diketik, jadi tombolnya tidak perlu
+   * mengambil data apa pun. Tapi sampai 2026-10-16 ia tidak dioper sama sekali
+   * sehingga menekannya benar-benar TIDAK melakukan apa pun — dan itu terbaca
+   * sebagai tombol rusak, bukan sebagai "hasilnya memang sudah di bawah".
+   * Grid hasil sering berada di luar layar saat penonton masih di bar atas.
+   *
+   * Jadi tugasnya: ANTARKAN penonton ke hasilnya. Memakai `gridRef` yang sudah
+   * dipakai pindah-halaman, bukan mekanisme kedua.
+   *
+   * Sengaja TIDAK melempar ke /discover: halaman ini sudah punya hasilnya
+   * sendiri, dan memindahkan penonton keluar justru membuang penyaringan yang
+   * sudah jalan di tempat.
+   */
+  const lompatKeHasil = () => {
+    gridRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   const resetFilter = () => {
     setQuery("");
     setPage(1);
@@ -184,6 +204,7 @@ export default function CatalogBrowser({
       <SearchBar
         value={query}
         onValueChange={(v) => ubahFilter(() => setQuery(v))}
+        onSubmit={lompatKeHasil}
         /* Susunan yang SAMA dengan /discover & kerangka pemuatannya —
            lihat alasannya di chromeKatalog(). */
         chrome={chromeKatalog(menus)}

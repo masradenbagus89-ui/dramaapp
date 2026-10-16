@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { type Category, type Drama } from "@/lib/types";
 import { labelNegara } from "@/lib/negara";
@@ -20,6 +20,7 @@ import { chromeKatalog } from "./beranda/KepalaKatalog";
 import HasilPlayly, { cariVideoPlayly } from "./beranda/HasilPlayly";
 import SearchBar, { KELAS_MENEMPEL_KEPALA } from "./beranda/SearchBar";
 import { GRID_CLASS, SHELL } from "./beranda/shell";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Search, X } from "lucide-react";
 
@@ -77,6 +78,22 @@ export default function DramaBrowser({
   const router = useRouter();
 
   const [filter, setFilter] = useState<CatalogFilter>(() => bacaFilter(searchParams));
+  const hasilRef = useRef<HTMLDivElement>(null);
+
+  /**
+   * Tombol cari / Enter. Halaman ini menyaring langsung saat diketik, jadi
+   * tombolnya tidak mengambil data apa pun — tugasnya MENGANTAR penonton ke
+   * hasilnya, yang sering sudah di luar layar saat kursor masih di bar atas.
+   *
+   * Sampai 2026-10-16 `onSubmit` tidak dioper sama sekali di sini maupun di
+   * /beranda, jadi menekan tombolnya benar-benar tidak melakukan apa pun.
+   * Owner melaporkannya untuk /beranda; halaman ini punya cacat yang SAMA dan
+   * ikut dibetulkan — menambal satu pemanggil saja akan meninggalkan yang
+   * lain rusak dengan bentuk persis sama.
+   */
+  const lompatKeHasil = () => {
+    hasilRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   /**
    * Sinkronkan penyaring tiap alamat berubah dari LUAR komponen ini: tombol
@@ -161,6 +178,7 @@ export default function DramaBrowser({
       <SearchBar
         value={filter.q}
         onValueChange={(v) => setFilter((f) => ({ ...f, q: v }))}
+        onSubmit={lompatKeHasil}
         /* Susunannya dipakai BERSAMA dengan kerangka pemuatan halaman ini
            (KerangkaKepalaKatalog) — lihat alasannya di chromeKatalog(). */
         chrome={chromeKatalog(menus)}
@@ -172,7 +190,7 @@ export default function DramaBrowser({
           dropdown, sorotannya lepas dengan sendirinya, dan itu memang jujur. */}
       <StripKatalog items={STRIP_KATALOG} activeHref={alamatAktif} />
 
-      <div className={SHELL}>
+      <div ref={hasilRef} className={cn(SHELL, "scroll-mt-32")}>
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800 py-3">
           <h1 className="text-sm text-zinc-400">
             <span className="font-bold text-white">Jelajah Drama</span> &mdash;{" "}

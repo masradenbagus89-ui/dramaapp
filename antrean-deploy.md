@@ -3,25 +3,53 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-10-15 malam (**komputer OWNER**) — **yang SUDAH di-push: SELARAS.**
-Lokal = `origin/main` = `dramaku/main` = **`a93a2e5`** (selisih **0/0** ke kedua remote,
-diverifikasi dengan `git fetch` + `git rev-list --left-right --count`). Catatan `10ed638` di
-bawah sudah basi — sesudahnya menyusul `7858944`, `4d88ca8`, `a93a2e5`, semuanya sudah ganda.
+**Terakhir dicek:** 2026-10-16 (**komputer OWNER**) — **ANTREAN KOSONG, DUAL PUSH TUNTAS.**
+Lokal = `origin/main` = `dramaku/main` = **`700ad2c`** (selisih **0/0** ke kedua remote).
+Catatan `10ed638` di bawah sudah basi — sesudahnya menyusul `7858944`, `4d88ca8`, `a93a2e5`,
+lalu rilis 2026-10-16 di bawah ini.
 
-🟡 **BELUM di-push — 5 berkas baru + 4 dokumen, menunggu izin rilis owner.** Dibuat
-2026-10-15 malam: robot uji-pulih backup (`.github/workflows/uji-pulihkan-backup.yml` +
-`scripts/uji-pulihkan-backup.mjs` + `tests/uji-pulihkan-backup.test.ts`), **pengingat tutup
-Vercel** (`.github/workflows/pengingat-tutup-vercel.yml`), bahan pengajuan domain
-(`docs/pengajuan-domain-sendiri.md`), plus `docs/uji-pulihkan-backup.md`,
-`docs/lintasai/INDEX.md`, `HANDOFF.md` & berkas ini diperbarui.
-**Nol berkas kode aplikasi** — penonton tidak melihat perubahan apa pun.
+✅ **DIRILIS 2026-10-16 atas izin owner — DUAL PUSH TUNTAS di `700ad2c`.**
+Lokal = `origin/main` = `dramaku/main` = **`700ad2c`**, fast-forward
+`a93a2e5..b167d61..09b3605..700ad2c`, **nol paksaan**, selisih **0/0** ke kedua remote
+(diverifikasi `git fetch` + `rev-list --left-right --count` SESUDAH push, bukan dari
+keluaran push).
 
-⚠️ **Dua workflow baru ini perilakunya beda — ketahui sebelum push.**
-`uji-pulihkan-backup.yml` = `workflow_dispatch` **saja**, tak akan pernah menyala sendiri.
-`pengingat-tutup-vercel.yml` **punya jadwal** (tiap Senin 02:00 UTC) — jadi ia akan mulai
-jalan sendiri begitu di-push. Itu memang tujuannya, dan sebelum **2026-11-26** ia keluar
-diam-diam tanpa membuat Issue apa pun (diuji: 25 Nov diam, 26 Nov berbunyi). Hak aksesnya
-`issues: write` saja — tidak bisa menyentuh kode, secret, maupun setelan.
+**3 commit, 1 tujuan masing-masing** (supaya bisa di-revert terpisah):
+
+| SHA | Isinya |
+|---|---|
+| `b167d61` | robot uji-pulih backup — workflow + `scripts/uji-pulihkan-backup.mjs` + 19 tes |
+| `09b3605` | pengingat tutup Vercel |
+| `700ad2c` | bahan pengajuan domain + catatan sesi + 2 entri pelajaran |
+
+9 berkas, +1223/−29. **Nol berkas kode aplikasi** — penonton tidak melihat perubahan apa pun.
+Gerbang §6 dijalankan utuh sebelum push (urutan benar): build **0** → tsc **0** →
+**100 berkas / 1466 tes hijau** · nol berkas env ter-stage · nol pola nilai rahasia di diff.
+
+**Bukti TAYANG dari GitHub, bukan tebakan:** `Penjaga Kebocoran Rahasia` **success** —
+pemeriksa inilah yang semula akan MERAH (8 baris di tes memuat pola
+`skema://pengguna:sandi@`; diperbaiki dengan merakit string palsunya dari potongan, **bukan**
+dengan melonggarkan penjaganya). Kedua platform **success**: `Vercel` + `ravishing-adaptation
+- dramaapp` (Railway).
+
+🧪 **Pengingat diuji LANGSUNG di GitHub, bukan cuma di harness lokal** — run `38827828114`
+(`workflow_dispatch`, 2026-10-16): **success**, dan baris log runtime-nya
+`Belum waktunya: 2026-10-16 < 2026-11-26. Tidak ada Issue dibuat.` Jumlah Issue repo tetap
+**4** sesudah run — nol dibuat. Ini membuktikan sekaligus: gerbang tanggalnya memilih jalur
+yang benar, SHA action-nya sah, dan `permissions` cukup.
+
+⚠️ **Dua workflow baru perilakunya BEDA.** `uji-pulihkan-backup.yml` = `workflow_dispatch`
+**saja**, tak akan pernah menyala sendiri (dan tetap gagal keras kalau
+`DATABASE_URL_UJI_PULIH` belum dipasang — itu disengaja). `pengingat-tutup-vercel.yml`
+**punya jadwal** (tiap Senin 02:00 UTC) dan sudah mulai hidup — sebelum 2026-11-26 ia keluar
+diam-diam, terbukti di run di atas. Keduanya terdaftar `active` di Actions. Hak akses
+pengingat: `issues: write` saja — tak bisa menyentuh kode, secret, maupun setelan.
+
+🧹 **Hapus `.github/workflows/pengingat-tutup-vercel.yml`** setelah Vercel benar-benar
+ditutup. Issue yang dibuatnya nanti sudah memuat pengingat itu sebagai centang terakhir.
+
+**Rollback 1-baris** (per bagian, pilih SHA-nya):
+`git revert --no-edit <sha> && git push origin main && git push dramaku main`.
 
 Gerbang §6 dijalankan utuh, urutan benar: `rm -rf .next` → build **exit 0** → tsc **exit 0** →
 **100 berkas / 1466 tes hijau** (dari 99/1447 = +1 berkas, +19 tes) · nol env ter-stage · nol

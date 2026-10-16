@@ -9,7 +9,7 @@
 >
 > **📦 Berkas ini sudah ±6.600 baris** (diukur 2026-10-15; angka lama "5.224 baris" dari 2026-10-10 sudah basi — tumbuh ±1.400 baris dalam 5 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-10-15 (malam).
+**Terakhir diisi:** 2026-10-16 (rilis `700ad2c`).
 
 ---
 
@@ -70,8 +70,11 @@ diperbaiki.
 
 ## 2026-10-15 (malam) — 3 pekerjaan tersisa dimajukan sejauh yang bisa tanpa owner: robot uji-pulih DIBUAT & DIUJI, bahan pengajuan domain SIAP, Vercel diukur ulang
 
-**Belum di-push.** Perubahannya ada di komputer owner, menunggu izin rilis.
-Gerbang §6 sudah dijalankan utuh (hasil di bawah).
+✅ **DIRILIS 2026-10-16 di `700ad2c`** atas izin owner — dual push tuntas ke `origin` +
+`dramaku`, fast-forward, nol paksaan, selisih 0/0 (diverifikasi SESUDAH push). 3 commit:
+`b167d61` robot uji-pulih · `09b3605` pengingat Vercel · `700ad2c` dokumen.
+**Penjaga Kebocoran Rahasia success** — pemeriksa yang semula akan merah. Kedua platform
+**success**: Vercel + Railway. Rincian rilis & rollback: `antrean-deploy.md`.
 
 ### Yang berubah — 5 berkas baru, 4 dokumen diperbarui
 
@@ -167,8 +170,7 @@ nol berkas env ter-stage · nol pola nilai rahasia.
 - **Uji pulih tidak dijalankan** — tak ada Supabase project kosong, dan
   membuatnya butuh akun owner.
 - **Domain tidak dibeli** — itu keputusan + uang atasan owner.
-- **Tidak ada yang di-push** — push ke `origin main` = tombol rilis, butuh izin
-  owner di sesi itu juga.
+- ~~Tidak ada yang di-push~~ → **owner memberi izin, DIRILIS `700ad2c`** (lihat atas).
 
 ### ✅ DIKERJAKAN atas persetujuan owner: pengingat otomatis untuk 2026-11-26
 
@@ -208,6 +210,12 @@ pengukuran gagal → Issue tetap dibuat dan ditandai *"tidak terukur"* (bukan
 mengarang angka) · Vercel menjawab 200 → statusnya dilaporkan apa adanya.
 SHA `actions/github-script` diverifikasi ada di repo action-nya, dan sama dengan
 yang sudah dipakai `audit-access.yml`.
+
+🧪 **Diuji LANGSUNG di GitHub sesudah rilis, bukan cuma di harness lokal** — run
+`38827828114` (dipicu manual 2026-10-16): **success**, baris log runtime-nya
+`Belum waktunya: 2026-10-16 < 2026-11-26. Tidak ada Issue dibuat.`, dan jumlah Issue
+repo tetap **4** sesudahnya. Satu run itu membuktikan tiga hal sekaligus: gerbang
+tanggalnya memilih jalur yang benar, SHA action-nya sah, dan `permissions`-nya cukup.
 
 ⚠️ **Utang teknis yang DISENGAJA: uji 7 skenario itu TIDAK dijadikan tes
 permanen.** Skripnya ada di dalam YAML, jadi menjalankannya dari `npm test`

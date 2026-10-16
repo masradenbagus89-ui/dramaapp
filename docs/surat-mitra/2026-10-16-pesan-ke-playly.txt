@@ -1,0 +1,91 @@
+Halo Vio & tim Playly,
+
+Ada dua hal dari sisi kami. Keduanya kecil dan berdiri sendiri.
+
+
+====================================================================
+HAL 1 - Mohon daftarkan alamat baru situs kami
+====================================================================
+
+Situs penonton DramaKu sudah pindah hosting ke Railway. Alamat barunya:
+
+    https://dramaapp-production-9e88.up.railway.app
+
+Alamat ini belum ada di daftar domain mitra kalian, jadi penyematan video
+dari sana masih dijawab halaman "Situs ini belum diizinkan". Kami sudah
+melihatnya langsung di panel admin kami.
+
+Bisa dicek sendiri. Dua perintah di bawah bedanya HANYA di baris Referer:
+
+    # alamat BARU kami -> muncul "belum diizinkan"
+    curl -s -H "Referer: https://dramaapp-production-9e88.up.railway.app/"       https://playly-hosting-video.up.railway.app/id/1792063568974/embed       | grep -o "belum diizinkan"
+
+    # alamat LAMA kami -> player termuat normal
+    curl -s -H "Referer: https://dramaapp.vercel.app/"       https://playly-hosting-video.up.railway.app/id/1792063568974/embed       | grep -o "<video"
+
+Yang kami minta:
+
+  1. TAMBAHKAN alamat Railway di atas ke daftar domain mitra.
+
+  2. JANGAN hapus dramaapp.vercel.app dulu. Alamat lama masih kami pakai
+     sebagai pengalihan sampai sekitar akhir November, jadi lebih aman
+     kalau keduanya terdaftar selama masa itu.
+
+  3. Mohon ditulis LENGKAP sampai subdomain, yaitu
+     dramaapp-production-9e88.up.railway.app
+     Jangan hanya up.railway.app. Kalau pencocokannya memakai akhiran,
+     mendaftarkan up.railway.app saja akan meloloskan aplikasi Railway
+     milik siapa pun. Kami sudah kena hampir-hampir soal ini di sisi kami
+     dan sekarang menguncinya dengan tes.
+
+Seberapa mendesak, jujurnya: penonton TIDAK terdampak sekarang. Halaman
+tonton kami memakai pemutar sendiri, bukan iframe, dan itu jalan normal.
+Yang terkena baru pratinjau di panel admin kami.
+
+Tapi ada tenggatnya. Setelah dramaapp.vercel.app kami tutup (paling cepat
+26 November), tidak ada lagi satu pun alamat kami yang terdaftar di sisi
+kalian. Jadi tidak darurat hari ini, tapi sebaiknya tidak menunggu sampai
+bulan depan.
+
+Info ke depan supaya tidak mengagetkan: kalau nanti kami jadi membeli
+domain sendiri, akan ada satu permintaan serupa sekali lagi. Kami kabari
+kalau sudah pasti.
+
+
+====================================================================
+HAL 2 - 12 video tidak punya sampul (thumbnail)
+====================================================================
+
+Di halaman depan kami ada 20 video. 8 sampulnya tampil normal, 12 kosong.
+Yang kosong:
+
+    1.  The Runner
+    2.  Rush Hour 2
+    3.  Novocaine
+    4.  Mortal Kombat
+    5.  Mayday
+    6.  Karate Kid Legends
+    7.  Heads Of State
+    8.  Ghosted
+    9.  Dungeons Dragons Honor Among Thieves
+    10. Civil War
+    11. William Tell
+    12. The Tomorrow War
+
+Kami sudah menyingkirkan kemungkinan dari sisi kami:
+
+  - Pembaca sampul kami menerima tujuh nama field (thumbnail, thumbnailUrl,
+    thumbnail_url, thumb, poster, cover, image) DAN bentuk bersarang
+    seo.thumbnailUrl - perbaikan yang kami pasang 6 Oktober.
+
+  - Kalau pembacanya rusak, yang kosong pasti SEMUA, bukan 12 dari 20.
+
+  - Alamat sampul yang ada pun terbukti sehat. Kami unduh satu: HTTP 200,
+    image/jpeg, 69 KB.
+
+Jadi dugaan kami: 12 video itu memang belum punya sampul di sisi kalian.
+Mohon dicek. Kami tidak bisa memastikannya sendiri karena /api/catalog
+sekarang meminta API key.
+
+
+Terima kasih banyak!

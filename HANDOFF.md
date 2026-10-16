@@ -102,7 +102,25 @@ Playly adalah **Vercel** — alamat yang akan ditutup. Sesudah itu nol alamat ki
 yang terdaftar, dan jalur iframe mati tanpa jalan mundur cepat (pendaftaran ada di
 sisi mitra, bukan sesuatu yang bisa kita ubah sendiri).
 
-📨 **DRAF SIAP KIRIM (2026-10-16): `docs/surat-mitra/2026-10-16-minta-daftarkan-domain-railway.md`**
+✅ **DIKONFIRMASI OWNER DENGAN MATA SENDIRI (2026-10-16).** Owner membuka
+`/admin/videos/playly` → klik video **The Runner** → kotak "Video terpilih"
+menampilkan **"Situs ini belum diizinkan"**. Jadi temuan ini tidak lagi
+bersandar pada pengukuran AI saja. videoId yang terlihat: `1792063568974` —
+diuji ulang dan hasilnya sama (Railway DIBLOKIR, Vercel lolos).
+
+📨 **BERKAS SIAP KIRIM — `docs/surat-mitra/2026-10-16-pesan-ke-playly.txt`**
+Teks polos **ASCII murni + CRLF** (owner minta bentuk notepad supaya mudah
+dikirim dan tidak salah paste): nol markdown, nol emoji, nol em-dash, nol kutip
+melengkung — jadi tak ada karakter yang berubah jadi simbol aneh saat ditempel ke
+chat/email. 91 baris. Owner tinggal buka di Notepad → Ctrl+A → Ctrl+C.
+Dua perintah `curl` di dalamnya **dijalankan persis seperti tertulis di berkas**
+(termasuk pemenggalan barisnya) dan keduanya bekerja — bukan ditulis dari ingatan.
+Isinya 2 permintaan: daftarkan alamat Railway, dan 12 sampul kosong.
+
+Versi `.md`-nya (`...-minta-daftarkan-domain-railway.md`) tetap disimpan sebagai
+arsip + konteks internal yang **tidak** ikut dikirim.
+
+📄 Catatan draf lama: `docs/surat-mitra/2026-10-16-minta-daftarkan-domain-railway.md`
 Owner tinggal menyalin blok "Pesan siap kirim" ke chat. Sengaja **pendek** — surat
 `2026-10-01-surat-ke-playly.md` panjangnya 170 baris dan **tak pernah jadi dikirim**;
 keputusan owner saat itu: *"cukup beberapa kalimat lewat chat"*. Isinya memuat dua

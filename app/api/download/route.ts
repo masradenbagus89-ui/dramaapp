@@ -11,7 +11,13 @@ export const maxDuration = 60;
 //
 // KENAPA diubah dari proxy jadi redirect (2026-08-26): versi lama menyalurkan
 // isi episode lewat server (`new NextResponse(upstream.body)`) — satu unduhan
-// 300 MB = 3% jatah bulanan Vercel terbakar sekaligus. Route ini memang jarang
+// 300 MB = 3% jatah bulanan Vercel terbakar sekaligus.
+//
+// ⚠️ Alasan itu TETAP BERLAKU sesudah pindah ke Railway (2026-10) — jangan
+// dikira gugur cuma karena platformnya ganti. Yang berubah hanya nama tagihannya:
+// bandwidth & jam CPU container juga dihitung, dan menyalurkan ratusan MB lewat
+// server tetap membayar untuk sesuatu yang bisa dilayani langsung oleh tunnel.
+// Route ini memang jarang
 // terpakai (lib/video.ts:21 sudah mengarahkan tombol Unduh LANGSUNG ke tunnel
 // selama alamatnya ada), tapi justru itu bahayanya: ia jalur cadangan yang
 // menyala persis saat keadaan sedang kacau — dan waktu itu tak ada yang
@@ -51,9 +57,14 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  // Tanpa tunnel = mode lokal/dev: baca dari public/videos. Jalur ini TIDAK
-  // pernah aktif di Vercel (filesystem-nya read-only dan folder itu tak berisi
-  // video), jadi tak ada byte besar yang bisa lewat sini di produksi.
+  // Tanpa tunnel = mode lokal/dev: baca dari public/videos.
+  //
+  // Jalur ini tidak aktif di server, tapi SEBABNYA berubah 2026-10-16 dan itu
+  // perlu dicatat: dulu karena filesystem Vercel read-only (jaminan platform),
+  // sekarang karena `public/videos` memang KOSONG di container — nol berkas
+  // ter-track di git. Jaminan itu lebih lemah: apa pun yang berhasil MENULIS ke
+  // folder tersebut akan menghidupkan jalur ini, dengan isi yang lenyap tiap
+  // deploy. Itulah yang dipagari di lib/unggah-lokal.ts — jangan dilepas.
   try {
     const p = join(process.cwd(), "public", "videos", id, fileName);
     const buf = await readFile(p);

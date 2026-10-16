@@ -9,13 +9,20 @@ import {
   type Drama,
 } from "@/lib/dramas";
 import { isAdminRequest } from "@/lib/session";
+import { alasanTolakUnggahKeDisk } from "@/lib/unggah-lokal";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// Catatan: route ini menulis berkas ke disk (public/videos, public/posters) +
-// data/dramas.json, jadi hanya berfungsi di lingkungan LOKAL (filesystem Vercel
-// read-only). UI live memakai /api/admin/drama (berbasis GitHub API).
+// Route ini menulis berkas ke disk (public/videos, public/posters), jadi hanya
+// untuk dipakai di komputer sendiri. UI live memakai /api/admin/drama.
+//
+// ⚠️ Sampai 2026-10-16 baris ini berbunyi "hanya berfungsi di lingkungan LOKAL
+// (filesystem Vercel read-only)" — dan kalimat itu BUKAN sekadar catatan,
+// melainkan satu-satunya pengaman route ini. Pindah ke Railway mencabutnya:
+// disk container BISA ditulis, jadi unggahan akan BERHASIL lalu hilang senyap
+// pada deploy berikutnya. Pagar di bawah menggantikan jaminan platform yang
+// sudah tidak ada itu. Alasan lengkap: lib/unggah-lokal.ts
 
 const VIDEO_EXT_RE = /\.(mp4|mov|webm|m4v)$/i;
 const IMAGE_EXT_RE = /\.(png|jpe?g|webp)$/i;
@@ -25,6 +32,17 @@ export async function POST(req: NextRequest) {
     if (!(await isAdminRequest(req))) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    // Sesudah cek admin (jangan beri tahu orang asing soal lingkungan server),
+    // tapi SEBELUM membaca formData — badan permintaan di sini bisa berukuran
+    // video utuh, dan tak ada gunanya menelan ratusan MB untuk kemudian ditolak.
+    const tolak = alasanTolakUnggahKeDisk({
+      produksi: process.env.NODE_ENV === "production",
+    });
+    if (tolak) {
+      return NextResponse.json({ error: tolak }, { status: 503 });
+    }
+
     const form = await req.formData();
     const title = String(form.get("title") ?? "").trim();
     const category = String(form.get("category") ?? "Romance").trim();

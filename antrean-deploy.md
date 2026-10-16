@@ -4,9 +4,38 @@
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
 **Terakhir dicek:** 2026-10-16 malam (**komputer OWNER**) — **ANTREAN KOSONG, DUAL PUSH TUNTAS.**
-Lokal = `origin/main` = `dramaku/main` = **`8391875`** (selisih **0/0** ke kedua remote).
+Lokal = `origin/main` = `dramaku/main` = **`95d3b29`** (selisih **0/0** ke kedua remote).
 Catatan `10ed638` di bawah sudah basi — sesudahnya menyusul `7858944`, `4d88ca8`, `a93a2e5`,
 lalu rilis 2026-10-16 di bawah ini.
+
+✅ **DIRILIS 2026-10-16 (ke-4) — `/api/admin/upload` DIHAPUS, di `95d3b29`.**
+Dual push tuntas, fast-forward `b984725..95d3b29`, nol paksaan, selisih **0/0**.
+4 berkas dihapus (359 baris) + 3 berkas disesuaikan.
+
+Atas keputusan owner, dan **dibuktikan dulu** (lima bukti: nol pemanggil · nol form admin ·
+jalur asli `/api/admin/drama` · catatan repo sendiri "mati di produksi" · nol tes).
+
+**Bukti TAYANG — inilah yang paling menentukan:**
+
+| Diukur sesudah deploy | Hasil |
+|---|---|
+| `POST /api/admin/upload` | **404** — benar-benar hilang (sebelumnya 401) |
+| `POST /api/admin/drama` (jalur yang DIPAKAI) | **401** — tidak tersentuh |
+| `/api/health` | `sumberData: database` |
+| `/`, `/film`, `/discover` | **200** |
+| Vercel · Railway · Penjaga Kebocoran Rahasia | ketiganya **success** |
+
+⚠️ **Jumlah tes TURUN 102→100 berkas, 1473→1466. Itu BUKAN kemunduran** — 7 tes itu
+menguji pagar yang kodenya sudah tidak ada. Cakupan atas kode yang masih hidup tidak
+berubah. Jangan dibaca sebagai regresi di sesi berikutnya.
+
+📌 **Sisa untuk owner:** bahan presentasi masih menyebut endpoint ini di 4 tempat
+(`presentasi/build_pptx.py:533,552` + naskah `.md`/`.txt:102`). Sengaja tidak disentuh —
+itu materi bicara owner. Tapi `build_pptx.py` generator yang masih hidup.
+
+**Rollback 1-baris:** `git revert --no-edit 95d3b29` mengembalikan keempat berkas utuh.
+
+---
 
 ✅ **DIRILIS 2026-10-16 (ke-3) — SISA AUDIT + HASIL PLAYLY, di `8391875`.**
 Dual push tuntas, fast-forward `26eaf6a..8391875`, nol paksaan, selisih **0/0** (diverifikasi

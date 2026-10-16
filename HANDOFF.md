@@ -102,13 +102,41 @@ Dua komentar yang menunjuk `lib/unggah-lokal.ts` ikut diperbarui
 yang tiada. Keduanya kini menyebut hal yang lebih kuat: `public/videos` tak bisa
 terisi lagi karena **jalur tulisnya sudah dihapus**, bukan sekadar dipagari.
 
-📌 **PERLU KEPUTUSAN OWNER — bahan presentasi menyebut endpoint ini di 4 tempat:**
-`presentasi/build_pptx.py:533,552` dan `presentasi/Naskah-Pembicara-PerSlide.md/.txt:102`
-(*"/api/admin/upload (poster/aset)"*). **Sengaja TIDAK disentuh** — itu materi yang
-mungkin sudah dipresentasikan, dan mengubah naskah bicara owner bukan keputusan AI.
-Tapi `build_pptx.py` adalah **generator yang masih hidup**: dijalankan lagi, ia akan
-membuat slide yang menyebut endpoint yang tak ada. Perlu dibereskan kalau presentasi
-itu masih akan dipakai.
+### ✅ Presentasi ikut dibereskan — owner: "masih dipakai"
+
+Owner menjawab bahwa bahan presentasi masih dipakai, jadi sebutan endpoint yang
+sudah tiada dibereskan. **Saat memeriksanya ketemu yang lebih penting: klaim
+KEAMANAN yang menggambarkan sistem lebih lemah daripada kenyataannya.**
+
+| Klaim lama di presentasi | Kenyataan (diverifikasi di `lib/session.ts`) |
+|---|---|
+| *"header `x-admin-email` dicocokkan ke `admins.json`"* | **cookie HttpOnly bertanda tangan HMAC**; diperiksa tanda tangan, masa berlaku, `role=admin`, DAN email masih terdaftar admin (mencabut admin = langsung putus akses) |
+
+Bedanya bukan kosmetik: **header bisa diketik siapa saja, tanda tangan tidak bisa
+dipalsukan tanpa kunci server.** Kode di `lib/session.ts:5` sendiri menulis *"Route
+admin memverifikasi tanda tangan cookie ini (BUKAN header yang mudah dipalsukan)"*.
+Mempresentasikan versi lama = menjelaskan model keamanan yang keliru ke audiens.
+
+Diperbarui di **5 berkas**: `build_pptx.py` (slide + catatan pembicara),
+`Naskah-Pembicara-PerSlide.md`, `.txt`, `Cheat-Sheet-1-Lembar.txt`,
+`Materi-Presentasi-DramaApp.md`. Sebutan `/api/admin/upload` diganti
+`/api/admin/playly/videos` (endpoint nyata, dicek dari `find app/api/admin`), dan
+"Unggah aset" di daftar fungsi panel admin diganti "Kelola video mitra Playly".
+`build_pptx.py` diverifikasi masih sah dengan `python -m py_compile`.
+
+⚠️ **MASIH USANG, SENGAJA TIDAK DISENTUH — perlu keputusan owner.** Presentasi juga
+menggambarkan arsitektur **sebelum Supabase**, dan ini bukan satu-dua kata:
+
+| Tempat | Klaim | Kenyataan |
+|---|---|---|
+| `Cheat-Sheet-1-Lembar.txt:32` | *"Data: tanpa DB, semua file JSON di folder data/"* | `/api/health` → **`sumberData: database`** (Supabase) |
+| `Cheat-Sheet-1-Lembar.txt:43` | *"tanpa DB->JSON (mudah upgrade nanti)"* | upgrade-nya **sudah terjadi** |
+| `build_pptx.py:627` + naskah `:121` | *"kalau ditanya kenapa tanpa DB..."* | pertanyaannya tak berlaku lagi |
+| `Materi-Presentasi-DramaApp.md:97` | *"login disimpan di localStorage (`dramaku:user`)"* | sesi penonton pakai **cookie bertanda tangan** |
+
+Tidak diperbaiki karena **melebihi yang diminta** — itu menulis ulang bagian isi
+presentasi, bukan membereskan akibat penghapusan endpoint. Tapi kalau presentasi ini
+dipakai lagi, empat butir itu akan menyampaikan arsitektur yang salah ke audiens.
 
 **Rollback:** `git revert --no-edit <sha>` mengembalikan keempat berkas utuh.
 

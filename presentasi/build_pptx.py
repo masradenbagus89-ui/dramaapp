@@ -530,7 +530,7 @@ line(s, 7.13, 3.0, 4.95)
 adm = [
     ("/api/admin/drama", "Tambah, ubah, hapus drama (CRUD)"),
     ("/api/admin/scan", "Pindai berkas video tiap drama"),
-    ("/api/admin/upload", "Unggah poster & aset"),
+    ("/api/admin/playly/videos", "Kelola video dari mitra Playly"),
     ("/api/admin/hardlink", "Tautkan berkas video ke aplikasi"),
 ]
 py = 3.15
@@ -540,18 +540,23 @@ for ep, d in adm:
     py += 0.8
 
 txt(s, 7.13, 6.05, 5.0, 0.45,
-    [[("Proteksi: header ", 10, GRAY, False),
-      ("x-admin-email", 10, AMBER, True, MONO),
-      (" divalidasi vs admins.json", 10, GRAY, False)]])
+    [[("Proteksi: cookie sesi ", 10, GRAY, False),
+      ("HttpOnly + HMAC", 10, AMBER, True, MONO),
+      (" — tanda tangan, masa berlaku, role", 10, GRAY, False)]])
 footer(s, 8)
 notes(s, """
 API & BACKEND. Endpoint ada di app/api/* — sebagian publik, sebagian admin.
 PUBLIK: GET /api/dramas (daftar drama), /api/comments (komentar),
 /api/likes (like), /api/admins (daftar email admin).
 ADMIN (terproteksi): /api/admin/drama (CRUD drama), /api/admin/scan (pindai
-video), /api/admin/upload (poster/aset), /api/admin/hardlink (tautkan video).
-KEAMANAN: tiap request admin membawa header x-admin-email yang dicocokkan ke
-admins.json; kalau tak cocok → ditolak 401. Validasi di SERVER, bukan tampilan.
+video), /api/admin/playly/videos (video mitra), /api/admin/hardlink (tautkan
+video).
+KEAMANAN: tiap request admin membawa COOKIE SESI HttpOnly yang ditandatangani
+HMAC. Server memeriksa tanda tangannya, masa berlakunya, role=admin, DAN email
+itu masih terdaftar sebagai admin - jadi mencabut admin langsung memutus akses.
+Kenapa cookie bertanda tangan, bukan header biasa: header bisa diketik siapa
+saja; tanda tangan tidak bisa dipalsukan tanpa kunci server. Validasi di
+SERVER, bukan tampilan.
 """)
 
 # ======================================================================
@@ -653,19 +658,20 @@ card(s, 0.95, 5.25, 11.45, 1.25, fill=CARD2)
 rect(s, MSO_SHAPE.ROUNDED_RECTANGLE, 0.95, 5.25, 0.13, 1.25, fill=ROSE, radius=0.5)
 txt(s, 1.3, 5.45, 1.9, 0.4, [[("KEAMANAN", 11, ROSE, True)]])
 txt(s, 1.3, 5.78, 10.9, 0.65,
-    [[("Setiap permintaan ke API admin memuat header ", 12, LIGHT, False),
-      ("x-admin-email", 12, AMBER, True, MONO),
-      (" yang dicocokkan dengan daftar di ", 12, LIGHT, False),
-      ("admins.json", 12, AMBER, True, MONO),
-      (" — bila tidak cocok, ditolak (401 Unauthorized).", 12, LIGHT, False)]],
+    [[("Setiap permintaan ke API admin membawa ", 12, LIGHT, False),
+      ("cookie sesi HttpOnly bertanda tangan HMAC", 12, AMBER, True, MONO),
+      (". Server memeriksa tanda tangan, masa berlaku, role, dan keanggotaan admin ", 12, LIGHT, False),
+      ("— bila gagal, ditolak (401 Unauthorized).", 12, LIGHT, False)]],
     line_spacing=1.3)
 footer(s, 10)
 notes(s, """
 PANEL ADMIN. Halaman /admin = kelola konten TANPA menyentuh kode.
 Empat fungsi: Kelola drama (CRUD), Pindai video (deteksi file tersedia tiap
-drama), Unggah aset (poster/gambar), Tautkan video (hardlink file besar agar
-siap diputar). Bawah: pengingat keamanan — header x-admin-email dicocokkan ke
-admins.json, kalau gagal 401.
+drama), Kelola video mitra Playly, Tautkan video (hardlink file besar agar
+siap diputar). Bawah: pengingat keamanan — cookie sesi HttpOnly bertanda
+tangan HMAC; server memeriksa tanda tangan, masa berlaku, role, dan apakah
+email itu masih terdaftar admin. Kalau gagal 401. Kenapa bukan header biasa:
+header bisa diketik siapa saja, tanda tangan tidak bisa dipalsukan.
 Cerita evolusi (bisa diceritakan di sini): dulu tambah drama = edit file JSON +
 copy video manual; sekarang lewat form jadi praktis. Detail "3 klik" ada di
 slide Perjalanan Pembuatan.

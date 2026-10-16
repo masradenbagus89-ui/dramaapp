@@ -97,7 +97,7 @@ Struktur halaman (`app/`):
 - User login → data disimpan di **localStorage** browser (`dramaku:user`).
 - Ada 2 role: **admin** dan **viewer** (default viewer).
 - **Siapa admin ditentukan server-side**, bukan client — daftar email admin ada di `data/admins.json`. Jadi user tidak bisa mengaku-ngaku jadi admin lewat browser.
-- Setiap API admin (tambah drama, scan, hardlink, upload) **mengecek ulang** apakah email pemanggil benar-benar terdaftar sebagai admin (header `x-admin-email`). Kalau tidak → ditolak (401 Unauthorized).
+- Setiap API admin (tambah drama, scan, hardlink, kelola video Playly) **mengecek ulang** lewat **cookie sesi HttpOnly bertanda tangan HMAC**: tanda tangannya sah, belum kedaluwarsa, `role=admin`, dan email itu **masih** terdaftar sebagai admin — jadi mencabut admin langsung memutus akses. Kalau gagal → ditolak (401 Unauthorized).
 
 **Poin:** keamanan admin diverifikasi di sisi server di setiap endpoint, bukan cuma di tampilan.
 

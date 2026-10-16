@@ -99,9 +99,14 @@ API & BACKEND. Endpoint ada di app/api/* — sebagian publik, sebagian admin.
 PUBLIK: GET /api/dramas (daftar drama), /api/comments (komentar),
 /api/likes (like), /api/admins (daftar email admin).
 ADMIN (terproteksi): /api/admin/drama (CRUD drama), /api/admin/scan (pindai
-video), /api/admin/upload (poster/aset), /api/admin/hardlink (tautkan video).
-KEAMANAN: tiap request admin membawa header x-admin-email yang dicocokkan ke
-admins.json; kalau tak cocok → ditolak 401. Validasi di SERVER, bukan tampilan.
+video), /api/admin/playly/videos (video mitra), /api/admin/hardlink (tautkan
+video).
+KEAMANAN: tiap request admin membawa COOKIE SESI HttpOnly yang ditandatangani
+HMAC. Server memeriksa tanda tangannya, masa berlakunya, role=admin, DAN email
+itu masih terdaftar sebagai admin - jadi mencabut admin langsung memutus akses.
+Kenapa cookie bertanda tangan, bukan header biasa: header bisa diketik siapa
+saja; tanda tangan tidak bisa dipalsukan tanpa kunci server. Validasi di
+SERVER, bukan tampilan.
 
 ---
 
@@ -122,9 +127,11 @@ Slide 10 - Panel Admin
 
 PANEL ADMIN. Halaman /admin = kelola konten TANPA menyentuh kode.
 Empat fungsi: Kelola drama (CRUD), Pindai video (deteksi file tersedia tiap
-drama), Unggah aset (poster/gambar), Tautkan video (hardlink file besar agar
-siap diputar). Bawah: pengingat keamanan — header x-admin-email dicocokkan ke
-admins.json, kalau gagal 401.
+drama), Kelola video mitra Playly, Tautkan video (hardlink file besar agar
+siap diputar). Bawah: pengingat keamanan — cookie sesi HttpOnly bertanda
+tangan HMAC; server memeriksa tanda tangan, masa berlaku, role, dan apakah
+email itu masih terdaftar admin. Kalau gagal 401. Kenapa bukan header biasa:
+header bisa diketik siapa saja, tanda tangan tidak bisa dipalsukan.
 Cerita evolusi (bisa diceritakan di sini): dulu tambah drama = edit file JSON +
 copy video manual; sekarang lewat form jadi praktis. Detail "3 klik" ada di
 slide Perjalanan Pembuatan.

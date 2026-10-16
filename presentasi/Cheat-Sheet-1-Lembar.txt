@@ -28,7 +28,7 @@ ALUR BICARA (per slide)
   6  Arsitektur: server & client components, API routes, data JSON,
        state di localStorage
   7  Routing: nama folder = URL, 11 rute, [id]/[ep] = dinamis
-  8  API: publik vs admin; admin dicek header x-admin-email (401)
+  8  API: publik vs admin; admin dicek cookie sesi bertanda tangan (401)
   9  Data: tanpa DB, semua file JSON di folder data/
   10 Panel admin /admin: kelola konten tanpa sentuh kode
   11 Video: player HTML5, fallback otomatis ke sample

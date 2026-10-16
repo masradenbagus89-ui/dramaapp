@@ -62,9 +62,10 @@ export async function GET(req: NextRequest) {
   // Jalur ini tidak aktif di server, tapi SEBABNYA berubah 2026-10-16 dan itu
   // perlu dicatat: dulu karena filesystem Vercel read-only (jaminan platform),
   // sekarang karena `public/videos` memang KOSONG di container — nol berkas
-  // ter-track di git. Jaminan itu lebih lemah: apa pun yang berhasil MENULIS ke
-  // folder tersebut akan menghidupkan jalur ini, dengan isi yang lenyap tiap
-  // deploy. Itulah yang dipagari di lib/unggah-lokal.ts — jangan dilepas.
+  // ter-track di git, dan sejak endpoint unggah-ke-disk dihapus tak ada lagi
+  // jalur yang bisa mengisinya. Kalau suatu saat ada kode baru yang menulis ke
+  // folder itu, jalur ini ikut hidup dengan isi yang lenyap tiap deploy —
+  // pertimbangkan itu sebelum menambahkannya.
   try {
     const p = join(process.cwd(), "public", "videos", id, fileName);
     const buf = await readFile(p);

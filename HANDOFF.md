@@ -69,6 +69,54 @@ diperbaiki.
 
 ---
 
+## 2026-10-16 (malam) — `/api/admin/upload` DIHAPUS: pagarnya ikut, karena yang dijaga sudah tak ada
+
+Keputusan owner: *"kalau memang tidak terpakai lagi kamu hapus saja"*. Itu
+bersyarat, jadi **dibuktikan dulu** — lima bukti terpisah, baru dihapus:
+
+| Bukti | Hasil |
+|---|---|
+| Pemanggil di kode aplikasi | **nol** |
+| Form / halaman upload di panel admin | **nol** (nol `FormData()` di komponen admin) |
+| Jalur yang benar-benar dipakai panel | `/api/admin/drama` (`app/admin/page.tsx:190,283`) |
+| Catatan repo sendiri | *"route ini mati di produksi"* — `docs/lintasai/rencana/2026-08-26-vercel-paused-teaser-proxy.md:134` |
+| Tes yang menyentuhnya | nol (selain pagar yang dibuat pagi ini) |
+
+**4 berkas dihapus, 359 baris:** `app/api/admin/upload/route.ts` ·
+`lib/unggah-lokal.ts` · `tests/unggah-lokal.test.ts` · `tests/upload-route-pagar.test.ts`.
+Folder `app/api/admin/upload/` ikut dibersihkan.
+
+🪤 **Pagar yang baru dirilis pagi ini (`b789ec9`) ikut terhapus — dan itu BENAR.**
+Pagar itu dibuat untuk melindungi endpoint yang asumsi keselamatannya kedaluwarsa.
+Begitu endpointnya tiada, pagarnya jadi kode yang menjaga ketiadaan. **Menghapus
+akar masalahnya lebih bersih daripada merawat pagar di depan pintu yang sudah
+ditutup tembok.** Kerja pagi ini tidak sia-sia: ia yang membuat bahayanya terlihat,
+dan itu yang menuntun ke keputusan hapus.
+
+⚠️ **Jumlah tes TURUN 102→100 berkas, 1473→1466 tes. Itu bukan penurunan cakupan**
+— 7 tes itu menguji pagar yang kodenya sudah tidak ada. Cakupan atas kode yang
+MASIH hidup tidak berubah sedikit pun.
+
+Dua komentar yang menunjuk `lib/unggah-lokal.ts` ikut diperbarui
+(`app/api/download/route.ts`, `lib/store.ts`) supaya tak ada penunjuk ke berkas
+yang tiada. Keduanya kini menyebut hal yang lebih kuat: `public/videos` tak bisa
+terisi lagi karena **jalur tulisnya sudah dihapus**, bukan sekadar dipagari.
+
+📌 **PERLU KEPUTUSAN OWNER — bahan presentasi menyebut endpoint ini di 4 tempat:**
+`presentasi/build_pptx.py:533,552` dan `presentasi/Naskah-Pembicara-PerSlide.md/.txt:102`
+(*"/api/admin/upload (poster/aset)"*). **Sengaja TIDAK disentuh** — itu materi yang
+mungkin sudah dipresentasikan, dan mengubah naskah bicara owner bukan keputusan AI.
+Tapi `build_pptx.py` adalah **generator yang masih hidup**: dijalankan lagi, ia akan
+membuat slide yang menyebut endpoint yang tak ada. Perlu dibereskan kalau presentasi
+itu masih akan dipakai.
+
+**Rollback:** `git revert --no-edit <sha>` mengembalikan keempat berkas utuh.
+
+Gerbang §6: build **0** · tsc **0** · **100 berkas / 1466 tes hijau** · build hasil
+diperiksa: **nol** sebutan `admin/upload` di daftar route.
+
+---
+
 ## 2026-10-16 (sore) — PLAYLY SUDAH MEMPERBAIKI KEDUANYA: alamat Railway terdaftar + 15 sampul terisi. DIVERIFIKASI SENDIRI.
 
 Owner mengirim surat `docs/surat-mitra/2026-10-16-pesan-ke-playly.txt`; mitra

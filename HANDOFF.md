@@ -23,14 +23,14 @@ Alamat resmi: `https://dramaapp-production-9e88.up.railway.app`.
 **jangan dimatikan dulu**. Webhook Playly, sumber video PC backup, dan robot
 keepalive semuanya sudah menunjuk Railway dan terbukti jalan.
 
-### Yang tersisa — 4, semuanya TIDAK mendesak
+### Yang tersisa — 3, semuanya TIDAK mendesak
 
 | # | Pekerjaan | Yang ditunggu |
 |---|---|---|
 | 1 | **Tutup Vercel** | ≥6 minggu sejak 2026-10-15 → **paling cepat 2026-11-26**, DAN cek Google (seksi ⏰ di bawah). Nol pekerjaan teknis tersisa; diukur ulang 2026-10-15 malam dan semua sinyalnya masih benar. 🔔 **Tak perlu diingat manual lagi** — `.github/workflows/pengingat-tutup-vercel.yml` akan membuka Issue sendiri saat tanggalnya tiba |
 | 2 | **Uji pulihkan backup** | 1 Supabase project kosong. 🟢 **Robotnya SUDAH dibuat & diuji** (2026-10-15 malam) — owner tinggal 3 langkah, `docs/uji-pulihkan-backup.md` "Rute 2" |
 | 3 | **Beli domain** | persetujuan atasan owner — **BUKAN blocker apa pun**. 🟢 Bahan pengajuannya sudah disiapkan: `docs/pengajuan-domain-sendiri.md` |
-| 4 | **Playly daftarkan alamat Railway** | jawaban mitra. 📨 Draf siap kirim: `docs/surat-mitra/2026-10-16-minta-daftarkan-domain-railway.md`. Tenggat: sebelum Vercel ditutup |
+| ~~4~~ | ~~**Playly daftarkan alamat Railway**~~ | ✅ **SELESAI 2026-10-16** — didaftarkan & diverifikasi sendiri (termasuk uji anti-wildcard). Sampul 15 video ikut dibereskan mitra |
 
 ### ⛔ KEPUTUSAN OWNER — jangan ditawarkan lagi
 
@@ -66,6 +66,74 @@ diperbaiki.
 - **Edit berkas di repo ≠ hidup di PC backup.** PC backup **tidak punya folder
   repo**; script disalin manual ke `C:\Users\USER\pc-backup-agent\`. Cara
   memasang yang terbukti ada di entri ReleaseMutex.
+
+---
+
+## 2026-10-16 (sore) — PLAYLY SUDAH MEMPERBAIKI KEDUANYA: alamat Railway terdaftar + 15 sampul terisi. DIVERIFIKASI SENDIRI.
+
+Owner mengirim surat `docs/surat-mitra/2026-10-16-pesan-ke-playly.txt`; mitra
+menjawab dan mengerjakan keduanya di hari yang sama. **Klaim mereka tidak
+dipercaya begitu saja — diukur ulang dari sisi kita.**
+
+### ✅ 1. Pendaftaran domain — TERBUKTI, dan didaftarkan dengan BENAR
+
+| Yang diuji | Hasil |
+|---|---|
+| Alamat Railway kita | **LOLOS**, player termuat (sebelumnya DIBLOKIR) |
+| Alamat Vercel lama | **LOLOS** — tetap terdaftar sesuai permintaan |
+| 5 videoId berbeda | semuanya lolos → berlaku menyeluruh, bukan per-video |
+
+🔒 **Uji keamanan yang paling mudah terlewat — mereka TIDAK mendaftarkan terlalu luas:**
+
+| Referer | Hasil |
+|---|---|
+| situs Railway milik orang lain | **DIBLOKIR** ✅ |
+| situs asing acak | **DIBLOKIR** ✅ |
+| subdomain tiruan `...railway.app.jahat.com` | **DIBLOKIR** ✅ |
+
+Peringatan "tulis lengkap sampai subdomain, jangan `up.railway.app` saja" yang
+ditaruh di surat benar-benar diikuti. Kalau mereka memakai pencocokan akhiran yang
+longgar, uji pertama akan lolos — dan itu lubang nyata, bukan teori.
+
+### ✅ 2. Sampul — 15 video (bukan 12), sebabnya dari mereka, kini 0 kosong
+
+Jawaban mitra: 15 video (12 yang kita sebut + **Der Tiger**, **Civil War salinan
+kedua**, **Backrooms (2026)**). Sebabnya: video baru mendapat tautan sampul hanya
+**setelah penyegaran katalog harian** mereka, dan ke-15 video itu tayang sesudah
+penyegaran terakhir. Mereka juga menyiapkan perbaikan supaya video baru langsung
+bersampul saat tayang.
+
+Terukur sesudahnya: beranda **20 kartu / 0 placeholder** · `/film` **0 placeholder**
+(sebelumnya 12) · sampul baru dijawab **200 `image/jpeg`**.
+
+📌 **Permintaan mereka "tarik ulang datanya dari sisi kalian" SUDAH terpenuhi
+sendiri** — terbukti karena `Der Tiger` dan `Backrooms` di payload kita sudah
+memakai sampul `playly-hosting-video`, dan keduanya baru ada sesudah penyegaran
+mereka. Cache `playly:cadangan` memang menulis ulang dirinya tiap pengambilan
+berhasil. **Nol aksi manual yang perlu dikerjakan.**
+
+🪤 **Dua koreksi atas kesimpulan AI sendiri, keduanya dikoreksi oleh pengukuran:**
+
+1. Sempat disimpulkan *"poster terisi oleh pengayaan IMDb kita, jadi memuji Playly
+   keliru"*. **Salah** — penjelasan mitra benar dan justru lebih tepat: 15 video
+   itu memang belum punya sampul di sisi mereka. Keduanya kebetulan terjadi
+   berdekatan.
+2. Sempat disimpulkan permintaan sampul di surat *"kemungkinan salah alamat"*
+   karena `lib/playly-imdb.ts` mencatat Playly tak pernah mengirim thumbnail.
+   **Salah juga** — catatan itu dari 2026-10-08 dan sudah tidak berlaku penuh;
+   permintaannya tepat sasaran dan memicu perbaikan permanen di sisi mitra.
+
+Yang TETAP benar dan terukur: poster yang tampil sekarang **campuran** —
+`The Runner`, `Civil War`, `Ghosted`, `Mortal Kombat`, `The Tomorrow War` memakai
+poster IMDb (`m.media-amazon.com`, dari pengayaan sisi kita), sedangkan `Der Tiger`
+dan `Backrooms` memakai sampul Playly. Keduanya jalan berdampingan.
+
+### Sisa
+
+Butir **#4 "Playly daftarkan alamat Railway"** di tabel "Yang tersisa" → **SELESAI**.
+Belum dikerjakan: 3 pesan error ber-"(Vercel)" yang terlewat (`lib/dashboard-videos.ts:394`,
+`lib/external-video.ts:308`, `lib/playly.ts:229`) + 2 komentar berasumsi platform lama
+(`lib/supabase.ts:132`, `lib/store.ts:125` — bukan bug, hanya alasannya basi).
 
 ---
 

@@ -9,7 +9,7 @@
 >
 > **📦 Berkas ini sudah ±6.600 baris** (diukur 2026-10-15; angka lama "5.224 baris" dari 2026-10-10 sudah basi — tumbuh ±1.400 baris dalam 5 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-10-16 (rilis `700ad2c`).
+**Terakhir diisi:** 2026-10-16 (audit migrasi putaran 2).
 
 ---
 
@@ -65,6 +65,140 @@ diperbaiki.
 - **Edit berkas di repo ≠ hidup di PC backup.** PC backup **tidak punya folder
   repo**; script disalin manual ke `C:\Users\USER\pc-backup-agent\`. Cara
   memasang yang terbukti ada di entri ReleaseMutex.
+
+---
+
+## 2026-10-16 — AUDIT MIGRASI PUTARAN 2: 4 temuan baru, 2 sudah diperbaiki, 1 butuh mitra Playly, 1 butuh 1 menit owner
+
+Audit menyeluruh atas permintaan owner, **dengan mengukur situs hidup** — bukan
+membaca catatan. Audit 2026-10-15 memeriksa 9 hal dan menyatakan aman; putaran
+ini mencari yang **tidak masuk daftar itu**.
+
+### 🔴 TEMUAN 1 — gerbang domain Playly belum memuat alamat Railway (BELUM beres, butuh mitra)
+
+Playly memblokir penyematan dari domain yang belum didaftarkan **di sisi mereka**.
+Diuji dengan satu alamat embed sungguhan, 4 Referer:
+
+| Referer | Hasil |
+|---|---|
+| `dramaapp-production-9e88.up.railway.app` | 🔒 **DIBLOKIR** — "Situs ini belum diizinkan" |
+| `dramaapp.vercel.app` | ✅ lolos, player termuat |
+| situs asing acak | 🔒 diblokir (gerbangnya aktif & membedakan) |
+| tanpa Referer | lolos |
+
+⚠️ **Keduanya membalas HTTP 200** — pemantauan berbasis status code tak akan
+pernah menangkapnya.
+
+**Lingkup sebenarnya (dugaan awal AI dikoreksi oleh pengukuran):** penonton
+**TIDAK** terdampak. `/film` & `/tonton/[id]` memakai pemutar sendiri
+(`PlaylyPlayer`, sejak 2026-09-09), dan video aslinya presigned URL **Cloudflare
+R2** — diuji: **206 `video/mp4`** dengan Referer Railway, normal. Yang kena hanya
+jalur `<iframe>`: **pratinjau di panel admin** (`PlaylyVideoPicker`) dan halaman
+uji internal `/video-eksternal` (`noindex`).
+
+**Kenapa tetap harus dibereskan:** satu-satunya alamat kita yang terdaftar di
+Playly adalah **Vercel** — alamat yang akan ditutup. Sesudah itu nol alamat kita
+yang terdaftar. **Langkah: minta pengelola Playly mendaftarkan alamat Railway**
+(dan nanti domain sendiri). Ini permintaan ke pihak luar → makin cepat makin baik.
+
+### ✅ TEMUAN 2 — teks "di Vercel" di panel admin (DIPERBAIKI)
+
+8 tempat menyuruh owner mengatur env **"di Vercel"** — panel yang sudah bukan
+tempatnya, dan yang sebentar lagi tidak ada. Diganti **"panel hosting (Railway)"**.
+Yang diperbaiki: halaman webhook Playly (2×), form kunci Playly, pesan error
+`hardlink`, `scan`, `agent/video-base` (2×), `coins/topup`, komentar `lib/midtrans.ts`.
+
+🪤 **Sapuan pertama melewatkan 3 di antaranya** — grep-nya memakai pola `"di Vercel"`
+sedangkan teksnya berbunyi `"di env Vercel"`. Ketemu hanya karena hasilnya
+diperiksa ulang, bukan dipercaya.
+
+**Yang SENGAJA TIDAK diubah: catatan SEJARAH.** Kalimat seperti *"Terbukti
+2026-09-01: kunci Supabase di Vercel tertinggal versi lama"* adalah fakta yang
+sudah terjadi — mengubahnya jadi "Railway" berarti memalsukan sejarah dan
+menghapus pelajarannya. **Aturan: ganti INSTRUKSI, jangan sentuh CATATAN.**
+
+Pesan `topup` sekalian diperkuat: dulu menyarankan `ENABLE_DEMO_TOPUP=1` tanpa
+peringatan — sekarang menyebut tegas bahwa itu **hanya untuk komputer sendiri**
+dan memasangnya di server membuat koin bisa dicetak tanpa pembayaran.
+
+### ✅ TEMUAN 3 — pengaman yang kedaluwarsa tanpa satu baris kode berubah (DIPERBAIKI)
+
+`app/api/admin/upload/route.ts` menulis video ke `public/videos`. Komentarnya
+menyebut alasan kenapa itu dianggap aman: *"hanya berfungsi di lingkungan LOKAL
+(**filesystem Vercel read-only**)"*. Itu bukan sekadar catatan — itu **satu-satunya
+pengamannya**, dan ia berupa jaminan PLATFORM, bukan kode.
+
+Pindah ke Railway mencabutnya:
+
+| | dulu (Vercel) | kini (Railway, tanpa pagar) |
+|---|---|---|
+| Unggah | **GAGAL** — admin langsung tahu | **BERHASIL** |
+| Berkasnya | — | **hilang saat deploy berikutnya** |
+| Entri dramanya | — | tetap di database → katalog menunjuk video yang tak ada |
+| Pesan error | ada | **nol** |
+
+**Diperbaiki dengan memagari, bukan menghapus** (nol pemanggil di UI, tapi
+`presentasi/` masih menyebutnya sebagai kemampuan; memagari memulihkan pengaman
+tanpa menghilangkan apa pun). Pagar: `lib/unggah-lokal.ts`, dipanggil **sesudah
+cek admin** (jangan bocorkan info lingkungan ke orang asing) tapi **sebelum
+`formData()`** (badan permintaan bisa ratusan MB — tak ada gunanya ditelan lalu
+ditolak). Sejalan rak owasp A10:2025 *gagal-AMAN / default-deny*.
+
+🪤 Efek ikutan yang ikut ketemu: `app/api/download/route.ts` punya jalur cadangan
+yang menyajikan berkas dari `public/videos`. Hari ini folder itu **kosong di
+container** (nol berkas ter-track di git) — jadi jalurnya mati. Unggahan yang
+berhasil akan **MENGISINYA**, menghidupkan jalur itu dengan isi yang lenyap tiap
+deploy. Komentarnya diperbarui supaya alasannya benar.
+
+⚠️ Komentar di `download/route.ts` soal "3% jatah bulanan Vercel" **tidak dihapus**,
+tapi diberi catatan bahwa alasannya **tetap berlaku** di Railway (bandwidth & jam
+CPU container juga dihitung) — supaya tak ada yang mengembalikan proxy dengan
+alasan "kan sudah bukan Vercel".
+
+### 🟡 TEMUAN 4 — butuh 1 menit owner, dan ini yang paling mahal kalau salah
+
+`ENABLE_DEMO_TOPUP` membuat siapa pun yang login bisa **mencetak koin tanpa
+membayar**, langsung ke database produksi. Dokumen migrasi sudah menandainya
+**"JANGAN DIISI"**, dan ia memang tak pernah ada di Vercel → risiko rendah. Tapi
+yang ada baru **instruksi, bukan bukti**: AI tak punya akses panel Railway, dan
+ini tak bisa diukur dari luar tanpa akun penonton.
+
+➡️ **Owner: buka panel Railway → Variables → pastikan `ENABLE_DEMO_TOPUP` tidak ada.**
+
+### ✅ Terbukti AMAN putaran ini — jangan diperiksa ulang
+
+| Diperiksa | Hasil terukur |
+|---|---|
+| **Env parity** | 22 env dibaca kode, 21 terdaftar pindah; yang ke-22 (`ALLOW_FILE_MODE`) justru pagar yang **sengaja** dikosongkan |
+| **Cookie sesi** | host-only, **tanpa** `domain:` dipatok → nol bug lintas domain |
+| **Optimasi gambar** | jalan (`image/avif`) |
+| **ISR** | jalan (`x-nextjs-cache: STALE`), edge `sin1` |
+| **Video penonton** | 206 `video/mp4` lewat R2 |
+| **Midtrans** | belum aktif (nol kunci) → webhook pembayaran belum jadi isu |
+| **Mode berkas** | `/api/health` → `sumberData: database` |
+
+Catatan kecil, bukan masalah: gambar hasil optimasi Railway **~74% lebih besar**
+dari Vercel (38 KB vs 22 KB pada berkas yang sama), dan **tak ada lapisan CDN** di
+depan container — semua trafik sampai ke server. Keduanya konsekuensi wajar
+pindah dari platform ke container.
+
+### Gerbang §6 — urutan benar
+
+`rm -rf .next` → build **0** → tsc **0** → **102 berkas / 1473 tes hijau**
+(dari 100/1466 = +2 berkas, +7 tes) · nol env ter-stage · nol pola nilai rahasia.
+
+🪤 Dua kali tes baru merah dan **keduanya menemukan hal benar**: (1) `process.env`
+menolak ditulis lewat `defineProperty` → dipakai `vi.stubEnv`, API resmi vitest;
+(2) pagar Supabase ikut memicu saat `NODE_ENV=production` tanpa env database —
+**bukti pagar itu bekerja**; dilewati dengan `ALLOW_FILE_MODE=1`, saklar resmi
+yang memang disediakan `lib/supabase.ts:62`, bukan dengan mengakali.
+
+Pagar diuji **dua sisi** supaya terbukti MEMBEDAKAN: produksi → **503 sebelum
+badan permintaan dibaca**; development → lolos pagar sampai validasi judul (400),
+nol berkas ditulis. Tanpa sisi kedua, pagar yang keliru dan selalu menolak pun
+akan tampak hijau.
+
+**Belum di-push** — menunggu izin rilis owner.
 
 ---
 

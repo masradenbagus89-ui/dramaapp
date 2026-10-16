@@ -129,11 +129,17 @@ function baseHeaders(extra: Record<string, string> = {}): Record<string, string>
 // --- Ketahanan jalur ke Supabase -----------------------------------------
 // Angka-angka di bawah menjawab kejadian nyata 2026-09-16: server Supabase
 // berhenti menjawab query, lalu SELURUH route /api yang menyentuh database
-// balas 500 kosong setelah tepat 20 detik (batas jalan fungsi di Vercel).
-// Tanpa batas waktu sendiri, kita mati di tengah jalan tanpa sempat memberi
-// pesan; dengan batas ini kita yang menyerah baik-baik sambil menjelaskan.
+// balas 500 kosong setelah tepat 20 detik — waktu itu karena batas jalan
+// fungsi di Vercel memotongnya.
+//
+// ⚠️ SESUDAH PINDAH KE RAILWAY (2026-10), batas platform itu TIDAK ADA lagi.
+// Jangan dibaca sebagai "berarti batas di bawah tak perlu" — kebalikannya:
+// dulu ia lapis KEDUA di belakang pemotong platform, sekarang ia SATU-SATUNYA
+// yang menghentikan permintaan yang menggantung. Tanpa ini, permintaan bisa
+// tergantung jauh lebih lama daripada 20 detik, dan penonton cuma melihat
+// halaman yang tak kunjung selesai.
 
-/** Batas satu request ke Supabase — sengaja jauh di bawah batas fungsi Vercel. */
+/** Batas satu request ke Supabase. Lihat catatan di atas: kini pelindung tunggal. */
 const BATAS_WAKTU_MS = 6_000;
 
 /** 2 = sekali coba + sekali ulang. Terburuk ~12,3 detik, masih di bawah 20. */

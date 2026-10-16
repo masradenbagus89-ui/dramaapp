@@ -305,7 +305,7 @@ export async function fetchExternalVideos(
 ): Promise<NormalizeResult> {
   if (!config.apiUrl) {
     throw new ExternalVideoError(
-      "EXTERNAL_VIDEO_API_URL belum di-set. Isi dulu di .env.local (lokal) atau Environment Variables (Vercel).",
+      "EXTERNAL_VIDEO_API_URL belum di-set. Isi dulu di .env.local (lokal) atau Environment Variables di panel hosting (Railway).",
       503,
     );
   }

@@ -121,8 +121,13 @@ async function sbDocSet<T>(key: string, value: T): Promise<void> {
 }
 
 /**
- * Baca dokumen; kalau belum ada di Supabase, seed sekali dari file JSON bawaan
- * (file/ ikut ke deploy = read-only di Vercel, jadi aman dipakai sbg seed awal).
+ * Baca dokumen; kalau belum ada di Supabase, seed sekali dari file JSON bawaan.
+ *
+ * Berkas seed ikut terbawa ke deploy dan hanya DIBACA di sini. Catatan lama
+ * menyebut alasannya "read-only di Vercel" — itu jaminan platform yang sudah
+ * TIDAK berlaku di Railway (disk container bisa ditulis). Yang menjaganya kini
+ * cuma kenyataan bahwa tak ada jalur tulis ke sana selama Supabase aktif; pagar
+ * untuk jalur tulis yang nyata ada di lib/unggah-lokal.ts.
  */
 async function sbDocGetOrSeed<T>(key: string, seed: () => T): Promise<T> {
   const v = await sbDocGet<T>(key);

@@ -226,7 +226,7 @@ function requireEncryptionKey(): Buffer {
     throw new PlaylyError(
       "PLAYLY_ENCRYPTION_KEY belum di-set (atau panjangnya bukan 32 byte). " +
         "Buat dengan: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\" " +
-        "lalu isikan di .env.local (lokal) atau Environment Variables (Vercel).",
+        "lalu isikan di .env.local (lokal) atau Environment Variables di panel hosting (Railway).",
       503,
     );
   }

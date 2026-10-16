@@ -391,7 +391,7 @@ async function ambilJson(
 function wajibAdaConfig(config: DashboardConfig): void {
   if (!config.apiUrl) {
     throw new DashboardError(
-      "DASHBOARD_API_URL belum di-set. Isi di .env.local (lokal) atau Environment Variables (Vercel).",
+      "DASHBOARD_API_URL belum di-set. Isi di .env.local (lokal) atau Environment Variables di panel hosting (Railway).",
       503,
     );
   }

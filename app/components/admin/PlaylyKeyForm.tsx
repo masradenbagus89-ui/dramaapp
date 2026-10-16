@@ -184,7 +184,7 @@ export default function PlaylyKeyForm({
                 database. Tanpa ini, penyimpanan akan ditolak. Buat satu dengan
                 perintah di bawah, lalu isikan di berkas{" "}
                 <code className="text-amber-200">.env.local</code> (lokal) atau
-                Environment Variables di Vercel:
+                Environment Variables di panel hosting (Railway):
               </p>
               <code className="mt-2 block overflow-x-auto rounded bg-black/40 p-2 text-[11px] text-amber-200">
                 {PERINTAH_BUAT_KUNCI}

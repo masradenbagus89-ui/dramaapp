@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json(
     {
       error:
-        "Pembayaran belum aktif. Set MIDTRANS_SERVER_KEY + MIDTRANS_CLIENT_KEY di Vercel (atau ENABLE_DEMO_TOPUP=1 untuk uji coba).",
+        "Pembayaran belum aktif. Set MIDTRANS_SERVER_KEY + MIDTRANS_CLIENT_KEY di panel hosting (Railway). ENABLE_DEMO_TOPUP=1 hanya untuk uji coba di komputer sendiri — JANGAN dipasang di server, itu membuat koin bisa dicetak tanpa pembayaran.",
     },
     { status: 501 },
   );

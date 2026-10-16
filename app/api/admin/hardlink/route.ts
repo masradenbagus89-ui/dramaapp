@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "Alamat sumber video belum ada. PC backup belum pernah melapor, dan NEXT_PUBLIC_VIDEO_BASE_URL juga kosong di env Vercel.",
+            "Alamat sumber video belum ada. PC backup belum pernah melapor, dan NEXT_PUBLIC_VIDEO_BASE_URL juga kosong di Environment Variables panel hosting (Railway).",
         },
         { status: 500 },
       );
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "HARDLINK_AGENT_SECRET belum di-set di Vercel env vars. Set token yang sama dengan agent di PC backup.",
+            "HARDLINK_AGENT_SECRET belum di-set di Environment Variables panel hosting (Railway). Set token yang sama dengan agent di PC backup.",
         },
         { status: 500 },
       );

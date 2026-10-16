@@ -56,8 +56,11 @@ const WINDOW_MS = 60_000;
 
 function clientIp(req: NextRequest): string {
   const fwd = req.headers.get("x-forwarded-for");
-  // Rantai "klien, proxy1, proxy2" — yang pertama klien asli menurut Vercel.
-  // Tetap dianggap usaha-terbaik saja, bukan identitas tepercaya.
+  // Rantai "klien, proxy1, proxy2" — entri PERTAMA klien asli; itu konvensi
+  // X-Forwarded-For dan berlaku sama di proxy Railway maupun Vercel, jadi
+  // pindah hosting tidak mengubah baris ini.
+  // Tetap dianggap usaha-terbaik saja, bukan identitas tepercaya: header ini
+  // dikirim klien dan BISA dipalsukan (rak owasp) — jangan jadikan dasar izin.
   return fwd?.split(",")[0]?.trim() || "tanpa-ip";
 }
 
@@ -81,7 +84,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         error:
-          "HARDLINK_AGENT_SECRET belum di-set di env Vercel. Set token yang sama dengan yang dipakai agent di PC backup.",
+          "HARDLINK_AGENT_SECRET belum di-set di Environment Variables panel hosting (Railway). Set token yang sama dengan yang dipakai agent di PC backup.",
       },
       { status: 500 },
     );
@@ -160,7 +163,7 @@ export async function POST(req: NextRequest) {
  * Lihat alamat yang sedang berlaku + kapan terakhir berubah. Khusus admin.
  *
  * Field `dipakai` adalah SATU-SATUNYA cara melihat alamat yang benar-benar
- * disajikan ke penonton. Env var di dashboard Vercel BUKAN sumber kebenaran lagi
+ * disajikan ke penonton. Env var di panel hosting BUKAN sumber kebenaran lagi
  * kalau baris DB terisi — periksa di sini dulu sebelum menyimpulkan apa pun.
  */
 export async function GET(req: NextRequest) {

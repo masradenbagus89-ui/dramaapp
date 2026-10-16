@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(
         {
           error:
-            "Alamat sumber video belum ada. PC backup belum pernah melapor, dan NEXT_PUBLIC_VIDEO_BASE_URL juga kosong di env Vercel.",
+            "Alamat sumber video belum ada. PC backup belum pernah melapor, dan NEXT_PUBLIC_VIDEO_BASE_URL juga kosong di Environment Variables panel hosting (Railway).",
         },
         { status: 500 },
       );

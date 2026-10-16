@@ -1,6 +1,6 @@
 // Integrasi Midtrans (Snap) — tanpa dependency, pakai REST API + node:crypto.
 //
-// Env var yang dibutuhkan (di Vercel):
+// Env var yang dibutuhkan (di panel hosting — Railway):
 //   MIDTRANS_SERVER_KEY      : Server Key dari dashboard Midtrans (RAHASIA)
 //   MIDTRANS_CLIENT_KEY      : Client Key (dipakai snap.js di browser; tidak rahasia)
 //   MIDTRANS_IS_PRODUCTION   : "1" untuk akun production, kosong/0 untuk sandbox

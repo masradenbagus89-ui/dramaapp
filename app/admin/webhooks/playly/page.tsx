@@ -101,7 +101,7 @@ export default async function PlaylyWebhookPage() {
                   <code className="rounded bg-black/30 px-1.5 py-0.5 text-xs">
                     PLAYLY_WEBHOOK_SECRET
                   </code>{" "}
-                  di Vercel, lalu{" "}
+                  di panel hosting (Railway), lalu{" "}
                   <strong className="text-rose-50">deploy ulang</strong> — env baru
                   tidak aktif sampai situsnya dibangun ulang.
                 </li>
@@ -183,8 +183,8 @@ export default async function PlaylyWebhookPage() {
             ditampilkan di layar mana pun — termasuk halaman ini. Yang bisa
             diketahui dari sini hanya sudah terpasang atau belum. Kunci yang pernah
             tampil di layar berarti pernah keluar dari server, dan itu tak bisa
-            ditarik kembali. Kalau kuncinya lupa, ganti dengan yang baru di Vercel
-            lalu beri tahu Playly — jangan mencari yang lama.
+            ditarik kembali. Kalau kuncinya lupa, ganti dengan yang baru di panel
+            hosting (Railway) lalu beri tahu Playly — jangan mencari yang lama.
           </p>
         </section>
 

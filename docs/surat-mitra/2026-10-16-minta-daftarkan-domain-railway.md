@@ -54,11 +54,66 @@
 > Satu info ke depan supaya tidak mengagetkan: kalau nanti kami jadi membeli domain
 > sendiri, akan ada satu permintaan serupa sekali lagi — kami kabari kalau sudah pasti.
 >
+> ---
+>
+> **Hal kedua — 12 video tidak punya sampul (thumbnail).**
+>
+> Di halaman depan kami ada 20 video; **8 sampulnya tampil normal, 12 kosong**.
+> Yang kosong:
+>
+> ```
+> The Runner · Rush Hour 2 · Novocaine · Mortal Kombat · Mayday
+> Karate Kid Legends · Heads Of State · Ghosted
+> Dungeons Dragons Honor Among Thieves · Civil War · William Tell
+> The Tomorrow War
+> ```
+>
+> Kami sudah menyingkirkan kemungkinan dari sisi kami: pembaca sampul kami
+> menerima tujuh nama field (`thumbnail`, `thumbnailUrl`, `thumb`, `poster`,
+> `cover`, dll) **dan** bentuk bersarang `seo.thumbnailUrl` — perbaikan yang
+> kami pasang 6 Oktober setelah diskusi dengan kalian. Kalau pembacanya rusak,
+> yang kosong pasti **semua**, bukan 12 dari 20. Alamat sampul yang ada pun
+> terbukti sehat (kami unduh satu: 200, `image/jpeg`, 69 KB).
+>
+> Jadi dugaan kami: 12 video itu memang belum punya sampul di sisi kalian.
+> Mohon dicek — kami tidak bisa memastikannya sendiri karena `/api/catalog`
+> sekarang meminta API key.
+>
 > Terima kasih!
 
 ---
 
+> 💡 **Kalau owner mau mengirim permintaan pertama saja**, blok "Hal kedua" bisa
+> dihapus tanpa merusak apa pun — keduanya berdiri sendiri.
+
+---
+
 ## Konteks untuk kita sendiri (jangan ikut dikirim)
+
+### Hal kedua: 12 sampul kosong — bagaimana kemungkinan lain disingkirkan
+
+Ditemukan 2026-10-16 saat owner melihat halaman depan: 12 kartu berisi kotak abu
+berikon film. Itu placeholder `KartuVideo.tsx:47` — digambar persis ketika
+`video.thumbnail` kosong.
+
+| Kemungkinan | Diuji | Hasil |
+|---|---|---|
+| Akibat migrasi Vercel → Railway | alamat sampul diambil dengan 3 Referer berbeda | ❌ bukan — 200 `image/jpeg` di semua |
+| Gerbang domain Playly | sama seperti di atas | ❌ bukan — sampul tidak kena gerbang |
+| `next/image` menolak host baru Playly | baca `KartuVideo.tsx:23` | ❌ bukan — memakai `<img>` biasa, `remotePatterns` tak berlaku |
+| CSP / COEP situs kita memblokir | baca header respons beranda | ❌ bukan — **nol** header CSP/COEP |
+| Browser owner memblokir | owner membuka alamat sampul langsung | ❌ bukan — gambar tampil normal |
+| Pembaca sampul kita rusak | hitung kartu | ❌ bukan — **8 dari 20 tampil**; kalau pembacanya rusak, yang kosong semua |
+| **12 video itu memang tanpa sampul di Playly** | — | ✅ **dugaan tersisa** |
+
+⚠️ **Batas jujur:** dugaan terakhir **belum diverifikasi dari sumber**. `/api/catalog`
+Playly kini menolak tanpa API key (`missing_key`), jadi isi katalog mereka tak bisa
+dibaca dari sini. Karena itu suratnya **meminta mereka mengecek**, bukan menyatakan
+sebagai fakta.
+
+📌 Catatan sejarah yang relevan: `lib/playly.ts:713` mencatat bahwa per 2026-10-06
+`seo.thumbnailUrl` terisi di **169 dari 172 video** — jadi sampul kosong di sebagian
+kecil video memang sudah pernah terjadi, dan jumlahnya bisa berubah.
 
 ### Apa yang sebenarnya terjadi
 

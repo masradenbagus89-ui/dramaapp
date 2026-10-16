@@ -187,6 +187,37 @@ Owner membuka Railway → Variables: **14 Service Variables**, dan `ENABLE_DEMO_
 📌 Catatan untuk seksi penyegelan variabel di atas: angkanya kini **14, bukan 13** —
 `NEXT_PUBLIC_SITE_URL` ditambahkan 2026-10-15.
 
+### 🔎 TEMUAN 5 (2026-10-16 sore) — 12 sampul video kosong: BUKAN akibat migrasi
+
+Owner melihat 12 kartu berisi kotak abu berikon film di halaman depan. Itu
+placeholder `KartuVideo.tsx:47`, digambar persis saat `video.thumbnail` kosong.
+Enam kemungkinan diuji dan **semuanya tersingkir**:
+
+| Kemungkinan | Hasil |
+|---|---|
+| Akibat migrasi / gerbang domain Playly | ❌ alamat sampul **200 `image/jpeg`** dari 3 Referer berbeda |
+| `next/image` menolak host baru Playly | ❌ memakai `<img>` biasa — `remotePatterns` tak berlaku |
+| CSP / COEP situs kita | ❌ **nol** header CSP/COEP di respons |
+| Browser owner memblokir | ❌ owner buka alamat sampul langsung → gambar tampil |
+| Pembaca sampul kita rusak | ❌ **8 dari 20 kartu tampil** — kalau rusak, kosong semua |
+| **12 video memang tanpa sampul di Playly** | ✅ dugaan tersisa |
+
+⚠️ **Dugaan terakhir BELUM diverifikasi dari sumber** — `/api/catalog` Playly kini
+menolak tanpa API key (`missing_key`). Karena itu surat ke mitra **meminta mereka
+mengecek**, bukan menyatakannya sebagai fakta. Daftar 12 judulnya sudah masuk ke
+`docs/surat-mitra/2026-10-16-minta-daftarkan-domain-railway.md` sebagai permintaan
+kedua, digabung ke surat yang sama karena owner belum sempat mengirimnya.
+
+🪤 **Dua kesalahan AI sendiri di penelusuran ini, keduanya ketahuan hanya karena
+hasilnya diperiksa ulang:** (1) dugaan pertama `next/image` menolak host Playly —
+salah, posternya `<img>` biasa; (2) hitungan `<img>` sempat dilaporkan **1** padahal
+sebenarnya **110** — pola `grep` ber-escape rusak saat HTML dipipe lewat variabel
+shell. **Aturan: untuk HTML satu-baris raksasa, simpan ke berkas dulu lalu `grep -o | wc -l`;
+`grep -c` menghitung BARIS, bukan kemunculan.**
+
+📌 `lib/playly.ts:713` mencatat per 2026-10-06 `seo.thumbnailUrl` terisi di 169 dari
+172 video — sampul kosong di sebagian kecil video memang sudah pernah terjadi.
+
 ### ✅ Terbukti AMAN putaran ini — jangan diperiksa ulang
 
 | Diperiksa | Hasil terukur |

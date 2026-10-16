@@ -69,6 +69,76 @@ diperbaiki.
 
 ---
 
+## 2026-10-16 (malam, ke-2) — PERBAIKAN TAMPILAN PERTAMA SESUDAH MIGRASI: tombol cari + lencana EPS
+
+Owner memastikan migrasi selesai, lalu minta 2 perbaikan. **Keduanya nyata,
+bukan selera** — satu tombol benar-benar mati.
+
+### 🔴 1. Tombol cari DIAM di `/beranda` dan `/discover`
+
+`SearchBar` sendiri **sudah benar** — tombol submit-nya memanggil `onSubmit?.()`.
+Yang rusak pemanggilnya: `CatalogBrowser` dan `DramaBrowser` **tidak mengoper
+`onSubmit` sama sekali**, jadi `preventDefault()` menelan kiriman form dan nol
+yang terjadi. Dua pemakai lain (`PublicTopBars`, `KerangkaKepalaKatalog`) sudah
+menyambungkannya sejak awal — itulah kenapa pencarian terasa jalan di sebagian
+halaman saja, dan kenapa ini lolos lama.
+
+**Perbaikan:** tombol MENGANTAR penonton ke hasil (`scrollIntoView`). Kedua
+halaman sudah menyaring live saat diketik; yang hilang cuma umpan baliknya,
+karena grid hasil sering di luar layar saat kursor masih di bar atas.
+**Sengaja TIDAK melempar ke `/discover`** — halaman itu sudah punya hasilnya
+sendiri, memindahkan penonton justru membuang penyaringan yang sudah jalan.
+
+`/discover` ikut dibetulkan walau owner hanya melaporkan `/beranda`: cacatnya
+sama persis di komponen bersama yang sama.
+
+🛡️ **Penjaga permanen `tests/search-bar-submit.test.ts`** membaca BERKAS SUMBER,
+bukan merender komponen — yang rusak adalah *"satu pemanggil lupa
+menyambungkan"*, dan itu mustahil ditangkap dengan menguji `SearchBar`
+sendirian. Aturannya: tiap `<SearchBar>` wajib mengoper `onSubmit` ATAU
+`action`. **Diuji-balik**: `onSubmit` dicabut sementara → tes MERAH + menyebut
+berkasnya; dikembalikan → hijau.
+
+### ✅ 2. Jumlah episode pindah ke pojok kanan-ATAS
+
+**PINDAH, bukan TAMBAH** — dan itu yang menentukan bentuk perbaikannya.
+Kanan-atas sudah dipakai chip HD + EXCLUSIVE, jadi menambah chip ketiga akan
+membuat kartu lebih penuh. Karena itu serial **melepas** label kanan-bawahnya:
+jumlah lencana per poster **tidak bertambah**. Ini penting karena chip
+"Premium" pernah dicabut dari poster justru karena kartunya terlalu penuh.
+
+Kontraknya dipecah supaya jujur: `episodeKananAtas` (serial) vs `kananBawah`
+(durasi film). Sebelumnya **satu** field memuat dua hal berbeda — itulah yang
+membuatnya tak bisa dipindah sebagian.
+
+**Film tidak ikut pindah**; durasinya tetap di kanan-bawah, dan film tidak
+memajang "1 EPS" (benar secara data, menyesatkan bagi penonton) — dikunci tes.
+
+⚠️ **Format & warna SENGAJA tidak diubah**: tetap `"38 EPS"` (bukan `"EPS 38"`
+seperti contoh) dan chip gelap, bukan ungu. Yang diminta eksplisit adalah
+POSISI, dan **ungu pernah ditolak owner** untuk bar cari (2026-09-21).
+Keduanya satu baris kalau owner mau diubah.
+
+🪤 **Angka pertama saya SALAH dan hampir dilaporkan.** Pemeriksaan posisi
+melaporkan *"128 EPS masih di blok bawah"* — ternyata penanda deteksinya yang
+tidak cocok dengan kelas hasil build, bukan kodenya. Ketahuan karena hasilnya
+dicocokkan ke potongan HTML asli. **Hitungan yang benar: 167 label EPS di
+beranda + katalog, SEMUANYA di kanan-atas, NOL di bawah** — jadi benar-benar
+pindah, tidak tersalin jadi dua.
+
+### Cara owner mencoba
+
+1. Buka `/beranda` → ketik di kotak cari → tekan tombol kaca pembesar.
+   Halaman harus **menggulir sendiri ke hasil** (dulu: diam sama sekali).
+2. Lihat poster SERIAL: jumlah episode kini di **pojok kanan atas**, di bawah
+   chip HD. Pojok kanan bawah serial jadi kosong. Poster FILM tidak berubah —
+   durasinya tetap di kanan bawah.
+
+Gerbang §6: build **0** · tsc **0** · **101 berkas / 1473 tes hijau**
+(+1 berkas, +7 tes).
+
+---
+
 ## 2026-10-16 (malam) — `/api/admin/upload` DIHAPUS: pagarnya ikut, karena yang dijaga sudah tak ada
 
 Keputusan owner: *"kalau memang tidak terpakai lagi kamu hapus saja"*. Itu

@@ -13,7 +13,7 @@
 
 ---
 
-## 🧭 BACA INI DULU — status & titik lanjut (2026-10-15)
+## 🧭 BACA INI DULU — status & titik lanjut (diperbarui 2026-10-16)
 
 ### Keadaan sekarang, satu paragraf
 
@@ -23,13 +23,14 @@ Alamat resmi: `https://dramaapp-production-9e88.up.railway.app`.
 **jangan dimatikan dulu**. Webhook Playly, sumber video PC backup, dan robot
 keepalive semuanya sudah menunjuk Railway dan terbukti jalan.
 
-### Yang tersisa — 3, semuanya TIDAK mendesak
+### Yang tersisa — 4, semuanya TIDAK mendesak
 
 | # | Pekerjaan | Yang ditunggu |
 |---|---|---|
 | 1 | **Tutup Vercel** | ≥6 minggu sejak 2026-10-15 → **paling cepat 2026-11-26**, DAN cek Google (seksi ⏰ di bawah). Nol pekerjaan teknis tersisa; diukur ulang 2026-10-15 malam dan semua sinyalnya masih benar. 🔔 **Tak perlu diingat manual lagi** — `.github/workflows/pengingat-tutup-vercel.yml` akan membuka Issue sendiri saat tanggalnya tiba |
 | 2 | **Uji pulihkan backup** | 1 Supabase project kosong. 🟢 **Robotnya SUDAH dibuat & diuji** (2026-10-15 malam) — owner tinggal 3 langkah, `docs/uji-pulihkan-backup.md` "Rute 2" |
 | 3 | **Beli domain** | persetujuan atasan owner — **BUKAN blocker apa pun**. 🟢 Bahan pengajuannya sudah disiapkan: `docs/pengajuan-domain-sendiri.md` |
+| 4 | **Playly daftarkan alamat Railway** | jawaban mitra. 📨 Draf siap kirim: `docs/surat-mitra/2026-10-16-minta-daftarkan-domain-railway.md`. Tenggat: sebelum Vercel ditutup |
 
 ### ⛔ KEPUTUSAN OWNER — jangan ditawarkan lagi
 
@@ -98,8 +99,20 @@ uji internal `/video-eksternal` (`noindex`).
 
 **Kenapa tetap harus dibereskan:** satu-satunya alamat kita yang terdaftar di
 Playly adalah **Vercel** — alamat yang akan ditutup. Sesudah itu nol alamat kita
-yang terdaftar. **Langkah: minta pengelola Playly mendaftarkan alamat Railway**
-(dan nanti domain sendiri). Ini permintaan ke pihak luar → makin cepat makin baik.
+yang terdaftar, dan jalur iframe mati tanpa jalan mundur cepat (pendaftaran ada di
+sisi mitra, bukan sesuatu yang bisa kita ubah sendiri).
+
+📨 **DRAF SIAP KIRIM (2026-10-16): `docs/surat-mitra/2026-10-16-minta-daftarkan-domain-railway.md`**
+Owner tinggal menyalin blok "Pesan siap kirim" ke chat. Sengaja **pendek** — surat
+`2026-10-01-surat-ke-playly.md` panjangnya 170 baris dan **tak pernah jadi dikirim**;
+keputusan owner saat itu: *"cukup beberapa kalimat lewat chat"*. Isinya memuat dua
+perintah `curl` supaya mitra bisa **membuktikan sendiri** (keduanya sudah dijalankan
+dan benar-benar bekerja, bukan ditulis dari ingatan). Tiga hal yang diminta tegas:
+**TAMBAH** alamat Railway (jangan hapus Vercel dulu) · host ditulis **lengkap sampai
+subdomain** (mendaftarkan `up.railway.app` saja akan meloloskan aplikasi Railway milik
+siapa pun) · pemberitahuan akan ada satu permintaan serupa kalau domain sendiri jadi dibeli.
+Surat itu juga menyebut apa adanya bahwa penonton **tidak** terdampak sekarang, tapi ada
+**tenggat nyata**: sesudah Vercel ditutup (paling cepat 26 November) nol alamat kita terdaftar.
 
 ### ✅ TEMUAN 2 — teks "di Vercel" di panel admin (DIPERBAIKI)
 
@@ -163,7 +176,16 @@ membayar**, langsung ke database produksi. Dokumen migrasi sudah menandainya
 yang ada baru **instruksi, bukan bukti**: AI tak punya akses panel Railway, dan
 ini tak bisa diukur dari luar tanpa akun penonton.
 
-➡️ **Owner: buka panel Railway → Variables → pastikan `ENABLE_DEMO_TOPUP` tidak ada.**
+✅ **TERTUTUP 2026-10-16 — terbukti dari LAYAR PANEL, bukan dari instruksi dokumen.**
+Owner membuka Railway → Variables: **14 Service Variables**, dan `ENABLE_DEMO_TOPUP`
+**TIDAK ADA** di antaranya. Yang terdaftar: `SUPABASE_URL` · `SUPABASE_SERVICE_ROLE_KEY` ·
+`AUTH_SECRET` · `ADMIN_PASSWORD` · `NEXT_PUBLIC_VIDEO_BASE_URL` · `HARDLINK_AGENT_SECRET` ·
+`PLAYLY_ENCRYPTION_KEY` · `PLAYLY_API_KEY` · `PLAYLY_WEBHOOK_SECRET` · `DASHBOARD_API_URL` ·
+`DASHBOARD_API_KEY` · `DASHBOARD_API_KEY_HEADER` · `OMDB_API_KEY` · `NEXT_PUBLIC_SITE_URL`
+(+8 variabel bawaan Railway). Jangan diperiksa ulang.
+
+📌 Catatan untuk seksi penyegelan variabel di atas: angkanya kini **14, bukan 13** —
+`NEXT_PUBLIC_SITE_URL` ditambahkan 2026-10-15.
 
 ### ✅ Terbukti AMAN putaran ini — jangan diperiksa ulang
 

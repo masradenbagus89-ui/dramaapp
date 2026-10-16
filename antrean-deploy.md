@@ -3,10 +3,41 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-10-16 (**komputer OWNER**) — **ANTREAN KOSONG, DUAL PUSH TUNTAS.**
-Lokal = `origin/main` = `dramaku/main` = **`bfb42fc`** (selisih **0/0** ke kedua remote).
+**Terakhir dicek:** 2026-10-16 malam (**komputer OWNER**) — **ANTREAN KOSONG, DUAL PUSH TUNTAS.**
+Lokal = `origin/main` = `dramaku/main` = **`8391875`** (selisih **0/0** ke kedua remote).
 Catatan `10ed638` di bawah sudah basi — sesudahnya menyusul `7858944`, `4d88ca8`, `a93a2e5`,
 lalu rilis 2026-10-16 di bawah ini.
+
+✅ **DIRILIS 2026-10-16 (ke-3) — SISA AUDIT + HASIL PLAYLY, di `8391875`.**
+Dual push tuntas, fast-forward `26eaf6a..8391875`, nol paksaan, selisih **0/0** (diverifikasi
+SESUDAH push). 6 commit, 8 berkas: 5 dokumen + **5 berkas `lib/` kode**.
+
+| SHA | Isinya |
+|---|---|
+| `5a61a67` | draf surat Playly + temuan `ENABLE_DEMO_TOPUP` ditutup |
+| `344f5a0` | 12 sampul kosong — 6 kemungkinan disingkirkan |
+| `72fbf43` | surat bentuk `.txt` siap tempel |
+| `ec4e2de` | surat dipangkas 91 → 38 baris |
+| `1d01436` | Playly beres (domain + sampul), diverifikasi sendiri |
+| `8391875` | 3 pesan error terakhir ber-"(Vercel)" + 2 komentar asumsi platform |
+
+Gerbang §6 utuh, urutan benar: `rm -rf .next` → build **0** → tsc **0** → **102 berkas /
+1473 tes hijau** · nol env ter-stage · nol pola nilai rahasia.
+
+**Bukti TAYANG sesudah deploy:** `Vercel` **success** · `ravishing-adaptation - dramaapp`
+(Railway) **success** · `Penjaga Kebocoran Rahasia` **success** · `/api/health` →
+`sumberData: database` · `/`, `/film`, `/discover`, `/katalog` **200** · beranda **20 kartu /
+0 sampul kosong** · embed Playly **LOLOS** dari alamat Railway · Vercel masih **308** ke Railway.
+
+⚠️ **Kode yang disentuh hanya TEKS dan KOMENTAR** — nol perubahan perilaku. Angka batas waktu
+Supabase (6 detik, 2× coba) **tidak diubah**; yang ditulis ulang cuma alasannya, karena alasan
+lamanya ("batas fungsi Vercel") sudah tidak ada di Railway dan bisa menyesatkan orang
+berikutnya untuk mencabut pagarnya.
+
+**Rollback 1-baris** (per bagian):
+`git revert --no-edit <sha> && git push origin main && git push dramaku main`.
+
+---
 
 ✅ **DIRILIS 2026-10-16 (ke-2) — AUDIT PUTARAN 2, di `bfb42fc`.** Dual push tuntas,
 fast-forward `4ce51e1..b789ec9..00b1760..bfb42fc`, nol paksaan, selisih **0/0** ke kedua

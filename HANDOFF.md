@@ -198,7 +198,17 @@ badan permintaan dibaca**; development → lolos pagar sampai validasi judul (40
 nol berkas ditulis. Tanpa sisi kedua, pagar yang keliru dan selalu menolak pun
 akan tampak hijau.
 
-**Belum di-push** — menunggu izin rilis owner.
+✅ **DIRILIS 2026-10-16 di `bfb42fc`** atas izin owner — dual push tuntas, fast-forward,
+selisih 0/0 (diverifikasi SESUDAH push). 3 commit: `b789ec9` pagar unggah · `00b1760`
+teks panel admin · `bfb42fc` catatan audit. Ketiga pemeriksa **success** (Vercel,
+Railway, Penjaga Kebocoran Rahasia). Situs diukur sesudah deploy: health `database` ·
+`/`, `/film`, `/discover`, `/katalog` **200** · endpoint admin tetap **401**.
+
+⚠️ **Satu hal TIDAK terbukti dari luar:** teks panel admin yang baru butuh login untuk
+dilihat — Next.js hanya memuat chunk isi admin sesudah sesi ada (15 chunk anonim memuat
+nol teks baru DAN nol teks lama). Yang terbukti cuma deploy sukses atas SHA yang memuat
+perubahannya. **Owner membuktikan dalam 2 klik:** login → `/admin/webhooks/playly` →
+langkah 1 harus berbunyi "di panel hosting (Railway)".
 
 ---
 

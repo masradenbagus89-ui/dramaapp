@@ -4,9 +4,41 @@
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
 **Terakhir dicek:** 2026-10-16 (**komputer OWNER**) — **ANTREAN KOSONG, DUAL PUSH TUNTAS.**
-Lokal = `origin/main` = `dramaku/main` = **`700ad2c`** (selisih **0/0** ke kedua remote).
+Lokal = `origin/main` = `dramaku/main` = **`bfb42fc`** (selisih **0/0** ke kedua remote).
 Catatan `10ed638` di bawah sudah basi — sesudahnya menyusul `7858944`, `4d88ca8`, `a93a2e5`,
 lalu rilis 2026-10-16 di bawah ini.
+
+✅ **DIRILIS 2026-10-16 (ke-2) — AUDIT PUTARAN 2, di `bfb42fc`.** Dual push tuntas,
+fast-forward `4ce51e1..b789ec9..00b1760..bfb42fc`, nol paksaan, selisih **0/0** ke kedua
+remote (diverifikasi SESUDAH push). **Rilis pertama sesi ini yang menyentuh KODE APLIKASI.**
+
+| SHA | Isinya |
+|---|---|
+| `b789ec9` | **pagar unggah** — pengganti jaminan "filesystem Vercel read-only" yang hilang saat pindah |
+| `00b1760` | 8 teks panel admin berhenti menyuruh owner ke panel Vercel |
+| `bfb42fc` | catatan hasil audit putaran 2 |
+
+Gerbang §6 utuh, urutan benar: build **0** → tsc **0** → **102 berkas / 1473 tes hijau**
+(dari 100/1466 = +2 berkas, +7 tes) · nol env ter-stage · nol pola nilai rahasia.
+
+**Bukti TAYANG, diukur sesudah deploy:** `Vercel` **success** · `ravishing-adaptation -
+dramaapp` (Railway) **success** · `Penjaga Kebocoran Rahasia` **success** · `/api/health`
+→ `sumberData: database` · `/`, `/film`, `/discover`, `/katalog` semuanya **200** ·
+`/api/admin/upload` & `/api/admin/hardlink` tetap **401** (pagar baru ada SESUDAH cek auth,
+jadi perilaku untuk orang asing tak berubah — persis desainnya) · `/admin/webhooks/playly`
+**200** menampilkan halaman login, tidak rusak.
+
+⚠️ **BATAS JUJUR — satu hal TIDAK terbukti dari luar.** Teks panel admin yang baru
+("panel hosting (Railway)") **tidak bisa diverifikasi tanpa login**: Next.js hanya memuat
+chunk isi admin sesudah sesi ada, jadi 15 chunk yang disajikan ke pengunjung anonim memuat
+**nol** teks baru DAN **nol** teks lama. Yang terbukti: deploy `success` untuk SHA yang
+memuat perubahan itu. **Owner membuktikannya dalam 2 klik** — login admin →
+`/admin/webhooks/playly` → langkah 1 harus berbunyi "di panel hosting (Railway)".
+
+**Rollback 1-baris** (per bagian):
+`git revert --no-edit <sha> && git push origin main && git push dramaku main`.
+
+---
 
 ✅ **DIRILIS 2026-10-16 atas izin owner — DUAL PUSH TUNTAS di `700ad2c`.**
 Lokal = `origin/main` = `dramaku/main` = **`700ad2c`**, fast-forward

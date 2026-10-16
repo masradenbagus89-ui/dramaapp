@@ -118,9 +118,17 @@ describe("daftar kualitas di kode HARUS sama dengan CHECK di database", () => {
 });
 
 describe("lencanaKartu — label kartu hanya dari data yang benar-benar ada", () => {
-  it("serial memakai jumlah episode di pojok kanan-bawah", () => {
-    expect(lencanaKartu(stub({ episodes: 62 })).kananBawah).toBe("62 EPS");
-    expect(lencanaKartu(stub({ episodes: 1 })).kananBawah).toBe("1 EPS");
+  it("serial memajang jumlah episode di pojok KANAN-ATAS", () => {
+    // Dipindah dari kanan-bawah 2026-10-16 atas permintaan owner.
+    expect(lencanaKartu(stub({ episodes: 62 })).episodeKananAtas).toBe("62 EPS");
+    expect(lencanaKartu(stub({ episodes: 1 })).episodeKananAtas).toBe("1 EPS");
+  });
+
+  it("serial TIDAK lagi memakai pojok kanan-bawah", () => {
+    // Sisi sebaliknya, dan ini yang membuat tes di atas berarti: kalau nilainya
+    // cuma DISALIN ke atas tanpa dilepas dari bawah, poster memajang jumlah
+    // episode DUA KALI dan kartunya jadi lebih penuh, bukan lebih rapi.
+    expect(lencanaKartu(stub({ episodes: 62 })).kananBawah).toBeNull();
   });
 
   it("film memakai durasi jam:menit", () => {
@@ -142,9 +150,18 @@ describe("lencanaKartu — label kartu hanya dari data yang benar-benar ada", ()
   it("serial yang kebetulan punya runtime TIDAK memajang durasi", () => {
     // Pemisahnya tanda `kind`, bukan tebakan dari jumlah episode. Serial yang
     // baru punya 1 episode juga bernilai 1 — tebakan itu akan salah.
-    expect(lencanaKartu(stub({ episodes: 1, runtime: "45 min" })).kananBawah).toBe(
-      "1 EPS",
-    );
+    const l = lencanaKartu(stub({ episodes: 1, runtime: "45 min" }));
+    expect(l.episodeKananAtas).toBe("1 EPS");
+    expect(l.kananBawah).toBeNull();
+  });
+
+  it("film TIDAK punya lencana episode di kanan-atas", () => {
+    // Kalau film ikut memajangnya, poster film akan menulis "1 EPS" — angka
+    // yang benar secara data tapi menyesatkan bagi penonton.
+    expect(
+      lencanaKartu(stub({ kind: "movie", episodes: 1, runtime: "165 min" }))
+        .episodeKananAtas,
+    ).toBeNull();
   });
 
   it("rating kosong TIDAK dikarang jadi angka", () => {

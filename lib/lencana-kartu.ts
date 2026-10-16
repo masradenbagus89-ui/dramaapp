@@ -1,7 +1,7 @@
 // -------------------------------------------------------------------------
 // LENCANA KARTU POSTER — label kecil yang menempel di empat pojok poster,
-// pola yang dipakai situs streaming katalog (rating · kualitas · tahun ·
-// durasi/jumlah episode).
+// pola yang dipakai situs streaming katalog (rating · kualitas · jumlah
+// episode · tahun · durasi).
 //
 // Kenapa berkas SENDIRI (dipindah dari lib/beranda-catalog.ts, 2026-09-22):
 // sampai kemarin lencana cuma digambar kartu grid beranda. Sekarang SEMUA
@@ -39,11 +39,21 @@ export type LencanaKartu = {
    */
   kiriBawah: string | null;
   /**
-   * Kanan-bawah: durasi film "02:45", atau jumlah episode serial "62 EPS".
-   * SELALU terisi — `episodes` wajib ada di katalog, dan film tanpa durasi
-   * yang terbaca tetap punya kata "FILM" untuk dipajang.
+   * Kanan-atas, DI BAWAH chip kualitas: jumlah episode serial ("62 EPS").
+   * null untuk FILM — film memajang durasinya di kanan-bawah.
+   *
+   * Dipindah ke atas 2026-10-16 atas permintaan owner (contoh: situs katalog
+   * pembanding menaruh jumlah episode di pojok kanan atas). Ini PINDAH, bukan
+   * TAMBAH: serial kehilangan label kanan-bawahnya, jadi jumlah lencana di
+   * poster tidak bertambah. Itu disengaja — chip "Premium" pernah dicabut dari
+   * poster justru karena kartunya jadi terlalu penuh (lihat Poster.tsx).
    */
-  kananBawah: string;
+  episodeKananAtas: string | null;
+  /**
+   * Kanan-bawah: durasi film "02:45", atau "FILM" kalau durasinya tak terbaca.
+   * null untuk SERIAL — jumlah episodenya pindah ke `episodeKananAtas`.
+   */
+  kananBawah: string | null;
   /** Pita bawah: "ONGOING"/"TAMAT". null = status belum diisi admin. */
   status: string | null;
   /** true = drama berbayar koin (dari jalur koin, bukan tebakan tampilan). */
@@ -60,7 +70,8 @@ export function lencanaKartu(d: Drama): LencanaKartu {
     rating: d.imdbRating?.trim() ? d.imdbRating.trim() : null,
     kualitas: d.quality ?? null,
     kiriBawah: d.year?.trim() ? d.year.trim() : null,
-    kananBawah: kananBawahLabel(d),
+    episodeKananAtas: isMovie(d) ? null : `${d.episodes} EPS`,
+    kananBawah: isMovie(d) ? durasiFilm(d) : null,
     // "Completed" ditampilkan sebagai "TAMAT" — kata yang dipakai penonton
     // Indonesia di situs streaming, bukan istilah database.
     status:
@@ -71,14 +82,14 @@ export function lencanaKartu(d: Drama): LencanaKartu {
 }
 
 /**
- * Serial memakai jumlah episode, film memakai durasi jam:menit.
+ * Durasi film "01:45", atau "FILM" kalau runtime-nya tidak bisa dibaca.
  *
- * Pemisahnya `isMovie` (tanda `kind` yang eksplisit), BUKAN tebakan
- * `episodes === 1` — serial yang baru punya 1 episode juga bernilai 1, jadi
- * tebakan itu akan menampilkan durasi pada sesuatu yang sebenarnya serial.
+ * Hanya dipanggil untuk FILM. Pemisah film/serial di `lencanaKartu` memakai
+ * `isMovie` (tanda `kind` yang eksplisit), BUKAN tebakan `episodes === 1` —
+ * serial yang baru punya 1 episode juga bernilai 1, jadi tebakan itu akan
+ * menampilkan durasi pada sesuatu yang sebenarnya serial.
  */
-function kananBawahLabel(d: Drama): string {
-  if (!isMovie(d)) return `${d.episodes} EPS`;
+function durasiFilm(d: Drama): string {
   const menit = menitDariRuntime(d.runtime);
   return menit === null ? LABEL_FILM : formatJamMenit(menit);
 }

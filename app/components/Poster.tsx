@@ -165,6 +165,19 @@ export default function Poster({
                 {lencana.kualitas}
               </span>
             )}
+            {/* Jumlah episode SERIAL — dipindah ke sini dari pojok kanan-bawah
+                (owner 2026-10-16, contoh: situs katalog pembanding). Film tidak
+                punya nilai ini; durasinya tetap di kanan-bawah.
+
+                PINDAH, bukan TAMBAH: serial kehilangan label kanan-bawahnya,
+                jadi jumlah lencana di poster tidak bertambah. Penting karena
+                chip "Premium" pernah dicabut dari poster justru karena kartunya
+                jadi terlalu penuh saat puluhan berjajar. */}
+            {lencana.episodeKananAtas && (
+              <span className={cn(CHIP, CHIP_GELAP)}>
+                {lencana.episodeKananAtas}
+              </span>
+            )}
             {showBadge && !lencana.premium && lencana.exclusive && (
               <span className={cn(CHIP, CHIP_GELAP, "uppercase tracking-wider")}>
                 Exclusive
@@ -173,9 +186,13 @@ export default function Poster({
           </span>
         </div>
 
-        {/* Baris bawah: tahun di kiri, durasi/jumlah episode di kanan. Gradien
-            hitam tipis di belakangnya supaya teks putih tetap terbaca di atas
-            poster berwarna terang. */}
+        {/* Baris bawah: tahun di kiri, durasi FILM di kanan. Gradien hitam tipis
+            di belakangnya supaya teks putih tetap terbaca di atas poster
+            berwarna terang.
+
+            Serial tidak punya isi di kanan sejak 2026-10-16 — jumlah episodenya
+            pindah ke pojok kanan-atas. Gradien & baris ini TETAP digambar
+            karena tahun dan status ONGOING/TAMAT masih memakainya. */}
         <div className="flex items-end justify-between gap-1 bg-gradient-to-t from-black/90 via-black/45 to-transparent px-1.5 pb-1.5 pt-7">
           <span className="flex min-w-0 items-center gap-1">
             {lencana.kiriBawah && (
@@ -194,9 +211,11 @@ export default function Poster({
               </span>
             )}
           </span>
-          <span className="shrink-0 text-[10px] font-bold text-white md:text-[11px]">
-            {lencana.kananBawah}
-          </span>
+          {lencana.kananBawah && (
+            <span className="shrink-0 text-[10px] font-bold text-white md:text-[11px]">
+              {lencana.kananBawah}
+            </span>
+          )}
         </div>
       </div>
     </div>

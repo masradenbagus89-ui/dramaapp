@@ -170,13 +170,26 @@ describe("lencanaKartu — label kartu hanya dari data yang benar-benar ada", ()
     expect(lencanaKartu(stub({ imdbRating: "8.4" })).rating).toBe("8.4");
   });
 
-  it("kualitas kosong TIDAK ditebak jadi HD", () => {
+  it("kualitas kosong TIDAK ditebak jadi HD (film)", () => {
     // Kosong tetap kosong: kode TIDAK pernah menebak sendiri. Pengisian massal
     // "HD" untuk 34 serial (2026-09-22 sore) dilakukan lewat SQL atas keputusan
     // owner yang tahu isi berkas videonya — bukan oleh tampilan.
-    expect(lencanaKartu(stub()).kualitas).toBeNull();
-    expect(lencanaKartu(stub({ quality: "CAM" })).kualitas).toBe("CAM");
-    expect(lencanaKartu(stub({ quality: "WEB-DL" })).kualitas).toBe("WEB-DL");
+    const film = { kind: "movie" } as const;
+    expect(lencanaKartu(stub(film)).kualitas).toBeNull();
+    expect(lencanaKartu(stub({ ...film, quality: "CAM" })).kualitas).toBe("CAM");
+    expect(lencanaKartu(stub({ ...film, quality: "WEB-DL" })).kualitas).toBe(
+      "WEB-DL",
+    );
+  });
+
+  it("SERIAL tidak punya kualitas maupun eksklusif di kartu", () => {
+    // Permintaan owner 2026-10-17: pojok kanan-atas serial milik jumlah
+    // episode saja. Nilainya sengaja DIISI di stub — kalau dikosongkan, tes
+    // ini lulus karena datanya kosong, bukan karena aturannya bekerja.
+    const l = lencanaKartu(stub({ quality: "HD", exclusive: true }));
+    expect(l.kualitas).toBeNull();
+    expect(l.exclusive).toBe(false);
+    expect(l.episodeKananAtas).toBe("10 EPS");
   });
 
   it("kiri-bawah HANYA tahun — tidak pernah berisi keterangan subtitle", () => {
@@ -198,9 +211,13 @@ describe("lencanaKartu — label kartu hanya dari data yang benar-benar ada", ()
     expect(lencanaKartu(stub()).status).toBeNull();
   });
 
-  it("penanda koin & eksklusif ikut apa adanya", () => {
+  it("penanda koin & eksklusif ikut apa adanya (film)", () => {
     expect(lencanaKartu(stub()).premium).toBe(false);
     expect(lencanaKartu(stub({ premium: true })).premium).toBe(true);
-    expect(lencanaKartu(stub({ exclusive: true })).exclusive).toBe(true);
+    // `exclusive` hanya dipajang pada FILM sejak 2026-10-17; serial diuji di
+    // "SERIAL tidak punya kualitas maupun eksklusif di kartu" di atas.
+    expect(
+      lencanaKartu(stub({ kind: "movie", exclusive: true })).exclusive,
+    ).toBe(true);
   });
 });

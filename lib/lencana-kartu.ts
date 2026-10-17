@@ -26,7 +26,17 @@ import { formatJamMenit, menitDariRuntime } from "./format";
 export type LencanaKartu = {
   /** Kiri-atas: rating IMDb apa adanya ("8.4"). null = judul ini belum punya. */
   rating: string | null;
-  /** Kanan-atas: kualitas video ("CAM"/"HD"/…). null = owner belum mengisinya. */
+  /**
+   * Kanan-atas: kualitas video ("CAM"/"HD"/…) — HANYA untuk FILM.
+   *
+   * null untuk SERIAL sejak 2026-10-17 (permintaan owner). Pojok itu kini milik
+   * jumlah episode, dan menumpuk dua chip di sana membuat kartu penuh. Alasan
+   * isinya: kualitas paling menentukan pada film — penonton memutuskan
+   * menontonnya sekali duduk, jadi "CAM atau bersih" itu pertanyaan pertama.
+   * Untuk serial, yang lebih dicari adalah ada berapa episode.
+   *
+   * null juga kalau owner memang belum mengisi `quality` — tidak pernah ditebak.
+   */
   kualitas: DramaQuality | null;
   /**
    * Kiri-bawah: tahun tayang ("2026"). null = judul ini belum punya tahun.
@@ -58,7 +68,15 @@ export type LencanaKartu = {
   status: string | null;
   /** true = drama berbayar koin (dari jalur koin, bukan tebakan tampilan). */
   premium: boolean;
-  /** true = drama ditandai eksklusif. Hanya dipajang kalau BUKAN premium. */
+  /**
+   * true = ditandai eksklusif. Hanya dipajang kalau BUKAN premium.
+   *
+   * SELALU false untuk SERIAL sejak 2026-10-17 (permintaan owner): pojok
+   * kanan-atas serial sudah berisi jumlah episode, dan menambahkan pita
+   * EXCLUSIVE di bawahnya mengembalikan kepenuhan yang justru mau dihindari.
+   * Penandanya sendiri TIDAK hilang dari data — tab "SERIES UNGGULAN" di
+   * beranda masih memakai field `exclusive` yang sama.
+   */
   exclusive: boolean;
 };
 
@@ -68,7 +86,8 @@ const LABEL_FILM = "FILM";
 export function lencanaKartu(d: Drama): LencanaKartu {
   return {
     rating: d.imdbRating?.trim() ? d.imdbRating.trim() : null,
-    kualitas: d.quality ?? null,
+    // Kualitas & eksklusif: FILM saja. Lihat alasannya di tipe di atas.
+    kualitas: isMovie(d) ? (d.quality ?? null) : null,
     kiriBawah: d.year?.trim() ? d.year.trim() : null,
     episodeKananAtas: isMovie(d) ? null : `${d.episodes} EPS`,
     kananBawah: isMovie(d) ? durasiFilm(d) : null,
@@ -77,7 +96,7 @@ export function lencanaKartu(d: Drama): LencanaKartu {
     status:
       d.status === "Completed" ? "TAMAT" : d.status === "Ongoing" ? "ONGOING" : null,
     premium: Boolean(d.premium),
-    exclusive: Boolean(d.exclusive),
+    exclusive: isMovie(d) ? Boolean(d.exclusive) : false,
   };
 }
 

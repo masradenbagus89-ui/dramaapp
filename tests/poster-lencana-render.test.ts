@@ -65,9 +65,38 @@ describe("Poster — keempat pojok benar-benar tergambar", () => {
       render(stub({ episodes: 62, quality: "HD", year: "2025", imdbRating: "8.2" })),
     );
     expect(teks).toContain("62 EPS");
-    expect(teks).toContain("HD");
     expect(teks).toContain("8.2");
     expect(teks).toContain("2025");
+  });
+
+  it("serial TIDAK memajang chip kualitas walau datanya terisi", () => {
+    // Permintaan owner 2026-10-17. Stub-nya sengaja DIBERI quality "HD" —
+    // kalau nilainya dikosongkan, tes ini lulus hanya karena datanya kosong
+    // dan tidak membuktikan aturannya sama sekali.
+    const teks = isiTeks(render(stub({ episodes: 62, quality: "HD" })));
+    expect(teks).not.toContain("HD");
+    expect(teks).toContain("62 EPS");
+  });
+
+  it("serial TIDAK memajang EXCLUSIVE walau ditandai eksklusif", () => {
+    // Sama alasannya: penandanya sengaja dinyalakan supaya tesnya berarti.
+    // Field `exclusive` TIDAK hilang dari data — tab SERIES UNGGULAN memakainya.
+    const html = render(stub({ episodes: 62, exclusive: true }));
+    expect(isiTeks(html).join(" ")).not.toMatch(/Exclusive/i);
+  });
+
+  it("jumlah episode serial memakai chip HIJAU, dan itu AMAN karena terpisah", () => {
+    // Owner memilih hijau 2026-10-17. Yang membuatnya tidak membingungkan
+    // adalah PEMISAHANNYA, bukan warnanya: kartu serial memajang chip episode
+    // dan TIDAK memajang chip kualitas, jadi dua hijau itu tak pernah
+    // berdampingan. Kedua sisi dikunci di sini — kalau suatu saat serial
+    // kembali memajang kualitas, tes ini yang merah lebih dulu.
+    const html = render(stub({ episodes: 62, quality: "HD" }));
+    expect(html).toContain("bg-green-600");
+    expect(isiTeks(html)).toContain("62 EPS");
+    expect(isiTeks(html)).not.toContain("HD");
+    // tepat SATU chip hijau di kartu serial — bukan dua.
+    expect(html.match(/bg-green-600/g)?.length).toBe(1);
   });
 
   it("field kosong TIDAK menghasilkan lencana kosong/placeholder", () => {
@@ -93,13 +122,15 @@ describe("Poster — keempat pojok benar-benar tergambar", () => {
     // Warnanya bukan hiasan: CAM = rekaman bioskop, dan penonton memakai
     // penanda itu untuk memutuskan jadi menonton atau tidak. Dua warna ini
     // ditentukan owner lewat dua poster pembanding (2026-09-22 sore).
+    // `kind: "movie"` WAJIB sejak 2026-10-17: chip kualitas kini hanya digambar
+    // pada FILM. Tanpa itu tes ini menguji sesuatu yang memang tak tergambar.
     for (const buram of ["CAM", "HDCAM"] as const) {
-      const html = render(stub({ quality: buram }));
+      const html = render(stub({ kind: "movie", quality: buram }));
       expect(html).toContain("bg-red-600");
       expect(html).not.toContain("bg-green-600");
     }
     for (const bersih of ["HD", "WEB-DL", "BluRay", "4K"] as const) {
-      const html = render(stub({ quality: bersih }));
+      const html = render(stub({ kind: "movie", quality: bersih }));
       expect(html).toContain("bg-green-600");
       expect(html).not.toContain("bg-red-600");
     }
@@ -114,7 +145,13 @@ describe("Poster — keempat pojok benar-benar tergambar", () => {
     // memasangnya kembali, poster contoh yang dibuka saat memeriksa belum tentu
     // yang berbayar. Tidak ada error, cuma tulisan yang balik lagi.
     const html = render(
-      stub({ premium: true, quality: "WEB-DL", year: "2026", imdbRating: "9.0" }),
+      stub({
+        kind: "movie",
+        premium: true,
+        quality: "WEB-DL",
+        year: "2026",
+        imdbRating: "9.0",
+      }),
     );
     const teks = isiTeks(html);
     expect(teks.join(" ")).not.toMatch(/Premium/i);
@@ -136,6 +173,10 @@ describe("Poster — keempat pojok benar-benar tergambar", () => {
     // VAKUM: tak ada apa pun yang tergambar di KEDUA keadaan, jadi ia lulus
     // hijau walau prop `showBadge` dihapus total dari komponen.
     const ciri: Partial<Drama> = {
+      // FILM: sejak 2026-10-17 hanya film yang memajang Exclusive, jadi stub
+      // serial akan membuat tes ini VAKUM lagi — persis jebakan yang dicatat
+      // di komentar atas.
+      kind: "movie",
       exclusive: true,
       quality: "WEB-DL",
       year: "2026",

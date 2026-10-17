@@ -31,6 +31,23 @@ const CHIP =
 const CHIP_GELAP = "bg-black/75 text-white ring-1 ring-white/15 backdrop-blur-[2px]";
 
 /**
+ * Warna chip jumlah episode (SERIAL) — HIJAU, dipilih owner 2026-10-17 setelah
+ * melihat preview ungu dan hijau.
+ *
+ * Sempat dipasang ungu dengan alasan hijau sudah berarti "kualitas bersih" di
+ * chip kualitas. Alasan itu TIDAK berlaku di sini: aturan baru memisahkan
+ * keduanya dengan tegas — serial hanya memajang jumlah episode, film hanya
+ * memajang kualitas — jadi dua chip hijau ini TIDAK PERNAH muncul pada kartu
+ * yang sama, dan penonton tak punya kesempatan tertukar membacanya.
+ *
+ * ⚠️ Yang membuatnya aman adalah pemisahan itu, bukan warnanya. Kalau suatu
+ * saat serial kembali memajang chip kualitas, dua chip hijau akan berdampingan
+ * di pojok yang sama dengan arti berbeda — ganti salah satunya saat itu juga.
+ * Aturan pemisahnya ada di lib/lencana-kartu.ts.
+ */
+const CHIP_EPS = "bg-green-600 text-white ring-1 ring-green-300/40";
+
+/**
  * Warna chip kualitas — dua warna saja, sesuai contoh yang diberikan owner
  * 2026-09-22 sore (dua poster pembanding: CAM merah, HD hijau).
  *
@@ -149,7 +166,14 @@ export default function Poster({
             </span>
           )}
 
-          {/* Kanan-atas: kualitas video, lalu penanda eksklusif di bawahnya.
+          {/* Kanan-atas — isinya BERGANTUNG jenis judul (owner 2026-10-17):
+                FILM   : chip kualitas (HD/CAM/…) + penanda EXCLUSIVE
+                SERIAL : chip jumlah episode berwarna ungu, itu saja
+              Aturannya ada di lib/lencana-kartu.ts, bukan di sini — komponen
+              ini cuma menggambar apa yang sudah diputuskan di sana, jadi tak
+              ada aturan kedua yang bisa menyimpang diam-diam.
+
+              Kualitas video, lalu penanda eksklusif di bawahnya.
               `ml-auto` (bukan justify-between) supaya kelompok ini tetap menempel
               ke kanan walau lencana rating di kiri tidak digambar.
 
@@ -174,7 +198,7 @@ export default function Poster({
                 chip "Premium" pernah dicabut dari poster justru karena kartunya
                 jadi terlalu penuh saat puluhan berjajar. */}
             {lencana.episodeKananAtas && (
-              <span className={cn(CHIP, CHIP_GELAP)}>
+              <span className={cn(CHIP, CHIP_EPS)}>
                 {lencana.episodeKananAtas}
               </span>
             )}

@@ -4,9 +4,94 @@
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
 **Terakhir dicek:** 2026-10-24 (**komputer OWNER**) — **ANTREAN KOSONG, DUAL PUSH TUNTAS.**
-Lokal = `origin/main` = `dramaku/main` = **`92512a7`** (selisih **0/0** ke kedua remote,
+Lokal = `origin/main` = `dramaku/main` = **`fd689fb`** (selisih **0/0** ke kedua remote,
 diverifikasi `git fetch` SESUDAH push). Catatan `95d3b29` di bawah sudah basi; seluruh commit
-antaranya (sampai `0c6564d`) terbukti sudah ada di KEDUA remote — justru karena selisihnya 0/0.
+antaranya terbukti sudah ada di KEDUA remote — justru karena selisihnya 0/0.
+
+✅ **DIRILIS 2026-10-24 (ke-2) — 2 celah akses dari audit ditutup, di `fd689fb`.**
+Dual push tuntas, fast-forward `91e3079..fd689fb`, nol paksaan, selisih **0/0** (diverifikasi
+SESUDAH push). 2 commit, 8 berkas (754 baris masuk): 1 berkas baru `lib/paywall-guard.ts`,
+4 berkas disesuaikan, **3 berkas tes baru**.
+
+| SHA | Isinya |
+|---|---|
+| `b07e8aa` | paywall episode ditegakkan di SERVER (`/api/teaser` & `/api/download`) |
+| `fd689fb` | `GET /api/admins` tak lagi menyerahkan email admin ke publik |
+
+**Bukti TAYANG — sebelum vs sesudah, diukur di situs sungguhan:**
+
+| Diukur | Sebelum | Sesudah |
+|---|---|---|
+| `/api/teaser?...&ep=99` tanpa cookie | **307 + alamat .mp4** | **401**, nol header `Location` |
+| `/api/teaser?...&ep=4` (di luar jatah gratis) | 307 | **401** |
+| `/api/download?...&ep=99` tanpa cookie | **307 + alamat .mp4** | **401**, nol `Location` |
+| `/api/teaser?...&ep=1` dan `ep=3` (jatah gratis) | 307 | **307** — hero & kartu TIDAK tersentuh |
+| `GET /api/admins` | **200 + 5 nama & email** | **403**, **0 email** di badan respons |
+| `GET /api/admins?email=` tanpa login | — | **401** |
+| Cache episode berbayar | `s-maxage=60` (bisa disajikan ulang ke orang lain) | **`private, no-store`** |
+| 22 jalur penonton + `/admin` | 200 | **200, nol yang gagal** |
+| `/api/dramas` | 33524 byte | **33524 byte — katalog utuh** |
+| Versi Next | 16.4.3 | **15/15 chunk masih cocok — tidak mundur** |
+| Lama build & downtime | — | tayang pada cek ke-4 (~1,5 menit), **downtime NOL** (`health=200` di semua cek) |
+
+Gerbang §6 utuh dan **DIULANG** sesudah gangguan database (lihat entri gangguan di bawah):
+`rm -rf .next` → build **sukses** → tsc **0** → **104 berkas / 1518 tes hijau** (naik dari
+101/1477 — **41 tes baru**) · nol env ter-stage · Penjaga Kebocoran Rahasia **success** di `fd689fb`.
+
+⚠️ **PAYWALL BELUM TERTUTUP PENUH — jangan dicatat sebagai beres.** `FeedPlayer.tsx:114,519`
+masih menulis alamat tunnel LANGSUNG ke halaman lewat `videoSrc` (lib/video.ts:12), jadi alamat
+episode terkunci tetap terbaca dari View Source TANPA melewati gerbang baru ini. Yang ditutup:
+jalur API yang paling mudah ditemukan & dibagikan ulang, plus satu-satunya yang ikut membocorkan
+alamat tunnel. Penutupan penuh menuntut tunnel menolak permintaan tanpa tanda tangan —
+pekerjaan di `pc-backup-agent/`, BELUM dikerjakan. `GET /api/admins` sebaliknya: **tertutup penuh**.
+
+📌 **Keputusan owner di sesi ini** (jangan ditawar ulang): untuk `/api/admins` dipilih
+"sembunyikan email, spanduk tetap jalan" — bukan kunci total. Karena itu pemanggil bersesi
+penonton masih bisa menanyakan **satu** email, tapi HANYA email miliknya sendiri (dicocokkan ke
+cookie bertanda tangan), sehingga celah tebak-menebak nol. Spanduk "kamu admin, masuk ulang"
+(TopNav.tsx:242 & KepalaKatalog.tsx:163) tetap hidup — itu syarat yang diminta owner.
+
+**Rollback 1-baris:** `git revert --no-edit fd689fb b07e8aa && git push origin main` (atau
+Redeploy deployment sebelumnya di panel Railway). Keduanya mengembalikan perilaku lama —
+termasuk lubangnya, jadi pakai hanya kalau ada kerusakan nyata.
+
+---
+
+⛔ **GANGGUAN PRODUKSI 2026-10-24 — database tak terjangkau ~20 menit. BUKAN dari kode kita.**
+
+Terjadi di tengah sesi, antara rilis `92512a7` dan `fd689fb`. Deploy ditahan atas keputusan
+owner sampai sebabnya jelas — dan itu keputusan yang benar.
+
+**Gejala:** semua endpoint yang menyentuh database balas **500 setelah tepat ~12,47 detik**
+(pola timeout yang sudah tercatat di app/api/health/route.ts:45). Halaman daftar tetap tampil
+40+ drama karena cache, tapi `/drama/[id]` balas **500** — penonton yang mengklik drama kena error.
+
+**Diagnosis, dipersempit berlapis:**
+
+| Uji | Hasil | Yang disingkirkan |
+|---|---|---|
+| Aplikasi di Railway | 500 / 12,47s | — |
+| Kode SAMA dijalankan di komputer owner | 500 / 12,32s | bukan masalah Railway |
+| **Supabase dipanggil LANGSUNG dengan `curl`** (tanpa Next.js, tanpa Node) | **522 / 19,8s**, halaman Cloudflare `supabase.co \| 522: Connection timed out` | **bukan kode kita, bukan Next.js 16.4.3** |
+
+522 = Cloudflare sehat tapi tak bisa menghubungi server database di belakangnya. Status resmi
+Supabase "All Systems Operational", jadi ini spesifik project `nvblmpkwyzbpdbshyvzw` — project
+yang **BUKAN milik owner** (lihat .github/workflows/backup-schemas.yml:51) dan dipakai bersama
+4 aplikasi lain (scripts/perbaiki_izin_dramaapp.py:14-15).
+
+**Pulih SENDIRI** setelah ~20 menit; diverifikasi stabil 8/8 permintaan di bawah 1,3 detik dan
+Supabase langsung 200 dalam 0,27 detik. Kambuhan dari kejadian 2026-09-19 — naskah permintaan
+restart sudah ada di `docs/permintaan-restart-supabase.md` (tombol Restart hanya bisa ditekan
+Kang Dedi, pemilik project).
+
+**Pelajaran yang mahal kalau dilupakan:** build yang dijalankan SELAMA gangguan bisa lulus tapi
+memakai cadangan `data/dramas.json` yang basi (lib/dramas.ts:256,279 sengaja jatuh ke berkas).
+Karena itu gerbang §6 DIULANG dari nol sesudah database sehat, dan hasil cetak-awalnya diperiksa
+memuat 40 tautan drama — bukan cadangan kosong. Jangan merilis build yang dibuat saat database
+sakit. Alarmnya sendiri bekerja: `keep-db-awake` gagal 06:39 UTC dan GitHub mengirim email ke
+pemilik repo (lihat komentar workflow itu baris 17) — itu kanal pemberitahuan gangguan.
+
+---
 
 ✅ **DIRILIS 2026-10-24 — Next.js 16.2.9 → 16.4.3, menutup 3 RCE tanpa login, di `92512a7`.**
 Dual push tuntas, fast-forward `0c6564d..92512a7`, nol paksaan, selisih **0/0** (diverifikasi

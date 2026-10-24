@@ -69,7 +69,7 @@ diperbaiki.
 
 ---
 
-## 2026-10-24 — AUDIT KEAMANAN MENYELURUH + RILIS Next.js 16.4.3 (`92512a7`). 3 TEMUAN DARURAT, BARU 1 DITUTUP.
+## 2026-10-24 — AUDIT KEAMANAN MENYELURUH + 2 RILIS (`92512a7`, `fd689fb`). 3 TEMUAN DARURAT: 2 DITUTUP, 1 SISA DI TANGAN OWNER.
 
 Owner minta audit keamanan menyeluruh (pemicunya peringatan **PHP2Shell**). Audit dijalankan
 READ-ONLY dulu, lalu owner menyetujui satu perbaikan dan men-deploy-nya.
@@ -90,33 +90,61 @@ critical**. Bukti tayang: **15/15 nama chunk produksi cocok persis** dengan buil
 **downtime NOL** (`health=200` di 9/9 cek); `/api/dramas` **persis 33524 byte sama** seperti
 sebelumnya. Gerbang §6 utuh (build → tsc 0 → 1477 tes hijau).
 
-### 🔴 BELUM DITUTUP — dua temuan DARURAT, keduanya sudah DIBUKTIKAN HIDUP
+### ✅ SUDAH DIRILIS (ke-2) — paywall ditegakkan di server + kebocoran email admin ditutup
 
-Jangan anggap ini dugaan. Keduanya diuji langsung ke produksi/tunnel saat audit:
+Rinciannya di `antrean-deploy.md` (entri 2026-10-24 ke-2, di `fd689fb`). Bukti tayang:
+`/api/teaser?...&ep=99` tanpa cookie **307 → 401** (nol header `Location`), idem
+`/api/download`; `ep=1` & `ep=3` **tetap 307** sehingga hero & kartu tak tersentuh;
+`GET /api/admins` **200 + 5 email → 403 + 0 email**. 22 jalur penonton 200, `/api/dramas`
+persis **33524 byte sama**, **downtime NOL**. Gerbang §6 diulang: 104 berkas / **1518 tes hijau**
+(41 tes baru sebagai penjaga permanen).
+
+Berkas intinya `lib/paywall-guard.ts` — sengaja **memakai ulang** `isEpisodeLocked`
+(lib/coins.ts:64) supaya server & UI tak bisa berbeda pendapat, dan punya jalan pintas: episode
+dalam jatah gratis lewat tanpa menyentuh database (teaser hero SELALU ep 1,
+lib/hero-teaser.ts:77).
+
+⚠️ **D-2 BELUM tertutup penuh** — `FeedPlayer.tsx:114,519` masih menulis alamat tunnel LANGSUNG
+ke halaman lewat `videoSrc` (lib/video.ts:12), jadi alamat episode terkunci tetap terbaca dari
+View Source tanpa melewati gerbang baru. Penutupan penuh = tunnel menolak permintaan tanpa
+tanda tangan, pekerjaan di `pc-backup-agent/`.
+
+### 🔴 BELUM DITUTUP — D-1, dan HANYA owner yang bisa
 
 | # | Temuan | Bukti saat audit | Yang menutupnya |
 |---|---|---|---|
 | D-1 | **Pustaka video terbuka ke internet tanpa login, daftar isi folder AKTIF** | root tunnel → **200 + 61 tautan folder**; HEAD berkas judul premium → **200 `video/mp4`** | buang kata `browse` di `pc-backup-agent/Caddyfile:30` + ganti CORS `*` di `:35` → **butuh tangan owner** (restart layanan PC, video mati 1-2 menit) |
-| D-2 | **Paywall koin bisa dilewati total** | tanpa cookie, judul premium ep **1/25/99** → ketiganya **307 ke alamat `.mp4`** | `/api/download` & `/api/teaser` wajib cek `resolveUserEmail` + unlock koin sebelum 307 — **perbaikan kode, belum dikerjakan** |
 
-Pemberat D-1: alamat tunnel **diserahkan gratis** oleh `/api/teaser` lewat header `Location`
-pada 307 (`app/api/teaser/route.ts:63-69`), jadi menutup `browse` saja belum cukup.
+Pemberat D-1 yang sebagian sudah mereda: alamat tunnel dulu diserahkan gratis oleh `/api/teaser`
+lewat header `Location` pada 307. Sesudah `fd689fb`, jalur itu hanya menyerahkannya untuk
+episode dalam jatah gratis — tapi satu permintaan `ep=1` masih cukup untuk mendapat alamatnya,
+jadi menutup `browse` tetap WAJIB.
 
-### 🟠 Temuan TINGGI yang juga belum ditutup
+### ⛔ GANGGUAN PRODUKSI hari ini — database tak terjangkau ~20 menit, BUKAN dari kode kita
 
-1. **`GET /api/admins` publik** (`app/api/admins/route.ts:14`) — diuji: **200 + nama & email 5
-   admin** tanpa login. POST (`:22`) & DELETE (`:81`) sudah dipagari; hanya GET yang lupa.
-2. **RLS MATI di semua tabel + nol policy** (`supabase_migrations/2026-08-29_...sql:134-137`,
+Rinciannya di `antrean-deploy.md`. Ringkas: semua endpoint DB balas 500 setelah ~12,47 detik;
+`curl` LANGSUNG ke Supabase (tanpa Next.js) balas **522 Connection timed out** dari Cloudflare →
+server database project `nvblmpkwyzbpdbshyvzw` yang tak merespons, bukan kode/Next.js/Railway.
+Pulih sendiri. Kambuhan dari 2026-09-19; naskah restart siap di
+`docs/permintaan-restart-supabase.md` (hanya Kang Dedi, pemilik project, bisa menekannya).
+
+**JANGAN merilis build yang dibuat saat database sakit** — build tetap lulus tapi memakai
+cadangan `data/dramas.json` yang basi (lib/dramas.ts:256,279). Gerbang §6 wajib diulang sesudah
+DB sehat, lalu periksa hasil cetak-awal memuat tautan drama, bukan kosong.
+
+### 🟠 Temuan TINGGI yang masih belum ditutup
+
+1. **RLS MATI di semua tabel + nol policy** (`supabase_migrations/2026-08-29_...sql:134-137`,
    dikonfirmasi `docs/db.md:83-85`), DAN fungsi RPC `coin_add`/`coin_spend_unlock`/`like_change`
    tak pernah di-`revoke` dari PUBLIC — `scripts/perbaiki_izin_dramaapp.py:83` hanya mencabut hak
    **tabel**, bukan fungsi. Project Supabase ini **dipakai bersama 4 aplikasi lain**, jadi satu
    `grant` keliru oleh pengelola app lain membuka hash password + 2FA + saldo koin penonton.
    ❓ Keadaan nyatanya **belum diverifikasi** — catatan `HANDOFF.md:6160-6161` bilang izin anon
    sudah dicabut, tapi itu **catatan, bukan bukti**. SQL siap-tempel ada di laporan audit.
-3. **`/admin` dijaga hanya `localStorage`** (`app/admin/page.tsx:85-93`). Diredam: 12 route API
+2. **`/admin` dijaga hanya `localStorage`** (`app/admin/page.tsx:85-93`). Diredam: 12 route API
    admin **semuanya** cek cookie HMAC di server. Pola gerbang server yang benar sudah ada di
    `app/admin/settings/playly/page.tsx:34-36` — tinggal disalin.
-4. **`POST /api/likes` & `POST /api/ads/event` menulis DB tanpa auth & tanpa rate limit.**
+3. **`POST /api/likes` & `POST /api/ads/event` menulis DB tanpa auth & tanpa rate limit.**
 
 ### ✅ Yang DIPERIKSA dan terbukti BERSIH — jangan diaudit ulang dari nol
 

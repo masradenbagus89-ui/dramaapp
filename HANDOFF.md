@@ -69,7 +69,7 @@ diperbaiki.
 
 ---
 
-## 2026-10-24 — AUDIT KEAMANAN MENYELURUH + 4 RILIS + 1 MIGRASI DB. DARURAT: 3 dari 3 DITUTUP · TINGGI: 4 dari 4 DITUTUP. Sisa: paywall belum tertutup PENUH.
+## 2026-10-24 — AUDIT KEAMANAN MENYELURUH + 5 RILIS + 1 MIGRASI DB + 1 PERBAIKAN PC. DARURAT: 3 dari 3 DITUTUP · TINGGI: 4 dari 4 DITUTUP. Sisa: paywall belum tertutup PENUH.
 
 Owner minta audit keamanan menyeluruh (pemicunya peringatan **PHP2Shell**). Audit dijalankan
 READ-ONLY dulu, lalu owner menyetujui satu perbaikan dan men-deploy-nya.
@@ -249,15 +249,36 @@ akan kambuh. Butuh keputusan owner + Kang Dedi, bukan perbaikan kode.
 3. ~~`/admin` dijaga hanya `localStorage`~~ — ✅ **`9125fb3`** (rilis ke-4).
 4. ~~`POST /api/likes` & `POST /api/ads/event` menulis DB tanpa pagar~~ — ✅ **`1f5a546`** (rilis ke-3).
 
-### 🟡 SISA Tahap 1 yang belum dikerjakan — butuh keputusan owner
+### ✅ SUDAH DIRILIS (ke-5) — 5 header keamanan + CSP mode Report-Only
 
-1. **Header keamanan + CSP** — nol CSP/HSTS/X-Frame-Options sampai sekarang. **Ditahan dengan
-   sengaja**: CSP yang salah setel bisa mematikan AdSense (`AdBanner.tsx` membangkitkan ulang
-   `<script>` dari env) dan pembayaran Midtrans Snap (`CoinWallet.tsx:54`). Butuh perlakuan
-   sendiri, idealnya mode `Report-Only` dulu sebelum ditegakkan.
-2. **`import "server-only"` di `lib/supabase.ts`** — paket `server-only` **belum terpasang**, jadi
+Rinciannya di `antrean-deploy.md` (entri 2026-10-24 ke-5, di `2a9dfd3`). Sebelumnya produksi
+mengirim **NOL** header keamanan; sekarang **6/6** di seluruh jalur termasuk `/_next/image`.
+19 jalur penonton 200, nol kemunduran pada rilis sebelumnya. 108 berkas / **1561 tes hijau**.
+
+⏭️ **BELUM SELESAI — CSP masih `Report-Only`, jadi ia MENGAMATI, belum melindungi.**
+Langkah penutupnya butuh browser dan karena itu butuh owner: buka situs + halaman drama + modal
+top-up koin dengan DevTools Console, kumpulkan baris `[Report Only] Refused to ...`, tambahkan
+host sah yang muncul, lalu ganti nama header dari `Content-Security-Policy-Report-Only` menjadi
+`Content-Security-Policy`. **Jangan ditegakkan tanpa langkah ini** — CSP terlalu ketat mematikan
+AdSense & Midtrans TANPA error apa pun di layar.
+
+📌 Keputusan yang jangan dibalik tanpa alasan baru (alasan lengkap di komentar `next.config.ts`):
+`'unsafe-inline'` pada script terpaksa ada sehingga CSP ini **bukan penghenti XSS utuh** · HSTS
+tanpa `preload` · `fullscreen`/`payment` tidak dimatikan · `img-src` sengaja longgar ·
+`X-Frame-Options: SAMEORIGIN`.
+
+### 🟡 SISA yang belum dikerjakan — butuh keputusan owner
+
+1. **`import "server-only"` di `lib/supabase.ts`** — paket `server-only` **belum terpasang**, jadi
    ini menambah dependency baru. Ditahan karena penambahan paket = keputusan owner (rak owasp §1
    A03 rantai pasok). Nilainya: mengubah kebocoran senyap jadi kegagalan build.
+2. **Tegakkan CSP** (lihat di atas) — menunggu laporan Console dari owner.
+3. **Paywall belum tertutup PENUH** — `FeedPlayer.tsx:114,519` masih menulis alamat tunnel
+   langsung ke halaman. Penutupan penuh = URL bertanda tangan berumur pendek (kode situs + agen
+   PC). Ini juga yang menutup sisa D-1 (orang yang sudah tahu nama berkas tetap bisa mengunduh).
+4. **Koneksi database bersama 51/60** — akar gangguan hari ini, akan kambuh. Butuh pembicaraan
+   owner dengan Kang Dedi (naikkan plafon, atau pindah ke project Supabase sendiri). Bukan
+   perbaikan kode.
 
 ### ✅ Yang DIPERIKSA dan terbukti BERSIH — jangan diaudit ulang dari nol
 

@@ -4,9 +4,53 @@
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
 **Terakhir dicek:** 2026-10-24 (**komputer OWNER**) — **ANTREAN KOSONG, DUAL PUSH TUNTAS.**
-Lokal = `origin/main` = `dramaku/main` = **`9125fb3`** (selisih **0/0** ke kedua remote,
+Lokal = `origin/main` = `dramaku/main` = **`2a9dfd3`** (selisih **0/0** ke kedua remote,
 diverifikasi `git fetch` SESUDAH push). Catatan `95d3b29` di bawah sudah basi; seluruh commit
 antaranya terbukti sudah ada di KEDUA remote — justru karena selisihnya 0/0.
+
+✅ **DIRILIS 2026-10-24 (ke-5) — 5 header keamanan + CSP mode Report-Only, di `2a9dfd3`.**
+Dual push tuntas, fast-forward `9a4aa23..2a9dfd3`, selisih **0/0**. 2 berkas: `next.config.ts`
++ 1 berkas tes baru.
+
+**KENAPA:** temuan S-1 — produksi mengirim **NOL** header keamanan. Diukur tepat sebelum push:
+keenamnya (HSTS, X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy,
+CSP) **HILANG** semua.
+
+⚠️ **CSP SENGAJA `Report-Only` DULU — jangan ditegakkan sebelum laporannya dikumpulkan.**
+CSP yang salah setel TIDAK memunculkan error di layar: iklan AdSense dan tombol bayar Midtrans
+cuma berhenti muncul, dan tak ada yang melapor. Report-Only membuat browser MENCATAT tanpa
+memblokir, jadi daftarnya bisa dirapikan dari kenyataan.
+
+**Bukti TAYANG:**
+
+| Diukur | Sebelum | Sesudah |
+|---|---|---|
+| 6 header keamanan | **HILANG semua** | **6/6 ADA**, di seluruh jalur termasuk `/_next/image` |
+| CSP penegak / laporkan-saja | 0 / 0 | **0 / 1** — benar, belum menegakkan |
+| Host wajib di CSP | — | AdSense · Midtrans · tunnel · Playly · youtube-nocookie **semua ADA** |
+| 19 jalur penonton + `/admin` | 200 | **200, nol gagal** |
+| Rilis ke-1..ke-4 + migrasi DB | — | **utuh**: paywall 401 · video 307 · `/api/admins` 403 · `/admin` ditolak · `/api/dramas` **33524 byte sama** |
+| Build & downtime | — | tayang cek ke-4 (~1,5 menit), **downtime NOL** |
+
+Gerbang §6: build 0 · tsc 0 · **108 berkas / 1561 tes hijau** (+14 tes).
+
+📌 **KEPUTUSAN yang jangan dibalik tanpa alasan baru** (alasannya lengkap di komentar
+`next.config.ts`): `'unsafe-inline'` pada script TERPAKSA (Next.js menyisipkan script hydration,
+belum pakai nonce) sehingga CSP ini **bukan penghenti XSS utuh** — nilainya di pembatasan ASAL
+script · HSTS **tanpa `preload`** (preload permanen & sulit dicabut; jangan di host sementara
+`*.up.railway.app`) · `fullscreen` & `payment` **tidak** dimatikan (dipakai pemutar & Midtrans) ·
+`img-src` sengaja longgar (`https:`) supaya poster tak hilang diam-diam tiap admin menambah
+sumber · `X-Frame-Options: SAMEORIGIN`, bukan DENY.
+
+⏭️ **LANGKAH BERIKUTNYA (belum dikerjakan):** owner membuka situs + halaman drama + modal
+top-up koin dengan DevTools Console, mengumpulkan baris `[Report Only] Refused to ...`. Host sah
+yang muncul ditambahkan ke daftar, lalu nama header diganti dari
+`Content-Security-Policy-Report-Only` menjadi `Content-Security-Policy`. Sebelum itu, CSP belum
+melindungi apa pun — ia baru mengamati.
+
+**Rollback 1-baris:** `git revert --no-edit 2a9dfd3 && git push origin main`.
+
+---
 
 🗄️ **MIGRASI DATABASE 2026-10-24 — RLS nyala di 5 tabel + hak fungsi dirapatkan. BUKAN deploy kode.**
 

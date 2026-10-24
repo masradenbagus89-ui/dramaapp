@@ -4,9 +4,65 @@
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
 **Terakhir dicek:** 2026-10-24 (**komputer OWNER**) — **ANTREAN KOSONG, DUAL PUSH TUNTAS.**
-Lokal = `origin/main` = `dramaku/main` = **`fd689fb`** (selisih **0/0** ke kedua remote,
+Lokal = `origin/main` = `dramaku/main` = **`daa2030`** (selisih **0/0** ke kedua remote,
 diverifikasi `git fetch` SESUDAH push). Catatan `95d3b29` di bawah sudah basi; seluruh commit
 antaranya terbukti sudah ada di KEDUA remote — justru karena selisihnya 0/0.
+
+✅ **DIRILIS 2026-10-24 (ke-3) — pagar penyalahgunaan + validasi alamat video, di `daa2030`.**
+Dual push tuntas, fast-forward `08567e8..daa2030`, nol paksaan, selisih **0/0** (diverifikasi
+SESUDAH push). 2 commit, 8 berkas: 6 disesuaikan + **2 berkas tes baru**.
+
+| SHA | Isinya |
+|---|---|
+| `1f5a546` | `guardMutation` di 4 endpoint penulis-data publik + validasi `dramaId` di `/api/likes` |
+| `daa2030` | alamat sumber video divalidasi saat DIBACA + pola `id` di `/api/admin/scan` |
+
+**Bukti TAYANG — sebelum vs sesudah, diukur dengan uji NOL-MUTASI** (permintaan dari domain
+asing berisi body kosong, jadi tak satu pun baris database tersentuh saat diuji):
+
+| Diukur | Sebelum | Sesudah |
+|---|---|---|
+| `POST /api/likes` dari domain asing | 400 | **403** |
+| `POST /api/ads/event` dari domain asing | 400 | **403** |
+| `POST /api/comments` dari domain asing | 401 | **403** |
+| `POST /api/ratings` dari domain asing | 400 | **403** |
+| `POST /api/likes` `dramaId` karangan | **200 — baris sampah MASUK database** | **404 "Drama tidak ditemukan"** |
+| `POST /api/likes` `dramaId` bentuk aneh / kepanjangan | 200 | **400** |
+| Like judul SUNGGUHAN dari domain sendiri | jalan | **jalan** (diuji 1→2, lalu dikembalikan 2→1 supaya data tak berubah) |
+| `/api/teaser?...&ep=1` (video) | 307 ke tunnel | **307 ke tunnel** — validasi baru TIDAK mematikan video |
+| `/api/teaser?...&ep=99` (paywall rilis ke-2) | 401 | **401** — tidak mundur |
+| 22 jalur penonton + `/admin` | 200 | **200, nol gagal** |
+| `/api/dramas` | 33524 byte | **33524 byte — katalog utuh** |
+| Versi Next | 16.4.3 | **15/15 chunk cocok — tidak mundur** |
+| Build & downtime | — | tayang cek ke-4 (~1,5 menit), **downtime NOL** |
+
+Gerbang §6 utuh: `rm -rf .next` → build **sukses** → tsc **0** → **106 berkas / 1541 tes hijau**
+(naik dari 104/1518 — **23 tes baru**) · nol env ter-stage · Penjaga Kebocoran Rahasia **success**.
+
+🔎 **Yang diperiksa SEBELUM merilis validasi alamat video** — ini bagian yang paling bisa
+merusak, jadi jangan diulangi tanpa pemeriksaan yang sama: alamat yang BENAR-BENAR dipakai
+produksi diuji terhadap keenam aturan `isAllowedVideoBase` (https · tanpa kredensial · tanpa
+port · host di bawah suffix sah · bukan `api.trycloudflare.com` · ada subdomain) — keenamnya
+lolos. Daftar suffix di jalur baca juga disamakan dengan jalur tulis
+(`parseAllowedSuffixes(process.env.VIDEO_BASE_ALLOWED_SUFFIXES)`); memakai daftar bawaan saja
+akan menolak alamat yang sengaja diizinkan owner lewat env dan mematikan video tanpa sebab.
+
+📌 **Keputusan desain yang jangan dibalik tanpa alasan baru:** `/api/likes` dan
+`/api/ads/event` SENGAJA tetap tanpa kewajiban login — keduanya dipakai pengunjung yang belum
+punya akun (`LikeButton.tsx:39`, `ActionRail.tsx:69`, `FeedPlayer.tsx:483`, `AdBanner.tsx:99,127`).
+Mewajibkan sesi akan mematikan fiturnya dan membuat angka impresi iklan SALAH, bukan aman.
+Batas laju juga longgar dengan sengaja (likes 120/mnt, ads 600/mnt) karena kuncinya IP dan
+banyak pengunjung Indonesia berbagi satu IP di belakang NAT operator seluler.
+
+⚠️ **Batas jujur yang DIDOKUMENTASIKAN, bukan dirahasiakan:** permintaan tanpa header `Origin`
+(mis. `curl`/skrip di luar browser) masih melewati lapis pertama — keputusan sadar di
+`lib/origin.ts:26`, benar untuk anti-CSRF karena serangan dari browser SELALU membawa `Origin`.
+Ada satu tes yang sengaja mengunci fakta ini di `tests/abuse-guard.test.ts` supaya terlihat
+kalau suatu hari perilakunya diperketat.
+
+**Rollback 1-baris:** `git revert --no-edit daa2030 1f5a546 && git push origin main`.
+
+---
 
 ✅ **DIRILIS 2026-10-24 (ke-2) — 2 celah akses dari audit ditutup, di `fd689fb`.**
 Dual push tuntas, fast-forward `91e3079..fd689fb`, nol paksaan, selisih **0/0** (diverifikasi

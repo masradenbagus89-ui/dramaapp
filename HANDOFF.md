@@ -69,7 +69,7 @@ diperbaiki.
 
 ---
 
-## 2026-10-24 — AUDIT KEAMANAN MENYELURUH + 2 RILIS (`92512a7`, `fd689fb`). 3 TEMUAN DARURAT: 2 DITUTUP, 1 SISA DI TANGAN OWNER.
+## 2026-10-24 — AUDIT KEAMANAN MENYELURUH + 3 RILIS (`92512a7`, `fd689fb`, `daa2030`). DARURAT: 2 dari 3 DITUTUP · TINGGI: 2 dari 4 DITUTUP.
 
 Owner minta audit keamanan menyeluruh (pemicunya peringatan **PHP2Shell**). Audit dijalankan
 READ-ONLY dulu, lalu owner menyetujui satu perbaikan dan men-deploy-nya.
@@ -109,6 +109,24 @@ ke halaman lewat `videoSrc` (lib/video.ts:12), jadi alamat episode terkunci teta
 View Source tanpa melewati gerbang baru. Penutupan penuh = tunnel menolak permintaan tanpa
 tanda tangan, pekerjaan di `pc-backup-agent/`.
 
+### ✅ SUDAH DIRILIS (ke-3) — pagar penyalahgunaan + validasi alamat video
+
+Rinciannya di `antrean-deploy.md` (entri 2026-10-24 ke-3, di `daa2030`). Ringkas: `guardMutation`
+dipasang di 4 endpoint penulis-data publik (`likes`, `ads/event`, `comments`, `ratings`) —
+dari domain asing kini **403**, dulu 400/401. `/api/likes` juga memvalidasi `dramaId`: id
+karangan **404**, dulu **200 dan baris sampahnya MASUK database** (`changeLike` memanggil fungsi
+DB `like_change` yang membuat baris untuk id apa pun, lib/store.ts:217). Dan alamat sumber video
+dari database kini divalidasi saat DIBACA, bukan cuma saat ditulis — penting karena
+`/api/admin/hardlink` MENGIRIM `HARDLINK_AGENT_SECRET` ke host itu.
+
+Gerbang §6: **106 berkas / 1541 tes hijau** (23 tes baru). Downtime NOL. Video terbukti tetap
+jalan (teaser ep=1 masih 307 ke tunnel) karena alamat produksi diuji dulu terhadap keenam aturan
+validator sebelum pengetatannya dirilis.
+
+📌 `/api/likes` & `/api/ads/event` SENGAJA tetap tanpa kewajiban login — keduanya dipakai
+pengunjung tanpa akun; mewajibkan sesi akan mematikan fitur dan membuat angka impresi iklan
+SALAH, bukan aman. Jangan "diperbaiki" tanpa alasan baru.
+
 ### 🔴 BELUM DITUTUP — D-1, dan HANYA owner yang bisa
 
 | # | Temuan | Bukti saat audit | Yang menutupnya |
@@ -143,8 +161,19 @@ DB sehat, lalu periksa hasil cetak-awal memuat tautan drama, bukan kosong.
    sudah dicabut, tapi itu **catatan, bukan bukti**. SQL siap-tempel ada di laporan audit.
 2. **`/admin` dijaga hanya `localStorage`** (`app/admin/page.tsx:85-93`). Diredam: 12 route API
    admin **semuanya** cek cookie HMAC di server. Pola gerbang server yang benar sudah ada di
-   `app/admin/settings/playly/page.tsx:34-36` — tinggal disalin.
-3. **`POST /api/likes` & `POST /api/ads/event` menulis DB tanpa auth & tanpa rate limit.**
+   `app/admin/settings/playly/page.tsx:34-36` — tinggal disalin. **Ini butir berikutnya.**
+3. ~~`POST /api/likes` & `POST /api/ads/event` menulis DB tanpa auth & tanpa rate limit~~ —
+   ✅ **DITUTUP di `1f5a546`** (rilis ke-3 di atas).
+
+### 🟡 SISA Tahap 1 yang belum dikerjakan — butuh keputusan owner
+
+1. **Header keamanan + CSP** — nol CSP/HSTS/X-Frame-Options sampai sekarang. **Ditahan dengan
+   sengaja**: CSP yang salah setel bisa mematikan AdSense (`AdBanner.tsx` membangkitkan ulang
+   `<script>` dari env) dan pembayaran Midtrans Snap (`CoinWallet.tsx:54`). Butuh perlakuan
+   sendiri, idealnya mode `Report-Only` dulu sebelum ditegakkan.
+2. **`import "server-only"` di `lib/supabase.ts`** — paket `server-only` **belum terpasang**, jadi
+   ini menambah dependency baru. Ditahan karena penambahan paket = keputusan owner (rak owasp §1
+   A03 rantai pasok). Nilainya: mengubah kebocoran senyap jadi kegagalan build.
 
 ### ✅ Yang DIPERIKSA dan terbukti BERSIH — jangan diaudit ulang dari nol
 

@@ -13,8 +13,19 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const dramaId = searchParams.get("id")?.trim();
-    if (!dramaId) {
-      return NextResponse.json({ error: "Parameter 'id' wajib." }, { status: 400 });
+    // Pola id disamakan dengan app/api/admin/hardlink/route.ts:19 (temuan audit
+    // 2026-10-24: di sini dulu cuma dicek "tidak kosong").
+    //
+    // `encodeURIComponent` di bawah memang sudah mencegah traversal mentah
+    // (`/` jadi `%2F`), jadi ini bukan lubang terbuka — tapi mengandalkan
+    // encoding saja berarti bergantung pada cara Caddy di PC backup
+    // menormalkan `%2F`/`%2e%2e`, dan itu di luar kendali kode ini. Memvalidasi
+    // bentuknya lebih murah daripada menebak perilaku server lain.
+    if (!dramaId || !/^[a-z0-9-]{1,100}$/i.test(dramaId)) {
+      return NextResponse.json(
+        { error: "Parameter 'id' wajib & hanya boleh huruf, angka, dan tanda hubung." },
+        { status: 400 },
+      );
     }
 
     const baseUrl = await getVideoBaseUrl();

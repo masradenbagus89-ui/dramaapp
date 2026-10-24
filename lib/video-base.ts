@@ -113,7 +113,33 @@ export async function getVideoBaseUrl(
 
   try {
     const rec = await getVideoBaseRecord(opts);
-    if (rec?.url) return normalizeVideoBase(rec.url);
+    if (rec?.url) {
+      const tersimpan = normalizeVideoBase(rec.url);
+
+      // DIVALIDASI ULANG SAAT BACA, bukan hanya saat tulis (temuan audit
+      // 2026-10-24). Sebelum ini nilai dari database dipakai apa adanya,
+      // padahal allowlist cuma dipasang di jalur tulis
+      // (app/api/agent/video-base/route.ts:136). Artinya baris yang pernah
+      // terisi lewat jalur LAIN — SQL langsung, migrasi, dashboard Supabase,
+      // atau sebelum allowlist dipasang — akan dipakai tanpa diperiksa.
+      //
+      // Kenapa itu serius, bukan sekadar rapi: `/api/admin/hardlink` MENGIRIM
+      // `HARDLINK_AGENT_SECRET` ke host ini. Satu nilai jahat di database
+      // berarti rahasia itu dikirim ke server penyerang. Pertahanan berlapis
+      // (rak owasp §1) menuntut pemeriksaan di kedua sisi, bukan satu sisi.
+      //
+      // Daftar suffix-nya SAMA dengan jalur tulis — memakai daftar bawaan saja
+      // di sini akan menolak alamat yang sah lewat VIDEO_BASE_ALLOWED_SUFFIXES
+      // dan mematikan video tanpa sebab.
+      const suffixes = parseAllowedSuffixes(
+        process.env.VIDEO_BASE_ALLOWED_SUFFIXES,
+      );
+      if (isAllowedVideoBase(tersimpan, suffixes)) return tersimpan;
+
+      // Tidak lolos → abaikan, jatuh ke env di bawah. Sengaja TIDAK dikosongkan
+      // paksa: env diisi owner di panel hosting, jadi ia sumber yang lebih
+      // tepercaya daripada baris database yang gagal periksa.
+    }
   } catch {
     // Database mati/tak terjangkau bukan alasan mematikan video: jatuh ke env
     // (perilaku lama). Sengaja diam — jalur ini dipanggil tiap render halaman,

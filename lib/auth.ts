@@ -57,14 +57,31 @@ export function clearUser(): void {
 }
 
 /**
- * Cek role dari server-side admin list (data/admins.json via /api/admins).
- * Default: viewer kalau email tidak terdaftar atau API error.
+ * Cek role yang DIAKUI SERVER untuk email ini, lewat /api/admins.
+ * Default: viewer kalau tidak terdaftar, tidak berhak bertanya, atau API error.
+ *
+ * `?email=` dikirim supaya server bisa menolak kalau yang ditanyakan BUKAN
+ * pemilik sesi — bukan supaya server mempercayainya sebagai identitas.
+ * Sejak 2026-10-24 endpoint itu tak lagi menyerahkan daftar email admin kepada
+ * pemanggil biasa (app/api/admins/route.ts), jadi di sini jawabannya dibaca
+ * dalam dua bentuk:
+ *   - `{ isAdmin }`  → jawaban untuk pemilik sesi penonton (bentuk baru)
+ *   - `{ admins }`   → jawaban untuk sesi ADMIN, yang memang menerima daftar
+ *                      penuh; dipertahankan supaya pemanggil bersesi admin
+ *                      tetap mendapat jawaban benar tanpa permintaan kedua.
  */
 export async function fetchUserRole(email: string): Promise<Role> {
   try {
-    const res = await fetch("/api/admins");
+    const res = await fetch(`/api/admins?email=${encodeURIComponent(email)}`);
+    // Gagal-AMAN: 401/403/429 dari server = jangan menaikkan hak siapa pun.
     if (!res.ok) return "viewer";
-    const data = (await res.json()) as { admins?: { email: string }[] };
+    const data = (await res.json()) as {
+      isAdmin?: boolean;
+      admins?: { email: string }[];
+    };
+    if (typeof data.isAdmin === "boolean") {
+      return data.isAdmin ? "admin" : "viewer";
+    }
     const list = (data.admins ?? []).map((a) => a.email.trim().toLowerCase());
     return list.includes(email.trim().toLowerCase()) ? "admin" : "viewer";
   } catch {

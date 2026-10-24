@@ -1,20 +1,96 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   getAdmins,
+  isAdminEmail,
   setAdmins,
   setAdminPassword,
   type AdminsFile,
 } from "@/lib/store";
-import { getAdminEmail } from "@/lib/session";
+import { getAdminEmail, resolveUserEmail } from "@/lib/session";
 import { hashPassword, MIN_ADMIN_PASSWORD_LEN } from "@/lib/admin-password";
+import { clientIp } from "@/lib/origin";
+import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-export async function GET() {
-  const file = await getAdmins();
-  // Hanya kembalikan daftar admin (tanpa data internal lain).
-  return NextResponse.json({ admins: file.admins });
+/**
+ * GET /api/admins
+ *
+ * KENAPA DIPAGARI (audit keamanan 2026-10-24): sebelum ini GET terbuka untuk
+ * siapa pun dan menyerahkan NAMA + EMAIL seluruh admin. Terbukti di produksi:
+ * satu permintaan tanpa cookie membalas 200 dengan 5 entri admin. Akibatnya
+ * brute-force login berubah dari "tebak email DAN password" menjadi "tebak
+ * password saja" — dan jalur login admin masih punya cadangan satu
+ * `ADMIN_PASSWORD` bersama (app/api/auth/login/route.ts:79), jadi bocornya
+ * daftar email langsung menaikkan nilai tiap percobaan. POST (:22) dan DELETE
+ * (:81) memang sudah dipagari sejak awal; hanya GET yang terlewat.
+ *
+ * Dua bentuk jawaban, sengaja berbeda menurut siapa yang bertanya:
+ *
+ *  1. Sesi ADMIN → daftar lengkap, bentuk `{ admins: [...] }` TIDAK diubah
+ *     supaya app/components/admin/AdminManager.tsx:34 tetap jalan apa adanya.
+ *
+ *  2. `?email=` + sesi penonton → hanya `{ isAdmin: boolean }`, dan HANYA untuk
+ *     email milik sesi itu sendiri. Ini yang dibutuhkan spanduk "kamu admin,
+ *     masuk ulang" (lib/auth.ts fetchUserRole → needsAdminRelogin, tampil di
+ *     TopNav.tsx:242 & KepalaKatalog.tsx:163).
+ *
+ *     KENAPA dibatasi ke email sendiri, bukan sekadar dibatasi laju: kalau
+ *     siapa pun boleh menanyakan email siapa pun, endpoint ini menjadi alat
+ *     pemeriksa tebakan ("apakah budi@x.com admin?") — bocornya lebih lambat,
+ *     tapi tetap bocor. Dengan dipaku ke email sesi, tak ada yang bisa
+ *     ditanyakan selain tentang diri sendiri, jadi celah tebak-menebak hilang
+ *     sama sekali. Bonus: identitas diambil dari cookie bertanda tangan, bukan
+ *     dari email kiriman klien yang memang tak bisa dipercaya.
+ */
+export async function GET(req: NextRequest) {
+  // Sesi admin: daftar penuh, seperti sebelumnya.
+  const admin = await getAdminEmail(req);
+  if (admin) {
+    const file = await getAdmins();
+    return NextResponse.json({ admins: file.admins });
+  }
+
+  const diminta = new URL(req.url).searchParams.get("email")?.trim();
+  if (!diminta) {
+    return NextResponse.json(
+      { error: "Hanya admin yang bisa melihat daftar admin." },
+      { status: 403 },
+    );
+  }
+
+  // Pagar tambahan, bukan pagar utama. Pagar utamanya adalah "cuma boleh
+  // bertanya soal diri sendiri" di bawah. Ini sekadar meredam skrip yang
+  // membanjiri endpoint. Catatan jujur: pembatas ini di MEMORI tiap instance
+  // (lib/rate-limit.ts:7-12), jadi best-effort — bukan jaminan lintas-instance.
+  const laju = rateLimit(`admins:cek:${clientIp(req.headers)}`, 30, 60_000);
+  if (!laju.allowed) {
+    return NextResponse.json(
+      { error: "Terlalu banyak permintaan. Coba lagi sebentar." },
+      { status: 429, headers: { "Retry-After": String(laju.retryAfterSec) } },
+    );
+  }
+
+  const sesi = await resolveUserEmail(req);
+  if (!sesi) {
+    return NextResponse.json(
+      { error: "Masuk dulu untuk memeriksa status akun." },
+      { status: 401 },
+    );
+  }
+  if (sesi.email.trim().toLowerCase() !== diminta.toLowerCase()) {
+    // 403, bukan 404 atau jawaban palsu: pemanggil memang sudah login, tapi
+    // menanyakan akun orang lain. Dibalas tegas supaya bug di klien kelihatan,
+    // dan tak ada informasi apa pun tentang email yang ditanyakan yang ikut
+    // keluar dari sini.
+    return NextResponse.json(
+      { error: "Hanya bisa memeriksa akun sendiri." },
+      { status: 403 },
+    );
+  }
+
+  return NextResponse.json({ isAdmin: await isAdminEmail(sesi.email) });
 }
 
 export async function POST(req: NextRequest) {

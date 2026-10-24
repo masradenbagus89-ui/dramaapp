@@ -25,14 +25,45 @@
 	}
 
 	# Default: serve video files dari folder lokal (streaming inline utk player)
+	#
+	# ⚠️ `browse` DIBUANG 2026-10-24 (temuan audit keamanan D-1) — JANGAN
+	# dipasang lagi. Dengan `browse`, Caddy menampilkan DAFTAR ISI FOLDER kepada
+	# siapa pun yang membuka alamat tunnel. Diukur saat audit: halaman root
+	# membalas 200 dengan **61 tautan folder** terlihat, tanpa diminta
+	# kredensial apa pun — seluruh pustaka video bisa ditelusuri lalu diunduh,
+	# termasuk judul berbayar.
+	#
+	# Pemutaran video TIDAK terpengaruh: player meminta nama berkas spesifik
+	# (`<base>/<dramaId>/<ep>.mp4`, lib/video.ts:12), bukan daftar folder.
+	# `file_server` tanpa `browse` tetap menyajikan berkas yang alamatnya tepat.
+	#
+	# BATAS JUJUR: ini menutup PENELUSURAN, bukan orang yang sudah tahu nama
+	# berkasnya. Penutupan penuh menuntut URL bertanda tangan berumur pendek
+	# (tunnel menolak permintaan tanpa tanda tangan). `basicauth` BUKAN
+	# jawabannya di jalur ini — elemen `<video>` tidak mengirim kredensial
+	# basic-auth, jadi memasangnya justru mematikan pemutaran.
 	handle {
 		root * C:\Users\USER\Downloads\video
-		file_server browse
+		file_server
 	}
 
-	# CORS header buat case admin form fetch langsung (opsional, defensive)
+	# CORS: dibatasi ke domain situs sendiri (2026-10-24). Sebelumnya `*`, yang
+	# berarti JavaScript di situs mana pun boleh MEMBACA byte video kita.
+	#
+	# Diperiksa dulu sebelum diubah, supaya tidak mematikan apa pun — nol jalur
+	# browser yang membutuhkan CORS ke tunnel ini:
+	#   * video: `<video src>` tanpa atribut crossOrigin → permintaan non-CORS
+	#     (dicatat di app/components/FeedPlayer.tsx:589)
+	#   * subtitle: SENGAJA di-proxy lewat /api/subtitle supaya same-origin,
+	#     justru agar `<track>` tak kena CORS (lib/subtitles.ts:1-4)
+	#   * tombol unduh `?dl=1`: navigasi biasa, bukan fetch
+	#   * /_agent/*: dipanggil SERVER kita (app/api/admin/hardlink/route.ts:47),
+	#     dan CORS tidak berlaku untuk permintaan server-ke-server
+	#
+	# Headernya tidak dihapus seluruhnya supaya tetap ada nilai yang benar
+	# kalau nanti ada formulir admin yang memang perlu memanggil langsung.
 	header {
-		Access-Control-Allow-Origin "*"
+		Access-Control-Allow-Origin "https://dramaapp-production-9e88.up.railway.app"
 		Access-Control-Allow-Methods "GET, POST, OPTIONS"
 		Access-Control-Allow-Headers "Content-Type, x-agent-secret"
 	}

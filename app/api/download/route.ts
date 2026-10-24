@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { getVideoBaseUrl } from "@/lib/video-base";
+import { FREE_EPISODES } from "@/lib/coins";
+import {
+  balasanAksesDitolak,
+  periksaAksesEpisode,
+} from "@/lib/paywall-guard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -38,12 +43,29 @@ const ID_RE = /^[a-z0-9-]+$/i;
 // berganti tiap PC backup restart, jadi redirect JANGAN disimpan lama.
 const REDIRECT_CACHE = "public, max-age=0, s-maxage=60";
 
+// Balasan yang bergantung pada SIAPA yang bertanya tak boleh masuk cache
+// bersama — alasan lengkapnya di app/api/teaser/route.ts (CACHE_PER_ORANG).
+const CACHE_PER_ORANG = "private, no-store";
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id")?.trim() ?? "";
   const ep = Number(searchParams.get("ep"));
   if (!ID_RE.test(id) || !Number.isInteger(ep) || ep < 1 || ep > 999) {
     return new NextResponse("Parameter tidak valid", { status: 400 });
+  }
+
+  // GERBANG PAYWALL — mendahului pencarian alamat tunnel, supaya pemanggil yang
+  // tak berhak tidak ikut diberi tahu alamat sumber videonya. Tombol unduh di
+  // halaman detail dipaku ep 1 (lib/video.ts:64) sehingga lewat tanpa menyentuh
+  // database; yang tertahan hanyalah pemanggilan langsung ke episode berbayar.
+  const akses = await periksaAksesEpisode(req, id, ep);
+  if (akses !== "boleh") {
+    const { pesan, status } = balasanAksesDitolak(akses);
+    return new NextResponse(pesan, {
+      status,
+      headers: { "Cache-Control": CACHE_PER_ORANG },
+    });
   }
 
   const fileName = `${ep}.mp4`;
@@ -53,7 +75,11 @@ export async function GET(req: NextRequest) {
     const target = `${baseUrl}/${encodeURIComponent(id)}/${encodeURIComponent(fileName)}?dl=1`;
     return new NextResponse(null, {
       status: 307,
-      headers: { Location: target, "Cache-Control": REDIRECT_CACHE },
+      headers: {
+        Location: target,
+        // Hanya jatah gratis yang jawabannya sama untuk semua orang.
+        "Cache-Control": ep <= FREE_EPISODES ? REDIRECT_CACHE : CACHE_PER_ORANG,
+      },
     });
   }
 
@@ -75,6 +101,12 @@ export async function GET(req: NextRequest) {
         "Content-Type": "video/mp4",
         "X-Content-Type-Options": "nosniff",
         "Content-Disposition": `attachment; filename="${id}-ep${ep}.mp4"`,
+        // Dinyatakan eksplisit, jangan diserahkan ke dugaan cache: tanpa
+        // header ini, perantara boleh menyimpan isi episode berbayar dengan
+        // kebijakannya sendiri. Jalur ini memang dev-only (lihat catatan di
+        // bawah), tapi pagar yang bergantung pada "jalurnya kan tidak aktif"
+        // akan jebol diam-diam begitu jalurnya hidup lagi.
+        "Cache-Control": ep <= FREE_EPISODES ? REDIRECT_CACHE : CACHE_PER_ORANG,
       },
     });
   } catch {

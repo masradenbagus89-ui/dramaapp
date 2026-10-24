@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getVideoBaseUrl } from "@/lib/video-base";
+import { FREE_EPISODES } from "@/lib/coins";
+import {
+  balasanAksesDitolak,
+  periksaAksesEpisode,
+} from "@/lib/paywall-guard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -38,12 +43,36 @@ const ID_RE = /^[a-z0-9-]+$/i;
 // membuat alamat basi terasa lama oleh penonton.
 const REDIRECT_CACHE = "public, max-age=0, s-maxage=60";
 
+// Cache untuk balasan yang BERGANTUNG PADA SIAPA yang bertanya.
+//
+// KENAPA WAJIB BEDA (2026-10-24): sejak gerbang paywall dipasang di bawah,
+// jawaban untuk episode di luar jatah gratis ikut bergantung pada sesi
+// pemanggil. Menyimpannya di cache BERSAMA (`public`/`s-maxage`) berarti satu
+// redirect yang sah untuk penonton yang sudah bayar bisa disajikan ulang ke
+// orang lain — gerbangnya ditegakkan sekali lalu dilewati 60 detik berikutnya.
+// Itu bukan sekadar bocor, itu membatalkan pagarnya.
+const CACHE_PER_ORANG = "private, no-store";
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id")?.trim() ?? "";
   const ep = Number(searchParams.get("ep") ?? "1");
   if (!ID_RE.test(id) || !Number.isInteger(ep) || ep < 1 || ep > 999) {
     return new NextResponse("Parameter tidak valid", { status: 400 });
+  }
+
+  // GERBANG PAYWALL — sebelum alamat tunnel dicari sama sekali, supaya
+  // pemanggil yang tak berhak tidak ikut diberi tahu alamat sumber videonya.
+  // Episode 1..FREE_EPISODES lewat tanpa menyentuh database (lihat jalan
+  // pintas di lib/paywall-guard.ts), jadi teaser hero & hover kartu — yang
+  // SELALU ep 1 — tidak berubah perilakunya sedikit pun.
+  const akses = await periksaAksesEpisode(req, id, ep);
+  if (akses !== "boleh") {
+    const { pesan, status } = balasanAksesDitolak(akses);
+    return new NextResponse(pesan, {
+      status,
+      headers: { "Cache-Control": CACHE_PER_ORANG },
+    });
   }
 
   const baseUrl = await getVideoBaseUrl();
@@ -64,7 +93,9 @@ export async function GET(req: NextRequest) {
     status: 307,
     headers: {
       Location: target,
-      "Cache-Control": REDIRECT_CACHE,
+      // Hanya episode dalam jatah gratis yang jawabannya sama untuk semua
+      // orang — itu saja yang boleh masuk cache bersama. Lihat CACHE_PER_ORANG.
+      "Cache-Control": ep <= FREE_EPISODES ? REDIRECT_CACHE : CACHE_PER_ORANG,
     },
   });
 }

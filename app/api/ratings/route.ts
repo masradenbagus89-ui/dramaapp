@@ -7,6 +7,7 @@ import {
   RATING_MAX,
 } from "@/lib/store";
 import { resolveUserEmail } from "@/lib/session";
+import { guardMutation } from "@/lib/request-guard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -26,6 +27,17 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  // Otorisasi sudah benar (identitas dari sesi, satu rating per email per
+  // judul). Yang ditambahkan audit 2026-10-24 adalah pagar penyalahgunaan:
+  // tanpa batas laju, satu skrip bisa mengganti-ganti nilai rating tanpa henti
+  // dan membebani database, walau hasil akhirnya tetap satu baris per orang.
+  const blocked = guardMutation(req, {
+    bucket: "ratings:post",
+    limit: 30,
+    windowMs: 60_000,
+  });
+  if (blocked) return blocked;
+
   try {
     const body = (await req.json()) as {
       dramaId?: string;

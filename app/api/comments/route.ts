@@ -6,6 +6,7 @@ import {
   type Comment,
 } from "@/lib/store";
 import { resolveUserEmail } from "@/lib/session";
+import { guardMutation } from "@/lib/request-guard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,6 +21,19 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  // Otorisasinya sudah benar sejak Tahap 6 (identitas dari sesi, bukan body).
+  // Yang terlewat — dan ditemukan audit 2026-10-24 — adalah pagar
+  // PENYALAHGUNAAN: tanpa ini satu skrip bisa membanjiri satu judul dengan
+  // komentar tanpa batas jumlah (batas 500 karakter hanya membatasi PANJANG
+  // tiap komentar, bukan berapa banyak). 20/menit jauh di atas kecepatan
+  // manusia menulis komentar, jadi tak ada penonton sah yang tersentuh.
+  const blocked = guardMutation(req, {
+    bucket: "comments:post",
+    limit: 20,
+    windowMs: 60_000,
+  });
+  if (blocked) return blocked;
+
   try {
     const body = (await req.json()) as {
       dramaId?: string;
@@ -99,6 +113,16 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  // Pagar penyalahgunaan juga di jalur HAPUS: pemeriksaan pemilik di bawah
+  // sudah benar (:126-132), tapi tanpa batas laju sebuah skrip masih bisa
+  // menembak ribuan percobaan hapus untuk MENEBAK commentId milik orang lain.
+  const blocked = guardMutation(req, {
+    bucket: "comments:delete",
+    limit: 20,
+    windowMs: 60_000,
+  });
+  if (blocked) return blocked;
+
   try {
     const { dramaId, commentId } = (await req.json()) as {
       dramaId?: string;

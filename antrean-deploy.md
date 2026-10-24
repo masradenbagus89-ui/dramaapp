@@ -8,6 +8,25 @@ Lokal = `origin/main` = `dramaku/main` = **`9125fb3`** (selisih **0/0** ke kedua
 diverifikasi `git fetch` SESUDAH push). Catatan `95d3b29` di bawah sudah basi; seluruh commit
 antaranya terbukti sudah ada di KEDUA remote — justru karena selisihnya 0/0.
 
+🗄️ **MIGRASI DATABASE 2026-10-24 — RLS nyala di 5 tabel + hak fungsi dirapatkan. BUKAN deploy kode.**
+
+Dijalankan langsung ke Postgres produksi atas izin verbatim owner, lewat jalur yang sudah ada
+(`scripts/jalankan_sql_dramaapp.py`). Migrasinya terversion di
+`supabase_migrations/2026-10-24_rls_dan_hak_fungsi.sql`. Rinciannya di `HANDOFF.md`.
+
+⚠️ **PENTING SAAT ROLLBACK:** `git revert` mengembalikan KODE, **tidak** mengembalikan database.
+Kalau suatu saat rilis hari ini dibalikkan, perubahan RLS ini TETAP berlaku — dan itu memang
+tidak masalah, karena aplikasi mengaksesnya lewat `service_role` yang menembus RLS (perilakunya
+sama sebelum maupun sesudah). Rollback database-nya terpisah, satu blok, ada di dalam berkas
+migrasi itu.
+
+Bukti: pemeriksa `python scripts/cek_rls_dramaapp.py` melaporkan **8 hal longgar → rapat (kode 0)**.
+Situs diuji per-tabel lewat jalur aplikasi: `/api/dramas` **33524 byte sama** · `/api/likes` 200 ·
+**fungsi `like_change` hidup** (1→2→1) · login admin berhasil · `/api/coins` mengembalikan
+saldo & unlock · 5 halaman penonton 200. Jumlah baris **tidak berubah** (37/40/46/0/3).
+
+---
+
 ✅ **DIRILIS 2026-10-24 (ke-4) — gerbang server SATU PINTU untuk seluruh /admin/*, di `9125fb3`.**
 Dual push tuntas, fast-forward `6138a48..9125fb3`, nol paksaan, selisih **0/0** (diverifikasi
 SESUDAH push). 1 commit, 4 berkas: `app/admin/layout.tsx` + 2 komentar dibetulkan + 1 berkas tes.

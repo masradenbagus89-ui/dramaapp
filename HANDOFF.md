@@ -69,7 +69,7 @@ diperbaiki.
 
 ---
 
-## 2026-10-24 — AUDIT KEAMANAN MENYELURUH + 4 RILIS. DARURAT: 2 dari 3 DITUTUP · TINGGI: 3 dari 4 DITUTUP. Sisa darurat ADA DI TANGAN OWNER.
+## 2026-10-24 — AUDIT KEAMANAN MENYELURUH + 4 RILIS + 1 MIGRASI DB. DARURAT: 2 dari 3 DITUTUP · TINGGI: 4 dari 4 DITUTUP. Sisa darurat ADA DI TANGAN OWNER.
 
 Owner minta audit keamanan menyeluruh (pemicunya peringatan **PHP2Shell**). Audit dijalankan
 READ-ONLY dulu, lalu owner menyetujui satu perbaikan dan men-deploy-nya.
@@ -171,18 +171,57 @@ Pulih sendiri. Kambuhan dari 2026-09-19; naskah restart siap di
 cadangan `data/dramas.json` yang basi (lib/dramas.ts:256,279). Gerbang §6 wajib diulang sesudah
 DB sehat, lalu periksa hasil cetak-awal memuat tautan drama, bukan kosong.
 
-### 🟠 Temuan TINGGI yang masih belum ditutup
+### ✅ DIKERJAKAN DI DATABASE — RLS nyala + hak fungsi dirapatkan (2026-10-24)
 
-1. **RLS MATI di semua tabel + nol policy** (`supabase_migrations/2026-08-29_...sql:134-137`,
-   dikonfirmasi `docs/db.md:83-85`), DAN fungsi RPC `coin_add`/`coin_spend_unlock`/`like_change`
-   tak pernah di-`revoke` dari PUBLIC — `scripts/perbaiki_izin_dramaapp.py:83` hanya mencabut hak
-   **tabel**, bukan fungsi. Project Supabase ini **dipakai bersama 4 aplikasi lain**, jadi satu
-   `grant` keliru oleh pengelola app lain membuka hash password + 2FA + saldo koin penonton.
-   ❓ Keadaan nyatanya **belum diverifikasi** — catatan `HANDOFF.md:6160-6161` bilang izin anon
-   sudah dicabut, tapi itu **catatan, bukan bukti**. SQL siap-tempel ada di laporan audit.
-2. ~~`/admin` dijaga hanya `localStorage`~~ — ✅ **DITUTUP di `9125fb3`** (rilis ke-4 di atas).
-3. ~~`POST /api/likes` & `POST /api/ads/event` menulis DB tanpa auth & tanpa rate limit~~ —
-   ✅ **DITUTUP di `1f5a546`** (rilis ke-3 di atas).
+Dijalankan langsung ke database produksi atas izin verbatim owner (owner tidak punya akses
+dashboard Supabase; project itu milik Kang Dedi). Jalurnya yang SUDAH ADA di repo:
+`scripts/jalankan_sql_dramaapp.py` + kredensial Postgres. Migrasinya tersimpan terversion di
+**`supabase_migrations/2026-10-24_rls_dan_hak_fungsi.sql`** (lengkap dengan rollback 1 blok).
+
+**Keadaan nyata yang akhirnya TERVERIFIKASI** (sebelumnya cuma dugaan dari berkas migrasi):
+
+| Diperiksa | Sebelum | Sesudah |
+|---|---|---|
+| RLS di 5 tabel | **MATI semua** | **NYALA semua** |
+| `coin_add` / `coin_spend_unlock` / `like_change` | 🔴 **anon & authenticated BISA menjalankan** | **hanya `service_role`** |
+| Hak tabel anon/authenticated | kosong (catatan HANDOFF lama **terbukti benar**) | tetap kosong |
+| `USAGE` schema untuk anon | tertutup | tetap tertutup |
+| Jumlah baris | 37/40/46/0/3 | **37/40/46/0/3 — nol data tersentuh** |
+
+Temuan terburuk justru yang ketiga fungsi: Postgres memberi EXECUTE ke PUBLIC untuk SETIAP
+fungsi baru secara bawaan, dan `scripts/perbaiki_izin_dramaapp.py:83` dulu hanya mencabut hak
+**tabel**. Jadi `coin_add` bisa dipanggil `anon` untuk mencetak koin ke email mana pun — tertahan
+HANYA oleh gerbang USAGE schema. Sekarang dua lapis.
+
+⚠️ **Jebakan yang WAJIB diingat kalau menyentuh fungsi di schema ini:** `service_role` punya
+`rolbypassrls = true` sehingga menembus RLS, TAPI itu **tidak** melewati izin fungsi. Mencabut
+EXECUTE dari PUBLIC tanpa `grant execute ... to service_role` di migrasi yang sama akan
+**MEMATIKAN** fitur koin & like. Pasangan GRANT-nya ada di migrasi; jangan dipisah.
+
+⚠️ **BATAS JUJUR — fungsi BARU akan lahir longgar lagi.** `alter default privileges ... revoke
+execute on functions from public` DIUJI dan terbukti **nol efek** (hak bawaan PUBLIC tak bisa
+dicabut begitu). Penggantinya perintah, bukan ingatan: **`python scripts/cek_rls_dramaapp.py`**
+— pemeriksa baca-saja yang keluar dengan kode 1 kalau ada yang longgar. Dijalankan sebelum
+migrasi: **8 hal longgar**. Sesudah: **rapat, kode 0**. Jalankan tiap menambah fungsi/tabel baru.
+
+**Terbukti situs tidak rusak** (tiap tabel diuji lewat jalur aplikasi sungguhan): `/api/dramas`
+**33524 byte sama**; `/api/likes` 200; **fungsi `like_change` hidup** (diuji 1→2→1); login admin
+berhasil (membaca `app_data`); `/api/coins` mengembalikan saldo & unlock (`wallets`+`unlocks`);
+5 halaman penonton 200.
+
+❗ **Temuan infrastruktur yang lebih mendesak dari RLS:** database bersama ini memakai **51 dari
+60 koneksi** maksimum, dan dipakai banyak tim (terlihat schema `mappingplan`, `bigseo`,
+`novelaksara`, `footballbot` + belasan user `creative_*` — jadi BUKAN "4 aplikasi" seperti
+catatan lama). Percobaan sambungan pertama ditolak dengan `remaining connection slots are
+reserved for roles with the SUPERUSER attribute`. Inilah akar gangguan 20 menit hari ini, dan ia
+akan kambuh. Butuh keputusan owner + Kang Dedi, bukan perbaikan kode.
+
+### ✅ Keempat temuan TINGGI — semuanya sudah ditutup
+
+1. ~~`GET /api/admins` menyerahkan email 5 admin ke publik~~ — ✅ **`fd689fb`** (rilis ke-2).
+2. ~~RLS mati + fungsi koin bisa dijalankan `anon`~~ — ✅ **migrasi DB di atas**.
+3. ~~`/admin` dijaga hanya `localStorage`~~ — ✅ **`9125fb3`** (rilis ke-4).
+4. ~~`POST /api/likes` & `POST /api/ads/event` menulis DB tanpa pagar~~ — ✅ **`1f5a546`** (rilis ke-3).
 
 ### 🟡 SISA Tahap 1 yang belum dikerjakan — butuh keputusan owner
 

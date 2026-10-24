@@ -5,11 +5,17 @@
 // login tidak pernah menerima isi halamannya — bukan sekadar "disembunyikan"
 // setelah halaman terkirim.
 //
-// Catatan untuk pengembang berikutnya: halaman /admin yang lama masih memakai
-// pemeriksaan di sisi browser (localStorage). Route API-nya sendiri sudah
-// dijaga cookie, jadi datanya aman; yang belum seragam cuma penjaga tampilan.
-// TODO: satukan penjagaan semua halaman /admin lewat satu middleware, supaya
-// tidak ada halaman baru yang lupa dijaga.
+// ✅ TODO LAMA SUDAH DIKERJAKAN (2026-10-24). Dulu tertulis di sini: "satukan
+// penjagaan semua halaman /admin lewat satu middleware, supaya tidak ada
+// halaman baru yang lupa dijaga". Sekarang gerbang satu-pintu itu ada di
+// `app/admin/layout.tsx` dan menjaga SELURUH /admin/* — termasuk halaman admin
+// yang dibuat di kemudian hari. Bukan `middleware.ts`, karena project ini
+// sengaja menghindari middleware sebagai penjaga otorisasi (CVE-2025-29927,
+// lihat app/api/admin/playly/unduhan/route.ts:25).
+//
+// Pemeriksaan di halaman ini SENGAJA DIBIARKAN sebagai lapis kedua: kalau
+// layout itu suatu hari dihapus atau salah di-refactor, halaman ini masih
+// berdiri sendiri.
 import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";

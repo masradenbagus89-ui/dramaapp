@@ -81,6 +81,18 @@ export default function AdminPage() {
 
   const effectiveId = id.trim() || (title.trim() ? slugify(title) : "");
 
+  // ⚠️ INI BUKAN PENJAGA KEAMANAN — jangan diandalkan sebagai pagar.
+  //
+  // Sejak 2026-10-24 pagar sungguhannya ada di `app/admin/layout.tsx`: cookie
+  // sesi admin diperiksa DI SERVER sebelum apa pun dirender, jadi orang tanpa
+  // sesi admin tidak pernah menerima isi halaman ini. Nilai `role` di bawah
+  // dibaca dari `localStorage` dan BISA DIKARANG siapa pun lewat console
+  // browsernya sendiri (lib/auth.ts:34) — dulu inilah satu-satunya penjaga,
+  // dan itu temuan audit T-3.
+  //
+  // Yang masih dikerjakan blok ini, dan sebabnya tidak dihapus: mengalihkan
+  // pengunjung ke halaman yang masuk akal (/login atau /beranda) alih-alih
+  // membiarkan mereka menatap layar "Akses ditolak". Murni kenyamanan.
   useEffect(() => {
     const u = readUser();
     setAuthUser(u);

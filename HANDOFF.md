@@ -69,7 +69,7 @@ diperbaiki.
 
 ---
 
-## 2026-10-24 — AUDIT KEAMANAN MENYELURUH + 4 RILIS + 1 MIGRASI DB. DARURAT: 2 dari 3 DITUTUP · TINGGI: 4 dari 4 DITUTUP. Sisa darurat ADA DI TANGAN OWNER.
+## 2026-10-24 — AUDIT KEAMANAN MENYELURUH + 4 RILIS + 1 MIGRASI DB. DARURAT: 3 dari 3 DITUTUP · TINGGI: 4 dari 4 DITUTUP. Sisa: paywall belum tertutup PENUH.
 
 Owner minta audit keamanan menyeluruh (pemicunya peringatan **PHP2Shell**). Audit dijalankan
 READ-ONLY dulu, lalu owner menyetujui satu perbaikan dan men-deploy-nya.
@@ -148,16 +148,42 @@ termuat. Bukan gerbangnya (`/admin` dengan cookie sama = 0,21 detik) — sebabny
 `/api/videos` **502**, `/api/external-videos` **503**, sama sebelum maupun sesudah rilis hari
 ini. Dugaan: kunci API Playly belum terpasang di Railway. Belum diperiksa.
 
-### 🔴 BELUM DITUTUP — D-1, dan HANYA owner yang bisa
+### ✅ D-1 DITUTUP DI PC BACKUP (2026-10-24) — dikerjakan owner, dipandu
 
-| # | Temuan | Bukti saat audit | Yang menutupnya |
-|---|---|---|---|
-| D-1 | **Pustaka video terbuka ke internet tanpa login, daftar isi folder AKTIF** | root tunnel → **200 + 61 tautan folder**; HEAD berkas judul premium → **200 `video/mp4`** | buang kata `browse` di `pc-backup-agent/Caddyfile:30` + ganti CORS `*` di `:35` → **butuh tangan owner** (restart layanan PC, video mati 1-2 menit) |
+**Penting untuk sesi berikutnya: perubahan di repo TIDAK menutup apa pun.** Caddy membaca
+`C:\Users\USER\pc-backup-agent\Caddyfile` di **PC backup** — komputer LAIN, bukan mesin
+pengembang. Dibuktikan saat itu: Caddy tidak jalan di mesin pengembang & port 8088 kosong di
+sana, TAPI tunnel tetap menjawab 200. Jadi berkas di repo = acuan; yang berlaku = berkas di PC.
 
-Pemberat D-1 yang sebagian sudah mereda: alamat tunnel dulu diserahkan gratis oleh `/api/teaser`
-lewat header `Location` pada 307. Sesudah `fd689fb`, jalur itu hanya menyerahkannya untuk
-episode dalam jatah gratis — tapi satu permintaan `ep=1` masih cukup untuk mendapat alamatnya,
-jadi menutup `browse` tetap WAJIB.
+Owner menjalankan sendiri (dipandu langkah demi langkah): hapus kata `browse` → `caddy validate`
+→ `caddy reload`. **`reload`, bukan restart — nol downtime**, video penonton tidak terputus.
+Cadangan tersimpan di `Caddyfile.sebelum-audit` di PC itu.
+
+**Bukti TAYANG, diukur dari luar (seperti penyerang melihatnya):**
+
+| Diukur | Sebelum | Sesudah |
+|---|---|---|
+| Root tunnel | **200**, halaman 83.191 byte | **404**, 0 byte |
+| Tautan folder bocor | **61** | **0** |
+| Penanda file-browser Caddy | 3 | **0** |
+| Tebak nama folder langsung | bisa ditelusuri | **404** |
+| **Berkas video** | 200 | **200 `video/mp4` — tetap tersaji** |
+| Tombol unduh `?dl=1` | 200 | **200**, header `attachment` utuh |
+| CORS | `*` (situs mana pun boleh baca byte) | **domain situs sendiri** — diuji dengan Origin palsu, tetap dijawab domain kita |
+| `/api/teaser` ep=1 · ep=99 · `/drama/[id]` | 307 · 401 · 200 | **sama — nol kemunduran** |
+
+⚠️ **JANGAN pasang `basicauth` di jalur video** — laporan audit awal sempat menyarankannya dan
+itu SALAH: elemen `<video>` tidak mengirim kredensial basic-auth, jadi memasangnya mematikan
+pemutaran. Koreksi ini sudah ditulis di dalam `pc-backup-agent/Caddyfile`.
+
+⚠️ **BATAS JUJUR — yang ini belum tertutup:** orang yang SUDAH tahu nama berkasnya tetap bisa
+mengunduh (diukur: `HEAD /<drama>/1.mp4` → **200**). Itu memang harus, supaya penonton bisa
+menonton. Penutupan penuh menuntut URL bertanda tangan berumur pendek — pekerjaan dua sisi
+(kode situs + agen di PC), belum dikerjakan.
+
+📌 Berkas di PC sekarang sedikit berbeda dari repo: **isinya sama secara fungsi** (dua
+`file_server` tanpa `browse` + CORS ke domain sendiri), repo punya komentar penjelas yang lebih
+panjang. Kalau suatu saat disamakan, salin dari repo lalu `caddy validate` sebelum `reload`.
 
 ### ⛔ GANGGUAN PRODUKSI hari ini — database tak terjangkau ~20 menit, BUKAN dari kode kita
 

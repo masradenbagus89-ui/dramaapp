@@ -3,10 +3,69 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-10-16 malam (**komputer OWNER**) — **ANTREAN KOSONG, DUAL PUSH TUNTAS.**
-Lokal = `origin/main` = `dramaku/main` = **`95d3b29`** (selisih **0/0** ke kedua remote).
-Catatan `10ed638` di bawah sudah basi — sesudahnya menyusul `7858944`, `4d88ca8`, `a93a2e5`,
-lalu rilis 2026-10-16 di bawah ini.
+**Terakhir dicek:** 2026-10-24 (**komputer OWNER**) — **ANTREAN KOSONG, DUAL PUSH TUNTAS.**
+Lokal = `origin/main` = `dramaku/main` = **`92512a7`** (selisih **0/0** ke kedua remote,
+diverifikasi `git fetch` SESUDAH push). Catatan `95d3b29` di bawah sudah basi; seluruh commit
+antaranya (sampai `0c6564d`) terbukti sudah ada di KEDUA remote — justru karena selisihnya 0/0.
+
+✅ **DIRILIS 2026-10-24 — Next.js 16.2.9 → 16.4.3, menutup 3 RCE tanpa login, di `92512a7`.**
+Dual push tuntas, fast-forward `0c6564d..92512a7`, nol paksaan, selisih **0/0** (diverifikasi
+SESUDAH push). 1 commit, 3 berkas: `package.json` (1 baris), `package-lock.json`, dan
+`next-env.d.ts` (ditulis otomatis oleh `next build`, bukan tangan).
+
+Pemicunya audit keamanan menyeluruh hari ini atas permintaan owner. Temuan audit lain yang
+**belum** dikerjakan ada di laporannya — yang paling mendesak: pustaka video PC terbuka ke
+internet (daftar folder aktif) dan paywall koin bisa dilewati lewat `/api/download` & `/api/teaser`.
+
+**KENAPA — tiga advisory yang prasyaratnya COCOK**, diverifikasi satu per satu ke sumber resmi
+(bukan menelan daftar `npm audit` mentah):
+
+| Advisory | Prasyarat | Kenapa project ini kena |
+|---|---|---|
+| GHSA-2xp9-vwfh-vxw4 | AVIF dioptimasi, <16.3.3 | `next.config.ts:28` mengaktifkan `formats: ["image/avif"]` |
+| CVE-2026-96889 (GHSA-2464-fhr4-w9xw) | glibc Linux + sharp <0.35.5 | Railway = glibc Linux; sharp terpasang 0.34.5 |
+| CVE-2026-75604 (GHSA-p293-qw3h-jr36) | server ber-filesystem Windows, <16.3.3 | instance `next start` di PC owner (`app.amasyaforum.com`) |
+
+Pintu masuknya `/_next/image` — **terbukti hidup** di produksi (200). Upgrade ikut menaikkan
+**sharp 0.34.5 → 0.35.5**, persis syarat aman yang disebut advisory CVE-2026-96889.
+
+⚠️ **Yang TIDAK kena — jangan dipanikkan ulang di sesi berikutnya:** RCE `use cache`
+(GHSA-673q-mjm6-r5xr) → fitur itu **nol dipakai** (grep kosong). Dua cache-poisoning
+(GHSA-4jqv-mc3x-m676 & CVE-2026-94484) → keduanya butuh **Pages Router**, project ini App
+Router murni (folder `pages/` tidak ada).
+
+Gerbang §6 utuh, urutan benar: `rm -rf .next` → build **sukses** → tsc **0** → **101 berkas /
+1477 tes hijau** · nol env ter-stage · Penjaga Kebocoran Rahasia **success** di `92512a7`.
+
+**Bukti TAYANG — inilah yang paling menentukan:**
+
+| Diukur sesudah deploy | Hasil |
+|---|---|
+| Versi yang benar-benar tayang | **15/15 nama chunk produksi cocok persis** dengan build lokal 16.4.3 (nama chunk = hash isinya, jadi identik = versi identik) |
+| Lama build Railway | sidik jari berubah pada cek ke-9, ~2 menit sesudah push |
+| Downtime | **NOL** — `health=200` di **semua** 9 pengecekan |
+| 20 jalur publik + `/admin` + `/_next/image` | **200** |
+| `/api/dramas` | 200, **persis 33524 byte sama** seperti sebelum deploy → katalog utuh |
+| `/api/health` | `sumberData: database` |
+| `/api/teaser`, `/api/external-videos`, `/api/admins` | identik sebelum/sesudah (307 · 503 · 200+5 admin) |
+| `npm audit` | **1 critical + 6 high → 0 critical + 3 high** |
+
+🧪 Catatan uji: `/tonton/<id-drama>` membalas 404 — itu **salah jenis id** dari penguji, bukan
+regresi. `app/tonton/[id]/page.tsx:50` memakai **id video Playly**, bukan id drama katalog.
+
+📌 **Sisa 6 celah, nol critical.** Empat murni alat tes (vitest/vite/undici-via-jsdom — tidak
+ikut ter-deploy). Dua ada di pohon produksi tapi **build-time**: `source-map-js` lewat postcss,
+dan `baseline-browser-mapping` — pemroses CSS saat build, bukan pelayan permintaan penonton.
+Menutupnya butuh `npm audit fix --force` yang berpotensi naik major → **keputusan owner, belum diambil.**
+
+❗ **Pengamatan LAMA, bukan akibat deploy ini:** `/api/videos` membalas `count: 0` dengan 20 judul
+dilewati beralasan "tidak ada alamat video", dan `/api/external-videos` **503**. Keduanya sama
+persis sebelum dan sesudah deploy → bukan regresi, tapi layak dicek terpisah.
+
+**Rollback 1-baris:** `git revert --no-edit 92512a7 && git push origin main` (atau tekan
+**Redeploy** pada deployment sebelumnya di panel Railway) — keduanya kembali ke 16.2.9.
+
+---
 
 ✅ **DIRILIS 2026-10-16 (ke-4) — `/api/admin/upload` DIHAPUS, di `95d3b29`.**
 Dual push tuntas, fast-forward `b984725..95d3b29`, nol paksaan, selisih **0/0**.

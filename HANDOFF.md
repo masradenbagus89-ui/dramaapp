@@ -9,7 +9,7 @@
 >
 > **📦 Berkas ini sudah ±6.600 baris** (diukur 2026-10-15; angka lama "5.224 baris" dari 2026-10-10 sudah basi — tumbuh ±1.400 baris dalam 5 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-10-16 (audit migrasi putaran 2).
+**Terakhir diisi:** 2026-10-24 (audit keamanan menyeluruh + rilis Next.js 16.4.3).
 
 ---
 
@@ -66,6 +66,72 @@ diperbaiki.
 - **Edit berkas di repo ≠ hidup di PC backup.** PC backup **tidak punya folder
   repo**; script disalin manual ke `C:\Users\USER\pc-backup-agent\`. Cara
   memasang yang terbukti ada di entri ReleaseMutex.
+
+---
+
+## 2026-10-24 — AUDIT KEAMANAN MENYELURUH + RILIS Next.js 16.4.3 (`92512a7`). 3 TEMUAN DARURAT, BARU 1 DITUTUP.
+
+Owner minta audit keamanan menyeluruh (pemicunya peringatan **PHP2Shell**). Audit dijalankan
+READ-ONLY dulu, lalu owner menyetujui satu perbaikan dan men-deploy-nya.
+
+### Jawaban PHP2Shell — TUTUP, jangan dibahas ulang
+
+CVE-2026-109618 & CVE-2026-109619 **nyata** (PHP 5.4–8.5, RCE tanpa login, CVSS 9.2, ditambal
+21 Okt 2026, sudah dieksploitasi liar). **Tapi project ini NOL PHP** — diverifikasi 4× `find`:
+nol `.php` (bahkan di `node_modules`), nol `composer.json`, nol `vendor/`, nol `.htaccess`, nol
+`php.ini`, nol Docker. Owner juga menegaskan **tidak punya hosting PHP lain**. → tidak terdampak.
+
+### ✅ SUDAH DIRILIS — Next.js 16.2.9 → 16.4.3
+
+Rinciannya di `antrean-deploy.md` (entri 2026-10-24). Ringkas: menutup 3 RCE **tanpa login** yang
+prasyaratnya terbukti cocok (AVIF `GHSA-2xp9-vwfh-vxw4` · sharp/glibc-Linux `CVE-2026-96889` ·
+server Windows `CVE-2026-75604`). sharp ikut naik 0.34.5 → 0.35.5. `npm audit` **1 critical → 0
+critical**. Bukti tayang: **15/15 nama chunk produksi cocok persis** dengan build lokal 16.4.3;
+**downtime NOL** (`health=200` di 9/9 cek); `/api/dramas` **persis 33524 byte sama** seperti
+sebelumnya. Gerbang §6 utuh (build → tsc 0 → 1477 tes hijau).
+
+### 🔴 BELUM DITUTUP — dua temuan DARURAT, keduanya sudah DIBUKTIKAN HIDUP
+
+Jangan anggap ini dugaan. Keduanya diuji langsung ke produksi/tunnel saat audit:
+
+| # | Temuan | Bukti saat audit | Yang menutupnya |
+|---|---|---|---|
+| D-1 | **Pustaka video terbuka ke internet tanpa login, daftar isi folder AKTIF** | root tunnel → **200 + 61 tautan folder**; HEAD berkas judul premium → **200 `video/mp4`** | buang kata `browse` di `pc-backup-agent/Caddyfile:30` + ganti CORS `*` di `:35` → **butuh tangan owner** (restart layanan PC, video mati 1-2 menit) |
+| D-2 | **Paywall koin bisa dilewati total** | tanpa cookie, judul premium ep **1/25/99** → ketiganya **307 ke alamat `.mp4`** | `/api/download` & `/api/teaser` wajib cek `resolveUserEmail` + unlock koin sebelum 307 — **perbaikan kode, belum dikerjakan** |
+
+Pemberat D-1: alamat tunnel **diserahkan gratis** oleh `/api/teaser` lewat header `Location`
+pada 307 (`app/api/teaser/route.ts:63-69`), jadi menutup `browse` saja belum cukup.
+
+### 🟠 Temuan TINGGI yang juga belum ditutup
+
+1. **`GET /api/admins` publik** (`app/api/admins/route.ts:14`) — diuji: **200 + nama & email 5
+   admin** tanpa login. POST (`:22`) & DELETE (`:81`) sudah dipagari; hanya GET yang lupa.
+2. **RLS MATI di semua tabel + nol policy** (`supabase_migrations/2026-08-29_...sql:134-137`,
+   dikonfirmasi `docs/db.md:83-85`), DAN fungsi RPC `coin_add`/`coin_spend_unlock`/`like_change`
+   tak pernah di-`revoke` dari PUBLIC — `scripts/perbaiki_izin_dramaapp.py:83` hanya mencabut hak
+   **tabel**, bukan fungsi. Project Supabase ini **dipakai bersama 4 aplikasi lain**, jadi satu
+   `grant` keliru oleh pengelola app lain membuka hash password + 2FA + saldo koin penonton.
+   ❓ Keadaan nyatanya **belum diverifikasi** — catatan `HANDOFF.md:6160-6161` bilang izin anon
+   sudah dicabut, tapi itu **catatan, bukan bukti**. SQL siap-tempel ada di laporan audit.
+3. **`/admin` dijaga hanya `localStorage`** (`app/admin/page.tsx:85-93`). Diredam: 12 route API
+   admin **semuanya** cek cookie HMAC di server. Pola gerbang server yang benar sudah ada di
+   `app/admin/settings/playly/page.tsx:34-36` — tinggal disalin.
+4. **`POST /api/likes` & `POST /api/ads/event` menulis DB tanpa auth & tanpa rate limit.**
+
+### ✅ Yang DIPERIKSA dan terbukti BERSIH — jangan diaudit ulang dari nol
+
+551 commit disisir: **nol rahasia asli** pernah ter-commit (yang cocok pola kunci semuanya contoh
+palsu di berkas uji pemindai, mis. `AKIA1234...`). Nol `.env` ter-commit selain `.env.example`.
+6 variabel `NEXT_PUBLIC_` **nol** berisi rahasia. **Nol endpoint upload** sama sekali. Nol SQL
+mentah, nol `eval`, nol `child_process` di `app/`/`lib/`/`components/`. SSRF **dipagari serius**
+(allowlist + `redirect:"manual"`). IDOR **tertutup** (identitas selalu dari cookie bertanda
+tangan). Nol backdoor/malware; `public/` bersih. Token JWT di 2 berkas tes = **palsu** (60 char,
+2 bagian).
+
+### Berkas terkait
+
+Laporan audit penuh + SQL siap-tempel + panduan langkah-demi-langkah owner ada di
+`C:\Users\user18\.claude\plans\kamu-cek-file-diatas-smooth-adleman.md` (berkas lokal, di luar repo).
 
 ---
 

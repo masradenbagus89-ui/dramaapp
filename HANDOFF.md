@@ -69,7 +69,7 @@ diperbaiki.
 
 ---
 
-## 2026-10-24 — AUDIT KEAMANAN MENYELURUH + 3 RILIS (`92512a7`, `fd689fb`, `daa2030`). DARURAT: 2 dari 3 DITUTUP · TINGGI: 2 dari 4 DITUTUP.
+## 2026-10-24 — AUDIT KEAMANAN MENYELURUH + 4 RILIS. DARURAT: 2 dari 3 DITUTUP · TINGGI: 3 dari 4 DITUTUP. Sisa darurat ADA DI TANGAN OWNER.
 
 Owner minta audit keamanan menyeluruh (pemicunya peringatan **PHP2Shell**). Audit dijalankan
 READ-ONLY dulu, lalu owner menyetujui satu perbaikan dan men-deploy-nya.
@@ -127,6 +127,27 @@ validator sebelum pengetatannya dirilis.
 pengunjung tanpa akun; mewajibkan sesi akan mematikan fitur dan membuat angka impresi iklan
 SALAH, bukan aman. Jangan "diperbaiki" tanpa alasan baru.
 
+### ✅ SUDAH DIRILIS (ke-4) — gerbang server SATU PINTU untuk seluruh /admin/*
+
+Rinciannya di `antrean-deploy.md` (entri 2026-10-24 ke-4, di `9125fb3`). Gerbangnya di
+`app/admin/layout.tsx`, jadi menjaga `/admin` DAN setiap halaman admin yang dibuat kemudian —
+persis TODO lama di `app/admin/settings/playly/page.tsx:11-13`, yang kini ditandai selesai.
+
+⚠️ **JANGAN dipindah ke `middleware.ts`** walau terlihat lebih rapi: project ini sengaja
+menghindari middleware sebagai penjaga otorisasi (CVE-2025-29927 — satu header buatan penyerang
+melewati seluruh cek yang hanya ada di middleware). Pemeriksaan per-halaman di 3 halaman Playly
+SENGAJA dibiarkan sebagai lapis kedua.
+
+Bukti dua arah: tanpa login → "Akses ditolak" dan **nol isi panel terkirim**; **login admin
+sungguhan → `/admin` 200 dalam 0,21 detik, owner TIDAK terkunci**. `/admin` juga berubah dari
+`○ (Static)` ke `ƒ (Dynamic)` — kerangka panel berhenti dicetak-saat-build lalu disajikan dari
+cache. Halaman publik tetap Static/SSG. 107 berkas / **1547 tes hijau**.
+
+❗ **Temuan sampingan, BUKAN akibat rilis ini:** `/admin/videos/playly` butuh **~33 detik**
+termuat. Bukan gerbangnya (`/admin` dengan cookie sama = 0,21 detik) — sebabnya data Playly:
+`/api/videos` **502**, `/api/external-videos` **503**, sama sebelum maupun sesudah rilis hari
+ini. Dugaan: kunci API Playly belum terpasang di Railway. Belum diperiksa.
+
 ### 🔴 BELUM DITUTUP — D-1, dan HANYA owner yang bisa
 
 | # | Temuan | Bukti saat audit | Yang menutupnya |
@@ -159,9 +180,7 @@ DB sehat, lalu periksa hasil cetak-awal memuat tautan drama, bukan kosong.
    `grant` keliru oleh pengelola app lain membuka hash password + 2FA + saldo koin penonton.
    ❓ Keadaan nyatanya **belum diverifikasi** — catatan `HANDOFF.md:6160-6161` bilang izin anon
    sudah dicabut, tapi itu **catatan, bukan bukti**. SQL siap-tempel ada di laporan audit.
-2. **`/admin` dijaga hanya `localStorage`** (`app/admin/page.tsx:85-93`). Diredam: 12 route API
-   admin **semuanya** cek cookie HMAC di server. Pola gerbang server yang benar sudah ada di
-   `app/admin/settings/playly/page.tsx:34-36` — tinggal disalin. **Ini butir berikutnya.**
+2. ~~`/admin` dijaga hanya `localStorage`~~ — ✅ **DITUTUP di `9125fb3`** (rilis ke-4 di atas).
 3. ~~`POST /api/likes` & `POST /api/ads/event` menulis DB tanpa auth & tanpa rate limit~~ —
    ✅ **DITUTUP di `1f5a546`** (rilis ke-3 di atas).
 

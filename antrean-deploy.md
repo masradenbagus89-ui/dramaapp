@@ -4,9 +4,61 @@
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
 **Terakhir dicek:** 2026-10-24 (**komputer OWNER**) — **ANTREAN KOSONG, DUAL PUSH TUNTAS.**
-Lokal = `origin/main` = `dramaku/main` = **`daa2030`** (selisih **0/0** ke kedua remote,
+Lokal = `origin/main` = `dramaku/main` = **`9125fb3`** (selisih **0/0** ke kedua remote,
 diverifikasi `git fetch` SESUDAH push). Catatan `95d3b29` di bawah sudah basi; seluruh commit
 antaranya terbukti sudah ada di KEDUA remote — justru karena selisihnya 0/0.
+
+✅ **DIRILIS 2026-10-24 (ke-4) — gerbang server SATU PINTU untuk seluruh /admin/*, di `9125fb3`.**
+Dual push tuntas, fast-forward `6138a48..9125fb3`, nol paksaan, selisih **0/0** (diverifikasi
+SESUDAH push). 1 commit, 4 berkas: `app/admin/layout.tsx` + 2 komentar dibetulkan + 1 berkas tes.
+
+**KENAPA:** halaman `/admin` dijaga HANYA oleh pemeriksaan di browser
+(`app/admin/page.tsx:85-93` membaca `localStorage` lalu mempercayai field `role`,
+`lib/auth.ts:34`). Siapa pun bisa menanam `{"role":"admin"}` lewat console browsernya dan
+menerima SELURUH isi panel. Diperparah: `/admin` muncul `○ (Static)` di keluaran build —
+kerangka panel DICETAK saat build lalu disajikan dari cache ke siapa pun.
+
+**Dipasang di LAYOUT, bukan per-halaman** — ini persis yang diminta TODO lama di
+`app/admin/settings/playly/page.tsx:11-13`. Satu gerbang menjaga `/admin` DAN setiap halaman
+admin yang dibuat kemudian, tanpa penulisnya perlu ingat memasangnya. TODO itu sudah ditandai
+selesai di tempatnya.
+
+⚠️ **BUKAN `middleware.ts`, dan jangan "diperbaiki" ke sana:** project ini sengaja menghindari
+middleware sebagai penjaga otorisasi karena CVE-2025-29927 (catatan di
+`app/api/admin/playly/unduhan/route.ts:25`) — satu header buatan penyerang bisa melewati seluruh
+cek yang hanya ada di middleware. Layout = Server Component biasa, tak ada header ajaib yang
+melewatinya. Pemeriksaan per-halaman di 3 halaman Playly SENGAJA DIBIARKAN sebagai lapis kedua.
+
+**Bukti TAYANG — diuji DUA ARAH di situs sungguhan:**
+
+| Diukur | Sebelum | Sesudah |
+|---|---|---|
+| `/admin` tanpa login | **ditolak=0** (panel terkirim) | **ditolak=1** |
+| isi panel ikut terkirim ke browser? | ya | **NOL** — penanda form drama / manajer admin / 2FA semuanya **0** |
+| 3 halaman admin Playly tanpa login | sudah ditolak | tetap ditolak |
+| **Login admin SUNGGUHAN → `/admin`** | — | **200, ditolak=0, 0,21 detik → owner TIDAK terkunci** |
+| 3 halaman Playly dengan cookie sah | — | **ditolak=0** |
+| `/admin` di keluaran build | `○ (Static)` | **`ƒ (Dynamic)`** |
+| `/beranda` `/katalog` `/drama/[id]` | Static/SSG | **Static/SSG — tak berubah**, ISR & hemat kuota utuh |
+| 20 jalur penonton | 200 | **200, nol gagal** |
+| Perbaikan rilis ke-1..ke-3 | — | **masih utuh**: paywall 401 · video 307 · `/api/admins` 403 · likes lintas-domain 403 |
+| `/api/dramas` | 33524 byte | **33524 byte** |
+
+Gerbang §6 utuh: build **sukses** → tsc **0** → **107 berkas / 1547 tes hijau** (+6 tes) ·
+Penjaga Kebocoran Rahasia **success** di `9125fb3` · nol error di log server uji.
+
+❗ **TEMUAN SAMPINGAN, bukan akibat rilis ini — `/admin/videos/playly` butuh ~33 DETIK** untuk
+termuat (200, 2,5 MB). Dipastikan bukan gerbangnya: `/admin` dengan cookie yang SAMA menjawab
+dalam **0,21 detik**. Sebabnya pengambilan data Playly di halaman itu sendiri —
+`/api/videos` **502** dan `/api/external-videos` **503**, keduanya sama persis sebelum deploy
+pertama hari ini. Layak diperiksa terpisah (kemungkinan kunci API Playly belum terpasang di
+Railway). Catatan: angka 429 di `/api/admin/playly/videos` saat pengujian adalah ulah penguji
+yang menembak berulang, bukan gejala.
+
+**Rollback 1-baris:** `git revert --no-edit 9125fb3 && git push origin main` — mengembalikan
+`/admin` ke penjagaan localStorage saja, termasuk lubangnya.
+
+---
 
 ✅ **DIRILIS 2026-10-24 (ke-3) — pagar penyalahgunaan + validasi alamat video, di `daa2030`.**
 Dual push tuntas, fast-forward `08567e8..daa2030`, nol paksaan, selisih **0/0** (diverifikasi

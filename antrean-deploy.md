@@ -4,9 +4,54 @@
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
 **Terakhir dicek:** 2026-10-24 (**komputer OWNER**) — **ANTREAN KOSONG, DUAL PUSH TUNTAS.**
-Lokal = `origin/main` = `dramaku/main` = **`2a9dfd3`** (selisih **0/0** ke kedua remote,
+Lokal = `origin/main` = `dramaku/main` = **`c1c0e31`** (selisih **0/0** ke kedua remote,
 diverifikasi `git fetch` SESUDAH push). Catatan `95d3b29` di bawah sudah basi; seluruh commit
 antaranya terbukti sudah ada di KEDUA remote — justru karena selisihnya 0/0.
+
+✅ **DIRILIS 2026-10-26 (ke-6) — kebocoran email admin ditutup + pemantauan diperbaiki + pesan error dirapikan, di `c1c0e31`.**
+Dual push tuntas, fast-forward `3261119..c1c0e31`, selisih **0/0**. 6 commit, 21 berkas.
+
+| SHA | Isinya |
+|---|---|
+| `d658117` | email admin berhenti bocor ke repo PUBLIK (kode + 3 berkas data) |
+| `cd86095` | pemantau database jadi TIAP JAM + hanya jalan di repo produksi |
+| `27d2d42` | pesan error mentah berhenti bocor ke browser di 7 route publik |
+| `254378f`, `d592782` | surat ke Kang Dedi diperbarui + tanggalnya dibetulkan |
+| `c1c0e31` | 6 pelajaran dicatat ke buku pelajaran project |
+
+**Bukti TAYANG — diukur lewat API GitHub, bukan `raw.githubusercontent.com`** (CDN-nya
+menyimpan salinan beberapa menit dan sempat menampilkan isi LAMA sesudah push — jangan
+tertipu itu lagi):
+
+| Diukur | Sebelum | Sesudah |
+|---|---|---|
+| `data/admins.json` · `supabase_export.sql` · `migrasi-full.sql` di repo publik | ketiganya **HTTP 200**, bisa diunduh siapa pun | **tidak ada lagi di pohon repo** |
+| Email admin di `lib/store.ts` | **1 kemunculan** | **0**, diganti `ADMIN_BOOTSTRAP_EMAIL` |
+| Jadwal pemantau | `0 2 * * *` (sekali sehari) | **`7 * * * *`** (tiap jam) |
+| Pagar repo produksi di pemantau | tidak ada | **1 baris `if:`** |
+| Berkas di komputer owner | ada | **tetap ada** — yang berhenti cuma ikut ter-commit |
+| 19 jalur penonton | 200 | **200, nol gagal** |
+| Rilis ke-1..ke-5 + migrasi DB | — | **utuh**: paywall 401 · video 307 · `/api/admins` 403 · `/admin` ditolak · likes lintas-domain 403 · header **6/6** · katalog **33524 byte sama** |
+
+⚠️ **GANGGUAN DATABASE KEDUA, 2026-10-26 — 85 MENIT, dan TIDAK pulih cepat seperti yang
+pertama.** Berlangsung ~07:20–08:45 UTC; `/drama/[id]` membalas 500 selama itu. Sebab sama
+dengan 24 Oktober (522 Connection timed out saat Supabase dipanggil langsung). Pulih sendiri,
+tanpa ada yang menyentuh apa pun. Push SENGAJA DITAHAN selama gangguan — lihat catatan di bawah.
+
+🪤 **JEBAKAN YANG HAMPIR MELOLOSKAN RILIS CACAT:** `npm run build` tetap **exit 0** walau
+database mati, karena jatuh ke `data/dramas.json`. Build saat gangguan menghasilkan halaman
+cetak-awal berisi **42** judul (isi cadangan) padahal katalog asli **40**. Yang berbahaya bukan
+build lokal, tapi **build Railway** — ia mem-build sendiri dari sumber. Karena itu push ditahan
+sampai database sehat, lalu dibangun ULANG dari nol: peringatan "pakai berkas lokal" **nol**,
+dan halaman cetak-awal kembali **40** tautan. Aturan permanen ada di `docs/lintasai/INDEX.md`.
+
+📌 **SISA yang sengaja tidak diborong:** ~18 route ADMIN masih memakai pola pesan error lama.
+Nilainya jauh lebih kecil (semua sudah terkunci sesi admin), dan memborongnya akan membuat diff
+sulit ditinjau. Tercatat, bukan terlupa.
+
+**Rollback 1-baris:** `git revert --no-edit c1c0e31 d592782 27d2d42 cd86095 254378f d658117 && git push origin main`.
+
+---
 
 ✅ **DIRILIS 2026-10-24 (ke-5) — 5 header keamanan + CSP mode Report-Only, di `2a9dfd3`.**
 Dual push tuntas, fast-forward `9a4aa23..2a9dfd3`, selisih **0/0**. 2 berkas: `next.config.ts`

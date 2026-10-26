@@ -9,7 +9,7 @@
 >
 > **📦 Berkas ini sudah ±6.600 baris** (diukur 2026-10-15; angka lama "5.224 baris" dari 2026-10-10 sudah basi — tumbuh ±1.400 baris dalam 5 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-10-24 (audit keamanan menyeluruh + rilis Next.js 16.4.3).
+**Terakhir diisi:** 2026-10-26 (lanjutan audit: kebocoran email admin ditutup, pemantauan diperbaiki).
 
 ---
 
@@ -66,6 +66,51 @@ diperbaiki.
 - **Edit berkas di repo ≠ hidup di PC backup.** PC backup **tidak punya folder
   repo**; script disalin manual ke `C:\Users\USER\pc-backup-agent\`. Cara
   memasang yang terbukti ada di entri ReleaseMutex.
+
+---
+
+## 2026-10-26 — LANJUTAN AUDIT: email admin berhenti bocor, pemantauan 24x lebih cepat, pesan error dirapikan. Rilis ke-6 di `c1c0e31`.
+
+Rinciannya di `antrean-deploy.md` (entri 2026-10-26 ke-6). Tiga perbaikan + dua catatan:
+
+1. **Email admin berhenti bocor ke repo PUBLIK.** Lebih luas dari catatan audit: `admin@dramaku.com`
+   ada di **5 berkas ter-track**, termasuk DI DALAM KODE (`lib/store.ts` DEFAULT_ADMINS) dan satu
+   skrip QA. Diganti `ADMIN_BOOTSTRAP_EMAIL` dari env; **tanpa env daftarnya KOSONG** —
+   gagal-MENGUNCI, karena admin bawaan yang alamatnya bisa ditebak adalah pintu masuk permanen.
+   Pemulihan bencana tetap mungkin lewat env itu. Tiga berkas data berhenti ter-commit (berkasnya
+   TETAP ADA di komputer owner).
+   ⚠️ **Riwayat git lama MASIH memuatnya** — mengeluarkannya berarti menulis ulang repo publik,
+   keputusan terpisah yang belum diambil.
+   📌 Identitas owner sendiri (handle GitHub + gmail) di `AGENTS.local.md`, `.github/staff-roster.yml`
+   dan beberapa workflow **sengaja TIDAK disentuh** — itu konfigurasi tim yang ditulis owner,
+   bukan kebocoran tak disengaja. Dilaporkan, tidak diubah sepihak.
+
+2. **Pemantauan: 24x lebih cepat + alarm palsu dihentikan.** Robot `keep-db-awake` jalan sekali
+   sehari; 2026-10-26 ia memeriksa 07:11 UTC, LULUS, lalu database mati beberapa menit sesudahnya —
+   owner baru akan tahu besok pagi. Jadi tiap jam (`7 * * * *`), biaya nol karena repo produksi
+   publik. Dan repo cermin `ojokesusu/dramaku` yang GAGAL tiap hari (alarm palsu yang membuat alarm
+   sungguhan ikut diabaikan) kini dipagari `if: github.repository == ...`. Alarmnya **diuji
+   sungguhan** saat database mati — memang gagal dengan pesan yang benar.
+
+3. **Pesan error mentah berhenti bocor** di 7 route yang dilihat penonton, lewat helper baru
+   `lib/api-error.ts` yang mengangkat pola jalur login. Diagnosa tidak hilang (error asli tetap ke
+   log Railway); gangguan database kini **503**, bukan 500. ~18 route ADMIN sengaja belum diborong.
+
+### ⚠️ GANGGUAN DATABASE KEDUA (2026-10-26) — 85 menit, TIDAK pulih cepat
+
+~07:20–08:45 UTC. `/drama/[id]` 500 selama itu; halaman daftar selamat karena cache. Sebab sama
+dengan 24 Oktober: **522 Connection timed out** saat Supabase dipanggil LANGSUNG tanpa aplikasi.
+Pulih sendiri. Ini kambuhan kedua dalam tiga hari — akarnya koneksi **51/60** yang diukur 24
+Oktober. **Butuh Kang Dedi, bukan perbaikan kode.** Surat siap-kirim ada di
+`docs/permintaan-restart-supabase.md` §2 (sudah diperbarui dengan pola kambuhannya).
+
+### 🪤 Jebakan yang hampir meloloskan rilis cacat — BACA SEBELUM MERILIS
+
+`npm run build` tetap **exit 0** walau database mati (jatuh ke `data/dramas.json`). Build saat
+gangguan menghasilkan halaman cetak-awal berisi **42** judul padahal katalog asli **40**. Yang
+berbahaya bukan build lokal melainkan **build Railway** — ia mem-build sendiri dari sumber.
+**Aturan: pastikan database sehat sebelum push; sesudah build, HITUNG tautan drama di
+`.next/server/app/beranda.html` dan bandingkan dengan `/api/dramas`.** Exit 0 bukan buktinya.
 
 ---
 

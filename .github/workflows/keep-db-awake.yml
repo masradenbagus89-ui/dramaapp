@@ -46,9 +46,25 @@ name: Penjaga Anti-Tidur Database
 
 on:
   schedule:
-    # Tiap hari 02:00 UTC = 09:00 WIB. Harian = jauh di dalam ambang 7 hari,
-    # jadi tetap aman walau GitHub sesekali menunda/melewatkan satu jadwal.
-    - cron: "0 2 * * *"
+    # TIAP JAM (menit ke-7), diubah dari sekali-sehari pada 2026-10-26.
+    #
+    # KENAPA DIUBAH — hari itu membuktikannya: robot ini memeriksa jam 07:11 UTC
+    # dan LULUS, lalu database mati beberapa menit sesudahnya. Dengan jadwal
+    # harian, owner baru akan tahu BESOK PAGI — situs bisa rusak hampir 24 jam
+    # tanpa ada yang sadar. Gangguan itu akhirnya ketahuan cuma karena kebetulan
+    # ada yang sedang melihat, dan "kebetulan" bukan sistem pemantauan.
+    #
+    # Tiap jam = paling lama 1 jam buta, 24x lebih cepat dari sebelumnya.
+    # Menit ke-7, bukan ke-0: jadwal pada menit bulat adalah jam paling sibuk di
+    # GitHub dan paling sering ditunda.
+    #
+    # Tujuan ASLI (mencegah database ditidurkan) tetap terpenuhi dengan jauh
+    # lebih aman — ambangnya 7 hari, dan ini menyapa 24x sehari.
+    #
+    # Biaya: NOL. Repo produksi ini PUBLIK, dan menit GitHub Actions untuk repo
+    # publik tidak dibatasi. Lihat juga pagar `if:` di bawah — repo cermin yang
+    # PRIVAT sengaja tidak ikut menjalankannya supaya jatah menitnya tak terpakai.
+    - cron: "7 * * * *"
   workflow_dispatch: {}
 
 permissions:
@@ -57,6 +73,20 @@ permissions:
 jobs:
   sapa-database:
     name: Sapa database supaya tidak tertidur
+    # HANYA jalan di repo PRODUKSI. Ditambahkan 2026-10-26.
+    #
+    # KENAPA: repo cermin `ojokesusu/dramaku` ikut menjalankan robot ini dan
+    # GAGAL setiap hari (24, 25, 26 Oktober semuanya failure, tiap run cuma 3
+    # detik dan berhenti sebelum pekerjaannya mulai). Akibatnya owner menerima
+    # email kegagalan PALSU tiap hari — dan itu bahaya yang sesungguhnya:
+    # alarm yang berbohong tiap hari membuat alarm SUNGGUHAN ikut diabaikan.
+    #
+    # Cermin memang tidak seharusnya memantau produksi; ia cermin, bukan tempat
+    # situs berjalan. Pagar ini juga menjaga jatah menit Actions repo cermin yang
+    # PRIVAT agar tidak terpakai 24x sehari.
+    #
+    # Pola `if:` ini sama dengan yang sudah dipakai .github/workflows/ai-review.yml.
+    if: github.repository == 'masradenbagus89-ui/dramaapp'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

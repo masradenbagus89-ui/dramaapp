@@ -143,10 +143,39 @@ async function sbDocGetOrSeed<T>(key: string, seed: () => T): Promise<T> {
 }
 
 // =====================  ADMINS (dokumen tunggal)  ==========================
+/**
+ * Admin bawaan saat BELUM ADA sumber lain — dokumen `admins` di database tidak
+ * ada DAN `data/admins.json` tidak ada. Praktisnya cuma terjadi di pemasangan
+ * baru atau pemulihan bencana; produksi memakai dokumen database.
+ *
+ * KENAPA DARI ENV, bukan ditulis di sini (audit keamanan 2026-10-24): berkas
+ * ini ter-commit di repo yang **PUBLIK**, dan sebelumnya memuat alamat email
+ * admin SUNGGUHAN. Itu memberi penyerang separuh kunci pintu secara cuma-cuma —
+ * mereka tinggal menebak passwordnya, dan jalur login admin masih punya
+ * cadangan satu `ADMIN_PASSWORD` bersama (app/api/auth/login/route.ts:79).
+ *
+ * KENAPA kosong kalau env tak diisi, bukan menebak alamat lain: admin bawaan
+ * yang alamatnya bisa ditebak = pintu masuk permanen yang tak pernah
+ * ditutup siapa pun. Kosong berarti tidak ada yang bisa masuk sampai seseorang
+ * yang memegang env sengaja membukanya — gagal-MENGUNCI, bukan gagal-membuka
+ * (rak owasp §1 A10:2025).
+ *
+ * PEMULIHAN BENCANA: isi `ADMIN_BOOTSTRAP_EMAIL` di panel hosting, muat ulang,
+ * login dengan `ADMIN_PASSWORD`, tambahkan admin sungguhan lewat panel, lalu
+ * KOSONGKAN kembali env itu.
+ */
+const BOOTSTRAP_ADMIN = process.env.ADMIN_BOOTSTRAP_EMAIL?.trim().toLowerCase();
+
 const DEFAULT_ADMINS: AdminsFile = {
-  admins: [
-    { email: "admin@dramaku.com", name: "Admin Utama", addedAt: "2026-05-06" },
-  ],
+  admins: BOOTSTRAP_ADMIN
+    ? [
+        {
+          email: BOOTSTRAP_ADMIN,
+          name: "Admin Bootstrap",
+          addedAt: new Date().toISOString().slice(0, 10),
+        },
+      ]
+    : [],
 };
 
 export async function getAdmins(): Promise<AdminsFile> {

@@ -8,7 +8,10 @@ LIVE = "https://dramaapp.vercel.app"
 ENV_PATH = r"D:\Users\user18\dramaapp\.env.local"
 DRAMA = "guru-misterius-membentuk-pasukan-rahasia"
 PEMAIL = "qa-premium-test@dramaku.test"
-ADMIN_EMAIL = "admin@dramaku.com"
+# Email admin TIDAK ditulis di sini: berkas ini ter-commit di repo PUBLIK,
+# dan alamat admin sungguhan = separuh kunci pintu yang diberikan gratis
+# (audit keamanan 2026-10-24). Diambil dari .env.local, sama seperti
+# kredensial lain di bawah.
 
 # --- kredensial prod dari .env.local ---
 env = {}
@@ -18,6 +21,13 @@ with open(ENV_PATH, encoding="utf-8") as f:
         if m: env[m.group(1)] = m.group(2)
 URL = env["SUPABASE_URL"].rstrip("/"); KEY = env["SUPABASE_SERVICE_ROLE_KEY"]
 ADMIN_PW = env.get("ADMIN_PASSWORD", "")
+ADMIN_EMAIL = env.get("QA_ADMIN_EMAIL", "").strip()
+if not ADMIN_EMAIL:
+    raise SystemExit(
+        "BERHENTI: isi QA_ADMIN_EMAIL di .env.local dengan email admin yang dipakai "
+        "untuk uji ini. Sengaja tidak ada nilai bawaan — alamat admin tak boleh "
+        "ditulis di repo publik."
+    )
 
 def rest(method, path, body=None):
     req = urllib.request.Request(f"{URL}/rest/v1/{path}",

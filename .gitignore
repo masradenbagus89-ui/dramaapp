@@ -84,3 +84,16 @@ __pycache__/
 *.pyc
 .vercel
 .env*
+
+# === Audit keamanan 2026-10-24: berhenti membocorkan email admin ke repo PUBLIK ===
+# Ketiganya memuat alamat email admin SUNGGUHAN dan ter-commit di repo publik.
+# Berkasnya TETAP ADA di komputer masing-masing — yang dihentikan cuma ikut
+# ter-commit. Produksi tidak memakainya (daftar admin ada di database).
+#
+# CATATAN JUJUR: riwayat git lama TETAP memuat ketiganya. Mengeluarkannya dari
+# riwayat berarti menulis ulang repo publik — keputusan terpisah, belum diambil.
+data/admins.json
+# Dibuat ulang oleh scripts/gen-supabase-sql.mjs, jadi tak perlu ikut di repo.
+supabase_export.sql
+# Dump historis berisi dokumen app_data (termasuk daftar admin).
+migrasi-full.sql

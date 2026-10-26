@@ -99,7 +99,10 @@ dramaapp/
 - `npm test` - jalankan seluruh tes otomatis sekali (Vitest, mode `run`)
 - `npm run test:watch` - tes mode "tongkrongin" (jalan ulang otomatis saat kode berubah)
 - ⚠️ **Belum ada** `npm run lint` (tidak ada framework lint di `package.json`) — lihat `docs/decisions/2026-06-20-audit-findings.md`.
-- **SQL**: jalankan `supabase_setup.sql` / `migrasi-schema.sql` / `migrasi-full.sql` di Supabase SQL editor. Perbaikan RPC produksi: `scripts/fix_coin_spend_unlock_prod.sql`.
+- **SQL**: jalankan `supabase_setup.sql` / `migrasi-schema.sql` di Supabase SQL editor.
+  `migrasi-full.sql` dan `supabase_export.sql` TIDAK lagi ter-commit sejak audit keamanan
+  2026-10-24 (memuat email admin sungguhan di repo PUBLIK) — yang pertama ada di komputer
+  owner, yang kedua dibuat ulang dengan `node scripts/gen-supabase-sql.mjs`. Perbaikan RPC produksi: `scripts/fix_coin_spend_unlock_prod.sql`.
 
 ---
 

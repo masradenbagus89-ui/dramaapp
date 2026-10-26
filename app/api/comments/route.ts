@@ -7,6 +7,7 @@ import {
 } from "@/lib/store";
 import { resolveUserEmail } from "@/lib/session";
 import { guardMutation } from "@/lib/request-guard";
+import { balasanGagal } from "@/lib/api-error";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -107,8 +108,7 @@ export async function POST(req: NextRequest) {
     await addComment(dramaId, comment);
     return NextResponse.json({ ok: true, comment });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Tambah komentar gagal";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return balasanGagal("api/comments POST", err, "Komentar gagal disimpan. Coba lagi sebentar lagi.");
   }
 }
 
@@ -163,7 +163,6 @@ export async function DELETE(req: NextRequest) {
     );
     return NextResponse.json({ ok: true });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Hapus komentar gagal";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return balasanGagal("api/comments DELETE", err, "Komentar gagal dihapus. Coba lagi sebentar lagi.");
   }
 }

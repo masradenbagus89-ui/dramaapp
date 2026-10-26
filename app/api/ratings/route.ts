@@ -8,6 +8,7 @@ import {
 } from "@/lib/store";
 import { resolveUserEmail } from "@/lib/session";
 import { guardMutation } from "@/lib/request-guard";
+import { balasanGagal } from "@/lib/api-error";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -72,7 +73,6 @@ export async function POST(req: NextRequest) {
     const map = await setRating(dramaId, id.email, stars);
     return NextResponse.json({ ok: true, ...summarizeRatings(map), mine: stars });
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Simpan rating gagal";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return balasanGagal("api/ratings POST", err, "Rating gagal disimpan. Coba lagi sebentar lagi.");
   }
 }

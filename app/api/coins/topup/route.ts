@@ -78,8 +78,23 @@ export async function POST(req: NextRequest) {
         orderId,
       });
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Gagal buat transaksi.";
-      return NextResponse.json({ error: message }, { status: 502 });
+      // Pesan mentah TIDAK diteruskan: balasan error Midtrans bisa memuat
+      // detail konfigurasi merchant, dan jalur ini dilihat PENONTON (bukan
+      // admin) persis saat ia hendak membayar — kalimat teknis di situ bikin
+      // orang ragu membayar, bukan membantu.
+      //
+      // Status 502 DIPERTAHANKAN, sengaja tidak dipukul rata jadi 500:
+      // artinya "layanan pembayaran di luar sana yang bermasalah", bukan kode
+      // kita. Beda itu dipakai untuk memilah alarm — karena itu di sini tidak
+      // memakai balasanGagal() yang selalu 500/503.
+      console.error("[api/coins/topup] Midtrans gagal:", err);
+      return NextResponse.json(
+        {
+          error:
+            "Pembayaran belum bisa diproses sekarang. Saldo koinmu tidak berkurang — coba lagi beberapa saat lagi.",
+        },
+        { status: 502 },
+      );
     }
   }
 

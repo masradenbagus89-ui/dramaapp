@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { DashboardError, fetchVideoDetail } from "@/lib/dashboard-videos";
+import { balasanGagal } from "@/lib/api-error";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -38,7 +39,6 @@ export async function GET(
     if (err instanceof DashboardError) {
       return NextResponse.json({ error: err.message }, { status: err.status });
     }
-    const message = err instanceof Error ? err.message : "Gagal mengambil detail video.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return balasanGagal("api/videos/[id] GET", err, "Detail video gagal diambil. Coba lagi sebentar lagi.");
   }
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ExternalVideoError, fetchExternalVideos } from "@/lib/external-video";
+import { balasanGagal } from "@/lib/api-error";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -69,8 +70,6 @@ export async function GET(req: NextRequest) {
     if (err instanceof ExternalVideoError) {
       return NextResponse.json({ error: err.message }, { status: err.status });
     }
-    const message =
-      err instanceof Error ? err.message : "Gagal mengambil data video.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return balasanGagal("api/external-videos GET", err, "Data video gagal diambil. Coba lagi sebentar lagi.");
   }
 }

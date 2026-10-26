@@ -5,6 +5,7 @@ import {
   fetchVideos,
   ringkasAlasanDilewati,
 } from "@/lib/dashboard-videos";
+import { balasanGagal } from "@/lib/api-error";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -49,7 +50,6 @@ export async function GET() {
     if (err instanceof DashboardError) {
       return NextResponse.json({ error: err.message }, { status: err.status });
     }
-    const message = err instanceof Error ? err.message : "Gagal mengambil daftar video.";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return balasanGagal("api/videos GET", err, "Daftar video gagal diambil. Coba lagi sebentar lagi.");
   }
 }

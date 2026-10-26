@@ -41,7 +41,7 @@ menyelamatkan kita. Kalau gangguannya berlanjut lama, salinan itu akan basi.
 
 ## 2. Teks untuk dikirim ke Kang Dedi (salin dari sini ke bawah)
 
-> **DIPERBARUI 2026-10-24.** Versi September digantikan: sekarang ada angka yang
+> **DIPERBARUI 2026-10-26.** Versi September digantikan: sekarang ada angka yang
 > diukur LANGSUNG dari database (`pg_stat_activity`), bukan lagi dugaan. Angka
 > itu mengubah permintaannya — restart cuma meredakan sementara, yang dibutuhkan
 > adalah menaikkan plafon koneksi.
@@ -52,17 +52,25 @@ Kang, mohon bantuannya untuk project Supabase dramaapp:
   Project ref : nvblmpkwyzbpdbshyvzw
   Pooler      : aws-1-ap-southeast-1.pooler.supabase.com
 
-Hari ini (24 Oktober) database project ini DUA KALI tidak bisa dihubungi.
-Yang pertama sekitar 20 menit lalu pulih sendiri; yang kedua sedang
-berlangsung saat surat ini ditulis.
+Database project ini sudah DUA KALI tidak bisa dihubungi dalam tiga hari:
 
-ANGKA YANG KAMI UKUR LANGSUNG DARI DATABASE (bukan dugaan):
+  24 Oktober - sekitar 20 menit, lalu pulih sendiri
+  26 Oktober - sedang berlangsung saat pesan ini dikirim
+
+Yang membuat polanya jelas: robot pemantau kami jalan tiap pagi dan
+hasilnya sukses tanggal 19-23, GAGAL tanggal 24, sukses lagi 25 dan 26
+pagi (07:11 UTC) - lalu database mati beberapa menit sesudah pemeriksaan
+itu. Jadi ini kambuhan berselang, bukan kejadian sekali.
+
+ANGKA YANG KAMI UKUR LANGSUNG DARI DATABASE (bukan dugaan),
+diambil 24 Oktober saat database masih bisa disambung:
 
   koneksi aktif    : 51
   max_connections  : 60
 
 Jadi 85% jatah koneksi terpakai dalam keadaan normal. Tidak ada ruang
-untuk lonjakan, dan begitu penuh semuanya ikut tersendat.
+untuk lonjakan, dan begitu penuh semuanya ikut tersendat. Angka ini belum
+bisa kami ukur ulang hari ini justru KARENA sambungannya ditolak.
 
 BUKTI PENDUKUNG:
 
@@ -70,7 +78,7 @@ BUKTI PENDUKUNG:
    aplikasi, tanpa Next.js, cuma curl) membalas:
       HTTP 522 - Connection timed out (halaman error Cloudflare)
    Artinya Cloudflare sehat tapi tidak bisa menghubungi database di
-   belakangnya. Terjadi di KEDUA gangguan hari ini.
+   belakangnya. Terjadi di KEDUA gangguan (24 dan 26 Oktober).
 
 2. Menyambung langsung ke Postgres (port 5432) ditolak dengan:
       FATAL: remaining connection slots are reserved for roles with

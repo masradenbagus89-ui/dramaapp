@@ -9,7 +9,7 @@
 >
 > **📦 Berkas ini sudah ±6.600 baris** (diukur 2026-10-15; angka lama "5.224 baris" dari 2026-10-10 sudah basi — tumbuh ±1.400 baris dalam 5 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-10-27 (celah Node `CVE-2026-111497` ditutup di produksi lewat env `RAILPACK_NODE_VERSION`; nol commit).
+**Terakhir diisi:** 2026-10-27 (kebocoran paywall video ditutup di sisi aplikasi, rilis `5165f22` — Tahap A dari 2; sebelumnya celah Node `CVE-2026-111497`).
 
 ---
 
@@ -66,6 +66,66 @@ diperbaiki.
 - **Edit berkas di repo ≠ hidup di PC backup.** PC backup **tidak punya folder
   repo**; script disalin manual ke `C:\Users\USER\pc-backup-agent\`. Cara
   memasang yang terbukti ada di entri ReleaseMutex.
+
+---
+
+## 2026-10-27 (ke-2) — KEBOCORAN PAYWALL VIDEO DITUTUP DI SISI APLIKASI. Rilis `5165f22`, downtime nol. Tahap A dari 2 tahap.
+
+**Episode berbayar bisa ditonton siapa pun tanpa login** — diukur, bukan dugaan: alamat `.mp4`
+tercetak di HTML `/feed`, lalu tunnel melayaninya (`206`, `video/mp4`, `ftypmp42`). Gerbang
+rilis 24 Okt hanya menjaga jalur API; `lib/paywall-guard.ts:11-19` sudah menulis batas itu
+sendiri. Rencana + Tahap B: `docs/lintasai/rencana/2026-10-27-tutup-kebocoran-paywall-video.md`.
+
+**Perbaikannya:** alamat video hanya LAHIR di server lewat `/api/video-url`, sesudah
+`periksaAksesEpisode()` lolos, lalu ditandatangani HMAC-SHA256 berumur 6 jam. Episode yang tak
+berhak **tidak punya alamat sama sekali** di halaman.
+
+### Bukti TAYANG (diukur dari luar)
+
+| Diukur | Sebelum | Sesudah |
+|---|---|---|
+| Alamat `.mp4` di HTML `/feed` | **2** | **0** |
+| Sebutan tunnel di HTML | ada | **0** |
+| `/api/video-url` ep gratis | 404 (belum ada) | **200** |
+| ep 4/5/20/79 drama premium, tanpa cookie | — | **401, nol alamat** |
+| ep 1/2/3 drama premium | — | **200** (jatah gratis utuh) |
+| `/api/dramas` | 33524 byte · 40 drama | **identik** |
+| `/api/teaser` & `/api/download` | 307 · 0 byte | **tetap 307 · 0 byte** |
+| 6 halaman penonton | — | **200** |
+
+Owner memverifikasi di browser sungguhan: video **bisa diputar**. Gerbang §6 sebelum rilis:
+build 0 · tsc 0 · **1.612 tes** (+31 baru, −4 tes `downloadUrl` yang ikut dibuang).
+
+### 🪤 Tiga jebakan pengukuran yang HAMPIR membuat laporan salah
+
+1. **`Invoke-WebRequest` MENGIKUTI redirect.** `/api/teaser` sempat terbaca `200` dan nyaris
+   dilaporkan "berubah jadi proxy" — padahal yang terbaca status akhir dari TUNNEL. Dengan
+   `AllowAutoRedirect=$false`: **307, 0 byte**. **Aturan: mengukur apakah byte lewat server kita
+   WAJIB mematikan auto-redirect**, kalau tidak yang diukur server orang lain.
+2. **Menyaring `premium` dengan truthiness itu SALAH.** `Where-Object { $_.premium }` memberi 15
+   drama; yang benar `-eq $true` → **14**. Akibatnya owner sempat disuruh menguji paywall dengan
+   `diremehkan-istana-bangkit-sebagai-dewa-abadi` yang **tidak punya field `premium` sama sekali**
+   (43 episodenya memang gratis). Episode 4 yang bisa diputar di situ **bukan bug** — nyaris
+   dilaporkan sebagai kebocoran. **Aturan: bandingkan `-eq $true`, jangan truthiness.**
+3. **Header `Accept` menentukan jawaban.** Mengukur `/_next/image` tanpa header browser memberi
+   PNG 542 KB; dengan `Accept: image/avif` jadi **AVIF ~69 KB**. Perkiraan pertama (186 MB/kunjungan)
+   **salah 8×**. Yang benar: ~0,07 MB per kunjungan tak digeser, ~11 MB batas atas.
+
+### ⚠️ Yang BELUM diuji, dan ini risiko nyata
+
+**Beli-lalu-tonton belum pernah dijalankan.** Owner menguji dengan drama yang ternyata gratis,
+jadi alur "buka episode dengan koin → langsung bisa diputar TANPA muat ulang" belum terbukti.
+Mekanismenya ada (`unlocked` jadi pemicu `useEffect` di `FeedPlayer.tsx`), tapi belum dilihat
+jalan. **Kalau gagal, pelanggan membayar lalu tak dapat apa-apa** — lebih buruk daripada
+kebocoran yang baru ditutup. Uji dengan drama ber-`premium: true`, mis.
+`dikira-sopir-lemah-ternyata-raja-perang`, episode 4 ke atas.
+
+### Tahap B belum dikerjakan
+
+Tunnel **belum** menolak permintaan tanpa tanda tangan, jadi orang yang sudah menyimpan alamat
+lama masih bisa memakainya. `VIDEO_SIGNING_SECRET` belum diisi di Railway — dan memang belum
+perlu (tanpa env itu alamat terbit tanpa tanda tangan, aman & disengaja). Langkah + jalan
+mundurnya ada di rencana.
 
 ---
 

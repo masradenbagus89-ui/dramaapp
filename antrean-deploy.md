@@ -20,6 +20,25 @@ commit di belakangnya. Pelajarannya: SHA di catatan basi begitu ada commit berik
 ditaruh di `docs/` lalu dipindah: isinya rinci soal paparan mesin kerja, dan repo ini **PUBLIK**
 (§5.2). Jangan dipindahkan masuk.
 
+✅ **DIRILIS 2026-10-27 (ke-2) — kebocoran paywall video ditutup, di `5165f22`.** Dual push
+tuntas (`3ef9e00..5165f22`, selisih 0/0). Alamat video berhenti dirakit di browser; kini terbit
+dari `/api/video-url` sesudah gerbang paywall, lalu ditandatangani HMAC-SHA256 berumur 6 jam.
+
+| Diukur | Sebelum | Sesudah |
+|---|---|---|
+| Alamat `.mp4` di HTML `/feed` | **2** | **0** |
+| ep 4/5/20/79 drama premium tanpa cookie | — | **401, nol alamat** |
+| ep 1/2/3 drama premium | — | **200** (jatah gratis utuh) |
+| `/api/dramas` | 33524 byte · 40 drama | **identik** |
+| `/api/teaser` & `/api/download` | 307 · 0 byte | **tetap 307 · 0 byte** |
+
+Gerbang §6: build 0 · tsc 0 · **1.612 tes**. Kode baru tayang ~60 detik, nol kegagalan pada
+3 cek. Owner memverifikasi di browser: video bisa diputar.
+
+⚠️ **BELUM diuji: beli-lalu-tonton.** Rinciannya + tiga jebakan pengukuran yang hampir membuat
+laporan salah ada di `HANDOFF.md` entri 2026-10-27 (ke-2). **Tahap B (tunnel menolak permintaan
+tanpa tanda tangan) belum dikerjakan.**
+
 ✅ **DEPLOY 2026-10-27 — TAPI NOL COMMIT. Bukan rilis kode.**
 Produksi dibangun ulang dari commit yang SAMA (**`778f6aa`**) dengan versi Node berbeda:
 **`node@24.21.0` → `node@24.22.1`**, menutup `CVE-2026-111497` (Node2Shell) + 7 CVE lain di

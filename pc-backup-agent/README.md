@@ -287,6 +287,113 @@ balasannya `ERROR: Access is denied` dan penjaga tidak dipicu sama sekali — la
 `False` yang MENIPU, seolah penjaganya gagal. Siklus otomatisnya tidak butuh admin, jadi MENUNGGU
 justru menguji jalur yang sebenarnya dipakai sehari-hari.
 
+## Setup 1× — Bagian H: tunnel menolak alamat video tanpa tanda tangan *(Tahap B, 2026-10-27)*
+
+**Masalah yang dijawab.** Sampai Oktober 2026, siapa pun yang tahu nama berkasnya bisa menonton
+episode BERBAYAR tanpa login — diukur di produksi: tunnel membalas `206`, `video/mp4`, isi
+diawali `ftypmp42`. Membuang `browse` (Bagian audit 2026-10-24) hanya menutup PENELUSURAN, bukan
+orang yang sudah tahu alamatnya. Bagian ini yang menutupnya: Caddy memanggil `hardlink-agent.js`
+(lewat `forward_auth`) untuk memeriksa tanda tangan HMAC + masa berlaku sebelum menyajikan `.mp4`.
+
+**Kenapa bukan plugin Caddy:** plugin menuntut `caddy.exe` hasil build sendiri — binary tak
+bertanda tangan di PC yang memakai 360 Total Security, dan berkas di folder ini sudah hilang
+dua kali karena AV (lihat Bagian F). Cara ini memakai Caddy standar yang sudah terpasang.
+
+### 🔴 URUTANNYA MENGIKAT — salah urut = SELURUH video mati
+
+| # | Di mana | Langkah |
+|---|---|---|
+| 1 | repo | rilis kode situs (sudah selesai di `61eebc3`) |
+| 2 | **panel hosting** | isi `VIDEO_SIGNING_SECRET` |
+| 3 | **PC backup** | salin 2 berkas + `caddy reload` |
+| 4 | **PC backup** | isi `VIDEO_SIGNING_SECRET` + jalankan ulang agent ← **saklarnya** |
+
+Langkah 2 **wajib** sebelum 4. Kalau PC backup sudah memeriksa sementara situs belum
+menandatangani, semua alamat ditolak dan video mati.
+
+### H1. Salin berkas (langkah 3)
+
+Salin dari repo ke `C:\Users\USER\pc-backup-agent\`:
+
+- `hardlink-agent.js` — berisi endpoint `/_verify`
+- `Caddyfile` — berisi `forward_auth` untuk `*.mp4`
+- `start-video-services.ps1` — meneruskan env barunya ke agent
+
+Aman terhadap penjaga berkas: berkas yang BERUBAH ISINYA membuat **cadangannya yang
+disegarkan**, bukan ditimpa balik (`penjaga-berkas.ps1` baris 13-14).
+
+```powershell
+cd C:\Users\USER\pc-backup-agent
+caddy validate --config Caddyfile      # WAJIB hijau dulu
+caddy reload   --config Caddyfile      # reload, BUKAN restart - nol downtime
+```
+
+Sesudah ini **belum ada yang berubah**: env di PC masih kosong, jadi agent meloloskan semua.
+Pastikan video masih jalan sebelum lanjut.
+
+### H2. Nyalakan penegakan (langkah 4)
+
+PowerShell **sebagai Administrator**:
+
+```powershell
+[Environment]::SetEnvironmentVariable('VIDEO_SIGNING_SECRET','<nilai-yang-SAMA-dengan-panel-hosting>','Machine')
+```
+
+⚠️ Mengisi env saja **TIDAK cukup** — agent membaca env sekali saat start. Dan script
+autostart sengaja **tidak menyentuh apa pun kalau tunnel masih sehat**
+(`start-video-services.ps1`, baris "sudah sehat - tidak ada yang diubah"), jadi memanggilnya
+begitu saja tidak akan memuat nilai baru. Paksa start ulang:
+
+```powershell
+Get-NetTCPConnection -State Listen -LocalPort 8088,8089 |
+  ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
+schtasks /run /tn "DramaApp Video"
+Get-Content logs\start-video-services.log -Tail 20
+```
+
+Cari baris **`tanda tangan video: AKTIF (panjang N karakter)`**. Kalau tertulis `MATI`, env-nya
+belum terbaca — ulangi dengan level `Machine` dan PowerShell Administrator.
+
+### H3. Buktikan dari LUAR (bukan dari diff)
+
+Alamat polos harus DITOLAK, alamat dari situs harus JALAN:
+
+```powershell
+# 1) alamat polos -> harus 403
+curl.exe -s -o NUL -w "%{http_code}`n" "<url-tunnel>/<drama-id>/1.mp4"
+
+# 2) lewat situs -> harus 307 lalu video jalan
+curl.exe -s -o NUL -w "%{http_code}`n" "https://<situs>/api/teaser?id=<drama-id>&ep=1"
+```
+
+Lalu buka situsnya: episode gratis harus jalan, tombol unduh harus jalan.
+
+### 🚨 Saklar darurat
+
+Kalau ada yang tidak beres:
+
+```powershell
+[Environment]::SetEnvironmentVariable('VIDEO_SIGNING_SECRET',$null,'Machine')
+Get-NetTCPConnection -State Listen -LocalPort 8088,8089 |
+  ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }
+schtasks /run /tn "DramaApp Video"
+```
+
+Semua alamat diloloskan lagi, persis seperti sebelum Bagian H. **Caddyfile tidak perlu
+disentuh, tidak perlu rilis apa pun.** Log harus kembali menulis `tanda tangan video: MATI`.
+
+### Batas yang DIKETAHUI
+
+- **Subtitle `.vtt` sengaja dibebaskan** — bukan barang jualan, dan memang sudah terbuka sejak
+  dulu (`app/api/subtitle/route.ts` tidak memanggil gerbang paywall). Dicatat, bukan terlewat.
+- **Agent mati = video ikut mati** (sebelumnya hanya fitur Scan admin). Ditanggung watchdog
+  15 menit + penjaga berkas 10 menit yang sudah terpasang.
+- **Tanda tangan berlaku 6 jam.** Penonton berbayar yang sengaja membagikan tautannya masih
+  bisa dipakai orang lain selama itu. Yang ditutup: pengambilan massal, penelusuran pustaka,
+  dan tautan abadi.
+
+---
+
 ## Setup 1x - Bagian G: jalankan SITUS dari PC backup *(darurat / saat Vercel mati)*
 
 > **Kapan dipakai:** akun Vercel di-pause (mis. kuota jebol 2026-08-26) sementara upgrade

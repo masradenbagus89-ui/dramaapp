@@ -387,9 +387,27 @@ if (-not $SECRET) {
   Berhenti "HARDLINK_AGENT_SECRET belum di-set di level Machine. Jalankan: [Environment]::SetEnvironmentVariable('HARDLINK_AGENT_SECRET','<token>','Machine')"
 }
 
+# Rahasia penanda tangan alamat video (Tahap B, 2026-10-27). Dibaca dengan cara
+# yang SAMA dengan di atas, tapi SENGAJA TIDAK WAJIB:
+#   terisi = Caddy menolak alamat .mp4 tanpa tanda tangan yang sah
+#   kosong = semua diloloskan, persis seperti sebelum Tahap B
+# Itulah saklar daruratnya — hapus env-nya, jalankan ulang script ini, video
+# kembali seperti semula tanpa menyentuh Caddyfile dan tanpa rilis.
+#
+# ⚠️ Nilainya WAJIB sama persis dengan `VIDEO_SIGNING_SECRET` di panel hosting.
+# Beda satu huruf = situs menandatangani dengan kunci A, PC backup memeriksa
+# dengan kunci B, dan SELURUH video mati.
+$VIDEO_SIGN = [Environment]::GetEnvironmentVariable("VIDEO_SIGNING_SECRET", "Machine")
+if (-not $VIDEO_SIGN) { $VIDEO_SIGN = $env:VIDEO_SIGNING_SECRET }
+
 Catat "node : $NODE_EXE"
 Catat "caddy: $CADDY_EXE"
 Catat "secret terbaca (panjang $($SECRET.Length) karakter)"   # nilainya JANGAN pernah dicatat
+if ($VIDEO_SIGN) {
+  Catat "tanda tangan video: AKTIF (panjang $($VIDEO_SIGN.Length) karakter)"
+} else {
+  Catat "tanda tangan video: MATI (VIDEO_SIGNING_SECRET kosong - semua alamat diloloskan)"
+}
 
 # --- 1b. Tunggu jaringan, lalu cek apakah semuanya SUDAH sehat ---
 if (-not (Tunggu-Jaringan 300)) {
@@ -445,6 +463,12 @@ Start-Sleep -Seconds 2
 # Env var disuntik ke proses ini dulu; proses anak mewarisinya.
 $env:HARDLINK_AGENT_SECRET = $SECRET
 $env:VIDEO_ROOT            = $VIDEO_ROOT
+# Disuntik EKSPLISIT, tidak mengandalkan pewarisan dari Task Scheduler —
+# alasan yang sama dengan HARDLINK_AGENT_SECRET di atas. Kosong pun tetap
+# disuntik (jadi string kosong di agent = pemeriksaan mati), supaya menghapus
+# env di level Machine benar-benar MEMATIKAN penegakan, bukan menyisakan nilai
+# lama yang masih menempel di proses.
+$env:VIDEO_SIGNING_SECRET  = $VIDEO_SIGN
 
 # try/catch WAJIB di sini: $ErrorActionPreference = "Stop" membuat Start-Process
 # yang gagal langsung mematikan script TANPA menulis apa pun ke log - gagal

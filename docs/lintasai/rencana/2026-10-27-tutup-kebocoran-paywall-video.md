@@ -215,7 +215,69 @@ seperti sekarang. Tahap ini aman di-deploy sendirian.
 putar 1 episode gratis & 1 episode berbayar milik akun yang sudah bayar), dan alamat di HTML
 sekarang **memuat tanda tangan**.
 
-### Tahap B — sisi PC backup (berisiko, ada jalan mundur)
+### ✅ Tahap B — KODE SELESAI 2026-10-27 (belum dipasang di PC backup)
+
+**Desainnya BERUBAH dari rencana semula — plugin Caddy DIBATALKAN.** Rencana awal menyuruh
+menaruh `caddy.exe` hasil build sendiri di PC backup. Setelah membaca `pc-backup-agent/README.md`
+Bagian F: mesin itu memakai **360 Total Security**, dan berkas di folder itu **sudah hilang dua
+kali** karena antivirus. Binary tak bertanda tangan di sana = kemungkinan besar dikarantina,
+**dan tidak ada penjaga yang mengembalikannya** (penjaga hanya memulihkan 4 berkas skrip).
+
+**Yang dipakai: `forward_auth` bawaan Caddy → agent Node yang SUDAH jalan di sana.**
+
+| | Plugin (dibatalkan) | forward_auth (dipakai) |
+|---|---|---|
+| Binary baru di PC ber-AV | ya — risiko karantina | **tidak** — Caddy standar yang sudah ada |
+| Kalau rusak | tak ada pemulih | agent dipulihkan watchdog 15 menit + penjaga berkas 10 menit |
+| Ketergantungan ke Railway | tidak | **tidak** — pemeriksaan 100% lokal (127.0.0.1) |
+| Kode pemeriksa | pihak ketiga, aktivitas minim | milik sendiri, di repo, ada tesnya |
+
+Harga yang diterima: kalau proses agent mati, video ikut mati (sebelumnya hanya fitur Scan
+admin). Dijinakkan oleh watchdog 15 menit yang memang sudah terpasang.
+
+**Bukti uji lokal (Caddy resmi v2.11.7 + agent asli, 11/11 lulus):**
+
+| Uji | Hasil |
+|---|---|
+| Bertanda tangan | **200**, 204.812 byte |
+| Range request (geser waktu) | **206** |
+| `?dl=1` bertanda tangan | **200** + `Content-Disposition: attachment` |
+| Alamat polos tanpa tanda tangan | **403** |
+| Alamat polos + Range | **403** |
+| Tanda tangan kedaluwarsa | **403** |
+| Nomor episode diganti sesudah ditandatangani | **403** |
+| Tanda tangan diutak-atik | **403** |
+| `?dl=1` tanpa tanda tangan | **403** |
+| Subtitle `.vtt` (sengaja dibebaskan) | 200 |
+| `/_agent/health` | 200 |
+
+Gerbang repo: build 0 · tsc 0 · **1.626 tes** (+14 tes kecocokan dua sisi).
+
+🪤 **Bug yang HANYA ketahuan karena uji lokal diwajibkan.** `forward_auth` menulis ulang alamat
+jadi `/_verify` **tetapi membawa query aslinya** → yang sampai ke agent
+`/_verify?expires=...&signature=...`. Agent membandingkan `req.url === "/_verify"` → tak pernah
+cocok → 404. Gejalanya MENIPU: alamat tak bertanda tangan tetap ditolak benar, jadi pagarnya
+tampak bekerja — yang rusak justru alamat yang SAH. Kalau langsung dipasang ke PC backup,
+**seluruh video mati**. Diperbaiki: rute dicocokkan dari JALUR saja.
+
+### ⚠️ URUTAN PEMASANGAN — SALAH URUT = SELURUH VIDEO MATI
+
+Tiap langkah aman sendiri-sendiri dan bisa dibalik. **Jangan dibolak-balik.**
+
+| # | Langkah | Kenapa aman |
+|---|---|---|
+| 1 | Rilis kode situs (sudah termasuk penandatanganan) | `VIDEO_SIGNING_SECRET` belum diisi → alamat terbit polos, persis seperti sekarang |
+| 2 | Isi `VIDEO_SIGNING_SECRET` di **Railway** | situs mulai menandatangani; tunnel belum memeriksa → parameter tambahan diabaikan |
+| 3 | Salin `hardlink-agent.js` + `Caddyfile` ke PC backup, `caddy validate` → `caddy reload` | env di PC masih kosong → agent **meloloskan semua**, perilaku tak berubah |
+| 4 | Isi `VIDEO_SIGNING_SECRET` di **PC backup** (level `Machine`) + jalankan ulang agent | **ini saklarnya.** Baru di sini penegakan menyala |
+
+🔴 **Langkah 2 WAJIB sebelum 4.** Kalau PC backup punya rahasia sementara Railway belum, situs
+mengirim alamat polos dan tunnel menolaknya → **semua video mati**.
+
+🚨 **SAKLAR DARURAT:** hapus `VIDEO_SIGNING_SECRET` di PC backup → jalankan ulang agent → semua
+lolos lagi seperti sebelum Tahap B. Tidak perlu menyentuh Caddyfile, tidak perlu rilis.
+
+### Tahap B — rencana semula (sisi PC backup; DIBATALKAN, lihat di atas)
 
 1. **Uji lokal dulu**, di mesin pengembang: jalankan Caddy ber-plugin dengan folder video tiruan,
    buktikan (a) alamat bertanda tangan → **206**, (b) tanpa tanda tangan → **401**,

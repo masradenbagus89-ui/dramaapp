@@ -6,6 +6,10 @@
 #
 # Atau jalankan di background (nanti):
 #   caddy start --config Caddyfile
+#
+# ⚠️ SESUDAH MENGUBAH BERKAS INI: `caddy validate --config Caddyfile` lalu
+# `caddy reload --config Caddyfile`. **reload, BUKAN restart** — restart penuh
+# mengganti alamat tunnel dan memutus tontonan penonton (pelajaran 2026-10-24).
 
 :8088 {
 	# Reverse-proxy /_agent/* ke hardlink-agent Node.js di port 8089
@@ -14,36 +18,80 @@
 		reverse_proxy 127.0.0.1:8089
 	}
 
-	# Unduh PAKSA: kalau URL ada ?dl=1, kirim Content-Disposition: attachment
-	# supaya HP/browser MENGUNDUH file (bukan memutar di tab), langsung dari
-	# tunnel tanpa batas waktu Vercel. Dipakai tombol Unduh di player.
-	@dl query dl=1
-	handle @dl {
-		root * C:\Users\USER\Downloads\video
-		header Content-Disposition "attachment"
-		file_server
+	root * C:\Users\USER\Downloads\video
+
+	# ─────────────────────────────────────────────────────────────────────
+	# BERKAS VIDEO (.mp4) — WAJIB BERTANDA TANGAN  [Tahap B, 2026-10-27]
+	# ─────────────────────────────────────────────────────────────────────
+	#
+	# MASALAH YANG DITUTUP (diukur di produksi, bukan dugaan): siapa pun yang
+	# tahu nama berkasnya bisa menonton episode BERBAYAR tanpa login — tunnel
+	# membalas `206`, `video/mp4`, isi diawali `ftypmp42`. Membuang `browse`
+	# (2026-10-24) hanya menutup PENELUSURAN, bukan orang yang sudah tahu
+	# alamatnya; batas itu memang sudah ditulis jujur di versi sebelumnya.
+	#
+	# CARA KERJANYA: `forward_auth` mengirim salinan permintaan ke agent Node
+	# yang SUDAH jalan di sini (port 8089, hanya 127.0.0.1). Agent memeriksa
+	# tanda tangan HMAC + masa berlaku di query, lalu membalas 204 (boleh) atau
+	# 403 (tolak). 2xx = Caddy lanjut menyajikan berkas; selain itu balasan
+	# agent diteruskan apa adanya ke penonton.
+	#
+	# KENAPA BUKAN PLUGIN `caddy-signed-urls` (rencana semula): plugin menuntut
+	# caddy.exe hasil build sendiri — binary TAK BERTANDA TANGAN di PC yang
+	# memakai 360 Total Security, dan AV di mesin ini sudah terbukti MEMAKAN
+	# berkas folder ini dua kali (README.md Bagian F). Kalau binary-nya
+	# dikarantina, tak ada penjaga yang mengembalikannya dan video mati tanpa
+	# gejala. Cara ini memakai Caddy standar yang sudah terpasang & tepercaya.
+	#
+	# KENAPA DIBUNGKUS `route`: di luar `route`, Caddy menata ulang directive
+	# memakai urutan bawaannya, dan `file_server` bisa berjalan LEBIH DULU
+	# daripada pemeriksanya — berkas tersaji sebelum diperiksa, pagar jadi
+	# hiasan. `route` mempertahankan urutan sesuai yang tertulis di sini.
+	#
+	# ⚠️ SAKLAR DARURAT: kosongkan env `VIDEO_SIGNING_SECRET` di PC backup lalu
+	# jalankan ulang agent → semua permintaan diloloskan lagi, persis seperti
+	# sebelum Tahap B. Tidak perlu menyentuh berkas ini.
+
+	# Unduh paksa: `?dl=1` → header attachment supaya HP mengunduh sampai
+	# tuntas, bukan memutarnya di tab. `?dl=1` IKUT ditandatangani situs, jadi
+	# urutan ini aman.
+	@videoUnduh {
+		path *.mp4
+		query dl=1
+	}
+	handle @videoUnduh {
+		route {
+			forward_auth 127.0.0.1:8089 {
+				uri /_verify
+			}
+			header Content-Disposition "attachment"
+			file_server
+		}
 	}
 
-	# Default: serve video files dari folder lokal (streaming inline utk player)
+	@video path *.mp4
+	handle @video {
+		route {
+			forward_auth 127.0.0.1:8089 {
+				uri /_verify
+			}
+			file_server
+		}
+	}
+
+	# ─────────────────────────────────────────────────────────────────────
+	# SISANYA (subtitle .vtt dll) — SENGAJA tanpa tanda tangan
+	# ─────────────────────────────────────────────────────────────────────
+	# Subtitle bukan barang yang dijual, dan sudah terbuka sejak dulu
+	# (app/api/subtitle/route.ts tidak memanggil gerbang paywall). Memagarinya
+	# sekarang menambah permukaan gagal tanpa melindungi pendapatan apa pun.
+	# Dicatat sebagai batas yang DIKETAHUI, bukan yang terlewat.
 	#
-	# ⚠️ `browse` DIBUANG 2026-10-24 (temuan audit keamanan D-1) — JANGAN
-	# dipasang lagi. Dengan `browse`, Caddy menampilkan DAFTAR ISI FOLDER kepada
-	# siapa pun yang membuka alamat tunnel. Diukur saat audit: halaman root
-	# membalas 200 dengan **61 tautan folder** terlihat, tanpa diminta
-	# kredensial apa pun — seluruh pustaka video bisa ditelusuri lalu diunduh,
-	# termasuk judul berbayar.
-	#
-	# Pemutaran video TIDAK terpengaruh: player meminta nama berkas spesifik
-	# (`<base>/<dramaId>/<ep>.mp4`, lib/video.ts:12), bukan daftar folder.
-	# `file_server` tanpa `browse` tetap menyajikan berkas yang alamatnya tepat.
-	#
-	# BATAS JUJUR: ini menutup PENELUSURAN, bukan orang yang sudah tahu nama
-	# berkasnya. Penutupan penuh menuntut URL bertanda tangan berumur pendek
-	# (tunnel menolak permintaan tanpa tanda tangan). `basicauth` BUKAN
-	# jawabannya di jalur ini — elemen `<video>` tidak mengirim kredensial
-	# basic-auth, jadi memasangnya justru mematikan pemutaran.
+	# ⚠️ `browse` DIBUANG 2026-10-24 (temuan audit D-1) — JANGAN dipasang lagi.
+	# Dengan `browse`, Caddy menampilkan DAFTAR ISI FOLDER kepada siapa pun.
+	# Diukur saat audit: halaman root membalas 200 dengan 61 tautan folder
+	# terlihat, tanpa kredensial apa pun.
 	handle {
-		root * C:\Users\USER\Downloads\video
 		file_server
 	}
 
@@ -53,7 +101,7 @@
 	# Diperiksa dulu sebelum diubah, supaya tidak mematikan apa pun — nol jalur
 	# browser yang membutuhkan CORS ke tunnel ini:
 	#   * video: `<video src>` tanpa atribut crossOrigin → permintaan non-CORS
-	#     (dicatat di app/components/FeedPlayer.tsx:589)
+	#     (dicatat di app/components/FeedPlayer.tsx)
 	#   * subtitle: SENGAJA di-proxy lewat /api/subtitle supaya same-origin,
 	#     justru agar `<track>` tak kena CORS (lib/subtitles.ts:1-4)
 	#   * tombol unduh `?dl=1`: navigasi biasa, bukan fetch

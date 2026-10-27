@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { getVideoBaseUrl } from "@/lib/video-base";
+import { tandaTanganiUrlVideo } from "@/lib/video-signature";
 import { FREE_EPISODES } from "@/lib/coins";
 import {
   balasanAksesDitolak,
@@ -72,7 +73,13 @@ export async function GET(req: NextRequest) {
   const baseUrl = await getVideoBaseUrl();
 
   if (baseUrl) {
-    const target = `${baseUrl}/${encodeURIComponent(id)}/${encodeURIComponent(fileName)}?dl=1`;
+    // DITANDATANGANI (Tahap B) — alasan & batasnya sama dengan /api/teaser.
+    // `?dl=1` IKUT ditandatangani (query masuk hitungan tanda tangan), jadi
+    // paksa-unduh di Caddy tetap bekerja; dikunci tes video-signature-cocok.
+    const target = tandaTanganiUrlVideo(
+      `${baseUrl}/${encodeURIComponent(id)}/${encodeURIComponent(fileName)}?dl=1`,
+      Math.floor(Date.now() / 1000),
+    );
     return new NextResponse(null, {
       status: 307,
       headers: {

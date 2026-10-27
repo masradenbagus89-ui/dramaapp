@@ -2,11 +2,14 @@
 //
 // Usage:
 //   $env:HARDLINK_AGENT_SECRET = "your-secret-here"
+//   $env:VIDEO_SIGNING_SECRET  = "..."                  # opsional; kosong = pemeriksaan MATI
 //   $env:VIDEO_ROOT = "C:\Users\USER\Downloads\video"   # optional, has default
 //   node hardlink-agent.js
 //
 // Endpoints:
 //   GET  /health           -> { ok, videoRoot }
+//   GET  /_verify          -> 204 boleh / 403 tolak   (dipanggil Caddy forward_auth)
+//        header: x-forwarded-uri   (diisi Caddy sendiri, bukan penonton)
 //   POST /hardlink         -> { ok, action, count, ... }
 //        body: { dramaId }
 //        header: x-agent-secret
@@ -14,11 +17,23 @@
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
+const crypto = require("crypto");
 
 const VIDEO_ROOT =
   process.env.VIDEO_ROOT || "C:\\Users\\USER\\Downloads\\video";
 const PORT = parseInt(process.env.PORT || "8089", 10);
 const SECRET = process.env.HARDLINK_AGENT_SECRET;
+
+/**
+ * Rahasia pemeriksa tanda tangan alamat video — HARUS sama persis dengan
+ * `VIDEO_SIGNING_SECRET` di panel hosting situs.
+ *
+ * ⚠️ KOSONG = PEMERIKSAAN MATI, dan itu DISENGAJA (lihat alasan lengkap di
+ * `periksaTandaTanganVideo`). Mengisinya = menyalakan; mengosongkannya lalu
+ * menjalankan ulang agent = SAKLAR DARURAT yang mengembalikan keadaan seperti
+ * sebelum Tahap B, tanpa menyentuh Caddyfile.
+ */
+const VIDEO_SIGNING_SECRET = (process.env.VIDEO_SIGNING_SECRET || "").trim();
 
 // Player selalu meminta "<nomor>.mp4", dan <video> di browser hanya bisa memutar
 // kontainer MP4. Kontainer lain TIDAK cukup di-rename jadi .mp4 — isinya tetap
@@ -225,6 +240,72 @@ function processHardlink(dramaId) {
   };
 }
 
+/**
+ * Periksa tanda tangan alamat video. Dipanggil Caddy lewat `forward_auth`
+ * SEBELUM berkas `.mp4` disajikan.
+ *
+ * KENAPA ADA (Tahap B, rencana 2026-10-27): sampai Tahap A, tunnel melayani
+ * siapa pun yang tahu nama berkasnya — diukur di produksi: `206`, `video/mp4`,
+ * isi diawali `ftypmp42`, tanpa login. Tahap A menutup cara MENEMUKAN alamat;
+ * fungsi inilah yang mencabut alamat yang sudah terlanjur beredar.
+ *
+ * ⚠️ FORMATNYA MENGIKAT — wajib cermin dari `lib/video-signature.ts` di repo
+ * situs. Kalau keduanya melenceng, video mati total. Karena berkas ini disalin
+ * MANUAL ke PC backup (tak ikut `npm`), kecocokannya tidak bisa dijamin
+ * compiler — maka dijaga tes `tests/video-signature-cocok.test.ts` yang
+ * menandatangani dengan kode situs lalu memverifikasi dengan fungsi INI.
+ *
+ * ⚠️ RAHASIA KOSONG = LOLOSKAN SEMUA, dan ini keputusan sadar — bukan kelalaian
+ * fail-open yang dilarang rak owasp A10. Bedanya penting: yang dilarang itu
+ * meloloskan saat terjadi ERROR (gagal baca database, timeout). Di sini yang
+ * terjadi adalah fitur BELUM DINYALAKAN, dan perilaku yang benar untuk itu
+ * adalah "persis seperti sebelumnya". Kalau dibalik jadi tolak-semua, satu env
+ * var yang lupa diisi di PC backup = SELURUH video mati, termasuk episode
+ * gratis. Tanda tangan yang SALAH atau KEDALUWARSA tetap ditolak tegas.
+ *
+ * @param {string} uri path + query apa adanya (header `X-Forwarded-Uri` dari Caddy)
+ * @param {string} rahasia isi VIDEO_SIGNING_SECRET
+ * @param {number} sekarangDetik detik Unix sekarang
+ * @returns {{ boleh: boolean, sebab: string }}
+ */
+function periksaTandaTanganVideo(uri, rahasia, sekarangDetik) {
+  if (!rahasia) return { boleh: true, sebab: "pemeriksaan-mati" };
+  if (typeof uri !== "string" || !uri.startsWith("/")) {
+    return { boleh: false, sebab: "uri-tidak-sah" };
+  }
+
+  const batas = uri.indexOf("?");
+  const jalur = batas === -1 ? uri : uri.slice(0, batas);
+  const params = new URLSearchParams(batas === -1 ? "" : uri.slice(batas + 1));
+
+  const tanda = params.get("signature");
+  if (!tanda) return { boleh: false, sebab: "tanpa-tanda-tangan" };
+  params.delete("signature");
+
+  // `expires` WAJIB ada dan wajib ikut ditandatangani (dijamin di sisi situs).
+  // Tanpa syarat ini, tanda tangan jadi berlaku selamanya.
+  const expires = Number(params.get("expires"));
+  if (!Number.isInteger(expires)) return { boleh: false, sebab: "expires-tidak-sah" };
+  if (sekarangDetik > expires) return { boleh: false, sebab: "kedaluwarsa" };
+
+  params.sort();
+  const harapan = crypto
+    .createHmac("sha256", rahasia)
+    .update(`${jalur}?${params.toString()}`)
+    .digest("base64url");
+
+  // Dibandingkan TAHAN-WAKTU: perbandingan string biasa berhenti di huruf
+  // pertama yang beda, sehingga lama-pembandingan membocorkan berapa banyak
+  // huruf yang sudah benar — cukup untuk menebak tanda tangan huruf demi huruf.
+  const a = Buffer.from(tanda, "utf8");
+  const b = Buffer.from(harapan, "utf8");
+  if (a.length !== b.length) return { boleh: false, sebab: "tanda-tangan-salah" };
+  if (!crypto.timingSafeEqual(a, b)) {
+    return { boleh: false, sebab: "tanda-tangan-salah" };
+  }
+  return { boleh: true, sebab: "sah" };
+}
+
 const server = http.createServer((req, res) => {
   // CORS (so admin form could also call directly if needed in future)
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -240,7 +321,19 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  if (req.method === "GET" && req.url === "/health") {
+  // Rute dicocokkan dari JALUR saja, bukan `req.url` utuh.
+  //
+  // KENAPA (ditemukan saat uji lokal Tahap B, 2026-10-27): `forward_auth`
+  // Caddy menulis ulang alamat jadi `/_verify` TAPI query aslinya ikut
+  // terbawa — yang sampai ke sini `/_verify?expires=...&signature=...`.
+  // Perbandingan `req.url === "/_verify"` tidak pernah cocok, permintaan
+  // jatuh ke 404, dan Caddy meneruskan 404 itu ke penonton. Gejalanya
+  // MENIPU: alamat tanpa query (tak bertanda tangan) tetap ditolak benar,
+  // jadi pagarnya tampak bekerja — yang rusak justru alamat yang SAH.
+  // Kalau ini lolos ke PC backup, SELURUH video mati.
+  const jalurReq = (req.url || "").split("?")[0];
+
+  if (req.method === "GET" && jalurReq === "/health") {
     return jsonResponse(res, 200, {
       ok: true,
       videoRoot: VIDEO_ROOT,
@@ -248,7 +341,37 @@ const server = http.createServer((req, res) => {
     });
   }
 
-  if (req.method === "POST" && req.url === "/hardlink") {
+  // Dipanggil Caddy lewat `forward_auth` sebelum menyajikan berkas .mp4.
+  // Caddy selalu mengirim GET dan menaruh alamat aslinya di X-Forwarded-Uri.
+  // 2xx = Caddy lanjut menyajikan berkas; selain itu = balasan ini yang
+  // diteruskan ke penonton.
+  if (req.method === "GET" && jalurReq === "/_verify") {
+    const uri = req.headers["x-forwarded-uri"];
+    const hasil = periksaTandaTanganVideo(
+      uri,
+      VIDEO_SIGNING_SECRET,
+      Math.floor(Date.now() / 1000),
+    );
+    if (hasil.boleh) {
+      // 204: nol badan respons. Caddy hanya butuh tahu "boleh", dan apa pun
+      // yang ditulis di sini akan ikut terkirim ke penonton kalau suatu saat
+      // konfigurasinya salah.
+      res.writeHead(204, { "Cache-Control": "no-store" });
+      res.end();
+      return;
+    }
+    // 403, BUKAN 401 (rak owasp §2: jangan tertukar). 401 berarti "login lalu
+    // coba lagi" — di tunnel ini tidak ada jalur login yang bisa ditempuh
+    // penonton, jadi 401 akan menyesatkan.
+    //
+    // `sebab` SENGAJA tidak dikirim ke penonton: membedakan "tanda tangan
+    // salah" dari "kedaluwarsa" membantu orang menebak-nebak. Alasannya tetap
+    // terlihat pengelola di log baris bawah.
+    console.warn(`[verify] DITOLAK (${hasil.sebab}) uri=${uri}`);
+    return jsonResponse(res, 403, { error: "Alamat video tidak sah." });
+  }
+
+  if (req.method === "POST" && jalurReq === "/hardlink") {
     const providedSecret = req.headers["x-agent-secret"];
     if (providedSecret !== SECRET) {
       return jsonResponse(res, 401, { error: "Unauthorized" });
@@ -302,4 +425,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { petakanEpisode, processHardlink };
+module.exports = { petakanEpisode, processHardlink, periksaTandaTanganVideo };

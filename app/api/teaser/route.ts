@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getVideoBaseUrl } from "@/lib/video-base";
+import { tandaTanganiUrlVideo } from "@/lib/video-signature";
 import { FREE_EPISODES } from "@/lib/coins";
 import {
   balasanAksesDitolak,
@@ -84,7 +85,15 @@ export async function GET(req: NextRequest) {
   }
 
   const fileName = `${ep}.mp4`;
-  const target = `${baseUrl}/${encodeURIComponent(id)}/${encodeURIComponent(fileName)}`;
+  // DITANDATANGANI (Tahap B): mulai saat tunnel menegakkan, alamat polos
+  // ditolak 403. Tanpa baris ini teaser hero & cuplikan kartu mati senyap —
+  // `<video>` cuma gagal memuat, nol pesan error di layar.
+  // Nol byte tambahan lewat server kita: tanda tangan menempel di header
+  // `Location`, bukan di badan respons.
+  const target = tandaTanganiUrlVideo(
+    `${baseUrl}/${encodeURIComponent(id)}/${encodeURIComponent(fileName)}`,
+    Math.floor(Date.now() / 1000),
+  );
 
   // 307, bukan 302: 307 mewajibkan klien mengulang permintaan APA ADANYA —
   // termasuk header `Range` yang dipakai <video> untuk seek & buffering

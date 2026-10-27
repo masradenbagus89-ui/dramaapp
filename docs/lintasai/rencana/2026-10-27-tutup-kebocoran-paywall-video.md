@@ -2,7 +2,12 @@
 
 > Dibuat 2026-10-27 · Bobot **BERAT** (uang + bisa mematikan seluruh video + menyentuh PC backup)
 > Rak dibuka: `skills/owasp` · `skills/backend` · `skills/auth` (dirutekan lewat `rak-cli --divisi`)
-> Status: **RENCANA — belum ada satu baris pun yang diubah.**
+> Status: ✅ **SELESAI 2026-10-27.** Tahap A dirilis (`5165f22`) + Tahap B terpasang di PC backup.
+> Terukur: alamat polos **403** · bertanda tangan **200** · ep 4 premium tanpa login **401** ·
+> HTML premium **0** alamat `.mp4`. Owner memverifikasi di browser: video bisa diputar.
+> 🪤 Pelajaran terpentingnya ada di PROSEDUR, bukan kode — tiga kesalahan + jalan keluarnya
+> dicatat di `HANDOFF.md` entri 2026-10-27 (ke-3). Pemasangan ulang: satu perintah
+> `pc-backup-agent/pasang-tanda-tangan.ps1`.
 
 ## Ringkasan
 

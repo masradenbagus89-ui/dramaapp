@@ -9,7 +9,7 @@
 >
 > **📦 Berkas ini sudah ±6.600 baris** (diukur 2026-10-15; angka lama "5.224 baris" dari 2026-10-10 sudah basi — tumbuh ±1.400 baris dalam 5 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-10-27 (kebocoran paywall video ditutup di sisi aplikasi, rilis `5165f22` — Tahap A dari 2; sebelumnya celah Node `CVE-2026-111497`).
+**Terakhir diisi:** 2026-10-27 (**kebocoran paywall video TERTUTUP PENUH** — Tahap A `5165f22` + Tahap B terpasang di PC backup; sebelumnya celah Node `CVE-2026-111497`).
 
 ---
 
@@ -66,6 +66,78 @@ diperbaiki.
 - **Edit berkas di repo ≠ hidup di PC backup.** PC backup **tidak punya folder
   repo**; script disalin manual ke `C:\Users\USER\pc-backup-agent\`. Cara
   memasang yang terbukti ada di entri ReleaseMutex.
+
+---
+
+## 2026-10-27 (ke-3) — TAHAP B SELESAI: tunnel MENOLAK alamat video tanpa tanda tangan. Kebocoran paywall tertutup PENUH.
+
+**Alamat video yang sudah terlanjur beredar sekarang MATI.** Diukur dari luar sesudah dipasang:
+
+| Diukur | Hasil |
+|---|---|
+| Alamat polos (yang dicuri orang) | **403** |
+| Alamat polos episode lain | **403** |
+| Alamat bertanda tangan dari situs | **200** |
+| ep 1 & 3 (jatah gratis) drama premium | **200** |
+| ep 4 & ep 20 terkunci tanpa login | **401** |
+| HTML halaman premium | **0** alamat `.mp4`, **0** sebutan tunnel |
+| `/api/teaser` · `/api/download` · `/feed` · `/beranda` · `/` | semua **200** |
+| Katalog | 33477 byte · 40 drama (tak berubah) |
+
+Owner memverifikasi di browser: video **bisa diputar**. Rantai akhirnya:
+Caddy `forward_auth` → `hardlink-agent.js` `/_verify` → HMAC-SHA256 + masa berlaku 6 jam.
+
+### 🔑 Cara memasang ulang (atau di mesin lain): SATU perintah
+
+```powershell
+.\pasang-tanda-tangan.ps1 -Kunci "<kunci>"     # memeriksa dulu, baru mengubah
+.\pasang-tanda-tangan.ps1 -Matikan             # saklar darurat
+```
+
+`pc-backup-agent/pasang-tanda-tangan.ps1` mengambil alamat bertanda tangan ASLI dari situs
+yang sedang tayang, menghitung ulang dengan kunci yang diberikan, dan **berhenti tanpa
+mengubah apa pun kalau tidak cocok**. Kalau cocok: pasang → uji 3 hal → **kembalikan
+sendiri** kalau satu saja gagal. **Jangan kembali ke pemasangan manual.**
+
+### 🪤 TIGA KESALAHAN PROSES yang memakan waktu owner seharian — semuanya satu pola
+
+Kodenya tidak pernah salah (11/11 uji lokal, 1.626 tes). Yang salah **prosedur yang disusun
+AI**: memecah pekerjaan jadi langkah manual, lalu memverifikasi BELAKANGAN.
+
+1. **`caddy reload` dijalankan SEBELUM agent diganti.** Agent lama belum punya `/_verify` →
+   balas 404 → `forward_auth` meneruskan 404 ke penonton → **SELURUH video mati ~10 menit**.
+   Uji lokal tak menangkapnya karena di sana agent SELALU dinyalakan lebih dulu; kombinasi
+   "Caddy baru + agent lama" tak pernah diuji. **Aturan: saat dua komponen saling bergantung,
+   uji juga urutan pemasangan yang SALAH — bukan cuma urutan yang benar.**
+2. **`Stop-Process` menelan errornya sendiri.** Proses agent dimiliki `NT AUTHORITY\SYSTEM`
+   (Task Scheduler `/ru SYSTEM`), jadi PowerShell biasa TIDAK bisa mematikannya — dan karena
+   dipakai `-ErrorAction SilentlyContinue`, kegagalannya tak terlihat. Proses lama tetap
+   hidup, proses baru gagal merebut port lalu keluar diam-diam, dan gejalanya menyesatkan:
+   `/health` menjawab (proses lama) tapi `/_verify` 404 (kode lama). **Aturan: perintah yang
+   HARUS berhasil jangan pernah dipasangi `SilentlyContinue`; buktikan hasilnya (port benar-benar
+   kosong), jangan percaya perintahnya jalan.**
+3. **Saklar dinyalakan sebelum kecocokan kunci dibuktikan.** Kunci di panel hosting ≠ kunci di
+   PC backup → alamat bertanda tangan pun ditolak → **video mati lagi**. Padahal kecocokan itu
+   bisa diuji TANPA risiko: ambil alamat bertanda tangan dari situs, hitung ulang lokal,
+   bandingkan. **Aturan: kalau sebuah saklar bisa mematikan produksi, syaratnya wajib dibuktikan
+   SEBELUM saklar disentuh.** Sekarang dipaksa oleh skrip, bukan diandalkan pada ingatan.
+
+💡 **Kenapa kuncinya beda:** panel hosting **menyembunyikan** nilai variabel, jadi menyalin
+dengan menyorot teks menghasilkan nilai yang salah. Jalan keluarnya: **jangan membaca kunci
+dari panel** — tulis kunci ke berkas di PC backup, salin dari situ ke panel, lalu jalankan
+pemasangnya membaca berkas yang sama. Satu sumber, nol ketikan ulang.
+
+### Batas yang DIKETAHUI (bukan terlewat)
+
+- **Subtitle `.vtt` sengaja tidak ditandatangani** — bukan barang jualan, dan sudah terbuka
+  sejak dulu (`app/api/subtitle/route.ts` tak memanggil gerbang paywall).
+- **Tanda tangan berlaku 6 jam.** Penonton berbayar yang sengaja membagikan tautannya masih
+  bisa dipakai orang lain selama itu. Yang mati: pengambilan massal, penelusuran pustaka,
+  tautan abadi.
+- **Agent mati = video ikut mati** (dulu hanya fitur Scan admin). Ditanggung watchdog 15 menit
+  + penjaga berkas 10 menit yang sudah terpasang.
+- Drama `dikira-sopir-lemah-ternyata-raja-perang` **dilepas tanda premiumnya** oleh owner hari
+  ini (premium 14 → 13). Episode 4 di situ bisa diputar siapa pun — itu BENAR, bukan bocor.
 
 ---
 

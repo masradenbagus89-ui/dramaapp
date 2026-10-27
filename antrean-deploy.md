@@ -20,7 +20,17 @@ commit di belakangnya. Pelajarannya: SHA di catatan basi begitu ada commit berik
 ditaruh di `docs/` lalu dipindah: isinya rinci soal paparan mesin kerja, dan repo ini **PUBLIK**
 (§5.2). Jangan dipindahkan masuk.
 
-✅ **DIRILIS 2026-10-27 (ke-2) — kebocoran paywall video ditutup, di `5165f22`.** Dual push
+✅ **TAHAP B TERPASANG 2026-10-27 — tunnel MENOLAK alamat tanpa tanda tangan. Kebocoran paywall TERTUTUP PENUH.**
+Dipasang di PC backup (bukan rilis kode; kodenya sudah ada di `61eebc3`/`0216453`/`6dabda2`).
+Alamat polos → **403**, alamat bertanda tangan → **200**, ep 4 premium tanpa login → **401**,
+HTML premium → **0** alamat `.mp4`. Owner memverifikasi di browser: video bisa diputar.
+
+🔑 **Pasang ulang / mesin lain = SATU perintah:** `.\pasang-tanda-tangan.ps1 -Kunci "<kunci>"`
+(memeriksa dulu, baru mengubah; `-Matikan` = saklar darurat). **Jangan kembali ke pemasangan
+manual** — cara manual gagal 2× hari ini dan mematikan video ~10 menit tiap kali. Ketiga
+kesalahan prosesnya dicatat di `HANDOFF.md` entri 2026-10-27 (ke-3).
+
+✅ **DIRILIS 2026-10-27 (ke-2) — kebocoran paywall video ditutup di sisi aplikasi, di `5165f22`.** Dual push
 tuntas (`3ef9e00..5165f22`, selisih 0/0). Alamat video berhenti dirakit di browser; kini terbit
 dari `/api/video-url` sesudah gerbang paywall, lalu ditandatangani HMAC-SHA256 berumur 6 jam.
 

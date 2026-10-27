@@ -15,7 +15,7 @@ import {
   writeSubtitlePref,
 } from "@/lib/subtitles";
 import { readUser } from "@/lib/auth";
-import { videoSrc, downloadUrl, decideVideoError } from "@/lib/video";
+import { decideVideoError } from "@/lib/video";
 import { seekTime } from "@/lib/seek";
 import { fetchWallet, unlockEpisode, unlockAllEpisodes } from "@/lib/wallet";
 import { isEpisodeLocked } from "@/lib/coins";
@@ -38,7 +38,6 @@ export default function FeedPlayer({
   dramaId,
   title,
   episodes,
-  baseUrl,
   startEp,
   posterImage,
   subtitles = [],
@@ -50,7 +49,6 @@ export default function FeedPlayer({
   dramaId: string;
   title: string;
   episodes: number;
-  baseUrl: string;
   startEp: number;
   posterImage?: string;
   subtitles?: string[];
@@ -111,24 +109,100 @@ export default function FeedPlayer({
   const lastSaveAt = useRef(0);
   const prevActiveRef = useRef(active);
 
-  const srcFor = (ep: number) => videoSrc(baseUrl, dramaId, ep, resolution);
+  // Alamat video TIDAK lagi dirakit di browser — diminta ke server.
+  //
+  // KENAPA diubah (temuan 2026-10-27, diukur di produksi): versi lama memanggil
+  // `videoSrc(baseUrl, ...)` di sini, sehingga alamat episode BERBAYAR ikut
+  // tercetak ke HTML dan terbaca siapa pun dari View Source — lalu tunnel
+  // melayaninya tanpa syarat (206, `video/mp4`, `ftypmp42`). Sekarang alamat
+  // hanya LAHIR di server, sesudah gerbang `lib/paywall-guard.ts` lolos, lalu
+  // ditandatangani. Episode yang tak berhak **tidak punya alamat sama sekali**
+  // di halaman — bukan sekadar disembunyikan.
+  const [srcMap, setSrcMap] = useState<Record<string, string>>({});
+  // Kunci yang sudah/sedang diminta, supaya satu slide tak meminta berulang.
+  // Ref, bukan state: isinya alat pembukuan dan tak boleh memicu render.
+  const sudahDiminta = useRef<Set<string>>(new Set());
+  const srcKeyFor = (ep: number) => `${ep}|${resolution}`;
+  /** Alamat siap pakai, atau `undefined` selagi diambil / kalau tak berhak. */
+  const srcFor = (ep: number) => srcMap[srcKeyFor(ep)];
+
+  // Ambil alamat untuk slide yang benar-benar dimount (maks 3: aktif ± 1) —
+  // sejalan dengan syarat `near` di bagian render, jadi nol permintaan untuk
+  // episode yang elemen videonya memang tidak dibuat.
+  //
+  // `unlocked` ikut jadi pemicu DENGAN SENGAJA: episode yang BARU DIBAYAR harus
+  // langsung dapat alamat tanpa penonton memuat ulang halaman. Tanpa ini,
+  // pelanggan membayar lalu videonya tetap tak jalan — kerusakan yang lebih
+  // buruk daripada kebocoran yang sedang ditutup.
+  useEffect(() => {
+    let batal = false;
+    const epSekitar = [active - 1, active, active + 1]
+      .filter((i) => i >= 0 && i < episodes)
+      .map((i) => i + 1);
+
+    for (const ep of epSekitar) {
+      const k = `${ep}|${resolution}`;
+      if (sudahDiminta.current.has(k)) continue;
+      sudahDiminta.current.add(k);
+      void (async () => {
+        try {
+          const r = await fetch(
+            `/api/video-url?id=${encodeURIComponent(dramaId)}&ep=${ep}` +
+              `&res=${encodeURIComponent(resolution)}`,
+            { cache: "no-store" },
+          );
+          if (!r.ok) {
+            // Ditolak gerbang (belum bayar / belum login) atau server sakit.
+            // Dilepas dari pembukuan supaya bisa diminta LAGI begitu `unlocked`
+            // berubah. Panel paywall & panel gagal yang sudah ada yang bicara
+            // ke penonton — di sini cukup diam.
+            sudahDiminta.current.delete(k);
+            return;
+          }
+          const { url } = (await r.json()) as { url?: string };
+          if (!batal && url) setSrcMap((m) => ({ ...m, [k]: url }));
+        } catch {
+          sudahDiminta.current.delete(k);
+        }
+      })();
+    }
+    return () => {
+      batal = true;
+    };
+  }, [active, resolution, dramaId, episodes, unlocked]);
 
   // Tombol "Coba lagi" pada panel gagal: hapus penanda gagal lalu paksa elemen
   // <video> memuat ulang. dataset.resfb ikut dibersihkan supaya percobaan
   // turun-resolusi boleh berjalan lagi dari awal.
-  const retryEpisode = useCallback((ep: number, idx: number) => {
-    setFailedEps((prev) => {
-      if (!prev.has(ep)) return prev;
-      const next = new Set(prev);
-      next.delete(ep);
-      return next;
-    });
-    const v = videoRefs.current[idx];
-    if (v) {
-      delete v.dataset.resfb;
-      v.load();
-    }
-  }, []);
+  const retryEpisode = useCallback(
+    (ep: number, idx: number) => {
+      setFailedEps((prev) => {
+        if (!prev.has(ep)) return prev;
+        const next = new Set(prev);
+        next.delete(ep);
+        return next;
+      });
+      // Buang alamat yang tersimpan supaya "Coba lagi" MEMINTA ALAMAT BARU,
+      // bukan memuat ulang alamat yang sama. Penting sejak alamat bertanda
+      // tangan: tanda tangan punya masa berlaku, dan penyebab paling mungkin
+      // sebuah episode gagal setelah lama dijeda adalah tanda tangannya habis —
+      // memuat ulang alamat yang sama akan gagal lagi, selamanya.
+      const k = `${ep}|${resolution}`;
+      sudahDiminta.current.delete(k);
+      setSrcMap((m) => {
+        if (!(k in m)) return m;
+        const next = { ...m };
+        delete next[k];
+        return next;
+      });
+      const v = videoRefs.current[idx];
+      if (v) {
+        delete v.dataset.resfb;
+        v.load();
+      }
+    },
+    [resolution],
+  );
 
   // Episode terkunci? Ep awal gratis; admin bebas; sisanya butuh sudah-dibuka.
   const isLocked = useCallback(
@@ -434,12 +508,22 @@ export default function FeedPlayer({
     return () => window.clearTimeout(t);
   }, [paused, lockedActive, settingsOpen, commentsOpen, episodesOpen, adOpen, active, tick]);
 
-  // Unduh episode aktif: bikin <a> tak-terlihat lalu klik otomatis. Aturan
-  // alamat unduh (tunnel ?dl=1 vs proxy /api/download) ada di downloadUrl().
+  // Unduh episode aktif: bikin <a> tak-terlihat lalu klik otomatis.
+  //
+  // LEWAT /api/download, bukan alamat tunnel yang dirakit di sini (diubah
+  // 2026-10-27). Dulu `downloadUrl(baseUrl, ...)` menempelkan alamat tunnel
+  // langsung — jalur kedua yang sama bocornya dengan `videoSrc`: episode
+  // berbayar bisa diunduh siapa pun yang membaca HTML.
+  //
+  // Nol yang hilang dari penonton: /api/download menegakkan gerbang paywall
+  // yang sama lalu membalas 307 ke `...?dl=1`, dan Caddy PC backup yang
+  // mengirim `Content-Disposition: attachment` (pc-backup-agent/Caddyfile:20-25).
+  // Jadi unduhan tetap langsung dari tunnel — NOL byte lewat server kita,
+  // syarat yang dikunci tests/download-redirect.test.ts.
   const onDownload = () => {
     const ep = active + 1;
     const a = document.createElement("a");
-    a.href = downloadUrl(baseUrl, dramaId, ep);
+    a.href = `/api/download?id=${encodeURIComponent(dramaId)}&ep=${ep}`;
     a.download = `${dramaId}-ep${ep}.mp4`; // dihormati saat same-origin (dev)
     a.rel = "noopener";
     document.body.appendChild(a);

@@ -158,7 +158,42 @@ buruk daripada kebocoran: pelanggan membayar lalu tidak dapat apa-apa.
 
 Dipecah begini supaya **tak ada satu langkah pun yang bisa mematikan video tanpa jalan mundur.**
 
-### Tahap A — sisi aplikasi (aman, tidak bisa merusak apa pun)
+### ✅ Tahap A — SELESAI 2026-10-27 (belum di-push)
+
+**Terbukti, bukan diklaim.** Gerbang §6: `build` exit 0 · `tsc` exit 0 · **1.612 tes hijau**
+(113 berkas; +31 tes baru, −4 tes `downloadUrl` yang ikut dibuang). Lalu dijalankan sungguhan
+(`next start` lokal):
+
+| Diukur | Sebelum | Sesudah |
+|---|---|---|
+| Alamat `.mp4` di HTML `/feed/<premium>?ep=40` | **3 alamat tunnel** | **0** |
+| Sebutan tunnel di HTML | ada | **0** |
+| `/api/video-url` ep 1 (gratis) | — | 200 + alamat |
+| `/api/video-url` ep 40 tanpa login | — | **401, nol alamat** |
+| Tanda tangan di runtime Next sungguhan | — | `expires − issued = 21600` detik (6 jam), base64url |
+
+**Tiga koreksi atas rencana ini sendiri, ditemukan saat mengerjakan:**
+
+1. 🔴 **Penanda tangan TIDAK boleh di `lib/video.ts`** seperti ditulis rencana semula.
+   `app/components/FeedPlayer.tsx:1` berbaris `"use client"` dan mengimpor berkas itu — menaruh
+   pembaca `VIDEO_SIGNING_SECRET` di sana berarti **rahasia ikut ke browser** (§5.2). Dipindah
+   ke berkas khusus-server `lib/video-signature.ts`.
+2. **Tombol unduh dialihkan ke `/api/download`**, bukan diberi penandatanganan sendiri.
+   Route itu sudah menegakkan gerbang yang sama lalu 307 ke `...?dl=1` — memakai ulang yang ada
+   (§4.4) menghapus satu jalur bocor tanpa kode baru.
+3. **`downloadUrl()` dibuang** (kode mati sesudah #2) dan **prop `baseUrl` dilepas dari
+   FeedPlayer**. Efek sampingnya bagus: alamat tunnel kini **tidak tercetak ke halaman sama
+   sekali**, bukan sekadar alamat `.mp4`-nya.
+
+Berkas: `lib/video-signature.ts` (baru) · `app/api/video-url/route.ts` (baru) ·
+`tests/video-signature.test.ts` (baru, 14) · `tests/video-url-route.test.ts` (baru, 17) ·
+`app/components/FeedPlayer.tsx` · `app/feed/[id]/page.tsx` · `lib/video.ts` · `tests/video.test.ts`.
+
+⏳ **Sisa Tahap A: owner mengisi `VIDEO_SIGNING_SECRET` di Railway.** Tanpa itu alamat
+diterbitkan TANPA tanda tangan — dan itu memang aman & disengaja (lihat `video-signature.ts`),
+karena tunnel juga belum menegakkan. Kebocoran View Source **sudah tertutup** tanpa env itu.
+
+### Tahap A — rencana semula (sisi aplikasi; aman, tidak bisa merusak apa pun)
 
 Aplikasi mulai menerbitkan alamat **ber-tanda-tangan**, sementara tunnel **belum** menegakkan.
 Caddy yang belum menegakkan hanya mengabaikan parameter tambahan, jadi video tetap jalan persis

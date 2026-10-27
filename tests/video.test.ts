@@ -1,7 +1,7 @@
-// Tes pengunci perilaku untuk videoSrc + downloadUrl + decideVideoError
+// Tes pengunci perilaku untuk videoSrc + decideVideoError
 // (lib/video.ts).
 import { describe, it, expect } from "vitest";
-import { videoSrc, downloadUrl, decideVideoError } from "../lib/video";
+import { videoSrc, decideVideoError } from "../lib/video";
 
 describe("videoSrc — bikin alamat file video", () => {
   it("resolusi asli (kode kosong) -> <ep>.mp4", () => {
@@ -21,31 +21,10 @@ describe("videoSrc — bikin alamat file video", () => {
   });
 });
 
-describe("downloadUrl — bikin alamat unduh episode", () => {
-  it("ada tunnel -> unduh langsung dari tunnel dengan ?dl=1", () => {
-    expect(downloadUrl("https://x.trycloudflare.com", "drama-1", 3)).toBe(
-      "https://x.trycloudflare.com/drama-1/3.mp4?dl=1",
-    );
-  });
-
-  it("tunnel dengan garis miring di ujung -> garis miring dipotong dulu", () => {
-    expect(downloadUrl("https://x.trycloudflare.com/", "d", 1)).toBe(
-      "https://x.trycloudflare.com/d/1.mp4?dl=1",
-    );
-  });
-
-  it("tanpa tunnel (mode lokal) -> lewat proxy /api/download", () => {
-    expect(downloadUrl("", "drama-1", 2)).toBe(
-      "/api/download?id=drama-1&ep=2",
-    );
-  });
-
-  it("tanpa tunnel + id ada karakter spesial -> id di-encode aman", () => {
-    expect(downloadUrl("", "drama a&b", 5)).toBe(
-      "/api/download?id=drama%20a%26b&ep=5",
-    );
-  });
-});
+// Tes `downloadUrl` DIBUANG bersama fungsinya (2026-10-27) — lihat penanda di
+// lib/video.ts. Yang dulu dijaga di sini tidak hilang: konvensi `?dl=1` sudah
+// dikunci tests/download-redirect.test.ts (jalur /api/download), dan itu memang
+// tempat yang lebih tepat karena di situlah gerbang paywall ikut diuji.
 
 // PENJAGA REGRESI — bug yang pernah lolos ke penonton (2026-08-19/20):
 // saat tunnel PC backup mati, player mengarahkan src ke "/sample.mp4" yang tidak

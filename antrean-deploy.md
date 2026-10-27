@@ -3,10 +3,40 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-10-24 (**komputer OWNER**) — **ANTREAN KOSONG, DUAL PUSH TUNTAS.**
-Lokal = `origin/main` = `dramaku/main` = **`c1c0e31`** (selisih **0/0** ke kedua remote,
-diverifikasi `git fetch` SESUDAH push). Catatan `95d3b29` di bawah sudah basi; seluruh commit
-antaranya terbukti sudah ada di KEDUA remote — justru karena selisihnya 0/0.
+**Terakhir dicek:** 2026-10-27 (**komputer OWNER**).
+`origin/main` = `dramaku/main` = **`778f6aa`** (selisih 0/0 antar-remote, diverifikasi
+`git fetch origin` + `git fetch dramaku` hari ini). Lokal **1 commit di depan** keduanya —
+commit docs berisi catatan penutupan celah Node di bawah, **belum di-push, menunggu izin owner.**
+(SHA-nya sengaja tidak ditulis: sebuah commit tak bisa memuat hash dirinya sendiri — cek dengan
+`git log --oneline -1`.)
+
+🪤 **Angka `c1c0e31` di header lama SALAH dibaca ulang.** Sesi 2026-10-27 sempat menyalinnya
+sebagai "commit yang tayang" tanpa memverifikasi; yang benar `778f6aa`, dan `c1c0e31` ada SATU
+commit di belakangnya. Pelajarannya: SHA di catatan basi begitu ada commit berikutnya —
+**selalu `git rev-parse origin/main`, jangan percaya angka di prosa.**
+
+🔒 **Laporan keamanan untuk atasan owner SENGAJA DISIMPAN DI LUAR REPO** —
+`laporan-keamanan-dramaku-2026-10-27.html` di folder rumah owner, bukan di `docs/`. Sempat
+ditaruh di `docs/` lalu dipindah: isinya rinci soal paparan mesin kerja, dan repo ini **PUBLIK**
+(§5.2). Jangan dipindahkan masuk.
+
+✅ **DEPLOY 2026-10-27 — TAPI NOL COMMIT. Bukan rilis kode.**
+Produksi dibangun ulang dari commit yang SAMA (**`778f6aa`**) dengan versi Node berbeda:
+**`node@24.21.0` → `node@24.22.1`**, menutup `CVE-2026-111497` (Node2Shell) + 7 CVE lain di
+jalur 24.x. Caranya variabel Railway **`RAILPACK_NODE_VERSION=24.22.1`** — bukan `package.json`,
+jadi **tidak lewat gerbang §6 dan tidak perlu dual push** (memang tidak ada yang bisa di-push).
+
+| Diukur | Sebelum | Sesudah |
+|---|---|---|
+| Badge panel Railway | `node@24.21.0` | **`node@24.22.1`** |
+| `/api/health` | `{"ok":true,"sumberData":"database"}` | **sama** |
+| `/api/dramas` | 33524 byte · 40 drama | **33524 byte · 40 drama — identik** |
+| 5 halaman penonton | — | **semua 200** |
+| Downtime | — | **NOL** (200 pada 20 cek berturut selama build) |
+
+⚠️ **Versi Node kini DIKUNCI MANUAL** — tambalan berikutnya tidak naik sendiri. Rinciannya +
+jebakan "sidik jari chunk tidak berubah untuk perubahan runtime" ada di `HANDOFF.md` entri
+2026-10-27.
 
 ✅ **DIRILIS 2026-10-26 (ke-6) — kebocoran email admin ditutup + pemantauan diperbaiki + pesan error dirapikan, di `c1c0e31`.**
 Dual push tuntas, fast-forward `3261119..c1c0e31`, selisih **0/0**. 6 commit, 21 berkas.

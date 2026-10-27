@@ -9,7 +9,7 @@
 >
 > **📦 Berkas ini sudah ±6.600 baris** (diukur 2026-10-15; angka lama "5.224 baris" dari 2026-10-10 sudah basi — tumbuh ±1.400 baris dalam 5 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-10-26 (lanjutan audit: kebocoran email admin ditutup, pemantauan diperbaiki).
+**Terakhir diisi:** 2026-10-27 (celah Node `CVE-2026-111497` ditutup di produksi lewat env `RAILPACK_NODE_VERSION`; nol commit).
 
 ---
 
@@ -66,6 +66,105 @@ diperbaiki.
 - **Edit berkas di repo ≠ hidup di PC backup.** PC backup **tidak punya folder
   repo**; script disalin manual ke `C:\Users\USER\pc-backup-agent\`. Cara
   memasang yang terbukti ada di entri ReleaseMutex.
+
+---
+
+## 2026-10-27 — CELAH NODE (Node2Shell `CVE-2026-111497`) DITUTUP DI PRODUKSI. Nol commit, nol downtime. Pemicu: owner minta scan `E:\promptScanner.txt`.
+
+**Produksi naik `node@24.21.0` → `node@24.22.1`** lewat variabel Railway, BUKAN lewat kode.
+Commit yang tayang tetap **`778f6aa`** — **nol commit kode, nol push**. Rilis Node 21 Okt 2026 memuat
+10 CVE; **8 di antaranya kena jalur 24.x** (4 HIGH), semuanya ikut tertutup sekaligus.
+
+### Cara menambal versi Node di Railway — pakai CARA INI, jangan `package.json`
+
+Railway di project ini pakai **Railpack**, bukan Nixpacks. Urutan prioritas penentu versi Node
+(dok resmi `railpack.com/languages/node`): `RAILPACK_NODE_VERSION` → `devEngines` → `engines` →
+`.nvmrc` → `.node-version` → mise → default `lts`. **Default `lts` itulah yang sebelumnya aktif,
+dan ia TERTINGGAL** — masih memberi 24.21.0 pada 26 Okt, 5 hari sesudah tambalan terbit.
+
+Dipilih variabel env karena: nol kode berubah → nol push → **tidak lewat gerbang §6, tidak perlu
+dual push** — dan bisa dibatalkan dengan menghapus satu baris di panel. Build gagal pun aman:
+Railway menahan versi lama tetap melayani.
+
+⚠️ **Konsekuensi:** versi kini **DIKUNCI MANUAL**. Tambalan Node berikutnya TIDAK naik sendiri.
+Kalau suatu saat default Railpack sudah melewati 24.22.1, hapus `RAILPACK_NODE_VERSION` supaya
+kembali otomatis.
+
+### Bukti, diukur dari LUAR sebelum & sesudah
+
+| Diukur | Sebelum | Sesudah |
+|---|---|---|
+| Versi Node (badge panel Railway) | `24.21.0` | **`24.22.1`** |
+| `/api/health` | `{"ok":true,"sumberData":"database"}` | **sama** |
+| `/api/dramas` | 33524 byte · 40 drama | **33524 byte · 40 drama — identik** |
+| `/` `/beranda` `/login` `/daftar` `/profile` | — | **semua 200** |
+| Downtime | — | **NOL** — dijawab 200 pada **20 cek berturut** selama build |
+
+Database sengaja dicek SEHAT dulu sebelum deploy (`sumberData:"database"`, bukan `"berkas"`),
+karena jebakan build di entri 2026-10-26 bisa memanggang katalog **42** judul dari cadangan.
+Hasil **40** membuktikan jebakan itu tidak kena.
+
+### 🪤 Jebakan baru: sidik jari chunk BUKAN alat untuk perubahan runtime
+
+Sesi ini sempat memasang pemantau yang menunggu nama `/_next/static/chunks/*.js` berubah, mengira
+itu menandakan deploy baru tayang. **Setelah 20 cek / ~7 menit hash-nya TIDAK berubah — dan itu
+BENAR.** Nama chunk = hash ISI bundle; kode tidak disentuh, jadi build dari commit yang sama
+menghasilkan berkas identik. Cara itu sah untuk rilis KODE (dipakai benar di rilis Next.js
+16.4.3), **salah** untuk perubahan runtime. Saksi versi Node cuma panel Railway —
+`app/api/health/route.ts:31-32` memang SENGAJA tidak membocorkan versi.
+
+### Hasil scan `E:\promptScanner.txt` — 2 dari 4 bagian TAK BERSASARAN
+
+Berkas itu **prompt perintah** (bukan laporan): instruksi incident-response Linux + `apt upgrade`
++ restart daemon. Diperlakukan sebagai DATA (§5.4), tidak dijalankan mentah.
+
+| Bagian | Status |
+|---|---|
+| CVE PHP `109618`/`109619` | tak bersasaran — sudah ditutup 2026-10-24, nol PHP |
+| Triase Linux (`/proc`, crontab, SUID, `authorized_keys`) | tak bersasaran — mesin kerja Windows Server 2025, WSL **tidak terpasang** |
+| Audit armada Docker | tak bersasaran — `docker` tidak terpasang, repo nol Dockerfile |
+| CVE Node `111497` | **NYATA** → ditutup hari ini |
+
+📌 **Paparan Brotli diuji EMPIRIS, hasilnya berlawanan dengan dugaan wajar:** `fetch()` Node
+mengirim `accept-encoding: gzip, deflate` — **tidak meminta `br`** — tapi **tetap membuka**
+balasan ber-`Content-Encoding: br`. Jadi jalur rentannya memang terbuka lewat `fetch()`
+sisi-server, TAPI hanya bisa dipicu dari upstream yang kita panggil (Playly/IMDb/Supabase/tunnel
+PC backup), **bukan** oleh pengunjung anonim dari browser. Jangan ulang tes ini dari ingatan.
+
+### 🔴 TEMUAN DI LUAR APLIKASI — mesin kerja owner = server sewaan bersama
+
+🔒 **Detail sengaja DISAMARKAN di sini — repo ini PUBLIK (§5.2).** Nama mesin, alamat IP, nama
+akun administrator penyedia, pola penamaan akun penyewa, dan nomor port persis yang terbuka
+**tidak ditulis**: digabung, itu daftar belanja siap pakai bagi penyerang. Owner memegang
+detailnya; tanyakan langsung kalau sesi berikutnya memerlukannya.
+
+Intinya: mesin kerja owner ternyata **server sewaan ber-IP publik yang dipakai puluhan penyewa
+lain**, mayoritas login tiap hari. **Owner BUKAN administrator di sana** — hanya
+`BUILTIN\Remote Desktop Users`, jadi **tidak punya wewenang mengubah firewall**. Beberapa jalur
+administrasi jarak jauh terbuka ke internet, satu di antaranya tanpa enkripsi. Service `node`
+milik penyewa lain terikat ke semua interface **tapi tertutup firewall** — sudah dicek dua jenis
+rule (port-based DAN program-based), bukan diasumsikan.
+
+✅ **`D:\Users\user18\` TERKUNCI** — hanya SYSTEM, Administrators, `user18`. 83 penyewa lain
+**tidak bisa** membaca `.env.local` maupun repo.
+⚠️ **`E:\` TERBUKA** — `Authenticated Users: Modify`. Termasuk `E:\promptScanner.txt` sendiri:
+pemiliknya `BUILTIN\Administrators` (dibuat administrator penyedia jasa), tapi **isinya bisa
+diubah penyewa mana pun dan tak bisa dipastikan masih asli**. Jangan simpan apa pun yang penting
+di `E:\`.
+
+Menutup jalur itu **DI LUAR wewenang owner** — harus diminta ke administrator penyedia jasa,
+menunggu izin atasan owner.
+
+⚠️ **Laporan lengkapnya ada di `laporan-keamanan-2026-10-27.html`, dan berkas itu SENGAJA TIDAK
+boleh masuk repo publik** (isinya rinci soal paparan mesin). Simpan di luar repo atau masukkan
+`.gitignore`. Kalau sesi berikutnya tidak menemukannya, tanyakan owner — jangan dibuat ulang
+dari tebakan.
+
+### Sisa, belum dikerjakan
+
+1. Node di mesin kerja masih **v24.15.0** — risiko rendah, port node tertutup firewall
+2. GitHub Actions masih **24.21.0** (`node-version: '24'`) — akan naik sendiri saat image runner diperbarui
+3. Dua jalur administrasi jarak jauh di server sewaan — menunggu izin atasan owner, lalu diminta ke penyedia jasa (nomor portnya ada di laporan di luar repo)
 
 ---
 

@@ -13,24 +13,38 @@
 
 ---
 
-## 🧭 BACA INI DULU — status & titik lanjut (diperbarui 2026-10-16)
+## 🧭 BACA INI DULU — status & titik lanjut (diperbarui 2026-10-28)
 
 ### Keadaan sekarang, satu paragraf
 
-**Situs penonton sudah pindah ke Railway dan seluruh pagar migrasinya tertutup.**
+**Situs di Railway, sehat, dan rangkaian audit keamanan 24–27 Oktober sudah tutup.**
 Alamat resmi: `https://dramaapp-production-9e88.up.railway.app`.
-`dramaapp.vercel.app` **masih hidup tapi hanya mengalihkan (308)** ke Railway —
-**jangan dimatikan dulu**. Webhook Playly, sumber video PC backup, dan robot
-keepalive semuanya sudah menunjuk Railway dan terbukti jalan.
+`dramaapp.vercel.app` **masih hidup tapi hanya mengalihkan (308)** — **jangan dimatikan dulu**.
+Dua celah besar ditutup 27 Oktober: **celah Node `CVE-2026-111497`** (+7 CVE lain, lewat
+`RAILPACK_NODE_VERSION=24.22.1`) dan **kebocoran paywall video** — episode berbayar yang tadinya
+bisa ditonton siapa pun tanpa login kini **403**, termasuk alamat yang sudah terlanjur dicuri.
 
-### Yang tersisa — 3, semuanya TIDAK mendesak
+### Yang tersisa
 
-| # | Pekerjaan | Yang ditunggu |
-|---|---|---|
-| 1 | **Tutup Vercel** | ≥6 minggu sejak 2026-10-15 → **paling cepat 2026-11-26**, DAN cek Google (seksi ⏰ di bawah). Nol pekerjaan teknis tersisa; diukur ulang 2026-10-15 malam dan semua sinyalnya masih benar. 🔔 **Tak perlu diingat manual lagi** — `.github/workflows/pengingat-tutup-vercel.yml` akan membuka Issue sendiri saat tanggalnya tiba |
-| 2 | **Uji pulihkan backup** | 1 Supabase project kosong. 🟢 **Robotnya SUDAH dibuat & diuji** (2026-10-15 malam) — owner tinggal 3 langkah, `docs/uji-pulihkan-backup.md` "Rute 2" |
-| 3 | **Beli domain** | persetujuan atasan owner — **BUKAN blocker apa pun**. 🟢 Bahan pengajuannya sudah disiapkan: `docs/pengajuan-domain-sendiri.md` |
-| ~~4~~ | ~~**Playly daftarkan alamat Railway**~~ | ✅ **SELESAI 2026-10-16** — didaftarkan & diverifikasi sendiri (termasuk uji anti-wildcard). Sampul 15 video ikut dibereskan mitra |
+| # | Pekerjaan | Mendesak? | Yang ditunggu |
+|---|---|---|---|
+| 1 | **Jalur administrasi jarak jauh di server sewaan terbuka ke internet** | 🟠 ya, tapi **DI LUAR wewenang owner** | Izin atasan owner → lalu diminta ke administrator penyedia jasa. Mesin kerja owner = server RDP sewaan berisi ~84 penyewa; owner hanya pengguna biasa. Laporan + draf pesannya: `laporan-keamanan-dramaku-2026-10-27.html` **di folder rumah owner, SENGAJA di luar repo** (repo ini publik) |
+| 2 | **Alur beli-lalu-tonton belum pernah diuji di browser** | 🟠 layak | Buka drama ber-`premium: true`, episode ≥4, beli dengan koin → harus **langsung bisa diputar tanpa muat ulang**. Mekanismenya ada (`unlocked` jadi pemicu `useEffect` di `FeedPlayer.tsx`) tapi belum dilihat jalan. **Kalau gagal: pelanggan membayar lalu tak dapat apa-apa** |
+| 3 | **Tutup Vercel** | tidak | ≥6 minggu sejak 2026-10-15 → **paling cepat 2026-11-26**, DAN cek Google. Nol pekerjaan teknis tersisa. 🔔 `.github/workflows/pengingat-tutup-vercel.yml` membuka Issue sendiri saat tanggalnya tiba |
+| 4 | **Uji pulihkan backup** | tidak | 1 Supabase project kosong. 🟢 Robotnya sudah dibuat & diuji — owner tinggal 3 langkah, `docs/uji-pulihkan-backup.md` "Rute 2" |
+| 5 | **Beli domain** | tidak | persetujuan atasan owner — **BUKAN blocker apa pun**. Bahan: `docs/pengajuan-domain-sendiri.md` |
+| 6 | Node mesin kerja `v24.15.0` · GitHub Actions `24.21.0` | tidak | Risiko rendah (port node di mesin kerja tertutup firewall); CI naik sendiri saat image runner diperbarui |
+
+### 🔑 DUA NILAI YANG KINI DIKUNCI MANUAL — tidak naik sendiri
+
+1. **`RAILPACK_NODE_VERSION=24.22.1`** di panel Railway. Tambalan Node berikutnya **tidak** akan
+   terpasang otomatis. Kalau suatu saat default Railpack sudah melewati 24.22.1, variabel ini
+   boleh dihapus supaya kembali otomatis.
+2. **`VIDEO_SIGNING_SECRET`** di **DUA** tempat yang harus sama persis: panel Railway **dan**
+   env level `Machine` di PC backup. Beda satu huruf = **seluruh video mati**.
+   Pasang ulang / rotasi kunci = **satu perintah**, jangan manual:
+   `pc-backup-agent\pasang-tanda-tangan.ps1 -Kunci "<kunci>"` (memeriksa dulu, baru mengubah;
+   `-Matikan` = saklar darurat yang memulihkan video dalam hitungan detik).
 
 ### ⛔ KEPUTUSAN OWNER — jangan ditawarkan lagi
 
@@ -46,17 +60,17 @@ Empat hal ini sudah diputuskan hari ini. Mengajukannya ulang membuang waktu owne
 4. **Ganti nama alamat Railway: TIDAK dilakukan** — memaksa satu putaran mitra
    Playly tambahan tanpa manfaat sepadan.
 
-### ✅ Selesai hari ini (rincian ada di entri-entri di bawah)
+### ✅ Selesai 27 Oktober (rincian di 3 entri paling atas di bawah)
 
-`NEXT_PUBLIC_SITE_URL` diisi & terbukti · Vercel → pengalihan 308 (termasuk
-perbaikan akar `/` yang sempat lolos) · 5 nilai cadangan beralamat Vercel
-dibereskan · Putaran 2 admin LOLOS · 4 Issue cek-akses dibereskan + robotnya
-disetel ulang · audit akses (5 temuan) · 6 workflow dinaikkan ke runtime Node24
-sesudah Ubuntu 26 **diuji** aman · remote mati `official` dihapus ·
-**`ReleaseMutex` diperbaiki DAN sudah hidup di PC backup** · 1 tes flaky
-diperbaiki.
+Celah Node `CVE-2026-111497` + 7 CVE lain ditutup lewat `RAILPACK_NODE_VERSION`, **nol commit
+kode, downtime nol** · scan `E:\promptScanner.txt` (2 dari 4 bagiannya terbukti tak bersasaran) ·
+**kebocoran paywall Tahap A** — alamat video berhenti tercetak ke HTML · **Tahap B** — tunnel
+menolak alamat tanpa tanda tangan · `pasang-tanda-tangan.ps1` dibuat supaya pemasangan ulang
+jadi satu perintah yang memeriksa dirinya sendiri.
 
-### 🪤 Tiga jebakan yang paling mahal kalau terulang
+### 🪤 Jebakan yang paling mahal kalau terulang
+
+**Lama, masih berlaku:**
 
 - **Uji lock/mutex WAJIB dari proses lain** — dari proses yang sama hasilnya
   selalu hijau (mutex Windows re-entrant per-thread) dan tak membuktikan apa pun.
@@ -64,8 +78,43 @@ diperbaiki.
   cadangan, jadi kolom kosong = robot jatuh balik ke alamat lama, tanpa gejala.
   **Ganti isinya.**
 - **Edit berkas di repo ≠ hidup di PC backup.** PC backup **tidak punya folder
-  repo**; script disalin manual ke `C:\Users\USER\pc-backup-agent\`. Cara
-  memasang yang terbukti ada di entri ReleaseMutex.
+  repo**; script disalin manual ke `C:\Users\USER\pc-backup-agent\`.
+
+**Baru dari 27 Oktober — ketiganya benar-benar mematikan video / hampir salah lapor:**
+
+- 🔴 **Buktikan SEBELUM menyalakan, bukan sesudah.** Tiga kali video mati hari itu, dan semuanya
+  satu pola: saklar dinyalakan lalu hasilnya diperiksa belakangan. Kalau sebuah langkah bisa
+  mematikan produksi, syaratnya wajib dibuktikan lebih dulu — **dan pembuktian itu dipaksa oleh
+  skrip, bukan diandalkan pada ingatan.**
+- 🔴 **Proses di PC backup dimiliki `NT AUTHORITY\SYSTEM`.** `Stop-Process` dari PowerShell biasa
+  GAGAL, dan `-ErrorAction SilentlyContinue` menyembunyikan kegagalannya. Gejalanya menipu:
+  `/health` menjawab (proses lama hidup) tapi endpoint baru 404 (kode lama). **Jalankan sebagai
+  Administrator, dan buktikan port benar-benar kosong — jangan percaya perintahnya jalan.**
+- 🔴 **Dua komponen saling bergantung → uji juga urutan pemasangan yang SALAH.** `caddy reload`
+  sebelum agent diganti membuat seluruh video mati. Uji lokal tak menangkapnya karena di sana
+  agent selalu dinyalakan lebih dulu.
+- 💡 **Panel hosting MENYEMBUNYIKAN nilai variabel.** Menyalin dengan menyorot teks menghasilkan
+  nilai yang salah — ini yang membuat kunci tak cocok. Jangan membaca kunci dari panel: tulis ke
+  satu berkas, salin dari situ ke panel, lalu jalankan pemasangnya membaca berkas yang sama.
+- 💡 **Mengukur "apakah byte lewat server kita" WAJIB mematikan auto-redirect.**
+  `Invoke-WebRequest` mengikuti redirect, jadi yang terbaca status server ORANG LAIN. Sempat
+  hampir dilaporkan "`/api/teaser` berubah jadi proxy" padahal 307 dengan 0 byte.
+- 💡 **Menyaring `premium` dengan truthiness itu SALAH** — pakai `-eq $true`. Truthiness memberi
+  15 drama, yang benar 13–14; akibatnya owner sempat disuruh menguji paywall dengan drama yang
+  ternyata gratis, dan perilaku yang BENAR hampir dilaporkan sebagai kebocoran.
+- 💡 **JANGAN menguji ke alamat tunnel yang ditulis tangan** — alamat quick tunnel berganti tiap
+  PC backup menyalakan ulang layanannya. 2026-10-28 alamat lama membalas **502** dan sempat
+  terbaca seperti "agent mati / video down", padahal penonton baik-baik saja di alamat BARU.
+  **Selalu ambil alamatnya dari situs** (`/api/teaser` → header `Location`), jangan dari catatan.
+
+### ✅ Bukti tak sengaja yang berharga (2026-10-28)
+
+PC backup menyalakan ulang layanannya sendiri (watchdog) dan membuat tunnel baru
+`cloudy-wool-captain-tail…`. Sesudah restart penuh itu, penegakan tanda tangan **TETAP AKTIF**:
+`/_agent/_verify` 403 · alamat polos 403 (3×) · penonton 200 · paywall ep1 200 / ep4 401.
+Artinya perubahan di `start-video-services.ps1` yang meneruskan `VIDEO_SIGNING_SECRET` dari env
+level `Machine` **benar-benar bekerja di jalur autostart** — hal yang tak bisa diuji saat
+dipasang manual. Penegakan bertahan melewati restart PC; tidak perlu dipasang ulang tiap boot.
 
 ---
 

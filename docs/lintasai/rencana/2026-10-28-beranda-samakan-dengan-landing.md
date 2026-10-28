@@ -68,6 +68,66 @@ kategori (`CatalogBrowser`) memang dilepas, bukan ditumpuk.
   §7. Sudah diperbaiki dengan `KepalaBeranda.tsx`; isi kanan-kirinya (`chromeKatalog()`) SAMA
   seperti sebelumnya, jadi status login & menu akun tetap tak tersentuh.
 
+## 8. Putaran kedua — umpan balik owner 2026-10-28
+
+### a. Kaki situs dibuang dari `/beranda`
+
+Owner: *"bagian bawah kamu hapus"*. `BadanKatalog` dapat prop `denganKaki` (bawaan `true`);
+`/beranda` mengisinya `false`. **Kaki situs TETAP ada di landing page `/`** — owner tidak
+meminta ia dilepas dari sana, dan di situlah pengunjung baru mendarat.
+Terukur: blok kaki (TENTANG DRAMAKU · JELAJAHI · GENRE POPULER · DISCLAIMER) **0** di
+`/beranda`, **ada** di `/`. Kepala situs `/beranda` tetap utuh (kotak cari · logo · menu · strip).
+
+### b. "Kenapa ada Masuk, harusnya Keluar" — PREMIS KELIRU, kodenya sudah benar
+
+Owner melihat menu garis-tiga berisi **Beranda · Masuk · Daftar** dan mengira itu salah karena
+`/beranda` hanya untuk yang sudah login.
+
+**Sebabnya bukan bug: owner sedang melihat PRATINJAU LOKAL, dan di sana ia memang belum login.**
+Sesi login disimpan browser **per-alamat-situs**; `localhost:3999` adalah alamat yang berbeda dari
+situs produksi, jadi login di produksi tidak terbawa ke pratinjau.
+
+Dibuktikan dengan menjalankan browser sungguhan dan MEMBUKA menunya di dua keadaan:
+
+| Keadaan | Isi menu garis-tiga |
+|---|---|
+| Belum login | `Beranda` · **Masuk** · `Daftar` |
+| Sudah login | `Beranda` · *Masuk sebagai Mas radenbagus89* · **Keluar** |
+
+Logikanya memang sudah ada sejak lama di `app/components/beranda/KepalaKatalog.tsx`
+(`{mounted && user ? (… Keluar …) : (… Masuk/Daftar …)}`) dan **tidak disentuh** perubahan ini.
+Tangkapan layarnya: `5-MENU-saat-BELUM-login.png` & `6-MENU-saat-SUDAH-login.png`.
+
+💡 Catatan untuk pratinjau lokal berikutnya: selain menu akun, **"Lanjut Menonton" juga tidak
+akan muncul** di localhost — riwayat tontonan ikut tersimpan per-alamat-situs.
+
+### c. 🔴 INSIDEN: perintah browser otomatis MASUK KE BROWSER PENYEWA LAIN
+
+Untuk membuktikan butir (b), sesi ini menjalankan Chrome dengan
+`--remote-debugging-port=9222` lalu mengendalikannya lewat DevTools Protocol. **Port 9222 ternyata
+SUDAH dipakai proses Chrome milik penyewa lain** (PID-nya mulai 10:45:55, ±45 menit sebelum Chrome
+kita dijalankan; detail pemilik & baris perintahnya tak terbaca — ciri proses pengguna lain).
+Akibatnya Chrome kita gagal mengikat port itu, dan seluruh perintah kita mendarat di **browser
+orang lain**: 4 tab dibuka di sana, diarahkan ke `localhost:3999`, diklik, dan dipotret.
+
+**Sudah dibereskan, persis sebatas yang dibuat:** 4 tab itu ditutup, entri `localStorage` yang
+ditulis dihapus. **1 tab milik orang tersebut TIDAK disentuh**, isi tab lain tidak dibaca.
+
+**Aturan untuk sesi berikutnya:**
+1. **Mesin ini dipakai bersama ±84 penyewa — `127.0.0.1` BUKAN milik kita sendiri.** Port
+   "localhost" yang biasanya dianggap aman di komputer pribadi, di sini bisa milik orang lain.
+2. **Jangan pakai port debug tetap.** Pakai port acak, lalu **verifikasi** bahwa yang menjawab
+   benar-benar proses kita (mis. cocokkan PID pemilik port dengan PID yang baru dijalankan)
+   SEBELUM mengirim satu pun perintah.
+3. **Server pratinjau wajib diikat ke localhost saja**: `next start -H 127.0.0.1`. Bawaan Next
+   mengikat ke `0.0.0.0`, artinya penyewa lain bisa membuka pratinjau kita. Sudah diperbaiki.
+
+🔒 **Juga temuan KEAMANAN untuk laporan ke penyedia jasa** (menyambung butir 1 di `HANDOFF.md`
+"Yang tersisa"): ada penyewa yang menjalankan Chrome dengan DevTools terbuka di `127.0.0.1:9222`.
+Di mesin bersama, **penyewa mana pun bisa mengendalikan browser itu** — membaca tab, cookie, dan
+sesi login yang sedang terbuka. Itu kelemahan milik penyewa tersebut, bukan milik kita, tapi ia
+memperkuat kesimpulan bahwa mesin ini tidak layak dipakai untuk pekerjaan yang menyentuh kredensial.
+
 ## 5. Bukti yang wajib ada sebelum ditunjukkan ke owner
 
 - `npm test` hijau · `tsc` 0 · build sukses.

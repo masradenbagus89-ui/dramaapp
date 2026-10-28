@@ -164,6 +164,39 @@ halaman yang digambar. Sudah diperbaiki (`KepalaBeranda.tsx`) + dipasangi penjag
 `tests/kepala-situs.test.ts` — berkas yang sudah menyatakan aturannya tapi tak pernah memeriksa
 pemasangannya.
 
+### Putaran kedua (umpan balik owner, hari yang sama)
+
+- **Kaki situs DIBUANG dari `/beranda`** (owner: "bagian bawah kamu hapus") lewat prop
+  `denganKaki={false}`. **Masih ada di landing `/`** — tidak diminta dilepas dari sana.
+- **"Kenapa ada Masuk, harusnya Keluar" — PREMIS KELIRU, bukan bug.** Owner melihatnya di
+  PRATINJAU LOKAL, dan di `localhost` ia memang belum login (sesi disimpan browser
+  per-alamat-situs, jadi login produksi tidak terbawa). Dibuktikan dengan membuka menunya di
+  browser sungguhan: **belum login** → `Beranda · Masuk · Daftar`; **sudah login** →
+  `Beranda · "Masuk sebagai Mas radenbagus89" · Keluar`. Logikanya sudah benar sejak lama di
+  `app/components/beranda/KepalaKatalog.tsx` dan tidak disentuh perubahan ini.
+  💡 Hal yang sama berlaku untuk **"Lanjut Menonton"**: tak akan muncul di localhost.
+
+### 🔴 INSIDEN 2026-10-28 — perintah browser otomatis masuk ke BROWSER PENYEWA LAIN
+
+Sesi ini menjalankan Chrome dengan `--remote-debugging-port=9222`. **Port itu sudah dipakai
+Chrome milik penyewa lain** (mulai 10:45:55, ±45 menit lebih awal), jadi Chrome kita gagal
+mengikatnya dan seluruh perintah mendarat di browser orang lain: 4 tab dibuka, diarahkan ke
+`localhost:3999`, diklik, dipotret. **Sudah dibereskan persis sebatas yang dibuat** — 4 tab itu
+ditutup, `localStorage` yang ditulis dihapus, 1 tab miliknya tidak disentuh, isi tab lain tidak
+dibaca.
+
+**Aturan baru (mesin ini dipakai ±84 penyewa — `127.0.0.1` BUKAN milik kita sendiri):**
+1. **Jangan pakai port debug tetap.** Pakai port acak, lalu **buktikan** yang menjawab adalah
+   proses kita (cocokkan PID pemilik port dengan PID yang baru dijalankan) SEBELUM mengirim
+   perintah apa pun.
+2. **Server pratinjau wajib `next start -H 127.0.0.1`** — bawaan Next mengikat `0.0.0.0`,
+   artinya penyewa lain bisa membukanya. Sudah diperbaiki di sesi ini.
+
+🔒 **Tambahan untuk laporan ke penyedia jasa (butir 1 di "Yang tersisa"):** ada penyewa yang
+menjalankan Chrome dengan DevTools terbuka di `127.0.0.1:9222`. Di mesin bersama, **penyewa mana
+pun bisa mengendalikan browser itu** — tab, cookie, sesi login. Kelemahan milik penyewa tersebut,
+tapi memperkuat kesimpulan bahwa mesin ini tidak layak untuk pekerjaan yang menyentuh kredensial.
+
 ### Yang ikut berubah & perlu owner setujui
 
 - Baris kategori `/beranda` (**Drama Terbaru/Action/Romance/Tycoon**, **Paling Banyak Ditonton**)
@@ -171,7 +204,7 @@ pemasangannya.
   (keluhan lama "ada 2 rekomendasi"). Genre tetap dicapai dari strip kuning, menu atas, FILTER.
 - Dua baris personal (**"Karena kamu menonton"**, **"Trending di <genre>"**) dan **Favorit Saya**
   hilang; **Lanjut Menonton** tetap.
-- `/beranda` kini punya **kaki situs** (sebelumnya tidak).
+- ~~`/beranda` kini punya kaki situs~~ → **DIBATALKAN atas permintaan owner**, lihat putaran kedua di atas.
 - Kotak cari di `/beranda` kini **melempar ke `/discover`**, tidak lagi menyaring di tempat —
   grid yang dulu disaringnya sudah tidak ada.
 - `CatalogBrowser` jadi **tak terpakai**, tapi **sengaja belum dihapus** sampai owner setuju.

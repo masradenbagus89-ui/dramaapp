@@ -30,6 +30,7 @@ export default function BadanKatalog({
   genres,
   basePath,
   heroHref,
+  denganKaki = true,
   slotAtas,
 }: {
   dramas: Drama[];
@@ -51,6 +52,16 @@ export default function BadanKatalog({
   basePath?: string;
   /** Tujuan tombol "Lihat semua film unggulan". */
   heroHref?: string;
+  /**
+   * Gambar kaki situs 4 kolom di bawah halaman. Bawaannya `true`.
+   *
+   * `/beranda` mematikannya atas permintaan owner (2026-10-28): di halaman yang
+   * dibuka penonton yang SUDAH login, blok itu cuma memanjangkan halaman —
+   * isinya (tentang situs, tautan jelajah, genre, disclaimer) berguna untuk
+   * pengunjung baru yang mendarat di landing page, bukan untuk orang yang
+   * memang datang untuk menonton.
+   */
+  denganKaki?: boolean;
   /** Diselipkan antara hero dan badan terang. */
   slotAtas?: ReactNode;
 }) {
@@ -101,8 +112,9 @@ export default function BadanKatalog({
       </div>
 
       {/* KAKI SITUS — empat kolom (owner 2026-10-10). Sengaja tetap gelap,
-          menutup halaman dengan warna yang sama seperti hero di atas. */}
-      <FooterSitus genres={genres} />
+          menutup halaman dengan warna yang sama seperti hero di atas.
+          Dimatikan di /beranda sejak 2026-10-28 — lihat `denganKaki`. */}
+      {denganKaki && <FooterSitus genres={genres} />}
     </>
   );
 }

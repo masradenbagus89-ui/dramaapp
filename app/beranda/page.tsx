@@ -81,6 +81,10 @@ export default async function BerandaPage() {
         /* WAJIB "/beranda", jangan "/": RedirectIfAuthed memantulkan penonton
            yang sudah login dari "/", sehingga tabnya akan terlihat MATI. */
         basePath="/beranda"
+        /* Tanpa kaki situs (owner 2026-10-28: "bagian bawah kamu hapus").
+           Kaki itu tetap ada di landing page `/`, tempat pengunjung baru
+           mendarat — owner tidak meminta ia dilepas dari sana. */
+        denganKaki={false}
         /* Hanya baris "Lanjut Menonton" (keputusan owner 2026-10-28). Dua baris
            personal lain sengaja tidak ikut supaya halaman ini benar-benar sama
            dengan landing page; yang ini tetap karena ia satu-satunya cara

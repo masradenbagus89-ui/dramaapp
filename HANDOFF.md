@@ -9,7 +9,7 @@
 >
 > **📦 Berkas ini sudah ±6.600 baris** (diukur 2026-10-15; angka lama "5.224 baris" dari 2026-10-10 sudah basi — tumbuh ±1.400 baris dalam 5 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-10-28 (**/beranda disamakan dengan landing page** — sudah jadi & terukur, **BELUM dirilis**, menunggu owner melihat hasilnya; sebelumnya koin & iklan dijeda di `c5bdb54`).
+**Terakhir diisi:** 2026-10-28 (**/beranda disamakan dengan landing page & kaki situsnya dibuang — TAYANG** di `bd12977`, dual push tuntas, downtime nol).
 
 ---
 
@@ -24,7 +24,12 @@ Dua celah besar ditutup 27 Oktober: **celah Node `CVE-2026-111497`** (+7 CVE lai
 `RAILPACK_NODE_VERSION=24.22.1`) dan **kebocoran paywall video** (mekanismenya tetap terpasang —
 alamat video hanya lahir di server, ditandatangani, dan tunnel menolak alamat polos).
 
-⏸️ **TAPI SEJAK 28 OKTOBER: KOIN & IKLAN DIJEDA atas permintaan owner** (`c5bdb54`). Jadi
+🏠 **28 Oktober: `/beranda` kini BERSUSUN SAMA dengan landing page `/`** (`bd12977`) —
+deret tab menampilkan isinya (Film Terbaru, Series Terbaru, …), baris kategori lama dilepas,
+dan kaki situsnya dibuang atas permintaan owner (kaki di `/` tetap ada). Keduanya memakai
+komponen badan yang SAMA, jadi tak bisa menyimpang lagi.
+
+⏸️ **DAN SEJAK 28 OKTOBER: KOIN & IKLAN DIJEDA atas permintaan owner** (`c5bdb54`). Jadi
 **semua episode kini gratis** dan tak ada satu pun fitur koin/iklan yang tampil — itu DISENGAJA,
 bukan kebocoran. Jangan "memperbaiki"nya. Paywall-nya tidak dibongkar, hanya dimatikan lewat
 saklar; ⭐ nyalakan kembali di **`lib/saklar-fitur.ts`** (2 konstanta). Pagar keamanan videonya
@@ -35,7 +40,7 @@ tetap jalan penuh — yang berubah cuma SIAPA yang berhak (sekarang semua orang)
 | # | Pekerjaan | Mendesak? | Yang ditunggu |
 |---|---|---|---|
 | 1 | **Jalur administrasi jarak jauh di server sewaan terbuka ke internet** | 🟠 ya, tapi **DI LUAR wewenang owner** | Izin atasan owner → lalu diminta ke administrator penyedia jasa. Mesin kerja owner = server RDP sewaan berisi ~84 penyewa; owner hanya pengguna biasa. Laporan + draf pesannya: `laporan-keamanan-dramaku-2026-10-27.html` **di folder rumah owner, SENGAJA di luar repo** (repo ini publik) |
-| 2 | **Beli-lalu-tonton: SUDAH DIRILIS — tinggal dicoba owner di browser** | 🟠 layak | **Uji 3 klik Anda sendiri** (langkahnya di entri 2026-10-28 di bawah). Cacatnya sudah ditutup & tayang di `7efa591`: dulu sesudah koin terpotong nol perintah putar menyusul begitu alamat videonya tiba. Bundle yang dilayani produksi sudah dipastikan **identik byte-per-byte** dengan yang diuji |
+| 2 | **Beli-lalu-tonton: perbaikannya TAYANG, tapi kini TAK BISA DIUJI** | ⚪ tertunda | **Menunggu koin dinyalakan lagi.** Perbaikannya sudah tayang di `7efa591`, tapi sejak koin dijeda (`c5bdb54`) tak ada lagi episode yang bisa dibeli — jadi alur "beli lalu tonton" tidak ada untuk diuji. **Begitu koin dinyalakan di `lib/saklar-fitur.ts`, uji ini WAJIB dikerjakan lebih dulu**: buka drama premium → episode 4 → Buka • 8 koin → videonya harus jalan sendiri tanpa muat ulang. Penjaganya `tests/beli-lalu-tonton.test.ts` tetap hijau |
 | 3 | **Tutup Vercel** | tidak | ≥6 minggu sejak 2026-10-15 → **paling cepat 2026-11-26**, DAN cek Google. Nol pekerjaan teknis tersisa. 🔔 `.github/workflows/pengingat-tutup-vercel.yml` membuka Issue sendiri saat tanggalnya tiba |
 | 4 | **Uji pulihkan backup** | tidak | 1 Supabase project kosong. 🟢 Robotnya sudah dibuat & diuji — owner tinggal 3 langkah, `docs/uji-pulihkan-backup.md` "Rute 2" |
 | 5 | **Beli domain** | tidak | persetujuan atasan owner — **BUKAN blocker apa pun**. Bahan: `docs/pengajuan-domain-sendiri.md` |
@@ -129,7 +134,7 @@ dipasang manual. Penegakan bertahan melewati restart PC; tidak perlu dipasang ul
 
 ---
 
-## 2026-10-28 (ke-3) — /beranda DISAMAKAN dengan landing page. BELUM dirilis — menunggu owner melihat hasilnya.
+## 2026-10-28 (ke-3) — /beranda DISAMAKAN dengan landing page + kaki situs dibuang. DIRILIS `bd12977`, downtime nol.
 
 Owner: *"aku mau tampilan beranda sama dengan tampilan di landing page, begitu selesai kamu
 tunjukan hasilnya dulu biar ku cek."* Dari popup, owner memilih: baris **"Lanjut Menonton" TETAP**
@@ -209,11 +214,47 @@ tapi memperkuat kesimpulan bahwa mesin ini tidak layak untuk pekerjaan yang meny
   grid yang dulu disaringnya sudah tidak ada.
 - `CatalogBrowser` jadi **tak terpakai**, tapi **sengaja belum dihapus** sampai owner setuju.
 
-### Cara owner melihatnya
+### ✅ DIRILIS `bd12977` — bukti diukur dari LUAR, sebelum vs sesudah
 
-Tangkapan layar di **`D:\Users\user18\pratinjau-beranda`** (di luar repo):
-`1-SEBELUM-beranda-produksi.png` · `2-SESUDAH-beranda-baru.png` · `3-ACUAN-landing-page.png`.
-Pratinjau hidup: **http://localhost:3999/beranda** (hanya dari komputer ini).
+Dual push tuntas `0bdac92..bd12977` (`origin` **dan** `dramaku`, selisih 0/0). Tayang pada cek
+ke-9 (~1,5 menit); **downtime NOL** — nol cek `/api/health` yang gagal selama build.
+
+| Diukur di produksi | SEBELUM | SESUDAH |
+|---|---|---|
+| Judul seksi `/beranda` | Film Terbaru · **Drama Terbaru · Paling Banyak Ditonton · Drama Action · Drama Romance · Drama Tycoon** | **identik dengan `/`**: Film Terbaru · Series Terbaru · Series Unggulan · Series Update · Terpopuler · Rekomendasi · 2025 |
+| Tujuan klik tab `/beranda` | `/katalog?tab=…` (menu) | **`/beranda?tab=…`** — 0 yang menunjuk `/` |
+| Kaki situs di `/beranda` | 0 | **0** (dibuang sesuai permintaan owner) |
+| Kaki situs di `/` | ada | **tetap ada** |
+| Kepala `/beranda` (kotak cari · logo · menu · strip genre) | ada | **ada** — regresi yang sempat terjadi tidak ikut tayang |
+| Baris kategori lama di `/beranda` | ada | **0** |
+| Chunk `/beranda` vs build lokal `bd12977` | — | **15/15 cocok**; chunk badan katalog **identik byte-per-byte** (md5 sama, 26024 byte) |
+| 12 halaman penonton + `/admin` | — | semua **200** |
+| `/api/dramas` | 33477 byte | **33477 byte — identik** |
+| `/api/health` | `sumberData:"database"` | **sama** |
+
+**Nol regresi pada dua rilis sebelumnya** (diperiksa khusus): `/api/coins` & `/api/ads` tetap
+**404**, webhook Midtrans tetap **403** (hidup), jejak kata koin/iklan di HTML `/beranda` **0**,
+ep4 premium tanpa login **200**, alamat `.mp4` di HTML `/feed` **0**, alamat video tetap
+bertanda tangan (`expires` · `issued` · `signature`).
+
+📌 **Dua angka yang sempat terlihat seperti sisa, ternyata BENAR:**
+- 5 tautan `/katalog?tab=…` di `/beranda` = tombol **"SEMUA"** di ujung tiap baris seksi
+  (landing page punya 8 yang sama). Bukan deret tab.
+- 1 teks **"Paling Banyak Ditonton"** = item di dalam dropdown **Populer** pada bar atas —
+  ada di **kedua** halaman (1 : 1). Bukan sisa baris kategori.
+  **Keduanya diperiksa dengan membandingkan ke landing page, bukan diasumsikan.**
+
+### Tangkapan layar arsip
+
+**`D:\Users\user18\pratinjau-beranda`** (di luar repo): `1-SEBELUM-beranda-produksi.png` ·
+`2-SESUDAH-beranda-baru.png` · `3-ACUAN-landing-page.png` · `5-MENU-saat-BELUM-login.png` ·
+`6-MENU-saat-SUDAH-login.png`.
+
+### Utang yang masih terbuka
+
+`CatalogBrowser` kini **tak dipakai halaman mana pun** (anak-anaknya masih dipakai `/discover`,
+`/film`, `/katalog`, jadi aman). Sengaja belum dihapus. Hapus hanya kalau owner sudah yakin
+tak mau kembali ke bentuk lama — sesudah itu `NomorHalaman` di dalamnya ikut perlu dicek.
 
 ---
 

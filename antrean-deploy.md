@@ -4,9 +4,26 @@
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
 **Terakhir dicek:** 2026-10-28 (**komputer OWNER**).
-`origin/main` = `dramaku/main` = **`c5bdb54`** (selisih 0/0 antar-remote, diverifikasi
+`origin/main` = `dramaku/main` = **`bd12977`** (selisih 0/0 antar-remote, diverifikasi
 `git fetch origin` + `git fetch dramaku` SESUDAH push). **Nol antrean** — tak ada yang
 menunggu rilis.
+
+✅ **DIRILIS 2026-10-28 (ke-3) — /beranda disamakan dengan landing page + kaki situsnya dibuang,
+di `bd12977`. Dual push `0bdac92..bd12977`, tayang ~1,5 menit, downtime NOL.**
+Kedua halaman kini memakai komponen badan yang SAMA (`BadanKatalog`), bukan susunan yang
+disalin. Bukti: judul seksi `/beranda` **identik** dengan `/` · tab menunjuk `/beranda?tab=…`
+(0 yang menunjuk `/`) · kaki situs **0** di `/beranda` tapi **tetap ada** di `/` · kepala situs
+(kotak cari · logo · menu · strip genre) **ada** · baris kategori lama **0** · chunk `/beranda`
+**15/15 cocok** dengan build lokal commit ini (chunk badan katalog identik byte-per-byte) ·
+12 halaman + `/admin` **200** · `/api/dramas` **33477 byte identik**. Nol regresi pada jeda koin
+(`/api/coins` & `/api/ads` tetap 404, webhook tetap hidup) maupun pagar video (alamat `.mp4` di
+HTML `/feed` tetap 0, alamat tetap bertanda tangan).
+
+🪤 **Dua pelajaran mahal dari rilis ini**, rinciannya di `HANDOFF.md` entri 2026-10-28 (ke-3):
+(1) melepas `CatalogBrowser` sempat menghapus SELURUH kepala situs `/beranda` **tanpa satu pun
+error** — ketahuan hanya karena tangkapan layarnya dilihat; (2) percobaan memotret lewat Chrome
+`--remote-debugging-port=9222` mendarat di **browser penyewa lain** karena port itu sudah dipakai
+di mesin sewaan bersama ini.
 
 ✅ **DIRILIS 2026-10-28 (ke-2) — JEDA KOIN & IKLAN, di `c5bdb54`. Dual push tuntas
 `97fd5f1..c5bdb54`, tayang ~1 menit, downtime NOL.** Permintaan owner "koin kita

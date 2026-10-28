@@ -9,7 +9,8 @@ import {
   midtransConfigured,
   snapJsUrl,
 } from "@/lib/midtrans";
-import { guardMutation } from "@/lib/request-guard";
+import { guardFitur, guardMutation } from "@/lib/request-guard";
+import { PAYWALL_ENABLED } from "@/lib/saklar-fitur";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -25,6 +26,11 @@ export const dynamic = "force-dynamic";
 //
 // Kalau Midtrans belum di-set tapi ENABLE_DEMO_TOPUP=1 → kredit instan (uji coba).
 export async function POST(req: NextRequest) {
+  // Fitur ini sedang DIJEDA lewat saklar di lib/saklar-fitur.ts. Digerbang di
+  // route juga — bukan cuma disembunyikan di layar — karena alamat API tetap
+  // bisa dipanggil langsung oleh siapa pun yang tahu namanya.
+  const mati = guardFitur(PAYWALL_ENABLED, "koin");
+  if (mati) return mati;
   const blocked = guardMutation(req, {
     bucket: "coins:topup",
     limit: 10,

@@ -4,9 +4,27 @@
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
 **Terakhir dicek:** 2026-10-28 (**komputer OWNER**).
-`origin/main` = `dramaku/main` = **`7efa591`** (selisih 0/0 antar-remote, diverifikasi
-`git fetch origin` + `git fetch dramaku` SESUDAH push). **Nol antrean** — tak ada yang
-menunggu rilis.
+`origin/main` = `dramaku/main` = **`97fd5f1`** (selisih 0/0 antar-remote, diverifikasi
+`git fetch origin` + `git fetch dramaku` hari ini). Lokal **1 commit di depan** keduanya:
+**jeda koin & iklan**, belum di-push, **menunggu izin owner** (`origin main` = tombol rilis).
+
+⏸️ **MENUNGGU IZIN RILIS 2026-10-28 (ke-2) — JEDA KOIN & IKLAN.** Permintaan owner "koin kita
+pending saja". Dimatikan lewat **2 saklar** di `lib/saklar-fitur.ts` (`PAYWALL_ENABLED`,
+`ADS_ENABLED`); **nol berkas dihapus/dipindah**, database **nol disentuh**. 15 titik ditutup
+(koin: chip saldo, toko koin, layar episode terkunci, menu profil, chip PREMIUM, chip filter
+"Pakai Koin", 7 route API, panggilan dompet di pemutar · iklan: banner sponsor, modal iklan
+berhadiah, 3 route, panel admin + menunya). `/api/coins/webhook` **sengaja tetap hidup** supaya
+pembayaran yang sudah berjalan tidak hilang.
+
+Gerbang §6: build **sukses** · `tsc` **exit 0** · **1.636 tes** hijau (+8 tes keadaan jeda, −2
+tripwire yang dipindah). Diukur pada `next start` lokal: 10 route koin/iklan **404**, webhook
+**403** (hidup), 18 halaman penonton + `/admin` **200** dengan **nol** jejak kata koin/iklan,
+`/api/video-url` ep4 tanpa login **200** (paywall terbuka), alamat `.mp4` di HTML `/feed` tetap
+**0**. Uji balik: saklar dinyalakan sementara → **7 dari 8** tes jeda MERAH.
+
+⚠️ **Akibat yang disengaja:** episode 4+ dari 13 drama premium jadi **gratis**; pemasukan koin &
+iklan **berhenti** selama dijeda. ⭐ Nyalakan kembali = ubah 2 konstanta + perbarui tripwire di
+`tests/jeda-koin-iklan.test.ts`. Rincian: `docs/lintasai/rencana/2026-10-28-jeda-koin-dan-iklan.md`.
 (SHA-nya sengaja tidak ditulis: sebuah commit tak bisa memuat hash dirinya sendiri — cek dengan
 `git log --oneline -1`.)
 

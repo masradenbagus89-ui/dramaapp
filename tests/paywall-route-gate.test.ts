@@ -8,6 +8,15 @@
 // diserahkan". Satu `return` yang lupa dipindahkan sudah cukup untuk
 // membocorkannya lagi tanpa satu pun tes lain berubah warna.
 import { describe, it, expect, beforeEach, vi } from "vitest";
+// Tes ini menguji perilaku SAAT KOIN/IKLAN MENYALA, dan sejak 2026-10-28
+// saklarnya DIJEDA di lib/saklar-fitur.ts (keputusan owner). Saklarnya dipaku
+// MENYALA di sini dengan sengaja: perilaku paywall/iklan harus tetap terbukti
+// hijau selama dijeda, kalau tidak jalur "nyalakan kembali" berangkat tanpa
+// satu pun penjaga. Keadaan JEDA-nya diuji terpisah di tests/jeda-koin-iklan.test.ts.
+vi.mock("@/lib/saklar-fitur", () => ({
+  PAYWALL_ENABLED: true,
+  ADS_ENABLED: true,
+}));
 import { FREE_EPISODES } from "../lib/coins";
 
 const state = {

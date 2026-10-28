@@ -24,6 +24,7 @@ import DramaForm from "@/app/components/admin/DramaForm";
 import AdminPasswordSettings from "@/app/components/admin/AdminPasswordSettings";
 import { Button } from "@/components/ui/button";
 import { Lock } from "lucide-react";
+import { ADS_ENABLED } from "@/lib/saklar-fitur";
 
 export default function AdminPage() {
   const router = useRouter();
@@ -462,7 +463,10 @@ export default function AdminPage() {
 
         <TwoFactorSettings />
 
-        <SponsorAdsManager />
+        {/* Pengatur iklan sponsor — ikut mati bersama saklar iklan
+            (lib/saklar-fitur.ts). Disembunyikan, bukan dibiarkan: mengatur
+            daftar iklan yang tidak akan tayang membuang waktu admin. */}
+        {ADS_ENABLED && <SponsorAdsManager />}
       </div>
     </div>
   );

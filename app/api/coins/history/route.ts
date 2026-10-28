@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getBalance, getCoinMeta, getUnlocks } from "@/lib/store";
 import { resolveUserEmail } from "@/lib/session";
+import { PAYWALL_ENABLED } from "@/lib/saklar-fitur";
+import { guardFitur } from "@/lib/request-guard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,6 +18,11 @@ type HistoryItem = {
 // Riwayat aktivitas koin yang diturunkan dari data yang sudah ada
 // (tanpa tabel transaksi baru): episode yang dibuka, check-in, kuota iklan.
 export async function GET(req: NextRequest) {
+  // Fitur ini sedang DIJEDA lewat saklar di lib/saklar-fitur.ts. Digerbang di
+  // route juga — bukan cuma disembunyikan di layar — karena alamat API tetap
+  // bisa dipanggil langsung oleh siapa pun yang tahu namanya.
+  const mati = guardFitur(PAYWALL_ENABLED, "koin");
+  if (mati) return mati;
   const { searchParams } = new URL(req.url);
   const id = await resolveUserEmail(req);
 

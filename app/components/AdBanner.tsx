@@ -5,6 +5,7 @@ import Link from "next/link";
 import AdCreative from "./AdCreative";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { ADS_ENABLED } from "@/lib/saklar-fitur";
 
 // =====================================================================
 // Banner IKLAN OTOMATIS (auto ads). Beda dari RewardedAdModal (iklan koin
@@ -40,6 +41,16 @@ export default function AdBanner({
   slot?: string;
   className?: string;
 }) {
+  // Saklar iklan mati → nol slot, nol permintaan, nol script pihak ketiga.
+  // Digerbang DI SINI (bukan di kedua halaman pemanggil) supaya tak ada
+  // pemanggil yang tertinggal saat slot baru ditambah nanti.
+  //
+  // Berhenti SEBELUM hook-nya dideklarasikan itu aman di sini, dan hanya karena
+  // ADS_ENABLED adalah konstanta saat build — bukan state. Jumlah hook tak
+  // pernah berubah di antara dua render komponen yang sama. Jangan tiru pola ini
+  // dengan nilai yang bisa berubah saat situs jalan.
+  if (!ADS_ENABLED) return null;
+
   const effectiveSlot = (slot || ADSENSE_SLOT).trim();
   const mode: "raw" | "adsense" | "house" = RAW_HTML
     ? "raw"

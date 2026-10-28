@@ -10,6 +10,7 @@ import {
   HelpCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PAYWALL_ENABLED } from "@/lib/saklar-fitur";
 
 type MenuItem = {
   key: string;
@@ -54,13 +55,20 @@ export default function DashboardMenu({ onOpenSettings }: Props) {
       icon: Settings,
       onClick: onOpenSettings,
     },
-    {
-      key: "premium",
-      label: "Premium / Koin",
-      description: "Top-up koin dan lihat saldo",
-      icon: Crown,
-      href: "#premium",
-    },
+    // Pintu ke toko koin. Hanya ada saat saklar koin menyala
+    // (lib/saklar-fitur.ts) — kalau tidak, menunya membuka bagian halaman yang
+    // sudah tidak digambar, jadi penonton mengklik dan tak terjadi apa pun.
+    ...(PAYWALL_ENABLED
+      ? [
+          {
+            key: "premium",
+            label: "Premium / Koin",
+            description: "Top-up koin dan lihat saldo",
+            icon: Crown,
+            href: "#premium",
+          } satisfies MenuItem,
+        ]
+      : []),
     {
       key: "help",
       label: "Bantuan",

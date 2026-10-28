@@ -19,6 +19,7 @@ import DownloadButton from "@/app/components/DownloadButton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, Captions } from "lucide-react";
+import { PAYWALL_ENABLED } from "@/lib/saklar-fitur";
 
 // Halaman disimpan & dipakai ulang, disegarkan tiap 60 detik. Menggantikan
 // force-dynamic yang sebelumnya membangun ulang halaman untuk TIAP pengunjung
@@ -138,7 +139,11 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
           <div className="flex flex-col justify-end pb-2 md:pb-4">
             <div className="flex items-center gap-2">
               <h1 className="title-gold text-2xl leading-tight md:text-4xl">{drama.title}</h1>
-              {drama.premium && (
+              {/* Penanda berbayar — satu-satunya tempat kata "PREMIUM" masih
+                  dipajang ke penonton (chip di poster dicabut owner
+                  2026-09-23). Ikut mati bersama saklar koin: tanpa koin tak ada
+                  yang berbayar, jadi memajangnya cuma membingungkan. */}
+              {PAYWALL_ENABLED && drama.premium && (
                 <Badge className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold">
                   🪙 PREMIUM
                 </Badge>

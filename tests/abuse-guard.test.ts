@@ -13,6 +13,15 @@
 // (lib/store.ts:217) yang membuat baris untuk id APA PUN. Jadi id karangan
 // menumbuhkan baris sampah selamanya tanpa ada yang menyadarinya.
 import { describe, it, expect, beforeEach, vi } from "vitest";
+// Tes ini menguji perilaku SAAT KOIN/IKLAN MENYALA, dan sejak 2026-10-28
+// saklarnya DIJEDA di lib/saklar-fitur.ts (keputusan owner). Saklarnya dipaku
+// MENYALA di sini dengan sengaja: perilaku paywall/iklan harus tetap terbukti
+// hijau selama dijeda, kalau tidak jalur "nyalakan kembali" berangkat tanpa
+// satu pun penjaga. Keadaan JEDA-nya diuji terpisah di tests/jeda-koin-iklan.test.ts.
+vi.mock("@/lib/saklar-fitur", () => ({
+  PAYWALL_ENABLED: true,
+  ADS_ENABLED: true,
+}));
 
 const state = {
   dramaAda: true,

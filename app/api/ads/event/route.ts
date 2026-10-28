@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { incrementAdStat } from "@/lib/store";
-import { guardMutation } from "@/lib/request-guard";
+import { guardFitur, guardMutation } from "@/lib/request-guard";
+import { ADS_ENABLED } from "@/lib/saklar-fitur";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,6 +24,11 @@ export const dynamic = "force-dynamic";
 // sudah melakukannya di lib/store.ts:726-727 (`if (!ad) return`), jadi id
 // karangan tidak pernah membuat baris baru. Jangan ditambah lagi di sini.
 export async function POST(req: NextRequest) {
+  // Fitur ini sedang DIJEDA lewat saklar di lib/saklar-fitur.ts. Digerbang di
+  // route juga — bukan cuma disembunyikan di layar — karena alamat API tetap
+  // bisa dipanggil langsung oleh siapa pun yang tahu namanya.
+  const mati = guardFitur(ADS_ENABLED, "iklan");
+  if (mati) return mati;
   // Batasnya tinggi DENGAN SENGAJA: "view" terpicu pada hampir setiap
   // pemuatan halaman beriklan, dan banyak pengunjung Indonesia berbagi satu IP
   // di belakang NAT operator seluler. 600/menit menahan banjir skrip tanpa

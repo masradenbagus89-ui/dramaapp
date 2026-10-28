@@ -9,7 +9,7 @@
 >
 > **📦 Berkas ini sudah ±6.600 baris** (diukur 2026-10-15; angka lama "5.224 baris" dari 2026-10-10 sudah basi — tumbuh ±1.400 baris dalam 5 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-10-28 (**perbaikan beli-lalu-tonton DIRILIS** di `7efa591`, dual push tuntas, downtime nol — tinggal uji browser owner).
+**Terakhir diisi:** 2026-10-28 (**koin & iklan DIJEDA lewat saklar** — nol berkas dihapus, **belum di-push, menunggu izin owner**; sebelumnya perbaikan beli-lalu-tonton dirilis di `7efa591`).
 
 ---
 
@@ -29,6 +29,7 @@ bisa ditonton siapa pun tanpa login kini **403**, termasuk alamat yang sudah ter
 | # | Pekerjaan | Mendesak? | Yang ditunggu |
 |---|---|---|---|
 | 1 | **Jalur administrasi jarak jauh di server sewaan terbuka ke internet** | 🟠 ya, tapi **DI LUAR wewenang owner** | Izin atasan owner → lalu diminta ke administrator penyedia jasa. Mesin kerja owner = server RDP sewaan berisi ~84 penyewa; owner hanya pengguna biasa. Laporan + draf pesannya: `laporan-keamanan-dramaku-2026-10-27.html` **di folder rumah owner, SENGAJA di luar repo** (repo ini publik) |
+| 0 | **Koin & iklan DIJEDA — tinggal dirilis** | 🔴 ya | **Izin owner untuk push + rilis.** Semua fitur koin & iklan sudah berhenti tampil & berhenti melayani lewat 2 saklar di `lib/saklar-fitur.ts`; nol berkas dihapus. Lulus gerbang §6 (build 0 · tsc 0 · **1.636 tes**) + diukur pada situs lokal yang berjalan. Rincian di entri 2026-10-28 (ke-2) di bawah |
 | 2 | **Beli-lalu-tonton: SUDAH DIRILIS — tinggal dicoba owner di browser** | 🟠 layak | **Uji 3 klik Anda sendiri** (langkahnya di entri 2026-10-28 di bawah). Cacatnya sudah ditutup & tayang di `7efa591`: dulu sesudah koin terpotong nol perintah putar menyusul begitu alamat videonya tiba. Bundle yang dilayani produksi sudah dipastikan **identik byte-per-byte** dengan yang diuji |
 | 3 | **Tutup Vercel** | tidak | ≥6 minggu sejak 2026-10-15 → **paling cepat 2026-11-26**, DAN cek Google. Nol pekerjaan teknis tersisa. 🔔 `.github/workflows/pengingat-tutup-vercel.yml` membuka Issue sendiri saat tanggalnya tiba |
 | 4 | **Uji pulihkan backup** | tidak | 1 Supabase project kosong. 🟢 Robotnya sudah dibuat & diuji — owner tinggal 3 langkah, `docs/uji-pulihkan-backup.md` "Rute 2" |
@@ -115,6 +116,86 @@ PC backup menyalakan ulang layanannya sendiri (watchdog) dan membuat tunnel baru
 Artinya perubahan di `start-video-services.ps1` yang meneruskan `VIDEO_SIGNING_SECRET` dari env
 level `Machine` **benar-benar bekerja di jalur autostart** — hal yang tak bisa diuji saat
 dipasang manual. Penegakan bertahan melewati restart PC; tidak perlu dipasang ulang tiap boot.
+
+---
+
+## 2026-10-28 (ke-2) — KOIN & IKLAN DIJEDA lewat saklar. Nol berkas dihapus. BELUM dirilis.
+
+Permintaan owner: *"koin kita pending saja, semua fitur yang berhubungan dengan koin & iklan
+kamu hapus dan kamu simpan filenya jadi sewaktu waktu mau di pakai lagi bisa kita aktifkan
+kembali."* Dari 2 pilihan yang disajikan, owner memilih **saklar mati** (berkas tetap di
+tempatnya) dan **semua iklan ikut dimatikan** — termasuk banner sponsor yang penghasilannya
+terpisah dari koin.
+
+### ⭐ CARA MENYALAKANNYA KEMBALI — satu berkas
+
+`lib/saklar-fitur.ts` berisi **2 konstanta**: `PAYWALL_ENABLED` dan `ADS_ENABLED`. Ubah `false`
+→ `true` (boleh salah satu saja), perbarui tripwire di `tests/jeda-koin-iklan.test.ts` (tes
+pertama — ia SENGAJA merah saat saklar menyala), jalankan gerbang §6, push.
+**Nol migration SQL, nol env baru, nol berkas yang harus dikembalikan.**
+Rencana + daftar periksa lengkap: `docs/lintasai/rencana/2026-10-28-jeda-koin-dan-iklan.md`.
+
+### Yang dimatikan (15 titik)
+
+**Koin:** chip saldo di header & bar cari · toko koin di `/profile` · layar "episode terkunci" ·
+menu "Premium / Koin" di profil · chip 🪙 PREMIUM di halaman detail drama · chip filter
+"Pakai Koin" di halaman depan · 7 route `/api/coins/*` · panggilan dompet di pemutar.
+**Iklan:** banner sponsor di `/drama/[id]` & `/profile` · modal "tonton iklan dapat koin" ·
+`/api/ads` + `/api/ads/event` · panel pengatur iklan di `/admin` + menunya di sidebar ·
+`/api/admin/ads`.
+
+### Bukti — situs DIJALANKAN, bukan cuma dibaca
+
+Gerbang §6: `rm -rf .next` → build **sukses** → `tsc` **exit 0** → **1.636 tes hijau** (116
+berkas; 1.630 → −2 tripwire yang dipindah → +8 tes baru).
+
+| Diukur pada `next start` lokal | Hasil |
+|---|---|
+| 10 route koin & iklan | semua **404** + pesan sebab (`"Fitur koin sedang tidak aktif."`) |
+| `/api/coins/webhook` (Midtrans) | **403** — HIDUP, sengaja tidak digerbang |
+| 18 halaman penonton + `/admin` | **200**, dan **NOL** jejak kata koin/iklan/PREMIUM/saldo/top-up/AdSense |
+| `/api/video-url` ep 1·3·4·20·99 tanpa login | **200** — paywall benar-benar terbuka |
+| Alamat `.mp4` di HTML `/feed` | tetap **0** (pagar Tahap A utuh) |
+| Katalog lokal | **33477 byte** — sama seperti produksi |
+| Uji balik: saklar dinyalakan sementara | **7 dari 8** tes jeda langsung MERAH |
+
+Uji balik itu sekaligus bukti **menyalakan kembali benar-benar bekerja**: route melayani lagi,
+komponen menggambar lagi, tanpa satu pun berkas dipindahkan.
+
+### 🔴 AKIBAT yang owner perlu tahu
+
+- **Episode 4 ke atas dari 13 drama premium kini GRATIS untuk semua orang.** Konsekuensi
+  langsung: tanpa koin tak ada cara membuka episode, jadi paywall ikut dilepas — kalau tidak,
+  penonton menabrak dinding mati. **Pemasukan koin & iklan berhenti** selama dijeda.
+- **Database NOL disentuh.** Saldo, episode yang sudah dibeli, riwayat transaksi, daftar iklan —
+  semua utuh. Itulah yang membuat penyalaan kembali utuh juga.
+- **Pagar keamanan video tidak ikut lepas.** `lib/video-signature.ts` dan
+  `app/api/video-url/route.ts` **tidak tersentuh**; yang berubah hanya SIAPA yang berhak.
+- 💡 **Kalau ingin memastikan nol uang masuk:** hapus `MIDTRANS_SERVER_KEY` di panel Railway.
+  Top-up sudah ditutup di route, jadi tak ada pembayaran BARU yang bisa dimulai — ini hanya
+  lapis kedua. Webhook sengaja dibiarkan hidup supaya pembayaran yang sudah berjalan (kalau ada)
+  tidak hilang.
+
+### 🪤 Pelajaran: peta dari `grep` MELEWATKAN satu tombol yang terlihat
+
+Pemetaan awal menyimpulkan filter `?akses=koin` "tidak punya tombol di layar" — **salah**. Chip
+**"Pakai Koin"** ada di menu "+ More" halaman depan (`lib/nav-katalog.ts:213`); berkasnya muncul
+di hasil grep awal tapi diklasifikasikan **tanpa dibuka**. Yang menangkapnya: memindai HTML yang
+benar-benar dikirim situs yang berjalan — `/` membalas 2 jejak sementara 17 halaman lain nol.
+
+**Aturan:** untuk fitur yang "dimatikan", daftar dari `grep` adalah titik-mulai, **bukan bukti**.
+Pemanggil yang terlewat tidak menimbulkan error apa pun — halamannya tetap 200, build tetap
+hijau, dan yang bocor baru terlihat kalau ada orang membukanya.
+
+💡 Dua tripwire lama yang berbunyi *"paywall sedang menyala"* (`tests/coins.test.ts`,
+`tests/download-button.test.ts`) bekerja persis seperti maksudnya: langsung merah begitu saklar
+dimatikan. Keduanya **dibalik, bukan dihapus** → pindah ke `tests/jeda-koin-iklan.test.ts`.
+
+### Yang ditunggu dari owner
+
+**Izin push + rilis** (`origin main` = tombol rilis; dual push ke `origin` + `dramaku`).
+Sesudah tayang, yang paling cepat dilihat: buka drama premium → **episode 4 langsung bisa
+diputar tanpa diminta koin**, dan halaman profil **tidak lagi punya** bagian koin/iklan.
 
 ---
 

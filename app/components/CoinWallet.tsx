@@ -79,6 +79,11 @@ export default function CoinWallet() {
   };
 
   useEffect(() => {
+    // Saklar koin mati → JANGAN panggil server. Komponen ini sudah `return null`
+    // di bawah, tapi itu cuma menghentikan GAMBARNYA: efek yang sudah
+    // dideklarasikan tetap berjalan, jadi tanpa penjaga ini setiap kunjungan ke
+    // /profile masih menembak /api/coins (yang kini membalas 404).
+    if (!PAYWALL_ENABLED) return;
     setMounted(true);
     const u = readUser();
     setEmail(u?.email ?? "");

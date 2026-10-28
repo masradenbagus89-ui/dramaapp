@@ -6,12 +6,24 @@
 // atau beli paket (top-up via payment gateway — lihat catatan di /api/coins/topup).
 
 /**
- * SAKLAR UTAMA MONETISASI.
+ * SAKLAR UTAMA MONETISASI — nilainya TIDAK lagi ditulis di sini.
  * true  = toko koin tampil & paywall aktif — TAPI hanya untuk drama yang
  *         ditandai `premium`. Drama lama (tanpa flag) tetap gratis.
  * false = semua episode gratis, toko koin disembunyikan total.
+ *
+ * Sejak 2026-10-28 definisinya pindah ke `lib/saklar-fitur.ts` dan di sini hanya
+ * di-ekspor ulang (re-export). KENAPA begitu: saklar koin & saklar iklan harus
+ * berada di SATU berkas supaya ada satu tempat yang jelas untuk menyalakannya
+ * kembali — sementara 10+ berkas sudah mengimpor nama ini dari `@/lib/coins`,
+ * dan mengubah semuanya hanya demi memindahkan satu konstanta = churn tanpa
+ * manfaat. Definisinya tetap SATU, jadi tak ada dua nilai yang bisa melenceng.
+ *
+ * Diimpor DULU lalu diekspor ulang (bukan `export ... from` sekali jalan):
+ * `isEpisodeLocked` di bawah ikut memakai nilainya, dan `export ... from` hanya
+ * MENERUSKAN nama tanpa memasukkannya ke ruang lingkup berkas ini.
  */
-export const PAYWALL_ENABLED = true;
+import { PAYWALL_ENABLED } from "@/lib/saklar-fitur";
+export { PAYWALL_ENABLED };
 
 /** Episode 1..FREE_EPISODES gratis tanpa koin (berlaku saat PAYWALL_ENABLED). */
 export const FREE_EPISODES = 3;

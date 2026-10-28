@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getBalance, getUnlocks } from "@/lib/store";
 import { resolveUserEmail } from "@/lib/session";
+import { PAYWALL_ENABLED } from "@/lib/saklar-fitur";
+import { guardFitur } from "@/lib/request-guard";
 import {
   COIN_PER_EPISODE,
   FREE_EPISODES,
@@ -23,6 +25,11 @@ const CONFIG = {
 // GET /api/coins?email=...&dramaId=...
 // Status wallet user: saldo + episode yang sudah dibuka untuk satu drama.
 export async function GET(req: NextRequest) {
+  // Fitur ini sedang DIJEDA lewat saklar di lib/saklar-fitur.ts. Digerbang di
+  // route juga — bukan cuma disembunyikan di layar — karena alamat API tetap
+  // bisa dipanggil langsung oleh siapa pun yang tahu namanya.
+  const mati = guardFitur(PAYWALL_ENABLED, "koin");
+  if (mati) return mati;
   const { searchParams } = new URL(req.url);
   const id = await resolveUserEmail(req);
 

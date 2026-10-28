@@ -8,7 +8,8 @@ import {
   unlockToken,
   calculateUnlockAllPrice,
 } from "@/lib/coins";
-import { guardMutation } from "@/lib/request-guard";
+import { guardFitur, guardMutation } from "@/lib/request-guard";
+import { PAYWALL_ENABLED } from "@/lib/saklar-fitur";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,6 +19,11 @@ export const dynamic = "force-dynamic";
 // harga diskon. Untuk drama non-premium / admin / user tanpa sisa episode,
 // langsung sukses tanpa menarik koin.
 export async function POST(req: NextRequest) {
+  // Fitur ini sedang DIJEDA lewat saklar di lib/saklar-fitur.ts. Digerbang di
+  // route juga — bukan cuma disembunyikan di layar — karena alamat API tetap
+  // bisa dipanggil langsung oleh siapa pun yang tahu namanya.
+  const mati = guardFitur(PAYWALL_ENABLED, "koin");
+  if (mati) return mati;
   const blocked = guardMutation(req, {
     bucket: "coins:unlock-all",
     limit: 10,

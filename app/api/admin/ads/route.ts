@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/session";
 import { addAd, removeAd } from "@/lib/store";
+import { ADS_ENABLED } from "@/lib/saklar-fitur";
+import { guardFitur } from "@/lib/request-guard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -9,6 +11,11 @@ const isUrl = (s: string) => /^https?:\/\/.+/i.test(s.trim());
 
 // POST /api/admin/ads { title?, imageUrl, linkUrl } — tambah iklan sponsor.
 export async function POST(req: NextRequest) {
+  // Fitur ini sedang DIJEDA lewat saklar di lib/saklar-fitur.ts. Digerbang di
+  // route juga — bukan cuma disembunyikan di layar — karena alamat API tetap
+  // bisa dipanggil langsung oleh siapa pun yang tahu namanya.
+  const mati = guardFitur(ADS_ENABLED, "iklan");
+  if (mati) return mati;
   if (!(await isAdminRequest(req))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -32,6 +39,11 @@ export async function POST(req: NextRequest) {
 
 // DELETE /api/admin/ads { id } — hapus iklan.
 export async function DELETE(req: NextRequest) {
+  // Fitur ini sedang DIJEDA lewat saklar di lib/saklar-fitur.ts. Digerbang di
+  // route juga — bukan cuma disembunyikan di layar — karena alamat API tetap
+  // bisa dipanggil langsung oleh siapa pun yang tahu namanya.
+  const mati = guardFitur(ADS_ENABLED, "iklan");
+  if (mati) return mati;
   if (!(await isAdminRequest(req))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

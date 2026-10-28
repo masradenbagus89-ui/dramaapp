@@ -24,6 +24,7 @@ import {
   parseImdb,
 } from "./discover";
 import { labelNegara } from "./negara";
+import { PAYWALL_ENABLED } from "./saklar-fitur";
 
 /**
  * Satu baris yang bisa diklik. `href` sudah lengkap & siap dipakai `<Link>`.
@@ -147,7 +148,16 @@ export function buildNavMenus(dramas: Drama[]): NavMenu[] {
   const tamat = hitung(dramas, (d) => d.status === "Completed");
   const tayang = hitung(dramas, (d) => d.status === "Ongoing");
   const gratis = hitung(dramas, (d) => !d.premium);
-  const koin = hitung(dramas, (d) => Boolean(d.premium));
+  // Jumlah drama berbayar. Saklar koin mati (lib/saklar-fitur.ts) → DIPAKSA 0,
+  // dan kedua chip filter ("Gratis" + "Pakai Koin") hilang sendiri lewat syarat
+  // `koin > 0` yang sudah ada di bawah — tanpa percabangan baru.
+  //
+  // KENAPA dipaksa di sini, bukan di tempat chip-nya digambar: angka inilah
+  // artinya "ada judul yang perlu koin". Selama koin dijeda, tak ada. Memilah di
+  // tempat gambar berarti dua aturan yang bisa melenceng (§3.3).
+  const koin = PAYWALL_ENABLED
+    ? hitung(dramas, (d) => Boolean(d.premium))
+    : 0;
   const subIndo = hitung(dramas, (d) => Boolean(d.subtitles?.includes("id")));
 
   const kandidat: (NavMenu | null)[] = [

@@ -23,6 +23,15 @@
 // PERILAKU yang hidup di state React — `next build`, `tsc`, maupun screenshot
 // tetap hijau walau rantai ini mati total.
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+// Tes ini menguji perilaku SAAT KOIN/IKLAN MENYALA, dan sejak 2026-10-28
+// saklarnya DIJEDA di lib/saklar-fitur.ts (keputusan owner). Saklarnya dipaku
+// MENYALA di sini dengan sengaja: perilaku paywall/iklan harus tetap terbukti
+// hijau selama dijeda, kalau tidak jalur "nyalakan kembali" berangkat tanpa
+// satu pun penjaga. Keadaan JEDA-nya diuji terpisah di tests/jeda-koin-iklan.test.ts.
+vi.mock("@/lib/saklar-fitur", () => ({
+  PAYWALL_ENABLED: true,
+  ADS_ENABLED: true,
+}));
 import { createElement as h, act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { COIN_PER_EPISODE, FREE_EPISODES } from "../lib/coins";

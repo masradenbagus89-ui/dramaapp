@@ -27,8 +27,17 @@
 // + posisi (di bawah badge subtitle) + kelas sticky sekaligus. Menyalinnya ke
 // sini lagi cuma membuat dua berkas yang harus disunting bersamaan tiap kali
 // tata letaknya bergeser.
-import { describe, it, expect } from "vitest";
-import { FREE_EPISODES, PAYWALL_ENABLED, isEpisodeLocked } from "@/lib/coins";
+import { describe, it, expect, vi } from "vitest";
+import { FREE_EPISODES, isEpisodeLocked } from "@/lib/coins";
+// Tes ini menguji perilaku SAAT KOIN/IKLAN MENYALA, dan sejak 2026-10-28
+// saklarnya DIJEDA di lib/saklar-fitur.ts (keputusan owner). Saklarnya dipaku
+// MENYALA di sini dengan sengaja: perilaku paywall/iklan harus tetap terbukti
+// hijau selama dijeda, kalau tidak jalur "nyalakan kembali" berangkat tanpa
+// satu pun penjaga. Keadaan JEDA-nya diuji terpisah di tests/jeda-koin-iklan.test.ts.
+vi.mock("@/lib/saklar-fitur", () => ({
+  PAYWALL_ENABLED: true,
+  ADS_ENABLED: true,
+}));
 import {
   DETAIL_DOWNLOAD_EP,
   detailDownloadUrl,
@@ -50,11 +59,10 @@ describe("tombol Unduh halaman detail — TIDAK boleh melewati paywall", () => {
     expect(terkunci).toBe(false);
   });
 
-  it("paywall memang menyala — kalau mati, tes di atas jadi hijau palsu", () => {
-    // Bukan menguji tombol, tapi menguji PREMIS tes di atasnya. Tanpa baris ini
-    // mematikan PAYWALL_ENABLED membuat tes ini lulus untuk alasan yang salah.
-    expect(PAYWALL_ENABLED).toBe(true);
-  });
+  // Tripwire premis "paywall menyala" DIPINDAH ke tests/jeda-koin-iklan.test.ts
+  // (2026-10-28) dengan alasan yang sama seperti di tests/coins.test.ts:
+  // saklarnya kini dipaku menyala di berkas ini, jadi tripwire di sini tak akan
+  // pernah bisa merah. Premis tes di atas tetap dijaga — oleh vi.mock itu.
 });
 
 describe("alamat unduh — wajib lewat route, bukan alamat tunnel", () => {

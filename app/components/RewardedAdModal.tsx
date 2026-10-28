@@ -7,6 +7,7 @@ import { REWARD_PER_AD } from "@/lib/coins";
 import type { SponsorAd } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ADS_ENABLED } from "@/lib/saklar-fitur";
 
 // Iklan berhadiah pakai IKLAN SPONSOR SENDIRI (house ad). Admin pasang gambar +
 // link di /admin; modal ini ambil acak dari /api/ads, hitung view/klik, lalu
@@ -24,6 +25,13 @@ export default function RewardedAdModal({
   onClose: () => void;
   onRewarded?: (balance: number) => void;
 }) {
+  // Saklar iklan mati → modal "tonton iklan dapat koin" tak pernah digambar.
+  // Pemanggilnya (CoinWallet & EpisodePaywall) memang sudah ikut mati bersama
+  // saklar koin, tapi digerbang di sini juga supaya iklan benar-benar mati walau
+  // suatu saat koin dinyalakan lagi lebih dulu. Soal berhenti sebelum hook:
+  // lihat alasan yang sama di AdBanner.tsx.
+  if (!ADS_ENABLED) return null;
+
   const [left, setLeft] = useState(AD_SECONDS);
   const [phase, setPhase] = useState<"playing" | "claiming" | "done" | "error">(
     "playing",

@@ -4,6 +4,7 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { ADS_ENABLED } from "@/lib/saklar-fitur";
 import {
   Home,
   Plus,
@@ -36,7 +37,11 @@ const NAV_ITEMS: { href: string; label: string; icon: LucideIcon }[] = [
   { href: "/admin/settings/playly", label: "Kunci Playly", icon: KeyRound },
   { href: "/admin#kelola-admin", label: "Kelola Admin", icon: Users },
   { href: "/admin#keamanan", label: "Keamanan (2FA)", icon: ShieldCheck },
-  { href: "/admin#iklan", label: "Iklan Sponsor", icon: Megaphone },
+  // Menu iklan hanya ada saat saklarnya menyala (lib/saklar-fitur.ts) — kalau
+  // tidak, menunya menuju bagian halaman yang sudah tidak digambar.
+  ...(ADS_ENABLED
+    ? [{ href: "/admin#iklan", label: "Iklan Sponsor", icon: Megaphone }]
+    : []),
   { href: "/", label: "← Kembali ke web", icon: ArrowLeft },
 ];
 

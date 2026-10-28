@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { addCoins, getBalance, getCoinMeta, setCoinMeta } from "@/lib/store";
 import { resolveUserEmail } from "@/lib/session";
 import { DAILY_AD_LIMIT, REWARD_PER_AD } from "@/lib/coins";
-import { guardMutation } from "@/lib/request-guard";
+import { guardFitur, guardMutation } from "@/lib/request-guard";
+import { PAYWALL_ENABLED } from "@/lib/saklar-fitur";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,6 +15,11 @@ function today(): string {
 // POST /api/coins/reward  { email? }
 // Dipanggil setelah user menyelesaikan 1 iklan berhadiah. Ada kuota harian.
 export async function POST(req: NextRequest) {
+  // Fitur ini sedang DIJEDA lewat saklar di lib/saklar-fitur.ts. Digerbang di
+  // route juga — bukan cuma disembunyikan di layar — karena alamat API tetap
+  // bisa dipanggil langsung oleh siapa pun yang tahu namanya.
+  const mati = guardFitur(PAYWALL_ENABLED, "koin");
+  if (mati) return mati;
   const blocked = guardMutation(req, {
     bucket: "coins:reward",
     limit: 20,

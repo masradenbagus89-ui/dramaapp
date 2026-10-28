@@ -18,7 +18,7 @@ import { readUser } from "@/lib/auth";
 import { decideVideoError } from "@/lib/video";
 import { seekTime } from "@/lib/seek";
 import { fetchWallet, unlockEpisode, unlockAllEpisodes } from "@/lib/wallet";
-import { isEpisodeLocked } from "@/lib/coins";
+import { PAYWALL_ENABLED, isEpisodeLocked } from "@/lib/coins";
 import RewardedAdModal from "./RewardedAdModal";
 import EpisodePaywall from "./player/EpisodePaywall";
 import CommentsDrawer from "./player/CommentsDrawer";
@@ -219,7 +219,13 @@ export default function FeedPlayer({
   const lockedActive = isLocked(active + 1);
 
   // Muat status wallet (saldo + episode yang sudah dibuka) saat mount.
+  //
+  // Saklar koin mati → dilewati seluruhnya: tak ada paywall untuk ditegakkan,
+  // jadi saldo & daftar episode terbuka tak dipakai siapa pun di sini. Menyimpan
+  // panggilannya berarti satu permintaan sia-sia (dan satu 404) tiap kali
+  // pemutar dibuka — di halaman yang paling sering dibuka penonton.
   useEffect(() => {
+    if (!PAYWALL_ENABLED) return;
     const u = readUser();
     setEmail(u?.email ?? "");
     setIsAdmin(u?.role === "admin");

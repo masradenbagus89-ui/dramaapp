@@ -1,7 +1,16 @@
 // Tes pengunci perilaku untuk isEpisodeLocked (lib/coins.ts) — gerbang paywall.
 // Mengunci aturan "episode mana yang terkunci" yang dulu hidup di FeedPlayer.
-import { describe, it, expect } from "vitest";
-import { isEpisodeLocked, FREE_EPISODES, PAYWALL_ENABLED } from "../lib/coins";
+import { describe, it, expect, vi } from "vitest";
+import { isEpisodeLocked, FREE_EPISODES } from "../lib/coins";
+// Tes ini menguji perilaku SAAT KOIN/IKLAN MENYALA, dan sejak 2026-10-28
+// saklarnya DIJEDA di lib/saklar-fitur.ts (keputusan owner). Saklarnya dipaku
+// MENYALA di sini dengan sengaja: perilaku paywall/iklan harus tetap terbukti
+// hijau selama dijeda, kalau tidak jalur "nyalakan kembali" berangkat tanpa
+// satu pun penjaga. Keadaan JEDA-nya diuji terpisah di tests/jeda-koin-iklan.test.ts.
+vi.mock("@/lib/saklar-fitur", () => ({
+  PAYWALL_ENABLED: true,
+  ADS_ENABLED: true,
+}));
 
 const noneUnlocked = new Set<number>();
 
@@ -45,9 +54,8 @@ describe("isEpisodeLocked — gerbang episode terkunci (paywall)", () => {
     ).toBe(false);
   });
 
-  it("tripwire konfigurasi: paywall sedang menyala (PAYWALL_ENABLED=true)", () => {
-    // Kalau suatu saat paywall sengaja dimatikan, tes ini menyala-merah sebagai
-    // pengingat bahwa SEMUA episode jadi gratis (isEpisodeLocked selalu false).
-    expect(PAYWALL_ENABLED).toBe(true);
-  });
+  // Tripwire "paywall sedang menyala" DIPINDAH ke tests/jeda-koin-iklan.test.ts
+  // (2026-10-28). Harus pindah: berkas ini memaku saklarnya MENYALA lewat
+  // vi.mock di atas, jadi tripwire di sini hanya akan membaca tiruannya sendiri
+  // dan selamanya hijau — penjaga yang tak pernah bisa merah.
 });

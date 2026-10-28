@@ -3,12 +3,21 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-10-27 (**komputer OWNER**).
-`origin/main` = `dramaku/main` = **`778f6aa`** (selisih 0/0 antar-remote, diverifikasi
-`git fetch origin` + `git fetch dramaku` hari ini). Lokal **1 commit di depan** keduanya —
-commit docs berisi catatan penutupan celah Node di bawah, **belum di-push, menunggu izin owner.**
+**Terakhir dicek:** 2026-10-28 (**komputer OWNER**).
+`origin/main` = `dramaku/main` = **`a1d0af7`** (selisih 0/0 antar-remote, diverifikasi
+`git fetch origin` + `git fetch dramaku` hari ini — nol antrean warisan; semua yang tertunda
+kemarin sudah tayang). Lokal **1 commit di depan** keduanya: perbaikan beli-lalu-tonton +
+4 tes penjaga, **belum di-push, menunggu izin owner** (`origin main` = tombol rilis).
 (SHA-nya sengaja tidak ditulis: sebuah commit tak bisa memuat hash dirinya sendiri — cek dengan
 `git log --oneline -1`.)
+
+⚠️ **MENUNGGU IZIN RILIS 2026-10-28 — perbaikan beli-lalu-tonton.** Sesudah koin terpotong,
+pemutar meminta alamat video baru dengan benar tapi **tak pernah menyuruhnya jalan** begitu
+alamat itu tiba. Diperbaiki di `app/components/FeedPlayer.tsx` (satu efek pemulai pemutaran,
+ber-pembukuan `ep|resolusi`) + `tests/beli-lalu-tonton.test.ts` (4 tes mount sungguhan, **MERAH
+sebelum perbaikan**). Gerbang §6 lolos: `rm -rf .next` → build sukses → `tsc` **exit 0** →
+**1.630 tes** hijau. Nol berkas env/kunci tersentuh. Rincian + batas jujurnya di `HANDOFF.md`
+entri 2026-10-28.
 
 🪤 **Angka `c1c0e31` di header lama SALAH dibaca ulang.** Sesi 2026-10-27 sempat menyalinnya
 sebagai "commit yang tayang" tanpa memverifikasi; yang benar `778f6aa`, dan `c1c0e31` ada SATU

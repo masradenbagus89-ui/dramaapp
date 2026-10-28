@@ -122,6 +122,10 @@ export default function FeedPlayer({
   // Kunci yang sudah/sedang diminta, supaya satu slide tak meminta berulang.
   // Ref, bukan state: isinya alat pembukuan dan tak boleh memicu render.
   const sudahDiminta = useRef<Set<string>>(new Set());
+  // Kunci yang pemutarannya sudah PERNAH dimulai. Dipisah dari `sudahDiminta`
+  // karena menjawab pertanyaan lain: yang itu "alamatnya sudah diminta?", yang
+  // ini "videonya sudah disuruh jalan?". Ref, bukan state — alat pembukuan.
+  const sudahDimulai = useRef<Set<string>>(new Set());
   const srcKeyFor = (ep: number) => `${ep}|${resolution}`;
   /** Alamat siap pakai, atau `undefined` selagi diambil / kalau tak berhak. */
   const srcFor = (ep: number) => srcMap[srcKeyFor(ep)];
@@ -189,6 +193,9 @@ export default function FeedPlayer({
       // memuat ulang alamat yang sama akan gagal lagi, selamanya.
       const k = `${ep}|${resolution}`;
       sudahDiminta.current.delete(k);
+      // Ikut dilepas, kalau tidak "Coba lagi" akan mendapat alamat baru tapi
+      // tak pernah disuruh jalan (lihat efek PEMULAI PEMUTARAN di bawah).
+      sudahDimulai.current.delete(k);
       setSrcMap((m) => {
         if (!(k in m)) return m;
         const next = { ...m };
@@ -396,6 +403,31 @@ export default function FeedPlayer({
       }
     }
   }, [active, dramaId, isLocked]);
+
+  // PEMULAI PEMUTARAN saat alamatnya tiba — pasangan wajib dari efek di atas.
+  //
+  // KENAPA ADA (diukur 2026-10-28, tests/beli-lalu-tonton.test.ts): efek di
+  // atas bereaksi pada "episode/aksesnya berubah" dan berjalan SINKRON dengan
+  // perubahan state, sementara alamat video baru datang BELAKANGAN (jawaban
+  // /api/video-url). Di jalur beli-lalu-tonton keduanya tak pernah bertemu:
+  // koin terpotong → `unlocked` berubah → play() dipanggil pada <video> yang
+  // masih TANPA `src` → nol byte dimuat. Paywall hilang, layar tetap diam,
+  // dan tak ada yang melapor - pelanggan membayar lalu tak dapat apa-apa.
+  //
+  // Dicatat per-kunci `ep|resolusi` supaya satu alamat hanya DIMULAI SEKALI:
+  // tanpa pembukuan itu, render ulang berikutnya akan merebut kembali kendali
+  // dari penonton yang baru menjeda sendiri.
+  useEffect(() => {
+    if (paused) return; // penonton menjeda sendiri → jangan diambil alih
+    const ep = active + 1;
+    const k = `${ep}|${resolution}`;
+    if (!srcMap[k] || sudahDimulai.current.has(k)) return;
+    if (isLocked(ep)) return;
+    const v = videoRefs.current[active];
+    if (!v) return;
+    sudahDimulai.current.add(k);
+    v.play().catch(() => setPaused(true)); // autoplay diblokir → tombol play
+  }, [active, resolution, srcMap, paused, isLocked]);
 
   const persistProgress = useCallback(
     (opts?: { completed?: boolean; force?: boolean }) => {

@@ -9,7 +9,7 @@
 >
 > **📦 Berkas ini sudah ±6.600 baris** (diukur 2026-10-15; angka lama "5.224 baris" dari 2026-10-10 sudah basi — tumbuh ±1.400 baris dalam 5 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-10-27 (**kebocoran paywall video TERTUTUP PENUH** — Tahap A `5165f22` + Tahap B terpasang di PC backup; sebelumnya celah Node `CVE-2026-111497`).
+**Terakhir diisi:** 2026-10-28 (**cacat beli-lalu-tonton DITEMUKAN & DIPERBAIKI di lokal** — efek samping penutupan paywall 27 Okt; **belum di-push, menunggu izin owner**).
 
 ---
 
@@ -29,7 +29,7 @@ bisa ditonton siapa pun tanpa login kini **403**, termasuk alamat yang sudah ter
 | # | Pekerjaan | Mendesak? | Yang ditunggu |
 |---|---|---|---|
 | 1 | **Jalur administrasi jarak jauh di server sewaan terbuka ke internet** | 🟠 ya, tapi **DI LUAR wewenang owner** | Izin atasan owner → lalu diminta ke administrator penyedia jasa. Mesin kerja owner = server RDP sewaan berisi ~84 penyewa; owner hanya pengguna biasa. Laporan + draf pesannya: `laporan-keamanan-dramaku-2026-10-27.html` **di folder rumah owner, SENGAJA di luar repo** (repo ini publik) |
-| 2 | **Alur beli-lalu-tonton belum pernah diuji di browser** | 🟠 layak | Buka drama ber-`premium: true`, episode ≥4, beli dengan koin → harus **langsung bisa diputar tanpa muat ulang**. Mekanismenya ada (`unlocked` jadi pemicu `useEffect` di `FeedPlayer.tsx`) tapi belum dilihat jalan. **Kalau gagal: pelanggan membayar lalu tak dapat apa-apa** |
+| 2 | **Beli-lalu-tonton: cacat DITEMUKAN & diperbaiki — tinggal dirilis** | 🔴 ya | **Izin owner untuk push + rilis.** Mekanismenya ternyata TIDAK lengkap: sesudah koin terpotong, nol perintah putar menyusul begitu alamat videonya tiba. Perbaikan + 4 tes penjaga sudah terpasang di lokal & lulus gerbang §6 (build 0 · tsc 0 · **1.630 tes**). Rincian di entri 2026-10-28 di bawah |
 | 3 | **Tutup Vercel** | tidak | ≥6 minggu sejak 2026-10-15 → **paling cepat 2026-11-26**, DAN cek Google. Nol pekerjaan teknis tersisa. 🔔 `.github/workflows/pengingat-tutup-vercel.yml` membuka Issue sendiri saat tanggalnya tiba |
 | 4 | **Uji pulihkan backup** | tidak | 1 Supabase project kosong. 🟢 Robotnya sudah dibuat & diuji — owner tinggal 3 langkah, `docs/uji-pulihkan-backup.md` "Rute 2" |
 | 5 | **Beli domain** | tidak | persetujuan atasan owner — **BUKAN blocker apa pun**. Bahan: `docs/pengajuan-domain-sendiri.md` |
@@ -115,6 +115,74 @@ PC backup menyalakan ulang layanannya sendiri (watchdog) dan membuat tunnel baru
 Artinya perubahan di `start-video-services.ps1` yang meneruskan `VIDEO_SIGNING_SECRET` dari env
 level `Machine` **benar-benar bekerja di jalur autostart** — hal yang tak bisa diuji saat
 dipasang manual. Penegakan bertahan melewati restart PC; tidak perlu dipasang ulang tiap boot.
+
+---
+
+## 2026-10-28 — CACAT BELI-LALU-TONTON DITEMUKAN OLEH TES, BUKAN OLEH PENONTON. Diperbaiki di lokal, BELUM dirilis.
+
+Risiko yang ditulis terbuka di berkas ini sejak 27 Oktober akhirnya **diukur**, dan hasilnya:
+**mekanismenya tidak lengkap.** Yang dikira sudah ada ternyata hanya separuh rantai.
+
+### Apa yang rusak, dalam satu kalimat
+
+Sesudah koin terpotong, pemutar **meminta** alamat video baru dengan benar — tapi begitu alamat
+itu tiba, **nol** perintah putar menyusul. Satu-satunya `play()` terjadi **lebih dulu**, saat
+elemen `<video>` masih tanpa alamat sama sekali.
+
+### Kenapa bisa lolos review 27 Oktober
+
+Penutupan kebocoran memindahkan alamat video keluar dari HTML — benar dan tetap benar. Yang tak
+terpikir: akibatnya `<video>` **mulai hidup tanpa `src`**, dan alamatnya datang **belakangan**
+(jawaban `fetch`). Sementara itu efek pemutaran di `app/components/FeedPlayer.tsx` dipicu
+`active`/`isLocked` yang berubah **sinkron**. Di jalur beli, keduanya tak pernah bertemu:
+
+| Urutan nyata sesudah tombol "Buka" ditekan | Akibat |
+|---|---|
+| koin terpotong → `unlocked` berubah | paywall hilang, `isLocked` jadi false |
+| efek pemutaran jalan (sinkron) → `play()` | elemen **belum punya alamat** — nol byte dimuat |
+| `/api/video-url` dijawab → alamat terpasang | **tak ada** yang menyuruh video jalan lagi |
+
+### Perbaikannya: satu efek "pemulai pemutaran"
+
+Dipasang di akarnya (komponen bersama, bukan tambalan per-halaman): begitu alamat episode
+**aktif** terpasang dan episodenya tidak terkunci, pemutaran dimulai. Ber-pembukuan per kunci
+`ep|resolusi` supaya **satu alamat hanya dimulai sekali** — tanpa itu, render ulang berikutnya
+akan merebut kembali kendali dari penonton yang baru menjeda sendiri. Tombol "Coba lagi" ikut
+melepas pembukuan itu, kalau tidak ia akan dapat alamat baru tapi tak pernah disuruh jalan.
+
+### Bukti
+
+- `tests/beli-lalu-tonton.test.ts` — **4 tes mount sungguhan** (react-dom/client + `act`),
+  **MERAH sebelum perbaikan, hijau sesudahnya**. Yang dikunci: (1) sebelum dibeli paywall tampil
+  & episodenya **tidak punya alamat**; (2) sesudah dibeli alamat diminta **ULANG** lalu terpasang
+  & paywall hilang; (3) `play()` terjadi saat alamatnya **sudah ada**; (4) hal yang sama untuk
+  episode **gratis**.
+- Gerbang §6 penuh: `rm -rf .next` → build **sukses** → `tsc` **exit 0** → **1.630 tes hijau**
+  (dari 1.626; +4 baru, nol yang pecah).
+- Cacatnya **sedang tayang**: produksi menjalankan kode pasca-Tahap A (`/api/video-url` hidup,
+  membalas `400 {"error":"Parameter tidak valid."}` tanpa parameter), dan kode di `5165f22`
+  punya `srcMap` tapi belum punya pemulai pemutaran.
+
+### ⚠️ BATAS JUJUR — jangan dicatat lebih kuat dari ini
+
+Yang terbukti: **kode kita** tidak pernah mengirim perintah putar sesudah alamatnya tiba.
+Yang **TIDAK** bisa diuji di sini: apakah browser sungguhan tetap memutar sendiri lewat jalur
+"`play()` dulu, `src` menyusul" — spesifikasi HTML memang mengizinkannya, dan bisa jadi
+penonton selama ini tak pernah terganggu. Tanpa browser otomatis (project ini tak punya
+Playwright), itu tak bisa dibuktikan dari sini. Jadi perbaikan ini menghapus **ketergantungan**
+pada perilaku halus itu, dan belum tentu menyembuhkan gejala yang terlihat.
+Satu jalur yang **pasti** rusak sebelum ini: tombol **"Coba lagi"** — di situ `v.load()`
+dipanggil eksplisit, dan menurut spesifikasi HTML `load()` **menyetel `paused` jadi true** +
+menolak janji `play()` yang menggantung, jadi alamat baru mendarat di elemen yang sudah dijeda.
+
+### Yang masih ditunggu dari owner
+
+1. **Izin push + rilis** (`origin main` = tombol rilis). Dual push ke `origin` + `dramaku`.
+2. **Uji browser sesudah tayang** — ini yang membuktikan ke penonton, bukan ke mesin:
+   buka drama ber-`premium: true` → episode 4 → tekan **Buka • 8 koin** → videonya harus
+   **jalan sendiri, tanpa menyentuh apa pun dan tanpa muat ulang halaman**.
+   ⚠️ Pilih dramanya dengan `premium -eq $true`, **jangan** truthiness — jebakan 27 Okt yang
+   membuat owner sempat menguji dengan drama yang ternyata gratis.
 
 ---
 
@@ -233,6 +301,9 @@ build 0 · tsc 0 · **1.612 tes** (+31 baru, −4 tes `downloadUrl` yang ikut di
    **salah 8×**. Yang benar: ~0,07 MB per kunjungan tak digeser, ~11 MB batas atas.
 
 ### ⚠️ Yang BELUM diuji, dan ini risiko nyata
+
+> 📌 **SUDAH DITINDAKLANJUTI 2026-10-28 — jangan bertindak dari seksi ini lagi.** Diukur, dan
+> mekanismenya ternyata **tidak lengkap**. Entri 2026-10-28 di atas yang berlaku.
 
 **Beli-lalu-tonton belum pernah dijalankan.** Owner menguji dengan drama yang ternyata gratis,
 jadi alur "buka episode dengan koin → langsung bisa diputar TANPA muat ulang" belum terbukti.

@@ -121,10 +121,27 @@ describe("halaman depan & Shorts SENGAJA tidak ikut berubah", () => {
   // Owner meminta videonya masuk BERANDA. Halaman depan dan Shorts memanggil
   // homeCatalogRows langsung, dan itu harus tetap begitu — Shorts khususnya
   // salah tempat: isinya cuplikan pendek, sedangkan video ini sampai 1,5 jam.
+  // 🪤 DIBETULKAN 2026-10-28 — versi lama tes ini adalah PENJAGA PALSU untuk
+  // `app/page.tsx`. Ia menuntut berkas itu memuat teks "homeCatalogRows", dan
+  // itu memang hijau — tapi HANYA karena namanya disebut di dalam KOMENTAR
+  // ("homeCatalogRows() TIDAK dihapus dari lib: …"). Halaman depan tak pernah
+  // benar-benar memanggilnya. Begitu komentar itu ikut terbawa saat halaman
+  // dirapikan, tesnya merah — padahal nol perilaku berubah.
+  //
+  // Pelajarannya: `toContain("namaFungsi")` atas SELURUH isi berkas tidak bisa
+  // membedakan "dipakai" dari "disebut". Premis yang begitu memberi rasa aman
+  // palsu. Yang diperiksa sekarang: `app/shorts/page.tsx` benar-benar
+  // MENGIMPOR + memanggilnya, dan keduanya tetap menjauhi baris gabungan.
+  it("app/shorts/page.tsx benar-benar memanggil homeCatalogRows", () => {
+    const isi = readFileSync("app/shorts/page.tsx", "utf-8");
+    const impor = isi.match(/^import[\s\S]*?;$/gm)?.join(" ") ?? "";
+    expect(impor).toContain("homeCatalogRows");
+    expect(isi).toMatch(/homeCatalogRows\(/);
+  });
+
   for (const berkas of ["app/page.tsx", "app/shorts/page.tsx"]) {
-    it(`${berkas} masih memakai homeCatalogRows apa adanya`, () => {
+    it(`${berkas} TIDAK memakai baris gabungan`, () => {
       const isi = readFileSync(berkas, "utf-8");
-      expect(isi).toContain("homeCatalogRows");
       expect(
         isi,
         `${berkas} ikut memakai baris gabungan — itu perubahan cakupan yang ` +

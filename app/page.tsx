@@ -1,16 +1,12 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import { getAllDramasCachedSafe } from "@/lib/dramas";
 import { getPlaylyVideosGabunganCached } from "@/lib/playly-gabungan";
 import { featuredHeroSlides } from "@/lib/hero-teaser";
 import RedirectIfAuthed from "@/app/components/RedirectIfAuthed";
-import FeaturedRow from "@/app/components/beranda/FeaturedRow";
+import BadanKatalog from "@/app/components/beranda/BadanKatalog";
 import PublicTopBars from "@/app/components/beranda/PublicTopBars";
 import LanjutMenonton from "@/app/components/beranda/LanjutMenonton";
-import FooterSitus from "@/app/components/beranda/FooterSitus";
-import TabKatalog from "@/app/components/beranda/TabKatalog";
-import TabKatalogTampilan from "@/app/components/beranda/TabKatalogTampilan";
-import { TAB_BAWAAN, TAB_GRID_ITEMS } from "@/lib/tab-katalog";
+import { TAB_GRID_ITEMS } from "@/lib/tab-katalog";
 import { availableGenres, FEATURED_ROW_COUNT } from "@/lib/beranda-catalog";
 import { buildNavMenus } from "@/lib/nav-katalog";
 
@@ -71,78 +67,22 @@ export default async function LandingPage() {
           dibuang bersama tombol Masuk/Daftar-nya. */}
       <h1 className="sr-only">Nonton Drama China Sub Indo Gratis — DramaKu</h1>
 
-      {/* ===== HERO — SATU baris poster unggulan berlatar HITAM (owner
-             2026-10-09, menyamakan dengan situs katalog pembanding).
-
-             Dipindah ke ATAS dari posisi lamanya (dulu di bawah deret tab).
-             Di tempat lama ia menghasilkan DUA baris poster mirip berturut-
-             turut — baris isi tab, lalu baris unggulan — dan owner membacanya
-             sebagai daftar yang sama tercetak dua kali.
-
-             Latarnya tetap hitam karena berada DI LUAR pembungkus
-             tema-terang di bawah: gelap di hero, terang di badan. ===== */}
-      <FeaturedRow dramas={heroSlides} href="/discover" />
-
-      <LanjutMenonton />
-
-      {/* ===== BADAN TERANG — dari sini ke bawah berlatar putih-abu.
-             Pembungkus inilah SATU-SATUNYA saklar tema terang (lihat
-             @custom-variant terang di app/globals.css). ===== */}
-      <div className="tema-terang bg-zinc-100">
-
-        {/* ===== DERET TAB KATALOG (owner 2026-09-22, meniru situs katalog):
-               TERBARU · SERIES UNGGULAN · SERIES UPDATE · TERPOPULER ·
-               REKOMENDASI · <tahun>, plus tombol FILTER di ujung kanan.
-
-               Dibungkus <Suspense> karena isinya membaca alamat lewat
-               `useSearchParams()` — tanpa pembungkus ini `next build` GAGAL.
-               Katalog dioper sebagai prop (bukan dibaca ulang di browser) supaya
-               halaman ini TETAP statis: menaruh `searchParams` di halamannya akan
-               membuat Next membangun ulang seluruh halaman untuk tiap pengunjung
-               dan `revalidate = 60` di atas jadi percuma. ===== */}
-        <Suspense
-          fallback={
-            <TabKatalogTampilan
-              dramas={dramas}
-              tab={TAB_BAWAAN}
-              semua={false}
-              seksiLengkap
-              videos={filmTerbaru}
-            />
-          }
-        >
-          <TabKatalog dramas={dramas} seksiLengkap videos={filmTerbaru} />
-        </Suspense>
-
-        {/* Strip ajakan daftar (judul + tombol Daftar Gratis/Masuk) DIBUANG
-            2026-10-09 atas permintaan owner: pintu akun kini TUNGGAL, di bar
-            "Lanjutkan Menonton" yang baru terbuka saat diklik. Peran <h1>-nya
-            sudah dipindah ke atas (sr-only) supaya SEO tidak ikut hilang. */}
-
-        {/* Baris kategori genre ("Drama Terbaru", "Drama Action", ...) DILEPAS
-            dari halaman depan 2026-10-09: isinya kini tumpang tindih dengan
-            seksi tab di atas, dan owner meminta susunan yang sama dengan situs
-            katalog pembanding — di sana bagian sesudah hero adalah seksi per
-            TAB, bukan per genre.
-
-            `homeCatalogRows()` TIDAK dihapus dari lib: /beranda (lewat
-            lib/beranda-video.ts) dan /shorts masih memakainya, dan itu dijaga
-            tests/beranda-video-render.test.ts. Genre tetap bisa dicapai dari
-            strip kuning, menu atas, dan tombol FILTER. */}
-
-        {/* Blok penutup "Siap memulai marathon drama?" DIBUANG 2026-10-09:
-            ajakan mendaftar yang ketiga di satu halaman. Lihat LanjutMenonton. */}
-      </div>
-      {/* ^ tutup BADAN TERANG — footer di bawah sengaja tetap gelap,
-          menutup halaman dengan warna yang sama seperti hero di atas. */}
-
-      {/* ===== KAKI SITUS — empat kolom (owner 2026-10-10, mencontoh situs
-             katalog pembanding): tentang, jelajahi, genre populer, disclaimer.
-
-             Menggantikan kaki lama satu baris "© 2026 DramaKu · Prototype".
-             Kata "Prototype" ikut hilang — situs ini sudah tayang dan dipakai
-             penonton sungguhan, jadi label itu justru menyesatkan. ===== */}
-      <FooterSitus genres={genres} />
+      {/* Badan halaman — hero, bar lanjut-menonton, seksi tab, kaki situs.
+          DIPAKAI BERSAMA dengan /beranda sejak 2026-10-28 (owner: "tampilan
+          beranda sama dengan landing page"). Susunannya sengaja TIDAK ditulis
+          lagi di sini: dua salinan pasti melenceng, dan itu yang sudah terjadi
+          sampai hari ini. Lihat app/components/beranda/BadanKatalog.tsx. */}
+      <BadanKatalog
+        dramas={dramas}
+        heroSlides={heroSlides}
+        filmTerbaru={filmTerbaru}
+        genres={genres}
+        heroHref="/discover"
+        /* Bar "Lanjutkan Menonton" = pintu akun TUNGGAL halaman ini (owner
+           2026-10-09): tertutup dulu, terbuka saat diklik. Di /beranda slot yang
+           sama diisi baris riwayat, karena di sana penontonnya sudah login. */
+        slotAtas={<LanjutMenonton />}
+      />
     </div>
   );
 }

@@ -112,17 +112,27 @@ describe("FILTER menempel pada BARIS TAB, dan baris tab dipasang dua halaman", (
     { berkas: "app/beranda/page.tsx", halaman: "`/beranda`" },
   ]) {
     it(`${halaman} memasang baris tabnya`, () => {
+      // Sejak 2026-10-28 kedua halaman memasangnya lewat badan bersama
+      // (BadanKatalog), bukan masing-masing. Rantainya diperiksa SAMPAI UJUNG:
+      // berhenti di "halaman memasang BadanKatalog" akan tetap hijau walau
+      // badan itu berhenti menggambar baris tabnya.
       const sumber = readFileSync(berkas, "utf-8");
       const impor = sumber.match(/^import[\s\S]*?;$/gm)?.join(" ") ?? "";
-      expect(impor, `${berkas} tidak mengimpor TabKatalog`).toContain(
-        "TabKatalog",
+      expect(impor, `${berkas} tidak mengimpor BadanKatalog`).toContain(
+        "BadanKatalog",
       );
       expect(
         sumber,
         `${berkas} mengimpor tapi tidak merender — penonton di ${halaman} ` +
           `tidak akan melihat baris tab MAUPUN tombol filternya, dan tidak ` +
           `ada error apa pun yang memberi tahu`,
-      ).toMatch(/<TabKatalog\s+dramas=/);
+      ).toMatch(/<BadanKatalog\s/);
+
+      const badan = readFileSync(
+        "app/components/beranda/BadanKatalog.tsx",
+        "utf-8",
+      );
+      expect(badan).toMatch(/<TabKatalog\s+dramas=/);
     });
   }
 

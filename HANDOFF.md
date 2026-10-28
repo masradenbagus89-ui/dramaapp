@@ -9,7 +9,7 @@
 >
 > **📦 Berkas ini sudah ±6.600 baris** (diukur 2026-10-15; angka lama "5.224 baris" dari 2026-10-10 sudah basi — tumbuh ±1.400 baris dalam 5 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-10-28 (**koin & iklan DIJEDA dan sudah TAYANG** di `c5bdb54`, dual push tuntas, downtime nol — nol berkas dihapus).
+**Terakhir diisi:** 2026-10-28 (**/beranda disamakan dengan landing page** — sudah jadi & terukur, **BELUM dirilis**, menunggu owner melihat hasilnya; sebelumnya koin & iklan dijeda di `c5bdb54`).
 
 ---
 
@@ -126,6 +126,61 @@ PC backup menyalakan ulang layanannya sendiri (watchdog) dan membuat tunnel baru
 Artinya perubahan di `start-video-services.ps1` yang meneruskan `VIDEO_SIGNING_SECRET` dari env
 level `Machine` **benar-benar bekerja di jalur autostart** — hal yang tak bisa diuji saat
 dipasang manual. Penegakan bertahan melewati restart PC; tidak perlu dipasang ulang tiap boot.
+
+---
+
+## 2026-10-28 (ke-3) — /beranda DISAMAKAN dengan landing page. BELUM dirilis — menunggu owner melihat hasilnya.
+
+Owner: *"aku mau tampilan beranda sama dengan tampilan di landing page, begitu selesai kamu
+tunjukan hasilnya dulu biar ku cek."* Dari popup, owner memilih: baris **"Lanjut Menonton" TETAP**
+di atas; dua baris personal lain ("Karena kamu menonton", "Trending di <genre>") ikut hilang.
+
+### Kenapa kedua halaman ini bisa beda tanpa ada yang sadar
+
+`/` adalah halaman untuk yang **belum login**; begitu login, `RedirectIfAuthed` melempar penonton
+ke `/beranda`. Jadi owner tak pernah melihat `/` kecuali logout — dan kedua halaman merakit
+susunannya **sendiri-sendiri**, lalu menyimpang pelan-pelan.
+
+**Sekarang keduanya memakai komponen yang SAMA** (`app/components/beranda/BadanKatalog.tsx`),
+bukan susunan yang disalin — supaya tak bisa menyimpang lagi. Yang boleh berbeda cuma dioper
+lewat prop: isi slot atas, dan `basePath` tab.
+
+### Bukti (gerbang §6 + situs dijalankan lokal)
+
+build **sukses** · `tsc` **exit 0** · **1.642 tes hijau** (+3 baru) · judul seksi `/` dan
+`/beranda` **identik** · tab `/beranda` menunjuk `/beranda?tab=…`, **0** yang menunjuk `/` ·
+baris kategori lama **0** · kepala situs (logo · kotak cari · menu · strip genre) **ada di
+keduanya**.
+
+### 🔴 REGRESI yang nyaris lolos — ditangkap GAMBAR, bukan angka
+
+Melepas `CatalogBrowser` ikut menghapus **seluruh kepala situs `/beranda`** (logo, kotak cari,
+menu, strip genre) — karena bar itu lahir **di dalam** komponen grid, tak punya rumah sendiri.
+**Nol tanda bahaya:** halaman tetap 200, build sukses, tsc 0, 1.639 tes hijau, judul seksi semua
+cocok. Ketahuan hanya karena tangkapan layarnya benar-benar dilihat.
+
+**Aturan:** untuk perubahan TAMPILAN, status 200 + tes hijau BUKAN bukti. Yang membuktikan adalah
+halaman yang digambar. Sudah diperbaiki (`KepalaBeranda.tsx`) + dipasangi penjaga di
+`tests/kepala-situs.test.ts` — berkas yang sudah menyatakan aturannya tapi tak pernah memeriksa
+pemasangannya.
+
+### Yang ikut berubah & perlu owner setujui
+
+- Baris kategori `/beranda` (**Drama Terbaru/Action/Romance/Tycoon**, **Paling Banyak Ditonton**)
+  dan penomoran halamannya **hilang** — wajib, kalau tidak daftar yang sama muncul dua kali
+  (keluhan lama "ada 2 rekomendasi"). Genre tetap dicapai dari strip kuning, menu atas, FILTER.
+- Dua baris personal (**"Karena kamu menonton"**, **"Trending di <genre>"**) dan **Favorit Saya**
+  hilang; **Lanjut Menonton** tetap.
+- `/beranda` kini punya **kaki situs** (sebelumnya tidak).
+- Kotak cari di `/beranda` kini **melempar ke `/discover`**, tidak lagi menyaring di tempat —
+  grid yang dulu disaringnya sudah tidak ada.
+- `CatalogBrowser` jadi **tak terpakai**, tapi **sengaja belum dihapus** sampai owner setuju.
+
+### Cara owner melihatnya
+
+Tangkapan layar di **`D:\Users\user18\pratinjau-beranda`** (di luar repo):
+`1-SEBELUM-beranda-produksi.png` · `2-SESUDAH-beranda-baru.png` · `3-ACUAN-landing-page.png`.
+Pratinjau hidup: **http://localhost:3999/beranda** (hanya dari komputer ini).
 
 ---
 

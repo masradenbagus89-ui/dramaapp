@@ -1,15 +1,13 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import { getAllDramasCachedSafe } from "@/lib/dramas";
-import { TAB_BAWAAN } from "@/lib/tab-katalog";
+import { TAB_GRID_ITEMS } from "@/lib/tab-katalog";
 import { getPlaylyVideosGabunganCached } from "@/lib/playly-gabungan";
 import { featuredHeroSlides } from "@/lib/hero-teaser";
-import { FEATURED_ROW_COUNT } from "@/lib/beranda-catalog";
-import CatalogBrowser from "../components/beranda/CatalogBrowser";
-import FeaturedRow from "../components/beranda/FeaturedRow";
+import { availableGenres, FEATURED_ROW_COUNT } from "@/lib/beranda-catalog";
+import { buildNavMenus } from "@/lib/nav-katalog";
+import BadanKatalog from "../components/beranda/BadanKatalog";
+import KepalaBeranda from "../components/beranda/KepalaBeranda";
 import PersonalRows from "../components/beranda/PersonalRows";
-import TabKatalog from "../components/beranda/TabKatalog";
-import TabKatalogTampilan from "../components/beranda/TabKatalogTampilan";
 
 // Disimpan & dipakai ulang, disegarkan tiap 60 detik (menggantikan force-dynamic
 // yang membangun ulang halaman untuk tiap pengunjung).
@@ -40,7 +38,10 @@ export default async function BerandaPage() {
   // halaman ini dibangun ulang untuk tiap pengunjung dan ikut mati saat Supabase
   // tak menjawab (lib/supabase.ts:204). Buktinya bukan baris ini, melainkan
   // kolom Static/Dynamic di keluaran `npm run build`.
-  const { videos: playlyVideos } = await getPlaylyVideosGabunganCached();
+  const { videos } = await getPlaylyVideosGabunganCached();
+  const filmTerbaru = videos.slice(0, TAB_GRID_ITEMS);
+  const genres = availableGenres(dramas);
+  const menus = buildNavMenus(dramas);
 
   if (slides.length === 0) {
     return (
@@ -51,77 +52,43 @@ export default async function BerandaPage() {
   }
 
   return (
-    <div className="pb-10">
-      {/*
-        Urutan halaman (permintaan owner 2026-09-07): bar cari + strip genre +
-        grid poster HARUS terlihat di layar pertama.
+    <div className="min-h-screen bg-black">
+      {/* Kepala situs: bar cari + strip genre. Sampai 2026-10-28 ia lahir di
+          dalam CatalogBrowser, jadi ikut hilang begitu grid itu dilepas —
+          halaman tetap 200 dan build tetap hijau, tapi logo, kotak cari, dan
+          SELURUH menu lenyap. Sekarang dipasang terang-terangan di sini. */}
+      <KepalaBeranda menus={menus} />
 
-        Banner hero yang berganti sendiri DIBUANG dari halaman ini atas permintaan
-        owner ("jangan berjalan lagi") — diganti FeaturedRow: deretan poster yang
-        hanya bergerak kalau digeser penonton. Komponen hero lama (HomeHero) sudah
-        DIHAPUS 2026-09-09 setelah /discover ikut lepas darinya.
+      {/* Susunannya SAMA PERSIS dengan landing page `/` (owner 2026-10-28:
+          "tampilan beranda sama dengan tampilan di landing page") — dan sama
+          karena memakai komponen yang SAMA, bukan susunan yang disalin.
 
-        Syarat yang ikut berubah: TopNav tidak boleh memakai posisi `fixed` di
-        halaman ini, kalau tidak bar cari tertutup navbar. Diatur di
-        app/components/TopNav.tsx (`overlayHero`).
+          Yang DIBUANG dari halaman ini saat itu: `CatalogBrowser` (baris kategori
+          "Drama Terbaru/Action/Romance/Tycoon" + penomoran halaman) dan deret tab
+          yang dulu hanya berfungsi sebagai MENU ke /katalog. Kenapa harus dibuang,
+          bukan ditumpuk: begitu isi tab digambar, baris kategori menampilkan
+          daftar yang itu-itu juga — persis keluhan owner "ada 2 rekomendasi"
+          (2026-09-26). Genre tetap dicapai dari strip kuning, menu atas, dan
+          tombol FILTER.
 
-        ⚠️ SLOT IKLAN DI HALAMAN INI SENGAJA DIHAPUS (owner, 2026-09-08): banner
-        ungu di antara baris film memutus susunan poster. Ini MEMBATALKAN
-        permintaan owner 2026-09-03 yang justru meminta 3 slot melintang — jadi
-        JANGAN dikembalikan tanpa perintah baru. Komponen AdBanner sendiri tidak
-        dihapus; masih dipakai /drama/[id] dan /profile.
-      */}
-      <CatalogBrowser
+          ⚠️ SLOT IKLAN DI HALAMAN INI TETAP TIDAK ADA (owner 2026-09-08) —
+          jangan dikembalikan tanpa perintah baru. */}
+      <BadanKatalog
         dramas={dramas}
-        playlyVideos={playlyVideos}
-        heroSlot={<FeaturedRow dramas={slides} />}
-        /* Deret tab katalog + tombol FILTER — bentuk situs katalog pembanding
-           yang diminta owner 2026-09-26. Komponennya SAMA dengan yang dipakai
-           halaman depan `/`, bukan salinan kedua.
-
-           `hanyaMenu` + `basePath="/katalog"` (owner 2026-09-26): di sini
-           baris tab berfungsi sebagai MENU — tiap tab MEMBUKA HALAMAN sendiri
-           yang isinya daftar itu saja. Isinya sengaja TIDAK digambar di sini;
-           kalau digambar, daftar yang sama muncul dua kali dalam satu halaman
-           (persis keluhan "ada 2 rekomendasi").
-
-           Jangan kembalikan basePath ke `/`: `RedirectIfAuthed` memantulkan
-           penonton yang sudah login dari sana, dan tabnya terlihat mati.
-
-           <Suspense> WAJIB: isinya membaca `?tab=` lewat `useSearchParams()`,
-           dan tanpa pembungkus ini `next build` GAGAL. Isi fallback-nya sengaja
-           bentuk yang SAMA (tab bawaan) supaya halaman tidak melompat saat
-           bagian browsernya menyusul. */
-        tabSlot={
-          <Suspense
-            fallback={
-              <TabKatalogTampilan
-                dramas={dramas}
-                tab={TAB_BAWAAN}
-                semua={false}
-                basePath="/katalog"
-                hanyaMenu
-              />
-            }
-          >
-            <TabKatalog dramas={dramas} basePath="/katalog" hanyaMenu />
-          </Suspense>
-        }
-        beforeGridSlot={
-          <div className="pt-6">
-            {/* Baris personal (Lanjut Menonton dsb). Menghilang sendiri untuk
-                penonton yang belum punya riwayat/favorit.
-
-                -mx-4 md:mx-0 membatalkan padding mobile milik pembungkus:
-                ContentRow sudah membawa `px-4` sendiri, tanpa ini jaraknya
-                dobel di HP. */}
-            <div className="-mx-4 md:mx-0">
-              <PersonalRows dramas={dramas} />
-            </div>
-          </div>
+        heroSlides={slides}
+        filmTerbaru={filmTerbaru}
+        genres={genres}
+        /* WAJIB "/beranda", jangan "/": RedirectIfAuthed memantulkan penonton
+           yang sudah login dari "/", sehingga tabnya akan terlihat MATI. */
+        basePath="/beranda"
+        /* Hanya baris "Lanjut Menonton" (keputusan owner 2026-10-28). Dua baris
+           personal lain sengaja tidak ikut supaya halaman ini benar-benar sama
+           dengan landing page; yang ini tetap karena ia satu-satunya cara
+           penonton meneruskan episode yang tertinggal di tengah. */
+        slotAtas={
+          <PersonalRows dramas={dramas} hanyaLanjut />
         }
       />
-
     </div>
   );
 }

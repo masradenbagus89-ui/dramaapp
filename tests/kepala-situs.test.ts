@@ -532,3 +532,57 @@ describe("bar bawah HP ikut dirampingkan", () => {
     expect(html).not.toContain("grid-cols-4");
   });
 });
+
+// ===========================================================================
+// PEMASANGAN — bar cari merah benar-benar DIPASANG di /beranda.
+//
+// 🪤 Celah yang baru menggigit (2026-10-28). Berkas ini sudah menyatakan
+// /beranda termasuk PUNYA_BAR_CARI, dan TopNav memang benar menyembunyikan diri
+// di sana. Yang TIDAK pernah diperiksa: apakah halamannya sungguh memasang bar
+// penggantinya. Sampai hari itu bar tersebut lahir di dalam `CatalogBrowser` —
+// komponen GRID — jadi begitu grid dilepas (owner minta /beranda disamakan
+// dengan landing page), logo, kotak cari, dan SELURUH menu ikut lenyap.
+// Halaman tetap 200, `next build` tetap hijau, `tsc` nol error, 1.639 tes
+// hijau. Ketahuan hanya karena tampilannya benar-benar dilihat.
+//
+// Pelajarannya sama dengan kasus DownloadButton 2026-09-23: komponen yang benar
+// + aturan yang benar TIDAK membuktikan ada orang yang memasangnya.
+// ===========================================================================
+describe("bar cari merah benar-benar DIPASANG di /beranda", () => {
+  it("KepalaBeranda menggambar kotak cari DAN strip genre", async () => {
+    const { default: KepalaBeranda } = await import(
+      "../app/components/beranda/KepalaBeranda"
+    );
+    const { TEKS_KOTAK_CARI } = await import(
+      "../app/components/beranda/SearchBar"
+    );
+    const html = render(
+      "/beranda",
+      () => createElement(KepalaBeranda, { menus: [] }),
+    );
+
+    expect(html, "kotak cari hilang dari kepala /beranda").toContain(
+      TEKS_KOTAK_CARI,
+    );
+    // Strip genre kuning — baris ACTION · ANIME · HORROR · … di bawah bar cari.
+    // Dicocokkan ke TAUTANNYA, bukan ke teks di layar: tulisan huruf besar di
+    // strip itu hasil CSS (`uppercase`), sedangkan teks aslinya "Action" —
+    // mencari "ACTION" membuat tes MERAH PALSU padahal stripnya ada.
+    expect(html, "strip genre hilang dari kepala /beranda").toContain(
+      'href="/discover?cat=Action"',
+    );
+  });
+
+  it("halaman /beranda memasangnya — bukan cuma komponennya yang benar", () => {
+    const halaman = readFileSync("app/beranda/page.tsx", "utf-8");
+    const impor = halaman.match(/^import[\s\S]*?;$/gm)?.join(" ") ?? "";
+    expect(impor, "app/beranda/page.tsx tidak mengimpor kepala situsnya").toContain(
+      "KepalaBeranda",
+    );
+    expect(
+      halaman,
+      "mengimpor tapi tidak merender — penonton /beranda kehilangan logo, " +
+        "kotak cari, dan seluruh menu tanpa satu pun error",
+    ).toMatch(/<KepalaBeranda\s/);
+  });
+});

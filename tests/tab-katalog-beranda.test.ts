@@ -159,62 +159,92 @@ describe("3. baris tab jadi SATU kotak berpembatas", () => {
 // untuk owner.
 // ===========================================================================
 describe("deret tab benar-benar DIPASANG di /beranda", () => {
+  // Sejak 2026-10-28 susunan badan kedua halaman TIDAK lagi ditulis di tiap
+  // halaman, melainkan di satu komponen bersama (owner: "tampilan beranda sama
+  // dengan landing page"). Jadi rantainya sekarang DUA mata rantai, dan tes ini
+  // memeriksa keduanya — memeriksa satu saja meninggalkan celah: halaman boleh
+  // mengoper basePath yang benar sementara badan bersama tak meneruskannya.
   const halaman = readFileSync("app/beranda/page.tsx", "utf-8");
+  const badan = readFileSync(
+    "app/components/beranda/BadanKatalog.tsx",
+    "utf-8",
+  );
 
-  it("halaman beranda merender TabKatalog", () => {
+  it("halaman beranda memasang badan katalog bersama", () => {
     const impor = halaman.match(/^import[\s\S]*?;$/gm)?.join(" ") ?? "";
-    expect(impor).toContain("TabKatalog");
-    expect(halaman).toMatch(/<TabKatalog\s+dramas=/);
+    expect(impor).toContain("BadanKatalog");
+    expect(halaman).toMatch(/<BadanKatalog\s/);
   });
 
-  it("mengoper basePath=/beranda pada ELEMEN TabKatalog itu sendiri", () => {
+  it("badan bersama itulah yang merender TabKatalog", () => {
+    const impor = badan.match(/^import[\s\S]*?;$/gm)?.join(" ") ?? "";
+    expect(impor).toContain("TabKatalog");
+    expect(badan).toMatch(/<TabKatalog\s+dramas=/);
+  });
+
+  it("mengoper basePath=/beranda pada ELEMEN BadanKatalog itu sendiri", () => {
     // ⚠️ Diperiksa dari elemennya, BUKAN dari "apakah teks basePath ada di
     // berkas". Versi pertama tes ini cuma mencari teks, dan itu LOLOS saat
     // diuji-rusak: isi `<Suspense fallback>` juga memuat basePath yang sama,
-    // jadi melepasnya dari `<TabKatalog>` tetap hijau. Penjaga palsu —
+    // jadi melepasnya dari elemen aslinya tetap hijau. Penjaga palsu —
     // bentuk kelemahan yang sudah berulang di repo ini.
-    const elemen = halaman.match(/<TabKatalog\s[\s\S]*?\/>/);
-    expect(elemen, "<TabKatalog … /> tidak ditemukan").toBeTruthy();
+    const elemen = halaman.match(/<BadanKatalog\s[\s\S]*?\/>/);
+    expect(elemen, "<BadanKatalog … /> tidak ditemukan").toBeTruthy();
     expect(
       elemen![0],
       'tab di /beranda menunjuk "/" — penonton yang sudah login akan ' +
         "dipantulkan RedirectIfAuthed dan tabnya terlihat mati",
-    ).toMatch(/basePath="\/katalog"/);
-    expect(
-      elemen![0],
-      "baris tab di beranda menggambar isinya juga — daftar yang sama akan " +
-        "muncul dua kali dalam satu halaman",
-    ).toContain("hanyaMenu");
+    ).toMatch(/basePath="\/beranda"/);
+  });
+
+  it("badan bersama MENERUSKAN basePath ke elemen TabKatalog", () => {
+    // Mata rantai kedua. Tanpa pemeriksaan ini, halaman boleh mengoper
+    // basePath yang benar sementara badan bersama diam-diam tak memakainya —
+    // dan tabnya kembali menunjuk "/" tanpa satu pun error.
+    const elemen = badan.match(/<TabKatalog\s[\s\S]*?\/>/);
+    expect(elemen, "<TabKatalog … /> tidak ditemukan").toBeTruthy();
+    expect(elemen![0]).toContain("basePath={basePath}");
   });
 
   it("fallback-nya JUGA memakai basePath yang sama", () => {
     // Kalau fallback memakai alamat berbeda, tab sempat menunjuk `/` selama
     // sepersekian detik sebelum bagian browsernya menyusul — cukup untuk
     // diklik dan memantul.
-    const fb = halaman.match(/<TabKatalogTampilan[\s\S]*?\/>/);
+    const fb = badan.match(/<TabKatalogTampilan[\s\S]*?\/>/);
     expect(fb, "<TabKatalogTampilan … /> di fallback tidak ditemukan").toBeTruthy();
-    expect(fb![0]).toMatch(/basePath="\/katalog"/);
-    expect(fb![0]).toContain("hanyaMenu");
+    expect(fb![0]).toContain("basePath={basePath}");
   });
 
   it("dibungkus <Suspense> — syarat Next untuk useSearchParams", () => {
     // Tanpa ini `next build` GAGAL, bukan sekadar peringatan.
-    expect(halaman).toContain("<Suspense");
-    expect(halaman).toContain("fallback=");
+    expect(badan).toContain("<Suspense");
+    expect(badan).toContain("fallback=");
   });
 
   it("isi fallback-nya bentuk yang SAMA, supaya halaman tidak melompat", () => {
-    expect(halaman).toContain("TabKatalogTampilan");
-    expect(halaman).toContain("TAB_BAWAAN");
+    expect(badan).toContain("TabKatalogTampilan");
+    expect(badan).toContain("TAB_BAWAAN");
   });
 
-  it("CatalogBrowser menggambar slotnya, bukan menelannya diam-diam", () => {
-    const browser = readFileSync(
-      "app/components/beranda/CatalogBrowser.tsx",
-      "utf-8",
-    );
-    expect(browser).toContain("tabSlot");
-    expect(browser).toMatch(/\{tabSlot\}/);
+  it("isi tab digambar, DAN baris kategori tidak ikut (anti 'ada 2 rekomendasi')", () => {
+    // Menggantikan tes lama "CatalogBrowser menggambar slotnya": sejak
+    // 2026-10-28 /beranda tidak memakai CatalogBrowser sama sekali. Yang
+    // berbahaya sekarang kebalikannya — kalau CatalogBrowser dikembalikan
+    // SAMBIL isi tab tetap digambar, daftar yang sama muncul dua kali, persis
+    // keluhan owner 2026-09-26.
+    expect(badan).toContain("seksiLengkap");
+    // Diperiksa dari IMPOR + elemennya, bukan dari teks berkas. Versi pertama
+    // tes ini menolak kata "CatalogBrowser" di mana pun dan langsung MERAH
+    // PALSU — karena halaman itu menyebutnya di komentar untuk menerangkan
+    // kenapa ia dilepas. Persis kelemahan yang baru dibetulkan di
+    // tests/beranda-video-render.test.ts: "disebut" bukan "dipakai".
+    const impor = halaman.match(/^import[\s\S]*?;$/gm)?.join(" ") ?? "";
+    expect(
+      impor,
+      "CatalogBrowser kembali dipasang di /beranda sementara isi tab juga " +
+        "digambar — daftar yang sama akan muncul dua kali",
+    ).not.toContain("CatalogBrowser");
+    expect(halaman).not.toMatch(/<CatalogBrowser\s/);
   });
 });
 
@@ -223,6 +253,9 @@ describe("halaman depan TIDAK ikut berubah", () => {
     // Di sana `/` memang alamat yang benar, dan RedirectIfAuthed baru bekerja
     // SESUDAH halaman terbuka — jadi pengunjung yang belum login tetap wajar.
     const depan = readFileSync("app/page.tsx", "utf-8");
+    // Sejak 2026-10-28 halaman depan memasang badan bersama, bukan TabKatalog
+    // langsung. Yang dijaga tetap SAMA: ia tak boleh menyebut basePath.
+    expect(depan).toMatch(/<BadanKatalog\s/);
     // Dicocokkan ke POLA pemanggilannya, bukan ke teksnya huruf-per-huruf.
     // Versi lama menuntut persis "<TabKatalog dramas={dramas} />", sehingga
     // menambah prop yang sah (mis. seksiLengkap, 2026-10-09) membuatnya MERAH
@@ -230,7 +263,6 @@ describe("halaman depan TIDAK ikut berubah", () => {
     // benar akan dimatikan orang, dan pagar yang dimatikan tidak menjaga apa
     // pun. Pagarnya justru DITAMBAH: sekarang basePath apa pun ditolak, bukan
     // cuma "/beranda".
-    expect(depan).toContain("<TabKatalog dramas={dramas}");
     // Halaman depan tidak boleh menyebut basePath SAMA SEKALI — lebih ketat
     // daripada versi lama yang hanya menolak nilai "/beranda".
     expect(depan).not.toContain("basePath");

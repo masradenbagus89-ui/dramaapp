@@ -26,7 +26,25 @@ import ContentRow from "../ContentRow";
  * sini lagi: semuanya sudah jadi pilihan "Urutkan" di grid katalog, dan dua
  * tempat yang menampilkan daftar sama hanya membuat beranda memanjang.
  */
-export default function PersonalRows({ dramas }: { dramas: Drama[] }) {
+export default function PersonalRows({
+  dramas,
+  hanyaLanjut = false,
+}: {
+  dramas: Drama[];
+  /**
+   * true = HANYA baris "Lanjut Menonton" yang digambar.
+   *
+   * Dipakai `/beranda` sejak 2026-10-28, saat halaman itu disamakan dengan
+   * landing page `/`: owner memilih membuang baris saran ("Karena kamu
+   * menonton", "Trending di <genre>") dan Favorit Saya, tapi MENAHAN
+   * lanjut-menonton — itu satu-satunya cara penonton meneruskan episode yang
+   * tertinggal di tengah tanpa harus mengingat sendiri sampai episode berapa.
+   *
+   * Prop, bukan komponen baru: pembacaan riwayat & pencocokan ke katalog di
+   * berkas ini tetap SATU: dua salinan logika riwayat akan melenceng diam-diam.
+   */
+  hanyaLanjut?: boolean;
+}) {
   const [mounted, setMounted] = useState(false);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [saved, setSaved] = useState<string[]>([]);
@@ -117,7 +135,8 @@ export default function PersonalRows({ dramas }: { dramas: Drama[] }) {
         />
       )}
 
-      {similar.base && similar.items.length > 0 && (
+      {/* Di bawah ini baris SARAN. Semuanya dilewati saat `hanyaLanjut`. */}
+      {!hanyaLanjut && similar.base && similar.items.length > 0 && (
         <ContentRow
           title={`Karena kamu menonton ${similar.base.title}`}
           subtitle="Drama serupa yang belum kamu tonton"
@@ -143,7 +162,7 @@ export default function PersonalRows({ dramas }: { dramas: Drama[] }) {
           dihapus: nilainya masih dipakai baris "Trending di <genre>" di bawah.
           Penjaganya: tests/tab-katalog-beranda.test.ts. */}
 
-      {trendingGenre.length > 0 && recommended.genre && (
+      {!hanyaLanjut && trendingGenre.length > 0 && recommended.genre && (
         <ContentRow
           title={`Trending di ${recommended.genre}`}
           subtitle="Paling banyak ditonton di genre favoritmu"
@@ -153,7 +172,7 @@ export default function PersonalRows({ dramas }: { dramas: Drama[] }) {
         />
       )}
 
-      {savedDramas.length > 0 && (
+      {!hanyaLanjut && savedDramas.length > 0 && (
         <ContentRow title="Favorit Saya" dramas={savedDramas} href="/my-list" />
       )}
     </div>

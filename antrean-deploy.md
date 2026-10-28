@@ -4,11 +4,12 @@
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
 **Terakhir dicek:** 2026-10-28 (**komputer OWNER**).
-`origin/main` = `dramaku/main` = **`97fd5f1`** (selisih 0/0 antar-remote, diverifikasi
-`git fetch origin` + `git fetch dramaku` hari ini). Lokal **1 commit di depan** keduanya:
-**jeda koin & iklan**, belum di-push, **menunggu izin owner** (`origin main` = tombol rilis).
+`origin/main` = `dramaku/main` = **`c5bdb54`** (selisih 0/0 antar-remote, diverifikasi
+`git fetch origin` + `git fetch dramaku` SESUDAH push). **Nol antrean** — tak ada yang
+menunggu rilis.
 
-⏸️ **MENUNGGU IZIN RILIS 2026-10-28 (ke-2) — JEDA KOIN & IKLAN.** Permintaan owner "koin kita
+✅ **DIRILIS 2026-10-28 (ke-2) — JEDA KOIN & IKLAN, di `c5bdb54`. Dual push tuntas
+`97fd5f1..c5bdb54`, tayang ~1 menit, downtime NOL.** Permintaan owner "koin kita
 pending saja". Dimatikan lewat **2 saklar** di `lib/saklar-fitur.ts` (`PAYWALL_ENABLED`,
 `ADS_ENABLED`); **nol berkas dihapus/dipindah**, database **nol disentuh**. 15 titik ditutup
 (koin: chip saldo, toko koin, layar episode terkunci, menu profil, chip PREMIUM, chip filter
@@ -22,6 +23,13 @@ tripwire yang dipindah). Diukur pada `next start` lokal: 10 route koin/iklan **4
 `/tonton/<drama>` 404 karena itu rute film; 2 × `/watch` 307 mengalihkan ke `/feed` seperti biasa),
 `/api/video-url` ep4 tanpa login **200** (paywall terbuka), alamat `.mp4` di HTML `/feed` tetap
 **0**. Uji balik: saklar dinyalakan sementara → **7 dari 8** tes jeda MERAH.
+
+Bukti TAYANG (sebelum → sesudah, diukur dari luar): `/api/coins` **200 → 404** · `/api/ads`
+**200 → 404** · 7 route POST + `/api/admin/ads` **404** · webhook Midtrans **403 → 403** (hidup) ·
+jejak kata koin/iklan di HTML `/` **2 → 0** · 15 halaman penonton + `/admin` **200** nol jejak ·
+`/api/video-url` ep4 tanpa login **401 → 200** · `/api/dramas` **33477 byte identik** · alamat
+video **tetap bertanda tangan** & alamat polos ke tunnel **tetap 403** · chunk halaman depan
+**15/15 cocok** dengan build lokal commit ini (chunk menu katalog identik byte-per-byte).
 
 ⚠️ **Akibat yang disengaja:** episode 4+ dari 13 drama premium jadi **gratis**; pemasukan koin &
 iklan **berhenti** selama dijeda. ⭐ Nyalakan kembali = ubah 2 konstanta + perbarui tripwire di

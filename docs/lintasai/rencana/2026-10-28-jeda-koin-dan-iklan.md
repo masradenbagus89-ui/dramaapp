@@ -144,7 +144,7 @@ dinyalakan, episode yang pernah dibeli penonton **langsung terbuka lagi** sepert
 - Episode 4 drama premium tanpa login → **200** (sudah gratis), alamatnya tetap bertanda tangan.
 - Katalog tetap **40 drama**; `/api/health` tetap `sumberData:"database"`.
 
-## 8. HASIL — terukur 2026-10-28, sebelum rilis
+## 8. HASIL — terukur 2026-10-28 (dirilis `c5bdb54`, downtime nol)
 
 Gerbang §6: `rm -rf .next` → build **sukses** → `tsc` **exit 0** → **1.636 tes hijau**
 (116 berkas; dari 1.630 → −2 tripwire yang dipindah → +8 tes baru keadaan jeda).
@@ -163,6 +163,22 @@ Gerbang §6: `rm -rf .next` → build **sukses** → `tsc` **exit 0** → **1.63
 
 Uji balik itu sekaligus bukti **menyalakan kembali benar-benar bekerja**: route melayani lagi,
 komponen menggambar lagi, tanpa satu pun berkas dipindahkan.
+
+### Sesudah RILIS — diukur di produksi, sebelum vs sesudah
+
+`/api/coins` **200 → 404** · `/api/ads` **200 → 404** · 7 route POST + `/api/admin/ads` **404** ·
+webhook Midtrans **403 → 403** (hidup) · jejak kata koin/iklan di HTML `/` **2 → 0** ·
+15 halaman penonton + `/admin` **200** dengan nol jejak · `/api/video-url` ep4 tanpa login
+**401 → 200** · `/api/dramas` **33477 byte identik** · `/api/health` tetap `sumberData:"database"` ·
+alamat video **tetap bertanda tangan** (`expires`/`issued`/`signature`) & alamat polos ke tunnel
+tetap **403** · chunk halaman depan **15/15 cocok** dengan build lokal commit ini, chunk menu
+katalog **identik byte-per-byte**. Downtime **NOL** (32 cek `/api/health`, nol kegagalan).
+
+📌 **Teks seperti `"Pakai Koin"` MASIH ADA di dalam berkas JS yang terkirim** (terukur 1×).
+Itu konsekuensi sadar dari cara saklar: ia menghentikan fitur **dijalankan**, bukan menghapusnya
+dari bundle. Bagi penonton yang menentukan adalah ia **tak pernah digambar** (HTML `/` 2 → 0).
+Akibatnya saksi "kode baru tayang" untuk rilis semacam ini **bukan** hitungan kata di bundle
+(angkanya justru tetap) melainkan **perubahan perilaku sebelum/sesudah**.
 
 ### 🪤 Pelajaran proses: PETA dari `grep` sempat MELEWATKAN satu tombol yang terlihat
 

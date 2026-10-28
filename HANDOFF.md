@@ -9,7 +9,7 @@
 >
 > **📦 Berkas ini sudah ±6.600 baris** (diukur 2026-10-15; angka lama "5.224 baris" dari 2026-10-10 sudah basi — tumbuh ±1.400 baris dalam 5 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-10-28 (**koin & iklan DIJEDA lewat saklar** — nol berkas dihapus, **belum di-push, menunggu izin owner**; sebelumnya perbaikan beli-lalu-tonton dirilis di `7efa591`).
+**Terakhir diisi:** 2026-10-28 (**koin & iklan DIJEDA dan sudah TAYANG** di `c5bdb54`, dual push tuntas, downtime nol — nol berkas dihapus).
 
 ---
 
@@ -21,15 +21,20 @@
 Alamat resmi: `https://dramaapp-production-9e88.up.railway.app`.
 `dramaapp.vercel.app` **masih hidup tapi hanya mengalihkan (308)** — **jangan dimatikan dulu**.
 Dua celah besar ditutup 27 Oktober: **celah Node `CVE-2026-111497`** (+7 CVE lain, lewat
-`RAILPACK_NODE_VERSION=24.22.1`) dan **kebocoran paywall video** — episode berbayar yang tadinya
-bisa ditonton siapa pun tanpa login kini **403**, termasuk alamat yang sudah terlanjur dicuri.
+`RAILPACK_NODE_VERSION=24.22.1`) dan **kebocoran paywall video** (mekanismenya tetap terpasang —
+alamat video hanya lahir di server, ditandatangani, dan tunnel menolak alamat polos).
+
+⏸️ **TAPI SEJAK 28 OKTOBER: KOIN & IKLAN DIJEDA atas permintaan owner** (`c5bdb54`). Jadi
+**semua episode kini gratis** dan tak ada satu pun fitur koin/iklan yang tampil — itu DISENGAJA,
+bukan kebocoran. Jangan "memperbaiki"nya. Paywall-nya tidak dibongkar, hanya dimatikan lewat
+saklar; ⭐ nyalakan kembali di **`lib/saklar-fitur.ts`** (2 konstanta). Pagar keamanan videonya
+tetap jalan penuh — yang berubah cuma SIAPA yang berhak (sekarang semua orang).
 
 ### Yang tersisa
 
 | # | Pekerjaan | Mendesak? | Yang ditunggu |
 |---|---|---|---|
 | 1 | **Jalur administrasi jarak jauh di server sewaan terbuka ke internet** | 🟠 ya, tapi **DI LUAR wewenang owner** | Izin atasan owner → lalu diminta ke administrator penyedia jasa. Mesin kerja owner = server RDP sewaan berisi ~84 penyewa; owner hanya pengguna biasa. Laporan + draf pesannya: `laporan-keamanan-dramaku-2026-10-27.html` **di folder rumah owner, SENGAJA di luar repo** (repo ini publik) |
-| 0 | **Koin & iklan DIJEDA — tinggal dirilis** | 🔴 ya | **Izin owner untuk push + rilis.** Semua fitur koin & iklan sudah berhenti tampil & berhenti melayani lewat 2 saklar di `lib/saklar-fitur.ts`; nol berkas dihapus. Lulus gerbang §6 (build 0 · tsc 0 · **1.636 tes**) + diukur pada situs lokal yang berjalan. Rincian di entri 2026-10-28 (ke-2) di bawah |
 | 2 | **Beli-lalu-tonton: SUDAH DIRILIS — tinggal dicoba owner di browser** | 🟠 layak | **Uji 3 klik Anda sendiri** (langkahnya di entri 2026-10-28 di bawah). Cacatnya sudah ditutup & tayang di `7efa591`: dulu sesudah koin terpotong nol perintah putar menyusul begitu alamat videonya tiba. Bundle yang dilayani produksi sudah dipastikan **identik byte-per-byte** dengan yang diuji |
 | 3 | **Tutup Vercel** | tidak | ≥6 minggu sejak 2026-10-15 → **paling cepat 2026-11-26**, DAN cek Google. Nol pekerjaan teknis tersisa. 🔔 `.github/workflows/pengingat-tutup-vercel.yml` membuka Issue sendiri saat tanggalnya tiba |
 | 4 | **Uji pulihkan backup** | tidak | 1 Supabase project kosong. 🟢 Robotnya sudah dibuat & diuji — owner tinggal 3 langkah, `docs/uji-pulihkan-backup.md` "Rute 2" |
@@ -58,7 +63,12 @@ Empat hal ini sudah diputuskan hari ini. Mengajukannya ulang membuang waktu owne
    terbiasa dengan Railway, dan penyegelan itu permanen.
 3. **`ai-review.yml` TETAP DIPAKAI** — jangan dihapus. Ia gagal keras & terlihat
    (bukan senyap), jadi tuduhan "kepercayaan palsu" dari AI itu berlebihan.
-4. **Ganti nama alamat Railway: TIDAK dilakukan** — memaksa satu putaran mitra
+4. **Menghapus/memindahkan berkas koin & iklan: DITOLAK (28 Okt).** Owner memilih
+   **saklar mati** dengan berkas tetap di tempatnya, supaya menyalakan kembali = mengubah
+   2 konstanta, bukan merakit ulang. Konsekuensi yang sudah diterima owner: kodenya masih
+   ikut terkirim ke browser (teks seperti "Pakai Koin" masih ada di dalam berkas JS, tapi
+   tak pernah digambar).
+5. **Ganti nama alamat Railway: TIDAK dilakukan** — memaksa satu putaran mitra
    Playly tambahan tanpa manfaat sepadan.
 
 ### ✅ Selesai 27 Oktober (rincian di 3 entri paling atas di bawah)
@@ -119,7 +129,7 @@ dipasang manual. Penegakan bertahan melewati restart PC; tidak perlu dipasang ul
 
 ---
 
-## 2026-10-28 (ke-2) — KOIN & IKLAN DIJEDA lewat saklar. Nol berkas dihapus. BELUM dirilis.
+## 2026-10-28 (ke-2) — KOIN & IKLAN DIJEDA lewat saklar. DIRILIS `c5bdb54`, downtime nol. Nol berkas dihapus.
 
 Permintaan owner: *"koin kita pending saja, semua fitur yang berhubungan dengan koin & iklan
 kamu hapus dan kamu simpan filenya jadi sewaktu waktu mau di pakai lagi bisa kita aktifkan
@@ -191,11 +201,53 @@ hijau, dan yang bocor baru terlihat kalau ada orang membukanya.
 `tests/download-button.test.ts`) bekerja persis seperti maksudnya: langsung merah begitu saklar
 dimatikan. Keduanya **dibalik, bukan dihapus** → pindah ke `tests/jeda-koin-iklan.test.ts`.
 
-### Yang ditunggu dari owner
+### ✅ DIRILIS `c5bdb54` — bukti diukur dari LUAR, sebelum vs sesudah
 
-**Izin push + rilis** (`origin main` = tombol rilis; dual push ke `origin` + `dramaku`).
-Sesudah tayang, yang paling cepat dilihat: buka drama premium → **episode 4 langsung bisa
-diputar tanpa diminta koin**, dan halaman profil **tidak lagi punya** bagian koin/iklan.
+Dual push tuntas `97fd5f1..c5bdb54` (`origin` **dan** `dramaku`, selisih 0/0). Kode baru tayang
+pada cek ke-7 (~1 menit); **downtime NOL** — `/api/health` menjawab 200 pada SELURUH cek selama
+build (25 cek beruntun + 7 cek pemantau, nol kegagalan).
+
+| Diukur di produksi | SEBELUM rilis | SESUDAH rilis |
+|---|---|---|
+| `/api/coins` · `/api/coins/history` | **200** | **404** + `"Fitur koin sedang tidak aktif."` |
+| `/api/ads` | **200** | **404** + `"Fitur iklan sedang tidak aktif."` |
+| 7 route POST koin & iklan + `/api/admin/ads` | melayani | **404** semua |
+| `/api/coins/webhook` (Midtrans) | 403 | **403** — HIDUP, sengaja tidak digerbang |
+| Jejak kata koin/iklan di HTML `/` | **2** (chip "Pakai Koin") | **0** |
+| 15 halaman penonton + `/admin` | — | **200** semua, **NOL** jejak kata koin/iklan/PREMIUM/saldo/top-up/AdSense |
+| `/api/video-url` ep4 tanpa login | **401** | **200** — paywall terbuka sesuai keputusan |
+| `/api/video-url` ep1·3·20·99 | — | **200** |
+| `/api/dramas` | 33477 byte | **33477 byte — identik** |
+| `/api/health` | `sumberData:"database"` | **sama** |
+| Alamat `.mp4` di HTML `/feed` | 0 | **0** — pagar Tahap A utuh |
+| Alamat video dari server | bertanda tangan | **tetap** (`expires` · `issued` · `signature`) |
+| Alamat bertanda tangan ke tunnel | 206 | **206 `video/mp4`** |
+| Alamat POLOS ke tunnel (Tahap B) | 403 | **403** |
+| Chunk halaman depan vs build lokal `c5bdb54` | — | **15/15 cocok**; chunk menu katalog **identik byte-per-byte** (md5 sama, 38273 byte) |
+
+📌 **Satu hal yang TIDAK ikut hilang, dan itu memang disengaja:** teks seperti `"Pakai Koin"`
+masih ADA di dalam berkas JS yang terkirim ke browser (terukur: 1×). Itu konsekuensi cara saklar
+yang dipilih owner — saklar menghentikan fitur **dijalankan**, bukan menghapusnya dari bundle.
+Yang menentukan bagi penonton: ia **tidak pernah digambar** (HTML `/` turun 2 jejak → 0). Kalau
+suatu saat owner ingin teksnya benar-benar keluar dari bundle, itu pilihan "pindahkan berkas ke
+arsip" yang ditolak hari ini karena jauh lebih besar & lebih berisiko.
+
+💡 **Saksi independen "kode baru tayang" di rilis ini BUKAN hitungan kata di bundle** (angkanya
+justru tetap 1, karena kodenya memang masih ada) — melainkan **perubahan perilaku sebelum/sesudah**
+yang terukur: `/api/coins` 200 → 404 dan HTML `/` 2 jejak → 0. Untuk rilis yang mematikan fitur
+lewat saklar, perilakulah saksinya, bukan isi bundle.
+
+### Yang perlu owner coba sendiri
+
+Buka drama premium → **episode 4 langsung bisa diputar tanpa diminta koin**, dan halaman profil
+**tidak lagi punya** bagian koin maupun iklan. Drama premium yang sudah diverifikasi:
+`diremehkan-saat-latihan-pedang-ternyata-dewa-abadi` ·
+`mereka-menganggapku-biasa-ternyata-aku-penyelamat-negeri` ·
+`pria-nakal-menembus-waktu-menguasai-harem-kaisar`.
+
+**Jalan mundur kalau ternyata tak diinginkan:** ubah `false` → `true` di `lib/saklar-fitur.ts`
++ perbarui tripwire di `tests/jeda-koin-iklan.test.ts`, atau di panel Railway pilih deployment
+`97fd5f1` lalu Redeploy.
 
 ---
 

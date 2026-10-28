@@ -9,7 +9,7 @@
 >
 > **📦 Berkas ini sudah ±6.600 baris** (diukur 2026-10-15; angka lama "5.224 baris" dari 2026-10-10 sudah basi — tumbuh ±1.400 baris dalam 5 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-10-28 (**cacat beli-lalu-tonton DITEMUKAN & DIPERBAIKI di lokal** — efek samping penutupan paywall 27 Okt; **belum di-push, menunggu izin owner**).
+**Terakhir diisi:** 2026-10-28 (**perbaikan beli-lalu-tonton DIRILIS** di `7efa591`, dual push tuntas, downtime nol — tinggal uji browser owner).
 
 ---
 
@@ -29,7 +29,7 @@ bisa ditonton siapa pun tanpa login kini **403**, termasuk alamat yang sudah ter
 | # | Pekerjaan | Mendesak? | Yang ditunggu |
 |---|---|---|---|
 | 1 | **Jalur administrasi jarak jauh di server sewaan terbuka ke internet** | 🟠 ya, tapi **DI LUAR wewenang owner** | Izin atasan owner → lalu diminta ke administrator penyedia jasa. Mesin kerja owner = server RDP sewaan berisi ~84 penyewa; owner hanya pengguna biasa. Laporan + draf pesannya: `laporan-keamanan-dramaku-2026-10-27.html` **di folder rumah owner, SENGAJA di luar repo** (repo ini publik) |
-| 2 | **Beli-lalu-tonton: cacat DITEMUKAN & diperbaiki — tinggal dirilis** | 🔴 ya | **Izin owner untuk push + rilis.** Mekanismenya ternyata TIDAK lengkap: sesudah koin terpotong, nol perintah putar menyusul begitu alamat videonya tiba. Perbaikan + 4 tes penjaga sudah terpasang di lokal & lulus gerbang §6 (build 0 · tsc 0 · **1.630 tes**). Rincian di entri 2026-10-28 di bawah |
+| 2 | **Beli-lalu-tonton: SUDAH DIRILIS — tinggal dicoba owner di browser** | 🟠 layak | **Uji 3 klik Anda sendiri** (langkahnya di entri 2026-10-28 di bawah). Cacatnya sudah ditutup & tayang di `7efa591`: dulu sesudah koin terpotong nol perintah putar menyusul begitu alamat videonya tiba. Bundle yang dilayani produksi sudah dipastikan **identik byte-per-byte** dengan yang diuji |
 | 3 | **Tutup Vercel** | tidak | ≥6 minggu sejak 2026-10-15 → **paling cepat 2026-11-26**, DAN cek Google. Nol pekerjaan teknis tersisa. 🔔 `.github/workflows/pengingat-tutup-vercel.yml` membuka Issue sendiri saat tanggalnya tiba |
 | 4 | **Uji pulihkan backup** | tidak | 1 Supabase project kosong. 🟢 Robotnya sudah dibuat & diuji — owner tinggal 3 langkah, `docs/uji-pulihkan-backup.md` "Rute 2" |
 | 5 | **Beli domain** | tidak | persetujuan atasan owner — **BUKAN blocker apa pun**. Bahan: `docs/pengajuan-domain-sendiri.md` |
@@ -118,7 +118,7 @@ dipasang manual. Penegakan bertahan melewati restart PC; tidak perlu dipasang ul
 
 ---
 
-## 2026-10-28 — CACAT BELI-LALU-TONTON DITEMUKAN OLEH TES, BUKAN OLEH PENONTON. Diperbaiki di lokal, BELUM dirilis.
+## 2026-10-28 — CACAT BELI-LALU-TONTON DITEMUKAN OLEH TES, BUKAN OLEH PENONTON. DIRILIS `7efa591`, downtime nol.
 
 Risiko yang ditulis terbuka di berkas ini sejak 27 Oktober akhirnya **diukur**, dan hasilnya:
 **mekanismenya tidak lengkap.** Yang dikira sudah ada ternyata hanya separuh rantai.
@@ -175,14 +175,47 @@ Satu jalur yang **pasti** rusak sebelum ini: tombol **"Coba lagi"** — di situ 
 dipanggil eksplisit, dan menurut spesifikasi HTML `load()` **menyetel `paused` jadi true** +
 menolak janji `play()` yang menggantung, jadi alamat baru mendarat di elemen yang sudah dijeda.
 
+### ✅ DIRILIS — bukti diukur dari LUAR sesudah tayang
+
+Dual push tuntas `a1d0af7..7efa591` (`origin` **dan** `dramaku`, selisih 0/0).
+
+| Diukur | Hasil |
+|---|---|
+| Chunk pemutar yang dilayani produksi vs build lokal dari commit ini | **identik byte-per-byte** (md5 sama, 30864 byte) |
+| Jumlah `.play()` di bundle yang dilayani | **4** — cocok kode baru (lama: **3**) |
+| 9 halaman penonton (`/` `/beranda` `/login` `/daftar` `/profile` `/katalog` `/film` `/feed/<id>` `/drama/<id>`) | semua **200** |
+| `/api/dramas` | **33477 byte · 40 drama** — identik dengan sebelum rilis |
+| `/api/health` | `sumberData:"database"` — bukan cadangan |
+| `/api/video-url` ep1 & ep3 (jatah gratis, tanpa cookie) | **200** + alamat bertanda tangan |
+| `/api/video-url` ep4 & ep20 tanpa login | **401, nol alamat** |
+| `/api/teaser` & `/api/download` | tetap **307 · 0 byte** |
+| Alamat `.mp4` di HTML `/feed` | **0** |
+| Alamat bertanda tangan ke tunnel | **206 `video/mp4`** |
+| Alamat POLOS ke tunnel (Tahap B) | **403** |
+
+📌 **Dua catatan pengukuran dari rilis ini, keduanya hampir menyesatkan:**
+
+- **Satu `500` transien** terbaca di `/feed/meg-2-the-trench` tepat saat Railway menukar
+  container. Diperiksa ulang beberapa detik kemudian: **200**, dan 3 drama lain juga 200.
+  Bukan cacat — tapi jangan ambil baseline saat build sedang berjalan: baseline `/feed`
+  pertama sesi ini ternyata terambil dari **halaman error** (14916 byte, 15 chunk palsu).
+- **Sidik jari chunk HANYA sah di halaman yang MEMUAT komponen yang berubah.** `/beranda`
+  memberi **16 chunk yang sama persis** sebelum & sesudah rilis — dan itu BENAR, halaman itu
+  tak memuat pemutar. Kalau rilis dinilai dari situ, kesimpulannya "deploy tak tayang"
+  padahal tayang. Ukur di `/feed/<id>`.
+
 ### Yang masih ditunggu dari owner
 
-1. **Izin push + rilis** (`origin main` = tombol rilis). Dual push ke `origin` + `dramaku`.
-2. **Uji browser sesudah tayang** — ini yang membuktikan ke penonton, bukan ke mesin:
+1. **Uji browser** — ini yang membuktikan ke penonton, bukan ke mesin:
    buka drama ber-`premium: true` → episode 4 → tekan **Buka • 8 koin** → videonya harus
    **jalan sendiri, tanpa menyentuh apa pun dan tanpa muat ulang halaman**.
-   ⚠️ Pilih dramanya dengan `premium -eq $true`, **jangan** truthiness — jebakan 27 Okt yang
-   membuat owner sempat menguji dengan drama yang ternyata gratis.
+   ✅ Tiga drama premium yang sudah DIVERIFIKASI `premium === true` + cukup episode hari ini:
+   `diremehkan-saat-latihan-pedang-ternyata-dewa-abadi` (49 ep) ·
+   `mereka-menganggapku-biasa-ternyata-aku-penyelamat-negeri` (49 ep) ·
+   `pria-nakal-menembus-waktu-menguasai-harem-kaisar` (56 ep).
+   ⚠️ Kalau memilih sendiri, saring dengan `premium -eq $true`, **jangan** truthiness — jebakan
+   27 Okt yang membuat owner sempat menguji dengan drama yang ternyata gratis
+   (katalog hari ini: 40 drama, **13** premium).
 
 ---
 

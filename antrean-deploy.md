@@ -18,7 +18,8 @@ pembayaran yang sudah berjalan tidak hilang.
 
 Gerbang §6: build **sukses** · `tsc` **exit 0** · **1.636 tes** hijau (+8 tes keadaan jeda, −2
 tripwire yang dipindah). Diukur pada `next start` lokal: 10 route koin/iklan **404**, webhook
-**403** (hidup), 18 halaman penonton + `/admin` **200** dengan **nol** jejak kata koin/iklan,
+**403** (hidup), 18 halaman penonton + `/admin` dengan **nol** jejak kata koin/iklan (15 × 200;
+`/tonton/<drama>` 404 karena itu rute film; 2 × `/watch` 307 mengalihkan ke `/feed` seperti biasa),
 `/api/video-url` ep4 tanpa login **200** (paywall terbuka), alamat `.mp4` di HTML `/feed` tetap
 **0**. Uji balik: saklar dinyalakan sementara → **7 dari 8** tes jeda MERAH.
 

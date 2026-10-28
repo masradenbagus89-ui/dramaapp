@@ -153,7 +153,7 @@ berkas; 1.630 → −2 tripwire yang dipindah → +8 tes baru).
 |---|---|
 | 10 route koin & iklan | semua **404** + pesan sebab (`"Fitur koin sedang tidak aktif."`) |
 | `/api/coins/webhook` (Midtrans) | **403** — HIDUP, sengaja tidak digerbang |
-| 18 halaman penonton + `/admin` | **200**, dan **NOL** jejak kata koin/iklan/PREMIUM/saldo/top-up/AdSense |
+| 18 halaman penonton + `/admin` | **NOL** jejak kata koin/iklan/PREMIUM/saldo/top-up/AdSense di ke-18. Status: 15 × **200** · `/tonton/<drama>` **404** (itu rute FILM, bukan drama) · 2 × `/watch/...` **307** (pengalihan ke `/feed`, perilaku lama) |
 | `/api/video-url` ep 1·3·4·20·99 tanpa login | **200** — paywall benar-benar terbuka |
 | Alamat `.mp4` di HTML `/feed` | tetap **0** (pagar Tahap A utuh) |
 | Katalog lokal | **33477 byte** — sama seperti produksi |

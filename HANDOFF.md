@@ -9,7 +9,7 @@
 >
 > **📦 Berkas ini sudah ±6.600 baris** (diukur 2026-10-15; angka lama "5.224 baris" dari 2026-10-10 sudah basi — tumbuh ±1.400 baris dalam 5 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-10-29 (**arahan Kang Dedi + 6 putaran koreksi owner — TAYANG** di `98c2b92`, dual push tuntas, uji asap hijau, downtime nol).
+**Terakhir diisi:** 2026-10-29 (**arahan Kang Dedi — TAYANG** di `98c2b92`; jalan masuk pengelola yang sempat hilang diperbaiki & TAYANG di `a0f4079`).
 
 ---
 
@@ -131,6 +131,60 @@ PC backup menyalakan ulang layanannya sendiri (watchdog) dan membuat tunnel baru
 Artinya perubahan di `start-video-services.ps1` yang meneruskan `VIDEO_SIGNING_SECRET` dari env
 level `Machine` **benar-benar bekerja di jalur autostart** — hal yang tak bisa diuji saat
 dipasang manual. Penegakan bertahan melewati restart PC; tidak perlu dipasang ulang tiap boot.
+
+---
+
+## 2026-10-29 — 🔴 PERBAIKAN SESUDAH RILIS: jalan masuk PENGELOLA sempat hilang. TAYANG `a0f4079`.
+
+Owner, beberapa menit sesudah rilis: *"aku bilang login daftar khusus viewer saja yang
+dihilangkan, kenapa admin juga ikut nggak ada, gimana aku edit dashboard-ku."*
+
+### Apa yang sebenarnya terjadi
+
+`/login`, `/daftar`, `/admin` **tidak pernah dihapus** — ketiganya 200 sepanjang waktu. Yang
+hilang adalah **SELURUH TAUTAN** menuju ke sana, termasuk jalan owner ke panel admin-nya sendiri.
+Satu-satunya cara mencapainya jadi mengetik alamat manual.
+
+Permintaan owner jelas **"khusus viewer"**. Membuang jalan admin adalah keputusan yang diambil AI
+sendiri — ditulis di catatan rilis sebagai *"admin membukanya dengan mengetik alamat"* — tanpa
+pernah menanyakannya. Itu salah.
+
+### 🔴 KENAPA TES TIDAK MENANGKAPNYA — pelajaran paling berharga hari ini
+
+Ada tes bernama **"halaman /login & /daftar TETAP hidup — itu pintu ADMIN"**. Ia **hijau terus**,
+termasuk saat semua tautan ke sana sudah lenyap. Sebabnya ia memeriksa `existsSync()` — keberadaan
+BERKAS.
+
+> **Berkas ADA ≠ ada JALAN ke sana.** Tes keberadaan berkas/route tidak pernah bisa membuktikan
+> sebuah halaman masih bisa DICAPAI. Untuk tiap halaman yang "sengaja dibiarkan hidup walau
+> tombolnya dilepas", tulis juga tes yang memeriksa **jalannya**, bukan cuma berkasnya.
+
+Penjaga baru: **"ADA JALAN ke /login dari dalam situs"** + **"jalan pengelola TIDAK ikut dijeda
+saklar penonton"**.
+
+### Perbaikannya: DUA jalan, masing-masing menutup lubang yang lain
+
+| Jalan | Ada di |
+|---|---|
+| Kaki situs — "Masuk sebagai pengelola" | `/` dan semua halaman film |
+| Menu garis-tiga — item yang sama | `/beranda`, `/discover`, semua halaman film |
+
+Dua-duanya WAJIB: kaki situs **tidak digambar di `/beranda`** (owner melepasnya 2026-10-28) —
+justru halaman yang paling sering dibuka owner. Terverifikasi di produksi: tiap halaman punya
+minimal satu jalan.
+
+⚠️ Keduanya **SENGAJA tidak digerbangi `AKUN_PENONTON_ENABLED`** — justru saat saklar itu mati,
+tautan inilah yang paling dibutuhkan. Menggerbanginya = mengulang persis kesalahan ini.
+
+🔒 Keamanan **tidak berubah sedikit pun**. `skills/auth/SKILL.md`: *"menyembunyikan tombol di layar
+BUKAN kontrol izin"*. Halaman login tetap meminta password + pembatas laju; `/admin` tetap
+digerbangi cookie sesi admin bertanda tangan. Yang berubah cuma: pengelola tak perlu menghafal
+alamat.
+
+### Bukti
+
+build **sukses** · `tsc` **exit 0** · **1.761 tes hijau** (+2) · dual push tuntas · di situs asli:
+`/` kaki situs ✓ · `/beranda` menu garis-tiga ✓ · `/drama/…` keduanya ✓ · `/login` & `/admin` 200.
 
 ---
 

@@ -9,7 +9,7 @@
 >
 > **📦 Berkas ini sudah ±6.600 baris** (diukur 2026-10-15; angka lama "5.224 baris" dari 2026-10-10 sudah basi — tumbuh ±1.400 baris dalam 5 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-10-29 (**arahan Kang Dedi — TAYANG** di `98c2b92`; jalan masuk pengelola yang sempat hilang diperbaiki & TAYANG di `a0f4079`).
+**Terakhir diisi:** 2026-10-29 (**rangkaian arahan Kang Dedi + koreksi owner — SEMUA TAYANG**; terakhir `d0d301e`: cari sejajar, panel lipat, terkait sesuai jenis).
 
 ---
 
@@ -131,6 +131,55 @@ PC backup menyalakan ulang layanannya sendiri (watchdog) dan membuat tunnel baru
 Artinya perubahan di `start-video-services.ps1` yang meneruskan `VIDEO_SIGNING_SECRET` dari env
 level `Machine` **benar-benar bekerja di jalur autostart** — hal yang tak bisa diuji saat
 dipasang manual. Penegakan bertahan melewati restart PC; tidak perlu dipasang ulang tiap boot.
+
+---
+
+## 2026-10-29 — ✅ DIRILIS `d0d301e`: cari sejajar + panel lipat + terkait sesuai jenis.
+
+Owner: *"sudah pas mantap, langsung gas kita rilis"*. Dual push tuntas, uji asap hijau.
+
+### Lima koreksi tampilan yang ikut tayang
+
+1. **Kotak cari SEJAJAR di dalam bar.** Bentuknya sudah EMPAT putaran: kotak permanen
+   ("kelebaran") → lapisan penuh layar ("bikin sakit mata", menutupi poster) → panel menggantung
+   (masih menimpa baris poster) → **kotak mengisi ruang kosong di bar**. Yang terakhir satu-satunya
+   yang menutupi **NOL** bagian halaman. Dijaga tes yang menelusuri SELURUH induk kotak dan menolak
+   `fixed`/`absolute` apa pun.
+2. **`/discover` ikut tombol**, tapi kotaknya **terbuka sendiri** kalau ada `?q=`. 🪤
+   `useState(bukaAwal)` saja TIDAK cukup — `/discover` halaman STATIS, kata kuncinya baru terbaca
+   di browser, dan nilai awal tak pernah menyusul. Butuh `useEffect`.
+3. **Lanjut Menonton disembunyikan** sampai diklik. Owner menolak versi "dipisah garis"
+   (*"masih terlihat sama"*). Accordion diangkat dari `LanjutMenonton` jadi `PanelLipat` bersama.
+4. **Panah geser hilang** saat isinya muat satu layar — baris 1 kartu tetap menggambar panah yang
+   ditekan tak melakukan apa pun. Gradien tepi ikut digerbangi (ia "berbohong" soal ada lanjutan).
+5. **Panel terkait mengikuti JENIS tayangan** lewat `isMovie()`.
+
+### 🪤 KATALOG CUMA PUNYA 1 FILM — dan itu mengubah fitur nomor 5
+
+Diukur 2026-10-29: **1 film + 39 serial**. Penyaringan ketat membuat halaman FILM kehilangan kolom
+kanannya SAMA SEKALI — "memperbaiki" judul justru menghapus fiturnya.
+
+Jadi ada **jatuh-kembali**: kalau katalog sejenis ≤ 1, dipakai seluruh katalog **DAN judulnya
+berubah jadi "Tontonan Lain"**. Daftar campuran di bawah judul "Film Terkait" adalah janji yang
+tidak ditepati. Begitu film kedua masuk katalog, judulnya kembali sendiri **tanpa ubah kode**.
+
+📌 Jadi kalau owner suatu saat bertanya *"kenapa halaman film tulisannya Tontonan Lain?"* —
+jawabannya: tambah film kedua ke katalog.
+
+### Bukti
+
+build **sukses** · `tsc` **exit 0** · **1.776 tes hijau** (+17) · dual push tuntas · di situs asli:
+11 halaman **200** (termasuk `?q=naruto`, `/login`, `/admin`) · bar `/beranda` **nol elemen
+melayang** · `/discover` tombol & kotak tertutup · panel Lanjut Menonton **tertutup, isi belum
+tergambar** · SERIAL → **"Drama Terkait"**, FILM → **"Tontonan Lain"** · komentar **200**, rating
+**200**, hapus **200**, data uji dibersihkan.
+
+### ↩️ ROLLBACK 1-BARIS
+
+```
+git revert d0d301e && git push origin main && git push dramaku main
+```
+Nol migration SQL, nol env baru.
 
 ---
 

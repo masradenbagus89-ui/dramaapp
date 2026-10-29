@@ -1077,6 +1077,16 @@ ditolak** sampai `PLAYLY_UNDUHAN_DOMAIN_CAST` diisi (perilaku yang diinginkan).
 ---
 
 
+
+## 2026-10-29 (ke-2) — `d0d301e` SUDAH DI-DEPLOY (owner)
+
+Lima koreksi tampilan: kotak cari sejajar di dalam bar (nol bagian halaman tertutup), /discover ikut
+tombol dengan kotak terbuka-sendiri saat ada ?q=, Lanjut Menonton jadi panel lipat tersembunyi,
+panah geser hilang saat isi muat selayar, dan panel terkait mengikuti jenis tayangan (drama/film).
+
+Uji asap hijau termasuk komentar & rating tanpa akun. Nol migration SQL, nol env baru.
+Rollback: `git revert d0d301e`.
+
 ## 2026-10-29 — `98c2b92` SUDAH DI-DEPLOY (owner)
 
 Arahan Kang Dedi + 6 putaran koreksi owner: login penonton dihapus (komentar & rating tetap

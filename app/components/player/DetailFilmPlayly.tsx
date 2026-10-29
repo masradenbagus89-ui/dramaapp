@@ -27,11 +27,11 @@ export default function DetailFilmPlayly({ meta }: { meta: PlaylyImdbMeta }) {
       label: "Asal",
       // Negara & bahasa digabung satu baris, persis seperti halaman drama.
       nilai: [meta.country, meta.language].filter(Boolean).join(" · "),
-      warna: "text-zinc-400",
+      warna: "text-zinc-600",
     },
-    { label: "Director", nilai: meta.director ?? "", warna: "text-indigo-300" },
-    { label: "Writers", nilai: meta.writer ?? "", warna: "text-indigo-300" },
-    { label: "Stars", nilai: meta.stars ?? "", warna: "text-indigo-300" },
+    { label: "Director", nilai: meta.director ?? "", warna: "text-indigo-700" },
+    { label: "Writers", nilai: meta.writer ?? "", warna: "text-indigo-700" },
+    { label: "Stars", nilai: meta.stars ?? "", warna: "text-indigo-700" },
   ].filter((b) => b.nilai.trim() !== "");
 
   // Baris angka di bawah judul: tahun, durasi, nilai IMDb. Dirangkai dari
@@ -52,7 +52,7 @@ export default function DetailFilmPlayly({ meta }: { meta: PlaylyImdbMeta }) {
   return (
     <section className="mt-8">
       {ringkas.length > 0 && (
-        <p className="text-sm text-zinc-400">
+        <p className="text-sm text-zinc-500">
           {ringkas.join(" · ")}
           {meta.imdbVotes ? ` · ${meta.imdbVotes} votes` : ""}
         </p>
@@ -60,24 +60,24 @@ export default function DetailFilmPlayly({ meta }: { meta: PlaylyImdbMeta }) {
 
       {meta.synopsis.trim() !== "" && (
         <>
-          <h2 className="mt-6 text-sm font-semibold uppercase tracking-wider text-zinc-300">
+          <h2 className="mt-6 text-sm font-semibold uppercase tracking-wider text-zinc-500">
             Sinopsis
           </h2>
-          <p className="mt-2 text-sm leading-6 text-zinc-300">{meta.synopsis}</p>
+          <p className="mt-2 text-sm leading-6 text-zinc-700">{meta.synopsis}</p>
         </>
       )}
 
       {(kredit.length > 0 || meta.imdbId) && (
-        <dl className="mt-5 space-y-2 border-t border-zinc-800 pt-5 text-sm">
+        <dl className="mt-5 space-y-2 border-t border-zinc-200 pt-5 text-sm">
           {kredit.map((b) => (
             <div key={b.label} className="flex flex-wrap gap-x-2">
-              <dt className="shrink-0 font-semibold text-zinc-200">{b.label}</dt>
+              <dt className="shrink-0 font-semibold text-zinc-900">{b.label}</dt>
               <dd className={b.warna}>{b.nilai}</dd>
             </div>
           ))}
           {meta.imdbId && (
             <div className="flex flex-wrap gap-x-2">
-              <dt className="shrink-0 font-semibold text-zinc-200">IMDb</dt>
+              <dt className="shrink-0 font-semibold text-zinc-900">IMDb</dt>
               <dd>
                 {/* rel="noopener noreferrer" WAJIB pada target="_blank":
                     tanpa noopener, halaman tujuan bisa menyetir tab kita lewat
@@ -86,7 +86,7 @@ export default function DetailFilmPlayly({ meta }: { meta: PlaylyImdbMeta }) {
                   href={`https://www.imdb.com/title/${meta.imdbId}/`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-amber-400 underline"
+                  className="text-rose-700 underline"
                 >
                   {meta.imdbId}
                 </a>

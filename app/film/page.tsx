@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Film } from "lucide-react";
 import { getPlaylyVideosGabunganCached } from "@/lib/playly-gabungan";
 import DaftarFilmBerhalaman from "@/app/components/film/DaftarFilmBerhalaman";
+import KepalaFilm from "@/app/components/beranda/KepalaFilm";
 
 // Halaman disimpan & dipakai ulang, disegarkan tiap 300 detik — sama dengan
 // PLAYLY_PUBLIK_TTL_SECONDS di lib/playly.ts. Ditulis sebagai angka, bukan
@@ -36,6 +37,11 @@ export default async function PlaylyPage() {
 
   return (
     <main className="min-h-screen bg-zinc-950 pb-16">
+      {/* Kepala situs yang SAMA dengan Home (owner 2026-10-29) — bar cari
+          merah-pink + strip kuning, bukan navbar hitam. Dipasang sebagai anak
+          PERTAMA <main> dan DI LUAR pembatas isi di bawahnya, supaya barnya
+          membentang selebar layar persis seperti di /beranda. */}
+      <KepalaFilm />
       <div className="mx-auto max-w-7xl px-4 pt-8 md:px-6">
         <header>
           <p className="text-xs uppercase tracking-wider text-zinc-500">

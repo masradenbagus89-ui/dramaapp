@@ -60,7 +60,24 @@ const TAUTAN_JELAJAHI: { label: string; href: string }[] = [
 const KELAS_TAUTAN =
   "flex min-h-11 items-center text-zinc-400 transition-colors hover:text-amber-400 md:min-h-0 md:py-1";
 
-export default function FooterSitus({ genres }: { genres: string[] }) {
+export default function FooterSitus({
+  genres,
+  tentang,
+}: {
+  genres: string[];
+  /**
+   * Isi kolom pertama, menggantikan keterangan situs yang umum.
+   *
+   * Dipakai halaman FILM (owner 2026-10-29, mencontoh kaki situs pembanding):
+   * di sana kolom pertama memuat keterangan JUDUL YANG SEDANG DIBUKA, bukan
+   * keterangan situs — jadi tiap halaman menutup dengan teks yang benar-benar
+   * berkaitan dengan isinya, dan mesin pencari membaca kalimat berbeda di tiap
+   * halaman alih-alih paragraf yang sama persis berulang kali.
+   *
+   * Kosong = perilaku lama: keterangan situs yang umum (dipakai landing `/`).
+   */
+  tentang?: { judul: string; teks: string };
+}) {
   const genrePopuler = genres.slice(0, MAKS_GENRE);
 
   return (
@@ -69,12 +86,13 @@ export default function FooterSitus({ genres }: { genres: string[] }) {
         <div className="grid gap-8 text-sm sm:grid-cols-2 lg:grid-cols-4">
           {/* ---- 1. Tentang ---- */}
           <section>
-            <JudulKolom>{`Tentang ${SITE_NAME}`}</JudulKolom>
+            <JudulKolom>
+              {tentang ? tentang.judul : `Tentang ${SITE_NAME}`}
+            </JudulKolom>
             <p className="mt-3 leading-relaxed text-zinc-400">
-              {SITE_NAME} adalah katalog nonton drama China dan film sub Indo
-              yang bisa langsung diputar, gratis, di HP maupun komputer. Koleksi
-              drama pendek, serial yang masih berjalan, sampai film layar lebar
-              — dengan pencarian dan penyaring genre di satu tempat.
+              {tentang
+                ? tentang.teks
+                : `${SITE_NAME} adalah katalog nonton drama China dan film sub Indo yang bisa langsung diputar, gratis, di HP maupun komputer. Koleksi drama pendek, serial yang masih berjalan, sampai film layar lebar — dengan pencarian dan penyaring genre di satu tempat.`}
             </p>
           </section>
 

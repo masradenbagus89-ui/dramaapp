@@ -10,10 +10,17 @@ export default function SaveButton({
   id,
   variant = "block",
   className,
+  terang = false,
 }: {
   id: string;
   variant?: "block" | "hero";
   className?: string;
+  /**
+   * Gambar untuk LATAR TERANG (halaman film sejak owner 2026-10-29).
+   * Default `false` = tampilan gelap seperti semula, jadi pemakai lain —
+   * termasuk layar pemutar — tidak ikut berubah.
+   */
+  terang?: boolean;
 }) {
   const [saved, setSaved] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -63,10 +70,13 @@ export default function SaveButton({
       onClick={onClick}
       aria-pressed={saved}
       className={cn(
-        "h-auto w-full rounded-full border bg-zinc-900 py-3 text-sm font-semibold transition-colors",
+        "h-auto w-full rounded-full border py-3 text-sm font-semibold transition-colors",
+        terang ? "bg-white" : "bg-zinc-900",
         saved
-          ? "border-amber-400 text-amber-400 hover:text-amber-400"
-          : "border-zinc-700 text-zinc-200",
+          ? "border-amber-500 text-amber-600 hover:text-amber-600"
+          : terang
+            ? "border-zinc-300 text-zinc-700"
+            : "border-zinc-700 text-zinc-200",
       )}
     >
       <Bookmark className="size-4" fill={saved ? "currentColor" : "none"} />

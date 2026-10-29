@@ -356,8 +356,15 @@ describe("halaman /katalog: satu tab, satu halaman penuh", () => {
   });
 
   it("punya navigasi — penonton yang mendarat bisa pulang", async () => {
-    const { punyaNavbarAtas } = await import("../lib/navigasi-halaman");
-    expect(punyaNavbarAtas("/katalog")).toBe(true);
+    const { punyaKepalaFilm, punyaNavigasiBawah, punyaNavbarAtas } =
+      await import("../lib/navigasi-halaman");
+    // 2026-10-29: kepalanya pindah dari navbar hitam ke bar cari merah-pink
+    // yang sama dengan Home. Janjinya ke owner tidak berubah — "penonton yang
+    // mendarat bisa pulang" — jadi yang diperiksa tetap ADA-nya jalan pulang,
+    // di layar komputer (kepala) maupun di HP (menu bawah).
+    expect(punyaKepalaFilm("/katalog")).toBe(true);
+    expect(punyaNavigasiBawah("/katalog")).toBe(true);
+    expect(punyaNavbarAtas("/katalog")).toBe(false);
   });
 });
 

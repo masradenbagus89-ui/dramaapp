@@ -27,6 +27,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { Check, LogOut, Settings } from "lucide-react";
+import { AKUN_PENONTON_ENABLED } from "@/lib/saklar-fitur";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -237,7 +238,7 @@ export default function ProfilePage() {
         </CardContent>
       </Card>
 
-      {mounted && !user && (
+      {mounted && !user && AKUN_PENONTON_ENABLED && (
         <div className="mx-auto mt-3 flex max-w-2xl gap-2">
           <Button
             asChild

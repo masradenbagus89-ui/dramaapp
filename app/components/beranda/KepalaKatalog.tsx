@@ -18,6 +18,7 @@ import {
 import { cn } from "@/lib/utils";
 import { LogOut, Menu } from "lucide-react";
 import type { NavMenu } from "@/lib/nav-katalog";
+import { AKUN_PENONTON_ENABLED } from "@/lib/saklar-fitur";
 import NavMenus from "./NavMenus";
 import type { SearchBarChrome } from "./SearchBar";
 
@@ -185,12 +186,16 @@ export function MenuAplikasi() {
                 Keluar
               </DropdownMenuItem>
             </>
-          ) : (
+          ) : AKUN_PENONTON_ENABLED ? (
             /* Masuk & Daftar ada DI SINI, bukan sebagai tombol di bar cari —
                owner 2026-09-21: tombolnya dobel dengan ajakan di badan halaman.
                Tapi menghapusnya begitu saja akan membuat halaman ini tak punya
                jalan masuk sama sekali (badan /beranda & /discover cuma berisi
-               poster), jadi keduanya dipindah, bukan dibuang. */
+               poster), jadi keduanya dipindah, bukan dibuang.
+
+               DIJEDA 2026-10-29 bersama seluruh akun penonton. Catatan di atas
+               tentang "tak punya jalan masuk" sengaja DIPERTAHANKAN: ia berlaku
+               lagi persis begitu saklarnya dinyalakan kembali. */
             <>
               <DropdownMenuSeparator className="bg-zinc-700" />
               {TAUTAN_AKUN.map((t) => (
@@ -206,7 +211,7 @@ export function MenuAplikasi() {
                 </DropdownMenuItem>
               ))}
             </>
-          )}
+          ) : null}
         </DropdownMenuContent>
       </DropdownMenu>
 

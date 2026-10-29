@@ -4,6 +4,7 @@ import { getAllDramasCachedSafe } from "@/lib/dramas";
 import { TAB_BAWAAN } from "@/lib/tab-katalog";
 import TabKatalog from "@/app/components/beranda/TabKatalog";
 import TabKatalogTampilan from "@/app/components/beranda/TabKatalogTampilan";
+import KepalaFilm from "@/app/components/beranda/KepalaFilm";
 
 // HALAMAN KATALOG PER-TAB (owner 2026-09-26).
 //
@@ -35,6 +36,11 @@ export default async function KatalogPage() {
 
   return (
     <main className="min-h-screen bg-black pb-12">
+      {/* Kepala situs yang SAMA dengan Home (owner 2026-10-29) — bar cari
+          merah-pink + strip kuning, bukan navbar hitam. Dipasang sebagai anak
+          PERTAMA <main> dan DI LUAR pembatas isi di bawahnya, supaya barnya
+          membentang selebar layar persis seperti di /beranda. */}
+      <KepalaFilm />
       {/* `paksaSemua` membuat halaman ini SELALU menampilkan grid penuh — bukan
           baris geser yang cuma memuat sebagian. Itu inti permintaan owner:
           "satu halaman film terbaru SEMUA".

@@ -9,7 +9,7 @@
 >
 > **📦 Berkas ini sudah ±6.600 baris** (diukur 2026-10-15; angka lama "5.224 baris" dari 2026-10-10 sudah basi — tumbuh ±1.400 baris dalam 5 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-10-28 (**/beranda disamakan dengan landing page & kaki situsnya dibuang — TAYANG** di `bd12977`, dual push tuntas, downtime nol).
+**Terakhir diisi:** 2026-10-29 (**tiga arahan Kang Dedi dikerjakan — BELUM DIRILIS**, menunggu owner melihat hasilnya di preview lokal).
 
 ---
 
@@ -131,6 +131,444 @@ PC backup menyalakan ulang layanannya sendiri (watchdog) dan membuat tunnel baru
 Artinya perubahan di `start-video-services.ps1` yang meneruskan `VIDEO_SIGNING_SECRET` dari env
 level `Machine` **benar-benar bekerja di jalur autostart** — hal yang tak bisa diuji saat
 dipasang manual. Penegakan bertahan melewati restart PC; tidak perlu dipasang ulang tiap boot.
+
+---
+
+## 2026-10-29 (ke-9) — Blok judul + tombol unduh /tonton dirapikan. **BELUM DIRILIS**.
+
+Owner: *"tampilan download dan komponennya terkesan kaku, ubah supaya lebih enak dilihat TAPI
+jangan ganti isi-isinya, hanya layout-nya."*
+
+### Tiga sebab "kaku" — semuanya tata letak, nol isi dibuang
+
+1. **Judul film tergambar DUA KALI** — `<h1>` halaman, lalu diulang persis di dalam kotak tepat di
+   bawahnya. Ini yang paling cepat membuat halaman terasa belum dirapikan.
+2. **Kotak berbingkai `max-w-sm`** terjepit di tengah kolom lebar — terbaca seperti potongan yang
+   tertinggal dari halaman lain.
+3. **Tombol beda tinggi**: DOWNLOAD `h-9`, Share & Save `h-8`.
+
+Diperbaiki lewat prop **`tataLetak: "kartu" | "halaman"`** di `InfoVideoPlayly`:
+mode halaman melepas bingkai, berhenti menggambar judul (duplikat), dan menyamakan ketiga tombol
+di `h-10`. **Bawaannya tetap `"kartu"`** — `PlaylyVideoGrid` butuh bentuk kartu, dan di sana
+tidak ada yang berubah (dijaga tes `render() === render("kartu")`).
+
+### 🪤 ALARM PALSU yang hampir kulaporkan sebagai regresi
+
+Pemeriksaan HTML `/film` melaporkan *"kartu berbingkai HILANG — regresi!"*. **Salah.**
+`PlaylyVideoGrid` menggambar kotak itu HANYA sesudah penonton **mengklik** sebuah video
+(`{aktif && …}`), jadi ia memang tidak ada di HTML awal halaman. Grep atas HTML statis **tidak
+bisa** memeriksa komponen yang baru lahir setelah interaksi — yang menjawabnya render sungguhan.
+
+📌 **Aturan:** sebelum menyimpulkan regresi dari HTML halaman, pastikan dulu komponennya memang
+tergambar tanpa interaksi. Kalau tidak, pakai tes render. Ini kali KEEMPAT di sesi ini sebuah
+pemeriksaan verifikasi memberi angka yang salah (sebelumnya: potongan markup, escape backslash,
+dan kata "Terpopuler" yang juga ada di strip kepala).
+
+### Bukti
+
+build **sukses** · `tsc` **exit 0** · **1.754 tes hijau / 121 berkas** (+11 di
+`tests/tata-letak-blok-judul.test.ts`, 5 di antaranya render sungguhan) · dari HTML `/tonton`:
+judul yang TERLIHAT tinggal **1×** (sisanya kaki situs + penanda Google), kotak berbingkai sudah
+dilepas, ketiga tombol `h-10`, 3 chip genre, DOWNLOAD/Bagikan/Simpan semuanya masih ada.
+
+---
+
+## 2026-10-29 (ke-8) — Panel "Film Terkait" yang "stuck" DIPERBAIKI. **BELUM DIRILIS**.
+
+Owner: *"film terkait stuck tidak bisa di-scroll, jadi bisa muat film banyak."*
+
+### 🪤 Penyebabnya BUKAN `overflow-y-auto` yang hilang — ia memang sudah ada
+
+Dua sebab bertumpuk, dan keduanya harus dibereskan bersama:
+
+**1. Grid menyetel tinggi baris mengikuti item TERTINGGI.** Selama panel adalah item grid biasa,
+daftar yang panjang justru **MEMANJANGKAN barisnya** — tingginya tak pernah terlampaui, jadi
+`overflow-y-auto` tak punya apa pun untuk digulung. Gejalanya menipu: mekanismenya terpasang
+benar, tapi terasa macet. Perbaikannya **`lg:absolute lg:inset-0`** pada pembungkus panel: elemen
+`absolute` dikeluarkan dari perhitungan tinggi baris, jadi tinggi bingkai ditentukan MURNI oleh
+pemutar dan panel mengisi tinggi itu persis.
+
+**2. Isinya cuma 6 judul** — tingginya nyaris sama dengan pemutar, jadi tak ada yang terlampaui
+walaupun sebab (1) sudah dibereskan. Dinaikkan **6 → 20**.
+
+Memperbaiki salah satu saja TIDAK cukup. Keduanya dijaga tes terpisah: "panel dikeluarkan dari
+perhitungan tinggi baris grid" dan "daftarnya MEMANG lebih panjang daripada pemutar"
+(`TERKAIT_SIDEBAR >= 15`).
+
+⚠️ `absolute` hanya berawalan `lg:`. Di layar sempit panel turun ke BAWAH pemutar dan harus
+mengalir normal — `absolute` di sana akan menumpuknya di atas pemutar.
+
+### Bukti
+
+build **sukses** · `tsc` **exit 0** · **1.748 tes hijau / 120 berkas** (+2) · dari HTML server,
+kedua halaman: panel "Film Terkait" **20 judul** (±1.520px) vs pemutar 16:9 (±480px) — jelas
+melampaui, jadi gulungannya benar-benar punya isi; `lg:absolute lg:inset-0` + `lg:overflow-y-auto`
+keduanya terpasang; panel "Terpopuler" tetap 10 judul.
+
+---
+
+## 2026-10-29 (ke-7) — Pemutar + "Film Terkait" jadi SATU BINGKAI. **BELUM DIRILIS**.
+
+Owner: *"aku mau film yang diputar jadi satu bingkai dengan film terkait"* + tangkapan layar situs
+pembanding dengan **scrollbar** ditandai di sisi daftar.
+
+### Bentuk barunya
+
+```
+┌─ BINGKAI GELAP ──────────────────────────────┐
+│  [ PEMUTAR / HERO ]  │ FILM TERKAIT (gulung) │   <- tinggi SAMA
+└──────────────────────┴───────────────────────┘
+┌─ kartu putih ────────┐ ┌─ TERPOPULER ────────┐
+│ judul · info · komen │ │ 10 judul            │
+└──────────────────────┘ └─────────────────────┘
+```
+
+Kolom kanan dipecah: "Film Terkait" naik ke dalam bingkai pemutar, "Terpopuler" tinggal di bawah.
+`SidebarFilm` diganti **`PanelFilm`** (tampilan, dipakai keduanya) + **`PanelPopuler`** (pengambil
+data). Satu komponen tampilan untuk dua tempat — daftar film di repo ini sudah tiga kali menyimpang
+saat disalin.
+
+### Kunci teknisnya — DUA hal yang harus berpasangan
+
+1. grid dua kolom dengan tinggi baris ditentukan **pemutar** (`aspect-video`), dan
+2. panel kanan `lg:h-full` + daftarnya `lg:flex-1 lg:overflow-y-auto`.
+
+Melepas salah satunya membuat bingkai ikut memanjang mengikuti daftar, dan pemutar terlihat
+mengambang di kotak kebesaran. `overflow-y-auto` **hanya** berawalan `lg:` — di HP panel turun ke
+bawah pemutar, dan mengunci tingginya di sana memasang area gulung DI DALAM halaman yang juga
+digulung (dua gulungan bersarang = paling membingungkan di layar sentuh). Judul panel `shrink-0`
+di luar area gulung supaya tetap terlihat saat daftar digulir.
+
+### 🪤 JEBAKAN /drama: bingkainya TIDAK boleh `overflow-hidden`
+
+Poster judul di halaman drama dipasang `absolute -bottom-16` — ia sengaja MENJOROK keluar kotak
+gambar hero. Dengan `overflow-hidden` di bingkai, poster itu terpotong rapi dan **tidak ada error
+apa pun** yang memberi tahu. Gantinya `pb-20` di kolom kiri, supaya poster mendarat di dalam
+bingkai gelap. Hero juga diangkat jadi fungsi `HeroDrama` — dan pembungkus `relative`-nya WAJIB
+ikut, sebab poster `absolute` di dalamnya akan melompat ke tempat yang salah tanpa itu.
+
+### 🪤 Jebakan verifikasi yang terulang TIGA kali hari ini
+
+Tes yang mencari KELAS CSS tersandung **komentar kode** yang menyebut kelas itu untuk menjelaskan
+kenapa dipakai/dihindari — penjelasan yang benar terbaca sebagai pelanggaran. Sekarang ada satu
+pembantu `tanpaKomentar()` di `tests/film-terkait.test.ts`. Ia sengaja memakai `split`, BUKAN
+regex: pola regex komentar penuh backslash dan **tiga kali rusak** saat berkas disunting lewat
+skrip di sesi ini.
+
+### Bukti
+
+build **sukses** · `tsc` **exit 0** · **1.746 tes hijau / 120 berkas** (+7) · dari HTML server,
+kedua halaman: panel "Film Terkait" **6 judul DI DALAM** bingkai gelap dengan `lg:overflow-y-auto`;
+panel "Terpopuler" **10 judul** sesudah bingkai; **NOL** judul dobel antar keduanya.
+
+📌 Catatan verifikasi: menghitung "Terpopuler" dengan mencari teksnya salah — kata itu juga ada
+sebagai chip di strip kuning kepala situs. Hitung lewat `id="panel-terpopuler"`.
+
+---
+
+## 2026-10-29 (ke-6) — Grid "Film Terkait" di bawah komentar DIBUANG. **BELUM DIRILIS**.
+
+Owner: *"film terkait cukup SATU di sidebar kanan atas, yang bawah kamu hapus."*
+
+Grid 5 poster di bawah kolom komentar dilepas dari `/drama/[id]` + `/tonton/[id]`, dan
+`app/components/film/FilmTerkait.tsx` **DIHAPUS** — berkas yatim yang tak dipanggil siapa pun
+terbaca seperti fitur yang masih hidup, dan itu jebakan untuk sesi berikutnya.
+
+### ⚠️ KOREKSI terhadap catatan ke-5 di bawah — pagar anti-dobelnya sudah TIDAK BERLAKU
+
+Catatan "(ke-5)" menjelaskan pembagian `TERKAIT_SIDEBAR + TERKAIT_GRID` (6+5) yang dipasang supaya
+kolom kanan dan grid bawah tidak memajang judul yang sama. **Pembagian itu ikut dibuang**: dengan
+film terkait hanya di SATU tempat, tak ada lagi yang bisa kembar. `TERKAIT_GRID` sudah tidak ada.
+
+Yang MASIH berlaku dari catatan ke-5: seksi "Terpopuler" tetap membuang judul yang sudah tampil di
+seksi "Film Terkait" di atasnya (`sudahTampil.has(d.id)`) — keduanya berada dalam SATU kolom, jadi
+kembar di situ paling mencolok.
+
+Penjaganya ikut berubah arah: tes yang dulu memeriksa "potongannya tidak beririsan" diganti tes
+**"film terkait digambar di SATU tempat saja"** (`<FilmTerkait` tidak boleh muncul lagi) + tes yang
+memastikan berkas komponennya benar-benar terhapus.
+
+### Bukti
+
+build **sukses** · `tsc` **exit 0** · **1.739 tes hijau / 120 berkas** · dari HTML server, kedua
+halaman: teks "Film Terkait" muncul **tepat 1×**; kolom kanan tetap 6 + 8 judul; grid poster di
+bawah komentar **sudah tidak ada**; kolom komentar & kaki situs tetap utuh.
+
+---
+
+## 2026-10-29 (ke-5) — Sidebar jadi DUA seksi: Film Terkait + Terpopuler. **BELUM DIRILIS**.
+
+Owner: *"sidebar kanan jadi film terkait, terus bagian kanan bawah setelah garis kamu jadikan
+terpopuler."* `SidebarPopuler` (satu seksi) diganti **`SidebarFilm`** (dua seksi bertumpuk,
+masing-masing berjudul dengan garis merah pemisah).
+
+### 🪤 Pagar ANTI-DOBEL — ini bagian yang mudah terlewat
+
+Halaman film kini punya "Film Terkait" di DUA tempat: kolom kanan **dan** grid 5 poster di bawah
+komentar. Kalau masing-masing memanggil `pilihTerkait()` sendiri, keduanya menghasilkan daftar
+**SAMA PERSIS** — judul itu-itu juga dipajang dua kali di satu halaman, persis keluhan "dobel"
+yang owner sampaikan 2026-09-21. Tidak ada error apa pun yang memberi tahu.
+
+Pemecahannya: daftar dihitung **SEKALI** sebanyak `TERKAIT_SIDEBAR + TERKAIT_GRID` (6+5), lalu
+dipotong — bagian paling mirip ke kolom kanan, sisanya ke grid. Dijaga tes yang menghitung
+`pilihTerkait(` **harus muncul tepat 1×** per halaman.
+
+Lapis kedua: seksi "Terpopuler" membuang judul yang sudah tampil di seksi "Film Terkait" di
+ATASNYA (`sudahTampil.has(d.id)`) — satu judul muncul dua kali dalam SATU kolom jauh lebih
+mencolok daripada dobel antar-seksi yang berjauhan.
+
+### Bukti
+
+build **sukses** · `tsc` **exit 0** · **1.739 tes hijau / 120 berkas** · dari HTML server, kedua
+halaman: kolom kanan = "Film Terkait" **6 judul** + "Terpopuler" **8 judul**; grid bawah **5
+petak**; **NOL** judul yang dobel antara sidebar↔grid maupun terkait↔populer.
+
+🪤 Jebakan verifikasi (kecil, tapi berulang): pemeriksaan pertama melaporkan *"grid bawah 0 petak"*
+karena mencarinya SESUDAH `</aside>` — padahal di markup grid berada di kolom KIRI, jadi ia muncul
+**sebelum** `<aside>`. Angka "0" itu salah-cari, bukan grid yang hilang. **Urutan markup ≠ urutan
+visual** di tata letak dua kolom.
+
+---
+
+## 2026-10-29 (ke-4) — Blok keterangan diganti KAKI SITUS gelap 4 kolom. **BELUM DIRILIS**.
+
+Owner: *"bagian ini bawah kamu buat seperti image 2 biar tidak menyatu dengan yang di atas."*
+Blok `TentangSitus` berlatar sama dengan badan halaman, jadi ia terbaca menyambung begitu saja.
+
+### Yang dilakukan: MEMAKAI ULANG footer yang sudah ada, bukan membuat yang kedua
+
+`FooterSitus` sudah hidup sejak 2026-10-10 di landing `/`, dan bentuknya **sudah persis** yang
+owner tunjuk: empat kolom (Tentang · Jelajahi · Genre Populer · Disclaimer), latar `bg-zinc-950`,
+judul bergaris bawah kuning. Jadi yang dibuat cuma pembungkus tipis `KakiFilm` (sepola
+`KepalaFilm`) yang menyediakan daftar genre.
+
+**Kenapa ini penting:** membuat footer kedua = dua tempat yang harus selalu sepakat dan pasti
+menyimpang. Repo ini sudah TIGA KALI kena masalah itu pada KEPALA situs (logo, lalu tulisan kotak
+cari dua kali — riwayatnya di `KepalaKatalog.tsx`). Jangan diulang di kaki.
+
+`TentangSitus.tsx` **DIHAPUS**, bukan ditinggal — dua blok keterangan di satu halaman persis
+keluhan "dobel" yang owner sampaikan 2026-09-21.
+
+### Kolom pertama kini per-halaman
+
+Mencontoh kaki situs pembanding: kolom 1 memuat keterangan **judul yang sedang dibuka**
+(`Nonton <judul>` + sinopsisnya), bukan paragraf situs yang sama diulang di tiap halaman — yang
+juga merugikan di mata mesin pencari. Lewat prop `tentang` yang **opsional**: tanpa prop itu
+`FooterSitus` berperilaku persis seperti semula, jadi landing `/` tidak tersenggol (dijaga tes).
+
+### 🪤 Jebakan tata letak yang hampir lolos
+
+Footer WAJIB di LUAR grid dua kolom DAN di luar kartu putih. Di dalam salah satunya, ia ikut
+menyempit mengikuti kolom isi dan kehilangan latar gelap yang membentang penuh — persis keluhan
+yang membuatnya diubah. Dijaga tes yang memeriksa URUTAN (`<KakiFilm` harus muncul sesudah
+`<SidebarPopuler`).
+
+Ikut ketahuan: `pb-16` di `<main>` halaman `/tonton` menyisakan **pita abu-abu di BAWAH footer
+gelap** — halaman terlihat seperti belum selesai dimuat. Dilepas; jarak isi ke footer sudah
+ditangani `pb-10`/`pb-8` di kartu putihnya.
+
+### Bukti
+
+build **sukses** · `tsc` **exit 0** · **1.733 tes hijau / 120 berkas** · dari HTML server:
+`/drama` + `/tonton` + `/` ketiganya punya `<footer>` `bg-zinc-950` dengan **4 kolom**; kolom-1
+di halaman film berisi *"Nonton Sympathy for the Devil (2023)"* / *"Nonton Meg 2 The Trench"*,
+sedangkan `/` tetap keterangan situs umum. Nol rujukan `TentangSitus` tersisa di kode.
+
+---
+
+## 2026-10-29 (ke-3) — Komentar lengkap (nama/email/website) + blok keterangan situs + sidebar 12 judul. **BELUM DIRILIS**.
+
+Owner: *"komentarnya tambahin yang lengkap nama, email, website kasih optional juga, lalu di
+bawahnya kasih seperti no 2, terus sidebar kanan film/dramanya kamu list sampai bawah."*
+
+### 🔒 DUA titik risiko di permintaan yang kelihatannya sepele
+
+**1. EMAIL = data pribadi.** Field `email` di `Comment` SUDAH berubah arti jadi KUNCI identitas
+(`tamu:<hex>`), jadi email ketikan penonton TIDAK boleh menumpang ke sana — kalau dua orang
+mengetik email yang sama, mereka saling bisa menghapus komentar satu sama lain. Dibuat field
+**terpisah** `emailKontak`, dan `untukPublik()` membuang KEDUANYA sebelum balasan dikirim. Form-nya
+menulis janji *"Email kamu tidak akan ditampilkan"* — janji itu hanya benar selama pagar tadi ada,
+jadi dijaga tes khusus.
+
+**2. WEBSITE = pintu XSS tersimpan + spam backlink.** Alamat diketik orang luar lalu DIGAMBAR
+SEBAGAI TAUTAN. `javascript:alert(1)` yang lolos bukan bug biasa — ia tersimpan permanen di
+database dan menyerang SETIAP pembaca komentar itu. Pagarnya:
+- `bersihkanWebsiteTamu` (lib/tamu.ts) mengurai dengan **`new URL()`**, bukan regex — penyaring
+  teks berulang kali kalah oleh `JaVaScRiPt:`, spasi di tengah skema, dsb. Hanya `http:`/`https:`
+  yang lolos. Diuji 6 varian jahat.
+- Digambar dengan **`rel="nofollow ugc noopener noreferrer"`** — tiap bagian menutup lubang
+  berbeda; dijaga satu per satu di tes.
+
+⚠️ **Kolom salah ketik TIDAK menolak komentarnya.** Ketiganya opsional, jadi email/website yang
+bentuknya salah cukup tidak disimpan — membuang isi komentar yang sudah susah payah ditulis gara-gara
+kolom pelengkap adalah pertukaran yang salah.
+
+### Blok "Tentang DramaKu" — klaimnya SENGAJA tidak meniru contoh
+
+Tangkapan layar owner memuat *"Streaming Lancar Tanpa Buffering"*, *"minimal resolusi 1080p"*, dan
+*"semua film sudah disertai subtitle Indonesia"*. Ketiganya **tidak ditiru**: dua pertama tak bisa
+dijanjikan, dan yang ketiga **BOHONG di situs ini** — diukur 2026-10-29, **24 dari 40** judul punya
+subtitle. Teks kita menulis *"sebagian besar judul dilengkapi subtitle"*. Dijaga tes
+"TIDAK meniru klaim yang tak bisa dibuktikan" supaya tidak masuk lagi lewat penyuntingan nanti.
+
+📌 Kalau katalog berubah besar, **periksa ulang kalimatnya** — teks pemasaran yang basi berubah jadi
+klaim palsu tanpa satu pun error yang memberi tahu.
+
+### Sidebar 5 -> 12
+
+"Sampai bawah" tidak bisa dibuat persis: panjang kolom kanan bergantung panjang isi di kiri, yang
+beda tiap judul. 12 dipilih supaya terisi wajar tanpa jadi daftar tak berujung di HP (di sana
+sidebar turun ke BAWAH isi, jadi tiap baris = gulungan tambahan).
+
+### Bukti
+
+build **sukses** · `tsc` **exit 0** · **1.731 tes hijau / 120 berkas** (+19 di
+`tests/komentar-lengkap.test.ts`) · dari HTML server: kedua halaman film memuat ketiga kolom
+opsional, centang simpan, janji privasi, blok keterangan situs, dan sidebar **12 judul**.
+
+🪤 Jebakan kecil yang sempat kena: tes "jangan meniru klaim" awalnya memeriksa berkas MENTAH,
+sehingga **komentar kode yang menjelaskan kenapa klaim itu dihindari** ikut terbaca sebagai
+pelanggaran — tes merah yang menghukum dokumentasi yang benar. Diperbaiki dengan membuang komentar
+sebelum memeriksa.
+
+---
+
+## 2026-10-29 (ke-2) — PUTARAN KEDUA: search jadi TOMBOL pop up + halaman film jadi TERANG + sidebar. **BELUM DIRILIS**.
+
+Owner melihat preview lalu mengoreksi dua hal, disertai SS situs pembanding (REBAHIN):
+*"tombol search masih terlalu besar"* dan *"ketika klik film ternyata gelap tidak bagus, ubah
+seperti SS"*. Dari popup owner memilih: search **jadi tombol pop up**, halaman film **"warna +
+sidebar kanan"**.
+
+### 🪤 Kotak cari: ini keputusan KETIGA atas lebar yang sama — berhenti mengukur, ganti bentuk
+
+448px dilepas owner 2026-09-21 ("terlalu sempit") → 576px ditolak 2026-10-29 ("masih kebesaran").
+Pelajarannya: **selama kotaknya duduk di bar, lebar berapa pun salah bagi sebagian layar.**
+Sekarang diganti TOMBOL ikon + lapisan pop up (`modeTombol` di `SearchBar.tsx`) — tidak memakan
+ruang sama sekali, jadi pertanyaannya hilang, bukan dijawab lagi. ⚠️ SENGAJA **mati di
+`/discover`**: itu halaman HASIL pencarian, kotaknya wajib terlihat terus. Batas jujur: lapisannya
+dibuka JavaScript, jadi sebelum JS aktif tombol itu diam.
+
+### Halaman film TERANG
+
+`/drama/[id]` + `/tonton/[id]`: `bg-zinc-100` (menimpa `bg-black` dari layout), isi utama kartu
+putih, dua kolom + `SidebarPopuler` ("Paling Banyak Ditonton", urut `sortCatalog(…,"populer")` —
+fungsi yang sudah ada, bukan logika baru). Tema dioper lewat prop `terang` ke 6 komponen,
+**semuanya default `false`** — WAJIB, sebab `Comments` & `RatingStars` juga dipakai `FeedPlayer`
+dan `CommentsDrawer`, dua layar pemutar yang harus tetap gelap. `/` dan `/beranda` **tetap gelap**
+(owner tak memintanya berubah; diverifikasi masih `bg-black`).
+
+### 🔴 JEBAKAN BUILD yang hampir membuat laporan SALAH — WAJIB dibaca sesi berikutnya
+
+Sesudah build + `next start`, `/drama` tampil versi BARU tapi `/tonton` dan `/` masih versi LAMA.
+Sumber benar, tes hijau, `tsc` exit 0 — tapi yang dilayani ke browser kode lama.
+
+**Sebabnya: `rm -rf .next` GAGAL DIAM-DIAM selama server lama masih hidup.** Di Windows berkas yang
+dipegang proses lain tak bisa dihapus, dan `rm -rf` TIDAK mengeluh. Build berikutnya menulis
+sebagian, sehingga halaman yang **di-prerender saat build** (`○ Static` / `● SSG` — `/` dan
+`/tonton/[id]`) tetap memakai berkas lama. `/drama/[id]` lolos justru karena dibangun **on-demand**
+(`generateStaticParams` memulangkan daftar kosong).
+
+**Aturan baru:** matikan server lewat PID → buktikan port kosong → `rm -rf .next` → **buktikan
+foldernya benar-benar hilang** (`if [ -d .next ]`) → baru build. Jangan percaya `rm -rf` berhasil
+hanya karena tak ada error. Pola yang sama dengan dua jebakan lama di berkas ini: *"TaskStop tidak
+mematikan server npx"* dan *"`Stop-Process` gagal, `-ErrorAction SilentlyContinue`
+menyembunyikannya"* — **perintah pembersih yang gagal tanpa suara.**
+
+### Putaran ketiga (koreksi kecil owner, hari yang sama)
+
+Owner: *"sudah bagus tapi kecil kali, bisa besar sedikit, dan backgroundnya jangan blur kali
+soalnya bikin sakit mata."* Lapisan cari diperbesar (panel 576 -> **672px**, kotak `h-9` -> `h-12`,
+teks `text-sm` -> `text-base`) dan latarnya **`backdrop-blur-sm` DIBUANG** + gelapnya 80% -> 55%.
+
+⚠️ Ukuran kotak jadi **parameter** `formCari(kelas, besar)`, bukan diubah langsung: kotak yang sama
+dipakai bar `/discover` yang masih mode biasa — menaikkan tingginya di sana akan meninggikan
+SELURUH kepala situs halaman itu. Dijaga tes "kotak di lapisan LEBIH BESAR daripada kotak di bar".
+
+🪤 **Jebakan verifikasi yang terulang:** memeriksa kelas CSS hasil build lewat `node -e` sempat
+melaporkan *"bg-black/55 TIDAK ADA — latar bisa transparan!"*, padahal `bg-black/95` milik TopNav
+yang jelas bekerja di produksi juga ikut "tidak ada". Penyebabnya **backslash termakan lapisan
+shell** sehingga pola escape-nya salah — bukan CSS-nya. Pola yang sama sudah muncul dua kali di
+sesi ini (sekali saat menulis regex ke `lib/tamu.ts`). **Kalau sebuah pemeriksaan melaporkan
+sesuatu yang sudah terbukti jalan di produksi ikut rusak, curigai ALATNYA dulu, bukan kodenya.**
+
+### Bukti putaran kedua
+
+build **sukses** (sesudah `.next` DIBUKTIKAN terhapus) · `tsc` **exit 0** · **1.697 tes hijau /
+118 berkas** (+13 baru di `tests/cari-popup-dan-film-terang.test.ts`) · dari HTML server: keempat
+halaman memuat **tombol cari**, **nol** kotak cari di bar · `/drama`+`/tonton` `bg-zinc-100` dengan
+`<aside>` sidebar · `/`+`/beranda` **tetap** `bg-black` tanpa sidebar.
+
+---
+
+## 2026-10-29 — Tiga arahan Kang Dedi: kotak cari, login penonton, kepala halaman film. SELESAI, **BELUM DIRILIS**.
+
+Owner meneruskan SS arahan Kang Dedi: (1) *"searchnya kelebaran"* · (2) *"hapus fitur login/daftar,
+orang lain tinggal nonton gratis"* · (3) *"halaman FILM header + sidebar-nya berbeda dengan Home —
+Home pink+kuning+putih, halaman nonton DARK"*. Owner: butir 2 **khusus viewer**, dan *"cuma login
+dan daftar aja yang dihapus, sisanya biarkan saja jadi viewer masih bisa kasih rating komen."*
+
+### 🔴 Jawaban owner butir 2 TIDAK BISA jalan apa adanya — dan itu yang paling penting di sini
+
+*"Sisanya biarkan saja"* terdengar seperti nol pekerjaan tambahan. Kenyataannya POST komentar
+(`app/api/comments/route.ts`) dan POST rating (`app/api/ratings/route.ts`) **menolak 401 tanpa sesi
+login**. Hapus login lalu biarkan sisanya = **komentar & bintang mati total untuk semua orang**,
+dan matinya SENYAP — 401 itu jawaban yang sah, tak ada error di sisi kita; yang tahu cuma penonton
+yang mencoba. Karena maksud owner jelas, keduanya dibuat **bisa dipakai tanpa akun** lewat identitas
+tamu (`lib/tamu.ts` — cookie HttpOnly bertanda tangan HMAC, nomor acak, bukan identitas orang).
+
+### ⚠️ BATAS JUJUR yang owner perlu tahu
+
+Rating kini berarti **"satu BROWSER satu suara"**, bukan satu ORANG satu suara: hapus cookie /
+jendela samaran = bisa menilai lagi. Lebih longgar daripada sebelumnya. Karena itu rating penonton
+**tetap DILARANG** jadi structured data Google — `lib/structured-data.ts` memakai rating IMDb asli,
+jangan ditukar. Menutupnya kembali = nyalakan `AKUN_PENONTON_ENABLED`; jalur sesi lama masih utuh
+dan DIDAHULUKAN oleh `identitasInteraksi()`.
+
+### 🔒 Temuan sampingan yang ikut ditutup: email penonton bocor ke semua pengunjung
+
+`GET /api/comments` memulangkan baris komentar apa adanya — **alamat email tiap penulis ikut
+terkirim ke browser semua orang**, terbaca dari panel jaringan tanpa alat khusus. Ditutup lewat
+`untukPublik()`; penggantinya penanda `milikku` yang diputuskan server (browser memang TIDAK bisa
+tahu sendiri — cookie tamunya `httpOnly`). Bukan bagian permintaan Kang Dedi; ditemukan saat membaca
+route yang memang harus diubah.
+
+### Yang TIDAK ikut longgar (sengaja)
+
+`resolveUserEmail` di `lib/session.ts` **tidak disentuh sama sekali** — koin, paywall, kode
+pemulihan, daftar admin tetap menuntut sesi bertanda tangan sungguhan. Identitas tamu dipakai
+**hanya** komentar & rating. Anti-CSRF + rate-limit tetap. Tamu tak bisa dapat lencana admin, tak
+bisa hapus komentar orang lain (403). `/login` TETAP HIDUP — itu pintu admin satu-satunya.
+
+### Kepala halaman film (butir 3)
+
+`/drama/[id]`, `/film`, `/katalog`, `/tonton/[id]` kini memakai **komponen kepala yang SAMA** dengan
+`/beranda` (`KepalaFilm` → `KepalaBeranda`), bukan salinan — supaya tak bisa menyimpang lagi.
+`/admin` sengaja TETAP navbar hitam (halaman kerja), layar pemutar `/watch` & `/feed` tidak disentuh
+(kepala situs akan menutupi video).
+
+### 🪤 Kotak cari: ini putaran KEDUA, jangan diputar ketiga kalinya tanpa sadar
+
+2026-09-21 owner MELEPAS batas 448px ("berhenti di tengah"); 2026-10-29 Kang Dedi "kelebaran".
+Sekarang 576px (`md:max-w-xl`) — di tengah-tengah dua keluhan yang sudah sama-sama ditolak.
+Riwayatnya ditulis di komentar `SearchBar.tsx`.
+
+### Bukti
+
+build **sukses** · `tsc` **exit 0** · **1.684 tes hijau** (+42 baru, 117 berkas) · kepala
+`/drama`+`/film`+`/katalog` **IDENTIK byte-per-byte** dengan `/beranda` (id Radix dinormalkan) ·
+navbar hitam **nol** di keempat halaman · tautan `/login`·`/daftar` di halaman penonton **nol** ·
+end-to-end: komentar tanpa akun **200**, bintang **200**, 3× nilai tetap `count:1`, tamu lain hapus
+komentar orang **403**.
+
+⚠️ Uji tulis **sengaja TIDAK** dijalankan lewat `.env.local` — env itu menunjuk **Supabase
+PRODUKSI** dengan `service_role`, jadi komentar uji akan mengotori data penonton sungguhan. Dipakai
+server kedua `ALLOW_FILE_MODE=1`; `data/` dipulihkan sesudahnya (`git status -- data/` bersih).
+
+### Rincian + cara membalikkan
+
+`docs/lintasai/rencana/2026-10-29-arahan-kang-dedi-search-login-kepala-film.md` — termasuk
+pemeriksaan terhadap rak `skills/auth/SKILL.md` dan satu batas jujur session-fixation.
 
 ---
 

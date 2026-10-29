@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { Search } from "lucide-react";
 import { punyaNavbarAtas } from "@/lib/navigasi-halaman";
 import { alamatCari } from "@/lib/nav-katalog";
+import { AKUN_PENONTON_ENABLED } from "@/lib/saklar-fitur";
 import { TEKS_KOTAK_CARI } from "./beranda/SearchBar";
 
 /**
@@ -217,7 +218,15 @@ export default function TopNav() {
               <CoinChip />
               <MenuAkun />
             </div>
-          ) : mounted ? (
+          ) : mounted && AKUN_PENONTON_ENABLED ? (
+            /* Tombol Masuk & Daftar — DIJEDA sejak 2026-10-29 (arahan Kang Dedi
+               lewat owner: "orang lain tidak perlu login, mereka tinggal nonton
+               gratis saja"). Dibiarkan di tempatnya di balik saklar supaya
+               menyalakannya kembali = satu `false` jadi `true` di
+               lib/saklar-fitur.ts, bukan merakit ulang.
+
+               Halaman /login sendiri TETAP hidup: ia pintu ADMIN. Yang hilang
+               cuma tautan menuju ke sana dari tampilan penonton. */
             <div className="flex items-center gap-2">
               <Button
                 asChild

@@ -75,6 +75,21 @@ export type InfoVideoPlaylyProps = {
    */
   detailHref?: string | null;
   className?: string;
+  /**
+   * Bentuk tata letaknya.
+   *
+   *   "kartu"   (bawaan) — kotak putih berbingkai selebar `max-w-sm`. Bentuk
+   *                        yang dipakai grid daftar film, tempat kotak ini
+   *                        berdiri sendiri di samping poster.
+   *   "halaman"          — mengalir tanpa bingkai, selebar kolom isinya.
+   *
+   * Dibuat prop, BUKAN mengubah satu-satunya bentuk, karena kotak ini dipakai
+   * DUA tempat: `PlaylyVideoGrid` (butuh kartu) dan halaman `/tonton/[id]`
+   * (butuh mengalir). Owner 2026-10-29: di halaman detail bentuk kartu terasa
+   * *"kaku"* — ia kotak sempit berbingkai yang terjepit di tengah kolom lebar,
+   * dan judulnya mengulang judul halaman tepat di atasnya.
+   */
+  tataLetak?: "kartu" | "halaman";
 };
 
 export default function InfoVideoPlayly({
@@ -86,7 +101,9 @@ export default function InfoVideoPlayly({
   linkUnduhan = [],
   detailHref,
   className,
+  tataLetak = "kartu",
 }: InfoVideoPlaylyProps) {
+  const halaman = tataLetak === "halaman";
   // Sengaja HANYA di memori halaman (useState), tidak ditulis ke mana pun.
   // lib/myList.ts yang sudah ada TIDAK dipakai: isinya dibaca halaman /my-list
   // sebagai daftar dramaId, jadi memasukkan videoId Playly ke sana melahirkan
@@ -116,17 +133,38 @@ export default function InfoVideoPlayly({
     <>
       <section
         className={cn(
-          "w-full max-w-sm rounded-xl border border-zinc-200 bg-white p-3.5 shadow-sm",
+          "w-full",
+          halaman
+            ? // Mengalir: tanpa bingkai, tanpa batas lebar, tanpa jarak dalam.
+              // Kotak sempit berbingkai di tengah kolom lebar itulah yang
+              // membuat blok ini terasa "kaku" — ia terbaca seperti potongan
+              // yang tertinggal dari halaman lain.
+              ""
+            : "max-w-sm rounded-xl border border-zinc-200 bg-white p-3.5 shadow-sm",
           className,
         )}
       >
-        <h3 className="line-clamp-2 text-sm font-semibold text-zinc-900">{title}</h3>
+        {/* Judul SENGAJA tidak digambar di mode halaman: <h1> halaman tepat di
+            atasnya sudah memuat judul yang sama persis, dan judul kembar
+            berturut-turut adalah salah satu hal yang paling cepat membuat
+            sebuah halaman terasa belum dirapikan. Ini membuang DUPLIKAT, bukan
+            membuang informasi. */}
+        {!halaman && (
+          <h3 className="line-clamp-2 text-sm font-semibold text-zinc-900">
+            {title}
+          </h3>
+        )}
 
         {keterangan.length > 0 && (
           // Satu baris mengalir dipisah garis tegak ("17+ | BluRay | 1h 39m"),
           // bentuk yang dipilih owner 2026-09-25. Pemisahnya dibuat lebih pucat
           // dari teksnya supaya yang dibaca duluan isinya, bukan garisnya.
-          <p className="mt-1.5 flex flex-wrap items-center gap-x-1.5 text-xs font-medium text-zinc-600">
+          <p
+            className={cn(
+              "flex flex-wrap items-center gap-x-2 font-medium text-zinc-600",
+              halaman ? "mt-0 text-sm" : "mt-1.5 text-xs",
+            )}
+          >
             {keterangan.map((teks, i) => (
               <span key={teks} className="flex items-center gap-x-1.5">
                 {i > 0 && (
@@ -146,11 +184,19 @@ export default function InfoVideoPlayly({
           // latar GELAP (`bg-*-950`), dan dipakai di kotak putih ini hasilnya chip
           // gelap yang tidak menyatu. Seragam juga yang diminta owner (contoh
           // gambar 2026-09-25), dan senada dengan tombol DOWNLOAD.
-          <ul className="mt-2 flex flex-wrap items-center gap-1.5">
+          <ul
+            className={cn(
+              "flex flex-wrap items-center gap-1.5",
+              halaman ? "mt-2.5" : "mt-2",
+            )}
+          >
             {genres.map((g) => (
               <li
                 key={g}
-                className="rounded-md bg-pink-50 px-2 py-0.5 text-[11px] font-medium text-pink-600"
+                className={cn(
+                  "rounded-md bg-pink-50 font-medium text-pink-600",
+                  halaman ? "px-2.5 py-1 text-xs" : "px-2 py-0.5 text-[11px]",
+                )}
               >
                 {g}
               </li>
@@ -158,7 +204,16 @@ export default function InfoVideoPlayly({
           </ul>
         )}
 
-        <div className="mt-3 flex flex-wrap items-center gap-2">
+        {/* Deretan tombol. Di mode halaman ketiganya disamakan tingginya dan
+            diberi jarak sedikit lebih lega — di contoh yang owner tunjuk,
+            DOWNLOAD/Share/Save berdiri sejajar sebagai satu baris aksi, bukan
+            satu tombol besar diikuti dua tombol kecil yang tingginya beda. */}
+        <div
+          className={cn(
+            "flex flex-wrap items-center gap-2",
+            halaman ? "mt-4" : "mt-3",
+          )}
+        >
           {/* SATU perilaku untuk semua video: membuka/menutup popup. Isinya
               yang berbeda — tabel provider, atau "Link unduhan belum tersedia"
               (popup memutuskannya sendiri dari `links`). */}
@@ -171,7 +226,10 @@ export default function InfoVideoPlayly({
             // hidup-mati berpindah tempat justru menyesatkan.
             aria-haspopup="dialog"
             aria-expanded={popupTerbuka}
-            className="h-9 rounded-full bg-pink-600 px-4 text-xs font-bold tracking-wide text-white hover:bg-pink-500"
+            className={cn(
+              "rounded-full bg-pink-600 font-bold tracking-wide text-white hover:bg-pink-500",
+              halaman ? "h-10 px-5 text-sm" : "h-9 px-4 text-xs",
+            )}
           >
             <Download className="size-4" />
             DOWNLOAD
@@ -182,7 +240,10 @@ export default function InfoVideoPlayly({
               jadi kelas yang bertabrakan (bg/border/text) diambil yang terakhir. */}
           <ShareButton
             title={title}
-            className="h-8 w-auto rounded-full border-zinc-300 bg-white px-3 py-0 text-xs font-semibold text-zinc-700 hover:border-pink-400 hover:text-pink-600"
+            className={cn(
+              "w-auto rounded-full border-zinc-300 bg-white py-0 font-semibold text-zinc-700 hover:border-pink-400 hover:text-pink-600",
+              halaman ? "h-10 px-4 text-sm" : "h-8 px-3 text-xs",
+            )}
           />
 
           <Button
@@ -191,7 +252,8 @@ export default function InfoVideoPlayly({
             onClick={() => setTersimpan((t) => !t)}
             aria-pressed={tersimpan}
             className={cn(
-              "h-8 w-auto rounded-full border border-zinc-300 bg-white px-3 py-0 text-xs font-semibold transition-colors",
+              "w-auto rounded-full border border-zinc-300 bg-white py-0 font-semibold transition-colors",
+              halaman ? "h-10 px-4 text-sm" : "h-8 px-3 text-xs",
               tersimpan
                 ? "border-pink-400 text-pink-600"
                 : "text-zinc-700 hover:border-pink-400 hover:text-pink-600",

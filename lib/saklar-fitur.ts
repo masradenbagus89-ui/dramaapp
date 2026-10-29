@@ -54,3 +54,29 @@ export const PAYWALL_ENABLED = false;
  * lagi lebih dulu/terpisah. Owner 2026-10-28 memilih mematikan keduanya.
  */
 export const ADS_ENABLED = false;
+
+/**
+ * AKUN PENONTON — tombol Masuk & Daftar, halaman profil, favorit, riwayat, dan
+ * ajakan "Masuk untuk melanjutkan" di beranda.
+ *
+ * Dibuat 2026-10-29 atas arahan Kang Dedi lewat owner: "hapus fitur login /
+ * daftar, karena orang lain tidak perlu login, mereka tinggal nonton gratis
+ * saja." Dipilih saklar — bukan menghapus berkas — mengikuti keputusan owner
+ * 2026-10-28 untuk koin & iklan: menyalakan kembali = satu `false` jadi `true`.
+ *
+ * ⚠️ YANG SENGAJA TIDAK IKUT MATI, dan kenapa:
+ *
+ * 1. Route `/login` TETAP HIDUP. Ia satu-satunya pintu ADMIN, dan admin masih
+ *    harus mengelola katalog. Yang hilang cuma TAUTAN menuju ke sana dari
+ *    tampilan penonton; admin membukanya dengan mengetik alamat, dan
+ *    `AdminAccessDenied` tetap menunjuk ke sana.
+ * 2. Route `/daftar` juga tetap hidup supaya tautan lama & bookmark tidak mati
+ *    (404 mendadak terbaca seperti situs rusak), hanya tak ada lagi jalan ke
+ *    sana dari dalam situs.
+ * 3. Komentar & rating JUSTRU TETAP MENYALA, dan itu permintaan owner
+ *    2026-10-29 yang eksplisit: "viewer masih bisa kasih rating komen".
+ *    Karena keduanya dulu mensyaratkan sesi login, identitas penggantinya
+ *    lahir di `lib/tamu.ts` — lihat BATAS JUJUR di berkas itu sebelum
+ *    mengandalkan angkanya.
+ */
+export const AKUN_PENONTON_ENABLED = false;

@@ -159,7 +159,9 @@ describe("chip strip & menu yang SUNGGUHAN digambar halaman", () => {
     expect(html).not.toContain('href="/login"');
     expect(html).not.toContain('href="/daftar"');
     // Pagar: barnya sendiri tetap utuh, bukan kosong karena render gagal.
-    expect(html).toContain("Cari film di DramaKu");
+    // Kotak cari kini di balik tombol (owner 2026-10-29), jadi yang
+    // membuktikan "barnya utuh" adalah TOMBOLNYA, bukan tulisan placeholder.
+    expect(html).toContain('aria-label="Cari film"');
     expect(html).toContain(">Action<");
   });
 

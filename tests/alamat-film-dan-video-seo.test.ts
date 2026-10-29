@@ -36,12 +36,24 @@ describe("halaman daftar video pindah ke /film", () => {
   });
 
   it("navigasi mengenali /film, bukan /playly", async () => {
-    const { punyaNavbarAtas } = await import("../lib/navigasi-halaman");
+    const { punyaKepalaFilm, punyaNavigasiBawah, punyaNavbarAtas } =
+      await import("../lib/navigasi-halaman");
+    // Sejak 2026-10-29 kepala /film BUKAN lagi navbar hitam, melainkan bar cari
+    // merah-pink + strip kuning yang sama dengan Home (arahan Kang Dedi). Yang
+    // dijaga tes ini TIDAK berubah artinya: penonton yang mendarat dari Google
+    // harus tetap punya jalan ke katalog. Hanya BENTUK jalannya yang berpindah,
+    // jadi harapannya ikut berpindah — bukan dilonggarkan.
     expect(
-      punyaNavbarAtas("/film"),
-      "/film tak punya navbar — penonton yang mendarat dari Google terkurung " +
-        "tanpa jalan ke katalog",
+      punyaKepalaFilm("/film"),
+      "/film tak punya kepala situs — penonton yang mendarat dari Google " +
+        "terkurung tanpa jalan ke katalog",
     ).toBe(true);
+    // Di HP jalannya lewat menu bawah; ini yang paling mudah hilang diam-diam
+    // saat sebuah halaman dipindah antar-kelompok navigasi.
+    expect(punyaNavigasiBawah("/film")).toBe(true);
+    // Dan navbar hitamnya memang harus MENGHILANG — dua kepala situs sekaligus
+    // persis keluhan "dua baris kepala lalu berkedip" dari 2026-09-22.
+    expect(punyaNavbarAtas("/film")).toBe(false);
   });
 
   it("tak ada lagi tautan penonton yang menunjuk /playly", () => {

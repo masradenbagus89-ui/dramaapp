@@ -1,8 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { readUser, type User } from "@/lib/auth";
 import { Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -13,25 +11,37 @@ type Summary = { average: number; count: number; mine: number | null };
 const EMPTY: Summary = { average: 0, count: 0, mine: null };
 
 /**
- * Rating penonton untuk satu drama. Satu email = satu suara; menilai ulang
- * MENGUBAH nilai lama, bukan menambah suara.
+ * Rating penonton untuk satu drama. Menilai ulang MENGUBAH nilai lama, bukan
+ * menambah suara.
  *
- * Catatan: angka ini belum tahan pemalsuan (identitas viewer masih di-assert
- * klien — lihat BATAS JUJUR di lib/store.ts), jadi sengaja TIDAK dipakai
- * sebagai sumber structured data Google.
+ * Sejak 2026-10-29 bintangnya bisa diklik TANPA akun (owner: "viewer masih
+ * bisa kasih rating komen"). Identitas penilai sepenuhnya urusan server —
+ * cookie `httpOnly` yang memang tak terbaca dari sini — jadi komponen ini tidak
+ * lagi tahu, dan tidak perlu tahu, siapa yang sedang menilai.
+ *
+ * ⚠️ Akibatnya "satu suara" kini berarti satu BROWSER, bukan satu orang: hapus
+ * cookie atau buka jendela samaran = bisa menilai lagi. Karena itu angka ini
+ * tetap DILARANG jadi sumber structured data Google. Rinciannya di lib/tamu.ts.
  */
-export default function RatingStars({ dramaId }: { dramaId: string }) {
-  const [user, setUser] = useState<User | null>(null);
+export default function RatingStars({
+  dramaId,
+  terang = false,
+}: {
+  dramaId: string;
+  /**
+   * Gambar untuk LATAR TERANG (halaman film sejak owner 2026-10-29).
+   * Default `false` — WAJIB, sebab komponen ini juga dipakai di layar pemutar
+   * yang harus tetap gelap (FeedPlayer, CommentsDrawer).
+   */
+  terang?: boolean;
+}) {
   const [summary, setSummary] = useState<Summary>(EMPTY);
   const [hover, setHover] = useState(0);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const current = readUser();
-    setUser(current);
-
-    const load = async (u: User | null) => {
+    const load = async () => {
       try {
         const res = await fetch(
           `/api/ratings?dramaId=${encodeURIComponent(dramaId)}`,
@@ -42,19 +52,17 @@ export default function RatingStars({ dramaId }: { dramaId: string }) {
         setSummary(EMPTY);
       }
     };
-    load(current);
+    load();
 
-    const onAuthChanged = () => {
-      const next = readUser();
-      setUser(next);
-      load(next);
-    };
-    window.addEventListener("dramaku:auth-changed", onAuthChanged);
-    return () => window.removeEventListener("dramaku:auth-changed", onAuthChanged);
+    // Tetap mendengarkan pergantian akun: kalau admin masuk/keluar, suara
+    // miliknya berbeda dari suara tamu di browser yang sama, jadi ringkasannya
+    // harus diambil ulang.
+    window.addEventListener("dramaku:auth-changed", load);
+    return () => window.removeEventListener("dramaku:auth-changed", load);
   }, [dramaId]);
 
   const submit = async (stars: number) => {
-    if (!user || pending) return;
+    if (pending) return;
     setPending(true);
     setError(null);
     try {
@@ -81,7 +89,12 @@ export default function RatingStars({ dramaId }: { dramaId: string }) {
   const highlight = hover || summary.mine || Math.round(summary.average);
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-4">
+    <div
+      className={cn(
+        "rounded-xl border p-4",
+        terang ? "border-zinc-200 bg-zinc-50" : "border-zinc-800 bg-zinc-900/60",
+      )}
+    >
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <div
           className="flex items-center gap-1"
@@ -91,13 +104,12 @@ export default function RatingStars({ dramaId }: { dramaId: string }) {
             <button
               key={n}
               type="button"
-              disabled={!user || pending}
+              disabled={pending}
               onClick={() => submit(n)}
-              onMouseEnter={() => user && setHover(n)}
+              onMouseEnter={() => setHover(n)}
               aria-label={`Beri ${n} bintang`}
               className={cn(
-                "rounded p-0.5 transition-transform",
-                user ? "cursor-pointer hover:scale-110" : "cursor-default",
+                "cursor-pointer rounded p-0.5 transition-transform hover:scale-110",
                 pending && "opacity-60",
               )}
             >
@@ -106,7 +118,9 @@ export default function RatingStars({ dramaId }: { dramaId: string }) {
                   "size-6",
                   n <= highlight
                     ? "fill-amber-400 text-amber-400"
-                    : "text-zinc-600",
+                    : terang
+                      ? "text-zinc-300"
+                      : "text-zinc-600",
                 )}
               />
             </button>
@@ -114,8 +128,8 @@ export default function RatingStars({ dramaId }: { dramaId: string }) {
         </div>
 
         {summary.count > 0 ? (
-          <span className="text-sm text-zinc-300">
-            <strong className="text-white">{summary.average.toFixed(1)}</strong>
+          <span className={cn("text-sm", terang ? "text-zinc-700" : "text-zinc-300")}>
+            <strong className={terang ? "text-zinc-900" : "text-white"}>{summary.average.toFixed(1)}</strong>
             <span className="text-zinc-500"> / 5 · {summary.count} penilai</span>
           </span>
         ) : (
@@ -123,20 +137,13 @@ export default function RatingStars({ dramaId }: { dramaId: string }) {
         )}
       </div>
 
-      {/* Pre-mortem rencana: jangan diam saat belum masuk — beri ajakan jelas. */}
-      {!user ? (
-        <p className="mt-2 text-xs text-zinc-400">
-          <Link href="/login" className="font-semibold text-amber-400 hover:underline">
-            Masuk
-          </Link>{" "}
-          untuk memberi rating drama ini.
-        </p>
-      ) : summary.mine ? (
-        <p className="mt-2 text-xs text-zinc-400">
+      {/* Tak ada lagi cabang "belum masuk": siapa pun boleh menilai. */}
+      {summary.mine ? (
+        <p className={cn("mt-2 text-xs", terang ? "text-zinc-600" : "text-zinc-400")}>
           Kamu memberi {summary.mine} bintang — klik bintang lain untuk mengubah.
         </p>
       ) : (
-        <p className="mt-2 text-xs text-zinc-400">Klik bintang untuk menilai.</p>
+        <p className={cn("mt-2 text-xs", terang ? "text-zinc-600" : "text-zinc-400")}>Klik bintang untuk menilai.</p>
       )}
 
       {error && <p className="mt-2 text-xs text-rose-400">{error}</p>}

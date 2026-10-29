@@ -6,7 +6,18 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Heart } from "lucide-react";
 
-export default function LikeButton({ dramaId }: { dramaId: string }) {
+export default function LikeButton({
+  dramaId,
+  terang = false,
+}: {
+  dramaId: string;
+  /**
+   * Gambar untuk LATAR TERANG (halaman film sejak owner 2026-10-29).
+   * Default `false` = tampilan gelap seperti semula, jadi pemakai lain tidak
+   * ikut berubah.
+   */
+  terang?: boolean;
+}) {
   const [liked, setLikedState] = useState(false);
   const [count, setCount] = useState<number | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -58,10 +69,13 @@ export default function LikeButton({ dramaId }: { dramaId: string }) {
       disabled={pending}
       aria-pressed={liked}
       className={cn(
-        "h-auto w-full rounded-full border bg-zinc-900 py-3 text-sm font-semibold transition-colors disabled:opacity-60",
+        "h-auto w-full rounded-full border py-3 text-sm font-semibold transition-colors disabled:opacity-60",
+        terang ? "bg-white" : "bg-zinc-900",
         liked
-          ? "border-rose-500 bg-rose-500/15 text-rose-300 hover:text-rose-300"
-          : "border-zinc-700 text-zinc-200 hover:border-rose-500 hover:text-rose-400",
+          ? "border-rose-500 bg-rose-500/15 text-rose-600 hover:text-rose-600"
+          : terang
+            ? "border-zinc-300 text-zinc-700 hover:border-rose-500 hover:text-rose-600"
+            : "border-zinc-700 text-zinc-200 hover:border-rose-500 hover:text-rose-400",
       )}
     >
       <Heart
@@ -70,7 +84,7 @@ export default function LikeButton({ dramaId }: { dramaId: string }) {
       />
       {mounted ? (liked ? "Disukai" : "Suka") : "Suka"}
       {count !== null && count > 0 && (
-        <span className="text-xs text-zinc-400">· {count}</span>
+        <span className={cn("text-xs", terang ? "text-zinc-500" : "text-zinc-400")}>· {count}</span>
       )}
     </Button>
   );

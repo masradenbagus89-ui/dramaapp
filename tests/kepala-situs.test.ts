@@ -38,12 +38,29 @@ const PUNYA_BAR_CARI = ["/beranda", "/discover"];
  */
 const WAJIB_ADA_NAVBAR = [
   "/shorts",
-  "/film",
   "/my-list",
   "/profile",
   "/history",
   "/admin",
-  "/drama/contoh-judul",
+];
+
+/**
+ * Halaman FILM — kepalanya bar cari merah-pink yang SAMA dengan Home, dipasang
+ * lewat `<KepalaFilm />` (arahan Kang Dedi lewat owner, 2026-10-29).
+ *
+ * Keempatnya DIPINDAH dari `WAJIB_ADA_NAVBAR` di atas pada tanggal itu. Yang
+ * dijaga bukan sekadar "navbar hitamnya hilang" — itu setengah cerita, dan
+ * setengah cerita persis yang membuat sebuah halaman bisa berakhir TANPA kepala
+ * sama sekali tanpa satu pun error. Jadi tiap halaman di sini diperiksa DUA
+ * ARAH: navbar hitam harus hilang, DAN penggantinya harus benar-benar terpasang
+ * (berkas halamannya memanggil `<KepalaFilm />` + terdaftar di
+ * `AKAR_BERKEPALA_FILM`).
+ */
+const BERKEPALA_FILM = [
+  { alamat: "/drama/contoh-judul", berkas: "app/drama/[id]/page.tsx" },
+  { alamat: "/film", berkas: "app/film/page.tsx" },
+  { alamat: "/katalog", berkas: "app/katalog/page.tsx" },
+  { alamat: "/tonton/contoh-video", berkas: "app/tonton/[id]/page.tsx" },
 ];
 
 describe("navbar hitam (TopNav)", () => {
@@ -71,6 +88,18 @@ describe("navbar hitam (TopNav)", () => {
       // Kotak cari ikut dijaga: sesudah menunya tinggal satu, kotak inilah
       // jalan utama penonton mencari film dari halaman non-katalog.
       expect(html).toContain('type="search"');
+    });
+  }
+
+  for (const { alamat } of BERKEPALA_FILM) {
+    it(`MENGHILANG di ${alamat} — kepalanya bar cari ala Home`, () => {
+      // Dua kepala situs sekaligus = penonton melihat dua baris kepala lalu
+      // satu berkedip hilang. Itu bug yang sudah pernah terjadi di `/`
+      // (2026-09-22); jangan sampai lahir lagi di halaman film.
+      expect(
+        render(alamat, TopNav),
+        `${alamat} masih menggambar navbar hitam DI ATAS bar cari merah`,
+      ).toBe("");
     });
   }
 
@@ -139,8 +168,12 @@ describe("menu garis-tiga (pengganti navbar di halaman berkatalog)", () => {
 // `?? "/"` tidak menolong karena `??` hanya menangkap null/undefined.
 // ===========================================================================
 const { default: BottomNav } = await import("../app/components/BottomNav");
-const { punyaNavbarAtas, punyaNavigasiBawah, TANPA_NAVIGASI_SENGAJA } =
-  await import("../lib/navigasi-halaman");
+const {
+  punyaNavbarAtas,
+  punyaNavigasiBawah,
+  punyaKepalaFilm,
+  TANPA_NAVIGASI_SENGAJA,
+} = await import("../lib/navigasi-halaman");
 const { readdirSync, readFileSync } = await import("node:fs");
 const { join } = await import("node:path");
 
@@ -178,10 +211,16 @@ describe("navigasi tahan nilai pathname yang tak terduga", () => {
   });
 
   it("mencocokkan per-segmen, bukan awalan mentah", () => {
-    // `/drama` tidak boleh ikut mencocoki `/dramaku`.
-    expect(punyaNavbarAtas("/drama")).toBe(true);
-    expect(punyaNavbarAtas("/drama/judul-apa-pun")).toBe(true);
-    expect(punyaNavbarAtas("/dramaku")).toBe(false);
+    // `/drama` tidak boleh ikut mencocoki `/dramaku`. Patokannya pindah ke
+    // `punyaKepalaFilm` 2026-10-29 karena /drama pindah kelompok — aturan
+    // pencocokannya sendiri (`cocok`) tidak berubah sama sekali.
+    expect(punyaKepalaFilm("/drama")).toBe(true);
+    expect(punyaKepalaFilm("/drama/judul-apa-pun")).toBe(true);
+    expect(punyaKepalaFilm("/dramaku")).toBe(false);
+    // Diuji juga di daftar yang masih memakai navbar hitam, supaya aturan
+    // per-segmen terbukti berlaku untuk KEDUA kelompok, bukan cuma satu.
+    expect(punyaNavbarAtas("/shorts")).toBe(true);
+    expect(punyaNavbarAtas("/shortsan")).toBe(false);
   });
 });
 
@@ -254,7 +293,6 @@ describe("perilaku 19 halaman tidak berubah dari yang diukur di produksi", () =>
   // satu-satunya yang sengaja BERUBAH adalah `/` (itulah bug-nya).
   const DIUKUR_BERNAVBAR = [
     "/shorts",
-    "/film",
     "/my-list",
     "/profile",
     "/history",
@@ -262,9 +300,20 @@ describe("perilaku 19 halaman tidak berubah dari yang diukur di produksi", () =>
     "/lupa-password",
     "/admin",
     "/admin/settings/playly",
-    "/drama/contoh",
   ];
   const DIUKUR_TANPA_NAVBAR = ["/login", "/daftar", "/beranda", "/discover"];
+
+  /**
+   * SENGAJA BERUBAH 2026-10-29, dan dicatat di sini — bukan dihapus diam-diam
+   * dari daftar di atas.
+   *
+   * Keduanya diukur bernavbar hitam di produksi 2026-09-22. Arahan Kang Dedi
+   * lewat owner memindahkannya ke kepala situs ala Home. Mencoret barisnya
+   * begitu saja akan membuat berkas ini berbohong: ia mengaku "perilaku tidak
+   * berubah" padahal dua halaman berubah. Dipindah ke daftar bernama supaya
+   * perubahannya tetap terbaca sebagai KEPUTUSAN, lengkap dengan tanggalnya.
+   */
+  const SENGAJA_PINDAH_KE_KEPALA_FILM = ["/film", "/drama/contoh", "/katalog"];
 
   for (const alamat of DIUKUR_BERNAVBAR) {
     it(`${alamat} TETAP bernavbar seperti sebelumnya`, () => {
@@ -274,6 +323,16 @@ describe("perilaku 19 halaman tidak berubah dari yang diukur di produksi", () =>
   for (const alamat of DIUKUR_TANPA_NAVBAR) {
     it(`${alamat} TETAP tanpa navbar seperti sebelumnya`, () => {
       expect(punyaNavbarAtas(alamat), alamat).toBe(false);
+    });
+  }
+
+  for (const alamat of SENGAJA_PINDAH_KE_KEPALA_FILM) {
+    it(`${alamat} PINDAH ke kepala ala Home — dan tetap punya navigasi`, () => {
+      expect(punyaNavbarAtas(alamat), alamat).toBe(false);
+      expect(punyaKepalaFilm(alamat), alamat).toBe(true);
+      // Pagar yang paling penting: kehilangan navigasi di HP adalah kerusakan
+      // SENYAP — di layar komputer semuanya tetap terlihat normal.
+      expect(punyaNavigasiBawah(alamat), alamat).toBe(true);
     });
   }
 
@@ -561,9 +620,23 @@ describe("bar cari merah benar-benar DIPASANG di /beranda", () => {
       () => createElement(KepalaBeranda, { menus: [] }),
     );
 
-    expect(html, "kotak cari hilang dari kepala /beranda").toContain(
-      TEKS_KOTAK_CARI,
-    );
+    // Sejak 2026-10-29 kotaknya TIDAK lagi duduk di bar: ia dibuka lewat
+    // TOMBOL ikon (owner: "tombol search seperti pop up gitu"), setelah lebar
+    // kotaknya dua kali diputar dan dua kali ditolak. Yang dijaga tetap sama —
+    // kepala situs wajib punya jalan ke pencarian — hanya BENTUKNYA yang
+    // berpindah, jadi patokannya ikut berpindah, bukan dilonggarkan.
+    expect(
+      html,
+      "tombol cari hilang dari kepala /beranda — penonton tak punya jalan " +
+        "mencari film sama sekali di halaman ini",
+    ).toContain('aria-label="Cari film"');
+    // Pagar arah kedua: tulisan kotaknya memang BELUM tergambar sebelum
+    // tombolnya diklik. Kalau suatu saat ia muncul lagi di HTML awal, berarti
+    // mode tombol diam-diam mati dan keluhan "searchnya kelebaran" kembali.
+    expect(
+      html,
+      "kotak cari tergambar langsung di bar — mode tombol tidak aktif",
+    ).not.toContain(TEKS_KOTAK_CARI);
     // Strip genre kuning — baris ACTION · ANIME · HORROR · … di bawah bar cari.
     // Dicocokkan ke TAUTANNYA, bukan ke teks di layar: tulisan huruf besar di
     // strip itu hasil CSS (`uppercase`), sedangkan teks aslinya "Action" —
@@ -584,5 +657,66 @@ describe("bar cari merah benar-benar DIPASANG di /beranda", () => {
       "mengimpor tapi tidak merender — penonton /beranda kehilangan logo, " +
         "kotak cari, dan seluruh menu tanpa satu pun error",
     ).toMatch(/<KepalaBeranda\s/);
+  });
+});
+
+
+// ===========================================================================
+// PENJAGA 2026-10-29 — kepala situs halaman FILM.
+//
+// Kenapa perlu dua arah. Memindahkan sebuah halaman keluar dari
+// `AKAR_BERNAVBAR_ATAS` itu SATU baris, dan sesudahnya semua tes "navbar hitam
+// menghilang" langsung hijau — termasuk kalau penggantinya lupa dipasang.
+// Hasilnya halaman tanpa kepala situs sama sekali: tetap 200, `next build`
+// tetap hijau, dan yang hilang cuma logo, kotak cari, dan seluruh menu. Persis
+// kejadian 2026-10-28 di /beranda, yang baru ketahuan saat tampilannya dilihat
+// mata. Blok ini menutup celah itu.
+// ===========================================================================
+describe("halaman film memakai kepala situs yang SAMA dengan Home", () => {
+  for (const { alamat, berkas } of BERKEPALA_FILM) {
+    it(`${berkas} benar-benar memasang <KepalaFilm />`, () => {
+      const sumber = readFileSync(berkas, "utf-8");
+      expect(
+        sumber,
+        `${berkas} tidak mengimpor kepala situsnya — halaman ini akan tampil ` +
+          `TANPA logo, kotak cari, dan menu, tanpa satu pun error`,
+      ).toContain("beranda/KepalaFilm");
+      expect(sumber, `${berkas} mengimpor KepalaFilm tapi tak memakainya`).toContain(
+        "<KepalaFilm />",
+      );
+    });
+
+    it(`${alamat} terdaftar sebagai halaman berkepala film`, () => {
+      expect(punyaKepalaFilm(alamat)).toBe(true);
+    });
+  }
+
+  it("kepala film memakai komponen yang SAMA dengan /beranda, bukan salinan", () => {
+    // Inti pekerjaan 2026-10-29. Kalau suatu saat ada yang menyalin susunan
+    // barnya ke KepalaFilm.tsx alih-alih memakai KepalaBeranda, kedua kepala
+    // mulai bisa menyimpang lagi — dan itu PERSIS keluhan yang dilaporkan Kang
+    // Dedi. Diperiksa dari sumbernya karena perbedaan sehalus warna/ukuran
+    // tidak akan tertangkap perbandingan HTML.
+    const sumber = readFileSync("app/components/beranda/KepalaFilm.tsx", "utf-8");
+    expect(sumber).toContain("KepalaBeranda");
+    // Tanda bahaya: merakit bar sendiri, bukan meminjam yang sudah ada.
+    expect(
+      sumber,
+      "KepalaFilm merakit bar cari/strip sendiri — itu salinan kedua yang " +
+        "pasti menyimpang dari kepala /beranda",
+    ).not.toContain("<SearchBar");
+    expect(sumber).not.toContain("<StripKatalog");
+  });
+
+  it("layar PEMUTAR sengaja TIDAK ikut — video tak boleh tertutupi", () => {
+    // Keputusan owner 2026-10-29. Didaftar sebagai tes supaya "menyeragamkan
+    // semuanya" tidak terjadi tanpa sadar di kemudian hari.
+    expect(punyaKepalaFilm("/watch/apa-pun/1")).toBe(false);
+    expect(punyaKepalaFilm("/feed/apa-pun")).toBe(false);
+  });
+
+  it("panel ADMIN sengaja TIDAK ikut — ia halaman kerja, bukan halaman tonton", () => {
+    expect(punyaKepalaFilm("/admin")).toBe(false);
+    expect(punyaNavbarAtas("/admin")).toBe(true);
   });
 });

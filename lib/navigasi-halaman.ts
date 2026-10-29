@@ -23,9 +23,10 @@
  * Halaman yang navbar hitam atasnya (`TopNav`) WAJIB tergambar — di sana ia
  * satu-satunya navigasi di layar komputer.
  *
- * Ditulis sebagai akar segmen: `/drama` mencakup `/drama/<judul>`, `/admin`
- * mencakup seluruh halaman admin. Pencocokannya per-segmen (lihat `cocok`),
- * jadi `/drama` TIDAK ikut mencocoki alamat lain yang cuma berawalan sama.
+ * Ditulis sebagai akar segmen: `/admin` mencakup seluruh halaman admin,
+ * `/profile` mencakup halaman di bawahnya. Pencocokannya per-segmen (lihat
+ * `cocok`), jadi sebuah akar TIDAK ikut mencocoki alamat lain yang cuma
+ * berawalan sama (`/shorts` bukan `/shortsan`).
  *
  * `/lupa-password` & `/video-eksternal` ada di sini karena memang begitu
  * perilakunya di produksi saat daftar ini dibuat (diukur satu per satu
@@ -33,30 +34,51 @@
  */
 export const AKAR_BERNAVBAR_ATAS = [
   "/shorts",
+  "/my-list",
+  "/profile",
+  "/history",
+  // Halaman KERJA admin — sengaja TETAP bernavbar hitam. Ia bukan halaman
+  // penonton, jadi tidak ikut diseragamkan dengan Home 2026-10-29; bar cari
+  // katalog di atas panel admin cuma menawarkan hal yang tak ada hubungannya
+  // dengan pekerjaan di situ.
+  "/admin",
+  "/video-eksternal",
+  "/lupa-password",
+] as const;
+
+/**
+ * Halaman FILM: kepala situsnya bar cari merah-pink + strip kuning yang SAMA
+ * dengan Home, dipasang masing-masing lewat `<KepalaFilm />`
+ * (app/components/beranda/KepalaFilm.tsx).
+ *
+ * Dipindahkan ke sini dari `AKAR_BERNAVBAR_ATAS` pada 2026-10-29 atas arahan
+ * Kang Dedi lewat owner: *"halaman header + sidebar-nya berbeda dengan yang di
+ * Home."* Keempatnya memang halaman yang dibuka penonton begitu sebuah film
+ * diklik, jadi di situlah perbedaan kepala situs paling terasa.
+ *
+ * ⚠️ Kenapa dipisah dari `AKAR_BERBAR_CARI` dan bukan digabung: kedua kelompok
+ * memang sama-sama tidak ber-navbar hitam, TAPI sumber kepalanya berbeda —
+ * /beranda & /discover merakitnya sendiri di dalam komponen katalognya,
+ * sedangkan keempat halaman ini memanggil `<KepalaFilm />`. Menggabungkannya
+ * akan menghapus perbedaan yang justru perlu terlihat saat ada yang menelusuri
+ * "kenapa halaman ini tidak punya kepala".
+ */
+export const AKAR_BERKEPALA_FILM = [
+  // Halaman detail drama — yang ditunjuk Kang Dedi di tangkapan layarnya.
+  "/drama",
   // Daftar lengkap film & video. Alamatnya pindah dari "/playly" 2026-09-26
   // (owner: nama penyedia tak boleh terlihat penonton, termasuk di kotak
   // alamat browser). Alamat lama tetap hidup lewat redirect permanen di
   // next.config.ts, jadi ia TIDAK perlu didaftarkan lagi di sini — permintaan
   // ke /playly tidak pernah sampai ke komponen navigasi.
   "/film",
-  // Halaman katalog per-tab (owner 2026-09-26): tiap tab di beranda
-  // membuka halaman ini. Butuh navbar — penonton yang mendarat dari sana
-  // harus punya jalan pulang.
+  // Halaman katalog per-tab (owner 2026-09-26): tiap tab di beranda membuka
+  // halaman ini.
   "/katalog",
-  "/my-list",
-  "/profile",
-  "/history",
-  "/admin",
-  "/drama",
-  // Halaman tonton satu video (owner 2026-09-26). Masuk daftar ini, BUKAN
-  // dibiarkan tanpa navigasi seperti /watch & /feed: keduanya layar pemutar
-  // penuh yang navigasinya akan menutupi video, sedangkan halaman ini berbentuk
-  // halaman biasa — pemutar di tengah, keterangan di bawahnya. Tanpa navbar,
-  // penonton yang mendarat dari Google atau tautan WhatsApp tidak punya satu
-  // pun jalan menuju katalog.
+  // Halaman tonton satu video (owner 2026-09-26). Ia berbentuk halaman biasa —
+  // pemutar di tengah, keterangan di bawahnya — BUKAN layar pemutar penuh
+  // seperti /watch & /feed, jadi kepala situs di atasnya tidak menutupi video.
   "/tonton",
-  "/video-eksternal",
-  "/lupa-password",
 ] as const;
 
 /**
@@ -105,6 +127,16 @@ export function punyaNavbarAtas(pathname: string): boolean {
  */
 export function punyaNavigasiBawah(pathname: string): boolean {
   return (
-    cocok(pathname, AKAR_BERNAVBAR_ATAS) || cocok(pathname, AKAR_BERBAR_CARI)
+    cocok(pathname, AKAR_BERNAVBAR_ATAS) ||
+    cocok(pathname, AKAR_BERBAR_CARI) ||
+    // WAJIB ikut: keempat halaman film pindah keluar dari AKAR_BERNAVBAR_ATAS
+    // pada 2026-10-29. Tanpa baris ini mereka kehilangan menu bawah di HP —
+    // kerusakan SENYAP, sebab di layar komputer semuanya terlihat normal.
+    cocok(pathname, AKAR_BERKEPALA_FILM)
   );
+}
+
+/** Halaman ini memakai kepala situs ala Home (`<KepalaFilm />`)? */
+export function punyaKepalaFilm(pathname: string): boolean {
+  return cocok(pathname, AKAR_BERKEPALA_FILM);
 }

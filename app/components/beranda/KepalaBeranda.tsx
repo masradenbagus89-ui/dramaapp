@@ -48,6 +48,13 @@ export default function KepalaBeranda({ menus }: { menus: NavMenu[] }) {
         onSubmit={() => router.push(alamatCari(query))}
         className={KELAS_MENEMPEL_KEPALA}
         chrome={chromeKatalog(menus)}
+        /* Kotak cari diganti TOMBOL yang membuka lapisan (owner 2026-10-29:
+           "tombol search seperti pop up gitu"). Ini jawaban akhir atas keluhan
+           "searchnya kelebaran" yang ukurannya sudah dua kali diputar
+           (448px dilepas 2026-09-21, 576px ditolak 2026-10-29): selama kotaknya
+           duduk di bar, lebar berapa pun selalu salah bagi sebagian layar.
+           Sebagai tombol, ia tidak memakan ruang sama sekali. */
+        modeTombol
         /* `action` + `namaKolom` membuat Enter tetap mencari walau JavaScript
            belum aktif — pelajaran dari KerangkaKepalaKatalog, di mana tanpa
            keduanya menekan Enter justru memuat ulang halaman dan MENGHAPUS

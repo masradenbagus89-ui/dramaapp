@@ -12,9 +12,26 @@
 // ini, lihat tests/menu-akun-render.test.ts): tes "tautan login tidak muncul"
 // sendirian TIDAK bisa dibedakan dari "komponennya kosong melompong". Pasangan
 // sebelum/sesudah klik-lah yang membuat penghapusan isi langsung MERAH.
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { createElement as h, act } from "react";
 import { createRoot, type Root } from "react-dom/client";
+
+// Saklar akun penonton DIPAKU MENYALA di berkas ini — sengaja.
+//
+// Sejak 2026-10-29 nilai sungguhannya `false` (owner: login & daftar dihapus
+// untuk penonton), sehingga komponen ini diam total. Tapi perilaku buka-tutup
+// yang dijaga di sini TIDAK dibongkar — ia cuma dimatikan saklarnya, dan kelak
+// harus tetap benar begitu saklarnya dinyalakan lagi. Menghapus berkas tes ini
+// berarti jalur "nyalakan kembali" tidak lagi dijaga siapa pun.
+//
+// Pembagiannya mengikuti pola yang sudah dipakai jeda koin & iklan: berkas
+// perilaku memaku saklar MENYALA, sementara keadaan MATI yang sedang berlaku
+// dijaga tripwire di tests/jeda-akun-penonton.test.ts.
+vi.mock("@/lib/saklar-fitur", () => ({
+  AKUN_PENONTON_ENABLED: true,
+  PAYWALL_ENABLED: false,
+  ADS_ENABLED: false,
+}));
 
 const { default: LanjutMenonton } = await import(
   "../app/components/beranda/LanjutMenonton"

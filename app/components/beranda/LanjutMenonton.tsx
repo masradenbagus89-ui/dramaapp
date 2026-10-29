@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { AKUN_PENONTON_ENABLED } from "@/lib/saklar-fitur";
 
 /**
  * Bar "Lanjutkan Menonton" di bawah hero — PINTU MASUK AKUN yang tertutup
@@ -27,6 +28,13 @@ import { cn } from "@/lib/utils";
  */
 export default function LanjutMenonton() {
   const [terbuka, setTerbuka] = useState(false);
+
+  // DIAM TOTAL saat akun penonton dijeda (2026-10-29). Bar ini BUKAN daftar
+  // tontonan — isinya cuma dua tombol Masuk/Daftar, jadi tanpa akun ia jadi
+  // tombol yang terbuka ke panel kosong. Early-return, bukan menyembunyikan
+  // isinya saja: judul "Lanjutkan Menonton" yang bisa diklik lalu tak
+  // menampilkan apa-apa terbaca persis seperti situs rusak.
+  if (!AKUN_PENONTON_ENABLED) return null;
 
   return (
     <section className="border-b border-zinc-800 bg-zinc-900">

@@ -11,17 +11,24 @@ import {
 import { fmtTime } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Check, Play } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function EpisodeList({
   dramaId,
   episodes,
   posterImage,
   title,
+  terang = false,
 }: {
   dramaId: string;
   episodes: number;
   posterImage?: string;
   title: string;
+  /**
+   * Gambar untuk LATAR TERANG (halaman film sejak owner 2026-10-29).
+   * Default `false` = tampilan gelap seperti semula.
+   */
+  terang?: boolean;
 }) {
   const [entry, setEntry] = useState<ProgressEntry | null>(null);
 
@@ -44,7 +51,12 @@ export default function EpisodeList({
           <li key={ep}>
             <Link
               href={`/feed/${dramaId}?ep=${ep}`}
-              className="flex min-h-16 items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900/50 p-2 pr-3 transition-colors hover:border-amber-400/60 hover:bg-zinc-900"
+              className={cn(
+                "flex min-h-16 items-center gap-3 rounded-xl border p-2 pr-3 transition-colors hover:border-amber-400/60",
+                terang
+                  ? "border-zinc-200 bg-zinc-50 hover:bg-zinc-100"
+                  : "border-zinc-800 bg-zinc-900/50 hover:bg-zinc-900",
+              )}
             >
               <div className="relative h-14 w-24 shrink-0 overflow-hidden rounded-lg bg-zinc-800">
                 {posterImage ? (
@@ -64,11 +76,11 @@ export default function EpisodeList({
                 </span>
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-white">
+                <p className={cn("text-sm font-semibold", terang ? "text-zinc-900" : "text-white")}>
                   Episode {ep}
                   <span className="sr-only"> {title}</span>
                 </p>
-                <p className="text-[11px] text-zinc-500">
+                <p className={cn("text-[11px]", terang ? "text-zinc-500" : "text-zinc-500")}>
                   {dur > 0 ? fmtTime(dur) : "Durasi —"}
                 </p>
               </div>

@@ -52,6 +52,20 @@ export type AdminsFile = { admins: Admin[] };
 export type Comment = {
   id: string;
   user: string;
+  /**
+   * KUNCI penulis — penamaannya sudah tidak tepat lagi, dan itu disengaja.
+   *
+   * Sejak 2026-10-29 isinya bisa DUA bentuk: alamat email (penulis bernomor
+   * akun) ATAU "tamu:<32 hex>" (penonton tanpa akun — lihat lib/tamu.ts).
+   * Namanya TIDAK diganti jadi `kunci` supaya ribuan komentar yang sudah
+   * tersimpan di Supabase tidak perlu dimigrasi; menggantinya berarti satu
+   * perubahan skema demi kerapian nama, dengan risiko komentar lama kehilangan
+   * pemiliknya kalau migrasinya meleset.
+   *
+   * ⚠️ JANGAN pernah mengirim field ini ke browser. Untuk pemilik akun ia
+   * alamat email pribadi; `app/api/comments/route.ts` membuangnya lewat
+   * `untukPublik()` dan menggantinya dengan penanda `milikku`.
+   */
   email: string;
   role: "admin" | "viewer";
   text: string;
@@ -63,6 +77,32 @@ export type Comment = {
    * Balasan dibatasi 1 tingkat — balasan tidak boleh punya balasan lagi.
    */
   parentId?: string;
+  /**
+   * Email KONTAK yang diketik penonton sendiri (owner 2026-10-29, meniru kolom
+   * "Email*" di situs pembanding). OPSIONAL — boleh dikosongkan.
+   *
+   * ⚠️ FIELD TERPISAH dari `email` di atas, dan itu WAJIB: `email` sudah
+   * berubah arti jadi KUNCI identitas ("tamu:<hex>"). Menumpangkan email
+   * ketikan ke sana akan membuat penonton kehilangan kepemilikan komentarnya
+   * sendiri — dan kalau dua orang mengetik email yang sama, mereka saling bisa
+   * menghapus komentar satu sama lain.
+   *
+   * 🔒 JANGAN PERNAH dikirim ke browser. Ini alamat email orang sungguhan yang
+   * tak pernah perlu diketahui pembaca komentar. `untukPublik()` di
+   * app/api/comments/route.ts membuangnya bersama `email`.
+   */
+  emailKontak?: string;
+  /**
+   * Situs yang diketik penonton. OPSIONAL. Boleh tampil ke publik — itu memang
+   * maksudnya — TAPI dengan dua pagar yang tak boleh dilepas:
+   *   1. hanya `http:`/`https:` yang disimpan (lihat `bersihkanWebsiteTamu`
+   *      di lib/tamu.ts). `javascript:` di sini = XSS tertanam permanen di
+   *      database, menyerang setiap pembaca komentar itu.
+   *   2. ditggambar dengan `rel="nofollow ugc noopener noreferrer"` — tanpa
+   *      `nofollow`, kolom komentar berubah jadi ladang spam backlink dalam
+   *      hitungan hari, dan Google menghukum situs yang menjualnya.
+   */
+  website?: string;
 };
 export type CommentsFile = { comments: Record<string, Comment[]> };
 

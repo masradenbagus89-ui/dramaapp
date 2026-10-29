@@ -88,7 +88,15 @@ function verifyToken(token: string, expectedRole: SessionRole): Payload | null {
   }
 }
 
-function readCookie(header: string | null, name: string): string | null {
+/**
+ * Ambil satu cookie dari header mentah.
+ *
+ * Diekspor 2026-10-29 untuk `lib/tamu.ts` (identitas tamu komentar & rating).
+ * Isinya TIDAK diubah — hanya kata `export` yang ditambahkan, supaya pembacaan
+ * cookie di seluruh server tetap satu implementasi dan tak ada versi kedua yang
+ * bisa menyimpang soal spasi/encoding.
+ */
+export function readCookie(header: string | null, name: string): string | null {
   if (!header) return null;
   for (const part of header.split(";")) {
     const eq = part.indexOf("=");
@@ -182,3 +190,50 @@ export function sessionCookieOptions(maxAge: number) {
 
 /** Nama lama; jalur admin masih memakainya. Sama persis dengan sessionCookieOptions. */
 export const adminCookieOptions = sessionCookieOptions;
+
+
+// -------------------------------------------------------------------------
+// TANDA TANGAN PAYLOAD UMUM — dipakai identitas tamu (lib/tamu.ts).
+//
+// Kenapa di berkas ini, bukan di tamu.ts: `secret()` dan `hmac()` sudah hidup
+// di sini, dan menyalinnya ke berkas lain berarti dua tempat yang harus selalu
+// sepakat soal algoritma + sumber kunci. Yang ditambahkan HANYA dua fungsi
+// baru; `signSession`/`verifyToken` di atas tidak disentuh sama sekali, jadi
+// jalur sesi admin & penonton yang sudah teruji tetap persis seperti semula.
+// -------------------------------------------------------------------------
+
+/**
+ * Tanda tangani objek apa pun dengan kunci sesi. `null` kalau AUTH_SECRET
+ * belum dipasang — gagal-mengunci, sama dengan jalur sesi.
+ */
+export function tandaTanganiPayload(payload: object): string | null {
+  const s = secret();
+  if (!s) return null;
+  const body = Buffer.from(JSON.stringify(payload)).toString("base64url");
+  return `${body}.${hmac(body, s)}`;
+}
+
+/**
+ * Kebalikannya: periksa tanda tangan lalu pulangkan isinya. `null` kalau kunci
+ * belum dipasang, bentuk tokennya salah, atau tanda tangannya tidak cocok.
+ *
+ * Pembandingnya `timingSafeEqual` — sama dengan `verifyToken` — supaya lama
+ * waktu balasan tidak membocorkan seberapa dekat tebakan penyerang.
+ */
+export function bacaPayloadBertandaTangan<T>(
+  token: string | null | undefined,
+): T | null {
+  const s = secret();
+  if (!s || !token) return null;
+  const dot = token.indexOf(".");
+  if (dot < 0) return null;
+  const body = token.slice(0, dot);
+  const a = Buffer.from(token.slice(dot + 1));
+  const b = Buffer.from(hmac(body, s));
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
+  try {
+    return JSON.parse(Buffer.from(body, "base64url").toString("utf-8")) as T;
+  } catch {
+    return null;
+  }
+}

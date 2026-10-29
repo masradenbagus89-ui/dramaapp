@@ -44,6 +44,11 @@ export default function PublicTopBars({ menus }: Props) {
         onValueChange={setQuery}
         onSubmit={cari}
         className={KELAS_MENEMPEL_KEPALA}
+        /* Sama dengan /beranda & halaman film — lihat alasannya di
+           KepalaBeranda.tsx. Halaman depan WAJIB ikut: ia justru halaman yang
+           paling sering dilihat, dan kepala yang berbeda di sini akan
+           mengembalikan persis keluhan "beda dengan Home". */
+        modeTombol
         chrome={{
           /* Logo dirapikan 2026-09-21: kotak kuning berisi huruf "D" diganti
              lambang situs yang sesungguhnya. Komponennya SAMA dengan kepala

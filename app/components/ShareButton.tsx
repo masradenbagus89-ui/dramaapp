@@ -18,6 +18,7 @@ const FEEDBACK_MS = 2000;
 export default function ShareButton({
   title,
   className,
+  terang = false,
 }: {
   title: string;
   /**
@@ -26,6 +27,12 @@ export default function ShareButton({
    * kotak info video Playly memakainya untuk versi yang lebih kecil.
    */
   className?: string;
+  /**
+   * Gambar untuk LATAR TERANG (halaman film sejak owner 2026-10-29).
+   * Default `false` = tampilan gelap seperti semula, jadi pemakai lain —
+   * termasuk layar pemutar — tidak ikut berubah.
+   */
+  terang?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -59,7 +66,10 @@ export default function ShareButton({
       variant="outline"
       onClick={onClick}
       className={cn(
-        "h-auto w-full rounded-full border border-zinc-700 bg-zinc-900 py-3 text-sm font-semibold text-zinc-200 transition-colors hover:border-amber-500 hover:text-amber-400",
+        "h-auto w-full rounded-full border py-3 text-sm font-semibold transition-colors hover:border-amber-500",
+        terang
+          ? "border-zinc-300 bg-white text-zinc-700 hover:text-amber-600"
+          : "border-zinc-700 bg-zinc-900 text-zinc-200 hover:text-amber-400",
         className,
       )}
     >

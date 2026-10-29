@@ -130,8 +130,39 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
    * browser tiap pengunjung padahal yang tergambar cuma 5 petak.
    */
   const semuaDrama = await getAllDramasCachedSafe();
+
+  /**
+   * Kandidat "terkait" DISARING ke jenis yang SAMA (owner 2026-10-29: *"kalau
+   * yang diputar drama, sidebar kanan drama terkait; kalau film, film
+   * terkait"*).
+   *
+   * Sebelumnya seluruh katalog jadi kandidat, sehingga halaman serial 38
+   * episode menawarkan daftar berjudul "FILM TERKAIT" berisi film layar lebar.
+   * Dua jenis tontonan yang berbeda: orang yang sedang mengikuti serial tidak
+   * sedang mencari film sekali tonton.
+   *
+   * `isMovie()` — SATU-SATUNYA tempat yang memutuskan film atau serial
+   * (lib/types.ts). Dipakai ulang, bukan ditebak dari jumlah episode, supaya
+   * tak ada aturan kedua yang bisa menyimpang.
+   *
+   * ⚠️ JATUH-KEMBALI saat katalog sejenis terlalu tipis. Diukur 2026-10-29,
+   * katalog berisi 1 film dan 39 serial — jadi halaman FILM tidak punya satu
+   * pun film lain untuk ditawarkan, dan penyaringan ketat membuat kolom
+   * kanannya hilang sama sekali. Dalam keadaan itu seluruh katalog dipakai,
+   * DAN judulnya ikut berubah jadi "Tontonan Lain": daftar campuran di bawah
+   * judul "Film Terkait" adalah janji yang tidak ditepati.
+   */
+  const sejenis = semuaDrama.filter((d) => isMovie(d) === film);
+  /** `> 1` karena judul yang sedang dibuka ikut terhitung di `sejenis`. */
+  const cukupSejenis = sejenis.length > 1;
+  const kandidatTerkait = cukupSejenis ? sejenis : semuaDrama;
+  const judulTerkait = cukupSejenis
+    ? film
+      ? "Film Terkait"
+      : "Drama Terkait"
+    : "Tontonan Lain";
   const semuaTerkait = pilihTerkait(
-    semuaDrama,
+    kandidatTerkait,
     // Genre + kategori + negara diadu bersama; makin banyak yang beririsan,
     // makin tinggi skornya. Lihat `pilihTerkait` di lib/film-terkait.ts.
     { id: drama.id, label: [drama.genre, drama.category, drama.country].filter(Boolean).join(", ") },
@@ -194,7 +225,11 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
             <div className="relative min-h-0 border-zinc-800 lg:border-l">
               <div className="flex flex-col lg:absolute lg:inset-0">
                 <PanelFilm
-                  judul="Film Terkait"
+                  /* Judul mengikuti ISI yang benar-benar tergambar, bukan
+                     sekadar jenis halaman — lihat `judulTerkait` di atas.
+                     "FILM TERKAIT" di atas daftar serial terbaca seperti
+                     salah daftar (owner 2026-10-29). */
+                  judul={judulTerkait}
                   items={terkaitSidebar}
                   gelap
                   gulung

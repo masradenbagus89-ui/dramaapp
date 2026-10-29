@@ -8,6 +8,7 @@ import { buildNavMenus } from "@/lib/nav-katalog";
 import BadanKatalog from "../components/beranda/BadanKatalog";
 import KepalaBeranda from "../components/beranda/KepalaBeranda";
 import PersonalRows from "../components/beranda/PersonalRows";
+import PanelLipat from "../components/beranda/PanelLipat";
 
 // Disimpan & dipakai ulang, disegarkan tiap 60 detik (menggantikan force-dynamic
 // yang membangun ulang halaman untuk tiap pengunjung).
@@ -89,8 +90,17 @@ export default async function BerandaPage() {
            personal lain sengaja tidak ikut supaya halaman ini benar-benar sama
            dengan landing page; yang ini tetap karena ia satu-satunya cara
            penonton meneruskan episode yang tertinggal di tengah. */
+        /* TERSEMBUNYI sampai diklik (owner 2026-10-29: *"lanjut menonton buat
+           seperti itu, disembunyikan — kalau dipisah masih terlihat sama"*).
+           Bentuk accordion-nya komponen yang SAMA dengan pintu akun di landing
+           page, jadi keduanya tak bisa menyimpang.
+
+           `tanpaJudul`: tombol panelnya sudah bertuliskan "Lanjutkan
+           Menonton", jadi judul di dalam barisnya akan jadi kembar. */
         slotAtas={
-          <PersonalRows dramas={dramas} hanyaLanjut />
+          <PanelLipat judul="Lanjutkan Menonton">
+            <PersonalRows dramas={dramas} hanyaLanjut tanpaJudul />
+          </PanelLipat>
         }
       />
     </div>

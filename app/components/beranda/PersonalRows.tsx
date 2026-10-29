@@ -29,6 +29,7 @@ import ContentRow from "../ContentRow";
 export default function PersonalRows({
   dramas,
   hanyaLanjut = false,
+  tanpaJudul = false,
 }: {
   dramas: Drama[];
   /**
@@ -44,6 +45,14 @@ export default function PersonalRows({
    * berkas ini tetap SATU: dua salinan logika riwayat akan melenceng diam-diam.
    */
   hanyaLanjut?: boolean;
+  /**
+   * Lepas judul "Lanjut Menonton" dari barisnya.
+   *
+   * Dipakai saat baris ini berada DI DALAM `PanelLipat` yang tombolnya sudah
+   * bertuliskan "Lanjutkan Menonton" (owner 2026-10-29) — tanpa ini judulnya
+   * tergambar dua kali berturut-turut.
+   */
+  tanpaJudul?: boolean;
 }) {
   const [mounted, setMounted] = useState(false);
   const [history, setHistory] = useState<HistoryItem[]>([]);
@@ -127,8 +136,8 @@ export default function PersonalRows({
     <div className="space-y-7 md:space-y-9">
       {continueWatching.length > 0 && (
         <ContentRow
-          title="Lanjut Menonton"
-          subtitle="Teruskan dari menit terakhir"
+          title={tanpaJudul ? "" : "Lanjut Menonton"}
+          subtitle={tanpaJudul ? undefined : "Teruskan dari menit terakhir"}
           dramas={continueWatching}
           continueMap={continueMap}
           href="/history"

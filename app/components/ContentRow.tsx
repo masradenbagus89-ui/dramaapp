@@ -13,6 +13,14 @@ import { cn } from "@/lib/utils";
 
 type ContinueMeta = { episode: number; positionSec: number };
 
+/**
+ * Perkiraan jumlah kartu yang muat dalam satu layar lebar. Dipakai memutuskan
+ * perlu-tidaknya panah geser. Perkiraan, bukan hitungan persis — mengukur
+ * lebar sesungguhnya butuh JavaScript yang berjalan tiap kali ukuran jendela
+ * berubah, dan itu harga yang terlalu mahal untuk menyembunyikan dua tombol.
+ */
+const KARTU_MUAT_SELAYAR = 6;
+
 type Props = {
   title: string;
   subtitle?: string;
@@ -34,6 +42,19 @@ export default function ContentRow({
 
   if (dramas.length === 0) return null;
 
+  /**
+   * Panah geser hanya berguna kalau isinya MEMANG tidak muat satu layar.
+   *
+   * Owner 2026-10-29 menunjuk baris "Lanjut Menonton" yang isinya satu kartu:
+   * panah kiri/kanan tetap tergambar, dan menekannya tidak melakukan apa pun —
+   * tombol yang mati tanpa tanda. Ambangnya disamakan dengan jumlah kartu yang
+   * muat di layar lebar (±6); di bawah itu barisnya pasti utuh terlihat.
+   *
+   * Di layar sempit panah memang sudah disembunyikan (`hidden md:flex`), jadi
+   * aturan ini hanya menambah, tidak mengurangi.
+   */
+  const perluGeser = dramas.length > KARTU_MUAT_SELAYAR;
+
   const scroll = (dir: -1 | 1) => {
     const el = scroller.current;
     if (!el) return;
@@ -42,16 +63,23 @@ export default function ContentRow({
 
   return (
     <section className="group/row">
+      {/* Header dilewati kalau `title` kosong. Dipakai saat baris ini sudah
+          berada DI DALAM panel yang judulnya sendiri sudah menyebutkan isinya
+          (lihat PanelLipat di /beranda) — judul kembar berturut-turut persis
+          keluhan "dobel" yang owner sampaikan 2026-09-21. */}
+      {(title || href) && (
       <div className="mb-2 flex items-end justify-between px-4 md:px-0">
         <div>
-          <h2
-            className={cn(
-              "text-base font-bold md:text-lg",
-              accent ? genreTextClass(accent) : "text-white",
-            )}
-          >
-            {title}
-          </h2>
+          {title && (
+            <h2
+              className={cn(
+                "text-base font-bold md:text-lg",
+                accent ? genreTextClass(accent) : "text-white",
+              )}
+            >
+              {title}
+            </h2>
+          )}
           {accent && (
             <span
               className={cn(
@@ -71,30 +99,38 @@ export default function ContentRow({
           </Link>
         )}
       </div>
+      )}
 
       <div className="relative">
-        <div className="pointer-events-none absolute inset-y-0 left-0 z-[5] hidden w-8 bg-gradient-to-r from-black to-transparent md:block" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 z-[5] hidden w-8 bg-gradient-to-l from-black to-transparent md:block" />
-        <Button
-          type="button"
-          variant="secondary"
-          size="icon"
-          onClick={() => scroll(-1)}
-          aria-label="Geser kiri"
-          className="absolute left-0 top-[42%] z-10 hidden h-11 w-11 -translate-y-1/2 rounded-full border border-white/30 bg-black/75 text-white opacity-80 shadow-lg hover:bg-black md:flex md:group-hover/row:opacity-100"
-        >
-          <ChevronLeft className="size-6" />
-        </Button>
-        <Button
-          type="button"
-          variant="secondary"
-          size="icon"
-          onClick={() => scroll(1)}
-          aria-label="Geser kanan"
-          className="absolute right-0 top-[42%] z-10 hidden h-11 w-11 -translate-y-1/2 rounded-full border border-white/30 bg-black/75 text-white opacity-80 shadow-lg hover:bg-black md:flex md:group-hover/row:opacity-100"
-        >
-          <ChevronRight className="size-6" />
-        </Button>
+        {/* Gradien tepi ikut digerbangi: ia PETUNJUK bahwa masih ada isi di
+            luar layar. Di baris yang sudah utuh terlihat, ia justru berbohong —
+            memberi kesan ada lanjutannya padahal tidak. */}
+        {perluGeser && (
+          <>
+            <div className="pointer-events-none absolute inset-y-0 left-0 z-[5] hidden w-8 bg-gradient-to-r from-black to-transparent md:block" />
+            <div className="pointer-events-none absolute inset-y-0 right-0 z-[5] hidden w-8 bg-gradient-to-l from-black to-transparent md:block" />
+            <Button
+              type="button"
+              variant="secondary"
+              size="icon"
+              onClick={() => scroll(-1)}
+              aria-label="Geser kiri"
+              className="absolute left-0 top-[42%] z-10 hidden h-11 w-11 -translate-y-1/2 rounded-full border border-white/30 bg-black/75 text-white opacity-80 shadow-lg hover:bg-black md:flex md:group-hover/row:opacity-100"
+            >
+              <ChevronLeft className="size-6" />
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="icon"
+              onClick={() => scroll(1)}
+              aria-label="Geser kanan"
+              className="absolute right-0 top-[42%] z-10 hidden h-11 w-11 -translate-y-1/2 rounded-full border border-white/30 bg-black/75 text-white opacity-80 shadow-lg hover:bg-black md:flex md:group-hover/row:opacity-100"
+            >
+              <ChevronRight className="size-6" />
+            </Button>
+          </>
+        )}
 
         <div
           ref={scroller}

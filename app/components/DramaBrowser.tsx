@@ -183,6 +183,17 @@ export default function DramaBrowser({
            (KerangkaKepalaKatalog) — lihat alasannya di chromeKatalog(). */
         chrome={chromeKatalog(menus)}
         className={KELAS_MENEMPEL_KEPALA}
+        /* Tombol, seragam dengan seluruh situs (owner 2026-10-29: *"di bagian
+           discover pun berlaku hal yang sama untuk search"*).
+
+           ⚠️ `bukaAwal` WAJIB ikut. Ini halaman HASIL pencarian: kalau
+           penonton tiba lewat `?q=naruto`, kata kunci itu harus TERLIHAT —
+           tersembunyi di balik tombol, ia tak tahu apa yang sedang dicari dan
+           tak bisa menyuntingnya. Jadi kotaknya terbuka sendiri HANYA saat
+           memang ada kata kunci; tanpa itu tampilannya seragam dengan halaman
+           lain. */
+        modeTombol
+        bukaAwal={Boolean(filter.q)}
       />
       {/* activeHref: chip yang alamatnya PERSIS sama dengan penyaring yang
           sedang berlaku akan disorot. Cocok karena tiap chip memasang satu

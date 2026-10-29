@@ -93,6 +93,16 @@ type Props = {
    * kehilangan pencariannya.
    */
   modeTombol?: boolean;
+  /**
+   * Buka kotaknya SEJAK AWAL walau `modeTombol` menyala.
+   *
+   * Dipakai `/discover` saat halaman dibuka dengan kata kunci (`?q=…`): di
+   * halaman HASIL pencarian, kata kunci yang sedang berlaku wajib terlihat —
+   * kalau tersembunyi di balik tombol, penonton tidak tahu apa yang sedang
+   * dicari dan tidak bisa menyuntingnya. Tanpa kata kunci, tombolnya tetap
+   * tertutup seperti halaman lain, jadi tampilannya tetap seragam.
+   */
+  bukaAwal?: boolean;
 };
 
 /**
@@ -119,10 +129,28 @@ export default function SearchBar({
   action,
   namaKolom,
   modeTombol = false,
+  bukaAwal = false,
 }: Props) {
   const [filterTerbuka, setFilterTerbuka] = useState(false);
-  const [cariTerbuka, setCariTerbuka] = useState(false);
+  const [cariTerbuka, setCariTerbuka] = useState(bukaAwal);
   const kotakRef = useRef<HTMLInputElement>(null);
+
+  /**
+   * Buka kotaknya begitu `bukaAwal` menyala.
+   *
+   * ⚠️ `useState(bukaAwal)` saja TIDAK CUKUP, dan ini bug yang sudah terbukti:
+   * `/discover` adalah halaman STATIS, jadi saat HTML-nya dibuat kata kunci
+   * `?q=…` belum terbaca — `bukaAwal` masih false. Kata kuncinya baru muncul di
+   * browser lewat `useSearchParams`, dan nilai AWAL `useState` tak pernah
+   * diperbarui sesudah itu. Akibatnya penonton yang tiba lewat tautan
+   * pencarian melihat kotak tertutup, tanpa tahu apa yang sedang dicari.
+   *
+   * Hanya MEMBUKA, tidak pernah menutup: kalau penonton sengaja menutup kotak
+   * sementara kata kuncinya masih berlaku, ia harus tetap tertutup.
+   */
+  useEffect(() => {
+    if (bukaAwal) setCariTerbuka(true);
+  }, [bukaAwal]);
 
   // Fokus langsung ke kotak begitu lapisan terbuka, dan tutup dengan Esc.
   // Tanpa fokus otomatis, penonton harus mengklik dua kali untuk mulai
@@ -211,24 +239,16 @@ export default function SearchBar({
           <div className="order-1 shrink-0 md:order-none">{chrome.brand}</div>
         )}
 
-        {/* KOTAK CARI — dua bentuk, satu sumber.
+        {/* KOTAK CARI mode BIASA (halaman hasil pencarian). Mode TOMBOL tidak
+            di sini — ia dipindah ke UJUNG KANAN bar, lihat di bawah.
             Isinya dirakit SEKALI di `formCari` (di atas `return`) lalu dipakai
-            apa adanya di bar maupun di dalam lapisan popup. Ditulis dua kali,
-            keduanya pasti menyimpang — tulisan placeholder di repo ini sudah
-            dua kali menyimpang karena persis sebab itu (lihat TEKS_KOTAK_CARI). */}
-        {modeTombol ? (
-          <button
-            type="button"
-            onClick={() => setCariTerbuka(true)}
-            aria-label="Cari film"
-            aria-expanded={cariTerbuka}
-            className="order-2 flex size-9 shrink-0 items-center justify-center rounded-sm text-white transition-colors outline-none hover:bg-black/25 focus-visible:bg-black/25 md:order-none"
-          >
-            <Search className="size-5" />
-          </button>
-        ) : (
-          formCari("order-3 flex w-full min-w-0 items-stretch md:order-none md:w-auto md:max-w-xl md:flex-1")
-        )}
+            apa adanya di bar maupun di dalam panel. Ditulis dua kali, keduanya
+            pasti menyimpang — tulisan placeholder di repo ini sudah dua kali
+            menyimpang karena persis sebab itu (lihat TEKS_KOTAK_CARI). */}
+        {!modeTombol &&
+          formCari(
+            "order-3 flex w-full min-w-0 items-stretch md:order-none md:w-auto md:max-w-xl md:flex-1",
+          )}
 
         {chrome?.menus && (
           <div className="order-4 w-full min-w-0 md:order-none md:w-auto">
@@ -256,8 +276,54 @@ export default function SearchBar({
           </>
         )}
 
+        {/* ===== CARI — TOMBOL + KOTAK yang melebar SEJAJAR di dalam bar
+               (owner 2026-10-29: *"bukan di bawahnya, tapi sejajar search"*).
+
+               Perjalanan bentuk ini sudah tiga kali, dan tiap langkah menutup
+               keluhan yang nyata:
+                 1. kotak permanen di bar      -> "searchnya kelebaran";
+                 2. lapisan menutupi layar     -> "backgroundnya bikin sakit
+                    mata" + menutupi poster film;
+                 3. panel menggantung di bawah -> masih menimpa baris poster;
+                 4. SEKARANG: kotak muncul di DALAM bar, sejajar tombolnya.
+
+               Bentuk terakhir ini satu-satunya yang menutupi NOL bagian
+               halaman: barnya memang sudah ada di situ, kotak cuma mengisi
+               ruang kosong di sebelah kiri tombol. Tak ada lapisan, tak ada
+               bayangan, tak ada yang perlu ditutup.
+
+               `ml-auto` mendorong seluruh kelompok ini ke ujung kanan. Di layar
+               sempit `flex-wrap` milik bar yang menurunkan kotaknya ke baris
+               berikutnya — masih DI DALAM bar, bukan menimpa poster. */}
+        {modeTombol && (
+          <div className="order-2 ml-auto flex min-w-0 flex-1 items-center justify-end gap-2 md:order-none">
+            {cariTerbuka && (
+              <div className="min-w-0 flex-1 md:max-w-md">
+                {formCari("flex w-full items-stretch")}
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setCariTerbuka((t) => !t)}
+              aria-label={cariTerbuka ? "Tutup pencarian" : "Cari film"}
+              aria-expanded={cariTerbuka}
+              className={cn(
+                "flex size-9 shrink-0 items-center justify-center rounded-sm text-white transition-colors outline-none hover:bg-black/25 focus-visible:bg-black/25",
+                cariTerbuka && "bg-black/30",
+              )}
+            >
+              {cariTerbuka ? (
+                <X className="size-5" />
+              ) : (
+                <Search className="size-5" />
+              )}
+            </button>
+          </div>
+        )}
+
         {chrome?.trailing && (
-          <div className="order-2 ml-auto flex shrink-0 items-center gap-2 md:order-none">
+          <div className="order-2 flex shrink-0 items-center gap-2 md:order-none">
             {chrome.trailing}
           </div>
         )}
@@ -266,59 +332,6 @@ export default function SearchBar({
       {filters && filterTerbuka && (
         <div className={cn(SHELL, "grid grid-cols-2 gap-1.5 pb-2.5 md:hidden")}>
           {filters}
-        </div>
-      )}
-
-      {/* LAPISAN CARI (owner 2026-10-29: "tombol search seperti pop up gitu").
-          Menutupi seluruh layar supaya kotaknya besar & jelas, tanpa memakan
-          ruang di bar saat tidak dipakai — itu inti keluhan "searchnya
-          kelebaran" yang sudah dua kali diputar ukurannya.
-
-          Latar gelapnya SENGAJA bisa diklik untuk menutup, selain tombol X dan
-          tombol Esc. Tiga jalan keluar, karena lapisan yang menutupi seluruh
-          layar tanpa jalan keluar yang jelas adalah jebakan — penonton
-          mengira situsnya menggantung. */}
-      {cariTerbuka && (
-        <div
-          /* TANPA `backdrop-blur` dan gelapnya dikurangi 80% -> 55% (owner
-             2026-10-29: "backgroundnya jangan blur kali, soalnya bikin sakit
-             mata"). Blur di belakang grid poster memaksa mata terus mencoba
-             memfokus ke gambar yang tak akan pernah tajam — itu yang terasa
-             melelahkan, bukan gelapnya. Cukup gelap untuk memisahkan lapisan
-             dari halaman, tanpa mengaburkan apa pun. */
-          className="fixed inset-0 z-50 bg-black/55 p-4"
-          onClick={() => setCariTerbuka(false)}
-          role="presentation"
-        >
-          <div
-            /* stopPropagation: klik DI DALAM kotak jangan ikut menutup
-               lapisannya — tanpa ini, mengklik kotak untuk menaruh kursor
-               justru membuat pencarian hilang di depan mata. */
-            onClick={(e) => e.stopPropagation()}
-            /* max-w-2xl (672px, naik dari 576px) + jarak dalam lebih lega —
-               owner: "kecil kali, bisa besar sedikit". `border` tipis
-               ditambahkan supaya panel tetap punya batas jelas sekarang latar
-               di belakangnya tidak lagi diburamkan. */
-            className="mx-auto mt-[10vh] w-full max-w-2xl rounded-xl border border-zinc-700 bg-zinc-900 p-5 shadow-2xl shadow-black/60"
-          >
-            <div className="mb-3 flex items-center justify-between">
-              <span className="text-base font-semibold text-white">
-                Cari film
-              </span>
-              <button
-                type="button"
-                onClick={() => setCariTerbuka(false)}
-                aria-label="Tutup pencarian"
-                className="flex size-9 items-center justify-center rounded-sm text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-white"
-              >
-                <X className="size-5" />
-              </button>
-            </div>
-            {formCari("flex w-full items-stretch", true)}
-            <p className="mt-2 text-xs text-zinc-500">
-              Tekan Enter untuk mencari &middot; Esc untuk menutup
-            </p>
-          </div>
         </div>
       )}
     </div>

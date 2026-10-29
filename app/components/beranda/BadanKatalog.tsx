@@ -71,6 +71,15 @@ export default function BadanKatalog({
           Latarnya gelap karena berada DI LUAR pembungkus tema-terang di bawah. */}
       <FeaturedRow dramas={heroSlides} href={heroHref} />
 
+      {/* SLOT ATAS — pengisinya yang membawa pemisahnya sendiri.
+          Sejak 2026-10-29 kedua pengisi (`LanjutMenonton` di `/`, `PanelLipat`
+          berisi `PersonalRows` di `/beranda`) sama-sama berbentuk bar lipat
+          ber-`border-y`. Pembungkus tambahan di sini akan menumpuk dua garis
+          sekaligus, jadi sengaja TIDAK ada.
+
+          Owner sempat mencoba versi "dipisah tapi tetap terbuka" dan menolaknya
+          — *"kalau dipisah masih terlihat sama"* — lalu memilih disembunyikan
+          sampai diklik. */}
       {slotAtas}
 
       {/* BADAN TERANG — dari sini ke bawah berlatar putih-abu. Pembungkus inilah

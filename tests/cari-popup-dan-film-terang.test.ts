@@ -45,8 +45,12 @@ function pasang(modeTombol: boolean) {
   );
 }
 
+/** Tombol cari. Labelnya berubah jadi "Tutup pencarian" saat kotak terbuka,
+ *  jadi keduanya dicari — satu tombol, dua keadaan. */
 const tombolCari = () =>
-  container.querySelector<HTMLButtonElement>('[aria-label="Cari film"]');
+  container.querySelector<HTMLButtonElement>(
+    '[aria-label="Cari film"], [aria-label="Tutup pencarian"]',
+  );
 const kotakCari = () =>
   container.querySelector<HTMLInputElement>('input[type="search"]');
 
@@ -113,39 +117,112 @@ describe("kotak cari jadi TOMBOL yang membuka lapisan", () => {
     expect(kotakCari()).toBeNull();
   });
 
-  it("latar lapisan TIDAK diburamkan", () => {
-    // Owner 2026-10-29: "backgroundnya jangan blur kali, soalnya bikin sakit
-    // mata." Dijaga mesin karena `backdrop-blur` gampang sekali masuk lagi
-    // saat ada yang merapikan tampilan — dan tak ada error apa pun yang
-    // memberi tahu; yang merasakannya cuma mata penonton.
+  it("🔑 kotak muncul DI DALAM bar — NOL bagian halaman tertutup", () => {
+    // Inti perjalanan empat putaran koreksi owner. Yang DILARANG di sini
+    // adalah segala bentuk elemen yang menimpa halaman:
+    //   • `fixed`    -> lapisan menutupi seluruh layar (putaran 2);
+    //   • `absolute` -> panel menggantung menimpa baris poster (putaran 3).
+    // Bentuk yang benar: kotak cuma mengisi ruang kosong di bar, sejajar
+    // tombolnya, jadi tak ada satu pun poster yang tertutup.
     pasang(true);
     act(() => tombolCari()!.click());
-    const lapisan = container.querySelector('[role="presentation"]');
-    expect(lapisan, "lapisan pencarian tidak tergambar").toBeTruthy();
-    const kelas = lapisan!.className;
-    expect(kelas, "latar lapisan diburamkan lagi").not.toMatch(/backdrop-blur/);
-    // Gelapnya juga dijaga: `bg-black/80` yang lama terlalu pekat.
-    expect(kelas).toContain("bg-black/55");
+    const kotak = kotakCari();
+    expect(kotak, "kotak cari tidak muncul").toBeTruthy();
+
+    // Telusuri induk kotak sampai akar: tak boleh ada yang melayang.
+    let n: HTMLElement | null = kotak!.parentElement;
+    const melayang: string[] = [];
+    while (n && n !== container) {
+      const k = n.className || "";
+      if (/fixed/.test(k)) melayang.push("fixed: " + k);
+      if (/absolute/.test(k)) melayang.push("absolute: " + k);
+      n = n.parentElement;
+    }
+    expect(
+      melayang,
+      "kotak cari dibungkus elemen melayang — ia akan menimpa poster film, " +
+        "persis keluhan yang membuat bentuknya diubah empat kali",
+    ).toEqual([]);
+
+    // Tak boleh ada penangkap klik yang menutupi layar.
+    expect(
+      container.querySelector('[role="presentation"]'),
+      "masih ada lapisan penangkap klik yang menutupi halaman",
+    ).toBeNull();
   });
 
-  it("kotak di lapisan LEBIH BESAR daripada kotak di bar", () => {
-    // Owner: "kecil kali, bisa besar sedikit". Yang dijaga PERBANDINGANNYA,
-    // bukan angka mutlak — supaya mengubah ukuran nanti tidak otomatis merah,
-    // tapi menyamakannya lagi (yang mengembalikan keluhan) tetap merah.
+  it("kotak & tombol SEJAJAR di ujung kanan bar", () => {
     pasang(true);
     act(() => tombolCari()!.click());
-    expect(kotakCari()!.className).toContain("h-12");
-
-    act(() => {
-      window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
-    });
-    pasang(false);
-    // Bar BIASA (/discover) wajib tetap ramping — menaikkannya di sana akan
-    // meninggikan seluruh kepala situs.
+    const kotak = kotakCari()!;
+    const tombol = tombolCari()!;
+    // Keduanya anak dari pembungkus yang sama = berdiri sejajar satu baris.
+    const indukBersama = tombol.parentElement!;
+    expect(indukBersama.contains(kotak)).toBe(true);
+    // `ml-auto` yang mendorong kelompok ini ke ujung kanan bar.
+    expect(indukBersama.className).toContain("ml-auto");
+    // Kotak SEBELUM tombol dalam urutan DOM = kotak melebar ke KIRI.
     expect(
-      kotakCari()!.className,
-      "kotak cari di bar ikut membesar — kepala situs /discover jadi tinggi",
-    ).toContain("h-9");
+      indukBersama.innerHTML.indexOf("input"),
+      "tombol mendahului kotak — kotaknya akan melebar ke kanan, keluar bar",
+    ).toBeLessThan(indukBersama.innerHTML.indexOf("<button"));
+  });
+
+  it("tombol berubah jadi ✕ saat kotak terbuka", () => {
+    // Satu tombol, dua keadaan — penonton tak perlu mencari cara menutupnya.
+    pasang(true);
+    expect(tombolCari()).toBeTruthy();
+    act(() => tombolCari()!.click());
+    expect(
+      container.querySelector('[aria-label="Tutup pencarian"]'),
+      "tombol tidak berubah jadi tutup — penonton kehilangan jalan menutup " +
+        "selain menekan Esc",
+    ).toBeTruthy();
+  });
+
+  it("tinggi kotak SAMA dengan tombol — satu baris rapi", () => {
+    // Kotak `h-12` (ukuran panel lama) di samping tombol `size-9` akan
+    // meninggikan seluruh bar dan mendorong strip genre turun.
+    pasang(true);
+    act(() => tombolCari()!.click());
+    expect(kotakCari()!.className).toContain("h-9");
+  });
+
+  it("`bukaAwal` membuka kotak — walau menyala BELAKANGAN", () => {
+    // 🪤 Bug yang sudah terbukti: `/discover` halaman STATIS, jadi saat HTML
+    // dibuat kata kunci `?q=…` belum terbaca dan `bukaAwal` masih false. Ia
+    // baru menyala di browser. `useState(bukaAwal)` saja tak pernah menyusul —
+    // penonton yang tiba lewat tautan pencarian melihat kotak tertutup tanpa
+    // tahu apa yang sedang dicari.
+    act(() =>
+      root.render(
+        h(SearchBar, {
+          value: "",
+          onValueChange: () => {},
+          modeTombol: true,
+          bukaAwal: false,
+        }),
+      ),
+    );
+    expect(kotakCari(), "kotak terbuka padahal bukaAwal false").toBeNull();
+
+    // Kata kunci terbaca BELAKANGAN (hydration di browser).
+    act(() =>
+      root.render(
+        h(SearchBar, {
+          value: "naruto",
+          onValueChange: () => {},
+          modeTombol: true,
+          bukaAwal: true,
+        }),
+      ),
+    );
+    expect(
+      kotakCari(),
+      "kotak tidak ikut terbuka saat kata kunci menyala belakangan — " +
+        "penonton tak tahu apa yang sedang dicari",
+    ).toBeTruthy();
+    expect(kotakCari()!.getAttribute("value")).toBe("naruto");
   });
 
   it("mode BIASA tidak berubah — kotak langsung tergambar, tanpa tombol", () => {
@@ -225,5 +302,83 @@ describe("halaman film berlatar TERANG + sidebar", () => {
           `(termasuk layar pemutar) ikut berubah tanpa diminta`,
       ).toContain("terang = false");
     }
+  });
+});
+
+// ===========================================================================
+// PEMISAH "Lanjut Menonton" + panah geser cerdas (owner 2026-10-29)
+// ===========================================================================
+describe("baris Lanjut Menonton DISEMBUNYIKAN sampai diklik", () => {
+  const BERANDA = readFileSync("app/beranda/page.tsx", "utf-8");
+  const BADAN = readFileSync(
+    "app/components/beranda/BadanKatalog.tsx",
+    "utf-8",
+  );
+  const PANEL = readFileSync(
+    "app/components/beranda/PanelLipat.tsx",
+    "utf-8",
+  );
+  const ROW = readFileSync("app/components/ContentRow.tsx", "utf-8");
+
+  it("dibungkus panel lipat, bukan sekadar dipisah garis", () => {
+    // Owner 2026-10-29 menolak versi "dipisah tapi tetap terbuka":
+    // *"kalau dipisah masih terlihat sama"*. Yang diminta: tersembunyi sampai
+    // tombolnya diklik.
+    expect(BERANDA).toContain('<PanelLipat judul="Lanjutkan Menonton">');
+  });
+
+  it("TERTUTUP saat halaman dibuka", () => {
+    // Inti permintaannya. Kalau bawaannya terbuka, kita kembali ke versi yang
+    // sudah ditolak.
+    expect(PANEL).toContain("bawaanTerbuka = false");
+  });
+
+  it("judul tidak kembar — barisnya dioper `tanpaJudul`", () => {
+    // Tombol panel sudah bertuliskan "Lanjutkan Menonton"; judul di dalam
+    // barisnya akan jadi kembar berturut-turut.
+    expect(BERANDA).toContain("tanpaJudul");
+    expect(ROW).toContain("{(title || href) && (");
+  });
+
+  it("isinya TIDAK dirender selama tertutup", () => {
+    // Disembunyikan dengan CSS saja tidak cukup: isi yang tetap hidup masih
+    // bisa dijangkau Tab dan masih dibacakan pembaca layar — penonton
+    // "menabrak" isi yang tak terlihat di layar.
+    expect(PANEL).toContain("{terbuka && (");
+  });
+
+  it("satu komponen accordion untuk KEDUA halaman", () => {
+    // `/` (pintu akun) dan `/beranda` (riwayat) memakai bentuk yang sama.
+    // Dua accordion mirip pasti menyimpang begitu salah satunya diubah —
+    // sudah tiga kali terjadi di repo ini pada kepala situs.
+    const landing = readFileSync(
+      "app/components/beranda/LanjutMenonton.tsx",
+      "utf-8",
+    );
+    expect(landing).toContain("<PanelLipat");
+    expect(landing, "LanjutMenonton merakit accordion-nya sendiri").not.toContain(
+      "aria-expanded={terbuka}",
+    );
+  });
+
+  it("pembungkus pemisah GANDA dilepas dari badan bersama", () => {
+    // `PanelLipat` sudah membawa `border-y` sendiri. Pembungkus tambahan di
+    // BadanKatalog akan menumpuk dua garis sekaligus.
+    expect(BADAN).not.toContain("border-y border-zinc-800 bg-zinc-950");
+  });
+
+  it("panah geser hilang saat isinya muat satu layar", () => {
+    // Owner menunjuk baris berisi SATU kartu yang panahnya tetap tergambar —
+    // ditekan, tak terjadi apa pun. Tombol mati tanpa tanda.
+    expect(ROW).toContain("const perluGeser = dramas.length >");
+    expect(ROW).toContain("{perluGeser && (");
+  });
+
+  it("gradien tepi ikut hilang bersama panahnya", () => {
+    // Gradien itu PETUNJUK "masih ada isi di luar layar". Di baris yang sudah
+    // utuh terlihat, ia berbohong.
+    const blok = ROW.slice(ROW.indexOf("{perluGeser && ("));
+    expect(blok).toContain("bg-gradient-to-r from-black");
+    expect(blok).toContain("bg-gradient-to-l from-black");
   });
 });

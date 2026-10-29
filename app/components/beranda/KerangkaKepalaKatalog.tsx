@@ -75,6 +75,12 @@ export default function KerangkaKepalaKatalog({ menus }: Props) {
         onSubmit={() => router.push(alamatCari(query))}
         className={KELAS_MENEMPEL_KEPALA}
         chrome={chromeKatalog(menus)}
+        /* WAJIB sama dengan DramaBrowser (bar /discover yang sesungguhnya).
+           Kerangka ini ditukar isi sungguhan begitu halaman aktif — kalau
+           bentuk barnya beda, bar MELOMPAT tepat di depan mata penonton.
+           Pelajaran yang sudah tercatat di KELAS_MENEMPEL_KEPALA: beda 56px
+           saja sudah terasa, apalagi kotak lebar vs tombol. */
+        modeTombol
         action={TUJUAN_CARI}
         namaKolom="q"
       />

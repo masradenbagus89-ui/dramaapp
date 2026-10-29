@@ -1,11 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { AKUN_PENONTON_ENABLED } from "@/lib/saklar-fitur";
+import PanelLipat from "./PanelLipat";
 
 /**
  * Bar "Lanjutkan Menonton" di bawah hero — PINTU MASUK AKUN yang tertutup
@@ -27,8 +25,6 @@ import { AKUN_PENONTON_ENABLED } from "@/lib/saklar-fitur";
  * pemeriksaan hak akses.
  */
 export default function LanjutMenonton() {
-  const [terbuka, setTerbuka] = useState(false);
-
   // DIAM TOTAL saat akun penonton dijeda (2026-10-29). Bar ini BUKAN daftar
   // tontonan — isinya cuma dua tombol Masuk/Daftar, jadi tanpa akun ia jadi
   // tombol yang terbuka ke panel kosong. Early-return, bukan menyembunyikan
@@ -36,57 +32,32 @@ export default function LanjutMenonton() {
   // menampilkan apa-apa terbaca persis seperti situs rusak.
   if (!AKUN_PENONTON_ENABLED) return null;
 
+  // Bentuk accordion-nya kini milik `PanelLipat` — komponen yang SAMA dipakai
+  // baris "Lanjut Menonton" di /beranda (owner 2026-10-29), supaya keduanya
+  // tak bisa menyimpang bentuknya.
   return (
-    <section className="border-b border-zinc-800 bg-zinc-900">
-      <div className="shell-wide mx-auto px-4 md:px-6">
-        <button
-          type="button"
-          onClick={() => setTerbuka((b) => !b)}
-          aria-expanded={terbuka}
-          aria-controls="panel-lanjut-menonton"
-          /* min-h-11 = ~44px: batas target sentuh yang masih nyaman ditekan
-             jari di HP (standar aksesibilitas, skills/a11y). */
-          className="flex min-h-11 w-full items-center justify-center gap-1.5 text-sm font-bold text-amber-400 transition-colors hover:text-amber-300"
-        >
-          Lanjutkan Menonton
-          <ChevronDown
-            className={cn(
-              "size-4 transition-transform duration-200",
-              terbuka && "rotate-180",
-            )}
-          />
-        </button>
-
-        {/* Dirender hanya saat terbuka, bukan disembunyikan dengan CSS:
-            isinya cuma dua tautan, jadi tak ada yang perlu dipertahankan
-            hidup di balik layar. */}
-        {terbuka && (
-          <div
-            id="panel-lanjut-menonton"
-            className="flex flex-col items-center gap-2.5 pb-5 text-center"
+    <PanelLipat judul="Lanjutkan Menonton">
+      <div className="flex flex-col items-center gap-2.5 text-center">
+        <p className="text-xs text-zinc-400 md:text-sm">
+          Masuk untuk melanjutkan dari episode terakhir yang kamu tonton, dan
+          menyimpan drama favorit.
+        </p>
+        <div className="flex flex-wrap justify-center gap-2">
+          <Button
+            asChild
+            className="rounded-full bg-amber-400 px-5 text-sm font-bold text-black hover:bg-amber-300"
           >
-            <p className="text-xs text-zinc-400 md:text-sm">
-              Masuk untuk melanjutkan dari episode terakhir yang kamu tonton,
-              dan menyimpan drama favorit.
-            </p>
-            <div className="flex flex-wrap justify-center gap-2">
-              <Button
-                asChild
-                className="rounded-full bg-amber-400 px-5 text-sm font-bold text-black hover:bg-amber-300"
-              >
-                <Link href="/login">Masuk</Link>
-              </Button>
-              <Button
-                asChild
-                variant="outline"
-                className="rounded-full border-zinc-600 bg-transparent px-5 text-sm font-semibold text-white hover:border-amber-400 hover:text-amber-400"
-              >
-                <Link href="/daftar">Daftar Gratis</Link>
-              </Button>
-            </div>
-          </div>
-        )}
+            <Link href="/login">Masuk</Link>
+          </Button>
+          <Button
+            asChild
+            variant="outline"
+            className="rounded-full border-zinc-600 bg-transparent px-5 text-sm font-semibold text-white hover:border-amber-400 hover:text-amber-400"
+          >
+            <Link href="/daftar">Daftar Gratis</Link>
+          </Button>
+        </div>
       </div>
-    </section>
+    </PanelLipat>
   );
 }

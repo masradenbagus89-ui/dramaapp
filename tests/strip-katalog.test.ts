@@ -237,22 +237,27 @@ describe("chip strip & menu yang SUNGGUHAN digambar halaman", () => {
     expect(html).toContain('alt="DramaKu"');
   });
 
-  it("kotak cari memanjang, tidak lagi dipatok 28rem", () => {
+  it("pencarian /discover kini TOMBOL, seragam dengan seluruh situs", () => {
+    // Owner 2026-10-29: *"di bagian discover pun berlaku hal yang sama untuk
+    // search"*. Lebar kotaknya sudah tidak relevan — ia tidak lagi duduk di
+    // bar. Yang dijaga sekarang: tombolnya ADA (tanpa itu halaman ini
+    // kehilangan pencariannya).
     const html = renderToStaticMarkup(
       createElement(DramaBrowser, { dramas: KATALOG }),
     );
-    expect(html).toContain("md:flex-1");
-    expect(html).not.toContain("md:max-w-md");
+    expect(html).toContain('aria-label="Cari film"');
   });
 
-  it("kotak cari memakai tulisan pendek yang diminta owner", () => {
-    const html = renderToStaticMarkup(
-      createElement(DramaBrowser, { dramas: KATALOG }),
-    );
-    expect(html).toContain('placeholder="Cari film di DramaKu"');
-    // Kotak carinya tetap kotak cari sungguhan, bukan hiasan.
-    expect(html).toContain('role="search"');
-    expect(html).toContain('type="search"');
+  it("kotak TERBUKA SENDIRI kalau halaman dibuka dengan kata kunci", () => {
+    // ⚠️ Pagar terpenting di halaman ini. /discover adalah halaman HASIL
+    // pencarian: kalau penonton tiba lewat `?q=…`, kata kuncinya WAJIB
+    // terlihat — tersembunyi di balik tombol, ia tak tahu apa yang sedang
+    // dicari dan tak bisa menyuntingnya.
+    const sumber = readFileSync("app/components/DramaBrowser.tsx", "utf-8");
+    expect(
+      sumber,
+      "`bukaAwal` hilang — kata kunci yang sedang berlaku akan tersembunyi",
+    ).toContain("bukaAwal={Boolean(filter.q)}");
   });
 
   it("menggambar keenam tombol menu dengan tulisan yang ditentukan owner", () => {
@@ -357,8 +362,11 @@ describe("kerangka kepala /discover", () => {
     ["bar merah", "from-rose-700 via-rose-600 to-pink-600"],
     ["logo situs", 'alt="DramaKu"'],
     ["tombol menu garis-tiga", 'aria-label="Menu halaman"'],
-    ["tulisan kotak cari", `placeholder="${TEKS_KOTAK_CARI}"`],
-    ["penanda pencarian", 'role="search"'],
+    // Kotak cari TIDAK lagi duduk di bar sejak 2026-10-29 (owner: pencarian
+    // jadi tombol di seluruh situs), jadi `placeholder` & `role="search"`
+    // memang sudah tidak ada di HTML awal. Penggantinya TOMBOLNYA — itulah
+    // yang sekarang wajib sama antara kerangka dan kepala sungguhan.
+    ["tombol cari", 'aria-label="Cari film"'],
   ];
 
   for (const [nama, tanda] of TANDA_KEPALA) {

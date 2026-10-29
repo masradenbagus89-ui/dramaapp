@@ -381,3 +381,52 @@ describe("bingkai pemutar + film terkait", () => {
     }
   });
 });
+
+// ===========================================================================
+// JENIS TAYANGAN — drama menawarkan drama, film menawarkan film
+// (owner 2026-10-29: *"kalau yang diputar drama, sidebar kanan drama terkait;
+// kalau diputar film, film terkait"*)
+// ===========================================================================
+describe("panel terkait menyesuaikan JENIS tayangan", () => {
+  const DRAMA = readFileSync("app/drama/[id]/page.tsx", "utf-8");
+
+  it("kandidat disaring ke jenis yang sama", () => {
+    // Sebelum ini halaman serial 38 episode menawarkan daftar berjudul
+    // "FILM TERKAIT" berisi film layar lebar. Dua jenis tontonan berbeda:
+    // orang yang sedang mengikuti serial tidak sedang mencari film sekali
+    // tonton.
+    expect(DRAMA).toContain("semuaDrama.filter((d) => isMovie(d) === film)");
+  });
+
+  it("memakai isMovie(), bukan menebak dari jumlah episode", () => {
+    // `isMovie` adalah SATU-SATUNYA tempat yang memutuskan film/serial
+    // (lib/types.ts). Aturan kedua yang ditulis sendiri pasti menyimpang —
+    // misalnya menebak dari `episodes === 1`, yang akan salah untuk serial
+    // yang baru punya satu episode.
+    expect(DRAMA).toContain("isMovie(d)");
+    expect(
+      DRAMA.includes("episodes === 1") || DRAMA.includes("episodes <= 1"),
+      "ada aturan jenis KEDUA yang ditebak dari jumlah episode",
+    ).toBe(false);
+  });
+
+  it("judul mengikuti jenisnya", () => {
+    expect(DRAMA).toContain('"Film Terkait"');
+    expect(DRAMA).toContain('"Drama Terkait"');
+  });
+
+  it("🪤 JATUH-KEMBALI saat katalog sejenis terlalu tipis", () => {
+    // Diukur 2026-10-29: katalog berisi 1 film + 39 serial. Penyaringan ketat
+    // membuat halaman FILM tidak punya satu pun kandidat, dan kolom kanannya
+    // hilang sama sekali. Tanpa pagar ini, "memperbaiki" judul justru
+    // menghapus panelnya.
+    expect(DRAMA).toContain("const cukupSejenis = sejenis.length > 1;");
+    expect(DRAMA).toContain("cukupSejenis ? sejenis : semuaDrama");
+  });
+
+  it("judul JUJUR saat isinya terpaksa campuran", () => {
+    // Daftar campuran di bawah judul "Film Terkait" adalah janji yang tidak
+    // ditepati. Saat jatuh-kembali, judulnya ikut berubah jadi netral.
+    expect(DRAMA).toContain('"Tontonan Lain"');
+  });
+});

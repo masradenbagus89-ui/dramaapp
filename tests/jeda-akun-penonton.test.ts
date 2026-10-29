@@ -140,6 +140,61 @@ describe("TRIPWIRE saklar akun penonton", () => {
     expect(AKUN_PENONTON_ENABLED).toBe(false);
   });
 
+  it("ADA JALAN ke /login dari dalam situs — bukan cuma halamannya hidup", async () => {
+    // 🔴 PELAJARAN MAHAL (owner 2026-10-29, sesudah rilis):
+    //
+    // Tes "halaman /login tetap hidup" di bawah SELALU HIJAU — dan tetap hijau
+    // ketika SELURUH tautan menuju ke sana sudah hilang. Owner kehilangan jalan
+    // ke panel admin-nya sendiri dan harus mengetik alamat manual.
+    //
+    // Berkas ADA != ada JALAN ke sana. Tes keberadaan berkas tidak pernah bisa
+    // membuktikan sebuah halaman masih bisa dicapai. Ini penjaga yang kurang
+    // waktu itu.
+    const { readFileSync } = await import("node:fs");
+
+    // Dua jalan, SENGAJA, karena masing-masing punya lubang sendiri:
+    //   • kaki situs — tidak digambar di /beranda (owner melepasnya 28 Okt);
+    //   • menu garis-tiga — hadir di /beranda, /discover, dan halaman film.
+    // Kalau salah satu hilang, yang lain masih menyelamatkan.
+    const kaki = readFileSync(
+      "app/components/beranda/FooterSitus.tsx",
+      "utf-8",
+    );
+    const menu = readFileSync(
+      "app/components/beranda/KepalaKatalog.tsx",
+      "utf-8",
+    );
+
+    expect(
+      kaki,
+      "kaki situs kehilangan jalan masuk pengelola",
+    ).toContain('href="/login"');
+    expect(
+      menu,
+      "menu garis-tiga kehilangan jalan masuk pengelola — di /beranda " +
+        "(tanpa kaki situs) owner tak punya jalan ke dashboard sama sekali",
+    ).toContain("Masuk sebagai pengelola");
+  });
+
+  it("jalan pengelola TIDAK ikut dijeda saklar penonton", async () => {
+    // Justru saat `AKUN_PENONTON_ENABLED` MATI-lah tautan ini paling
+    // dibutuhkan. Menggerbanginya dengan saklar yang sama = mengulang persis
+    // kesalahan yang baru diperbaiki.
+    const { readFileSync } = await import("node:fs");
+    const menu = readFileSync(
+      "app/components/beranda/KepalaKatalog.tsx",
+      "utf-8",
+    );
+    const i = menu.indexOf("Masuk sebagai pengelola");
+    // Ambil blok cabang tempat tautan itu hidup; `AKUN_PENONTON_ENABLED`
+    // tidak boleh menjadi syaratnya.
+    const blok = menu.slice(Math.max(0, i - 600), i);
+    expect(
+      blok.includes("AKUN_PENONTON_ENABLED ?"),
+      "tautan pengelola berada di cabang yang digerbangi saklar penonton",
+    ).toBe(false);
+  });
+
   it("halaman /login & /daftar TETAP hidup — itu pintu ADMIN", async () => {
     const { existsSync } = await import("node:fs");
     expect(

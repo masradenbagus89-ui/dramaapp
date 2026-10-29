@@ -186,7 +186,31 @@ export function MenuAplikasi() {
                 Keluar
               </DropdownMenuItem>
             </>
-          ) : AKUN_PENONTON_ENABLED ? (
+          ) : (
+            <>
+              {/* JALAN MASUK PENGELOLA — selalu ada, TIDAK digerbangi
+                  `AKUN_PENONTON_ENABLED` (owner 2026-10-29).
+
+                  Kaki situs juga memuat tautan yang sama, TAPI kaki itu tidak
+                  digambar di /beranda (owner melepasnya 2026-10-28) — padahal
+                  /beranda justru halaman yang paling sering dibuka owner.
+                  Menu garis-tiga ini hadir di /beranda, /discover, DAN semua
+                  halaman film, jadi inilah jalan yang paling bisa diandalkan.
+
+                  Tertutup di balik satu klik, jadi tidak mengajak penonton
+                  mendaftar — yang persis jadi alasan tombol Masuk/Daftar
+                  dijeda. Kata "pengelola" dipilih supaya penonton tahu ini
+                  bukan untuk mereka. */}
+              <DropdownMenuSeparator className="bg-zinc-700" />
+              <DropdownMenuItem asChild className={ITEM_CLASS}>
+                <Link href="/login" className="text-zinc-400">
+                  Masuk sebagai pengelola
+                </Link>
+              </DropdownMenuItem>
+            </>
+          )}
+
+          {!mounted || user ? null : AKUN_PENONTON_ENABLED ? (
             /* Masuk & Daftar ada DI SINI, bukan sebagai tombol di bar cari —
                owner 2026-09-21: tombolnya dobel dengan ajakan di badan halaman.
                Tapi menghapusnya begitu saja akan membuat halaman ini tak punya

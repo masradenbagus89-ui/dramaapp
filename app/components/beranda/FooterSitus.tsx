@@ -150,10 +150,40 @@ export default function FooterSitus({
           </section>
         </div>
 
-        <div className="mt-8 border-t border-zinc-800 pt-5 text-center text-xs text-zinc-500">
+        <div className="mt-8 flex flex-col items-center gap-2 border-t border-zinc-800 pt-5 text-center text-xs text-zinc-500">
           <p>
             © {TAHUN_RILIS} {SITE_NAME}. Seluruh hak cipta judul ada pada
             pemiliknya.
+          </p>
+
+          {/* JALAN MASUK PENGELOLA — dipasang 2026-10-29 sesudah owner melapor
+              *"login daftar khusus viewer saja yang dihilangkan, kenapa admin
+              juga ikut nggak ada, gimana aku edit dashboard-ku"*.
+
+              KESALAHAN YANG DIPERBAIKI: saat tombol Masuk/Daftar dijeda untuk
+              penonton, SELURUH tautan ke /login ikut hilang — termasuk jalan
+              owner sendiri ke panel admin. Halamannya tidak pernah dihapus
+              (tes "halaman /login & /daftar TETAP hidup" selalu hijau), tapi
+              satu-satunya cara mencapainya jadi mengetik alamat manual. Itu
+              keputusan yang diambil AI sendiri tanpa menanyakan owner, dan
+              merepotkan orang yang justru paling sering memakainya.
+
+              ⚠️ Menampilkan tautan ini TIDAK melemahkan keamanan apa pun —
+              `skills/auth/SKILL.md`: *"menyembunyikan tombol di layar BUKAN
+              kontrol izin"*. Penjagaan yang sesungguhnya tetap di server:
+              halaman login meminta password, punya pembatas laju percobaan,
+              dan /admin digerbangi cookie sesi admin bertanda tangan. Yang
+              berubah cuma: pengelola tak perlu lagi menghafal alamat.
+
+              SENGAJA TIDAK digerbangi `AKUN_PENONTON_ENABLED`: justru saat
+              saklar itu MATI-lah tautan ini paling dibutuhkan. */}
+          <p>
+            <Link
+              href="/login"
+              className="text-zinc-500 underline-offset-2 transition-colors hover:text-amber-400 hover:underline"
+            >
+              Masuk sebagai pengelola
+            </Link>
           </p>
         </div>
       </div>

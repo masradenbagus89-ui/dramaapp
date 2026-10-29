@@ -13,53 +13,87 @@
 
 ---
 
-## 🧭 BACA INI DULU — status & titik lanjut (diperbarui 2026-10-28)
+## 🧭 BACA INI DULU — status & titik lanjut (diperbarui 2026-10-29)
 
 ### Keadaan sekarang, satu paragraf
 
-**Situs di Railway, sehat, dan rangkaian audit keamanan 24–27 Oktober sudah tutup.**
-Alamat resmi: `https://dramaapp-production-9e88.up.railway.app`.
+**Situs di Railway, sehat.** Alamat resmi: `https://dramaapp-production-9e88.up.railway.app`.
 `dramaapp.vercel.app` **masih hidup tapi hanya mengalihkan (308)** — **jangan dimatikan dulu**.
-Dua celah besar ditutup 27 Oktober: **celah Node `CVE-2026-111497`** (+7 CVE lain, lewat
-`RAILPACK_NODE_VERSION=24.22.1`) dan **kebocoran paywall video** (mekanismenya tetap terpasang —
-alamat video hanya lahir di server, ditandatangani, dan tunnel menolak alamat polos).
+Rangkaian audit keamanan 24–27 Oktober sudah tutup (celah Node `CVE-2026-111497` + 7 CVE lain
+lewat `RAILPACK_NODE_VERSION`, dan kebocoran paywall video — mekanismenya tetap terpasang penuh).
 
-🏠 **28 Oktober: `/beranda` kini BERSUSUN SAMA dengan landing page `/`** (`bd12977`) —
-deret tab menampilkan isinya (Film Terbaru, Series Terbaru, …), baris kategori lama dilepas,
-dan kaki situsnya dibuang atas permintaan owner (kaki di `/` tetap ada). Keduanya memakai
-komponen badan yang SAMA, jadi tak bisa menyimpang lagi.
+🎬 **29 OKTOBER — SITUS BERUBAH BESAR. Tiga arahan Kang Dedi + 7 putaran koreksi owner, SEMUA
+TAYANG** (`98c2b92` → `a0f4079` → `d0d301e`). Yang berubah bagi penonton:
 
-⏸️ **DAN SEJAK 28 OKTOBER: KOIN & IKLAN DIJEDA atas permintaan owner** (`c5bdb54`). Jadi
-**semua episode kini gratis** dan tak ada satu pun fitur koin/iklan yang tampil — itu DISENGAJA,
-bukan kebocoran. Jangan "memperbaiki"nya. Paywall-nya tidak dibongkar, hanya dimatikan lewat
-saklar; ⭐ nyalakan kembali di **`lib/saklar-fitur.ts`** (2 konstanta). Pagar keamanan videonya
-tetap jalan penuh — yang berubah cuma SIAPA yang berhak (sekarang semua orang).
+| Dulu | Sekarang |
+|---|---|
+| Tombol Masuk/Daftar di mana-mana | **hilang** — nonton langsung, tanpa akun |
+| Komentar & rating butuh login | **bisa tanpa akun** (nama/email/website opsional) |
+| Halaman film: navbar hitam, latar gelap | **kepala sama dengan Home**, latar terang |
+| Kotak cari memakan ruang bar | **tombol** → kotak melebar sejajar di dalam bar |
+| — | kolom kanan **Film/Drama Terkait + Terpopuler**, kaki situs 4 kolom |
+| Lanjut Menonton selalu terbuka | **panel lipat**, tersembunyi sampai diklik |
+
+⏸️ **KOIN & IKLAN DIJEDA sejak 28 Okt** (`c5bdb54`) — semua episode gratis, nol fitur koin/iklan
+tampil. DISENGAJA, jangan "diperbaiki".
+⏸️ **AKUN PENONTON DIJEDA sejak 29 Okt** (`98c2b92`) — login/daftar hilang dari tampilan penonton.
+⭐ Keduanya saklar di **`lib/saklar-fitur.ts`** (3 konstanta): `PAYWALL_ENABLED`, `ADS_ENABLED`,
+`AKUN_PENONTON_ENABLED`. Nyalakan = ubah `false` → `true`, bukan merakit ulang.
+
+🔑 **ADMIN MASUK LEWAT MANA SEKARANG:** kaki situs → **"Masuk sebagai pengelola"**, atau menu ☰
+di kiri atas (`/beranda` tidak punya kaki situs, jadi di sana pakai menu ☰). Halaman `/login`
+tidak pernah dihapus.
 
 ### Yang tersisa
 
 | # | Pekerjaan | Mendesak? | Yang ditunggu |
 |---|---|---|---|
 | 1 | **Jalur administrasi jarak jauh di server sewaan terbuka ke internet** | 🟠 ya, tapi **DI LUAR wewenang owner** | Izin atasan owner → lalu diminta ke administrator penyedia jasa. Mesin kerja owner = server RDP sewaan berisi ~84 penyewa; owner hanya pengguna biasa. Laporan + draf pesannya: `laporan-keamanan-dramaku-2026-10-27.html` **di folder rumah owner, SENGAJA di luar repo** (repo ini publik) |
-| 2 | **Beli-lalu-tonton: perbaikannya TAYANG, tapi kini TAK BISA DIUJI** | ⚪ tertunda | **Menunggu koin dinyalakan lagi.** Perbaikannya sudah tayang di `7efa591`, tapi sejak koin dijeda (`c5bdb54`) tak ada lagi episode yang bisa dibeli — jadi alur "beli lalu tonton" tidak ada untuk diuji. **Begitu koin dinyalakan di `lib/saklar-fitur.ts`, uji ini WAJIB dikerjakan lebih dulu**: buka drama premium → episode 4 → Buka • 8 koin → videonya harus jalan sendiri tanpa muat ulang. Penjaganya `tests/beli-lalu-tonton.test.ts` tetap hijau |
-| 3 | **Tutup Vercel** | tidak | ≥6 minggu sejak 2026-10-15 → **paling cepat 2026-11-26**, DAN cek Google. Nol pekerjaan teknis tersisa. 🔔 `.github/workflows/pengingat-tutup-vercel.yml` membuka Issue sendiri saat tanggalnya tiba |
-| 4 | **Uji pulihkan backup** | tidak | 1 Supabase project kosong. 🟢 Robotnya sudah dibuat & diuji — owner tinggal 3 langkah, `docs/uji-pulihkan-backup.md` "Rute 2" |
-| 5 | **Beli domain** | tidak | persetujuan atasan owner — **BUKAN blocker apa pun**. Bahan: `docs/pengajuan-domain-sendiri.md` |
-| 6 | Node mesin kerja `v24.15.0` · GitHub Actions `24.21.0` | tidak | Risiko rendah (port node di mesin kerja tertutup firewall); CI naik sendiri saat image runner diperbarui |
+| 2 | **Katalog cuma punya 1 FILM (+39 serial)** | ⚪ keputusan isi, bukan teknis | Halaman `/drama/meg-2-the-trench` memakai judul **"Tontonan Lain"**, bukan "Film Terkait" — karena tak ada film lain untuk ditawarkan. **Bukan bug.** Tambah film kedua ke katalog → judulnya berubah sendiri, nol ubah kode. Rinciannya di catatan rilis `d0d301e` di bawah |
+| 3 | **Beli-lalu-tonton: perbaikannya TAYANG, tapi kini TAK BISA DIUJI** | ⚪ tertunda | **Menunggu koin dinyalakan lagi.** Perbaikannya sudah tayang di `7efa591`, tapi sejak koin dijeda tak ada episode yang bisa dibeli. **Begitu koin dinyalakan, uji ini WAJIB lebih dulu**: drama premium → episode 4 → Buka • 8 koin → video harus jalan sendiri tanpa muat ulang. Penjaganya `tests/beli-lalu-tonton.test.ts` tetap hijau |
+| 4 | **Tutup Vercel** | tidak | ≥6 minggu sejak 2026-10-15 → **paling cepat 2026-11-26**, DAN cek Google. Nol pekerjaan teknis tersisa. 🔔 `.github/workflows/pengingat-tutup-vercel.yml` membuka Issue sendiri saat tanggalnya tiba |
+| 5 | **Uji pulihkan backup** | tidak | 1 Supabase project kosong. 🟢 Robotnya sudah dibuat & diuji — owner tinggal 3 langkah, `docs/uji-pulihkan-backup.md` "Rute 2" |
+| 6 | **Beli domain** | tidak | persetujuan atasan owner — **BUKAN blocker apa pun**. Bahan: `docs/pengajuan-domain-sendiri.md` |
+| 7 | Node mesin kerja `v24.15.0` · GitHub Actions `24.21.0` | tidak | Risiko rendah (port node di mesin kerja tertutup firewall); CI naik sendiri saat image runner diperbarui |
 
-### 🔑 DUA NILAI YANG KINI DIKUNCI MANUAL — tidak naik sendiri
+### 🔑 DUA NILAI YANG DIKUNCI MANUAL DI PANEL RAILWAY — tidak naik sendiri
 
-1. **`RAILPACK_NODE_VERSION=24.22.1`** di panel Railway. Tambalan Node berikutnya **tidak** akan
-   terpasang otomatis. Kalau suatu saat default Railpack sudah melewati 24.22.1, variabel ini
-   boleh dihapus supaya kembali otomatis.
+1. **`RAILPACK_NODE_VERSION=24.22.1`**. Tambalan Node berikutnya **tidak** terpasang otomatis.
+   Kalau default Railpack sudah melewati 24.22.1, variabel ini boleh dihapus.
 2. **`VIDEO_SIGNING_SECRET`** di **DUA** tempat yang harus sama persis: panel Railway **dan**
    env level `Machine` di PC backup. Beda satu huruf = **seluruh video mati**.
-   Pasang ulang / rotasi kunci = **satu perintah**, jangan manual:
-   `pc-backup-agent\pasang-tanda-tangan.ps1 -Kunci "<kunci>"` (memeriksa dulu, baru mengubah;
-   `-Matikan` = saklar darurat yang memulihkan video dalam hitungan detik).
+   Pasang ulang / rotasi = **satu perintah**: `pc-backup-agent\pasang-tanda-tangan.ps1 -Kunci "<kunci>"`
+   (`-Matikan` = saklar darurat yang memulihkan video dalam hitungan detik).
+
+   ⚠️ **`AUTH_SECRET` kini menopang LEBIH BANYAK** (sejak 29 Okt): selain sesi admin, ia juga
+   menandatangani identitas tamu untuk komentar & rating. Menghapus/menggantinya = **semua orang
+   kehilangan hak hapus atas komentarnya sendiri** dan suara rating lamanya. Terverifikasi ADA di
+   Railway (uji tulis sesudah rilis `98c2b92`).
+
+### 🪤 TIGA JEBAKAN VERIFIKASI dari 29 Oktober — mahal kalau terulang
+
+1. **`rm -rf .next` GAGAL DIAM-DIAM selama server lama hidup.** Di Windows berkas terkunci tak
+   bisa dihapus dan `rm -rf` tidak mengeluh. Build berikutnya menulis sebagian → halaman
+   ber-prerender (`○`/`●`) tetap versi LAMA. **Matikan server lewat PID → buktikan port kosong →
+   `rm -rf .next` → buktikan foldernya hilang (`if [ -d .next ]`) → baru build.**
+2. **Berkas ADA ≠ ada JALAN ke sana.** Tes `existsSync("app/login/page.tsx")` hijau terus walau
+   SEMUA tautan ke sana lenyap — owner kehilangan jalan ke dashboard-nya. Untuk tiap halaman yang
+   "sengaja dibiarkan hidup walau tombolnya dilepas", tulis tes yang memeriksa **jalannya**.
+3. **Grep atas HTML halaman tak bisa memeriksa komponen yang lahir setelah interaksi.** Kartu di
+   `/film` baru dirender sesudah penonton mengklik video — pemeriksaan HTML melaporkannya "hilang"
+   dan nyaris dilaporkan sebagai regresi. Pakai tes render.
+
+### 📦 HANDOFF SUDAH 8.700+ BARIS
+
+Naik ±2.100 baris hari ini saja. Berkas ini dibaca PALING AWAL tiap sesi, jadi ia memakan jatah
+konteks sebelum kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` —
+**tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*,
+*"Performance /beranda: SUDAH SEHAT"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan
+sejarah. Menunggu keputusan owner.
 
 ### ⛔ KEPUTUSAN OWNER — jangan ditawarkan lagi
 
-Empat hal ini sudah diputuskan hari ini. Mengajukannya ulang membuang waktu owner:
+Sudah diputuskan. Mengajukannya ulang membuang waktu owner:
 
 1. **"Beli domain" BUKAN prasyarat menutup Vercel.** `dramaapp.vercel.app` juga
    subdomain gratis platform — situs ini sudah setahun hidup di alamat platform.
@@ -75,6 +109,29 @@ Empat hal ini sudah diputuskan hari ini. Mengajukannya ulang membuang waktu owne
    tak pernah digambar).
 5. **Ganti nama alamat Railway: TIDAK dilakukan** — memaksa satu putaran mitra
    Playly tambahan tanpa manfaat sepadan.
+
+**Ditambah 29 Oktober:**
+
+6. **Login & daftar DIHAPUS, khusus PENONTON.** Admin TETAP punya jalan masuk —
+   itu syarat yang owner tegaskan sendiri sesudah AI sempat membuang semua tautan
+   `/login`. Jangan pernah menggerbangi jalan pengelola dengan
+   `AKUN_PENONTON_ENABLED`: justru saat saklar itu mati, tautan itulah yang
+   paling dibutuhkan.
+7. **Komentar & rating TETAP BISA DIPAKAI tanpa akun.** Owner menolak
+   mematikannya bersama login. Konsekuensi yang sudah diterima: rating berarti
+   **"satu BROWSER satu suara"**, jadi tetap DILARANG jadi structured data Google.
+8. **Nama/email/website di komentar: SEMUANYA OPSIONAL.** Berbeda dari situs
+   pembanding yang mewajibkan nama & email. Jangan "memperbaiki"nya jadi wajib.
+9. **Badan halaman film TETAP ikut terang, layar pemutar `/watch` TIDAK.**
+   Owner memilihnya lewat popup; layar pemutar sengaja gelap & tanpa navigasi
+   supaya tak menutupi video.
+10. **"Lanjut Menonton" DISEMBUNYIKAN sampai diklik.** Owner sudah mencoba versi
+    "dipisah garis tapi tetap terbuka" dan **menolaknya** — *"kalau dipisah masih
+    terlihat sama"*. Jangan tawarkan versi itu lagi.
+11. **Kotak cari: BENTUK FINAL = melebar sejajar di dalam bar.** Tiga bentuk
+    sebelumnya sudah ditolak satu per satu (kotak permanen "kelebaran" · lapisan
+    penuh layar "bikin sakit mata" · panel menggantung "masih menutupi film").
+    Jangan usulkan ukuran/lebar baru — pertanyaannya sudah dihapus, bukan dijawab.
 
 ### ✅ Selesai 27 Oktober (rincian di 3 entri paling atas di bawah)
 

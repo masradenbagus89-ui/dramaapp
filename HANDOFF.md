@@ -9,7 +9,7 @@
 >
 > **📦 Berkas ini sudah ±6.600 baris** (diukur 2026-10-15; angka lama "5.224 baris" dari 2026-10-10 sudah basi — tumbuh ±1.400 baris dalam 5 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-10-29 (**tiga arahan Kang Dedi dikerjakan — BELUM DIRILIS**, menunggu owner melihat hasilnya di preview lokal).
+**Terakhir diisi:** 2026-10-29 (**arahan Kang Dedi + 6 putaran koreksi owner — TAYANG** di `98c2b92`, dual push tuntas, uji asap hijau, downtime nol).
 
 ---
 
@@ -131,6 +131,49 @@ PC backup menyalakan ulang layanannya sendiri (watchdog) dan membuat tunnel baru
 Artinya perubahan di `start-video-services.ps1` yang meneruskan `VIDEO_SIGNING_SECRET` dari env
 level `Machine` **benar-benar bekerja di jalur autostart** — hal yang tak bisa diuji saat
 dipasang manual. Penegakan bertahan melewati restart PC; tidak perlu dipasang ulang tiap boot.
+
+---
+
+## 2026-10-29 — ✅ DIRILIS `98c2b92`. Semua pekerjaan hari ini TAYANG.
+
+Owner: *"rilis"* (izin eksplisit, rak `skills/deploy/SKILL.md` §1). Dual push tuntas:
+`dramaku` (cermin) lebih dulu, lalu `origin main` (= tombol rilis). Deploy Railway selesai
+±3 menit sesudah push.
+
+### Gerbang §6 — lolos lengkap, urutan build→tsc
+
+`rm -rf .next` (dibuktikan terhapus) → `npm run build` **sukses** → `npx tsc --noEmit` **exit 0**
+→ `npm test` **1.759 hijau / 121 berkas** → nol berkas env/rahasia ter-stage → `data/` bersih →
+`.env.local` terbukti ter-ignore.
+
+### Uji asap di SITUS ASLI sesudah tayang
+
+| Pemeriksaan | Hasil |
+|---|---|
+| 9 halaman utama (`/`, `/beranda`, `/discover`, `/film`, `/katalog`, `/drama/…`, `/tonton/…`, `/login`, `/admin`) | semua **200** |
+| Komentar TANPA akun | **200** — tersimpan |
+| Rating TANPA akun | **200** |
+| Hapus komentar sendiri | **200** |
+| Tampilan (3 halaman) | tombol cari pop up · **nol** tautan Masuk/Daftar · latar terang · panel Film Terkait + Terpopuler · kolom komentar 3 kolom opsional · kaki situs gelap — semua **OK** |
+
+🔑 **`AUTH_SECRET` TERBUKTI ADA di Railway.** Ini risiko rilis terbesar hari ini dan tak bisa
+dipastikan dari luar sebelum tayang: identitas tamu gagal-MENGUNCI (503) tanpa kunci itu, jadi
+komentar & rating akan mati total. Uji tulis di atas yang membuktikannya.
+
+🧹 Data uji dibersihkan: komentar `__uji-rilis__` dihapus, `GET` memulangkan `{"comments":[]}`.
+`dramaId` uji sengaja dipilih yang TIDAK ada di katalog, jadi tak pernah tampil di halaman mana pun.
+
+### ↩️ ROLLBACK 1-BARIS (kalau ada yang salah)
+
+```
+git revert 98c2b92 && git push origin main && git push dramaku main
+```
+Atau lebih cepat: panel Railway → Deployments → pilih build sebelum `98c2b92` → Redeploy.
+**Nol migration SQL, nol env baru** di rilis ini, jadi mundur tidak meninggalkan apa pun.
+
+### ⏸️ Yang bisa dimatikan tanpa rollback
+
+`AKUN_PENONTON_ENABLED` di `lib/saklar-fitur.ts` → `true` mengembalikan tombol Masuk/Daftar.
 
 ---
 

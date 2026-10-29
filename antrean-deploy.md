@@ -1076,6 +1076,16 @@ ditolak** sampai `PLAYLY_UNDUHAN_DOMAIN_CAST` diisi (perilaku yang diinginkan).
 
 ---
 
+
+## 2026-10-29 — `98c2b92` SUDAH DI-DEPLOY (owner)
+
+Arahan Kang Dedi + 6 putaran koreksi owner: login penonton dihapus (komentar & rating tetap
+jalan lewat identitas tamu), kepala situs halaman film disamakan dengan Home, halaman film jadi
+terang + bingkai pemutar/Film Terkait/Terpopuler, komentar 3 kolom opsional, kaki situs 4 kolom.
+
+Dual push tuntas (`origin` + `dramaku`). Uji asap di situs asli hijau — termasuk komentar &
+rating tanpa akun. Nol migration SQL, nol env baru. Rollback: `git revert 98c2b92`.
+
 ## Riwayat sebelumnya
 
 **Terakhir dicek:** 2026-10-02 (**komputer OWNER**) — **✅ ANTREAN KOSONG, DUAL PUSH TUNTAS.**

@@ -9,7 +9,7 @@
 >
 > **📦 Berkas ini sudah ±6.600 baris** (diukur 2026-10-15; angka lama "5.224 baris" dari 2026-10-10 sudah basi — tumbuh ±1.400 baris dalam 5 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-10-30 (tiga rilis beruntun, semuanya TAYANG: `5088bf2` genre bahasa Indonesia → `27973f0` koreksi owner Kerajaan/CEO/Lainnya → **`55894b8` dua tombol halaman drama yang selama ini TERPOTONG**. Downtime NOL).
+**Terakhir diisi:** 2026-10-30 (tiga rilis beruntun, semuanya TAYANG: `5088bf2` genre bahasa Indonesia → `27973f0` koreksi owner Kerajaan/CEO/Lainnya → **`55894b8` dua tombol halaman drama yang selama ini TERPOTONG**. Downtime NOL. ⏸️ Satu bahasan **menunggu keputusan owner**: "klik drama langsung play" — risetnya sudah selesai, nol kode diubah.)
 
 ---
 
@@ -188,6 +188,53 @@ PC backup menyalakan ulang layanannya sendiri (watchdog) dan membuat tunnel baru
 Artinya perubahan di `start-video-services.ps1` yang meneruskan `VIDEO_SIGNING_SECRET` dari env
 level `Machine` **benar-benar bekerja di jalur autostart** — hal yang tak bisa diuji saat
 dipasang manual. Penegakan bertahan melewati restart PC; tidak perlu dipasang ulang tiap boot.
+
+---
+
+## 2026-10-30 — ⏸️ DIBAHAS, BELUM DIPUTUSKAN: "klik drama langsung play"
+
+Owner bertanya (dengan tangkapan layar menunjuk area gambar besar halaman drama):
+*"kamu buat pilihan jadi begitu kita klik drama langsung play gimana menurutmu"*.
+Disajikan 4 pilihan → owner memilih **"Jangan dulu, saya pikir-pikir"**.
+**NOL kode diubah.** Dicatat di sini supaya sesi berikutnya tidak menanyakan ulang dari nol
+dan tidak mengulang riset yang sama.
+
+### Fakta yang sudah digali (jangan diteliti ulang)
+
+| Fakta | Berkas |
+|---|---|
+| Kartu drama diklik → `/drama/<id>` (halaman detail) | `CatalogCard.tsx:38`, `DramaCard.tsx:19` |
+| Pemutarnya `/feed/<id>` — tombol "Mulai/Lanjut Nonton" ke sana | `WatchCta.tsx` |
+| `/drama/<id>` punya `generateMetadata` + structured data + `generateStaticParams` (dicetak statis) | `app/drama/[id]/page.tsx` |
+| `/feed/<id>` **`force-dynamic`, NOL metadata, NOL structured data** | `app/feed/[id]/page.tsx` |
+| **Sitemap HANYA memuat `/drama/<id>`**, tidak memuat `/feed` | `app/sitemap.ts:38` |
+| `/watch/<id>/<ep>` sudah lama hanya mengalihkan ke `/feed` | `app/watch/[id]/[ep]/page.tsx:7` |
+| Hero halaman drama **murni foto diam** — nol `<video>` di seluruh berkas | `HeroDrama` di `page.tsx:493` |
+| Mekanisme tunda-unduh teaser SUDAH ADA (1,2 detik) dan dibuat persis untuk kasus ini | `lib/hero-teaser.ts` `HERO_TEASER_DELAY_MS` |
+
+### ⚠️ BATAS KERAS yang membatasi SEMUA rancangan
+
+**Browser memblokir video yang jalan sendiri kalau ada suara**, dan mengklik kartu TIDAK
+memindahkan izin itu ke halaman berikutnya. Kode kita sudah tahu: `FeedPlayer.tsx:405,435`
+menangkapnya (`autoplay diblokir → tombol play`), dan `muted` bawaannya `false`.
+**Versi jujur dari "langsung play" di web mana pun = jalan TANPA SUARA, sekali ketuk untuk suara.**
+Jangan pernah menjanjikan lebih dari itu ke owner.
+
+### Dua ongkos nyata kalau kartu dibuat lompat langsung ke pemutar
+
+1. **Google.** 40 halaman `/drama/<id>` adalah satu-satunya yang terindeks; mengarahkan semua
+   kartu ke `/feed` membuat tautan internal ke sana tinggal dari sitemap saja. `/feed` tak bisa
+   menggantikannya tanpa ditambahi metadata + dimasukkan sitemap.
+2. **Kuota & mesin owner.** Video lewat terowongan dari PC backup. Tiap klik iseng langsung
+   menarik video — penonton yang cuma mau baca sinopsis pun memakan megabyte.
+
+### Rekomendasi AI (kalau owner melanjutkan nanti)
+
+**Hero halaman detail yang langsung memutar di tempat** (tanpa suara), ketuk → layar penuh +
+suara. Dapat rasa "langsung jalan", nol kehilangan Google, video berat baru ditarik saat
+penonton benar-benar mau, dan mekanisme tundanya sudah ada. Perkiraan 2-3 jam, nol pekerjaan
+untuk owner. Pilihan lain yang sudah disajikan: kartu lompat langsung ke pemutar (3-4 jam,
++ metadata & sitemap untuk `/feed`), atau keduanya + saklar penonton (4-5 jam).
 
 ---
 

@@ -4,8 +4,9 @@
 menggunakan bahasa indonesia"* — disertai tangkapan layar menu **Genre** di bar
 merah (Action · Romance · Tycoon · Comedy · Harem · Time Travel · Adventure · Horror).
 
-**Status:** ✅ selesai & terbukti di halaman sungguhan. **Belum dirilis** — menunggu
-izin owner (push ke `origin main` = tombol rilis).
+**Status:** ✅ **DIRILIS 2026-10-30 di `5088bf2`** — dual push `ee6fbc5..5088bf2` ke `origin`
+dan `dramaku`, Railway build sendiri, tayang ~90 detik, **downtime NOL**.
+**Rencana mundur 1 baris:** `git revert 5088bf2` lalu dual push (nol perubahan database/env).
 
 ---
 

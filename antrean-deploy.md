@@ -3,10 +3,31 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-10-28 (**komputer OWNER**).
-`origin/main` = `dramaku/main` = **`bd12977`** (selisih 0/0 antar-remote, diverifikasi
-`git fetch origin` + `git fetch dramaku` SESUDAH push). **Nol antrean** — tak ada yang
-menunggu rilis.
+**Terakhir dicek:** 2026-10-30 (**komputer OWNER**).
+`origin/main` = `dramaku/main` = **`5088bf2`** (selisih 0/0 antar-remote, diverifikasi
+`git fetch origin` + `git fetch dramaku` SEBELUM push, dan push keduanya exit 0). **Nol antrean**
+— tak ada yang menunggu rilis.
+
+✅ **DIRILIS 2026-10-30 — nama genre jadi bahasa Indonesia di seluruh sisi penonton, di
+`5088bf2`. Dual push `ee6fbc5..5088bf2`, tayang ~90 detik, downtime NOL.**
+Permintaan owner *"ubah bagian genre ke bahasa indonesia agar sinkron semua"*. 13 permukaan
+berubah (menu Genre di bar merah, strip kuning, dropdown Filter, kaki situs, tulisan di bawah
+judul tiap poster, chip halaman drama, kolom Terpopuler, baris "Trending di …", kartu & grid
+Playly, halaman `/tonton`). **Yang diterjemahkan HANYA tulisannya** — nilai di database, alamat
+penyaring (`?cat=Action`), pencocokan "Drama Terkait", dan kunci warna aksen tetap ejaan asli.
+Penerjemahnya `lib/genre.ts`, meniru `lib/negara.ts`.
+
+Gerbang §6 berurutan: `rm -rf .next` (dibuktikan hilang) → `npm run build` **sukses**
+(0 pesan "pakai berkas lokal" = memakai database sungguhan; 40 tautan drama di halaman
+cetak-awal, sama dengan produksi) → `npx tsc --noEmit` **exit 0** → **1.784 tes hijau** (122
+berkas) → nol berkas env/kunci ter-stage. Smoke test sesudah rilis: 7 halaman **200** ·
+`/api/dramas` **33.477 byte** utuh · **nol** genre Inggris yang terlihat di 4 halaman ·
+jalan masuk pengelola utuh · alamat `.mp4` telanjang di HTML `/feed` tetap **0**.
+
+🪤 Tiga tes lama sempat **MERAH** karena memang mengecek tulisan Inggris yang baru diganti
+(`strip-katalog`, `playly-video-grid`, `nav-katalog`) — itu penjaganya bekerja. Asersinya
+diperbarui, **nol pagar dilonggarkan**; pagar label-vs-alamat justru ditambah di
+`tests/genre-label.test.ts`.
 
 ✅ **DIRILIS 2026-10-28 (ke-3) — /beranda disamakan dengan landing page + kaki situsnya dibuang,
 di `bd12977`. Dual push `0bdac92..bd12977`, tayang ~1,5 menit, downtime NOL.**

@@ -9,7 +9,7 @@
 >
 > **📦 Berkas ini sudah ±6.600 baris** (diukur 2026-10-15; angka lama "5.224 baris" dari 2026-10-10 sudah basi — tumbuh ±1.400 baris dalam 5 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-10-30 (**nama genre diindonesiakan di seluruh tampilan penonton** — selesai & terbukti, **BELUM dirilis**, menunggu izin owner). Rilis terakhir yang TAYANG masih `d0d301e` (29 Okt).
+**Terakhir diisi:** 2026-10-30 (**nama genre jadi bahasa Indonesia — SUDAH TAYANG** di `5088bf2`, dual push tuntas, tayang ~90 detik, downtime NOL).
 
 ---
 
@@ -191,10 +191,16 @@ dipasang manual. Penegakan bertahan melewati restart PC; tidak perlu dipasang ul
 
 ---
 
-## 2026-10-30 — ✅ SIAP, BELUM DIRILIS: nama genre jadi bahasa Indonesia
+## 2026-10-30 — ✅ DIRILIS `5088bf2`: nama genre jadi bahasa Indonesia
 
 Owner (dengan tangkapan layar menu **Genre** di bar merah): *"ubah bagian genre ke bahasa
 indonesia agar sinkron semua menggunakan bahasa indonesia"*.
+
+**TAYANG** di `https://dramaapp-production-9e88.up.railway.app` sejak 2026-10-30. Dual push `ee6fbc5..5088bf2` ke `origin` + `dramaku` tuntas, Railway build sendiri, **tayang ~90 detik, downtime NOL**.
+
+**Smoke test produksi sesudah rilis:** 7 halaman (`/` `/beranda` `/discover` `/film` `/katalog` `/login` `/admin`) semuanya **200** · `/api/dramas` **33.477 byte** (sama persis dengan sebelum rilis, katalog utuh 40 judul) · **nol** genre Inggris yang terlihat penonton di 4 halaman, 110 label Indonesia di halaman depan · chip halaman drama `>Aksi<` `>Horor<` `>Petualangan<` · **jalan masuk pengelola utuh** ("Masuk sebagai pengelola" → `/login` tetap ada di halaman depan) · **pagar video tidak mundur** (alamat `.mp4` telanjang di HTML `/feed` tetap **0**).
+
+**Rencana mundur 1 baris** kalau nanti ada keluhan: `git revert 5088bf2` lalu dual push — Railway build ulang sendiri ~90 detik. Tak ada perubahan database maupun env, jadi mundur benar-benar cuma soal kode.
 
 **Yang penonton lihat sekarang:** Action→**Aksi** · Romance→**Romantis** · Tycoon→**Taipan** ·
 Comedy→**Komedi** · Time Travel→**Lintas Waktu** · Adventure→**Petualangan** · Horror→**Horor** ·

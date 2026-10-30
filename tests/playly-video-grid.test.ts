@@ -43,7 +43,9 @@ describe("PlaylyVideoGrid — isi kartu video", () => {
     const html = render([
       videoKartu({ year: "2026", genre: "Action, Sci-Fi" }),
     ]);
-    expect(html).toContain("2026 · Action, Sci-Fi");
+    // Genre OMDb tergambar dalam bahasa Indonesia sejak 2026-10-30
+    // (lib/genre.ts); nilai aslinya di data tidak berubah.
+    expect(html).toContain("2026 · Aksi, Fiksi Ilmiah");
     expect(html).toContain("MOVIE_TITAN WAR THE LAST KING");
   });
 

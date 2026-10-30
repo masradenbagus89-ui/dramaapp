@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { type Category, type Drama } from "@/lib/types";
 import { labelNegara } from "@/lib/negara";
+import { labelGenre } from "@/lib/genre";
 import {
   FILTER_KOSONG,
   bacaFilter,
@@ -46,7 +47,7 @@ function alamatDenganFilter(f: CatalogFilter): string {
  */
 function keteranganFilter(f: CatalogFilter): string {
   const bagian: string[] = [];
-  if (f.cat !== "Semua") bagian.push(`genre ${f.cat}`);
+  if (f.cat !== "Semua") bagian.push(`genre ${labelGenre(f.cat)}`);
   if (f.kind !== "all") bagian.push(f.kind === "movie" ? "film" : "serial");
   if (f.status !== "all")
     bagian.push(f.status === "completed" ? "sudah tamat" : "masih tayang");
@@ -55,7 +56,7 @@ function keteranganFilter(f: CatalogFilter): string {
   // labelNegara: alamatnya menyimpan nama asli OMDb ("China"), tapi yang
   // dibaca penonton harus bahasa Indonesia ("Cina").
   if (f.negara !== "all") bagian.push(labelNegara(f.negara));
-  if (f.genre !== "all") bagian.push(`genre ${f.genre}`);
+  if (f.genre !== "all") bagian.push(`genre ${labelGenre(f.genre)}`);
   if (f.year !== "all") bagian.push(`tahun ${f.year}`);
   return bagian.length ? ` — ${bagian.join(", ")}` : "";
 }

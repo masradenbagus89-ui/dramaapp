@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SITE_NAME } from "@/lib/site";
+import { labelGenre } from "@/lib/genre";
 
 /**
  * Kaki situs halaman depan — empat kolom: tentang, jelajahi, genre populer,
@@ -125,7 +126,7 @@ export default function FooterSitus({
                       href={`/discover?cat=${encodeURIComponent(g)}`}
                       className={KELAS_TAUTAN}
                     >
-                      {g}
+                      {labelGenre(g)}
                     </Link>
                   </li>
                 ))}

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { Drama } from "@/lib/types";
 import { teaserSrc } from "@/lib/hero-teaser";
+import { labelGenre } from "@/lib/genre";
 import Poster from "../Poster";
 import { Play } from "lucide-react";
 
@@ -55,7 +56,7 @@ export default function CatalogCard({
         {drama.title}
       </h3>
       <p className="mt-0.5 line-clamp-1 text-[11px] text-zinc-500 terang:text-zinc-600 md:text-xs">
-        {drama.category}
+        {labelGenre(drama.category)}
       </p>
     </Link>
   );

@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { ChevronLeft } from "lucide-react";
 import { getPlaylyVideosGabunganCached } from "@/lib/playly-gabungan";
 import { alamatGambarVideo, cariVideoDariSegmen } from "@/lib/tonton";
+import { labelGenreGabungan } from "@/lib/genre";
 import { SITE_URL, absoluteUrl } from "@/lib/site";
 import { toJsonLdScript, videoJsonLd } from "@/lib/structured-data";
 import PlaylyPlayer from "@/app/components/player/PlaylyPlayer";
@@ -169,7 +170,7 @@ export default async function TontonPage(props: PageProps<"/tonton/[id]">) {
     judul: v.title,
     href: `/tonton/${encodeURIComponent(v.id)}`,
     gambar: v.thumbnail ?? null,
-    keterangan: [v.kategori ?? v.genre].filter(Boolean).join(", "),
+    keterangan: labelGenreGabungan(v.kategori ?? v.genre),
     // Baris ketiga di kolom sempit. Durasi dipilih karena katalog video tidak
     // punya angka "ditonton" seperti katalog drama.
     jejak: v.durationLabel !== "-" ? v.durationLabel : undefined,
@@ -291,7 +292,7 @@ export default async function TontonPage(props: PageProps<"/tonton/[id]">) {
             contentRating={video.contentRating}
             quality={video.quality}
             durationLabel={video.durationLabel}
-            genre={video.kategori ?? video.genre}
+            genre={labelGenreGabungan(video.kategori ?? video.genre) || null}
             // Sampai 2026-10-05 baris ini TIDAK ada, sehingga tombol DOWNLOAD
             // di halaman detail tak pernah bisa membuka link apa pun walau
             // linknya sudah diisi — dijaga tests/tonton-halaman.test.ts.

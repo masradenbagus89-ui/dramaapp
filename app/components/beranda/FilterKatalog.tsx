@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Drama } from "@/lib/types";
 import { availableGenres } from "@/lib/beranda-catalog";
 import { getYearOptions } from "@/lib/discover";
+import { labelGenre } from "@/lib/genre";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -77,9 +78,13 @@ export default function FilterKatalog({ dramas }: { dramas: Drama[] }) {
           <>
             <DropdownMenuSeparator className="bg-zinc-800" />
             <DropdownMenuLabel className="text-amber-400">Genre</DropdownMenuLabel>
+            {/* Label Indonesia, alamat tetap nilai asli katalog — kalau
+                tertukar, pilihannya memulangkan halaman hampa. */}
             {genre.map((g) => (
               <DropdownMenuItem key={g} asChild>
-                <Link href={`/discover?cat=${encodeURIComponent(g)}`}>{g}</Link>
+                <Link href={`/discover?cat=${encodeURIComponent(g)}`}>
+                  {labelGenre(g)}
+                </Link>
               </DropdownMenuItem>
             ))}
           </>

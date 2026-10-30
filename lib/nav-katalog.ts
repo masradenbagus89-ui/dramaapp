@@ -23,6 +23,7 @@ import {
   getYearOptions,
   parseImdb,
 } from "./discover";
+import { labelGenre } from "./genre";
 import { labelNegara } from "./negara";
 import { PAYWALL_ENABLED } from "./saklar-fitur";
 
@@ -170,13 +171,14 @@ export function buildNavMenus(dramas: Drama[]): NavMenu[] {
       // akan muncul dua kali dengan arti berbeda — penonton mengira menunya
       // rusak. Keduanya sudah dihitung dari katalog, jadi tiap pilihannya
       // dijamin berisi.
+      // Label diterjemahkan, alamatnya TIDAK — lihat catatan di `NavItem`.
       [
         ...availableGenres(dramas).map((g) => ({
-          label: g,
+          label: labelGenre(g),
           href: tautan({ cat: g }),
         })),
         ...genreSinema(dramas).map((g) => ({
-          label: g,
+          label: labelGenre(g),
           href: tautan({ genre: g }),
         })),
       ],
@@ -264,19 +266,26 @@ export function buildNavMenus(dramas: Drama[]): NavMenu[] {
  * berisi) tidak hilang — tetap tersedia di menu dropdown `buildNavMenus`
  * di atas, yang masih dihitung dari katalog seperti sebelumnya.
  *
- * Urutan & ejaan label sengaja PERSIS seperti yang ditulis owner. Label ditulis
- * huruf biasa; strip yang membesarkannya jadi huruf kapital (CSS `uppercase`).
+ * URUTAN chip tetap PERSIS seperti yang ditulis owner. LABEL-nya kini lewat
+ * `labelGenre`/`labelNegara` (owner 2026-10-30: "ubah bagian genre ke bahasa
+ * indonesia agar sinkron semua") — jadi ejaan Indonesia ditentukan di SATU
+ * tempat (lib/genre.ts), bukan ditulis ulang di sini. Tanpa itu strip dan menu
+ * dropdown bisa menyebut genre yang sama dengan dua nama berbeda.
+ *
+ * Label ditulis huruf biasa; strip yang membesarkannya jadi huruf kapital
+ * (CSS `uppercase`).
  */
 export const STRIP_KATALOG: NavItem[] = [
-  { label: "Action", href: tautan({ cat: "Action" }) },
+  { label: labelGenre("Action"), href: tautan({ cat: "Action" }) },
   // OMDb menamai genre animasi "Animation" — "Anime" bukan nilai yang dikenal
-  // di sana, jadi chip ini menyaring Animation dan ditampilkan sebagai ANIME.
+  // di sana, jadi chip ini menyaring Animation tapi ditampilkan sebagai ANIME:
+  // itu nama yang dicari penonton. Label sengaja ditulis tetap, BUKAN
+  // labelGenre("Animation") yang akan memulangkan "Animasi".
   { label: "Anime", href: tautan({ genre: "Animation" }) },
-  { label: "Horror", href: tautan({ genre: "Horror" }) },
-  // Kategori kurasi DramaKu bernama "Comedy"; labelnya yang diindonesiakan.
-  { label: "Komedi", href: tautan({ cat: "Comedy" }) },
-  { label: "Sci-Fi", href: tautan({ genre: "Sci-Fi" }) },
-  { label: "Romance", href: tautan({ cat: "Romance" }) },
+  { label: labelGenre("Horror"), href: tautan({ genre: "Horror" }) },
+  { label: labelGenre("Comedy"), href: tautan({ cat: "Comedy" }) },
+  { label: labelGenre("Sci-Fi"), href: tautan({ genre: "Sci-Fi" }) },
+  { label: labelGenre("Romance"), href: tautan({ cat: "Romance" }) },
   // Nama negara di alamat WAJIB memakai ejaan OMDb (bahasa Inggris) — itu yang
   // dicocokkan `cocokNegara`. Labelnya diterjemahkan lewat lib/negara.ts.
   { label: labelNegara("China"), href: tautan({ negara: "China" }) },

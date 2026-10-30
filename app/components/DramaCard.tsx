@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { Drama } from "@/lib/types";
 import { teaserSrc } from "@/lib/hero-teaser";
 import { genreTextClass } from "@/lib/genre-accent";
+import { labelGenre } from "@/lib/genre";
 import Poster from "./Poster";
 
 export default function DramaCard({ drama }: { drama: Drama }) {
@@ -31,7 +32,7 @@ export default function DramaCard({ drama }: { drama: Drama }) {
             sebagai lencana DI POSTER sejak 2026-09-22 — mengulanginya di sini
             cuma membuat kartu terlihat penuh tanpa menambah informasi. */}
         <p className={`mt-1 text-xs ${genreTextClass(drama.category)}`}>
-          {drama.category}
+          {labelGenre(drama.category)}
         </p>
       </div>
     </Link>

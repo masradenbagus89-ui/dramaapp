@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Film, Play } from "lucide-react";
 import type { PlaylyVideoPublik } from "@/lib/playly-publik";
 import { alamatTonton } from "@/lib/tonton";
+import { labelGenreGabungan } from "@/lib/genre";
 
 /**
  * Kartu poster untuk satu VIDEO, sebaris dengan kartu drama di beranda.
@@ -35,7 +36,7 @@ export default function KartuVideo({ video }: { video: PlaylyVideoPublik }) {
   // itulah yang menempatkan video ini di baris genre; `genre` teks bebas dari
   // katalog jadi cadangan. Keduanya kosong = barisnya tidak digambar sama
   // sekali, bukan diisi tanda hubung (lihat aturan lencana di lib/types.ts).
-  const label = video.kategori ?? video.genre;
+  const label = labelGenreGabungan(video.kategori ?? video.genre);
 
   return (
     <Link

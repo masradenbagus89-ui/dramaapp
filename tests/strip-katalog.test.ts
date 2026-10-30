@@ -162,7 +162,10 @@ describe("chip strip & menu yang SUNGGUHAN digambar halaman", () => {
     // Kotak cari kini di balik tombol (owner 2026-10-29), jadi yang
     // membuktikan "barnya utuh" adalah TOMBOLNYA, bukan tulisan placeholder.
     expect(html).toContain('aria-label="Cari film"');
-    expect(html).toContain(">Action<");
+    // Chip pertama strip kuning. Labelnya Indonesia sejak 2026-10-30
+    // (lib/genre.ts); alamatnya tetap ejaan katalog — dijaga terpisah di
+    // tests/nav-katalog.test.ts.
+    expect(html).toContain(">Aksi<");
   });
 
   it("halaman depan: logo memakai lambang situs, bukan huruf dalam kotak", () => {

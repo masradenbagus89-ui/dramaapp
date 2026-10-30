@@ -1,5 +1,7 @@
 import { getAllDramasCachedSafe } from "@/lib/dramas";
 import { sortCatalog } from "@/lib/beranda-catalog";
+import { labelGenreGabungan } from "@/lib/genre";
+import { labelNegara } from "@/lib/negara";
 import PanelFilm, { type BarisFilm } from "./PanelFilm";
 
 /**
@@ -56,7 +58,9 @@ export default async function PanelPopuler({
       judul: d.title,
       href: `/drama/${encodeURIComponent(d.id)}`,
       gambar: d.posterImage || d.heroImage || null,
-      keterangan: [d.genre, d.country].filter(Boolean).join(", "),
+      keterangan: [labelGenreGabungan(d.genre), labelNegara(d.country ?? "")]
+        .filter(Boolean)
+        .join(", "),
       jejak: `${d.views} ditonton`,
     }));
 

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Drama } from "@/lib/types";
 import { alamatCari } from "@/lib/nav-katalog";
+import { labelGenre } from "@/lib/genre";
 import { readMyList } from "@/lib/myList";
 import { readHistory, type HistoryItem } from "@/lib/progress";
 import {
@@ -173,7 +174,7 @@ export default function PersonalRows({
 
       {!hanyaLanjut && trendingGenre.length > 0 && recommended.genre && (
         <ContentRow
-          title={`Trending di ${recommended.genre}`}
+          title={`Trending di ${labelGenre(recommended.genre)}`}
           subtitle="Paling banyak ditonton di genre favoritmu"
           accent={recommended.genre}
           dramas={trendingGenre}

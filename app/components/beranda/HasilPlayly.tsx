@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { saringDenganKetikan } from "@/lib/pencarian";
 import type { PlaylyVideoPublik } from "@/lib/playly-publik";
+import { labelGenreGabungan } from "@/lib/genre";
 import PlaylyVideoGrid from "../PlaylyVideoGrid";
 
 /**
@@ -47,6 +48,9 @@ export function cariVideoPlayly(
     v.creator,
     v.dramaTitle,
     v.genre,
+    // Alasannya sama dengan di lib/discover.ts: yang penonton baca di kartu
+    // adalah label Indonesia, jadi itu pun harus bisa diketik.
+    labelGenreGabungan(v.genre),
   ]);
 }
 

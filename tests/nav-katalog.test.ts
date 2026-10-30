@@ -137,18 +137,37 @@ describe("buildNavMenus", () => {
   it("menggabungkan genre sinema OMDb ke menu Genre tanpa menggandakan", () => {
     const genre = buildNavMenus(KAYA).find((m) => m.key === "genre");
     const label = genre?.items.map((i) => i.label) ?? [];
-    // Genre sinema yang belum jadi kategori DramaKu → ikut digambar.
-    expect(label).toContain("Horror");
-    expect(label).toContain("Sci-Fi");
+    // Genre sinema yang belum jadi kategori DramaKu → ikut digambar. Labelnya
+    // Indonesia sejak 2026-10-30 (lib/genre.ts).
+    expect(label).toContain("Horor");
+    expect(label).toContain("Fiksi Ilmiah");
     // "Action" sudah jadi kategori, jadi hanya boleh muncul SEKALI.
-    expect(label.filter((l) => l === "Action")).toHaveLength(1);
+    expect(label.filter((l) => l === "Aksi")).toHaveLength(1);
+    // Penyaringan ganda bekerja atas NILAI ASLI, bukan label — kalau suatu saat
+    // dibandingkan pakai label, "Action" dari dua sumber lolos berdua.
+    expect(label).not.toContain("Action");
   });
 
   it("memisahkan alamat kategori (?cat=) dari genre sinema (?genre=)", () => {
     const genre = buildNavMenus(KAYA).find((m) => m.key === "genre");
     const cari = (l: string) => genre?.items.find((i) => i.label === l)?.href;
-    expect(cari("Action")).toBe("/discover?cat=Action");
-    expect(cari("Horror")).toBe("/discover?genre=Horror");
+    // Label Indonesia, alamat ejaan asli katalog. Inilah kegagalan senyap yang
+    // paling mungkin: label ikut terkirim ke alamat → halaman hampa.
+    expect(cari("Aksi")).toBe("/discover?cat=Action");
+    expect(cari("Horor")).toBe("/discover?genre=Horror");
+    expect(cari("Fiksi Ilmiah")).toBe("/discover?genre=Sci-Fi");
+  });
+
+  it("tiap pilihan menu Genre memulangkan judul — label tak merusak alamat", () => {
+    // Pagar nyata atas label-vs-alamat: alamatnya dijalankan sungguhan lewat
+    // `bacaFilter` + `filterDariUrl`, sama seperti halaman /discover.
+    const genre = buildNavMenus(KAYA).find((m) => m.key === "genre");
+    for (const item of genre?.items ?? []) {
+      expect(
+        hasilDariTautan(KAYA, item.href).length,
+        `pilihan ${item.label} (${item.href}) memulangkan nol judul`,
+      ).toBeGreaterThan(0);
+    }
   });
 
   it("menawarkan penyaring rating IMDb di menu + More", () => {
@@ -215,12 +234,12 @@ describe("STRIP_KATALOG (daftar tetap milik owner)", () => {
 
   it("isinya persis daftar & urutan yang ditulis owner", () => {
     expect(STRIP_KATALOG.map((c) => c.label)).toEqual([
-      "Action",
+      "Aksi",
       "Anime",
-      "Horror",
+      "Horor",
       "Komedi",
-      "Sci-Fi",
-      "Romance",
+      "Fiksi Ilmiah",
+      "Romantis",
       "Cina",
       "India",
       "Jepang",
@@ -252,9 +271,13 @@ describe("STRIP_KATALOG (daftar tetap milik owner)", () => {
     }
   });
 
-  it("chip negara berlabel Indonesia tapi alamatnya ejaan OMDb", () => {
+  it("chip genre & negara berlabel Indonesia tapi alamatnya ejaan asli", () => {
     // Kegagalan senyap yang paling mungkin: label ikut masuk ke alamat.
     const cari = (l: string) => STRIP_KATALOG.find((c) => c.label === l)?.href;
+    expect(cari("Aksi")).toBe("/discover?cat=Action");
+    expect(cari("Horor")).toBe("/discover?genre=Horror");
+    expect(cari("Fiksi Ilmiah")).toBe("/discover?genre=Sci-Fi");
+    expect(cari("Romantis")).toBe("/discover?cat=Romance");
     expect(cari("Cina")).toBe("/discover?negara=China");
     expect(cari("Jepang")).toBe("/discover?negara=Japan");
     expect(cari("Korea")).toBe("/discover?negara=South+Korea");

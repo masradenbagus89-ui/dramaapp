@@ -14,6 +14,7 @@ import { Film, Play, Star } from "lucide-react";
 import PlaylyPlayer from "./player/PlaylyPlayer";
 import InfoVideoPlayly from "./player/InfoVideoPlayly";
 import { alamatTonton } from "@/lib/tonton";
+import { labelGenreGabungan } from "@/lib/genre";
 import type { PlaylyVideoPublik } from "@/lib/playly-publik";
 
 export default function PlaylyVideoGrid({
@@ -63,7 +64,7 @@ export default function PlaylyVideoGrid({
                 contentRating={aktif.contentRating}
                 quality={aktif.quality}
                 durationLabel={aktif.durationLabel}
-                genre={aktif.genre}
+                genre={labelGenreGabungan(aktif.genre) || null}
                 linkUnduhan={aktif.linkUnduhan}
                 // Jalan ke halaman video ini, tempat sinopsis & pemain tinggal.
                 // Alamatnya dirakit `alamatTonton` — fungsi yang sama yang
@@ -96,7 +97,9 @@ export default function PlaylyVideoGrid({
           // Tahun & genre digabung jadi satu baris "2026 · Action, Sci-Fi".
           // Keduanya bisa null (video yang belum dikaitkan admin ke drama), jadi
           // yang kosong dibuang dulu — supaya tidak tersisa pemisah "·" menggantung.
-          const metaFilm = [v.year, v.genre].filter(Boolean).join(" · ");
+          const metaFilm = [v.year, labelGenreGabungan(v.genre)]
+            .filter(Boolean)
+            .join(" · ");
           return (
             <li key={v.id}>
               <button

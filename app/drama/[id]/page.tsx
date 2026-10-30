@@ -25,6 +25,8 @@ import PanelFilm from "@/app/components/film/PanelFilm";
 import PanelPopuler from "@/app/components/film/PanelPopuler";
 import KakiFilm from "@/app/components/film/KakiFilm";
 import { getAllDramasCachedSafe } from "@/lib/dramas";
+import { labelGenre, labelGenreGabungan } from "@/lib/genre";
+import { labelNegara } from "@/lib/negara";
 import { pilihTerkait } from "@/lib/film-terkait";
 
 // Halaman disimpan & dipakai ulang, disegarkan tiap 60 detik. Menggantikan
@@ -176,7 +178,9 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
     judul: d.title,
     href: `/drama/${encodeURIComponent(d.id)}`,
     gambar: d.posterImage || d.heroImage || null,
-    keterangan: [d.genre, d.country].filter(Boolean).join(", "),
+    keterangan: [labelGenreGabungan(d.genre), labelNegara(d.country ?? "")]
+      .filter(Boolean)
+      .join(", "),
     // Baris ketiga di kolom sempit. Dulu `lencana` (rating IMDb) untuk grid
     // poster yang kini dibuang; sidebar memakai `jejak`, dan di sana jumlah
     // tontonan lebih berguna daripada angka rating yang sudah tampil di
@@ -524,7 +528,7 @@ function HeroDrama({ drama }: { drama: Drama }) {
                         key={g.trim()}
                         className="rounded-full border border-white/40 px-2.5 py-0.5 text-[11px] text-white"
                       >
-                        {g.trim()}
+                        {labelGenre(g.trim())}
                       </span>
                     ))}
                   </div>

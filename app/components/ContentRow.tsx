@@ -6,6 +6,7 @@ import type { Drama } from "@/lib/types";
 import { continueLabel } from "@/lib/progress";
 import { teaserSrc } from "@/lib/hero-teaser";
 import { genreBarClass, genreTextClass } from "@/lib/genre-accent";
+import { labelGenre } from "@/lib/genre";
 import Poster from "./Poster";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Play } from "lucide-react";
@@ -163,7 +164,7 @@ export default function ContentRow({
                   // Rating & tahun sudah jadi lencana di poster (2026-09-22),
                   // jadi baris ini cukup menyebut kategorinya.
                   <p className="line-clamp-1 text-[11px] text-zinc-500">
-                    {d.category}
+                    {labelGenre(d.category)}
                   </p>
                 )}
               </Link>

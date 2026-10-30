@@ -2,6 +2,7 @@ import type { Category, Drama } from "./types";
 import { CATEGORIES, isMovie } from "./types";
 import { parseViews } from "./format";
 import { cocokSemuaKata, pecahKataKunci } from "./pencarian";
+import { labelGenre } from "./genre";
 
 export const SORT_OPTIONS = [
   { value: "relevance", label: "Paling sesuai" },
@@ -233,7 +234,16 @@ export function filterAndSortDramas(
     // Field yang dicari sengaja TETAP tiga ini; yang berubah cuma CARA
     // mencocokkannya (lib/pencarian.ts), supaya hasil pencarian tidak
     // tiba-tiba melebar ke kolom yang tak pernah dimaksud penonton.
-    const matchQ = cocokSemuaKata(kataCari, d.title, d.category, d.synopsis);
+    // `labelGenre` ikut dicocokkan supaya ketikan "Aksi" — kata yang penonton
+    // BACA di kartu sejak label genre diindonesiakan — menemukan kategori yang
+    // tersimpan sebagai "Action". Ejaan aslinya tetap dicocokkan juga.
+    const matchQ = cocokSemuaKata(
+      kataCari,
+      d.title,
+      d.category,
+      labelGenre(d.category),
+      d.synopsis,
+    );
     return (
       matchCat &&
       matchYear &&

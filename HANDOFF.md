@@ -9,7 +9,7 @@
 >
 > **📦 Berkas ini sudah ±6.600 baris** (diukur 2026-10-15; angka lama "5.224 baris" dari 2026-10-10 sudah basi — tumbuh ±1.400 baris dalam 5 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-10-29 (**rangkaian arahan Kang Dedi + koreksi owner — SEMUA TAYANG**; terakhir `d0d301e`: cari sejajar, panel lipat, terkait sesuai jenis).
+**Terakhir diisi:** 2026-10-30 (**nama genre diindonesiakan di seluruh tampilan penonton** — selesai & terbukti, **BELUM dirilis**, menunggu izin owner). Rilis terakhir yang TAYANG masih `d0d301e` (29 Okt).
 
 ---
 
@@ -188,6 +188,63 @@ PC backup menyalakan ulang layanannya sendiri (watchdog) dan membuat tunnel baru
 Artinya perubahan di `start-video-services.ps1` yang meneruskan `VIDEO_SIGNING_SECRET` dari env
 level `Machine` **benar-benar bekerja di jalur autostart** — hal yang tak bisa diuji saat
 dipasang manual. Penegakan bertahan melewati restart PC; tidak perlu dipasang ulang tiap boot.
+
+---
+
+## 2026-10-30 — ✅ SIAP, BELUM DIRILIS: nama genre jadi bahasa Indonesia
+
+Owner (dengan tangkapan layar menu **Genre** di bar merah): *"ubah bagian genre ke bahasa
+indonesia agar sinkron semua menggunakan bahasa indonesia"*.
+
+**Yang penonton lihat sekarang:** Action→**Aksi** · Romance→**Romantis** · Tycoon→**Taipan** ·
+Comedy→**Komedi** · Time Travel→**Lintas Waktu** · Adventure→**Petualangan** · Horror→**Horor** ·
+Sci-Fi→**Fiksi Ilmiah**. **Harem**, **Thriller**, **Anime** SENGAJA tetap — kata Inggrisnya sudah
+jadi istilah sehari-hari penonton; memaksakan padanan malah membuat genre-nya tak dikenali.
+
+Berubah di 13 permukaan: menu Genre di bar merah · strip kuning · dropdown Filter `/beranda` ·
+kolom "Genre Populer" di kaki situs · tulisan di bawah judul tiap kartu poster · chip genre di
+halaman drama/film · kolom Terpopuler · baris "Trending di …" · keterangan penyaring di judul
+`/discover` · kartu & grid video Playly · halaman `/tonton`.
+
+### ⚠️ ATURAN PERMANEN yang lahir di sini — jangan dilanggar
+
+**Nama genre dipakai untuk LIMA hal sekaligus. Hanya SATU yang boleh diterjemahkan.**
+
+| Dipakai untuk | Boleh diterjemahkan? |
+|---|---|
+| Tulisan yang dibaca penonton | ✅ ya |
+| Nilai penyaring di alamat (`/discover?cat=Action`) | ❌ TIDAK |
+| Pencocokan "Drama Terkait" (`lib/film-terkait.ts`) | ❌ TIDAK |
+| Pencarian warna aksen (`lib/genre-accent.ts`) | ❌ TIDAK |
+| Pencocokan ketikan pencarian (`lib/discover.ts`) | ➕ DITAMBAH, bukan menggantikan |
+
+Penerjemahnya **`lib/genre.ts`** (`labelGenre` + `labelGenreGabungan`) — kembaran `lib/negara.ts`
+yang sudah terbukti. Nama di luar daftar dipulangkan apa adanya, jadi katalog yang tumbuh tak
+pernah kehilangan chip. **Tambah genre baru = tambah satu baris di berkas itu, bukan di tempat
+gambarnya.**
+
+### Panel admin SENGAJA tetap Inggris
+
+Dropdown kategori, kolom "Genre (OMDb)", dan lencana di daftar drama **tidak** diterjemahkan:
+di sana yang terlihat adalah **nilai yang benar-benar tersimpan di database**, dan kolom OMDb-nya
+harus cocok dengan ejaan OMDb. Menampilkan "Aksi" sementara yang tersimpan "Action" membuat owner
+salah baca saat mencocokkan data. Bukan kelupaan — bisa diubah kalau owner minta.
+
+### Bukti
+
+`npm test` **1.784 hijau** (122 berkas) · `npm run build` sukses · `npx tsc --noEmit` **exit 0**
+(dijalankan SESUDAH build) · HTML dari server lokal: `href="/discover?cat=Action">Aksi<` — label
+Indonesia, alamat ejaan asli · `/beranda` **nol** genre Inggris yang terlihat penonton · halaman
+drama: `>Aksi<` `>Horor<` `>Petualangan<`.
+
+Penjaga permanen: **`tests/genre-label.test.ts`** (10 tes). Yang dijaga bukan selera terjemahan,
+melainkan dua kegagalan senyap — (1) label bocor ke alamat, (2) label dipakai mencari warna.
+Plus pagar masa-depan: **kategori BARU di `CATEGORIES` (`lib/types.ts`) membuat tes MERAH sampai
+labelnya didaftarkan** — tanpa itu kategori baru muncul dalam bahasa Inggris dan tak ada yang tahu.
+Di `tests/nav-katalog.test.ts`, tiap pilihan menu Genre dijalankan lewat penyaring yang SAMA dengan
+`/discover` lalu dipastikan memulangkan minimal satu judul.
+
+Rincian: `docs/lintasai/rencana/2026-10-30-genre-bahasa-indonesia.md`.
 
 ---
 

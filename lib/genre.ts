@@ -17,7 +17,7 @@
 // ADANYA (bukan dibuang), jadi katalog yang tumbuh tidak pernah kehilangan chip
 // hanya karena namanya belum sempat didaftarkan di sini.
 //
-// Sebagian nama SENGAJA tidak diterjemahkan ("Harem", "Thriller", "Anime"):
+// Sebagian nama SENGAJA tidak diterjemahkan ("Thriller", "Anime"):
 // kata Inggrisnya sudah jadi istilah sehari-hari penonton Indonesia, dan
 // memaksakan padanan justru membuat genre-nya tak dikenali.
 // -------------------------------------------------------------------------
@@ -26,10 +26,14 @@ const NAMA_INDONESIA: Record<string, string> = {
   // --- Kategori kurasi DramaKu (CATEGORIES di lib/types.ts) ---
   Semua: "Semua",
   Romance: "Romantis",
-  // "Taipan" = pengusaha kaya raya; kata baku bahasa Indonesia, dan itu persis
-  // isi genre ini (kisah bos/CEO kaya) tanpa perlu kalimat penjelas.
-  Tycoon: "Taipan",
-  Harem: "Harem",
+  // Owner 2026-10-30 menolak "Taipan" dan memilih sendiri kata ini. "CEO"
+  // memang singkatan Inggris, tapi sudah jadi istilah sehari-hari penonton
+  // drama di sini — keputusan owner, jangan "diperbaiki" jadi kata Indonesia.
+  Tycoon: "CEO",
+  // Owner 2026-10-30: "harem jadikan kerajaan". Pagi ini "Harem" sempat
+  // sengaja dibiarkan Inggris; owner mengoreksinya langsung. Nilai di database
+  // TETAP "Harem" — yang berubah cuma yang dibaca penonton.
+  Harem: "Kerajaan",
   "Time Travel": "Lintas Waktu",
   Action: "Aksi",
   Comedy: "Komedi",

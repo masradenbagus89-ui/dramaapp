@@ -40,13 +40,26 @@ untuk nama negara — `lib/negara.ts` (`labelNegara`), dan aturannya tertulis di
   persis jenis kegagalan yang tak pernah dilaporkan siapa pun.
 
 Daftar terjemahan (yang ada di katalog 2026-10-30): Action→**Aksi** ·
-Romance→**Romantis** · Tycoon→**Taipan** · Comedy→**Komedi** ·
+Romance→**Romantis** · Tycoon→**CEO** · Harem→**Kerajaan** · Comedy→**Komedi** ·
 Time Travel→**Lintas Waktu** · Adventure→**Petualangan** · Horror→**Horor** ·
 Fantasy→**Fantasi** · Sci-Fi→**Fiksi Ilmiah** · + 20 genre OMDb lain yang wajar menyusul.
 
-**Sengaja TIDAK diterjemahkan:** `Harem`, `Thriller`, `Anime` — kata Inggrisnya
-sudah jadi istilah sehari-hari penonton Indonesia; memaksakan padanan justru
-membuat genre-nya tak dikenali.
+**Sengaja TIDAK diterjemahkan:** `Thriller`, `Anime` — kata Inggrisnya sudah jadi
+istilah sehari-hari penonton Indonesia; memaksakan padanan justru membuat genre-nya
+tak dikenali. Hal yang sama berlaku untuk **CEO**, yang dipilih owner sendiri.
+
+### Koreksi owner di hari yang sama (sesudah rilis `5088bf2`)
+
+Owner melihat hasilnya lalu mengoreksi tiga hal — **semuanya menang atas pilihan AI**:
+
+| Rilis pagi | Koreksi owner | Keterangan |
+|---|---|---|
+| Harem (dibiarkan Inggris) | **Kerajaan** | AI sempat menilai "Harem" lebih dikenali. Owner tak setuju. |
+| Taipan | **CEO** | AI mengusulkan Konglomerat/Crazy Rich/Orang Kaya/Bos Kaya; owner menulis sendiri "CEO". |
+| + More | **Lainnya** | Mencabut keputusan owner 2026-09-21 yang justru meminta label Inggris itu. |
+
+⚠️ **"Series" TIDAK ikut diubah** — berasal dari keputusan 2026-09-21 yang sama dengan
+"+ More", tapi owner hanya menyebut "more". Jangan diubah tanpa diminta.
 
 **2. Dipasang di 13 tempat yang dibaca penonton:** menu Genre di bar merah ·
 strip kuning · dropdown Filter `/beranda` · kolom "Genre Populer" di kaki situs ·

@@ -89,7 +89,7 @@ describe("buildNavMenus", () => {
       "Populer",
       "Negara",
       "Tahun",
-      "+ More",
+      "Lainnya",
     ]);
   });
 
@@ -170,7 +170,7 @@ describe("buildNavMenus", () => {
     }
   });
 
-  it("menawarkan penyaring rating IMDb di menu + More", () => {
+  it("menawarkan penyaring rating IMDb di menu Lainnya", () => {
     // Dropdown rating di bar cari dilepas 2026-09-21; pilihannya pindah ke sini
     // supaya penyaringnya tidak ikut hilang. KAYA punya satu judul 8.5.
     const lainnya = buildNavMenus(KAYA).find((m) => m.key === "lainnya");

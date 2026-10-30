@@ -202,10 +202,24 @@ indonesia agar sinkron semua menggunakan bahasa indonesia"*.
 
 **Rencana mundur 1 baris** kalau nanti ada keluhan: `git revert 5088bf2` lalu dual push — Railway build ulang sendiri ~90 detik. Tak ada perubahan database maupun env, jadi mundur benar-benar cuma soal kode.
 
-**Yang penonton lihat sekarang:** Action→**Aksi** · Romance→**Romantis** · Tycoon→**Taipan** ·
+**Yang penonton lihat sekarang:** Action→**Aksi** · Romance→**Romantis** · Tycoon→**CEO** ·
+Harem→**Kerajaan** ·
 Comedy→**Komedi** · Time Travel→**Lintas Waktu** · Adventure→**Petualangan** · Horror→**Horor** ·
-Sci-Fi→**Fiksi Ilmiah**. **Harem**, **Thriller**, **Anime** SENGAJA tetap — kata Inggrisnya sudah
-jadi istilah sehari-hari penonton; memaksakan padanan malah membuat genre-nya tak dikenali.
+Sci-Fi→**Fiksi Ilmiah**. Tombol menu **"+ More" → "Lainnya"**. **Thriller** & **Anime** SENGAJA
+tetap — kata Inggrisnya sudah jadi istilah sehari-hari penonton; memaksakan padanan malah membuat
+genre-nya tak dikenali. **CEO** juga Inggris, tapi itu **pilihan owner sendiri**.
+
+### ⛔ KOREKSI OWNER sesudah rilis pagi — keputusan owner MENANG, jangan dibalik
+
+| Rilis pagi (`5088bf2`) | Koreksi owner | Catatan |
+|---|---|---|
+| Harem (dibiarkan Inggris) | **Kerajaan** | AI menilai "Harem" lebih dikenali. Owner tak setuju. |
+| Taipan | **CEO** | AI menawarkan Konglomerat/Crazy Rich/Orang Kaya/Bos Kaya; owner menulis sendiri "CEO". |
+| + More | **Lainnya** | **Mencabut keputusan owner 2026-09-21** yang dulu justru meminta label Inggris itu (ditegaskan dua kali waktu itu). |
+
+⚠️ **"Series" TIDAK ikut diubah.** Ia lahir dari keputusan 2026-09-21 yang SAMA dengan "+ More",
+tapi owner kali ini hanya menyebut "more". Jangan diubah tanpa diminta — dan jangan pula
+"mengembalikan" Lainnya jadi + More dengan alasan catatan September.
 
 Berubah di 13 permukaan: menu Genre di bar merah · strip kuning · dropdown Filter `/beranda` ·
 kolom "Genre Populer" di kaki situs · tulisan di bawah judul tiap kartu poster · chip genre di

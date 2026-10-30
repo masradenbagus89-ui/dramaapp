@@ -269,13 +269,18 @@ describe("chip strip & menu yang SUNGGUHAN digambar halaman", () => {
     );
     // Hanya TOMBOL-nya yang ada di HTML — isi dropdown Radix baru dirender
     // saat menunya dibuka, jadi isinya dijaga di tests/nav-katalog.test.ts.
-    for (const label of ["Genre", "Series", "Populer", "Negara", "Tahun", "+ More"]) {
+    for (const label of ["Genre", "Series", "Populer", "Negara", "Tahun", "Lainnya"]) {
       expect(html, `tombol menu "${label}" tidak tergambar`).toContain(
         `>${label}<`,
       );
     }
+    // Kunci internal menu ("jenis") tidak boleh bocor jadi tulisan di layar.
     expect(html).not.toContain(">Jenis<");
-    expect(html).not.toContain(">Lainnya<");
+    // Pagar untuk kunci "lainnya" DIGANTI, bukan dihapus: sejak owner meminta
+    // "+ More" diindonesiakan (2026-10-30), "Lainnya" justru label yang BENAR,
+    // jadi melarangnya malah bertentangan dengan permintaan. Yang kini dijaga:
+    // label Inggris lamanya benar-benar hilang dari layar.
+    expect(html).not.toContain(">+ More<");
   });
 
   it("strip TIDAK lagi memajang negara & pintasan yang tak diminta owner", () => {

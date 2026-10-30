@@ -45,7 +45,8 @@ describe("labelGenre — nilai data Inggris jadi label Indonesia", () => {
     // Adventure/Horror. Inilah yang penonton lihat di menu pada gambar owner.
     expect(labelGenre("Action")).toBe("Aksi");
     expect(labelGenre("Romance")).toBe("Romantis");
-    expect(labelGenre("Tycoon")).toBe("Taipan");
+    expect(labelGenre("Tycoon")).toBe("CEO");
+    expect(labelGenre("Harem")).toBe("Kerajaan");
     expect(labelGenre("Comedy")).toBe("Komedi");
     expect(labelGenre("Time Travel")).toBe("Lintas Waktu");
     expect(labelGenre("Adventure")).toBe("Petualangan");
@@ -57,10 +58,11 @@ describe("labelGenre — nilai data Inggris jadi label Indonesia", () => {
     // di lib/types.ts, tes ini MERAH sampai labelnya didaftarkan. Tanpa ini,
     // kategori baru muncul di menu dalam bahasa Inggris dan tak ada yang tahu.
     //
-    // "Harem" sengaja dikecualikan: kata Inggrisnya memang dipakai apa adanya
-    // oleh penonton Indonesia, jadi label = nilai itu DISENGAJA, bukan lupa.
+    // Sejak owner mengubah "Harem" jadi "Kerajaan" (2026-10-30), TIDAK ADA
+    // lagi kategori yang dikecualikan selain "Semua" — yang memang sudah kata
+    // Indonesia. Pagarnya jadi lebih ketat daripada versi pagi ini.
     const belumDiterjemahkan = CATEGORIES.filter(
-      (k) => k !== "Harem" && k !== "Semua" && labelGenre(k) === k,
+      (k) => k !== "Semua" && labelGenre(k) === k,
     );
     expect(belumDiterjemahkan).toEqual([]);
   });

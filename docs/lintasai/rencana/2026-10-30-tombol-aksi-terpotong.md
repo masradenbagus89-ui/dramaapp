@@ -2,7 +2,10 @@
 
 **Dilaporkan owner** lewat tangkapan layar: *"bisa kamu cek bagian itu karena ada yang ketutup"*.
 
-**Status:** ✅ diperbaiki & **terbukti dengan potret layar** di 5 lebar. Menunggu izin rilis.
+**Status:** ✅ **DIRILIS 2026-10-30 di `55894b8`** — dual push `60fb7a7..55894b8`, tayang
+~90 detik, **downtime NOL**. Dibuktikan ulang di situs produksi dengan potret layar 1280 px:
+keempat tombol utuh.
+**Rencana mundur 1 baris:** `git revert 55894b8` lalu dual push (nol perubahan database/env).
 
 ---
 

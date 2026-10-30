@@ -9,7 +9,7 @@
 >
 > **📦 Berkas ini sudah ±6.600 baris** (diukur 2026-10-15; angka lama "5.224 baris" dari 2026-10-10 sudah basi — tumbuh ±1.400 baris dalam 5 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-10-30 (**nama genre jadi bahasa Indonesia — TAYANG**, lalu **3 koreksi owner ikut TAYANG** di `27973f0`: Kerajaan · CEO · Lainnya. Dual push tuntas, downtime NOL).
+**Terakhir diisi:** 2026-10-30 (tiga rilis beruntun, semuanya TAYANG: `5088bf2` genre bahasa Indonesia → `27973f0` koreksi owner Kerajaan/CEO/Lainnya → **`55894b8` dua tombol halaman drama yang selama ini TERPOTONG**. Downtime NOL).
 
 ---
 
@@ -188,6 +188,68 @@ PC backup menyalakan ulang layanannya sendiri (watchdog) dan membuat tunnel baru
 Artinya perubahan di `start-video-services.ps1` yang meneruskan `VIDEO_SIGNING_SECRET` dari env
 level `Machine` **benar-benar bekerja di jalur autostart** — hal yang tak bisa diuji saat
 dipasang manual. Penegakan bertahan melewati restart PC; tidak perlu dipasang ulang tiap boot.
+
+---
+
+## 2026-10-30 — ✅ DIRILIS `55894b8`: dua tombol halaman drama yang terpotong tanpa gejala
+
+Dilaporkan **OWNER dari layar**, bukan oleh mesin. Baris aksi di bawah poster seharusnya berisi
+**empat** tombol — `Mulai Nonton · Tambah Favorit · Suka · Bagikan`. Di lebar 1280px yang benar-
+benar tampil cuma dua: **"Suka" sepotong di tepi kanan, "Bagikan" HILANG TOTAL**. Artinya dua
+fungsi itu **tak bisa dipakai siapa pun** di ukuran layar segitu.
+
+### 🪤 PELAJARAN TERPENTING — kerusakan LEBAR tak bisa dibuktikan oleh mesin
+
+Saat kerusakan ini sedang tayang: `npm run build` **sukses**, `npx tsc --noEmit` **exit 0**, dan
+**1.784 tes hijau semua**. `overflow-hidden` memotong **tanpa error, tanpa scrollbar, tanpa satu
+pun pesan di console**. Tak ada gerbang yang bisa menangkapnya.
+
+**Aturan: untuk apa pun yang soal LEBAR/tata letak, bukti satu-satunya adalah POTRET LAYAR.**
+Caranya di mesin ini: Edge `--headless=new --screenshot` **TANPA** `--remote-debugging-port` —
+port debug itu yang pada 2026-10-28 membuat perintah browser mendarat di browser penyewa lain
+di server sewaan bersama ini. Edge & Chrome keduanya sudah terpasang, tak perlu memasang apa pun.
+
+### Sebabnya: tiga hal yang masing-masing wajar
+
+1. Tombol dasar project membawa `shrink-0` (`components/ui/button.tsx`) — "jangan pernah menyusut".
+2. `SaveButton`/`LikeButton`/`ShareButton` masing-masing membawa `w-full` — "ambil 100% lebar induk".
+3. Ketiganya dikurung **satu** `<div className="flex flex-1 gap-2">`, induknya ber-`overflow-hidden`.
+
+Digabung: tiga tombol berebut 100% ruang yang sama, menolak menyusut, kelebihannya dipotong.
+
+**Perbaikannya:** baris diratakan jadi satu flex yang BOLEH membungkus — `sm:flex-wrap`, tiap
+tombol `sm:flex-1` + `sm:min-w-[…]`. `flex-1` membuat lebar dasar 0 sehingga tombol hanya TUMBUH
+(tak perlu menyusut), `min-w` menjaga teks utuh sekaligus menentukan kapan membungkus.
+`overflow-hidden` **TIDAK** dilepas — ia masih melindungi dari luapan lain.
+
+### 💡 Cacat ikutan: PROP YANG BERBOHONG
+
+`SaveButton` **mengumumkan** prop `className` tapi cabang yang dipakai halaman drama tidak pernah
+memasangnya (hanya cabang `hero`). Pemanggil mengatur lebar → diabaikan tanpa peringatan.
+`LikeButton` malah belum punya propnya sama sekali. Keduanya dibereskan: prop yang berbohong akan
+menipu pemanggil berikutnya juga.
+
+### Bukti
+
+Potret produksi 1280px sesudah rilis: keempat tombol utuh · 8 halaman **200** · `/api/dramas`
+**33.477 byte** utuh · keempat tulisan tombol terkirim ke browser · alamat `.mp4` telanjang **0** ·
+jalan masuk pengelola **1** · label genre tak mundur (`Aksi` 55× `CEO` 12× `Kerajaan` 4×).
+Gerbang §6: build sukses (40 judul dari database) · `tsc` exit 0 · **1.791 tes hijau** (+7 baru).
+
+Penjaganya `tests/tombol-aksi-drama.test.ts`, **diuji MERAH lebih dulu** (dengan `sm:flex-wrap`
+dilepas, tes langsung gagal; dipulihkan, hijau lagi). Sebagian membaca SUMBER, bukan merender —
+disengaja: `jsdom` tidak menghitung lebar sama sekali, jadi tes render apa pun akan hijau baik
+tombolnya terpotong maupun tidak. Yang dikunci adalah BENTUK yang membuat pemotongan mustahil.
+
+### ⚪ Ditemukan tapi TIDAK dikerjakan (di luar permintaan)
+
+Di layar **≤1024px**, kolom "Drama Terkait" turun ke bawah hero dan menampilkan **seluruh 20
+judul** SEBELUM baris tombol aksi. Di tablet, penonton menggulir melewati 20 drama lain sebelum
+sampai ke tombol "Mulai Nonton" drama yang sedang dibukanya. Di HP dampaknya diredam tombol
+melayang di bawah layar; di tablet tidak. **Bentuk lama, bukan akibat perbaikan ini.** Menunggu
+keputusan owner.
+
+Rincian: `docs/lintasai/rencana/2026-10-30-tombol-aksi-terpotong.md`.
 
 ---
 

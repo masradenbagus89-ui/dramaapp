@@ -4,9 +4,30 @@
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
 **Terakhir dicek:** 2026-10-30 (**komputer OWNER**).
-`origin/main` = `dramaku/main` = **`27973f0`** (selisih 0/0 antar-remote, diverifikasi
+`origin/main` = `dramaku/main` = **`55894b8`** (selisih 0/0 antar-remote, diverifikasi
 `git fetch origin` + `git fetch dramaku` SEBELUM push, dan push keduanya exit 0). **Nol antrean**
 — tak ada yang menunggu rilis.
+
+✅ **DIRILIS 2026-10-30 (ke-3) — dua tombol halaman drama yang terpotong tanpa gejala, di
+`55894b8`. Dual push `60fb7a7..55894b8`, tayang ~90 detik, downtime NOL.**
+Dilaporkan OWNER dari layar. Baris aksi seharusnya 4 tombol; di 1280px "Suka" cuma sepotong dan
+"Bagikan" hilang total — dua fungsi tak bisa dipakai siapa pun. Sebabnya tombol dasar ber-
+`shrink-0` + tiap tombol ber-`w-full` + ketiganya dikurung satu induk `flex-1` di bawah
+`overflow-hidden`. Diperbaiki jadi satu flex yang boleh membungkus (`sm:flex-wrap` + `sm:flex-1`
++ `sm:min-w-[…]`). Ikut dibereskan: `SaveButton` mengumumkan prop `className` tapi tak
+memasangnya, `LikeButton` belum punya propnya.
+
+🪤 **PELAJARAN: kerusakan LEBAR tak bisa dibuktikan oleh mesin.** Saat bug ini tayang, build
+sukses, `tsc` exit 0, dan 1.784 tes HIJAU semua — `overflow-hidden` memotong tanpa error, tanpa
+scrollbar, tanpa pesan apa pun. **Buktinya hanya POTRET LAYAR.** Caranya di mesin ini: Edge
+`--headless=new --screenshot` **TANPA** `--remote-debugging-port` (port debug itu yang 2026-10-28
+nyasar ke browser penyewa lain di server sewaan bersama).
+
+Gerbang §6 lengkap: `.next` dihapus & dibuktikan hilang → build **sukses** (0 pesan "pakai berkas
+lokal", 40 tautan drama) → `tsc` **exit 0** → **1.791 tes hijau** (+7 baru, diuji MERAH lebih
+dulu) → nol berkas rahasia. Bukti tayang: potret produksi 1280px keempat tombol utuh · 8 halaman
+**200** · `/api/dramas` **33.477 byte** utuh · `.mp4` telanjang **0** · jalan masuk pengelola **1** ·
+label genre tak mundur.
 
 ✅ **DIRILIS 2026-10-30 (ke-2) — tiga koreksi owner atas rilis pagi, di `27973f0`. Dual push
 `2e54d30..27973f0`, tayang ~150 detik, downtime NOL.**

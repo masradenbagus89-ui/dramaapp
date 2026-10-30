@@ -9,7 +9,7 @@
 >
 > **📦 Berkas ini sudah ±6.600 baris** (diukur 2026-10-15; angka lama "5.224 baris" dari 2026-10-10 sudah basi — tumbuh ±1.400 baris dalam 5 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-10-30 (**nama genre jadi bahasa Indonesia — SUDAH TAYANG** di `5088bf2`, dual push tuntas, tayang ~90 detik, downtime NOL).
+**Terakhir diisi:** 2026-10-30 (**nama genre jadi bahasa Indonesia — TAYANG**, lalu **3 koreksi owner ikut TAYANG** di `27973f0`: Kerajaan · CEO · Lainnya. Dual push tuntas, downtime NOL).
 
 ---
 
@@ -191,7 +191,7 @@ dipasang manual. Penegakan bertahan melewati restart PC; tidak perlu dipasang ul
 
 ---
 
-## 2026-10-30 — ✅ DIRILIS `5088bf2`: nama genre jadi bahasa Indonesia
+## 2026-10-30 — ✅ DIRILIS `5088bf2` + koreksi `27973f0`: nama genre jadi bahasa Indonesia
 
 Owner (dengan tangkapan layar menu **Genre** di bar merah): *"ubah bagian genre ke bahasa
 indonesia agar sinkron semua menggunakan bahasa indonesia"*.
@@ -209,7 +209,7 @@ Sci-Fi→**Fiksi Ilmiah**. Tombol menu **"+ More" → "Lainnya"**. **Thriller** 
 tetap — kata Inggrisnya sudah jadi istilah sehari-hari penonton; memaksakan padanan malah membuat
 genre-nya tak dikenali. **CEO** juga Inggris, tapi itu **pilihan owner sendiri**.
 
-### ⛔ KOREKSI OWNER sesudah rilis pagi — keputusan owner MENANG, jangan dibalik
+### ⛔ KOREKSI OWNER sesudah rilis pagi — TAYANG di `27973f0`, jangan dibalik
 
 | Rilis pagi (`5088bf2`) | Koreksi owner | Catatan |
 |---|---|---|
@@ -220,6 +220,12 @@ genre-nya tak dikenali. **CEO** juga Inggris, tapi itu **pilihan owner sendiri**
 ⚠️ **"Series" TIDAK ikut diubah.** Ia lahir dari keputusan 2026-09-21 yang SAMA dengan "+ More",
 tapi owner kali ini hanya menyebut "more". Jangan diubah tanpa diminta — dan jangan pula
 "mengembalikan" Lainnya jadi + More dengan alasan catatan September.
+
+**Bukti koreksi `27973f0` (tayang ~150 detik):** tombol bar merah terbaca `Genre · Series ·
+Populer · Negara · Tahun · Lainnya` · kartu poster halaman depan: `CEO` 12× `Kerajaan` 4×
+`Aksi` 57× `Romantis` 29× `Komedi` 5× `Lintas Waktu` 4× · **kata lama nol semua** (`Taipan` 0 ·
+`Harem` 0 · `+ More` 0 · `Tycoon` 0) · 7 halaman **200** · `/api/dramas` **33.477 byte** utuh ·
+jalan masuk pengelola **tetap 1** · alamat `.mp4` telanjang di `/film` tetap **0**.
 
 Berubah di 13 permukaan: menu Genre di bar merah · strip kuning · dropdown Filter `/beranda` ·
 kolom "Genre Populer" di kaki situs · tulisan di bawah judul tiap kartu poster · chip genre di

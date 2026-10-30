@@ -4,9 +4,30 @@
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
 **Terakhir dicek:** 2026-10-30 (**komputer OWNER**).
-`origin/main` = `dramaku/main` = **`5088bf2`** (selisih 0/0 antar-remote, diverifikasi
+`origin/main` = `dramaku/main` = **`27973f0`** (selisih 0/0 antar-remote, diverifikasi
 `git fetch origin` + `git fetch dramaku` SEBELUM push, dan push keduanya exit 0). **Nol antrean**
 — tak ada yang menunggu rilis.
+
+✅ **DIRILIS 2026-10-30 (ke-2) — tiga koreksi owner atas rilis pagi, di `27973f0`. Dual push
+`2e54d30..27973f0`, tayang ~150 detik, downtime NOL.**
+Owner melihat hasil rilis pagi lalu mengoreksi: **Harem → Kerajaan** · **Taipan → CEO** (owner
+menulis sendiri kata itu setelah menolak Taipan) · tombol **"+ More" → "Lainnya"**. Yang terakhir
+**mencabut keputusan owner 2026-09-21** yang dulu justru meminta label Inggris itu; sejarahnya
+ditulis di komentar `lib/nav-katalog.ts` supaya sesi berikutnya tak mengembalikannya. **"Series"
+TIDAK ikut diubah** — lahir dari keputusan yang sama tapi owner hanya menyebut "more".
+
+Gerbang §6 lengkap lagi: `.next` dihapus & dibuktikan hilang → build **sukses** (0 pesan "pakai
+berkas lokal", 40 tautan drama) → `tsc` **exit 0** → **1.784 tes hijau** → nol berkas rahasia
+ter-stage. Bukti tayang: tombol bar merah `Genre · Series · Populer · Negara · Tahun · Lainnya` ·
+`CEO` 12× & `Kerajaan` 4× di kartu poster · **kata lama nol semua** (Taipan 0, Harem 0, + More 0,
+Tycoon 0) · 7 halaman **200** · `/api/dramas` **33.477 byte** utuh · jalan masuk pengelola tetap
+ada · alamat `.mp4` telanjang tetap **0**.
+
+🪤 **Pelajaran kecil tapi mahal:** satu tes lama berbunyi `expect(html).not.toContain(">Lainnya<")`
+— dulu menjaga agar **kunci internal** menu tak bocor jadi tulisan di layar. Begitu "Lainnya"
+menjadi label yang BENAR, pagar itu bertentangan dengan permintaan owner. Pagarnya **DIGANTI**
+jadi `not.toContain(">+ More<")` (membuktikan label Inggris lama benar-benar hilang), **bukan
+dihapus** — menghapus pagar yang merah itu cara paling mudah kehilangan penjaga tanpa sadar.
 
 ✅ **DIRILIS 2026-10-30 — nama genre jadi bahasa Indonesia di seluruh sisi penonton, di
 `5088bf2`. Dual push `ee6fbc5..5088bf2`, tayang ~90 detik, downtime NOL.**

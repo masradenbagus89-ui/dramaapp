@@ -9,7 +9,7 @@
 >
 > **📦 Berkas ini sudah ±6.600 baris** (diukur 2026-10-15; angka lama "5.224 baris" dari 2026-10-10 sudah basi — tumbuh ±1.400 baris dalam 5 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
 
-**Terakhir diisi:** 2026-10-30 (tiga rilis beruntun, semuanya TAYANG: `5088bf2` genre bahasa Indonesia → `27973f0` koreksi owner Kerajaan/CEO/Lainnya → **`55894b8` dua tombol halaman drama yang selama ini TERPOTONG**. Downtime NOL. ⏸️ Satu bahasan **menunggu keputusan owner**: "klik drama langsung play" — risetnya sudah selesai, nol kode diubah.)
+**Terakhir diisi:** 2026-10-30 (tiga rilis beruntun, semuanya TAYANG: `5088bf2` genre bahasa Indonesia → `27973f0` koreksi owner Kerajaan/CEO/Lainnya → **`55894b8` dua tombol halaman drama yang selama ini TERPOTONG**. Downtime NOL. ⏸️ **DUA bahasan menunggu keputusan owner**, risetnya sudah selesai & nol kode diubah: "klik drama langsung play" dan "sinopsis film masih bahasa Inggris".)
 
 ---
 
@@ -188,6 +188,63 @@ PC backup menyalakan ulang layanannya sendiri (watchdog) dan membuat tunnel baru
 Artinya perubahan di `start-video-services.ps1` yang meneruskan `VIDEO_SIGNING_SECRET` dari env
 level `Machine` **benar-benar bekerja di jalur autostart** — hal yang tak bisa diuji saat
 dipasang manual. Penegakan bertahan melewati restart PC; tidak perlu dipasang ulang tiap boot.
+
+---
+
+## 2026-10-30 — ⏸️ DIBAHAS, BELUM DIPUTUSKAN: sinopsis film masih bahasa Inggris
+
+Owner (tangkapan layar halaman `/tonton`): *"di sinopsis isinya bahasa inggris bisa kamu buat
+bahasa indonesia atau kamu tambahkan translate yang mana bagusnya"*.
+Disajikan 4 pilihan → owner: **"kamu simpan ini dulu di update kita putuskan nanti"**.
+**NOL kode diubah.** Risetnya di bawah — **jangan diukur ulang**.
+
+### Angka yang SUDAH diukur dari produksi (2026-10-30)
+
+| Yang diukur | Hasil |
+|---|---|
+| Halaman `/tonton` terdaftar di `sitemap.xml` | **443** |
+| Sampel 40 halaman acak (tiap baris ke-11): sinopsis **INGGRIS** | **31** (≈78%) |
+| Sinopsis **INDONESIA** | **0** |
+| Tanpa sinopsis | 9 |
+| Perkiraan total halaman berbahasa Inggris | **± 340** |
+| Katalog **drama** (`/api/dramas`, 40 judul) | **100% sudah Indonesia — TIDAK terdampak** |
+
+⚠️ **Jebakan pengukuran yang sudah memakan satu putaran:** markup-nya `<h2>Sinopsis</h2>`,
+huruf besar "SINOPSIS" di layar itu dari CSS. Grep atas `SINOPSIS` memulangkan **nol** dan
+sempat terbaca seperti "tak ada sinopsis sama sekali". Pola yang benar:
+`Sinopsis</h2><p[^>]*>`.
+
+### Fakta kode (jangan ditelusuri ulang)
+
+- Sinopsis film datang dari **OMDb `Plot`** → `lib/imdb-tool.ts:215`. OMDb **hanya** Inggris,
+  jadi ini bukan kelalaian — memang begitu datangnya.
+- Tersimpan di **SATU dokumen** Supabase `playly:imdb` (peta `{videoId: meta}`),
+  `lib/store.ts:1242`. Penyetelnya sudah ada: `setPlaylyVideoImdb`.
+  **→ Menerjemahkan TIDAK perlu mengubah struktur database sama sekali.**
+- Halaman drama (`/drama/<id>`) memakai `drama.synopsis` yang diisi tangan/sumber Playly —
+  itu sebabnya sudah Indonesia.
+
+### Pendapat AI (kalau dilanjutkan nanti)
+
+**Terjemahkan & SIMPAN, bukan tombol translate.** Alasan terkuat: **443 halaman itu ada di
+sitemap**, dan tombol terjemah **nol manfaat bagi Google** — Google membaca HTML saat pertama
+dikirim, sebelum ada yang mengklik. Menyimpan terjemahan membuat ratusan halaman relevan untuk
+pencarian **Indonesia**; tombol tidak. Tambahan: sinopsis dibaca untuk memutuskan menonton, jadi
+yang harus diklik dulu kebanyakan tak diklik; dan tersimpan = nol panggilan ke luar per kunjungan.
+
+**Kelemahan jujurnya:** judul BARU dari Playly tetap datang Inggris → harus disambung ke jalur
+impor, kalau tidak masalahnya kembali pelan-pelan.
+
+Empat pilihan yang sudah disajikan: (1) AI terjemahkan + sambung ke impor, 3-4 jam, nol kunci API
+baru, tapi AI menulis massal ke database produksi → **butuh izin owner**; (2) terjemahkan yang ada
+saja tanpa menyambung impor, 2 jam; (3) **TMDB** — sinopsis Indonesia tulisan manusia, API gratis,
+**TAPI cakupannya BELUM diukur** (jangan mengarang angka) + owner perlu daftar kunci gratis;
+(4) tombol Terjemahkan — tidak direkomendasikan.
+
+### 💡 Ikut terlihat di tangkapan layar yang sama, belum ditanyakan
+
+Label `Director` · `Writers` · `Stars` di halaman `/tonton` **dan** `/drama` masih bahasa
+Inggris (`Asal` dan `IMDb` sudah benar). Tiga kata, label saja, nol risiko — tinggal diminta.
 
 ---
 

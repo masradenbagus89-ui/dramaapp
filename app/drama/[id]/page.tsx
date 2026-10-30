@@ -254,13 +254,43 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
           <div className="min-w-0 overflow-hidden bg-white pb-10 pt-5 shadow-sm md:rounded-xl">
       <div className="px-4 md:px-8">
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <WatchCta dramaId={drama.id} className="flex-1" />
-          <div className="flex flex-1 gap-2">
-            <SaveButton id={drama.id} terang />
-            <LikeButton dramaId={drama.id} terang />
-            <ShareButton title={drama.title} terang />
-          </div>
+        {/* BARIS TOMBOL AKSI — satu flex yang BOLEH MEMBUNGKUS, bukan dua
+            kelompok ber-`flex-1`.
+
+            🪤 Bentuk lamanya (dilaporkan owner 2026-10-30): tiga tombol kanan
+            dibungkus satu `div` ber-`flex-1`, dan tiap tombol membawa `w-full`.
+            Tombol dasar project punya `shrink-0` (components/ui/button.tsx),
+            jadi ketiganya sama-sama menuntut 100% lebar kelompok DAN menolak
+            menyusut → tombol ke-2 & ke-3 terdorong keluar, lalu dipotong DIAM-
+            DIAM oleh `overflow-hidden` kartu putih di atas. Tanpa error, tanpa
+            scrollbar: "Suka" cuma tampak sepotong dan "Bagikan" hilang total.
+
+            Kenapa bentuk ini aman: `flex-1` membuat lebar dasar tiap tombol 0
+            sehingga mereka hanya TUMBUH membagi ruang (tak perlu menyusut),
+            sementara `min-w-*` menjaga teksnya tak pernah terjepit. Begitu
+            keempat lebar minimum tak muat, `flex-wrap` menurunkannya ke baris
+            berikutnya — MEMBUNGKUS, bukan terpotong. Di bawah `sm` tetap
+            bertumpuk satu kolom seperti semula. */}
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+          <WatchCta
+            dramaId={drama.id}
+            className="sm:min-w-[190px] sm:flex-1"
+          />
+          <SaveButton
+            id={drama.id}
+            terang
+            className="sm:min-w-[160px] sm:flex-1"
+          />
+          <LikeButton
+            dramaId={drama.id}
+            terang
+            className="sm:min-w-[110px] sm:flex-1"
+          />
+          <ShareButton
+            title={drama.title}
+            terang
+            className="sm:min-w-[120px] sm:flex-1"
+          />
         </div>
 
         {drama.subtitles && drama.subtitles.length > 0 && (

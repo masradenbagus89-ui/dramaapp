@@ -77,6 +77,11 @@ export default function SaveButton({
           : terang
             ? "border-zinc-300 text-zinc-700"
             : "border-zinc-700 text-zinc-200",
+        // `className` SEMPAT TERLUPA di cabang ini (ketahuan 2026-10-30):
+        // propnya diumumkan di atas tapi hanya dipakai cabang "hero", jadi
+        // pemanggil yang mengaturnya diam-diam diabaikan — tak ada error,
+        // tombolnya cuma tidak menuruti lebar yang diminta.
+        className,
       )}
     >
       <Bookmark className="size-4" fill={saved ? "currentColor" : "none"} />

@@ -8,9 +8,14 @@ import { Heart } from "lucide-react";
 
 export default function LikeButton({
   dramaId,
+  className,
   terang = false,
 }: {
   dramaId: string;
+  /** Kelas tambahan dari pemanggil — dipakai halaman drama untuk mengatur
+   *  lebar tombol di dalam baris aksi. Sejajar dengan SaveButton, ShareButton,
+   *  dan WatchCta yang ketiganya sudah punya prop ini. */
+  className?: string;
   /**
    * Gambar untuk LATAR TERANG (halaman film sejak owner 2026-10-29).
    * Default `false` = tampilan gelap seperti semula, jadi pemakai lain tidak
@@ -76,6 +81,7 @@ export default function LikeButton({
           : terang
             ? "border-zinc-300 text-zinc-700 hover:border-rose-500 hover:text-rose-600"
             : "border-zinc-700 text-zinc-200 hover:border-rose-500 hover:text-rose-400",
+        className,
       )}
     >
       <Heart

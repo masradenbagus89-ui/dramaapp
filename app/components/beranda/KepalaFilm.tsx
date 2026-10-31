@@ -1,4 +1,5 @@
 import { getAllDramasCachedSafe } from "@/lib/dramas";
+import { getPlaylyVideosGabunganCached } from "@/lib/playly-gabungan";
 import { buildNavMenus } from "@/lib/nav-katalog";
 import KepalaBeranda from "./KepalaBeranda";
 
@@ -45,5 +46,15 @@ export default async function KepalaFilm() {
    *   (`buildNavMenus` membuang menu yang kosong), halamannya tetap tampil.
    */
   const dramas = await getAllDramasCachedSafe();
-  return <KepalaBeranda menus={buildNavMenus(dramas)} />;
+  // Film ikut dihitung supaya menu Negara di kepala halaman ini sama isinya
+  // dengan halaman lain — kalau tidak, penonton melihat daftar negara yang
+  // berbeda tergantung halaman mana yang sedang dibuka.
+  //
+  // `.catch` WAJIB di sini dengan alasan yang sama seperti `...Safe` di atas:
+  // daftar film yang gagal dibaca tidak boleh menjatuhkan kepala situs. Gagal =
+  // menu Negara mengecil ke isi katalog drama, halamannya tetap tampil.
+  const { videos } = await getPlaylyVideosGabunganCached().catch(() => ({
+    videos: [],
+  }));
+  return <KepalaBeranda menus={buildNavMenus(dramas, videos)} />;
 }

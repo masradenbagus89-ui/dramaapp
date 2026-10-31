@@ -41,7 +41,9 @@ export default async function LandingPage() {
   // Isi menu dihitung DI SERVER: hasilnya cuma label + alamat, jauh lebih
   // ringan dikirim ke browser daripada seluruh katalog. Isi strip kuning tidak
   // ikut dihitung — sejak 2026-09-21 daftarnya TETAP, ditentukan owner.
-  const menus = buildNavMenus(dramas);
+  // Film ikut dioper supaya menu Negara dihitung dari katalog LENGKAP —
+  // lihat alasannya di `opsiNegaraGabungan` (lib/film-jelajah.ts).
+  const menus = buildNavMenus(dramas, videos);
 
   return (
     <div className="min-h-screen bg-black">

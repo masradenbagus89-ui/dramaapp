@@ -50,11 +50,23 @@ export type SubKey = "all" | "id";
  * tempat yang memecahnya — dipakai penyaring DAN penyusun menu, supaya
  * keduanya tak pernah memecah dengan aturan berbeda.
  */
-export function negaraDari(drama: Drama): string[] {
-  return (drama.country ?? "")
+/**
+ * Pecah nilai gabungan OMDb ("Action, Drama, History") jadi daftar bersih.
+ *
+ * Di-export sejak 2026-10-31: penyaring FILM (lib/film-jelajah.ts) butuh aturan
+ * yang SAMA PERSIS. Menyalinnya ke sana berarti dua aturan pemecah yang bisa
+ * menyimpang diam-diam — dan kalau menyimpang, gejalanya cuma "klik genre tidak
+ * memunculkan apa-apa", tanpa satu pun error.
+ */
+export function pecahDaftar(nilai: string | null | undefined): string[] {
+  return (nilai ?? "")
     .split(",")
-    .map((n) => n.trim())
+    .map((x) => x.trim())
     .filter(Boolean);
+}
+
+export function negaraDari(drama: Drama): string[] {
+  return pecahDaftar(drama.country);
 }
 
 /**
@@ -69,10 +81,7 @@ export function negaraDari(drama: Drama): string[] {
  * satunya lagi (lib/types.ts:79).
  */
 export function genreDari(drama: Drama): string[] {
-  return (drama.genre ?? "")
-    .split(",")
-    .map((g) => g.trim())
-    .filter(Boolean);
+  return pecahDaftar(drama.genre);
 }
 
 export function parseKind(value?: string | null): KindKey {
@@ -121,6 +130,11 @@ export function getYearOptions(dramas: Drama[]): string[] {
  * Negara yang BENAR-BENAR punya isi di katalog, urut dari yang terbanyak.
  * Sejajar dengan `availableGenres` di lib/beranda-catalog.ts.
  */
+// ⚠️ TIDAK LAGI DIPAKAI menu Negara sejak 2026-10-31 — penggantinya
+// `opsiNegaraGabungan` (lib/film-jelajah.ts), yang ikut menghitung katalog FILM.
+// Dipertahankan karena bentuknya sejajar dengan `getGenreOptions` di bawah dan
+// masih dipakai tes; JANGAN dipakai lagi untuk membangun menu — hasilnya cuma
+// negara dari katalog drama, dan di sana hanya 1 dari 40 judul punya negara.
 export function getCountryOptions(dramas: Drama[]): string[] {
   const jumlah = new Map<string, number>();
   for (const d of dramas) {

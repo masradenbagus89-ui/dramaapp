@@ -38,7 +38,8 @@ export default async function DiscoverPage() {
   // menunya sejak HTML pertama. Hasilnya cuma label + alamat — jauh lebih
   // ringan dikirim ke browser daripada seluruh katalog. Pola yang sama dipakai
   // halaman depan (app/page.tsx).
-  const menus = buildNavMenus(dramas);
+  // Film ikut dioper — alasan sama dengan halaman depan.
+  const menus = buildNavMenus(dramas, playlyVideos);
 
   return (
     <div className="pb-10">

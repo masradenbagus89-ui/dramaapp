@@ -18,13 +18,14 @@ import type { Drama } from "./types";
 import { isMovie } from "./types";
 import { availableGenres, countWithRating, countWithYear } from "./beranda-catalog";
 import {
-  getCountryOptions,
   getGenreOptions,
   getYearOptions,
   parseImdb,
 } from "./discover";
 import { labelGenre } from "./genre";
 import { labelNegara } from "./negara";
+import { opsiNegaraGabungan } from "./film-jelajah";
+import type { PlaylyVideoPublik } from "./playly-publik";
 import { PAYWALL_ENABLED } from "./saklar-fitur";
 
 /**
@@ -135,7 +136,20 @@ function genreSinema(dramas: Drama[]): string[] {
  * Tahun hanya muncul kalau ada judul yang punya kolom itu), jadi daftar ini
  * tak pernah menjanjikan sesuatu yang tidak dipunyai katalog.
  */
-export function buildNavMenus(dramas: Drama[]): NavMenu[] {
+export function buildNavMenus(
+  dramas: Drama[],
+  /**
+   * Katalog FILM, untuk menu "Negara". OPSIONAL dan bawaannya kosong supaya
+   * seluruh pemanggil lama tetap berlaku apa adanya.
+   *
+   * KENAPA menu Negara butuh ini (owner 2026-10-31): diukur hari itu, dari 40
+   * drama hanya SATU yang punya kolom negara — sehingga isi menunya selama ini
+   * adalah daftar negara produksi satu film saja. Film punya kolom negara yang
+   * jauh lebih rapat lewat metadata IMDb. Alasan lengkap di
+   * `opsiNegaraGabungan` (lib/film-jelajah.ts).
+   */
+  videos: PlaylyVideoPublik[] = [],
+): NavMenu[] {
   // Katalog kosong = TIDAK ada menu sama sekali. Beberapa pilihan di bawah
   // (urutan A-Z, "Semua Judul") tidak bergantung isi katalog, jadi tanpa pagar
   // ini menunya tetap tergambar lalu memulangkan halaman hampa saat diklik.
@@ -206,7 +220,7 @@ export function buildNavMenus(dramas: Drama[]): NavMenu[] {
     menu(
       "negara",
       "Negara",
-      getCountryOptions(dramas).map((n) => ({
+      opsiNegaraGabungan(dramas, videos).map((n) => ({
         // Label diterjemahkan, alamatnya TIDAK — lihat catatan di `NavItem`.
         label: labelNegara(n),
         href: tautan({ negara: n }),

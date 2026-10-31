@@ -121,6 +121,7 @@ describe("rakitVideoPublik — video mana yang boleh dilihat penonton", () => {
       kategori: null,
       rating: null,
       contentRating: null,
+      country: null,
       quality: null,
     });
   });
@@ -144,6 +145,7 @@ describe("rakitVideoPublik — video mana yang boleh dilihat penonton", () => {
       kategori: null,
       rating: null,
       contentRating: null,
+      country: null,
       quality: null,
     });
   });

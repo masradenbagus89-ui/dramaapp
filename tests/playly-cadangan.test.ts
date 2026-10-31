@@ -84,6 +84,7 @@ function kartu(id: string): PlaylyVideoPublik {
     kategori: null,
     rating: null,
     contentRating: null,
+    country: null,
     quality: null,
   };
 }

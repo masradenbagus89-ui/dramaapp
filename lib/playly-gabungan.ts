@@ -134,6 +134,9 @@ export function webhookKeKartu(
     kategori: genres[v.videoId] ?? null,
     rating: m?.rating || null,
     contentRating: m?.contentRating || null,
+    // Jalur webhook tak punya drama yang dikaitkan, jadi hanya metadata IMDb
+    // video ini yang bisa mengisinya.
+    country: m?.country || null,
     // Hanya koreksi admin yang bisa mengisinya di sini — jalur webhook tak
     // punya drama yang dikaitkan. Kosong = diisi turunan link unduhan nanti.
     quality: kualitas[v.videoId] ?? null,

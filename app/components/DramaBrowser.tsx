@@ -19,6 +19,7 @@ import CatalogCard from "./beranda/CatalogCard";
 import StripKatalog from "./beranda/StripKatalog";
 import { chromeKatalog } from "./beranda/KepalaKatalog";
 import HasilPlayly, { cariVideoPlayly } from "./beranda/HasilPlayly";
+import { saringFilm } from "@/lib/film-jelajah";
 import SearchBar, { KELAS_MENEMPEL_KEPALA } from "./beranda/SearchBar";
 import { GRID_CLASS, SHELL } from "./beranda/shell";
 import { cn } from "@/lib/utils";
@@ -107,7 +108,10 @@ export default function DramaBrowser({
     setFilter(bacaFilter(searchParams));
   }, [searchParams]);
 
-  const menus = useMemo(() => buildNavMenus(dramas), [dramas]);
+  const menus = useMemo(
+    () => buildNavMenus(dramas, playlyVideos),
+    [dramas, playlyVideos],
+  );
 
   /**
    * Ketikan pencarian & urutan sengaja TIDAK dihitung sebagai "filter aktif":
@@ -149,11 +153,25 @@ export default function DramaBrowser({
     [dramas, filter],
   );
 
-  // Disaring dengan ketikan YANG SAMA; jumlahnya ikut dipakai pesan kosong di
-  // bawah supaya penonton tahu harus menggulir.
+  /**
+   * Film yang cocok dengan penyaring yang SEDANG AKTIF — bukan cuma ketikan.
+   *
+   * KENAPA BERUBAH (owner 2026-10-31: "ketika klik genre misal komedi harus
+   * muncul hasilnya jadi tidak monoton drama saja karena kita ada film"):
+   * sampai hari ini baris ini hanya memakai `filter.q`, sehingga genre/negara/
+   * tahun TIDAK pernah berlaku untuk film. Akibatnya dua-duanya salah
+   * sekaligus — penonton yang mengklik "Anime" melihat halaman "0 judul"
+   * padahal ada film beranimasi, DAN pesan di bawah menyebut "443 video cocok"
+   * untuk genre apa pun, karena 443 itu jumlah SELURUH film.
+   *
+   * Urutannya: saring dulu dengan penyaring (lib/film-jelajah.ts), baru dengan
+   * ketikan. `filterOptions(filter)` yang SAMA dipakai katalog drama di atas —
+   * satu sumber kebenaran, jadi drama dan film mustahil menyaring dengan
+   * aturan yang berbeda.
+   */
   const videoPlayly = useMemo(
-    () => cariVideoPlayly(playlyVideos, filter.q),
-    [playlyVideos, filter.q],
+    () => cariVideoPlayly(saringFilm(playlyVideos, filterOptions(filter)), filter.q),
+    [playlyVideos, filter],
   );
 
   // Ketikan pencarian DIPERTAHANKAN — alasannya sama dengan `adaFilterAktif`.
@@ -204,9 +222,23 @@ export default function DramaBrowser({
 
       <div ref={hasilRef} className={cn(SHELL, "scroll-mt-32")}>
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800 py-3">
+          {/* Hitungannya menyebut DUA jenis sejak 2026-10-31 (owner: "tidak
+              monoton drama saja karena kita ada film"). Sebelumnya judul ini
+              hanya menghitung drama, sehingga halaman berbunyi "0 judul"
+              padahal ada belasan film cocok tepat di bawahnya — terbaca
+              seperti pencarian yang gagal. Bagian film hilang sendiri saat
+              nol, supaya tidak ada "0 film" yang cuma menambah bacaan. */}
           <h1 className="text-sm text-zinc-400">
-            <span className="font-bold text-white">Jelajah Drama</span> &mdash;{" "}
-            {filtered.length} judul
+            {/* "Jelajah Drama & Film", bukan "Jelajah" polos: teks `>Jelajah<`
+                dipakai penjaga tests/strip-katalog.test.ts untuk memastikan
+                chip pintasan lama yang dibuang owner tidak kembali. Judul ini
+                bukan chip itu, tapi menamainya persis sama membuat penjaga
+                tersebut menyala tanpa ada yang salah — dan penjaga yang
+                berbunyi palsu cepat dimatikan orang. */}
+            <span className="font-bold text-white">Jelajah Drama &amp; Film</span>{" "}
+            &mdash;{" "}
+            {filtered.length} drama
+            {videoPlayly.length > 0 ? ` · ${videoPlayly.length} film` : ""}
             {keteranganFilter(filter)}
             {filter.q ? ` untuk "${filter.q}"` : ""}
           </h1>
@@ -225,13 +257,22 @@ export default function DramaBrowser({
         </div>
 
         {filtered.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 py-16 text-center">
-            <Search className="size-8 text-zinc-700" />
+          /* Ruang kosongnya MENGECIL kalau ada film yang cocok di bawah
+             (owner 2026-10-31). Blok setinggi `py-16` berisi ikon besar
+             membuat penonton mengira halamannya habis sampai di situ, lalu
+             berhenti menggulir — padahal hasilnya ada persis di bawahnya. */
+          <div
+            className={cn(
+              "flex flex-col items-center gap-3 text-center",
+              videoPlayly.length > 0 ? "py-6" : "py-16",
+            )}
+          >
+            {videoPlayly.length === 0 && <Search className="size-8 text-zinc-700" />}
             <p className="text-sm text-zinc-500">Tidak ada drama yang cocok.</p>
             {videoPlayly.length > 0 && (
               <p className="text-sm font-medium text-amber-400">
-                Tapi ada {videoPlayly.length} video Playly yang cocok &mdash; ada
-                di bawah halaman ini.
+                Tapi ada {videoPlayly.length} film yang cocok &mdash; ada di
+                bawah halaman ini.
               </p>
             )}
             {adaFilterAktif && (

@@ -102,7 +102,10 @@ export default function CatalogBrowser({
   // Menu katalog menuju /discover — satu-satunya halaman yang membaca
   // penyaring dari alamat URL. Halaman INI menyimpan pencariannya di state
   // lokal, jadi tautan `?sort=…` ke sini akan diabaikan diam-diam.
-  const menus = useMemo(() => buildNavMenus(dramas), [dramas]);
+  const menus = useMemo(
+    () => buildNavMenus(dramas, playlyVideos),
+    [dramas, playlyVideos],
+  );
 
   const hasil = useMemo(() => {
     // Pengurutan diserahkan ke sortCatalog di bawah — di sini murni menyaring.
@@ -317,8 +320,8 @@ export default function CatalogBrowser({
               </p>
               {videoPlayly.length > 0 && (
                 <p className="text-sm font-medium text-amber-400">
-                  Tapi ada {videoPlayly.length} video Playly yang cocok &mdash;
-                  ada di bawah halaman ini.
+                  Tapi ada {videoPlayly.length} film yang cocok &mdash; ada di
+                  bawah halaman ini.
                 </p>
               )}
               {menyaring && (

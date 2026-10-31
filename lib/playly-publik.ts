@@ -79,6 +79,20 @@ export type PlaylyVideoPublik = PlaylyVideo & {
    */
   contentRating: string | null;
   /**
+   * Negara produksi dari OMDb ("United States, China"), lewat metadata IMDb
+   * video ini atau drama yang dikaitkan.
+   *
+   * DITERUSKAN ke kartu sejak 2026-10-31 (owner: "negara kamu perbaiki karena
+   * ada indonesia juga, asia dll"). Sebelum itu datanya sudah tersimpan tapi
+   * berhenti di halaman tonton — akibatnya menu Negara hanya dibangun dari
+   * katalog drama, dan di sana HANYA 1 dari 40 judul punya negara. Menu itu
+   * praktis mendaftar negara produksi SATU film saja.
+   *
+   * Boleh null dan itu wajar: baris metadata yang disimpan sebelum 2026-10-08
+   * belum punya field ini. Tampilan & menu WAJIB diam saat null.
+   */
+  country: string | null;
+  /**
    * Mutu sumber video ("HD", "WEB-DL", "CAM", ...) dari katalog kita.
    * Aturannya sama dengan lencana poster (lib/types.ts:214-221): null = jangan
    * digambar, JANGAN diisi tebakan "HD".
@@ -125,6 +139,7 @@ type DramaRingkas = {
   category?: string;
   contentRating?: string;
   quality?: string;
+  country?: string;
 };
 
 /**
@@ -195,6 +210,9 @@ export function rakitVideoPublik(
         kategori: genres[videoId] ?? drama?.category ?? null,
         rating: m?.rating || drama?.imdbRating || null,
         contentRating: m?.contentRating || drama?.contentRating || null,
+        // Metadata video MENANG atas drama yang dikaitkan — aturan yang sama
+        // dengan `rating` di atas.
+        country: m?.country || drama?.country || null,
         // SENGAJA tidak diambil dari IMDb: `quality` adalah mutu SUMBER VIDEO
         // (HD/WEB-DL/CAM) milik katalog kita, bukan sifat filmnya. OMDb tidak
         // tahu berkas mana yang kita simpan, jadi mengisinya dari sana sama

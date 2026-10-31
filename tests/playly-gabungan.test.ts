@@ -124,6 +124,7 @@ function kartuKatalog(id: string, ubah: Partial<PlaylyVideoPublik> = {}): Playly
     kategori: null,
     rating: null,
     contentRating: null,
+    country: null,
     quality: null,
     ...ubah,
   };

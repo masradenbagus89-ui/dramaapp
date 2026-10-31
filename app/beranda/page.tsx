@@ -42,7 +42,8 @@ export default async function BerandaPage() {
   const { videos } = await getPlaylyVideosGabunganCached();
   const filmTerbaru = videos.slice(0, TAB_GRID_ITEMS);
   const genres = availableGenres(dramas);
-  const menus = buildNavMenus(dramas);
+  // Film ikut dioper — alasan sama dengan halaman depan.
+  const menus = buildNavMenus(dramas, videos);
 
   if (slides.length === 0) {
     return (

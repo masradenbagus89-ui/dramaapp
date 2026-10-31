@@ -30,6 +30,7 @@ function videoKartu(ubah: Partial<PlaylyVideoPublik> = {}): PlaylyVideoPublik {
     kategori: null,
     rating: null,
     contentRating: null,
+    country: null,
     quality: null,
     ...ubah,
   };

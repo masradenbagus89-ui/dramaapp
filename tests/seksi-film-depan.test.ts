@@ -48,6 +48,7 @@ const film = (i: number): PlaylyVideoPublik => ({
   kategori: null,
   rating: null,
   contentRating: null,
+  country: null,
   quality: null,
 });
 

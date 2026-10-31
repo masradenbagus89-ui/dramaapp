@@ -52,6 +52,7 @@ const VIDEO: PlaylyVideoPublik = {
   kategori: "Action",
   rating: "8.1",
   contentRating: "PG-13",
+  country: null,
   quality: "WEB-DL",
 };
 

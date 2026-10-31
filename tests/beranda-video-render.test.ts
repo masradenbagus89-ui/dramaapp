@@ -34,6 +34,7 @@ function video(
     kategori: null,
     rating: null,
     contentRating: null,
+    country: null,
     quality: null,
     ...ubah,
   };

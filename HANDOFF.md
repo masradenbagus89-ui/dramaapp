@@ -9,7 +9,9 @@
 >
 > **📦 Berkas ini sudah 9.086 baris** (dihitung 2026-10-30 dengan `wc -l`, bukan ditaksir; angka lama "±6.600" dari 2026-10-15 dan "8.700+" sudah basi — tumbuh ±2.500 baris dalam 15 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. **Menunggu keputusan owner.**
 
-**Terakhir diisi:** 2026-10-31 (✅ **TAYANG `4dde5c0`**: tombol beranda "LIHAT SEMUA FILM UNGGULAN" → **"TEMUKAN TONTONAN FAVORITMU"** — labelnya salah di dua sisi (isinya drama berseri, bukan film; tujuannya katalog lengkap, bukan daftar unggulan). Dual push → Railway build sendiri → tayang ±60 detik, **downtime NOL**. Smoke test 5 alur: 4 langsung 200, `/drama/meg-2-the-trench` 500 SEKALI lalu 200 enam kali — cold start, dicatat bukan dihapus. 🔎 **Masih terbuka**: tombol yang sama **tergeser ke kanan di layar HP** — pembanding produksi membuktikan itu gejala LAMA (bukan regresi rilis ini), penyebabnya belum ketemu, owner belum memutuskan.)
+**Terakhir diisi:** 2026-10-31, rilis ke-2 hari ini (✅ **TAYANG `a44ac67`**: poster FILM akhirnya punya **⭐ rating + chip HD**. Rating ternyata sudah ada di data sejak lama tapi tak pernah digambar (21 dari 24 film punya); kualitas memang tak punya sumber sama sekali, jadi atas keputusan owner diturunkan dari **link unduhan** (1080p → HD, 480p → SD) + dropdown koreksi di panel admin. Tayang ±90 detik, smoke test 5/5 = 200. ❌ **RALAT PENTING**: temuan "tombol tergeser di layar HP" yang dicatat sebelumnya **TIDAK PERNAH ADA** — itu cacat alat potret (Edge di mesin ini tak bisa < ±476px, jadi gambar hanya DIPOTONG). Sudah diukur ulang: tombol terpusat sempurna, nol pelebaran halaman. Rinciannya + cara memotret lebar HP yang BENAR ada di seksinya.)
+
+**Rilis ke-1 hari ini:** (✅ **TAYANG `4dde5c0`**: tombol beranda "LIHAT SEMUA FILM UNGGULAN" → **"TEMUKAN TONTONAN FAVORITMU"** — labelnya salah di dua sisi (isinya drama berseri, bukan film; tujuannya katalog lengkap, bukan daftar unggulan). Dual push → Railway build sendiri → tayang ±60 detik, **downtime NOL**. Smoke test 5 alur: 4 langsung 200, `/drama/meg-2-the-trench` 500 SEKALI lalu 200 enam kali — cold start, dicatat bukan dihapus. ❌ **DIRALAT di rilis ke-2**: catatan asli di sini menyebut tombol itu "tergeser ke kanan di layar HP" sebagai gejala nyata. **Itu keliru** — cacat alat potret, bukan cacat situs; sudah diukur ulang dan tombolnya terpusat sempurna. Jangan diburu.)
 
 **Sebelumnya:** 2026-10-30 (tiga rilis beruntun, semuanya TAYANG: `5088bf2` genre bahasa Indonesia → `27973f0` koreksi owner Kerajaan/CEO/Lainnya → **`55894b8` dua tombol halaman drama yang selama ini TERPOTONG**. Downtime NOL. ⏸️ **DUA bahasan menunggu keputusan owner**, risetnya sudah selesai & nol kode diubah: "klik drama langsung play" dan "sinopsis film masih bahasa Inggris".)
 
@@ -218,6 +220,76 @@ dipasang manual. Penegakan bertahan melewati restart PC; tidak perlu dipasang ul
 
 ---
 
+## 2026-10-31 — ✅ DIRILIS `a44ac67`: poster FILM akhirnya punya rating ⭐ + kualitas HD
+
+**Permintaan owner:** *"di poster film tidak ada keterangan HD/cam lalu rating berapa, seharusnya itu
+sudah otomatis ikut ketika film tersebut di upload"*.
+
+Dibaca dari kode, itu ternyata **DUA masalah berbeda** — dan cuma satu yang soal data:
+
+**1. RATING sudah ada di data, cuma tidak pernah digambar.** `app/components/beranda/KartuVideo.tsx`
+(kartu film di beranda) sejak lahir hanya menggambar durasi, padahal `PlaylyVideoPublik` punya field
+`rating` (`lib/playly-publik.ts`). Diukur di produksi hari itu: **21 dari 24** film di halaman pertama
+`/film` SUDAH punya rating. Jadi lencananya yang tak pernah dipasang, bukan datanya yang hilang.
+
+**2. KUALITAS memang tak punya sumber sama sekali.** Penyedia video TIDAK pernah mengirim mutu berkas
+— `PlaylyVideo` di `lib/playly.ts` isinya hanya judul, durasi, kreator, embed, sampul. Satu-satunya
+sumber sebelum ini adalah `quality` milik drama yang dikaitkan admin, dan **nol kaitan** pernah dibuat
+di produksi. Jadi kolom itu memang selalu kosong, bukan kadang-kadang.
+
+### Keputusan owner untuk nomor 2: turunkan dari LINK UNDUHAN
+
+Ada berkas **1080p → "HD"** · hanya **480p → "SD"** · tidak ada link → **tidak digambar sama sekali**.
+Datanya nyata dan sudah kita simpan sendiri (`lib/playly-unduhan.ts`); diperiksa di produksi, 3 dari 3
+film punya link 1080p.
+
+⚠️ **BATAS YANG HARUS TETAP JUJUR** (ditulis juga di kepala `lib/kualitas-video.ts`): "ada berkas
+1080p" membuktikan **resolusinya** tinggi, **TIDAK** membuktikan sumbernya bukan rekaman bioskop. Film
+CAM beresolusi tinggi akan berlabel HD sampai seseorang mengoreksinya. Owner sudah diberi tahu risiko
+ini sebelum memilih, dan karena itulah jalur koreksinya ikut dibangun.
+
+**Urutan menangnya — jangan dibalik:** koreksi admin **>** kualitas drama yang dikaitkan **>** turunan
+otomatis. Ada tes yang MERAH kalau turunan sampai menimpa koreksi manusia
+(`tests/kualitas-video.test.ts`). Tanpa penjaga itu, koreksi admin hilang sendiri tiap halaman
+menyegarkan diri, dan admin akan menyimpulkan panelnya rusak — rusak yang SENYAP.
+
+### Yang dibangun
+
+| Berkas | Isinya |
+|---|---|
+| `lib/kualitas-video.ts` | aturan turunan, fungsi murni (8 tes) |
+| `playly:kualitas` (`lib/store.ts`) | dokumen koreksi admin per video |
+| `/api/admin/playly/kualitas` | GET/POST; pagar disalin dari endpoint `genre` |
+| panel admin Video Playly | dropdown **"Kualitas: otomatis"** + 8 pilihan |
+| `app/components/lencana-gaya.ts` | rupa chip, dipakai bersama kartu drama & film |
+
+**Cara owner mengoreksi film yang salah label:** Admin → Video dari Playly → cari filmnya → dropdown
+kedua (**"Kualitas: otomatis"**) → pilih `CAM`. Poster berubah dalam ±5 menit. Pilih kembali
+"Kualitas: otomatis" untuk mengembalikannya ke turunan link unduhan.
+
+**Bukti:** `rm -rf .next` (dibuktikan hilang) → `npm run build` sukses → `npx tsc --noEmit` **exit 0**
+→ `npm test` **1.799 hijau (naik 8)** → **POTRET LAYAR**: poster film membawa bintang rating di
+kiri-atas dan chip HD hijau di kanan-atas, bentuk yang sama persis dengan contoh kiriman owner.
+
+🪤 **JEBAKAN YANG NYARIS MENIPU saat verifikasi:** potret pertama sesudah `next start` memperlihatkan
+rating muncul tapi **HD tidak** — nyaris dilaporkan sebagai fitur gagal. Penyebabnya beranda disajikan
+dari hasil **prerender saat build**; sesudah halaman menyegarkan diri (`revalidate`), HD muncul di 20
+kartu. **Sesudah mengubah data yang dipakai halaman ber-`revalidate`, panggil halamannya beberapa kali
+dulu sebelum menyimpulkan.** Jebakan kedua di hari yang sama: `data/playly.json` lokal TIDAK dipakai
+saat `.env.local` terhubung Supabase — menyuntik data uji ke sana nol efek dan sempat terbaca seperti
+kode yang tidak jalan.
+
+**RILIS & VERIFIKASI PRODUKSI.** Dual push `24170d7..a44ac67` (`dramaku` dulu, lalu `origin`).
+**TAYANG ±90 detik** sesudah push: **20 lencana HD** terhitung di beranda produksi, dan potret layar
+situs sungguhan memperlihatkan tiap poster film membawa ⭐ rating + chip HD. Smoke test `/` ·
+`/beranda` · `/discover` · `/api/health` · `/film` → **5 dari 5 = 200**, nol 500 kali ini.
+
+**Rencana mundur 1 baris:** `git revert a44ac67` lalu dual push — Railway build ulang ±60–90 detik.
+Nol perubahan skema database (dokumen `playly:kualitas` lahir sendiri saat pertama kali diisi) dan nol
+env baru, jadi mundur benar-benar cuma soal kode.
+
+---
+
 ## 2026-10-31 — ✅ DIRILIS `4dde5c0`: tombol beranda "LIHAT SEMUA FILM UNGGULAN" → "TEMUKAN TONTONAN FAVORITMU"
 
 **Permintaan owner:** *"lihat semua film unggulan sedangkan kita ada drama juga, baiknya diganti apa"*.
@@ -276,23 +348,39 @@ penyelidikan dari nol.
 ±60–90 detik. Nol perubahan database, nol env baru, jadi mundur benar-benar cuma soal kode. Lebih
 cepat lagi: panel Railway → Deployments → Redeploy build sebelum `4dde5c0`.
 
-### 🔎 TEMUAN SAMPINGAN — bukan dari perubahan ini, tapi NYATA: tombol itu tergeser ke kanan di layar HP
+### ❌ RALAT 2026-10-31 — "tombol tergeser ke kanan di layar HP" ITU TIDAK PERNAH ADA
 
-Saat memotret lebar 360px, tombolnya **tidak terpusat** — bergeser ke kanan sampai kotaknya menyentuh
-tepi layar (padding kanan tersisa ±10px dari seharusnya 24px). Sebelum menuduh teks baru, diambil
-pembanding dari **situs produksi yang masih memakai teks lama**: bentuknya **sama persis**. Jadi ini
-**gejala lama yang sudah tayang**, bukan regresi.
+Seksi ini semula melaporkan tombol yang tidak terpusat di HP sebagai **gejala nyata yang sudah
+tayang**. **Laporan itu SALAH, dan ralat ini ditulis sesudah diukur, bukan sesudah ditebak.**
+Dibiarkan berdiri (bukan dihapus) supaya sesi berikutnya tidak memburu bug yang tidak ada.
 
-Yang sudah DICORET sebagai penyebab: `.shell-wide` cuma `max-width:100%` (`app/globals.css:213`),
-`BarisGeser` memakai `overflow-x-auto` (tak memperlebar induk), dan tak ada `w-screen`/`min-w-[`/
-lebar tetap di komponen beranda. Dugaan tersisa: ada elemen lain yang meluap horizontal sehingga
-`justify-center` memusatkan terhadap lebar konten, bukan lebar layar. **Belum terbukti — jangan
-ditulis sebagai fakta.** Bar menu merah dan deret tab ikut meluap dengan pola yang sama, jadi
-kemungkinan satu sebab untuk ketiganya. Ditawarkan ke owner sebagai pekerjaan terpisah.
+**Yang sebenarnya terjadi: cacat ALAT POTRET, bukan cacat situs.** Edge headless di mesin ini
+TIDAK BISA membuat jendela lebih sempit dari **±476px**. Meminta `--window-size=360` (bahkan 320)
+tetap menghasilkan viewport **476** — alat hanya **MEMOTONG gambar dari kiri**. Elemen yang terpusat
+di 476px otomatis tampak bergeser ke kanan pada gambar selebar 360. Pembanding ke produksi pun ikut
+menyesatkan: dua-duanya dipotong oleh alat yang sama, jadi "bentuknya sama persis" cuma membuktikan
+alatnya konsisten, bukan situsnya bergejala.
 
-⚠️ Catatan alat: potret di mesin ini WAJIB Edge `--headless=new --screenshot` **TANPA**
-`--remote-debugging-port`. Emulasi lebarnya terbukti bekerja — di 360px tulisan "DramaKu" di samping
-logo ikut hilang, dan itu memang `hidden sm:inline` (`KepalaKatalog.tsx:111`).
+**Pengukuran yang membantahnya** (viewport 356px sungguhan, lewat bingkai `<iframe width=360>` di
+halaman uji lokal sehingga DOM-nya bisa diukur dari dalam):
+
+```
+vw=356  bodyScroll=356  htmlScroll=356      <- bodyScroll == vw: NOL pelebaran halaman
+TOMBOL kiri=49 kanan=307 lebar=258 pusat=178   (pusat layar=178)   <- terpusat SEMPURNA
+```
+
+⭐ **CARA BENAR MEMOTRET LEBAR HP DI MESIN INI** (pakai ini, jangan `--window-size` kecil):
+buat halaman uji sementara berisi `<iframe src="/" width=360>`, lalu ukur dari dalam bingkai itu.
+`--window-size` di bawah ±476 **diam-diam berbohong** — tidak ada error, cuma gambar terpotong.
+Potret tetap WAJIB `--headless=new --screenshot` **TANPA** `--remote-debugging-port` (port itu
+2026-10-28 nyasar ke browser penyewa lain).
+
+🪤 **JEBAKAN `next dev` yang ikut tertangkap hari ini.** Menjalankan `npx next dev` mengubah DUA
+berkas tanpa diminta: (a) `next-env.d.ts` diarahkan ke `./.next/dev/types/...` — kalau ini ter-commit,
+gerbang `tsc` sesudah `next build` memeriksa berkas yang salah; (b) `AGENTS.md` — berkas kernel tim
+yang TIDAK boleh diedit — disisipi blok `<!-- BEGIN:nextjs-agent-rules -->` oleh
+`node_modules/next/dist/server/lib/generate-agent-files.js`. **Sesudah memakai `next dev`, selalu
+`git status` dan kembalikan kedua berkas itu.**
 
 ---
 

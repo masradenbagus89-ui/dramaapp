@@ -6,7 +6,7 @@ import { ROW_CARD_CLASS } from "./shell";
 import { Button } from "@/components/ui/button";
 
 /**
- * Baris FILM UNGGULAN di kepala beranda — deretan poster yang bisa digeser
+ * Baris TONTONAN UNGGULAN di kepala beranda — deretan poster yang bisa digeser
  * ke samping, lalu satu tombol "lihat semua" di bawahnya.
  *
  * Menggantikan banner hero yang berganti sendiri (permintaan owner 2026-09-07:
@@ -61,7 +61,7 @@ export default function FeaturedRow({
   /** Lebar satu kartu; diteruskan apa adanya ke `BarisGeser`. */
   cardClass?: string;
   /**
-   * false = jangan gambar tombol besar "Lihat semua film unggulan" di bawah
+   * false = jangan gambar tombol besar "Temukan tontonan favoritmu" di bawah
    * baris. Dipakai deret tab halaman depan (TabKatalogTampilan) yang sudah
    * punya tombolnya sendiri di kepala bagian — dua tombol dengan maksud sama
    * di satu bagian membuat penonton ragu yang mana yang benar.
@@ -79,7 +79,7 @@ export default function FeaturedRow({
 
   return (
     <section
-      aria-label={title ?? "Film unggulan"}
+      aria-label={title ?? "Tontonan unggulan"}
       className="relative border-b border-zinc-900 bg-black py-4 terang:border-zinc-200 terang:bg-zinc-100"
     >
       <div className="shell-wide relative mx-auto px-4 md:px-6">
@@ -103,13 +103,22 @@ export default function FeaturedRow({
           cardHrefPrefix={cardHrefPrefix}
         />
 
+        {/* Tulisannya SENGAJA tidak menyebut "film" (keputusan owner 2026-10-31).
+            Dua sebab, keduanya terbaca dari kode di atas: baris ini diisi
+            `featuredHeroSlides` yang justru MENYARING drama berseri
+            (lib/hero-teaser.ts, `episodes >= 5`), dan `href` bawaannya
+            `/discover` = katalog LENGKAP drama + film, bukan daftar unggulan.
+            Jadi label lama "Lihat semua film unggulan" salah di kedua sisi.
+            "Tontonan" dipilih mengikuti kosakata yang sudah dipakai halaman
+            drama saat daftarnya campuran ("Tontonan Lain", app/drama/[id]/
+            page.tsx) — satu konsep, satu nama (§3.3). */}
         {!title && tombolBawah && (
           <div className="mt-4 flex justify-center">
             <Button
               asChild
               className="h-10 rounded-sm bg-gradient-to-r from-fuchsia-600 to-rose-600 px-6 text-xs font-bold uppercase tracking-wide text-white shadow-lg hover:from-fuchsia-500 hover:to-rose-500"
             >
-              <Link href={href}>Lihat semua film unggulan</Link>
+              <Link href={href}>Temukan tontonan favoritmu</Link>
             </Button>
           </div>
         )}

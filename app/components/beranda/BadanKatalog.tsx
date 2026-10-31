@@ -50,7 +50,7 @@ export default function BadanKatalog({
    * `app/beranda/page.tsx` supaya ikut terbaca oleh pemakai komponen berikutnya.
    */
   basePath?: string;
-  /** Tujuan tombol "Lihat semua film unggulan". */
+  /** Tujuan tombol "Temukan tontonan favoritmu". */
   heroHref?: string;
   /**
    * Gambar kaki situs 4 kolom di bawah halaman. Bawaannya `true`.

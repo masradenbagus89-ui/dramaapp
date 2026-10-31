@@ -20,7 +20,7 @@ import { parseRating, parseViews } from "./format";
 export const CATALOG_PER_PAGE = 60;
 
 /**
- * Berapa poster yang dikirim ke baris FILM UNGGULAN.
+ * Berapa poster yang dikirim ke baris TONTONAN UNGGULAN.
  *
  * KENAPA 14, bukan bawaan `featuredHeroSlides` yang 5: pada layar 1440px muat
  * ±8 kartu sekaligus, jadi 5 menyisakan ruang kosong lebar di kanan dan barisnya

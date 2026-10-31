@@ -88,6 +88,10 @@ vi.mock("../lib/store", () => ({
   // memulangkan daftar KOSONG: berkas ini menguji aturan PENGGABUNGAN, dan
   // salinan yang berisi akan menutupi hasil gabungan yang justru sedang diuji.
   // Perilaku salinannya sendiri diuji terpisah di tests/playly-cadangan.test.ts.
+  // Koreksi kualitas admin (owner 2026-10-31). Peta KOSONG: berkas ini menguji
+  // aturan PENGGABUNGAN, dan aturan kualitasnya sendiri sudah punya penjaga
+  // terpisah di tests/kualitas-video.test.ts.
+  getPlaylyKualitasCached: async () => ({}),
   getPlaylyCadanganCached: async () => ({ videos: [], disimpanPada: "" }),
   getPlaylyLinkUnduhanCached: async () => {
     if (state.unduhanGagal) throw new Error("supabase tidak bisa dihubungi");

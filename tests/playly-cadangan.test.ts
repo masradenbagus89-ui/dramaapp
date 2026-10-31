@@ -44,6 +44,11 @@ vi.mock("../lib/store", () => ({
   // getPlaylyGenresCached di atas: berkas ini menguji aturan SALINAN, dan data
   // tambahan apa pun cuma mengaburkan apa yang sebenarnya sedang dibuktikan.
   getPlaylyImdbCached: async () => ({}),
+  // Koreksi kualitas admin (owner 2026-10-31). Peta KOSONG tetap, alasan sama:
+  // berkas ini menguji aturan SALINAN, dan kualitas yang terisi hanya akan
+  // mengaburkan apa yang sedang dibuktikan. Turunan otomatisnya sendiri diuji
+  // di tests/kualitas-video.test.ts.
+  getPlaylyKualitasCached: async () => ({}),
   // Peta KOSONG tetap, alasannya sama dengan getPlaylyGenresCached di atas:
   // berkas ini menguji perilaku SALINAN, dan daftar link unduhan kosong membuat
   // tempelUnduhanPlayly tidak mengubah apa pun — jadi yang diuji tetap murni

@@ -18,7 +18,7 @@ import { useState } from "react";
 import { AlertTriangle, Eye, EyeOff, Info, Loader2 } from "lucide-react";
 import type { PlaylyVideo, PlaylySumber } from "@/lib/playly";
 import type { PlaylyImdbMap } from "@/lib/playly-imdb";
-import { KATEGORI_ISI } from "@/lib/types";
+import { DRAMA_QUALITY_OPTIONS, KATEGORI_ISI } from "@/lib/types";
 import PlaylyImdbPicker from "./PlaylyImdbPicker";
 import PlaylyCocokkanSemua from "./PlaylyCocokkanSemua";
 
@@ -32,6 +32,7 @@ export default function PlaylyVisibilityManager({
   initialHidden,
   initialGenres = {},
   initialImdb = {},
+  initialKualitas = {},
   belumSiapIds,
   fetchError,
   source,
@@ -55,6 +56,14 @@ export default function PlaylyVisibilityManager({
    * fitur ini baru ada 2026-10-08, jadi pemanggil lama tetap berlaku apa adanya.
    */
   initialImdb?: PlaylyImdbMap;
+  /**
+   * Kualitas yang sudah DIKOREKSI admin (videoId -> "HD"/"CAM"/...).
+   *
+   * Bawaannya peta kosong — dan itu memang keadaan normal: kualitas poster
+   * diturunkan otomatis dari link unduhan (lib/kualitas-video.ts), jadi entri
+   * di sini hanya ada untuk video yang turunannya meleset dan dibetulkan orang.
+   */
+  initialKualitas?: Record<string, string>;
   /** Video yang berkasnya belum ada di Playly — tidak tampil ke penonton. */
   belumSiapIds: string[];
   /** Terisi kalau daftar gagal diambil dari Playly. */
@@ -69,6 +78,8 @@ export default function PlaylyVisibilityManager({
   const [imdb, setImdb] = useState<PlaylyImdbMap>(initialImdb);
   const [sedangProses, setSedangProses] = useState<string | null>(null);
   const [sedangGenre, setSedangGenre] = useState<string | null>(null);
+  const [kualitas, setKualitas] = useState<Record<string, string>>(initialKualitas);
+  const [sedangKualitas, setSedangKualitas] = useState<string | null>(null);
   const [pesan, setPesan] = useState<Pesan | null>(null);
 
   const ubah = async (videoId: string, jadikanTersembunyi: boolean) => {
@@ -146,6 +157,52 @@ export default function PlaylyVisibilityManager({
       });
     } finally {
       setSedangGenre(null);
+    }
+  };
+
+  /**
+   * KOREKSI kualitas sebuah video, atau kembalikan ke otomatis.
+   *
+   * Bawaannya situs MENURUNKAN kualitas dari link unduhan (1080p -> "HD",
+   * hanya 480p -> "SD"; lib/kualitas-video.ts). Turunan itu bisa meleset —
+   * berkas 1080p hasil rekaman bioskop tetap CAM — dan di sinilah orang
+   * membetulkannya. Nilai pilihan admin SELALU menang atas turunan.
+   */
+  const ubahKualitas = async (videoId: string, label: string) => {
+    setSedangKualitas(videoId);
+    setPesan(null);
+    try {
+      const res = await fetch("/api/admin/playly/kualitas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // String kosong dikirim sebagai null supaya maksud "ikuti otomatis
+        // lagi" tidak bergantung pada tafsiran server terhadap teks kosong.
+        body: JSON.stringify({ videoId, kualitas: label || null }),
+      });
+      const data = (await res.json()) as {
+        kualitas?: Record<string, string>;
+        error?: string;
+      };
+      if (!res.ok) {
+        setPesan({ jenis: "gagal", teks: data.error ?? "Gagal menyimpan kualitas." });
+        return;
+      }
+      // Peta terbaru datang dari server, dipakai apa adanya — layar tidak
+      // menebak hasilnya sendiri dan ikut benar walau ada admin lain.
+      setKualitas(data.kualitas ?? {});
+      setPesan({
+        jenis: "ok",
+        teks: label
+          ? `Kualitas disimpan. Poster film ini akan menampilkan "${label}" dalam ±5 menit.`
+          : "Kualitas dikembalikan ke otomatis: mengikuti link unduhan (ada 1080p → HD, hanya 480p → SD).",
+      });
+    } catch {
+      setPesan({
+        jenis: "gagal",
+        teks: "Tidak bisa menghubungi server. Cek koneksi internet lalu coba lagi.",
+      });
+    } finally {
+      setSedangKualitas(null);
     }
   };
 
@@ -324,6 +381,34 @@ export default function PlaylyVisibilityManager({
                     ))}
                   </select>
                   {sedangGenre === v.id && (
+                    <Loader2
+                      className="h-3.5 w-3.5 animate-spin text-zinc-400"
+                      aria-hidden="true"
+                    />
+                  )}
+                </label>
+
+                {/* KUALITAS poster (owner 2026-10-31). Bawaannya "Otomatis":
+                    situs menurunkannya sendiri dari link unduhan, jadi daftar
+                    ini hanya perlu disentuh kalau turunannya meleset —
+                    terutama film CAM yang berkas unduhannya kebetulan 1080p.
+                    Bentuknya sengaja sama dengan dropdown kategori di atas. */}
+                <label className="flex shrink-0 items-center gap-1.5">
+                  <span className="sr-only">Kualitas untuk {v.title}</span>
+                  <select
+                    value={kualitas[v.id] ?? KOSONG}
+                    onChange={(e) => ubahKualitas(v.id, e.target.value)}
+                    disabled={sedangKualitas === v.id}
+                    className="min-h-9 rounded-full border border-zinc-700 bg-zinc-900 px-3 text-xs text-zinc-200 outline-none transition focus-visible:border-amber-400 disabled:opacity-50"
+                  >
+                    <option value={KOSONG}>Kualitas: otomatis</option>
+                    {DRAMA_QUALITY_OPTIONS.map((q) => (
+                      <option key={q} value={q}>
+                        {q}
+                      </option>
+                    ))}
+                  </select>
+                  {sedangKualitas === v.id && (
                     <Loader2
                       className="h-3.5 w-3.5 animate-spin text-zinc-400"
                       aria-hidden="true"

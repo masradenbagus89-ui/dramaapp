@@ -31,6 +31,7 @@ import {
   getPlaylyGenresCached,
   getPlaylyHiddenIdsCached,
   getPlaylyImdbCached,
+  getPlaylyKualitasCached,
 } from "./store";
 import type { PlaylyImdbMap } from "./playly-imdb";
 
@@ -148,6 +149,13 @@ export function rakitVideoPublik(
    * serta tes lama harus tetap berlaku tanpa diubah.
    */
   imdb: PlaylyImdbMap = {},
+  /**
+   * Kualitas pilihan admin (videoId -> "HD"/"CAM"/...). OPSIONAL dengan alasan
+   * yang sama seperti dua di atas: fitur ini baru ada 2026-10-31. Nilainya
+   * MENANG atas kualitas drama yang dikaitkan maupun turunan otomatis dari link
+   * unduhan (lib/kualitas-video.ts) — itu yang membuat koreksi admin bertahan.
+   */
+  kualitas: Record<string, string> = {},
 ): { tampil: PlaylyVideo[]; labelUntuk: (videoId: string) => Omit<PlaylyVideoPublik, keyof PlaylyVideo> } {
   const disembunyikan = new Set(hiddenIds);
   const dramaById = new Map(dramas.map((d) => [d.id, d] as const));
@@ -191,7 +199,11 @@ export function rakitVideoPublik(
         // (HD/WEB-DL/CAM) milik katalog kita, bukan sifat filmnya. OMDb tidak
         // tahu berkas mana yang kita simpan, jadi mengisinya dari sana sama
         // dengan menjanjikan mutu yang tak pernah diperiksa siapa pun.
-        quality: drama?.quality ?? null,
+        // Koreksi admin MENANG, lalu kualitas drama yang dikaitkan. Keduanya
+        // kosong -> null di sini, dan turunan otomatis dari link unduhan baru
+        // mengisinya belakangan di lib/playly-gabungan.ts (urutan itu yang
+        // membuat nilai pilihan manusia tak pernah tertimpa tebakan).
+        quality: kualitas[videoId] ?? drama?.quality ?? null,
       };
     },
   };
@@ -221,7 +233,7 @@ export function bolehTampilKePenonton(detail: PlaylyDetailPublik | undefined): b
  * supaya satu gangguan di Playly tidak merusak halaman DramaKu.
  */
 export async function getPlaylyVideosPublik(): Promise<PlaylyPublikResult> {
-  const [mitra, hiddenIds, embeds, dramas, genres, imdb] = await Promise.all([
+  const [mitra, hiddenIds, embeds, dramas, genres, imdb, kualitas] = await Promise.all([
     fetchPlaylyVideosKita(),
     getPlaylyHiddenIdsCached().catch(() => [] as string[]),
     getPlaylyEmbedsCached().catch(() => []),
@@ -232,6 +244,9 @@ export async function getPlaylyVideosPublik(): Promise<PlaylyPublikResult> {
     // Alasan sama: metadata IMDb hanya MENAMBAH label pada kartu. Kalau tak
     // terbaca, kartunya tampil seperti sebelum fitur ini ada — bukan gagal.
     getPlaylyImdbCached().catch(() => ({}) as PlaylyImdbMap),
+    // Alasan sama lagi: koreksi kualitas cuma MENGUBAH label di pojok poster.
+    // Tak terbaca = kartu memakai turunan otomatis, bukan halaman gagal.
+    getPlaylyKualitasCached().catch(() => ({}) as Record<string, string>),
   ]);
 
   if (mitra.error) {
@@ -245,6 +260,7 @@ export async function getPlaylyVideosPublik(): Promise<PlaylyPublikResult> {
     dramas,
     genres,
     imdb,
+    kualitas,
   );
 
   // Sampul sudah IKUT di balasan /api/videos (`seo.thumbnailUrl`, dibaca di

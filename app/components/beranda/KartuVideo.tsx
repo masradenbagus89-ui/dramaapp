@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { Film, Play } from "lucide-react";
+import { Film, Play, Star } from "lucide-react";
 import type { PlaylyVideoPublik } from "@/lib/playly-publik";
 import { alamatTonton } from "@/lib/tonton";
 import { labelGenreGabungan } from "@/lib/genre";
+import { cn } from "@/lib/utils";
+import { CHIP, CHIP_GELAP, warnaKualitas } from "@/app/components/lencana-gaya";
 
 /**
  * Kartu poster untuk satu VIDEO, sebaris dengan kartu drama di beranda.
@@ -59,6 +61,38 @@ export default function KartuVideo({ video }: { video: PlaylyVideoPublik }) {
             // berubah jadi kartu tanpa identitas.
             <Film className="size-8 text-zinc-700 terang:text-zinc-400" aria-hidden="true" />
           )}
+
+          {/* Lencana atas: RATING di kiri, KUALITAS di kanan — posisi dan rupa
+              yang SAMA dengan poster drama (app/components/Poster.tsx), lewat
+              kelas bersama di app/components/lencana-gaya.ts.
+
+              KENAPA BARU ADA SEKARANG (owner 2026-10-31: "di poster film tidak
+              ada keterangan HD/cam lalu rating berapa"): kartu ini sejak lahir
+              hanya menggambar durasi, padahal `rating` dan `quality` SUDAH ada
+              di datanya (lib/playly-publik.ts). Diukur di produksi hari itu,
+              21 dari 24 film di halaman pertama /film punya rating — jadi
+              datanya memang ada, cuma tidak pernah dipajang di beranda.
+
+              Keduanya hilang sendiri saat kosong, TIDAK diganti "—" atau
+              ditebak "HD". Memajang mutu yang tak pernah diperiksa siapa pun
+              sama dengan berbohong ke penonton, dan kerusakannya senyap —
+              aturan yang sama sudah berlaku untuk poster drama
+              (lib/lencana-kartu.ts). */}
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start gap-1 p-1 md:p-1.5">
+            {video.rating && (
+              <span className={cn(CHIP, CHIP_GELAP)}>
+                <Star className="size-2.5 fill-amber-400 text-amber-400 md:size-3" />
+                {video.rating}
+              </span>
+            )}
+            {video.quality && (
+              /* `ml-auto` supaya chip kualitas tetap menempel ke kanan walau
+                 lencana rating di kiri tidak digambar. */
+              <span className={cn(CHIP, warnaKualitas(video.quality), "ml-auto")}>
+                {video.quality}
+              </span>
+            )}
+          </div>
 
           {/* Durasi di pojok kanan-bawah — posisi yang sama dengan lencana
               durasi poster drama (app/components/Poster.tsx). "-" berarti

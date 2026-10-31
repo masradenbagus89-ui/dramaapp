@@ -906,6 +906,8 @@ type PlaylyFile = {
   cadangan?: PlaylyCadangan;
   /** Baris link unduhan videoId × provider × kualitas (opsional: file lama tak punya). */
   linkUnduhan?: LinkUnduhan[];
+  /** Kualitas pilihan admin per video (opsional: file lama tak punya). */
+  kualitas?: PlaylyKualitasMap;
 };
 const EMPTY_PLAYLY: PlaylyFile = {
   key: null,
@@ -1218,6 +1220,70 @@ export async function setPlaylyVideoGenre(
   } else {
     const file = readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY);
     file.genre = baru;
+    writeLocal("playly.json", file);
+  }
+  return baru;
+}
+
+// ===========  KUALITAS VIDEO PILIHAN ADMIN (playly:kualitas)  =============
+//
+// KENAPA ADA (owner 2026-10-31): poster film tampil tanpa keterangan HD/CAM.
+// Penyedia video tidak pernah mengirim mutu berkas, jadi situs menurunkannya
+// dari link unduhan (lib/kualitas-video.ts). Turunan itu bisa MELESET — berkas
+// 1080p hasil rekaman bioskop tetap CAM — dan dokumen inilah jalan admin
+// mengoreksinya.
+//
+// Bentuknya PETA videoId -> label, sama seperti playly:genre di atas:
+// pertanyaannya "video ini kualitasnya apa?", bukan "video ini ada di daftar
+// atau tidak". Nilai di sini SELALU menang atas turunan otomatis — kalau
+// terbalik, koreksi admin akan tertimpa tebakan tiap halaman dimuat ulang.
+
+const PLAYLY_KUALITAS_DOC = "playly:kualitas";
+
+/** Peta videoId -> kualitas pilihan admin. Tanpa entri = belum dikoreksi. */
+export type PlaylyKualitasMap = Record<string, string>;
+
+export async function getPlaylyKualitas(): Promise<PlaylyKualitasMap> {
+  if (useSupabase) {
+    return (await sbDocGet<PlaylyKualitasMap>(PLAYLY_KUALITAS_DOC)) ?? {};
+  }
+  return readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY).kualitas ?? {};
+}
+
+/** Versi ber-cache untuk HALAMAN PUBLIK — alasannya sama dengan getPlaylyGenresCached. */
+export async function getPlaylyKualitasCached(): Promise<PlaylyKualitasMap> {
+  if (useSupabase) {
+    return (
+      (await sbDocGet<PlaylyKualitasMap>(PLAYLY_KUALITAS_DOC, {
+        revalidate: CATALOG_TTL_SECONDS,
+      })) ?? {}
+    );
+  }
+  return readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY).kualitas ?? {};
+}
+
+/**
+ * Pasang kualitas satu video, atau KEMBALIKAN KE OTOMATIS dengan mengirim null.
+ *
+ * Mengosongkan berarti MENGHAPUS kuncinya, bukan menyimpan string kosong —
+ * alasan yang sama persis dengan setPlaylyVideoGenre di atas. Di sini akibatnya
+ * lebih terasa: entri kosong akan terbaca sebagai "sudah dikoreksi jadi tanpa
+ * label", sehingga turunan otomatis tidak pernah jalan lagi untuk video itu.
+ */
+export async function setPlaylyVideoKualitas(
+  videoId: string,
+  kualitas: string | null,
+): Promise<PlaylyKualitasMap> {
+  const sekarang = await getPlaylyKualitas();
+  const baru = { ...sekarang };
+  if (kualitas) baru[videoId] = kualitas;
+  else delete baru[videoId];
+
+  if (useSupabase) {
+    await sbDocSet(PLAYLY_KUALITAS_DOC, baru);
+  } else {
+    const file = readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY);
+    file.kualitas = baru;
     writeLocal("playly.json", file);
   }
   return baru;

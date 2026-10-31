@@ -24,6 +24,7 @@ import {
   getPlaylyGenres,
   getPlaylyHiddenIds,
   getPlaylyImdb,
+  getPlaylyKualitas,
   getPlaylyLinkUnduhan,
 } from "@/lib/store";
 import { bacaDomainUnduhan } from "@/lib/playly-unduhan-domain";
@@ -54,7 +55,7 @@ export default async function PlaylyVideosPage() {
   // revalidateSeconds = 0 -> jalur admin selalu minta data SEGAR ke Playly,
   // supaya video yang baru di-upload langsung kelihatan di sini. Halaman
   // penonton yang memakai versi ber-cache.
-  const [status, dramas, embeds, mitra, hidden, genres, imdb, unduhan] =
+  const [status, dramas, embeds, mitra, hidden, genres, imdb, unduhan, kualitas] =
     await Promise.all([
       getPlaylyKeyStatus(),
       getAllDramas(),
@@ -68,6 +69,9 @@ export default async function PlaylyVideosPage() {
       // Jalur admin -> versi TANPA cache: begitu owner menyimpan link, layar ini
       // harus menampilkan keadaan sekarang, bukan salinan 5 menit lalu.
       getPlaylyLinkUnduhan(),
+      // Versi TANPA cache, alasan sama: begitu owner mengoreksi kualitas sebuah
+      // film, dropdown di layar ini harus memperlihatkan keadaan sekarang.
+      getPlaylyKualitas(),
     ]);
 
   // Video yang catatannya ada di Playly tapi BERKASNYA tidak (upload putus di
@@ -140,6 +144,7 @@ export default async function PlaylyVideosPage() {
           initialHidden={hidden}
           initialGenres={genres}
           initialImdb={imdb}
+          initialKualitas={kualitas}
           belumSiapIds={belumSiapIds}
           fetchError={mitra.error}
           source={mitra.source}

@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import type { Drama, DramaQuality } from "@/lib/types";
+import type { Drama } from "@/lib/types";
+import { CHIP, CHIP_GELAP, warnaKualitas } from "@/app/components/lencana-gaya";
 import { CARD_PREVIEW_SEC, teaserShouldLoop } from "@/lib/hero-teaser";
 import { lencanaKartu } from "@/lib/lencana-kartu";
 import { cn } from "@/lib/utils";
@@ -23,12 +24,12 @@ type Props = {
   previewSrc?: string;
 };
 
-// --- Bentuk lencana (dipakai berulang; ditulis sekali supaya seragam) -------
+// --- Bentuk lencana -------------------------------------------------------
 // Kecil & gelap-transparan supaya menempel di poster tanpa menutupi wajah
 // pemainnya — permintaan owner: "jangan membuat poster menjadi penuh".
-const CHIP =
-  "pointer-events-none flex items-center gap-0.5 rounded-sm px-1.5 py-0.5 text-[10px] font-bold leading-tight shadow md:text-[11px]";
-const CHIP_GELAP = "bg-black/75 text-white ring-1 ring-white/15 backdrop-blur-[2px]";
+//
+// Kelasnya PINDAH ke app/components/lencana-gaya.ts (2026-10-31) karena kartu
+// FILM kini memajang lencana yang sama; alasannya ada di kepala berkas itu.
 
 /**
  * Warna chip jumlah episode (SERIAL) — HIJAU, dipilih owner 2026-10-17 setelah
@@ -47,23 +48,6 @@ const CHIP_GELAP = "bg-black/75 text-white ring-1 ring-white/15 backdrop-blur-[2
  */
 const CHIP_EPS = "bg-green-600 text-white ring-1 ring-green-300/40";
 
-/**
- * Warna chip kualitas — dua warna saja, sesuai contoh yang diberikan owner
- * 2026-09-22 sore (dua poster pembanding: CAM merah, HD hijau).
- *
- * MERAH = CAM/HDCAM, rekaman bioskop (buram, sering miring). Warnanya bukan
- * hiasan: itu peringatan yang dicari penonton SEBELUM memutuskan menonton.
- * HIJAU = sisanya (HD, WEB-DL, BluRay, 4K) = sumber bersih, aman ditonton.
- *
- * Sengaja cuma dua warna, bukan satu warna per nilai: penonton perlu menjawab
- * satu pertanyaan saja ("jernih atau tidak?"), dan lima warna berbeda di pojok
- * poster justru memperlambat jawabannya.
- */
-function warnaKualitas(q: DramaQuality): string {
-  return q === "CAM" || q === "HDCAM"
-    ? "bg-red-600 text-white ring-1 ring-red-300/40"
-    : "bg-green-600 text-white ring-1 ring-green-300/40";
-}
 
 export default function Poster({
   drama,

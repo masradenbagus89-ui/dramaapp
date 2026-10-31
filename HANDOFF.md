@@ -9,11 +9,13 @@
 >
 > **📦 Berkas ini sudah 9.086 baris** (dihitung 2026-10-30 dengan `wc -l`, bukan ditaksir; angka lama "±6.600" dari 2026-10-15 dan "8.700+" sudah basi — tumbuh ±2.500 baris dalam 15 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. **Menunggu keputusan owner.**
 
-**Terakhir diisi:** 2026-10-30 (tiga rilis beruntun, semuanya TAYANG: `5088bf2` genre bahasa Indonesia → `27973f0` koreksi owner Kerajaan/CEO/Lainnya → **`55894b8` dua tombol halaman drama yang selama ini TERPOTONG**. Downtime NOL. ⏸️ **DUA bahasan menunggu keputusan owner**, risetnya sudah selesai & nol kode diubah: "klik drama langsung play" dan "sinopsis film masih bahasa Inggris".)
+**Terakhir diisi:** 2026-10-31 (✅ **TAYANG `4dde5c0`**: tombol beranda "LIHAT SEMUA FILM UNGGULAN" → **"TEMUKAN TONTONAN FAVORITMU"** — labelnya salah di dua sisi (isinya drama berseri, bukan film; tujuannya katalog lengkap, bukan daftar unggulan). Dual push → Railway build sendiri → tayang ±60 detik, **downtime NOL**. Smoke test 5 alur: 4 langsung 200, `/drama/meg-2-the-trench` 500 SEKALI lalu 200 enam kali — cold start, dicatat bukan dihapus. 🔎 **Masih terbuka**: tombol yang sama **tergeser ke kanan di layar HP** — pembanding produksi membuktikan itu gejala LAMA (bukan regresi rilis ini), penyebabnya belum ketemu, owner belum memutuskan.)
+
+**Sebelumnya:** 2026-10-30 (tiga rilis beruntun, semuanya TAYANG: `5088bf2` genre bahasa Indonesia → `27973f0` koreksi owner Kerajaan/CEO/Lainnya → **`55894b8` dua tombol halaman drama yang selama ini TERPOTONG**. Downtime NOL. ⏸️ **DUA bahasan menunggu keputusan owner**, risetnya sudah selesai & nol kode diubah: "klik drama langsung play" dan "sinopsis film masih bahasa Inggris".)
 
 ---
 
-## 🧭 BACA INI DULU — status & titik lanjut (diperbarui 2026-10-30)
+## 🧭 BACA INI DULU — status & titik lanjut (diperbarui 2026-10-31)
 
 ### Keadaan sekarang, satu paragraf
 
@@ -213,6 +215,84 @@ PC backup menyalakan ulang layanannya sendiri (watchdog) dan membuat tunnel baru
 Artinya perubahan di `start-video-services.ps1` yang meneruskan `VIDEO_SIGNING_SECRET` dari env
 level `Machine` **benar-benar bekerja di jalur autostart** — hal yang tak bisa diuji saat
 dipasang manual. Penegakan bertahan melewati restart PC; tidak perlu dipasang ulang tiap boot.
+
+---
+
+## 2026-10-31 — ✅ DIRILIS `4dde5c0`: tombol beranda "LIHAT SEMUA FILM UNGGULAN" → "TEMUKAN TONTONAN FAVORITMU"
+
+**Permintaan owner:** *"lihat semua film unggulan sedangkan kita ada drama juga, baiknya diganti apa"*.
+Owner menolak dua usulan bernada netral, lalu memilih versi yang **mengajak**.
+
+**Labelnya memang salah di DUA sisi** — dua-duanya terbaca langsung dari kode, bukan selera:
+
+1. Kata **"film"** keliru. Baris poster itu diisi `featuredHeroSlides` (`lib/hero-teaser.ts:82`) yang
+   justru MENYARING drama berseri (`d.episodes >= 5`); komentarnya sendiri berbunyi *"Utamakan drama
+   berseri, bukan film IMDb 1 bagian"*. Potret layar owner membenarkan: semua poster berlencana EPS.
+2. Kata **"unggulan"** juga meleset. Tombolnya menuju `/discover` (`app/page.tsx:80`) = **katalog
+   LENGKAP** drama + film ber-penyaring, bukan daftar unggulan. Tidak ada penyaring "unggulan" di sana.
+
+**Kenapa kata "Tontonan":** halaman drama SUDAH memakai kosakata itu untuk kasus yang sama persis —
+saat daftar sampingnya campuran, judulnya berubah jadi "Tontonan Lain" karena *"daftar campuran di
+bawah judul Film Terkait adalah janji yang tidak ditepati"* (`app/drama/[id]/page.tsx:155`).
+Satu konsep, satu nama (§3.3).
+
+**Yang disentuh — 3 berkas, semuanya teks/komentar, NOL logika:**
+
+- `app/components/beranda/FeaturedRow.tsx` — teks tombol (baris ~121), `aria-label` seksi
+  `"Film unggulan"` → `"Tontonan unggulan"` (baris 82, ini yang dibacakan pembaca layar), komentar
+  kepala berkas, + komentar baru di atas tombol yang menjelaskan kenapa kata "film" dibuang.
+- `app/components/beranda/BadanKatalog.tsx` — komentar prop `heroHref`.
+- `lib/beranda-catalog.ts` — komentar `FEATURED_ROW_COUNT`.
+
+**Cakupannya sempit:** tombol besar itu hanya digambar saat `FeaturedRow` dipanggil TANPA `title` —
+yakni lewat `BadanKatalog`, artinya `/` dan `/beranda` saja. Tiga pemanggil lain (`/shorts`,
+`CatalogBrowser`, `TabKatalogTampilan`) memakai judul sendiri atau `tombolBawah={false}`.
+
+**Bukti:** `rm -rf .next` → `npm run build` sukses → `npx tsc --noEmit` **exit 0** → `npm test`
+**1.791 tes hijau (123 berkas)** → **POTRET LAYAR** `next start` lokal di 1280px: tombol tampil
+UTUH, lebar terukur ±258px. Potret wajib karena pelajaran `55894b8` kemarin: tombol terpotong tidak
+memicu satu pun error. Potret lokal itu sekaligus membuktikan `.next` benar-benar terbangun ulang
+(jebakan #1 di seksi atas), karena teks barunya tergambar.
+
+**RILIS & VERIFIKASI PRODUKSI.** Dual push `dc4e6e7..4dde5c0` — `dramaku` (cermin) dulu, lalu
+`origin main` (= tombol rilis). Railway mem-build sendiri dari sumber; teks baru **TAYANG ±60 detik
+sesudah push** (diperiksa tiap 15 detik; tiga pemeriksaan pertama masih memulangkan versi lama —
+itu normal, bukan gejala gagal). Verifikasi penutup = **potret layar situs produksi** 1280px:
+tombolnya tampil utuh.
+⚠️ Pemeriksaan teksnya WAJIB abai huruf besar-kecil. Huruf kapital di tombol itu datang dari CSS
+`uppercase`; di HTML teksnya tetap "Temukan tontonan favoritmu". Jebakan yang sama persis pernah
+menipu pengukuran sinopsis (grep "SINOPSIS" memulangkan nol padahal ada).
+
+**Smoke test sesudah rilis:** `/` · `/beranda` · `/discover` · `/api/health` (memulangkan
+`{"ok":true,"sumberData":"database"}`) semuanya **200**.
+⚠️ `/drama/meg-2-the-trench` sempat **500 SEKALI** pada pemeriksaan pertama, lalu **200 enam kali
+berturut-turut** (0,20–0,22 detik) dan lima halaman drama lain juga 200. Dibaca sebagai halaman yang
+kebetulan dibangun pertama kali tepat sesudah server naik (cold start), **bukan** kerusakan menetap.
+Sengaja DICATAT, bukan dihapus: kalau 500 di halaman drama muncul lagi sesudah deploy berikutnya,
+catatan ini bukti pertama bahwa polanya berulang — dan tanpa catatan, sesi berikutnya akan memulai
+penyelidikan dari nol.
+
+**Rencana mundur 1 baris:** `git revert 4dde5c0` lalu dual push — Railway build ulang sendiri
+±60–90 detik. Nol perubahan database, nol env baru, jadi mundur benar-benar cuma soal kode. Lebih
+cepat lagi: panel Railway → Deployments → Redeploy build sebelum `4dde5c0`.
+
+### 🔎 TEMUAN SAMPINGAN — bukan dari perubahan ini, tapi NYATA: tombol itu tergeser ke kanan di layar HP
+
+Saat memotret lebar 360px, tombolnya **tidak terpusat** — bergeser ke kanan sampai kotaknya menyentuh
+tepi layar (padding kanan tersisa ±10px dari seharusnya 24px). Sebelum menuduh teks baru, diambil
+pembanding dari **situs produksi yang masih memakai teks lama**: bentuknya **sama persis**. Jadi ini
+**gejala lama yang sudah tayang**, bukan regresi.
+
+Yang sudah DICORET sebagai penyebab: `.shell-wide` cuma `max-width:100%` (`app/globals.css:213`),
+`BarisGeser` memakai `overflow-x-auto` (tak memperlebar induk), dan tak ada `w-screen`/`min-w-[`/
+lebar tetap di komponen beranda. Dugaan tersisa: ada elemen lain yang meluap horizontal sehingga
+`justify-center` memusatkan terhadap lebar konten, bukan lebar layar. **Belum terbukti — jangan
+ditulis sebagai fakta.** Bar menu merah dan deret tab ikut meluap dengan pola yang sama, jadi
+kemungkinan satu sebab untuk ketiganya. Ditawarkan ke owner sebagai pekerjaan terpisah.
+
+⚠️ Catatan alat: potret di mesin ini WAJIB Edge `--headless=new --screenshot` **TANPA**
+`--remote-debugging-port`. Emulasi lebarnya terbukti bekerja — di 360px tulisan "DramaKu" di samping
+logo ikut hilang, dan itu memang `hidden sm:inline` (`KepalaKatalog.tsx:111`).
 
 ---
 

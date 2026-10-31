@@ -7,13 +7,13 @@
 >
 > **⚠️ Cara menyisipkan catatan baru (dibetulkan 2026-09-21).** Sisipkan **satu** judul `## ` saja, lalu isinya, lalu `---`. JANGAN menulis ulang judul seksi lama sebagai penanda posisi — itu menghasilkan **judul kembar/yatim**, dan sesi 2026-09-21 meninggalkan **4 judul yatim + 2 judul kembar** sebelum ketahuan. Kalau satu topik perlu dua blok (status rilis + rincian), beri judul kedua akhiran **` — rincian`**.
 >
-> **📦 Berkas ini sudah ±6.600 baris** (diukur 2026-10-15; angka lama "5.224 baris" dari 2026-10-10 sudah basi — tumbuh ±1.400 baris dalam 5 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. Menunggu keputusan owner.
+> **📦 Berkas ini sudah 9.086 baris** (dihitung 2026-10-30 dengan `wc -l`, bukan ditaksir; angka lama "±6.600" dari 2026-10-15 dan "8.700+" sudah basi — tumbuh ±2.500 baris dalam 15 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. **Menunggu keputusan owner.**
 
 **Terakhir diisi:** 2026-10-30 (tiga rilis beruntun, semuanya TAYANG: `5088bf2` genre bahasa Indonesia → `27973f0` koreksi owner Kerajaan/CEO/Lainnya → **`55894b8` dua tombol halaman drama yang selama ini TERPOTONG**. Downtime NOL. ⏸️ **DUA bahasan menunggu keputusan owner**, risetnya sudah selesai & nol kode diubah: "klik drama langsung play" dan "sinopsis film masih bahasa Inggris".)
 
 ---
 
-## 🧭 BACA INI DULU — status & titik lanjut (diperbarui 2026-10-29)
+## 🧭 BACA INI DULU — status & titik lanjut (diperbarui 2026-10-30)
 
 ### Keadaan sekarang, satu paragraf
 
@@ -34,6 +34,31 @@ TAYANG** (`98c2b92` → `a0f4079` → `d0d301e`). Yang berubah bagi penonton:
 | — | kolom kanan **Film/Drama Terkait + Terpopuler**, kaki situs 4 kolom |
 | Lanjut Menonton selalu terbuka | **panel lipat**, tersembunyi sampai diklik |
 
+📝 **30 OKTOBER — dua pekerjaan, keduanya TAYANG.**
+
+**(a) Seluruh nama genre kini bahasa Indonesia** (`5088bf2`). Aksi · Romantis · Komedi ·
+Petualangan · Horor · Fiksi Ilmiah · Lintas Waktu, dan tombol menu **"+ More" → "Lainnya"**.
+Daftar LENGKAP — termasuk putaran koreksi owner sesudahnya (`27973f0`) — ada di seksinya
+sendiri di bawah; sengaja tidak disalin ke sini supaya tidak ada dua daftar yang bisa melenceng.
+Berubah di 13 permukaan sekaligus (menu bar merah, strip kuning, dropdown Filter, kaki situs,
+tulisan di bawah tiap poster, chip halaman drama, kolom Terpopuler, baris "Trending di …",
+kartu & grid Playly, halaman `/tonton`). ⭐ **ATURAN PERMANEN:** yang diterjemahkan HANYA
+tulisannya. Nilai di database, alamat penyaring (`?cat=Action`), pencocokan "Drama Terkait",
+dan kunci warna aksen **WAJIB tetap ejaan Inggris** — kalau label ikut masuk ke alamat, chip
+tergambar rapi lalu memulangkan halaman hampa tanpa satu pun error. Penerjemahnya
+**`lib/genre.ts`** (meniru `lib/negara.ts`); **tambah genre baru = tambah satu baris di sana**,
+bukan di tempat gambarnya. Panel admin SENGAJA tetap Inggris — di sana yang terlihat adalah
+nilai yang tersimpan di database.
+
+**(b) Dua tombol di halaman drama yang selama ini TERPOTONG, diperbaiki** (`55894b8`).
+Baris aksi berisi empat tombol (`Mulai Nonton · Tambah Favorit · Suka · Bagikan`), tapi di lebar
+1280px hanya dua yang terlihat — "Suka" sepotong, **"Bagikan" hilang total**. Dua fungsi itu
+praktis mati bagi semua penonton layar lebar. 🪤 **PELAJARAN PERMANEN:** saat bug itu tayang,
+build sukses, `tsc` exit 0, dan **1.784 tes hijau semua** — `overflow-hidden` memotong tanpa
+error, tanpa scrollbar, tanpa pesan apa pun. **Kerusakan LEBAR/tata letak hanya bisa dibuktikan
+dengan POTRET LAYAR**, dan caranya di mesin ini: Edge `--headless=new --screenshot` **TANPA**
+`--remote-debugging-port` (port itu yang 2026-10-28 nyasar ke browser penyewa lain).
+
 ⏸️ **KOIN & IKLAN DIJEDA sejak 28 Okt** (`c5bdb54`) — semua episode gratis, nol fitur koin/iklan
 tampil. DISENGAJA, jangan "diperbaiki".
 ⏸️ **AKUN PENONTON DIJEDA sejak 29 Okt** (`98c2b92`) — login/daftar hilang dari tampilan penonton.
@@ -51,6 +76,8 @@ tidak pernah dihapus.
 | 1 | **Jalur administrasi jarak jauh di server sewaan terbuka ke internet** | 🟠 ya, tapi **DI LUAR wewenang owner** | Izin atasan owner → lalu diminta ke administrator penyedia jasa. Mesin kerja owner = server RDP sewaan berisi ~84 penyewa; owner hanya pengguna biasa. Laporan + draf pesannya: `laporan-keamanan-dramaku-2026-10-27.html` **di folder rumah owner, SENGAJA di luar repo** (repo ini publik) |
 | 2 | **Katalog cuma punya 1 FILM (+39 serial)** | ⚪ keputusan isi, bukan teknis | Halaman `/drama/meg-2-the-trench` memakai judul **"Tontonan Lain"**, bukan "Film Terkait" — karena tak ada film lain untuk ditawarkan. **Bukan bug.** Tambah film kedua ke katalog → judulnya berubah sendiri, nol ubah kode. Rinciannya di catatan rilis `d0d301e` di bawah |
 | 3 | **Beli-lalu-tonton: perbaikannya TAYANG, tapi kini TAK BISA DIUJI** | ⚪ tertunda | **Menunggu koin dinyalakan lagi.** Perbaikannya sudah tayang di `7efa591`, tapi sejak koin dijeda tak ada episode yang bisa dibeli. **Begitu koin dinyalakan, uji ini WAJIB lebih dulu**: drama premium → episode 4 → Buka • 8 koin → video harus jalan sendiri tanpa muat ulang. Penjaganya `tests/beli-lalu-tonton.test.ts` tetap hijau |
+| 3b | ⏸️ **"Klik drama langsung play"** | ⚪ owner pikir-pikir | Owner bertanya pendapat, lalu menunda. **Riset SUDAH selesai, jangan diulang** — seksi `2026-10-30 — DIBAHAS, BELUM DIPUTUSKAN` di bawah. Batas kerasnya: browser memblokir autoplay bersuara, jadi versi jujurnya selalu mulai TANPA suara |
+| 3c | ⏸️ **Sinopsis film masih bahasa Inggris** | ⚪ owner pikir-pikir | ± **340 dari 443** halaman `/tonton` bersinopsis Inggris (diukur dari sampel 40: 31 Inggris, 0 Indonesia, 9 kosong). Katalog **drama** 100% sudah Indonesia. Riset lengkap + 4 pilihan ada di seksinya sendiri — **jangan diukur ulang** |
 | 4 | **Tutup Vercel** | tidak | ≥6 minggu sejak 2026-10-15 → **paling cepat 2026-11-26**, DAN cek Google. Nol pekerjaan teknis tersisa. 🔔 `.github/workflows/pengingat-tutup-vercel.yml` membuka Issue sendiri saat tanggalnya tiba |
 | 5 | **Uji pulihkan backup** | tidak | 1 Supabase project kosong. 🟢 Robotnya sudah dibuat & diuji — owner tinggal 3 langkah, `docs/uji-pulihkan-backup.md` "Rute 2" |
 | 6 | **Beli domain** | tidak | persetujuan atasan owner — **BUKAN blocker apa pun**. Bahan: `docs/pengajuan-domain-sendiri.md` |
@@ -83,13 +110,11 @@ tidak pernah dihapus.
    `/film` baru dirender sesudah penonton mengklik video — pemeriksaan HTML melaporkannya "hilang"
    dan nyaris dilaporkan sebagai regresi. Pakai tes render.
 
-### 📦 HANDOFF SUDAH 8.700+ BARIS
+### 📦 UKURAN BERKAS INI → lihat catatan di header
 
-Naik ±2.100 baris hari ini saja. Berkas ini dibaca PALING AWAL tiap sesi, jadi ia memakan jatah
-konteks sebelum kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` —
-**tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*,
-*"Performance /beranda: SUDAH SEHAT"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan
-sejarah. Menunggu keputusan owner.
+Pesannya **sama persis** dengan catatan 📦 di bagian atas berkas, jadi sengaja TIDAK diulang di
+sini: dua angka yang hidup berdampingan pasti melenceng, dan catatan yang angkanya saling
+bertentangan berhenti dipercaya. Angka terbaru (dihitung, bukan ditaksir) ada di sana.
 
 ### ⛔ KEPUTUSAN OWNER — jangan ditawarkan lagi
 

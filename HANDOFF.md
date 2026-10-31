@@ -9,7 +9,9 @@
 >
 > **📦 Berkas ini sudah 9.086 baris** (dihitung 2026-10-30 dengan `wc -l`, bukan ditaksir; angka lama "±6.600" dari 2026-10-15 dan "8.700+" sudah basi — tumbuh ±2.500 baris dalam 15 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. **Menunggu keputusan owner.**
 
-**Terakhir diisi:** 2026-10-31, rilis ke-2 hari ini (✅ **TAYANG `a44ac67`**: poster FILM akhirnya punya **⭐ rating + chip HD**. Rating ternyata sudah ada di data sejak lama tapi tak pernah digambar (21 dari 24 film punya); kualitas memang tak punya sumber sama sekali, jadi atas keputusan owner diturunkan dari **link unduhan** (1080p → HD, 480p → SD) + dropdown koreksi di panel admin. Tayang ±90 detik, smoke test 5/5 = 200. ❌ **RALAT PENTING**: temuan "tombol tergeser di layar HP" yang dicatat sebelumnya **TIDAK PERNAH ADA** — itu cacat alat potret (Edge di mesin ini tak bisa < ±476px, jadi gambar hanya DIPOTONG). Sudah diukur ulang: tombol terpusat sempurna, nol pelebaran halaman. Rinciannya + cara memotret lebar HP yang BENAR ada di seksinya.)
+**Terakhir diisi:** 2026-10-31, rilis ke-3 hari ini (✅ **TAYANG `7977f9c`**: **genre & negara akhirnya ikut menghitung FILM**. Klik "Komedi" dulu memulangkan "0 judul"; sekarang **1 drama + 64 film**. Menu Negara ternyata dibangun dari **SATU judul** — dari 40 drama cuma 1 punya kolom negara, yaitu film Meg 2 yang ko-produksi 6 negara, dan itulah seluruh isi dropdown yang dikeluhkan owner. Sekarang dihitung dari katalog lengkap → **Indonesia, Jepang, Korea, India, Thailand** ikut muncul, dibatasi 12 teratas. Sekalian: kata "Playly" dibuang dari layar penonton. Rinciannya + dua jebakan verifikasi di seksinya.)
+
+**Rilis ke-2 hari ini:** (✅ **TAYANG `a44ac67`**: poster FILM akhirnya punya **⭐ rating + chip HD**. Rating ternyata sudah ada di data sejak lama tapi tak pernah digambar (21 dari 24 film punya); kualitas memang tak punya sumber sama sekali, jadi atas keputusan owner diturunkan dari **link unduhan** (1080p → HD, 480p → SD) + dropdown koreksi di panel admin. Tayang ±90 detik, smoke test 5/5 = 200. ❌ **RALAT PENTING**: temuan "tombol tergeser di layar HP" yang dicatat sebelumnya **TIDAK PERNAH ADA** — itu cacat alat potret (Edge di mesin ini tak bisa < ±476px, jadi gambar hanya DIPOTONG). Sudah diukur ulang: tombol terpusat sempurna, nol pelebaran halaman. Rinciannya + cara memotret lebar HP yang BENAR ada di seksinya.)
 
 **Rilis ke-1 hari ini:** (✅ **TAYANG `4dde5c0`**: tombol beranda "LIHAT SEMUA FILM UNGGULAN" → **"TEMUKAN TONTONAN FAVORITMU"** — labelnya salah di dua sisi (isinya drama berseri, bukan film; tujuannya katalog lengkap, bukan daftar unggulan). Dual push → Railway build sendiri → tayang ±60 detik, **downtime NOL**. Smoke test 5 alur: 4 langsung 200, `/drama/meg-2-the-trench` 500 SEKALI lalu 200 enam kali — cold start, dicatat bukan dihapus. ❌ **DIRALAT di rilis ke-2**: catatan asli di sini menyebut tombol itu "tergeser ke kanan di layar HP" sebagai gejala nyata. **Itu keliru** — cacat alat potret, bukan cacat situs; sudah diukur ulang dan tombolnya terpusat sempurna. Jangan diburu.)
 
@@ -217,6 +219,83 @@ PC backup menyalakan ulang layanannya sendiri (watchdog) dan membuat tunnel baru
 Artinya perubahan di `start-video-services.ps1` yang meneruskan `VIDEO_SIGNING_SECRET` dari env
 level `Machine` **benar-benar bekerja di jalur autostart** — hal yang tak bisa diuji saat
 dipasang manual. Penegakan bertahan melewati restart PC; tidak perlu dipasang ulang tiap boot.
+
+## 2026-10-31 — ✅ DIRILIS `7977f9c`: genre & negara akhirnya ikut menghitung FILM
+
+**Dua keluhan owner, satu akar.** *"ketika klik genre misal komedi harus muncul hasilnya jadi tidak
+monoton drama saja karena kita ada film"* dan *"negara kamu perbaiki karena ada indonesia juga, asia
+dll"*. Dibaca dari kode, keduanya sebab yang sama: menu & penyaring hanya pernah melihat katalog
+DRAMA, sementara 443 film diabaikan.
+
+### 1. Klik genre tidak pernah menyentuh film
+
+`DramaBrowser` menyaring film HANYA dengan ketikan kotak cari (`filter.q`) — genre/negara/tahun tak
+pernah berlaku. Akibatnya dua hal salah sekaligus: mengklik "Anime" memulangkan **"0 judul"** padahal
+ada film beranimasi, DAN pesan di bawahnya menyebut **"443 video cocok" untuk genre APA PUN** (443 =
+jumlah SELURUH film, bukan yang cocok).
+
+Sekarang film disaring dengan `filterOptions(filter)` yang **sama persis** dengan katalog drama, lewat
+`lib/film-jelajah.ts`. Terukur sesudah perbaikan: genre **Komedi → 1 drama + 64 film**, genre
+**Anime → 15 film**.
+
+🪤 **JEBAKAN yang hampir membuat seluruh perbaikan ini nol guna** — sudah dipasangi tes yang MERAH
+kalau terulang: tombol "Komedi" mengirim `cat=Comedy`, sedangkan film **tidak punya kategori kurasi
+sama sekali** (nol film pernah diberi kategori admin) — nilainya cuma ada di `genre` OMDb. Kalau
+`category` hanya diadu ke `v.kategori`, hasilnya **nol film selamanya** dan halaman tetap kosong
+persis seperti sebelum diperbaiki, **tanpa satu pun error**.
+
+### 2. Menu "Negara" ternyata dibangun dari SATU judul
+
+⭐ **ANGKA YANG MENJELASKAN SEMUANYA** (diukur dari `/api/dramas` produksi): dari **40 drama, hanya 1**
+yang punya kolom `country` — film *Meg 2 The Trench*, isinya `"United States, China, Thailand,
+Germany, Canada, United Kingdom"`. **Itulah persis isi dropdown yang dikeluhkan owner.** Tidak ada
+Indonesia/Korea/Jepang karena 39 drama lain memang tak punya data negara.
+
+Film punya kolom negara yang jauh lebih rapat lewat metadata IMDb, tapi `country` **berhenti di
+halaman tonton** dan tak pernah diteruskan ke kartu. Sekarang diteruskan, dan menunya dihitung dari
+katalog LENGKAP. Hasil terukur: Australia · Canada · China · France · Germany · Iceland · India ·
+**Indonesia** · Ireland · Japan · South Korea · Thailand · United Kingdom · United States.
+
+**Dibatasi 12 teratas**, urut jumlah **JUDUL** (bukan kemunculan — satu film ko-produksi enam negara
+tidak boleh menenggelamkan negara yang benar-benar punya banyak judul). Owner sudah pernah menolak
+menu kepanjangan. Yang terpotong TIDAK hilang dari situs: tetap bisa dicapai lewat `?negara=<nama>`
+dan tetap ikut tersaring — yang dibatasi cuma isi menunya.
+
+### Ikut diperbaiki — kecil tapi nyata
+
+- Judul halaman kini **"Jelajah Drama & Film — 1 drama · 64 film"**, bukan "0 judul" yang terbaca
+  seperti pencarian gagal padahal hasilnya ada tepat di bawahnya.
+- Ruang kosong "Tidak ada drama yang cocok" **mengecil** kalau ada film di bawah; blok setinggi layar
+  membuat penonton berhenti menggulir.
+- Kata **"Playly" dibuang** dari dua pesan yang dilihat penonton. Itu nama penyedia, dan owner sudah
+  memutuskan 2026-09-26 penonton tidak melihatnya di mana pun — pelanggaran ini luput selama ini.
+- `pecahDaftar()` disatukan di `lib/discover.ts` supaya drama & film memakai aturan pemecah nilai OMDb
+  yang sama persis.
+- ⚠️ `getCountryOptions` **tidak lagi dipakai membangun menu** — penggantinya `opsiNegaraGabungan`.
+  Jangan dipakai lagi untuk menu: hasilnya cuma negara katalog drama, yang isinya 1 judul itu.
+
+**RILIS & VERIFIKASI PRODUKSI.** Dual push `43b3355..7977f9c` (`dramaku` dulu, lalu `origin`).
+**TAYANG ±75 detik.** Menu Negara di produksi kini berisi: Australia · Canada · China · France ·
+Germany · India · **Indonesia** · Ireland · Japan · New Zealand · South Korea · Thailand · United
+Kingdom · United States. Potret layar situs sungguhan pada `?cat=Comedy` berbunyi **"Jelajah Drama &
+Film — 1 drama · 86 film — genre Komedi"** dengan film komedi benar-benar tergambar. Smoke test `/` ·
+`/beranda` · `/discover` · `/film` · `/api/health` → **5 dari 5 = 200**.
+
+**Rencana mundur 1 baris:** `git revert 7977f9c` lalu dual push — Railway build ulang ±60–90 detik.
+Nol perubahan database, nol env baru.
+
+### 🪤 DUA JEBAKAN VERIFIKASI hari ini — keduanya terbaca seperti kode yang rusak
+
+1. **Server lama menahan port 3017 → halaman tampil HITAM KOSONG.** `next start` yang kedua gagal
+   dengan `EADDRINUSE` **di log, bukan di layar**, jadi yang melayani tetap proses LAMA — dan karena
+   `.next` sudah dihapus-dibangun-ulang, berkas yang dicarinya tak ada lagi. Nyaris dilaporkan sebagai
+   fitur rusak. **Selalu matikan server lewat PID + buktikan portnya kosong sebelum `next start`.**
+2. **`--virtual-time-budget` terlalu kecil → potret memperlihatkan halaman kosong.** `/discover`
+   dirender di BROWSER (`useSearchParams`), jadi potret dengan budget 25 detik masih menangkap
+   kerangka `<Suspense>` yang kosong. Dengan **60000** halaman terisi penuh. Gejalanya identik dengan
+   "fiturnya tidak jalan" — bedanya cuma waktu.
+
+---
 
 ---
 

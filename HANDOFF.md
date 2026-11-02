@@ -9,7 +9,9 @@
 >
 > **📦 Berkas ini sudah 9.086 baris** (dihitung 2026-10-30 dengan `wc -l`, bukan ditaksir; angka lama "±6.600" dari 2026-10-15 dan "8.700+" sudah basi — tumbuh ±2.500 baris dalam 15 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. **Menunggu keputusan owner.**
 
-**Terakhir diisi:** 2026-11-02, rilis ke-5 hari ini (✅ **TAYANG `8ced118`**: **subtitle dua baris tak lagi menimpa judul** + tombol play dikecilkan 44→40px di HP. Owner mengirim tangkapan DevTools Galaxy Z Fold 6 (412×968) dengan teks saling menimpa. Sebabnya subtitle dibungkus `<span>` polos = elemen **INLINE**, dan pada elemen inline padding atas-bawah TIDAK menambah tinggi baris — kotak latarnya meluber keluar menimpa apa pun di atas & di bawahnya. Satu baris aman, dua baris langsung tabrakan. Perbaikan: `inline-block`. Dual push `32c7b0c..8ced118`, tayang **±80 detik**, **downtime NOL**. Rinciannya di seksinya.)
+**Terakhir diisi:** 2026-11-02, rilis ke-6 hari ini (✅ **TAYANG `784460c`**: **judul pemutar kini MEMUDAR bersama kontrol saat film berjalan**, memberi ruang penuh bagi terjemahan. 🔍 **AKAR MASALAH AKHIRNYA TERVERIFIKASI, dan tiga rilis sebelumnya mengejar yang salah**: teks yang menumpuk judul BUKAN subtitle aplikasi melainkan **hardsub — terbakar di dalam gambar video**, posisinya mustahil digeser. Dibuktikan: pagar CSS subtitle browser sudah benar di bundle produksi, DAN drama itu tak punya satu pun berkas subtitle (ep 1/2/13/14/15 semua 404). Keputusan owner dari tiga opsi. Dual push `329c573..784460c`, tayang **±80 detik**, **downtime NOL**. ❗ Temuan terpisah belum ditangani: katalog menjanjikan subtitle yang berkasnya tidak ada — rinciannya di seksinya.)
+
+**Rilis ke-5 hari ini:** (✅ **TAYANG `8ced118`**: **subtitle dua baris tak lagi menimpa judul** + tombol play dikecilkan 44→40px di HP. Owner mengirim tangkapan DevTools Galaxy Z Fold 6 (412×968) dengan teks saling menimpa. Sebabnya subtitle dibungkus `<span>` polos = elemen **INLINE**, dan pada elemen inline padding atas-bawah TIDAK menambah tinggi baris — kotak latarnya meluber keluar menimpa apa pun di atas & di bawahnya. Satu baris aman, dua baris langsung tabrakan. Perbaikan: `inline-block`. Dual push `32c7b0c..8ced118`, tayang **±80 detik**, **downtime NOL**. Rinciannya di seksinya.)
 
 **Rilis ke-4 hari ini:** (✅ **TAYANG `3d57145`**: **blok JUDUL pemutar turun ~26px di HP**. Putaran kedua dari `7c67a40` di bawah — ❌ **RALAT: rilis itu menggeser blok yang SALAH.** Owner menulis *"teks arti tulisannya"*, dibaca sebagai subtitle terjemahan; tangkapan layar putaran kedua memperjelas kotak merahnya menandai **judul + `Eps n / N`**, dan di gambar itu tak ada subtitle sama sekali. Ruangnya dipanen dengan memindahkan angka durasi dari barisnya sendiri di bawah tombol ke **samping garis geser** — ~18px kembali TANPA penonton kehilangan angkanya. Dual push `c0132cf..3d57145`, tayang **±70 detik**, **downtime NOL**. Rinciannya di seksinya.)
 
@@ -26,6 +28,71 @@
 **Rilis ke-1 hari ini:** (✅ **TAYANG `4dde5c0`**: tombol beranda "LIHAT SEMUA FILM UNGGULAN" → **"TEMUKAN TONTONAN FAVORITMU"** — labelnya salah di dua sisi (isinya drama berseri, bukan film; tujuannya katalog lengkap, bukan daftar unggulan). Dual push → Railway build sendiri → tayang ±60 detik, **downtime NOL**. Smoke test 5 alur: 4 langsung 200, `/drama/meg-2-the-trench` 500 SEKALI lalu 200 enam kali — cold start, dicatat bukan dihapus. ❌ **DIRALAT di rilis ke-2**: catatan asli di sini menyebut tombol itu "tergeser ke kanan di layar HP" sebagai gejala nyata. **Itu keliru** — cacat alat potret, bukan cacat situs; sudah diukur ulang dan tombolnya terpusat sempurna. Jangan diburu.)
 
 **Sebelumnya:** 2026-10-30 (tiga rilis beruntun, semuanya TAYANG: `5088bf2` genre bahasa Indonesia → `27973f0` koreksi owner Kerajaan/CEO/Lainnya → **`55894b8` dua tombol halaman drama yang selama ini TERPOTONG**. Downtime NOL. ⏸️ **DUA bahasan menunggu keputusan owner**, risetnya sudah selesai & nol kode diubah: "klik drama langsung play" dan "sinopsis film masih bahasa Inggris".)
+
+---
+
+## 2026-11-02 — ✅ DIRILIS `784460c`: judul pemutar memudar bersama kontrol (akar masalah hardsub)
+
+### 🔍 AKAR MASALAH YANG AKHIRNYA TERVERIFIKASI — tiga rilis mengejar yang salah
+
+Selama tiga putaran (`7c67a40` → `3d57145` → `8ced118`) keluhan "teks bertumpuk dengan judul"
+dikira soal **subtitle aplikasi**. Bukan. Yang terbukti dengan pembacaan + pengujian langsung:
+
+1. **Pagar CSS subtitle bawaan browser SUDAH benar di produksi.** Diunduh dari bundle CSS nyata:
+   `video::cue{color:#0000;background:0 0}` dan
+   `video::-webkit-media-text-track-container{display:none!important}`. Jadi subtitle browser
+   mustahil terlihat. **Dugaan "subtitle ganda dari browser" DICORET.**
+2. **Drama yang dilaporkan tidak punya satu pun berkas subtitle.** `/api/subtitle` diuji untuk
+   ep 1, 2, 13, 14, 15 → **semua `404 "Subtitle tidak ada"`**. Artinya `<track>` gagal dimuat,
+   `cueText` selalu kosong, dan **subtitle aplikasi tidak pernah tergambar di drama ini.**
+3. ⇒ Teks yang menumpuk itu **TERBAKAR DI DALAM GAMBAR VIDEO (hardsub)**. Bukan milik aplikasi,
+   posisinya **mustahil digeser**, dan ia selalu mendarat persis di area panel judul.
+
+🪤 **PELAJARAN: kalau teks "milik video" tak bisa digeser, yang harus mengalah adalah panel kita.**
+Dan sebelum menggeser apa pun, **buktikan dulu teks itu milik siapa** — satu pengujian
+`/api/subtitle` akan menghemat tiga rilis.
+
+### Yang dikerjakan (keputusan owner, dipilih dari tiga opsi)
+
+Menurunkan judul sudah **mentok** di `3d57145`. Jadi area itu **dikosongkan saat film berjalan**:
+blok judul + `Eps n / N` ikut memudar bersama kontrol (`controlsVisible`).
+
+Judul **TETAP tampil** saat penonton menjeda, membuka menu, atau episode terkunci —
+`controlsVisible` dipaksa `true` di semua keadaan itu (FeedPlayer.tsx:541). Satu sentuhan layar
+memunculkannya lagi. Pola yang sama dipakai YouTube & Netflix.
+
+### 🪤 Jebakan: `pointer-events-none` di induk TIDAK mematikan anak yang menyalakannya sendiri
+
+Tombol `Eps n / N` ber-`pointer-events-auto` **permanen** akan tetap bisa ditekan walau induknya
+`pointer-events-none opacity-0` — jadi ketukan penonton untuk memunculkan kontrol malah **membuka
+daftar episode**, dari tombol yang tidak terlihat. `pointer-events` tombol itu kini ikut
+`controlsVisible`. Dijaga `tests/posisi-teks-pemutar.test.ts`, pagar diuji MERAH lebih dulu.
+
+⚠️ Blok kontrol di bawahnya **masih** memakai pola lama (anak-anak `pointer-events-auto` permanen
+di dalam induk yang memudar). Belum disentuh karena di luar lingkup permintaan owner — **layak
+diperiksa lain waktu**: kemungkinan tombol play/seek juga bisa ditekan saat tak terlihat.
+
+### Bukti
+
+Gerbang §6: `.next` dihapus → build **sukses** → `tsc` **exit 0** → **1.844 tes hijau**.
+
+```
+HTML produksi : px-3 pr-20 transition-opacity duration-300 opacity-100 ✅
+                (opacity-100 = judul TERLIHAT saat halaman dibuka — benar)
+LAMA          : class="px-3 pr-20" ❌ hilang · pointer-events-auto mt-1 flex min-h-11 ❌ hilang
+```
+
+Dual push `329c573..784460c` → tayang **±80 detik** → **0 balasan bukan-200**. Smoke test **8/8**.
+
+### ❗ TEMUAN TERPISAH — belum ditangani, sudah dilaporkan ke owner
+
+**Katalog menjanjikan subtitle yang berkasnya tidak ada.** `master-pedang-yang-diremehkan`
+terdaftar `subtitles: ["id"]` tapi semua episode balas 404. Akibatnya menu **Subtitle** di pemutar
+menawarkan "Indonesia", penonton memilihnya, lalu **tidak terjadi apa-apa — tanpa pesan apa pun**.
+**25 dari 41 judul** mengklaim punya subtitle; belum diperiksa satu per satu. Owner ditawari audit
+seluruh katalog, **belum dijawab**.
+
+**Rollback 1 baris:** `git revert 784460c && git push origin main && git push dramaku main`.
 
 ---
 

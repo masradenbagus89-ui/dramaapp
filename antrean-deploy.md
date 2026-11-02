@@ -4,11 +4,40 @@
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
 **Terakhir dicek:** 2026-11-02 (**komputer OWNER**).
-`origin/main` = `dramaku/main` = **`8ced118`** (selisih 0/0 antar-remote, diverifikasi
+`origin/main` = `dramaku/main` = **`784460c`** (selisih 0/0 antar-remote, diverifikasi
 `git fetch origin` + `git fetch dramaku` SEBELUM tiap push; push keduanya exit 0). **Nol antrean**
 — tak ada yang menunggu rilis, tak ada branch rekan yang tertinggal.
-**Lima rilis hari ini**, semuanya TAYANG, downtime NOL:
-`e90e967` → `91d1f5d` → `7c67a40` → `3d57145` → `8ced118`.
+**Enam rilis hari ini**, semuanya TAYANG, downtime NOL:
+`e90e967` → `91d1f5d` → `7c67a40` → `3d57145` → `8ced118` → `784460c`.
+
+✅ **DIRILIS 2026-11-02 (ke-6) — judul pemutar memudar bersama kontrol, di `784460c`.
+Dual push `329c573..784460c`, tayang ±80 detik, downtime NOL.** Gerbang §6 lengkap: build sukses
+→ `tsc` exit 0 → **1.844 tes hijau** → nol berkas rahasia.
+
+🔍 **AKAR MASALAH AKHIRNYA TERVERIFIKASI — dan TIGA rilis sebelumnya mengejar yang salah.**
+Keluhan "teks bertumpuk dengan judul" dikira soal subtitle aplikasi selama `7c67a40` → `3d57145`
+→ `8ced118`. Yang terbukti: (1) pagar CSS subtitle browser **sudah benar** di bundle produksi
+(`video::cue{color:#0000}` + `text-track-container{display:none!important}`), (2) drama itu
+**tidak punya satu pun berkas subtitle** — `/api/subtitle` ep 1/2/13/14/15 semua **404**. ⇒ teks
+itu **hardsub, terbakar di dalam gambar video**, posisinya mustahil digeser aplikasi.
+
+🪤 **PELAJARAN: buktikan dulu teks itu milik siapa sebelum menggeser apa pun.** Satu pengujian
+`/api/subtitle` akan menghemat tiga rilis. Kalau teks itu milik VIDEO, yang harus mengalah adalah
+panel kita — bukan mencari piksel untuk digeser.
+
+🪤 **PELAJARAN: `pointer-events-none` di induk TIDAK mematikan anak yang menyalakannya sendiri.**
+Tombol ber-`pointer-events-auto` permanen tetap bisa ditekan walau induknya `opacity-0` — ketukan
+untuk memunculkan kontrol malah membuka daftar episode, dari tombol tak terlihat. ⚠️ **Blok
+kontrol di bawah judul MASIH memakai pola lama** (tombol play/seek `pointer-events-auto` permanen
+di dalam induk yang memudar) — di luar lingkup permintaan owner, **layak diperiksa lain waktu**.
+
+❗ **TEMUAN TERPISAH, BELUM DITANGANI — katalog menjanjikan subtitle yang berkasnya tidak ada.**
+`master-pedang-yang-diremehkan` terdaftar `subtitles: ["id"]` tapi semua episode 404. Menu
+Subtitle di pemutar menawarkan "Indonesia", dipilih, lalu **tidak terjadi apa-apa tanpa pesan apa
+pun**. **25 dari 41 judul** mengklaim punya subtitle; belum diperiksa satu per satu. Owner
+ditawari audit seluruh katalog, **belum dijawab**.
+
+**Rollback 1 baris:** `git revert 784460c && git push origin main && git push dramaku main`.
 
 ✅ **DIRILIS 2026-11-02 (ke-5) — subtitle dua baris tak lagi menimpa judul + tombol play
 dikecilkan, di `8ced118`. Dual push `32c7b0c..8ced118`, tayang ±80 detik, downtime NOL.**

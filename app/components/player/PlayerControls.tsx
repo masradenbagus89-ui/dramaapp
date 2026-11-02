@@ -70,8 +70,13 @@ export default function PlayerControls({
 }) {
   const silent = muted || volume === 0;
 
+  /* `pb-6` di HP (bukan `pb-7`): 4px terakhir yang ikut menurunkan seluruh isi
+     panel. JANGAN turun lagi di bawah ini — tombol play sudah berada ~24px dari
+     tepi bawah layar, dan di HP tepi itu milik gesture "kembali" sistem;
+     merapatkannya lagi membuat jari yang menekan play sesekali menarik gesture
+     sistem. */
   return (
-    <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30 flex flex-col bg-gradient-to-t from-black/85 via-black/35 to-transparent pb-7 pt-10">
+    <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30 flex flex-col bg-gradient-to-t from-black/85 via-black/35 to-transparent pb-6 pt-10 sm:pb-7">
       <div className="px-3 pr-20">
         <h1 className="line-clamp-2 text-[13px] font-semibold leading-tight text-white/95 drop-shadow-md">
           {title}
@@ -119,14 +124,29 @@ export default function PlayerControls({
 
       {!lockedActive && (
         <div
-          /* `mt-1` di HP (bukan `mt-3`): 8px yang dilepas di sini adalah ruang
-             yang dipakai subtitle di atasnya untuk turun. Lihat catatan di
-             blok subtitle — inilah satu-satunya ruang yang bisa dipanen tanpa
-             memindahkan subtitle ke dalam blok yang memudar ini. */
-          className={`mt-1 px-3 transition-opacity duration-300 sm:mt-3 ${
+          /* `mt-0` di HP (bukan `mt-3`): 12px yang dilepas di sini ikut
+             menurunkan SEMUA yang ada di atasnya — blok judul dan subtitle.
+             Lihat catatan di blok subtitle: inilah ruang yang bisa dipanen
+             tanpa memindahkan apa pun ke dalam blok yang memudar ini. */
+          className={`mt-0 px-3 transition-opacity duration-300 sm:mt-3 ${
             controlsVisible ? "opacity-100" : "pointer-events-none opacity-0"
           }`}
         >
+        {/* SATU BARIS: garis geser + angka durasi HP di sampingnya.
+
+            Angka durasi dulu punya barisnya sendiri DI BAWAH tombol, dan baris
+            itu memakan ~18px yang mendorong seluruh blok judul ke atas (owner
+            2026-11-02, putaran kedua: *"tulisannya masih agak ke atas"*).
+            Dipindah ke samping garis geser, tingginya menumpang baris yang
+            sudah ada — ruangnya kembali TANPA penonton kehilangan angkanya.
+
+            ⚠️ `seekBarRef` WAJIB tetap menempel pada kotak garis gesernya,
+            BUKAN pada pembungkus baris ini. Posisi lompatan video dihitung dari
+            `getBoundingClientRect()` elemen ber-ref (FeedPlayer.tsx:577): kalau
+            ref naik ke pembungkus, lebarnya ikut menghitung angka durasi, dan
+            setiap ketukan mendarat di detik yang salah — makin ke kanan makin
+            meleset, tanpa error apa pun. */}
+        <div className="mb-2 flex items-center gap-2 sm:mb-3">
         <div
           ref={seekBarRef}
           onPointerDown={onSeekDown}
@@ -136,11 +156,10 @@ export default function PlayerControls({
           role="slider"
           aria-label="Posisi video"
           aria-valuenow={Math.round(curTime)}
-          /* `mb-2` di HP: 4px terakhir yang bisa dipanen untuk menurunkan
-             subtitle. Tidak lebih rapat dari ini — di bawahnya baris tombol,
-             dan jarak < 8px membuat jari yang menggeser seek bar gampang
-             mendarat di tombol play. */
-          className="pointer-events-auto mb-2 flex h-6 cursor-pointer touch-none select-none items-center sm:mb-3"
+          /* `h-6` = area sentuh garis geser. Sudah di bawah ambang target
+             sentuh 44px dan sengaja dibiarkan (garis tipis khas pemutar) —
+             JANGAN dikecilkan lagi demi memanen piksel. */
+          className="pointer-events-auto flex h-6 flex-1 cursor-pointer touch-none select-none items-center"
         >
           <div className="relative h-1.5 w-full rounded-full bg-white/25">
             <div
@@ -152,6 +171,11 @@ export default function PlayerControls({
               style={{ left: dur ? `${(curTime / dur) * 100}%` : "0%" }}
             />
           </div>
+        </div>
+          {/* Hanya di HP — di `sm` ke atas angka ini sudah ada di baris tombol. */}
+          <span className="shrink-0 text-[10px] tabular-nums text-white/60 sm:hidden">
+            {fmtTime(curTime)} / {fmtTime(dur)}
+          </span>
         </div>
 
         <div className="pointer-events-auto flex items-center gap-1.5 sm:gap-3">
@@ -238,9 +262,6 @@ export default function PlayerControls({
 
           <PlayerSettings {...settings} />
         </div>
-        <p className="mt-1 text-[10px] tabular-nums text-white/60 sm:hidden">
-          {fmtTime(curTime)} / {fmtTime(dur)}
-        </p>
         </div>
       )}
     </div>

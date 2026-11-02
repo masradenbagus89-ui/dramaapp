@@ -4,9 +4,26 @@
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
 **Terakhir dicek:** 2026-11-02 (**komputer OWNER**).
-`origin/main` = `dramaku/main` = **`91d1f5d`** (selisih 0/0 antar-remote, diverifikasi
+`origin/main` = `dramaku/main` = **`7c67a40`** (selisih 0/0 antar-remote, diverifikasi
 `git fetch origin` + `git fetch dramaku` SEBELUM tiap push; push keduanya exit 0). **Nol antrean**
 — tak ada yang menunggu rilis, tak ada branch rekan yang tertinggal.
+**Tiga rilis hari ini**, semuanya TAYANG, downtime NOL: `e90e967` → `91d1f5d` → `7c67a40`.
+
+✅ **DIRILIS 2026-11-02 (ke-3) — subtitle pemutar diturunkan di layar HP, di `7c67a40`.
+Dual push `ce0265c..7c67a40`, tayang ±90 detik, downtime NOL (0 balasan bukan-200).**
+Owner dengan tangkapan layar HP: subtitle terbaca menyatu dengan blok judul. Sebabnya tulisan
+`Eps n / N` duduk di TENGAH tombol ber-`min-h-11` (44px, target sentuh — jangan dikecilkan),
+jadi subtitle ber-`mt-2` berhenti hanya ±20px di bawahnya. Jarak dari judul +16px, subtitle
+turun 12px terhadap layar; layar `sm` ke atas NOL perubahan. Gerbang §6 lengkap: build sukses →
+`tsc` exit 0 → **1.839 tes hijau** (+5 baru, pagar diuji MERAH lebih dulu) → nol berkas rahasia.
+
+🪤 **PELAJARAN: subtitle TIDAK BOLEH dipindah ke dalam blok kontrol pemutar.** Di sana ada ±48px
+ruang lagi dan godaannya kuat — tapi blok itu memudar jadi `opacity-0` saat kontrol
+disembunyikan, sehingga subtitle ikut lenyap padahal filmnya masih berjalan, tanpa error apa pun.
+Dijaga `tests/posisi-subtitle-pemutar.test.ts`. Sisa ruang yang MASIH boleh dipanen: ±18px dari
+baris waktu `00:00 / 12:34` di HP — sudah ditawarkan ke owner, belum dijawab.
+
+**Rollback 1 baris:** `git revert 7c67a40 && git push origin main && git push dramaku main`.
 
 ✅ **DIRILIS 2026-11-02 (ke-2) — daftar episode menggulung sendiri ke episode terakhir ditonton,
 di `91d1f5d`. Dual push `c190bdb..91d1f5d`, tayang ±50 detik, downtime NOL (0 balasan bukan-200).**

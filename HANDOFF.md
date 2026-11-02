@@ -9,7 +9,9 @@
 >
 > **📦 Berkas ini sudah 9.086 baris** (dihitung 2026-10-30 dengan `wc -l`, bukan ditaksir; angka lama "±6.600" dari 2026-10-15 dan "8.700+" sudah basi — tumbuh ±2.500 baris dalam 15 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. **Menunggu keputusan owner.**
 
-**Terakhir diisi:** 2026-11-02, rilis ke-2 hari ini (✅ **TAYANG `91d1f5d`**: daftar episode di sidebar **menggulung sendiri ke episode terakhir ditonton**. Lanjutan langsung dari rilis ke-1 di bawah: sesudah daftar pindah ke kolom sempit, serial 45 episode selalu terbuka di episode 1. Sengaja **BUKAN** `scrollIntoView` — itu menggulung halamannya juga, melompatkan penonton melewati hero. Dual push `c190bdb..91d1f5d`, tayang **±50 detik**, **downtime NOL** (0 balasan bukan-200). Dibuktikan sampai ke isi bundle produksi. Rinciannya di seksinya.)
+**Terakhir diisi:** 2026-11-02, rilis ke-3 hari ini (✅ **TAYANG `7c67a40`**: **subtitle di pemutar diturunkan di layar HP**. Owner: *"teks arti tulisannya terlalu ke tengah, buat turun sedikit."* Sebabnya tulisan `Eps n / N` di atasnya duduk di TENGAH tombol setinggi 44px, jadi subtitle ber-`mt-2` berhenti hanya ±20px di bawahnya dan terbaca menyatu dengan blok judul. Jarak dari judul +16px, subtitle turun 12px terhadap layar; layar lebar NOL perubahan. Dual push `ce0265c..7c67a40`, tayang **±90 detik**, **downtime NOL**. ⚠️ Ruang turunnya MENTOK — alasannya di seksinya, jangan diulang dari nol.)
+
+**Rilis ke-2 hari ini:** (✅ **TAYANG `91d1f5d`**: daftar episode di sidebar **menggulung sendiri ke episode terakhir ditonton**. Lanjutan langsung dari rilis ke-1 di bawah: sesudah daftar pindah ke kolom sempit, serial 45 episode selalu terbuka di episode 1. Sengaja **BUKAN** `scrollIntoView` — itu menggulung halamannya juga, melompatkan penonton melewati hero. Dual push `c190bdb..91d1f5d`, tayang **±50 detik**, **downtime NOL** (0 balasan bukan-200). Dibuktikan sampai ke isi bundle produksi. Rinciannya di seksinya.)
 
 **Rilis ke-1 hari ini:** (✅ **TAYANG `e90e967`**: daftar **Episode** dan **Drama Terkait** BERTUKAR TEMPAT di halaman `/drama/[id]`, **khusus serial**. Episode naik ke sidebar bingkai hero; Drama Terkait turun ke kartu putih ditata berpetak. Alasan owner: di HP penonton harus menggulung melewati 20 judul lain + sinopsis sebelum menemukan tombol episode. Halaman FILM nol perubahan. Dual push `fb5aca1..e90e967`, tayang **±130 detik**, **downtime NOL** — `http=200` di SETIAP percobaan selama pergantian versi. Smoke test 6/6 = 200. Rinciannya di seksinya.)
 
@@ -20,6 +22,70 @@
 **Rilis ke-1 hari ini:** (✅ **TAYANG `4dde5c0`**: tombol beranda "LIHAT SEMUA FILM UNGGULAN" → **"TEMUKAN TONTONAN FAVORITMU"** — labelnya salah di dua sisi (isinya drama berseri, bukan film; tujuannya katalog lengkap, bukan daftar unggulan). Dual push → Railway build sendiri → tayang ±60 detik, **downtime NOL**. Smoke test 5 alur: 4 langsung 200, `/drama/meg-2-the-trench` 500 SEKALI lalu 200 enam kali — cold start, dicatat bukan dihapus. ❌ **DIRALAT di rilis ke-2**: catatan asli di sini menyebut tombol itu "tergeser ke kanan di layar HP" sebagai gejala nyata. **Itu keliru** — cacat alat potret, bukan cacat situs; sudah diukur ulang dan tombolnya terpusat sempurna. Jangan diburu.)
 
 **Sebelumnya:** 2026-10-30 (tiga rilis beruntun, semuanya TAYANG: `5088bf2` genre bahasa Indonesia → `27973f0` koreksi owner Kerajaan/CEO/Lainnya → **`55894b8` dua tombol halaman drama yang selama ini TERPOTONG**. Downtime NOL. ⏸️ **DUA bahasan menunggu keputusan owner**, risetnya sudah selesai & nol kode diubah: "klik drama langsung play" dan "sinopsis film masih bahasa Inggris".)
+
+---
+
+## 2026-11-02 — ✅ DIRILIS `7c67a40`: subtitle pemutar diturunkan di layar HP
+
+Owner (dengan tangkapan layar HP): *"teks arti tulisannya terlalu ke tengah, buat agak turun
+sedikit (sesuaikan versi HP)."*
+
+### Kenapa terasa "menyatu di tengah"
+
+Tulisan `Eps n / N` tepat di atas subtitle **bukan teks biasa** — itu tombol ber-`min-h-11`
+(44px, ambang target sentuh), dan teksnya duduk di **tengah** kotak itu. Subtitle ber-`mt-2`
+karena itu berhenti hanya ±20px di bawah tulisan `Eps`, dan mata membacanya sebagai satu blok
+judul, bukan sebagai terjemahan film. Mengecilkan `min-h-11` memang akan memberi ruang lagi —
+**jangan**, itu menukar ruang dengan tombol yang sulit ditekan.
+
+### Yang diubah (semua HP-dulu + pasangan `sm:` yang mengembalikan nilai semula)
+
+| | Dulu | Sekarang |
+|---|---|---|
+| jarak subtitle dari blok judul | `mt-2` (8px) | `mt-6 sm:mt-2` (24px) |
+| jarak blok kontrol dari subtitle | `mt-3` | `mt-1 sm:mt-3` |
+| jarak bawah seek bar | `mb-3` | `mb-2 sm:mb-3` |
+
+Bersihnya: subtitle **turun 12px** terhadap layar, dan **16px lebih jauh** dari `Eps n / N`.
+Layar `sm` ke atas **nol perubahan** — tidak pernah dikeluhkan dan ruangnya berlebih.
+
+### ⚠️ RUANG TURUNNYA MENTOK — jangan diulang dari nol
+
+Panel bawah pemutar adalah satu kolom: `[judul + Eps n/N]` → `[subtitle]` → `[seek bar + tombol
++ baris waktu]`. Subtitle hanya bisa turun sampai menyentuh seek bar.
+
+🪤 **Godaan yang HARUS ditolak: memindahkan subtitle ke dalam blok kontrol** (di antara seek bar
+dan baris tombol) untuk mendapat ±48px. Blok itu memudar jadi **`opacity-0`** saat kontrol
+disembunyikan — subtitle akan **ikut lenyap padahal filmnya masih berjalan**, tanpa satu pun
+error. Dijaga permanen oleh `tests/posisi-subtitle-pemutar.test.ts` (pagar diuji MERAH lebih
+dulu dengan benar-benar memindahkan bloknya).
+
+**Sisa ruang yang MASIH tersedia kalau owner minta lebih turun:** ±18px dari baris waktu
+`00:00 / 12:34` di bawah tombol (`sm:hidden`) — ongkosnya penonton HP kehilangan angka durasi.
+**Sudah ditawarkan ke owner, belum dijawab.**
+
+### Bukti
+
+Gerbang §6: `.next` dihapus → build **sukses** → `tsc` **exit 0** → **1.839 tes hijau** (+5 baru).
+
+Bukti tayang — kelas LAMA memang ada di HTML produksi sebelum push, jadi pergantiannya bisa
+dibaca langsung, bukan cuma lewat sidik jari bundle:
+
+```
+HTML produksi : mt-1 px-3 transition-opacity ✅ · sm:mt-3 ✅ · mb-2 flex h-6 ✅ · sm:mb-3 ✅
+                mt-3 px-3 transition-opacity ❌ hilang · mb-3 flex h-6 ❌ hilang   (benar)
+bundle JS     : "mt-6 flex justify-center px-3 pr-20 sm:mt-2" ADA di 3ij2q-ypv7bs2.js
+```
+
+Dual push `ce0265c..7c67a40` → tayang **±90 detik** → **0 balasan bukan-200**. Smoke test
+**8/8 = 200**.
+
+### ❓ Belum diverifikasi
+
+**Apakah hasilnya terasa pas di mata owner.** Pergeseran belasan piksel di HP tidak bisa
+dibuktikan mesin — yang terbukti hanya bahwa angkanya berubah persis seperti tabel di atas.
+
+**Rollback 1 baris:** `git revert 7c67a40 && git push origin main && git push dramaku main`.
 
 ---
 

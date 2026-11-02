@@ -90,8 +90,27 @@ export default function PlayerControls({
         )}
       </div>
 
+      {/* SUBTITLE (teks terjemahan).
+
+          Jaraknya dari blok judul dilebarkan di HP (owner 2026-11-02: *"posisi
+          tulisannya agak di tengah, buat turun sedikit"*). Teks "Eps 1 / 43" di
+          atasnya duduk di tengah tombol setinggi 44px (`min-h-11`, target
+          sentuh — jangan dikecilkan), jadi dengan `mt-2` subtitle berhenti
+          hanya ±20px di bawahnya dan terbaca menyatu dengan blok judul, bukan
+          sebagai terjemahan film.
+
+          ⚠️ SUBTITLE TIDAK BOLEH DIPINDAH KE DALAM BLOK KONTROL di bawah demi
+          menurunkannya lebih jauh. Blok itu memudar jadi `opacity-0` saat
+          kontrol disembunyikan, dan subtitle akan ikut lenyap padahal filmnya
+          masih berjalan — hilang tanpa satu pun error. Karena itu seberapa
+          rendah subtitle bisa turun dibatasi oleh tinggi blok kontrol
+          (seek bar + baris tombol + baris waktu), dan sisa ruangnya dipanen
+          lewat dua `mt`/`mb` di bawah, bukan dengan memindahkannya.
+
+          Semua penyesuaian berawalan HP-dulu + `sm:` kembali ke nilai semula:
+          layar lebar punya ruang berlebih dan tidak pernah dikeluhkan. */}
       {cueText && (
-        <div className="mt-2 flex justify-center px-3 pr-20">
+        <div className="mt-6 flex justify-center px-3 pr-20 sm:mt-2">
           <span className="whitespace-pre-line rounded bg-black/60 px-2 py-0.5 text-center text-[13px] font-medium leading-snug text-white sm:text-sm">
             {cueText}
           </span>
@@ -100,7 +119,11 @@ export default function PlayerControls({
 
       {!lockedActive && (
         <div
-          className={`mt-3 px-3 transition-opacity duration-300 ${
+          /* `mt-1` di HP (bukan `mt-3`): 8px yang dilepas di sini adalah ruang
+             yang dipakai subtitle di atasnya untuk turun. Lihat catatan di
+             blok subtitle — inilah satu-satunya ruang yang bisa dipanen tanpa
+             memindahkan subtitle ke dalam blok yang memudar ini. */
+          className={`mt-1 px-3 transition-opacity duration-300 sm:mt-3 ${
             controlsVisible ? "opacity-100" : "pointer-events-none opacity-0"
           }`}
         >
@@ -113,7 +136,11 @@ export default function PlayerControls({
           role="slider"
           aria-label="Posisi video"
           aria-valuenow={Math.round(curTime)}
-          className="pointer-events-auto mb-3 flex h-6 cursor-pointer touch-none select-none items-center"
+          /* `mb-2` di HP: 4px terakhir yang bisa dipanen untuk menurunkan
+             subtitle. Tidak lebih rapat dari ini — di bawahnya baris tombol,
+             dan jarak < 8px membuat jari yang menggeser seek bar gampang
+             mendarat di tombol play. */
+          className="pointer-events-auto mb-2 flex h-6 cursor-pointer touch-none select-none items-center sm:mb-3"
         >
           <div className="relative h-1.5 w-full rounded-full bg-white/25">
             <div

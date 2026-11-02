@@ -9,7 +9,9 @@
 >
 > **📦 Berkas ini sudah 9.086 baris** (dihitung 2026-10-30 dengan `wc -l`, bukan ditaksir; angka lama "±6.600" dari 2026-10-15 dan "8.700+" sudah basi — tumbuh ±2.500 baris dalam 15 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. **Menunggu keputusan owner.**
 
-**Terakhir diisi:** 2026-11-02, rilis ke-3 hari ini (✅ **TAYANG `7c67a40`**: **subtitle di pemutar diturunkan di layar HP**. Owner: *"teks arti tulisannya terlalu ke tengah, buat turun sedikit."* Sebabnya tulisan `Eps n / N` di atasnya duduk di TENGAH tombol setinggi 44px, jadi subtitle ber-`mt-2` berhenti hanya ±20px di bawahnya dan terbaca menyatu dengan blok judul. Jarak dari judul +16px, subtitle turun 12px terhadap layar; layar lebar NOL perubahan. Dual push `ce0265c..7c67a40`, tayang **±90 detik**, **downtime NOL**. ⚠️ Ruang turunnya MENTOK — alasannya di seksinya, jangan diulang dari nol.)
+**Terakhir diisi:** 2026-11-02, rilis ke-4 hari ini (✅ **TAYANG `3d57145`**: **blok JUDUL pemutar turun ~26px di HP**. Putaran kedua dari `7c67a40` di bawah — ❌ **RALAT: rilis itu menggeser blok yang SALAH.** Owner menulis *"teks arti tulisannya"*, dibaca sebagai subtitle terjemahan; tangkapan layar putaran kedua memperjelas kotak merahnya menandai **judul + `Eps n / N`**, dan di gambar itu tak ada subtitle sama sekali. Ruangnya dipanen dengan memindahkan angka durasi dari barisnya sendiri di bawah tombol ke **samping garis geser** — ~18px kembali TANPA penonton kehilangan angkanya. Dual push `c0132cf..3d57145`, tayang **±70 detik**, **downtime NOL**. Rinciannya di seksinya.)
+
+**Rilis ke-3 hari ini:** (✅ **TAYANG `7c67a40`**: **subtitle di pemutar diturunkan di layar HP**. Owner: *"teks arti tulisannya terlalu ke tengah, buat turun sedikit."* Sebabnya tulisan `Eps n / N` di atasnya duduk di TENGAH tombol setinggi 44px, jadi subtitle ber-`mt-2` berhenti hanya ±20px di bawahnya dan terbaca menyatu dengan blok judul. Jarak dari judul +16px, subtitle turun 12px terhadap layar; layar lebar NOL perubahan. Dual push `ce0265c..7c67a40`, tayang **±90 detik**, **downtime NOL**. ⚠️ Ruang turunnya MENTOK — alasannya di seksinya, jangan diulang dari nol.)
 
 **Rilis ke-2 hari ini:** (✅ **TAYANG `91d1f5d`**: daftar episode di sidebar **menggulung sendiri ke episode terakhir ditonton**. Lanjutan langsung dari rilis ke-1 di bawah: sesudah daftar pindah ke kolom sempit, serial 45 episode selalu terbuka di episode 1. Sengaja **BUKAN** `scrollIntoView` — itu menggulung halamannya juga, melompatkan penonton melewati hero. Dual push `c190bdb..91d1f5d`, tayang **±50 detik**, **downtime NOL** (0 balasan bukan-200). Dibuktikan sampai ke isi bundle produksi. Rinciannya di seksinya.)
 
@@ -22,6 +24,88 @@
 **Rilis ke-1 hari ini:** (✅ **TAYANG `4dde5c0`**: tombol beranda "LIHAT SEMUA FILM UNGGULAN" → **"TEMUKAN TONTONAN FAVORITMU"** — labelnya salah di dua sisi (isinya drama berseri, bukan film; tujuannya katalog lengkap, bukan daftar unggulan). Dual push → Railway build sendiri → tayang ±60 detik, **downtime NOL**. Smoke test 5 alur: 4 langsung 200, `/drama/meg-2-the-trench` 500 SEKALI lalu 200 enam kali — cold start, dicatat bukan dihapus. ❌ **DIRALAT di rilis ke-2**: catatan asli di sini menyebut tombol itu "tergeser ke kanan di layar HP" sebagai gejala nyata. **Itu keliru** — cacat alat potret, bukan cacat situs; sudah diukur ulang dan tombolnya terpusat sempurna. Jangan diburu.)
 
 **Sebelumnya:** 2026-10-30 (tiga rilis beruntun, semuanya TAYANG: `5088bf2` genre bahasa Indonesia → `27973f0` koreksi owner Kerajaan/CEO/Lainnya → **`55894b8` dua tombol halaman drama yang selama ini TERPOTONG**. Downtime NOL. ⏸️ **DUA bahasan menunggu keputusan owner**, risetnya sudah selesai & nol kode diubah: "klik drama langsung play" dan "sinopsis film masih bahasa Inggris".)
+
+---
+
+## 2026-11-02 — ✅ DIRILIS `3d57145`: blok JUDUL pemutar turun ~26px di HP (putaran kedua)
+
+### ❌ RALAT untuk `7c67a40`: rilis itu menggeser blok yang SALAH
+
+Owner menulis *"perbaiki teks arti tulisannya, terlalu ke tengah, buat turun"* sambil melampirkan
+tangkapan layar berkotak-merah. Kalimatnya dibaca sebagai **subtitle terjemahan** — dan di
+tangkapan pertama kebetulan memang ada subtitle ("bisakah kamu") di dalam kotak merah, jadi
+tafsirnya terasa cocok.
+
+Tangkapan layar putaran kedua yang menyelesaikannya: kotak merah menandai **judul + `Eps 13 / 43`**
+dan **tidak ada subtitle sama sekali** di gambar itu (video sedang jeda). Yang dimaksud owner
+sejak awal adalah **blok judul**.
+
+🪤 **PELAJARAN: kotak merah yang memuat beberapa elemen itu AMBIGU.** Yang memastikan bukan
+kalimatnya, melainkan elemen mana yang ADA DI SEMUA tangkapan layar. Kalau ragu, tanya "yang mana:
+judulnya, nomor episodenya, atau teks terjemahannya?" — satu pertanyaan jauh lebih murah daripada
+satu rilis yang menggeser blok salah.
+
+`7c67a40` **tidak dibatalkan**: menjauhkan subtitle dari blok judul tetap perbaikan yang benar,
+hanya bukan yang diminta.
+
+### Ruang dipanen dari baris durasi — tanpa membuang informasinya
+
+Rencana awal: **buang** baris durasi di HP (sudah ditawarkan ke owner). Yang akhirnya dikerjakan
+lebih baik — angka `0:49 / 2:00` **dipindah ke samping garis geser**, menumpang baris yang sudah
+ada. Penonton tetap melihat angkanya.
+
+| Dari mana | Turun |
+|---|---|
+| baris durasi sendiri di bawah tombol → samping garis geser | ~18px |
+| `mt-1` → `mt-0 sm:mt-3` pada blok kontrol | 4px |
+| `pb-7` → `pb-6 sm:pb-7` pada panel | 4px |
+| **blok judul turun** | **~26px** |
+
+### 🪤 Bahaya yang hampir masuk: `seekBarRef` naik ke pembungkus
+
+Memindahkan durasi ke baris garis geser membuat pembungkus flex BARU. Kalau `seekBarRef` ikut
+naik ke pembungkus itu, `getBoundingClientRect()` (FeedPlayer.tsx:577) akan menghitung lebar
+**termasuk angka durasi** — setiap ketukan mendarat di detik yang salah, makin ke kanan makin
+meleset, **tanpa error apa pun**. Ref sengaja tetap di kotak garis gesernya (`flex h-6 flex-1`);
+dijaga `tests/posisi-teks-pemutar.test.ts`, pagar diuji MERAH lebih dulu dengan benar-benar
+memindahkan refnya.
+
+### ⚠️ SISA RUANG HABIS — yang tersisa semuanya berongkos
+
+Dijaga tes supaya tak diambil diam-diam: `min-h-11` tombol Eps (44px), `size-11` tombol play,
+`h-6` garis geser (sudah di bawah ambang 44px), dan `pb-6` panel (tombol sudah ~24px dari tepi,
+dan tepi itu milik gesture "kembali" sistem di HP). Menurunkan judul lebih jauh **wajib** menukar
+salah satunya — keputusan owner, bukan AI.
+
+### Bukti
+
+Gerbang §6: `.next` dihapus → build **sukses** → `tsc` **exit 0** → **1.841 tes hijau**.
+
+🪤 Build **GAGAL sekali** di percobaan pertama: komentar `{/* … */}` ditaruh tepat sesudah
+`return (` dan sebelum elemen induk → JSX jadi punya DUA anak root (*"Expected ',', got 'ident'"*).
+Komentar sebelum elemen induk harus komentar JS biasa di atas `return`. Diperbaiki, build diulang
+dari nol.
+
+Bukti tayang (kelas lama memang terbaca di HTML produksi sebelum push, jadi pergantiannya
+langsung terlihat):
+
+```
+BARU  ✅ mt-0 px-3 transition-opacity · sm:mt-3 · mb-2 flex items-center gap-2 sm:mb-3
+      ✅ flex h-6 flex-1 · pb-6 pt-10 · sm:pb-7
+LAMA  ✅ mt-1 px-3 transition-opacity · mb-2 flex h-6 · pb-7 pt-10   → semua hilang (benar)
+      ✅ baris durasi terpisah hilang
+DURASI TETAP ADA: tabular-nums text-white/60 sm:hidden (HP, samping garis geser)
+                  tabular-nums text-white/80 sm:inline (desktop, baris tombol)
+```
+
+Dual push `c0132cf..3d57145` → tayang **±70 detik** → **0 balasan bukan-200**. Smoke test **8/8**.
+
+### ❓ Belum diverifikasi
+
+Apakah hasilnya akhirnya terasa pas di mata owner. Pergeseran puluhan piksel di HP tidak bisa
+dibuktikan mesin.
+
+**Rollback 1 baris:** `git revert 3d57145 && git push origin main && git push dramaku main`.
 
 ---
 

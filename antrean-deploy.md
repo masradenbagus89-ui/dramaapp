@@ -4,10 +4,41 @@
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
 **Terakhir dicek:** 2026-11-02 (**komputer OWNER**).
-`origin/main` = `dramaku/main` = **`7c67a40`** (selisih 0/0 antar-remote, diverifikasi
+`origin/main` = `dramaku/main` = **`3d57145`** (selisih 0/0 antar-remote, diverifikasi
 `git fetch origin` + `git fetch dramaku` SEBELUM tiap push; push keduanya exit 0). **Nol antrean**
 — tak ada yang menunggu rilis, tak ada branch rekan yang tertinggal.
-**Tiga rilis hari ini**, semuanya TAYANG, downtime NOL: `e90e967` → `91d1f5d` → `7c67a40`.
+**Empat rilis hari ini**, semuanya TAYANG, downtime NOL:
+`e90e967` → `91d1f5d` → `7c67a40` → `3d57145`.
+
+✅ **DIRILIS 2026-11-02 (ke-4) — blok JUDUL pemutar turun ~26px di HP, di `3d57145`.
+Dual push `c0132cf..3d57145`, tayang ±70 detik, downtime NOL.**
+Putaran kedua. ❌ **RALAT untuk `7c67a40`: rilis itu menggeser blok yang SALAH** — kalimat owner
+*"teks arti tulisannya"* dibaca sebagai subtitle terjemahan, padahal kotak merahnya menandai
+**judul + `Eps n / N`**. Ruangnya dipanen dengan memindahkan angka durasi dari barisnya sendiri
+di bawah tombol ke **samping garis geser** (~18px kembali, penonton TIDAK kehilangan angkanya),
+plus `mt-1`→`mt-0` dan `pb-7`→`pb-6`. Gerbang §6 lengkap: build sukses → `tsc` exit 0 →
+**1.841 tes hijau** → nol berkas rahasia.
+
+🪤 **PELAJARAN 1 — kotak merah yang memuat beberapa elemen itu AMBIGU.** Yang memastikan bukan
+kalimat owner, melainkan elemen mana yang ADA DI SEMUA tangkapan layar. Ragu → tanya "yang mana:
+judulnya, nomor episodenya, atau teks terjemahannya?". Satu pertanyaan jauh lebih murah daripada
+satu rilis yang menggeser blok salah.
+
+🪤 **PELAJARAN 2 — `seekBarRef` tidak boleh naik ke pembungkus.** Menambah pembungkus flex untuk
+menaruh durasi di samping garis geser membuka jebakan: ref di pembungkus membuat
+`getBoundingClientRect()` menghitung lebar termasuk angka durasi, jadi tiap ketukan mendarat di
+detik yang salah — makin ke kanan makin meleset, tanpa error. Dijaga
+`tests/posisi-teks-pemutar.test.ts`.
+
+🪤 **PELAJARAN 3 — komentar `{/* … */}` tepat sesudah `return (`** membuat JSX punya dua anak root
+(*"Expected ',', got 'ident'"*). Build gagal sekali karena ini. Komentar sebelum elemen induk
+harus komentar JS biasa DI ATAS `return`.
+
+⚠️ **SISA RUANG HABIS.** Menurunkan judul lebih jauh wajib menukar salah satu dari: `min-h-11`
+tombol Eps, `size-11` tombol play, `h-6` garis geser, atau `pb-6` panel (tepi bawah = gesture
+sistem). Keempatnya dijaga tes. Keputusan owner, bukan AI.
+
+**Rollback 1 baris:** `git revert 3d57145 && git push origin main && git push dramaku main`.
 
 ✅ **DIRILIS 2026-11-02 (ke-3) — subtitle pemutar diturunkan di layar HP, di `7c67a40`.
 Dual push `ce0265c..7c67a40`, tayang ±90 detik, downtime NOL (0 balasan bukan-200).**

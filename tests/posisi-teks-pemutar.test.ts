@@ -138,6 +138,33 @@ describe("panel bawah pemutar: ruang yang HARAM dipanen", () => {
     expect(KODE).not.toContain("flex h-4 flex-1");
   });
 
+  it("judul ikut memudar bersama kontrol, dan tombolnya ikut dimatikan", () => {
+    // Keputusan owner 2026-11-02 (putaran ketiga): banyak video punya
+    // terjemahan yang TERBAKAR di gambarnya (hardsub) dan mendarat persis di
+    // area panel judul. Posisinya mustahil digeser, dan menurunkan judul sudah
+    // mentok — jadi area itu dikosongkan saat film berjalan.
+    const i = KODE.indexOf('className={`px-3 pr-20 transition-opacity');
+    expect(
+      i,
+      "blok judul tidak lagi memudar bersama kontrol — hardsub akan tertimpa " +
+        "judul lagi, dan tak ada ruang tersisa untuk menurunkannya",
+    ).toBeGreaterThan(-1);
+    expect(KODE.slice(i, i + 200)).toContain("controlsVisible");
+
+    // `pointer-events-none` di induk TIDAK mematikan anak yang menyalakannya
+    // sendiri. Tombol Eps yang tetap `pointer-events-auto` permanen bisa
+    // ditekan walau tak terlihat — ketukan untuk memunculkan kontrol malah
+    // membuka daftar episode.
+    const j = KODE.indexOf("onClick={onOpenEpisodes}");
+    const blokEps = KODE.slice(j, j + 500);
+    expect(
+      blokEps,
+      "tombol Eps masih pointer-events-auto permanen — bisa ditekan saat " +
+        "tak terlihat",
+    ).not.toContain("pointer-events-auto mt-1 flex min-h-11");
+    expect(blokEps).toContain("controlsVisible");
+  });
+
   it("🪤 kotak subtitle WAJIB inline-block, bukan span inline polos", () => {
     // Pada elemen INLINE, padding atas-bawah tidak menambah tinggi baris —
     // kotak latarnya meluber keluar menimpa apa pun di atas & di bawahnya.

@@ -77,7 +77,30 @@ export default function PlayerControls({
      sistem. */
   return (
     <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30 flex flex-col bg-gradient-to-t from-black/85 via-black/35 to-transparent pb-6 pt-10 sm:pb-7">
-      <div className="px-3 pr-20">
+      {/* JUDUL + "Eps n / N" — ikut memudar bersama kontrol.
+          Keputusan owner 2026-11-02 (putaran ketiga), dipilih dari tiga opsi.
+
+          KENAPA: banyak video di katalog ini punya terjemahan yang **terbakar
+          ke dalam gambarnya** (hardsub) — teks yang bukan milik aplikasi dan
+          posisinya mustahil digeser. Ia selalu mendarat persis di area panel
+          ini. Menurunkan judul sudah mentok di rilis-rilis sebelumnya
+          (`3d57145`), jadi satu-satunya cara memberi hardsub ruang yang benar
+          adalah MENGOSONGKAN area itu saat film berjalan.
+
+          Judul TIDAK hilang saat penonton menjeda, membuka menu, atau saat
+          episode terkunci — `controlsVisible` dipaksa true di semua keadaan itu
+          (FeedPlayer.tsx:541). Jadi ia hanya menyingkir ketika film benar-benar
+          berjalan dan layar tidak disentuh; satu sentuhan memunculkannya lagi.
+
+          `opacity-0` saja TIDAK cukup: elemen yang tak terlihat tapi masih bisa
+          ditekan membuat penonton yang mengetuk layar untuk memunculkan kontrol
+          justru membuka daftar episode. Karena itu tombol di dalamnya ikut
+          dimatikan — lihat `pointer-events` pada tombol Eps di bawah. */}
+      <div
+        className={`px-3 pr-20 transition-opacity duration-300 ${
+          controlsVisible ? "opacity-100" : "pointer-events-none opacity-0"
+        }`}
+      >
         <h1 className="line-clamp-2 text-[13px] font-semibold leading-tight text-white/95 drop-shadow-md">
           {title}
         </h1>
@@ -86,7 +109,14 @@ export default function PlayerControls({
         ) : (
           <button
             onClick={onOpenEpisodes}
-            className="pointer-events-auto mt-1 flex min-h-11 items-center gap-1 text-[11px] font-medium text-white/70 active:text-white"
+            /* ⚠️ `pointer-events` WAJIB ikut `controlsVisible`, tidak boleh
+               `pointer-events-auto` permanen. `pointer-events-none` di induk
+               yang memudar TIDAK mematikan anak yang menyalakannya sendiri —
+               tombol ini akan tetap bisa ditekan walau tak terlihat, sehingga
+               ketukan untuk memunculkan kontrol malah membuka daftar episode. */
+            className={`mt-1 flex min-h-11 items-center gap-1 text-[11px] font-medium text-white/70 active:text-white ${
+              controlsVisible ? "pointer-events-auto" : "pointer-events-none"
+            }`}
           >
             <LayoutGrid className="h-3.5 w-3.5" />
             Eps {currentEp} / {episodes}

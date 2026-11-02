@@ -15,28 +15,41 @@ export type BarisFilm = {
 };
 
 /**
- * Daftar film berjudul untuk kolom sempit — dipakai DUA kali di halaman film
- * dengan tampilan berbeda:
+ * Daftar film berjudul — dipakai TIGA kali dengan tampilan berbeda:
  *
  *   • "FILM TERKAIT" di dalam bingkai pemutar — `gelap` + `gulung`
  *     (owner 2026-10-29: *"film yang diputar jadi satu bingkai dengan film
  *     terkait"*, mencontoh situs pembanding).
  *   • "TERPOPULER" di bawah bingkai — terang, mengalir apa adanya.
+ *   • "DRAMA TERKAIT" di dalam kartu putih halaman serial — `petak`
+ *     (owner 2026-11-02, sesudah slot sidebar diserahkan ke daftar episode).
  *
- * SATU komponen untuk keduanya, bukan dua yang mirip: daftar film di repo ini
+ * SATU komponen untuk ketiganya, bukan tiga yang mirip: daftar film di repo ini
  * sudah tiga kali menyimpang saat disalin (riwayatnya di KepalaKatalog.tsx).
- * Yang membedakan cuma dua saklar tampilan di bawah.
+ * Yang membedakan cuma tiga saklar tampilan di bawah.
  */
 export default function PanelFilm({
   judul,
   items,
   gelap = false,
   gulung = false,
+  petak = false,
 }: {
   judul: string;
   items: BarisFilm[];
   /** Untuk dipasang di atas latar gelap (di dalam bingkai pemutar). */
   gelap?: boolean;
+  /**
+   * Barisnya ditata BERPETAK (beberapa kolom), bukan satu kolom memanjang.
+   *
+   * Untuk tempat yang LEBAR saja. Satu baris di sini hanya setinggi ±70px dan
+   * selebar gambar 48px + teks — ditumpuk satu kolom di kartu selebar ~800px,
+   * sisi kanannya kosong melompong dan 12 judul jadi dinding sepanjang 850px
+   * yang menenggelamkan kolom nilai & komentar di bawahnya. Di kolom sempit
+   * (sidebar 300-320px) saklar ini HARUS tetap mati: di sana satu kolom justru
+   * bentuk yang benar.
+   */
+  petak?: boolean;
   /**
    * Daftarnya digulung SENDIRI di dalam kotaknya, mengikuti tinggi bingkai.
    *
@@ -73,7 +86,11 @@ export default function PanelFilm({
           penonton kehilangan konteks begitu menggulir satu baris. */}
       <ul
         className={cn(
-          "min-h-0 space-y-3",
+          "min-h-0",
+          // Petak: `grid` + `gap`, BUKAN `space-y-3` — jarak antar-baris di
+          // grid diurus `gap`, dan `space-y-*` di atasnya justru menambah
+          // margin ganda pada baris kedua ke bawah.
+          petak ? "grid gap-x-5 gap-y-3 sm:grid-cols-2 xl:grid-cols-3" : "space-y-3",
           gelap ? "px-3 py-3" : "mt-3",
           gulung &&
             // `overflow-y-auto` + `flex-1` di layar lebar: tingginya diisi oleh

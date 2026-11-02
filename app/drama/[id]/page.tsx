@@ -11,7 +11,6 @@ import SaveButton from "@/app/components/SaveButton";
 import LikeButton from "@/app/components/LikeButton";
 import Comments from "@/app/components/Comments";
 import WatchCta from "@/app/components/WatchCta";
-import EpisodeList from "@/app/components/EpisodeList";
 import AdBanner from "@/app/components/AdBanner";
 import RatingStars from "@/app/components/RatingStars";
 import ShareButton from "@/app/components/ShareButton";
@@ -22,6 +21,7 @@ import { ChevronLeft, Captions } from "lucide-react";
 import { PAYWALL_ENABLED } from "@/lib/saklar-fitur";
 import KepalaFilm from "@/app/components/beranda/KepalaFilm";
 import PanelFilm from "@/app/components/film/PanelFilm";
+import PanelEpisode from "@/app/components/film/PanelEpisode";
 import PanelPopuler from "@/app/components/film/PanelPopuler";
 import KakiFilm from "@/app/components/film/KakiFilm";
 import { getAllDramasCachedSafe } from "@/lib/dramas";
@@ -52,6 +52,23 @@ export const revalidate = 60;
  * dengan apa pun.
  */
 const TERKAIT_SIDEBAR = 20;
+
+/**
+ * Berapa judul di "Drama Terkait" saat ia TURUN ke dalam kartu putih — yaitu
+ * di halaman SERIAL, sesudah slot sidebar diserahkan ke daftar episode
+ * (owner 2026-11-02).
+ *
+ * Lebih sedikit daripada `TERKAIT_SIDEBAR` dan itu bukan kelalaian: angka 20
+ * dipilih justru supaya daftar sidebar MELAMPAUI tinggi hero sehingga
+ * gulungannya muncul. Di kartu putih tidak ada gulungan sendiri — daftarnya
+ * mengalir ikut halaman, jadi 20 judul menjadi tambahan ratusan piksel yang
+ * mendorong kolom nilai & komentar jauh ke bawah.
+ *
+ * 12 dipilih karena habis dibagi 2 DAN 3: tata petaknya 2 kolom di tablet dan
+ * 3 kolom di layar lebar, jadi baris terakhirnya penuh di kedua ukuran — tidak
+ * ada petak tunggal yang menggantung sendirian.
+ */
+const TERKAIT_BADAN = 12;
 
 // Daftar kosong DISENGAJA: halaman drama tidak lagi dibuat saat build, melainkan
 // saat pengunjung pertama membukanya (lalu disimpan ISR 60 detik oleh
@@ -120,6 +137,29 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
   const film = isMovie(drama);
 
   /**
+   * TUKAR SLOT untuk SERIAL — episode naik ke sidebar bingkai hero, "Drama
+   * Terkait" turun ke kartu putih (owner 2026-11-02: *"tukar tempat drama
+   * terkait menjadi drama episode ... agar ketika di hp penonton tidak scroll
+   * ke bawah bisa langsung ditonton"*).
+   *
+   * KENAPA ini benar-benar menolong di HP. Di bawah `lg` kedua grid halaman
+   * ini runtuh jadi satu kolom, dan isinya bertumpuk mengikuti URUTAN TULISAN
+   * di berkas — bukan posisi kiri/kanannya di desktop. Sebelum ini urutannya:
+   * hero → 20 judul drama terkait → tombol → sinopsis → tabel info → episode.
+   * Penonton HP harus melewati semuanya sebelum menemukan tombol episode.
+   * Sesudah ditukar, episode duduk tepat di bawah hero.
+   *
+   * Syaratnya DUA, dan keduanya wajib:
+   *   • `!film` — film layar lebar cuma punya satu video; halaman film tidak
+   *     berubah sama sekali dan tetap memajang "Film Terkait" di sidebar.
+   *   • `episodes > 0` — serial yang episodenya belum terdaftar akan menukar
+   *     sidebar berisi daftar dengan sidebar KOSONG. `PanelEpisode` memang
+   *     memulangkan null di keadaan itu, tapi mencegahnya di sini lebih jujur:
+   *     terkaitnya tetap di sidebar, tak ada slot yang menganga.
+   */
+  const tukarEpisodeKeSidebar = !film && drama.episodes > 0;
+
+  /**
    * "Film Terkait" — grid di dasar halaman (owner 2026-10-29, mencontoh
    * "RELATED MOVIES" di situs pembanding).
    *
@@ -172,7 +212,7 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
       id: d.id,
       label: [d.genre, d.category, d.country].filter(Boolean).join(", "),
     }),
-    TERKAIT_SIDEBAR,
+    tukarEpisodeKeSidebar ? TERKAIT_BADAN : TERKAIT_SIDEBAR,
   ).map((d) => ({
     id: d.id,
     judul: d.title,
@@ -188,7 +228,41 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
     jejak: `${d.views} ditonton`,
   }));
 
+  /**
+   * Nama `terkaitSidebar` DIPERTAHANKAN walau sejak 2026-11-02 daftar ini
+   * turun ke kartu putih pada halaman serial: ia masih benar untuk halaman
+   * FILM (tetap di sidebar) dan untuk /tonton, dan dipakai sebagai daftar
+   * "sudah tampil" oleh PanelPopuler di kedua keadaan.
+   */
   const terkaitSidebar = semuaTerkait;
+
+  /**
+   * Panel terkait dirakit SEKALI lalu dipasang di SATU dari dua tempat.
+   *
+   * Sengaja satu elemen, bukan dua pemanggilan PanelFilm yang ditulis di
+   * masing-masing cabang (ejaan ber-kurung-sudutnya SENGAJA tidak ditulis di
+   * komentar ini: penjaga di tests/film-terkait.test.ts menghitung kemunculan
+   * literalnya di seluruh berkas, komentar sekalipun). Dua salinan berarti dua
+   * daftar props yang harus terus dijaga
+   * seragam, dan halaman ini sudah pernah menggambar film terkait dua kali
+   * sekaligus (owner 2026-10-29: *"yang bawah kamu hapus"*). Satu elemen
+   * membuat pengulangan itu mustahil, bukan sekadar jarang.
+   *
+   * Saklar tampilannya mengikuti TEMPATNYA, jadi tidak bisa tertukar:
+   * di bingkai gelap → `gelap` + `gulung`; di kartu putih → `petak`.
+   */
+  const panelTerkait = (
+    <PanelFilm
+      /* Judul mengikuti ISI yang benar-benar tergambar, bukan sekadar jenis
+         halaman — lihat `judulTerkait` di atas. "FILM TERKAIT" di atas daftar
+         serial terbaca seperti salah daftar (owner 2026-10-29). */
+      judul={judulTerkait}
+      items={terkaitSidebar}
+      gelap={!tukarEpisodeKeSidebar}
+      gulung={!tukarEpisodeKeSidebar}
+      petak={tukarEpisodeKeSidebar}
+    />
+  );
 
   return (
     /* LATAR TERANG (owner 2026-10-29: "ketika klik film ternyata gelap tidak
@@ -228,16 +302,19 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
                 MURNI oleh hero — bukan ikut memanjang mengikuti daftar. */}
             <div className="relative min-h-0 border-zinc-800 lg:border-l">
               <div className="flex flex-col lg:absolute lg:inset-0">
-                <PanelFilm
-                  /* Judul mengikuti ISI yang benar-benar tergambar, bukan
-                     sekadar jenis halaman — lihat `judulTerkait` di atas.
-                     "FILM TERKAIT" di atas daftar serial terbaca seperti
-                     salah daftar (owner 2026-10-29). */
-                  judul={judulTerkait}
-                  items={terkaitSidebar}
-                  gelap
-                  gulung
-                />
+                {/* SERIAL → daftar episode; FILM → daftar terkait seperti
+                    semula. Lihat `tukarEpisodeKeSidebar` di atas untuk kenapa
+                    pertukaran ini yang menolong penonton HP. */}
+                {tukarEpisodeKeSidebar ? (
+                  <PanelEpisode
+                    dramaId={drama.id}
+                    episodes={drama.episodes}
+                    posterImage={drama.posterImage || drama.heroImage}
+                    title={drama.title}
+                  />
+                ) : (
+                  panelTerkait
+                )}
               </div>
             </div>
           </div>
@@ -408,22 +485,12 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
           </dl>
         )}
 
-        {/* Daftar episode hanya untuk serial — film cuma punya 1 video, jadi
-            daftar berisi satu baris "Episode 1" tak ada gunanya. */}
-        {!film && drama.episodes > 0 && (
-          <>
-            <h2 className="mt-6 text-sm font-semibold uppercase tracking-wider text-zinc-500">
-              Episode
-            </h2>
-            <EpisodeList
-              dramaId={drama.id}
-              episodes={drama.episodes}
-              posterImage={drama.posterImage || drama.heroImage}
-              title={drama.title}
-              terang
-            />
-          </>
-        )}
+        {/* Bekas tempat daftar episode. Sejak owner 2026-11-02 episode naik ke
+            sidebar bingkai hero, dan slot ini yang menerima "Drama Terkait"
+            sebagai gantinya — hanya di halaman SERIAL. Di halaman FILM
+            `tukarEpisodeKeSidebar` bernilai false, daftar terkaitnya tetap di
+            sidebar, dan tempat ini memang kosong (film tak punya episode). */}
+        {tukarEpisodeKeSidebar && <div className="mt-8">{panelTerkait}</div>}
 
         <AdBanner className="mt-6" />
 

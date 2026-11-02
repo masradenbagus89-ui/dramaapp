@@ -105,13 +105,56 @@ describe("panel bawah pemutar: ruang yang HARAM dipanen", () => {
     expect(KODE).toContain("min-h-11");
   });
 
-  it("tombol play tetap 44px dan garis geser tetap setinggi h-6", () => {
-    // Dua-duanya area sentuh. Memanen piksel dari sini menukar tampilan
-    // dengan ketepatan jari — pertukaran yang tidak pernah diminta owner.
-    expect(KODE).toContain("size-11");
+  it("tombol play 40px di HP, 44px di layar lebar — tidak lebih kecil", () => {
+    // Dikecilkan dari 44px atas permintaan owner 2026-11-02 (*"play-nya
+    // kecilkan sedikit, terlalu besar"*). 40px batas bawahnya: ini tombol
+    // yang paling sering ditekan di layar ini, dan di bawah 40px jempol
+    // mulai sering meleset.
+    // Dipotong ke blok tombol PLAY saja — `size-9` juga sah dipakai tombol
+    // prev/next/volume di sekitarnya, jadi memeriksa seluruh berkas akan
+    // menuduh tombol yang salah.
+    const i = KODE.indexOf("onClick={onTogglePlay}");
+    expect(i, "tombol play tidak ketemu").toBeGreaterThan(-1);
+    const blokPlay = KODE.slice(i, i + 400);
+
+    expect(blokPlay, "ukuran HP tombol play hilang").toContain("size-10");
+    expect(blokPlay, "layar lebar tidak lagi kembali ke 44px").toContain(
+      "sm:size-11",
+    );
+    for (const kekecilan of ["size-9 text-white", "size-8 text-white"]) {
+      expect(
+        blokPlay,
+        `tombol play dikecilkan jadi ${kekecilan} — di bawah 40px jempol ` +
+          `mulai sering meleset di tombol yang paling sering ditekan`,
+      ).not.toContain(kekecilan);
+    }
+  });
+
+  it("garis geser tetap setinggi h-6", () => {
+    // Area sentuh. Memanen piksel dari sini menukar tampilan dengan ketepatan
+    // jari — pertukaran yang tidak pernah diminta owner.
     expect(KODE).toContain("flex h-6 flex-1");
     expect(KODE).not.toContain("flex h-5 flex-1");
     expect(KODE).not.toContain("flex h-4 flex-1");
+  });
+
+  it("🪤 kotak subtitle WAJIB inline-block, bukan span inline polos", () => {
+    // Pada elemen INLINE, padding atas-bawah tidak menambah tinggi baris —
+    // kotak latarnya meluber keluar menimpa apa pun di atas & di bawahnya.
+    // Subtitle dua baris karena itu menghasilkan dua kotak latar yang saling
+    // tumpang tindih DAN menimpa judul (owner 2026-11-02, dengan tangkapan
+    // layar Galaxy Z Fold 6: "ada tulisannya bertumpuk").
+    const i = KODE.indexOf("{cueText && (");
+    const blok = KODE.slice(i, i + 500);
+    expect(
+      blok,
+      "kotak subtitle kembali jadi span inline — latarnya akan meluber " +
+        "menimpa judul begitu subtitlenya dua baris",
+    ).toContain("inline-block");
+    expect(
+      blok,
+      "padding vertikal subtitle hilang — kotaknya menjepit hurufnya",
+    ).toContain("py-1");
   });
 
   it("panel tidak dirapatkan lagi ke tepi bawah layar", () => {

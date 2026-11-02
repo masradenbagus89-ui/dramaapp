@@ -116,7 +116,25 @@ export default function PlayerControls({
           layar lebar punya ruang berlebih dan tidak pernah dikeluhkan. */}
       {cueText && (
         <div className="mt-6 flex justify-center px-3 pr-20 sm:mt-2">
-          <span className="whitespace-pre-line rounded bg-black/60 px-2 py-0.5 text-center text-[13px] font-medium leading-snug text-white sm:text-sm">
+          {/* ⚠️ `inline-block` WAJIB — jangan dilepas.
+
+              `<span>` tanpa ini adalah elemen INLINE, dan pada elemen inline
+              padding atas-bawah TIDAK menambah tinggi baris: kotak latarnya
+              meluber keluar menimpa apa pun di atas & di bawahnya. Subtitle
+              dua baris karena itu menghasilkan dua kotak latar yang saling
+              tumpang tindih DAN menimpa judul di atasnya — persis keluhan
+              owner 2026-11-02: *"ada tulisannya bertumpuk, buat rapi dan bisa
+              terbaca."* Dengan `inline-block` padding memakan ruang yang
+              sebenarnya, jadi berapa baris pun subtitle tetap satu kotak rapi.
+
+              `leading-relaxed` (bukan `leading-snug`): jarak antar baris di
+              dalam kotak harus lebih lega daripada tinggi hurufnya, kalau
+              tidak baris kedua terasa menempel ke baris pertama.
+
+              `bg-black/75` (bukan `/60`): subtitle duduk di atas gambar film
+              yang warnanya tak bisa ditebak. Latar yang terlalu tipis membuat
+              huruf putih hilang di adegan terang. */}
+          <span className="inline-block whitespace-pre-line rounded bg-black/75 px-2 py-1 text-center text-[13px] font-medium leading-relaxed text-white sm:text-sm">
             {cueText}
           </span>
         </div>
@@ -198,12 +216,16 @@ export default function PlayerControls({
             size="icon"
             onClick={onTogglePlay}
             aria-label={paused ? "Putar" : "Jeda"}
-            className="size-11 text-white transition-transform hover:bg-white/15 hover:text-white active:scale-90"
+            /* 40px di HP, 44px di layar lebar (owner 2026-11-02: *"play-nya
+               kecilkan sedikit, terlalu besar"*). 40px dipilih sebagai batas
+               bawah yang masih nyaman ditekan jempol — di bawah itu tombol
+               paling sering dipakai di layar ini jadi mudah meleset. */
+            className="size-10 text-white transition-transform hover:bg-white/15 hover:text-white active:scale-90 sm:size-11"
           >
             {paused ? (
-              <Play className="size-7 fill-white" strokeWidth={0} />
+              <Play className="size-6 fill-white sm:size-7" strokeWidth={0} />
             ) : (
-              <Pause className="size-7 fill-white" strokeWidth={0} />
+              <Pause className="size-6 fill-white sm:size-7" strokeWidth={0} />
             )}
           </Button>
           {!isMovie && (

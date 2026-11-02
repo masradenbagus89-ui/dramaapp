@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   episodeDurationSec,
@@ -9,9 +9,22 @@ import {
   type ProgressEntry,
 } from "@/lib/progress";
 import { fmtTime } from "@/lib/format";
+import { posisiGulungKeTujuan } from "@/lib/gulung-daftar";
 import { Badge } from "@/components/ui/badge";
 import { Check, Play } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+/**
+ * Ruang yang tetap diperlihatkan DI ATAS episode yang dituju saat daftar
+ * menggulung sendiri — kira-kira setinggi satu kartu episode.
+ *
+ * Bukan 0 dan itu disengaja: menempelkan episode tujuan persis di puncak kotak
+ * membuatnya terbaca seperti episode PERTAMA yang ada, dan penonton kehilangan
+ * aba-aba bahwa di atasnya masih ada episode lain yang sudah dilewati. Dengan
+ * satu kartu tersisa di atas, posisinya langsung terbaca sebagai "kamu di
+ * tengah-tengah daftar".
+ */
+const JARAK_KONTEKS_PX = 72;
 
 export default function EpisodeList({
   dramaId,
@@ -65,10 +78,72 @@ export default function EpisodeList({
     return () => window.removeEventListener("dramaku:progress-changed", load);
   }, [dramaId]);
 
+  const daftarRef = useRef<HTMLOListElement>(null);
+  const tujuanRef = useRef<HTMLLIElement>(null);
+  const sudahMenggulung = useRef(false);
+
+  /**
+   * Menggulung daftar ke episode yang terakhir ditonton (owner 2026-11-02).
+   *
+   * Masalahnya: sesudah daftar episode pindah ke kolom sempit, serial 45
+   * episode selalu terbuka di episode 1 — penonton yang sudah sampai episode
+   * 30 harus menggulung sendiri dari atas SETIAP kali membuka halaman.
+   *
+   * ⚠️ Yang digeser HANYA `scrollTop` kotak daftarnya, BUKAN
+   * `scrollIntoView()`. Keduanya terlihat setara saat dicoba, tapi
+   * `scrollIntoView` menggulung SEMUA leluhur yang bisa digulung — termasuk
+   * halaman itu sendiri. Akibatnya halaman melompat ke tengah begitu dibuka,
+   * dan penonton kehilangan hero + tombolnya tanpa pernah menyentuh layar.
+   *
+   * Tiga pagar, masing-masing menutup satu kerusakan senyap:
+   *
+   *   1. `sudahMenggulung` — SEKALI saja per kunjungan. Efek ini bergantung
+   *      pada `entry`, dan `entry` disegarkan tiap kali `dramaku:progress-
+   *      changed` menyala (mis. penonton menamatkan episode di tab lain).
+   *      Tanpa pagar ini daftar melompat sendiri tepat saat penonton sedang
+   *      menggulungnya dengan jari.
+   *   2. `requestAnimationFrame` — menunggu satu frame supaya tinggi kotak
+   *      sudah final saat diukur. Mengukur terlalu dini menghasilkan nol dan
+   *      gulungannya gagal diam-diam.
+   *   3. `posisiGulungKeTujuan` memulangkan `null` kalau kotaknya memang tidak
+   *      bisa digulung. Di situlah tata letak HP ditangani — bukan dengan
+   *      percabangan sendiri di sini, supaya aturannya hidup di SATU tempat
+   *      dan bisa diuji (lib/gulung-daftar.ts).
+   *
+   * Penonton baru (`entry` null) tidak punya `tujuanRef`, jadi daftarnya
+   * memang tetap di episode 1 — itu yang benar.
+   */
+  useEffect(() => {
+    if (sudahMenggulung.current) return;
+    const daftar = daftarRef.current;
+    const tujuan = tujuanRef.current;
+    if (!daftar || !tujuan) return;
+
+    sudahMenggulung.current = true;
+    const frame = requestAnimationFrame(() => {
+      // Jarak tujuan dari PUNCAK ISI daftar. Dihitung lewat rect + scrollTop,
+      // bukan `offsetTop`, karena `offsetTop` diukur terhadap leluhur
+      // ber-posisi terdekat — dan di sidebar halaman drama leluhur itu bukan
+      // daftarnya, melainkan pembungkus `lg:absolute` di atasnya.
+      const atasTujuan =
+        tujuan.getBoundingClientRect().top -
+        daftar.getBoundingClientRect().top +
+        daftar.scrollTop;
+      const posisi = posisiGulungKeTujuan({
+        atasTujuan,
+        jarakKonteks: JARAK_KONTEKS_PX,
+        scrollHeight: daftar.scrollHeight,
+        clientHeight: daftar.clientHeight,
+      });
+      if (posisi !== null) daftar.scrollTop = posisi;
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [entry]);
+
   const list = Array.from({ length: episodes }, (_, i) => i + 1);
 
   return (
-    <ol className={cn("space-y-2", className)}>
+    <ol ref={daftarRef} className={cn("space-y-2", className)}>
       {list.map((ep) => {
         const watched = isEpisodeWatched(entry, ep);
         const current = entry?.episode === ep && !watched;
@@ -79,7 +154,9 @@ export default function EpisodeList({
             ? "Sedang ditonton"
             : "Belum";
         return (
-          <li key={ep}>
+          /* Episode yang terakhir ditonton jadi tujuan gulungan. `entry` null
+             (penonton baru) = tak ada yang ditandai, daftarnya tetap di atas. */
+          <li key={ep} ref={ep === entry?.episode ? tujuanRef : null}>
             <Link
               href={`/feed/${dramaId}?ep=${ep}`}
               className={cn(

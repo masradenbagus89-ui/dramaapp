@@ -4,11 +4,31 @@
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
 **Terakhir dicek:** 2026-11-02 (**komputer OWNER**).
-`origin/main` = `dramaku/main` = **`3d57145`** (selisih 0/0 antar-remote, diverifikasi
+`origin/main` = `dramaku/main` = **`8ced118`** (selisih 0/0 antar-remote, diverifikasi
 `git fetch origin` + `git fetch dramaku` SEBELUM tiap push; push keduanya exit 0). **Nol antrean**
 — tak ada yang menunggu rilis, tak ada branch rekan yang tertinggal.
-**Empat rilis hari ini**, semuanya TAYANG, downtime NOL:
-`e90e967` → `91d1f5d` → `7c67a40` → `3d57145`.
+**Lima rilis hari ini**, semuanya TAYANG, downtime NOL:
+`e90e967` → `91d1f5d` → `7c67a40` → `3d57145` → `8ced118`.
+
+✅ **DIRILIS 2026-11-02 (ke-5) — subtitle dua baris tak lagi menimpa judul + tombol play
+dikecilkan, di `8ced118`. Dual push `32c7b0c..8ced118`, tayang ±80 detik, downtime NOL.**
+Gerbang §6 lengkap: build sukses → `tsc` exit 0 → **1.843 tes hijau** → nol berkas rahasia.
+
+🪤 **PELAJARAN: `<span>` + padding vertikal = latar yang meluber menimpa tetangga.** `<span>`
+adalah elemen **INLINE**, dan pada elemen inline padding atas-bawah TIDAK menambah tinggi baris —
+kotak latarnya meluber keluar. Subtitle satu baris aman; **dua baris langsung tabrakan** dengan
+judul di atasnya. Karena hanya muncul pada kalimat tertentu, bug ini tak akan tertangkap dengan
+membuka satu episode sembarangan. Perbaikan: `inline-block`. Dijaga
+`tests/posisi-teks-pemutar.test.ts`.
+
+🪤 **PELAJARAN: pemeriksaan ukuran SATU tombol wajib dipotong ke blok tombol itu.** Tes versi
+pertama mencari `size-9 text-white` di seluruh berkas dan merah palsu — prev/next/volume memang
+sah memakai ukuran itu.
+
+❎ **BUKAN penyebabnya, jangan dikejar ulang:** subtitle bawaan browser sudah dimatikan sejak lama
+di `app/globals.css:285-291` + `FeedPlayer` menyetel track ke `hidden`/`disabled`.
+
+**Rollback 1 baris:** `git revert 8ced118 && git push origin main && git push dramaku main`.
 
 ✅ **DIRILIS 2026-11-02 (ke-4) — blok JUDUL pemutar turun ~26px di HP, di `3d57145`.
 Dual push `c0132cf..3d57145`, tayang ±70 detik, downtime NOL.**

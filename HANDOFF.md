@@ -9,7 +9,9 @@
 >
 > **📦 Berkas ini sudah 9.086 baris** (dihitung 2026-10-30 dengan `wc -l`, bukan ditaksir; angka lama "±6.600" dari 2026-10-15 dan "8.700+" sudah basi — tumbuh ±2.500 baris dalam 15 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. **Menunggu keputusan owner.**
 
-**Terakhir diisi:** 2026-11-02, rilis ke-4 hari ini (✅ **TAYANG `3d57145`**: **blok JUDUL pemutar turun ~26px di HP**. Putaran kedua dari `7c67a40` di bawah — ❌ **RALAT: rilis itu menggeser blok yang SALAH.** Owner menulis *"teks arti tulisannya"*, dibaca sebagai subtitle terjemahan; tangkapan layar putaran kedua memperjelas kotak merahnya menandai **judul + `Eps n / N`**, dan di gambar itu tak ada subtitle sama sekali. Ruangnya dipanen dengan memindahkan angka durasi dari barisnya sendiri di bawah tombol ke **samping garis geser** — ~18px kembali TANPA penonton kehilangan angkanya. Dual push `c0132cf..3d57145`, tayang **±70 detik**, **downtime NOL**. Rinciannya di seksinya.)
+**Terakhir diisi:** 2026-11-02, rilis ke-5 hari ini (✅ **TAYANG `8ced118`**: **subtitle dua baris tak lagi menimpa judul** + tombol play dikecilkan 44→40px di HP. Owner mengirim tangkapan DevTools Galaxy Z Fold 6 (412×968) dengan teks saling menimpa. Sebabnya subtitle dibungkus `<span>` polos = elemen **INLINE**, dan pada elemen inline padding atas-bawah TIDAK menambah tinggi baris — kotak latarnya meluber keluar menimpa apa pun di atas & di bawahnya. Satu baris aman, dua baris langsung tabrakan. Perbaikan: `inline-block`. Dual push `32c7b0c..8ced118`, tayang **±80 detik**, **downtime NOL**. Rinciannya di seksinya.)
+
+**Rilis ke-4 hari ini:** (✅ **TAYANG `3d57145`**: **blok JUDUL pemutar turun ~26px di HP**. Putaran kedua dari `7c67a40` di bawah — ❌ **RALAT: rilis itu menggeser blok yang SALAH.** Owner menulis *"teks arti tulisannya"*, dibaca sebagai subtitle terjemahan; tangkapan layar putaran kedua memperjelas kotak merahnya menandai **judul + `Eps n / N`**, dan di gambar itu tak ada subtitle sama sekali. Ruangnya dipanen dengan memindahkan angka durasi dari barisnya sendiri di bawah tombol ke **samping garis geser** — ~18px kembali TANPA penonton kehilangan angkanya. Dual push `c0132cf..3d57145`, tayang **±70 detik**, **downtime NOL**. Rinciannya di seksinya.)
 
 **Rilis ke-3 hari ini:** (✅ **TAYANG `7c67a40`**: **subtitle di pemutar diturunkan di layar HP**. Owner: *"teks arti tulisannya terlalu ke tengah, buat turun sedikit."* Sebabnya tulisan `Eps n / N` di atasnya duduk di TENGAH tombol setinggi 44px, jadi subtitle ber-`mt-2` berhenti hanya ±20px di bawahnya dan terbaca menyatu dengan blok judul. Jarak dari judul +16px, subtitle turun 12px terhadap layar; layar lebar NOL perubahan. Dual push `ce0265c..7c67a40`, tayang **±90 detik**, **downtime NOL**. ⚠️ Ruang turunnya MENTOK — alasannya di seksinya, jangan diulang dari nol.)
 
@@ -24,6 +26,69 @@
 **Rilis ke-1 hari ini:** (✅ **TAYANG `4dde5c0`**: tombol beranda "LIHAT SEMUA FILM UNGGULAN" → **"TEMUKAN TONTONAN FAVORITMU"** — labelnya salah di dua sisi (isinya drama berseri, bukan film; tujuannya katalog lengkap, bukan daftar unggulan). Dual push → Railway build sendiri → tayang ±60 detik, **downtime NOL**. Smoke test 5 alur: 4 langsung 200, `/drama/meg-2-the-trench` 500 SEKALI lalu 200 enam kali — cold start, dicatat bukan dihapus. ❌ **DIRALAT di rilis ke-2**: catatan asli di sini menyebut tombol itu "tergeser ke kanan di layar HP" sebagai gejala nyata. **Itu keliru** — cacat alat potret, bukan cacat situs; sudah diukur ulang dan tombolnya terpusat sempurna. Jangan diburu.)
 
 **Sebelumnya:** 2026-10-30 (tiga rilis beruntun, semuanya TAYANG: `5088bf2` genre bahasa Indonesia → `27973f0` koreksi owner Kerajaan/CEO/Lainnya → **`55894b8` dua tombol halaman drama yang selama ini TERPOTONG**. Downtime NOL. ⏸️ **DUA bahasan menunggu keputusan owner**, risetnya sudah selesai & nol kode diubah: "klik drama langsung play" dan "sinopsis film masih bahasa Inggris".)
+
+---
+
+## 2026-11-02 — ✅ DIRILIS `8ced118`: subtitle dua baris tak lagi menimpa judul + play dikecilkan
+
+Owner mengirim tangkapan **DevTools, Galaxy Z Fold 6 (412×968)**: teks subtitle dan judul saling
+menimpa sampai tak terbaca. *"Ada tulisannya bertumpuk, jadi kamu buat rapi dan bisa terbaca.
+Untuk play-nya kamu kecilkan sedikit, terlalu besar."*
+
+### 🪤 PELAJARAN BESAR: `<span>` + padding vertikal = latar yang meluber menimpa tetangga
+
+Subtitle dibungkus `<span>` polos. **`<span>` adalah elemen INLINE**, dan pada elemen inline
+**padding atas-bawah TIDAK menambah tinggi baris** — kotak latarnya meluber keluar, menimpa apa
+pun di atas & di bawahnya.
+
+Kenapa baru ketahuan sekarang: **selama subtitlenya SATU baris tidak ada gejala apa pun.** Begitu
+sebuah cue dua baris, hasilnya dua kotak latar yang saling tumpang tindih DAN kotak paling atas
+meluber menimpa judul. Jadi bug ini hanya muncul pada kalimat tertentu — tak akan tertangkap
+dengan membuka satu episode sembarangan.
+
+Perbaikannya `inline-block`: padding memakan ruang yang sebenarnya, jadi berapa pun barisnya
+subtitle tetap satu kotak rapi. Dijaga `tests/posisi-teks-pemutar.test.ts` (pagar diuji MERAH
+lebih dulu dengan melepas `inline-block`).
+
+Sekalian keterbacaan: `leading-snug` → `leading-relaxed` (baris kedua tak menempel baris pertama)
+dan `bg-black/60` → `bg-black/75` (huruf putih sempat hilang di adegan terang).
+
+### Yang BUKAN penyebabnya — jangan dikejar ulang
+
+Subtitle bawaan browser **sudah dimatikan sejak lama** di `app/globals.css:285-291`
+(`video::cue { color: transparent }` + `video::-webkit-media-text-track-container { display:
+none !important }`), dan `FeedPlayer` menyetel track ke `hidden`/`disabled`. Dugaan "subtitle
+ganda dari browser" sudah dicoret lewat pembacaan kode, bukan tebakan.
+
+### Tombol play 44px → 40px di HP
+
+`sm` ke atas tetap 44px. **40px batas bawahnya** — ini tombol yang paling sering ditekan di layar
+itu, di bawah 40px jempol mulai meleset. Dijaga tes (`size-9`/`size-8` ditolak **di blok tombol
+play saja**; `size-9` tetap sah untuk prev/next/volume di sekitarnya).
+
+🪤 Tes versi pertama memeriksa `size-9 text-white` di SELURUH berkas dan langsung merah palsu —
+tombol prev/next/volume memang memakai ukuran itu. Pemeriksaan ukuran satu tombol WAJIB dipotong
+ke blok tombol itu dulu.
+
+### Bukti
+
+Gerbang §6: `.next` dihapus → build **sukses** → `tsc` **exit 0** → **1.843 tes hijau**.
+
+```
+HTML produksi : size-10 text-white transition-transform ✅ · sm:size-11 ✅
+                size-6 fill-white sm:size-7 ✅ · size-11 text-white… ❌ hilang (benar)
+bundle JS     : "inline-block whitespace-pre-line rounded bg-black/75" ADA di 1cmo3_3ivbaib.js
+```
+
+Dual push `32c7b0c..8ced118` → tayang **±80 detik** → **0 balasan bukan-200**. Smoke test **8/8**.
+
+### ❓ Belum diverifikasi
+
+Tampilan akhirnya di layar HP sungguhan. Penyebab yang diperbaiki **pasti salah** (fakta CSS yang
+bisa ditunjuk di kode), dan cocok dengan gejala di tangkapan layar owner — tapi mesin di sini tak
+punya browser otomatis, jadi konfirmasi akhir ada di mata owner.
+
+**Rollback 1 baris:** `git revert 8ced118 && git push origin main && git push dramaku main`.
 
 ---
 

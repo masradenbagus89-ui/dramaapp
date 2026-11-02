@@ -3,10 +3,32 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-10-30 (**komputer OWNER**).
-`origin/main` = `dramaku/main` = **`55894b8`** (selisih 0/0 antar-remote, diverifikasi
-`git fetch origin` + `git fetch dramaku` SEBELUM push, dan push keduanya exit 0). **Nol antrean**
-— tak ada yang menunggu rilis.
+**Terakhir dicek:** 2026-11-02 (**komputer OWNER**).
+`origin/main` = `dramaku/main` = **`e90e967`** (selisih 0/0 antar-remote, diverifikasi
+`git fetch origin` + `git fetch dramaku` SEBELUM push — ketiganya ada di `fb5aca1` yang sama,
+jadi nol risiko non-fast-forward; push keduanya exit 0). **Nol antrean** — tak ada yang menunggu
+rilis, tak ada branch rekan yang tertinggal.
+
+✅ **DIRILIS 2026-11-02 — Episode ↔ Drama Terkait bertukar tempat di halaman drama, di
+`e90e967`. Dual push `fb5aca1..e90e967`, tayang ±130 detik, downtime NOL.**
+Permintaan OWNER: di HP penonton harus menggulung melewati 20 judul drama terkait + sinopsis +
+tabel info sebelum menemukan tombol episode. Sebabnya bukan tata letak desktop, melainkan fakta
+bahwa di bawah `lg` kedua grid halaman runtuh jadi satu kolom dan isinya bertumpuk mengikuti
+**urutan tulisan di berkas sumber** — "siapa duluan di kode" = "siapa duluan dilihat penonton HP".
+Khusus SERIAL; halaman FILM nol perubahan (dipagari `!film`).
+
+Gerbang §6 lengkap: `.next` dihapus → build **sukses** → `tsc` **exit 0** → **1.825 tes hijau**
+(+11 baru, termasuk penjaga URUTAN: PanelEpisode wajib ditulis sebelum Sinopsis) → nol berkas
+rahasia. Bukti tayang: urutan id panel di HTML produksi · 6 halaman **200** · `200` di SETIAP
+percobaan selama pergantian versi.
+
+🪤 **PELAJARAN: komentar kode ikut dihitung penjaga tes.** `tests/film-terkait.test.ts` mencari
+literal `<PanelFilm` di berkas sumber **mentah** — komentar yang menjelaskan "jangan tulis dua
+PanelFilm" justru dihitung sebagai PanelFilm kedua dan menjatuhkan tes. Berkas tes itu sendiri
+sudah mencatat jebakan serupa ("tiga kali kena di sesi yang sama"). Perbaikannya **ubah kata-kata
+komentarnya**, jangan longgarkan tesnya.
+
+**Rollback 1 baris:** `git revert e90e967 && git push origin main && git push dramaku main`.
 
 ✅ **DIRILIS 2026-10-30 (ke-3) — dua tombol halaman drama yang terpotong tanpa gejala, di
 `55894b8`. Dual push `60fb7a7..55894b8`, tayang ~90 detik, downtime NOL.**

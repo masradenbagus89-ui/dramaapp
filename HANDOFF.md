@@ -9,13 +9,108 @@
 >
 > **📦 Berkas ini sudah 9.086 baris** (dihitung 2026-10-30 dengan `wc -l`, bukan ditaksir; angka lama "±6.600" dari 2026-10-15 dan "8.700+" sudah basi — tumbuh ±2.500 baris dalam 15 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. **Menunggu keputusan owner.**
 
-**Terakhir diisi:** 2026-10-31, rilis ke-3 hari ini (✅ **TAYANG `7977f9c`**: **genre & negara akhirnya ikut menghitung FILM**. Klik "Komedi" dulu memulangkan "0 judul"; sekarang **1 drama + 64 film**. Menu Negara ternyata dibangun dari **SATU judul** — dari 40 drama cuma 1 punya kolom negara, yaitu film Meg 2 yang ko-produksi 6 negara, dan itulah seluruh isi dropdown yang dikeluhkan owner. Sekarang dihitung dari katalog lengkap → **Indonesia, Jepang, Korea, India, Thailand** ikut muncul, dibatasi 12 teratas. Sekalian: kata "Playly" dibuang dari layar penonton. Rinciannya + dua jebakan verifikasi di seksinya.)
+**Terakhir diisi:** 2026-11-02 (✅ **TAYANG `e90e967`**: daftar **Episode** dan **Drama Terkait** BERTUKAR TEMPAT di halaman `/drama/[id]`, **khusus serial**. Episode naik ke sidebar bingkai hero; Drama Terkait turun ke kartu putih ditata berpetak. Alasan owner: di HP penonton harus menggulung melewati 20 judul lain + sinopsis sebelum menemukan tombol episode. Halaman FILM nol perubahan. Dual push `fb5aca1..e90e967`, tayang **±130 detik**, **downtime NOL** — `http=200` di SETIAP percobaan selama pergantian versi. Smoke test 6/6 = 200. Rinciannya di seksinya.)
+
+**Rilis terakhir sebelum itu:** 2026-10-31, rilis ke-3 hari itu (✅ **TAYANG `7977f9c`**: **genre & negara akhirnya ikut menghitung FILM**. Klik "Komedi" dulu memulangkan "0 judul"; sekarang **1 drama + 64 film**. Menu Negara ternyata dibangun dari **SATU judul** — dari 40 drama cuma 1 punya kolom negara, yaitu film Meg 2 yang ko-produksi 6 negara, dan itulah seluruh isi dropdown yang dikeluhkan owner. Sekarang dihitung dari katalog lengkap → **Indonesia, Jepang, Korea, India, Thailand** ikut muncul, dibatasi 12 teratas. Sekalian: kata "Playly" dibuang dari layar penonton. Rinciannya + dua jebakan verifikasi di seksinya.)
 
 **Rilis ke-2 hari ini:** (✅ **TAYANG `a44ac67`**: poster FILM akhirnya punya **⭐ rating + chip HD**. Rating ternyata sudah ada di data sejak lama tapi tak pernah digambar (21 dari 24 film punya); kualitas memang tak punya sumber sama sekali, jadi atas keputusan owner diturunkan dari **link unduhan** (1080p → HD, 480p → SD) + dropdown koreksi di panel admin. Tayang ±90 detik, smoke test 5/5 = 200. ❌ **RALAT PENTING**: temuan "tombol tergeser di layar HP" yang dicatat sebelumnya **TIDAK PERNAH ADA** — itu cacat alat potret (Edge di mesin ini tak bisa < ±476px, jadi gambar hanya DIPOTONG). Sudah diukur ulang: tombol terpusat sempurna, nol pelebaran halaman. Rinciannya + cara memotret lebar HP yang BENAR ada di seksinya.)
 
 **Rilis ke-1 hari ini:** (✅ **TAYANG `4dde5c0`**: tombol beranda "LIHAT SEMUA FILM UNGGULAN" → **"TEMUKAN TONTONAN FAVORITMU"** — labelnya salah di dua sisi (isinya drama berseri, bukan film; tujuannya katalog lengkap, bukan daftar unggulan). Dual push → Railway build sendiri → tayang ±60 detik, **downtime NOL**. Smoke test 5 alur: 4 langsung 200, `/drama/meg-2-the-trench` 500 SEKALI lalu 200 enam kali — cold start, dicatat bukan dihapus. ❌ **DIRALAT di rilis ke-2**: catatan asli di sini menyebut tombol itu "tergeser ke kanan di layar HP" sebagai gejala nyata. **Itu keliru** — cacat alat potret, bukan cacat situs; sudah diukur ulang dan tombolnya terpusat sempurna. Jangan diburu.)
 
 **Sebelumnya:** 2026-10-30 (tiga rilis beruntun, semuanya TAYANG: `5088bf2` genre bahasa Indonesia → `27973f0` koreksi owner Kerajaan/CEO/Lainnya → **`55894b8` dua tombol halaman drama yang selama ini TERPOTONG**. Downtime NOL. ⏸️ **DUA bahasan menunggu keputusan owner**, risetnya sudah selesai & nol kode diubah: "klik drama langsung play" dan "sinopsis film masih bahasa Inggris".)
+
+---
+
+## 2026-11-02 — ✅ DIRILIS `e90e967`: Episode ↔ Drama Terkait BERTUKAR TEMPAT (halaman drama, khusus serial)
+
+**Permintaan owner (verbatim):** *"kamu tukar tempat drama terkait menjadi drama episode, drama episode menjadi drama terkait, ini khusus drama yah agar ketika di hp penonton tidak sekrol kebawah bisa langsung di tonton."*
+
+### Fakta yang membuat ini benar-benar menolong (bukan sekadar geser kotak)
+
+Di bawah `lg`, KEDUA grid halaman `/drama/[id]` runtuh jadi satu kolom dan isinya bertumpuk
+mengikuti **urutan tulisan di berkas sumber** — bukan posisi kiri/kanannya di desktop. Jadi
+"siapa duluan di kode" = "siapa duluan dilihat penonton HP".
+
+| | Urutan yang dilihat penonton HP |
+|---|---|
+| Sebelum | hero → **20 judul Drama Terkait** → tombol → sinopsis → tabel info → **Episode** |
+| Sesudah | hero → **Episode** → tombol → sinopsis → tabel info → **Drama Terkait** |
+
+### Yang diubah
+
+- **BARU** `app/components/film/PanelEpisode.tsx` — kerangka panel sidebar (judul tetap + daftar
+  yang digulung sendiri di `lg`). Sengaja meniru bentuk `PanelFilm` karena menempati slot yang
+  sama persis; beda gaya akan terbaca seperti halaman belum selesai dirapikan.
+- `app/components/EpisodeList.tsx` — prop `ringkas` + `className`. **Keduanya default mati**,
+  jadi pemakai lain tidak berubah. `ringkas` bukan selera: di kolom 320px ruang bersih satu baris
+  tinggal ~276px, dan bentuk lebar (gambar 96px + badge ~86px + jarak 24px) menyisakan ~70px untuk
+  judul — kurang dari lebar tulisan "Episode 43", jadi judulnya membungkus dua baris di SETIAP
+  episode dua digit. Ringkas = gambar 80px + badge dibuang (statusnya turun ke baris kecil).
+- `app/components/film/PanelFilm.tsx` — prop `petak` (default mati). Daftar terkait kini mendarat
+  di kartu putih selebar ~800px; satu kolom di sana meninggalkan sisi kanan melompong.
+- `app/drama/[id]/page.tsx` — saklar `tukarEpisodeKeSidebar = !film && drama.episodes > 0`.
+  Panel terkait dirakit SEKALI ke variabel `panelTerkait` lalu dipasang di salah satu dari dua
+  tempat; saklar tampilannya mengikuti tempatnya sehingga tidak bisa tertukar.
+- `TERKAIT_BADAN = 12` (sidebar tetap 20). Di sidebar daftarnya punya gulungan sendiri, di kartu
+  putih tidak — 20 judul di sana mendorong kolom nilai & komentar jauh ke bawah. 12 habis dibagi
+  2 dan 3, jadi baris terakhir penuh di tablet maupun layar lebar.
+- **BARU** `tests/episode-naik-ke-sidebar.test.ts` — 11 penjaga, termasuk pemeriksa URUTAN
+  (PanelEpisode wajib ditulis sebelum Sinopsis, panelTerkait sesudahnya).
+
+### Halaman FILM TIDAK berubah sama sekali
+
+Syaratnya `!film`. Dibuktikan dari HTML server lokal: halaman `meg-2-the-trench` tetap memajang
+panel terkaitnya di posisi sidebar (sebelum Sinopsis), persis seperti sebelum perubahan.
+
+### Bukti
+
+```
+npm run build      → sukses, /drama/[id] tetap SSG
+npx tsc --noEmit   → exit 0   (dijalankan SESUDAH build, lihat AGENTS.local.md §6)
+npm test           → 126 berkas / 1825 tes, semua hijau
+```
+
+Render sungguhan dari `next start` lokal, urutan id panel di dalam HTML:
+
+```
+SERIAL (45 eps) : panel-episode(21157) → Sinopsis(76941) → panel-drama-terkait(77240) → panel-terpopuler(110006)
+FILM   (1 eps)  : panel-tontonan-lain(26342) → Sinopsis(73615) → panel-terpopuler(84013)
+```
+
+45 tautan episode tergambar + 1 dari tombol "Mulai Nonton" = 46. Judul **"Tontonan Lain"** di
+halaman film bukan efek perubahan ini: katalog cuma punya **1 film dari 41 judul**, jadi
+jatuh-kembali `cukupSejenis` yang sudah ada sejak 2026-10-29 yang bekerja.
+
+### Bukti TAYANG (produksi Railway, bukan lokal)
+
+Dual push `fb5aca1..e90e967` → `dramaku` dulu (cermin, tak merilis apa pun) → baru `origin`
+(TOMBOL RILIS). Keduanya exit 0. Railway build sendiri, perubahan terdeteksi di situs asli
+setelah **±130 detik**.
+
+**Downtime NOL, dan ini terukur bukan ditaksir:** selama 14 kali pengecekan berjarak 10 detik
+yang menjembatani pergantian versi, `/drama/master-pedang-yang-diremehkan` menjawab **`200` di
+SETIAP percobaan** — yang berubah hanya isinya, bukan ketersediaannya.
+
+Urutan id panel di HTML produksi:
+
+```
+SERIAL : panel-episode[SEBELUM sinopsis] → panel-drama-terkait[SESUDAH] → panel-terpopuler[SESUDAH]
+FILM   : panel-tontonan-lain[SEBELUM sinopsis] → panel-terpopuler[SESUDAH]   ← tidak berubah
+```
+
+Smoke test 6/6 = `200`: `/` · `/beranda` · `/katalog` · `/film` ·
+`/drama/master-pedang-yang-diremehkan` · `/api/dramas`.
+
+**Rollback 1 baris** kalau ternyata owner tak suka tata letaknya:
+`git revert e90e967 && git push origin main && git push dramaku main`.
+
+### 🪤 Jebakan yang memakan waktu di sesi ini
+
+Komentar kode yang menyebut ejaan `<PanelFilm>` **ikut dihitung** oleh penjaga
+`tests/film-terkait.test.ts` ("PanelFilm digambar lebih dari sekali") — tesnya membaca berkas
+sumber mentah tanpa membuang komentar. Berkas tes itu sendiri sudah mencatat jebakan serupa
+("sudah tiga kali kena di sesi yang sama"). Perbaikannya: ubah kata-kata komentar, **jangan**
+longgarkan tesnya.
 
 ---
 

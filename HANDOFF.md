@@ -9,7 +9,9 @@
 >
 > **📦 Berkas ini sudah 9.086 baris** (dihitung 2026-10-30 dengan `wc -l`, bukan ditaksir; angka lama "±6.600" dari 2026-10-15 dan "8.700+" sudah basi — tumbuh ±2.500 baris dalam 15 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. **Menunggu keputusan owner.**
 
-**Terakhir diisi:** 2026-11-02 (✅ **TAYANG `e90e967`**: daftar **Episode** dan **Drama Terkait** BERTUKAR TEMPAT di halaman `/drama/[id]`, **khusus serial**. Episode naik ke sidebar bingkai hero; Drama Terkait turun ke kartu putih ditata berpetak. Alasan owner: di HP penonton harus menggulung melewati 20 judul lain + sinopsis sebelum menemukan tombol episode. Halaman FILM nol perubahan. Dual push `fb5aca1..e90e967`, tayang **±130 detik**, **downtime NOL** — `http=200` di SETIAP percobaan selama pergantian versi. Smoke test 6/6 = 200. Rinciannya di seksinya.)
+**Terakhir diisi:** 2026-11-02, rilis ke-2 hari ini (✅ **TAYANG `91d1f5d`**: daftar episode di sidebar **menggulung sendiri ke episode terakhir ditonton**. Lanjutan langsung dari rilis ke-1 di bawah: sesudah daftar pindah ke kolom sempit, serial 45 episode selalu terbuka di episode 1. Sengaja **BUKAN** `scrollIntoView` — itu menggulung halamannya juga, melompatkan penonton melewati hero. Dual push `c190bdb..91d1f5d`, tayang **±50 detik**, **downtime NOL** (0 balasan bukan-200). Dibuktikan sampai ke isi bundle produksi. Rinciannya di seksinya.)
+
+**Rilis ke-1 hari ini:** (✅ **TAYANG `e90e967`**: daftar **Episode** dan **Drama Terkait** BERTUKAR TEMPAT di halaman `/drama/[id]`, **khusus serial**. Episode naik ke sidebar bingkai hero; Drama Terkait turun ke kartu putih ditata berpetak. Alasan owner: di HP penonton harus menggulung melewati 20 judul lain + sinopsis sebelum menemukan tombol episode. Halaman FILM nol perubahan. Dual push `fb5aca1..e90e967`, tayang **±130 detik**, **downtime NOL** — `http=200` di SETIAP percobaan selama pergantian versi. Smoke test 6/6 = 200. Rinciannya di seksinya.)
 
 **Rilis terakhir sebelum itu:** 2026-10-31, rilis ke-3 hari itu (✅ **TAYANG `7977f9c`**: **genre & negara akhirnya ikut menghitung FILM**. Klik "Komedi" dulu memulangkan "0 judul"; sekarang **1 drama + 64 film**. Menu Negara ternyata dibangun dari **SATU judul** — dari 40 drama cuma 1 punya kolom negara, yaitu film Meg 2 yang ko-produksi 6 negara, dan itulah seluruh isi dropdown yang dikeluhkan owner. Sekarang dihitung dari katalog lengkap → **Indonesia, Jepang, Korea, India, Thailand** ikut muncul, dibatasi 12 teratas. Sekalian: kata "Playly" dibuang dari layar penonton. Rinciannya + dua jebakan verifikasi di seksinya.)
 
@@ -18,6 +20,76 @@
 **Rilis ke-1 hari ini:** (✅ **TAYANG `4dde5c0`**: tombol beranda "LIHAT SEMUA FILM UNGGULAN" → **"TEMUKAN TONTONAN FAVORITMU"** — labelnya salah di dua sisi (isinya drama berseri, bukan film; tujuannya katalog lengkap, bukan daftar unggulan). Dual push → Railway build sendiri → tayang ±60 detik, **downtime NOL**. Smoke test 5 alur: 4 langsung 200, `/drama/meg-2-the-trench` 500 SEKALI lalu 200 enam kali — cold start, dicatat bukan dihapus. ❌ **DIRALAT di rilis ke-2**: catatan asli di sini menyebut tombol itu "tergeser ke kanan di layar HP" sebagai gejala nyata. **Itu keliru** — cacat alat potret, bukan cacat situs; sudah diukur ulang dan tombolnya terpusat sempurna. Jangan diburu.)
 
 **Sebelumnya:** 2026-10-30 (tiga rilis beruntun, semuanya TAYANG: `5088bf2` genre bahasa Indonesia → `27973f0` koreksi owner Kerajaan/CEO/Lainnya → **`55894b8` dua tombol halaman drama yang selama ini TERPOTONG**. Downtime NOL. ⏸️ **DUA bahasan menunggu keputusan owner**, risetnya sudah selesai & nol kode diubah: "klik drama langsung play" dan "sinopsis film masih bahasa Inggris".)
+
+---
+
+## 2026-11-02 — ✅ DIRILIS `91d1f5d`: daftar episode menggulung sendiri ke episode terakhir ditonton
+
+Lanjutan langsung dari `e90e967` di seksi berikutnya. Begitu daftar episode pindah ke kolom
+sempit, serial 45 episode **selalu** terbuka di episode 1 — penonton yang sudah sampai episode 30
+harus menggulung dari atas tiap kali membuka halaman.
+
+### 🪤 Keputusan yang hampir salah: BUKAN `scrollIntoView`
+
+Cara paling umum untuk ini satu baris: `target.scrollIntoView()`. **Jangan.** Perintah itu
+menggulung **semua leluhur yang bisa digulung — termasuk halaman itu sendiri.** Penonton membuka
+halaman drama, lalu halamannya melompat ke tengah tanpa ia menyentuh apa pun; hero dan baris
+tombol hilang dari pandangan. Tidak ada error, tidak ada peringatan.
+
+Yang benar: geser `scrollTop` kotak daftarnya saja. Dijaga permanen oleh tes yang menolak kata
+`scrollIntoView` muncul di kode `EpisodeList` (komentar dikecualikan).
+
+### Tiga pagar
+
+1. **Sekali saja per kunjungan** (`sudahMenggulung`). Efeknya bergantung pada `entry`, dan `entry`
+   disegarkan tiap `dramaku:progress-changed` menyala. Tanpa pagar ini daftar melompat sendiri
+   tepat saat penonton menggulungnya dengan jari.
+2. **`requestAnimationFrame`** — mengukur sebelum tata letak final menghasilkan nol, dan
+   gulungannya gagal diam-diam.
+3. **Guard tinggi di `lib/gulung-daftar.ts`** — kotak yang tidak bisa digulung memulangkan `null`.
+   Di situlah tata letak HP ditangani, **bukan** dengan percabangan kedua di komponen.
+
+Episode tujuan disisakan `JARAK_KONTEKS_PX = 72` (tepat satu kartu: `min-h-16` 64px +
+`space-y-2` 8px) di atasnya, supaya posisinya terbaca "di tengah daftar", bukan "episode pertama".
+
+### Kenapa aritmatikanya dipisah ke `lib/gulung-daftar.ts`
+
+Alat tes project ini **tidak merender React**, dan jsdom **tidak menghitung tata letak** —
+`scrollHeight` di sana selalu 0. Dibiarkan di dalam komponen, semua cabang akan terlihat "lolos"
+tanpa pernah benar-benar dijalankan. Dipisah, ia bisa diuji dengan angka sungguhan.
+
+### Bukti
+
+Gerbang §6: `.next` dihapus → build **sukses** → `tsc` **exit 0** → **1.834 tes hijau** (+9 baru).
+
+**Penjaganya diuji MERAH lebih dulu**: `scrollIntoView` disisipkan sementara ke kode → tes jatuh
+dengan pesan yang benar → dikembalikan. Sekaligus membuktikan pembersih komentarnya bekerja, sebab
+kata yang sama tetap ada di komentar dan tes tetap hijau.
+
+Bukti tayang — fitur ini berjalan di browser, jadi **tidak muncul di HTML**. Yang diperiksa:
+
+```
+sidik jari daftar chunk JS   48a5f384… (sebelum)  →  56ba071c… (sesudah)
+chunk-11.js (memuat EpisodeList, penanda "dramaku:progress-changed"):
+   ADA     requestAnimationFrame · cancelAnimationFrame · scrollTop
+           getBoundingClientRect · scrollHeight · clientHeight
+   BERSIH  scrollIntoView
+```
+
+Dual push `c190bdb..91d1f5d` → tayang **±50 detik** → **0 balasan bukan-200** selama pergantian
+versi. Smoke test **9/9 = 200**. Tata letak rilis sebelumnya tidak mundur (`panel-episode` →
+`panel-drama-terkait` → `panel-terpopuler` masih urut).
+
+### ❓ Yang BELUM diverifikasi — jangan diklaim sudah
+
+**Gerakan gulungannya belum pernah dilihat di browser sungguhan.** Mesin ini tidak punya alat
+otomasi browser (nol playwright/puppeteer), dan jalur `--remote-debugging-port` TIDAK dipakai
+karena pernah nyasar ke browser penyewa lain di server sewaan bersama ini. Yang terbukti:
+aritmatikanya, pagar-pagarnya, dan keberadaan kodenya di bundle produksi. Konfirmasi akhir ada di
+mata owner — cara mencoba: buka drama yang pernah ditonton sampai episode belasan, daftar di
+kolom kanan harus sudah berada di episode itu.
+
+**Rollback 1 baris:** `git revert 91d1f5d && git push origin main && git push dramaku main`.
 
 ---
 

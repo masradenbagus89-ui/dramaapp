@@ -4,10 +4,29 @@
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
 **Terakhir dicek:** 2026-11-02 (**komputer OWNER**).
-`origin/main` = `dramaku/main` = **`e90e967`** (selisih 0/0 antar-remote, diverifikasi
-`git fetch origin` + `git fetch dramaku` SEBELUM push — ketiganya ada di `fb5aca1` yang sama,
-jadi nol risiko non-fast-forward; push keduanya exit 0). **Nol antrean** — tak ada yang menunggu
-rilis, tak ada branch rekan yang tertinggal.
+`origin/main` = `dramaku/main` = **`91d1f5d`** (selisih 0/0 antar-remote, diverifikasi
+`git fetch origin` + `git fetch dramaku` SEBELUM tiap push; push keduanya exit 0). **Nol antrean**
+— tak ada yang menunggu rilis, tak ada branch rekan yang tertinggal.
+
+✅ **DIRILIS 2026-11-02 (ke-2) — daftar episode menggulung sendiri ke episode terakhir ditonton,
+di `91d1f5d`. Dual push `c190bdb..91d1f5d`, tayang ±50 detik, downtime NOL (0 balasan bukan-200).**
+Lanjutan langsung rilis ke-1 di bawah. Sengaja **BUKAN** `scrollIntoView` — perintah itu
+menggulung semua leluhur termasuk halamannya, sehingga halaman melompat ke tengah begitu dibuka.
+Gerbang §6 lengkap: build sukses → `tsc` exit 0 → **1.834 tes hijau** (+9 baru, **diuji MERAH
+lebih dulu** dengan menyisipkan `scrollIntoView` sementara) → nol berkas rahasia.
+
+🪤 **PELAJARAN: fitur sisi-browser tak bisa dibuktikan dari HTML.** Gulungan ini berjalan di
+JavaScript, jadi `curl` halaman tidak menunjukkan apa pun. Cara membuktikannya: rekam md5 daftar
+chunk JS SEBELUM push, bandingkan sesudahnya, lalu unduh chunk yang memuat penanda
+`dramaku:progress-changed` dan periksa penanda fitur di dalamnya (`requestAnimationFrame`,
+`scrollTop`, `getBoundingClientRect`) **plus** pastikan `scrollIntoView` tidak ada. Terbukti
+`48a5f384…` → `56ba071c…`, chunk-11 memuat enam penanda, bersih dari `scrollIntoView`.
+
+❓ **Belum diverifikasi:** gerakan gulungannya belum dilihat di browser sungguhan — mesin ini nol
+alat otomasi browser, dan `--remote-debugging-port` tidak dipakai (pernah nyasar ke browser
+penyewa lain di server sewaan bersama). Konfirmasi akhir di mata owner.
+
+**Rollback 1 baris:** `git revert 91d1f5d && git push origin main && git push dramaku main`.
 
 ✅ **DIRILIS 2026-11-02 — Episode ↔ Drama Terkait bertukar tempat di halaman drama, di
 `e90e967`. Dual push `fb5aca1..e90e967`, tayang ±130 detik, downtime NOL.**

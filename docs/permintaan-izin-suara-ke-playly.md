@@ -1,87 +1,58 @@
-# Permintaan ke rekan Playly — izin olah suara (CORS) di penyimpanan video
+# Izin olah suara (CORS) di penyimpanan video Playly — ✅ SUDAH TERPASANG
 
-> Dibuat 2026-11-03. **Ini bukan laporan bug di sisi Playly** — videonya jalan
-> normal. Yang diminta satu setelan tambahan supaya DramaKu bisa menyalakan dua
-> fitur suara di pemutarnya.
->
-> Teks di bawah garis bisa disalin apa adanya dan dikirim ke rekan Playly.
+> **Status 2026-11-03: SELESAI.** Rekan Playly sudah memasang aturan CORS, dan
+> **Volume Stabil + Penguat suara kini aktif** di pemutar DramaKu. Tidak ada
+> rilis ulang yang diperlukan — pemutar memeriksa izin itu sendiri tiap video
+> dibuka, persis seperti yang dirancang.
 
----
+## Bukti, diukur sendiri (bukan hanya laporan pihak lain)
 
-## Untuk owner — ringkasnya
+Permintaan ke berkas video dengan `Origin` situs kita membalas:
 
-Dua tombol di pemutar DramaKu (**Volume Stabil** dan **Penguat suara**) sudah
-dibangun penuh dan tesnya hijau, tapi **belum bisa menyala** karena satu hal di
-luar kendali kita: browser melarang mengolah suara dari berkas milik domain lain
-kecuali server berkas itu memberi izin.
-
-Diukur 2026-11-03 pada berkas video Playly: **nol** header izin.
-
-Begitu rekan Playly memasang setelan di bawah, **tombolnya menyala sendiri** —
-tidak perlu rilis ulang dari sisi kita, karena pemutar memeriksa izin itu setiap
-kali video dibuka.
-
-Kalau mereka **tidak bisa** memasangnya, itu juga jawaban yang sah: tombolnya
-tetap tampil abu dengan keterangan apa adanya, dan tidak ada yang rusak.
-
----
-
-## Untuk dikirim ke rekan Playly
-
-Halo, ada satu permintaan kecil dari sisi DramaKu.
-
-Kami memutar berkas video dari penyimpanan Playly memakai pemutar kami sendiri.
-Semuanya berjalan normal — ini bukan laporan masalah.
-
-Kami ingin menyalakan dua fitur suara di pemutar (peredam lonjakan volume dan
-penguat suara untuk film yang rekamannya pelan). Keduanya memakai **Web Audio
-API** di browser, dan Web Audio hanya boleh mengolah suara dari berkas yang
-servernya mengirim header **CORS**.
-
-Saat kami periksa (3 November 2026), permintaan ke berkas video membalas
-**200/206 dengan benar**, tapi **tanpa** header `Access-Control-Allow-Origin`.
-Akibatnya fitur itu kami matikan sendiri — kalau dipaksa, videonya jadi bisu.
-
-**Yang kami minta:** tambahkan aturan CORS pada bucket R2 tempat berkas video
-disimpan, mengizinkan origin kami.
-
-Contoh aturan CORS untuk Cloudflare R2:
-
-```json
-[
-  {
-    "AllowedOrigins": ["https://dramaapp-production-9e88.up.railway.app"],
-    "AllowedMethods": ["GET", "HEAD"],
-    "AllowedHeaders": ["Range", "Content-Type"],
-    "ExposeHeaders": ["Content-Length", "Content-Range", "Accept-Ranges"],
-    "MaxAgeSeconds": 86400
-  }
-]
+```
+HTTP/1.1 206 Partial Content
+Access-Control-Allow-Origin: https://dramaapp-production-9e88.up.railway.app
+Access-Control-Expose-Headers: Content-Length,Content-Range,Accept-Ranges
+Accept-Ranges: bytes
 ```
 
-Catatan kecil yang penting:
+Dan di halaman tonton produksi, elemen videonya kini membawa
+`crossorigin="anonymous"` — atribut itu **hanya** dipasang kalau pemeriksaan
+izin berhasil (`app/components/player/PlaylyPlayer.tsx`). Video tetap dimuat
+normal, durasi terbaca.
 
-- `Range` perlu ikut diizinkan karena pemutar meminta potongan berkas saat
-  penonton melompat ke menit tertentu.
-- `ExposeHeaders` membuat pemutar bisa membaca panjang berkasnya.
-- Kalau lebih nyaman memakai `"AllowedOrigins": ["*"]`, itu juga cukup untuk
-  kebutuhan kami — tapi silakan pilih yang paling sesuai kebijakan kalian.
-- Ini **tidak** membuka akses baru ke berkas: alamatnya tetap bertanda tangan
-  dan berumur pendek seperti sekarang. CORS hanya mengatur browser mana yang
-  boleh **membaca** balasan, bukan siapa yang boleh mengunduh.
+## ⚠️ Satu hal yang BELUM pernah diuji siapa pun: bunyinya
 
-Kalau sudah terpasang, kami tidak perlu melakukan apa-apa lagi — pemutar kami
-memeriksanya sendiri setiap video dibuka.
+Mesin kerja kita server tanpa perangkat suara — `AudioContext` di sana melapor
+"running" tapi grafiknya tidak pernah diproses, jadi semua pengukuran suara
+memulangkan nol. Yang sudah terkunci cuma aturan & angkanya (21 tes,
+`tests/olah-suara.test.ts`).
 
-Terima kasih.
+**Uji dengar wajib dilakukan manusia.** Buka film → menu titik tiga → nyalakan
+tombolnya → dengarkan. Yang dicari:
 
----
+| Tombol | Harusnya terdengar | Kalau salah |
+|---|---|---|
+| Volume Stabil | dialog pelan & ledakan jadi lebih rata | suara "memompa" naik-turun, atau terasa datar/kehilangan tenaga |
+| Penguat suara | jelas lebih keras dari 100% | suara pecah/serak (berarti batasnya terlalu tinggi) |
 
-## Cara owner memeriksa apakah sudah terpasang
+Angkanya ada di SATU tempat dan gampang disetel: `lib/olah-suara.ts` —
+`SETELAN_VOLUME_STABIL` (ratio/threshold) dan `PENGUAT_MAKS` (sekarang 2×).
 
-Buka salah satu film di DramaKu → menu titik tiga di pemutar. Kalau **Volume
-Stabil** dan **Penguat suara** sudah bisa digeser (tidak abu-abu lagi), berarti
-izinnya sudah ada dan fiturnya hidup.
+## Kalau ternyata bermasalah
 
-Kalau masih abu-abu dengan tulisan *"sumbernya tidak mengizinkan suara diolah"*,
-berarti setelannya belum terpasang atau belum mencakup alamat situs kita.
+Kedua tombol **bawaannya MATI** — hanya aktif kalau penonton sendiri yang
+menyalakannya, jadi penonton yang tidak menyentuhnya tidak terpengaruh sama
+sekali.
+
+Kalau perlu dimatikan total: `git revert 88d3429` lalu dual push. Nol perubahan
+database, nol env.
+
+## Catatan dari rekan Playly
+
+- Aturan dipasang untuk origin **tanpa garis miring di akhir** — memang begitu
+  yang benar, browser mengirim alamat asal tanpa itu.
+- Domain yang tidak terdaftar tetap ditolak (domain Vercel lama ikut ditolak,
+  sesuai yang kita mau).
+- **Kalau DramaKu pindah ke domain sendiri, daftarnya harus dikirim ulang ke
+  mereka** — kalau tidak, fitur suara mati lagi di domain baru.

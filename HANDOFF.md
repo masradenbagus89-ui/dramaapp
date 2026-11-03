@@ -9,7 +9,9 @@
 >
 > **📦 Berkas ini sudah 9.086 baris** (dihitung 2026-10-30 dengan `wc -l`, bukan ditaksir; angka lama "±6.600" dari 2026-10-15 dan "8.700+" sudah basi — tumbuh ±2.500 baris dalam 15 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. **Menunggu keputusan owner.**
 
-**Terakhir diisi:** 2026-11-02, rilis ke-6 hari ini (✅ **TAYANG `784460c`**: **judul pemutar kini MEMUDAR bersama kontrol saat film berjalan**, memberi ruang penuh bagi terjemahan. 🔍 **AKAR MASALAH AKHIRNYA TERVERIFIKASI, dan tiga rilis sebelumnya mengejar yang salah**: teks yang menumpuk judul BUKAN subtitle aplikasi melainkan **hardsub — terbakar di dalam gambar video**, posisinya mustahil digeser. Dibuktikan: pagar CSS subtitle browser sudah benar di bundle produksi, DAN drama itu tak punya satu pun berkas subtitle (ep 1/2/13/14/15 semua 404). Keputusan owner dari tiga opsi. Dual push `329c573..784460c`, tayang **±80 detik**, **downtime NOL**. ❗ Temuan terpisah belum ditangani: katalog menjanjikan subtitle yang berkasnya tidak ada — rinciannya di seksinya.)
+**Terakhir diisi:** 2026-11-03 — 🔍 **AUDIT HP + TABLET atas permintaan Kang Dedi: HASIL BERSIH, nol kode diubah.** 20/20 pengukuran (5 halaman × lebar 360/412/768/1024) menunjukkan `scrollWidth` sama persis dengan viewport — nol elemen meluber. 🪤 **PELAJARAN METODE PENTING**: potret `--window-size` di bawah ~476px MENYESATKAN (berkas PNG-nya selebar yang diminta, tapi viewport CSS yang dirender TIDAK) — jebakan ini sudah menipu TIGA kali. Cara yang benar (iframe + ukur `scrollWidth`) ada di seksinya.
+
+**Rilis terakhir:** 2026-11-02, rilis ke-6 hari itu (✅ **TAYANG `784460c`**: **judul pemutar kini MEMUDAR bersama kontrol saat film berjalan**, memberi ruang penuh bagi terjemahan. 🔍 **AKAR MASALAH AKHIRNYA TERVERIFIKASI, dan tiga rilis sebelumnya mengejar yang salah**: teks yang menumpuk judul BUKAN subtitle aplikasi melainkan **hardsub — terbakar di dalam gambar video**, posisinya mustahil digeser. Dibuktikan: pagar CSS subtitle browser sudah benar di bundle produksi, DAN drama itu tak punya satu pun berkas subtitle (ep 1/2/13/14/15 semua 404). Keputusan owner dari tiga opsi. Dual push `329c573..784460c`, tayang **±80 detik**, **downtime NOL**. ❗ Temuan terpisah belum ditangani: katalog menjanjikan subtitle yang berkasnya tidak ada — rinciannya di seksinya.)
 
 **Rilis ke-5 hari ini:** (✅ **TAYANG `8ced118`**: **subtitle dua baris tak lagi menimpa judul** + tombol play dikecilkan 44→40px di HP. Owner mengirim tangkapan DevTools Galaxy Z Fold 6 (412×968) dengan teks saling menimpa. Sebabnya subtitle dibungkus `<span>` polos = elemen **INLINE**, dan pada elemen inline padding atas-bawah TIDAK menambah tinggi baris — kotak latarnya meluber keluar menimpa apa pun di atas & di bawahnya. Satu baris aman, dua baris langsung tabrakan. Perbaikan: `inline-block`. Dual push `32c7b0c..8ced118`, tayang **±80 detik**, **downtime NOL**. Rinciannya di seksinya.)
 
@@ -28,6 +30,72 @@
 **Rilis ke-1 hari ini:** (✅ **TAYANG `4dde5c0`**: tombol beranda "LIHAT SEMUA FILM UNGGULAN" → **"TEMUKAN TONTONAN FAVORITMU"** — labelnya salah di dua sisi (isinya drama berseri, bukan film; tujuannya katalog lengkap, bukan daftar unggulan). Dual push → Railway build sendiri → tayang ±60 detik, **downtime NOL**. Smoke test 5 alur: 4 langsung 200, `/drama/meg-2-the-trench` 500 SEKALI lalu 200 enam kali — cold start, dicatat bukan dihapus. ❌ **DIRALAT di rilis ke-2**: catatan asli di sini menyebut tombol itu "tergeser ke kanan di layar HP" sebagai gejala nyata. **Itu keliru** — cacat alat potret, bukan cacat situs; sudah diukur ulang dan tombolnya terpusat sempurna. Jangan diburu.)
 
 **Sebelumnya:** 2026-10-30 (tiga rilis beruntun, semuanya TAYANG: `5088bf2` genre bahasa Indonesia → `27973f0` koreksi owner Kerajaan/CEO/Lainnya → **`55894b8` dua tombol halaman drama yang selama ini TERPOTONG**. Downtime NOL. ⏸️ **DUA bahasan menunggu keputusan owner**, risetnya sudah selesai & nol kode diubah: "klik drama langsung play" dan "sinopsis film masih bahasa Inggris".)
+
+---
+
+## 2026-11-03 — 🔍 AUDIT HP + TABLET (permintaan Kang Dedi lewat owner) — HASIL: BERSIH, nol kode diubah
+
+Kang Dedi: *"pastikan dari tampilan HP + Tablet nya yang pas/cocok sesuai size nya."*
+
+### Hasil: 20/20 pengukuran BERSIH
+
+5 halaman × 4 lebar, `documentElement.scrollWidth` dibandingkan dengan `clientWidth`:
+
+| halaman | 360px | 412px | 768px | 1024px |
+|---|---|---|---|---|
+| /beranda | ✅ | ✅ | ✅ | ✅ |
+| /katalog | ✅ | ✅ | ✅ | ✅ |
+| /drama/[id] | ✅ | ✅ | ✅ | ✅ |
+| /feed/[id] | ✅ | ✅ | ✅ | ✅ |
+| /film | ✅ | ✅ | ✅ | ✅ |
+
+`scrollWidth` **sama persis** dengan viewport di semua sel — **nol elemen meluber**. Tidak ada
+kode yang perlu diubah.
+
+### 🪤 PELAJARAN METODE — potret `--window-size` di bawah ~476px MENYESATKAN
+
+Jebakan ini sudah menipu **tiga kali** (ralat 2026-10-31 soal "tombol tergeser di HP", dan sesi
+ini **dua kali**: sekali menyatakan catatan lama basi, sekali melaporkan overflow yang tidak ada).
+
+**Apa yang terjadi:** `msedge --headless=new --window-size=360,780 --screenshot` menghasilkan
+berkas PNG **selebar 360px** — sehingga terlihat valid. Tapi viewport CSS yang dipakai merender
+TIDAK 360px; Edge memaksa lebar minimum (~466px di mesin ini) lalu **memotong** gambarnya.
+Hasilnya tombol dan judul tampak "terpotong di tepi layar" padahal di HP sungguhan muat.
+
+❌ **Ukuran berkas PNG BUKAN bukti viewport.** Diminta 360 → dapat PNG 360×900, dan itu tetap
+salah.
+
+✅ **CARA YANG BENAR — iframe di halaman diagnostik, dilayani server lokal (same-origin):**
+taruh `public/_diag.html` sementara berisi `<iframe>` yang lebarnya di-set lewat CSS, muat
+halaman yang diuji ke dalamnya, lalu ukur dari `contentDocument`:
+
+```js
+d.documentElement.clientWidth   // viewport sesungguhnya
+d.documentElement.scrollWidth   // lebar isi; lebih besar = MELUBER
+```
+
+Untuk menemukan pelakunya, sapu `body.querySelectorAll("*")` dan buang elemen yang leluhurnya
+ber-`overflow-x: auto/scroll` — tanpa penyaringan itu, setiap baris geser (poster, menu katalog,
+strip genre) terdaftar sebagai "meluber" padahal memang dirancang digeser.
+
+Hasilnya dibaca dengan `--screenshot` halaman diagnostiknya (`--dump-dom` menulis 0 byte di
+mesin ini). **Hapus `public/_diag.html` setelah selesai** — ia ikut tayang kalau tertinggal.
+
+### Yang terlihat terpotong tapi MEMANG DISENGAJA — jangan "diperbaiki"
+
+- **Menu katalog** (Genre/Series/Populer/…): `overflow-x-auto` di `NavMenus.tsx:31`. Komentarnya
+  menyebut keputusan owner: digeser ke samping, BUKAN dilipat ke hamburger.
+- **Strip genre kuning**: `overflow-x-auto` di `StripKatalog.tsx:52`.
+- **Baris poster**: `overflow-x-auto` di `BarisGeser.tsx:119`.
+
+Ketiganya memakai `no-scrollbar`, jadi tidak ada batang gulung yang terlihat — itulah yang
+membuatnya mudah disalahartikan sebagai "terpotong".
+
+### Catatan opsional (bukan temuan cacat)
+
+Di tablet portrait 768px, halaman drama tampil satu kolom karena sidebar baru muncul di `lg`
+(1024px). Rapi dan tidak ada yang terpotong, tapi ruang kanan menganggur. Menurunkan sidebar ke
+`md` layak dipertimbangkan — **belum ditawarkan ke owner**.
 
 ---
 

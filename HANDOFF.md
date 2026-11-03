@@ -9,7 +9,9 @@
 >
 > **📦 Berkas ini sudah 9.086 baris** (dihitung 2026-10-30 dengan `wc -l`, bukan ditaksir; angka lama "±6.600" dari 2026-10-15 dan "8.700+" sudah basi — tumbuh ±2.500 baris dalam 15 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. **Menunggu keputusan owner.**
 
-**Terakhir diisi:** 2026-11-03 — 🎬 **BARU `drama-ai-studio/`: episode 1 jadi MP4 — 18/18 FOTO AI + 11/11 DIALOG MANDARIN DIUCAPKAN, biaya NOL** — 4 putaran. 💡 Temuan sampingan penting: **jam mesin ini tertinggal 13 menit** dari waktu sebenarnya. 🪤 Pelajaran termahal: **"ada sinyal audio" ≠ "terdengar"** (semua tenaga di sub-bass yang speaker kecil tak bunyikan) dan **"kamera bergerak" ≠ "terbaca bergerak"** (14%/7dtk = slideshow); dua-duanya lolos pemeriksaan teknis saya dan hanya ketahuan dari laporan owner (1080×1920, 97,04 dtk, subtitle Mandarin+Indonesia terbakar, wajah tokoh konsisten lintas adegan). Sub-proyek terisolasi; repo induk nol tersentuh (build OK, tsc exit 0, 1844 tes hijau). ⚠️ Yang dihasilkan **animatic**, BUKAN video AI — mesin berbayar sengaja belum disambung (nol kunci API). Belum di-commit. · Sebelumnya: 🔍 **AUDIT HP + TABLET atas permintaan Kang Dedi: HASIL BERSIH, nol kode diubah.** 20/20 pengukuran (5 halaman × lebar 360/412/768/1024) menunjukkan `scrollWidth` sama persis dengan viewport — nol elemen meluber. 🪤 **PELAJARAN METODE PENTING**: potret `--window-size` di bawah ~476px MENYESATKAN (berkas PNG-nya selebar yang diminta, tapi viewport CSS yang dirender TIDAK) — jebakan ini sudah menipu TIGA kali. Cara yang benar (iframe + ukur `scrollWidth`) ada di seksinya.
+**Terakhir diisi:** 2026-11-03 — 🔊 ✅ **TAYANG `88d3429`: Volume Stabil & Penguat suara AKHIRNYA BERFUNGSI.** Ternyata kedua sakelar selama ini dipasang MATI PERMANEN dan **nol `AudioContext` di seluruh project** — mesinnya memang tak pernah dibangun, jadi ini membangun dari nol, bukan membuka gerbang. Surat permintaan izin dikirim ke rekan Playly dan **mereka memasangnya hari itu juga**, sehingga fitur **hidup sendiri tanpa rilis ulang** (perancangannya terbukti benar). 🔴 **Bunyinya BELUM pernah didengar siapa pun** — mesin kerja ini server tanpa perangkat suara, semua pengukuran audio memulangkan nol; **uji dengar wajib manusia**, caranya di seksinya. ⚠️ Kalau DramaKu pindah domain, daftar origin WAJIB dikirim ulang ke Playly atau fitur suara mati lagi.
+
+**Sebelumnya hari itu:** 🎬 **BARU `drama-ai-studio/`: episode 1 jadi MP4 — 18/18 FOTO AI + 11/11 DIALOG MANDARIN DIUCAPKAN, biaya NOL** — 4 putaran. 💡 Temuan sampingan penting: **jam mesin ini tertinggal 13 menit** dari waktu sebenarnya. 🪤 Pelajaran termahal: **"ada sinyal audio" ≠ "terdengar"** (semua tenaga di sub-bass yang speaker kecil tak bunyikan) dan **"kamera bergerak" ≠ "terbaca bergerak"** (14%/7dtk = slideshow); dua-duanya lolos pemeriksaan teknis saya dan hanya ketahuan dari laporan owner (1080×1920, 97,04 dtk, subtitle Mandarin+Indonesia terbakar, wajah tokoh konsisten lintas adegan). Sub-proyek terisolasi; repo induk nol tersentuh (build OK, tsc exit 0, 1844 tes hijau). ⚠️ Yang dihasilkan **animatic**, BUKAN video AI — mesin berbayar sengaja belum disambung (nol kunci API). Belum di-commit. · Sebelumnya: 🔍 **AUDIT HP + TABLET atas permintaan Kang Dedi: HASIL BERSIH, nol kode diubah.** 20/20 pengukuran (5 halaman × lebar 360/412/768/1024) menunjukkan `scrollWidth` sama persis dengan viewport — nol elemen meluber. 🪤 **PELAJARAN METODE PENTING**: potret `--window-size` di bawah ~476px MENYESATKAN (berkas PNG-nya selebar yang diminta, tapi viewport CSS yang dirender TIDAK) — jebakan ini sudah menipu TIGA kali. Cara yang benar (iframe + ukur `scrollWidth`) ada di seksinya.
 
 **Rilis terakhir:** 2026-11-02, rilis ke-6 hari itu (✅ **TAYANG `784460c`**: **judul pemutar kini MEMUDAR bersama kontrol saat film berjalan**, memberi ruang penuh bagi terjemahan. 🔍 **AKAR MASALAH AKHIRNYA TERVERIFIKASI, dan tiga rilis sebelumnya mengejar yang salah**: teks yang menumpuk judul BUKAN subtitle aplikasi melainkan **hardsub — terbakar di dalam gambar video**, posisinya mustahil digeser. Dibuktikan: pagar CSS subtitle browser sudah benar di bundle produksi, DAN drama itu tak punya satu pun berkas subtitle (ep 1/2/13/14/15 semua 404). Keputusan owner dari tiga opsi. Dual push `329c573..784460c`, tayang **±80 detik**, **downtime NOL**. ❗ Temuan terpisah belum ditangani: katalog menjanjikan subtitle yang berkasnya tidak ada — rinciannya di seksinya.)
 
@@ -30,6 +32,95 @@
 **Rilis ke-1 hari ini:** (✅ **TAYANG `4dde5c0`**: tombol beranda "LIHAT SEMUA FILM UNGGULAN" → **"TEMUKAN TONTONAN FAVORITMU"** — labelnya salah di dua sisi (isinya drama berseri, bukan film; tujuannya katalog lengkap, bukan daftar unggulan). Dual push → Railway build sendiri → tayang ±60 detik, **downtime NOL**. Smoke test 5 alur: 4 langsung 200, `/drama/meg-2-the-trench` 500 SEKALI lalu 200 enam kali — cold start, dicatat bukan dihapus. ❌ **DIRALAT di rilis ke-2**: catatan asli di sini menyebut tombol itu "tergeser ke kanan di layar HP" sebagai gejala nyata. **Itu keliru** — cacat alat potret, bukan cacat situs; sudah diukur ulang dan tombolnya terpusat sempurna. Jangan diburu.)
 
 **Sebelumnya:** 2026-10-30 (tiga rilis beruntun, semuanya TAYANG: `5088bf2` genre bahasa Indonesia → `27973f0` koreksi owner Kerajaan/CEO/Lainnya → **`55894b8` dua tombol halaman drama yang selama ini TERPOTONG**. Downtime NOL. ⏸️ **DUA bahasan menunggu keputusan owner**, risetnya sudah selesai & nol kode diubah: "klik drama langsung play" dan "sinopsis film masih bahasa Inggris".)
+
+---
+
+## 2026-11-03 — ✅ DIRILIS `88d3429`: Volume Stabil & Penguat suara AKHIRNYA BERFUNGSI (izin Playly terpasang hari itu juga)
+
+**Keluhan owner:** *"tombol volume dan penguat suara belum berfungsi"* (tangkapan layar menu pemutar:
+dua baris abu bertuliskan *"tidak tersedia untuk video ini — sumbernya tidak mengizinkan suara diolah"*).
+
+### Dugaan pertama SALAH, dan selisihnya besar
+
+Dugaan awal: fiturnya ada, cuma terkunci gerbang CORS. **Yang sebenarnya:** kedua sakelar dipasang
+**MATI PERMANEN** di `PlaylyPlayer` (`aktif: false, onUbah: () => undefined`), dan di SELURUH project
+**nol `AudioContext`** — mesinnya memang tidak pernah dibangun. Yang tampil di menu cuma cangkangnya.
+Jadi pekerjaannya bukan "membuka gerbang", melainkan **membangun fiturnya dari nol**.
+
+### Yang dibangun
+
+| Berkas | Isinya |
+|---|---|
+| `lib/olah-suara.ts` | setelan kompresor + batas penguat + gerbang izin (fungsi murni) |
+| `app/components/player/useOlahSuara.ts` | rantai `video → kompresor → penguat → speaker` |
+| `PlaylyPlayer.tsx` | sakelar tersambung sungguhan + pemeriksaan izin sebelum render |
+| `tests/olah-suara.test.ts` | **21 penjaga** |
+
+**Volume Stabil** = meratakan suara (dialog bisik vs ledakan tak lagi berbeda jauh).
+**Penguat suara** = menaikkan MELEWATI 100% — mustahil lewat `video.volume` yang mentok di 1.0.
+
+### Gerbangnya diperlonggar, TAPI TIDAK dilemahkan
+
+Syarat lama `seOrigin()` hanya menerima berkas dari domain sendiri — padahal Web Audio juga boleh
+menyentuh berkas domain lain **asal servernya mengizinkan**. Sekarang izin itu **DIUJI**, bukan
+diasumsikan: diambil 1 byte (`Range: bytes=0-0`, `mode: "cors"`) sebelum video dirender.
+
+⚠️ **JANGAN pernah menggantinya jadi `mode: "no-cors"` supaya "lebih mudah lolos"** — permintaan
+seperti itu SELALU terlihat berhasil (opaque response) padahal izinnya tidak ada, dan hasilnya persis
+bencana yang dihindari: **video bisu total**, gambar jalan tapi suara hilang, tanpa satu pun error.
+
+Pemeriksaan sengaja dari **BROWSER**, bukan server kita: izin CORS dinilai per-origin peminta dan
+server kita bukan penonton — sekalian menghindari server kita menembak alamat dari pihak luar (SSRF).
+
+### Izin Playly TERPASANG hari itu juga — fitur hidup TANPA rilis ulang
+
+Surat permintaan dikirim owner ke rekan Playly (cantika), dan mereka memasangnya hari itu.
+**Diverifikasi sendiri, bukan sekadar percaya laporan mereka:**
+
+```
+HTTP/1.1 206 Partial Content
+Access-Control-Allow-Origin: https://dramaapp-production-9e88.up.railway.app
+Access-Control-Expose-Headers: Content-Length,Content-Range,Accept-Ranges
+```
+
+Dan di DOM halaman tonton produksi, elemen `<video>` kini membawa **`crossorigin="anonymous"`** —
+atribut itu HANYA dipasang kalau pemeriksaan izin berhasil, jadi inilah bukti gerbangnya terbuka.
+Video tetap dimuat normal (durasi terbaca). **Itu yang paling dikhawatirkan:** izin yang kurang
+lengkap membuat video **GAGAL TOTAL**, bukan sekadar fitur mati.
+
+⭐ **Perancangannya terbukti benar:** fitur menyala sendiri begitu izin terpasang, nol deploy.
+
+### 🔴 BATAS YANG BELUM TERTUTUP — bunyinya BELUM pernah didengar siapa pun
+
+Mesin kerja ini server **tanpa perangkat suara**. Diukur hari itu: di browser tanpa layar
+`AudioContext` melapor `state: running` tapi grafiknya **tidak pernah diproses** — semua pengukuran
+RMS memulangkan **0.00000**, dan itu terbaca persis seperti "fiturnya tidak bekerja" padahal bukan.
+`OfflineAudioContext` pun tidak pernah menyelesaikan render di sana.
+
+Yang terbukti: aturan & angkanya (21 tes dengan node tiruan), pemutar utuh, build + `tsc` + 1.865 tes.
+**Uji dengar WAJIB manusia.** Yang dicari: Volume Stabil → lebih rata (gejala salah: suara "memompa"
+atau jadi datar); Penguat suara → jelas lebih keras (gejala salah: pecah/serak).
+Angkanya di SATU tempat: `lib/olah-suara.ts` — `SETELAN_VOLUME_STABIL` dan `PENGUAT_MAKS` (kini 2×).
+
+### Yang perlu diingat nanti
+
+- Kedua tombol **bawaannya MATI** — hanya aktif kalau penonton menyalakannya sendiri, jadi penonton
+  yang tak menyentuhnya nol terpengaruh.
+- ⚠️ **Playly mengizinkan ALAMAT SITUS INI SAJA.** Kalau DramaKu pindah ke domain sendiri, daftar
+  origin WAJIB dikirim ulang ke mereka — kalau tidak, fitur suara mati lagi di domain baru.
+- Rencana mundur: `git revert 88d3429` lalu dual push. Nol database, nol env.
+- Status + bukti + tabel uji dengar: `docs/permintaan-izin-suara-ke-playly.md`.
+
+### 🪤 Dua jebakan alat yang nyaris dilaporkan sebagai "fitur rusak"
+
+1. **Server lama menahan port → halaman tampil HITAM KOSONG.** `next start` kedua gagal
+   `EADDRINUSE` **di log, bukan di layar**; yang melayani tetap proses LAMA, dan karena `.next` sudah
+   dibangun ulang di bawahnya, berkasnya hilang. Selalu matikan lewat PID + buktikan port kosong.
+   ⚠️ Hari itu port 3017 dipakai **penyewa lain** (Stop-Process: *Access denied*) — jangan dipaksa,
+   pakai port lain.
+2. **Autoplay bersuara mustahil diuji di browser tanpa layar.** Trik "mulai bisu lalu buka suara"
+   TIDAK berlaku di sini: begitu elemen media disambungkan ke Web Audio, browser tak lagi
+   menganggapnya bisu dan tetap menuntut klik manusia.
 
 ---
 

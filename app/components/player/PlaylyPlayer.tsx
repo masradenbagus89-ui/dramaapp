@@ -35,6 +35,12 @@ import {
 } from "lucide-react";
 import { fmtTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { useOlahSuara } from "./useOlahSuara";
+import {
+  alasanMatiUntuk,
+  seOrigin,
+  type IzinSuara,
+} from "@/lib/olah-suara";
 import PlayerMenu, { type OpsiMenu } from "./PlayerMenu";
 
 const KECEPATAN: OpsiMenu[] = [
@@ -103,6 +109,9 @@ export default function PlaylyPlayer({
   const [muted, setMuted] = useState(false);
   const [speed, setSpeed] = useState("1");
   const [sinematik, setSinematik] = useState(false);
+  const [volumeStabil, setVolumeStabil] = useState(false);
+  const [penguatSuara, setPenguatSuara] = useState(false);
+  const [izinSuara, setIzinSuara] = useState<IzinSuara>("memeriksa");
   const [pipDidukung, setPipDidukung] = useState(false);
   const [pipAktif, setPipAktif] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
@@ -117,6 +126,7 @@ export default function PlaylyPlayer({
     let dibatalkan = false;
     setVideoUrl(null);
     setGagal(null);
+    setIzinSuara("memeriksa");
 
     (async () => {
       try {
@@ -127,7 +137,24 @@ export default function PlaylyPlayer({
           setGagal(data?.error ?? "Video tidak bisa dimuat.");
           return;
         }
-        setVideoUrl(data.videoUrl as string);
+        const url = data.videoUrl as string;
+
+        // GERBANG OLAH-SUARA, diperiksa SEBELUM video dirender.
+        //
+        // Kenapa sebelum, bukan sesudah: `crossOrigin` harus sudah menempel
+        // saat berkas mulai dimuat. Memasangnya belakangan memaksa video
+        // dimuat ULANG di tengah tontonan, dan memasangnya "untuk berjaga-jaga"
+        // justru membuat video GAGAL TOTAL saat sumbernya tidak mengizinkan.
+        //
+        // Kenapa diuji dari BROWSER, bukan dari server kita: inilah satu-satunya
+        // tempat yang jawabannya benar — izin CORS dinilai per-origin peminta,
+        // dan server kita bukan penonton. Sekalian menghindari server kita
+        // menembak alamat dari pihak luar (SSRF).
+        //
+        // Biayanya 1 byte (`Range: bytes=0-0`), bukan seluruh berkas.
+        setIzinSuara(await periksaIzinSuara(url));
+        if (dibatalkan) return;
+        setVideoUrl(url);
       } catch {
         if (!dibatalkan) setGagal("Gagal menghubungi server. Cek koneksi lalu coba lagi.");
       }
@@ -258,18 +285,16 @@ export default function PlaylyPlayer({
     setMuted(baru);
   };
 
-  // KENAPA Volume Stabil & Penguat Suara dimatikan untuk video Playly:
-  // keduanya butuh Web Audio API, dan Web Audio hanya boleh menyentuh suara
-  // dari berkas yang mengizinkan akses lintas domain (CORS). Berkas video
-  // Playly disimpan di Cloudflare R2 TANPA header Access-Control-Allow-Origin
-  // (dicek langsung 2026-09-09), jadi memaksakannya cuma menghasilkan video
-  // bisu. Dites dari alamat berkasnya, bukan diasumsikan: kalau suatu hari
-  // videonya disajikan dari domain kita sendiri, kedua fitur ini hidup
-  // sendirinya tanpa mengubah kode.
-  const olahSuaraBisa = seOrigin(videoUrl);
-  const alasanSuaraMati = olahSuaraBisa
-    ? undefined
-    : "tidak tersedia untuk video ini — sumbernya tidak mengizinkan suara diolah";
+  const olahSuaraBisa = izinSuara === "boleh";
+  const alasanSuaraMati = alasanMatiUntuk(izinSuara);
+
+  // Rantai Web Audio-nya sendiri ada di useOlahSuara. Hook itu TIDAK pernah
+  // menebak gerbangnya — `bisa` diputuskan di sini.
+  useOlahSuara(videoRef, {
+    bisa: olahSuaraBisa,
+    volumeStabil,
+    penguatSuara,
+  });
 
   const sedangMemuat = !videoUrl && !gagal;
 
@@ -307,6 +332,17 @@ export default function PlaylyPlayer({
           ref={videoRef}
           key={videoUrl}
           src={videoUrl}
+          /* Dipasang HANYA saat sumbernya sudah terbukti mengizinkan
+             (periksaIzinSuara di bawah) — itu syarat Web Audio boleh menyentuh
+             suaranya. Memasangnya pada sumber yang TIDAK mengizinkan membuat
+             video gagal dimuat sama sekali, jadi nilainya tidak pernah ditebak.
+             Tidak dipasang untuk sumber se-origin: di sana izin tak diperlukan,
+             dan atribut ini justru menambah syarat yang tak perlu. */
+          crossOrigin={
+            olahSuaraBisa && !seOrigin(videoUrl, window.location.href)
+              ? "anonymous"
+              : undefined
+          }
           poster={poster ?? undefined}
           title={title}
           autoPlay
@@ -514,13 +550,13 @@ export default function PlaylyPlayer({
               <PlayerMenu
                 onTerbukaChange={setMenuTerbuka}
                 volumeStabil={{
-                  aktif: false,
-                  onUbah: () => undefined,
+                  aktif: volumeStabil,
+                  onUbah: setVolumeStabil,
                   alasanMati: alasanSuaraMati,
                 }}
                 penguatSuara={{
-                  aktif: false,
-                  onUbah: () => undefined,
+                  aktif: penguatSuara,
+                  onUbah: setPenguatSuara,
                   alasanMati: alasanSuaraMati,
                 }}
                 sinematik={{ aktif: sinematik, onUbah: setSinematik }}
@@ -555,21 +591,38 @@ export default function PlaylyPlayer({
 }
 
 /**
- * Apakah berkas video berasal dari domain yang sama dengan halaman ini.
+ * Apakah sumber video ini boleh diolah suaranya?
  *
- * Dipakai sebagai syarat fitur olah-suara (Volume Stabil, Penguat Suara): Web
- * Audio API menolak memproses media dari domain lain yang tidak mengizinkan
- * akses lintas domain, dan hasilnya video jadi bisu — bukan pesan error. Lebih
- * baik fitur ditandai tidak tersedia daripada penonton kehilangan suara.
+ * Dua jalur, dan yang pertama tanpa menyentuh jaringan sama sekali:
  *
- * null (alamat belum diambil) dihitung "bukan se-origin" supaya menu tidak
- * sempat menampilkan fitur yang belum tentu bisa dipakai.
+ * 1. Se-origin → boleh. Berkas dari domain sendiri tidak butuh izin apa pun.
+ * 2. Lintas domain → DIUJI, bukan diasumsikan. Diambil 1 byte dengan
+ *    `mode: "cors"`; kalau servernya tidak mengirim izin, browser menolak
+ *    sendiri dan kita dapat jawaban "tidak" tanpa pernah membuat video bisu.
+ *
+ * ⚠️ JANGAN diganti jadi `mode: "no-cors"` supaya "lebih mudah lolos" —
+ * permintaan seperti itu SELALU terlihat berhasil (opaque response) padahal
+ * izinnya tidak ada, dan hasilnya persis bencana yang dihindari fungsi ini:
+ * video yang gambarnya jalan tapi suaranya hilang total.
+ *
+ * Batas waktu 1,2 detik: pemeriksaan ini menahan tampilnya video, jadi sumber
+ * yang menggantung harus menyerah cepat. Gagal/timeout = "tidak" (gagal-aman).
  */
-function seOrigin(src: string | null): boolean {
-  if (!src || typeof window === "undefined") return false;
+async function periksaIzinSuara(url: string): Promise<IzinSuara> {
+  if (typeof window === "undefined") return "tidak";
+  if (seOrigin(url, window.location.href)) return "boleh";
   try {
-    return new URL(src, window.location.href).origin === window.location.origin;
+    const batal = new AbortController();
+    const waktu = setTimeout(() => batal.abort(), 1200);
+    const res = await fetch(url, {
+      method: "GET",
+      mode: "cors",
+      headers: { Range: "bytes=0-0" },
+      signal: batal.signal,
+    });
+    clearTimeout(waktu);
+    return res.ok || res.status === 206 ? "boleh" : "tidak";
   } catch {
-    return false;
+    return "tidak";
   }
 }

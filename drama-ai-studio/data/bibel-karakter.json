@@ -1,0 +1,261 @@
+{
+  "serial": {
+    "judulMandarin": "三年后，她带着证据归来",
+    "judulPinyin": "Sān Nián Hòu, Tā Dài Zhe Zhèngjù Guīlái",
+    "judulIndonesia": "Tiga Tahun Kemudian, Dia Kembali Membawa Bukti",
+    "genre": [
+      "romansa",
+      "CEO",
+      "balas dendam",
+      "drama keluarga"
+    ],
+    "format": "vertikal 9:16",
+    "jumlahEpisode": 10,
+    "bahasaDialog": "Mandarin (普通话)",
+    "bahasaSubtitle": "Indonesia",
+    "logline": "Tiga tahun dipenjara atas kejahatan yang tak pernah ia lakukan, pewaris Grup Lin kembali sebagai petugas kebersihan di perusahaan yang akan mencaplok warisannya — membawa satu bukti yang bisa menjatuhkan pamannya, dan satu liontin giok yang membuat CEO paling dingin di kota itu mengenalinya.",
+    "nadaVisual": "Sinematik kontras tinggi, bayangan dalam, aksen emas-dingin. Mengacu pada estetika drama pendek vertikal Tiongkok: wajah besar di frame, bokeh kuat, perpindahan cepat."
+  },
+  "catatanKonsistensi": "Kolom `promptVisual` WAJIB disalin apa adanya ke setiap prompt pembuatan gambar/video yang memuat karakter itu. Inilah satu-satunya mekanisme yang menjaga wajah & kostum tidak berubah antar-episode. Jangan parafrase, jangan terjemahkan, jangan diringkas — model gambar sangat sensitif terhadap perubahan kata. Pakaian tokoh HANYA ditulis di `kostumPerBabak` dan nilainya WAJIB bahasa Inggris — teks itu disuntikkan apa adanya ke prompt gambar yang berbahasa Inggris, dan kalimat Indonesia di sana akan diabaikan mesin gambar tanpa satu pun pesan error. `promptVisual` hanya boleh memuat CIRI IDENTITAS (wajah, rambut, perawakan) — jangan arahan komposisi/pencahayaan. Dulu semuanya diakhiri \"cinematic portrait lighting\", dan itu memaksa mesin gambar membuat pas foto walau naskah meminta wide shot atau extreme close-up: adegan \"keluar dari gerbang penjara\" keluar sebagai potret studio. Arahan komposisi tempatnya di GAYA_SINEMATIK (lib/naskah/storyboard.mjs) dan di kolom `kamera` tiap shot. Tiap tokoh punya DUA deskripsi: `promptVisual` (rinci, ±35 kata) dan `promptRingkas` (±12 kata). Yang dipakai ditentukan kolom `fokus` tiap shot. Alasannya terukur: deskripsi wajah yang panjang memaksa mesin gambar menggambar close-up wajah walau naskah minta wide shot — adegan \"keluar dari gerbang penjara\" keluar sebagai pas foto studio.",
+  "karakter": [
+    {
+      "id": "wanxing",
+      "namaMandarin": "林晚星",
+      "pinyin": "Lín Wǎnxīng",
+      "namaIndonesia": "Lin Wanxing",
+      "umur": 26,
+      "peran": "protagonis utama (wanita)",
+      "ringkas": "Pewaris sah Grup Lin. Difitnah menggelapkan dana oleh pamannya, dipenjara tiga tahun. Kembali bekerja sebagai petugas kebersihan di Grup Shengshi untuk mendekati bukti yang ia sembunyikan.",
+      "motivasi": "Memulihkan nama ayahnya — bukan mengambil kembali uangnya.",
+      "ciriFisikTetap": [
+        "rambut hitam panjang, selalu diikat rendah",
+        "tahi lalat kecil di bawah mata kiri",
+        "mata almond tajam, alis tipis lurus",
+        "kulit pucat, tinggi 168 cm, bertubuh kurus"
+      ],
+      "propertiTanda": "Liontin giok putih (羊脂玉) berbentuk tetesan air, selalu tersembunyi di balik kerah.",
+      "kostumPerBabak": {
+        "ep1-3": "a faded grey janitor uniform with the sleeves rolled up",
+        "ep4-7": "a plain black blazer and no jewellery",
+        "ep8-10": "a sharply cut black dress with the jade pendant worn openly"
+      },
+      "paletWarna": [
+        "#2B3A4A",
+        "#8FA3B8",
+        "#E6E9EC"
+      ],
+      "suara": {
+        "deskripsi": "alto rendah, tenang, nyaris datar; emosi muncul lewat jeda bukan volume",
+        "kecepatan": 0.92,
+        "idSuaraMinimax": "Chinese (Mandarin)_Gentle_Senior",
+        "geserNada": -1
+      },
+      "promptVisual": "a 26-year-old Chinese woman, pale skin, sharp almond eyes, thin straight eyebrows, a small beauty mark under her left eye, long black hair tied in a low ponytail, slender build, calm guarded expression",
+      "promptRingkas": "a slender young Chinese woman with long black hair in a low ponytail"
+    },
+    {
+      "id": "chenzhou",
+      "namaMandarin": "顾沉舟",
+      "pinyin": "Gù Chénzhōu",
+      "namaIndonesia": "Gu Chenzhou",
+      "umur": 32,
+      "peran": "protagonis utama (pria), CEO Grup Shengshi",
+      "ringkas": "CEO termuda di kota, dikenal dingin dan tanpa ampun. Tiga tahun lalu selamat dari kecelakaan mobil karena ditolong perempuan asing yang tak pernah ia temukan — yang tertinggal hanya sebuah liontin giok.",
+      "motivasi": "Melunasi utang nyawa yang tak pernah bisa ia bayar.",
+      "ciriFisikTetap": [
+        "rahang tegas, mata dingin kelopak tunggal",
+        "bekas luka tipis membelah ujung alis kanan",
+        "rambut hitam rapi disisir ke belakang",
+        "tinggi 186 cm, bahu lebar"
+      ],
+      "propertiTanda": "Jam tangan kulit hitam, selalu di pergelangan kiri.",
+      "kostumPerBabak": {
+        "ep1-10": "a dark navy three-piece suit with a white shirt"
+      },
+      "paletWarna": [
+        "#121A2B",
+        "#C8A96A",
+        "#FFFFFF"
+      ],
+      "suara": {
+        "deskripsi": "bariton dalam, tempo lambat, hampir tanpa intonasi naik",
+        "kecepatan": 0.88,
+        "idSuaraMinimax": "Chinese (Mandarin)_Reliable_Executive",
+        "geserNada": -5
+      },
+      "promptVisual": "a 32-year-old Chinese man, tall and broad-shouldered, strong jawline, cold single-eyelid eyes, a thin scar cutting through the end of his right eyebrow, black hair neatly swept back, severe expression",
+      "promptRingkas": "a tall broad-shouldered Chinese man in his early thirties, black hair swept back"
+    },
+    {
+      "id": "zhenguo",
+      "namaMandarin": "林振国",
+      "pinyin": "Lín Zhènguó",
+      "namaIndonesia": "Lin Zhenguo",
+      "umur": 55,
+      "peran": "antagonis utama, paman Wanxing",
+      "ringkas": "Memalsukan surat wasiat kakaknya dan merebut Grup Lin. Membangun citra dermawan di depan publik.",
+      "motivasi": "Mempertahankan kedudukan yang ia curi, dengan cara apa pun.",
+      "ciriFisikTetap": [
+        "bertubuh gempal, perut membuncit",
+        "rambut menipis disisir menyamping",
+        "senyum lebar yang tak pernah sampai ke mata",
+        "jam tangan emas besar di tangan kanan"
+      ],
+      "propertiTanda": "Cincin giok hijau di jari kelingking.",
+      "kostumPerBabak": {
+        "ep1-10": "a shiny grey suit with a wine-red tie"
+      },
+      "paletWarna": [
+        "#4A3B2B",
+        "#A8893F",
+        "#6B2020"
+      ],
+      "suara": {
+        "deskripsi": "tenor serak, ramah dibuat-buat, tertawa terlalu cepat",
+        "kecepatan": 1.0,
+        "idSuaraMinimax": "Chinese (Mandarin)_Warm_Elder",
+        "geserNada": -4
+      },
+      "promptVisual": "a 55-year-old heavyset Chinese man, round belly, thinning hair combed sideways, wide insincere smile, small eyes, a large gold watch on his right wrist",
+      "promptRingkas": "a heavyset Chinese man in his fifties with thinning hair"
+    },
+    {
+      "id": "sutian",
+      "namaMandarin": "苏甜",
+      "pinyin": "Sū Tián",
+      "namaIndonesia": "Su Tian",
+      "umur": 24,
+      "peran": "antagonis pendamping, anak tiri Lin Zhenguo",
+      "ringkas": "Hidup dari uang yang dicuri dari keluarga Wanxing. Mengincar posisi nyonya Grup Shengshi.",
+      "motivasi": "Menikahi Gu Chenzhou sebelum ada yang tahu asal-usul kekayaannya.",
+      "ciriFisikTetap": [
+        "rambut ikal dicat cokelat madu sebahu",
+        "riasan tebal, eyeliner tajam",
+        "wajah bulat, bibir penuh warna merah terang"
+      ],
+      "propertiTanda": "Tas tangan desainer berganti tiap episode (satu-satunya properti yang SENGAJA tidak konsisten).",
+      "kostumPerBabak": {
+        "ep1-10": "a vivid designer dress and red high heels"
+      },
+      "paletWarna": [
+        "#C0355A",
+        "#E8B4C0",
+        "#F2E3C9"
+      ],
+      "suara": {
+        "deskripsi": "sopran tinggi, cepat, nada naik di akhir kalimat",
+        "kecepatan": 1.08,
+        "idSuaraMinimax": "Chinese (Mandarin)_Lively_Girl",
+        "geserNada": 2
+      },
+      "promptVisual": "a 24-year-old Chinese woman, shoulder-length honey-brown wavy hair, round face, heavy makeup with sharp eyeliner, bright red full lips, haughty expression",
+      "promptRingkas": "a young Chinese woman with shoulder-length honey-brown wavy hair"
+    },
+    {
+      "id": "laozhang",
+      "namaMandarin": "老张",
+      "pinyin": "Lǎo Zhāng",
+      "namaIndonesia": "Pak Zhang",
+      "umur": 48,
+      "peran": "asisten pribadi Gu Chenzhou",
+      "ringkas": "Mata dan telinga Chenzhou. Satu-satunya orang yang tahu soal kecelakaan tiga tahun lalu.",
+      "motivasi": "Melindungi atasannya, termasuk dari dirinya sendiri.",
+      "ciriFisikTetap": [
+        "kacamata berbingkai tipis",
+        "rambut beruban di pelipis",
+        "postur sedikit membungkuk, selalu memegang map"
+      ],
+      "propertiTanda": "Map kulit cokelat.",
+      "kostumPerBabak": {
+        "ep1-10": "a plain dark grey suit"
+      },
+      "paletWarna": [
+        "#3A3A3A",
+        "#8C8C8C",
+        "#D9D9D9"
+      ],
+      "suara": {
+        "deskripsi": "bariton sedang, sopan, artikulasi jelas",
+        "kecepatan": 0.95,
+        "idSuaraMinimax": "Chinese (Mandarin)_Reliable_Executive",
+        "geserNada": -3
+      },
+      "promptVisual": "a 48-year-old Chinese man, thin-rimmed glasses, greying temples, slightly stooped posture, holding a brown leather folder, respectful expression",
+      "promptRingkas": "a middle-aged Chinese man with thin-rimmed glasses"
+    }
+  ],
+  "lokasi": [
+    {
+      "id": "gerbang-penjara",
+      "nama": "Gerbang Lembaga Pemasyarakatan Wanita",
+      "promptVisual": "tall grey concrete prison gate with rusted iron bars, cold blue dawn light, empty road, light mist, cinematic wide shot"
+    },
+    {
+      "id": "menara-shengshi",
+      "nama": "Menara Grup Shengshi",
+      "promptVisual": "modern glass skyscraper headquarters, sharp reflective facade, low angle, overcast daylight, corporate cinematic"
+    },
+    {
+      "id": "lobi-shengshi",
+      "nama": "Lobi Grup Shengshi",
+      "promptVisual": "vast luxurious corporate lobby, polished black marble floor, gold accent lighting, floor-to-ceiling glass, reflections, cinematic depth of field"
+    },
+    {
+      "id": "kilas-kecelakaan",
+      "nama": "Kilas balik — kecelakaan mobil",
+      "promptVisual": "rain-soaked night road, overturned black sedan, shattered glass, red and blue emergency light haze, extreme shallow focus, memory-like desaturation"
+    }
+  ],
+  "arcSepuluhEpisode": [
+    {
+      "episode": 1,
+      "judul": "归来 — Kembali",
+      "inti": "Wanxing keluar penjara dan masuk Grup Shengshi sebagai petugas kebersihan. Chenzhou melihat liontin gioknya."
+    },
+    {
+      "episode": 2,
+      "judul": "认人 — Mengenali",
+      "inti": "Chenzhou memerintahkan Pak Zhang menyelidiki Wanxing; berkasnya ternyata sudah dihapus seseorang."
+    },
+    {
+      "episode": 3,
+      "judul": "旧账 — Utang Lama",
+      "inti": "Su Tian memfitnah Wanxing mencuri; rekaman CCTV membelanya dan permusuhan jadi terbuka."
+    },
+    {
+      "episode": 4,
+      "judul": "合同 — Kontrak",
+      "inti": "Grup Shengshi mengumumkan akuisisi Grup Lin. Lin Zhenguo panik melihat Wanxing di lobi."
+    },
+    {
+      "episode": 5,
+      "judul": "证据 — Bukti",
+      "inti": "Wanxing mengambil salinan surat wasiat asli dari brankas lama ayahnya."
+    },
+    {
+      "episode": 6,
+      "judul": "交易 — Transaksi",
+      "inti": "Chenzhou menawarkan pernikahan kontrak: perlindungan hukum ditukar satu jawaban soal liontin."
+    },
+    {
+      "episode": 7,
+      "judul": "裂痕 — Retak",
+      "inti": "Su Tian membocorkan masa lalu penjara Wanxing ke media."
+    },
+    {
+      "episode": 8,
+      "judul": "对质 — Konfrontasi",
+      "inti": "Wanxing menghadapi pamannya di rapat pemegang saham."
+    },
+    {
+      "episode": 9,
+      "judul": "真相 — Kebenaran",
+      "inti": "Terungkap: perempuan yang menolong Chenzhou tiga tahun lalu memang Wanxing — malam sebelum ia ditangkap."
+    },
+    {
+      "episode": 10,
+      "judul": "清算 — Perhitungan",
+      "inti": "Surat wasiat asli dibuka. Lin Zhenguo jatuh. Chenzhou melunasi utangnya dengan cara yang tak diduga."
+    }
+  ]
+}

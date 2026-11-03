@@ -1,0 +1,15 @@
+{
+  "name": "drama-ai-studio",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Studio produksi AI untuk serial drama pendek China (vertical 9:16). Sub-proyek TERISOLASI dari aplikasi dramaapp: package.json & node_modules sendiri, kode .mjs supaya tidak ikut diperiksa tsc repo induk.",
+  "scripts": {
+    "studio": "node bin/studio.mjs",
+    "test": "node --test \"tests/*.test.mjs\""
+  },
+  "dependencies": {
+    "ffmpeg-static": "^5.3.0",
+    "ws": "^8.22.1"
+  }
+}

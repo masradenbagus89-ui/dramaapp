@@ -1,0 +1,9 @@
+# Dependensi sub-proyek ini (biner ffmpeg ~79MB) — jangan pernah masuk repo.
+node_modules/
+
+# Hasil render: besar, selalu bisa dibuat ulang dari naskah + storyboard.
+keluaran/
+
+# Kunci API milik owner.
+.env
+.env.local

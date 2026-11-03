@@ -1,0 +1,312 @@
+{
+  "episode": 1,
+  "judulMandarin": "归来",
+  "judulIndonesia": "Kembali",
+  "sinopsis": "Lin Wanxing keluar dari penjara setelah tiga tahun dan masuk ke Grup Shengshi sebagai petugas kebersihan. Di lobi ia dipermalukan Su Tian — sampai liontin giok di lehernya terlihat oleh CEO Gu Chenzhou, dan seluruh ruangan berhenti.",
+  "targetDurasiDetik": 97,
+  "catatanPenulisan": "Dialog ditulis Mandarin lebih dulu, baru diterjemahkan. Terjemahan Indonesia sengaja TIDAK harfiah pada kalimat sarkastis — drama pendek Tiongkok mengandalkan nada, dan terjemahan kaku membunuh adegannya. `pinyin` disertakan untuk pemeriksaan pelafalan oleh mesin suara. Kolom `fokus` menentukan seberapa rinci tokoh dideskripsikan ke mesin gambar: \"wajah\" = deskripsi penuh (untuk close-up), \"adegan\" = ringkas (untuk wide/medium, supaya seluruh badan & latar ikut tergambar), \"objek\" = tokoh tidak dideskripsikan sama sekali (untuk close-up benda seperti liontin, supaya wajah tidak merebut bingkai).",
+  "shot": [
+    {
+      "id": "s01",
+      "lokasiId": "gerbang-penjara",
+      "karakterId": [
+        "wanxing"
+      ],
+      "kamera": "wide shot, slow push in",
+      "aksi": "she walks out through the heavy iron gate alone, carrying a thin cloth bag, she does not look back",
+      "mood": "fajar-dingin",
+      "durasiDetik": 7,
+      "dialog": {
+        "tipe": "narasi",
+        "karakterId": "wanxing",
+        "mandarin": "三年前，我被所有人丢掉了。",
+        "pinyin": "Sān nián qián, wǒ bèi suǒyǒu rén diūdiào le.",
+        "indonesia": "Tiga tahun lalu, semua orang membuangku."
+      },
+      "fokus": "adegan"
+    },
+    {
+      "id": "s02",
+      "lokasiId": "gerbang-penjara",
+      "karakterId": [
+        "wanxing"
+      ],
+      "kamera": "extreme close-up on her open palm",
+      "aksi": "her fingers slowly uncurl to reveal a white jade teardrop pendant resting in her palm",
+      "mood": "fajar-dingin",
+      "durasiDetik": 5,
+      "dialog": {
+        "tipe": "narasi",
+        "karakterId": "wanxing",
+        "mandarin": "三年后，我带着证据回来了。",
+        "pinyin": "Sān nián hòu, wǒ dài zhe zhèngjù huílái le.",
+        "indonesia": "Tiga tahun kemudian, aku kembali membawa bukti."
+      },
+      "fokus": "objek"
+    },
+    {
+      "id": "s03",
+      "lokasiId": "menara-shengshi",
+      "karakterId": [],
+      "kamera": "title card over low-angle tower",
+      "aksi": "series title appears over the glass tower",
+      "mood": "judul",
+      "durasiDetik": 3,
+      "dialog": null,
+      "kartuJudul": true,
+      "fokus": "adegan"
+    },
+    {
+      "id": "s04",
+      "lokasiId": "menara-shengshi",
+      "karakterId": [],
+      "kamera": "low angle wide, slow tilt up",
+      "aksi": "the glass headquarters tower rises against an overcast sky, traffic blurs at its base",
+      "mood": "korporat-megah",
+      "durasiDetik": 4,
+      "dialog": null,
+      "fokus": "adegan"
+    },
+    {
+      "id": "s05",
+      "lokasiId": "lobi-shengshi",
+      "karakterId": [
+        "wanxing"
+      ],
+      "kamera": "medium shot, static",
+      "aksi": "in a faded grey janitor uniform she mops the black marble floor, head down, invisible to the people walking past",
+      "mood": "dingin-tertahan",
+      "durasiDetik": 6,
+      "dialog": null,
+      "fokus": "adegan"
+    },
+    {
+      "id": "s06",
+      "lokasiId": "lobi-shengshi",
+      "karakterId": [
+        "sutian",
+        "wanxing"
+      ],
+      "kamera": "medium wide, handheld",
+      "aksi": "she sweeps in with two assistants and kicks over the mop bucket, water spreading across the marble",
+      "mood": "hina",
+      "durasiDetik": 6,
+      "dialog": {
+        "tipe": "dialog",
+        "karakterId": "sutian",
+        "mandarin": "哟，这不是我们林大小姐吗？",
+        "pinyin": "Yō, zhè bù shì wǒmen Lín dà xiǎojiě ma?",
+        "indonesia": "Wah, bukankah ini Nona Besar Lin kita?"
+      },
+      "fokus": "adegan"
+    },
+    {
+      "id": "s07",
+      "lokasiId": "lobi-shengshi",
+      "karakterId": [
+        "wanxing",
+        "sutian"
+      ],
+      "kamera": "high angle looking down at her",
+      "aksi": "she kneels and wipes the spilled water in silence while the other woman stands over her",
+      "mood": "hina",
+      "durasiDetik": 6,
+      "dialog": {
+        "tipe": "dialog",
+        "karakterId": "sutian",
+        "mandarin": "跪着的样子，比三年前顺眼多了。",
+        "pinyin": "Guì zhe de yàngzi, bǐ sān nián qián shùnyǎn duō le.",
+        "indonesia": "Berlutut begitu jauh lebih enak dilihat daripada tiga tahun lalu."
+      },
+      "fokus": "adegan"
+    },
+    {
+      "id": "s08",
+      "lokasiId": "lobi-shengshi",
+      "karakterId": [
+        "wanxing"
+      ],
+      "kamera": "extreme close-up on her eyes",
+      "aksi": "her eyes stay dry and perfectly still, no tears, only calculation",
+      "mood": "dingin-tertahan",
+      "durasiDetik": 5,
+      "dialog": {
+        "tipe": "narasi",
+        "karakterId": "wanxing",
+        "mandarin": "再等一等。",
+        "pinyin": "Zài děng yī děng.",
+        "indonesia": "Sabar sedikit lagi."
+      },
+      "fokus": "wajah"
+    },
+    {
+      "id": "s09",
+      "lokasiId": "lobi-shengshi",
+      "karakterId": [
+        "chenzhou",
+        "laozhang"
+      ],
+      "kamera": "wide shot, lift doors opening",
+      "aksi": "the private lift opens and he strides out with his assistant half a step behind, the entire lobby falls silent",
+      "mood": "kedatangan",
+      "durasiDetik": 6,
+      "dialog": null,
+      "fokus": "adegan"
+    },
+    {
+      "id": "s10",
+      "lokasiId": "lobi-shengshi",
+      "karakterId": [
+        "sutian"
+      ],
+      "kamera": "medium close-up",
+      "aksi": "her face flips instantly from cruelty to sweetness as she steps forward",
+      "mood": "hina",
+      "durasiDetik": 4,
+      "dialog": {
+        "tipe": "dialog",
+        "karakterId": "sutian",
+        "mandarin": "顾总！好巧啊。",
+        "pinyin": "Gù zǒng! Hǎo qiǎo a.",
+        "indonesia": "Direktur Gu! Kebetulan sekali."
+      },
+      "fokus": "wajah"
+    },
+    {
+      "id": "s11",
+      "lokasiId": "lobi-shengshi",
+      "karakterId": [
+        "chenzhou",
+        "sutian"
+      ],
+      "kamera": "tracking shot following him",
+      "aksi": "he walks straight past her without turning his head, she is left holding her smile at nothing",
+      "mood": "kedatangan",
+      "durasiDetik": 5,
+      "dialog": null,
+      "fokus": "adegan"
+    },
+    {
+      "id": "s12",
+      "lokasiId": "lobi-shengshi",
+      "karakterId": [
+        "chenzhou",
+        "wanxing"
+      ],
+      "kamera": "medium shot, he stops abruptly",
+      "aksi": "he halts mid-stride, his gaze locked on the kneeling woman whose collar has fallen open",
+      "mood": "kejut",
+      "durasiDetik": 5,
+      "dialog": null,
+      "fokus": "adegan"
+    },
+    {
+      "id": "s13",
+      "lokasiId": "kilas-kecelakaan",
+      "karakterId": [],
+      "kamera": "extreme close-up, shallow focus, memory flash",
+      "aksi": "the same jade pendant swings in the rain above a shattered windscreen, a bloodied hand reaching",
+      "mood": "kenangan-hujan",
+      "durasiDetik": 5,
+      "dialog": null,
+      "fokus": "objek"
+    },
+    {
+      "id": "s14",
+      "lokasiId": "lobi-shengshi",
+      "karakterId": [
+        "chenzhou",
+        "wanxing"
+      ],
+      "kamera": "close two-shot",
+      "aksi": "he seizes her wrist and pulls her to her feet, the lobby frozen around them",
+      "mood": "tegang-dekat",
+      "durasiDetik": 6,
+      "dialog": {
+        "tipe": "dialog",
+        "karakterId": "chenzhou",
+        "mandarin": "这个东西，你从哪儿拿的？",
+        "pinyin": "Zhège dōngxi, nǐ cóng nǎr ná de?",
+        "indonesia": "Benda ini — dari mana kau dapat?"
+      },
+      "fokus": "adegan"
+    },
+    {
+      "id": "s15",
+      "lokasiId": "lobi-shengshi",
+      "karakterId": [
+        "wanxing",
+        "chenzhou"
+      ],
+      "kamera": "close-up on her, slow push in",
+      "aksi": "she lifts her head for the first time and looks directly into his eyes without flinching",
+      "mood": "tegang-dekat",
+      "durasiDetik": 5,
+      "dialog": {
+        "tipe": "dialog",
+        "karakterId": "wanxing",
+        "mandarin": "顾总，您弄疼我了。",
+        "pinyin": "Gù zǒng, nín nòng téng wǒ le.",
+        "indonesia": "Direktur Gu, Anda menyakiti saya."
+      },
+      "fokus": "wajah"
+    },
+    {
+      "id": "s16",
+      "lokasiId": "lobi-shengshi",
+      "karakterId": [
+        "wanxing"
+      ],
+      "kamera": "close-up, she pulls her wrist free",
+      "aksi": "she twists her wrist free and tucks the pendant back under her collar, her voice dropping",
+      "mood": "dingin-tertahan",
+      "durasiDetik": 7,
+      "dialog": {
+        "tipe": "dialog",
+        "karakterId": "wanxing",
+        "mandarin": "它是我的。一直都是。",
+        "pinyin": "Tā shì wǒ de. Yīzhí dōu shì.",
+        "indonesia": "Ini milik saya. Sejak dulu."
+      },
+      "fokus": "wajah"
+    },
+    {
+      "id": "s17",
+      "lokasiId": "lobi-shengshi",
+      "karakterId": [
+        "chenzhou"
+      ],
+      "kamera": "close-up on him",
+      "aksi": "his cold composure cracks for a single frame",
+      "mood": "kejut",
+      "durasiDetik": 4,
+      "dialog": {
+        "tipe": "dialog",
+        "karakterId": "chenzhou",
+        "mandarin": "你到底是谁？",
+        "pinyin": "Nǐ dàodǐ shì shéi?",
+        "indonesia": "Sebenarnya kau siapa?"
+      },
+      "fokus": "wajah"
+    },
+    {
+      "id": "s18",
+      "lokasiId": "lobi-shengshi",
+      "karakterId": [
+        "wanxing"
+      ],
+      "kamera": "slow push to extreme close-up, cut to black",
+      "aksi": "the faintest smile touches her mouth as she answers, then the screen cuts hard to black",
+      "mood": "hook-gelap",
+      "durasiDetik": 8,
+      "dialog": {
+        "tipe": "dialog",
+        "karakterId": "wanxing",
+        "mandarin": "一个来讨债的人。",
+        "pinyin": "Yī gè lái tǎo zhài de rén.",
+        "indonesia": "Orang yang datang menagih utang."
+      },
+      "fokus": "wajah"
+    }
+  ]
+}

@@ -19,7 +19,15 @@ import { AlertTriangle, Eye, EyeOff, Info, Loader2 } from "lucide-react";
 import type { PlaylyVideo, PlaylySumber } from "@/lib/playly";
 import type { PlaylyImdbMap } from "@/lib/playly-imdb";
 import { DRAMA_QUALITY_OPTIONS, KATEGORI_ISI } from "@/lib/types";
+import { cn } from "@/lib/utils";
 import { JENIS_BAWAAN, LABEL_JENIS, type JenisVideo } from "@/lib/jenis-video";
+import {
+  hitungImdb,
+  LABEL_SARING,
+  SARING_BAWAAN,
+  saringVideoImdb,
+  type SaringImdb,
+} from "@/lib/saring-video-admin";
 import PlaylyImdbPicker from "./PlaylyImdbPicker";
 import PlaylyCocokkanSemua from "./PlaylyCocokkanSemua";
 
@@ -92,6 +100,8 @@ export default function PlaylyVisibilityManager({
   const [jenis, setJenis] = useState<Record<string, string>>(initialJenis);
   const [sedangJenis, setSedangJenis] = useState<string | null>(null);
   const [pesan, setPesan] = useState<Pesan | null>(null);
+  /** Saringan "sudah / belum ada IMDb" (owner 2026-11-05: "biar mudah"). */
+  const [saring, setSaring] = useState<SaringImdb>(SARING_BAWAAN);
 
   const ubah = async (videoId: string, jadikanTersembunyi: boolean) => {
     setSedangProses(videoId);
@@ -294,6 +304,12 @@ export default function PlaylyVisibilityManager({
   // Dihitung dari daftar aslinya, bukan pengurangan angka: video bisa
   // disembunyikan DAN belum siap sekaligus, jadi mengurangi dua angka akan
   // menghitungnya dua kali dan hasilnya bisa minus.
+  // Dihitung dari `imdb` yang ADA DI STATE, bukan dari prop awal: begitu admin
+  // mencocokkan sebuah video, angka di tombol saringan ikut turun seketika
+  // tanpa perlu memuat ulang halaman.
+  const jumlahSaring = hitungImdb(videos, imdb);
+  const videoTampil = saringVideoImdb(videos, imdb, saring);
+
   const belumSiap = new Set(belumSiapIds);
   const jumlahTampil = videos.filter(
     (v) => !hidden.has(v.id) && !belumSiap.has(v.id),
@@ -427,9 +443,61 @@ export default function PlaylyVisibilityManager({
         </p>
       )}
 
+      {/* SARINGAN IMDb (owner 2026-11-05: "biar mudah"). Ditaruh tepat di atas
+          daftar, bukan di kepala panel: ia menjelaskan isi daftar di bawahnya,
+          dan keterangan yang jauh dari yang dijelaskan mudah terlewat.
+
+          Angkanya dihitung ulang tiap render, jadi begitu sebuah video
+          dicocokkan, hitungannya bergerak seketika — admin melihat sisanya
+          berkurang tanpa memuat ulang halaman. */}
+      {videos.length > 0 && (
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          {(Object.keys(LABEL_SARING) as SaringImdb[]).map((pilihan) => {
+            const dipakai = saring === pilihan;
+            return (
+              <button
+                key={pilihan}
+                type="button"
+                onClick={() => setSaring(pilihan)}
+                aria-pressed={dipakai}
+                className={cn(
+                  "rounded-full border px-3 py-1.5 text-xs font-semibold transition",
+                  dipakai
+                    ? "border-amber-500 bg-amber-500/15 text-amber-700"
+                    : "border-zinc-700 text-zinc-400 hover:border-amber-400 hover:text-amber-700",
+                )}
+              >
+                {LABEL_SARING[pilihan]}{" "}
+                <span className="font-bold">{jumlahSaring[pilihan]}</span>
+              </button>
+            );
+          })}
+          {saring === "belum" && jumlahSaring.belum > 0 && (
+            // Kalimat ini mencegah kebingungan yang pasti muncul: saat saringan
+            // "Belum" aktif, video yang BARU SAJA dicocokkan langsung lenyap
+            // dari daftar — itu benar, tapi tanpa penjelasan terbaca seperti
+            // videonya terhapus.
+            <span className="text-xs text-zinc-500">
+              Video hilang dari daftar ini begitu selesai dicocokkan — itu
+              tandanya berhasil.
+            </span>
+          )}
+        </div>
+      )}
+
+      {videos.length > 0 && videoTampil.length === 0 && (
+        // Daftar kosong karena SARINGAN, bukan karena tidak ada video. Dua hal
+        // itu wajib dibedakan: tanpa pesan ini, panel terbaca seperti rusak.
+        <p className="mt-4 rounded-lg border border-zinc-700 p-4 text-center text-sm text-zinc-400">
+          {saring === "belum"
+            ? "Semua video sudah dicocokkan ke IMDb. Tidak ada yang tersisa."
+            : "Belum ada video yang cocok dengan saringan ini."}
+        </p>
+      )}
+
       {videos.length > 0 && (
         <ul className="mt-4 divide-y divide-zinc-800">
-          {videos.map((v) => {
+          {videoTampil.map((v) => {
             const tersembunyi = hidden.has(v.id);
             const belumAdaFile = belumSiap.has(v.id);
             const proses = sedangProses === v.id;

@@ -9,7 +9,9 @@
 >
 > **📦 Berkas ini sudah 9.086 baris** (dihitung 2026-10-30 dengan `wc -l`, bukan ditaksir; angka lama "±6.600" dari 2026-10-15 dan "8.700+" sudah basi — tumbuh ±2.500 baris dalam 15 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. **Menunggu keputusan owner.**
 
-**Terakhir diisi:** 2026-11-05 — ✅ **TAYANG `0cc1758`: PANEL ADMIN kini berlatar terang, seragam dengan beranda.** Owner: *"di admin kamu buat juga latar belakangnya sama dengan beranda jadi semua dashboard semua sinkron"*. ⭐ **477 kemunculan warna gelap dibalik TANPA menyentuh satu pun berkas komponen** — Tailwind v4 di sini mencetak warna sebagai VARIABEL, jadi paletnya cukup didefinisikan ulang di satu pembungkus (`app/globals.css`), saklarnya di `app/admin/layout.tsx`. 🪤 **TIGA jebakan senyap, semuanya ketahuan hanya karena hasilnya DIPANDANG** (lihat seksi teratas), dan 🪤 **DUA kesalahan METODE VERIFIKASI saya sendiri** — nyaris melaporkan 'deploy gagal' padahal sudah tayang. Dual push `60eb338..0cc1758`.
+**Terakhir diisi:** 2026-11-05 — ✅ **TAYANG `425cc34`: TIGA perbaikan panel admin sekaligus.** (1) 🧭 **Satu menu = satu tampilan** — lima menu sidebar ternyata BUKAN halaman terpisah, semuanya `/admin` yang sama; sekalian menutup menu **Keamanan (2FA) yang RUSAK** (targetnya `#keamanan` nol elemennya). (2) 🎨 **Teks bernada transparan tak lagi pucat** — cara kemarin bocor mendasar: `text-rose-100/90` adalah kelas BERBEDA dari `text-rose-100`. (3) 🔍 **Saringan "sudah / belum ada IMDb"** di daftar 489 video. Dual push `68b0069..425cc34`, tayang **±84 detik**, **downtime NOL**. Rinciannya di seksi teratas.
+
+**Sebelumnya hari ini:** ✅ **TAYANG `0cc1758`: PANEL ADMIN kini berlatar terang, seragam dengan beranda.** Owner: *"di admin kamu buat juga latar belakangnya sama dengan beranda jadi semua dashboard semua sinkron"*. ⭐ **477 kemunculan warna gelap dibalik TANPA menyentuh satu pun berkas komponen** — Tailwind v4 di sini mencetak warna sebagai VARIABEL, jadi paletnya cukup didefinisikan ulang di satu pembungkus (`app/globals.css`), saklarnya di `app/admin/layout.tsx`. 🪤 **TIGA jebakan senyap, semuanya ketahuan hanya karena hasilnya DIPANDANG** (lihat seksi teratas), dan 🪤 **DUA kesalahan METODE VERIFIKASI saya sendiri** — nyaris melaporkan 'deploy gagal' padahal sudah tayang. Dual push `60eb338..0cc1758`.
 
 **Sebelumnya hari ini:** ✅ **TAYANG `1dd0fd0`: panel admin Playly tak lagi HILANG saat Playly lambat.** 🪤 Owner melapor *"Dropdown paling kiri aku tidak ketemu"* — **dan memang tidak ada, bukan terlewat**: panel menyembunyikan DIRINYA SENDIRI begitu pengambilan daftar gagal (`if (fetchError) return`), jadi Playly telat 10 detik = daftar video + KETIGA dropdown lenyap. Senyap total: halaman admin tetap 200, build hijau, 1.886 tes hijau — yang hilang cuma alat kerjanya, dan **owner yang menemukan, bukan mesin, SESUDAH rilis**. Kini panel menyerah hanya kalau benar-benar nol video, dan halaman admin memakai salinan terakhir sebagai jaring. Dual push `d73fd0b..1dd0fd0`, downtime NOL.
 
@@ -44,6 +46,95 @@
 **Rilis ke-1 hari ini:** (✅ **TAYANG `4dde5c0`**: tombol beranda "LIHAT SEMUA FILM UNGGULAN" → **"TEMUKAN TONTONAN FAVORITMU"** — labelnya salah di dua sisi (isinya drama berseri, bukan film; tujuannya katalog lengkap, bukan daftar unggulan). Dual push → Railway build sendiri → tayang ±60 detik, **downtime NOL**. Smoke test 5 alur: 4 langsung 200, `/drama/meg-2-the-trench` 500 SEKALI lalu 200 enam kali — cold start, dicatat bukan dihapus. ❌ **DIRALAT di rilis ke-2**: catatan asli di sini menyebut tombol itu "tergeser ke kanan di layar HP" sebagai gejala nyata. **Itu keliru** — cacat alat potret, bukan cacat situs; sudah diukur ulang dan tombolnya terpusat sempurna. Jangan diburu.)
 
 **Sebelumnya:** 2026-10-30 (tiga rilis beruntun, semuanya TAYANG: `5088bf2` genre bahasa Indonesia → `27973f0` koreksi owner Kerajaan/CEO/Lainnya → **`55894b8` dua tombol halaman drama yang selama ini TERPOTONG**. Downtime NOL. ⏸️ **DUA bahasan menunggu keputusan owner**, risetnya sudah selesai & nol kode diubah: "klik drama langsung play" dan "sinopsis film masih bahasa Inggris".)
+
+---
+
+## 2026-11-05 — ✅ DIRILIS `425cc34`: TIGA perbaikan panel admin (sidebar · warna pucat · saringan IMDb)
+
+Tiga commit terpisah, satu commit satu tujuan: `5d5b116` sidebar · `a625273` warna · `425cc34` saringan.
+
+### 1. 🧭 Satu menu = satu tampilan (`5d5b116`)
+
+**Owner:** *"ketika klik dashboard, tambah drama, daftar drama, admin, 2FA semua kalau di scroll
+scroll sudah jadi satu hanya awalnya saja yang beda"*.
+
+**Pengamatannya tepat, dan sebabnya mengejutkan:** kelima menu itu **BUKAN halaman terpisah**.
+Semuanya menunjuk `/admin` yang SAMA dan cuma meloncat ke posisi dalam satu halaman berisi **enam
+bagian bertumpuk** (form Tambah Drama saja ~30 isian). Begitu digulung, memang menyatu.
+
+🪤 **Bug lama yang ikut ketahuan:** menu **"Keamanan (2FA)" RUSAK** — menunjuk `#keamanan`, dan
+**nol elemen** di halaman punya id itu. Diklik tidak membawa ke mana-mana, **tanpa error**, entah
+sejak kapan. Ditemukan hanya karena target tiap menu dihitung satu per satu, bukan dibaca sekilas.
+⚠️ **Aturan: menu yang menunjuk bagian halaman WAJIB punya penjaga yang memastikan targetnya ada**
+— `tests/bagian-admin.test.ts` kini menolak menu yang tak punya cabang render.
+
+Bagian disimpan di **HASH alamat** (`/admin#tambah`), bukan state biasa: tautan menu lama tetap
+bekerja, tombol Kembali browser berfungsi, halamannya bisa di-bookmark.
+
+🪤 **Dua urutan yang sengaja dijaga, keduanya diuji MERAH lebih dulu:**
+1. **Edit di Daftar Drama MEMBUKA bagian form dulu, baru mengisi.** `loadDramaToForm` menggulung
+   ke `#tambah`; kalau bagiannya belum dibuka, elemen itu masih tersembunyi — menggulung ke
+   sesuatu yang tak terlihat tidak menghasilkan apa pun, dan tombol Edit **terasa mati**.
+2. **Form Tambah Drama DISEMBUNYIKAN (`hidden`), bukan dilepas dari DOM.** Sebagian isian (mis.
+   berkas poster yang sudah dipilih) tidak tersimpan di state halaman — melepasnya membuat isian
+   itu **hilang diam-diam** tiap admin menengok menu lain.
+
+### 2. 🎨 Teks bernada transparan tak lagi pucat (`a625273`)
+
+**Owner** mengirim tangkapan blok *"Jalur webhook belum menyala"* yang teksnya tak terbaca.
+
+🪤 **PELAJARAN INTI — cara kemarin BOCOR SECARA MENDASAR, bukan sekadar satu blok terlewat.**
+Aturan warna ditulis dengan menyebut NAMA KELAS (`.text-rose-100 { … }`). Teks di sana memakai
+`text-rose-100/90` — **bertransparansi** — dan Tailwind mencetaknya sebagai kelas **BERBEDA**
+(`.text-rose-100\/90`), jadi aturannya **tidak pernah kena**. Hal yang sama berlaku untuk
+`hover:text-*`. Menambal per-selector = memburu tiap varian baru selamanya.
+
+**Yang benar: geser VARIABELNYA.** Satu perubahan menutup semua varian sekaligus — transparansi
+memakai `color-mix(… var(--color-x) …)` dan hover memakai variabel yang sama. Lalu warna asli
+**DIKEMBALIKAN** khusus untuk LATAR & GARIS supaya tombol kuning tidak ikut menggelap; daftarnya
+dihitung dari pemakaian nyata (hanya nada 300–400 yang bentrok, nada 500+ tak pernah digeser).
+
+⚠️ **Aturan umum: saat menimpa warna Tailwind, targetkan VARIABEL — bukan nama kelas.** Nama kelas
+tidak pernah menangkap varian transparansi maupun `hover:`.
+
+### 3. 🔍 Saringan "sudah / belum ada IMDb" (`425cc34`)
+
+**Owner:** *"tambahkan filter mana yang sudah ada imdb mana yang belum biar mudah"*. Daftar berisi
+**489 video, 370 sudah dicocokkan** — mencari 119 sisanya berarti menggulung seluruh daftar sambil
+memeriksa satu per satu.
+
+Tiga tombol beserta angkanya, dihitung dari state sehingga **bergerak seketika** tiap satu video
+selesai dicocokkan. Dua hal ikut dipasang karena pasti membingungkan kalau tidak ada: keterangan
+bahwa video memang **HILANG** dari daftar "Belum" begitu selesai (tanda berhasil, bukan terhapus),
+dan pesan yang **MEMBEDAKAN** "semua sudah dicocokkan" dari "tidak ada video".
+
+💡 Penjaga terpenting: **"Sudah" + "Belum" wajib sama persis dengan "Semua"**. Kalau sebuah video
+tidak masuk kelompok mana pun, ia tak terlihat di KEDUA saringan — hilang dari pandangan admin
+tanpa gejala.
+
+### 🪤 PELAJARAN VERIFIKASI (lanjutan dari rilis sebelumnya)
+
+Saat memeriksa rilis ini, pola `bg-amber-400{background-color:` **tidak ketemu** di CSS produksi —
+nyaris dilaporkan sebagai aturan yang hilang. Sebabnya **minifier MENGGABUNGKAN selector**:
+`.tema-admin-terang .bg-amber-400,.tema-admin-terang .hover\:bg-amber-400:hover{…}`. ⚠️ **Saat
+mencari aturan CSS di berkas hasil build, jangan berasumsi bentuknya sama dengan yang ditulis** —
+cocokkan potongan yang longgar, lalu bandingkan dengan CSS build LOKAL sebelum menyimpulkan hilang.
+Hal serupa terjadi pada bundle JS: saringan IMDb dicari di bundle `/admin` padahal ia hanya dimuat
+di `/admin/videos/playly`.
+
+### Bukti
+
+- **1.916 tes hijau** (+17 penjaga baru di 2 berkas). Urutan Edit dan penyaringan daftar
+  masing-masing **diuji MERAH lebih dulu**.
+- Build sukses · `tsc` exit 0 · **downtime NOL** (http=200 di setiap pemeriksaan selama 84 detik).
+- Smoke test produksi **10 alamat** semua 200 · `/api/health` → `{"ok":true,"sumberData":"database"}`.
+- Ketiganya diverifikasi hidup di produksi: variabel warna baru di CSS publik, `kelola-admin` di
+  bundle `/admin`, dan "Belum ada IMDb" di bundle `/admin/videos/playly`.
+
+### ⚠️ Batas jujur
+
+Ketiganya ada di halaman ber-login, jadi **tidak bisa dipotret dari luar** — bukti tampilannya dari
+render komponen asli + CSS hasil build. Penilaian akhir ada pada owner.
 
 ---
 

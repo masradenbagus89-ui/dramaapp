@@ -14,6 +14,8 @@ import HistoryCard from "@/app/components/HistoryCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Clock } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { BADAN_TERANG } from "@/app/components/beranda/shell";
 
 export default function HistoryPage() {
   const [items, setItems] = useState<HistoryItem[] | null>(null);
@@ -74,13 +76,14 @@ export default function HistoryPage() {
   };
 
   return (
-    <div className="mx-auto max-w-7xl px-4 pb-10 pt-6 md:px-6">
+    <div className={cn(BADAN_TERANG, "min-h-screen")}>
+      <div className="mx-auto max-w-7xl px-4 pb-10 pt-6 md:px-6">
       <div className="flex items-end justify-between gap-3">
         <div>
-          <h1 className="text-xl font-bold text-white md:text-2xl">
+          <h1 className="text-xl font-bold text-white terang:text-zinc-900 md:text-2xl">
             Riwayat tontonan
           </h1>
-          <p className="mt-1 text-sm text-zinc-400">
+          <p className="mt-1 text-sm text-zinc-400 terang:text-zinc-600">
             Drama yang baru saja kamu tonton. Tersimpan di perangkat ini.
           </p>
         </div>
@@ -89,7 +92,7 @@ export default function HistoryPage() {
             type="button"
             variant="outline"
             onClick={onClearAll}
-            className="shrink-0 rounded-full border-zinc-700 bg-transparent text-xs font-semibold text-zinc-300 hover:border-red-500 hover:text-red-400"
+            className="shrink-0 rounded-full border-zinc-700 terang:border-zinc-300 bg-transparent text-xs font-semibold text-zinc-300 terang:text-zinc-700 hover:border-red-500 hover:text-red-400 terang:hover:text-red-700"
           >
             Hapus semua
           </Button>
@@ -97,21 +100,21 @@ export default function HistoryPage() {
       </div>
 
       {items === null || !dramasReady ? (
-        <div className="mt-12 text-center text-sm text-zinc-500">Memuat...</div>
+        <div className="mt-12 text-center text-sm text-zinc-500 terang:text-zinc-600">Memuat...</div>
       ) : loadError ? (
-        <Card className="mt-16 border-zinc-800 bg-zinc-900/40">
+        <Card className="mt-16 border-zinc-800 bg-zinc-900/40 terang:border-zinc-200 terang:bg-white">
           <CardContent className="flex flex-col items-center text-center">
-            <Clock className="h-16 w-16 text-zinc-700" />
-            <p className="mt-3 text-sm text-zinc-500">
+            <Clock className="h-16 w-16 text-zinc-700 terang:text-zinc-300" />
+            <p className="mt-3 text-sm text-zinc-500 terang:text-zinc-600">
               Gagal memuat daftar drama. Coba buka ulang halaman ini.
             </p>
           </CardContent>
         </Card>
       ) : visible.length === 0 ? (
-        <Card className="mt-16 border-zinc-800 bg-zinc-900/40">
+        <Card className="mt-16 border-zinc-800 bg-zinc-900/40 terang:border-zinc-200 terang:bg-white">
           <CardContent className="flex flex-col items-center text-center">
-            <Clock className="h-16 w-16 text-zinc-700" />
-            <p className="mt-3 text-sm text-zinc-500">
+            <Clock className="h-16 w-16 text-zinc-700 terang:text-zinc-300" />
+            <p className="mt-3 text-sm text-zinc-500 terang:text-zinc-600">
               Belum ada riwayat. Nonton drama, lalu kembali ke sini.
             </p>
             <Button
@@ -126,7 +129,7 @@ export default function HistoryPage() {
         <div className="mt-8 space-y-9">
           {sections.map((section) => (
             <section key={section.id}>
-              <h2 className="mb-3 text-sm font-bold uppercase tracking-wider text-zinc-400">
+              <h2 className="mb-3 text-sm font-bold uppercase tracking-wider text-zinc-400 terang:text-zinc-600">
                 {section.label}
               </h2>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 md:gap-5 lg:grid-cols-5 xl:grid-cols-6">
@@ -149,6 +152,7 @@ export default function HistoryPage() {
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 }

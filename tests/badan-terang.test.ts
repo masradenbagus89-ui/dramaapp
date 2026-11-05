@@ -21,6 +21,10 @@ const HALAMAN_TERANG = [
   { berkas: "app/components/DramaBrowser.tsx", catatan: "/discover — Jelajah Drama & Film" },
   { berkas: "app/film/page.tsx", catatan: "/film" },
   { berkas: "app/katalog/page.tsx", catatan: "/katalog" },
+  // Ditambahkan 2026-11-05 atas permintaan owner, melengkapi keseragaman.
+  { berkas: "app/shorts/page.tsx", catatan: "/shorts" },
+  { berkas: "app/history/page.tsx", catatan: "/history — Riwayat tontonan" },
+  { berkas: "app/my-list/page.tsx", catatan: "/my-list — Daftar Saya" },
 ];
 
 /**
@@ -33,6 +37,10 @@ const KOMPONEN_DI_DALAM = [
   "app/components/beranda/HasilPlayly.tsx",
   "app/components/PlaylyVideoGrid.tsx",
   "app/components/beranda/CatalogCard.tsx",
+  // Kartu khusus /my-list dan /history. Keduanya TIDAK memakai CatalogCard,
+  // jadi dukungan tema terang di sana tidak otomatis ikut.
+  "app/components/DramaCard.tsx",
+  "app/components/HistoryCard.tsx",
 ];
 
 describe("badan terang: saklar dan latar tidak boleh terpisah", () => {
@@ -75,6 +83,12 @@ describe("tidak ada teks yang hilang di latar putih", () => {
       // ini sempit dengan sengaja: ia menuntut `fill-white`, bukan sekadar
       // "ikon", jadi teks biasa tetap tidak bisa lolos lewat celah ini.
       if (/\bfill-white\b/.test(k)) return false;
+      // DIKECUALIKAN JUGA: elemen yang MEMBAWA LATAR GELAPNYA SENDIRI
+      // (`bg-black/80` pada tombol hapus di sudut poster). Teks putih di atas
+      // latar hitam milik elemen itu sendiri memang benar — latarnya bukan
+      // kertas putih halaman. Sempit dengan sengaja: menuntut `bg-black`
+      // tertulis di className yang SAMA, jadi teks biasa tetap tak bisa lolos.
+      if (/\bbg-black(\/\d+)?\b/.test(k)) return false;
       return !/\bterang:text-/.test(k);
     });
 

@@ -49,7 +49,7 @@ export default function HistoryCard({
             />
           </div>
         </div>
-        <h3 className="mt-2 line-clamp-2 px-0.5 text-sm font-semibold text-white">
+        <h3 className="mt-2 line-clamp-2 px-0.5 text-sm font-semibold text-white terang:text-zinc-900">
           {drama.title}
         </h3>
         <p className="mt-0.5 px-0.5 text-[11px] font-medium leading-snug text-amber-400">

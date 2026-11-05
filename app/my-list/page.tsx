@@ -8,6 +8,8 @@ import DramaCard from "@/app/components/DramaCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Bookmark } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { BADAN_TERANG } from "@/app/components/beranda/shell";
 
 export default function MyListPage() {
   const [ids, setIds] = useState<string[] | null>(null);
@@ -32,19 +34,20 @@ export default function MyListPage() {
     .filter((d): d is Drama => Boolean(d));
 
   return (
-    <div className="mx-auto max-w-7xl px-4 pb-10 pt-6 md:px-6">
-      <h1 className="text-xl font-bold text-white md:text-2xl">Daftar Saya</h1>
-      <p className="mt-1 text-sm text-zinc-400">
+    <div className={cn(BADAN_TERANG, "min-h-screen")}>
+      <div className="mx-auto max-w-7xl px-4 pb-10 pt-6 md:px-6">
+      <h1 className="text-xl font-bold text-white terang:text-zinc-900 md:text-2xl">Daftar Saya</h1>
+      <p className="mt-1 text-sm text-zinc-400 terang:text-zinc-600">
         Drama yang Anda simpan untuk ditonton nanti.
       </p>
 
       {ids === null ? (
-        <div className="mt-12 text-center text-sm text-zinc-500">Memuat...</div>
+        <div className="mt-12 text-center text-sm text-zinc-500 terang:text-zinc-600">Memuat...</div>
       ) : dramas.length === 0 ? (
-        <Card className="mt-16 border-zinc-800 bg-zinc-900/40">
+        <Card className="mt-16 border-zinc-800 bg-zinc-900/40 terang:border-zinc-200 terang:bg-white">
           <CardContent className="flex flex-col items-center text-center">
-            <Bookmark className="h-16 w-16 fill-zinc-700 text-zinc-700" />
-            <p className="mt-3 text-sm text-zinc-500">
+            <Bookmark className="h-16 w-16 fill-zinc-700 text-zinc-700 terang:fill-zinc-300 terang:text-zinc-300" />
+            <p className="mt-3 text-sm text-zinc-500 terang:text-zinc-600">
               Daftar Anda masih kosong.
             </p>
             <Button
@@ -62,6 +65,7 @@ export default function MyListPage() {
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 }

@@ -4,6 +4,8 @@ import { homeCatalogRows } from "@/lib/beranda-catalog";
 import FeaturedRow from "@/app/components/beranda/FeaturedRow";
 import { SHELL } from "@/app/components/beranda/shell";
 import { Clapperboard } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { BADAN_TERANG } from "@/app/components/beranda/shell";
 
 // Disimpan & dipakai ulang, disegarkan tiap 60 detik (menggantikan force-dynamic
 // yang membangun ulang halaman untuk tiap pengunjung).
@@ -33,12 +35,12 @@ export default async function ShortsPage() {
   const rows = homeCatalogRows(dramas);
 
   return (
-    <div className="pb-10">
+    <div className={cn(BADAN_TERANG, "min-h-screen pb-10")}>
       <div className={`${SHELL} pt-6 pb-3`}>
-        <h1 className="text-xl font-bold text-white md:text-2xl">
+        <h1 className="text-xl font-bold text-white terang:text-zinc-900 md:text-2xl">
           Shorts Trending
         </h1>
-        <p className="mt-1 text-sm text-zinc-400">
+        <p className="mt-1 text-sm text-zinc-400 terang:text-zinc-600">
           Cuplikan singkat drama paling populer minggu ini. Klik poster untuk
           langsung memutar cuplikannya.
         </p>
@@ -46,8 +48,8 @@ export default async function ShortsPage() {
 
       {rows.length === 0 ? (
         <div className="flex flex-col items-center gap-2 py-16 text-center">
-          <Clapperboard className="size-8 text-zinc-700" />
-          <p className="text-sm text-zinc-500">Belum ada shorts trending.</p>
+          <Clapperboard className="size-8 text-zinc-700 terang:text-zinc-400" />
+          <p className="text-sm text-zinc-500 terang:text-zinc-600">Belum ada shorts trending.</p>
         </div>
       ) : (
         rows.map((row) => (

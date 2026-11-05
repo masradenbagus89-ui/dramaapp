@@ -25,7 +25,7 @@ export default function DramaCard({ drama }: { drama: Drama }) {
         className="shadow-sm transition-shadow group-hover:shadow-lg group-hover:shadow-amber-500/20"
       />
       <div className="mt-2 px-0.5">
-        <h3 className="line-clamp-2 text-sm font-semibold text-white">
+        <h3 className="line-clamp-2 text-sm font-semibold text-white terang:text-zinc-900">
           {drama.title}
         </h3>
         {/* Tinggal kategori: tahun, jumlah episode, dan rating sudah tergambar

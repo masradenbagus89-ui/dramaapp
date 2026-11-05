@@ -9,7 +9,9 @@
 >
 > **📦 Berkas ini sudah 9.086 baris** (dihitung 2026-10-30 dengan `wc -l`, bukan ditaksir; angka lama "±6.600" dari 2026-10-15 dan "8.700+" sudah basi — tumbuh ±2.500 baris dalam 15 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. **Menunggu keputusan owner.**
 
-**Terakhir diisi:** 2026-11-05 — 🔁 **VERIFIKASI SILANG 3 SESI.** Push yang diminta owner ternyata **sudah dilakukan sesi lain** (`4f28886` + 6 commit lain sudah di kedua remote). Nol kode diubah; yang dikerjakan: membetulkan catatan yang BASI — studio AI sudah di-commit (`d12d913`, 26 berkas) padahal masih tertulis "belum di-commit", dan `antrean-deploy.md` disegarkan ke `836a0b1`. 🪤 **Pelajaran: status "belum di-push" di catatan lama WAJIB dicek ulang lewat `git fetch`** — repo ini dikerjakan dari beberapa sesi. Rinciannya di seksi teratas.
+**Terakhir diisi:** 2026-11-05 — 🎬 **BELUM DIRILIS `2f8fb6f`: serial Playly akhirnya bisa dipisahkan dari "Film Terbaru".** Owner: *"rekan saya upload drama dari playly tapi masuknya ke film terbaru, harusnya masuk ke series terbaru"*. Akar masalahnya **bukan salah logika — fiturnya memang belum pernah ada**: seluruh video Playly dilempar ke baris film tanpa kecuali. 🪤 **Tebakan otomatis DIUKUR dulu di 489 video produksi lalu DITOLAK** (pola judul cocok cuma 18, DUA di antaranya justru film; judul yang dikeluhkan owner tak terdeteksi; 58% durasi `null`). ⏳ **Menunggu izin push owner.** Rinciannya di seksi teratas.
+
+**Sebelumnya 2026-11-05:** 🔁 **VERIFIKASI SILANG 3 SESI.** Push yang diminta owner ternyata **sudah dilakukan sesi lain** (`4f28886` + 6 commit lain sudah di kedua remote). Nol kode diubah; yang dikerjakan: membetulkan catatan yang BASI — studio AI sudah di-commit (`d12d913`, 26 berkas) padahal masih tertulis "belum di-commit", dan `antrean-deploy.md` disegarkan ke `836a0b1`. 🪤 **Pelajaran: status "belum di-push" di catatan lama WAJIB dicek ulang lewat `git fetch`** — repo ini dikerjakan dari beberapa sesi. Rinciannya di seksi teratas.
 
 **Sebelumnya 2026-11-03:** 🔊 ✅ **TAYANG `88d3429`: Volume Stabil & Penguat suara AKHIRNYA BERFUNGSI.** Ternyata kedua sakelar selama ini dipasang MATI PERMANEN dan **nol `AudioContext` di seluruh project** — mesinnya memang tak pernah dibangun, jadi ini membangun dari nol, bukan membuka gerbang. Surat permintaan izin dikirim ke rekan Playly dan **mereka memasangnya hari itu juga**, sehingga fitur **hidup sendiri tanpa rilis ulang** (perancangannya terbukti benar). 🔴 **Bunyinya BELUM pernah didengar siapa pun** — mesin kerja ini server tanpa perangkat suara, semua pengukuran audio memulangkan nol; **uji dengar wajib manusia**, caranya di seksinya. ⚠️ Kalau DramaKu pindah domain, daftar origin WAJIB dikirim ulang ke Playly atau fitur suara mati lagi.
 
@@ -36,6 +38,98 @@
 **Rilis ke-1 hari ini:** (✅ **TAYANG `4dde5c0`**: tombol beranda "LIHAT SEMUA FILM UNGGULAN" → **"TEMUKAN TONTONAN FAVORITMU"** — labelnya salah di dua sisi (isinya drama berseri, bukan film; tujuannya katalog lengkap, bukan daftar unggulan). Dual push → Railway build sendiri → tayang ±60 detik, **downtime NOL**. Smoke test 5 alur: 4 langsung 200, `/drama/meg-2-the-trench` 500 SEKALI lalu 200 enam kali — cold start, dicatat bukan dihapus. ❌ **DIRALAT di rilis ke-2**: catatan asli di sini menyebut tombol itu "tergeser ke kanan di layar HP" sebagai gejala nyata. **Itu keliru** — cacat alat potret, bukan cacat situs; sudah diukur ulang dan tombolnya terpusat sempurna. Jangan diburu.)
 
 **Sebelumnya:** 2026-10-30 (tiga rilis beruntun, semuanya TAYANG: `5088bf2` genre bahasa Indonesia → `27973f0` koreksi owner Kerajaan/CEO/Lainnya → **`55894b8` dua tombol halaman drama yang selama ini TERPOTONG**. Downtime NOL. ⏸️ **DUA bahasan menunggu keputusan owner**, risetnya sudah selesai & nol kode diubah: "klik drama langsung play" dan "sinopsis film masih bahasa Inggris".)
+
+---
+
+## 2026-11-05 — 🎬 BELUM DIRILIS `2f8fb6f`: serial Playly dipisahkan dari "Film Terbaru"
+
+**Keluhan owner:** *"rekan saya upload drama dari playly tapi masuknya ke film terbaru, harusnya
+masuk ke series terbaru"* + tangkapan layar halaman depan, kotak merah di **"Pemuda Miskin Mata
+Tembus Pandang Jadi Miliarder"** (durasi 2:00).
+
+### Akar masalahnya BUKAN salah logika — fiturnya memang belum pernah ada
+
+`TabKatalogTampilan.tsx` menggambar seksi "Film Terbaru" dengan `videos.map(bungkusVideo)` —
+**SELURUH** video Playly, tanpa penyaringan apa pun. Playly tidak pernah mengirim penanda jenis
+(`PlaylyWebhookVideo` cuma berisi judul, durasi, sampul, tahun, genre bebas), jadi situs memang
+tidak punya cara apa pun untuk membedakan film dari episode serial.
+
+**Ini bukan cuma 1 drama.** Judul berseri lain yang ikut salah tempat di 489 video produksi:
+Transformers *Chapter 1–7*, *THE VESSEL Episode 1*, `Outlander S07E15`,
+`All of Us Are Dead SEASON1EPISODE2`, `Imitation (2023) - E02`, `KONO EXPRESS Bab 2`.
+
+❗ **Jalur resmi yang sudah ada ternyata NOL dipakai.** Fitur "kaitkan video → drama + episode"
+(`/api/admin/playly/embeds`) sudah lengkap sejak lama, tapi **489 dari 489** video `dramaTitle`-nya
+`null` dan `episode`-nya `null`. Tidak pernah dipakai sekali pun.
+
+### 🪤 PELAJARAN INTI — tebakan otomatis DIUKUR DULU, lalu DITOLAK
+
+Godaan pertama: tebak dari judul & durasi, supaya owner tak perlu klik apa pun. Diukur dulu di
+489 video produksi sebelum ditulis, dan hasilnya **menggugurkan pendekatan itu**:
+
+| Penanda | Hasil nyata |
+|---|---|
+| Pola judul (`Chapter N`, `Ep N`, `SxxEyy`, `Bab N`) | cocok **18 dari 489**, dan **2 di antaranya FILM**: "John Wick Chapter 4", "Kantara A Legend Chapter 1" → akan salah pindah ke Series |
+| Judul yang dikeluhkan owner | **TIDAK terdeteksi** — "Pemuda Miskin…" tak punya angka episode |
+| Durasi | **282 dari 489 (58%)** durasinya `null`; Playly tak mengirimnya |
+
+Meleset **DUA arah sekaligus**, dan melesetnya **SENYAP** — nol error, cuma judul yang duduk di
+baris salah. **Aturan: sebelum memilih tebakan otomatis demi "hemat klik", ukur dulu akurasinya di
+data produksi yang sebenarnya.** Owner memilih penanda manual sesudah melihat angka ini.
+
+### 🪤 JEBAKAN KEDUA — ditemukan sebelum sempat tayang
+
+`app/page.tsx` memotong `videos.slice(0, TAB_GRID_ITEMS)` **SEBELUM** daftarnya sampai ke tampilan.
+Kalau pemisahan film/serial dilakukan di komponen, seksi Film **menyusut sendiri** (20 kartu jadi
+19) setiap kali ada serial di 20 teratas — dan karena video terbaru selalu di depan, justru upload
+terbaru yang paling sering memicunya. Tak ada error, cuma baris yang mengecil.
+**Pemisahan WAJIB mendahului potongan**, dan penjaganya membaca berkas halaman untuk memastikannya.
+
+### Yang dibangun
+
+| Berkas | Isinya |
+|---|---|
+| `lib/jenis-video.ts` | aturan MURNI: allowlist, bawaan, pemisah, batas jatah seksi |
+| `playly:jenis` (`lib/store.ts`) | peta `videoId -> jenis`, pola persis `playly:kualitas` |
+| `app/api/admin/playly/jenis/route.ts` | GET + POST, pagar disalin dari endpoint `/genre` |
+| `PlaylyVisibilityManager.tsx` | dropdown **Jenis: Film / Series** per video |
+| `app/page.tsx` + `app/beranda/page.tsx` | pisah DULU, baru potong |
+| `tests/jenis-video.test.ts` | **11 penjaga**, diuji MERAH lebih dulu |
+
+⭐ **Bawaannya `film`, jadi NOL video berpindah sampai owner menandai** — perubahan ini tidak
+mengubah apa pun di situs sampai ada yang disentuh di panel admin.
+
+💡 Pre-mortem yang ikut ditutup: jatah serial di seksi dibatasi **6**
+(`MAKS_SERIES_PLAYLY_DI_SEKSI`). Tanpa itu, rekan yang meng-upload 30 episode akan memenuhi seluruh
+seksi dengan kartu berjudul hampir sama dan **mendorong keluar drama katalog owner**.
+
+### Bukti
+
+- **1.876 tes hijau** (naik dari 1.865; +11 penjaga baru). **Diuji MERAH lebih dulu**: 2 tes gagal
+  saat perilaku lama sengaja dipasang kembali, hijau lagi sesudah dipulihkan.
+- `npm run build` sukses · `npx tsc --noEmit` **exit 0** (urutan build→tsc, sesuai pagar).
+- `/`, `/beranda`, `/film` tetap **○ Static** di keluaran build — pembacaan baru memakai varian
+  ber-cache, jadi halaman tidak jadi dibangun ulang tiap pengunjung.
+- Endpoint baru membalas **401** untuk GET maupun POST tanpa sesi admin (diuji di server lokal
+  port 3117, server dimatikan lewat PID dan dipastikan mati: `http=000`).
+- Smoke test 5 halaman: `/` `/beranda` `/film` `/katalog` `/discover` → semua **200**.
+
+### ⏳ Yang MASIH perlu dilakukan owner
+
+1. **Izin push** — belum dirilis.
+2. **Sesudah tayang:** buka panel admin → **Video Playly** → cari "Pemuda Miskin Mata Tembus
+   Pandang Jadi Miliarder" → dropdown paling kiri ubah **Film → Series**. Tunggu ±1 menit, muat
+   ulang halaman depan. Tanpa langkah ini situs tidak berubah sama sekali (itu disengaja).
+
+### ⚠️ Batas jujur
+
+- Halaman `/film` **sengaja TIDAK disaring** — judulnya memang "Film & Video" dan di sanalah sisa
+  episode tetap terjangkau. Menyaringnya justru membuat episode ke-7 dst. tak bisa ditemukan.
+- **Pengelompokan banyak episode jadi SATU kartu serial belum dibangun** — hari ini baru 1 video
+  serial, jadi membangunnya sekarang = membangun yang belum dibutuhkan. ❓ Perlu ditinjau ulang
+  begitu satu judul punya **>5 episode** di Playly.
+- Daftar video serial yang tampil belum pernah dilihat di situs sungguhan (video Playly butuh kunci
+  API yang hanya ada di produksi), jadi **bukti tampilannya dari tes render**, bukan dari layar.
 
 ---
 

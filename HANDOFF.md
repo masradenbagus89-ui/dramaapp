@@ -9,7 +9,9 @@
 >
 > **📦 Berkas ini sudah 9.086 baris** (dihitung 2026-10-30 dengan `wc -l`, bukan ditaksir; angka lama "±6.600" dari 2026-10-15 dan "8.700+" sudah basi — tumbuh ±2.500 baris dalam 15 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. **Menunggu keputusan owner.**
 
-**Terakhir diisi:** 2026-11-05 — ✅ **TAYANG `425cc34`: TIGA perbaikan panel admin sekaligus.** (1) 🧭 **Satu menu = satu tampilan** — lima menu sidebar ternyata BUKAN halaman terpisah, semuanya `/admin` yang sama; sekalian menutup menu **Keamanan (2FA) yang RUSAK** (targetnya `#keamanan` nol elemennya). (2) 🎨 **Teks bernada transparan tak lagi pucat** — cara kemarin bocor mendasar: `text-rose-100/90` adalah kelas BERBEDA dari `text-rose-100`. (3) 🔍 **Saringan "sudah / belum ada IMDb"** di daftar 489 video. Dual push `68b0069..425cc34`, tayang **±84 detik**, **downtime NOL**. Rinciannya di seksi teratas.
+**Terakhir diisi:** 2026-11-05 — ✅ **TAYANG `32ae1c6`: SELURUH halaman penonton + admin kini berlatar putih.** 🪤 **Pelajaran: PEMETAAN SAYA SEBELUMNYA TIDAK LENGKAP** — saya menyatakan "tinggal 3 halaman" (/shorts, /history, /my-list), lalu owner menunjuk **/profile** yang juga gelap. Pemetaan ulang lewat HTML yang BENAR-BENAR dikirim server menemukan **lima**, bukan satu. Kelas `.tema-admin-terang` digeneralkan jadi `.tema-terang-penuh` (dipakai admin + halaman akun). ⚠️ Halaman MENONTON sengaja TETAP gelap. Dual push `7afb6cc..32ae1c6`, tayang ±82 detik, downtime NOL. Rinciannya di seksi teratas.
+
+**Sebelumnya hari ini:** ✅ **TAYANG `425cc34`: TIGA perbaikan panel admin sekaligus.** (1) 🧭 **Satu menu = satu tampilan** — lima menu sidebar ternyata BUKAN halaman terpisah, semuanya `/admin` yang sama; sekalian menutup menu **Keamanan (2FA) yang RUSAK** (targetnya `#keamanan` nol elemennya). (2) 🎨 **Teks bernada transparan tak lagi pucat** — cara kemarin bocor mendasar: `text-rose-100/90` adalah kelas BERBEDA dari `text-rose-100`. (3) 🔍 **Saringan "sudah / belum ada IMDb"** di daftar 489 video. Dual push `68b0069..425cc34`, tayang **±84 detik**, **downtime NOL**. Rinciannya di seksi teratas.
 
 **Sebelumnya hari ini:** ✅ **TAYANG `0cc1758`: PANEL ADMIN kini berlatar terang, seragam dengan beranda.** Owner: *"di admin kamu buat juga latar belakangnya sama dengan beranda jadi semua dashboard semua sinkron"*. ⭐ **477 kemunculan warna gelap dibalik TANPA menyentuh satu pun berkas komponen** — Tailwind v4 di sini mencetak warna sebagai VARIABEL, jadi paletnya cukup didefinisikan ulang di satu pembungkus (`app/globals.css`), saklarnya di `app/admin/layout.tsx`. 🪤 **TIGA jebakan senyap, semuanya ketahuan hanya karena hasilnya DIPANDANG** (lihat seksi teratas), dan 🪤 **DUA kesalahan METODE VERIFIKASI saya sendiri** — nyaris melaporkan 'deploy gagal' padahal sudah tayang. Dual push `60eb338..0cc1758`.
 
@@ -46,6 +48,72 @@
 **Rilis ke-1 hari ini:** (✅ **TAYANG `4dde5c0`**: tombol beranda "LIHAT SEMUA FILM UNGGULAN" → **"TEMUKAN TONTONAN FAVORITMU"** — labelnya salah di dua sisi (isinya drama berseri, bukan film; tujuannya katalog lengkap, bukan daftar unggulan). Dual push → Railway build sendiri → tayang ±60 detik, **downtime NOL**. Smoke test 5 alur: 4 langsung 200, `/drama/meg-2-the-trench` 500 SEKALI lalu 200 enam kali — cold start, dicatat bukan dihapus. ❌ **DIRALAT di rilis ke-2**: catatan asli di sini menyebut tombol itu "tergeser ke kanan di layar HP" sebagai gejala nyata. **Itu keliru** — cacat alat potret, bukan cacat situs; sudah diukur ulang dan tombolnya terpusat sempurna. Jangan diburu.)
 
 **Sebelumnya:** 2026-10-30 (tiga rilis beruntun, semuanya TAYANG: `5088bf2` genre bahasa Indonesia → `27973f0` koreksi owner Kerajaan/CEO/Lainnya → **`55894b8` dua tombol halaman drama yang selama ini TERPOTONG**. Downtime NOL. ⏸️ **DUA bahasan menunggu keputusan owner**, risetnya sudah selesai & nol kode diubah: "klik drama langsung play" dan "sinopsis film masih bahasa Inggris".)
+
+---
+
+## 2026-11-05 — ✅ DIRILIS `32ae1c6` + `788a11b`: SELURUH halaman kini berlatar putih
+
+Dua commit: `788a11b` (/shorts, /history, /my-list) lalu `32ae1c6` (halaman akun).
+
+### 🪤 PELAJARAN INTI — PEMETAAN SAYA SENDIRI TIDAK LENGKAP
+
+Saya menutup rilis sebelumnya dengan kalimat *"tinggal 3 halaman: /shorts, /history, /my-list"*.
+Owner lalu mengirim tangkapan **/profile** yang juga gelap. Pemetaan saya memang salah: ia dibuat
+dengan membaca isi berkas sekilas, bukan memeriksa setiap halaman.
+
+Pemetaan ULANG dilakukan lewat **HTML yang benar-benar dikirim server** untuk SETIAP halaman
+penonton — dan yang masih gelap ternyata **LIMA**, bukan satu: `/profile`, `/login`, `/daftar`,
+`/lupa-password`, `/video-eksternal`.
+
+⚠️ **Aturan: pernyataan "tinggal sekian lagi" WAJIB berasal dari pemeriksaan menyeluruh, bukan dari
+ingatan atas apa yang kebetulan sudah dilihat.** Daftar yang kurang lengkap membuat owner mengira
+pekerjaan sudah selesai, lalu menemukan sisanya sendiri satu per satu.
+
+🪤 Jebakan kedua di pemetaan itu: `/discover`, `/` dan `/beranda` sempat terbaca "GELAP" karena
+latarnya datang dari KOMPONEN yang dirender di browser, bukan dari berkas halaman — HTML server
+hanya berisi kerangkanya. **Memeriksa HTML server saja bisa memberi jawaban yang salah untuk
+halaman yang isinya digambar di browser.**
+
+### Cara yang dipakai, dan kenapa BEDA dari halaman katalog
+
+Kelima halaman akun penuh `Card`, `Input`, `Label` dari `components/ui/*` — yang memakai **TOKEN
+shadcn**, bukan kelas zinc. Varian `terang:` tidak akan pernah menyentuhnya, berapa pun banyaknya
+ditambahkan (dihitung: **123 kelas warna di 6 halaman**). Jadi dipakai cara yang sudah terbukti di
+panel admin: **membalik paletnya**.
+
+Kelas `.tema-admin-terang` **digeneralkan** jadi `.tema-terang-penuh` karena kini dipakai di luar
+admin. Konstanta `BADAN_TERANG_PENUH` ditambahkan di `shell.ts` lengkap dengan catatan KAPAN
+memakai yang mana — ini penting supaya sesi berikutnya tidak salah pilih:
+
+| Konstanta | Dipakai untuk | Kenapa |
+|---|---|---|
+| `BADAN_TERANG` | halaman KATALOG | komponennya (CatalogCard, FeaturedRow) sudah disiapkan dua-tema lewat varian `terang:` |
+| `BADAN_TERANG_PENUH` | panel admin + halaman AKUN | komponennya tak pernah disiapkan; paletnya yang dibalik |
+
+⚠️ **JANGAN pakai `BADAN_TERANG_PENUH` di halaman katalog**: ia membalik `--color-zinc-*`, sehingga
+`bg-zinc-100` yang dipakai sebagai latar TERANG di beberapa komponen katalog justru jadi gelap.
+
+### ⚠️ Halaman MENONTON sengaja TETAP gelap
+
+`/watch`, `/tonton`, `/feed` **bukan kelalaian**. Menonton video di latar putih menyilaukan — itu
+sebabnya semua situs streaming memakai latar gelap di sana. Keputusan ini disampaikan ke owner,
+bukan didiamkan. `/drama/[id]` (halaman detail: sinopsis + daftar episode) juga masih gelap dan
+memang pantas putih, tapi butuh pendekatan katalog — sengaja tidak dicampur ke commit ini.
+
+### Bukti
+
+- **1.921 tes hijau**. Penjaga `tests/badan-terang.test.ts` diperluas ke 3 halaman + 2 komponen
+  kartu (`DramaCard`, `HistoryCard` — keduanya TIDAK memakai CatalogCard, jadi dukungan terang di
+  sana tidak otomatis ikut), dan **diuji MERAH lebih dulu**.
+- Pengecualian penjaga diperlebar untuk elemen yang **membawa latar gelapnya sendiri**
+  (`bg-black/80` pada tombol hapus di sudut poster) — teks putih di sana memang benar. Sempit
+  dengan sengaja: menuntut `bg-black` tertulis di className yang SAMA.
+- Build sukses · `tsc` exit 0 · **downtime NOL** (200 di setiap pemeriksaan selama 82 detik).
+- **13 halaman** diverifikasi TERANG di produksi, semuanya 200, dan `/profile` dipotret dari situs
+  sungguhan.
+- 🪤 Gerbang "nol berkas rahasia" menandai `app/lupa-password/page.tsx` — **false positive** dari
+  nama berkasnya. Diverifikasi: diff-nya cuma 2 import + 1 baris latar. **Jangan loloskan temuan
+  gerbang rahasia tanpa memeriksa isinya, tapi juga jangan panik atas nama berkas.**
 
 ---
 

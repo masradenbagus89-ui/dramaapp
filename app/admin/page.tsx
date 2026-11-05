@@ -25,10 +25,24 @@ import AdminPasswordSettings from "@/app/components/admin/AdminPasswordSettings"
 import { Button } from "@/components/ui/button";
 import { Lock } from "lucide-react";
 import { ADS_ENABLED } from "@/lib/saklar-fitur";
+import {
+  BAGIAN_BAWAAN,
+  JUDUL_BAGIAN,
+  KETERANGAN_BAGIAN,
+  parseBagianAdmin,
+  type BagianAdmin,
+} from "@/lib/bagian-admin";
 
 export default function AdminPage() {
   const router = useRouter();
   const [authUser, setAuthUser] = useState<User | null>(null);
+  /**
+   * Bagian yang sedang ditampilkan (owner 2026-11-05: "satu menu = satu
+   * tampilan"). Disimpan di HASH alamat, bukan state biasa — alasannya lengkap
+   * di lib/bagian-admin.ts: tautan menu lama tetap bekerja, tombol Kembali
+   * browser berfungsi, dan halamannya bisa di-bookmark.
+   */
+  const [bagian, setBagian] = useState<BagianAdmin>(BAGIAN_BAWAAN);
   const [authChecked, setAuthChecked] = useState(false);
 
   const [id, setId] = useState("");
@@ -313,6 +327,33 @@ export default function AdminPage() {
     }
   };
 
+  // Hash dibaca lewat efek, BUKAN saat render: `window` tidak ada saat HTML
+  // dibuat di server. `hashchange` saja tidak cukup — mengklik menu yang
+  // hash-nya SAMA dengan yang sedang dibuka tidak memicunya, sehingga bagian
+  // yang diklik terasa "tidak merespons". `click` menutup celah itu.
+  useEffect(() => {
+    const baca = () => setBagian(parseBagianAdmin(window.location.hash));
+    baca();
+    window.addEventListener("hashchange", baca);
+    window.addEventListener("click", baca);
+    return () => {
+      window.removeEventListener("hashchange", baca);
+      window.removeEventListener("click", baca);
+    };
+  }, []);
+
+  /**
+   * Pindah bagian dari dalam halaman (bukan lewat klik menu).
+   *
+   * Hash ikut diperbarui supaya keadaan layar dan alamat tidak pernah berbeda —
+   * kalau hanya state yang diubah, tombol Kembali browser akan memulangkan
+   * admin ke bagian yang tidak sesuai dengan yang terlihat.
+   */
+  const bukaBagian = (tujuan: BagianAdmin) => {
+    setBagian(tujuan);
+    if (typeof window !== "undefined") window.location.hash = tujuan;
+  };
+
   const loadDramaToForm = (d: Drama) => {
     setId(d.id);
     setTitle(d.title);
@@ -384,8 +425,22 @@ export default function AdminPage() {
       <AdminSidebar />
 
       <div className="space-y-6">
-        <AdminDashboard dramas={dramas} />
+        {/* KEPALA BAGIAN — admin selalu tahu sedang berada di mana. Sebelum
+            2026-11-05 enam bagian bertumpuk tanpa penanda posisi sama sekali,
+            dan begitu digulung semuanya terasa menyatu (keluhan owner). */}
+        <header>
+          <h1 className="text-2xl font-bold text-white">{JUDUL_BAGIAN[bagian]}</h1>
+          <p className="mt-1 text-sm text-zinc-400">{KETERANGAN_BAGIAN[bagian]}</p>
+        </header>
 
+        {bagian === "dashboard" && <AdminDashboard dramas={dramas} />}
+
+        {/* Form SENGAJA tetap dirender (disembunyikan dengan `hidden`), bukan
+            dilepas dari halaman. Alasannya nyata: isinya diisi dari tombol Edit
+            di Daftar Drama, dan sebagian isian — mis. berkas poster yang dipilih
+            — tidak ikut tersimpan di state halaman ini. Melepasnya dari DOM
+            berarti isian itu hilang diam-diam tiap admin menengok bagian lain. */}
+        <div className={bagian === "tambah" ? undefined : "hidden"}>
         <DramaForm
           id={id}
           setId={setId}
@@ -451,22 +506,45 @@ export default function AdminPage() {
           onSubmit={onSubmit}
         />
 
-        <DramaList
-          dramas={dramas}
-          onEdit={loadDramaToForm}
-          onDelete={onDelete}
-        />
+        </div>
 
-        <AdminManager currentAdminEmail={authUser.email} />
+        {bagian === "daftar" && (
+          <DramaList
+            dramas={dramas}
+            /* Edit MEMBUKA bagian form dulu, baru mengisinya. Urutannya tidak
+               boleh dibalik: `loadDramaToForm` menggulung ke elemen #tambah,
+               dan elemen itu masih tersembunyi sampai bagiannya dibuka —
+               menggulung ke sesuatu yang tak terlihat tidak menghasilkan apa
+               pun, sehingga tombol Edit terasa tidak berfungsi. */
+            onEdit={(d) => {
+              bukaBagian("tambah");
+              loadDramaToForm(d);
+            }}
+            onDelete={onDelete}
+          />
+        )}
 
-        <AdminPasswordSettings />
+        {bagian === "kelola-admin" && (
+          <AdminManager currentAdminEmail={authUser.email} />
+        )}
 
-        <TwoFactorSettings />
+        {/* Password dan 2FA disatukan di bagian "Keamanan": keduanya menjawab
+            pertanyaan yang sama ("bagaimana akun admin dilindungi?"), dan
+            memisahkannya berarti satu menu lagi yang isinya cuma satu kotak.
+            Sekaligus menutup menu "Keamanan (2FA)" yang SELAMA INI RUSAK —
+            targetnya `#keamanan` tidak pernah ada di halaman, jadi diklik pun
+            tidak membawa ke mana-mana. */}
+        {bagian === "keamanan" && (
+          <>
+            <AdminPasswordSettings />
+            <TwoFactorSettings />
+          </>
+        )}
 
         {/* Pengatur iklan sponsor — ikut mati bersama saklar iklan
             (lib/saklar-fitur.ts). Disembunyikan, bukan dibiarkan: mengatur
             daftar iklan yang tidak akan tayang membuang waktu admin. */}
-        {ADS_ENABLED && <SponsorAdsManager />}
+        {ADS_ENABLED && bagian === "iklan" && <SponsorAdsManager />}
       </div>
     </div>
   );

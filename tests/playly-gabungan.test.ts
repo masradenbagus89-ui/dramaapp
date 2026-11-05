@@ -92,6 +92,10 @@ vi.mock("../lib/store", () => ({
   // aturan PENGGABUNGAN, dan aturan kualitasnya sendiri sudah punya penjaga
   // terpisah di tests/kualitas-video.test.ts.
   getPlaylyKualitasCached: async () => ({}),
+  // Jenis tayangan (owner 2026-11-05). Peta KOSONG: berkas ini menguji aturan
+  // PENGGABUNGAN, dan aturan jenisnya sendiri sudah punya penjaga terpisah di
+  // tests/jenis-video.test.ts.
+  getPlaylyJenisCached: async () => ({}),
   getPlaylyCadanganCached: async () => ({ videos: [], disimpanPada: "" }),
   getPlaylyLinkUnduhanCached: async () => {
     if (state.unduhanGagal) throw new Error("supabase tidak bisa dihubungi");

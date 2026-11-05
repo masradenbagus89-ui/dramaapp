@@ -62,6 +62,7 @@ export default function TabKatalogTampilan({
   hanyaMenu = false,
   seksiLengkap = false,
   videos = [],
+  videoSeries = [],
 }: {
   dramas: Drama[];
   /** Tab yang sedang dibuka. Pemanggil yang menentukan dari mana asalnya. */
@@ -106,6 +107,21 @@ export default function TabKatalogTampilan({
    * produksi, jadi di komputer lokal daftarnya memang selalu kosong.
    */
   videos?: PlaylyVideoPublik[];
+  /**
+   * SERIAL dari penyedia video luar, untuk seksi "Series Terbaru" (owner
+   * 2026-11-05: "rekan saya upload drama dari playly tapi masuknya ke film
+   * terbaru, harusnya masuk ke series terbaru").
+   *
+   * Jumlahnya SUDAH dibatasi oleh halaman pemanggil
+   * (`MAKS_SERIES_PLAYLY_DI_SEKSI`) — jangan dipotong lagi di sini, dan jangan
+   * dilepas batasnya: satu drama pendek bisa berisi puluhan episode, dan tiap
+   * episode hari ini = satu kartu sendiri.
+   *
+   * Kosong = seksi "Series Terbaru" berisi drama katalog saja, persis seperti
+   * sebelum fitur ini ada. Itu keadaan NORMAL selama belum ada video yang
+   * ditandai admin.
+   */
+  videoSeries?: PlaylyVideoPublik[];
 }) {
   const tabs = daftarTab(dramas);
   const aktif = tab;
@@ -204,9 +220,25 @@ export default function TabKatalogTampilan({
               idSeksi={`seksi-${t.key}`}
               judul={t.judul}
               keterangan={t.keterangan}
-              kartu={isiTabLengkap(dramas, t.key)
-                .slice(0, TAB_GRID_ITEMS)
-                .map(bungkusDrama)}
+              /* SERIAL dari penyedia luar ikut HANYA ke seksi "Series Terbaru"
+                 (tab bawaan), dan sengaja tidak ke tab lain: "Series Unggulan"
+                 butuh penanda `exclusive`, "Series Update" butuh status Ongoing,
+                 "Terpopuler" butuh jumlah penonton, "Rekomendasi" butuh rating —
+                 video Playly tidak punya satu pun dari data itu. Menaruhnya di
+                 sana berarti mengaku judul ini unggulan/populer tanpa seorang
+                 pun pernah menilainya.
+
+                 Ditaruh di DEPAN drama katalog, bukan di ekor: seksi memuat 20
+                 kartu dan yang di ekor praktis tak pernah terlihat tanpa
+                 menggeser jauh — owner yang baru saja menandai sebuah video akan
+                 menyimpulkan fiturnya tidak jalan. Aturan yang sama sudah
+                 dipakai baris genre di lib/beranda-video.ts. */
+              kartu={[
+                ...(t.key === TAB_BAWAAN ? videoSeries.map(bungkusVideo) : []),
+                ...isiTabLengkap(dramas, t.key)
+                  .slice(0, TAB_GRID_ITEMS)
+                  .map(bungkusDrama),
+              ].slice(0, TAB_GRID_ITEMS)}
               /* Tujuan "SEMUA" = /katalog, halaman yang memang dibuat untuk
                  membuka SATU tab secara penuh (lihat app/katalog/page.tsx).
                  Dulu tombol ini memakai `?semua=1` di halaman yang sama — itu

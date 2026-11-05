@@ -31,6 +31,7 @@ export default function TabKatalog({
   paksaSemua,
   seksiLengkap,
   videos,
+  videoSeries,
 }: {
   dramas: Drama[];
   /**
@@ -53,6 +54,8 @@ export default function TabKatalog({
   seksiLengkap?: boolean;
   /** Film untuk seksi "Film Terbaru". Lihat tampilannya untuk aturannya. */
   videos?: PlaylyVideoPublik[];
+  /** SERIAL untuk seksi "Series Terbaru". Lihat tampilannya untuk aturannya. */
+  videoSeries?: PlaylyVideoPublik[];
 }) {
   const sp = useSearchParams();
   return (
@@ -64,6 +67,7 @@ export default function TabKatalog({
       hanyaMenu={hanyaMenu}
       seksiLengkap={seksiLengkap}
       videos={videos}
+      videoSeries={videoSeries}
     />
   );
 }

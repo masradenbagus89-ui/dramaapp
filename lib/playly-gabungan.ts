@@ -33,6 +33,7 @@ import {
   getPlaylyGenresCached,
   getPlaylyHiddenIdsCached,
   getPlaylyImdbCached,
+  getPlaylyJenisCached,
   getPlaylyKualitasCached,
   getPlaylyLinkUnduhanCached,
   getPublishedPlaylyWebhookVideos,
@@ -42,6 +43,7 @@ import {
 import type { PlaylyImdbMap } from "./playly-imdb";
 import { lengkapiKualitasVideo } from "./kualitas-video";
 import { tempelUnduhanPlayly } from "./playly-unduhan";
+import { tempelJenisVideo } from "./jenis-video";
 
 export type PlaylyGabunganResult = {
   videos: PlaylyVideoPublik[];
@@ -228,7 +230,7 @@ export function gabungVideoPlayly(
 async function rakitGabungan(
   ambilWebhook: () => Promise<PlaylyWebhookVideo[]>,
 ): Promise<PlaylyGabunganResult> {
-  const [katalog, webhook, hiddenIds, genres, imdb, linkUnduhan, kualitas] = await Promise.all([
+  const [katalog, webhook, hiddenIds, genres, imdb, linkUnduhan, kualitas, jenis] = await Promise.all([
     // Sudah menangkap kegagalannya sendiri: mengembalikan daftar kosong +
     // alasan, bukan melempar.
     getPlaylyVideosPublik(),
@@ -275,6 +277,11 @@ async function rakitGabungan(
     // mengubah label di pojok poster, dan tanpanya turunan otomatis tetap
     // jalan — persis perilaku sebelum fitur koreksi ini ada.
     getPlaylyKualitasCached().catch(() => ({}) as Record<string, string>),
+    // Jenis tayangan (film / serial) pilihan admin. Gagal baca = peta kosong,
+    // dan itu GAGAL-AMAN: tanpa peta semua video dihitung film, persis perilaku
+    // sebelum fitur ini ada — video kembali ke baris lamanya, bukan terlempar
+    // ke baris yang belum pernah diminta siapa pun.
+    getPlaylyJenisCached().catch(() => ({}) as Record<string, string>),
   ]);
 
   // GAGAL-AMAN (skills/owasp/SKILL.md §1 A10 "jangan fail-open"): kalau daftar
@@ -295,18 +302,24 @@ async function rakitGabungan(
   // Kualitas lencana poster diturunkan SESUDAH link unduhan menempel — itu
   // sumbernya (lib/kualitas-video.ts). Hanya mengisi yang masih kosong, jadi
   // nilai pilihan manusia tidak pernah tertimpa.
-  const videos = lengkapiKualitasVideo(
-    tempelUnduhanPlayly(
-      gabungVideoPlayly(
-        katalog.videos,
-        webhookAman,
-        hiddenIds.ids,
-        genres,
-        imdb,
-        kualitas,
+  // Jenis ditempel di lapisan yang sama dengan provider & kualitas, dan dengan
+  // alasan yang sama: satu tempat untuk KEDUA sumber, jadi tak ada video yang
+  // diam-diam tertinggal tanpa jenis dan mendarat di baris yang salah.
+  const videos = tempelJenisVideo(
+    lengkapiKualitasVideo(
+      tempelUnduhanPlayly(
+        gabungVideoPlayly(
+          katalog.videos,
+          webhookAman,
+          hiddenIds.ids,
+          genres,
+          imdb,
+          kualitas,
+        ),
+        linkUnduhan,
       ),
-      linkUnduhan,
     ),
+    jenis,
   );
   // Katalog didahulukan karena ia sumber utama halaman ini; kalau dua-duanya
   // bermasalah, satu kalimat sudah cukup untuk pengunjung.
@@ -345,7 +358,15 @@ async function rakitGabungan(
         // sumber yang TIDAK ikut mati saat Playly bermasalah. Tanpa baris ini
         // tombol DOWNLOAD justru hilang di saat halaman sedang bertahan hidup.
         return {
-          videos: lengkapiKualitasVideo(tempelUnduhanPlayly(aman, linkUnduhan)),
+          // Jenis ditempel ke salinan juga, alasan yang sama dengan provider di
+          // atas: petanya datang dari `app_data`, sumber yang TIDAK ikut mati
+          // saat Playly bermasalah. Tanpa baris ini seluruh serial yang sudah
+          // ditandai owner akan diam-diam kembali ke baris film justru saat
+          // halaman sedang bertahan hidup.
+          videos: tempelJenisVideo(
+            lengkapiKualitasVideo(tempelUnduhanPlayly(aman, linkUnduhan)),
+            jenis,
+          ),
           error,
           dariCadangan: true,
         };

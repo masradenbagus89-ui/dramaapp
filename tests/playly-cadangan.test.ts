@@ -49,6 +49,12 @@ vi.mock("../lib/store", () => ({
   // mengaburkan apa yang sedang dibuktikan. Turunan otomatisnya sendiri diuji
   // di tests/kualitas-video.test.ts.
   getPlaylyKualitasCached: async () => ({}),
+  // Jenis tayangan (owner 2026-11-05). Peta KOSONG tetap, alasan sama dengan
+  // dua di atas: berkas ini menguji aturan SALINAN, bukan aturan jenis — dan
+  // peta kosong berarti semua video dihitung film, jadi tempelJenisVideo tidak
+  // mengubah apa pun yang sedang dibuktikan di sini. Aturan jenisnya sendiri
+  // punya penjaga terpisah di tests/jenis-video.test.ts.
+  getPlaylyJenisCached: async () => ({}),
   // Peta KOSONG tetap, alasannya sama dengan getPlaylyGenresCached di atas:
   // berkas ini menguji perilaku SALINAN, dan daftar link unduhan kosong membuat
   // tempelUnduhanPlayly tidak mengubah apa pun — jadi yang diuji tetap murni

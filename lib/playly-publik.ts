@@ -34,6 +34,7 @@ import {
   getPlaylyKualitasCached,
 } from "./store";
 import type { PlaylyImdbMap } from "./playly-imdb";
+import type { JenisVideo } from "./jenis-video";
 
 /** Satu video Playly + label drama, kalau admin memang mengaitkannya. */
 export type PlaylyVideoPublik = PlaylyVideo & {
@@ -108,6 +109,20 @@ export type PlaylyVideoPublik = PlaylyVideo & {
    * DOWNLOAD menampilkan "Link unduhan belum tersedia".
    */
   linkUnduhan?: LinkUnduhanPublik[];
+  /**
+   * Film layar lebar atau episode SERIAL (owner 2026-11-05) — inilah yang
+   * memutuskan judul ini masuk seksi "Film Terbaru" atau "Series Terbaru".
+   *
+   * Ditempel belakangan di titik gabung (lib/playly-gabungan.ts) dengan alasan
+   * yang sama persis seperti `linkUnduhan` di atas: video dari webhook juga
+   * berhak punya jenis, dan menempelkannya di dua tempat = dua aturan yang bisa
+   * berbeda diam-diam.
+   *
+   * OPSIONAL dengan sengaja: tidak ada field = belum ditandai admin = FILM
+   * (lib/jenis-video.ts `JENIS_BAWAAN`). Itu yang membuat fitur ini nol efek
+   * sampai owner menandai video pertamanya.
+   */
+  jenis?: JenisVideo;
 };
 
 export type PlaylyPublikResult = {

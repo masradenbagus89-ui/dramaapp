@@ -7,6 +7,7 @@ import BadanKatalog from "@/app/components/beranda/BadanKatalog";
 import PublicTopBars from "@/app/components/beranda/PublicTopBars";
 import LanjutMenonton from "@/app/components/beranda/LanjutMenonton";
 import { TAB_GRID_ITEMS } from "@/lib/tab-katalog";
+import { MAKS_SERIES_PLAYLY_DI_SEKSI, pisahFilmSeries } from "@/lib/jenis-video";
 import { availableGenres, FEATURED_ROW_COUNT } from "@/lib/beranda-catalog";
 import { buildNavMenus } from "@/lib/nav-katalog";
 
@@ -32,7 +33,22 @@ export default async function LandingPage() {
    * padahal yang tergambar cuma sebagian kecil.
    */
   const { videos } = await getPlaylyVideosGabunganCached();
-  const filmTerbaru = videos.slice(0, TAB_GRID_ITEMS);
+  /**
+   * Film dan serial DIPISAH DULU, baru masing-masing dipotong (owner
+   * 2026-11-05: drama berseri yang di-upload rekan mendarat di "Film Terbaru").
+   *
+   * ⚠️ Urutannya tidak boleh dibalik. Kalau daftarnya dipotong 20 dulu lalu
+   * dipisah di komponen, tiap serial yang kebetulan ada di 20 teratas akan
+   * MENGURANGI isi seksi Film (20 kartu jadi 19) — dan karena video terbaru
+   * selalu di depan, justru upload terbaru yang paling sering memicunya.
+   * Kerusakannya senyap: tak ada error, cuma barisnya menyusut sendiri.
+   */
+  const { film, series } = pisahFilmSeries(videos);
+  const filmTerbaru = film.slice(0, TAB_GRID_ITEMS);
+  // Jatah serial Playly di seksi "Series Terbaru" sengaja dibatasi supaya satu
+  // drama berepisode banyak tidak mendorong keluar drama katalog — alasannya di
+  // lib/jenis-video.ts `MAKS_SERIES_PLAYLY_DI_SEKSI`.
+  const seriesTerbaru = series.slice(0, MAKS_SERIES_PLAYLY_DI_SEKSI);
   const heroSlides = featuredHeroSlides(dramas, FEATURED_ROW_COUNT);
   // Genre yang BENAR-BENAR berisi, untuk kolom "Genre Populer" di kaki situs.
   // Dihitung di server dari katalog yang sudah di tangan — nol pembacaan
@@ -78,6 +94,7 @@ export default async function LandingPage() {
         dramas={dramas}
         heroSlides={heroSlides}
         filmTerbaru={filmTerbaru}
+        seriesTerbaru={seriesTerbaru}
         genres={genres}
         heroHref="/discover"
         /* Bar "Lanjutkan Menonton" = pintu akun TUNGGAL halaman ini (owner

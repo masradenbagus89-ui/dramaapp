@@ -19,6 +19,7 @@ import { AlertTriangle, Eye, EyeOff, Info, Loader2 } from "lucide-react";
 import type { PlaylyVideo, PlaylySumber } from "@/lib/playly";
 import type { PlaylyImdbMap } from "@/lib/playly-imdb";
 import { DRAMA_QUALITY_OPTIONS, KATEGORI_ISI } from "@/lib/types";
+import { JENIS_BAWAAN, LABEL_JENIS, type JenisVideo } from "@/lib/jenis-video";
 import PlaylyImdbPicker from "./PlaylyImdbPicker";
 import PlaylyCocokkanSemua from "./PlaylyCocokkanSemua";
 
@@ -33,6 +34,7 @@ export default function PlaylyVisibilityManager({
   initialGenres = {},
   initialImdb = {},
   initialKualitas = {},
+  initialJenis = {},
   belumSiapIds,
   fetchError,
   source,
@@ -64,6 +66,13 @@ export default function PlaylyVisibilityManager({
    * di sini hanya ada untuk video yang turunannya meleset dan dibetulkan orang.
    */
   initialKualitas?: Record<string, string>;
+  /**
+   * Jenis tayangan yang sudah ditandai admin (videoId -> "film"/"series").
+   *
+   * Bawaannya peta kosong, dan itu keadaan normal: semua video dihitung FILM
+   * sampai ditandai. Entri di sini hanya ada untuk video yang memang serial.
+   */
+  initialJenis?: Record<string, string>;
   /** Video yang berkasnya belum ada di Playly — tidak tampil ke penonton. */
   belumSiapIds: string[];
   /** Terisi kalau daftar gagal diambil dari Playly. */
@@ -80,6 +89,8 @@ export default function PlaylyVisibilityManager({
   const [sedangGenre, setSedangGenre] = useState<string | null>(null);
   const [kualitas, setKualitas] = useState<Record<string, string>>(initialKualitas);
   const [sedangKualitas, setSedangKualitas] = useState<string | null>(null);
+  const [jenis, setJenis] = useState<Record<string, string>>(initialJenis);
+  const [sedangJenis, setSedangJenis] = useState<string | null>(null);
   const [pesan, setPesan] = useState<Pesan | null>(null);
 
   const ubah = async (videoId: string, jadikanTersembunyi: boolean) => {
@@ -206,6 +217,53 @@ export default function PlaylyVisibilityManager({
     }
   };
 
+  /**
+   * Tandai video ini FILM atau SERIES (owner 2026-11-05).
+   *
+   * Inilah satu-satunya hal yang memindahkan sebuah video dari seksi "Film
+   * Terbaru" ke "Series Terbaru" di beranda — Playly tidak pernah mengirim
+   * penanda jenis, dan tebakan otomatis dari judul/durasi sudah diukur lalu
+   * ditolak (angkanya di lib/jenis-video.ts).
+   */
+  const ubahJenis = async (videoId: string, pilihan: string) => {
+    setSedangJenis(videoId);
+    setPesan(null);
+    try {
+      const res = await fetch("/api/admin/playly/jenis", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // String kosong dikirim sebagai null supaya maksud "kembalikan ke
+        // bawaan" tidak bergantung pada tafsiran server terhadap teks kosong.
+        body: JSON.stringify({ videoId, jenis: pilihan || null }),
+      });
+      const data = (await res.json()) as {
+        jenis?: Record<string, string>;
+        error?: string;
+      };
+      if (!res.ok) {
+        setPesan({ jenis: "gagal", teks: data.error ?? "Gagal menyimpan jenis." });
+        return;
+      }
+      // Peta terbaru datang dari server, dipakai apa adanya — layar tidak
+      // menebak hasilnya sendiri dan ikut benar walau ada admin lain.
+      setJenis(data.jenis ?? {});
+      setPesan({
+        jenis: "ok",
+        teks:
+          pilihan === "series"
+            ? 'Ditandai SERIES. Video ini pindah ke baris "Series Terbaru" di beranda dalam ±1 menit.'
+            : 'Ditandai FILM. Video ini tampil di baris "Film Terbaru" di beranda dalam ±1 menit.',
+      });
+    } catch {
+      setPesan({
+        jenis: "gagal",
+        teks: "Tidak bisa menghubungi server. Cek koneksi internet lalu coba lagi.",
+      });
+    } finally {
+      setSedangJenis(null);
+    }
+  };
+
   if (fetchError) {
     return (
       <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-5">
@@ -235,6 +293,26 @@ export default function PlaylyVisibilityManager({
           ? "Belum ada video di akun Playly kita. Upload dulu di dashboard Playly — begitu ter-upload, video langsung muncul di sini dan di halaman penonton."
           : `${jumlahTampil} dari ${videos.length} video tampil. Semua video tampil otomatis; sembunyikan yang tidak ingin ditayangkan.`}
       </p>
+
+      {videos.length > 0 && (
+        // Keterangan jenis ditulis sekali di sini, alasan yang sama dengan
+        // keterangan kategori di bawah: aturannya sama untuk semua baris.
+        <p className="mt-2 text-sm text-zinc-400">
+          <strong className="text-zinc-200">Jenis</strong> menentukan video ini
+          masuk baris <strong className="text-zinc-200">&quot;Film Terbaru&quot;</strong> atau{" "}
+          <strong className="text-zinc-200">&quot;Series Terbaru&quot;</strong> di
+          beranda. Bawaannya <em>Film</em>, jadi pilih <em>Series</em> untuk
+          episode drama berseri. Playly tidak pernah memberi tahu kita sebuah
+          video itu film atau serial, jadi pilihan di sinilah satu-satunya yang
+          menentukan. Perubahan terlihat di situs dalam ±1 menit. Ditandai
+          Series:{" "}
+          <strong className="text-zinc-200">
+            {videos.filter((v) => jenis[v.id] === "series").length} dari{" "}
+            {videos.length}
+          </strong>
+          .
+        </p>
+      )}
 
       {videos.length > 0 && (
         // Keterangan kategori ditulis di sini, bukan di sebelah tiap dropdown:
@@ -360,6 +438,36 @@ export default function PlaylyVisibilityManager({
                   </div>
                   <p className="mt-0.5 text-xs text-zinc-500">{catatan}</p>
                 </div>
+
+                {/* JENIS tayangan (owner 2026-11-05). Ditaruh PALING KIRI di
+                    antara ketiga dropdown karena ia yang paling menentukan:
+                    kategori & kualitas cuma mengubah label dan baris genre,
+                    sedangkan yang ini memindahkan judulnya antar-seksi beranda.
+                    Bentuknya sengaja sama dengan dua dropdown di bawahnya. */}
+                <label className="flex shrink-0 items-center gap-1.5">
+                  <span className="sr-only">Jenis tayangan untuk {v.title}</span>
+                  <select
+                    value={jenis[v.id] ?? JENIS_BAWAAN}
+                    onChange={(e) => ubahJenis(v.id, e.target.value)}
+                    disabled={sedangJenis === v.id}
+                    className="min-h-9 rounded-full border border-zinc-700 bg-zinc-900 px-3 text-xs text-zinc-200 outline-none transition focus-visible:border-amber-400 disabled:opacity-50"
+                  >
+                    {/* Ditulis dari LABEL_JENIS, bukan diketik ulang: nama yang
+                        dilihat admin dan nilai yang tersimpan jadi mustahil
+                        menyimpang kalau nanti jenisnya bertambah. */}
+                    {(Object.keys(LABEL_JENIS) as JenisVideo[]).map((j) => (
+                      <option key={j} value={j}>
+                        {LABEL_JENIS[j]}
+                      </option>
+                    ))}
+                  </select>
+                  {sedangJenis === v.id && (
+                    <Loader2
+                      className="h-3.5 w-3.5 animate-spin text-zinc-400"
+                      aria-hidden="true"
+                    />
+                  )}
+                </label>
 
                 {/* Kategori untuk baris beranda. Memakai <select> bawaan,
                     bukan dropdown berhias: daftarnya 8 pilihan tetap, dan

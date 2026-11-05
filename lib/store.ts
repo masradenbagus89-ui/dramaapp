@@ -908,6 +908,8 @@ type PlaylyFile = {
   linkUnduhan?: LinkUnduhan[];
   /** Kualitas pilihan admin per video (opsional: file lama tak punya). */
   kualitas?: PlaylyKualitasMap;
+  /** Jenis tayangan pilihan admin per video (opsional: file lama tak punya). */
+  jenis?: PlaylyJenisMap;
 };
 const EMPTY_PLAYLY: PlaylyFile = {
   key: null,
@@ -1284,6 +1286,70 @@ export async function setPlaylyVideoKualitas(
   } else {
     const file = readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY);
     file.kualitas = baru;
+    writeLocal("playly.json", file);
+  }
+  return baru;
+}
+
+// ===========  JENIS TAYANGAN VIDEO PLAYLY (playly:jenis)  ==================
+//
+// KENAPA ADA (owner 2026-11-05): rekan meng-upload drama BERSERI lewat Playly
+// dan judulnya mendarat di seksi "Film Terbaru". Playly tak pernah mengirim
+// penanda jenis, jadi tanpa dokumen ini situs memang tidak punya cara apa pun
+// untuk membedakan film dari episode serial — alasan lengkapnya (termasuk
+// kenapa tebakan otomatis ditolak) ada di lib/jenis-video.ts.
+//
+// Bentuknya PETA videoId -> jenis, sama seperti playly:genre & playly:kualitas
+// di atas: pertanyaannya "video ini jenisnya apa?", bukan "video ini ada di
+// daftar atau tidak". Tanpa entri = film (JENIS_BAWAAN), dan itu disengaja —
+// lihat alasannya di lib/jenis-video.ts.
+
+const PLAYLY_JENIS_DOC = "playly:jenis";
+
+/** Peta videoId -> "film" | "series". Tanpa entri = belum ditandai admin. */
+export type PlaylyJenisMap = Record<string, string>;
+
+export async function getPlaylyJenis(): Promise<PlaylyJenisMap> {
+  if (useSupabase) {
+    return (await sbDocGet<PlaylyJenisMap>(PLAYLY_JENIS_DOC)) ?? {};
+  }
+  return readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY).jenis ?? {};
+}
+
+/** Versi ber-cache untuk HALAMAN PUBLIK — alasannya sama dengan getPlaylyGenresCached. */
+export async function getPlaylyJenisCached(): Promise<PlaylyJenisMap> {
+  if (useSupabase) {
+    return (
+      (await sbDocGet<PlaylyJenisMap>(PLAYLY_JENIS_DOC, {
+        revalidate: CATALOG_TTL_SECONDS,
+      })) ?? {}
+    );
+  }
+  return readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY).jenis ?? {};
+}
+
+/**
+ * Tandai jenis satu video, atau KEMBALIKAN KE BAWAAN dengan mengirim null.
+ *
+ * Mengosongkan berarti MENGHAPUS kuncinya, bukan menyimpan string kosong —
+ * alasan yang sama persis dengan setPlaylyVideoGenre di atas: entri kosong akan
+ * terbaca sebagai jenis yang tak dikenal, dan peta ini dibaca oleh halaman
+ * penonton untuk memutuskan sebuah judul masuk baris film atau baris serial.
+ */
+export async function setPlaylyVideoJenis(
+  videoId: string,
+  jenis: string | null,
+): Promise<PlaylyJenisMap> {
+  const sekarang = await getPlaylyJenis();
+  const baru = { ...sekarang };
+  if (jenis) baru[videoId] = jenis;
+  else delete baru[videoId];
+
+  if (useSupabase) {
+    await sbDocSet(PLAYLY_JENIS_DOC, baru);
+  } else {
+    const file = readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY);
+    file.jenis = baru;
     writeLocal("playly.json", file);
   }
   return baru;

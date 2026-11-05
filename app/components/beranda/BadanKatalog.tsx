@@ -27,6 +27,7 @@ export default function BadanKatalog({
   dramas,
   heroSlides,
   filmTerbaru,
+  seriesTerbaru = [],
   genres,
   basePath,
   heroHref,
@@ -38,6 +39,18 @@ export default function BadanKatalog({
   heroSlides: Drama[];
   /** Film dari penyedia luar untuk seksi "Film Terbaru". Kosong = seksi tak digambar. */
   filmTerbaru: PlaylyVideoPublik[];
+  /**
+   * SERIAL dari penyedia luar, untuk seksi "Series Terbaru" (owner 2026-11-05).
+   *
+   * Terpisah dari `filmTerbaru` dan sudah dipisah+dipotong oleh halaman
+   * pemanggil, bukan di sini: potongannya harus terjadi SESUDAH pemisahan,
+   * kalau tidak seksi Film menyusut tiap ada serial di deretan teratas
+   * (alasan lengkapnya di app/page.tsx).
+   *
+   * Bawaannya kosong supaya halaman yang belum mengirimnya tetap berlaku
+   * apa adanya — seksi Series cuma berisi drama katalog, persis seperti dulu.
+   */
+  seriesTerbaru?: PlaylyVideoPublik[];
   /** Daftar genre untuk kaki situs. */
   genres: string[];
   /**
@@ -107,6 +120,7 @@ export default function BadanKatalog({
               semua={false}
               seksiLengkap
               videos={filmTerbaru}
+              videoSeries={seriesTerbaru}
               basePath={basePath}
             />
           }
@@ -115,6 +129,7 @@ export default function BadanKatalog({
             dramas={dramas}
             seksiLengkap
             videos={filmTerbaru}
+            videoSeries={seriesTerbaru}
             basePath={basePath}
           />
         </Suspense>

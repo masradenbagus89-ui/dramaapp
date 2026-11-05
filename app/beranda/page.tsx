@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getAllDramasCachedSafe } from "@/lib/dramas";
 import { TAB_GRID_ITEMS } from "@/lib/tab-katalog";
+import { MAKS_SERIES_PLAYLY_DI_SEKSI, pisahFilmSeries } from "@/lib/jenis-video";
 import { getPlaylyVideosGabunganCached } from "@/lib/playly-gabungan";
 import { featuredHeroSlides } from "@/lib/hero-teaser";
 import { availableGenres, FEATURED_ROW_COUNT } from "@/lib/beranda-catalog";
@@ -40,7 +41,12 @@ export default async function BerandaPage() {
   // tak menjawab (lib/supabase.ts:204). Buktinya bukan baris ini, melainkan
   // kolom Static/Dynamic di keluaran `npm run build`.
   const { videos } = await getPlaylyVideosGabunganCached();
-  const filmTerbaru = videos.slice(0, TAB_GRID_ITEMS);
+  // Dipisah DULU, baru dipotong — urutannya tidak boleh dibalik; alasannya
+  // ditulis lengkap di app/page.tsx (seksi Film menyusut sendiri kalau ada
+  // serial di deretan teratas).
+  const { film, series } = pisahFilmSeries(videos);
+  const filmTerbaru = film.slice(0, TAB_GRID_ITEMS);
+  const seriesTerbaru = series.slice(0, MAKS_SERIES_PLAYLY_DI_SEKSI);
   const genres = availableGenres(dramas);
   // Film ikut dioper — alasan sama dengan halaman depan.
   const menus = buildNavMenus(dramas, videos);
@@ -79,6 +85,7 @@ export default async function BerandaPage() {
         dramas={dramas}
         heroSlides={slides}
         filmTerbaru={filmTerbaru}
+        seriesTerbaru={seriesTerbaru}
         genres={genres}
         /* WAJIB "/beranda", jangan "/": RedirectIfAuthed memantulkan penonton
            yang sudah login dari "/", sehingga tabnya akan terlihat MATI. */

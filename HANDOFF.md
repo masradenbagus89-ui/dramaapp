@@ -9,7 +9,9 @@
 >
 > **📦 Berkas ini sudah 9.086 baris** (dihitung 2026-10-30 dengan `wc -l`, bukan ditaksir; angka lama "±6.600" dari 2026-10-15 dan "8.700+" sudah basi — tumbuh ±2.500 baris dalam 15 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. **Menunggu keputusan owner.**
 
-**Terakhir diisi:** 2026-11-05 — ✅ **TAYANG `d04a952`: DUA perbaikan sekaligus.** (1) 🎬 **Serial Playly bisa dipisahkan dari "Film Terbaru"** — dropdown Jenis di panel admin. (2) 🎨 **Latar putih seragam** di `/discover` (Jelajah + semua filter genre), `/film`, `/katalog`. Dual push `8f30108..d04a952`, tayang **±88 detik**, **downtime NOL** (http=200 di SETIAP percobaan selama pergantian versi). ⏳ **SATU langkah owner tersisa:** tandai video "Pemuda Miskin Mata Tembus Pandang Jadi Miliarder" jadi **Series** di panel admin — situs sengaja TIDAK berubah sampai itu dilakukan (bawaan `film`, supaya nol film ikut berpindah). Rinciannya di seksi teratas.
+**Terakhir diisi:** 2026-11-05 — ✅ **TAYANG `1dd0fd0`: panel admin Playly tak lagi HILANG saat Playly lambat.** 🪤 Owner melapor *"Dropdown paling kiri aku tidak ketemu"* — **dan memang tidak ada, bukan terlewat**: panel menyembunyikan DIRINYA SENDIRI begitu pengambilan daftar gagal (`if (fetchError) return`), jadi Playly telat 10 detik = daftar video + KETIGA dropdown lenyap. Senyap total: halaman admin tetap 200, build hijau, 1.886 tes hijau — yang hilang cuma alat kerjanya, dan **owner yang menemukan, bukan mesin, SESUDAH rilis**. Kini panel menyerah hanya kalau benar-benar nol video, dan halaman admin memakai salinan terakhir sebagai jaring. Dual push `d73fd0b..1dd0fd0`, downtime NOL.
+
+**Sebelumnya hari ini:** ✅ **TAYANG `d04a952`: DUA perbaikan sekaligus.** (1) 🎬 **Serial Playly bisa dipisahkan dari "Film Terbaru"** — dropdown Jenis di panel admin. (2) 🎨 **Latar putih seragam** di `/discover` (Jelajah + semua filter genre), `/film`, `/katalog`. Dual push `8f30108..d04a952`, tayang **±88 detik**, **downtime NOL** (http=200 di SETIAP percobaan selama pergantian versi). ⏳ **SATU langkah owner tersisa:** tandai video "Pemuda Miskin Mata Tembus Pandang Jadi Miliarder" jadi **Series** di panel admin — situs sengaja TIDAK berubah sampai itu dilakukan (bawaan `film`, supaya nol film ikut berpindah). Rinciannya di seksi teratas.
 
 **Sebelumnya hari ini (kini SUDAH tayang):** 🎬 `2f8fb6f`: serial Playly akhirnya bisa dipisahkan dari "Film Terbaru".** Owner: *"rekan saya upload drama dari playly tapi masuknya ke film terbaru, harusnya masuk ke series terbaru"*. Akar masalahnya **bukan salah logika — fiturnya memang belum pernah ada**: seluruh video Playly dilempar ke baris film tanpa kecuali. 🪤 **Tebakan otomatis DIUKUR dulu di 489 video produksi lalu DITOLAK** (pola judul cocok cuma 18, DUA di antaranya justru film; judul yang dikeluhkan owner tak terdeteksi; 58% durasi `null`). ⏳ **Menunggu izin push owner.** Rinciannya di seksi teratas.
 
@@ -40,6 +42,74 @@
 **Rilis ke-1 hari ini:** (✅ **TAYANG `4dde5c0`**: tombol beranda "LIHAT SEMUA FILM UNGGULAN" → **"TEMUKAN TONTONAN FAVORITMU"** — labelnya salah di dua sisi (isinya drama berseri, bukan film; tujuannya katalog lengkap, bukan daftar unggulan). Dual push → Railway build sendiri → tayang ±60 detik, **downtime NOL**. Smoke test 5 alur: 4 langsung 200, `/drama/meg-2-the-trench` 500 SEKALI lalu 200 enam kali — cold start, dicatat bukan dihapus. ❌ **DIRALAT di rilis ke-2**: catatan asli di sini menyebut tombol itu "tergeser ke kanan di layar HP" sebagai gejala nyata. **Itu keliru** — cacat alat potret, bukan cacat situs; sudah diukur ulang dan tombolnya terpusat sempurna. Jangan diburu.)
 
 **Sebelumnya:** 2026-10-30 (tiga rilis beruntun, semuanya TAYANG: `5088bf2` genre bahasa Indonesia → `27973f0` koreksi owner Kerajaan/CEO/Lainnya → **`55894b8` dua tombol halaman drama yang selama ini TERPOTONG**. Downtime NOL. ⏸️ **DUA bahasan menunggu keputusan owner**, risetnya sudah selesai & nol kode diubah: "klik drama langsung play" dan "sinopsis film masih bahasa Inggris".)
+
+---
+
+## 2026-11-05 — ✅ DIRILIS `1dd0fd0`: panel admin Playly tak lagi hilang saat Playly lambat
+
+**Laporan owner:** *"Dropdown paling kiri aku tidak ketemu"* + tangkapan layar halaman admin
+yang memperlihatkan kotak kuning **"Gagal mengambil daftar video: Playly tidak menjawab dalam
+10 detik."**
+
+### 🪤 PELAJARAN INTI — FITUR BARU BISA TAK TERJANGKAU WALAU KODENYA BENAR
+
+Dropdown Jenis yang baru dirilis `2f8fb6f` **memang tidak ada di layar owner** — bukan terlewat,
+bukan salah lihat. `PlaylyVisibilityManager` menyembunyikan **dirinya sendiri** begitu pengambilan
+daftar gagal:
+
+```tsx
+if (fetchError) { return <kotak peringatan /> }   // SELURUH panel diganti
+```
+
+Playly telat menjawab 10 detik → daftar video beserta **ketiga** dropdown-nya (Jenis, Kategori,
+Kualitas) lenyap → owner tidak bisa menandai apa pun sampai Playly kebetulan sedang cepat.
+
+**Yang membuatnya mahal: tidak ada error di mana pun.** Halaman admin tetap 200, build hijau,
+1.886 tes hijau, `tsc` exit 0 — dan fiturnya tetap tak terpakai. Seluruh gerbang pra-rilis lolos
+sempurna sementara alat kerjanya tak bisa dibuka.
+
+⚠️ **Aturan untuk fitur berikutnya: "kode benar + tes hijau" BUKAN "owner bisa memakainya".**
+Sesudah merilis fitur yang dipakai lewat panel admin, telusuri juga **jalan menuju panelnya** —
+apa saja yang bisa membuat panel itu tidak tergambar. Pola ini kembar dengan pelajaran 2026-10-29
+("BERKAS ADA ≠ ADA JALAN KE SANA"): di situ halaman hidup tapi tautannya putus, di sini komponen
+benar tapi panelnya menyembunyikan diri.
+
+### Kenapa rapuh — dan kenapa halaman PENONTON tidak
+
+`fetchPlaylyVideosKita` di halaman admin sengaja **tanpa cache** (`revalidateSeconds = 0`) supaya
+admin melihat keadaan sekarang. Konsekuensinya: saat gagal ia memulangkan `{ videos: [], error }`
+— daftar KOSONG, **nol jalur cadangan**. Sementara halaman penonton sudah lama kebal terhadap
+gangguan yang sama lewat salinan terakhir (`getPlaylyCadanganCached`, jaring dari insiden
+2026-09-26 saat Playly membalas HTTP 402).
+
+### Yang diperbaiki
+
+| # | Isinya |
+|---|---|
+| 1 | Panel menyerah **hanya** kalau `fetchError` **DAN** daftarnya kosong. Selama ada video, panel tetap bekerja dan peringatannya turun jadi spanduk di atas daftar. |
+| 2 | Halaman admin memakai `getPlaylyVideosGabunganCached()` sebagai cadangan — **bukan mekanisme baru**, melainkan jaring yang sudah melindungi halaman penonton. Hanya dipanggil SAAT GAGAL, jadi jalur normal nol beban tambahan. |
+| 3 | `PlaylyUnduhanManager` ikut memakai daftar berjaring yang sama (gejalanya kembar: "Belum ada video di akun Playly kita"). |
+
+Syaratnya sengaja **"gagal DAN kosong"**, bukan "gagal" saja: kalau pengambilan bermasalah tapi
+masih membawa video, data segar itu yang dipakai — salinan tidak boleh menggeser yang lebih baru.
+
+⭐ Penandaan dari daftar cadangan **TETAP sah**: Jenis/Kategori/Kualitas disimpan ke database KITA
+(`app_data`), bukan ke Playly. Jadi bekerja dari salinan tidak membuat hasilnya meleset.
+
+### Bukti
+
+- **1.891 tes hijau** (+5 penjaga `tests/panel-playly-tahan-gangguan.test.ts`), **diuji MERAH
+  lebih dulu**: perilaku lama dipasang kembali → 2 tes langsung gagal → hijau sesudah dipulihkan.
+- Build sukses · `tsc` exit 0 · downtime **NOL** (http=200 di 8 percobaan berturut selama 87 detik).
+- Smoke test produksi 6 alamat semua 200 · `/api/health` → `{"ok":true,"sumberData":"database"}`.
+- `/admin/videos/playly` tanpa sesi → **"Akses ditolak"** (pagar admin tetap utuh).
+
+### ⚠️ Batas jujur
+
+Perubahan ini ada di halaman yang **butuh login admin**, jadi **tidak bisa diverifikasi dari luar**
+— bukti tampilannya dari tes render + potret lokal, bukan dari layar produksi. Verifikasi akhir
+ada pada owner: buka panel admin → Video Playly → dropdown **Jenis** harus ada di tiap baris,
+bahkan saat spanduk peringatan Playly sedang muncul.
 
 ---
 

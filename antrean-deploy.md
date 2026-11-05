@@ -4,11 +4,13 @@
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
 **Terakhir dicek:** 2026-11-05 (**komputer OWNER**), sesudah rilis `d04a952`.
-`HEAD` = `origin/main` = `dramaku/main` = **`d04a952`** (selisih 0/0, diverifikasi `git fetch
+`HEAD` = `origin/main` = `dramaku/main` = **`1dd0fd0`** (selisih 0/0, diverifikasi `git fetch
 origin` + `git fetch dramaku`; working tree bersih). **Nol antrean** — tak ada yang menunggu
 rilis, tak ada branch rekan yang tertinggal.
 
-✅ **Rilis terakhir `d04a952`** (dual push `8f30108..d04a952`, cermin `dramaku` dulu lalu
+✅ **Rilis terakhir `1dd0fd0`** — panel admin Playly tak lagi hilang saat Playly lambat (owner: *"dropdown paling kiri aku tidak ketemu"*). Downtime NOL.
+
+✅ **Rilis sebelumnya `d04a952`** (dual push `8f30108..d04a952`, cermin `dramaku` dulu lalu
 produksi `origin`). Isinya 3 commit: `2f8fb6f` pisah serial Playly dari "Film Terbaru" ·
 `89e017e` catatan · `d04a952` latar putih seragam. **Tayang ±88 detik, downtime NOL** —
 `http=200` di SETIAP percobaan selama pergantian versi, diukur tiap 12 detik. Smoke test

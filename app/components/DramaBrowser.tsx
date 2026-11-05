@@ -21,7 +21,7 @@ import { chromeKatalog } from "./beranda/KepalaKatalog";
 import HasilPlayly, { cariVideoPlayly } from "./beranda/HasilPlayly";
 import { saringFilm } from "@/lib/film-jelajah";
 import SearchBar, { KELAS_MENEMPEL_KEPALA } from "./beranda/SearchBar";
-import { GRID_CLASS, SHELL } from "./beranda/shell";
+import { BADAN_TERANG, GRID_CLASS, SHELL } from "./beranda/shell";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Search, X } from "lucide-react";
@@ -220,22 +220,32 @@ export default function DramaBrowser({
           dropdown, sorotannya lepas dengan sendirinya, dan itu memang jujur. */}
       <StripKatalog items={STRIP_KATALOG} activeHref={alamatAktif} />
 
-      <div ref={hasilRef} className={cn(SHELL, "scroll-mt-32")}>
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800 py-3">
+      {/* BADAN TERANG (owner 2026-11-05: "aku mau semua seragam backgroundnya
+          jadi sama dengan beranda"). Bar cari & strip genre sengaja TETAP di
+          luar: keduanya memang berwarna (merah + kuning) dan sudah seragam
+          dengan beranda apa adanya.
+
+          `min-h-screen` bukan hiasan: tanpa itu, hasil pencarian yang cuma
+          beberapa judul meninggalkan pita HITAM di bawah halaman — latar
+          <body> menembus dari belakang, dan hasilnya justru terbaca lebih
+          belang daripada sebelum diseragamkan. */}
+      <div className={cn(BADAN_TERANG, "min-h-screen")}>
+      <div ref={hasilRef} className={cn(SHELL, "scroll-mt-32 pb-10")}>
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800 terang:border-zinc-300 py-3">
           {/* Hitungannya menyebut DUA jenis sejak 2026-10-31 (owner: "tidak
               monoton drama saja karena kita ada film"). Sebelumnya judul ini
               hanya menghitung drama, sehingga halaman berbunyi "0 judul"
               padahal ada belasan film cocok tepat di bawahnya — terbaca
               seperti pencarian yang gagal. Bagian film hilang sendiri saat
               nol, supaya tidak ada "0 film" yang cuma menambah bacaan. */}
-          <h1 className="text-sm text-zinc-400">
+          <h1 className="text-sm text-zinc-400 terang:text-zinc-600">
             {/* "Jelajah Drama & Film", bukan "Jelajah" polos: teks `>Jelajah<`
                 dipakai penjaga tests/strip-katalog.test.ts untuk memastikan
                 chip pintasan lama yang dibuang owner tidak kembali. Judul ini
                 bukan chip itu, tapi menamainya persis sama membuat penjaga
                 tersebut menyala tanpa ada yang salah — dan penjaga yang
                 berbunyi palsu cepat dimatikan orang. */}
-            <span className="font-bold text-white">Jelajah Drama &amp; Film</span>{" "}
+            <span className="font-bold text-white terang:text-zinc-900">Jelajah Drama &amp; Film</span>{" "}
             &mdash;{" "}
             {filtered.length} drama
             {videoPlayly.length > 0 ? ` · ${videoPlayly.length} film` : ""}
@@ -248,7 +258,7 @@ export default function DramaBrowser({
               variant="ghost"
               size="sm"
               onClick={resetFilters}
-              className="h-8 gap-1 rounded-sm text-xs text-zinc-400 hover:text-white"
+              className="h-8 gap-1 rounded-sm text-xs text-zinc-400 terang:text-zinc-600 hover:text-white terang:hover:text-zinc-900"
             >
               <X className="size-3.5" />
               Hapus filter
@@ -267,10 +277,10 @@ export default function DramaBrowser({
               videoPlayly.length > 0 ? "py-6" : "py-16",
             )}
           >
-            {videoPlayly.length === 0 && <Search className="size-8 text-zinc-700" />}
-            <p className="text-sm text-zinc-500">Tidak ada drama yang cocok.</p>
+            {videoPlayly.length === 0 && <Search className="size-8 text-zinc-700 terang:text-zinc-400" />}
+            <p className="text-sm text-zinc-500 terang:text-zinc-600">Tidak ada drama yang cocok.</p>
             {videoPlayly.length > 0 && (
-              <p className="text-sm font-medium text-amber-400">
+              <p className="text-sm font-medium text-amber-400 terang:text-amber-700">
                 Tapi ada {videoPlayly.length} film yang cocok &mdash; ada di
                 bawah halaman ini.
               </p>
@@ -281,7 +291,7 @@ export default function DramaBrowser({
                 variant="outline"
                 size="sm"
                 onClick={resetFilters}
-                className="rounded-sm border-zinc-700 bg-transparent text-xs text-zinc-300 hover:border-amber-400 hover:text-amber-400"
+                className="rounded-sm border-zinc-700 terang:border-zinc-300 bg-transparent text-xs text-zinc-300 terang:text-zinc-700 hover:border-amber-400 hover:text-amber-400 terang:hover:text-amber-700"
               >
                 Hapus filter
               </Button>
@@ -296,6 +306,7 @@ export default function DramaBrowser({
         )}
 
         <HasilPlayly videos={videoPlayly} ketikan={filter.q} />
+      </div>
       </div>
     </>
   );

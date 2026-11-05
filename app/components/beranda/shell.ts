@@ -10,6 +10,28 @@
 export const SHELL = "shell-wide mx-auto px-4 md:px-6";
 
 /**
+ * BADAN TERANG — latar putih-abu yang menyalakan seluruh aturan tema terang di
+ * dalamnya (owner 2026-11-05: "aku mau semua seragam backgroundnya jadi sama
+ * dengan beranda (putih)").
+ *
+ * Dua kelas ini SELALU berpasangan dan itu bukan kebetulan:
+ *   - `tema-terang` = saklarnya. Varian `terang:` di seluruh komponen hanya
+ *     menyala di dalam pembungkus ber-class ini (lihat @custom-variant di
+ *     app/globals.css). Tanpa kelas ini, `terang:text-zinc-900` DIAM saja.
+ *   - `bg-zinc-100` = latarnya sendiri. Tanpa ini, `<body className="bg-black">`
+ *     (app/layout.tsx:53) tetap terlihat menembus dari belakang.
+ * Memasang salah satunya saja menghasilkan kerusakan SENYAP: saklar tanpa latar
+ * = tulisan gelap di atas hitam (tak terbaca), latar tanpa saklar = tulisan
+ * putih di atas putih (hilang sama sekali).
+ *
+ * KENAPA ditulis di sini, bukan diketik ulang di tiap halaman: sejak 2026-11-05
+ * ia dipakai LIMA halaman (`/`, `/beranda`, `/discover`, `/film`, `/katalog`).
+ * Kalau owner minta ganti warnanya nanti, satu baris ini yang diubah — bukan
+ * lima berkas yang salah satunya pasti tertinggal lalu jadi belang tanpa error.
+ */
+export const BADAN_TERANG = "tema-terang bg-zinc-100";
+
+/**
  * Grid poster: jumlah kolom MENYESUAIKAN SENDIRI — sebanyak mungkin kolom
  * selebar minimal sekian piksel.
  *

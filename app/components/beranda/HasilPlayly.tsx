@@ -81,10 +81,10 @@ export default function HasilPlayly({ videos, ketikan }: Props) {
     <section className="mt-10" aria-labelledby="judul-video-playly">
       <div className="flex items-end justify-between gap-4">
         <div>
-          <h2 id="judul-video-playly" className="text-lg font-bold text-white">
+          <h2 id="judul-video-playly" className="text-lg font-bold text-white terang:text-zinc-900">
             {JUDUL_BAGIAN}
           </h2>
-          <p className="mt-1 text-sm text-zinc-400">
+          <p className="mt-1 text-sm text-zinc-400 terang:text-zinc-600">
             {mencari
               ? `${videos.length} video cocok dengan "${ketikan}".`
               : "Bisa langsung diputar di sini."}
@@ -95,7 +95,7 @@ export default function HasilPlayly({ videos, ketikan }: Props) {
         {!mencari && videos.length > BATAS_JELAJAH && (
           <Link
             href="/film"
-            className="shrink-0 text-sm font-semibold text-amber-400 underline"
+            className="shrink-0 text-sm font-semibold text-amber-400 terang:text-amber-700 underline"
           >
             Lihat semua
           </Link>

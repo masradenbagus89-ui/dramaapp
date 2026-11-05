@@ -73,7 +73,7 @@ export default function PlaylyVideoGrid({
                 detailHref={alamatTonton(aktif)}
               />
               {aktif.dramaHref && aktif.dramaTitle && (
-                <p className="mt-2 text-xs text-zinc-400">
+                <p className="mt-2 text-xs text-zinc-400 terang:text-zinc-600">
                   <Link href={aktif.dramaHref} className="text-amber-400 underline">
                     {aktif.dramaTitle}
                     {aktif.episode ? ` · Episode ${aktif.episode}` : ""}
@@ -109,10 +109,10 @@ export default function PlaylyVideoGrid({
                 className={`group w-full overflow-hidden rounded-xl border text-left transition ${
                   dipilih
                     ? "border-amber-400 ring-2 ring-amber-400/40"
-                    : "border-zinc-800 hover:border-zinc-600"
+                    : "border-zinc-800 terang:border-zinc-300 hover:border-zinc-600 terang:hover:border-zinc-400"
                 }`}
               >
-                <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden bg-zinc-800">
+                <div className="relative flex aspect-video w-full items-center justify-center overflow-hidden bg-zinc-800 terang:bg-zinc-200">
                   {v.thumbnail ? (
                     // Sampul dari Playly berupa data URI atau alamat https yang
                     // sudah disaring di server. next/image sengaja tidak dipakai:
@@ -126,7 +126,7 @@ export default function PlaylyVideoGrid({
                       className="h-full w-full object-cover transition group-hover:scale-105"
                     />
                   ) : (
-                    <Film className="h-7 w-7 text-zinc-600" aria-hidden="true" />
+                    <Film className="h-7 w-7 text-zinc-600 terang:text-zinc-400" aria-hidden="true" />
                   )}
                   {/* Gelap dari bawah saat hover — biar ikon play & badge tetap
                       terbaca di atas sampul yang terang. */}
@@ -152,11 +152,11 @@ export default function PlaylyVideoGrid({
                   )}
                 </div>
                 <div className="p-2.5">
-                  <p className="line-clamp-2 text-xs font-bold text-zinc-100 transition-colors group-hover:text-white sm:text-sm">
+                  <p className="line-clamp-2 text-xs font-bold text-zinc-100 terang:text-zinc-900 transition-colors group-hover:text-white terang:group-hover:text-amber-700 sm:text-sm">
                     {v.title}
                   </p>
                   {metaFilm && (
-                    <p className="mt-1 line-clamp-1 text-[11px] text-zinc-500">
+                    <p className="mt-1 line-clamp-1 text-[11px] text-zinc-500 terang:text-zinc-600">
                       {metaFilm}
                     </p>
                   )}

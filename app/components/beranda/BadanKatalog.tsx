@@ -6,6 +6,7 @@ import FooterSitus from "./FooterSitus";
 import TabKatalog from "./TabKatalog";
 import TabKatalogTampilan from "./TabKatalogTampilan";
 import { TAB_BAWAAN } from "@/lib/tab-katalog";
+import { BADAN_TERANG } from "./shell";
 
 /**
  * BADAN BERSAMA halaman katalog utama — dipakai `/` (landing, untuk yang belum
@@ -98,7 +99,7 @@ export default function BadanKatalog({
       {/* BADAN TERANG — dari sini ke bawah berlatar putih-abu. Pembungkus inilah
           SATU-SATUNYA saklar tema terang (lihat @custom-variant terang di
           app/globals.css). */}
-      <div className="tema-terang bg-zinc-100">
+      <div className={BADAN_TERANG}>
         {/* DERET TAB KATALOG (owner 2026-09-22, meniru situs katalog pembanding):
             TERBARU · SERIES UNGGULAN · SERIES UPDATE · TERPOPULER · REKOMENDASI ·
             <tahun>, plus tombol FILTER di ujung kanan. `seksiLengkap` membuat isi

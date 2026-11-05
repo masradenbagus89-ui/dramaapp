@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { getAllDramasCachedSafe } from "@/lib/dramas";
 import { TAB_BAWAAN } from "@/lib/tab-katalog";
+import { cn } from "@/lib/utils";
+import { BADAN_TERANG } from "@/app/components/beranda/shell";
 import TabKatalog from "@/app/components/beranda/TabKatalog";
 import TabKatalogTampilan from "@/app/components/beranda/TabKatalogTampilan";
 import KepalaFilm from "@/app/components/beranda/KepalaFilm";
@@ -35,7 +37,7 @@ export default async function KatalogPage() {
   const dramas = await getAllDramasCachedSafe();
 
   return (
-    <main className="min-h-screen bg-black pb-12">
+    <main className={cn("min-h-screen pb-12", BADAN_TERANG)}>
       {/* Kepala situs yang SAMA dengan Home (owner 2026-10-29) — bar cari
           merah-pink + strip kuning, bukan navbar hitam. Dipasang sebagai anak
           PERTAMA <main> dan DI LUAR pembatas isi di bawahnya, supaya barnya

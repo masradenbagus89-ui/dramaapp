@@ -61,7 +61,7 @@ export default function DaftarFilmBerhalaman({
       {/* scroll-mt menahan baris pertama dari balik navbar yang menempel. */}
       <div ref={atasRef} className="scroll-mt-20" />
 
-      <p className="mb-4 text-xs text-zinc-500">
+      <p className="mb-4 text-xs text-zinc-500 terang:text-zinc-600">
         Menampilkan {potongan.from}&ndash;{potongan.to} dari {potongan.total}{" "}
         judul
       </p>

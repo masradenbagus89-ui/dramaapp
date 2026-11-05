@@ -77,7 +77,7 @@ export default async function AdminLayout({
   // yang sesinya habis, dan panel terbaca belang.
   if (!email) {
     return (
-      <div className="tema-admin-terang">
+      <div className="tema-terang-penuh">
         <AdminAccessDenied />
       </div>
     );
@@ -97,5 +97,5 @@ export default async function AdminLayout({
    * Isi kelasnya (palet yang dibalik + latar + tinggi penuh) ada di
    * app/globals.css, lengkap dengan alasan tiap pengecualiannya.
    */
-  return <div className="tema-admin-terang">{children}</div>;
+  return <div className="tema-terang-penuh">{children}</div>;
 }

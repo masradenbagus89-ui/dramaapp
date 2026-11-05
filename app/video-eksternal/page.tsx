@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import ExternalVideoBrowser from "@/app/components/ExternalVideoBrowser";
+import { BADAN_TERANG_PENUH } from "@/app/components/beranda/shell";
+import { cn } from "@/lib/utils";
 
 // Halaman uji jalur video eksternal. Sengaja TIDAK diindeks mesin pencari
 // (noindex): ini halaman pembuktian internal, bukan halaman tonton publik.
@@ -11,7 +13,7 @@ export const metadata: Metadata = {
 
 export default function VideoEksternalPage() {
   return (
-    <main className="min-h-screen bg-zinc-950">
+    <main className={cn("min-h-screen", BADAN_TERANG_PENUH)}>
       <ExternalVideoBrowser />
     </main>
   );

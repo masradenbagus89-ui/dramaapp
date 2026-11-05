@@ -28,6 +28,7 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { Check, LogOut, Settings } from "lucide-react";
 import { AKUN_PENONTON_ENABLED } from "@/lib/saklar-fitur";
+import { BADAN_TERANG_PENUH } from "@/app/components/beranda/shell";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -100,7 +101,8 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="mx-auto max-w-7xl px-4 pb-10 pt-6 md:px-6">
+    <div className={BADAN_TERANG_PENUH}>
+      <div className="mx-auto max-w-7xl px-4 pb-10 pt-6 md:px-6">
       {/* Header profil */}
       <Card className="mx-auto max-w-2xl border-zinc-800 bg-zinc-900/50 py-4">
         <CardContent className="px-4">
@@ -295,6 +297,7 @@ export default function ProfilePage() {
       <p className="mt-6 text-center text-[11px] text-zinc-600">
         DramaKu v0.1 · Prototype
       </p>
+      </div>
     </div>
   );
 }

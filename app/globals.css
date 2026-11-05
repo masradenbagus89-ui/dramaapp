@@ -52,9 +52,9 @@
    terang-gelap. Yang digeser hanya beberapa nada yang terlalu pucat di atas
    putih — lihat blok di bawah.
 
-   Mau batal? Hapus satu kata `tema-admin-terang` di app/admin/layout.tsx.
+   Mau batal? Hapus satu kata `tema-terang-penuh` di app/admin/layout.tsx.
    ============================================================ */
-.tema-admin-terang {
+.tema-terang-penuh {
   /* Latar & permukaan: makin "gelap" nomornya, makin terang hasilnya. */
   --color-zinc-950: #ffffff;
   --color-zinc-900: #ffffff;
@@ -116,7 +116,7 @@
    sangat muda supaya blok kodenya tetap terbaca sebagai blok, tapi teksnya
    kembali kontras. Ditulis sebagai aturan, bukan disunting di 8 komponen,
    dengan alasan yang sama seperti palet di atas. */
-.tema-admin-terang [class*="bg-black/"] {
+.tema-terang-penuh [class*="bg-black/"] {
   background-color: rgb(0 0 0 / 0.06);
 }
 
@@ -146,7 +146,7 @@
    Menggeser variabelnya menutup SEMUA varian sekaligus — transparansi memakai
    `color-mix(… var(--color-rose-100) …)`, dan hover memakai variabel yang sama.
    Nada 500+ sengaja TIDAK digeser: sudah cukup gelap untuk kertas putih. */
-.tema-admin-terang {
+.tema-terang-penuh {
   --color-amber-50: #78350f;
   --color-amber-100: #78350f;
   --color-amber-200: #78350f;
@@ -180,14 +180,14 @@
    hanya nada 300–400 yang bentrok; nada 500+ tak pernah digeser. Bentuk
    selectornya mengikuti kelas aslinya — `hover:` punya selector sendiri, jadi
    warnanya hanya kembali saat benar-benar di-hover. */
-.tema-admin-terang .bg-amber-400 { background-color: #fcbb00; }
-.tema-admin-terang .hover\:bg-amber-400:hover { background-color: #fcbb00; }
-.tema-admin-terang .hover\:bg-amber-300:hover { background-color: #ffd236; }
-.tema-admin-terang .bg-rose-400 { background-color: #ff667f; }
-.tema-admin-terang .bg-emerald-400 { background-color: #00d294; }
-.tema-admin-terang .border-amber-400 { border-color: #fcbb00; }
-.tema-admin-terang .border-sky-400 { border-color: #00bcfe; }
-.tema-admin-terang .hover\:border-sky-400:hover { border-color: #00bcfe; }
+.tema-terang-penuh .bg-amber-400 { background-color: #fcbb00; }
+.tema-terang-penuh .hover\:bg-amber-400:hover { background-color: #fcbb00; }
+.tema-terang-penuh .hover\:bg-amber-300:hover { background-color: #ffd236; }
+.tema-terang-penuh .bg-rose-400 { background-color: #ff667f; }
+.tema-terang-penuh .bg-emerald-400 { background-color: #00d294; }
+.tema-terang-penuh .border-amber-400 { border-color: #fcbb00; }
+.tema-terang-penuh .border-sky-400 { border-color: #00bcfe; }
+.tema-terang-penuh .hover\:border-sky-400:hover { border-color: #00bcfe; }
 
 /* ============================================================
    Tema DramaKu — dark + emas (default gelap, tanpa toggle).

@@ -11,6 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Eye, EyeOff } from "lucide-react";
+import { BADAN_TERANG_PENUH } from "@/app/components/beranda/shell";
+import { cn } from "@/lib/utils";
 
 /**
  * Pulihkan akun penonton memakai kode pemulihan.
@@ -75,7 +77,7 @@ export default function LupaPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-black">
+    <div className={cn("min-h-screen", BADAN_TERANG_PENUH)}>
       <div className="flex min-h-screen items-center justify-center px-4 py-10">
         <div className="w-full max-w-md">
           <div className="mb-6 text-center">

@@ -32,6 +32,25 @@ export const SHELL = "shell-wide mx-auto px-4 md:px-6";
 export const BADAN_TERANG = "tema-terang bg-zinc-100";
 
 /**
+ * BADAN TERANG PENUH — paletnya DIBALIK seluruhnya (app/globals.css).
+ *
+ * BEDANYA dengan `BADAN_TERANG` di atas, dan kapan memakai yang mana:
+ *   - `BADAN_TERANG` cuma MENYALAKAN varian `terang:` yang sudah ditulis satu
+ *     per satu di komponen. Dipakai halaman KATALOG, yang komponennya
+ *     (CatalogCard, FeaturedRow, …) memang sudah disiapkan untuk dua tema.
+ *   - `BADAN_TERANG_PENUH` membalik PALETNYA. Dipakai halaman yang komponennya
+ *     TIDAK PERNAH disiapkan untuk terang — panel admin dan halaman akun
+ *     (/profile, /login, /daftar, /lupa-password), yang penuh `Card`, `Input`,
+ *     dan `Label` dari `components/ui/*`. Komponen itu memakai TOKEN shadcn,
+ *     bukan kelas zinc, jadi varian `terang:` tak pernah menyentuhnya.
+ *
+ * ⚠️ JANGAN pakai yang ini di halaman katalog: ia membalik `--color-zinc-*`,
+ * sehingga `bg-zinc-100` yang dipakai sebagai latar TERANG di beberapa
+ * komponen katalog justru berubah jadi gelap.
+ */
+export const BADAN_TERANG_PENUH = "tema-terang-penuh";
+
+/**
  * Grid poster: jumlah kolom MENYESUAIKAN SENDIRI — sebanyak mungkin kolom
  * selebar minimal sekian piksel.
  *

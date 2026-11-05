@@ -14,7 +14,7 @@ const CSS = readFileSync("app/globals.css", "utf8");
 const LAYOUT = readFileSync("app/admin/layout.tsx", "utf8");
 
 /**
- * Isi blok `.tema-admin-terang { ... }` — KOMENTARNYA DIBUANG lebih dulu.
+ * Isi blok `.tema-terang-penuh { ... }` — KOMENTARNYA DIBUANG lebih dulu.
  *
  * 🪤 Membuang komentar bukan kerapian: versi pertama tes ini memeriksa teks
  * blok apa adanya, dan ia LOLOS PALSU. Sebabnya komentar di dalam blok itu
@@ -25,19 +25,19 @@ const LAYOUT = readFileSync("app/admin/layout.tsx", "utf8");
  * yang mengutip pola yang dicari.
  */
 const blokPalet = () => {
-  const mulai = CSS.indexOf(".tema-admin-terang {");
-  expect(mulai, "blok .tema-admin-terang hilang dari globals.css").toBeGreaterThan(0);
+  const mulai = CSS.indexOf(".tema-terang-penuh {");
+  expect(mulai, "blok .tema-terang-penuh hilang dari globals.css").toBeGreaterThan(0);
   return CSS.slice(mulai, CSS.indexOf("}", mulai)).replace(/\/\*[\s\S]*?\*\//g, "");
 };
 
 /** Seluruh CSS tanpa komentar — alasannya sama seperti `blokPalet` di atas. */
 const CSS_TANPA_KOMENTAR = CSS.replace(/\/\*[\s\S]*?\*\//g, "");
 
-describe("saklar tema admin terpasang", () => {
+describe("saklar tema terang penuh terpasang", () => {
   it("layout /admin memakai pembungkusnya", () => {
     // Dipasang di LAYOUT, bukan tiap halaman: halaman admin baru ikut terang
     // sendiri. Kalau ini lepas, seluruh panel balik gelap sekaligus.
-    expect(LAYOUT.replace(/\/\*[\s\S]*?\*\//g, "")).toContain("tema-admin-terang");
+    expect(LAYOUT.replace(/\/\*[\s\S]*?\*\//g, "")).toContain("tema-terang-penuh");
   });
 
   it("punya latar sendiri — bukan cuma membalik warna teks", () => {
@@ -77,8 +77,8 @@ describe("tiga jebakan yang SUDAH terjadi saat fitur ini dibuat", () => {
     expect(
       css,
       "latar tombol kuning harus dikembalikan, kalau tidak tombol jadi cokelat",
-    ).toMatch(/\.tema-admin-terang \.bg-amber-400\s*\{/);
-    expect(css).toMatch(/\.tema-admin-terang \.hover\\:bg-amber-300:hover\s*\{/);
+    ).toMatch(/\.tema-terang-penuh \.bg-amber-400\s*\{/);
+    expect(css).toMatch(/\.tema-terang-penuh \.hover\\:bg-amber-300:hover\s*\{/);
   });
 
   it("2b. nada bertransparansi & hover ikut tertangani", () => {

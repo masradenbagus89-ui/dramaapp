@@ -21,6 +21,134 @@
 @custom-variant terang (&:is(.tema-terang *));
 
 /* ============================================================
+   PANEL ADMIN BERLATAR TERANG (owner 2026-11-05: "di admin kamu buat juga
+   latar belakangnya sama dengan beranda jadi semua dashboard semua sinkron").
+
+   KENAPA CARANYA BEDA dari `terang:` di atas — dan ini keputusan yang
+   menghemat ratusan suntingan: panel admin memakai **477 kemunculan** kelas
+   warna gelap (`text-white`, `text-zinc-400`, `bg-zinc-900`, …) yang tersebar
+   di 4 halaman + 18 komponen. Menempelkan varian `terang:` satu per satu ke
+   semuanya bukan cuma lama — yang terlewat SATU saja langsung jadi teks tak
+   terbaca, dan tak ada error yang memberi tahu.
+
+   Tailwind v4 di project ini mencetak warnanya sebagai VARIABEL
+   (`.text-zinc-400{color:var(--color-zinc-400)}` — diverifikasi di CSS hasil
+   build, bukan diasumsikan). Jadi cukup mendefinisikan ulang variabelnya di
+   dalam satu pembungkus: seluruh kelas zinc di dalamnya ikut terbalik
+   sekaligus, tanpa menyentuh satu pun berkas komponen.
+
+   Skalanya DIBALIK, bukan diganti asal: zinc-900 (dulu latar gelap) jadi
+   putih, zinc-100 (dulu teks terang) jadi hampir hitam. Dengan begitu
+   hierarki kontras yang sudah dirancang tetap utuh — yang dulu paling
+   menonjol tetap paling menonjol.
+
+   ⚠️ `--color-black` SENGAJA TIDAK dibalik. Panel admin memakai `text-black`
+   di 12 tempat, semuanya tulisan di atas tombol KUNING (amber) — membalikkan
+   hitam jadi putih di sana membuat tombol utamanya jadi putih-di-atas-kuning,
+   nyaris tak terbaca. Blok kode ber-`bg-black/XX` ditangani terpisah di bawah.
+
+   ⚠️ Warna AKSEN (amber/emerald/rose/red/sky) sengaja dibiarkan: artinya
+   terikat makna (kuning = tindakan utama, merah = bahaya), bukan terikat
+   terang-gelap. Yang digeser hanya beberapa nada yang terlalu pucat di atas
+   putih — lihat blok di bawah.
+
+   Mau batal? Hapus satu kata `tema-admin-terang` di app/admin/layout.tsx.
+   ============================================================ */
+.tema-admin-terang {
+  /* Latar & permukaan: makin "gelap" nomornya, makin terang hasilnya. */
+  --color-zinc-950: #ffffff;
+  --color-zinc-900: #ffffff;
+  --color-zinc-800: #e4e4e7;
+  --color-zinc-700: #d4d4d8;
+  --color-zinc-600: #a1a1aa;
+  /* Teks: dibalik supaya yang dulu paling terang kini paling gelap. */
+  --color-zinc-500: #71717a;
+  --color-zinc-400: #52525b;
+  --color-zinc-300: #3f3f46;
+  --color-zinc-200: #27272a;
+  --color-zinc-100: #18181b;
+  --color-zinc-50: #09090b;
+  /* `text-white` dipakai untuk JUDUL di panel ini, dan nol `bg-white`/
+     `fill-white` (dihitung sebelum diubah) — jadi membalikkannya aman. */
+  --color-white: #18181b;
+
+  background-color: #f4f4f5;
+  min-height: 100vh;
+  /* ⚠️ WAJIB, dan sebabnya halus — ketahuan hanya karena hasilnya DIPANDANG,
+     bukan dinalar: `body` di @layer base memasang `color: var(--foreground)`.
+     Nilai itu dihitung SEKALI di <body>, tempat --foreground masih terang,
+     lalu anak-anaknya mewarisi warna PUTIH yang sudah jadi — bukan menghitung
+     ulang variabelnya. Akibatnya tiap teks yang tak punya kelas warna sendiri
+     (isi kotak <input>, <label>, teks dalam Card) tampil putih di atas kertas
+     putih: hilang, tanpa satu pun error. Menyatakan ulang `color` di sini
+     memaksa perhitungan terjadi di dalam pembungkus, tempat --foreground sudah
+     gelap. */
+  color: var(--foreground);
+
+  /* ---- Token shadcn (dipakai Input, Card, Table, Select, Textarea) ----
+     Komponen di `components/ui/*` TIDAK memakai kelas zinc, melainkan token
+     (`bg-card`, `border-input`, `text-foreground`, …) yang di `:root` diset
+     GELAP. Tanpa blok ini, kotak isian dan tabel di panel admin tetap hitam
+     di tengah halaman putih — belang, dan teks gelap di dalamnya jadi tak
+     terbaca. Diperiksa sebelum ditulis: `grep` atas components/ui menunjukkan
+     kelimanya memang bergantung pada token-token di bawah.
+     `--primary` (kuning) dan `--primary-foreground` (teks gelap di atasnya)
+     sengaja TIDAK diubah — pasangan itu sudah kontras di latar mana pun. */
+  --background: oklch(0.985 0 0);
+  --foreground: oklch(0.21 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.21 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.21 0 0);
+  --secondary: oklch(0.95 0 0);
+  --secondary-foreground: oklch(0.21 0 0);
+  --muted: oklch(0.96 0 0);
+  --muted-foreground: oklch(0.49 0 0);
+  --accent: oklch(0.95 0 0);
+  --accent-foreground: oklch(0.21 0 0);
+  --border: oklch(0 0 0 / 14%);
+  --input: oklch(0 0 0 / 18%);
+}
+
+/* Blok kode & label di atas gambar memakai `bg-black/XX`. Hitamnya TIDAK ikut
+   dibalik (lihat alasan di atas), jadi di atas kertas putih ia jadi kotak
+   gelap berisi teks yang kini juga gelap — tak terbaca. Diturunkan jadi abu
+   sangat muda supaya blok kodenya tetap terbaca sebagai blok, tapi teksnya
+   kembali kontras. Ditulis sebagai aturan, bukan disunting di 8 komponen,
+   dengan alasan yang sama seperti palet di atas. */
+.tema-admin-terang [class*="bg-black/"] {
+  background-color: rgb(0 0 0 / 0.06);
+}
+
+/* Nada aksen yang dirancang untuk latar gelap jadi pucat di atas kertas putih:
+   `text-amber-400` nyaris tak terbaca. Tapi yang digelapkan HANYA WARNA TEKS,
+   bukan variabelnya.
+
+   ⚠️ Ini pelajaran yang didapat dari percobaan pertama, dan sengaja ditulis di
+   sini supaya tak terulang: mula-mula `--color-amber-400` yang digeser jadi
+   cokelat tua. Itu SALAH — amber-400 memikul DUA peran sekaligus, dan
+   `bg-amber-400` dipakai sebagai latar 10 TOMBOL UTAMA yang tulisannya
+   `text-black`. Menggelapkan variabelnya membuat tombol kuning berubah jadi
+   cokelat tua bertuliskan hitam: nyaris tak terbaca, justru pada tombol yang
+   paling sering ditekan.
+
+   Dengan menargetkan kelas teksnya saja, latar tombol tetap kuning cerah
+   (kontras bagus dengan tulisan hitam) sementara teks aksen jadi terbaca di
+   atas putih. Border aksen dibiarkan — garis kuning di atas putih tetap jelas. */
+.tema-admin-terang .text-amber-400 { color: #b45309; }
+.tema-admin-terang .text-amber-300 { color: #92400e; }
+.tema-admin-terang .text-amber-200,
+.tema-admin-terang .text-amber-100 { color: #78350f; }
+.tema-admin-terang .text-emerald-400 { color: #047857; }
+.tema-admin-terang .text-emerald-300 { color: #065f46; }
+.tema-admin-terang .text-rose-400 { color: #be123c; }
+.tema-admin-terang .text-rose-300 { color: #9f1239; }
+.tema-admin-terang .text-rose-100 { color: #881337; }
+.tema-admin-terang .text-red-400 { color: #b91c1c; }
+.tema-admin-terang .text-sky-400 { color: #0369a1; }
+.tema-admin-terang .text-sky-300 { color: #075985; }
+
+/* ============================================================
    Tema DramaKu — dark + emas (default gelap, tanpa toggle).
    Nilai token diset di :root agar app selalu gelap tanpa perlu
    class .dark. Blok .dark disediakan identik untuk jaga-jaga

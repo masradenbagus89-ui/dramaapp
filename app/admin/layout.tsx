@@ -74,5 +74,19 @@ export default async function AdminLayout({
   // ikut terkirim, jadi ini bukan "disembunyikan sesudah sampai".
   if (!email) return <AdminAccessDenied />;
 
-  return <>{children}</>;
+  /**
+   * SATU SAKLAR latar terang untuk SELURUH /admin/* (owner 2026-11-05:
+   * "di admin kamu buat juga latar belakangnya sama dengan beranda jadi semua
+   * dashboard semua sinkron").
+   *
+   * Dipasang di layout, bukan di tiap halaman, dengan alasan yang sama seperti
+   * gerbang akses di atas: halaman admin BARU yang dibuat nanti ikut terang
+   * sendiri, tanpa penulisnya perlu ingat memasangnya. Halaman yang lupa
+   * dibungkus akan terbaca belang — gelap di tengah panel yang serba putih —
+   * dan tak ada error yang memberi tahu.
+   *
+   * Isi kelasnya (palet yang dibalik + latar + tinggi penuh) ada di
+   * app/globals.css, lengkap dengan alasan tiap pengecualiannya.
+   */
+  return <div className="tema-admin-terang">{children}</div>;
 }

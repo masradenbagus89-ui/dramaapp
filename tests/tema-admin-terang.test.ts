@@ -57,13 +57,46 @@ describe("tiga jebakan yang SUDAH terjadi saat fitur ini dibuat", () => {
     expect(blokPalet()).toMatch(/color:\s*var\(--foreground\)/);
   });
 
-  it("2. tombol kuning TIDAK ikut digelapkan", () => {
-    // Percobaan pertama menggeser `--color-amber-400` jadi cokelat tua. Itu
-    // salah: amber-400 juga jadi latar 10 TOMBOL UTAMA yang tulisannya
-    // text-black — tombolnya berubah jadi cokelat bertulisan hitam, nyaris tak
-    // terbaca. Yang boleh digelapkan HANYA warna teksnya.
-    expect(blokPalet()).not.toMatch(/--color-amber-400:/);
-    expect(CSS_TANPA_KOMENTAR).toMatch(/\.tema-admin-terang \.text-amber-400\s*\{/);
+  it("2. tombol kuning TETAP kuning walau nada amber digelapkan", () => {
+    // Dua jebakan beruntun di butir yang sama:
+    //
+    // (a) Percobaan PERTAMA menggeser `--color-amber-400` tanpa pengaman. Itu
+    //     ikut menggelapkan latar 10 TOMBOL UTAMA bertulisan `text-black` —
+    //     tombolnya jadi cokelat tua bertulisan hitam, nyaris tak terbaca.
+    // (b) Percobaan KEDUA menghindarinya dengan menargetkan nama kelas
+    //     (`.text-amber-400 { … }`). Itu BOCOR: varian bertransparansi
+    //     (`text-rose-100/90`) dan `hover:text-*` adalah kelas yang BERBEDA,
+    //     jadi tak pernah kena — owner melaporkan teks pucat tak terbaca.
+    //
+    // Jalan yang benar: geser variabelnya (menutup semua varian sekaligus),
+    // lalu KEMBALIKAN warna asli khusus untuk latar & garis.
+    const css = CSS_TANPA_KOMENTAR;
+    expect(css, "nada amber harus digeser lewat variabel").toMatch(
+      /--color-amber-400:\s*#/,
+    );
+    expect(
+      css,
+      "latar tombol kuning harus dikembalikan, kalau tidak tombol jadi cokelat",
+    ).toMatch(/\.tema-admin-terang \.bg-amber-400\s*\{/);
+    expect(css).toMatch(/\.tema-admin-terang \.hover\\:bg-amber-300:hover\s*\{/);
+  });
+
+  it("2b. nada bertransparansi & hover ikut tertangani", () => {
+    // Pagar langsung atas bug yang dilaporkan owner: `text-rose-100/90` di blok
+    // "Jalur webhook belum menyala". Nada 50/100/200 WAJIB digeser lewat
+    // variabel — menargetkan nama kelas tidak akan pernah menangkapnya.
+    const css = CSS_TANPA_KOMENTAR;
+    for (const v of [
+      "--color-rose-100",
+      "--color-rose-50",
+      "--color-amber-100",
+      "--color-emerald-100",
+      "--color-red-300",
+    ]) {
+      expect(css, `${v} belum digeser — teks bernada itu akan pucat`).toContain(
+        `${v}:`,
+      );
+    }
   });
 
   it("3. token shadcn ikut dibalik — Input/Card/Table tak memakai kelas zinc", () => {

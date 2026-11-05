@@ -135,18 +135,59 @@
    Dengan menargetkan kelas teksnya saja, latar tombol tetap kuning cerah
    (kontras bagus dengan tulisan hitam) sementara teks aksen jadi terbaca di
    atas putih. Border aksen dibiarkan — garis kuning di atas putih tetap jelas. */
-.tema-admin-terang .text-amber-400 { color: #b45309; }
-.tema-admin-terang .text-amber-300 { color: #92400e; }
-.tema-admin-terang .text-amber-200,
-.tema-admin-terang .text-amber-100 { color: #78350f; }
-.tema-admin-terang .text-emerald-400 { color: #047857; }
-.tema-admin-terang .text-emerald-300 { color: #065f46; }
-.tema-admin-terang .text-rose-400 { color: #be123c; }
-.tema-admin-terang .text-rose-300 { color: #9f1239; }
-.tema-admin-terang .text-rose-100 { color: #881337; }
-.tema-admin-terang .text-red-400 { color: #b91c1c; }
-.tema-admin-terang .text-sky-400 { color: #0369a1; }
-.tema-admin-terang .text-sky-300 { color: #075985; }
+/* Nada aksen TERANG (50–400) digeser jadi gelap lewat VARIABELNYA.
+   ⚠️ Versi pertama menargetkan nama kelas (`.text-rose-100 { … }`) dan itu
+   BOCOR — owner melaporkan blok "Jalur webhook belum menyala" yang teksnya
+   pucat tak terbaca. Sebabnya kelas di sana `text-rose-100/90`: Tailwind
+   mencetaknya sebagai kelas BERBEDA (`.text-rose-100\/90`), jadi aturan yang
+   menyebut `.text-rose-100` tidak pernah kena. Hal yang sama berlaku untuk
+   `hover:text-*`. Menambal selector satu per satu berarti memburu tiap varian
+   baru selamanya.
+   Menggeser variabelnya menutup SEMUA varian sekaligus — transparansi memakai
+   `color-mix(… var(--color-rose-100) …)`, dan hover memakai variabel yang sama.
+   Nada 500+ sengaja TIDAK digeser: sudah cukup gelap untuk kertas putih. */
+.tema-admin-terang {
+  --color-amber-50: #78350f;
+  --color-amber-100: #78350f;
+  --color-amber-200: #78350f;
+  --color-amber-300: #92400e;
+  --color-amber-400: #b45309;
+  --color-rose-50: #881337;
+  --color-rose-100: #881337;
+  --color-rose-200: #881337;
+  --color-rose-300: #9f1239;
+  --color-rose-400: #be123c;
+  --color-emerald-50: #064e3b;
+  --color-emerald-100: #064e3b;
+  --color-emerald-200: #064e3b;
+  --color-emerald-300: #065f46;
+  --color-emerald-400: #047857;
+  --color-red-100: #7f1d1d;
+  --color-red-200: #7f1d1d;
+  --color-red-300: #991b1b;
+  --color-red-400: #b91c1c;
+  --color-sky-100: #0c4a6e;
+  --color-sky-300: #075985;
+  --color-sky-400: #0369a1;
+  --color-violet-400: #6d28d9;
+  --color-blue-400: #1d4ed8;
+}
+
+/* …lalu KEMBALIKAN warna aslinya di tempat yang memang harus tetap cerah:
+   LATAR dan GARIS. Tanpa ini, menggeser variabel di atas ikut menggelapkan
+   tombol kuning dan lencana berwarna — yang justru ingin dipertahankan.
+   Daftarnya dihitung dari pemakaian nyata di panel admin (bukan ditebak):
+   hanya nada 300–400 yang bentrok; nada 500+ tak pernah digeser. Bentuk
+   selectornya mengikuti kelas aslinya — `hover:` punya selector sendiri, jadi
+   warnanya hanya kembali saat benar-benar di-hover. */
+.tema-admin-terang .bg-amber-400 { background-color: #fcbb00; }
+.tema-admin-terang .hover\:bg-amber-400:hover { background-color: #fcbb00; }
+.tema-admin-terang .hover\:bg-amber-300:hover { background-color: #ffd236; }
+.tema-admin-terang .bg-rose-400 { background-color: #ff667f; }
+.tema-admin-terang .bg-emerald-400 { background-color: #00d294; }
+.tema-admin-terang .border-amber-400 { border-color: #fcbb00; }
+.tema-admin-terang .border-sky-400 { border-color: #00bcfe; }
+.tema-admin-terang .hover\:border-sky-400:hover { border-color: #00bcfe; }
 
 /* ============================================================
    Tema DramaKu — dark + emas (default gelap, tanpa toggle).

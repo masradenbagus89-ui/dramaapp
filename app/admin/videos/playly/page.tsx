@@ -32,6 +32,7 @@ import { bacaDomainUnduhan } from "@/lib/playly-unduhan-domain";
 import AdminAccessDenied from "@/app/components/admin/AdminAccessDenied";
 import AdminSidebar from "@/app/components/admin/AdminSidebar";
 import PlaylyVideoPicker from "@/app/components/admin/PlaylyVideoPicker";
+import { getPlaylyVideosGabunganCached } from "@/lib/playly-gabungan";
 import PlaylyVisibilityManager from "@/app/components/admin/PlaylyVisibilityManager";
 import PlaylyUnduhanManager from "@/app/components/admin/PlaylyUnduhanManager";
 import { Button } from "@/components/ui/button";
@@ -77,6 +78,32 @@ export default async function PlaylyVideosPage() {
       // sebagai Series, dropdown di layar ini harus memperlihatkannya.
       getPlaylyJenis(),
     ]);
+
+  /**
+   * JARING PENGAMAN panel admin (owner 2026-11-05: "dropdown paling kiri aku
+   * tidak ketemu").
+   *
+   * Masalahnya: `fetchPlaylyVideosKita` di atas sengaja TANPA cache supaya
+   * admin melihat keadaan sekarang — tapi konsekuensinya satu kali Playly telat
+   * menjawab 10 detik membuat daftarnya KOSONG, dan panel pengaturan ikut
+   * hilang dari layar bersama ketiga dropdown-nya. Owner jadi tidak bisa
+   * menandai apa pun sampai Playly kebetulan sedang cepat.
+   *
+   * Halaman PENONTON sudah lama kebal terhadap gangguan yang sama lewat salinan
+   * terakhir (lib/playly-gabungan.ts). Di sini salinan itu dipakai ulang — jadi
+   * ini bukan mekanisme baru, melainkan jaring yang sudah terbukti.
+   *
+   * Hanya dipanggil SAAT GAGAL, jadi jalur normal tidak kena beban tambahan.
+   * Daftar cadangan cukup untuk menandai video (Jenis/Kategori/Kualitas disimpan
+   * ke database KITA, bukan ke Playly), dan panelnya tetap memasang peringatan
+   * bahwa isinya bisa ketinggalan video yang baru di-upload.
+   */
+  const videoPanel =
+    mitra.error && mitra.videos.length === 0
+      ? await getPlaylyVideosGabunganCached()
+          .then((r) => r.videos)
+          .catch(() => mitra.videos)
+      : mitra.videos;
 
   // Video yang catatannya ada di Playly tapi BERKASNYA tidak (upload putus di
   // tengah / file dihapus). Sejak 2026-10-06 halaman penonton TIDAK lagi
@@ -144,7 +171,7 @@ export default async function PlaylyVideosPage() {
             katalog publik tersaring, video kita tetap tampil walau kunci ditolak —
             jadi menyembunyikan panel ini justru membuat admin mengira tak ada apa-apa. */}
         <PlaylyVisibilityManager
-          videos={mitra.videos}
+          videos={videoPanel}
           initialHidden={hidden}
           initialGenres={genres}
           initialImdb={imdb}
@@ -161,7 +188,7 @@ export default async function PlaylyVideosPage() {
             unduhannya. Sengaja tidak dibungkus syarat "kunci sudah dipasang",
             alasannya sama dengan panel di atas. */}
         <PlaylyUnduhanManager
-          videos={mitra.videos}
+          videos={videoPanel}
           initialLinks={unduhan}
           domain={bacaDomainUnduhan()}
         />

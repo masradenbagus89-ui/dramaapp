@@ -264,7 +264,23 @@ export default function PlaylyVisibilityManager({
     }
   };
 
-  if (fetchError) {
+  /**
+   * Pengambilan gagal DAN tak ada satu pun video yang bisa ditampilkan — barulah
+   * panel menyerah dan cuma menampilkan peringatan.
+   *
+   * ⚠️ Sampai 2026-11-05 syaratnya cuma `fetchError`, dan itu terbukti
+   * menyandera owner: Playly telat menjawab 10 detik → SELURUH panel diganti
+   * kotak peringatan → daftar video beserta KETIGA dropdown-nya (Jenis,
+   * Kategori, Kualitas) hilang dari layar, sehingga tak ada satu pun video yang
+   * bisa ditandai sampai Playly kebetulan sedang cepat. Owner melaporkannya
+   * dengan kalimat "dropdown paling kiri aku tidak ketemu" — dan memang tidak
+   * ada, bukan terlewat.
+   *
+   * Sekarang daftarnya bisa datang dari salinan terakhir (lihat halaman
+   * pemanggil), jadi selama ADA video, panel tetap bekerja dan peringatannya
+   * cukup tampil sebagai spanduk di atas daftar.
+   */
+  if (fetchError && videos.length === 0) {
     return (
       <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-5">
         <p className="flex items-start gap-2 text-sm text-amber-100">
@@ -288,6 +304,22 @@ export default function PlaylyVisibilityManager({
       <h2 className="text-base font-semibold text-white">
         Video yang tampil di halaman penonton
       </h2>
+
+      {/* Pengambilan bermasalah TAPI daftarnya masih ada (dari salinan
+          terakhir). Peringatannya tetap tampil — jujur bahwa daftar ini bisa
+          ketinggalan video yang baru di-upload — tanpa menyandera seluruh
+          panel seperti sebelum 2026-11-05. Penandaan yang disimpan dari sini
+          TETAP sah: ia menulis ke database kita sendiri, bukan ke Playly. */}
+      {fetchError && (
+        <p className="mt-3 flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-100">
+          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+          <span>
+            {fetchError} Daftar di bawah dipakai dari salinan terakhir, jadi
+            video yang baru saja di-upload mungkin belum muncul. Pengaturan yang
+            kamu simpan di sini tetap tersimpan dengan benar.
+          </span>
+        </p>
+      )}
       <p className="mt-1 text-sm text-zinc-400">
         {videos.length === 0
           ? "Belum ada video di akun Playly kita. Upload dulu di dashboard Playly — begitu ter-upload, video langsung muncul di sini dan di halaman penonton."

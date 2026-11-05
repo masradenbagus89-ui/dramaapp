@@ -9,9 +9,11 @@
 >
 > **📦 Berkas ini sudah 9.086 baris** (dihitung 2026-10-30 dengan `wc -l`, bukan ditaksir; angka lama "±6.600" dari 2026-10-15 dan "8.700+" sudah basi — tumbuh ±2.500 baris dalam 15 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. **Menunggu keputusan owner.**
 
-**Terakhir diisi:** 2026-11-03 — 🔊 ✅ **TAYANG `88d3429`: Volume Stabil & Penguat suara AKHIRNYA BERFUNGSI.** Ternyata kedua sakelar selama ini dipasang MATI PERMANEN dan **nol `AudioContext` di seluruh project** — mesinnya memang tak pernah dibangun, jadi ini membangun dari nol, bukan membuka gerbang. Surat permintaan izin dikirim ke rekan Playly dan **mereka memasangnya hari itu juga**, sehingga fitur **hidup sendiri tanpa rilis ulang** (perancangannya terbukti benar). 🔴 **Bunyinya BELUM pernah didengar siapa pun** — mesin kerja ini server tanpa perangkat suara, semua pengukuran audio memulangkan nol; **uji dengar wajib manusia**, caranya di seksinya. ⚠️ Kalau DramaKu pindah domain, daftar origin WAJIB dikirim ulang ke Playly atau fitur suara mati lagi.
+**Terakhir diisi:** 2026-11-05 — 🔁 **VERIFIKASI SILANG 3 SESI.** Push yang diminta owner ternyata **sudah dilakukan sesi lain** (`4f28886` + 6 commit lain sudah di kedua remote). Nol kode diubah; yang dikerjakan: membetulkan catatan yang BASI — studio AI sudah di-commit (`d12d913`, 26 berkas) padahal masih tertulis "belum di-commit", dan `antrean-deploy.md` disegarkan ke `836a0b1`. 🪤 **Pelajaran: status "belum di-push" di catatan lama WAJIB dicek ulang lewat `git fetch`** — repo ini dikerjakan dari beberapa sesi. Rinciannya di seksi teratas.
 
-**Sebelumnya hari itu:** 🎬 **BARU `drama-ai-studio/`: episode 1 jadi MP4 — 18/18 FOTO AI + 11/11 DIALOG MANDARIN DIUCAPKAN, biaya NOL** — 4 putaran. 💡 Temuan sampingan penting: **jam mesin ini tertinggal 13 menit** dari waktu sebenarnya. 🪤 Pelajaran termahal: **"ada sinyal audio" ≠ "terdengar"** (semua tenaga di sub-bass yang speaker kecil tak bunyikan) dan **"kamera bergerak" ≠ "terbaca bergerak"** (14%/7dtk = slideshow); dua-duanya lolos pemeriksaan teknis saya dan hanya ketahuan dari laporan owner (1080×1920, 97,04 dtk, subtitle Mandarin+Indonesia terbakar, wajah tokoh konsisten lintas adegan). Sub-proyek terisolasi; repo induk nol tersentuh (build OK, tsc exit 0, 1844 tes hijau). ⚠️ Yang dihasilkan **animatic**, BUKAN video AI — mesin berbayar sengaja belum disambung (nol kunci API). Belum di-commit. · Sebelumnya: 🔍 **AUDIT HP + TABLET atas permintaan Kang Dedi: HASIL BERSIH, nol kode diubah.** 20/20 pengukuran (5 halaman × lebar 360/412/768/1024) menunjukkan `scrollWidth` sama persis dengan viewport — nol elemen meluber. 🪤 **PELAJARAN METODE PENTING**: potret `--window-size` di bawah ~476px MENYESATKAN (berkas PNG-nya selebar yang diminta, tapi viewport CSS yang dirender TIDAK) — jebakan ini sudah menipu TIGA kali. Cara yang benar (iframe + ukur `scrollWidth`) ada di seksinya.
+**Sebelumnya 2026-11-03:** 🔊 ✅ **TAYANG `88d3429`: Volume Stabil & Penguat suara AKHIRNYA BERFUNGSI.** Ternyata kedua sakelar selama ini dipasang MATI PERMANEN dan **nol `AudioContext` di seluruh project** — mesinnya memang tak pernah dibangun, jadi ini membangun dari nol, bukan membuka gerbang. Surat permintaan izin dikirim ke rekan Playly dan **mereka memasangnya hari itu juga**, sehingga fitur **hidup sendiri tanpa rilis ulang** (perancangannya terbukti benar). 🔴 **Bunyinya BELUM pernah didengar siapa pun** — mesin kerja ini server tanpa perangkat suara, semua pengukuran audio memulangkan nol; **uji dengar wajib manusia**, caranya di seksinya. ⚠️ Kalau DramaKu pindah domain, daftar origin WAJIB dikirim ulang ke Playly atau fitur suara mati lagi.
+
+**Sebelumnya hari itu:** 🎬 **BARU `drama-ai-studio/`: episode 1 jadi MP4 — 18/18 FOTO AI + 11/11 DIALOG MANDARIN DIUCAPKAN, biaya NOL** — 4 putaran. 💡 Temuan sampingan penting: **jam mesin ini tertinggal 13 menit** dari waktu sebenarnya. 🪤 Pelajaran termahal: **"ada sinyal audio" ≠ "terdengar"** (semua tenaga di sub-bass yang speaker kecil tak bunyikan) dan **"kamera bergerak" ≠ "terbaca bergerak"** (14%/7dtk = slideshow); dua-duanya lolos pemeriksaan teknis saya dan hanya ketahuan dari laporan owner (1080×1920, 97,04 dtk, subtitle Mandarin+Indonesia terbakar, wajah tokoh konsisten lintas adegan). Sub-proyek terisolasi; repo induk nol tersentuh (build OK, tsc exit 0, 1844 tes hijau). ⚠️ Yang dihasilkan **animatic**, BUKAN video AI — mesin berbayar sengaja belum disambung (nol kunci API). ✅ **SUDAH di-commit & di-push** (`d12d913`, 26 berkas ter-track) — status "belum di-commit" di catatan lama sudah TIDAK berlaku. · Sebelumnya: 🔍 **AUDIT HP + TABLET atas permintaan Kang Dedi: HASIL BERSIH, nol kode diubah.** 20/20 pengukuran (5 halaman × lebar 360/412/768/1024) menunjukkan `scrollWidth` sama persis dengan viewport — nol elemen meluber. 🪤 **PELAJARAN METODE PENTING**: potret `--window-size` di bawah ~476px MENYESATKAN (berkas PNG-nya selebar yang diminta, tapi viewport CSS yang dirender TIDAK) — jebakan ini sudah menipu TIGA kali. Cara yang benar (iframe + ukur `scrollWidth`) ada di seksinya.
 
 **Rilis terakhir:** 2026-11-03 — `88d3429` (fitur suara pemutar, lihat seksi teratas).
 
@@ -34,6 +36,51 @@
 **Rilis ke-1 hari ini:** (✅ **TAYANG `4dde5c0`**: tombol beranda "LIHAT SEMUA FILM UNGGULAN" → **"TEMUKAN TONTONAN FAVORITMU"** — labelnya salah di dua sisi (isinya drama berseri, bukan film; tujuannya katalog lengkap, bukan daftar unggulan). Dual push → Railway build sendiri → tayang ±60 detik, **downtime NOL**. Smoke test 5 alur: 4 langsung 200, `/drama/meg-2-the-trench` 500 SEKALI lalu 200 enam kali — cold start, dicatat bukan dihapus. ❌ **DIRALAT di rilis ke-2**: catatan asli di sini menyebut tombol itu "tergeser ke kanan di layar HP" sebagai gejala nyata. **Itu keliru** — cacat alat potret, bukan cacat situs; sudah diukur ulang dan tombolnya terpusat sempurna. Jangan diburu.)
 
 **Sebelumnya:** 2026-10-30 (tiga rilis beruntun, semuanya TAYANG: `5088bf2` genre bahasa Indonesia → `27973f0` koreksi owner Kerajaan/CEO/Lainnya → **`55894b8` dua tombol halaman drama yang selama ini TERPOTONG**. Downtime NOL. ⏸️ **DUA bahasan menunggu keputusan owner**, risetnya sudah selesai & nol kode diubah: "klik drama langsung play" dan "sinopsis film masih bahasa Inggris".)
+
+---
+
+## 2026-11-05 — 🔁 VERIFIKASI SILANG 3 SESI (2026-11-03) + koreksi catatan yang BASI
+
+Owner: *"push lalu update handoff dari 3 sesi."* Nol kode aplikasi diubah — ini pekerjaan
+mencocokkan catatan dengan kenyataan git.
+
+### ❗ Push yang diminta ternyata SUDAH dilakukan sesi lain
+
+Commit audit `4f28886` masih tercatat "belum di-push" di sesi sebelumnya. Faktanya ia **sudah ada
+di `origin` dan `dramaku`**, lalu disusul 6 commit lain. Tidak ada yang perlu didorong.
+
+🪤 **Pelajaran: "belum di-push" di catatan sesi lama TIDAK BOLEH dipercaya mentah.** Repo ini
+dikerjakan dari beberapa sesi; status git **wajib dicek ulang** dengan `git fetch` + bandingkan
+`origin/main..HEAD` sebelum mengambil kesimpulan apa pun — bukan dibaca dari HANDOFF.
+
+### Peta 7 commit di 2026-11-03 (semua author `masradenbagus89-ui`)
+
+| commit | jam | isi | sesi |
+|---|---|---|---|
+| `88d3429` | 10:55 | fitur suara pemutar (Volume Stabil + Penguat) | suara |
+| `6abb28b` | 10:56 | surat permintaan izin CORS ke rekan Playly | suara |
+| `2c9a10d` | 15:12 | izin CORS terpasang — fitur suara aktif | suara |
+| `d12d913` | 15:38 | prototype `drama-ai-studio/` masuk repo | studio |
+| `3c95388` | 15:45 | catat rilis `88d3429` di HANDOFF | catatan |
+| `f0bcd84` | 15:46 | betulkan baris "Rilis terakhir" | catatan |
+| `836a0b1` | 15:49 | buang `uji-tts4.mjs` (49 baris sisa percobaan) | studio |
+
+Ketiga sesi (audit HP+Tablet · fitur suara · studio AI) **sudah punya seksinya masing-masing** di
+berkas ini. Yang kurang hanyalah status yang terlanjur basi — dibetulkan di bawah.
+
+### Yang DIBETULKAN hari ini
+
+1. **Ringkasan atas** masih menulis studio *"Belum di-commit"* → kini ✅ sudah di-commit + push.
+2. **Seksi studio** masih menulis *"Status git: NOL commit, nol push, 24 berkas"* → kini angka
+   nyata: **26 berkas ter-track**, `node_modules/` + `keluaran/` terbukti terabaikan, **nol
+   berkas rahasia**. Dua MP4 hasil prototype (24 MB + 22 MB) ada di disk tapi **tidak** masuk repo
+   — sesuai rancangan.
+3. **`antrean-deploy.md`** masih berhenti di `784460c` → disegarkan ke `836a0b1`.
+
+### Keadaan sekarang
+
+`HEAD` = `origin/main` = `dramaku/main` = **`836a0b1`**, selisih 0/0, working tree bersih.
+**Nol antrean rilis.** Situs produksi tidak tersentuh oleh pekerjaan ini.
 
 ---
 
@@ -171,7 +218,16 @@ Permintaan owner: sistem produksi serial drama China 10 episode yang keluarannya
 
 ✅ `keluaran/episode-01/episode-01.mp4` — 23,3 MB · 97,04 dtk · 1080×1920 · 18/18 foto AI · **11/11 dialog diucapkan** · **75 tes hijau**. ⚠️ Tersisa: satu suara untuk semua tokoh, nadanya datar (membacakan bukan memerankan), bibir tidak sinkron, endpoint tidak resmi.
 
-**Status git: NOL commit, nol push.** 24 berkas baru semuanya di dalam `drama-ai-studio/`; `node_modules` (79 MB) dan `keluaran/` (15 MB) terbukti terabaikan.
+**Status git — DIPERBARUI 2026-11-05 (sebelumnya tertulis "NOL commit, nol push", kini BASI):**
+✅ **sudah di-commit DAN di-push ke kedua remote.** `d12d913` memasukkan sub-proyeknya,
+`836a0b1` membuang `uji-tts4.mjs` (49 baris sisa skrip percobaan). Diverifikasi ulang hari ini:
+
+- **26 berkas** `drama-ai-studio/` ter-track (`git ls-files`).
+- `node_modules/` dan `keluaran/` **terbukti terabaikan** (`git check-ignore` memulangkan benar
+  untuk keduanya) — jadi dua MP4 hasil prototype yang ada di disk (`episode-01.mp4` 24 MB +
+  `episode-01-baru.mp4` 22 MB) **tidak ikut masuk repo**, dan itu memang yang diinginkan.
+- **Nol berkas rahasia ter-track**: tak ada `.env`/`key`/`secret`/`token`/`password` di antara
+  26 berkas itu.
 
 ---
 

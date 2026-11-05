@@ -3,11 +3,23 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-11-02 (**komputer OWNER**).
-`origin/main` = `dramaku/main` = **`784460c`** (selisih 0/0 antar-remote, diverifikasi
-`git fetch origin` + `git fetch dramaku` SEBELUM tiap push; push keduanya exit 0). **Nol antrean**
-— tak ada yang menunggu rilis, tak ada branch rekan yang tertinggal.
-**Enam rilis hari ini**, semuanya TAYANG, downtime NOL:
+**Terakhir dicek:** 2026-11-05 (**komputer OWNER**).
+`HEAD` = `origin/main` = `dramaku/main` = **`836a0b1`** (selisih 0/0, diverifikasi `git fetch
+origin` + `git fetch dramaku` lalu `origin/main..HEAD` dan `HEAD..origin/main` **dua-duanya
+kosong**; working tree bersih). **Nol antrean** — tak ada yang menunggu rilis, tak ada branch
+rekan yang tertinggal.
+
+🪤 **PELAJARAN 2026-11-05: status "belum di-push" di HANDOFF TIDAK BOLEH dipercaya mentah.**
+Commit audit `4f28886` masih tercatat menunggu push, padahal sudah ada di kedua remote dan
+disusul 6 commit lain dari sesi berbeda. Repo ini dikerjakan dari beberapa sesi — **selalu
+`git fetch` + bandingkan sendiri** sebelum menyimpulkan ada/tidaknya antrean.
+
+**2026-11-03 — tiga sesi, 7 commit** (fitur suara · studio AI · catatan):
+`88d3429` (fitur suara pemutar, TAYANG) → `6abb28b` → `2c9a10d` (izin CORS Playly terpasang) →
+`d12d913` (sub-proyek `drama-ai-studio/` masuk repo) → `3c95388` → `f0bcd84` → `836a0b1`.
+Hanya `88d3429` yang mengubah aplikasi penonton; sisanya catatan + sub-proyek terisolasi.
+
+**2026-11-02 — enam rilis**, semuanya TAYANG, downtime NOL:
 `e90e967` → `91d1f5d` → `7c67a40` → `3d57145` → `8ced118` → `784460c`.
 
 ✅ **DIRILIS 2026-11-02 (ke-6) — judul pemutar memudar bersama kontrol, di `784460c`.

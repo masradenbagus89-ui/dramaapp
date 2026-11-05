@@ -9,7 +9,9 @@
 >
 > **📦 Berkas ini sudah 9.086 baris** (dihitung 2026-10-30 dengan `wc -l`, bukan ditaksir; angka lama "±6.600" dari 2026-10-15 dan "8.700+" sudah basi — tumbuh ±2.500 baris dalam 15 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. **Menunggu keputusan owner.**
 
-**Terakhir diisi:** 2026-11-05 — 🎬 **BELUM DIRILIS `2f8fb6f`: serial Playly akhirnya bisa dipisahkan dari "Film Terbaru".** Owner: *"rekan saya upload drama dari playly tapi masuknya ke film terbaru, harusnya masuk ke series terbaru"*. Akar masalahnya **bukan salah logika — fiturnya memang belum pernah ada**: seluruh video Playly dilempar ke baris film tanpa kecuali. 🪤 **Tebakan otomatis DIUKUR dulu di 489 video produksi lalu DITOLAK** (pola judul cocok cuma 18, DUA di antaranya justru film; judul yang dikeluhkan owner tak terdeteksi; 58% durasi `null`). ⏳ **Menunggu izin push owner.** Rinciannya di seksi teratas.
+**Terakhir diisi:** 2026-11-05 — ✅ **TAYANG `d04a952`: DUA perbaikan sekaligus.** (1) 🎬 **Serial Playly bisa dipisahkan dari "Film Terbaru"** — dropdown Jenis di panel admin. (2) 🎨 **Latar putih seragam** di `/discover` (Jelajah + semua filter genre), `/film`, `/katalog`. Dual push `8f30108..d04a952`, tayang **±88 detik**, **downtime NOL** (http=200 di SETIAP percobaan selama pergantian versi). ⏳ **SATU langkah owner tersisa:** tandai video "Pemuda Miskin Mata Tembus Pandang Jadi Miliarder" jadi **Series** di panel admin — situs sengaja TIDAK berubah sampai itu dilakukan (bawaan `film`, supaya nol film ikut berpindah). Rinciannya di seksi teratas.
+
+**Sebelumnya hari ini (kini SUDAH tayang):** 🎬 `2f8fb6f`: serial Playly akhirnya bisa dipisahkan dari "Film Terbaru".** Owner: *"rekan saya upload drama dari playly tapi masuknya ke film terbaru, harusnya masuk ke series terbaru"*. Akar masalahnya **bukan salah logika — fiturnya memang belum pernah ada**: seluruh video Playly dilempar ke baris film tanpa kecuali. 🪤 **Tebakan otomatis DIUKUR dulu di 489 video produksi lalu DITOLAK** (pola judul cocok cuma 18, DUA di antaranya justru film; judul yang dikeluhkan owner tak terdeteksi; 58% durasi `null`). ⏳ **Menunggu izin push owner.** Rinciannya di seksi teratas.
 
 **Sebelumnya 2026-11-05:** 🔁 **VERIFIKASI SILANG 3 SESI.** Push yang diminta owner ternyata **sudah dilakukan sesi lain** (`4f28886` + 6 commit lain sudah di kedua remote). Nol kode diubah; yang dikerjakan: membetulkan catatan yang BASI — studio AI sudah di-commit (`d12d913`, 26 berkas) padahal masih tertulis "belum di-commit", dan `antrean-deploy.md` disegarkan ke `836a0b1`. 🪤 **Pelajaran: status "belum di-push" di catatan lama WAJIB dicek ulang lewat `git fetch`** — repo ini dikerjakan dari beberapa sesi. Rinciannya di seksi teratas.
 
@@ -41,7 +43,69 @@
 
 ---
 
-## 2026-11-05 — 🎬 BELUM DIRILIS `2f8fb6f`: serial Playly dipisahkan dari "Film Terbaru"
+## 2026-11-05 — ✅ DIRILIS `d04a952`: latar PUTIH seragam di /discover, /film, /katalog
+
+**Permintaan owner:** *"perbaiki juga background di jelajah drama, aksi, anime karena aku mau semua
+seragam backgroundnya jadi sama dengan beranda (putih)"* + *"bisa kamu buka di lokalhost saja"*.
+
+### 🪤 PELAJARAN INTI — mengganti latar MENYINGKAP teks yang selama ini "aman"
+
+Ini bukan pekerjaan ganti satu kelas `bg-black`. Latar putih **menyingkap** setiap teks yang
+selama ini mengandalkan latar gelap: judul **"Jelajah Drama & Film"** ber-`text-white` akan
+**HILANG TOTAL** (putih di atas putih) begitu latarnya diputihkan. **Nol error, build tetap hijau,
+halaman tetap 200** — satu-satunya yang bisa menangkapnya adalah mata atau penjaga tes.
+
+Yang diberi pasangan varian `terang:` — **25 warna** di 4 berkas:
+
+| Berkas | Isinya |
+|---|---|
+| `DramaBrowser.tsx` | judul, hitungan "22 drama · 187 film", garis, tombol Hapus filter, blok kosong |
+| `HasilPlayly.tsx` | judul "Film & Video Lainnya", keterangan, tautan "Lihat semua" |
+| `PlaylyVideoGrid.tsx` | judul kartu, border, **latar placeholder sampul** (tadinya kotak hitam pekat di atas kertas putih) |
+| `app/film/page.tsx` | header + blok "belum ada video" |
+
+⭐ Warnanya **dipusatkan di satu konstanta** `BADAN_TERANG` (`app/components/beranda/shell.ts`).
+Ganti nuansa nanti = satu baris, bukan lima berkas yang salah satunya pasti tertinggal lalu belang.
+Penjaganya langsung menemukan temuan nyata: **`BadanKatalog` ternyata menulis kelasnya sendiri** —
+sudah dialihkan ke konstanta.
+
+⚠️ `min-h-screen` pada badan terang `/discover` **bukan hiasan**: tanpa itu, hasil pencarian yang
+cuma beberapa judul meninggalkan **pita HITAM** di bawah halaman (latar `<body>` menembus dari
+belakang) — hasilnya justru lebih belang daripada sebelum diseragamkan.
+
+### 🪤 PELAJARAN KEDUA — port localhost di mesin ini BUKAN MILIK KITA
+
+Server lokal dinyalakan di port **3100**, lalu `/discover` `/film` `/katalog` semua membalas
+**404** padahal `/` membalas 200. Penyebabnya BUKAN kode: `netstat` menunjukkan **dua** proses
+listening di 3100, dan `taskkill` atas PID-nya ditolak **"Access is denied"** — bukti port itu
+milik **penyewa lain** di server RDP bersama ini. Permintaan curl mendarat di situs orang lain.
+
+**Aturan: sebelum percaya hasil dari localhost, pastikan yang menjawab benar-benar situs kita** —
+cek `netstat -ano | grep ":<port>"` (harus satu proses, dan PID-nya bisa kita matikan), lalu
+verifikasi isi balasannya memuat penanda situs kita. Dipakai port **3131** sesudah itu.
+
+### Bukti
+
+- **1.886 tes hijau** (+10 penjaga baru `tests/badan-terang.test.ts`). **Diuji MERAH lebih dulu**:
+  varian terang judul dilepas → 2 tes langsung gagal → hijau lagi sesudah dipulihkan.
+- Penjaganya menjaga DUA hal yang kalau putus merusak senyap: (a) saklar `tema-terang` + latar
+  selalu berpasangan; (b) tiap `text-white` di komponen dalam badan terang punya pasangan
+  `terang:`. Pengecualian HANYA untuk ikon ber-`fill-white` (tombol play di ATAS gambar, bukan di
+  atas kertas putih) — sempit dengan sengaja, bukan kelonggaran demi meloloskan kerja sendiri.
+- `npm run build` sukses · `npx tsc --noEmit` **exit 0** (urutan build→tsc).
+- Diperiksa lewat **potret layar sungguhan** 1440px, bukan nalar: `/discover`, `?cat=Action`,
+  `?cat=Comedy`, `/film`, `/katalog` — lokal DAN produksi sesudah tayang.
+- Smoke test produksi 8 alamat: semua **200**.
+
+### Yang SENGAJA belum diseragamkan
+
+`/shorts`, `/history`, `/my-list` masih gelap. Ketiganya bukan halaman katalog — dua terakhir
+halaman akun pribadi, dan `/shorts` isinya video pendek tegak yang memang lazim berlatar gelap.
+Menunggu keputusan owner; polanya tinggal diterapkan kalau diminta.
+
+---
+
+## 2026-11-05 — ✅ DIRILIS `2f8fb6f`: serial Playly dipisahkan dari "Film Terbaru"
 
 **Keluhan owner:** *"rekan saya upload drama dari playly tapi masuknya ke film terbaru, harusnya
 masuk ke series terbaru"* + tangkapan layar halaman depan, kotak merah di **"Pemuda Miskin Mata
@@ -116,8 +180,9 @@ seksi dengan kartu berjudul hampir sama dan **mendorong keluar drama katalog own
 
 ### ⏳ Yang MASIH perlu dilakukan owner
 
-1. **Izin push** — belum dirilis.
-2. **Sesudah tayang:** buka panel admin → **Video Playly** → cari "Pemuda Miskin Mata Tembus
+✅ Sudah dirilis `d04a952` (2026-11-05, tayang ±88 detik, downtime NOL).
+
+1. **Sekarang:** buka panel admin → **Video Playly** → cari "Pemuda Miskin Mata Tembus
    Pandang Jadi Miliarder" → dropdown paling kiri ubah **Film → Series**. Tunggu ±1 menit, muat
    ulang halaman depan. Tanpa langkah ini situs tidak berubah sama sekali (itu disengaja).
 

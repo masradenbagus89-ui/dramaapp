@@ -3,11 +3,17 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-11-05 (**komputer OWNER**).
-`HEAD` = `origin/main` = `dramaku/main` = **`836a0b1`** (selisih 0/0, diverifikasi `git fetch
-origin` + `git fetch dramaku` lalu `origin/main..HEAD` dan `HEAD..origin/main` **dua-duanya
-kosong**; working tree bersih). **Nol antrean** — tak ada yang menunggu rilis, tak ada branch
-rekan yang tertinggal.
+**Terakhir dicek:** 2026-11-05 (**komputer OWNER**), sesudah rilis `d04a952`.
+`HEAD` = `origin/main` = `dramaku/main` = **`d04a952`** (selisih 0/0, diverifikasi `git fetch
+origin` + `git fetch dramaku`; working tree bersih). **Nol antrean** — tak ada yang menunggu
+rilis, tak ada branch rekan yang tertinggal.
+
+✅ **Rilis terakhir `d04a952`** (dual push `8f30108..d04a952`, cermin `dramaku` dulu lalu
+produksi `origin`). Isinya 3 commit: `2f8fb6f` pisah serial Playly dari "Film Terbaru" ·
+`89e017e` catatan · `d04a952` latar putih seragam. **Tayang ±88 detik, downtime NOL** —
+`http=200` di SETIAP percobaan selama pergantian versi, diukur tiap 12 detik. Smoke test
+produksi 8 alamat semua 200. Dibuktikan tayang lewat penanda `tema-terang` di HTML `/film`
+(halaman itu dirender di server, jadi kelasnya ikut terkirim) + potret layar situs sungguhan.
 
 🪤 **PELAJARAN 2026-11-05: status "belum di-push" di HANDOFF TIDAK BOLEH dipercaya mentah.**
 Commit audit `4f28886` masih tercatat menunggu push, padahal sudah ada di kedua remote dan

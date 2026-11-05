@@ -72,7 +72,16 @@ export default async function AdminLayout({
   // Default-deny (rak auth §2 butir 5): tak ada sesi admin yang sah = tolak.
   // Yang dikirim ke browser hanya layar penolakan — isi panelnya tidak pernah
   // ikut terkirim, jadi ini bukan "disembunyikan sesudah sampai".
-  if (!email) return <AdminAccessDenied />;
+  // Layar penolakan ikut dibungkus tema terang — kalau tidak, satu-satunya
+  // halaman /admin yang masih gelap justru yang paling sering dilihat orang
+  // yang sesinya habis, dan panel terbaca belang.
+  if (!email) {
+    return (
+      <div className="tema-admin-terang">
+        <AdminAccessDenied />
+      </div>
+    );
+  }
 
   /**
    * SATU SAKLAR latar terang untuk SELURUH /admin/* (owner 2026-11-05:

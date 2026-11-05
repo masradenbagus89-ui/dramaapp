@@ -9,7 +9,9 @@
 >
 > **📦 Berkas ini sudah 9.086 baris** (dihitung 2026-10-30 dengan `wc -l`, bukan ditaksir; angka lama "±6.600" dari 2026-10-15 dan "8.700+" sudah basi — tumbuh ±2.500 baris dalam 15 hari) dan dibaca PALING AWAL tiap sesi, jadi ia memakan jatah konteks lebih dulu daripada kode. Catatan **2026-09-15 ke bawah** layak dipindah ke `NEXT-SESSION.md` — **tapi jangan dipotong buta**: bagian *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah; memindahkannya ke arsip berarti sesi berikutnya kehilangan pagarnya. **Menunggu keputusan owner.**
 
-**Terakhir diisi:** 2026-11-05 — ✅ **TAYANG `1dd0fd0`: panel admin Playly tak lagi HILANG saat Playly lambat.** 🪤 Owner melapor *"Dropdown paling kiri aku tidak ketemu"* — **dan memang tidak ada, bukan terlewat**: panel menyembunyikan DIRINYA SENDIRI begitu pengambilan daftar gagal (`if (fetchError) return`), jadi Playly telat 10 detik = daftar video + KETIGA dropdown lenyap. Senyap total: halaman admin tetap 200, build hijau, 1.886 tes hijau — yang hilang cuma alat kerjanya, dan **owner yang menemukan, bukan mesin, SESUDAH rilis**. Kini panel menyerah hanya kalau benar-benar nol video, dan halaman admin memakai salinan terakhir sebagai jaring. Dual push `d73fd0b..1dd0fd0`, downtime NOL.
+**Terakhir diisi:** 2026-11-05 — ✅ **TAYANG `0cc1758`: PANEL ADMIN kini berlatar terang, seragam dengan beranda.** Owner: *"di admin kamu buat juga latar belakangnya sama dengan beranda jadi semua dashboard semua sinkron"*. ⭐ **477 kemunculan warna gelap dibalik TANPA menyentuh satu pun berkas komponen** — Tailwind v4 di sini mencetak warna sebagai VARIABEL, jadi paletnya cukup didefinisikan ulang di satu pembungkus (`app/globals.css`), saklarnya di `app/admin/layout.tsx`. 🪤 **TIGA jebakan senyap, semuanya ketahuan hanya karena hasilnya DIPANDANG** (lihat seksi teratas), dan 🪤 **DUA kesalahan METODE VERIFIKASI saya sendiri** — nyaris melaporkan 'deploy gagal' padahal sudah tayang. Dual push `60eb338..0cc1758`.
+
+**Sebelumnya hari ini:** ✅ **TAYANG `1dd0fd0`: panel admin Playly tak lagi HILANG saat Playly lambat.** 🪤 Owner melapor *"Dropdown paling kiri aku tidak ketemu"* — **dan memang tidak ada, bukan terlewat**: panel menyembunyikan DIRINYA SENDIRI begitu pengambilan daftar gagal (`if (fetchError) return`), jadi Playly telat 10 detik = daftar video + KETIGA dropdown lenyap. Senyap total: halaman admin tetap 200, build hijau, 1.886 tes hijau — yang hilang cuma alat kerjanya, dan **owner yang menemukan, bukan mesin, SESUDAH rilis**. Kini panel menyerah hanya kalau benar-benar nol video, dan halaman admin memakai salinan terakhir sebagai jaring. Dual push `d73fd0b..1dd0fd0`, downtime NOL.
 
 **Sebelumnya hari ini:** ✅ **TAYANG `d04a952`: DUA perbaikan sekaligus.** (1) 🎬 **Serial Playly bisa dipisahkan dari "Film Terbaru"** — dropdown Jenis di panel admin. (2) 🎨 **Latar putih seragam** di `/discover` (Jelajah + semua filter genre), `/film`, `/katalog`. Dual push `8f30108..d04a952`, tayang **±88 detik**, **downtime NOL** (http=200 di SETIAP percobaan selama pergantian versi). ⏳ **SATU langkah owner tersisa:** tandai video "Pemuda Miskin Mata Tembus Pandang Jadi Miliarder" jadi **Series** di panel admin — situs sengaja TIDAK berubah sampai itu dilakukan (bawaan `film`, supaya nol film ikut berpindah). Rinciannya di seksi teratas.
 
@@ -42,6 +44,76 @@
 **Rilis ke-1 hari ini:** (✅ **TAYANG `4dde5c0`**: tombol beranda "LIHAT SEMUA FILM UNGGULAN" → **"TEMUKAN TONTONAN FAVORITMU"** — labelnya salah di dua sisi (isinya drama berseri, bukan film; tujuannya katalog lengkap, bukan daftar unggulan). Dual push → Railway build sendiri → tayang ±60 detik, **downtime NOL**. Smoke test 5 alur: 4 langsung 200, `/drama/meg-2-the-trench` 500 SEKALI lalu 200 enam kali — cold start, dicatat bukan dihapus. ❌ **DIRALAT di rilis ke-2**: catatan asli di sini menyebut tombol itu "tergeser ke kanan di layar HP" sebagai gejala nyata. **Itu keliru** — cacat alat potret, bukan cacat situs; sudah diukur ulang dan tombolnya terpusat sempurna. Jangan diburu.)
 
 **Sebelumnya:** 2026-10-30 (tiga rilis beruntun, semuanya TAYANG: `5088bf2` genre bahasa Indonesia → `27973f0` koreksi owner Kerajaan/CEO/Lainnya → **`55894b8` dua tombol halaman drama yang selama ini TERPOTONG**. Downtime NOL. ⏸️ **DUA bahasan menunggu keputusan owner**, risetnya sudah selesai & nol kode diubah: "klik drama langsung play" dan "sinopsis film masih bahasa Inggris".)
+
+---
+
+## 2026-11-05 — ✅ DIRILIS `0cc1758`: PANEL ADMIN berlatar terang, seragam dengan beranda
+
+**Permintaan owner:** *"di admin kamu buat juga latar belakangnya sama dengan beranda jadi semua
+dashboard semua sinkron"*.
+
+### ⭐ 477 warna dibalik TANPA menyentuh satu pun berkas komponen
+
+Panel admin memakai **477 kemunculan** kelas warna gelap (`text-white`, `text-zinc-400`,
+`bg-zinc-900`, …) di **4 halaman + 18 komponen**. Menempelkan varian `terang:` satu per satu
+seperti yang dilakukan di `/discover` jelas tidak sepadan — dan yang terlewat SATU saja langsung
+jadi teks tak terbaca, tanpa error apa pun.
+
+Jalan keluarnya ditemukan dengan **memeriksa CSS hasil build, bukan mengira-ngira**: Tailwind v4
+di project ini mencetak warna sebagai VARIABEL —
+`.text-zinc-400{color:var(--color-zinc-400)}`. Jadi cukup mendefinisikan ulang variabelnya di
+satu pembungkus: seluruh kelas zinc di dalamnya terbalik sekaligus. Skalanya DIBALIK (zinc-900 →
+putih, zinc-100 → hampir hitam) supaya hierarki kontras yang sudah dirancang tetap utuh.
+
+Saklarnya di `app/admin/layout.tsx` — **bukan di tiap halaman**, dengan alasan yang sama seperti
+gerbang akses di berkas itu: halaman admin BARU ikut terang sendiri tanpa penulisnya perlu ingat.
+
+### 🪤 TIGA jebakan senyap — semuanya lolos build+tsc+tes, ketahuan karena DIPANDANG
+
+| # | Jebakan | Kenapa senyap |
+|---|---|---|
+| 1 | **`body` mewariskan warna yang sudah TERLANJUR dihitung.** `body` memasang `color: var(--foreground)`; nilainya dihitung SEKALI di `<body>` (tempat --foreground masih terang) lalu diwariskan sebagai PUTIH yang sudah jadi — bukan dihitung ulang di dalam pembungkus. | Isi `<input>`, `<label>`, dan teks dalam `Card` tampil **putih di atas kertas putih**. Obatnya menyatakan ulang `color` di dalam pembungkus. |
+| 2 | **Satu variabel, DUA peran.** Percobaan pertama menggelapkan `--color-amber-400` supaya teks aksen terbaca. Salah: amber-400 juga jadi latar **10 TOMBOL UTAMA** yang tulisannya `text-black`. | Tombol kuning berubah jadi **cokelat tua bertulisan hitam** — nyaris tak terbaca, justru pada tombol yang paling sering ditekan. Perbaikannya: gelapkan **warna teksnya saja** (`.tema-admin-terang .text-amber-400`), biarkan variabelnya. |
+| 3 | **`components/ui/*` tidak memakai kelas zinc.** Input, Card, Table, Select, Textarea memakai TOKEN shadcn (`bg-card`, `border-input`, `text-foreground`). | Kotak isian & tabel tetap **hitam di tengah halaman putih**. Tokennya ikut dibalik di blok yang sama. |
+
+`--color-black` **sengaja TIDAK dibalik** (12 `text-black`, semuanya di atas tombol kuning).
+Warna AKSEN dibiarkan: artinya terikat makna (kuning = tindakan utama, merah = bahaya), bukan
+terikat terang-gelap — hanya nada teksnya yang digeser agar terbaca di atas putih.
+
+### 🪤 DUA kesalahan METODE VERIFIKASI saya sendiri — nyaris salah lapor
+
+Sesudah push, saya **nyaris melaporkan "deploy gagal"** padahal sudah tayang. Dua-duanya salah
+alat ukur, bukan salah sistem:
+
+1. **Memantau penanda di `/admin` yang MUSTAHIL muncul.** Tanpa sesi admin, layout memulangkan
+   `<AdminAccessDenied />` pada baris SEBELUM pembungkus tema dipasang — jadi penandanya memang
+   tak akan pernah ada di sana, berapa lama pun ditunggu. Ditunggu 8 menit sia-sia.
+2. **Hanya memeriksa berkas CSS PERTAMA.** Halaman memuat DUA chunk CSS; `head -1` mengambil yang
+   tidak berisi globals. Ditunggu 8 menit lagi. Begitu SEMUA chunk diperiksa, penandanya langsung
+   ketemu di chunk kedua.
+
+⚠️ **Aturan: saat memverifikasi rilis, periksa SEMUA kandidat — jangan ambil yang pertama — dan
+pastikan dulu penanda yang dipantau memang BISA muncul di tempat yang diperiksa.** Menunggu lebih
+lama tidak pernah memperbaiki alat ukur yang salah.
+
+### Bukti
+
+- **1.898 tes hijau** (+7 penjaga `tests/tema-admin-terang.test.ts`). Ketiga jebakan di atas
+  masing-masing **diuji MERAH lebih dulu** dengan menghidupkannya kembali satu per satu.
+- 🪤 Penjaganya sendiri sempat **LOLOS PALSU**: ia membaca teks `globals.css`, dan komentar di
+  dalam blok itu MENGUTIP aturan yang sedang dicari — jadi pencariannya menemukan kalimat
+  penjelasnya, bukan aturan CSS-nya. Dibuktikan dengan melepas baris aslinya: tes tetap hijau.
+  Diperbaiki dengan membuang komentar sebelum memeriksa. **Pelajaran: tes yang membaca teks
+  berkas bisa tertipu oleh komentar yang mengutip polanya.**
+- Build sukses · `tsc` exit 0 · diperiksa lewat **potret layar** hasil render komponen admin asli
+  (panel normal, panel saat Playly bermasalah, layar Akses ditolak, kotak isian + Card).
+- Terbukti tayang di produksi: chunk CSS publik memuat `tema-admin-terang`, `--color-white:#18181b`,
+  `color:var(--foreground)`, dan token `--card`.
+
+### ⚠️ Batas jujur
+
+Halaman admin butuh login, jadi **tidak bisa dipotret dari luar** — bukti tampilannya dari render
+komponen asli + CSS hasil build, bukan dari layar produksi. Penilaian akhir ada pada owner.
 
 ---
 

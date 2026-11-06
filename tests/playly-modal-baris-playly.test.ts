@@ -75,8 +75,22 @@ function pasangFetch(
   });
 }
 
-function balasanUnduh(resolusi: string[]) {
-  return { ok: true, alasan: "ada", unduh: { url: `${BASE}/unduh/${ID}`, resolusi } };
+/**
+ * Balasan endpoint kita. Bentuknya `pilihan: {res,label}[]` — satu-satunya bentuk
+ * yang keluar dari /api/playly/unduh, karena server sudah menormalkan kedua
+ * bentuk Playly (`resolusi` & `pilihan`) jadi satu di
+ * lib/playly-unduh-langsung.ts. Di sini tulisan dibuat sama dengan nilainya
+ * supaya kasus "tulisan BEDA dari nilai" punya tes sendiri di bawah.
+ */
+function balasanUnduh(res: string[]) {
+  return {
+    ok: true,
+    alasan: "ada",
+    unduh: {
+      url: `${BASE}/unduh/${ID}`,
+      pilihan: res.map((r) => ({ res: r, label: r })),
+    },
+  };
 }
 
 async function pasang(props: {
@@ -194,6 +208,36 @@ describe("Baris Playly — isi & tujuan linknya", () => {
     }
   });
 
+  it("tulisan tombol dari `label`, alamatnya dari `res` (boleh berbeda)", async () => {
+    // Bentuk putaran 2 owner: `res` bisa berupa kode yang tak berarti bagi mata
+    // ("orig"), sementara yang dibaca penonton "Asli". Kalau keduanya tertukar,
+    // tombolnya tetap tergambar rapi tapi mengunduh hal yang salah — atau
+    // bertulisan kode mentah. Dua-duanya tak memunculkan error apa pun.
+    pasangFetch({
+      ok: true,
+      alasan: "ada",
+      unduh: {
+        url: `${BASE}/unduh/${ID}`,
+        pilihan: [
+          { res: "orig", label: "Asli" },
+          { res: "hd", label: "1080p" },
+        ],
+      },
+    });
+    await pasang({ videoId: ID });
+    await klik(tombolDownload());
+
+    const a = Array.from(barisPlayly()!.querySelectorAll("a"));
+    expect(a.map((el) => el.textContent!.trim())).toEqual([
+      "DOWNLOAD ASLI",
+      "DOWNLOAD 1080p",
+    ]);
+    expect(a.map((el) => el.getAttribute("href"))).toEqual([
+      `${BASE}/unduh/${ID}?res=orig`,
+      `${BASE}/unduh/${ID}?res=hd`,
+    ]);
+  });
+
   it("video yang HANYA punya unduhan Playly tetap menampilkan tabel, bukan 'belum tersedia'", async () => {
     pasangFetch(balasanUnduh(["480p"]));
     await pasang({ videoId: ID, linkUnduhan: [] });
@@ -210,8 +254,10 @@ describe("Baris Playly — GAGAL-AMAN (provider lain tak boleh ikut hilang)", ()
     ["endpoint membalas gagal (404/502)", () => pasangFetch({ ok: false, error: "x" }, { ok: false })],
     ["jaringan putus", () => pasangFetch(null, { tolak: true })],
     ["balasan bukan objek", () => pasangFetch("bukan json")],
-    ["resolusi kosong", () => pasangFetch({ ok: true, unduh: { url: `${BASE}/unduh/${ID}`, resolusi: [] } })],
-    ["resolusi bukan array", () => pasangFetch({ ok: true, unduh: { url: `${BASE}/unduh/${ID}`, resolusi: "480p" } })],
+    ["daftar pilihan kosong", () => pasangFetch({ ok: true, unduh: { url: `${BASE}/unduh/${ID}`, pilihan: [] } })],
+    ["pilihan bukan array", () => pasangFetch({ ok: true, unduh: { url: `${BASE}/unduh/${ID}`, pilihan: "480p" } })],
+    ["pilihan berisi objek tanpa res", () => pasangFetch({ ok: true, unduh: { url: `${BASE}/unduh/${ID}`, pilihan: [{ label: "1080p" }] } })],
+    ["bentuk LAMA (resolusi) dari balasan usang", () => pasangFetch({ ok: true, unduh: { url: `${BASE}/unduh/${ID}`, resolusi: ["480p"] } })],
   ];
 
   for (const [nama, siapkan] of gagal) {

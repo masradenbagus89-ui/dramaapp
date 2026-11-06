@@ -8,17 +8,22 @@
 //   (b) bentuk yang tak dikenali disamakan dengan "tidak ada unduhan" -> kalau
 //       kelak Playly mengubah kontraknya, barisnya cuma hilang tanpa sebab.
 //
-// Per 2026-11-06 field `unduh` masih null di 200 dari 200 video kita (diperiksa
-// langsung ke /api/public-video), jadi tes inilah satu-satunya tempat bentuk
-// terisinya pernah dijalankan. Kalau suatu saat ada contoh NYATA dari Playly,
-// tambahkan di sini apa adanya — jangan hapus yang lama.
+// DUA BENTUK yang didukung, keduanya kontrak dari potongan kode yang diserahkan
+// owner 2026-11-06 (bukan dari balasan Playly yang pernah terlihat terisi):
+//   putaran 1  `resolusi: string[]`          -- tulisan tombol = nilainya sendiri
+//   putaran 2  `pilihan: {res,label}[]`      -- tulisan BOLEH beda dari nilainya
+// Per hari itu `unduh` masih null di semua video kita (diperiksa langsung ke
+// /api/public-video: 200 video, lalu 40 video lagi sesudah putaran 2 masuk), jadi
+// berkas inilah satu-satunya tempat bentuk TERISI pernah dijalankan. Kalau suatu
+// saat ada contoh NYATA dari Playly, tambahkan di sini apa adanya — jangan hapus
+// yang lama.
 import { describe, it, expect } from "vitest";
 import {
-  RESOLUSI_MAKS,
+  PILIHAN_MAKS,
   bacaUnduhLangsung,
   labelTombolUnduhPlayly,
   urlUnduhResolusi,
-  warnaTombolResolusi,
+  warnaTombolUnduhPlayly,
 } from "../lib/playly-unduh-langsung";
 
 const DOMAIN = ["playly-hosting-video.up.railway.app", "playly-dashboard.vercel.app"];
@@ -30,8 +35,8 @@ function balasan(unduh: unknown): Record<string, unknown> {
   return { ok: true, id: 1788093325344, title: "Video Uji", unduh };
 }
 
-describe("bacaUnduhLangsung — bentuk yang DITERIMA", () => {
-  it("alamat lengkap + daftar resolusi -> alasan 'ada'", () => {
+describe("bacaUnduhLangsung — bentuk putaran 1 (`resolusi`)", () => {
+  it("alamat lengkap + daftar resolusi -> alasan 'ada', tulisan = nilainya sendiri", () => {
     const hasil = bacaUnduhLangsung(
       balasan({ url: `${BASE}/unduh/1788093325344`, resolusi: ["480p", "720p", "asli"] }),
       OPSI,
@@ -39,7 +44,11 @@ describe("bacaUnduhLangsung — bentuk yang DITERIMA", () => {
     expect(hasil.alasan).toBe("ada");
     expect(hasil.unduh).toEqual({
       url: `${BASE}/unduh/1788093325344`,
-      resolusi: ["480p", "720p", "asli"],
+      pilihan: [
+        { res: "480p", label: "480p" },
+        { res: "720p", label: "720p" },
+        { res: "asli", label: "asli" },
+      ],
     });
   });
 
@@ -61,12 +70,15 @@ describe("bacaUnduhLangsung — bentuk yang DITERIMA", () => {
     expect(hasil.alasan).toBe("ada");
   });
 
-  it("resolusi dirapikan: huruf besar -> kecil, spasi dibuang, kembar jadi satu", () => {
+  it("nilai res TIDAK diubah huruf besar/kecilnya, tapi kembar tetap jadi satu", () => {
+    // Nilai ini DIKIRIM BALIK ke Playly lewat ?res=, jadi mengubahnya berarti
+    // meminta sesuatu yang mungkin tak mereka kenali. Yang pertama datang yang
+    // dipakai; pembandingan kembarnya mengabaikan huruf besar/kecil.
     const hasil = bacaUnduhLangsung(
       balasan({ url: `${BASE}/unduh/9`, resolusi: [" 480P ", "480p", "720p"] }),
       OPSI,
     );
-    expect(hasil.unduh?.resolusi).toEqual(["480p", "720p"]);
+    expect(hasil.unduh?.pilihan.map((p) => p.res)).toEqual(["480P", "720p"]);
   });
 
   it("urutan dari Playly DIPERTAHANKAN (bukan diurutkan sendiri)", () => {
@@ -74,24 +86,139 @@ describe("bacaUnduhLangsung — bentuk yang DITERIMA", () => {
       balasan({ url: `${BASE}/unduh/9`, resolusi: ["asli", "360p", "1080p"] }),
       OPSI,
     );
-    expect(hasil.unduh?.resolusi).toEqual(["asli", "360p", "1080p"]);
+    expect(hasil.unduh?.pilihan.map((p) => p.res)).toEqual(["asli", "360p", "1080p"]);
   });
 
   it("isi yang bukan teks / berkarakter aneh dibuang, sisanya tetap dipakai", () => {
     const hasil = bacaUnduhLangsung(
       balasan({
         url: `${BASE}/unduh/9`,
-        resolusi: ["480p", 1080, null, "", "720p<script>", "bagus sekali", "asli"],
+        resolusi: ["480p", 1080, null, "", "720p<script>", "bagus sekali", "1080p-hdr"],
       }),
       OPSI,
     );
-    expect(hasil.unduh?.resolusi).toEqual(["480p", "asli"]);
+    expect(hasil.unduh?.pilihan.map((p) => p.res)).toEqual(["480p", "1080p-hdr"]);
   });
 
-  it(`daftar resolusi dipotong di ${RESOLUSI_MAKS} tombol`, () => {
+  it(`daftar dipotong di ${PILIHAN_MAKS} tombol`, () => {
     const panjang = ["144p", "240p", "360p", "480p", "720p", "1080p", "1440p", "2160p", "asli", "4k"];
     const hasil = bacaUnduhLangsung(balasan({ url: `${BASE}/unduh/9`, resolusi: panjang }), OPSI);
-    expect(hasil.unduh?.resolusi).toHaveLength(RESOLUSI_MAKS);
+    expect(hasil.unduh?.pilihan).toHaveLength(PILIHAN_MAKS);
+  });
+});
+
+describe("bacaUnduhLangsung — bentuk putaran 2 (`pilihan`)", () => {
+  it("tulisan tombol boleh BEDA dari nilai yang dikirim ke Playly", () => {
+    const hasil = bacaUnduhLangsung(
+      balasan({
+        url: `${BASE}/unduh/9`,
+        pilihan: [
+          { res: "orig", label: "Asli" },
+          { res: "hd", label: "1080p" },
+        ],
+      }),
+      OPSI,
+    );
+    expect(hasil.alasan).toBe("ada");
+    expect(hasil.unduh?.pilihan).toEqual([
+      { res: "orig", label: "Asli" },
+      { res: "hd", label: "1080p" },
+    ]);
+  });
+
+  it("`pilihan` MENANG atas `resolusi` kalau keduanya dikirim", () => {
+    const hasil = bacaUnduhLangsung(
+      balasan({
+        url: `${BASE}/unduh/9`,
+        pilihan: [{ res: "orig", label: "Asli" }],
+        resolusi: ["480p", "720p"],
+      }),
+      OPSI,
+    );
+    expect(hasil.unduh?.pilihan).toEqual([{ res: "orig", label: "Asli" }]);
+  });
+
+  it("`pilihan` array KOSONG turun ke `resolusi` (bukan baris tanpa tombol)", () => {
+    // Array kosong itu "truthy" di JavaScript, jadi contoh kode owner
+    // (`pilihan || resolusi.map(...)`) akan menggambar baris TANPA tombol.
+    const hasil = bacaUnduhLangsung(
+      balasan({ url: `${BASE}/unduh/9`, pilihan: [], resolusi: ["480p"] }),
+      OPSI,
+    );
+    expect(hasil.unduh?.pilihan).toEqual([{ res: "480p", label: "480p" }]);
+  });
+
+  it("`pilihan` yang semua isinya ditolak juga turun ke `resolusi`", () => {
+    const hasil = bacaUnduhLangsung(
+      balasan({
+        url: `${BASE}/unduh/9`,
+        pilihan: [{ label: "tanpa res" }, "bukan objek", { res: "ada spasi di sini" }],
+        resolusi: ["480p"],
+      }),
+      OPSI,
+    );
+    expect(hasil.unduh?.pilihan).toEqual([{ res: "480p", label: "480p" }]);
+  });
+
+  it("label kosong/bukan teks -> tulisan tombol jatuh ke nilai res-nya", () => {
+    const hasil = bacaUnduhLangsung(
+      balasan({
+        url: `${BASE}/unduh/9`,
+        pilihan: [
+          { res: "480p", label: "   " },
+          { res: "720p", label: 720 },
+          { res: "1080p" },
+        ],
+      }),
+      OPSI,
+    );
+    expect(hasil.unduh?.pilihan).toEqual([
+      { res: "480p", label: "480p" },
+      { res: "720p", label: "720p" },
+      { res: "1080p", label: "1080p" },
+    ]);
+  });
+
+  it("label kepanjangan dipotong supaya tabel sempit di HP tak melebar", () => {
+    const hasil = bacaUnduhLangsung(
+      balasan({
+        url: `${BASE}/unduh/9`,
+        pilihan: [{ res: "480p", label: "A".repeat(200) }],
+      }),
+      OPSI,
+    );
+    expect(hasil.unduh?.pilihan[0].label.length).toBeLessThanOrEqual(24);
+  });
+
+  it("label berbaris-baris dirapikan jadi satu baris", () => {
+    const hasil = bacaUnduhLangsung(
+      balasan({
+        url: `${BASE}/unduh/9`,
+        pilihan: [{ res: "480p", label: "1080p\n\n  (Asli)" }],
+      }),
+      OPSI,
+    );
+    expect(hasil.unduh?.pilihan[0].label).toBe("1080p (Asli)");
+  });
+
+  it("res kembar di `pilihan` jadi satu tombol", () => {
+    const hasil = bacaUnduhLangsung(
+      balasan({
+        url: `${BASE}/unduh/9`,
+        pilihan: [
+          { res: "480p", label: "480p" },
+          { res: "480P", label: "480p lagi" },
+        ],
+      }),
+      OPSI,
+    );
+    expect(hasil.unduh?.pilihan).toEqual([{ res: "480p", label: "480p" }]);
+  });
+
+  it(`\`pilihan\` juga dipotong di ${PILIHAN_MAKS} tombol`, () => {
+    const panjang = Array.from({ length: 12 }, (_, i) => ({ res: `r${i}`, label: `R${i}` }));
+    const hasil = bacaUnduhLangsung(balasan({ url: `${BASE}/unduh/9`, pilihan: panjang }), OPSI);
+    expect(hasil.unduh?.pilihan).toHaveLength(PILIHAN_MAKS);
   });
 });
 
@@ -103,6 +230,14 @@ describe("bacaUnduhLangsung — Playly bilang TIDAK BOLEH (keadaan normal hari i
 
   it("alamat sah tapi NOL resolusi -> 'tidak-diizinkan'", () => {
     const hasil = bacaUnduhLangsung(balasan({ url: `${BASE}/unduh/9`, resolusi: [] }), OPSI);
+    expect(hasil).toEqual({ alasan: "tidak-diizinkan", unduh: null });
+  });
+
+  it("kedua daftar ada tapi dua-duanya nol isi sah -> 'tidak-diizinkan'", () => {
+    const hasil = bacaUnduhLangsung(
+      balasan({ url: `${BASE}/unduh/9`, pilihan: [], resolusi: ["ada spasi"] }),
+      OPSI,
+    );
     expect(hasil).toEqual({ alasan: "tidak-diizinkan", unduh: null });
   });
 });
@@ -166,7 +301,17 @@ describe("bacaUnduhLangsung — bentuk DI LUAR kontrak dilaporkan apa adanya", (
     expect(hasil.alasan).toBe("bentuk-tak-dikenali");
   });
 
-  it("`resolusi` hilang -> 'bentuk-tak-dikenali'", () => {
+  it("`pilihan` bukan array -> 'bentuk-tak-dikenali' walau `resolusi` sah", () => {
+    // Contoh kode owner memanggil .forEach di atas `pilihan`; bentuk begini akan
+    // meledak di sana, jadi di sini ia dilaporkan, bukan dilewati diam-diam.
+    const hasil = bacaUnduhLangsung(
+      balasan({ url: `${BASE}/unduh/9`, pilihan: { res: "480p" }, resolusi: ["480p"] }),
+      OPSI,
+    );
+    expect(hasil.alasan).toBe("bentuk-tak-dikenali");
+  });
+
+  it("kedua daftar hilang -> 'bentuk-tak-dikenali'", () => {
     expect(bacaUnduhLangsung(balasan({ url: `${BASE}/unduh/9` }), OPSI).alasan).toBe(
       "bentuk-tak-dikenali",
     );
@@ -196,29 +341,32 @@ describe("urlUnduhResolusi", () => {
 });
 
 describe("labelTombolUnduhPlayly", () => {
-  it("'asli' ditulis ASLI supaya terbaca sebagai pilihan", () => {
+  it("'asli' DAN 'Asli' sama-sama ditulis ASLI", () => {
+    // Putaran 1 owner mengirim "asli", putaran 2 mengirim label "Asli".
     expect(labelTombolUnduhPlayly("asli")).toBe("DOWNLOAD ASLI");
+    expect(labelTombolUnduhPlayly("Asli")).toBe("DOWNLOAD ASLI");
   });
 
-  it("resolusi lain dibiarkan apa adanya (480p tetap huruf kecil)", () => {
+  it("tulisan lain dibiarkan apa adanya (480p tetap huruf kecil)", () => {
     expect(labelTombolUnduhPlayly("480p")).toBe("DOWNLOAD 480p");
+    expect(labelTombolUnduhPlayly("1080p (Asli)")).toBe("DOWNLOAD 1080p (Asli)");
   });
 });
 
-describe("warnaTombolResolusi", () => {
-  it("yang tajam biru: asli, 1080p, 720p, 4k", () => {
-    for (const r of ["asli", "1080p", "720p", "4k"]) {
-      expect(warnaTombolResolusi(r)).toBe("blue");
+describe("warnaTombolUnduhPlayly", () => {
+  it("yang tajam biru: asli, Asli, 1080p, 720p, 4k", () => {
+    for (const r of ["asli", "Asli", "1080p", "720p", "4k"]) {
+      expect(warnaTombolUnduhPlayly(r)).toBe("blue");
     }
   });
 
   it("yang ringan oranye: 480p, 360p, 240p", () => {
     for (const r of ["480p", "360p", "240p"]) {
-      expect(warnaTombolResolusi(r)).toBe("orange");
+      expect(warnaTombolUnduhPlayly(r)).toBe("orange");
     }
   });
 
   it("nilai tak terbaca tetap dapat warna (tombol tak pernah tergambar pucat)", () => {
-    expect(warnaTombolResolusi("entah")).toBe("orange");
+    expect(warnaTombolUnduhPlayly("entah")).toBe("orange");
   });
 });

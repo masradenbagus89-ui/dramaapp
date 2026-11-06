@@ -51,7 +51,8 @@ import {
 import {
   labelTombolUnduhPlayly,
   urlUnduhResolusi,
-  warnaTombolResolusi,
+  warnaTombolUnduhPlayly,
+  type PilihanUnduhPlayly,
   type UnduhLangsungPlayly,
 } from "@/lib/playly-unduh-langsung";
 import type { DownloadButtonColor } from "@/lib/types";
@@ -250,23 +251,25 @@ export default function ModalProviderPlayly({
                       </td>
                       <td className="px-3 py-2.5 align-middle">
                         <div className="flex flex-wrap justify-end gap-1.5">
-                          {unduhPlayly.resolusi.map((res) => (
+                          {/* `res` ke alamat, `label` ke mata penonton — keduanya
+                              boleh berbeda (lib/playly-unduh-langsung.ts). */}
+                          {unduhPlayly.pilihan.map((pil) => (
                             <Button
-                              key={res}
+                              key={pil.res}
                               asChild
                               size="sm"
                               className={cn(
                                 "h-8 whitespace-nowrap rounded-md px-3 text-xs font-bold text-white",
-                                KELAS_WARNA_TOMBOL[warnaTombolResolusi(res)],
+                                KELAS_WARNA_TOMBOL[warnaTombolUnduhPlayly(pil.label)],
                               )}
                             >
                               <a
-                                href={urlUnduhResolusi(unduhPlayly.url, res)}
+                                href={urlUnduhResolusi(unduhPlayly.url, pil.res)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                               >
                                 <Download className="size-3.5" />
-                                {labelTombolUnduhPlayly(res)}
+                                {labelTombolUnduhPlayly(pil.label)}
                               </a>
                             </Button>
                           ))}
@@ -302,8 +305,17 @@ function bacaBalasanUnduh(json: unknown): UnduhLangsungPlayly | null {
   if (typeof json !== "object" || json === null) return null;
   const { unduh } = json as { unduh?: unknown };
   if (typeof unduh !== "object" || unduh === null) return null;
-  const { url, resolusi } = unduh as { url?: unknown; resolusi?: unknown };
-  if (typeof url !== "string" || !url || !Array.isArray(resolusi)) return null;
-  const bersih = resolusi.filter((r): r is string => typeof r === "string" && r !== "");
-  return bersih.length > 0 ? { url, resolusi: bersih } : null;
+  const { url, pilihan } = unduh as { url?: unknown; pilihan?: unknown };
+  if (typeof url !== "string" || !url || !Array.isArray(pilihan)) return null;
+
+  const bersih: PilihanUnduhPlayly[] = [];
+  for (const item of pilihan) {
+    if (typeof item !== "object" || item === null) continue;
+    const { res, label } = item as { res?: unknown; label?: unknown };
+    if (typeof res !== "string" || res === "") continue;
+    // Tulisan tombol tak pernah dibiarkan kosong: jatuh ke `res` supaya tidak
+    // ada tombol tanpa teks yang tetap bisa diklik.
+    bersih.push({ res, label: typeof label === "string" && label !== "" ? label : res });
+  }
+  return bersih.length > 0 ? { url, pilihan: bersih } : null;
 }

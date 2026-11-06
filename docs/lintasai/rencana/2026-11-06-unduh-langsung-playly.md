@@ -124,3 +124,54 @@ saklar di sisi Playly.
 5. `InfoVideoPlayly` + kedua pemanggilnya meneruskan `videoId`.
 6. Tes baru: penyaring + baris Playly di popup. Lalu gerbang pra-rilis AGENTS.local.md §6
    (`rm -rf .next` -> `build` -> `tsc` -> `npm test`).
+
+---
+
+## Putaran 2 — owner mengirim bentuk `pilihan` (2026-11-06, sesudah `df83931` tayang)
+
+Owner menyerahkan potongan kode kedua: `v.unduh.pilihan || v.unduh.resolusi.map(...)`, dengan
+`pilihan` berisi objek `{res, label}`. **Bedanya yang menentukan:** TULISAN tombol (`label`) kini
+boleh berbeda dari NILAI yang dikirim balik ke Playly (`res`) — mis. `res: "orig"` tapi tombolnya
+bertulisan `"Asli"`.
+
+### Diperiksa ulang sebelum dikerjakan
+
+- `unduh` **masih `null`** di 40 video yang diprobe lagi hari itu (sesudah putaran 2 masuk), dan
+  kata `pilihan` **tidak muncul** di halaman Playly mana pun yang sudah tersimpan. Jadi bentuk ini
+  **tetap kontrak dari owner**, bukan dari balasan nyata — status pengetahuannya sama dengan
+  `resolusi` di putaran 1, dan penanda `bentuk-tak-dikenali` tetap jadi jaring pengamannya.
+
+### Tiga keputusan yang berbeda dari contoh kode owner (semuanya menutup kerusakan senyap)
+
+1. **`pilihan: []` tidak membuat baris tanpa tombol.** Array kosong itu *truthy* di JavaScript,
+   jadi `pilihan || resolusi.map(...)` akan memilih array kosong lalu menggambar baris "Playly"
+   **tanpa satu pun tombol**. Di sini keadaan itu (dan `pilihan` yang semua isinya ditolak) turun
+   ke `resolusi`.
+2. **`pilihan` yang ADA tapi bukan array dilaporkan `bentuk-tak-dikenali`.** Contoh kode owner
+   memanggil `.forEach` di atasnya dan akan meledak di browser penonton; melewatinya diam-diam
+   juga salah, karena itu tanda kontrak Playly bergeser.
+3. **Nilai `res` tidak lagi di-lowercase.** Sampai putaran 1 nilainya diubah ke huruf kecil demi
+   kerapian tampilan. Itu **dibatalkan**: nilai ini dikirim BALIK ke Playly lewat `?res=`, jadi
+   mengubahnya berarti meminta sesuatu yang mungkin tak mereka kenali — dan kegagalannya baru
+   terasa penonton saat mengklik. Kembar tetap dibuang (dibandingkan tanpa peduli huruf
+   besar/kecil), yang pertama datang yang dipakai. **Satu tes putaran 1 ikut diubah** karena
+   dulunya mengunci perilaku lowercase itu; alasannya ditulis di dalam tesnya.
+
+### Yang ikut berubah
+
+- `UnduhLangsungPlayly` jadi `{ url, pilihan: {res,label}[] }` — kedua bentuk Playly dinormalkan
+  ke SATU bentuk di server, sehingga tampilan tak perlu tahu Playly mengirim versi yang mana.
+- `warnaTombolResolusi` → `warnaTombolUnduhPlayly`, dan dinilai dari `label` (bukan `res`): warna
+  ada untuk mata, sedangkan `res` boleh berupa kode yang tak berarti apa pun bagi mata.
+- `labelTombolUnduhPlayly` mencocokkan "asli" **tanpa peduli huruf besar/kecil** — putaran 1
+  mengirim `"asli"`, putaran 2 mengirim label `"Asli"`.
+- Tulisan tombol dibatasi 24 huruf & dirapikan jadi satu baris: teks bebas dari pihak luar yang
+  duduk di baris tabel sempit layar HP.
+
+### Akibat yang DISENGAJA (jujur dicatat)
+
+Balasan `/api/playly/unduh` berganti bentuk (`resolusi` → `pilihan`). Pengunjung yang halamannya
+masih versi lama (JavaScript ter-cache) tidak akan menggambar baris Playly sampai halamannya
+dimuat ulang. **Dampaknya nol hari ini** — baris itu belum pernah muncul di video mana pun karena
+Playly belum mengizinkan satu pun video diunduh. Dikunci tes: balasan bentuk LAMA -> baris tidak
+digambar, provider lain tetap tampil.

@@ -12,9 +12,17 @@
 // error tsc di tempat yang tak berhubungan — atau lebih buruk, ditambal dengan
 // melonggarkan daftar kualitas provider yang memang harus tertutup.
 //
-// SUMBER KONTRAK (penting untuk sesi berikutnya): bentuk `{ url, resolusi[] }`
-// dan alamat tombol `url + "?res=<resolusi>"` berasal dari potongan kode yang
-// DISERAHKAN OWNER 2026-11-06 ("code to push link provider.txt"), BUKAN dari
+// SUMBER KONTRAK (penting untuk sesi berikutnya): bentuknya berasal dari
+// potongan kode yang DISERAHKAN OWNER 2026-11-06, BUKAN dari
+// balasan Playly yang pernah terlihat terisi. Owner mengirim DUA putaran:
+//   putaran 1  `{ url, resolusi: string[] }`         -- tetap didukung
+//   putaran 2  `{ url, pilihan: {res,label}[] }`      -- dipakai kalau ada
+// Bedanya penting: di putaran 2 TULISAN tombol (`label`) boleh berbeda dari
+// NILAI yang dikirim balik ke Playly (`res`) -- mis. res "orig" tapi tulisannya
+// "1080p (Asli)". Keduanya diperiksa ulang 2026-11-06 sesudah putaran 2 masuk:
+// `unduh` masih null di 40 video yang diprobe lagi, dan kata "pilihan" tak
+// muncul di halaman Playly mana pun, jadi KEDUA bentuk itu masih
+// belum pernah terlihat terisi. Alamat tombol = `url` + `?res=<res>`. Bukan dari
 // balasan Playly yang pernah terlihat terisi. Diperiksa langsung hari itu: field
 // `unduh` memang ADA di /api/public-video, tapi nilainya `null` pada 200 dari 200
 // video kita — izin unduh adalah saklar per-video milik pengunggah di Playly
@@ -29,12 +37,30 @@
 // -------------------------------------------------------------------------
 import type { DownloadButtonColor } from "./types";
 
+/** Satu tombol unduhan: nilai yang dikirim ke Playly + tulisan untuk penonton. */
+export type PilihanUnduhPlayly = {
+  /**
+   * Nilai untuk `?res=`. DIKIRIM BALIK ke Playly apa adanya — cuma dipangkas
+   * spasinya lalu divalidasi, dan SENGAJA tidak diubah huruf besar/kecilnya.
+   * Sampai 2026-11-06 nilai ini di-lowercase di sini; itu dibatalkan karena
+   * mengubah nilai yang akan dikirim balik berarti meminta sesuatu yang mungkin
+   * tidak dikenali Playly — dan kegagalannya baru terasa penonton saat mengklik,
+   * bukan saat kodenya ditulis.
+   */
+  res: string;
+  /**
+   * Tulisan di tombol. Boleh BERBEDA dari `res` (bentuk putaran 2 owner), jadi
+   * jangan disatukan: `res` untuk mesin, `label` untuk mata penonton.
+   */
+  label: string;
+};
+
 /** Tawaran unduhan Playly untuk SATU video, sesudah lolos penyaring. */
 export type UnduhLangsungPlayly = {
   /** Alamat halaman unduhan Playly — sudah dipastikan https + domain Playly. */
   url: string;
-  /** Resolusi yang ditawarkan. Urutan dari Playly DIPERTAHANKAN. */
-  resolusi: string[];
+  /** Tombol yang ditawarkan. Urutan dari Playly DIPERTAHANKAN. */
+  pilihan: PilihanUnduhPlayly[];
 };
 
 /**
@@ -72,22 +98,92 @@ export type HasilUnduhLangsung =
   | { alasan: Exclude<AlasanUnduhLangsung, "ada">; unduh: null };
 
 /**
- * Resolusi = teks pendek dari pihak luar yang berakhir di ATRIBUT `href`
- * penonton, jadi bentuknya dibatasi di pintu masuk: huruf kecil + angka saja
- * ("480p", "720p", "asli", "4k"). Pola ini sekaligus menutup spasi, tanda petik,
- * dan karakter yang bisa dipakai menyelundupkan apa pun ke dalam URL.
+ * `res` dari pihak luar berakhir di ATRIBUT `href` penonton, jadi bentuknya
+ * dibatasi di pintu masuk: huruf, angka, titik, garis bawah, garis pisah —
+ * cukup untuk "480p", "asli", "4k", "1080p-hdr", "orig", sekaligus menutup
+ * spasi, tanda petik, dan karakter yang bisa dipakai menyelundupkan sesuatu ke
+ * dalam URL. Huruf BESAR ikut diterima karena nilainya tidak kita ubah lagi
+ * (lihat catatan di `PilihanUnduhPlayly.res`).
  */
-const RESOLUSI_RE = /^[a-z0-9]{1,8}$/;
+const RES_RE = /^[A-Za-z0-9._-]{1,24}$/;
+
+/**
+ * Panjang maksimum TULISAN tombol. Tulisannya teks bebas dari Playly dan duduk
+ * di dalam satu baris tabel yang sempit di layar HP — tanpa batas ini satu label
+ * panjang bisa mendorong tabelnya melebar. Tidak perlu disaring dari HTML:
+ * React menggambar teks sebagai teks, bukan markup.
+ */
+const LABEL_MAKS = 24;
 
 /**
  * Tombol per baris dibatasi supaya satu baris tabel tidak bisa diledakkan dari
  * sisi Playly. Mereka mengolah 360p/480p/720p/1080p + berkas asli = 5; 8 memberi
  * ruang tumbuh tanpa merusak tata letak di layar HP.
  */
-export const RESOLUSI_MAKS = 8;
+export const PILIHAN_MAKS = 8;
 
-/** Nilai resolusi untuk "berkas aslinya, tanpa diolah ulang". */
+/** Nilai/tulisan untuk "berkas aslinya, tanpa diolah ulang". */
 const RESOLUSI_ASLI = "asli";
+
+/**
+ * Dicocokkan TANPA peduli huruf besar/kecil: putaran 1 owner mengirim "asli",
+ * putaran 2 mengirim label "Asli". Membandingkan persis berarti salah satunya
+ * lolos tanpa diterjemahkan dan tombolnya bertulisan "DOWNLOAD Asli".
+ */
+function adalahAsli(teks: string): boolean {
+  return teks.trim().toLowerCase() === RESOLUSI_ASLI;
+}
+
+/** Nilai `res` yang sah, apa adanya (tanpa diubah huruf besar/kecilnya). */
+function bersihkanRes(mentah: unknown): string | null {
+  if (typeof mentah !== "string") return null;
+  const r = mentah.trim();
+  return RES_RE.test(r) ? r : null;
+}
+
+/** Tulisan tombol; kosong/bukan teks -> pakai `res` supaya tombol tak pernah kosong. */
+function bersihkanLabel(mentah: unknown, res: string): string {
+  if (typeof mentah !== "string") return res;
+  const l = mentah.trim().replace(/\s+/g, " ");
+  if (!l) return res;
+  return l.length > LABEL_MAKS ? l.slice(0, LABEL_MAKS) : l;
+}
+
+/**
+ * Kembar diperiksa tanpa peduli huruf besar/kecil ("480P" = "480p") supaya tak
+ * ada dua tombol yang terbaca sama, TAPI yang disimpan tetap ejaan asli dari
+ * Playly — yang pertama datang yang dipakai.
+ */
+function sudahAda(kumpulan: PilihanUnduhPlayly[], res: string): boolean {
+  const r = res.toLowerCase();
+  return kumpulan.some((p) => p.res.toLowerCase() === r);
+}
+
+/** Bentuk putaran 2: daftar objek {res,label}. */
+function bacaDaftarPilihan(daftar: unknown[]): PilihanUnduhPlayly[] {
+  const hasil: PilihanUnduhPlayly[] = [];
+  for (const item of daftar) {
+    const rec = asRecord(item);
+    if (!rec) continue;
+    const res = bersihkanRes(rec.res);
+    if (!res || sudahAda(hasil, res)) continue;
+    hasil.push({ res, label: bersihkanLabel(rec.label, res) });
+    if (hasil.length === PILIHAN_MAKS) break;
+  }
+  return hasil;
+}
+
+/** Bentuk putaran 1: daftar teks resolusi; tulisan tombol = nilainya sendiri. */
+function bacaDaftarResolusi(daftar: unknown[]): PilihanUnduhPlayly[] {
+  const hasil: PilihanUnduhPlayly[] = [];
+  for (const item of daftar) {
+    const res = bersihkanRes(item);
+    if (!res || sudahAda(hasil, res)) continue;
+    hasil.push({ res, label: res });
+    if (hasil.length === PILIHAN_MAKS) break;
+  }
+  return hasil;
+}
 
 function asRecord(nilai: unknown): Record<string, unknown> | null {
   return typeof nilai === "object" && nilai !== null && !Array.isArray(nilai)
@@ -141,6 +237,11 @@ function alamatPlaylyAman(
 /**
  * Baca field `unduh` dari balasan /api/public-video Playly.
  *
+ * Mendukung DUA bentuk isi: `pilihan: {res,label}[]` (putaran 2, dipakai kalau
+ * menghasilkan minimal satu tombol) dan `resolusi: string[]` (putaran 1, jalur
+ * cadangan). Keduanya dinormalkan ke SATU bentuk `PilihanUnduhPlayly[]` di sini,
+ * supaya tampilan tak perlu tahu Playly mengirim versi yang mana.
+ *
  * Menerima BALASAN UTUH, bukan cuma field `unduh`-nya, supaya bisa membedakan
  * dua keadaan yang artinya berbeda jauh:
  *   - field ADA bernilai null  -> "tidak-diizinkan" (keadaan NORMAL hari ini)
@@ -170,26 +271,40 @@ export function bacaUnduhLangsung(
   const url = alamatPlaylyAman(unduh.url, opsi.domainPlayly, opsi.baseUrl);
   if (!url) return { alasan: "bentuk-tak-dikenali", unduh: null };
 
-  if (!Array.isArray(unduh.resolusi)) {
+  const mentahPilihan = unduh.pilihan;
+  const mentahResolusi = unduh.resolusi;
+
+  // `pilihan` ADA tapi bukan array = kontrak di luar dugaan, jangan diam-diam
+  // dilewati: contoh kode owner memanggil .forEach di atasnya dan akan meledak.
+  const adaPilihan = mentahPilihan !== undefined && mentahPilihan !== null;
+  if (adaPilihan && !Array.isArray(mentahPilihan)) {
+    return { alasan: "bentuk-tak-dikenali", unduh: null };
+  }
+  // Tak satu pun dari dua bentuk yang dikenal -> laporkan, jangan samakan dengan
+  // "tidak ada unduhan".
+  if (!Array.isArray(mentahPilihan) && !Array.isArray(mentahResolusi)) {
     return { alasan: "bentuk-tak-dikenali", unduh: null };
   }
 
-  const resolusi: string[] = [];
-  for (const item of unduh.resolusi) {
-    if (typeof item !== "string") continue;
-    const r = item.trim().toLowerCase();
-    if (!RESOLUSI_RE.test(r)) continue;
-    if (resolusi.includes(r)) continue; // kembar = satu tombol saja
-    resolusi.push(r);
-    if (resolusi.length === RESOLUSI_MAKS) break;
-  }
+  // `pilihan` MENANG kalau isinya terpakai, sisanya turun ke `resolusi`.
+  // Satu beda yang disengaja dari contoh owner (`v.unduh.pilihan ||
+  // v.unduh.resolusi.map(...)`): array KOSONG itu "truthy" di JavaScript, jadi
+  // `pilihan: []` membuat contoh aslinya menggambar baris Playly TANPA satu pun
+  // tombol. Di sini keadaan itu turun ke `resolusi`.
+  const dariPilihan = Array.isArray(mentahPilihan) ? bacaDaftarPilihan(mentahPilihan) : [];
+  const pilihan =
+    dariPilihan.length > 0
+      ? dariPilihan
+      : Array.isArray(mentahResolusi)
+        ? bacaDaftarResolusi(mentahResolusi)
+        : [];
 
-  // Alamatnya sah tapi nol resolusi yang bisa ditawarkan = tidak ada yang bisa
+  // Alamatnya sah tapi nol tombol yang bisa ditawarkan = tidak ada yang bisa
   // diunduh. Bukan kesalahan bentuk, jadi jangan dilaporkan sebagai kontrak
   // rusak — hasilnya bagi penonton sama: barisnya tidak digambar.
-  if (resolusi.length === 0) return { alasan: "tidak-diizinkan", unduh: null };
+  if (pilihan.length === 0) return { alasan: "tidak-diizinkan", unduh: null };
 
-  return { alasan: "ada", unduh: { url, resolusi } };
+  return { alasan: "ada", unduh: { url, pilihan } };
 }
 
 /**
@@ -213,12 +328,13 @@ export function urlUnduhResolusi(url: string, resolusi: string): string {
 }
 
 /**
- * Tulisan tombol. "asli" ditulis "ASLI" supaya terbaca sebagai pilihan, bukan
- * nama berkas; resolusi lain dibiarkan APA ADANYA ("480p" tetap "480p", bukan
+ * Tulisan tombol, dari `label` (bukan dari `res`): itu yang dibaca penonton.
+ * "asli"/"Asli" ditulis "ASLI" supaya terbaca sebagai pilihan, bukan nama
+ * berkas; tulisan lain dibiarkan APA ADANYA ("480p" tetap "480p", bukan
  * "480P") — mengikuti contoh yang diserahkan owner.
  */
-export function labelTombolUnduhPlayly(resolusi: string): string {
-  return `DOWNLOAD ${resolusi === RESOLUSI_ASLI ? "ASLI" : resolusi}`;
+export function labelTombolUnduhPlayly(label: string): string {
+  return `DOWNLOAD ${adalahAsli(label) ? "ASLI" : label}`;
 }
 
 /**
@@ -232,12 +348,17 @@ export function labelTombolUnduhPlayly(resolusi: string): string {
  * Aturannya meneruskan pilihan owner di baris provider (1080p biru, 480p
  * oranye): yang lebih tajam biru, yang lebih ringan oranye, supaya penonton
  * membedakannya sebelum membaca tulisannya. "asli" = paling tajam -> biru.
+ *
+ * Dinilai dari `label`, bukan `res`, dengan alasan yang sama seperti tulisannya:
+ * `res` boleh berupa kode yang tak berarti apa pun bagi mata ("orig"), dan warna
+ * ada untuk mata.
  */
-export function warnaTombolResolusi(resolusi: string): DownloadButtonColor {
-  if (resolusi === RESOLUSI_ASLI) return "blue";
+export function warnaTombolUnduhPlayly(label: string): DownloadButtonColor {
+  if (adalahAsli(label)) return "blue";
+  const t = label.trim().toLowerCase();
   // "4k"/"2k" ditulis dengan satuan, bukan jumlah baris: parseInt("4k") = 4 dan
   // akan dinilai sebagai resolusi TERENDAH padahal justru yang paling tajam.
-  if (/^[0-9]+k$/.test(resolusi)) return "blue";
-  const angka = parseInt(resolusi, 10);
+  if (/^[0-9]+k$/.test(t)) return "blue";
+  const angka = parseInt(t, 10);
   return Number.isFinite(angka) && angka >= 720 ? "blue" : "orange";
 }

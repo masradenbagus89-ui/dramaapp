@@ -904,6 +904,8 @@ type PlaylyFile = {
   imdb?: PlaylyImdbMap;
   /** Salinan daftar video terakhir yang berhasil (opsional: file lama tak punya). */
   cadangan?: PlaylyCadangan;
+  /** Rating yang DIKETIK admin per video (opsional: file lama tak punya). */
+  rating?: PlaylyRatingMap;
   /** Baris link unduhan videoId × provider × kualitas (opsional: file lama tak punya). */
   linkUnduhan?: LinkUnduhan[];
   /** Kualitas pilihan admin per video (opsional: file lama tak punya). */
@@ -1286,6 +1288,76 @@ export async function setPlaylyVideoKualitas(
   } else {
     const file = readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY);
     file.kualitas = baru;
+    writeLocal("playly.json", file);
+  }
+  return baru;
+}
+
+// ===========  RATING VIDEO PILIHAN ADMIN (playly:rating)  =================
+//
+// KENAPA ADA (owner 2026-11-06): "kalau yang belum ada ratingnya bisa kita
+// edit kan?". Rating selama ini hanya ikut terbawa saat video dicocokkan ke
+// IMDb, jadi video yang belum dicocokkan — dan film yang memang tak punya
+// nilai di IMDb — tidak punya cara diisi sama sekali.
+//
+// ⚠️ DOKUMEN TERPISAH, BUKAN menumpang di `playly:imdb`. Dua alasan, keduanya
+// kerusakan senyap kalau dilanggar:
+//   1. panel admin menghitung "sudah ada IMDb" dari ADA-TIDAKNYA entri di peta
+//      itu (lib/saring-video-admin.ts). Menulis rating ke sana membuat video
+//      yang belum pernah dicocokkan hilang dari saringan "Belum ada IMDb" —
+//      poster & sinopsisnya masih kosong, tapi daftarnya mengaku sudah habis;
+//   2. pencocokan massal MENIMPA seluruh entri `playly:imdb` milik sebuah
+//      video. Rating ketikan admin akan lenyap tanpa peringatan.
+// Dokumen sendiri membuat kedua hal itu mustahil, bukan sekadar jarang.
+//
+// Bentuknya sengaja sama persis dengan playly:kualitas di atas.
+
+const PLAYLY_RATING_DOC = "playly:rating";
+
+/** Peta videoId -> rating ketikan admin ("7.4"). Tanpa entri = ikut IMDb. */
+export type PlaylyRatingMap = Record<string, string>;
+
+export async function getPlaylyRating(): Promise<PlaylyRatingMap> {
+  if (useSupabase) {
+    return (await sbDocGet<PlaylyRatingMap>(PLAYLY_RATING_DOC)) ?? {};
+  }
+  return readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY).rating ?? {};
+}
+
+/** Versi ber-cache untuk HALAMAN PUBLIK — alasannya sama dengan getPlaylyKualitasCached. */
+export async function getPlaylyRatingCached(): Promise<PlaylyRatingMap> {
+  if (useSupabase) {
+    return (
+      (await sbDocGet<PlaylyRatingMap>(PLAYLY_RATING_DOC, {
+        revalidate: CATALOG_TTL_SECONDS,
+      })) ?? {}
+    );
+  }
+  return readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY).rating ?? {};
+}
+
+/**
+ * Pasang rating satu video, atau KEMBALIKAN KE IMDb dengan mengirim null.
+ *
+ * Mengosongkan berarti MENGHAPUS kuncinya, bukan menyimpan string kosong —
+ * alasan yang sama persis dengan setPlaylyVideoKualitas di atas: entri kosong
+ * akan terbaca sebagai "sudah dikoreksi jadi tanpa rating", sehingga angka
+ * dari IMDb tidak pernah dipakai lagi untuk video itu.
+ */
+export async function setPlaylyVideoRating(
+  videoId: string,
+  rating: string | null,
+): Promise<PlaylyRatingMap> {
+  const sekarang = await getPlaylyRating();
+  const baru = { ...sekarang };
+  if (rating) baru[videoId] = rating;
+  else delete baru[videoId];
+
+  if (useSupabase) {
+    await sbDocSet(PLAYLY_RATING_DOC, baru);
+  } else {
+    const file = readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY);
+    file.rating = baru;
     writeLocal("playly.json", file);
   }
   return baru;

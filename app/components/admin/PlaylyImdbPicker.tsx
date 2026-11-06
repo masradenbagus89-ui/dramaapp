@@ -16,7 +16,7 @@
 // (sembunyikan + kategori); menumpuk alur pencarian berlangkah-langkah di sana
 // akan membuat satu berkas mengurus tiga alur yang tak berhubungan.
 import { useState } from "react";
-import { Check, Loader2, Search, Star, X } from "lucide-react";
+import { Check, Loader2, Search, X } from "lucide-react";
 import { bersihkanJudulRilis, type PlaylyImdbMap, type PlaylyImdbMeta } from "@/lib/playly-imdb";
 
 /** Satu kandidat dari OMDb, sebatas yang digambar di layar. */
@@ -154,51 +154,48 @@ export default function PlaylyImdbPicker({
   };
 
   return (
-    <div className="shrink-0 text-right">
+    // `relative` = titik jangkar panel pencarian di bawah. `min-w-0` supaya
+    // kotak ini ikut menyusut mengikuti lebar kolomnya di daftar video —
+    // `shrink-0` yang lama memaksa kolom melebar dan mendorong tombol di
+    // sebelahnya turun ke baris berikutnya.
+    //
+    // 🪤 RATA KIRI + MENGISI PENUH, bukan rata kanan (owner 2026-11-06: "masih
+    // terlihat acak acakan"). Dulu isinya didorong ke kanan, jadi titik
+    // mulainya berpindah-pindah tiap baris: video yang sudah punya data mulai
+    // di posisi yang bergantung panjang judul filmnya, yang belum punya mulai
+    // di posisi tombol "Cari di IMDb". Tidak ada satu pun garis tegak yang
+    // konsisten — itulah yang terbaca acak, bukan tinggi barisnya.
+    <div className="relative w-full min-w-0 text-left">
       {meta ? (
-        <div className="flex items-center justify-end gap-2">
-          <span
-            className="inline-flex max-w-[200px] items-center gap-1 truncate rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-300"
-            title={`${meta.title}${meta.year ? ` (${meta.year})` : ""}`}
-          >
-            <Check className="h-3 w-3 shrink-0" aria-hidden="true" />
-            <span className="truncate">
-              {meta.title}
-              {meta.year ? ` (${meta.year})` : ""}
-            </span>
-            {meta.rating && (
-              <span className="flex shrink-0 items-center gap-0.5 text-amber-300">
-                <Star className="h-3 w-3" aria-hidden="true" />
-                {meta.rating}
-              </span>
-            )}
+        // SATU tombol untuk satu sel tabel: ia sekaligus MEMPERLIHATKAN film
+        // yang tercocok dan menjadi pintu untuk menggantinya. Dua elemen
+        // (lencana + tombol "Ganti") tidak muat di kolom selebar ini tanpa
+        // memotong nama filmnya sampai tak terbaca — dan nama itulah satu-
+        // satunya cara memeriksa pencocokannya benar.
+        //
+        // Tombol "lepas data IMDb" pindah KE DALAM panel pencarian: ia aksi
+        // yang jarang dipakai, dan menahannya di baris memakan ±40px di TIAP
+        // baris hanya untuk berjaga-jaga.
+        <button
+          type="button"
+          onClick={buka}
+          title={`${meta.title}${meta.year ? ` (${meta.year})` : ""} — klik untuk ganti atau lepas`}
+          className="flex min-h-9 w-full min-w-0 items-center gap-1 overflow-hidden whitespace-nowrap rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2 text-[11px] font-semibold text-emerald-300 transition hover:border-emerald-400"
+        >
+          <Check className="h-3 w-3 shrink-0" aria-hidden="true" />
+          <span className="truncate">
+            {meta.title}
+            {meta.year ? ` (${meta.year})` : ""}
           </span>
-          <button
-            type="button"
-            onClick={buka}
-            className="min-h-9 rounded-full border border-zinc-700 px-3 text-xs font-semibold text-zinc-300 transition hover:border-zinc-500"
-          >
-            Ganti
-          </button>
-          <button
-            type="button"
-            onClick={lepas}
-            disabled={menyimpan === "lepas"}
-            className="min-h-9 rounded-full border border-zinc-800 px-2 text-xs text-zinc-500 transition hover:border-rose-500/50 hover:text-rose-300 disabled:opacity-50"
-            aria-label={`Lepas data IMDb dari ${judulVideo}`}
-          >
-            {menyimpan === "lepas" ? (
-              <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-            ) : (
-              <X className="h-3.5 w-3.5" aria-hidden="true" />
-            )}
-          </button>
-        </div>
+          {/* Rating sengaja TIDAK ikut di sini: ia sudah punya kolomnya
+              sendiri di daftar, dan mengulangnya di tombol cuma memakan
+              ruang yang dibutuhkan nama filmnya. */}
+        </button>
       ) : (
         <button
           type="button"
           onClick={buka}
-          className="inline-flex min-h-9 items-center gap-1.5 rounded-full border border-sky-500/50 px-3 text-xs font-semibold text-sky-300 transition hover:border-sky-400"
+          className="flex min-h-9 w-full items-center justify-center gap-1.5 whitespace-nowrap rounded-full border border-sky-500/50 px-2 text-xs font-semibold text-sky-300 transition hover:border-sky-400"
         >
           <Search className="h-3.5 w-3.5" aria-hidden="true" />
           Cari di IMDb
@@ -217,7 +214,35 @@ export default function PlaylyImdbPicker({
       )}
 
       {terbuka && (
-        <div className="mt-2 w-full rounded-xl border border-zinc-700 bg-zinc-950 p-3 text-left sm:w-[420px]">
+        // 🪤 MELAYANG (absolute), bukan ikut alur baris. Sebelumnya panel
+        // selebar 420px ini DIDORONG masuk ke dalam baris video: kolomnya
+        // melebar, kontrol di sebelahnya terdorong turun, dan seluruh daftar
+        // bergoyang tiap kali satu pencarian dibuka. Melayang membuat lebar
+        // baris tidak berubah sama sekali.
+        //
+        // z-20 supaya menutupi baris di bawahnya, bukan tertutup olehnya.
+        // Tidak ada induk ber-`overflow-hidden` di jalur ini (dicek di
+        // PlaylyVisibilityManager + PlaylyBagianAktif), jadi panelnya tidak
+        // terpotong.
+        <div className="absolute right-0 top-full z-20 mt-2 w-[min(420px,80vw)] rounded-xl border border-zinc-700 bg-zinc-950 p-3 text-left shadow-xl shadow-black/40">
+          {/* Pindahan dari baris daftar: aksi yang jarang dipakai tidak perlu
+              memakan tempat di tiap baris. Hanya muncul kalau memang ADA data
+              yang bisa dilepas. */}
+          {meta && (
+            <button
+              type="button"
+              onClick={lepas}
+              disabled={menyimpan === "lepas"}
+              className="mb-2 flex min-h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-zinc-800 px-2 text-xs font-semibold text-zinc-400 transition hover:border-rose-500/50 hover:text-rose-300 disabled:opacity-50"
+            >
+              {menyimpan === "lepas" ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+              ) : (
+                <X className="h-3.5 w-3.5" aria-hidden="true" />
+              )}
+              Lepas data IMDb dari video ini
+            </button>
+          )}
           <div className="flex gap-2">
             <input
               value={kata}

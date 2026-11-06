@@ -28,6 +28,7 @@
 // -------------------------------------------------------------------------
 import { formatDuration } from "./playly";
 import { getPlaylyVideosPublik, type PlaylyVideoPublik } from "./playly-publik";
+import { ratingTampil } from "./rating-video";
 import {
   getPlaylyCadanganCached,
   getPlaylyGenresCached,
@@ -36,6 +37,7 @@ import {
   getPlaylyJenisCached,
   getPlaylyKualitasCached,
   getPlaylyLinkUnduhanCached,
+  getPlaylyRatingCached,
   getPublishedPlaylyWebhookVideos,
   getPublishedPlaylyWebhookVideosCached,
   type PlaylyWebhookVideo,
@@ -101,6 +103,11 @@ export function webhookKeKartu(
    * atas turunan otomatis dari link unduhan (lib/kualitas-video.ts).
    */
   kualitas: Record<string, string> = {},
+  /**
+   * Rating ketikan admin. Opsional dengan alasan yang sama; nilainya MENANG
+   * atas angka IMDb (lib/rating-video.ts).
+   */
+  ratingManual: Record<string, string> = {},
 ): PlaylyVideoPublik {
   const m = imdb[v.videoId];
   return {
@@ -134,7 +141,12 @@ export function webhookKeKartu(
     // jadi kategori akan membuat baris beranda yang isinya tak pernah cocok —
     // rusak yang senyap, sebab tak ada error, cuma baris yang selalu kosong.
     kategori: genres[v.videoId] ?? null,
-    rating: m?.rating || null,
+    // Ketikan admin MENANG atas angka IMDb — aturan yang sama dengan jalur
+    // katalog (lib/playly-publik.ts). Dibuat sama di KEDUA jalur dengan
+    // sengaja: kalau hanya satu yang tahu rating ketikan, video yang sama bisa
+    // menampilkan angka berbeda tergantung dari mana ia datang, dan nol error
+    // memberi tahu.
+    rating: ratingTampil(ratingManual[v.videoId], m?.rating),
     contentRating: m?.contentRating || null,
     // Jalur webhook tak punya drama yang dikaitkan, jadi hanya metadata IMDb
     // video ini yang bisa mengisinya.
@@ -192,6 +204,8 @@ export function gabungVideoPlayly(
   imdb: PlaylyImdbMap = {},
   /** Kualitas pilihan admin; sama seperti `genres`, hanya dipakai sisi webhook. */
   kualitas: Record<string, string> = {},
+  /** Rating ketikan admin; sama seperti `genres`, hanya dipakai sisi webhook. */
+  ratingManual: Record<string, string> = {},
 ): PlaylyVideoPublik[] {
   const sudahDiKatalog = new Set(katalog.map((v) => v.id));
   const disembunyikan = new Set(hiddenIds);
@@ -209,7 +223,7 @@ export function gabungVideoPlayly(
     // memakai Date.parse: nilai rusak akan jadi NaN dan membuat hasil sort tak
     // menentu, sedangkan perbandingan teks selalu memberi urutan yang tetap.
     .sort((a, b) => b.receivedAt.localeCompare(a.receivedAt))
-    .map((v) => webhookKeKartu(v, genres, imdb, kualitas));
+    .map((v) => webhookKeKartu(v, genres, imdb, kualitas, ratingManual));
 
   return [...dariWebhook, ...katalog];
 }
@@ -230,7 +244,17 @@ export function gabungVideoPlayly(
 async function rakitGabungan(
   ambilWebhook: () => Promise<PlaylyWebhookVideo[]>,
 ): Promise<PlaylyGabunganResult> {
-  const [katalog, webhook, hiddenIds, genres, imdb, linkUnduhan, kualitas, jenis] = await Promise.all([
+  const [
+    katalog,
+    webhook,
+    hiddenIds,
+    genres,
+    imdb,
+    linkUnduhan,
+    kualitas,
+    jenis,
+    ratingManual,
+  ] = await Promise.all([
     // Sudah menangkap kegagalannya sendiri: mengembalikan daftar kosong +
     // alasan, bukan melempar.
     getPlaylyVideosPublik(),
@@ -282,6 +306,9 @@ async function rakitGabungan(
     // sebelum fitur ini ada — video kembali ke baris lamanya, bukan terlempar
     // ke baris yang belum pernah diminta siapa pun.
     getPlaylyJenisCached().catch(() => ({}) as Record<string, string>),
+    // Gagal baca = peta kosong, BUKAN halaman gagal: rating ketikan admin cuma
+    // MENGUBAH angka di kartu. Tak terbaca = kartu memakai angka IMDb.
+    getPlaylyRatingCached().catch(() => ({}) as Record<string, string>),
   ]);
 
   // GAGAL-AMAN (skills/owasp/SKILL.md §1 A10 "jangan fail-open"): kalau daftar
@@ -315,6 +342,7 @@ async function rakitGabungan(
           genres,
           imdb,
           kualitas,
+          ratingManual,
         ),
         linkUnduhan,
       ),

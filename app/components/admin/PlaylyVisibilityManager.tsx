@@ -15,12 +15,13 @@
 // otomatis tidak ditampilkan ke penonton; ditandai di sini supaya admin tahu
 // perbaikannya ada di dashboard Playly, bukan di DramaKu.
 import { useState } from "react";
-import { AlertTriangle, Eye, EyeOff, Info, Loader2 } from "lucide-react";
+import { AlertTriangle, Eye, EyeOff, Info, Loader2, Star } from "lucide-react";
 import type { PlaylyVideo, PlaylySumber } from "@/lib/playly";
 import type { PlaylyImdbMap } from "@/lib/playly-imdb";
 import { DRAMA_QUALITY_OPTIONS, KATEGORI_ISI } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { JENIS_BAWAAN, LABEL_JENIS, type JenisVideo } from "@/lib/jenis-video";
+import { parseRatingManual, ratingTampil } from "@/lib/rating-video";
 import {
   hitungImdb,
   LABEL_SARING,
@@ -30,11 +31,143 @@ import {
 } from "@/lib/saring-video-admin";
 import PlaylyImdbPicker from "./PlaylyImdbPicker";
 import PlaylyCocokkanSemua from "./PlaylyCocokkanSemua";
+import BantuanSingkat from "./BantuanSingkat";
+import PaginasiDaftar from "./PaginasiDaftar";
+import {
+  UKURAN_BAWAAN,
+  HALAMAN_PERTAMA,
+  jepitHalaman,
+  potongHalaman,
+  type UkuranHalaman,
+} from "@/lib/paginasi";
 
 type Pesan = { jenis: "ok" | "gagal"; teks: string };
 
 /** Nilai dropdown yang berarti "belum dipilihkan kategori". */
 const KOSONG = "";
+
+/**
+ * Tata kolom baris kontrol tiap video (owner 2026-11-06: "kamu rapikan kalau
+ * perlu di bikin chart agar lebih enak lihatnya").
+ *
+ * SATU BARIS, enam kolom, judul di kolom pertama — bentuk tabel yang owner
+ * kirim contohnya (owner 2026-11-06: "ubah seperti image 1").
+ *
+ * 🪤 Judul memang jadi sempit di jendela browser yang kecil, dan itu
+ * KEPUTUSAN owner, bukan kelalaian: "kalau ruang kurang karena judul panjang
+ * bisa kamu kasih titik atau apa dan begitu klik muncul judul lengkap". Jadi
+ * judulnya dipotong dengan "…" dan bisa diklik untuk menampilkan judul penuh
+ * beserta keterangannya.
+ *
+ * 📐 Lebar tiap kolom DIUKUR dari potret, bukan ditebak: percobaan pertama
+ * memakai 80/116/96/132 dan kolom judul cuma kebagian 78px — sekitar sepuluh
+ * huruf, tidak cukup membedakan "Americana" dari "American Siege". Kolom lain
+ * dirampingkan sampai batas isinya masih terbaca ("Series" 72px, "Tanpa
+ * kategori" 108px, "Otomatis" 88px) supaya sisanya jatuh ke judul. Dua putaran sebelumnya judul ditaruh di tingkat
+ * atas justru untuk menghindari pemotongan ini — owner lebih memilih tabel
+ * yang lurus.
+ *
+ * 📐 ANGKANYA DIUKUR DARI POTRET, bukan ditebak. Percobaan pertama memberi
+ * kolom tetap terlalu lebar (92/136/144/132), sehingga kolom IMDb cuma
+ * kebagian ±130px: badge hijaunya tergencet jadi lingkaran tanpa judul, tombol
+ * "x" lenyap, dan tombol "Cari di IMDb" terbungkus jadi TIGA baris sehingga
+ * tinggi barisnya kembali tak seragam. Kolom Kualitas boleh paling banyak
+ * menyusut karena labelnya sudah dipendekkan jadi "Otomatis".
+ *
+ * 🪤 Kolom IMDb diberi lebar TETAP (144px), bukan `1fr` (owner 2026-11-06:
+ * "IMDB kamu kecilkan"). Dengan `1fr` ia menyerap SELURUH sisa ruang, jadi
+ * tombol "Ganti" membentang ±315px — satu tombol selebar tiga dropdown
+ * sekaligus. 144px pas untuk teks "Cari di IMDb" tanpa pernah membungkus jadi
+ * dua baris, dan cukup untuk "Ganti" + tombol lepas.
+ *
+ * Kolom aksi tinggal selebar ikon (owner: "sembunyikan kamu jadikan icon saja
+ * jadi lebih irit tempat"); `1fr`-nya menampung SISA ruang supaya grid tetap
+ * mengisi penuh tanpa kolom lain ikut melar di layar lebar.
+ *
+ * 🪤 SENGAJA TIDAK memuat kelas `grid` itu sendiri. `cn()` memakai
+ * tailwind-merge, dan `grid` di dalam konstanta ini akan MENIMPA `hidden`
+ * milik baris judul kolom (keduanya utilitas `display`, dan konstanta ini
+ * dioper belakangan). Akibatnya judul kolom tetap tergambar di layar sempit,
+ * menumpuk jadi dua kolom dan menunjuk kontrol yang salah — terukur di
+ * viewport 560px, tanpa satu pun error. Tiap pemakai menyebut `grid` /
+ * `sm:grid` sendiri.
+ *
+ * Ditulis SEKALI di sini lalu dipakai baris header maupun tiap baris video —
+ * dua salinan template kolom pasti menyimpang, dan kolom yang menyimpang
+ * membuat judul kolom menunjuk kontrol yang salah tanpa ada yang error.
+ */
+const KOLOM_BARIS =
+  "grid-cols-2 gap-1 sm:grid-cols-[minmax(0,1fr)_72px_108px_88px_124px_72px_36px] sm:items-center";
+
+/**
+ * Warna tiap nada spanduk. Dikumpulkan di satu peta supaya tiga spanduk di
+ * panel ini (gangguan pengambilan · video belum siap · sumber katalog publik)
+ * mustahil menyimpang bentuknya — sebelumnya masing-masing menulis ulang
+ * rentetan kelas sendiri, dan yang satu sudah terlanjur beda ukuran teks.
+ */
+const NADA_SPANDUK = {
+  peringatan: "border-amber-500/40 bg-amber-500/10 text-amber-100",
+  bahaya: "border-rose-500/30 bg-rose-500/10 text-rose-100",
+  info: "border-sky-500/30 bg-sky-500/10 text-sky-100",
+} as const;
+
+/** Spanduk pemberitahuan sebaris-ikon. Di luar komponen utama supaya React
+ *  tidak menganggapnya komponen baru tiap render. */
+function Spanduk({
+  nada,
+  ikon: Ikon,
+  children,
+}: {
+  nada: keyof typeof NADA_SPANDUK;
+  ikon: typeof AlertTriangle;
+  children: React.ReactNode;
+}) {
+  return (
+    <p
+      className={cn(
+        "flex items-start gap-2 rounded-xl border p-3 text-xs leading-relaxed",
+        NADA_SPANDUK[nada],
+      )}
+    >
+      <Ikon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+      <span>{children}</span>
+    </p>
+  );
+}
+
+/**
+ * Satu angka ringkasan.
+ *
+ * Angka dipisah dari kalimat (dulu: "488 dari 500 video tampil ... Ditandai
+ * Series: 0 dari 500 · Sudah ada data IMDb: 376 dari 500") karena yang dicari
+ * mata tiap panel dibuka adalah ANGKA-nya, bukan kalimatnya — mencarinya di
+ * tengah paragraf berarti membaca ulang kalimat yang sama setiap kali.
+ */
+function KartuAngka({
+  label,
+  nilai,
+  dari,
+}: {
+  label: string;
+  nilai: number;
+  dari?: number;
+}) {
+  return (
+    <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 px-3 py-2">
+      <dt className="text-[11px] uppercase tracking-wide text-zinc-500">
+        {label}
+      </dt>
+      <dd className="mt-0.5 text-lg font-bold leading-tight text-zinc-100">
+        {nilai}
+        {dari !== undefined && (
+          <span className="ml-1 text-xs font-normal text-zinc-500">
+            / {dari}
+          </span>
+        )}
+      </dd>
+    </div>
+  );
+}
 
 export default function PlaylyVisibilityManager({
   videos,
@@ -43,6 +176,7 @@ export default function PlaylyVisibilityManager({
   initialImdb = {},
   initialKualitas = {},
   initialJenis = {},
+  initialRating = {},
   belumSiapIds,
   fetchError,
   source,
@@ -81,6 +215,14 @@ export default function PlaylyVisibilityManager({
    * sampai ditandai. Entri di sini hanya ada untuk video yang memang serial.
    */
   initialJenis?: Record<string, string>;
+  /**
+   * Rating yang sudah DIKETIK admin (videoId -> "7.4").
+   *
+   * Bawaannya peta kosong — keadaan normal: rating biasanya ikut terbawa dari
+   * IMDb, dan entri di sini hanya ada untuk video yang angkanya diisi/dikoreksi
+   * dengan tangan.
+   */
+  initialRating?: Record<string, string>;
   /** Video yang berkasnya belum ada di Playly — tidak tampil ke penonton. */
   belumSiapIds: string[];
   /** Terisi kalau daftar gagal diambil dari Playly. */
@@ -99,9 +241,24 @@ export default function PlaylyVisibilityManager({
   const [sedangKualitas, setSedangKualitas] = useState<string | null>(null);
   const [jenis, setJenis] = useState<Record<string, string>>(initialJenis);
   const [sedangJenis, setSedangJenis] = useState<string | null>(null);
+  const [ratingManual, setRatingManual] =
+    useState<Record<string, string>>(initialRating);
+  // Ketikan yang BELUM disimpan, per video. Dipisah dari `ratingManual` supaya
+  // tiap huruf yang diketik tidak langsung menembak server — penyimpanan baru
+  // terjadi saat kotaknya ditinggalkan atau Enter ditekan.
+  const [draftRating, setDraftRating] = useState<Record<string, string>>({});
+  const [sedangRating, setSedangRating] = useState<string | null>(null);
   const [pesan, setPesan] = useState<Pesan | null>(null);
   /** Saringan "sudah / belum ada IMDb" (owner 2026-11-05: "biar mudah"). */
   const [saring, setSaring] = useState<SaringImdb>(SARING_BAWAAN);
+  // Paginasi (owner 2026-11-06). Nomor halaman TIDAK dibetulkan lewat efek —
+  // lihat jepitHalaman di lib/paginasi.ts untuk alasannya.
+  const [halaman, setHalaman] = useState<number>(HALAMAN_PERTAMA);
+  const [ukuran, setUkuran] = useState<UkuranHalaman>(UKURAN_BAWAAN);
+  // Video yang sedang menampilkan judul lengkapnya. Satu pada satu waktu:
+  // membuka banyak sekaligus membuat daftar kembali bertinggi tak beraturan,
+  // yang persis keluhan yang sedang diperbaiki.
+  const [detail, setDetail] = useState<string | null>(null);
 
   const ubah = async (videoId: string, jadikanTersembunyi: boolean) => {
     setSedangProses(videoId);
@@ -189,6 +346,72 @@ export default function PlaylyVisibilityManager({
    * berkas 1080p hasil rekaman bioskop tetap CAM — dan di sinilah orang
    * membetulkannya. Nilai pilihan admin SELALU menang atas turunan.
    */
+  /**
+   * Simpan rating ketikan admin untuk satu video.
+   *
+   * 🪤 Hanya menembak server kalau nilainya BENAR-BENAR berubah dari yang
+   * sedang tampil. Tanpa penjaga itu, sekadar mengklik kotak lalu berpindah
+   * akan MENGUNCI angka IMDb jadi rating manual — video itu lalu berhenti
+   * mengikuti IMDb selamanya, tanpa ada yang memberi tahu.
+   */
+  const simpanRating = async (videoId: string, judul: string) => {
+    const diketik = draftRating[videoId];
+    if (diketik === undefined) return;
+
+    const tampilSekarang =
+      ratingTampil(ratingManual[videoId], imdb[videoId]?.rating) ?? "";
+    // Dibandingkan SESUDAH disaring supaya "7,4" dan "7.4" tidak dianggap dua
+    // nilai berbeda lalu memicu simpan yang tidak perlu.
+    const nilai = parseRatingManual(diketik);
+    if ((nilai ?? "") === tampilSekarang) {
+      setDraftRating((d) => {
+        const { [videoId]: _buang, ...sisa } = d;
+        return sisa;
+      });
+      return;
+    }
+
+    setSedangRating(videoId);
+    setPesan(null);
+    try {
+      const res = await fetch("/api/admin/playly/rating", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // Kotak yang dikosongkan dikirim sebagai null supaya maksud "ikuti
+        // IMDb lagi" tidak bergantung pada tafsiran server terhadap teks kosong.
+        body: JSON.stringify({ videoId, rating: nilai }),
+      });
+      const data = (await res.json()) as {
+        rating?: Record<string, string>;
+        error?: string;
+      };
+      if (!res.ok) {
+        setPesan({ jenis: "gagal", teks: data.error ?? "Gagal menyimpan rating." });
+        return;
+      }
+      // Peta terbaru datang dari server, dipakai apa adanya — layar tidak
+      // menebak hasilnya sendiri dan ikut benar walau ada admin lain bekerja.
+      setRatingManual(data.rating ?? {});
+      setDraftRating((d) => {
+        const { [videoId]: _buang, ...sisa } = d;
+        return sisa;
+      });
+      setPesan({
+        jenis: "ok",
+        teks: nilai
+          ? `Rating "${judul}" disimpan: ${nilai}. Angkanya muncul di situs dalam ±5 menit.`
+          : `Rating "${judul}" dikosongkan — video ini kembali memakai angka dari IMDb.`,
+      });
+    } catch {
+      setPesan({
+        jenis: "gagal",
+        teks: "Tidak bisa menghubungi server. Cek koneksi internet lalu coba lagi.",
+      });
+    } finally {
+      setSedangRating(null);
+    }
+  };
+
   const ubahKualitas = async (videoId: string, label: string) => {
     setSedangKualitas(videoId);
     setPesan(null);
@@ -310,63 +533,53 @@ export default function PlaylyVisibilityManager({
   const jumlahSaring = hitungImdb(videos, imdb);
   const videoTampil = saringVideoImdb(videos, imdb, saring);
 
+  // Dipotong SESUDAH disaring, bukan sebelum: memotong dulu lalu menyaring
+  // akan menghasilkan halaman yang jumlah barisnya berubah-ubah (halaman 1
+  // berisi 12 baris, halaman 2 berisi 40) tanpa ada yang salah di layar.
+  const halamanAman = jepitHalaman(halaman, videoTampil.length, ukuran);
+  const videoHalaman = potongHalaman(videoTampil, halamanAman, ukuran);
+
   const belumSiap = new Set(belumSiapIds);
   const jumlahTampil = videos.filter(
     (v) => !hidden.has(v.id) && !belumSiap.has(v.id),
   ).length;
+  const jumlahSeries = videos.filter((v) => jenis[v.id] === "series").length;
+  const jumlahImdb = videos.filter((v) => imdb[v.id]).length;
 
   return (
     <section className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-5">
-      <h2 className="text-base font-semibold text-white">
-        Video yang tampil di halaman penonton
-      </h2>
+      {/* Keterangan Jenis/Kategori/IMDb pindah ke balik tombol "?" (owner
+          2026-11-06: "jadi klo orang mau baca tinggal klik"). Isinya sama
+          persis — yang berubah cuma: tiga paragraf itu tidak lagi mendorong
+          daftar videonya jauh ke bawah layar tiap panel dibuka. */}
+      <BantuanSingkat
+        label="Apa arti Jenis, Kategori, dan Cari di IMDb?"
+        judul={
+          <h2 className="text-base font-semibold text-white">
+            Video yang tampil di halaman penonton
+          </h2>
+        }
+      >
 
-      {/* Pengambilan bermasalah TAPI daftarnya masih ada (dari salinan
-          terakhir). Peringatannya tetap tampil — jujur bahwa daftar ini bisa
-          ketinggalan video yang baru di-upload — tanpa menyandera seluruh
-          panel seperti sebelum 2026-11-05. Penandaan yang disimpan dari sini
-          TETAP sah: ia menulis ke database kita sendiri, bukan ke Playly. */}
-      {fetchError && (
-        <p className="mt-3 flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-100">
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-          <span>
-            {fetchError} Daftar di bawah dipakai dari salinan terakhir, jadi
-            video yang baru saja di-upload mungkin belum muncul. Pengaturan yang
-            kamu simpan di sini tetap tersimpan dengan benar.
-          </span>
-        </p>
-      )}
-      <p className="mt-1 text-sm text-zinc-400">
-        {videos.length === 0
-          ? "Belum ada video di akun Playly kita. Upload dulu di dashboard Playly — begitu ter-upload, video langsung muncul di sini dan di halaman penonton."
-          : `${jumlahTampil} dari ${videos.length} video tampil. Semua video tampil otomatis; sembunyikan yang tidak ingin ditayangkan.`}
-      </p>
-
-      {videos.length > 0 && (
-        // Keterangan jenis ditulis sekali di sini, alasan yang sama dengan
-        // keterangan kategori di bawah: aturannya sama untuk semua baris.
-        <p className="mt-2 text-sm text-zinc-400">
+        {/* Ketiga keterangan ini SELALU dirender, tidak lagi bersyarat
+            "ada video": tombol "?" yang diklik lalu tidak menampilkan apa-apa
+            terbaca seperti tombol rusak. Yang bersyarat cuma ANGKA-nya, dan
+            angka itu kini duduk di baris ringkas di luar kotak — tempatnya
+            memang di baris status, bukan terkubur di tengah penjelasan. */}
+        <p>
           <strong className="text-zinc-200">Jenis</strong> menentukan video ini
           masuk baris <strong className="text-zinc-200">&quot;Film Terbaru&quot;</strong> atau{" "}
           <strong className="text-zinc-200">&quot;Series Terbaru&quot;</strong> di
           beranda. Bawaannya <em>Film</em>, jadi pilih <em>Series</em> untuk
           episode drama berseri. Playly tidak pernah memberi tahu kita sebuah
           video itu film atau serial, jadi pilihan di sinilah satu-satunya yang
-          menentukan. Perubahan terlihat di situs dalam ±1 menit. Ditandai
-          Series:{" "}
-          <strong className="text-zinc-200">
-            {videos.filter((v) => jenis[v.id] === "series").length} dari{" "}
-            {videos.length}
-          </strong>
-          .
+          menentukan. Perubahan terlihat di situs dalam ±1 menit.
         </p>
-      )}
 
-      {videos.length > 0 && (
-        // Keterangan kategori ditulis di sini, bukan di sebelah tiap dropdown:
-        // aturannya sama untuk semua baris, dan mengulangnya 46 kali cuma
-        // membuat daftar jadi padat tanpa menambah kejelasan.
-        <p className="mt-2 text-sm text-zinc-400">
+        {/* Keterangan kategori ditulis di sini, bukan di sebelah tiap
+            dropdown: aturannya sama untuk semua baris, dan mengulangnya 46
+            kali cuma membuat daftar jadi padat tanpa menambah kejelasan. */}
+        <p>
           <strong className="text-zinc-200">Kategori</strong> menentukan video
           ikut muncul di baris genre beranda (mis. &quot;Drama Action&quot;).
           Dibiarkan <em>Tanpa kategori</em> pun videonya{" "}
@@ -374,12 +587,10 @@ export default function PlaylyVisibilityManager({
           &quot;Film Terbaru&quot; di atas beranda — jadi tidak ada video yang
           hilang karena belum diisi. Perubahan terlihat di situs dalam ±1 menit.
         </p>
-      )}
 
-      {videos.length > 0 && (
-        // Keterangan IMDb ditulis sekali di sini, bukan di sebelah tiap tombol —
-        // alasan yang sama dengan keterangan kategori di atas.
-        <p className="mt-2 text-sm text-zinc-400">
+        {/* Keterangan IMDb ditulis sekali di sini, bukan di sebelah tiap
+            tombol — alasan yang sama dengan keterangan kategori di atas. */}
+        <p>
           <strong className="text-zinc-200">Cari di IMDb</strong> mengisi poster,
           sinopsis, genre, tahun, dan rating untuk video itu. Playly tidak pernah
           mengirim data ini, jadi tanpa diisi kartunya memang tampil polos —
@@ -387,49 +598,96 @@ export default function PlaylyVisibilityManager({
           sendiri. Kotak pencariannya{" "}
           <strong className="text-zinc-200">sudah terisi otomatis</strong> dari
           judul videonya, jadi biasanya tinggal tekan <em>Cari</em> lalu pilih
-          film yang benar. Sudah terisi:{" "}
-          <strong className="text-zinc-200">
-            {videos.filter((v) => imdb[v.id]).length} dari {videos.length}
-          </strong>
-          .
+          film yang benar.
         </p>
+      </BantuanSingkat>
+
+      {/* RINGKASAN ANGKA. Keempatnya dihitung ulang tiap render, jadi begitu
+          sebuah video disembunyikan / ditandai Series / dicocokkan ke IMDb,
+          angkanya bergerak seketika tanpa memuat ulang halaman. */}
+      {videos.length === 0 ? (
+        <p className="mt-3 text-sm text-zinc-400">
+          Belum ada video di akun Playly kita. Upload dulu di dashboard Playly —
+          begitu ter-upload, video langsung muncul di sini dan di halaman
+          penonton.
+        </p>
+      ) : (
+        <>
+          <dl className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <KartuAngka label="Total video" nilai={videos.length} />
+            <KartuAngka
+              label="Tampil ke penonton"
+              nilai={jumlahTampil}
+              dari={videos.length}
+            />
+            <KartuAngka
+              label="Ditandai Series"
+              nilai={jumlahSeries}
+              dari={videos.length}
+            />
+            <KartuAngka
+              label="Sudah ada IMDb"
+              nilai={jumlahImdb}
+              dari={videos.length}
+            />
+          </dl>
+          <p className="mt-2 text-xs text-zinc-500">
+            Semua video tampil otomatis; sembunyikan yang tidak ingin
+            ditayangkan.
+          </p>
+        </>
       )}
+
+      {/* SEMUA PEMBERITAHUAN DIKUMPULKAN DI SATU TEMPAT (owner 2026-11-06:
+          "rapikan lagi agar UI nya lebih bagus"). Sebelumnya ketiganya
+          berserak — satu di atas kalimat status, dua lagi terselip di bawah
+          tombol pencocokan massal — sehingga peringatan penting bisa terlewat
+          karena posisinya berpindah tergantung spanduk mana yang muncul. */}
+      <div className="mt-4 space-y-2 empty:hidden">
+        {/* Pengambilan bermasalah TAPI daftarnya masih ada (dari salinan
+            terakhir). Peringatannya tetap tampil — jujur bahwa daftar ini bisa
+            ketinggalan video yang baru di-upload — tanpa menyandera seluruh
+            panel seperti sebelum 2026-11-05. Penandaan yang disimpan dari sini
+            TETAP sah: ia menulis ke database kita sendiri, bukan ke Playly. */}
+        {fetchError && (
+          <Spanduk nada="peringatan" ikon={AlertTriangle}>
+            {fetchError} Daftar di bawah dipakai dari salinan terakhir, jadi
+            video yang baru saja di-upload mungkin belum muncul. Pengaturan yang
+            kamu simpan di sini tetap tersimpan dengan benar.
+          </Spanduk>
+        )}
+
+        {belumSiap.size > 0 && (
+          <Spanduk nada="bahaya" ikon={AlertTriangle}>
+            <strong>{belumSiap.size} video belum siap.</strong> Catatannya ada di
+            Playly (judul, durasi, sampul), tapi file videonya tidak — biasanya
+            karena upload putus di tengah. Video ini <strong>tidak</strong>{" "}
+            ditampilkan ke penonton, karena kalau diklik yang muncul cuma layar
+            &quot;Video belum tersedia&quot;. Perbaikannya di dashboard Playly:
+            upload ulang videonya sampai 100% selesai, lalu buka lagi halaman
+            ini.
+          </Spanduk>
+        )}
+
+        {/* Dikatakan apa adanya: daftar ini TIDAK datang dari kunci mitra, jadi
+            jangan sampai ada yang mengira kuncinya sudah jalan padahal belum. */}
+        {source === "katalog-publik" && videos.length > 0 && (
+          <Spanduk nada="info" ikon={Info}>
+            Daftar ini diambil dari katalog publik Playly dan disaring ke akun{" "}
+            <strong>{creators.join(", ")}</strong>, karena kunci mitra sedang
+            tidak diterima Playly. Videonya tetap hanya milik akun kita. Kalau
+            ada akun Playly baru, tambahkan lewat Environment Variable{" "}
+            <code>PLAYLY_CREATOR</code> (dipisah koma) — isinya MENAMBAH daftar
+            bawaan, bukan menggantikannya.
+          </Spanduk>
+        )}
+      </div>
 
       {/* Pencocokan massal. Diletakkan SESUDAH keterangan dan SEBELUM daftar:
           urutan kerjanya memang begitu — pahami dulu apa yang diisi, kerjakan
           borongan, baru rapikan sisanya satu per satu di daftar di bawah. */}
       {!fetchError && (
         <PlaylyCocokkanSemua videos={videos} imdb={imdb} onPerbarui={setImdb} />
-      )}
-
-      {belumSiap.size > 0 && (
-        <p className="mt-3 flex items-start gap-2 rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-100">
-          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-          <span>
-            <strong>{belumSiap.size} video belum siap.</strong> Catatannya ada di
-            Playly (judul, durasi, sampul), tapi file videonya tidak — biasanya
-            karena upload putus di tengah. Video ini <strong>tidak</strong>{" "}
-            ditampilkan ke penonton, karena kalau diklik yang muncul cuma layar
-            "Video belum tersedia". Perbaikannya di dashboard Playly: upload ulang
-            videonya sampai 100% selesai, lalu buka lagi halaman ini.
-          </span>
-        </p>
-      )}
-
-      {source === "katalog-publik" && videos.length > 0 && (
-        // Dikatakan apa adanya: daftar ini TIDAK datang dari kunci mitra, jadi
-        // jangan sampai ada yang mengira kuncinya sudah jalan padahal belum.
-        <p className="mt-3 flex items-start gap-2 rounded-lg border border-sky-500/30 bg-sky-500/10 p-3 text-xs text-sky-100">
-          <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-          <span>
-            Daftar ini diambil dari katalog publik Playly dan disaring ke akun{" "}
-            <strong>{creators.join(", ")}</strong>, karena kunci mitra sedang tidak
-            diterima Playly. Videonya tetap hanya milik akun kita. Kalau ada akun
-            Playly baru, tambahkan lewat Environment Variable{" "}
-            <code>PLAYLY_CREATOR</code> (dipisah koma) — isinya MENAMBAH daftar
-            bawaan, bukan menggantikannya.
-          </span>
-        </p>
       )}
 
       {pesan && (
@@ -458,7 +716,15 @@ export default function PlaylyVisibilityManager({
               <button
                 key={pilihan}
                 type="button"
-                onClick={() => setSaring(pilihan)}
+                onClick={() => {
+                  setSaring(pilihan);
+                  // 🪤 Tanpa baris ini: sedang di halaman 3 "Semua" (359
+                  // video) lalu klik "Belum ada IMDb" (61 video, cuma 1
+                  // halaman) = halaman 3 tidak ada, daftarnya kosong. Penjepit
+                  // di lib/paginasi.ts menahan kerusakannya, tapi melompat ke
+                  // halaman terakhir tanpa diminta tetap membingungkan.
+                  setHalaman(HALAMAN_PERTAMA);
+                }}
                 aria-pressed={dipakai}
                 className={cn(
                   "rounded-full border px-3 py-1.5 text-xs font-semibold transition",
@@ -496,8 +762,37 @@ export default function PlaylyVisibilityManager({
       )}
 
       {videos.length > 0 && (
-        <ul className="mt-4 divide-y divide-zinc-800">
-          {videoTampil.map((v) => {
+        // 🪤 PADDING HORIZONTAL HANYA DI SINI. Sebelumnya baris judul kolom
+        // dan tiap baris video sama-sama ber-`px-2` di tempatnya
+        // masing-masing — kesejajarannya bergantung pada dua nilai yang
+        // KEBETULAN sama, dan nilai yang kebetulan sama adalah nilai yang
+        // menyimpang begitu salah satunya disunting. Sekarang keduanya
+        // mulai dari tepi yang sama persis, jadi mustahil meleset.
+        <div className="mt-4 px-1">
+          {/* Judul kolom — inilah yang membuat daftar terbaca seperti tabel.
+              Hanya muncul di layar yang kolomnya memang sejajar (sm ke atas);
+              di bawah itu kontrolnya jatuh jadi 2 kolom, jadi judul kolom di
+              sana justru menunjuk ke kontrol yang salah. */}
+          <div
+            className={cn(
+              // Tanpa padding horizontal sendiri — lihat catatan di
+              // pembungkusnya. `sm:grid` saja (bukan `grid`) supaya `hidden`
+              // tetap berlaku di layar sempit.
+              "hidden border-b border-zinc-800 pb-2 text-[11px] font-semibold uppercase tracking-wide text-zinc-500 sm:grid",
+              KOLOM_BARIS,
+            )}
+          >
+            <span>Judul</span>
+            <span>Jenis</span>
+            <span>Kategori</span>
+            <span>Kualitas</span>
+            <span>IMDb</span>
+            <span>Rating</span>
+            <span>Aksi</span>
+          </div>
+
+          <ul className="divide-y divide-zinc-800">
+          {videoHalaman.map((v) => {
             const tersembunyi = hidden.has(v.id);
             const belumAdaFile = belumSiap.has(v.id);
             const proses = sedangProses === v.id;
@@ -514,43 +809,53 @@ export default function PlaylyVisibilityManager({
             return (
               <li
                 key={v.id}
-                // flex-wrap sejak picker IMDb ditambahkan: panel pencariannya
-                // jauh lebih lebar dari tombol lain, jadi di layar sempit ia
-                // harus boleh turun ke baris sendiri — bukan memaksa seluruh
-                // baris menyusut sampai judulnya tak terbaca.
-                className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3"
+                // Latar berselang-seling (zebra) + garis pemisah: di daftar
+                // puluhan baris, mata kehilangan jejak baris mana yang sedang
+                // dibaca tanpa keduanya.
+                className="transition even:bg-zinc-900/40 hover:bg-zinc-800/50"
               >
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p
+                <div className={cn("grid py-1.5", KOLOM_BARIS)}>
+                  {/* JUDUL — kolom pertama, sejajar seperti kolom "Domain" di
+                      contoh yang owner kirim. Dipotong dengan "…" saat ruang
+                      kurang, dan DIKLIK untuk memunculkan judul lengkapnya
+                      (owner 2026-11-06). `title` dipasang juga supaya judul
+                      penuh bisa dibaca cukup dengan mendiamkan kursor. */}
+                  <button
+                    type="button"
+                    onClick={() => setDetail(detail === v.id ? null : v.id)}
+                    title={v.title}
+                    aria-expanded={detail === v.id}
+                    className="flex min-w-0 items-center gap-1.5 text-left"
+                  >
+                    {belumAdaFile && (
+                      <AlertTriangle
+                        className="size-3.5 shrink-0 text-rose-400"
+                        aria-hidden="true"
+                      />
+                    )}
+                    <span
                       className={`truncate text-sm font-medium ${
-                        tersembunyi ? "text-zinc-500 line-through" : "text-zinc-100"
+                        tersembunyi
+                          ? "text-zinc-500 line-through"
+                          : "text-zinc-100"
                       }`}
                     >
                       {v.title}
-                    </p>
-                    {belumAdaFile && (
-                      <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-rose-500/40 bg-rose-500/10 px-2 py-0.5 text-[11px] font-semibold text-rose-300">
-                        <AlertTriangle className="h-3 w-3" aria-hidden="true" />
-                        belum siap
-                      </span>
-                    )}
-                  </div>
-                  <p className="mt-0.5 text-xs text-zinc-500">{catatan}</p>
-                </div>
+                    </span>
+                  </button>
 
                 {/* JENIS tayangan (owner 2026-11-05). Ditaruh PALING KIRI di
                     antara ketiga dropdown karena ia yang paling menentukan:
                     kategori & kualitas cuma mengubah label dan baris genre,
                     sedangkan yang ini memindahkan judulnya antar-seksi beranda.
                     Bentuknya sengaja sama dengan dua dropdown di bawahnya. */}
-                <label className="flex shrink-0 items-center gap-1.5">
+                <label className="flex min-w-0 items-center gap-1.5">
                   <span className="sr-only">Jenis tayangan untuk {v.title}</span>
                   <select
                     value={jenis[v.id] ?? JENIS_BAWAAN}
                     onChange={(e) => ubahJenis(v.id, e.target.value)}
                     disabled={sedangJenis === v.id}
-                    className="min-h-9 rounded-full border border-zinc-700 bg-zinc-900 px-3 text-xs text-zinc-200 outline-none transition focus-visible:border-amber-400 disabled:opacity-50"
+                    className="min-h-9 w-full min-w-0 rounded-full border border-zinc-700 bg-zinc-900 px-2 text-xs text-zinc-200 outline-none transition focus-visible:border-amber-400 disabled:opacity-50"
                   >
                     {/* Ditulis dari LABEL_JENIS, bukan diketik ulang: nama yang
                         dilihat admin dan nilai yang tersimpan jadi mustahil
@@ -573,13 +878,13 @@ export default function PlaylyVisibilityManager({
                     bukan dropdown berhias: daftarnya 8 pilihan tetap, dan
                     di HP select bawaan membuka pemilih layar-penuh yang jauh
                     lebih enak dipakai daripada daftar kecil buatan sendiri. */}
-                <label className="flex shrink-0 items-center gap-1.5">
+                <label className="flex min-w-0 items-center gap-1.5">
                   <span className="sr-only">Kategori untuk {v.title}</span>
                   <select
                     value={genres[v.id] ?? KOSONG}
                     onChange={(e) => ubahGenre(v.id, e.target.value)}
                     disabled={sedangGenre === v.id}
-                    className="min-h-9 rounded-full border border-zinc-700 bg-zinc-900 px-3 text-xs text-zinc-200 outline-none transition focus-visible:border-amber-400 disabled:opacity-50"
+                    className="min-h-9 w-full min-w-0 rounded-full border border-zinc-700 bg-zinc-900 px-2 text-xs text-zinc-200 outline-none transition focus-visible:border-amber-400 disabled:opacity-50"
                   >
                     <option value={KOSONG}>Tanpa kategori</option>
                     {KATEGORI_ISI.map((k) => (
@@ -601,15 +906,15 @@ export default function PlaylyVisibilityManager({
                     ini hanya perlu disentuh kalau turunannya meleset —
                     terutama film CAM yang berkas unduhannya kebetulan 1080p.
                     Bentuknya sengaja sama dengan dropdown kategori di atas. */}
-                <label className="flex shrink-0 items-center gap-1.5">
+                <label className="flex min-w-0 items-center gap-1.5">
                   <span className="sr-only">Kualitas untuk {v.title}</span>
                   <select
                     value={kualitas[v.id] ?? KOSONG}
                     onChange={(e) => ubahKualitas(v.id, e.target.value)}
                     disabled={sedangKualitas === v.id}
-                    className="min-h-9 rounded-full border border-zinc-700 bg-zinc-900 px-3 text-xs text-zinc-200 outline-none transition focus-visible:border-amber-400 disabled:opacity-50"
+                    className="min-h-9 w-full min-w-0 rounded-full border border-zinc-700 bg-zinc-900 px-2 text-xs text-zinc-200 outline-none transition focus-visible:border-amber-400 disabled:opacity-50"
                   >
-                    <option value={KOSONG}>Kualitas: otomatis</option>
+                    <option value={KOSONG}>Otomatis</option>
                     {DRAMA_QUALITY_OPTIONS.map((q) => (
                       <option key={q} value={q}>
                         {q}
@@ -634,29 +939,145 @@ export default function PlaylyVisibilityManager({
                   onPerbarui={setImdb}
                 />
 
+                {/* RATING — BISA DIKETIK (owner 2026-11-06: "kalau yang
+                    belum ada ratingnya bisa kita edit kan?").
+                    Angkanya ikut terbawa sendiri saat video dicocokkan ke
+                    IMDb; kotak ini untuk dua keadaan yang tidak terlayani
+                    jalur itu — video yang belum dicocokkan, dan film yang
+                    memang tak punya nilai di IMDb.
+                    Disimpan saat kotaknya ditinggalkan atau Enter ditekan,
+                    bukan tiap huruf: mengetik "7.4" akan menembak server tiga
+                    kali, dan yang dua di antaranya menyimpan angka setengah
+                    jadi ("7", "7.") yang sempat tayang ke penonton. */}
+                <label className="flex items-center gap-1">
+                  <span className="sr-only">Rating untuk {v.title}</span>
+                  {/* Bintang menyala kalau ADA nilainya — dari mana pun
+                      asalnya. Sebelumnya hanya menyala untuk rating ketikan,
+                      sehingga angka IMDb yang sah tampil dengan bintang redup
+                      dan terbaca seperti nilai mati. Yang diisi tangan
+                      dibedakan lewat warna ANGKA-nya, bukan bintangnya. */}
+                  <Star
+                    className={cn(
+                      "size-3 shrink-0",
+                      ratingTampil(ratingManual[v.id], imdb[v.id]?.rating)
+                        ? "text-amber-500"
+                        : "text-zinc-600",
+                    )}
+                    aria-hidden="true"
+                  />
+                  <input
+                    // Nilai yang sedang diketik menang; kalau tidak ada,
+                    // yang tampil adalah rating EFEKTIF (ketikan admin, lalu
+                    // IMDb) — sama persis dengan yang dilihat penonton.
+                    value={
+                      draftRating[v.id] ??
+                      ratingTampil(ratingManual[v.id], imdb[v.id]?.rating) ??
+                      ""
+                    }
+                    onChange={(e) =>
+                      setDraftRating((d) => ({ ...d, [v.id]: e.target.value }))
+                    }
+                    onBlur={() => simpanRating(v.id, v.title)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") e.currentTarget.blur();
+                      // Escape membatalkan ketikan, bukan menyimpannya —
+                      // tanpa ini satu-satunya jalan keluar dari salah ketik
+                      // adalah menyimpannya dulu lalu membetulkannya.
+                      if (e.key === "Escape") {
+                        setDraftRating((d) => {
+                          const { [v.id]: _buang, ...sisa } = d;
+                          return sisa;
+                        });
+                        e.currentTarget.blur();
+                      }
+                    }}
+                    disabled={sedangRating === v.id}
+                    inputMode="decimal"
+                    placeholder="–"
+                    title={
+                      ratingManual[v.id]
+                        ? `Rating diisi manual. Kosongkan untuk kembali memakai angka IMDb.`
+                        : `Ketik rating 0-10. Angka ini tampil di kartu video untuk penonton.`
+                    }
+                    className={cn(
+                      "min-h-9 w-full min-w-0 rounded-lg border border-transparent bg-transparent px-1 text-xs outline-none transition placeholder:text-zinc-600 hover:border-zinc-700 focus-visible:border-amber-400 disabled:opacity-50",
+                      ratingManual[v.id]
+                        ? "font-semibold text-amber-700"
+                        : "text-zinc-300",
+                    )}
+                  />
+                  {sedangRating === v.id && (
+                    <Loader2
+                      className="size-3 shrink-0 animate-spin text-zinc-400"
+                      aria-hidden="true"
+                    />
+                  )}
+                </label>
+
                 <button
                   type="button"
                   onClick={() => ubah(v.id, !tersembunyi)}
                   disabled={proses}
-                  className={`flex min-h-9 shrink-0 items-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition disabled:opacity-50 ${
+                  // IKON SAJA (owner 2026-11-06: "sembunyikan kamu jadikan
+                  // icon saja jadi lebih irit tempat"). Tombol berteks memakan
+                  // ±110px di tiap baris; ikon cukup 36px.
+                  //
+                  // `title` + `aria-label` WAJIB ada dan berbunyi sama: begitu
+                  // teksnya hilang dari layar, satu-satunya cara tahu tombol
+                  // ini mengerjakan apa adalah mendiamkan kursor di atasnya —
+                  // dan pembaca layar hanya punya aria-label. Ikon tanpa
+                  // keduanya = tombol yang fungsinya cuma bisa ditebak.
+                  title={tersembunyi ? `Tampilkan ${v.title}` : `Sembunyikan ${v.title}`}
+                  aria-label={
+                    tersembunyi ? `Tampilkan ${v.title}` : `Sembunyikan ${v.title}`
+                  }
+                  aria-pressed={tersembunyi}
+                  className={`flex size-9 shrink-0 items-center justify-center rounded-full border transition disabled:opacity-50 ${
                     tersembunyi
-                      ? "border-zinc-700 text-zinc-300 hover:border-zinc-500"
-                      : "border-amber-500/50 text-amber-300 hover:border-amber-400"
+                      ? "border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200"
+                      : "border-amber-500/50 text-amber-500 hover:border-amber-400 hover:bg-amber-500/10"
                   }`}
                 >
                   {proses ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                   ) : tersembunyi ? (
-                    <Eye className="h-3.5 w-3.5" aria-hidden="true" />
+                    <Eye className="h-4 w-4" aria-hidden="true" />
                   ) : (
-                    <EyeOff className="h-3.5 w-3.5" aria-hidden="true" />
+                    <EyeOff className="h-4 w-4" aria-hidden="true" />
                   )}
-                  {tersembunyi ? "Tampilkan" : "Sembunyikan"}
                 </button>
+                </div>
+
+                {/* Judul lengkap + keterangannya. Muncul hanya saat judulnya
+                    diklik, jadi baris tetap setinggi satu baris selama tidak
+                    dibuka — kalau selalu tampil, seluruh daftar kembali
+                    bertinggi ganda. */}
+                {detail === v.id && (
+                  <p className="pb-2 text-xs leading-relaxed text-zinc-400">
+                    <strong className="text-zinc-200">{v.title}</strong>
+                    <br />
+                    {catatan}
+                  </p>
+                )}
               </li>
             );
           })}
-        </ul>
+          </ul>
+        </div>
+      )}
+
+      {/* SATU-SATUNYA kontrol halaman, di bawah daftar (owner 2026-11-06:
+          "yang di atas kamu hapus"). Sebelumnya dipasang dua kali; owner
+          menilai yang atas cuma menambah baris tanpa menambah guna. */}
+      {videoTampil.length > 0 && (
+        <PaginasiDaftar
+          className="mt-4 border-t border-zinc-800 pt-3"
+          total={videoTampil.length}
+          halaman={halamanAman}
+          ukuran={ukuran}
+          onHalaman={setHalaman}
+          onUkuran={setUkuran}
+        />
       )}
     </section>
   );

@@ -85,7 +85,14 @@ describe("saringan tersambung ke daftar yang digambar", () => {
   it("daftar memakai hasil saringan, BUKAN daftar mentah", () => {
     // Kalau ini lepas, tombol saringan tetap bisa diklik dan angkanya berubah,
     // tapi daftarnya tidak ikut menyaring — tombol yang berbohong.
-    expect(PANEL).toContain("videoTampil.map(");
+    //
+    // Sejak paginasi ditambahkan (owner 2026-11-06) rantainya satu mata lebih
+    // panjang: videos -> saringVideoImdb -> videoTampil -> potongHalaman ->
+    // videoHalaman -> .map. Yang DIJAGA tetap sama — daftar yang digambar
+    // wajib turunan dari hasil saringan — jadi kedua mata rantai itu dituntut
+    // sekaligus, bukan diturunkan jadi pemeriksaan yang lebih longgar.
+    expect(PANEL).toContain("potongHalaman(videoTampil");
+    expect(PANEL).toContain("videoHalaman.map(");
     expect(
       PANEL,
       "daftar masih memetakan `videos` mentah — saringan tidak akan terasa",

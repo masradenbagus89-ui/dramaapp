@@ -26,12 +26,14 @@ import {
 } from "./playly";
 import { getAllDramasCached } from "./dramas";
 import type { LinkUnduhanPublik } from "./playly-unduhan";
+import { ratingTampil } from "./rating-video";
 import {
   getPlaylyEmbedsCached,
   getPlaylyGenresCached,
   getPlaylyHiddenIdsCached,
   getPlaylyImdbCached,
   getPlaylyKualitasCached,
+  getPlaylyRatingCached,
 } from "./store";
 import type { PlaylyImdbMap } from "./playly-imdb";
 import type { JenisVideo } from "./jenis-video";
@@ -186,6 +188,12 @@ export function rakitVideoPublik(
    * unduhan (lib/kualitas-video.ts) — itu yang membuat koreksi admin bertahan.
    */
   kualitas: Record<string, string> = {},
+  /**
+   * Rating yang DIKETIK admin (videoId -> "7.4"). OPSIONAL dengan alasan yang
+   * sama seperti tiga di atas: fitur ini baru ada 2026-11-06. Nilainya MENANG
+   * atas angka IMDb — lihat `ratingTampil` di lib/rating-video.ts.
+   */
+  ratingManual: Record<string, string> = {},
 ): { tampil: PlaylyVideo[]; labelUntuk: (videoId: string) => Omit<PlaylyVideoPublik, keyof PlaylyVideo> } {
   const disembunyikan = new Set(hiddenIds);
   const dramaById = new Map(dramas.map((d) => [d.id, d] as const));
@@ -223,7 +231,14 @@ export function rakitVideoPublik(
         // admin belum memilih, kategori drama dipakai sebagai cadangan supaya
         // video yang sudah dikaitkan tidak perlu diisi ulang dengan tangan.
         kategori: genres[videoId] ?? drama?.category ?? null,
-        rating: m?.rating || drama?.imdbRating || null,
+        // Ketikan admin MENANG atas angka IMDb maupun rating drama yang
+        // dikaitkan: ia koreksi yang dibuat dengan sadar untuk video ini.
+        // Kalau dibalik, angka yang baru diketik tertutup lagi tanpa ada yang
+        // memberi tahu, dan admin akan mengetiknya berkali-kali mengira gagal.
+        rating: ratingTampil(
+          ratingManual[videoId],
+          m?.rating || drama?.imdbRating,
+        ),
         contentRating: m?.contentRating || drama?.contentRating || null,
         // Metadata video MENANG atas drama yang dikaitkan — aturan yang sama
         // dengan `rating` di atas.
@@ -266,7 +281,8 @@ export function bolehTampilKePenonton(detail: PlaylyDetailPublik | undefined): b
  * supaya satu gangguan di Playly tidak merusak halaman DramaKu.
  */
 export async function getPlaylyVideosPublik(): Promise<PlaylyPublikResult> {
-  const [mitra, hiddenIds, embeds, dramas, genres, imdb, kualitas] = await Promise.all([
+  const [mitra, hiddenIds, embeds, dramas, genres, imdb, kualitas, ratingManual] =
+    await Promise.all([
     fetchPlaylyVideosKita(),
     getPlaylyHiddenIdsCached().catch(() => [] as string[]),
     getPlaylyEmbedsCached().catch(() => []),
@@ -280,6 +296,9 @@ export async function getPlaylyVideosPublik(): Promise<PlaylyPublikResult> {
     // Alasan sama lagi: koreksi kualitas cuma MENGUBAH label di pojok poster.
     // Tak terbaca = kartu memakai turunan otomatis, bukan halaman gagal.
     getPlaylyKualitasCached().catch(() => ({}) as Record<string, string>),
+    // Alasan sama lagi: rating ketikan admin cuma MENGUBAH angka di kartu.
+    // Tak terbaca = kartu memakai angka IMDb, bukan halaman gagal.
+    getPlaylyRatingCached().catch(() => ({}) as Record<string, string>),
   ]);
 
   if (mitra.error) {
@@ -294,6 +313,7 @@ export async function getPlaylyVideosPublik(): Promise<PlaylyPublikResult> {
     genres,
     imdb,
     kualitas,
+    ratingManual,
   );
 
   // Sampul sudah IKUT di balasan /api/videos (`seo.thumbnailUrl`, dibaca di

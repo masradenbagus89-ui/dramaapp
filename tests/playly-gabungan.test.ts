@@ -92,6 +92,10 @@ vi.mock("../lib/store", () => ({
   // aturan PENGGABUNGAN, dan aturan kualitasnya sendiri sudah punya penjaga
   // terpisah di tests/kualitas-video.test.ts.
   getPlaylyKualitasCached: async () => ({}),
+  // Ditambahkan 2026-11-06 bersama rating ketikan admin: mock WAJIB
+  // selengkap modul aslinya, kalau tidak seluruh berkas tes ini gagal
+  // memuat — bukan karena perilakunya salah.
+  getPlaylyRatingCached: async () => ({}),
   // Jenis tayangan (owner 2026-11-05). Peta KOSONG: berkas ini menguji aturan
   // PENGGABUNGAN, dan aturan jenisnya sendiri sudah punya penjaga terpisah di
   // tests/jenis-video.test.ts.

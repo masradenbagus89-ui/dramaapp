@@ -17,35 +17,68 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { ADS_ENABLED } from "@/lib/saklar-fitur";
-import { BAGIAN_BAWAAN, parseBagianAdmin } from "@/lib/bagian-admin";
+import { parseBagianAdmin } from "@/lib/bagian-admin";
+import { parseBagianPlayly, RUTE_PLAYLY } from "@/lib/bagian-playly";
 import {
   Home,
   Plus,
   List,
+  ListVideo,
   Users,
   ShieldCheck,
   Megaphone,
   Film,
+  Star,
+  Download,
   KeyRound,
   Webhook,
   ArrowLeft,
   type LucideIcon,
 } from "lucide-react";
 
+/** Satu baris menu yang bisa diklik. */
+type MenuAdmin = { href: string; label: string; icon: LucideIcon };
+
+/**
+ * Sekelompok menu di bawah satu judul (divider).
+ *
+ * KENAPA ADA (owner 2026-11-06): "sidebar kiri video playly terlalu panjang
+ * kamu jadikan divider". Satu menu "Video Playly" dulu membuka satu halaman
+ * berisi TIGA panel besar bertumpuk; sekarang ketiganya punya barisnya sendiri
+ * di menu, sehingga admin bisa langsung menuju yang dia cari.
+ */
+type GrupAdmin = { grup: string; icon: LucideIcon; items: MenuAdmin[] };
+
+type EntriAdmin = MenuAdmin | GrupAdmin;
+
+const adalahGrup = (e: EntriAdmin): e is GrupAdmin => "grup" in e;
+
 // Tautan ditulis ABSOLUT ("/admin#dashboard", bukan "#dashboard") supaya menu
 // ini tetap berfungsi saat dipakai di halaman admin lain — mis. setelan Playly
 // yang punya alamatnya sendiri. Dari halaman /admin sendiri, hash-nya yang
-// menentukan bagian mana yang ditampilkan (lib/bagian-admin.ts).
-const NAV_ITEMS: { href: string; label: string; icon: LucideIcon }[] = [
+// menentukan bagian mana yang ditampilkan (lib/bagian-admin.ts); di halaman
+// Video Playly aturannya sama lewat lib/bagian-playly.ts.
+const NAV_ITEMS: EntriAdmin[] = [
   { href: "/admin#dashboard", label: "Dashboard", icon: Home },
   { href: "/admin#tambah", label: "Tambah Drama", icon: Plus },
   { href: "/admin#daftar", label: "Daftar Drama", icon: List },
-  { href: "/admin/videos/playly", label: "Video Playly", icon: Film },
-  // Ditaruh tepat di bawah "Video Playly" karena keduanya menjawab pertanyaan
-  // yang sama ("video Playly mana yang tampil?") lewat dua jalur berbeda:
-  // yang atas untuk video yang KITA jemput, yang ini untuk video yang PLAYLY
-  // kirim sendiri. Berjauhan di menu = admin mencari di tempat yang salah saat
-  // sebuah video tidak muncul.
+  {
+    grup: "Video Playly",
+    icon: Film,
+    items: [
+      // Urutannya mengikuti urutan KERJA, bukan abjad: tentukan dulu video
+      // mana yang tayang + lengkapi datanya, baru isi link download, baru
+      // (opsional) kaitkan ke drama.
+      { href: `${RUTE_PLAYLY}#imdb`, label: "IMDb", icon: Star },
+      { href: `${RUTE_PLAYLY}#unduhan`, label: "Link download", icon: Download },
+      { href: `${RUTE_PLAYLY}#daftar`, label: "Daftar video Playly", icon: ListVideo },
+    ],
+  },
+  // Ditaruh tepat di bawah grup "Video Playly" karena keduanya menjawab
+  // pertanyaan yang sama ("video Playly mana yang tampil?") lewat dua jalur
+  // berbeda: yang atas untuk video yang KITA jemput, yang ini untuk video yang
+  // PLAYLY kirim sendiri. Berjauhan di menu = admin mencari di tempat yang
+  // salah saat sebuah video tidak muncul.
   { href: "/admin/webhooks/playly", label: "Webhook Playly", icon: Webhook },
   { href: "/admin/settings/playly", label: "Kunci Playly", icon: KeyRound },
   { href: "/admin#kelola-admin", label: "Kelola Admin", icon: Users },
@@ -57,6 +90,19 @@ const NAV_ITEMS: { href: string; label: string; icon: LucideIcon }[] = [
     : []),
   { href: "/", label: "← Kembali ke web", icon: ArrowLeft },
 ];
+
+/**
+ * Aturan "hash kosong berarti bagian apa" untuk tiap halaman yang isinya
+ * dipecah jadi bagian-bagian.
+ *
+ * Dikumpulkan di satu peta, bukan ditulis sebagai rentetan `if`: menambah
+ * halaman ber-bagian berikutnya cukup menambah satu baris di sini, dan tidak
+ * ada cabang yang bisa lupa diperbarui.
+ */
+const PARSER_BAGIAN: Record<string, (hash: string) => string> = {
+  "/admin": parseBagianAdmin,
+  [RUTE_PLAYLY]: parseBagianPlayly,
+};
 
 export default function AdminSidebar() {
   const pathname = usePathname();
@@ -84,19 +130,58 @@ export default function AdminSidebar() {
    * Apakah sebuah menu sedang dibuka.
    *
    * Dua jenis menu diperlakukan berbeda, dan itu disengaja:
-   * - menu ber-hash (`/admin#tambah`) aktif saat kita BERADA di `/admin` DAN
-   *   bagiannya cocok;
-   * - menu halaman lain (`/admin/videos/playly`) aktif saat pathname-nya cocok.
+   * - menu ber-hash (`/admin#tambah`, `/admin/videos/playly#unduhan`) aktif
+   *   saat kita BERADA di halaman itu DAN bagiannya cocok;
+   * - menu biasa (`/admin/webhooks/playly`) aktif saat pathname-nya cocok.
    * Menyamakan keduanya membuat "Dashboard" ikut menyala di halaman Video
    * Playly — penanda yang berbohong, lebih menyesatkan daripada tanpa penanda.
+   *
+   * Hash yang masih kosong (render pertama) sengaja TIDAK diperlakukan khusus:
+   * tiap parser sudah memulangkan bagian bawaan halamannya, jadi menu bawaan
+   * langsung menyala tanpa menunggu alamat berisi.
    */
   const sedangDibuka = (href: string) => {
     if (href === "/") return false;
-    if (href.includes("#")) {
-      if (pathname !== "/admin") return false;
-      return parseBagianAdmin(href) === parseBagianAdmin(hash || BAGIAN_BAWAAN);
-    }
-    return pathname === href;
+    const [basis, bagian] = href.split("#");
+    if (!bagian) return pathname === href;
+    if (pathname !== basis) return false;
+    const parse = PARSER_BAGIAN[basis];
+    if (!parse) return false;
+    return parse(bagian) === parse(hash);
+  };
+
+  /**
+   * Gambar satu baris menu. Dipakai baris biasa maupun anak grup — supaya
+   * tampilan aktif/tidak aktif mustahil menyimpang antara keduanya.
+   *
+   * Ditulis sebagai FUNGSI penggambar, bukan komponen di dalam komponen:
+   * komponen yang didefinisikan ulang tiap render dianggap React sebagai
+   * komponen BARU, sehingga barisnya dibongkar-pasang ulang tanpa perlu.
+   */
+  const barisMenu = (item: MenuAdmin) => {
+    const Icon = item.icon;
+    const aktif = sedangDibuka(item.href);
+    return (
+      <Button
+        key={item.href}
+        asChild
+        variant="ghost"
+        className={cn(
+          "h-auto justify-start gap-2 rounded-lg px-3 py-2 text-zinc-300 hover:bg-zinc-800 hover:text-white",
+          // Menu aktif: latar kuning lembut + garis tegas di tepi kiri.
+          // Dua penanda sekaligus, bukan warna teks saja — warna tipis
+          // mudah luput di daftar 10 baris, dan garis tepi tetap terbaca
+          // walau latarnya ikut berubah tema.
+          aktif &&
+            "border-l-2 border-amber-500 bg-amber-500/15 font-semibold text-amber-700 hover:bg-amber-500/20 hover:text-amber-800",
+        )}
+      >
+        <a href={item.href} aria-current={aktif ? "page" : undefined}>
+          <Icon className="size-4" />
+          {item.label}
+        </a>
+      </Button>
+    );
   };
 
   return (
@@ -108,29 +193,28 @@ export default function AdminSidebar() {
         <p className="mt-1 text-base font-bold text-white">DramaKu</p>
       </div>
       <nav className="flex flex-col gap-1 text-sm">
-        {NAV_ITEMS.map((item) => {
-          const Icon = item.icon;
-          const aktif = sedangDibuka(item.href);
+        {NAV_ITEMS.map((entri) => {
+          if (!adalahGrup(entri)) return barisMenu(entri);
+
+          const IconGrup = entri.icon;
           return (
-            <Button
-              key={item.href}
-              asChild
-              variant="ghost"
-              className={cn(
-                "h-auto justify-start gap-2 rounded-lg px-3 py-2 text-zinc-300 hover:bg-zinc-800 hover:text-white",
-                // Menu aktif: latar kuning lembut + garis tegas di tepi kiri.
-                // Dua penanda sekaligus, bukan warna teks saja — warna tipis
-                // mudah luput di daftar 10 baris, dan garis tepi tetap terbaca
-                // walau latarnya ikut berubah tema.
-                aktif &&
-                  "border-l-2 border-amber-500 bg-amber-500/15 font-semibold text-amber-700 hover:bg-amber-500/20 hover:text-amber-800",
-              )}
+            // Grup dipagari garis atas-bawah supaya batasnya tegas: tanpa itu
+            // menu "Webhook Playly" di bawahnya terbaca seolah ikut anggota
+            // grup, padahal halamannya lain.
+            <div
+              key={entri.grup}
+              className="my-1 border-y border-zinc-800 py-2"
             >
-              <a href={item.href} aria-current={aktif ? "page" : undefined}>
-                <Icon className="size-4" />
-                {item.label}
-              </a>
-            </Button>
+              <p className="flex items-center gap-2 px-3 pb-1 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+                <IconGrup className="size-3.5" aria-hidden="true" />
+                {entri.grup}
+              </p>
+              {/* Anak grup di-indent + bergaris kiri: penanda hierarki yang
+                  tetap terbaca walau judul grupnya tergulung dari layar. */}
+              <div className="ml-4 flex flex-col gap-1 border-l border-zinc-800 pl-1">
+                {entri.items.map(barisMenu)}
+              </div>
+            </div>
           );
         })}
       </nav>

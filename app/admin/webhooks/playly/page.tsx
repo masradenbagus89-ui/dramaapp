@@ -17,13 +17,10 @@ import { cookies, headers } from "next/headers";
 import { ADMIN_COOKIE, verifyAdminSessionToken } from "@/lib/session";
 import { readWebhookSecret } from "@/lib/playly-webhook";
 import { getPlaylyHiddenIds, getPlaylyWebhookVideos } from "@/lib/store";
-import {
-  keBentukTampil,
-  ringkasWebhookPlayly,
-} from "@/lib/playly-webhook-status";
+import { ringkasWebhookPlayly } from "@/lib/playly-webhook-status";
 import AdminAccessDenied from "@/app/components/admin/AdminAccessDenied";
 import AdminSidebar from "@/app/components/admin/AdminSidebar";
-import PlaylyWebhookMonitor from "@/app/components/admin/PlaylyWebhookMonitor";
+import BantuanSingkat from "@/app/components/admin/BantuanSingkat";
 import { AlertTriangle, CheckCircle2, Clock, Webhook } from "lucide-react";
 
 export const runtime = "nodejs";
@@ -53,7 +50,6 @@ export default async function PlaylyWebhookPage() {
   ]);
 
   const ringkasan = ringkasWebhookPlayly(kunciTerpasang, semua, hidden);
-  const daftar = semua.map(keBentukTampil);
 
   // Alamat yang harus didaftarkan di sisi Playly. Diambil dari header host
   // supaya yang tertulis persis domain yang sedang dibuka admin (produksi vs
@@ -72,16 +68,30 @@ export default async function PlaylyWebhookPage() {
       <div className="space-y-6">
         <header>
           <p className="text-xs uppercase tracking-wider text-zinc-500">Konten</p>
-          <h1 className="mt-1 text-2xl font-bold text-white">Webhook Playly</h1>
-          <p className="mt-2 max-w-2xl text-sm text-zinc-400">
-            <strong className="text-zinc-200">Webhook</strong> artinya Playly yang{" "}
-            <strong className="text-zinc-200">mengirim kabar ke kita</strong> begitu
-            ada video baru — kebalikan dari cara biasa, di mana DramaKu yang
-            menanyakan daftar video ke Playly tiap 5 menit. Bedanya terasa di
-            kecepatan: lewat webhook video muncul seketika, tanpa menunggu giliran
-            tanya berikutnya. Halaman ini memperlihatkan apakah jalur itu hidup dan
-            apa saja yang sudah masuk lewatnya.
-          </p>
+          {/* Keterangannya disembunyikan di balik tombol "?" (owner
+              2026-11-06), sama seperti halaman Video Playly. Isinya tetap sama
+              persis — yang berubah cuma: ia tidak lagi mendorong kartu status
+              ke bawah layar tiap halaman dibuka, padahal kartu status itulah
+              yang paling sering dicari di sini. */}
+          <BantuanSingkat
+            label="Apa itu webhook?"
+            judul={
+              <h1 className="mt-1 text-2xl font-bold text-white">
+                Webhook Playly
+              </h1>
+            }
+          >
+            <p className="max-w-2xl">
+              <strong className="text-zinc-200">Webhook</strong> artinya Playly
+              yang{" "}
+              <strong className="text-zinc-200">mengirim kabar ke kita</strong>{" "}
+              begitu ada video baru — kebalikan dari cara biasa, di mana DramaKu
+              yang menanyakan daftar video ke Playly tiap 5 menit. Bedanya terasa
+              di kecepatan: lewat webhook video muncul seketika, tanpa menunggu
+              giliran tanya berikutnya. Halaman ini memperlihatkan apakah jalur
+              itu hidup.
+            </p>
+          </BantuanSingkat>
         </header>
 
         {/* Kartu status — bagian terpenting halaman ini. Ia menjawab "kenapa
@@ -188,19 +198,29 @@ export default async function PlaylyWebhookPage() {
           </p>
         </section>
 
-        <PlaylyWebhookMonitor videos={daftar} initialHidden={hidden} />
-
+        {/* Daftar video yang masuk lewat webhook DIHAPUS dari halaman ini
+            (owner 2026-11-06: "bagian 2 kamu hapus"). Halaman ini kembali ke
+            satu tugas: memperlihatkan jalur webhooknya hidup atau tidak.
+            ⚠️ Yang ikut hilang bersamanya: tombol "Sembunyikan" per video
+            webhook. Lihat catatan di paragraf bawah. */}
+        {/* ⚠️ Kalimatnya sengaja TIDAK menjanjikan "semua video webhook bisa
+            diatur di sana". Panel Video Playly menggambar katalog Playly
+            (`fetchPlaylyVideosKita`), BUKAN daftar webhook — video yang hanya
+            datang lewat webhook dan belum masuk katalog tidak muncul di sana.
+            Menulis janji yang belum tentu benar di layar admin lebih buruk
+            daripada tidak menulisnya: owner akan mencari tombolnya lalu
+            mengira panelnya rusak. */}
         <p className="text-xs text-zinc-500">
-          Video di daftar ini digabung dengan katalog Playly biasa saat ditampilkan
-          di halaman{" "}
+          Video yang masuk lewat webhook digabung dengan katalog Playly biasa
+          saat ditampilkan di halaman{" "}
           <Link href="/film" className="text-amber-400 underline">
             Video Playly
           </Link>
-          . Untuk mengatur video katalog, buka{" "}
+          . Pengaturan video — kategori, rating, dan sembunyikan — ada di menu{" "}
           <Link href="/admin/videos/playly" className="text-amber-400 underline">
             Video Playly
-          </Link>{" "}
-          di menu admin.
+          </Link>
+          , sejauh videonya sudah ikut terdaftar di katalog Playly.
         </p>
       </div>
     </div>

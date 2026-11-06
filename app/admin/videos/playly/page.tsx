@@ -27,6 +27,7 @@ import {
   getPlaylyJenis,
   getPlaylyKualitas,
   getPlaylyLinkUnduhan,
+  getPlaylyRating,
 } from "@/lib/store";
 import { bacaDomainUnduhan } from "@/lib/playly-unduhan-domain";
 import AdminAccessDenied from "@/app/components/admin/AdminAccessDenied";
@@ -35,6 +36,8 @@ import PlaylyVideoPicker from "@/app/components/admin/PlaylyVideoPicker";
 import { getPlaylyVideosGabunganCached } from "@/lib/playly-gabungan";
 import PlaylyVisibilityManager from "@/app/components/admin/PlaylyVisibilityManager";
 import PlaylyUnduhanManager from "@/app/components/admin/PlaylyUnduhanManager";
+import PlaylyBagianAktif from "@/app/components/admin/PlaylyBagianAktif";
+import BantuanSingkat from "@/app/components/admin/BantuanSingkat";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, KeyRound } from "lucide-react";
 
@@ -57,8 +60,19 @@ export default async function PlaylyVideosPage() {
   // revalidateSeconds = 0 -> jalur admin selalu minta data SEGAR ke Playly,
   // supaya video yang baru di-upload langsung kelihatan di sini. Halaman
   // penonton yang memakai versi ber-cache.
-  const [status, dramas, embeds, mitra, hidden, genres, imdb, unduhan, kualitas, jenis] =
-    await Promise.all([
+  const [
+    status,
+    dramas,
+    embeds,
+    mitra,
+    hidden,
+    genres,
+    imdb,
+    unduhan,
+    kualitas,
+    jenis,
+    ratingManual,
+  ] = await Promise.all([
       getPlaylyKeyStatus(),
       getAllDramas(),
       getPlaylyEmbeds(),
@@ -77,6 +91,10 @@ export default async function PlaylyVideosPage() {
       // Versi TANPA cache, alasan sama: begitu owner menandai sebuah video
       // sebagai Series, dropdown di layar ini harus memperlihatkannya.
       getPlaylyJenis(),
+      // Versi TANPA cache, alasan sama: begitu owner mengetik rating sebuah
+      // video, kotak isian di layar ini harus memperlihatkan angka itu — bukan
+      // salinan sebelum diketik.
+      getPlaylyRating(),
     ]);
 
   /**
@@ -141,8 +159,18 @@ export default async function PlaylyVideosPage() {
       <div className="space-y-6">
         <header>
           <p className="text-xs uppercase tracking-wider text-zinc-500">Konten</p>
-          <h1 className="mt-1 text-2xl font-bold text-white">Video dari Playly</h1>
-          <p className="mt-2 max-w-2xl text-sm text-zinc-400">
+          {/* Keterangan panjangnya disembunyikan di balik tombol "?" (owner
+              2026-11-06). Isinya tetap sama persis — yang berubah cuma: tidak
+              lagi mendorong isi panel ke bawah layar tiap halaman dibuka. */}
+          <BantuanSingkat
+            label="Apa itu video Playly?"
+            judul={
+              <h1 className="mt-1 text-2xl font-bold text-white">
+                Video dari Playly
+              </h1>
+            }
+          >
+          <p className="max-w-2xl">
             Video di akun Playly kita tampil{" "}
             <strong className="text-zinc-200">otomatis</strong> sebagai film
             biasa di{" "}
@@ -157,66 +185,85 @@ export default async function PlaylyVideosPage() {
             </Link>{" "}
             tetap ada tapi tidak lagi punya tombol di navbar.
           </p>
-          <p className="mt-2 max-w-2xl text-sm text-zinc-400">
-            Mengaitkan video ke drama (panel di bawah) sifatnya{" "}
+          <p className="max-w-2xl">
+            Mengaitkan video ke drama (menu &quot;Daftar video Playly&quot;)
+            sifatnya{" "}
             <strong className="text-zinc-200">opsional</strong> — hanya untuk
             memberi label &quot;bagian dari drama X&quot;. Yang menentukan video
             masuk baris genre beranda adalah{" "}
-            <strong className="text-zinc-200">Kategori</strong> di panel berikut
-            ini. Video DramaKu sendiri tetap berjalan seperti biasa.
+            <strong className="text-zinc-200">Kategori</strong> di menu{" "}
+            <strong className="text-zinc-200">IMDb</strong>. Video DramaKu
+            sendiri tetap berjalan seperti biasa.
           </p>
+          </BantuanSingkat>
         </header>
 
-{/* Sengaja TIDAK dibungkus syarat "kunci sudah dipasang": sejak ada jalur
-            katalog publik tersaring, video kita tetap tampil walau kunci ditolak —
-            jadi menyembunyikan panel ini justru membuat admin mengira tak ada apa-apa. */}
-        <PlaylyVisibilityManager
-          videos={videoPanel}
-          initialHidden={hidden}
-          initialGenres={genres}
-          initialImdb={imdb}
-          initialKualitas={kualitas}
-          initialJenis={jenis}
-          belumSiapIds={belumSiapIds}
-          fetchError={mitra.error}
-          source={mitra.source}
-          creators={konfigurasi.creators}
+        {/* Tiga panel yang dulu bertumpuk kini dipilih lewat menu sidebar
+            (owner 2026-11-06: "sidebar kiri video playly terlalu panjang").
+            Ketiganya tetap dirakit DI SINI — datanya cuma bisa diambil di
+            server — dan PlaylyBagianAktif hanya memilih mana yang terlihat. */}
+        <PlaylyBagianAktif
+          imdb={
+            /* Sengaja TIDAK dibungkus syarat "kunci sudah dipasang": sejak ada
+               jalur katalog publik tersaring, video kita tetap tampil walau
+               kunci ditolak — jadi menyembunyikan panel ini justru membuat
+               admin mengira tak ada apa-apa. */
+            <PlaylyVisibilityManager
+              videos={videoPanel}
+              initialHidden={hidden}
+              initialGenres={genres}
+              initialImdb={imdb}
+              initialKualitas={kualitas}
+              initialJenis={jenis}
+              initialRating={ratingManual}
+              belumSiapIds={belumSiapIds}
+              fetchError={mitra.error}
+              source={mitra.source}
+              creators={konfigurasi.creators}
+            />
+          }
+          unduhan={
+            /* Urutan menunya mengikuti urutan kerja: tentukan dulu video mana
+               yang tayang, baru isi link unduhannya. Sengaja tidak dibungkus
+               syarat "kunci sudah dipasang", alasannya sama dengan panel di
+               atas. */
+            <PlaylyUnduhanManager
+              videos={videoPanel}
+              initialLinks={unduhan}
+              domain={bacaDomainUnduhan()}
+            />
+          }
+          daftar={
+            status.configured ? (
+              <PlaylyVideoPicker dramas={pilihanDrama} initialEmbeds={embeds} />
+            ) : (
+              // Tanpa kunci, memuat daftar video pasti gagal. Jadi jangan
+              // tampilkan pesan error — arahkan langsung ke langkah yang benar.
+              <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-5">
+                <p className="flex items-start gap-2 text-sm text-amber-100">
+                  <AlertTriangle
+                    className="mt-0.5 h-4 w-4 shrink-0"
+                    aria-hidden="true"
+                  />
+                  <span>
+                    Kunci API Playly belum dipasang, jadi daftar videonya belum
+                    bisa diambil. Pasang kuncinya dulu, baru kembali ke halaman
+                    ini.
+                  </span>
+                </p>
+                <Button
+                  asChild
+                  className="mt-4 min-h-11 rounded-full px-5 text-sm font-semibold"
+                >
+                  <Link href="/admin/settings/playly">
+                    <KeyRound className="size-4" aria-hidden="true" />
+                    Pasang kunci Playly
+                  </Link>
+                </Button>
+              </div>
+            )
+          }
         />
-
-        {/* Diletakkan SESUDAH panel tampil/sembunyi: urutan kerjanya memang
-            begitu — tentukan dulu video mana yang tayang, baru isi link
-            unduhannya. Sengaja tidak dibungkus syarat "kunci sudah dipasang",
-            alasannya sama dengan panel di atas. */}
-        <PlaylyUnduhanManager
-          videos={videoPanel}
-          initialLinks={unduhan}
-          domain={bacaDomainUnduhan()}
-        />
-
-        {status.configured ? (
-          <PlaylyVideoPicker dramas={pilihanDrama} initialEmbeds={embeds} />
-        ) : (
-          // Tanpa kunci, memuat daftar video pasti gagal. Jadi jangan tampilkan
-          // pesan error — arahkan langsung ke langkah yang benar.
-          <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-5">
-            <p className="flex items-start gap-2 text-sm text-amber-100">
-              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-              <span>
-                Kunci API Playly belum dipasang, jadi daftar videonya belum bisa
-                diambil. Pasang kuncinya dulu, baru kembali ke halaman ini.
-              </span>
-            </p>
-            <Button
-              asChild
-              className="mt-4 min-h-11 rounded-full px-5 text-sm font-semibold"
-            >
-              <Link href="/admin/settings/playly">
-                <KeyRound className="size-4" aria-hidden="true" />
-                Pasang kunci Playly
-              </Link>
-            </Button>
-          </div>
-        )}
       </div>
     </div>
   );

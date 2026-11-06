@@ -29,6 +29,10 @@ import {
   type PlaylyKeyRecord,
 } from "./store";
 import { PLAYLY_BASE_URL, pindahkanAlamatPlaylyPensiun } from "./playly-alamat";
+import {
+  bacaUnduhLangsung,
+  type HasilUnduhLangsung,
+} from "./playly-unduh-langsung";
 
 /** Awalan wajib kunci Playly. Kunci contoh: plyk_a1b2c3d4e5f6json */
 export const PLAYLY_KEY_PREFIX = "plyk_";
@@ -1512,5 +1516,48 @@ export async function fetchPlaylyVideoUrl(
     return toHttpsUrl(mentah, config.baseUrl)?.toString() ?? null;
   } catch {
     return null;
+  }
+}
+
+
+/**
+ * Tawaran unduhan LANGSUNG dari server Playly untuk satu video.
+ *
+ * Saudara persis `fetchPlaylyVideoUrl` di atas — endpoint yang sama
+ * (/api/public-video), kunci yang sama (tidak ada: endpoint ini publik), batas
+ * tunggu yang sama. Yang dibaca berbeda: di sana `videoUrl` untuk memutar, di
+ * sini field `unduh` untuk baris "Playly" di popup DOWNLOAD.
+ *
+ * SENGAJA on-demand, satu video per panggilan. Field `unduh` HANYA ada di
+ * endpoint detail ini, dan mengambilnya untuk seluruh daftar berarti satu
+ * panggilan per video — persis pola yang pada 2026-10-06 mengosongkan SELURUH
+ * poster (172 panggilan serentak melewati batas tunggu). Jadi ia dipanggil saat
+ * penonton membuka popupnya, bukan saat halaman dibangun.
+ *
+ * TIDAK PERNAH melempar: gagal apa pun -> `playly-tak-terjawab` + `unduh: null`,
+ * dan popup cuma tidak menggambar baris Playly (gagal-AMAN).
+ */
+export async function fetchPlaylyUnduhLangsung(
+  videoId: string,
+  config: PlaylyConfig = readPlaylyConfig(),
+  revalidateSeconds: number = PLAYLY_PUBLIK_TTL_SECONDS,
+): Promise<HasilUnduhLangsung> {
+  const url = `${config.baseUrl}${PLAYLY_PUBLIC_VIDEO_PATH}?id=${encodeURIComponent(videoId)}`;
+  try {
+    const res = await fetch(url, {
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(8_000),
+      next: { revalidate: revalidateSeconds },
+    });
+    if (!res.ok) return { alasan: "playly-tak-terjawab", unduh: null };
+    // Daftar domain & alamat dasar datang dari env KITA (readPlaylyConfig),
+    // bukan dari balasan Playly — itu yang menjaga alamat di `href` penonton
+    // tetap milik Playly walau isi balasannya diubah orang.
+    return bacaUnduhLangsung(await res.json(), {
+      domainPlayly: config.allowedHosts,
+      baseUrl: config.baseUrl,
+    });
+  } catch {
+    return { alasan: "playly-tak-terjawab", unduh: null };
   }
 }

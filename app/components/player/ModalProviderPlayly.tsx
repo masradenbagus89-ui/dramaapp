@@ -16,6 +16,15 @@
 // & urutannya diputuskan `kelompokkanPerProvider` (lib/playly-unduhan.ts),
 // bukan di sini, supaya aturannya bisa diuji tanpa menggambar apa pun.
 //
+// BARIS "Playly" (2026-11-06, dari potongan kode yang diserahkan owner): satu
+// baris TAMBAHAN di paling bawah, isinya unduhan dari server Playly sendiri --
+// bukan provider yang diisi admin. Datanya ditanyakan ke /api/playly/unduh saat
+// popup DIBUKA (bukan diterima sebagai prop), dan barisnya hanya digambar kalau
+// Playly memang mengizinkan video itu diunduh. Per hari itu `unduh` masih null
+// di 200 dari 200 video kita -- izin unduh adalah saklar per-video milik
+// pengunggah di Playly, jadi "barisnya belum muncul" = keadaan DATA, bukan
+// kerusakan kode. Aturannya di lib/playly-unduh-langsung.ts.
+//
 // KENAPA BUKAN DownloadModal: itu popup DRAMA berlatar gelap; yang ini putih
 // senada kotak keterangan Playly. Warna kepala tabel & tombol tetap dari
 // app/components/unduhan-kelas.ts.
@@ -25,7 +34,7 @@
 //     halaman tujuan bisa menyetir tab kita lewat `window.opener`.
 //   - TANPA atribut `download`: browser mengabaikannya untuk alamat beda
 //     domain, jadi memasangnya cuma menjanjikan yang tak ditepati.
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Download, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -39,6 +48,12 @@ import {
   type KualitasUnduhan,
   type LinkUnduhanPublik,
 } from "@/lib/playly-unduhan";
+import {
+  labelTombolUnduhPlayly,
+  urlUnduhResolusi,
+  warnaTombolResolusi,
+  type UnduhLangsungPlayly,
+} from "@/lib/playly-unduh-langsung";
 import type { DownloadButtonColor } from "@/lib/types";
 
 /**
@@ -56,6 +71,7 @@ export default function ModalProviderPlayly({
   onClose,
   links,
   title,
+  videoId,
 }: {
   open: boolean;
   onClose: () => void;
@@ -63,6 +79,14 @@ export default function ModalProviderPlayly({
   links: LinkUnduhanPublik[];
   /** Judul video, dipakai sebagai keterangan kecil di kepala popup. */
   title?: string;
+  /**
+   * Id video Playly, untuk menanyakan baris "Playly".
+   *
+   * OPSIONAL dengan sengaja: tanpa id, popup berperilaku PERSIS seperti sebelum
+   * baris itu ada -- nol panggilan jaringan. Itulah yang membuat penambahan ini
+   * tidak mengubah apa pun bagi pemanggil yang belum mengirimkannya.
+   */
+  videoId?: string | null;
 }) {
   // Escape menutup popup. Dipasang SEBELUM early-return: hook tidak boleh
   // dilewati secara bersyarat, jadi penjagaan "sedang tertutup" ada di dalamnya.
@@ -75,9 +99,63 @@ export default function ModalProviderPlayly({
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
+  /**
+   * Tawaran unduhan dari server Playly untuk video INI. null = belum ada
+   * jawaban, atau memang tidak ada -- dua-duanya berarti barisnya tak digambar.
+   */
+  const [unduhPlayly, setUnduhPlayly] = useState<UnduhLangsungPlayly | null>(null);
+  /**
+   * true selama jawabannya belum sampai. Dipakai MENAHAN teks "Link unduhan
+   * belum tersedia": tanpa ini, video yang hanya punya unduhan Playly sempat
+   * menampilkan kalimat yang salah sebelum barisnya muncul.
+   */
+  const [memeriksaPlayly, setMemeriksaPlayly] = useState(false);
+  /** Id yang sudah pernah ditanyakan -- buka-tutup popup tak menanyakannya lagi. */
+  const sudahDitanya = useRef<string | null>(null);
+
+  // Ditanyakan saat popup DIBUKA, satu kali per video. Hook dipasang SEBELUM
+  // early-return, sama alasannya dengan hook Escape di atas.
+  useEffect(() => {
+    if (!open || !videoId) return;
+    if (sudahDitanya.current === videoId) return;
+    sudahDitanya.current = videoId;
+
+    let hidup = true;
+    let terjawab = false;
+    setUnduhPlayly(null);
+    setMemeriksaPlayly(true);
+
+    (async () => {
+      try {
+        const res = await fetch(`/api/playly/unduh?id=${encodeURIComponent(videoId)}`);
+        // Balasan gagal (404/502) sengaja diperlakukan sama dengan "tidak ada":
+        // penonton tidak bisa memperbaiki apa pun dari pesan error Playly.
+        const json: unknown = res.ok ? await res.json() : null;
+        terjawab = true;
+        if (hidup) setUnduhPlayly(bacaBalasanUnduh(json));
+      } catch {
+        // Jaringan putus / balasan bukan JSON -> gagal-AMAN: baris Playly tidak
+        // digambar, provider lain tetap tampil seperti biasa.
+      } finally {
+        if (hidup) setMemeriksaPlayly(false);
+      }
+    })();
+
+    return () => {
+      hidup = false;
+      // Ditutup SEBELUM terjawab -> boleh ditanyakan lagi saat dibuka lagi.
+      // Tanpa baris ini, menutup popup di tengah pengambilan membuat baris
+      // Playly tak pernah muncul lagi sampai halaman dimuat ulang.
+      if (!terjawab) sudahDitanya.current = null;
+    };
+  }, [open, videoId]);
+
   if (!open) return null;
 
   const baris = kelompokkanPerProvider(links);
+  // Tabel digambar kalau ADA yang bisa ditawarkan -- dari provider yang diisi
+  // admin ATAU dari Playly. Sebelum baris Playly ada, cukup `baris.length`.
+  const adaIsi = baris.length > 0 || unduhPlayly !== null;
 
   return (
     <div
@@ -113,9 +191,9 @@ export default function ModalProviderPlayly({
         </div>
 
         <div className="overflow-y-auto p-4">
-          {baris.length === 0 ? (
+          {!adaIsi ? (
             <p className="rounded-lg bg-zinc-100 px-3 py-6 text-center text-sm font-medium text-zinc-600">
-              Link unduhan belum tersedia
+              {memeriksaPlayly ? "Memeriksa ketersediaan unduhan..." : "Link unduhan belum tersedia"}
             </p>
           ) : (
             <>
@@ -160,6 +238,42 @@ export default function ModalProviderPlayly({
                       </td>
                     </tr>
                   ))}
+
+                  {/* PALING BAWAH, mengikuti contoh kode owner: provider yang
+                      diisi admin lebih dulu, unduhan langsung dari Playly
+                      sebagai tambahan. Alamatnya juga milik pihak luar, jadi
+                      aturan target/rel-nya sama dengan baris di atas. */}
+                  {unduhPlayly && (
+                    <tr className="border-b border-zinc-200 last:border-0">
+                      <td className="px-3 py-2.5 align-middle text-sm font-medium text-zinc-800">
+                        Playly
+                      </td>
+                      <td className="px-3 py-2.5 align-middle">
+                        <div className="flex flex-wrap justify-end gap-1.5">
+                          {unduhPlayly.resolusi.map((res) => (
+                            <Button
+                              key={res}
+                              asChild
+                              size="sm"
+                              className={cn(
+                                "h-8 whitespace-nowrap rounded-md px-3 text-xs font-bold text-white",
+                                KELAS_WARNA_TOMBOL[warnaTombolResolusi(res)],
+                              )}
+                            >
+                              <a
+                                href={urlUnduhResolusi(unduhPlayly.url, res)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                <Download className="size-3.5" />
+                                {labelTombolUnduhPlayly(res)}
+                              </a>
+                            </Button>
+                          ))}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
 
@@ -173,4 +287,23 @@ export default function ModalProviderPlayly({
       </div>
     </div>
   );
+}
+
+/**
+ * Balasan /api/playly/unduh -> bentuk siap digambar, atau null.
+ *
+ * PENYARING KEAMANANNYA DI SERVER (https + wajib domain Playly,
+ * lib/playly-unduh-langsung.ts). Yang di sini cuma memastikan BENTUKNYA sesuai
+ * sebelum dipakai menggambar, supaya balasan di luar dugaan tidak membuat popup
+ * gagal digambar sama sekali. Daftar domainnya memang tidak bisa diperiksa ulang
+ * di browser: isinya dari env server yang sengaja tidak dikirim ke browser.
+ */
+function bacaBalasanUnduh(json: unknown): UnduhLangsungPlayly | null {
+  if (typeof json !== "object" || json === null) return null;
+  const { unduh } = json as { unduh?: unknown };
+  if (typeof unduh !== "object" || unduh === null) return null;
+  const { url, resolusi } = unduh as { url?: unknown; resolusi?: unknown };
+  if (typeof url !== "string" || !url || !Array.isArray(resolusi)) return null;
+  const bersih = resolusi.filter((r): r is string => typeof r === "string" && r !== "");
+  return bersih.length > 0 ? { url, resolusi: bersih } : null;
 }

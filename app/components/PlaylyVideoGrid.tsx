@@ -60,6 +60,7 @@ export default function PlaylyVideoGrid({
             <div className="mt-3 max-w-sm">
               <InfoVideoPlayly
                 key={aktif.id}
+                videoId={aktif.id}
                 title={aktif.title}
                 contentRating={aktif.contentRating}
                 quality={aktif.quality}

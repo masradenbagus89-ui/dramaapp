@@ -288,6 +288,7 @@ export default async function TontonPage(props: PageProps<"/tonton/[id]">) {
         <div className="mt-2">
           <InfoVideoPlayly
             tataLetak="halaman"
+            videoId={video.id}
             title={video.title}
             contentRating={video.contentRating}
             quality={video.quality}

@@ -48,6 +48,13 @@ const DURASI_KOSONG = "-";
 
 export type InfoVideoPlaylyProps = {
   title: string;
+  /**
+   * Id video Playly. HANYA diteruskan ke popup provider, yang memakainya untuk
+   * menanyakan baris "Playly" (unduhan dari server Playly sendiri, bukan
+   * provider yang diisi admin). Opsional: tanpa id, popup menampilkan provider
+   * saja -- persis perilaku sebelum baris itu ada.
+   */
+  videoId?: string | null;
   /** Rating usia ("PG-13"); null = tidak ikut digambar. */
   contentRating?: string | null;
   /** Mutu sumber ("BluRay", "WEB-DL"); null = tidak digambar, JANGAN ditebak. */
@@ -94,6 +101,7 @@ export type InfoVideoPlaylyProps = {
 
 export default function InfoVideoPlayly({
   title,
+  videoId,
   contentRating,
   quality,
   durationLabel,
@@ -284,6 +292,7 @@ export default function InfoVideoPlayly({
         open={popupTerbuka}
         links={linkUnduhan}
         title={title}
+        videoId={videoId}
         onClose={() => setPopupTerbuka(false)}
       />
     </>

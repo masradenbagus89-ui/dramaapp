@@ -3,7 +3,32 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-11-05 (**komputer OWNER**), sesudah rilis `d04a952`.
+**Terakhir dicek:** 2026-11-06 (**komputer OWNER**), sesudah rilis `df83931`.
+`HEAD` = `origin/main` = `dramaku/main` = **`df83931`** (sebelum push selisih 0/0 di kedua
+remote, diverifikasi `git fetch origin` + `git fetch dramaku`). **Nol antrean** — tak ada yang
+menunggu rilis, tak ada branch rekan yang tertinggal.
+
+⬇️ **Rilis terakhir `df83931`** — baris **"Playly"** di popup *Pilih provider download*: unduhan
+dari server Playly sendiri (1 tombol per resolusi), di samping provider yang diisi admin. Dual
+push `37d8003..df83931` (cermin `dramaku` dulu, lalu produksi `origin`). Tayang ±80 detik sesudah push, downtime NOL (beranda 200 sebelum & sesudah).
+Diverifikasi di situs sungguhan lewat endpoint baru `/api/playly/unduh?id=1788093325344` →
+`{"ok":true,"unduh":null,"alasan":"tidak-diizinkan"}` (sebelum rilis alamat itu membalas **404 HTML**, jadi perbedaannya membuktikan versi
+barunya yang jalan).
+
+⚠️ **JANGAN simpulkan rilis ini gagal karena barisnya tak kelihatan.** Field `unduh` di
+`/api/public-video` Playly bernilai `null` di **200 dari 200 video kita** (diperiksa langsung
+2026-11-06, id dari HTML produksi `/film`, semua balasan `ok:true`). Halaman `/unduh/<id>` milik
+Playly menjawab sendiri *"pemiliknya tidak mengizinkan unduhan"* — izin unduh adalah **saklar
+per-video milik pengunggah di Playly**, bukan setelan DramaKu. Barisnya akan muncul sendiri
+begitu mereka menyalakannya, **tanpa rilis baru**. Itu sebabnya endpoint-nya membalas `alasan`
+(`tidak-diizinkan` / `bentuk-tak-dikenali` / `playly-tak-terjawab`): tanpa itu tak ada cara
+membedakan "fitur kita belum jalan" dari "Playly belum mengizinkan".
+
+📌 **Belum di-commit (sengaja):** 5 berkas di `docs/laporan/` (laporan progress .pptx + pratinjau
++ 3 skrip pembangunnya) dari sesi lain hari ini. Nol kode produksi, jadi tidak ikut rilis ini;
+keputusan mau disimpan ke repo atau tidak masih milik owner.
+
+**Dicek sebelumnya:** 2026-11-05 (**komputer OWNER**), sesudah rilis `d04a952`.
 `HEAD` = `origin/main` = `dramaku/main` = **`32ae1c6`+ (selisih 0/0, diverifikasi `git fetch
 origin` + `git fetch dramaku`; working tree bersih). **Nol antrean** — tak ada yang menunggu
 rilis, tak ada branch rekan yang tertinggal.

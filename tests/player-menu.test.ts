@@ -35,6 +35,19 @@ afterEach(() => {
 /** Props lengkap dengan aksi tiruan; tiap tes menimpa yang ia perlukan saja. */
 function propsDasar(timpa: Partial<PlayerMenuProps> = {}): PlayerMenuProps {
   return {
+    subtitle: {
+      bahasa: { nilai: "mati", opsi: [{ nilai: "mati", label: "Mati" }], onPilih: vi.fn() },
+      ukuran: { nilai: "sedang", opsi: [{ nilai: "sedang", label: "Sedang" }], onPilih: vi.fn() },
+      latar: { nilai: "tipis", opsi: [{ nilai: "tipis", label: "Transparan" }], onPilih: vi.fn() },
+    },
+    kecepatan: {
+      nilai: "1",
+      opsi: [
+        { nilai: "1", label: "Normal" },
+        { nilai: "1.5", label: "1,5×" },
+      ],
+      onPilih: vi.fn(),
+    },
     volumeStabil: { aktif: false, onUbah: vi.fn() },
     penguatSuara: { aktif: false, onUbah: vi.fn() },
     sinematik: { aktif: false, onUbah: vi.fn() },
@@ -80,33 +93,88 @@ describe("PlayerMenu — popup titik tiga", () => {
     expect(container.querySelector('[role="menu"]')).not.toBeNull();
   });
 
-  it("menampilkan KEEMPAT fitur yang tersisa di menu", () => {
+  it("menampilkan KEENAM fitur menu dengan urutan yang diminta", () => {
+    // Susunan 2026-11-06: Subtitle, Kecepatan, Volume Stabil, Penguat suara,
+    // Pencahayaan sinematik, Kualitas video. Urutan ikut dijaga karena urutan
+    // itulah yang diminta, bukan sekadar keberadaan barisnya.
     render(propsDasar());
     klik(tombolMenu());
 
-    const teks = container.textContent ?? "";
-    for (const label of [
+    const label = Array.from(container.querySelectorAll('[role="menu"] button')).map(
+      (b) => b.textContent ?? "",
+    );
+    const urutan = [
+      "Subtitle",
+      "Kecepatan pemutar",
       "Volume Stabil",
       "Penguat suara",
       "Pencahayaan sinematik",
-      "Kualitas",
-    ]) {
-      expect(teks).toContain(label);
-    }
+      "Kualitas video",
+    ];
+    expect(label).toHaveLength(urutan.length);
+    urutan.forEach((u, i) => expect(label[i]).toContain(u));
   });
 
-  it("TIDAK lagi memuat kontrol yang naik jadi tombol langsung", () => {
-    // Penjaga anti-dobel (owner 2026-09-28): PiP, Terjemahan, dan Kecepatan
-    // sekarang ada di baris kontrol pemutar. Kalau suatu saat ada yang
-    // menambahkannya kembali ke sini, penonton punya dua jalan ke pengaturan
-    // yang sama — dan keduanya bisa menampilkan keadaan yang berbeda.
+  it("PiP TIDAK ada di menu", () => {
+    // PiP tetap tombol langsung di baris kontrol — muncul juga di sini berarti
+    // ada dua jalan ke pengaturan yang sama.
     render(propsDasar());
     klik(tombolMenu());
 
     const teks = container.textContent ?? "";
-    for (const label of ["PiP", "Terjemahan", "Kecepatan"]) {
+    for (const label of ["PiP", "Pop-up"]) {
       expect(teks).not.toContain(label);
     }
+  });
+
+  it("Kecepatan: nilai sekarang terlihat, pilihan baru terkirim", () => {
+    const onPilih = vi.fn();
+    render(propsDasar({ kecepatan: { ...propsDasar().kecepatan, onPilih } }));
+
+    klik(tombolMenu());
+    expect(tombolBerteks("Kecepatan pemutar")?.textContent).toContain("Normal");
+
+    klik(tombolBerteks("Kecepatan pemutar"));
+    klik(tombolBerteks("1,5×"));
+    expect(onPilih).toHaveBeenCalledWith("1.5");
+  });
+
+  it("Subtitle tanpa berkas: alasannya terbaca dan Gaya subtitle terkunci", () => {
+    const alasan = "Sumber video ini tidak menyertakan berkas subtitle.";
+    render(propsDasar({ subtitle: { ...propsDasar().subtitle, alasanMati: alasan } }));
+
+    klik(tombolMenu());
+    klik(tombolBerteks("Subtitle"));
+    expect(container.textContent).toContain(alasan);
+
+    const gaya = tombolBerteks("Gaya subtitle");
+    expect(gaya?.disabled).toBe(true);
+    klik(gaya);
+    // Tetap di halaman Subtitle: tombol terkunci tidak boleh membuka apa pun.
+    expect(container.textContent).not.toContain("Ukuran teks");
+  });
+
+  it("Gaya subtitle (bila tersedia): ukuran & latar bisa dipilih, Kembali ke halaman Subtitle", () => {
+    const onUkuran = vi.fn();
+    const dasar = propsDasar().subtitle;
+    render(propsDasar({ subtitle: { ...dasar, ukuran: {
+      nilai: "sedang",
+      opsi: [{ nilai: "sedang", label: "Sedang" }, { nilai: "besar", label: "Besar" }],
+      onPilih: onUkuran,
+    } } }));
+
+    klik(tombolMenu());
+    klik(tombolBerteks("Subtitle"));
+    klik(tombolBerteks("Gaya subtitle"));
+    expect(container.textContent).toContain("Ukuran teks");
+    expect(container.textContent).toContain("Latar teks");
+
+    klik(tombolBerteks("Besar"));
+    expect(onUkuran).toHaveBeenCalledWith("besar");
+
+    klik(tombolBerteks("Gaya subtitle")); // tombol kembali di kepala halaman
+    expect(container.textContent).not.toContain("Ukuran teks");
+    expect(tombolBerteks("Gaya subtitle")?.getAttribute("role")).toBe("menuitem");
   });
 
   it("Pencahayaan sinematik mengirim nilai KEBALIKAN dari keadaan sekarang", () => {
@@ -135,15 +203,12 @@ describe("PlayerMenu — popup titik tiga", () => {
   it("submenu berisi satu pilihan tetap menjelaskan KENAPA cuma satu", () => {
     render(propsDasar());
     klik(tombolMenu());
-    klik(tombolBerteks("Kualitas"));
+    klik(tombolBerteks("Kualitas video"));
     // Tanpa catatan ini, submenu isi satu terbaca seperti fitur yang gagal muat.
     expect(container.textContent).toContain("hanya menyediakan satu kualitas");
   });
 
   it("Kualitas: nilai sekarang terlihat tanpa membuka, dan pilihan terkirim", () => {
-    // Kualitas kini SATU-SATUNYA submenu, jadi jalur buka -> pilih -> kirim
-    // hanya teruji di sini. Sebelumnya jalur itu ikut terjaga lewat submenu
-    // Kecepatan yang sudah pindah ke baris kontrol.
     const onPilih = vi.fn();
     render(propsDasar({ kualitas: { nilai: "auto", opsi: [
       { nilai: "auto", label: "Auto" },
@@ -151,9 +216,9 @@ describe("PlayerMenu — popup titik tiga", () => {
     ], onPilih } }));
 
     klik(tombolMenu());
-    expect(tombolBerteks("Kualitas")?.textContent).toContain("Auto");
+    expect(tombolBerteks("Kualitas video")?.textContent).toContain("Auto");
 
-    klik(tombolBerteks("Kualitas"));
+    klik(tombolBerteks("Kualitas video"));
     klik(tombolBerteks("720p"));
     expect(onPilih).toHaveBeenCalledWith("720");
   });

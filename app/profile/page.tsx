@@ -38,6 +38,7 @@ import {
 import CoinWallet from "@/app/components/CoinWallet";
 import RecoverySection from "@/app/components/RecoverySection";
 import AdBanner from "@/app/components/AdBanner";
+import TombolKembali from "@/app/components/TombolKembali";
 import AdminPasswordSettings from "@/app/components/admin/AdminPasswordSettings";
 import TwoFactorSettings from "@/app/components/TwoFactorSettings";
 import { Card, CardContent } from "@/components/ui/card";
@@ -130,6 +131,15 @@ export default function ProfilePage() {
   return (
     <div className={BADAN_TERANG_PENUH}>
       <div className="mx-auto max-w-2xl px-4 pb-10 pt-6 md:px-6">
+        {/* Posisi "Kembali" SENGAJA sama dengan /history & /my-list: pojok
+            kanan atas isi halaman. Halaman ini tidak punya baris judul seperti
+            keduanya (identitas pemiliknya ada di dalam kartu), jadi tombolnya
+            berdiri sendiri di baris paling atas — yang disamakan POSISINYA di
+            layar, bukan susunan kodenya. */}
+        <div className="mb-3 flex justify-end">
+          <TombolKembali />
+        </div>
+
         {/* Kepala: siapa yang sedang masuk */}
         <Card className="border-zinc-800 bg-zinc-900/50 py-4">
           <CardContent className="px-4">

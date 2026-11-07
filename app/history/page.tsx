@@ -14,6 +14,7 @@ import HistoryCard from "@/app/components/HistoryCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Clock } from "lucide-react";
+import TombolKembali from "@/app/components/TombolKembali";
 import { cn } from "@/lib/utils";
 import { BADAN_TERANG } from "@/app/components/beranda/shell";
 
@@ -87,16 +88,22 @@ export default function HistoryPage() {
             Drama yang baru saja kamu tonton. Tersimpan di perangkat ini.
           </p>
         </div>
-        {visible.length > 0 && (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onClearAll}
-            className="shrink-0 rounded-full border-zinc-700 terang:border-zinc-300 bg-transparent text-xs font-semibold text-zinc-300 terang:text-zinc-700 hover:border-red-500 hover:text-red-400 terang:hover:text-red-700"
-          >
-            Hapus semua
-          </Button>
-        )}
+        {/* "Kembali" SELALU paling kanan di ketiga halaman menu akun
+            (Profile, Riwayat, Favorit) — posisinya tetap supaya jadi hafalan
+            jari. "Hapus semua" duduk di kirinya dan tetap bersyarat. */}
+        <div className="flex shrink-0 items-center gap-2">
+          {visible.length > 0 && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClearAll}
+              className="shrink-0 rounded-full border-zinc-700 terang:border-zinc-300 bg-transparent text-xs font-semibold text-zinc-300 terang:text-zinc-700 hover:border-red-500 hover:text-red-400 terang:hover:text-red-700"
+            >
+              Hapus semua
+            </Button>
+          )}
+          <TombolKembali />
+        </div>
       </div>
 
       {items === null || !dramasReady ? (

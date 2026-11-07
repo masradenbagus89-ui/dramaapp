@@ -15,17 +15,20 @@
 import { useEffect, useRef, useState } from "react";
 import {
   AudioLines,
+  Captions,
   Check,
   ChevronLeft,
   ChevronRight,
   EllipsisVertical,
+  Gauge,
   MonitorPlay,
   Sun,
+  Type,
   Volume2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-/** Satu pilihan di dalam submenu (Terjemahan / Kecepatan / Kualitas). */
+/** Satu pilihan di dalam submenu (Subtitle / Kecepatan / Kualitas). */
 export type OpsiMenu = { nilai: string; label: string };
 
 /**
@@ -53,11 +56,27 @@ export type PilihanMenu = {
   catatan?: string;
 };
 
-// PiP, Terjemahan, dan Kecepatan SENGAJA tidak ada di sini (owner 2026-09-28):
-// ketiganya naik jadi tombol langsung di baris kontrol, meniru susunan pemutar
-// Playly. Menaruhnya di dua tempat sekaligus membuat penonton menebak-nebak
-// mana yang berlaku saat keduanya menampilkan keadaan berbeda.
+/**
+ * Subtitle + gayanya. `alasanMati` terisi = video ini tidak punya berkas
+ * subtitle: halamannya tetap bisa dibuka supaya penonton membaca alasannya,
+ * tapi "Gaya subtitle" dikunci — mengatur gaya teks yang tidak pernah tampil
+ * sama saja tombol yang diklik lalu tidak terjadi apa-apa.
+ */
+export type SubtitleMenu = {
+  bahasa: PilihanMenu;
+  ukuran: PilihanMenu;
+  latar: PilihanMenu;
+  alasanMati?: string;
+};
+
+// Susunan menu (permintaan 2026-11-06): Subtitle & Kecepatan KEMBALI masuk menu dan
+// tombol langsungnya di baris kontrol dihapus — tetap satu jalan ke tiap
+// pengaturan. Volume Stabil SENGAJA dipertahankan: mesinnya baru dibangun owner
+// 2026-11-03 dan menyala sendiri begitu sumber video memberi izin CORS. PiP
+// tetap tombol langsung, bukan di sini.
 export type PlayerMenuProps = {
+  subtitle: SubtitleMenu;
+  kecepatan: PilihanMenu;
   volumeStabil: SakelarMenu;
   penguatSuara: SakelarMenu;
   sinematik: SakelarMenu;
@@ -70,13 +89,11 @@ export type PlayerMenuProps = {
 };
 
 /** Halaman yang sedang ditampilkan di dalam popup. */
-type Laman = "utama" | "kualitas";
-
-const JUDUL_LAMAN: Record<Exclude<Laman, "utama">, string> = {
-  kualitas: "Kualitas",
-};
+type Laman = "utama" | "subtitle" | "gayaSubtitle" | "kecepatan" | "kualitas";
 
 export default function PlayerMenu({
+  subtitle,
+  kecepatan,
   volumeStabil,
   penguatSuara,
   sinematik,
@@ -117,7 +134,92 @@ export default function PlayerMenu({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [terbuka]);
 
-  const submenu = laman === "utama" ? null : { kualitas }[laman];
+  const kembaliUtama = () => setLaman("utama");
+
+  // Isi popup per halaman. Gaya subtitle kembali ke halaman Subtitle (asalnya),
+  // bukan ke utama, supaya penonton tidak kehilangan jejak.
+  const isiLaman: Record<Laman, React.ReactNode> = {
+    utama: (
+      <>
+        <BarisSubmenu
+          ikon={<Captions className="size-4" />}
+          label="Subtitle"
+          nilai={labelNilai(subtitle.bahasa)}
+          onBuka={() => setLaman("subtitle")}
+        />
+        <BarisSubmenu
+          ikon={<Gauge className="size-4" />}
+          label="Kecepatan pemutar"
+          nilai={labelNilai(kecepatan)}
+          onBuka={() => setLaman("kecepatan")}
+        />
+
+        <div className="my-1 h-px bg-white/10" />
+
+        <BarisSakelar
+          ikon={<AudioLines className="size-4" />}
+          label="Volume Stabil"
+          sakelar={volumeStabil}
+        />
+        <BarisSakelar
+          ikon={<Volume2 className="size-4" />}
+          label="Penguat suara"
+          sakelar={penguatSuara}
+        />
+        <BarisSakelar
+          ikon={<Sun className="size-4" />}
+          label="Pencahayaan sinematik"
+          sakelar={sinematik}
+        />
+
+        <div className="my-1 h-px bg-white/10" />
+
+        <BarisSubmenu
+          ikon={<MonitorPlay className="size-4" />}
+          label="Kualitas video"
+          nilai={labelNilai(kualitas)}
+          onBuka={() => setLaman("kualitas")}
+        />
+      </>
+    ),
+    subtitle: (
+      <>
+        <KepalaLaman judul="Subtitle" onKembali={kembaliUtama} />
+        <DaftarOpsi pilihan={subtitle.bahasa} />
+        <Catatan teks={subtitle.alasanMati ?? subtitle.bahasa.catatan} />
+        <div className="my-1 h-px bg-white/10" />
+        <BarisSubmenu
+          ikon={<Type className="size-4" />}
+          label="Gaya subtitle"
+          nilai={`${labelNilai(subtitle.ukuran)} · ${labelNilai(subtitle.latar)}`}
+          onBuka={() => setLaman("gayaSubtitle")}
+          alasanMati={subtitle.alasanMati && "terkunci — video ini tidak punya subtitle"}
+        />
+      </>
+    ),
+    gayaSubtitle: (
+      <>
+        <KepalaLaman judul="Gaya subtitle" onKembali={() => setLaman("subtitle")} />
+        <SubJudul teks="Ukuran teks" />
+        <DaftarOpsi pilihan={subtitle.ukuran} />
+        <SubJudul teks="Latar teks" />
+        <DaftarOpsi pilihan={subtitle.latar} />
+      </>
+    ),
+    kecepatan: (
+      <>
+        <KepalaLaman judul="Kecepatan pemutar" onKembali={kembaliUtama} />
+        <DaftarOpsi pilihan={kecepatan} />
+      </>
+    ),
+    kualitas: (
+      <>
+        <KepalaLaman judul="Kualitas video" onKembali={kembaliUtama} />
+        <DaftarOpsi pilihan={kualitas} />
+        <Catatan teks={kualitas.catatan} />
+      </>
+    ),
+  };
 
   return (
     <div ref={wadahRef} className="relative">
@@ -139,42 +241,9 @@ export default function PlayerMenu({
         <div
           role="menu"
           aria-label="Pengaturan pemutar"
-          className="absolute bottom-full right-0 z-40 mb-2 w-60 origin-bottom-right overflow-hidden rounded-2xl border border-white/10 bg-black/80 py-1 shadow-2xl ring-1 ring-black/40 backdrop-blur-md duration-150 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2"
+          className="absolute bottom-full right-0 z-40 mb-2 w-72 max-w-[calc(100vw-2rem)] origin-bottom-right overflow-hidden rounded-2xl border border-white/10 bg-black/80 py-1 shadow-2xl ring-1 ring-black/40 backdrop-blur-md duration-150 animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-2"
         >
-          {submenu ? (
-            <HalamanPilihan
-              judul={JUDUL_LAMAN[laman as Exclude<Laman, "utama">]}
-              pilihan={submenu}
-              onKembali={() => setLaman("utama")}
-            />
-          ) : (
-            <>
-              <BarisSakelar
-                ikon={<AudioLines className="size-4" />}
-                label="Volume Stabil"
-                sakelar={volumeStabil}
-              />
-              <BarisSakelar
-                ikon={<Volume2 className="size-4" />}
-                label="Penguat suara"
-                sakelar={penguatSuara}
-              />
-              <BarisSakelar
-                ikon={<Sun className="size-4" />}
-                label="Pencahayaan sinematik"
-                sakelar={sinematik}
-              />
-
-              <div className="my-1 h-px bg-white/10" />
-
-              <BarisSubmenu
-                ikon={<MonitorPlay className="size-4" />}
-                label="Kualitas"
-                pilihan={kualitas}
-                onBuka={() => setLaman("kualitas")}
-              />
-            </>
-          )}
+          {isiLaman[laman]}
         </div>
       )}
     </div>
@@ -188,6 +257,16 @@ function labelNilai(pilihan: PilihanMenu): string {
 
 const KELAS_BARIS =
   "flex w-full items-center gap-3 px-3 py-2.5 text-left text-[13px] text-white/90 transition-colors";
+
+/** Teks kecil di bawah label yang menjelaskan kenapa sebuah baris dikunci. */
+function Alasan({ teks }: { teks?: string }) {
+  if (!teks) return null;
+  return (
+    <span className="mt-0.5 block whitespace-normal text-[11px] leading-tight text-white/40">
+      {teks}
+    </span>
+  );
+}
 
 function BarisSakelar({
   ikon,
@@ -212,11 +291,7 @@ function BarisSakelar({
       <span className="shrink-0 text-white/70">{ikon}</span>
       <span className="flex-1 truncate">
         {label}
-        {sakelar.alasanMati && (
-          <span className="mt-0.5 block whitespace-normal text-[11px] leading-tight text-white/40">
-            {sakelar.alasanMati}
-          </span>
-        )}
+        <Alasan teks={sakelar.alasanMati} />
       </span>
       <Sakelar aktif={sakelar.aktif && !nonaktif} />
     </button>
@@ -226,42 +301,46 @@ function BarisSakelar({
 function BarisSubmenu({
   ikon,
   label,
-  pilihan,
+  nilai,
   onBuka,
+  alasanMati,
 }: {
   ikon: React.ReactNode;
   label: string;
-  pilihan: PilihanMenu;
+  nilai: string;
   onBuka: () => void;
+  alasanMati?: string;
 }) {
+  const nonaktif = Boolean(alasanMati);
+
   return (
     <button
       type="button"
       role="menuitem"
+      disabled={nonaktif}
       onClick={onBuka}
-      className={cn(KELAS_BARIS, "hover:bg-white/10")}
+      className={cn(KELAS_BARIS, nonaktif ? "opacity-40" : "hover:bg-white/10")}
     >
       <span className="shrink-0 text-white/70">{ikon}</span>
-      <span className="flex-1 truncate">{label}</span>
-      <span className="shrink-0 text-[11px] font-medium uppercase tracking-wide text-white/50">
-        {labelNilai(pilihan)}
+      <span className="flex-1 truncate">
+        {label}
+        <Alasan teks={alasanMati} />
       </span>
+      {/* Baris terkunci tidak menampilkan nilai: nilai yang tak bisa diubah
+          cuma memakan tempat yang dibutuhkan teks alasannya. */}
+      {!nonaktif && (
+        <span className="shrink-0 text-[11px] font-medium uppercase tracking-wide text-white/50">
+          {nilai}
+        </span>
+      )}
       <ChevronRight className="size-4 shrink-0 text-white/40" />
     </button>
   );
 }
 
-function HalamanPilihan({
-  judul,
-  pilihan,
-  onKembali,
-}: {
-  judul: string;
-  pilihan: PilihanMenu;
-  onKembali: () => void;
-}) {
+function KepalaLaman({ judul, onKembali }: { judul: string; onKembali: () => void }) {
   return (
-    <div>
+    <>
       <button
         type="button"
         onClick={onKembali}
@@ -270,9 +349,23 @@ function HalamanPilihan({
         <ChevronLeft className="size-4 shrink-0 text-white/60" />
         <span className="flex-1">{judul}</span>
       </button>
-
       <div className="my-1 h-px bg-white/10" />
+    </>
+  );
+}
 
+function SubJudul({ teks }: { teks: string }) {
+  return (
+    <p className="px-3 pb-1 pt-2 text-[11px] font-medium uppercase tracking-wide text-white/40">
+      {teks}
+    </p>
+  );
+}
+
+/** Daftar pilihan berbentuk radio; centang kuning = pilihan yang berlaku. */
+function DaftarOpsi({ pilihan }: { pilihan: PilihanMenu }) {
+  return (
+    <>
       {pilihan.opsi.map((o) => (
         <button
           key={o.nilai}
@@ -288,14 +381,13 @@ function HalamanPilihan({
           <span className="flex-1 truncate">{o.label}</span>
         </button>
       ))}
-
-      {pilihan.catatan && (
-        <p className="px-3 pb-2 pt-1 text-[11px] leading-snug text-white/40">
-          {pilihan.catatan}
-        </p>
-      )}
-    </div>
+    </>
   );
+}
+
+function Catatan({ teks }: { teks?: string }) {
+  if (!teks) return null;
+  return <p className="px-3 pb-2 pt-1 text-[11px] leading-snug text-white/40">{teks}</p>;
 }
 
 /** Sakelar kecil ala iOS. Sengaja bukan Radix Switch: di dalam popup pemutar

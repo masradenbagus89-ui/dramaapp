@@ -21,8 +21,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   AlertTriangle,
   LoaderCircle,
-  Captions,
-  Gauge,
   Maximize2,
   Minimize2,
   PictureInPicture2,
@@ -50,6 +48,24 @@ const KECEPATAN: OpsiMenu[] = [
   { nilai: "1.5", label: "1,5×" },
   { nilai: "2", label: "2×" },
 ];
+
+// Subtitle: Playly TIDAK mengirim berkas subtitle (kosong di 9 dari 9 video,
+// dicek 2026-09-09), jadi pilihannya cuma "Mati" dan gaya subtitle dikunci.
+// Ukuran & latar ditampilkan dengan nilai bawaannya supaya penonton tahu apa
+// yang bisa diatur kalau suatu hari sumbernya menyertakan subtitle.
+const SUBTITLE_MATI: OpsiMenu[] = [{ nilai: "mati", label: "Mati" }];
+const UKURAN_SUBTITLE: OpsiMenu[] = [
+  { nilai: "kecil", label: "Kecil" },
+  { nilai: "sedang", label: "Sedang" },
+  { nilai: "besar", label: "Besar" },
+];
+const LATAR_SUBTITLE: OpsiMenu[] = [
+  { nilai: "tanpa", label: "Tanpa latar" },
+  { nilai: "tipis", label: "Transparan" },
+  { nilai: "pekat", label: "Hitam pekat" },
+];
+const ALASAN_SUBTITLE_MATI =
+  "Sumber video ini tidak menyertakan berkas subtitle, jadi belum ada yang bisa ditampilkan.";
 
 // Pencahayaan sinematik = penyetelan tampilan (kontras/warna) seperti mode
 // bioskop di TV. Dikerjakan filter CSS, jadi tidak menyentuh isi videonya dan
@@ -257,14 +273,6 @@ export default function PlaylyPlayer({
   const ubahSpeed = (nilai: string) => {
     setSpeed(nilai);
     if (videoRef.current) videoRef.current.playbackRate = Number(nilai);
-  };
-
-  // Tombol kecepatan di baris kontrol memutar pilihan berurutan tiap diklik.
-  // Dipakai (bukan membuka daftar) karena pilihannya cuma lima dan nilainya
-  // langsung terlihat di tombol — penonton tak perlu membuka apa pun.
-  const siklusKecepatan = () => {
-    const i = KECEPATAN.findIndex((k) => k.nilai === speed);
-    ubahSpeed(KECEPATAN[(i + 1) % KECEPATAN.length].nilai);
   };
 
   const ubahVolume = (nilai: number) => {
@@ -500,39 +508,11 @@ export default function PlaylyPlayer({
               {fmtTime(curTime)} / {fmtTime(dur)}
             </span>
 
-            {/* Susunan sisi kanan sengaja meniru pemutar Playly (owner
-                2026-09-28): kontrol yang paling sering dipakai penonton naik
-                jadi tombol langsung, dan yang naik DIKELUARKAN dari menu titik
-                tiga supaya tidak ada dua jalan ke pengaturan yang sama. */}
+            {/* Sisi kanan: Subtitle & Kecepatan TIDAK lagi jadi tombol langsung
+                (permintaan 2026-11-06) — keduanya pindah ke menu titik tiga,
+                dan tombolnya di sini dihapus supaya tetap satu jalan ke tiap
+                pengaturan. PiP & layar penuh tetap tombol langsung. */}
             <div className="ml-auto flex items-center gap-1">
-              {/* Tombol terjemahan tetap DIGAMBAR walau mati, supaya penonton
-                  tahu fitur ini ada dan kenapa tidak bisa dipakai — bukan
-                  hilang tanpa penjelasan. Playly tidak mengirim berkas subtitle
-                  (kosong di 9 dari 9 video, dicek 2026-09-09). */}
-              <button
-                type="button"
-                disabled
-                aria-label="Terjemahan tidak tersedia untuk video ini"
-                title="Sumber video ini tidak menyertakan berkas terjemahan."
-                className="flex size-9 cursor-not-allowed items-center justify-center rounded-full text-white/35"
-              >
-                <Captions className="size-5" />
-              </button>
-
-              <button
-                type="button"
-                onClick={siklusKecepatan}
-                aria-label={`Kecepatan ${KECEPATAN.find((k) => k.nilai === speed)?.label ?? speed}`}
-                className="relative flex size-9 items-center justify-center rounded-full text-white transition hover:bg-white/15"
-              >
-                <Gauge className="size-5" />
-                {speed !== "1" && (
-                  <span className="absolute -bottom-0.5 text-[8px] font-bold tabular-nums">
-                    {speed}×
-                  </span>
-                )}
-              </button>
-
               {pipDidukung && (
                 <button
                   type="button"
@@ -549,6 +529,15 @@ export default function PlaylyPlayer({
 
               <PlayerMenu
                 onTerbukaChange={setMenuTerbuka}
+                // Aksi subtitle sengaja kosong: alasanMati mengunci gaya, dan
+                // pilihan bahasanya cuma "Mati" (lihat SUBTITLE_MATI).
+                subtitle={{
+                  bahasa: { nilai: "mati", opsi: SUBTITLE_MATI, onPilih: () => undefined },
+                  ukuran: { nilai: "sedang", opsi: UKURAN_SUBTITLE, onPilih: () => undefined },
+                  latar: { nilai: "tipis", opsi: LATAR_SUBTITLE, onPilih: () => undefined },
+                  alasanMati: ALASAN_SUBTITLE_MATI,
+                }}
+                kecepatan={{ nilai: speed, opsi: KECEPATAN, onPilih: ubahSpeed }}
                 volumeStabil={{
                   aktif: volumeStabil,
                   onUbah: setVolumeStabil,

@@ -76,7 +76,7 @@
 > ganti alamat tanpa `rm -rf .next` + nyala ulang akan tetap menyajikan alamat lama.
 
 
-**Terakhir diisi:** 2026-11-07 — ✅ **DI-COMMIT LOKAL (`f32b294`), ⏸️ BELUM DIRILIS atas keputusan owner: menu titik tiga pemutar Playly dari rekan DIGABUNG ke main dan DIPAKAI apa adanya.** Owner menarik branch rekan `feat/menu-pemutar-playly` (1 commit `06ed695`, tertinggal 4 commit, merge **nol bentrok**). Menu jadi 6 baris urut: Subtitle (+ Gaya subtitle) · Kecepatan pemutar · Volume Stabil · Penguat suara · Pencahayaan sinematik · Kualitas video; Subtitle & Kecepatan **tidak** punya tombol langsung di baris kontrol, PiP & layar penuh tetap punya. ⚠️ **Keputusan owner sempat BERUBAH di tengah** — tombol langsung CC & Kecepatan sudah dipulihkan penuh (membalik kembali ke permintaan 2026-09-28 `39be664`), lalu owner **melihat hasilnya di layar** dan membatalkannya: *"tetap pakai yang rekan saya kerjakan saja"*. Pemulihan dibuang sebelum sempat di-commit; `PlaylyPlayer.tsx` kini **persis** kerja rekan (`git status` kosong). 🪤 **Celah yang ditemukan di tengah putaran itu TETAP berguna dan sudah ditutup:** tidak ada SATU pun tes yang me-render `PlaylyPlayer`, jadi tombolnya bisa dihapus tanpa tes merah — dan `player-menu.test.ts` milik rekan **tidak** menangkap kalau sambungan menu→video putus (dibuktikan: sambungan diputus → tes rekan tetap 11 lulus). Penjaga baru `tests/pemutar-playly-kontrol.test.ts` (4 tes). ➕ Owner juga menyetujui penjaga SERUPA untuk menu pengaturan pemutar drama (`PlayerSettings`, yang juga nol tes): `tests/pemutar-drama-pengaturan.test.ts`, 8 tes. ❌ **Klaim rekan "1 tes gagal di `origin/main` murni" TIDAK berlaku di main terkini** — diuji ulang: `tests/episode-naik-ke-sidebar.test.ts` **12 lulus**, `npm test` penuh hijau. **Bukti:** build sukses · `tsc` exit 0 · **2.055 tes / 142 berkas hijau** (dari 2.040/140) · kedua penjaga diuji **MERAH lebih dulu** di 4 titik · **nol kode produksi disentuh** pada keadaan akhir. Tanpa SQL/env baru. ⚠️ **Verifikasi di produksi MUSTAHIL sekarang** — lihat blok peringatan Playly 500 di atas. ✅ **Di-commit lokal (sesi kedua, keputusan owner "commit dulu, tahan rilis"): `f32b294` penjaga tes + `cccf3ca` merge + `06ed695` rekan = 3 commit MENUNGGU; `origin/main` & `dramaku/main` masih `e486c17`.** Folder `docs/laporan/` ikut masuk git (skrip + 3 potret publik; PDF/PPTX/pratinjau di-gitignore). ⚠️ `npm run build` TIDAK diulang di sesi kedua (ada `next start -p 3100` yang sedang dipakai) — `tsc` exit 0 & 2.055 tes hijau sudah diukur sendiri. **⬇️ Rincian di seksi `## 2026-11-07` di bawah.**
+**Terakhir diisi:** 2026-11-07 — ✅ **DI-COMMIT LOKAL (`f32b294`), ⏸️ BELUM DIRILIS atas keputusan owner: menu titik tiga pemutar Playly dari rekan DIGABUNG ke main dan DIPAKAI apa adanya.** Owner menarik branch rekan `feat/menu-pemutar-playly` (1 commit `06ed695`, tertinggal 4 commit, merge **nol bentrok**). Menu jadi 6 baris urut: Subtitle (+ Gaya subtitle) · Kecepatan pemutar · Volume Stabil · Penguat suara · Pencahayaan sinematik · Kualitas video; Subtitle & Kecepatan **tidak** punya tombol langsung di baris kontrol, PiP & layar penuh tetap punya. ⚠️ **Keputusan owner sempat BERUBAH di tengah** — tombol langsung CC & Kecepatan sudah dipulihkan penuh (membalik kembali ke permintaan 2026-09-28 `39be664`), lalu owner **melihat hasilnya di layar** dan membatalkannya: *"tetap pakai yang rekan saya kerjakan saja"*. Pemulihan dibuang sebelum sempat di-commit; `PlaylyPlayer.tsx` kini **persis** kerja rekan (`git status` kosong). 🪤 **Celah yang ditemukan di tengah putaran itu TETAP berguna dan sudah ditutup:** tidak ada SATU pun tes yang me-render `PlaylyPlayer`, jadi tombolnya bisa dihapus tanpa tes merah — dan `player-menu.test.ts` milik rekan **tidak** menangkap kalau sambungan menu→video putus (dibuktikan: sambungan diputus → tes rekan tetap 11 lulus). Penjaga baru `tests/pemutar-playly-kontrol.test.ts` (4 tes). ➕ Owner juga menyetujui penjaga SERUPA untuk menu pengaturan pemutar drama (`PlayerSettings`, yang juga nol tes): `tests/pemutar-drama-pengaturan.test.ts`, 8 tes. ❌ **Klaim rekan "1 tes gagal di `origin/main` murni" TIDAK berlaku di main terkini** — diuji ulang: `tests/episode-naik-ke-sidebar.test.ts` **12 lulus**, `npm test` penuh hijau. **Bukti:** build sukses · `tsc` exit 0 · **2.055 tes / 142 berkas hijau** (dari 2.040/140) · kedua penjaga diuji **MERAH lebih dulu** di 4 titik · **nol kode produksi disentuh** pada keadaan akhir. Tanpa SQL/env baru. ⚠️ **Verifikasi di produksi MUSTAHIL sekarang** — lihat blok peringatan Playly 500 di atas. ✅ **Di-commit lokal (sesi kedua, keputusan owner "commit dulu, tahan rilis"): `f32b294` penjaga tes + `cccf3ca` merge + `06ed695` rekan = 3 commit MENUNGGU; `origin/main` & `dramaku/main` masih `e486c17`.** Folder `docs/laporan/` ikut masuk git (skrip + 3 potret publik; PDF/PPTX/pratinjau di-gitignore). ⚠️ `npm run build` TIDAK diulang di sesi kedua (ada `next start -p 3100` yang sedang dipakai) — `tsc` exit 0 & 2.055 tes hijau sudah diukur sendiri. 🆕 **Gerbang pra-rilis kini SATU perintah: `npm run gerbang`** (keputusan owner) — kelima pemeriksaan §6 berurutan, menolak jalan kalau urutan `build`/`tsc` tertukar. Dijalankan sungguhan: percobaan PERTAMA **menangkap kesalahan nyata** (exit 1), sesudah diperbaiki **✓ LOLOS exit 0** dengan **2.066 tes / 143 berkas hijau**. **⬇️ Rincian di seksi `## 2026-11-07` di bawah.**
 
 ---
 
@@ -131,6 +131,94 @@
 ## 2026-11-07 — ⏸️ Menu titik tiga pemutar Playly dari rekan DIGABUNG & DIPAKAI apa adanya (belum dirilis)
 
 Owner minta `git pull` + periksa branch yang dikerjakan rekan, lalu memutuskan apa yang diambil.
+
+### ✅ BARU: gerbang pra-rilis jadi SATU perintah — `npm run gerbang`
+
+Permintaan owner: *"kamu jadikan gerbang pra-rilis satu perintah"*. Kelima pemeriksaan
+`AGENTS.local.md` §6 kini dijalankan satu baris, urutannya tidak lagi bergantung pada ingatan.
+
+**Kenapa ini bukan sekadar kenyamanan:** urutan `build` SEBELUM `tsc` sudah menipu **tiga sesi**
+(2026-09-11, 2026-09-14, 2026-09-15), dua di antaranya nyaris melaporkan 4 error yang tidak ada.
+Penyebabnya bukan kecerobohan orangnya — penyebabnya urutan yang cuma hidup sebagai teks yang
+harus diingat. Sekarang ia terkunci di konstanta `LANGKAH`, dan skripnya **menolak jalan** kalau
+urutannya tertukar.
+
+**Berkas:** `scripts/gerbang-pra-rilis.mjs` · `tests/gerbang-pra-rilis.test.ts` (11 tes) ·
+`package.json` (`"gerbang"`) · §6 `AGENTS.local.md` diperbarui menunjuk ke sana.
+Rencana lengkap: `docs/lintasai/rencana/2026-11-07-gerbang-pra-rilis-satu-perintah.md`.
+
+#### Yang SENGAJA tidak diotomatiskan
+
+`git push` dan smoke test **tetap manual**. Push ke `origin main` = TOMBOL RILIS yang izinnya
+milik owner (AGENTS.md §5.5, rak devops §1 *"izin rilis bukan milik AI"*), dan smoke test baru
+masuk akal SESUDAH tayang serta perlu mata manusia. Gerbang berhenti tepat sebelum keduanya lalu
+menuliskan apa yang harus dikerjakan.
+
+🪤 **Pengecekan port untuk mendeteksi server lokal DITOLAK, bukan terlupa.** Mesin ini dipakai
+bersama ~84 penyewa — port 3000/3100 bisa milik orang lain, jadi pengecekan port akan sering
+salah-alarm, dan penjaga yang rutin salah-alarm mengajarkan orang menerobosnya. Gantinya
+peringatan tertulis di baris pertama keluaran.
+
+#### ⭐ Bukti terbaiknya: gerbang menangkap kesalahan NYATA di percobaan pertama
+
+Dijalankan pertama kali, gerbang **berhenti di langkah 2** dengan `exit 1` — dan yang ditangkapnya
+adalah kesalahan **di berkas tes yang baru saja ditulis untuk gerbang itu sendiri**:
+`npm run build` ikut memeriksa TypeScript, dan tesnya mengoper `{ nama }` saja ke
+`periksaUrutanLangkah()` yang tipenya tersimpulkan dari bentuk penuh `LANGKAH`.
+
+**Dua pelajaran dari situ:**
+1. `npx vitest run` **TIDAK** memeriksa tipe. Tes bisa hijau sempurna sementara `npm run build`
+   merah — jadi "tes hijau" bukan pengganti gerbang.
+2. Perbaikannya **bukan melonggarkan tesnya**, tapi menulis kontrak tipe yang jujur:
+   `periksaUrutanLangkah` memang HANYA membaca `.nama`, jadi JSDoc-nya menyatakan
+   `{ nama: string }[]`. Menuntut bentuk penuh akan memaksa tes menulis ulang field yang tak ada
+   hubungannya dengan urutan — dan penjaga yang merepotkan adalah penjaga yang dilonggarkan orang
+   berikutnya.
+
+Sesudah diperbaiki, dijalankan ulang **dari awal** (seperti yang diperintahkan pesan gagalnya,
+bukan dilanjutkan dari tengah): **✓ GERBANG LOLOS, exit 0**, kelima langkah hijau —
+`.next` dihapus · build sukses · `tsc` exit 0 · **2.066 tes / 143 berkas hijau** · 16 berkas di
+antrean push, nol berkas rahasia.
+
+#### Diuji-balik 3 titik, semuanya MERAH lebih dulu
+
+| Kerusakan yang disengaja | Hasil |
+|---|---|
+| Urutan `build` ↔ `tipe` dibalik | **3 tes MERAH** |
+| `cariBerkasRahasia` dibuat selalu bilang "aman" | **3 tes MERAH** |
+| `cariBerkasRahasia` dibuat menolak semuanya (alarm palsu) | **2 tes MERAH** |
+
+Ketiganya hijau lagi sesudah dipulihkan. Alarm-palsu ikut diuji karena pemeriksa yang menolak
+segalanya sama tak bergunanya dengan yang meloloskan segalanya — orang akan belajar
+mengabaikannya.
+
+#### 🪤 Dua jebakan mesin yang ditemukan sambil menguji
+
+**1. Menjalankan gerbang di latar belakang memberi hasil PALSU `exit 127`.** Di latar, keluaran
+berhenti tepat sesudah vitest mulai lalu memulangkan 127 (= "perintah tak ditemukan") — padahal
+skripnya cuma bisa memulangkan 0/1/2, jadi angka itu mustahil datang darinya. Dijalankan di
+DEPAN, perintah yang sama persis lolos penuh. **Aturan: `npm run gerbang` jalankan di depan,
+jangan di latar** — kalau tidak, gerbangnya "gagal" karena alasan yang tidak ada.
+
+**2. `curl http://127.0.0.1:3100` mendarat di aplikasi PENYEWA LAIN.** Port 3100 ternyata punya
+**dua** pendengar: server kita di `:::3100` dan proses milik orang lain di `127.0.0.1:3100`.
+Lewat IPv4 loopback, curl menjawab dari aplikasi mereka — `/` balas **200** (terlihat sehat!)
+sementara `/beranda` & `/film` balas **404**, dan itu nyaris dibaca sebagai "pratinjau kita
+rusak". Alamat yang benar untuk menguji server kita: **`http://[::1]:3100`**. Browser di
+`localhost:3100` aman karena Windows mendahulukan IPv6.
+
+#### Pratinjau lokal: dimatikan, lalu dihidupkan lagi
+
+Gerbang menghapus `.next`, jadi dua server harus berhenti dulu — `next start -p 3100` **dan**
+`next dev -p 3055` (yang kedua baru ketahuan saat memeriksa, awalnya dikira cuma satu). Server
+tiruan Playly di **:3056** tidak terdampak dan tetap hidup.
+
+Sesudah gerbang selesai, `next start -p 3100` dihidupkan kembali dengan
+`PLAYLY_API_URL=http://127.0.0.1:3056` — diuji `http://[::1]:3100/` dan `/beranda` → **200**.
+⚠️ **`next dev -p 3055` TIDAK dihidupkan ulang**: env persisnya milik sesi lain dan tidak bisa
+dibaca dari luar prosesnya; menebaknya berisiko memulihkan pratinjau yang terlihat jalan tapi
+menampilkan data yang salah. `/film` masih lambat/timeout — itu pemadaman Playly & Supabase yang
+sudah tercatat di kepala berkas, bukan akibat gerbang.
 
 ### Hasil pemeriksaan branch
 

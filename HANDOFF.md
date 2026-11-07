@@ -173,8 +173,33 @@ Gagal-aman.
 **2.078 tes / 144 berkas hijau** (dari 2.070/143) · pratinjau `/my-list` terbukti memuat
 "Favorit" + "Kembali", nol "Daftar Saya".
 
-⏳ **Belum dikerjakan (belum diminta):** tombol Kembali belum dipasang di `/history`. Komponennya
-sudah siap dipakai ulang — tinggal `<TombolKembali />` di kepala halamannya.
+#### ✅ Diseragamkan ke /history & /profile (owner: *"kamu seragamkan lah kembali nya juga"*)
+
+**Aturan yang dipakai, bukan dipilih per-halaman:** setiap halaman yang dibuka **dari menu akun**
+wajib punya tombol Kembali di pojok kanan atas — Profile · Riwayat · Favorit. Halaman katalog
+utama (Beranda, Film, Katalog) **sengaja tidak ikut**: itu tujuan utama di navbar, bukan
+sub-halaman, dan "kembali" di sana tak punya makna jelas. `/admin` dikecualikan karena sudah punya
+jalan pulangnya sendiri ("← Kembali ke web" di sidebar) — tombol kedua di sana justru dua jalan
+untuk hal yang sama.
+
+**POSISI ikut diseragamkan, bukan cuma keberadaannya:** "Kembali" selalu **paling kanan**. Di
+`/history` ia duduk di kanan "Hapus semua" (yang tetap bersyarat); di `/profile` ia berdiri
+sendiri di baris paling atas karena halaman itu tak punya baris judul. Yang disamakan **posisinya
+di layar**, bukan susunan kodenya — supaya jadi hafalan jari.
+
+Di `/profile` tombolnya tampil **juga untuk TAMU**: tamu justru yang paling butuh, sebab ia tak
+punya pengaturan untuk dilihat.
+
+🪤 **Penjaganya `tests/tombol-kembali-seragam.test.ts` menurunkan daftar halaman dari
+`TUJUAN_AKUN`, bukan menulisnya tangan.** Kalau suatu saat ada menu akun BARU, daftar tulis-tangan
+akan tetap hijau sementara halaman barunya lahir tanpa tombol Kembali — persis bentuk "seragam"
+yang **diam-diam berhenti seragam**. Dengan diturunkan, menu baru membuat tes MERAH sampai
+seseorang memutuskan: pasang tombolnya, atau kecualikan dengan alasan tertulis.
+
+**Bukti:** diuji-balik **2 titik** — tombol dicabut dari `/history` → MERAH · menu akun baru
+ditambahkan tanpa mendaftarkan halamannya → MERAH (penjaga anti-ketinggalan-zamannya bekerja);
+keduanya hijau lagi sesudah dipulihkan · `npm run gerbang` **LOLOS exit 0**, **2.083 tes /
+145 berkas hijau** · pratinjau: "Kembali" tergambar tepat sekali di ketiga halaman.
 
 ### 🧹 Lanjutan: "Menu Cepat" & menu Keamanan(2FA) sidebar DIBUANG (owner 2026-11-07)
 

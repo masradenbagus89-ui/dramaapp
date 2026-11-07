@@ -8,6 +8,7 @@ import DramaCard from "@/app/components/DramaCard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Bookmark } from "lucide-react";
+import TombolKembali from "@/app/components/TombolKembali";
 import { cn } from "@/lib/utils";
 import { BADAN_TERANG } from "@/app/components/beranda/shell";
 
@@ -36,10 +37,24 @@ export default function MyListPage() {
   return (
     <div className={cn(BADAN_TERANG, "min-h-screen")}>
       <div className="mx-auto max-w-7xl px-4 pb-10 pt-6 md:px-6">
-      <h1 className="text-xl font-bold text-white terang:text-zinc-900 md:text-2xl">Daftar Saya</h1>
-      <p className="mt-1 text-sm text-zinc-400 terang:text-zinc-600">
-        Drama yang Anda simpan untuk ditonton nanti.
-      </p>
+      {/* Judul SENGAJA "Favorit", bukan "Daftar Saya" (owner 2026-11-07).
+          Nama itu dipakai di SELURUH situs untuk konsep yang sama: tombol di
+          tiap kartu drama berbunyi "Tambah Favorit"/"Dalam Favorit"
+          (SaveButton.tsx) dan menu akun berbunyi "Favorit" (MenuAkun.tsx).
+          Judul halaman adalah satu-satunya tempat yang menyebutnya lain, jadi
+          judulnya yang ikut — bukan sebaliknya. Satu konsep = satu nama
+          (AGENTS.md §3.3): nama yang berbeda membuat orang mengira ia membuka
+          halaman yang salah. Alamatnya tetap /my-list supaya tautan lama dan
+          yang sudah di-bookmark tidak putus. */}
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-xl font-bold text-white terang:text-zinc-900 md:text-2xl">Favorit</h1>
+          <p className="mt-1 text-sm text-zinc-400 terang:text-zinc-600">
+            Drama yang Anda simpan untuk ditonton nanti.
+          </p>
+        </div>
+        <TombolKembali />
+      </div>
 
       {ids === null ? (
         <div className="mt-12 text-center text-sm text-zinc-500 terang:text-zinc-600">Memuat...</div>
@@ -48,7 +63,7 @@ export default function MyListPage() {
           <CardContent className="flex flex-col items-center text-center">
             <Bookmark className="h-16 w-16 fill-zinc-700 text-zinc-700 terang:fill-zinc-300 terang:text-zinc-300" />
             <p className="mt-3 text-sm text-zinc-500 terang:text-zinc-600">
-              Daftar Anda masih kosong.
+              Belum ada drama favorit.
             </p>
             <Button
               asChild

@@ -125,7 +125,6 @@ export default function PlaylyPlayer({
   const [muted, setMuted] = useState(false);
   const [speed, setSpeed] = useState("1");
   const [sinematik, setSinematik] = useState(false);
-  const [volumeStabil, setVolumeStabil] = useState(false);
   const [penguatSuara, setPenguatSuara] = useState(false);
   const [izinSuara, setIzinSuara] = useState<IzinSuara>("memeriksa");
   const [pipDidukung, setPipDidukung] = useState(false);
@@ -298,9 +297,14 @@ export default function PlaylyPlayer({
 
   // Rantai Web Audio-nya sendiri ada di useOlahSuara. Hook itu TIDAK pernah
   // menebak gerbangnya — `bisa` diputuskan di sini.
+  //
+  // volumeStabil dipaku `false`: barisnya dikeluarkan dari menu (permintaan
+  // 2026-11-07). Mesinnya di useOlahSuara SENGAJA dibiarkan — Penguat suara
+  // memakai rantai yang sama, dan memunculkan Volume Stabil lagi cukup dengan
+  // mengembalikan state + baris menunya.
   useOlahSuara(videoRef, {
     bisa: olahSuaraBisa,
-    volumeStabil,
+    volumeStabil: false,
     penguatSuara,
   });
 
@@ -538,11 +542,6 @@ export default function PlaylyPlayer({
                   alasanMati: ALASAN_SUBTITLE_MATI,
                 }}
                 kecepatan={{ nilai: speed, opsi: KECEPATAN, onPilih: ubahSpeed }}
-                volumeStabil={{
-                  aktif: volumeStabil,
-                  onUbah: setVolumeStabil,
-                  alasanMati: alasanSuaraMati,
-                }}
                 penguatSuara={{
                   aktif: penguatSuara,
                   onUbah: setPenguatSuara,

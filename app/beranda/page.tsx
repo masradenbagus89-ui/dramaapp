@@ -6,6 +6,7 @@ import { getPlaylyVideosGabunganCached } from "@/lib/playly-gabungan";
 import { featuredHeroSlides } from "@/lib/hero-teaser";
 import { availableGenres, FEATURED_ROW_COUNT } from "@/lib/beranda-catalog";
 import { buildNavMenus } from "@/lib/nav-katalog";
+import { rakitIndeksSaran } from "@/lib/saran-cari";
 import BadanKatalog from "../components/beranda/BadanKatalog";
 import KepalaBeranda from "../components/beranda/KepalaBeranda";
 import PersonalRows from "../components/beranda/PersonalRows";
@@ -65,7 +66,7 @@ export default async function BerandaPage() {
           dalam CatalogBrowser, jadi ikut hilang begitu grid itu dilepas —
           halaman tetap 200 dan build tetap hijau, tapi logo, kotak cari, dan
           SELURUH menu lenyap. Sekarang dipasang terang-terangan di sini. */}
-      <KepalaBeranda menus={menus} />
+      <KepalaBeranda menus={menus} indeksSaran={rakitIndeksSaran(dramas, videos)} />
 
       {/* Susunannya SAMA PERSIS dengan landing page `/` (owner 2026-10-28:
           "tampilan beranda sama dengan tampilan di landing page") — dan sama

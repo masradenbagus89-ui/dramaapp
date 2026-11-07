@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { STRIP_KATALOG, alamatCari, type NavMenu, TUJUAN_CARI } from "@/lib/nav-katalog";
+import type { SaranCari } from "@/lib/saran-cari";
 import SearchBar, { KELAS_MENEMPEL_KEPALA } from "./SearchBar";
 import StripKatalog from "./StripKatalog";
 import { chromeKatalog } from "./KepalaKatalog";
@@ -34,7 +35,14 @@ import { chromeKatalog } from "./KepalaKatalog";
  * Dulu ia menyaring grid tepat di bawahnya; grid itu sudah tidak ada. Perilaku
  * ini sama dengan kotak cari di landing page.
  */
-export default function KepalaBeranda({ menus }: { menus: NavMenu[] }) {
+export default function KepalaBeranda({
+  menus,
+  /** Indeks judul untuk saran-saat-mengetik; kosong = fitur itu mati. */
+  indeksSaran,
+}: {
+  menus: NavMenu[];
+  indeksSaran?: SaranCari[];
+}) {
   const router = useRouter();
   const [query, setQuery] = useState("");
 
@@ -59,6 +67,7 @@ export default function KepalaBeranda({ menus }: { menus: NavMenu[] }) {
            ketikan penonton. */
         action={TUJUAN_CARI}
         namaKolom="q"
+        indeksSaran={indeksSaran}
       />
       <StripKatalog items={STRIP_KATALOG} />
     </>

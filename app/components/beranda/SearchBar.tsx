@@ -1,6 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
+import DaftarSaran from "./DaftarSaran";
+import { pilihSaran, type SaranCari } from "@/lib/saran-cari";
+import { alamatCari } from "@/lib/nav-katalog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -103,6 +107,15 @@ type Props = {
    * tertutup seperti halaman lain, jadi tampilannya tetap seragam.
    */
   bukaAwal?: boolean;
+  /**
+   * Indeks judul untuk saran-saat-mengetik (owner 2026-11-07). Kosong = fitur
+   * ini MATI di pemakai itu, tanpa efek samping apa pun.
+   *
+   * Sengaja indeks jadi, bukan katalog mentah: pemanggil yang katalognya sudah
+   * ada di browser (mis. /discover) merakitnya sendiri tanpa menambah satu byte
+   * pun kiriman, sementara halaman lain merakitnya di server.
+   */
+  indeksSaran?: SaranCari[];
 };
 
 /**
@@ -130,10 +143,49 @@ export default function SearchBar({
   namaKolom,
   modeTombol = false,
   bukaAwal = false,
+  indeksSaran,
 }: Props) {
+  const router = useRouter();
   const [filterTerbuka, setFilterTerbuka] = useState(false);
   const [cariTerbuka, setCariTerbuka] = useState(bukaAwal);
   const kotakRef = useRef<HTMLInputElement>(null);
+  const formRef = useRef<HTMLFormElement>(null);
+
+  /** Baris saran yang sedang disorot panah; -1 = belum ada yang disorot. */
+  const [sorot, setSorot] = useState(-1);
+  /**
+   * Penonton menutup daftar saran dengan sengaja (Esc / klik di luar / sudah
+   * memilih). Dipisah dari "ada saran atau tidak" supaya daftar yang baru
+   * ditutup tidak langsung terbuka lagi oleh render berikutnya.
+   */
+  const [saranTutup, setSaranTutup] = useState(false);
+
+  const saran = useMemo(
+    () => (indeksSaran ? pilihSaran(value, indeksSaran) : []),
+    [indeksSaran, value],
+  );
+  const saranTampil = saran.length > 0 && !saranTutup;
+
+  // Tiap ketikan berubah, daftar dianggap relevan lagi dan sorotan direset.
+  // Tanpa reset sorot, panah bawah sekali lalu mengetik lagi membuat Enter
+  // membuka judul yang SUDAH TIDAK ADA di daftar — mendarat di halaman yang
+  // tak ada hubungannya dengan ketikan terakhir, tanpa satu pun error.
+  useEffect(() => {
+    setSorot(-1);
+    setSaranTutup(false);
+  }, [value]);
+
+  // Klik di LUAR kotak menutup daftar. Pemeriksaannya memakai pembungkus form,
+  // dan daftar saran ada DI DALAM form itu — jadi mengklik sebuah saran tidak
+  // ikut terhitung "di luar" dan tautannya tetap sempat jalan.
+  useEffect(() => {
+    if (!saranTampil) return;
+    const diLuar = (e: PointerEvent) => {
+      if (!formRef.current?.contains(e.target as Node)) setSaranTutup(true);
+    };
+    document.addEventListener("pointerdown", diLuar);
+    return () => document.removeEventListener("pointerdown", diLuar);
+  }, [saranTampil]);
 
   /**
    * Buka kotaknya begitu `bukaAwal` menyala.
@@ -181,14 +233,17 @@ export default function SearchBar({
    */
   const formCari = (kelas: string, besar = false) => (
     <form
+      ref={formRef}
       action={action}
       method={action ? "get" : undefined}
       onSubmit={(e) => {
         e.preventDefault();
+        setSaranTutup(true);
         onSubmit?.();
         setCariTerbuka(false);
       }}
-      className={kelas}
+      // `relative`: daftar saran di bawah diposisikan terhadap form ini.
+      className={cn("relative", kelas)}
       role="search"
     >
       <Input
@@ -197,8 +252,34 @@ export default function SearchBar({
         name={namaKolom}
         value={value}
         onChange={(e) => onValueChange(e.target.value)}
+        onKeyDown={(e) => {
+          if (!saranTampil) return;
+          // Baris terakhir ("Lihat semua hasil") ikut bisa disorot, jadi
+          // batas atasnya saran.length — BUKAN saran.length - 1.
+          if (e.key === "ArrowDown") {
+            e.preventDefault();
+            setSorot((i) => (i >= saran.length ? 0 : i + 1));
+          } else if (e.key === "ArrowUp") {
+            e.preventDefault();
+            setSorot((i) => (i <= -1 ? saran.length : i - 1));
+          } else if (e.key === "Escape") {
+            setSaranTutup(true);
+          } else if (e.key === "Enter" && sorot >= 0) {
+            // Enter TANPA sorotan sengaja dibiarkan lewat: itu pengiriman form
+            // biasa yang membuka halaman hasil lengkap. Yang dicegat hanya
+            // Enter saat sebuah baris memang sedang disorot.
+            e.preventDefault();
+            setSaranTutup(true);
+            router.push(
+              sorot < saran.length ? saran[sorot].href : alamatCari(value),
+            );
+          }
+        }}
         placeholder={placeholder}
         aria-label="Cari drama"
+        role="combobox"
+        aria-expanded={saranTampil}
+        aria-autocomplete="list"
         className={cn(
           "rounded-l-sm rounded-r-none border-transparent bg-white text-zinc-900 placeholder:text-zinc-500 focus-visible:border-amber-400 focus-visible:ring-0",
           // `besar` HANYA untuk lapisan popup (owner 2026-10-29: "kecil kali,
@@ -218,6 +299,19 @@ export default function SearchBar({
       >
         <Search className={besar ? "size-5" : "size-4"} />
       </button>
+
+      {saranTampil && (
+        <DaftarSaran
+          saran={saran}
+          aktif={sorot}
+          hrefSemua={alamatCari(value)}
+          onPilih={() => {
+            setSaranTutup(true);
+            setCariTerbuka(false);
+          }}
+          onSorot={setSorot}
+        />
+      )}
     </form>
   );
 

@@ -6,9 +6,12 @@ import { STRIP_KATALOG, alamatCari, type NavMenu, TUJUAN_CARI } from "@/lib/nav-
 import StripKatalog from "./StripKatalog";
 import { LogoDramaKu } from "./KepalaKatalog";
 import NavMenus from "./NavMenus";
+import type { SaranCari } from "@/lib/saran-cari";
 import SearchBar, { KELAS_MENEMPEL_KEPALA } from "./SearchBar";
 
 type Props = {
+  /** Indeks judul untuk saran-saat-mengetik; kosong = fitur itu mati. */
+  indeksSaran?: SaranCari[];
   /** Isi menu dropdown, dihitung di server oleh `buildNavMenus`. */
   menus: NavMenu[];
 };
@@ -26,7 +29,7 @@ type Props = {
  * MELEMPAR ke /discover. Halaman itu memang publik (bisa dibuka tanpa login),
  * jadi tautan ini tidak membuka apa pun yang tadinya tertutup.
  */
-export default function PublicTopBars({ menus }: Props) {
+export default function PublicTopBars({ menus, indeksSaran }: Props) {
   const router = useRouter();
   const [query, setQuery] = useState("");
 
@@ -61,6 +64,7 @@ export default function PublicTopBars({ menus }: Props) {
            seperti itulah yang membuat dua bar "sama" berperilaku beda. */
         action={TUJUAN_CARI}
         namaKolom="q"
+        indeksSaran={indeksSaran}
         chrome={{
           /* Logo dirapikan 2026-09-21: kotak kuning berisi huruf "D" diganti
              lambang situs yang sesungguhnya. Komponennya SAMA dengan kepala

@@ -2,6 +2,7 @@ import { getAllDramasCachedSafe } from "@/lib/dramas";
 import { getPlaylyVideosGabunganCached } from "@/lib/playly-gabungan";
 import { buildNavMenus } from "@/lib/nav-katalog";
 import KepalaBeranda from "./KepalaBeranda";
+import { rakitIndeksSaran } from "@/lib/saran-cari";
 
 /**
  * KEPALA SITUS untuk halaman FILM — `/drama/[id]`, `/tonton/[id]`, `/film`,
@@ -56,5 +57,10 @@ export default async function KepalaFilm() {
   const { videos } = await getPlaylyVideosGabunganCached().catch(() => ({
     videos: [],
   }));
-  return <KepalaBeranda menus={buildNavMenus(dramas, videos)} />;
+  return (
+    <KepalaBeranda
+      menus={buildNavMenus(dramas, videos)}
+      indeksSaran={rakitIndeksSaran(dramas, videos)}
+    />
+  );
 }

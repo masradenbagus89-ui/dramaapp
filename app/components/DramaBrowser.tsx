@@ -14,6 +14,7 @@ import {
   type CatalogFilter,
 } from "@/lib/discover";
 import { STRIP_KATALOG, buildNavMenus, TUJUAN_CARI } from "@/lib/nav-katalog";
+import { rakitIndeksSaran } from "@/lib/saran-cari";
 import type { PlaylyVideoPublik } from "@/lib/playly-publik";
 import CatalogCard from "./beranda/CatalogCard";
 import StripKatalog from "./beranda/StripKatalog";
@@ -110,6 +111,19 @@ export default function DramaBrowser({
 
   const menus = useMemo(
     () => buildNavMenus(dramas, playlyVideos),
+    [dramas, playlyVideos],
+  );
+
+  /**
+   * Indeks saran dirakit DI BROWSER, bukan dikirim server.
+   *
+   * Halaman ini sudah menerima katalog penuhnya sebagai prop untuk menggambar
+   * grid, jadi merakit indeksnya di sini menambah NOL byte kiriman. Halaman
+   * yang katalognya tidak ada di browser (mis. /beranda) merakitnya di server.
+   * Fungsinya sama persis, jadi hasilnya tak bisa menyimpang.
+   */
+  const indeksSaran = useMemo(
+    () => rakitIndeksSaran(dramas, playlyVideos),
     [dramas, playlyVideos],
   );
 
@@ -213,6 +227,7 @@ export default function DramaBrowser({
            lain. */
         modeTombol
         bukaAwal={Boolean(filter.q)}
+        indeksSaran={indeksSaran}
         /* Seragam dengan KepalaBeranda & KerangkaKepalaKatalog.
 
            ⚠️ BATAS JUJUR (diukur 2026-11-07): di `modeTombol`, formnya BELUM

@@ -5,6 +5,7 @@ import { featuredHeroSlides } from "@/lib/hero-teaser";
 import RedirectIfAuthed from "@/app/components/RedirectIfAuthed";
 import BadanKatalog from "@/app/components/beranda/BadanKatalog";
 import PublicTopBars from "@/app/components/beranda/PublicTopBars";
+import { rakitIndeksSaran } from "@/lib/saran-cari";
 import LanjutMenonton from "@/app/components/beranda/LanjutMenonton";
 import { TAB_GRID_ITEMS } from "@/lib/tab-katalog";
 import { MAKS_SERIES_PLAYLY_DI_SEKSI, pisahFilmSeries } from "@/lib/jenis-video";
@@ -74,7 +75,7 @@ export default async function LandingPage() {
              yang belum login pun langsung melihat pencarian, genre, dan poster,
              bukan blok sambutan sehalaman penuh. Cari, genre & menu melempar ke
              /discover, yang memang publik. ===== */}
-      <PublicTopBars menus={menus} />
+      <PublicTopBars menus={menus} indeksSaran={rakitIndeksSaran(dramas, videos)} />
 
       {/* Judul halaman untuk mesin pencari. SENGAJA tak terlihat (sr-only):
           hero di bawah meniru situs katalog pembanding yang tak punya judul

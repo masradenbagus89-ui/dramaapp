@@ -76,7 +76,7 @@
 > ganti alamat tanpa `rm -rf .next` + nyala ulang akan tetap menyajikan alamat lama.
 
 
-**Terakhir diisi:** 2026-11-07 — ✅ **DI-COMMIT LOKAL (`f32b294`), ⏸️ BELUM DIRILIS atas keputusan owner: menu titik tiga pemutar Playly dari rekan DIGABUNG ke main dan DIPAKAI apa adanya.** Owner menarik branch rekan `feat/menu-pemutar-playly` (1 commit `06ed695`, tertinggal 4 commit, merge **nol bentrok**). Menu jadi 6 baris urut: Subtitle (+ Gaya subtitle) · Kecepatan pemutar · Volume Stabil · Penguat suara · Pencahayaan sinematik · Kualitas video; Subtitle & Kecepatan **tidak** punya tombol langsung di baris kontrol, PiP & layar penuh tetap punya. ⚠️ **Keputusan owner sempat BERUBAH di tengah** — tombol langsung CC & Kecepatan sudah dipulihkan penuh (membalik kembali ke permintaan 2026-09-28 `39be664`), lalu owner **melihat hasilnya di layar** dan membatalkannya: *"tetap pakai yang rekan saya kerjakan saja"*. Pemulihan dibuang sebelum sempat di-commit; `PlaylyPlayer.tsx` kini **persis** kerja rekan (`git status` kosong). 🪤 **Celah yang ditemukan di tengah putaran itu TETAP berguna dan sudah ditutup:** tidak ada SATU pun tes yang me-render `PlaylyPlayer`, jadi tombolnya bisa dihapus tanpa tes merah — dan `player-menu.test.ts` milik rekan **tidak** menangkap kalau sambungan menu→video putus (dibuktikan: sambungan diputus → tes rekan tetap 11 lulus). Penjaga baru `tests/pemutar-playly-kontrol.test.ts` (4 tes). ➕ Owner juga menyetujui penjaga SERUPA untuk menu pengaturan pemutar drama (`PlayerSettings`, yang juga nol tes): `tests/pemutar-drama-pengaturan.test.ts`, 8 tes. ❌ **Klaim rekan "1 tes gagal di `origin/main` murni" TIDAK berlaku di main terkini** — diuji ulang: `tests/episode-naik-ke-sidebar.test.ts` **12 lulus**, `npm test` penuh hijau. **Bukti:** build sukses · `tsc` exit 0 · **2.055 tes / 142 berkas hijau** (dari 2.040/140) · kedua penjaga diuji **MERAH lebih dulu** di 4 titik · **nol kode produksi disentuh** pada keadaan akhir. Tanpa SQL/env baru. ⚠️ **Verifikasi di produksi MUSTAHIL sekarang** — lihat blok peringatan Playly 500 di atas. ✅ **Di-commit lokal (sesi kedua, keputusan owner "commit dulu, tahan rilis"): `f32b294` penjaga tes + `cccf3ca` merge + `06ed695` rekan = 3 commit MENUNGGU; `origin/main` & `dramaku/main` masih `e486c17`.** Folder `docs/laporan/` ikut masuk git (skrip + 3 potret publik; PDF/PPTX/pratinjau di-gitignore). ⚠️ `npm run build` TIDAK diulang di sesi kedua (ada `next start -p 3100` yang sedang dipakai) — `tsc` exit 0 & 2.055 tes hijau sudah diukur sendiri. 🧹 **"Menu Cepat" di /profile & menu Keamanan(2FA) di sidebar admin DIBUANG** (owner) — keluhan owner diverifikasi dan terbukti: "Download" menuju parameter yang tak pernah ditangani, "Bantuan" menuju halaman LOGIN. ⚠️ Menu itu ternyata pintu TERAKHIR ke /my-list, jadi "Favorit" dipindahkan ke menu akun di balik avatar. 🔑 **Login admin di LOKAL sekarang BISA** saat Supabase mati — sebabnya bukan password melainkan **503** (`isAdminEmail()` menanya Supabase sebelum password diperiksa); jalan keluarnya mode berkas resmi project ini (`ALLOW_FILE_MODE=1` + env Supabase dikosongkan), diuji sampai 200 `role:admin`. 🆕 **`/profile` jadi halaman AKUN** (keputusan owner): Lanjut Menonton · Riwayat Terbaru · Favorit dibuang dari sana (rumahnya `/beranda`, `/history`, `/my-list` — nol fitur hilang), diganti seksi **Akun** (nama + avatar) dan **Keamanan** (ubah password + 2FA, admin saja, komponennya dipakai ulang dari panel admin). 🪤 Kedua baris lama ternyata memanggil fungsi yang SAMA — dua judul untuk daftar yang sama. 🆕 **Gerbang pra-rilis kini SATU perintah: `npm run gerbang`** (keputusan owner) — kelima pemeriksaan §6 berurutan, menolak jalan kalau urutan `build`/`tsc` tertukar. Dijalankan sungguhan: percobaan PERTAMA **menangkap kesalahan nyata** (exit 1), sesudah diperbaiki **✓ LOLOS exit 0** dengan **2.066 tes / 143 berkas hijau**. **⬇️ Rincian di seksi `## 2026-11-07` di bawah.**
+**Terakhir diisi:** 2026-11-07 — ✅ **DI-COMMIT LOKAL (`f32b294`), ⏸️ BELUM DIRILIS atas keputusan owner: menu titik tiga pemutar Playly dari rekan DIGABUNG ke main dan DIPAKAI apa adanya.** Owner menarik branch rekan `feat/menu-pemutar-playly` (1 commit `06ed695`, tertinggal 4 commit, merge **nol bentrok**). Menu jadi 6 baris urut: Subtitle (+ Gaya subtitle) · Kecepatan pemutar · Volume Stabil · Penguat suara · Pencahayaan sinematik · Kualitas video; Subtitle & Kecepatan **tidak** punya tombol langsung di baris kontrol, PiP & layar penuh tetap punya. ⚠️ **Keputusan owner sempat BERUBAH di tengah** — tombol langsung CC & Kecepatan sudah dipulihkan penuh (membalik kembali ke permintaan 2026-09-28 `39be664`), lalu owner **melihat hasilnya di layar** dan membatalkannya: *"tetap pakai yang rekan saya kerjakan saja"*. Pemulihan dibuang sebelum sempat di-commit; `PlaylyPlayer.tsx` kini **persis** kerja rekan (`git status` kosong). 🪤 **Celah yang ditemukan di tengah putaran itu TETAP berguna dan sudah ditutup:** tidak ada SATU pun tes yang me-render `PlaylyPlayer`, jadi tombolnya bisa dihapus tanpa tes merah — dan `player-menu.test.ts` milik rekan **tidak** menangkap kalau sambungan menu→video putus (dibuktikan: sambungan diputus → tes rekan tetap 11 lulus). Penjaga baru `tests/pemutar-playly-kontrol.test.ts` (4 tes). ➕ Owner juga menyetujui penjaga SERUPA untuk menu pengaturan pemutar drama (`PlayerSettings`, yang juga nol tes): `tests/pemutar-drama-pengaturan.test.ts`, 8 tes. ❌ **Klaim rekan "1 tes gagal di `origin/main` murni" TIDAK berlaku di main terkini** — diuji ulang: `tests/episode-naik-ke-sidebar.test.ts` **12 lulus**, `npm test` penuh hijau. **Bukti:** build sukses · `tsc` exit 0 · **2.055 tes / 142 berkas hijau** (dari 2.040/140) · kedua penjaga diuji **MERAH lebih dulu** di 4 titik · **nol kode produksi disentuh** pada keadaan akhir. Tanpa SQL/env baru. ⚠️ **Verifikasi di produksi MUSTAHIL sekarang** — lihat blok peringatan Playly 500 di atas. ✅ **Di-commit lokal (sesi kedua, keputusan owner "commit dulu, tahan rilis"): `f32b294` penjaga tes + `cccf3ca` merge + `06ed695` rekan = 3 commit MENUNGGU; `origin/main` & `dramaku/main` masih `e486c17`.** Folder `docs/laporan/` ikut masuk git (skrip + 3 potret publik; PDF/PPTX/pratinjau di-gitignore). ⚠️ `npm run build` TIDAK diulang di sesi kedua (ada `next start -p 3100` yang sedang dipakai) — `tsc` exit 0 & 2.055 tes hijau sudah diukur sendiri. 🏷️ **Halaman Favorit disamakan namanya** — judul "Daftar Saya" (muncul di SATU tempat) kalah dari "Favorit" yang dipakai di seluruh situs; + **tombol Kembali** yang sengaja TIDAK memakai `router.back()` polos (itu melempar pengunjung baru keluar ke Google). 🧹 **"Menu Cepat" di /profile & menu Keamanan(2FA) di sidebar admin DIBUANG** (owner) — keluhan owner diverifikasi dan terbukti: "Download" menuju parameter yang tak pernah ditangani, "Bantuan" menuju halaman LOGIN. ⚠️ Menu itu ternyata pintu TERAKHIR ke /my-list, jadi "Favorit" dipindahkan ke menu akun di balik avatar. 🔑 **Login admin di LOKAL sekarang BISA** saat Supabase mati — sebabnya bukan password melainkan **503** (`isAdminEmail()` menanya Supabase sebelum password diperiksa); jalan keluarnya mode berkas resmi project ini (`ALLOW_FILE_MODE=1` + env Supabase dikosongkan), diuji sampai 200 `role:admin`. 🆕 **`/profile` jadi halaman AKUN** (keputusan owner): Lanjut Menonton · Riwayat Terbaru · Favorit dibuang dari sana (rumahnya `/beranda`, `/history`, `/my-list` — nol fitur hilang), diganti seksi **Akun** (nama + avatar) dan **Keamanan** (ubah password + 2FA, admin saja, komponennya dipakai ulang dari panel admin). 🪤 Kedua baris lama ternyata memanggil fungsi yang SAMA — dua judul untuk daftar yang sama. 🆕 **Gerbang pra-rilis kini SATU perintah: `npm run gerbang`** (keputusan owner) — kelima pemeriksaan §6 berurutan, menolak jalan kalau urutan `build`/`tsc` tertukar. Dijalankan sungguhan: percobaan PERTAMA **menangkap kesalahan nyata** (exit 1), sesudah diperbaiki **✓ LOLOS exit 0** dengan **2.066 tes / 143 berkas hijau**. **⬇️ Rincian di seksi `## 2026-11-07` di bawah.**
 
 ---
 
@@ -131,6 +131,50 @@
 ## 2026-11-07 — ⏸️ Menu titik tiga pemutar Playly dari rekan DIGABUNG & DIPAKAI apa adanya (belum dirilis)
 
 Owner minta `git pull` + periksa branch yang dikerjakan rekan, lalu memutuskan apa yang diambil.
+
+### 🏷️ Lanjutan: halaman Favorit disamakan namanya + tombol Kembali (owner 2026-11-07)
+
+Owner: *"ketika klik pavorit yang kluar daftar saya, kamu sinkronkan agar sama, tambahkan juga
+kembali di kanan atas"*.
+
+**Yang diubah JUDUL HALAMANNYA, bukan menunya** — dipetakan dulu siapa memakai nama apa:
+
+| Nama | Dipakai di |
+|---|---|
+| **"Favorit"** | tombol di TIAP kartu drama (`SaveButton.tsx`: "Tambah Favorit"/"Dalam Favorit") · menu akun · baris beranda "Favorit Saya" |
+| "Daftar Saya" | **satu tempat saja** — judul halaman `/my-list` |
+
+Jadi judulnya yang menyimpang. Satu konsep = satu nama (§3.3). Kerusakannya senyap: nol error,
+yang terjadi penonton mengklik "Favorit" lalu mendarat di halaman bernama lain dan mengira salah
+membuka. Teks keadaan kosong ikut disamakan (*"Daftar Anda masih kosong"* → *"Belum ada drama
+favorit"*) supaya konsep ketiga tidak muncul lewat pintu belakang.
+
+⚠️ **Alamatnya TETAP `/my-list`** — mengubah alamat memutus tautan lama & bookmark, sementara
+yang dikeluhkan owner adalah yang TERBACA, bukan alamatnya.
+
+#### 🪤 Tombol Kembali: `router.back()` polos itu jebakan
+
+Dibuat sebagai komponen sendiri `app/components/TombolKembali.tsx` supaya halaman lain bisa
+memakainya tanpa menyalin logikanya.
+
+`router.back()` POLOS membawa penonton **KELUAR dari situs** kalau ia mendarat langsung — hasil
+Google, alamat diketik, tautan dibagikan teman — sebab riwayat browsernya tidak berisi halaman
+kita. Tombol bernama "Kembali" yang melempar orang ke Google terbaca seperti situs rusak, **nol
+error muncul**, dan yang kena justru pengunjung **BARU**: orang yang paling tidak akan
+melaporkannya.
+
+Aturannya: mundur HANYA kalau `document.referrer` se-origin dengan situs ini; kalau tidak —
+termasuk saat referrer-nya tak bisa diurai — pulang ke `tujuanCadangan` (bawaan `/beranda`).
+Gagal-aman.
+
+**Bukti:** penjaga `tests/halaman-favorit.test.ts` (8 tes, me-RENDER halamannya), **diuji-balik
+2 titik**: judul dikembalikan jadi "Daftar Saya" → **1 MERAH** · `router.back()` dibuat polos →
+**4 MERAH**; keduanya hijau lagi sesudah dipulihkan · `npm run gerbang` **LOLOS exit 0** —
+**2.078 tes / 144 berkas hijau** (dari 2.070/143) · pratinjau `/my-list` terbukti memuat
+"Favorit" + "Kembali", nol "Daftar Saya".
+
+⏳ **Belum dikerjakan (belum diminta):** tombol Kembali belum dipasang di `/history`. Komponennya
+sudah siap dipakai ulang — tinggal `<TombolKembali />` di kepala halamannya.
 
 ### 🧹 Lanjutan: "Menu Cepat" & menu Keamanan(2FA) sidebar DIBUANG (owner 2026-11-07)
 

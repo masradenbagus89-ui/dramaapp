@@ -560,10 +560,13 @@ describe("menu dilepas dari tampilan, halamannya TETAP hidup", () => {
     // Diperiksa dari sumbernya: keduanya komponen dasbor yang butuh data
     // penonton, jadi merendernya di sini berarti menyeret seluruh lapisan
     // pengambilan data ke dalam tes navigasi.
+    // DIPERKETAT 2026-11-07: dulu syaratnya "DashboardMenu ATAU FavoritesRow",
+    // dan FavoritesRow sudah dihapus saat /profile dijadikan halaman akun
+    // (keputusan owner). Yang benar bukan melonggarkan syaratnya tapi
+    // MENGUNCI satu-satunya jalan yang tersisa: DashboardMenu.
     const dasbor = readFileSync("app/components/profile/DashboardMenu.tsx", "utf-8");
-    const favorit = readFileSync("app/components/profile/FavoritesRow.tsx", "utf-8");
     expect(
-      dasbor.includes('"/my-list"') || favorit.includes('"/my-list"'),
+      dasbor.includes('"/my-list"'),
       "tak ada lagi jalan ke /my-list dari /profile — sesudah tombolnya " +
         "dilepas dari navbar & bar bawah HP, inilah jalan terakhirnya",
     ).toBe(true);

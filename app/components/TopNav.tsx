@@ -48,7 +48,8 @@ type NavLink = {
  *
  * Jalan yang TERSISA sesudah tombolnya dilepas:
  *   /discover — kotak cari, menu genre/negara, "Lihat semua" di beranda
- *   /my-list  — /profile (profile/DashboardMenu.tsx:41, FavoritesRow.tsx:58)
+ *   /my-list  — /profile (profile/DashboardMenu.tsx:41 — SATU-SATUNYA jalan
+ *               dari /profile sejak FavoritesRow dihapus 2026-11-07)
  *               dan baris "Favorit Saya" di beranda (PersonalRows.tsx:155)
  *   /shorts   — TIDAK ADA lagi dari dalam situs; hanya lewat alamat langsung
  *               atau hasil Google (masih terdaftar di app/sitemap.ts:13).

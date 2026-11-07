@@ -76,7 +76,7 @@
 > ganti alamat tanpa `rm -rf .next` + nyala ulang akan tetap menyajikan alamat lama.
 
 
-**Terakhir diisi:** 2026-11-07 — ✅ **DI-COMMIT LOKAL (`f32b294`), ⏸️ BELUM DIRILIS atas keputusan owner: menu titik tiga pemutar Playly dari rekan DIGABUNG ke main dan DIPAKAI apa adanya.** Owner menarik branch rekan `feat/menu-pemutar-playly` (1 commit `06ed695`, tertinggal 4 commit, merge **nol bentrok**). Menu jadi 6 baris urut: Subtitle (+ Gaya subtitle) · Kecepatan pemutar · Volume Stabil · Penguat suara · Pencahayaan sinematik · Kualitas video; Subtitle & Kecepatan **tidak** punya tombol langsung di baris kontrol, PiP & layar penuh tetap punya. ⚠️ **Keputusan owner sempat BERUBAH di tengah** — tombol langsung CC & Kecepatan sudah dipulihkan penuh (membalik kembali ke permintaan 2026-09-28 `39be664`), lalu owner **melihat hasilnya di layar** dan membatalkannya: *"tetap pakai yang rekan saya kerjakan saja"*. Pemulihan dibuang sebelum sempat di-commit; `PlaylyPlayer.tsx` kini **persis** kerja rekan (`git status` kosong). 🪤 **Celah yang ditemukan di tengah putaran itu TETAP berguna dan sudah ditutup:** tidak ada SATU pun tes yang me-render `PlaylyPlayer`, jadi tombolnya bisa dihapus tanpa tes merah — dan `player-menu.test.ts` milik rekan **tidak** menangkap kalau sambungan menu→video putus (dibuktikan: sambungan diputus → tes rekan tetap 11 lulus). Penjaga baru `tests/pemutar-playly-kontrol.test.ts` (4 tes). ➕ Owner juga menyetujui penjaga SERUPA untuk menu pengaturan pemutar drama (`PlayerSettings`, yang juga nol tes): `tests/pemutar-drama-pengaturan.test.ts`, 8 tes. ❌ **Klaim rekan "1 tes gagal di `origin/main` murni" TIDAK berlaku di main terkini** — diuji ulang: `tests/episode-naik-ke-sidebar.test.ts` **12 lulus**, `npm test` penuh hijau. **Bukti:** build sukses · `tsc` exit 0 · **2.055 tes / 142 berkas hijau** (dari 2.040/140) · kedua penjaga diuji **MERAH lebih dulu** di 4 titik · **nol kode produksi disentuh** pada keadaan akhir. Tanpa SQL/env baru. ⚠️ **Verifikasi di produksi MUSTAHIL sekarang** — lihat blok peringatan Playly 500 di atas. ✅ **Di-commit lokal (sesi kedua, keputusan owner "commit dulu, tahan rilis"): `f32b294` penjaga tes + `cccf3ca` merge + `06ed695` rekan = 3 commit MENUNGGU; `origin/main` & `dramaku/main` masih `e486c17`.** Folder `docs/laporan/` ikut masuk git (skrip + 3 potret publik; PDF/PPTX/pratinjau di-gitignore). ⚠️ `npm run build` TIDAK diulang di sesi kedua (ada `next start -p 3100` yang sedang dipakai) — `tsc` exit 0 & 2.055 tes hijau sudah diukur sendiri. 🆕 **Gerbang pra-rilis kini SATU perintah: `npm run gerbang`** (keputusan owner) — kelima pemeriksaan §6 berurutan, menolak jalan kalau urutan `build`/`tsc` tertukar. Dijalankan sungguhan: percobaan PERTAMA **menangkap kesalahan nyata** (exit 1), sesudah diperbaiki **✓ LOLOS exit 0** dengan **2.066 tes / 143 berkas hijau**. **⬇️ Rincian di seksi `## 2026-11-07` di bawah.**
+**Terakhir diisi:** 2026-11-07 — ✅ **DI-COMMIT LOKAL (`f32b294`), ⏸️ BELUM DIRILIS atas keputusan owner: menu titik tiga pemutar Playly dari rekan DIGABUNG ke main dan DIPAKAI apa adanya.** Owner menarik branch rekan `feat/menu-pemutar-playly` (1 commit `06ed695`, tertinggal 4 commit, merge **nol bentrok**). Menu jadi 6 baris urut: Subtitle (+ Gaya subtitle) · Kecepatan pemutar · Volume Stabil · Penguat suara · Pencahayaan sinematik · Kualitas video; Subtitle & Kecepatan **tidak** punya tombol langsung di baris kontrol, PiP & layar penuh tetap punya. ⚠️ **Keputusan owner sempat BERUBAH di tengah** — tombol langsung CC & Kecepatan sudah dipulihkan penuh (membalik kembali ke permintaan 2026-09-28 `39be664`), lalu owner **melihat hasilnya di layar** dan membatalkannya: *"tetap pakai yang rekan saya kerjakan saja"*. Pemulihan dibuang sebelum sempat di-commit; `PlaylyPlayer.tsx` kini **persis** kerja rekan (`git status` kosong). 🪤 **Celah yang ditemukan di tengah putaran itu TETAP berguna dan sudah ditutup:** tidak ada SATU pun tes yang me-render `PlaylyPlayer`, jadi tombolnya bisa dihapus tanpa tes merah — dan `player-menu.test.ts` milik rekan **tidak** menangkap kalau sambungan menu→video putus (dibuktikan: sambungan diputus → tes rekan tetap 11 lulus). Penjaga baru `tests/pemutar-playly-kontrol.test.ts` (4 tes). ➕ Owner juga menyetujui penjaga SERUPA untuk menu pengaturan pemutar drama (`PlayerSettings`, yang juga nol tes): `tests/pemutar-drama-pengaturan.test.ts`, 8 tes. ❌ **Klaim rekan "1 tes gagal di `origin/main` murni" TIDAK berlaku di main terkini** — diuji ulang: `tests/episode-naik-ke-sidebar.test.ts` **12 lulus**, `npm test` penuh hijau. **Bukti:** build sukses · `tsc` exit 0 · **2.055 tes / 142 berkas hijau** (dari 2.040/140) · kedua penjaga diuji **MERAH lebih dulu** di 4 titik · **nol kode produksi disentuh** pada keadaan akhir. Tanpa SQL/env baru. ⚠️ **Verifikasi di produksi MUSTAHIL sekarang** — lihat blok peringatan Playly 500 di atas. ✅ **Di-commit lokal (sesi kedua, keputusan owner "commit dulu, tahan rilis"): `f32b294` penjaga tes + `cccf3ca` merge + `06ed695` rekan = 3 commit MENUNGGU; `origin/main` & `dramaku/main` masih `e486c17`.** Folder `docs/laporan/` ikut masuk git (skrip + 3 potret publik; PDF/PPTX/pratinjau di-gitignore). ⚠️ `npm run build` TIDAK diulang di sesi kedua (ada `next start -p 3100` yang sedang dipakai) — `tsc` exit 0 & 2.055 tes hijau sudah diukur sendiri. 🆕 **`/profile` jadi halaman AKUN** (keputusan owner): Lanjut Menonton · Riwayat Terbaru · Favorit dibuang dari sana (rumahnya `/beranda`, `/history`, `/my-list` — nol fitur hilang), diganti seksi **Akun** (nama + avatar) dan **Keamanan** (ubah password + 2FA, admin saja, komponennya dipakai ulang dari panel admin). 🪤 Kedua baris lama ternyata memanggil fungsi yang SAMA — dua judul untuk daftar yang sama. 🆕 **Gerbang pra-rilis kini SATU perintah: `npm run gerbang`** (keputusan owner) — kelima pemeriksaan §6 berurutan, menolak jalan kalau urutan `build`/`tsc` tertukar. Dijalankan sungguhan: percobaan PERTAMA **menangkap kesalahan nyata** (exit 1), sesudah diperbaiki **✓ LOLOS exit 0** dengan **2.066 tes / 143 berkas hijau**. **⬇️ Rincian di seksi `## 2026-11-07` di bawah.**
 
 ---
 
@@ -131,6 +131,100 @@
 ## 2026-11-07 — ⏸️ Menu titik tiga pemutar Playly dari rekan DIGABUNG & DIPAKAI apa adanya (belum dirilis)
 
 Owner minta `git pull` + periksa branch yang dikerjakan rekan, lalu memutuskan apa yang diambil.
+
+### ✅ BARU: `/profile` jadi halaman AKUN (keputusan owner 2026-11-07)
+
+Owner: *"jangan dimasukan riwayat tontonan dan lanjut menonton (masukan ke riwayat), profile
+kamu isi seperti ganti password, nama"*. Baris **Favorit** ikut dibuang atas persetujuan owner
+di sesi yang sama (profile jadi murni halaman akun, bukan setengah-konten).
+
+**Pembagian rumah sesudah perubahan — nol duplikasi, nol fitur hilang:**
+
+| Isi | Rumahnya sekarang |
+|---|---|
+| Lanjut Menonton | `/beranda` (baris yang sudah ada, keputusan owner 2026-10-28) |
+| Riwayat tontonan | `/history` (lengkap, dikelompokkan per tanggal) |
+| Favorit | `/my-list` ("Daftar Saya") |
+| Pengaturan akun | `/profile` ← halaman ini |
+
+Ketiganya tetap **satu klik** lewat `DashboardMenu` yang tetap di `/profile`.
+
+⚠️ **`/history` sengaja TIDAK diubah sama sekali.** Menambah baris "Lanjut menonton" di sana
+terdengar seperti menuruti *"masukan ke riwayat"*, tapi halaman itu **sudah memuat seluruh isi**
+kedua baris yang dibuang — menambah baris baru hanya akan menampilkan video yang sama dua kali
+di satu layar, yaitu persis masalah yang owner minta dibereskan.
+
+#### 🪤 Temuan yang menjelaskan kenapa halaman itu terasa berulang
+
+**"Lanjut Menonton" dan "Riwayat Terbaru" sama-sama memanggil `getContinueWatching()` dengan
+argumen yang sama** — dua judul berbeda untuk daftar yang nyaris identik. Jadi keluhan owner
+bukan soal selera tata letak; halamannya memang menggambar isi yang sama dua kali.
+
+#### Isi `/profile` sekarang
+
+- **Akun** — nama + warna avatar. Formnya **SELALU tampil** (dulu tersembunyi di balik tombol
+  "Edit", jadi halamannya terlihat kosong dari pengaturan).
+- **Keamanan (ADMIN saja)** — ubah password pribadi + verifikasi 2 langkah (2FA).
+- **Kode pemulihan** untuk non-admin (seperti sebelumnya).
+- Premium/Koin · menu · keluar akun (tidak berubah).
+
+🔒 **Komponen keamanannya DIPAKAI ULANG dari panel admin** (`AdminPasswordSettings` +
+`TwoFactorSettings`), bukan ditulis ulang. Server mengenali admin dari **cookie sesi**, bukan
+dari isian, jadi membukanya di halaman ini **nol menambah permukaan serangan**: permintaan dari
+sesi non-admin tetap dijawab **403**. Pagar di layar tetap dipasang supaya formnya tidak jadi
+*"hiasan berbahaya"* — form yang bisa diisi lalu SELALU gagal membuat orang mengira akunnya
+rusak.
+
+⚠️ **Keadaan TAMU diberi penjelasan, bukan form yang lenyap.** Dan tombol **"Daftar" TIDAK
+ditampilkan** karena `AKUN_PENONTON_ENABLED = false` (`lib/saklar-fitur.ts`): tombol menuju
+halaman yang dimatikan lebih buruk daripada tidak ada tombol.
+
+💡 **Efek samping yang disengaja:** `/profile` **tidak lagi memanggil `/api/dramas`**. Dulu
+seluruh katalog diunduh hanya untuk menggambar tiga baris kartu.
+
+#### Dead code dibersihkan + satu penjaga lama DIPERKETAT
+
+Yatim sesudah perubahan ini, semuanya dihapus (§3.1):
+`app/components/profile/{ContinueWatchingRow,FavoritesRow,RecentHistoryRow}.tsx` ·
+`lib/profile-dashboard.ts` · `tests/profile-dashboard.test.ts`.
+
+🪤 **`/my-list` SENGAJA tidak dikaitkan ke `getFavoriteDramas`** demi "menyelamatkan" helper itu:
+bawaannya `maxItems = 6`, jadi kalau suatu saat argumen ketiga lupa diisi, Daftar Saya **diam-diam
+terpotong jadi 6 judul** tanpa satu pun error. Memasang jebakan senyap demi menghindari
+penghapusan bukan pertukaran yang baik.
+
+🪤 **Penjaga lama nyaris ikut terhapus:** `tests/kepala-situs.test.ts` **membaca berkas
+`FavoritesRow.tsx` dari disk**, jadi menghapusnya membuat tes itu gagal. Syaratnya dulu "jalan ke
+`/my-list` ada di DashboardMenu **ATAU** FavoritesRow". Godaannya membuang syarat itu (= §5.3,
+melemahkan pengaman demi meloloskan kerja sendiri); yang dilakukan **memperketatnya** — sekarang
+ia menuntut `DashboardMenu` punya jalan itu, sebab `/my-list` sudah tidak ada di navbar maupun
+bar bawah HP sehingga `/profile` adalah jalan TERAKHIRNYA. Komentar basi di `TopNav.tsx` yang
+menunjuk `FavoritesRow.tsx:58` ikut dibetulkan.
+
+#### Bukti
+
+- Penjaga baru `tests/halaman-profil-akun.test.ts` (8 tes) yang **me-RENDER halamannya** — sampai
+  hari ini nol tes me-render `/profile`, celah yang sama persis dengan pemutar Playly, dan kini
+  halaman ini memuat form keamanan sehingga celahnya lebih mahal.
+- **Diuji-balik 2 titik:** pagar admin dilepas → **MERAH** di tes non-admin · baris konten
+  dipasang kembali → **MERAH**. Keduanya hijau lagi sesudah dipulihkan.
+- `npm run gerbang` **LOLOS exit 0** — build sukses · `tsc` exit 0 · **2.069 tes / 143 berkas
+  hijau**.
+- Pratinjau lokal diuji: `/`, `/profile`, `/history`, `/my-list` semua **200**.
+
+#### 🪤 RALAT pelajaran `exit 127` — pemicunya PIPA, bukan latar belakang
+
+Catatan di seksi gerbang di bawah sempat menyimpulkan `exit 127` muncul karena dijalankan di
+latar belakang. **Itu salah, dan sudah dibuktikan salah di sesi yang sama:** `npm run gerbang`
+di DEPAN pun memulangkan 127 begitu keluarannya dipipakan. Yang benar:
+
+| Cara menjalankan | Hasil |
+|---|---|
+| `npm run gerbang \| tail -45` (depan) | **exit 127 palsu** |
+| `npm run gerbang \| tail -40` (latar) | **exit 127 palsu** |
+| `npm run gerbang > log.txt 2>&1` lalu `tail` berkasnya | **exit 0, lolos penuh** |
+
+**Aturan: jangan pipakan keluaran `npm run gerbang`.** Tulis ke berkas dulu, baru baca berkasnya.
 
 ### ✅ BARU: gerbang pra-rilis jadi SATU perintah — `npm run gerbang`
 

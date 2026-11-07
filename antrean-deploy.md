@@ -30,6 +30,25 @@
 > dibatasi · **200** = sudah pulih, hapus blok peringatan ini.
 
 
+**Terakhir dicek:** 2026-11-07 ~19:25 (**komputer OWNER**), **sesudah rilis `eeb339e`**.
+`HEAD` = `origin/main` = `dramaku/main` = **`eeb339e`**. **Nol antrean** — SELURUH branch di
+cermin `dramaku` (11 branch) isinya sudah ada di `main`; nol commit menunggu.
+
+⬇️ **RILIS `6b8a8ec..eeb339e` — merge branch rekan `feat/menu-pemutar-playly`** (commit
+`179ef23`): baris **Volume Stabil** dikeluarkan dari menu titik tiga pemutar Playly. Owner
+MENGONFIRMASI ini memang permintaannya (jejaknya lewat chat, tak tercatat di repo) — dicek dulu
+karena rekan dulu menolak membuangnya. Gerbang kelima pemeriksaan HIJAU (2105 tes lulus).
+Deploy Railway **sukses 73 detik** sesudah push (dibuktikan lewat `gh api .../deployments`,
+BUKAN tebakan dari HTML — lihat PELAJARAN 2 di `HANDOFF.md`). **Downtime NOL** (30 pengecekan
+`200` berturut-turut). Tanpa SQL migrasi, tanpa env baru.
+
+🧹 **10 branch lama di cermin `dramaku` sudah nol gunanya** (isinya 100% ada di `main`, tertinggal
+206-464 commit): `chore/gitignore-claude-memory`, `feat/link-unduhan-provider-kualitas`,
+`feat/menu-pemutar-playly`, `feat/pemutar-play-tengah`, `feat/playly-integrasi`,
+`feat/playly-modal-unduhan`, `feat/playly-webhook`, `fix/playly-otomatis`,
+`gabung/unduhan-sendcm`, `redesign/playly-card`. Menghapusnya = keputusan owner, belum dikerjakan.
+
+<!-- riwayat cek sebelumnya -->
 **Terakhir dicek:** 2026-11-07 ~18:45 (**komputer OWNER**), **sesudah rilis `6b65e0a`**.
 `HEAD` = `origin/main` = `dramaku/main` = **`6b65e0a`** (diverifikasi `git fetch origin` +
 `git fetch dramaku`). **Nol antrean rilis.**

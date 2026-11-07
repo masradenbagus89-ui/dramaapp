@@ -130,7 +130,75 @@
 
 ---
 
-## 2026-11-07 — 📤 DIDORONG `6b65e0a` (rekan): pemutar episode — Putar di TENGAH, panel bawah tinggal timer, klik 2x ±10 detik
+## 2026-11-07 — ✅ TAYANG `eeb339e` (rekan): Volume Stabil DIKELUARKAN dari menu titik tiga Playly
+
+Owner: *"Tarik sekarang"* untuk branch `feat/menu-pemutar-playly` (1 commit `179ef23`, tertinggal
+24 commit dari `main`), lalu *"push"* sesudah gerbang hijau.
+
+**Isi:** baris **Volume Stabil** dihapus dari menu titik tiga pemutar Playly. State `volumeStabil`
+dibuang, `useOlahSuara` dipanggil dengan `volumeStabil: false`. **Mesinnya SENGAJA dibiarkan** —
+Penguat suara memakai rantai Web Audio yang sama; memunculkan barisnya lagi cukup mengembalikan
+state + baris menunya (komentar penjelasnya ada di `PlaylyPlayer.tsx`).
+
+### 🛑 DIHENTIKAN DULU sebelum digabung — dan itu benar
+
+Commit ini membuang fitur yang **owner bangun dari nol 2026-11-03** (`88d3429`), dan `HANDOFF.md:698`
+mencatat rekan dulu **MENOLAK** membuangnya dengan alasan itu — penolakan yang saat itu dinilai
+*"keputusan yang benar"*. Serah-terima rekan menulis terus terang *"**keputusan rekan**
+2026-11-07"*, bukan keputusan owner, dan **tidak ada jejak permintaan owner di repo**.
+
+✅ **Owner MENGONFIRMASI langsung 2026-11-07: penghapusan ini memang permintaannya** (lewat chat,
+tidak tercatat di repo). Keputusannya SAH. Dicatat di sini supaya sesi berikutnya tidak mengulang
+penyelidikan yang sama.
+
+### 🪤 PELAJARAN 1: tes HIJAU di sini BUKAN tanda aman
+
+29 tes pemutar lulus, nol bentrok, merge bersih — padahal perubahannya membuang fitur. Sebabnya
+rekan **ikut mengubah `tests/player-menu.test.ts`** supaya tesnya *mengharapkan* Volume Stabil tidak
+muncul. Penjaganya tidak menolak perubahan; arahnya ikut dibalik. **Aturan umum: kalau satu commit
+mengubah kode DAN tes penjaganya sekaligus, hijau tidak membuktikan apa-apa — baca diff tesnya.**
+
+### 🪤 PELAJARAN 2: "sidik chunk `/beranda`" BUKAN penanda deploy yang andal
+
+Pemantauan sidik chunk `/beranda` dipakai untuk mendeteksi versi baru tayang. Untuk rilis `6b65e0a`
+ia bekerja (berubah `72974fbfa38f` → `d05cf4f003ca` di detik ~320). Untuk rilis INI ia **tidak pernah
+berubah selama 580 detik** dan nyaris disimpulkan "build gagal" — padahal deploy **sukses di detik
+~73**. Sebabnya commit ini cuma menyentuh `PlayerMenu.tsx` + `PlaylyPlayer.tsx`, yang **tidak dimuat
+di `/beranda`**, jadi berkas JS halaman itu memang identik.
+
+✅ **Cara yang BENAR dan murah — tanya GitHub, jangan menebak dari HTML:**
+`gh api repos/masradenbagus89-ui/dramaapp/deployments --jq '.[0:3] | .[] | .created_at + " " + .environment'`
+lalu `gh api repos/.../deployments/<id>/statuses`. Untuk `eeb339e`: Railway **`success` 12:16:52Z**,
+push 12:15:39Z → **73 detik**. Catatan sampingan: **Vercel ternyata MASIH ikut menerima deploy**
+(`dramaapp-822ehnycz-dramaapp.vercel.app` juga `success`) — relevan untuk pengingat "MATIKAN
+dramaapp.vercel.app" yang masih menggantung.
+
+### Bukti
+
+- **Gerbang `npm run gerbang` kelima pemeriksaan HIJAU** (exit 0): build sukses · `tsc` 0 error ·
+  **2105 tes / 147 berkas lulus, nol gagal** · nol berkas rahasia di antrean.
+- **Nol berkas disentuh kedua sisi** (`comm -12` atas daftar berkas kedua cabang) — bentrok mustahil,
+  bukan sekadar "kebetulan tidak bentrok".
+- **`posisiSesudahLoncat` TIDAK tersentuh** → fitur klik-2x dari rilis `6b65e0a` aman.
+- Dikerjakan di branch uji `uji/menu-pemutar-playly` dulu, `main` baru disentuh sesudah owner
+  memutuskan. Branch uji sudah dihapus.
+- **Downtime NOL**: `/beranda` = `200` di **30 pengecekan** berturut-turut selama pergantian versi.
+- Smoke test sesudah tayang: `/` · `/beranda` · `/katalog` · `/film` · `/discover` **200**;
+  `/drama/<slug>` · `/feed/<slug>` · `/api/dramas` tetap **500** (Supabase 402, kondisi LAMA).
+
+⚠️ **Perubahan ini BELUM bisa dilihat siapa pun** — menu titik tiga itu ada di dalam pemutar film
+Playly, dan server Playly sedang membalas 500 sehingga `/film` tampil 200 **tapi nol film**.
+
+🧹 **Catatan kebersihan:** rekan **mengubah** berkas serah-terima lamanya
+(`docs/serah-terima/2026-11-06-menu-titik-tiga-pemutar-playly.md`) alih-alih membuat berkas baru
+seperti AGENTS.local.md butir 1. Kali ini tidak bentrok karena owner tak menyentuh berkas itu —
+tapi itu persis celah yang aturan "berkas baru tiap tugas" tutup. Ingatkan ke rekan.
+
+🔙 **Mundur:** `git revert -m 1 eeb339e` lalu dual push, atau redeploy `6b8a8ec` di panel Railway.
+
+---
+
+## 2026-11-07 — ✅ TAYANG `6b65e0a` (rekan): pemutar episode — Putar di TENGAH, panel bawah tinggal timer, klik 2x ±10 detik
 
 Owner: *"git pull branch kerjaan yusup"* lalu *"rilis sekarang"*. Branch `feat/pemutar-play-tengah`
 dari repo cermin `ojokesusu/dramaku`, **1 commit** tepat di atas `9d3aef2` (tidak tertinggal,

@@ -13,7 +13,7 @@ import {
   tulisFilter,
   type CatalogFilter,
 } from "@/lib/discover";
-import { STRIP_KATALOG, buildNavMenus } from "@/lib/nav-katalog";
+import { STRIP_KATALOG, buildNavMenus, TUJUAN_CARI } from "@/lib/nav-katalog";
 import type { PlaylyVideoPublik } from "@/lib/playly-publik";
 import CatalogCard from "./beranda/CatalogCard";
 import StripKatalog from "./beranda/StripKatalog";
@@ -213,6 +213,18 @@ export default function DramaBrowser({
            lain. */
         modeTombol
         bukaAwal={Boolean(filter.q)}
+        /* Seragam dengan KepalaBeranda & KerangkaKepalaKatalog.
+
+           ⚠️ BATAS JUJUR (diukur 2026-11-07): di `modeTombol`, formnya BELUM
+           tergambar sampai kotaknya dibuka — jadi ini BUKAN penyelamat untuk
+           jendela sebelum JavaScript aktif, seperti yang berlaku di kotak cari
+           biasa. Gunanya di sini dua: (a) begitu kotak terbuka, Enter tetap
+           mencari walau JS belakangan gagal, dan (b) keempat pemakai SearchBar
+           memakai prop yang sama — sebelumnya hanya KERANGKA pemuatan yang
+           punya, sementara bar sungguhannya telanjang, dan perbedaan diam-diam
+           seperti itulah yang membuat dua bar "sama" berperilaku beda. */
+        action={TUJUAN_CARI}
+        namaKolom="q"
       />
       {/* activeHref: chip yang alamatnya PERSIS sama dengan penyaring yang
           sedang berlaku akan disorot. Cocok karena tiap chip memasang satu

@@ -2,13 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { STRIP_KATALOG, alamatCari, type NavMenu } from "@/lib/nav-katalog";
+import { STRIP_KATALOG, alamatCari, type NavMenu, TUJUAN_CARI } from "@/lib/nav-katalog";
 import SearchBar, { KELAS_MENEMPEL_KEPALA } from "./SearchBar";
 import StripKatalog from "./StripKatalog";
 import { chromeKatalog } from "./KepalaKatalog";
 
-/** Alamat hasil pencarian — dipakai `action` form supaya jalan tanpa JavaScript. */
-const TUJUAN_CARI = "/discover";
 
 /**
  * Kepala situs halaman `/beranda`: bar cari merah (logo/menu-aplikasi + menu

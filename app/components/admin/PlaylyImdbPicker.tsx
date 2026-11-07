@@ -260,6 +260,17 @@ export default function PlaylyImdbPicker({
             <input
               value={tahun}
               onChange={(e) => setTahun(e.target.value)}
+              // Enter di kotak INI dulu tidak melakukan apa-apa, sementara
+              // Enter di kotak "Nama film" sebelahnya mencari. Dua kotak
+              // bersebelahan dengan tombol yang sama tapi perilaku tombol
+              // Enter berbeda = owner mengira pencariannya macet, padahal
+              // cuma salah kotak saat menekan Enter.
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  void cari();
+                }
+              }}
               placeholder="Tahun"
               inputMode="numeric"
               aria-label="Tahun rilis (boleh dikosongkan)"

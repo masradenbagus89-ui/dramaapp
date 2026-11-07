@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { Search } from "lucide-react";
 import { punyaNavbarAtas } from "@/lib/navigasi-halaman";
-import { alamatCari } from "@/lib/nav-katalog";
+import { alamatCari, TUJUAN_CARI } from "@/lib/nav-katalog";
 import { AKUN_PENONTON_ENABLED } from "@/lib/saklar-fitur";
 import { TEKS_KOTAK_CARI } from "./beranda/SearchBar";
 
@@ -193,12 +193,33 @@ export default function TopNav() {
 
         <form
           onSubmit={onSearch}
+          /* `action` + `method` + `name` di bawah hanya berarti SEBELUM
+             JavaScript aktif: sesudahnya `onSearch` memanggil
+             preventDefault(). Tanpa ketiganya, menekan Enter di jendela itu
+             cuma memuat ulang halaman dan KETIKAN PENONTON HILANG tanpa jejak
+             — pelajaran yang sudah ditulis di SearchBar.tsx tapi belum sampai
+             ke kotak cari ini. */
+          action={TUJUAN_CARI}
+          method="get"
+          role="search"
           className="ml-auto hidden max-w-xs flex-1 md:flex"
         >
           <div className="relative w-full">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
+            {/* 🪤 Kaca pembesar ini dulu `pointer-events-none` — MURNI hiasan.
+                Ia terlihat persis seperti tombol, jadi penonton mengkliknya
+                dan tidak terjadi apa-apa: nol error, nol jejak, dan satu-satunya
+                cara mencari adalah menekan Enter yang tak pernah diberitahukan.
+                Sekarang ia tombol submit sungguhan. */}
+            <button
+              type="submit"
+              aria-label="Cari"
+              className="absolute left-0 top-0 flex h-full w-9 items-center justify-center rounded-l-full text-zinc-500 outline-none transition-colors hover:text-amber-400 focus-visible:text-amber-400"
+            >
+              <Search className="size-4" />
+            </button>
             <Input
               type="search"
+              name="q"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               // Tulisan yang SAMA dengan kotak cari lebar di bar merah — dulu

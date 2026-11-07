@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { STRIP_KATALOG, alamatCari, type NavMenu } from "@/lib/nav-katalog";
+import { STRIP_KATALOG, alamatCari, type NavMenu, TUJUAN_CARI } from "@/lib/nav-katalog";
 import SearchBar, { KELAS_MENEMPEL_KEPALA } from "./SearchBar";
 import StripKatalog from "./StripKatalog";
 import { chromeKatalog } from "./KepalaKatalog";
@@ -13,7 +13,6 @@ type Props = {
 };
 
 /** Alamat halaman hasil pencarian — dipakai `action` form saat JS belum aktif. */
-const TUJUAN_CARI = "/discover";
 
 /**
  * Kepala situs /discover yang tergambar SELAGI katalognya belum siap.

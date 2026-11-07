@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { STRIP_KATALOG, alamatCari, type NavMenu } from "@/lib/nav-katalog";
+import { STRIP_KATALOG, alamatCari, type NavMenu, TUJUAN_CARI } from "@/lib/nav-katalog";
 import StripKatalog from "./StripKatalog";
 import { LogoDramaKu } from "./KepalaKatalog";
 import NavMenus from "./NavMenus";
@@ -49,6 +49,18 @@ export default function PublicTopBars({ menus }: Props) {
            paling sering dilihat, dan kepala yang berbeda di sini akan
            mengembalikan persis keluhan "beda dengan Home". */
         modeTombol
+        /* Seragam dengan KepalaBeranda & KerangkaKepalaKatalog.
+
+           ⚠️ BATAS JUJUR (diukur 2026-11-07): di `modeTombol`, formnya BELUM
+           tergambar sampai kotaknya dibuka — jadi ini BUKAN penyelamat untuk
+           jendela sebelum JavaScript aktif, seperti yang berlaku di kotak cari
+           biasa. Gunanya di sini dua: (a) begitu kotak terbuka, Enter tetap
+           mencari walau JS belakangan gagal, dan (b) keempat pemakai SearchBar
+           memakai prop yang sama — sebelumnya hanya KERANGKA pemuatan yang
+           punya, sementara bar sungguhannya telanjang, dan perbedaan diam-diam
+           seperti itulah yang membuat dua bar "sama" berperilaku beda. */
+        action={TUJUAN_CARI}
+        namaKolom="q"
         chrome={{
           /* Logo dirapikan 2026-09-21: kotak kuning berisi huruf "D" diganti
              lambang situs yang sesungguhnya. Komponennya SAMA dengan kepala

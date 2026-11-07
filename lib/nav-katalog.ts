@@ -53,7 +53,19 @@ export type NavMenu = {
  * diabaikan DIAM-DIAM — menu terlihat hidup padahal mati. Ini juga perilaku
  * situs katalog aslinya: klik Genre > Action = pindah ke halaman daftar Action.
  */
-const TUJUAN = "/discover";
+/**
+ * Alamat halaman hasil pencarian — SATU sumber untuk seluruh situs.
+ *
+ * ⚠️ Diekspor 2026-11-07. Sebelumnya nilainya ditulis TIGA kali: di sini
+ * (dipakai `alamatCari()`, yaitu jalur ketika JavaScript sudah aktif) dan
+ * sebagai `TUJUAN_CARI` tulis-tangan di KepalaBeranda.tsx serta
+ * KerangkaKepalaKatalog.tsx (dipakai `action` form, yaitu jalur ketika JS
+ * BELUM aktif). Kalau alamatnya suatu saat pindah, kedua jalur itu bisa
+ * menyimpang tanpa satu pun error: pencarian jalan saat JS aktif, dan
+ * mendarat di halaman 404 saat belum.
+ */
+export const TUJUAN_CARI = "/discover";
+const TUJUAN = TUJUAN_CARI;
 
 function tautan(params: Record<string, string>): string {
   const q = new URLSearchParams(params).toString();

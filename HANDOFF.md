@@ -130,6 +130,72 @@
 
 ---
 
+## 2026-11-07 — 📤 DIDORONG `6b65e0a` (rekan): pemutar episode — Putar di TENGAH, panel bawah tinggal timer, klik 2x ±10 detik
+
+Owner: *"git pull branch kerjaan yusup"* lalu *"rilis sekarang"*. Branch `feat/pemutar-play-tengah`
+dari repo cermin `ojokesusu/dramaku`, **1 commit** tepat di atas `9d3aef2` (tidak tertinggal,
+fast-forward murni). Serah-terima rekan: `docs/serah-terima/2026-11-07-pemutar-episode-play-tengah.md`.
+
+**Isi perubahan** (6 berkas, +181/−233 — kodenya justru menyusut):
+- Tombol Putar/Jeda bulat 64px pindah ke **tengah** video.
+- Panel bawah tinggal judul + Eps x/y + subtitle + garis geser + **timer**. Tombol prev/play/next,
+  volume, dan tombol Episode di panel bawah dihapus.
+- Gerigi pengaturan pindah ke **kanan atas** (isi menu tetap: subtitle, resolusi, kecepatan, unduh,
+  layar penuh).
+- **Klik 2x ala YouTube**: sisi kanan +10 detik, sisi kiri −10 detik (pakai `posisiSesudahLoncat`
+  dari `app/components/player/PlaylyPlayer.tsx:94` — diverifikasi ADA, bukan impor karangan).
+  Like lewat klik 2x **dihapus**; like sekarang hanya lewat tombol hati.
+
+**Gerbang pra-rilis `npm run gerbang` — kelima pemeriksaan HIJAU** (exit 0): hapus `.next` ·
+`npm run build` sukses · `npx tsc --noEmit` 0 error · **`npm test` 2105 lulus / 147 berkas / nol
+gagal** · nol berkas rahasia di antrean push. Tes `episode-naik-ke-sidebar.test.ts` yang **gagal di
+komputer rekan LULUS di sini** — dugaan rekan soal `core.autocrlf` di komputernya terbukti benar.
+
+**Diverifikasi sendiri, tidak sekadar percaya catatan rekan:** `git diff` ke seluruh `app/` dicari
+pola `video-url|PAYWALL|token|auth|service_role|NEXT_PUBLIC|apikey|secret` → **nol baris**. Pengaman
+keamanan tidak tersentuh. Tanpa SQL migrasi, tanpa env baru.
+
+**Dual push 2026-11-07 ~18:40** — cermin `dramaku` dulu lalu produksi `origin` (urutan §5), keduanya
+`9d3aef2..6b65e0a`, fast-forward murni (`git log main..origin/main` kosong sebelum push).
+
+### ⚠️ BELUM BISA DIBUKTIKAN TAYANG — dan sebabnya BUKAN rilis ini
+
+Smoke test di situs sungguhan (`dramaapp-production-9e88.up.railway.app`):
+
+| Halaman | Status | Catatan |
+|---|---|---|
+| `/` · `/beranda` · `/katalog` · `/film` · `/discover` | **200** | hidup, pakai cadangan `data/dramas.json` |
+| `/drama/<slug>` | **500** | 🔴 |
+| `/feed/<slug>` (halaman nonton) | **500** | 🔴 justru halaman yang diubah rilis ini |
+| `/watch/<slug>/<ep>` | 307 → `/feed` | ikut 500 |
+| `/api/dramas` | **500** | 🔴 |
+
+**Dibuktikan BUKAN regresi rilis ini, dua cara:** (a) `git show --stat 6b65e0a` → **nol** berkas
+`app/feed/`, `app/watch/`, atau `lib/` tersentuh — yang berubah cuma komponen UI pemutar;
+(b) saat `/feed` diukur 500, chunk JS yang tayang **masih versi lama** (teks penanda `"+10 detik"`
+belum ada di bundle). Jadi 500-nya sudah ada sebelum rilis mendarat.
+
+**Penyebabnya Supabase 402** yang sudah tercatat di blok peringatan di kepala berkas ini.
+
+### 🔑 TEMUAN BARU yang menjelaskan kenapa situs terasa rusak total
+
+`getDrama()` di `lib/dramas.ts:195` **TIDAK punya cadangan lokal**, padahal fungsi daftar
+`getAllDramasCachedSafe()` di `lib/dramas.ts:264` punya (`catch` → `readLocalDramas()`).
+
+Akibatnya **timpang dan menyesatkan**: beranda tampil normal dengan 42 drama dari cadangan, tapi
+**setiap tautan yang diklik mati 500**. Pengunjung melihat katalog penuh yang seluruh isinya tidak
+bisa dibuka. Ini juga sebabnya fitur pemutar baru tak bisa diuji siapa pun.
+
+⚠️ **Jangan langsung tambal tanpa cek:** halaman nonton juga butuh alamat video lewat
+`/api/video-url`, dan catatan di kepala berkas ini mencatat server Playly sendiri membalas 500
+(`galat_database`). Jadi memberi `getDrama` cadangan **mungkin** memulihkan halaman drama tapi
+**belum tentu** membuat video bisa diputar — harus diukur dulu, jangan dijanjikan.
+
+**Rollback kalau perlu:** `git revert 6b65e0a` lalu dual push — atau di dashboard Railway pilih
+deployment sebelumnya → Redeploy.
+
+---
+
 ## 2026-11-07 — ✅ TAYANG `4fb6ecf`: rilis besar 19 commit (pemutar · /profile · pencarian · gerbang rilis)
 
 Owner minta `git pull` + periksa branch yang dikerjakan rekan, lalu memutuskan apa yang diambil.

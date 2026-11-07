@@ -30,10 +30,26 @@
 > dibatasi · **200** = sudah pulih, hapus blok peringatan ini.
 
 
-**Terakhir dicek:** 2026-11-07 ~15:48 (**komputer OWNER**), **sesudah rilis `4fb6ecf`**.
-`HEAD` = `origin/main` = `dramaku/main` = **`4fb6ecf`** (diverifikasi `git fetch origin` +
-`git fetch dramaku`). **Nol antrean** — tak ada yang menunggu rilis, tak ada branch rekan yang
-tertinggal.
+**Terakhir dicek:** 2026-11-07 ~18:45 (**komputer OWNER**), **sesudah rilis `6b65e0a`**.
+`HEAD` = `origin/main` = `dramaku/main` = **`6b65e0a`** (diverifikasi `git fetch origin` +
+`git fetch dramaku`). **Nol antrean rilis.**
+
+⬇️ **RILIS `9d3aef2..6b65e0a` — 1 commit dari rekan** (branch `feat/pemutar-play-tengah`):
+pemutar episode, tombol Putar/Jeda pindah ke TENGAH video, panel bawah tinggal timer, klik 2x
+sisi kanan/kiri = maju/mundur 10 detik. Gerbang `npm run gerbang` **kelima pemeriksaan HIJAU**
+(2105 tes lulus, nol gagal). Tanpa SQL migrasi, tanpa env baru. Dual push cermin `dramaku` dulu
+lalu produksi `origin` (urutan §5), fast-forward murni.
+
+⚠️ **Rilis ini BELUM bisa dibuktikan tayang** — bukan karena rilisnya gagal, tapi karena halaman
+nonton `/feed/<slug>` membalas **500** akibat Supabase 402 (lihat blok peringatan di atas).
+Satu-satunya halaman yang memuat komponen yang diubah adalah `/feed/[id]`, jadi selama Supabase
+dibatasi, fitur ini tak bisa diuji siapa pun — termasuk owner. Rinciannya + temuan
+`getDrama()` tanpa cadangan ada di `HANDOFF.md` seksi `6b65e0a`.
+
+🕒 **MASIH ADA 1 branch rekan yang TERTINGGAL:** `dramaku/feat/menu-pemutar-playly` (commit
+`179ef23`, "keluarkan Volume Stabil dari menu titik tiga Playly") — tertinggal **24 commit** dari
+`main`. Belum bentrok, tapi ini pola yang dulu melahirkan 6 berkas bentrok di
+`redesign/playly-card`. Putuskan: tarik segera atau tutup.
 
 ⬇️ **RILIS BESAR `e486c17..4fb6ecf` — 19 commit sekaligus, hasil satu hari penuh.** Dual push
 cermin `dramaku` dulu lalu produksi `origin` (urutan §5), tayang **±77 detik** (push 15:46:30 →

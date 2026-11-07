@@ -253,14 +253,19 @@ disentuh untuk memasang penjaga ini.
 Owner memilih **commit lokal dulu, TAHAN rilis**. Riwayat git jadi aman dan tak bisa hilang,
 tapi tombol rilis **belum** ditekan.
 
-Tiga commit menunggu di komputer owner:
+Yang menunggu di komputer owner — **jumlah persisnya selalu bisa dibaca sendiri** dengan
+`git log --oneline origin/main..HEAD`, jadi angka di sini tak perlu dipercaya mentah-mentah.
+Yang **substantif** (menyentuh kode atau tes):
 
 - `f32b294` — dua berkas penjaga tes (nol kode produksi disentuh).
 - `cccf3ca` — merge kerja rekan ke main terkini.
 - `06ed695` — commit rekan yang terbawa lewat merge itu.
 
+Sisanya commit **catatan** (HANDOFF · antrean-deploy · INDEX · folder `docs/laporan/`) yang
+menyertainya — tak mengubah perilaku situs sama sekali.
+
 `origin/main` dan `dramaku/main` sama-sama masih di `e486c17` (diverifikasi `git fetch` ke
-KEDUA remote, 2026-11-07). Jadi ketiganya **belum ada di remote mana pun** — belum punya
+KEDUA remote, 2026-11-07). Jadi semuanya **belum ada di remote mana pun** — belum punya
 cadangan selain folder ini.
 
 ⚠️ **Alasan menahan rilis, bukan sekadar hati-hati:** verifikasi di situs sungguhan MUSTAHIL

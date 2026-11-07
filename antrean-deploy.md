@@ -34,8 +34,10 @@
 `origin/main` = `dramaku/main` = **`e486c17`** (diverifikasi `git fetch origin` +
 `git fetch dramaku`). `HEAD` lokal = **`f32b294`**.
 
-🟡 **ADA ANTREAN: 3 commit menunggu, belum ada di remote mana pun** (jadi belum punya cadangan
-selain folder di komputer owner):
+🟡 **ADA ANTREAN — belum ada di remote mana pun**, jadi belum punya cadangan selain folder di
+komputer owner. **Jumlah persisnya baca sendiri** dengan `git log --oneline origin/main..HEAD`
+(angka di tabel ini cuma yang substantif; commit catatan tidak didaftar supaya tabelnya tidak
+basi tiap kali catatan diperbarui):
 
 | Commit | Isi | Kode produksi? |
 |---|---|---|

@@ -175,6 +175,14 @@ Smoke test di situs sungguhan (`dramaapp-production-9e88.up.railway.app`):
 (b) saat `/feed` diukur 500, chunk JS yang tayang **masih versi lama** (teks penanda `"+10 detik"`
 belum ada di bundle). Jadi 500-nya sudah ada sebelum rilis mendarat.
 
+✅ **DIUKUR ULANG ~18:55, SESUDAH versi baru benar-benar tayang** (deploy Railway selesai
+**~320 detik** sesudah push; sidik chunk `/beranda` berubah `72974fbfa38f` → `d05cf4f003ca`,
+jadi build SUKSES — bukan gagal diam-diam seperti insiden 7 deployment 22 jam pada 2026-09-01):
+`/` · `/beranda` · `/katalog` · `/film` · `/discover` semua **200**, sedangkan
+`/drama/<slug>` · `/feed/<slug>` · `/api/dramas` tetap **500**, dan REST Supabase tetap **402**.
+Angka yang sama persis sebelum dan sesudah versi baru mendarat = **bukti terkuat bahwa 500 itu
+bukan regresi rilis ini**. Downtime akibat pergantian versi: **NOL**.
+
 **Penyebabnya Supabase 402** yang sudah tercatat di blok peringatan di kepala berkas ini.
 
 ### 🔑 TEMUAN BARU yang menjelaskan kenapa situs terasa rusak total

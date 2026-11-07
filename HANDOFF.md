@@ -76,7 +76,7 @@
 > ganti alamat tanpa `rm -rf .next` + nyala ulang akan tetap menyajikan alamat lama.
 
 
-**Terakhir diisi:** 2026-11-07 — ✅ **DI-COMMIT LOKAL (`f32b294`), ⏸️ BELUM DIRILIS atas keputusan owner: menu titik tiga pemutar Playly dari rekan DIGABUNG ke main dan DIPAKAI apa adanya.** Owner menarik branch rekan `feat/menu-pemutar-playly` (1 commit `06ed695`, tertinggal 4 commit, merge **nol bentrok**). Menu jadi 6 baris urut: Subtitle (+ Gaya subtitle) · Kecepatan pemutar · Volume Stabil · Penguat suara · Pencahayaan sinematik · Kualitas video; Subtitle & Kecepatan **tidak** punya tombol langsung di baris kontrol, PiP & layar penuh tetap punya. ⚠️ **Keputusan owner sempat BERUBAH di tengah** — tombol langsung CC & Kecepatan sudah dipulihkan penuh (membalik kembali ke permintaan 2026-09-28 `39be664`), lalu owner **melihat hasilnya di layar** dan membatalkannya: *"tetap pakai yang rekan saya kerjakan saja"*. Pemulihan dibuang sebelum sempat di-commit; `PlaylyPlayer.tsx` kini **persis** kerja rekan (`git status` kosong). 🪤 **Celah yang ditemukan di tengah putaran itu TETAP berguna dan sudah ditutup:** tidak ada SATU pun tes yang me-render `PlaylyPlayer`, jadi tombolnya bisa dihapus tanpa tes merah — dan `player-menu.test.ts` milik rekan **tidak** menangkap kalau sambungan menu→video putus (dibuktikan: sambungan diputus → tes rekan tetap 11 lulus). Penjaga baru `tests/pemutar-playly-kontrol.test.ts` (4 tes). ➕ Owner juga menyetujui penjaga SERUPA untuk menu pengaturan pemutar drama (`PlayerSettings`, yang juga nol tes): `tests/pemutar-drama-pengaturan.test.ts`, 8 tes. ❌ **Klaim rekan "1 tes gagal di `origin/main` murni" TIDAK berlaku di main terkini** — diuji ulang: `tests/episode-naik-ke-sidebar.test.ts` **12 lulus**, `npm test` penuh hijau. **Bukti:** build sukses · `tsc` exit 0 · **2.055 tes / 142 berkas hijau** (dari 2.040/140) · kedua penjaga diuji **MERAH lebih dulu** di 4 titik · **nol kode produksi disentuh** pada keadaan akhir. Tanpa SQL/env baru. ⚠️ **Verifikasi di produksi MUSTAHIL sekarang** — lihat blok peringatan Playly 500 di atas. ✅ **Di-commit lokal (sesi kedua, keputusan owner "commit dulu, tahan rilis"): `f32b294` penjaga tes + `cccf3ca` merge + `06ed695` rekan = 3 commit MENUNGGU; `origin/main` & `dramaku/main` masih `e486c17`.** Folder `docs/laporan/` ikut masuk git (skrip + 3 potret publik; PDF/PPTX/pratinjau di-gitignore). ⚠️ `npm run build` TIDAK diulang di sesi kedua (ada `next start -p 3100` yang sedang dipakai) — `tsc` exit 0 & 2.055 tes hijau sudah diukur sendiri. 🔑 **Login admin di LOKAL sekarang BISA** saat Supabase mati — sebabnya bukan password melainkan **503** (`isAdminEmail()` menanya Supabase sebelum password diperiksa); jalan keluarnya mode berkas resmi project ini (`ALLOW_FILE_MODE=1` + env Supabase dikosongkan), diuji sampai 200 `role:admin`. 🆕 **`/profile` jadi halaman AKUN** (keputusan owner): Lanjut Menonton · Riwayat Terbaru · Favorit dibuang dari sana (rumahnya `/beranda`, `/history`, `/my-list` — nol fitur hilang), diganti seksi **Akun** (nama + avatar) dan **Keamanan** (ubah password + 2FA, admin saja, komponennya dipakai ulang dari panel admin). 🪤 Kedua baris lama ternyata memanggil fungsi yang SAMA — dua judul untuk daftar yang sama. 🆕 **Gerbang pra-rilis kini SATU perintah: `npm run gerbang`** (keputusan owner) — kelima pemeriksaan §6 berurutan, menolak jalan kalau urutan `build`/`tsc` tertukar. Dijalankan sungguhan: percobaan PERTAMA **menangkap kesalahan nyata** (exit 1), sesudah diperbaiki **✓ LOLOS exit 0** dengan **2.066 tes / 143 berkas hijau**. **⬇️ Rincian di seksi `## 2026-11-07` di bawah.**
+**Terakhir diisi:** 2026-11-07 — ✅ **DI-COMMIT LOKAL (`f32b294`), ⏸️ BELUM DIRILIS atas keputusan owner: menu titik tiga pemutar Playly dari rekan DIGABUNG ke main dan DIPAKAI apa adanya.** Owner menarik branch rekan `feat/menu-pemutar-playly` (1 commit `06ed695`, tertinggal 4 commit, merge **nol bentrok**). Menu jadi 6 baris urut: Subtitle (+ Gaya subtitle) · Kecepatan pemutar · Volume Stabil · Penguat suara · Pencahayaan sinematik · Kualitas video; Subtitle & Kecepatan **tidak** punya tombol langsung di baris kontrol, PiP & layar penuh tetap punya. ⚠️ **Keputusan owner sempat BERUBAH di tengah** — tombol langsung CC & Kecepatan sudah dipulihkan penuh (membalik kembali ke permintaan 2026-09-28 `39be664`), lalu owner **melihat hasilnya di layar** dan membatalkannya: *"tetap pakai yang rekan saya kerjakan saja"*. Pemulihan dibuang sebelum sempat di-commit; `PlaylyPlayer.tsx` kini **persis** kerja rekan (`git status` kosong). 🪤 **Celah yang ditemukan di tengah putaran itu TETAP berguna dan sudah ditutup:** tidak ada SATU pun tes yang me-render `PlaylyPlayer`, jadi tombolnya bisa dihapus tanpa tes merah — dan `player-menu.test.ts` milik rekan **tidak** menangkap kalau sambungan menu→video putus (dibuktikan: sambungan diputus → tes rekan tetap 11 lulus). Penjaga baru `tests/pemutar-playly-kontrol.test.ts` (4 tes). ➕ Owner juga menyetujui penjaga SERUPA untuk menu pengaturan pemutar drama (`PlayerSettings`, yang juga nol tes): `tests/pemutar-drama-pengaturan.test.ts`, 8 tes. ❌ **Klaim rekan "1 tes gagal di `origin/main` murni" TIDAK berlaku di main terkini** — diuji ulang: `tests/episode-naik-ke-sidebar.test.ts` **12 lulus**, `npm test` penuh hijau. **Bukti:** build sukses · `tsc` exit 0 · **2.055 tes / 142 berkas hijau** (dari 2.040/140) · kedua penjaga diuji **MERAH lebih dulu** di 4 titik · **nol kode produksi disentuh** pada keadaan akhir. Tanpa SQL/env baru. ⚠️ **Verifikasi di produksi MUSTAHIL sekarang** — lihat blok peringatan Playly 500 di atas. ✅ **Di-commit lokal (sesi kedua, keputusan owner "commit dulu, tahan rilis"): `f32b294` penjaga tes + `cccf3ca` merge + `06ed695` rekan = 3 commit MENUNGGU; `origin/main` & `dramaku/main` masih `e486c17`.** Folder `docs/laporan/` ikut masuk git (skrip + 3 potret publik; PDF/PPTX/pratinjau di-gitignore). ⚠️ `npm run build` TIDAK diulang di sesi kedua (ada `next start -p 3100` yang sedang dipakai) — `tsc` exit 0 & 2.055 tes hijau sudah diukur sendiri. 🧹 **"Menu Cepat" di /profile & menu Keamanan(2FA) di sidebar admin DIBUANG** (owner) — keluhan owner diverifikasi dan terbukti: "Download" menuju parameter yang tak pernah ditangani, "Bantuan" menuju halaman LOGIN. ⚠️ Menu itu ternyata pintu TERAKHIR ke /my-list, jadi "Favorit" dipindahkan ke menu akun di balik avatar. 🔑 **Login admin di LOKAL sekarang BISA** saat Supabase mati — sebabnya bukan password melainkan **503** (`isAdminEmail()` menanya Supabase sebelum password diperiksa); jalan keluarnya mode berkas resmi project ini (`ALLOW_FILE_MODE=1` + env Supabase dikosongkan), diuji sampai 200 `role:admin`. 🆕 **`/profile` jadi halaman AKUN** (keputusan owner): Lanjut Menonton · Riwayat Terbaru · Favorit dibuang dari sana (rumahnya `/beranda`, `/history`, `/my-list` — nol fitur hilang), diganti seksi **Akun** (nama + avatar) dan **Keamanan** (ubah password + 2FA, admin saja, komponennya dipakai ulang dari panel admin). 🪤 Kedua baris lama ternyata memanggil fungsi yang SAMA — dua judul untuk daftar yang sama. 🆕 **Gerbang pra-rilis kini SATU perintah: `npm run gerbang`** (keputusan owner) — kelima pemeriksaan §6 berurutan, menolak jalan kalau urutan `build`/`tsc` tertukar. Dijalankan sungguhan: percobaan PERTAMA **menangkap kesalahan nyata** (exit 1), sesudah diperbaiki **✓ LOLOS exit 0** dengan **2.066 tes / 143 berkas hijau**. **⬇️ Rincian di seksi `## 2026-11-07` di bawah.**
 
 ---
 
@@ -131,6 +131,59 @@
 ## 2026-11-07 — ⏸️ Menu titik tiga pemutar Playly dari rekan DIGABUNG & DIPAKAI apa adanya (belum dirilis)
 
 Owner minta `git pull` + periksa branch yang dikerjakan rekan, lalu memutuskan apa yang diambil.
+
+### 🧹 Lanjutan: "Menu Cepat" & menu Keamanan(2FA) sidebar DIBUANG (owner 2026-11-07)
+
+Owner: *"2FA sudah ada di profile yang di sidebar kamu hapus, menu cepat kamu hapus juga karena
+ketika ku klik banyak yang belum berfungsi"*.
+
+**Keluhannya diverifikasi dulu, dan terbukti BENAR.** Dua dari lima tombol Menu Cepat memang
+rusak, dan kerusakannya **senyap** — tombolnya bisa diklik, halamannya terbuka, isinya saja yang
+bukan yang dijanjikan:
+
+| Tombol | Tujuannya | Kenyataannya |
+|---|---|---|
+| Download | `/history?tab=downloads` | `app/history/page.tsx` **nol menangani** parameter `tab` → cuma membuka Riwayat |
+| Bantuan | `/login` | halaman **login**, bukan pusat bantuan |
+| Premium / Koin | `#premium` | memang sudah tidak digambar (`PAYWALL_ENABLED = false`) |
+
+⚠️ **Akibat yang disurface DULU ke owner, bukan dikerjakan diam-diam:** Menu Cepat ternyata
+**satu-satunya pintu tersisa ke `/my-list`**. Halaman itu sudah dilepas dari navbar DAN bar bawah
+HP, dan baris "Favorit Saya" di beranda **tak pernah tergambar** — `app/beranda/page.tsx:110`
+memanggil `PersonalRows` dengan `hanyaLanjut` (keputusan owner 2026-10-28). Owner memilih: buang
+Menu Cepat, **pindahkan "Favorit" ke menu akun di balik avatar**, sebaris di bawah "Riwayat".
+
+🪤 Komentar di `TopNav.tsx` yang menyebut baris "Favorit Saya" di beranda sebagai jalan kedua
+ternyata **BASI** — ikut dibetulkan. Komentar yang salah di berkas navigasi berbahaya persis
+karena ia dipercaya saat memutuskan "aman tidak kalau tombol ini dilepas?".
+
+**Sidebar admin:** menu "Keamanan (2FA)" dibuang (panelnya kini di `/profile`). Bagian
+`#keamanan` di `app/admin/page.tsx` **sengaja TIDAK ikut dihapus** — ia masih dirender saat
+halaman digulung, dan membuangnya perubahan cakupan yang belum diminta.
+
+#### Penjaga: tiga keputusan layar ini kini merah kalau dibatalkan diam-diam
+
+- `tests/bagian-admin.test.ts` — menu "Keamanan (2FA)" tak boleh kembali ke sidebar. Dijaga
+  karena **nol hal akan error** kalau ia kembali: ikonnya masih ada, bagiannya masih sah,
+  `#keamanan` masih dirender. Yang berubah cuma owner menemukan dua tempat untuk satu pengaturan.
+- `tests/halaman-profil-akun.test.ts` — "Menu Cepat" tak boleh kembali, dan tak boleh ada tautan
+  `/history?tab=`.
+- `tests/kepala-situs.test.ts` — `/my-list` wajib punya jalan dari dalam situs.
+
+💡 **Penjaga `/my-list` itu sudah DUA KALI pindah target dalam satu hari**
+(DashboardMenu ATAU FavoritesRow → DashboardMenu → MenuAkun), dan tiap kali **diperketat** ke
+pintu yang tersisa, bukan dilonggarkan. Itu justru buktinya ia bekerja: tiap kali pintu terakhir
+dipindahkan, ia merah lebih dulu dan **memaksa keputusan sadar** alih-alih membiarkan sebuah
+halaman jadi yatim diam-diam.
+
+Penjaga "menu profil tidak punya pintu Premium/Koin" **PINDAH** dari `tests/jeda-koin-iklan.test.ts`
+ke `tests/halaman-profil-akun.test.ts` — komponen yang dulu dirender di sana sudah tidak ada, tapi
+maksudnya tetap perlu; kini diuji pada halaman `/profile` yang sesungguhnya.
+
+**Bukti:** diuji-balik **3 titik**, semuanya MERAH lebih dulu (menu 2FA dipasang kembali ·
+"Favorit" dicabut · "Menu Cepat" dipasang kembali), ketiganya hijau lagi sesudah dipulihkan ·
+`npm run gerbang` **LOLOS exit 0** — build sukses, `tsc` exit 0, **2.070 tes / 143 berkas hijau** ·
+pratinjau lokal `/login` `/profile` `/admin` `/my-list` semua **200**.
 
 ### 🔑 Cara login sebagai pengelola di LOKAL saat Supabase mati (terbukti 2026-11-07)
 

@@ -76,7 +76,7 @@
 > ganti alamat tanpa `rm -rf .next` + nyala ulang akan tetap menyajikan alamat lama.
 
 
-**Terakhir diisi:** 2026-11-07 — ✅ **DI-COMMIT LOKAL (`f32b294`), ⏸️ BELUM DIRILIS atas keputusan owner: menu titik tiga pemutar Playly dari rekan DIGABUNG ke main dan DIPAKAI apa adanya.** Owner menarik branch rekan `feat/menu-pemutar-playly` (1 commit `06ed695`, tertinggal 4 commit, merge **nol bentrok**). Menu jadi 6 baris urut: Subtitle (+ Gaya subtitle) · Kecepatan pemutar · Volume Stabil · Penguat suara · Pencahayaan sinematik · Kualitas video; Subtitle & Kecepatan **tidak** punya tombol langsung di baris kontrol, PiP & layar penuh tetap punya. ⚠️ **Keputusan owner sempat BERUBAH di tengah** — tombol langsung CC & Kecepatan sudah dipulihkan penuh (membalik kembali ke permintaan 2026-09-28 `39be664`), lalu owner **melihat hasilnya di layar** dan membatalkannya: *"tetap pakai yang rekan saya kerjakan saja"*. Pemulihan dibuang sebelum sempat di-commit; `PlaylyPlayer.tsx` kini **persis** kerja rekan (`git status` kosong). 🪤 **Celah yang ditemukan di tengah putaran itu TETAP berguna dan sudah ditutup:** tidak ada SATU pun tes yang me-render `PlaylyPlayer`, jadi tombolnya bisa dihapus tanpa tes merah — dan `player-menu.test.ts` milik rekan **tidak** menangkap kalau sambungan menu→video putus (dibuktikan: sambungan diputus → tes rekan tetap 11 lulus). Penjaga baru `tests/pemutar-playly-kontrol.test.ts` (4 tes). ➕ Owner juga menyetujui penjaga SERUPA untuk menu pengaturan pemutar drama (`PlayerSettings`, yang juga nol tes): `tests/pemutar-drama-pengaturan.test.ts`, 8 tes. ❌ **Klaim rekan "1 tes gagal di `origin/main` murni" TIDAK berlaku di main terkini** — diuji ulang: `tests/episode-naik-ke-sidebar.test.ts` **12 lulus**, `npm test` penuh hijau. **Bukti:** build sukses · `tsc` exit 0 · **2.055 tes / 142 berkas hijau** (dari 2.040/140) · kedua penjaga diuji **MERAH lebih dulu** di 4 titik · **nol kode produksi disentuh** pada keadaan akhir. Tanpa SQL/env baru. ⚠️ **Verifikasi di produksi MUSTAHIL sekarang** — lihat blok peringatan Playly 500 di atas. ✅ **Di-commit lokal (sesi kedua, keputusan owner "commit dulu, tahan rilis"): `f32b294` penjaga tes + `cccf3ca` merge + `06ed695` rekan = 3 commit MENUNGGU; `origin/main` & `dramaku/main` masih `e486c17`.** Folder `docs/laporan/` ikut masuk git (skrip + 3 potret publik; PDF/PPTX/pratinjau di-gitignore). ⚠️ `npm run build` TIDAK diulang di sesi kedua (ada `next start -p 3100` yang sedang dipakai) — `tsc` exit 0 & 2.055 tes hijau sudah diukur sendiri. 🆕 **`/profile` jadi halaman AKUN** (keputusan owner): Lanjut Menonton · Riwayat Terbaru · Favorit dibuang dari sana (rumahnya `/beranda`, `/history`, `/my-list` — nol fitur hilang), diganti seksi **Akun** (nama + avatar) dan **Keamanan** (ubah password + 2FA, admin saja, komponennya dipakai ulang dari panel admin). 🪤 Kedua baris lama ternyata memanggil fungsi yang SAMA — dua judul untuk daftar yang sama. 🆕 **Gerbang pra-rilis kini SATU perintah: `npm run gerbang`** (keputusan owner) — kelima pemeriksaan §6 berurutan, menolak jalan kalau urutan `build`/`tsc` tertukar. Dijalankan sungguhan: percobaan PERTAMA **menangkap kesalahan nyata** (exit 1), sesudah diperbaiki **✓ LOLOS exit 0** dengan **2.066 tes / 143 berkas hijau**. **⬇️ Rincian di seksi `## 2026-11-07` di bawah.**
+**Terakhir diisi:** 2026-11-07 — ✅ **DI-COMMIT LOKAL (`f32b294`), ⏸️ BELUM DIRILIS atas keputusan owner: menu titik tiga pemutar Playly dari rekan DIGABUNG ke main dan DIPAKAI apa adanya.** Owner menarik branch rekan `feat/menu-pemutar-playly` (1 commit `06ed695`, tertinggal 4 commit, merge **nol bentrok**). Menu jadi 6 baris urut: Subtitle (+ Gaya subtitle) · Kecepatan pemutar · Volume Stabil · Penguat suara · Pencahayaan sinematik · Kualitas video; Subtitle & Kecepatan **tidak** punya tombol langsung di baris kontrol, PiP & layar penuh tetap punya. ⚠️ **Keputusan owner sempat BERUBAH di tengah** — tombol langsung CC & Kecepatan sudah dipulihkan penuh (membalik kembali ke permintaan 2026-09-28 `39be664`), lalu owner **melihat hasilnya di layar** dan membatalkannya: *"tetap pakai yang rekan saya kerjakan saja"*. Pemulihan dibuang sebelum sempat di-commit; `PlaylyPlayer.tsx` kini **persis** kerja rekan (`git status` kosong). 🪤 **Celah yang ditemukan di tengah putaran itu TETAP berguna dan sudah ditutup:** tidak ada SATU pun tes yang me-render `PlaylyPlayer`, jadi tombolnya bisa dihapus tanpa tes merah — dan `player-menu.test.ts` milik rekan **tidak** menangkap kalau sambungan menu→video putus (dibuktikan: sambungan diputus → tes rekan tetap 11 lulus). Penjaga baru `tests/pemutar-playly-kontrol.test.ts` (4 tes). ➕ Owner juga menyetujui penjaga SERUPA untuk menu pengaturan pemutar drama (`PlayerSettings`, yang juga nol tes): `tests/pemutar-drama-pengaturan.test.ts`, 8 tes. ❌ **Klaim rekan "1 tes gagal di `origin/main` murni" TIDAK berlaku di main terkini** — diuji ulang: `tests/episode-naik-ke-sidebar.test.ts` **12 lulus**, `npm test` penuh hijau. **Bukti:** build sukses · `tsc` exit 0 · **2.055 tes / 142 berkas hijau** (dari 2.040/140) · kedua penjaga diuji **MERAH lebih dulu** di 4 titik · **nol kode produksi disentuh** pada keadaan akhir. Tanpa SQL/env baru. ⚠️ **Verifikasi di produksi MUSTAHIL sekarang** — lihat blok peringatan Playly 500 di atas. ✅ **Di-commit lokal (sesi kedua, keputusan owner "commit dulu, tahan rilis"): `f32b294` penjaga tes + `cccf3ca` merge + `06ed695` rekan = 3 commit MENUNGGU; `origin/main` & `dramaku/main` masih `e486c17`.** Folder `docs/laporan/` ikut masuk git (skrip + 3 potret publik; PDF/PPTX/pratinjau di-gitignore). ⚠️ `npm run build` TIDAK diulang di sesi kedua (ada `next start -p 3100` yang sedang dipakai) — `tsc` exit 0 & 2.055 tes hijau sudah diukur sendiri. 🔑 **Login admin di LOKAL sekarang BISA** saat Supabase mati — sebabnya bukan password melainkan **503** (`isAdminEmail()` menanya Supabase sebelum password diperiksa); jalan keluarnya mode berkas resmi project ini (`ALLOW_FILE_MODE=1` + env Supabase dikosongkan), diuji sampai 200 `role:admin`. 🆕 **`/profile` jadi halaman AKUN** (keputusan owner): Lanjut Menonton · Riwayat Terbaru · Favorit dibuang dari sana (rumahnya `/beranda`, `/history`, `/my-list` — nol fitur hilang), diganti seksi **Akun** (nama + avatar) dan **Keamanan** (ubah password + 2FA, admin saja, komponennya dipakai ulang dari panel admin). 🪤 Kedua baris lama ternyata memanggil fungsi yang SAMA — dua judul untuk daftar yang sama. 🆕 **Gerbang pra-rilis kini SATU perintah: `npm run gerbang`** (keputusan owner) — kelima pemeriksaan §6 berurutan, menolak jalan kalau urutan `build`/`tsc` tertukar. Dijalankan sungguhan: percobaan PERTAMA **menangkap kesalahan nyata** (exit 1), sesudah diperbaiki **✓ LOLOS exit 0** dengan **2.066 tes / 143 berkas hijau**. **⬇️ Rincian di seksi `## 2026-11-07` di bawah.**
 
 ---
 
@@ -131,6 +131,64 @@
 ## 2026-11-07 — ⏸️ Menu titik tiga pemutar Playly dari rekan DIGABUNG & DIPAKAI apa adanya (belum dirilis)
 
 Owner minta `git pull` + periksa branch yang dikerjakan rekan, lalu memutuskan apa yang diambil.
+
+### 🔑 Cara login sebagai pengelola di LOKAL saat Supabase mati (terbukti 2026-11-07)
+
+Owner: *"aku mau liat hasilnya dan login sebagai pengelola tapi tidak bisa"*. Ditelusuri sampai
+sebabnya, bukan ditebak — dan sebabnya **bukan password**.
+
+**Yang diukur:** `POST /api/auth/login` membalas **HTTP 503** *"Server database sedang tidak
+merespons… Ini BUKAN karena email atau password kamu salah"*. Jalurnya: `isAdminEmail()` menanya
+Supabase lebih dulu untuk tahu email itu admin atau bukan; Supabase sedang **402** (kuota egress),
+jadi ia melempar error **sebelum password sempat diperiksa sama sekali**. Penanganannya sudah
+BENAR dan tidak perlu diapa-apakan — ia gagal-TUTUP (OWASP A10:2025: nol sesi diterbitkan di
+jalur error) dan sudah membedakan "database mati" dari "password salah".
+
+**Jalan keluarnya pakai mode BERKAS yang memang sudah disediakan project ini**, bukan menerobos
+pengaman apa pun: `useSupabase = Boolean(SUPABASE_URL && SUPABASE_KEY)` (`lib/supabase.ts:113`),
+jadi mengosongkan kedua env membuat seluruh lib membaca `data/*.json`.
+
+🪤 **Mengosongkannya saja TIDAK cukup** — aplikasi menolak start dengan pesan panjang, dan itu
+pagar yang BENAR: mode berkas di produksi berarti data penonton ditulis ke disk container lalu
+lenyap tiap redeploy, tanpa satu pun error. Saklar resminya disebut di pesan itu sendiri:
+**`ALLOW_FILE_MODE=1`**.
+
+**Perintahnya (dijalankan dari folder project, LOKAL saja):**
+
+```
+ALLOW_FILE_MODE=1 SUPABASE_URL="" SUPABASE_SERVICE_ROLE_KEY="" NEXT_PUBLIC_SUPABASE_URL="" \
+SUPABASE_KEY="" PLAYLY_API_URL="http://127.0.0.1:3056" npx next start -p 3100
+```
+
+(`PLAYLY_API_URL` opsional — hanya perlu kalau server tiruan Playly sedang dipakai.)
+
+**Masuk dengan:** salah satu email di `data/admins.json`, password = nilai **`ADMIN_PASSWORD`** di
+`.env.local`. Dipakai karena `data/adminpass.json` TIDAK ADA di mesin ini, jadi
+`getAdminPassword()` memulangkan null dan login jatuh ke password bersama
+(`app/api/auth/login/route.ts:76`). ⚠️ Nilainya JANGAN pernah ditulis ke catatan mana pun.
+
+**Terbukti, bukan diduga:** password sengaja salah → **401** *"Password admin salah"* (artinya
+jalur password benar-benar dijalankan, bukan lagi 503) · password benar → **200**
+`{"ok":true,"role":"admin"}` untuk KEDUA email terdaftar · dengan sesi itu `GET /api/auth/2fa`
+**200** dan `/admin` **200** · tanpa sesi `GET /api/auth/2fa` **401** — pagarnya tetap berdiri,
+jadi mode berkas TIDAK melonggarkan otorisasi, ia hanya mengganti sumber datanya.
+
+⚠️ **Tiga batas yang WAJIB diingat saat memakai mode ini:**
+
+1. **Apa pun yang disimpan di panel admin lokal masuk ke `data/*.json` di komputer ini, BUKAN ke
+   produksi.** Rating, kategori, sembunyikan — semuanya lokal.
+2. 🪤 **Jangan menekan "Ubah password" di seksi Keamanan saat mode berkas**, kecuali memang
+   disengaja: ia membuat `data/adminpass.json` baru, dan sejak itu login lokal berhenti memakai
+   `ADMIN_PASSWORD` — kalau password barunya lupa, satu-satunya jalan pulih adalah menghapus
+   berkas itu. Produksi tidak terpengaruh sama sekali.
+3. **Katalog yang tampil berasal dari `data/dramas.json`** — cadangan yang bisa basi
+   (`AGENTS.local.md` butir 4).
+
+🪤 **Jebakan alat, bukan jebakan kode:** uji pertama memakai `urllib` Python dan membalas
+**502 Bad Gateway** dari sebuah *proxy*, bukan dari server kita. `curl --noproxy '*'` memberi
+jawaban yang benar. Di mesin ini, hasil uji HTTP dari Python WAJIB dicurigai kalau bentuk
+balasannya HTML padahal yang diminta JSON — sama keluarganya dengan jebakan
+`127.0.0.1` vs `[::1]` yang sudah tercatat di atas.
 
 ### ✅ BARU: `/profile` jadi halaman AKUN (keputusan owner 2026-11-07)
 

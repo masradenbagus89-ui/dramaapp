@@ -30,33 +30,52 @@
 > dibatasi · **200** = sudah pulih, hapus blok peringatan ini.
 
 
-**Terakhir dicek:** 2026-11-07 ~10:05 (**komputer OWNER**, sesi kedua hari itu).
-`origin/main` = `dramaku/main` = **`e486c17`** (diverifikasi `git fetch origin` +
-`git fetch dramaku`). `HEAD` lokal = **`f32b294`**.
+**Terakhir dicek:** 2026-11-07 ~15:48 (**komputer OWNER**), **sesudah rilis `4fb6ecf`**.
+`HEAD` = `origin/main` = `dramaku/main` = **`4fb6ecf`** (diverifikasi `git fetch origin` +
+`git fetch dramaku`). **Nol antrean** — tak ada yang menunggu rilis, tak ada branch rekan yang
+tertinggal.
 
-🟡 **ADA ANTREAN — belum ada di remote mana pun**, jadi belum punya cadangan selain folder di
-komputer owner. **Jumlah persisnya baca sendiri** dengan `git log --oneline origin/main..HEAD`
-(angka di tabel ini cuma yang substantif; commit catatan tidak didaftar supaya tabelnya tidak
-basi tiap kali catatan diperbarui):
+⬇️ **RILIS BESAR `e486c17..4fb6ecf` — 19 commit sekaligus, hasil satu hari penuh.** Dual push
+cermin `dramaku` dulu lalu produksi `origin` (urutan §5), tayang **±77 detik** (push 15:46:30 →
+versi baru terdeteksi 15:47:47), **downtime NOL** — `http=200` di SETIAP percobaan selama
+pergantian versi.
 
-| Commit | Isi | Kode produksi? |
+**Isi rilisnya:**
+
+| Bidang | Isi |
+|---|---|
+| Pemutar | menu titik tiga Playly dari rekan (`06ed695`) + penjaga render `PlaylyPlayer` & `PlayerSettings` |
+| `/profile` | jadi halaman AKUN: baris konten dibuang, seksi **Akun** + **Keamanan** (ubah password + 2FA) masuk; "Menu Cepat" dibuang karena 2 tombolnya rusak |
+| Favorit | judul `/my-list` disamakan jadi **Favorit** (dulu "Daftar Saya"), + tombol **Kembali** |
+| Navigasi | tombol **Kembali** seragam di Profile · Riwayat · Favorit; "Favorit" naik ke menu akun |
+| Pencarian | **4 cacat diperbaiki** — terbesar: kaca pembesar navbar ternyata `pointer-events-none` (hiasan) |
+| Pencarian | **BARU: saran judul saat mengetik** (poster + judul + tahun) di 4 halaman berkatalog |
+| Rilis | **`npm run gerbang`** — kelima pemeriksaan §6 jadi satu perintah |
+| Admin | menu "Keamanan (2FA)" dibuang dari sidebar (panelnya pindah ke `/profile`) |
+
+**Tanpa SQL migrasi, tanpa env baru** — diperiksa sebelum push (`git diff --name-only
+origin/main..HEAD` → nol berkas `supabase_migrations/`, `.sql`, `.env`).
+
+✅ **Smoke test di situs SUNGGUHAN, dibandingkan dengan baseline yang diambil SEBELUM push:**
+
+| Yang diukur | Sebelum | Sesudah |
 |---|---|---|
-| `f32b294` | Penjaga tes `pemutar-playly-kontrol` (4 tes) + `pemutar-drama-pengaturan` (8 tes) | **Tidak** — nol berkas produksi disentuh |
-| `cccf3ca` | Merge kerja rekan `feat/menu-pemutar-playly` ke main terkini | Ya (lewat `06ed695`) |
-| `06ed695` | Commit rekan: menu titik tiga pemutar Playly disusun ulang jadi 6 baris | Ya |
+| `/my-list` judul "Favorit" | 0 | **1** |
+| `/my-list` "Daftar Saya" | 1 | **0** |
+| tombol Cari di navbar (`aria-label`) | 0 | **1** |
+| `/profile` "Menu Cepat" | — | **0** |
+| indeks saran di `/`, `/beranda`, `/film` | — | **1 · 1 · 1** |
 
-**Kenapa ditahan, bukan dirilis** (keputusan owner 2026-11-07: *"commit lokal dulu, TAHAN
-rilis"*): verifikasi di situs sungguhan MUSTAHIL sekarang — `/film` di produksi nol film karena
-Playly membalas **500** dan Supabase **402** (blok peringatan di atas). Dirilis hari ini berarti
-tidak ada cara membuktikan menunya benar di produksi.
+Sembilan alamat semua **200**: `/`, `/beranda`, `/film`, `/discover`, `/my-list`, `/history`,
+`/profile`, `/login`, `/admin`.
 
-⚠️ **Sebelum push nanti, gerbang pra-rilis `AGENTS.local.md` §6 WAJIB diulang dari awal** —
-`rm -rf .next` → `npm run build` (SENGAJA mendahului `tsc`) → `npx tsc --noEmit` → `npm test` →
-cek nol berkas env ter-stage. Di sesi kedua `build` **tidak** diulang karena ada
-`next start -p 3100` yang sedang melayani pratinjau lokal; yang sudah diukur sendiri:
-`tsc` **exit 0** dan `npm test` **2.055 tes / 142 berkas hijau**.
+⚠️ **Yang TIDAK pulih oleh rilis ini, dan memang bukan tugasnya:** `/api/dramas` tetap **500**
+karena Supabase masih **402** (diuji ulang langsung ke REST Supabase 2026-11-07 ~15:50: masih
+402), dan `dramaku.com` tetap tak menjawab. Keduanya kondisi lama yang sudah tercatat di blok
+peringatan di atas.
 
-Nol branch rekan yang tertinggal.
+🔙 **Rencana mundur** kalau nanti ditemukan masalah: `git revert --no-commit e486c17..HEAD` lalu
+dual push, ATAU redeploy commit `e486c17` dari panel Railway.
 
 ⬇️ **Rilis terakhir `64a48fc`** — **panel admin Video Playly jadi TABEL + rating bisa DIKETIK.**
 Hasil sepuluh putaran koreksi owner dalam satu sesi, ditutup satu fitur baru. Daftar video kini

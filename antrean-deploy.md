@@ -3,12 +3,72 @@
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
 > AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
 
-**Terakhir dicek:** 2026-11-06 (**komputer OWNER**), sesudah rilis `df83931`.
-`HEAD` = `origin/main` = `dramaku/main` = **`df83931`** (sebelum push selisih 0/0 di kedua
-remote, diverifikasi `git fetch origin` + `git fetch dramaku`). **Nol antrean** — tak ada yang
-menunggu rilis, tak ada branch rekan yang tertinggal.
+> 🔴 **KONDISI PRODUKSI 2026-11-07 — DATABASE SUPABASE DIBATASI (kuota egress habis).**
+> Ditemukan tak sengaja saat `npm run build` rutin: Supabase membalas **HTTP 402**
+> `"Service for this project is restricted due to the following violations: exceed_egress_quota.
+> The project owner must upgrade their plan or remove spend caps to restore service."`
+> Diuji langsung ke REST Supabase (bukan lewat aplikasi): **402** dengan kunci, jadi ini
+> pembatasan di sisi Supabase — **bukan** akibat rilis `64a48fc`, dan bukan bug kode.
+>
+> **Dampak yang SUDAH terukur di situs sungguhan:**
+> - `/api/dramas` → **500** (beberapa jam sebelumnya masih **200**).
+> - Halaman penonton `/`, `/beranda`, `/film`, `/discover`, `/katalog` → masih **200**, karena
+>   jatuh ke salinan/berkas lokal. ⚠️ **Jangan simpulkan "situs baik-baik saja" dari angka 200
+>   itu** — isinya bisa basi dan tidak ikut berubah.
+> - **Panel admin tidak bisa MENYIMPAN apa pun** (rating, kategori, jenis, kualitas,
+>   sembunyikan) selama pembatasan berlaku: semuanya menulis ke Supabase.
+>
+> **Yang harus dilakukan (BUKAN pekerjaan AI — perlu pemilik akun Supabase):** naikkan paket
+> atau lepas spend cap di dashboard Supabase project `nvblmpkwyzbpdbshyvzw`. Catatan lama
+> menyebut owner **tidak punya akses dashboard** Supabase (yang ada hanya jalur SQL dari repo),
+> jadi kemungkinan perlu minta ke pemegang akunnya. Kuota egress free tier juga mereset tiap
+> awal siklus bulanan.
+>
+> **Sebelum menyimpulkan apa pun di sesi berikutnya:** uji ulang dulu —
+> `curl -s -o /dev/null -w "%{http_code}" <SUPABASE_URL>/rest/v1/dramas?select=id&limit=1`
+> dengan header `apikey` + `Authorization` + `Accept-Profile: dramaapp`. **402** = masih
+> dibatasi · **200** = sudah pulih, hapus blok peringatan ini.
 
-⬇️ **Rilis terakhir `df83931`** — baris **"Playly"** di popup *Pilih provider download*: unduhan
+
+**Terakhir dicek:** 2026-11-07 (**komputer OWNER**), sesudah rilis `64a48fc` + `cfa7a94`.
+`HEAD` = `origin/main` = `dramaku/main` = **`cfa7a94`** (diverifikasi `git fetch origin` +
+`git fetch dramaku`). **Nol antrean** — tak ada yang menunggu rilis, tak ada branch rekan yang
+tertinggal.
+
+⬇️ **Rilis terakhir `64a48fc`** — **panel admin Video Playly jadi TABEL + rating bisa DIKETIK.**
+Hasil sepuluh putaran koreksi owner dalam satu sesi, ditutup satu fitur baru. Daftar video kini
+satu baris per video (Judul · Jenis · Kategori · Kualitas · IMDb · Rating · Aksi) dengan paginasi
+bernomor; menu sidebar "Video Playly" jadi grup berisi tiga; keterangan panjang pindah ke tombol
+"?". Dual push `1938849..64a48fc` lalu `cfa7a94` (cermin `dramaku` dulu, baru produksi `origin`),
+deploy Railway ±2 menit, downtime NOL.
+
+Dipecah **dua commit** dengan sengaja: `7f68794` (fitur unduh-langsung putaran 2 — pekerjaan sesi
+sebelumnya yang belum sempat di-commit, diperiksa dulu: selesai, terdokumentasi, berpenjaga ±250
+baris tes) dan `64a48fc` (panel admin + rating). Riwayatnya jadi jujur dan bisa dibatalkan
+terpisah.
+
+✅ **Diverifikasi di situs sungguhan, bukan localhost:** endpoint BARU
+`/api/admin/playly/rating` membalas **401** — sebelum rilis alamat yang sama **404**, jadi
+perbedaannya membuktikan versi barunya yang jalan. Pagarnya ikut terbukti: GET maupun POST tanpa
+login ditolak `{"error":"Unauthorized"}`. Smoke test 8 alamat semua **200**: `/`, `/beranda`,
+`/film`, `/discover`, `/katalog`, `/api/dramas`, `/admin/videos/playly`, `/admin/webhooks/playly`.
+
+⚠️ **Rating yang diketik DILIHAT PENONTON** (kartu video di beranda), jadi nilainya disaring di
+server — kotak isian di layar bukan pagar. Disimpan di dokumen **sendiri** `playly:rating`, bukan
+menumpang di `playly:imdb`; kalau menumpang, (a) video yang diisi ratingnya hilang dari saringan
+"Belum ada IMDb" padahal poster/sinopsisnya kosong, dan (b) pencocokan massal menimpanya tanpa
+peringatan. **Tanpa SQL/env baru** — `playly:rating` menumpang di tabel `app_data` yang sudah
+dipakai `playly:kualitas` dan `playly:jenis`, jadi owner tidak perlu menjalankan apa pun.
+
+⚠️ **Yang IKUT HILANG dan owner sudah diberi tahu:** tombol **"Sembunyikan" per video webhook**,
+karena daftar video di halaman Webhook Playly dihapus atas permintaan owner. Panel Video Playly
+menggambar katalog Playly, BUKAN daftar webhook, jadi video yang hanya datang lewat webhook belum
+punya tempat pengaturan. Dua jalan kalau nanti dibutuhkan: kembalikan `PlaylyWebhookMonitor` dari
+git, atau buat panel Video Playly memakai daftar gabungan.
+
+---
+
+⬇️ **Rilis sebelumnya `df83931`** — baris **"Playly"** di popup *Pilih provider download*: unduhan
 dari server Playly sendiri (1 tombol per resolusi), di samping provider yang diisi admin. Dual
 push `37d8003..df83931` (cermin `dramaku` dulu, lalu produksi `origin`). Tayang ±80 detik sesudah push, downtime NOL (beranda 200 sebelum & sesudah).
 Diverifikasi di situs sungguhan lewat endpoint baru `/api/playly/unduh?id=1788093325344` →
@@ -24,9 +84,10 @@ begitu mereka menyalakannya, **tanpa rilis baru**. Itu sebabnya endpoint-nya mem
 (`tidak-diizinkan` / `bentuk-tak-dikenali` / `playly-tak-terjawab`): tanpa itu tak ada cara
 membedakan "fitur kita belum jalan" dari "Playly belum mengizinkan".
 
-📌 **Belum di-commit (sengaja):** 5 berkas di `docs/laporan/` (laporan progress .pptx + pratinjau
-+ 3 skrip pembangunnya) dari sesi lain hari ini. Nol kode produksi, jadi tidak ikut rilis ini;
-keputusan mau disimpan ke repo atau tidak masih milik owner.
+📌 **Belum di-commit (sengaja, masih berlaku 2026-11-07):** berkas di `docs/laporan/` (laporan
+progress .pptx + PDF + pratinjau + 3 skrip pembangunnya + 3 gambar) dari sesi lain. Nol kode
+produksi, jadi tidak ikut rilis mana pun; berkas binernya besar. Masih untracked — tidak hilang,
+dan keputusan mau disimpan ke repo atau tidak masih milik owner.
 
 **Dicek sebelumnya:** 2026-11-05 (**komputer OWNER**), sesudah rilis `d04a952`.
 `HEAD` = `origin/main` = `dramaku/main` = **`32ae1c6`+ (selisih 0/0, diverifikasi `git fetch

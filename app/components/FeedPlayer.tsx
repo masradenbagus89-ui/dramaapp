@@ -2,11 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Pause, Play } from "lucide-react";
 import ActionRail from "./ActionRail";
 import EpisodeSheet from "./EpisodeSheet";
 import { getProgressEntry, resumePosition, setProgress } from "@/lib/progress";
-import { setLiked } from "@/lib/myLikes";
 import { subtitleLabel, type DownloadProvider } from "@/lib/types";
 import {
   OFF,
@@ -23,10 +22,13 @@ import RewardedAdModal from "./RewardedAdModal";
 import EpisodePaywall from "./player/EpisodePaywall";
 import CommentsDrawer from "./player/CommentsDrawer";
 import PlayerControls from "./player/PlayerControls";
+import PlayerSettings from "./player/PlayerSettings";
+import { posisiSesudahLoncat } from "./player/PlaylyPlayer";
 
-const DOUBLE_TAP_MS = 280; // ambang ketuk-ganda (double tap) untuk like
+const DOUBLE_TAP_MS = 280; // ambang ketuk-ganda (double tap) untuk maju cepat
 const CONTROLS_AUTO_HIDE_MS = 3500; // sembunyikan kontrol setelah diam beberapa detik
-const HEART_ANIM_MS = 700; // durasi animasi hati saat like
+const LONCAT_DETIK = 10; // ketuk-ganda = maju/mundur sejauh ini
+const TANDA_LONCAT_MS = 700; // lama tanda "+10 detik" tampil
 const SAVE_PROGRESS_MS = 5000; // jangan tulis localStorage tiap frame timeupdate
 // Rasio bingkai video sebelum metadata aslinya terbaca. 9:16 = potret ala
 // Melolo/TikTok, bentuk mayoritas episode di sini.
@@ -66,7 +68,8 @@ export default function FeedPlayer({
   const eps = Array.from({ length: episodes }, (_, i) => i + 1);
   const [active, setActive] = useState(startEp - 1);
   const [paused, setPaused] = useState(false);
-  const [heart, setHeart] = useState(false);
+  // Arah loncat terakhir untuk tanda "+10 / -10 detik"; null = tanda tersembunyi.
+  const [tandaLoncat, setTandaLoncat] = useState<"maju" | "mundur" | null>(null);
   const [subLang, setSubLang] = useState(OFF);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [cueText, setCueText] = useState("");
@@ -80,8 +83,6 @@ export default function FeedPlayer({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [episodesOpen, setEpisodesOpen] = useState(false);
   const [seeking, setSeeking] = useState(false);
-  const [volume, setVolume] = useState(1);
-  const [muted, setMuted] = useState(false);
   // Episode yang sumbernya benar-benar gagal dimuat (mis. PC backup / tunnel
   // mati). Ditampilkan sebagai pesan + tombol Coba lagi, BUKAN layar hitam.
   const [failedEps, setFailedEps] = useState<Set<number>>(new Set());
@@ -367,14 +368,12 @@ export default function FeedPlayer({
     return () => obs.disconnect();
   }, [episodes]);
 
-  // Terapkan kecepatan & volume ke video aktif (juga tiap pindah episode).
+  // Terapkan kecepatan ke video aktif (juga tiap pindah episode).
   useEffect(() => {
     const v = videoRefs.current[active];
     if (!v) return;
     v.playbackRate = speed;
-    v.volume = volume;
-    v.muted = muted;
-  }, [active, speed, volume, muted]);
+  }, [active, speed]);
 
   // Saat active berubah: simpan posisi episode lama, mainkan yang aktif.
   useEffect(() => {
@@ -455,11 +454,6 @@ export default function FeedPlayer({
 
   const goNext = useCallback(() => {
     slideRefs.current[active + 1]?.scrollIntoView({ behavior: "smooth" });
-  }, [active]);
-
-  const goPrev = useCallback(() => {
-    if (active <= 0) return;
-    slideRefs.current[active - 1]?.scrollIntoView({ behavior: "smooth" });
   }, [active]);
 
   // Lompat ke episode tertentu dari daftar episode (loncatan jauh = instan).
@@ -595,20 +589,31 @@ export default function FeedPlayer({
     e.currentTarget.releasePointerCapture?.(e.pointerId);
   };
 
+  // Ketuk-ganda ala YouTube: separuh kanan = maju, separuh kiri = mundur
+  // LONCAT_DETIK. Like TIDAK lagi lewat ketuk-ganda (permintaan 2026-11-07) —
+  // tombol hati di ActionRail tetap jalurnya.
+  const loncat = (arah: "maju" | "mundur") => {
+    if (lockedActive) return;
+    const v = videoRefs.current[active];
+    if (!v) return;
+    const delta = arah === "maju" ? LONCAT_DETIK : -LONCAT_DETIK;
+    const t = posisiSesudahLoncat(v.currentTime, delta, v.duration);
+    v.currentTime = t;
+    setCurTime(t);
+    setTandaLoncat(arah);
+    window.setTimeout(() => setTandaLoncat(null), TANDA_LONCAT_MS);
+  };
+
   // 1x tap: kalau kontrol tersembunyi → munculkan saja; kalau sudah tampil →
-  // play/pause. 2x tap = like (dengan animasi hati).
-  const onTap = () => {
+  // play/pause. 2x tap = maju/mundur 10 detik tergantung sisi yang diketuk.
+  // Patokan tengahnya = tengah elemen <video> (selebar layar); di layar lebar
+  // kolom video ada di tengah, jadi garis pembaginya tetap tengah gambar.
+  const onTap = (e: React.MouseEvent<HTMLVideoElement>) => {
     const now = Date.now();
     if (now - lastTap.current < DOUBLE_TAP_MS) {
       lastTap.current = 0;
-      setLiked(dramaId, true);
-      fetch("/api/likes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ dramaId, action: "like" }),
-      }).catch(() => {});
-      setHeart(true);
-      window.setTimeout(() => setHeart(false), HEART_ANIM_MS);
+      const rect = e.currentTarget.getBoundingClientRect();
+      loncat(e.clientX < rect.left + rect.width / 2 ? "mundur" : "maju");
     } else {
       lastTap.current = now;
       const wasHidden = !controlsVisible;
@@ -650,8 +655,6 @@ export default function FeedPlayer({
                     // HP kadang reset playbackRate saat mulai play → set ulang
                     // supaya kontrol kecepatan benar-benar berfungsi di mobile.
                     e.currentTarget.playbackRate = speed;
-                    e.currentTarget.volume = volume;
-                    e.currentTarget.muted = muted;
                   }}
                   onRateChange={(e) => {
                     if (idx === active && e.currentTarget.playbackRate !== speed) {
@@ -674,8 +677,6 @@ export default function FeedPlayer({
                       setVideoRatio(v.videoWidth / v.videoHeight);
                     }
                     v.playbackRate = speed;
-                    v.volume = volume;
-                    v.muted = muted;
                     // Restore posisi setelah ganti resolusi, atau lanjut dari riwayat.
                     if (pendingSeek.current != null) {
                       v.currentTime = pendingSeek.current;
@@ -757,7 +758,7 @@ export default function FeedPlayer({
           tinggi x rasio, tinggi dibatasi lebar / rasio — yang lebih kecil yang
           mengikat. Di layar sempit (HP) tak ada yang mengikat, panggung = satu
           layar penuh, jadi tampilan HP tidak berubah.
-          pointer-events-none supaya ketukan play/pause & ketuk-ganda like tetap
+          pointer-events-none supaya ketukan play/pause & ketuk-ganda maju tetap
           sampai ke <video> di bawahnya; tiap anak yang bisa diklik menyalakan
           pointer-events-auto sendiri.
           Paywall, sheet episode, drawer komentar & modal SENGAJA di luar
@@ -786,8 +787,34 @@ export default function FeedPlayer({
           providers={providers}
         />
 
-        {/* Panel bawah: judul, episode, subtitle, kontrol — komponen sendiri
-            (PlayerControls). Semua data + aksi disuplai dari sini lewat prop. */}
+        {/* Gerigi pengaturan di kanan atas — panel bawah sengaja hanya judul +
+            bar posisi + timer (permintaan 2026-11-07). Ikut memudar bersama
+            kontrol lain; disembunyikan saat episode terkunci seperti dulu. */}
+        {!lockedActive && (
+          <div
+            className={`absolute right-3 top-3 z-30 transition-opacity duration-300 ${
+              controlsVisible ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
+            }`}
+          >
+            <PlayerSettings
+              open={settingsOpen}
+              speed={speed}
+              resolution={resolution}
+              subtitles={subtitles}
+              subLang={subLang}
+              isFullscreen={isFullscreen}
+              onToggle={() => setSettingsOpen((v) => !v)}
+              onSpeed={setSpeedTo}
+              onResolution={chooseRes}
+              onSubtitle={chooseSub}
+              onDownload={onDownload}
+              onToggleFullscreen={toggleFullscreen}
+            />
+          </div>
+        )}
+
+        {/* Panel bawah: judul, episode, subtitle, bar posisi + timer —
+            komponen sendiri (PlayerControls). */}
         <PlayerControls
           title={title}
           currentEp={active + 1}
@@ -796,69 +823,47 @@ export default function FeedPlayer({
           cueText={cueText}
           lockedActive={lockedActive}
           controlsVisible={controlsVisible}
-          paused={paused}
           curTime={curTime}
           dur={dur}
           seekBarRef={seekRef}
           onSeekDown={onSeekDown}
           onSeekMove={onSeekMove}
           onSeekUp={onSeekUp}
-          onTogglePlay={togglePlay}
           onOpenEpisodes={() => setEpisodesOpen(true)}
-          onPrev={goPrev}
-          onNext={goNext}
-          hasPrev={active > 0}
-          hasNext={active < episodes - 1}
-          volume={volume}
-          muted={muted}
-          onVolume={(n) => {
-            setVolume(n);
-            setMuted(n === 0);
-          }}
-          onToggleMute={() => setMuted((m) => !m)}
-          settings={{
-            open: settingsOpen,
-            speed,
-            resolution,
-            subtitles,
-            subLang,
-            isFullscreen,
-            onToggle: () => setSettingsOpen((v) => !v),
-            onSpeed: setSpeedTo,
-            onResolution: chooseRes,
-            onSubtitle: chooseSub,
-            onDownload,
-            onToggleFullscreen: toggleFullscreen,
-          }}
         />
 
-        {paused && !lockedActive && (
+        {/* Tombol putar/jeda di TENGAH video. Saat jeda: lapisan inset-0 supaya
+            ketuk di mana saja memutar. Saat berputar: hanya lingkarannya yang
+            bisa diklik (muncul bersama kontrol), sisa layar tetap tembus ke
+            <video> agar ketuk-ganda maju/mundur 10 detik tetap jalan. */}
+        {!lockedActive && (paused || controlsVisible) && (
           <button
             onClick={togglePlay}
-            className="pointer-events-auto absolute inset-0 z-10"
-            aria-label="Putar"
+            className={`pointer-events-auto absolute z-10 ${
+              paused
+                ? "inset-0"
+                : "left-1/2 top-1/2 h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full"
+            }`}
+            aria-label={paused ? "Putar" : "Jeda"}
           >
-            {/* Lingkaran play SENGAJA tidak di tengah persis (dulu begitu):
-                digeser ke 58% tinggi video atas permintaan owner. Dipasang
-                absolut dengan persen — bukan padding — supaya pergeserannya
-                ikut tinggi VIDEO, jadi proporsinya tetap sama di layar mana
-                pun. Tombolnya sendiri tetap inset-0 agar ketuk di mana saja
-                tetap memutar. Batas bawahnya: panel judul + kontrol memakan
-                sekitar sepertiga bagian bawah, jadi angka ini jangan dinaikkan
-                melewati ~60% kalau tak mau lingkarannya menimpa judul. */}
-            <span className="absolute left-1/2 top-[58%] flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-black/50">
-              <svg viewBox="0 0 24 24" className="h-8 w-8 fill-white">
-                <path d="M8 5v14l11-7z" />
-              </svg>
+            <span className="absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-black/50">
+              {paused ? (
+                <Play className="h-8 w-8 fill-white" strokeWidth={0} />
+              ) : (
+                <Pause className="h-8 w-8 fill-white" strokeWidth={0} />
+              )}
             </span>
           </button>
         )}
 
-        {heart && (
-          <div className="pointer-events-none absolute inset-0 z-30 flex items-center justify-center">
-            <svg viewBox="0 0 24 24" className="h-28 w-28 animate-ping fill-rose-500/90">
-              <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z" />
-            </svg>
+        {tandaLoncat && (
+          <div
+            className={`pointer-events-none absolute top-1/2 z-30 -translate-y-1/2 rounded-full bg-black/60 px-3 py-1.5 text-sm font-semibold text-white ${
+              tandaLoncat === "maju" ? "right-6" : "left-6"
+            }`}
+          >
+            {tandaLoncat === "maju" ? "+" : "-"}
+            {LONCAT_DETIK} detik
           </div>
         )}
 

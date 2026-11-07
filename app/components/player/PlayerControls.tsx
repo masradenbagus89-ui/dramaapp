@@ -1,19 +1,11 @@
 "use client";
 
 import { fmtTime } from "@/lib/format";
-import { Button } from "@/components/ui/button";
-import {
-  Play,
-  Pause,
-  LayoutGrid,
-  ChevronRight,
-  SkipBack,
-  SkipForward,
-  Volume2,
-  VolumeX,
-} from "lucide-react";
-import PlayerSettings, { type PlayerSettingsProps } from "./PlayerSettings";
+import { LayoutGrid, ChevronRight } from "lucide-react";
 
+// Panel bawah pemutar feed: judul + episode + subtitle + garis geser + timer.
+// Tombol putar ada di TENGAH video & gerigi di kanan atas (FeedPlayer) —
+// panel ini sengaja hanya menampilkan waktu (permintaan 2026-11-07).
 export default function PlayerControls({
   title,
   currentEp,
@@ -22,24 +14,13 @@ export default function PlayerControls({
   cueText,
   lockedActive,
   controlsVisible,
-  paused,
   curTime,
   dur,
   seekBarRef,
   onSeekDown,
   onSeekMove,
   onSeekUp,
-  onTogglePlay,
   onOpenEpisodes,
-  onPrev,
-  onNext,
-  hasPrev,
-  hasNext,
-  volume,
-  muted,
-  onVolume,
-  onToggleMute,
-  settings,
 }: {
   title: string;
   currentEp: number;
@@ -49,32 +30,19 @@ export default function PlayerControls({
   cueText: string;
   lockedActive: boolean;
   controlsVisible: boolean;
-  paused: boolean;
   curTime: number;
   dur: number;
   seekBarRef: React.RefObject<HTMLDivElement | null>;
   onSeekDown: (e: React.PointerEvent<HTMLDivElement>) => void;
   onSeekMove: (e: React.PointerEvent<HTMLDivElement>) => void;
   onSeekUp: (e: React.PointerEvent<HTMLDivElement>) => void;
-  onTogglePlay: () => void;
   onOpenEpisodes: () => void;
-  onPrev: () => void;
-  onNext: () => void;
-  hasPrev: boolean;
-  hasNext: boolean;
-  volume: number;
-  muted: boolean;
-  onVolume: (n: number) => void;
-  onToggleMute: () => void;
-  settings: PlayerSettingsProps;
 }) {
-  const silent = muted || volume === 0;
-
   /* `pb-6` di HP (bukan `pb-7`): 4px terakhir yang ikut menurunkan seluruh isi
-     panel. JANGAN turun lagi di bawah ini — tombol play sudah berada ~24px dari
-     tepi bawah layar, dan di HP tepi itu milik gesture "kembali" sistem;
-     merapatkannya lagi membuat jari yang menekan play sesekali menarik gesture
-     sistem. */
+     panel. JANGAN turun lagi di bawah ini — garis geser kini baris paling
+     bawah, dan di HP tepi bawah layar milik gesture "kembali" sistem;
+     merapatkannya lagi membuat jari yang menggeser video sesekali menarik
+     gesture sistem. */
   return (
     <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30 flex flex-col bg-gradient-to-t from-black/85 via-black/35 to-transparent pb-6 pt-10 sm:pb-7">
       {/* JUDUL + "Eps n / N" — ikut memudar bersama kontrol.
@@ -180,7 +148,7 @@ export default function PlayerControls({
             controlsVisible ? "opacity-100" : "pointer-events-none opacity-0"
           }`}
         >
-        {/* SATU BARIS: garis geser + angka durasi HP di sampingnya.
+        {/* SATU BARIS: garis geser + angka durasi di sampingnya.
 
             Angka durasi dulu punya barisnya sendiri DI BAWAH tombol, dan baris
             itu memakan ~18px yang mendorong seluruh blok judul ke atas (owner
@@ -220,99 +188,10 @@ export default function PlayerControls({
             />
           </div>
         </div>
-          {/* Hanya di HP — di `sm` ke atas angka ini sudah ada di baris tombol. */}
-          <span className="shrink-0 text-[10px] tabular-nums text-white/60 sm:hidden">
+          {/* Satu-satunya angka waktu di pemutar — tampil di semua ukuran layar. */}
+          <span className="shrink-0 text-[11px] tabular-nums text-white/80">
             {fmtTime(curTime)} / {fmtTime(dur)}
           </span>
-        </div>
-
-        <div className="pointer-events-auto flex items-center gap-1.5 sm:gap-3">
-          {!isMovie && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={onPrev}
-              disabled={!hasPrev}
-              aria-label="Episode sebelumnya"
-              className="size-9 text-white hover:bg-white/15 hover:text-white disabled:opacity-30"
-            >
-              <SkipBack className="size-5 fill-white" />
-            </Button>
-          )}
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={onTogglePlay}
-            aria-label={paused ? "Putar" : "Jeda"}
-            /* 40px di HP, 44px di layar lebar (owner 2026-11-02: *"play-nya
-               kecilkan sedikit, terlalu besar"*). 40px dipilih sebagai batas
-               bawah yang masih nyaman ditekan jempol — di bawah itu tombol
-               paling sering dipakai di layar ini jadi mudah meleset. */
-            className="size-10 text-white transition-transform hover:bg-white/15 hover:text-white active:scale-90 sm:size-11"
-          >
-            {paused ? (
-              <Play className="size-6 fill-white sm:size-7" strokeWidth={0} />
-            ) : (
-              <Pause className="size-6 fill-white sm:size-7" strokeWidth={0} />
-            )}
-          </Button>
-          {!isMovie && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={onNext}
-              disabled={!hasNext}
-              aria-label="Episode berikutnya"
-              className="size-9 text-white hover:bg-white/15 hover:text-white disabled:opacity-30"
-            >
-              <SkipForward className="size-5 fill-white" />
-            </Button>
-          )}
-          <span className="hidden text-xs tabular-nums text-white/80 sm:inline">
-            {fmtTime(curTime)} / {fmtTime(dur)}
-          </span>
-
-          <div className="ml-1 flex items-center gap-1">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={onToggleMute}
-              aria-label={silent ? "Nyalakan suara" : "Bisukan"}
-              className="size-9 text-white hover:bg-white/15 hover:text-white"
-            >
-              {silent ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
-            </Button>
-            <input
-              type="range"
-              min={0}
-              max={1}
-              step={0.05}
-              value={silent ? 0 : volume}
-              onChange={(e) => onVolume(Number(e.target.value))}
-              aria-label="Volume"
-              className="hidden h-1.5 w-16 cursor-pointer accent-amber-400 sm:block"
-            />
-          </div>
-
-          {!isMovie && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={onOpenEpisodes}
-              aria-label="Daftar episode"
-              className="hidden h-8 gap-1 rounded-full bg-white/15 px-2.5 text-xs font-bold text-white hover:bg-white/25 hover:text-white sm:inline-flex"
-            >
-              <LayoutGrid className="size-4" />
-              Episode
-            </Button>
-          )}
-
-          <PlayerSettings {...settings} />
         </div>
         </div>
       )}

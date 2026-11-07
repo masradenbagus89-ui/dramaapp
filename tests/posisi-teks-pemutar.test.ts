@@ -105,27 +105,28 @@ describe("panel bawah pemutar: ruang yang HARAM dipanen", () => {
     expect(KODE).toContain("min-h-11");
   });
 
-  it("tombol play 40px di HP, 44px di layar lebar — tidak lebih kecil", () => {
-    // Dikecilkan dari 44px atas permintaan owner 2026-11-02 (*"play-nya
-    // kecilkan sedikit, terlalu besar"*). 40px batas bawahnya: ini tombol
-    // yang paling sering ditekan di layar ini, dan di bawah 40px jempol
-    // mulai sering meleset.
-    // Dipotong ke blok tombol PLAY saja — `size-9` juga sah dipakai tombol
-    // prev/next/volume di sekitarnya, jadi memeriksa seluruh berkas akan
-    // menuduh tombol yang salah.
-    const i = KODE.indexOf("onClick={onTogglePlay}");
-    expect(i, "tombol play tidak ketemu").toBeGreaterThan(-1);
-    const blokPlay = KODE.slice(i, i + 400);
+  it("tombol play di TENGAH video, tidak lebih kecil dari 40px", () => {
+    // Riwayat: owner 2026-11-02 mengecilkan tombol play di panel bawah ke 40px
+    // (*"play-nya kecilkan sedikit, terlalu besar"*) dan menetapkan 40px
+    // sebagai batas bawah — di bawah itu jempol mulai sering meleset.
+    // 2026-11-07 tombol itu PINDAH ke tengah video (panel bawah tinggal
+    // garis geser + timer), jadi penjaganya ikut pindah: panel bawah tak
+    // boleh punya tombol play kedua, dan lingkaran di tengah tetap >= 40px.
+    expect(
+      KODE,
+      "tombol play muncul lagi di panel bawah — kini tempatnya di tengah video",
+    ).not.toContain("onClick={onTogglePlay}");
 
-    expect(blokPlay, "ukuran HP tombol play hilang").toContain("size-10");
-    expect(blokPlay, "layar lebar tidak lagi kembali ke 44px").toContain(
-      "sm:size-11",
-    );
-    for (const kekecilan of ["size-9 text-white", "size-8 text-white"]) {
+    const PEMUTAR = readFileSync("app/components/FeedPlayer.tsx", "utf-8");
+    const i = PEMUTAR.indexOf('aria-label={paused ? "Putar" : "Jeda"}');
+    expect(i, "tombol putar/jeda di tengah tidak ketemu").toBeGreaterThan(-1);
+    const blokPlay = PEMUTAR.slice(i, i + 400);
+    expect(blokPlay, "lingkaran play tengah tak lagi 64px").toContain("h-16 w-16");
+    for (const kekecilan of ["h-9 w-9", "h-8 w-8 -translate", "h-6 w-6"]) {
       expect(
         blokPlay,
-        `tombol play dikecilkan jadi ${kekecilan} — di bawah 40px jempol ` +
-          `mulai sering meleset di tombol yang paling sering ditekan`,
+        `lingkaran play dikecilkan jadi ${kekecilan} — di bawah 40px jempol ` +
+          `mulai sering meleset`,
       ).not.toContain(kekecilan);
     }
   });

@@ -25,7 +25,6 @@ import {
   List,
   ListVideo,
   Users,
-  ShieldCheck,
   Megaphone,
   Film,
   Star,
@@ -82,7 +81,11 @@ const NAV_ITEMS: EntriAdmin[] = [
   { href: "/admin/webhooks/playly", label: "Webhook Playly", icon: Webhook },
   { href: "/admin/settings/playly", label: "Kunci Playly", icon: KeyRound },
   { href: "/admin#kelola-admin", label: "Kelola Admin", icon: Users },
-  { href: "/admin#keamanan", label: "Keamanan (2FA)", icon: ShieldCheck },
+  // "Keamanan (2FA)" DIBUANG dari sini 2026-11-07 atas permintaan owner: panel
+  // 2FA-nya kini ada di /profile (seksi Keamanan), jadi menu ini jadi jalan
+  // kedua ke pengaturan yang sama. Bagian `#keamanan` di app/admin/page.tsx
+  // SENGAJA tidak ikut dihapus -- ia masih dirender saat halaman digulung,
+  // dan membuangnya adalah perubahan cakupan yang belum diminta.
   // Menu iklan hanya ada saat saklarnya menyala (lib/saklar-fitur.ts) — kalau
   // tidak, menunya menuju bagian halaman yang sudah tidak digambar.
   ...(ADS_ENABLED

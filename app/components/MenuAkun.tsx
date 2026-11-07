@@ -62,6 +62,11 @@ type TujuanAkun = { href: string; label: string; adminOnly?: boolean };
 export const TUJUAN_AKUN: TujuanAkun[] = [
   { href: "/profile", label: "Profile" },
   { href: "/history", label: "Riwayat" },
+  // "Favorit" naik ke sini 2026-11-07 (keputusan owner) saat Menu Cepat di
+  // /profile dibuang. Tanpa baris ini /my-list TIDAK bisa dicapai dari mana
+  // pun di dalam situs: ia sudah dilepas dari navbar & bar bawah HP, dan
+  // baris "Favorit Saya" di beranda dimatikan owner 2026-10-28.
+  { href: "/my-list", label: "Favorit" },
   { href: "/admin", label: "Admin", adminOnly: true },
 ];
 

@@ -8,6 +8,9 @@
 import { describe, it, expect, vi } from "vitest";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+// Dipakai penjaga "/my-list masih punya jalan dari dalam situs" di bawah:
+// sejak 2026-11-07 menu akun adalah pintu TERAKHIR ke halaman Favorit.
+import { TUJUAN_AKUN } from "../app/components/MenuAkun";
 
 // Alamat halaman yang sedang "dibuka" — diganti tiap kasus uji.
 const keadaan = vi.hoisted(() => ({ path: "/beranda" }));
@@ -556,20 +559,29 @@ describe("menu dilepas dari tampilan, halamannya TETAP hidup", () => {
     expect(alamatCari("")).toBe("/discover");
   });
 
-  it("/profile masih menyimpan jalan ke /my-list", () => {
+  it("/my-list masih punya jalan dari dalam situs", () => {
     // Diperiksa dari sumbernya: keduanya komponen dasbor yang butuh data
     // penonton, jadi merendernya di sini berarti menyeret seluruh lapisan
     // pengambilan data ke dalam tes navigasi.
-    // DIPERKETAT 2026-11-07: dulu syaratnya "DashboardMenu ATAU FavoritesRow",
-    // dan FavoritesRow sudah dihapus saat /profile dijadikan halaman akun
-    // (keputusan owner). Yang benar bukan melonggarkan syaratnya tapi
-    // MENGUNCI satu-satunya jalan yang tersisa: DashboardMenu.
-    const dasbor = readFileSync("app/components/profile/DashboardMenu.tsx", "utf-8");
+    // Penjaga ini sudah DUA KALI pindah target dalam sehari, dan itu justru
+    // buktinya ia bekerja: tiap kali pintu terakhir ke /my-list dipindahkan,
+    // ia merah lebih dulu dan memaksa keputusan sadar.
+    //   - sampai 2026-11-07 pagi : DashboardMenu ATAU FavoritesRow (/profile)
+    //   - 2026-11-07 siang       : DashboardMenu saja (FavoritesRow dihapus)
+    //   - 2026-11-07 sore        : MenuAkun (Menu Cepat ikut dibuang owner)
+    // Tiap kali yang dilakukan MEMPERKETAT ke pintu yang tersisa, BUKAN
+    // melonggarkan syaratnya supaya kerja sendiri lolos (§5.3).
+    //
+    // Kenapa penting: /my-list sudah dilepas dari navbar DAN bar bawah HP,
+    // dan baris "Favorit Saya" di beranda tak pernah tergambar (/beranda
+    // memanggil PersonalRows dengan `hanyaLanjut`). Jadi menu akun benar-benar
+    // pintu terakhirnya — kalau baris ini hilang, halaman Favorit cuma bisa
+    // dibuka dengan mengetik alamatnya.
     expect(
-      dasbor.includes('"/my-list"'),
-      "tak ada lagi jalan ke /my-list dari /profile — sesudah tombolnya " +
-        "dilepas dari navbar & bar bawah HP, inilah jalan terakhirnya",
-    ).toBe(true);
+      TUJUAN_AKUN.map((t) => t.href),
+      "tak ada lagi jalan ke /my-list dari dalam situs — menu akun adalah " +
+        "pintu terakhirnya",
+    ).toContain("/my-list");
   });
 });
 

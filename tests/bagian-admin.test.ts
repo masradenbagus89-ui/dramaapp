@@ -73,6 +73,20 @@ describe("menu sidebar dan isi halaman tidak boleh menyimpang", () => {
     }
   });
 
+  it('menu "Keamanan (2FA)" TIDAK dipasang kembali ke sidebar', () => {
+    // Dibuang owner 2026-11-07: panel 2FA-nya kini ada di /profile (seksi
+    // Keamanan), jadi menu ini jadi jalan KEDUA ke pengaturan yang sama.
+    //
+    // Dijaga karena memasangnya kembali terasa seperti "melengkapi sidebar"
+    // bagi siapa pun yang tak tahu sejarahnya — ikonnya masih terdaftar di
+    // lucide-react, bagiannya masih sah di BAGIAN_SAH, dan `#keamanan` masih
+    // dirender di app/admin/page.tsx. Jadi tidak ada satu pun yang akan error
+    // kalau baris menunya kembali; yang berubah cuma owner menemukan dua
+    // tempat untuk satu pengaturan.
+    expect(SIDEBAR).not.toContain('label: "Keamanan (2FA)"');
+    expect(SIDEBAR).not.toContain('/admin#keamanan');
+  });
+
   it("alamatBagian sepakat dengan ejaan menu di sidebar", () => {
     // Satu salah ketik di salah satu sisi = menu yang membuka bagian bawaan
     // terus-menerus, dan itu terbaca seperti menu mati.

@@ -7,8 +7,14 @@
 // "Favorit" -- dipindahkan/dihapus:
 //   - Lanjut Menonton + Riwayat Terbaru  -> rumahnya /history ("Riwayat tontonan")
 //   - Favorit                            -> rumahnya /my-list ("Daftar Saya")
-// Keduanya tetap terjangkau satu klik lewat DashboardMenu di bawah, jadi nol
-// jalan yang hilang.
+// Keduanya tetap terjangkau satu klik lewat menu di balik foto profil
+// (app/components/MenuAkun.tsx), jadi nol jalan yang hilang.
+//
+// "Menu Cepat" (DashboardMenu) DIBUANG 2026-11-07 atas permintaan owner: dari
+// lima tombolnya, DUA memang rusak -- "Download" menuju /history?tab=downloads
+// padahal /history nol menangani parameter `tab`, dan "Bantuan" menuju halaman
+// LOGIN. Karena menu itu satu-satunya pintu tersisa ke /my-list, "Favorit"
+// dipindahkan ke MenuAkun supaya halamannya tidak jadi yatim.
 //
 // 🪤 Yang ditemukan saat memindahkannya: "Lanjut Menonton" dan "Riwayat Terbaru"
 // sama-sama memanggil getContinueWatching() dengan argumen yang sama, jadi
@@ -32,7 +38,6 @@ import {
 import CoinWallet from "@/app/components/CoinWallet";
 import RecoverySection from "@/app/components/RecoverySection";
 import AdBanner from "@/app/components/AdBanner";
-import DashboardMenu from "@/app/components/profile/DashboardMenu";
 import AdminPasswordSettings from "@/app/components/admin/AdminPasswordSettings";
 import TwoFactorSettings from "@/app/components/TwoFactorSettings";
 import { Card, CardContent } from "@/components/ui/card";
@@ -117,11 +122,6 @@ export default function ProfilePage() {
     writeUser(updated);
     setUser(updated);
     setSaveMsg({ type: "ok", text: "Perubahan tersimpan." });
-  };
-
-  /** Menu "Pengaturan" di DashboardMenu menggulung ke seksi Akun di bawah. */
-  const keSeksiAkun = () => {
-    document.getElementById("akun")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   const sudahLogin = mounted && Boolean(user);
@@ -332,11 +332,6 @@ export default function ProfilePage() {
         {/* ── Premium / Koin ─────────────────────────────────────── */}
         <section id="premium" className="mt-8 scroll-mt-20">
           <CoinWallet />
-        </section>
-
-        {/* ── Menu: jalan ke Riwayat, Favorit, Download, Bantuan ──── */}
-        <section className="mt-8">
-          <DashboardMenu onOpenSettings={keSeksiAkun} />
         </section>
 
         {/* Slot iklan otomatis — passive income; fallback iklan manual/promo. */}

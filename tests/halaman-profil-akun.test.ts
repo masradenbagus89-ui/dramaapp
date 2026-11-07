@@ -176,18 +176,39 @@ describe("/profile — halaman akun", () => {
     expect(tautan).not.toContain("/daftar");
   });
 
-  it("jalan ke Riwayat dan Favorit TIDAK ikut hilang", async () => {
-    // Inti keputusan owner: barisnya dipindahkan, BUKAN dimatikan. Kalau
-    // menunya ikut lepas, fiturnya benar-benar hilang dari situs — dan
-    // /my-list sudah tidak ada di navbar maupun bar bawah HP, jadi /profile
-    // jalan terakhirnya (lihat tests/kepala-situs.test.ts).
+  it('"Menu Cepat" sudah TIDAK ada, beserta tombol-tombol rusaknya', async () => {
+    // Dibuang owner 2026-11-07: dari lima tombolnya, DUA memang rusak dan
+    // kerusakannya SENYAP (tombolnya bisa diklik, halamannya terbuka, isinya
+    // saja yang bukan yang dijanjikan):
+    //   - "Download" -> /history?tab=downloads, padahal /history nol menangani
+    //     parameter `tab` (dicek: tidak ada satu pun `searchParams` di sana),
+    //     jadi ia cuma membuka Riwayat.
+    //   - "Bantuan"  -> /login. Bukan pusat bantuan.
+    //
+    // Jalan ke Riwayat & Favorit TIDAK ikut mati: keduanya pindah ke menu akun
+    // di balik avatar, dan reachability-nya dijaga di tempat yang benar —
+    // tests/kepala-situs.test.ts + tests/menu-akun.test.ts. Yang dijaga DI
+    // SINI cuma satu hal: halaman profil tidak memasangnya kembali.
     masuk("admin");
     await render();
 
+    expect(teks()).not.toContain("Menu Cepat");
     const tautan = Array.from(container.querySelectorAll("a")).map((a) =>
       a.getAttribute("href"),
     );
-    expect(tautan).toContain("/history");
-    expect(tautan).toContain("/my-list");
+    expect(tautan.some((h) => h?.startsWith("/history?tab="))).toBe(false);
+  });
+
+  it("tidak memasang pintu koin selama saklar koin mati", async () => {
+    // PINDAH dari tests/jeda-koin-iklan.test.ts 2026-11-07: penjaga itu dulu
+    // me-render DashboardMenu, yang kini sudah tidak ada. Maksudnya tetap sama
+    // dan tetap perlu — CoinWallet memang `return null` saat PAYWALL_ENABLED
+    // mati (app/components/CoinWallet.tsx:173), tapi kalau suatu saat ia
+    // menggambar sesuatu, penonton melihat toko koin yang belum dibuka.
+    masuk("admin");
+    await render();
+
+    expect(teks()).not.toContain("Koin");
+    expect(teks()).not.toContain("Top-up");
   });
 });

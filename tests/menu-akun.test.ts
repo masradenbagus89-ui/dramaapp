@@ -18,15 +18,26 @@ import { readFileSync } from "node:fs";
 import { TUJUAN_AKUN, tujuanAkunUntuk } from "../app/components/MenuAkun";
 
 describe("isi menu akun", () => {
-  it("membawa Profile, Riwayat, dan Admin dengan alamat yang benar", () => {
+  it("membawa Profile, Riwayat, Favorit, dan Admin dengan alamat yang benar", () => {
+    // "Favorit" masuk 2026-11-07 (keputusan owner) saat "Menu Cepat" di
+    // /profile dibuang. Itu BUKAN sekadar tambahan kenyamanan: menu ini jadi
+    // pintu TERAKHIR ke /my-list — halaman itu sudah dilepas dari navbar &
+    // bar bawah HP, dan baris "Favorit Saya" di beranda tak pernah tergambar
+    // (/beranda memanggil PersonalRows dengan `hanyaLanjut`).
+    //
+    // Daftar dikunci PERSIS (toEqual, bukan toContain) supaya urutan maupun
+    // ejaannya tidak bergeser diam-diam: inilah satu-satunya tempat urutan
+    // menu akun ditentukan.
     expect(TUJUAN_AKUN.map((t) => t.href)).toEqual([
       "/profile",
       "/history",
+      "/my-list",
       "/admin",
     ]);
     expect(TUJUAN_AKUN.map((t) => t.label)).toEqual([
       "Profile",
       "Riwayat",
+      "Favorit",
       "Admin",
     ]);
   });
@@ -39,13 +50,14 @@ describe("isi menu akun", () => {
 describe("saringan peran — menu Admin tidak boleh bocor", () => {
   it("penonton biasa TIDAK melihat Admin", () => {
     const untukViewer = tujuanAkunUntuk("viewer").map((t) => t.href);
-    expect(untukViewer).toEqual(["/profile", "/history"]);
+    expect(untukViewer).toEqual(["/profile", "/history", "/my-list"]);
   });
 
   it("admin melihat semuanya (pembanding — tanpa ini 'tidak muncul' tak bisa dibedakan dari 'tak pernah ada')", () => {
     expect(tujuanAkunUntuk("admin").map((t) => t.href)).toEqual([
       "/profile",
       "/history",
+      "/my-list",
       "/admin",
     ]);
   });

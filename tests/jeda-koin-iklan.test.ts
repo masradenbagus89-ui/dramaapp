@@ -188,16 +188,10 @@ describe("tampilan: nol jejak koin & iklan di layar", () => {
     expect(hasil.filter((r) => r.anak !== "").map((r) => r.nama)).toEqual([]);
   });
 
-  it("menu profil tidak lagi punya pintu 'Premium / Koin'", async () => {
-    const { default: DashboardMenu } = await import(
-      "../app/components/profile/DashboardMenu"
-    );
-    const { isi } = await gambar("DashboardMenu", h(DashboardMenu, {}));
-
-    expect(isi).not.toContain("Koin");
-    expect(isi).not.toContain("Top-up");
-    // Dua arah: menunya memang masih digambar, cuma pintu koinnya yang hilang.
-    // Tanpa pemeriksaan ini, komponen yang kosong melompong juga lulus.
-    expect(isi).toContain("Riwayat Tontonan");
-  });
+  // Penjaga "menu profil tidak lagi punya pintu Premium/Koin" PINDAH ke
+  // tests/halaman-profil-akun.test.ts 2026-11-07. Sebabnya komponen yang dulu
+  // dirender di sini, DashboardMenu ("Menu Cepat"), dibuang owner — dua dari
+  // lima tombolnya rusak. Maksud penjaganya tidak dibuang: ia kini diuji pada
+  // halaman /profile yang sesungguhnya, yang lebih kuat daripada menguji satu
+  // komponen terpisah.
 });

@@ -34,9 +34,53 @@
 > `curl -s -o /dev/null -w "%{http_code}" <SUPABASE_URL>/rest/v1/dramas?select=id&limit=1`
 > dengan header `apikey` + `Authorization` + `Accept-Profile: dramaapp`. **402** = masih
 > dibatasi · **200** = sudah pulih, hapus blok peringatan ini.
+>
+> ✅ **Diuji ulang 2026-11-07 ~09:00 — MASIH 402.** Pembatasan belum lepas.
+
+> 🔴 **KONDISI PRODUKSI 2026-11-07 — SERVER PLAYLY SENDIRI JUGA MATI (temuan BARU, terpisah
+> dari Supabase di atas).** Ini penting karena mengubah kesimpulan: memulihkan Supabase saja
+> **TIDAK** akan memunculkan kembali film di halaman `/film`.
+>
+> **Yang diukur (bukan ditebak):** `GET https://playly-hosting-video.up.railway.app/api/public-video?id=<id>`
+> dengan **dua videoId asli** (`1788933611579`, `1788929757376`, diambil dari `cadangan` di
+> `data/playly.json`) → keduanya **HTTP 500** `{"ok":false,"error":"galat_database"}`. Jadi
+> database di SISI MITRA yang bermasalah; tidak ada yang bisa kita perbaiki dari sisi kita.
+> Alamat yang benar adalah yang Railway (`PLAYLY_BASE_URL` di `lib/playly-alamat.ts:24`) —
+> alamat lama `playly-dashboard.vercel.app` membalas **404** dan itu bukan gejala baru, ia
+> memang sudah pensiun.
+>
+> **Empat lapis daftar film sekarang mati SEMUA** — dicatat supaya sesi berikutnya tidak
+> mengulang penelusuran yang sama: (1) Supabase **402** · (2) katalog Playly butuh kunci API
+> wajib sejak 22 Sep 2026 yang **belum dipasang** ("Pasang di Setelan → Playly") ·
+> (3) berkas lokal `data/playly.json` → `webhook` & `embeds` **0 item** · (4) Playly sendiri
+> **500**. Akibatnya `/film` di produksi tampil **200 tapi nol film**, dengan pesan sopan
+> *"Daftar video sedang tidak bisa dimuat. Ini gangguan sementara di sisi penyedia video."*
+> Penanganan kodenya BENAR — jangan diburu sebagai bug.
+>
+> ⚠️ **`dramaku.com` TIDAK MENJAWAB** (diukur 2026-11-07: `http=000` setelah timeout 20 detik),
+> padahal `dramaapp-production-9e88.up.railway.app` **200**. Jadi Railway hidup, domainnya yang
+> tidak sampai. **Belum ditelusuri sebabnya** (DNS? domain custom di Railway?) — jangan
+> diklaim sudah diperiksa.
+>
+> **Yang harus dilakukan (BUKAN pekerjaan AI):** laporkan `galat_database` ke tim Playly, dan
+> putuskan soal kunci API Playly. Keduanya di luar jangkauan kode kita.
+>
+> **Cara melihat pemutar Playly di LOKAL selama keempat lapis itu mati** (sudah terbukti jalan
+> 2026-11-07, nol baris kode project diubah): arahkan `PLAYLY_API_URL` ke server tiruan kecil
+> yang membalas `/api/public-video` dengan `{"videoUrl":"<mp4 https>"}` — env MENANG atas
+> bawaan di kode (`readPlaylyConfig` di `lib/playly.ts`). Lalu isi `data/playly.json` →
+> `webhook` dengan 1 entri `status:"published"`, dan jalankan `next dev` dengan **SUPABASE_URL
+> + SUPABASE_SERVICE_ROLE_KEY dikosongkan** (mode berkas; sekalian tidak menambah pemakaian
+> kuota egress yang sedang dibatasi). 🪤 Dua jebakan: alamat video wajib **https**
+> (`toHttpsUrl` menolak http polos), dan hasil `fetchPlaylyVideoUrl` di-cache **300 detik** —
+> ganti alamat tanpa `rm -rf .next` + nyala ulang akan tetap menyajikan alamat lama.
 
 
-**Terakhir diisi:** 2026-11-06 — ✅ **TAYANG `64a48fc` + `cfa7a94`: panel admin Video Playly jadi TABEL, dan rating kini BISA DIKETIK.** Sepuluh putaran perbaikan tampilan atas koreksi owner, berakhir dengan satu fitur baru. Daftar video jadi satu baris per video (Judul · Jenis · Kategori · Kualitas · IMDb · Rating · Aksi) dengan paginasi bernomor; menu sidebar "Video Playly" jadi grup berisi tiga; keterangan panjang pindah ke tombol "?". ⚠️ **Rating yang diketik DILIHAT PENONTON** (kartu video di beranda), jadi disaring di server — kotak isian di layar bukan pagar. Disimpan di dokumen SENDIRI `playly:rating`, bukan menumpang di `playly:imdb`; alasannya dua kerusakan senyap, rinciannya di seksi di bawah. Tanpa SQL/env baru. ⚠️ **Yang IKUT HILANG:** tombol "Sembunyikan" per video webhook, karena daftar video di halaman Webhook Playly dihapus atas permintaan owner. **Bukti:** build exit 0 · tsc exit 0 · **2.040 tes / 140 berkas hijau** (dari 1.970/137) · diuji-balik 2 titik → merah → dikembalikan hijau · diverifikasi di situs SUNGGUHAN: endpoint baru `/api/admin/playly/rating` **401** (sebelum rilis **404**), smoke test 8 alamat semua **200**. **⬇️ Rincian 10 putaran + semua jebakannya ada di seksi `## 2026-11-06 18:45` di bawah.** Rencana lengkap: `docs/lintasai/rencana/2026-11-06-sidebar-playly-divider-dan-bantuan.md`.
+**Terakhir diisi:** 2026-11-07 — ✅ **DI-COMMIT LOKAL (`f32b294`), ⏸️ BELUM DIRILIS atas keputusan owner: menu titik tiga pemutar Playly dari rekan DIGABUNG ke main dan DIPAKAI apa adanya.** Owner menarik branch rekan `feat/menu-pemutar-playly` (1 commit `06ed695`, tertinggal 4 commit, merge **nol bentrok**). Menu jadi 6 baris urut: Subtitle (+ Gaya subtitle) · Kecepatan pemutar · Volume Stabil · Penguat suara · Pencahayaan sinematik · Kualitas video; Subtitle & Kecepatan **tidak** punya tombol langsung di baris kontrol, PiP & layar penuh tetap punya. ⚠️ **Keputusan owner sempat BERUBAH di tengah** — tombol langsung CC & Kecepatan sudah dipulihkan penuh (membalik kembali ke permintaan 2026-09-28 `39be664`), lalu owner **melihat hasilnya di layar** dan membatalkannya: *"tetap pakai yang rekan saya kerjakan saja"*. Pemulihan dibuang sebelum sempat di-commit; `PlaylyPlayer.tsx` kini **persis** kerja rekan (`git status` kosong). 🪤 **Celah yang ditemukan di tengah putaran itu TETAP berguna dan sudah ditutup:** tidak ada SATU pun tes yang me-render `PlaylyPlayer`, jadi tombolnya bisa dihapus tanpa tes merah — dan `player-menu.test.ts` milik rekan **tidak** menangkap kalau sambungan menu→video putus (dibuktikan: sambungan diputus → tes rekan tetap 11 lulus). Penjaga baru `tests/pemutar-playly-kontrol.test.ts` (4 tes). ➕ Owner juga menyetujui penjaga SERUPA untuk menu pengaturan pemutar drama (`PlayerSettings`, yang juga nol tes): `tests/pemutar-drama-pengaturan.test.ts`, 8 tes. ❌ **Klaim rekan "1 tes gagal di `origin/main` murni" TIDAK berlaku di main terkini** — diuji ulang: `tests/episode-naik-ke-sidebar.test.ts` **12 lulus**, `npm test` penuh hijau. **Bukti:** build sukses · `tsc` exit 0 · **2.055 tes / 142 berkas hijau** (dari 2.040/140) · kedua penjaga diuji **MERAH lebih dulu** di 4 titik · **nol kode produksi disentuh** pada keadaan akhir. Tanpa SQL/env baru. ⚠️ **Verifikasi di produksi MUSTAHIL sekarang** — lihat blok peringatan Playly 500 di atas. ✅ **Di-commit lokal (sesi kedua, keputusan owner "commit dulu, tahan rilis"): `f32b294` penjaga tes + `cccf3ca` merge + `06ed695` rekan = 3 commit MENUNGGU; `origin/main` & `dramaku/main` masih `e486c17`.** Folder `docs/laporan/` ikut masuk git (skrip + 3 potret publik; PDF/PPTX/pratinjau di-gitignore). ⚠️ `npm run build` TIDAK diulang di sesi kedua (ada `next start -p 3100` yang sedang dipakai) — `tsc` exit 0 & 2.055 tes hijau sudah diukur sendiri. **⬇️ Rincian di seksi `## 2026-11-07` di bawah.**
+
+---
+
+**Sebelumnya 2026-11-06:** ✅ **TAYANG `64a48fc` + `cfa7a94`: panel admin Video Playly jadi TABEL, dan rating kini BISA DIKETIK.** Sepuluh putaran perbaikan tampilan atas koreksi owner, berakhir dengan satu fitur baru. Daftar video jadi satu baris per video (Judul · Jenis · Kategori · Kualitas · IMDb · Rating · Aksi) dengan paginasi bernomor; menu sidebar "Video Playly" jadi grup berisi tiga; keterangan panjang pindah ke tombol "?". ⚠️ **Rating yang diketik DILIHAT PENONTON** (kartu video di beranda), jadi disaring di server — kotak isian di layar bukan pagar. Disimpan di dokumen SENDIRI `playly:rating`, bukan menumpang di `playly:imdb`; alasannya dua kerusakan senyap, rinciannya di seksi di bawah. Tanpa SQL/env baru. ⚠️ **Yang IKUT HILANG:** tombol "Sembunyikan" per video webhook, karena daftar video di halaman Webhook Playly dihapus atas permintaan owner. **Bukti:** build exit 0 · tsc exit 0 · **2.040 tes / 140 berkas hijau** (dari 1.970/137) · diuji-balik 2 titik → merah → dikembalikan hijau · diverifikasi di situs SUNGGUHAN: endpoint baru `/api/admin/playly/rating` **401** (sebelum rilis **404**), smoke test 8 alamat semua **200**. **⬇️ Rincian 10 putaran + semua jebakannya ada di seksi `## 2026-11-06 18:45` di bawah.** Rencana lengkap: `docs/lintasai/rencana/2026-11-06-sidebar-playly-divider-dan-bantuan.md`.
 
 ---
 
@@ -81,6 +125,203 @@
 **Rilis ke-1 hari ini:** (✅ **TAYANG `4dde5c0`**: tombol beranda "LIHAT SEMUA FILM UNGGULAN" → **"TEMUKAN TONTONAN FAVORITMU"** — labelnya salah di dua sisi (isinya drama berseri, bukan film; tujuannya katalog lengkap, bukan daftar unggulan). Dual push → Railway build sendiri → tayang ±60 detik, **downtime NOL**. Smoke test 5 alur: 4 langsung 200, `/drama/meg-2-the-trench` 500 SEKALI lalu 200 enam kali — cold start, dicatat bukan dihapus. ❌ **DIRALAT di rilis ke-2**: catatan asli di sini menyebut tombol itu "tergeser ke kanan di layar HP" sebagai gejala nyata. **Itu keliru** — cacat alat potret, bukan cacat situs; sudah diukur ulang dan tombolnya terpusat sempurna. Jangan diburu.)
 
 **Sebelumnya:** 2026-10-30 (tiga rilis beruntun, semuanya TAYANG: `5088bf2` genre bahasa Indonesia → `27973f0` koreksi owner Kerajaan/CEO/Lainnya → **`55894b8` dua tombol halaman drama yang selama ini TERPOTONG**. Downtime NOL. ⏸️ **DUA bahasan menunggu keputusan owner**, risetnya sudah selesai & nol kode diubah: "klik drama langsung play" dan "sinopsis film masih bahasa Inggris".)
+
+---
+
+## 2026-11-07 — ⏸️ Menu titik tiga pemutar Playly dari rekan DIGABUNG & DIPAKAI apa adanya (belum dirilis)
+
+Owner minta `git pull` + periksa branch yang dikerjakan rekan, lalu memutuskan apa yang diambil.
+
+### Hasil pemeriksaan branch
+
+Satu branch baru: `dramaku/feat/menu-pemutar-playly`, 1 commit `06ed695` (2026-11-06), tertinggal
+**4 commit** dari main. Menyentuh 3 berkas kode + 1 berkas serah-terima. Daftar berkasnya **tidak
+bertabrakan** dengan 4 commit main (main menyentuh `ModalProviderPlayly.tsx` + panel admin + lib),
+jadi merge-nya **nol bentrok** — berbeda dari kasus `redesign/playly-card` dulu yang bentrok 6
+berkas karena dibiarkan tertinggal 54 commit.
+
+**Dua klaim di berkas serah-terima rekan yang TIDAK lolos verifikasi** — dicatat bukan untuk
+menyalahkan, tapi karena keduanya akan menyesatkan sesi berikutnya kalau dibiarkan:
+
+1. *"1 tes gagal di `origin/main` murni, perlu dibereskan owner sebelum rilis"* →
+   **tidak berlaku di main terkini.** `tests/episode-naik-ke-sidebar.test.ts` dijalankan di
+   `e486c17`: **12 lulus, 0 gagal**; `npm test` penuh **2.040 hijau**. Kemungkinan itu kondisi
+   di basis lama komputer rekan (`1938849`), bukan di main. Satu penghalang rilis batal.
+2. *"rekan menyetujui pembalikan ini 2026-11-06"* untuk penghapusan tombol langsung CC &
+   Kecepatan → yang menyetujui **rekan sendiri**, sementara jejak permintaan owner yang dibalik
+   ADA dan eksplisit di `39be664`: *"owner membandingkan dengan pemutar Playly lalu LK21 dan
+   meminta susunannya seragam"*. ✅ **Keputusan itu kini SAH** — owner menyetujuinya langsung
+   2026-11-07 (lihat di bawah). Pelajarannya tetap berlaku untuk lain kali: klaim "keputusan
+   owner" di catatan rekan **wajib dicek jejaknya**, jangan diterima apa adanya.
+
+👍 Satu hal yang pantas dicatat positif: permintaan awal meminta **Volume Stabil** dibuang dari
+menu, dan rekan **menolak membuangnya** karena mesinnya baru dibangun owner 2026-11-03
+(`88d3429`). Itu keputusan yang benar.
+
+### Keputusan owner: LIHAT DULU, baru putuskan — dan keputusannya berubah di tengah
+
+Urutannya dicatat lengkap karena cara mengambilnya yang berharga, bukan hasil akhirnya saja:
+
+1. AI merekomendasikan **ambil menunya, pulihkan tombol langsungnya** (supaya akses sekali-klik
+   yang diminta 2026-09-28 tidak hilang). Owner setuju, dan itu **dikerjakan penuh** — tombol
+   dipulihkan, komentar ditulis ulang, penjaga tes dipasang, gerbang lewat semua.
+2. Owner **melihat hasilnya di layar** lewat jalur lokal bertiru, lalu **membatalkan
+   keputusannya sendiri**: *"tetap pakai yang rekan saya kerjakan saja"*.
+3. Pemulihan tombol dibuang (belum sempat di-commit, jadi bersih), `PlaylyPlayer.tsx` kembali
+   **persis** seperti kerja rekan — diverifikasi `git status` kosong atas berkas itu.
+
+**Keadaan akhir yang berlaku:** Subtitle & Kecepatan **hanya di menu titik tiga**, TIDAK ada
+tombol langsungnya di baris kontrol. PiP & layar penuh tetap tombol langsung. Menu 6 baris urut:
+Subtitle (+ Gaya subtitle) · Kecepatan pemutar · Volume Stabil · Penguat suara · Pencahayaan
+sinematik · Kualitas video.
+
+💡 **Yang tidak terbuang dari putaran yang dibatalkan:** celah penjaga di bawah ditemukan justru
+saat mengerjakannya, dan penjaganya tetap terpasang — cuma arahnya dibalik mengikuti keputusan
+owner yang baru.
+
+### 🪤 Celah yang ditemukan: `PlaylyPlayer` tidak punya penjaga sama sekali
+
+Inilah sebab dua tombol itu bisa hilang tanpa ada yang tahu: **tidak ada satu pun tes yang
+me-render `PlaylyPlayer`.** `tests/player-loncat.test.ts` cuma menguji fungsi murni
+`posisiSesudahLoncat`; `tests/player-menu.test.ts` me-render `PlayerMenu` sendirian tanpa
+pemutarnya. Jadi menghapus dua tombol di baris kontrol = **nol tes merah**, padahal itu
+membalik permintaan owner.
+
+Penjaga barunya `tests/pemutar-playly-kontrol.test.ts` (4 tes), menjaga keputusan owner yang
+SEKARANG — dua arah sekaligus:
+
+- Baris kontrol & menu titik tiga **tergambar** sesudah alamat video didapat (kontrol hanya
+  dirender kalau `videoUrl` terisi; kalau bentuk balasan gerbang berubah, SELURUH baris kontrol
+  lenyap dan videonya jalan tanpa satu tombol pun).
+- **SATU JALAN SAJA**: Subtitle & Kecepatan TIDAK boleh naik jadi tombol langsung. Menambahkannya
+  kembali terasa seperti "perbaikan" bagi siapa pun yang tak tahu sejarahnya — sekarang itu merah.
+- 🪤 **Penjaga paling berharga: memilih kecepatan dari menu benar-benar menyetel
+  `playbackRate` videonya.** Ini celah yang **tidak** tertutup tes rekan: `player-menu.test.ts`
+  me-render `PlayerMenu` dengan `onPilih` TIRUAN, jadi ia membuktikan menunya memanggil sesuatu —
+  bukan bahwa pilihan itu SAMPAI ke elemen video. **Dibuktikan, bukan diduga:** sambungan
+  `videoRef.current.playbackRate` sengaja diputus → tes rekan tetap **11 lulus semua**, penjaga
+  baru **MERAH**.
+- Nilai yang dipilih ikut terbaca di baris menunya (satu state, satu sumber bacaan).
+
+🪤 Dua jebakan saat menulis tesnya: (a) alamat video uji dibuat **se-origin** dengan halaman tes
+supaya `periksaIzinSuara()` memulangkan "boleh" lewat cabang `seOrigin` tanpa menembak jaringan —
+kalau beda origin, tes harus memalsukan permintaan kedua (`Range: bytes=0-0`) juga; (b) memilih
+opsi di submenu **sengaja tidak menutup submenu** (penonton boleh mencoba beberapa kecepatan),
+jadi untuk membaca nilai di baris menu harus kembali dulu lewat judul halaman yang merangkap
+tombol Kembali.
+
+### Celah yang SAMA ditutup di pemutar drama (atas persetujuan owner 2026-11-07)
+
+Sesudah celah di atas ketemu, dicari apakah ada permukaan lain yang senasib. Ada, dan lebih
+mahal: **`PlayerSettings` — menu pengaturan pemutar episode drama, jalur tontonan UTAMA situs —
+tidak disebut oleh satu pun tes.** (`FeedPlayer` sendiri aman, disebut 8 berkas tes; yang
+telanjang cuma menu pengaturannya.) Penjaga barunya `tests/pemutar-drama-pengaturan.test.ts`,
+8 tes, memilih hal yang kalau rusak **tidak mengeluarkan error apa pun** — tata letak & warna
+sengaja TIDAK diuji karena itu berubah sah tiap owner minta perapian:
+
+- 🪤 **Penjaga paling berharga: pilihan resolusi "Asli" wajib mengirim string KOSONG.** Nilai itu
+  dipakai menyusun nama berkas di PC backup (`<ep>.<res>.mp4`; `""` berarti `1.mp4`). Kalau suatu
+  saat ada yang "merapikan" `""` jadi `"asli"`, pemutar akan mencari `1.asli.mp4` yang tak pernah
+  ada → video gagal diputar **tanpa satu pun pesan yang menyebut sebabnya**.
+- Kecepatan dikirim sebagai **angka**, bukan teks (`video.playbackRate` menolak teks, dan itu baru
+  kelihatan saat ada yang betul-betul memutar video).
+- Blok **Subtitle disembunyikan** saat episodenya tak punya subtitle, dan muncul dengan **nama
+  bahasa** (bukan kode `id`/`en`) saat ada; pilihan "Mati" mengirim `OFF`.
+- `open` tetap milik **pemanggil** (`PlayerControls`), bukan state di dalam komponen — mencegah
+  dua sumber kebenaran untuk "menu terbuka atau tidak".
+- Tombol **Unduh** & **Layar penuh** benar-benar memanggil aksinya, dan labelnya ikut keadaan
+  (`Keluar` saat sedang layar penuh).
+
+**Diuji-balik 2 titik:** `""` → `"asli"` pada resolusi → penjaga pola berkas **MERAH**; syarat
+`subtitles.length > 0` dilepas → penjaga blok subtitle **MERAH**. Keduanya hijau lagi sesudah
+berkas dipulihkan, dan `git diff` atas `PlayerSettings.tsx` **kosong** — nol kode produksi
+disentuh untuk memasang penjaga ini.
+
+### Bukti
+
+- Kedua penjaga baru **diuji MERAH lebih dulu**, total 4 titik: tombol langsung ditambahkan
+  kembali → merah · sambungan menu→video diputus → merah (sementara tes rekan tetap hijau) ·
+  resolusi `""` → `"asli"` → merah · syarat blok subtitle dilepas → merah.
+- Gerbang pra-rilis berurutan: `rm -rf .next` → `npm run build` **sukses** → `npx tsc --noEmit`
+  **exit 0** → `npm test` **2.055 tes / 142 berkas hijau** (dari 2.040/140).
+- **Nol kode produksi disentuh** pada keadaan akhir: `git status` atas `PlaylyPlayer.tsx` dan
+  `PlayerSettings.tsx` sama-sama kosong. Yang bertambah hanya 2 berkas tes + catatan.
+- Tanpa SQL migrasi, tanpa env baru, nol berkas kunci tersentuh.
+
+### ✅ Sudah di-commit LOKAL — ⏸️ belum dirilis (keputusan owner 2026-11-07)
+
+Owner memilih **commit lokal dulu, TAHAN rilis**. Riwayat git jadi aman dan tak bisa hilang,
+tapi tombol rilis **belum** ditekan.
+
+Tiga commit menunggu di komputer owner:
+
+- `f32b294` — dua berkas penjaga tes (nol kode produksi disentuh).
+- `cccf3ca` — merge kerja rekan ke main terkini.
+- `06ed695` — commit rekan yang terbawa lewat merge itu.
+
+`origin/main` dan `dramaku/main` sama-sama masih di `e486c17` (diverifikasi `git fetch` ke
+KEDUA remote, 2026-11-07). Jadi ketiganya **belum ada di remote mana pun** — belum punya
+cadangan selain folder ini.
+
+⚠️ **Alasan menahan rilis, bukan sekadar hati-hati:** verifikasi di situs sungguhan MUSTAHIL
+untuk fitur ini sekarang — `/film` di produksi nol film karena empat lapis mati (blok peringatan
+di kepala berkas). Dirilis hari ini = **tidak ada cara membuktikan menunya benar di produksi**;
+yang ada cuma bukti tes + bukti layar dari jalur lokal bertiru.
+
+🔁 **Saat owner memutuskan rilis**, gerbang pra-rilis `AGENTS.local.md` §6 WAJIB dijalankan ulang
+dari awal, termasuk `rm -rf .next` → `npm run build` yang SENGAJA mendahului `tsc`.
+
+⚠️ **Batas jujur sesi ini: `npm run build` TIDAK dijalankan ulang.** Sebabnya ada
+`next start -p 3100` (PID 135756) yang sedang melayani pratinjau lokal, dan `rm -rf .next`
+akan mematikannya di tengah pemakaian. Yang **sudah diukur sendiri** di sesi ini:
+`npx tsc --noEmit` **exit 0** dan `npm test` **2.055 tes / 142 berkas hijau**. Build terakhir
+yang sukses atas kode yang SAMA PERSIS dijalankan sesi sebelumnya (kode produksi nol tersentuh
+sejak itu — `git diff` atas `PlaylyPlayer.tsx` & `PlayerSettings.tsx` kosong).
+
+### 🪤 Jebakan sesi kedua: membaca repo yang sedang DITULIS sesi lain
+
+Sesi kedua hari ini dibuka dengan `lanjut dari handoff` dan sempat menemukan catatan yang
+bertentangan dengan kenyataan di disk. Dicatat karena cara ketahuannya berguna.
+
+Tes `pemutar-playly-kontrol` sempat tampil **1 MERAH** (*"expected 'Kecepatan pemutar' to contain
+'2×'"*), dan itu nyaris dilaporkan sebagai bug. **Ia bukan bug:** tesnya dijalankan pukul
+**09:51:40**, sementara berkas tesnya sendiri baru selesai ditulis **09:51:43** dan
+`PlaylyPlayer.tsx` **09:52:09** — repo tertangkap dalam keadaan setengah tertulis. Dijalankan
+ulang sesudah sunyi: **4/4 hijau, 4 kali berturut-turut**. Sebabnya dibuktikan, bukan diduga:
+tesnya disalin lalu isi DOM dicetak tiap langkah, dan hasilnya benar (`"Kecepatan pemutar2×"`).
+
+**Aturan yang dipetik:** di mesin ini bisa ada **lebih dari satu sesi AI menulis repo yang sama**
+(`ListAgents` memperlihatkannya; sesi kedua melihat `dramaapp-2e` masih aktif). Tes merah yang
+muncul **sekali** di menit-menit awal sesi WAJIB diulang sesudah berkasnya berhenti berubah
+(cek `stat` mtime) sebelum disimpulkan sebagai kerusakan — melaporkannya mentah-mentah akan
+mengirim sesi berikutnya memburu bug yang tidak ada.
+
+Yang diverifikasi ulang secara mandiri: merge `cccf3ca` benar ada · `PlaylyPlayer.tsx` memang
+**nol** `Captions`/`Gauge`/`siklusKecepatan` (jadi keadaan akhir = kerja rekan apa adanya, cocok
+dengan penjaga tesnya) · jejak permintaan owner 2026-09-28 di `39be664` memang ADA dan eksplisit ·
+`npm test` **2.055/142 hijau** · `npx tsc --noEmit` **exit 0**.
+
+### Folder `docs/laporan/` dimasukkan ke git (keputusan owner 2026-11-07)
+
+Sembilan berkas, 2,4 MB, selama ini tak ter-track DAN tak di-gitignore — artinya ia menunggu
+ikut ter-commit tanpa ada yang pernah memutuskan. Owner memilih: **skrip masuk, hasil cetak
+diabaikan.**
+
+- **Masuk git:** `_buat-laporan.py`, `_buat-pratinjau.py`, `_cek-tata-letak.py`, dan
+  `gambar/*.jpg` (3 potret, 515 KB).
+- **Di-gitignore:** PDF + PPTX + `pratinjau-*.html` (1,99 MB) — hasil cetak yang selalu bisa
+  dibangun ulang, sementara binari besar menempel PERMANEN di riwayat git (tak bisa dihapus
+  tanpa menulis ulang sejarah repo publik).
+
+🪤 **Kenapa `gambar/` IKUT masuk padahal owner bilang "skripnya saja":** `_buat-laporan.py:154`
+berhenti dengan `SystemExit("gambar tidak ada")` kalau salah satu potret hilang. Ketiganya
+**bahan**, bukan hasil — tanpa mereka skripnya tak bisa membangun ulang laporannya, jadi menuruti
+kalimatnya secara harfiah justru membatalkan alasan owner memilihnya.
+
+⚠️ Ketiga potret **diperiksa satu per satu sebelum di-commit** karena repo ini **PUBLIK**:
+semuanya halaman penonton biasa (beranda, katalog film, detail drama) dalam keadaan belum login —
+nol panel admin, nol email, nol data pribadi. Skripnya juga dipindai pola kunci/token: nol temuan
+(kata "admin" yang muncul cuma prosa yang menjelaskan panelnya).
 
 ---
 

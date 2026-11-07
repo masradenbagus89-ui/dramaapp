@@ -7,7 +7,7 @@
 // satu pun tes — nol. Itu celah yang sama persis dengan yang baru terbukti
 // memakan korban di pemutar Playly hari ini: dua tombol langsung di
 // `PlaylyPlayer` bisa dihapus dengan 2.040 tes tetap hijau, karena tak ada
-// yang me-render komponennya (lihat tests/pemutar-kontrol-langsung.test.ts
+// yang me-render komponennya (lihat tests/pemutar-playly-kontrol.test.ts
 // dan HANDOFF seksi 2026-11-07). Menu ini dipakai pemutar episode drama —
 // jalur tontonan UTAMA situs — jadi celahnya lebih mahal, bukan lebih murah.
 //

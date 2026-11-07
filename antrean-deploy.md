@@ -30,10 +30,31 @@
 > dibatasi · **200** = sudah pulih, hapus blok peringatan ini.
 
 
-**Terakhir dicek:** 2026-11-07 (**komputer OWNER**), sesudah rilis `64a48fc` + `cfa7a94`.
-`HEAD` = `origin/main` = `dramaku/main` = **`cfa7a94`** (diverifikasi `git fetch origin` +
-`git fetch dramaku`). **Nol antrean** — tak ada yang menunggu rilis, tak ada branch rekan yang
-tertinggal.
+**Terakhir dicek:** 2026-11-07 ~10:05 (**komputer OWNER**, sesi kedua hari itu).
+`origin/main` = `dramaku/main` = **`e486c17`** (diverifikasi `git fetch origin` +
+`git fetch dramaku`). `HEAD` lokal = **`f32b294`**.
+
+🟡 **ADA ANTREAN: 3 commit menunggu, belum ada di remote mana pun** (jadi belum punya cadangan
+selain folder di komputer owner):
+
+| Commit | Isi | Kode produksi? |
+|---|---|---|
+| `f32b294` | Penjaga tes `pemutar-playly-kontrol` (4 tes) + `pemutar-drama-pengaturan` (8 tes) | **Tidak** — nol berkas produksi disentuh |
+| `cccf3ca` | Merge kerja rekan `feat/menu-pemutar-playly` ke main terkini | Ya (lewat `06ed695`) |
+| `06ed695` | Commit rekan: menu titik tiga pemutar Playly disusun ulang jadi 6 baris | Ya |
+
+**Kenapa ditahan, bukan dirilis** (keputusan owner 2026-11-07: *"commit lokal dulu, TAHAN
+rilis"*): verifikasi di situs sungguhan MUSTAHIL sekarang — `/film` di produksi nol film karena
+Playly membalas **500** dan Supabase **402** (blok peringatan di atas). Dirilis hari ini berarti
+tidak ada cara membuktikan menunya benar di produksi.
+
+⚠️ **Sebelum push nanti, gerbang pra-rilis `AGENTS.local.md` §6 WAJIB diulang dari awal** —
+`rm -rf .next` → `npm run build` (SENGAJA mendahului `tsc`) → `npx tsc --noEmit` → `npm test` →
+cek nol berkas env ter-stage. Di sesi kedua `build` **tidak** diulang karena ada
+`next start -p 3100` yang sedang melayani pratinjau lokal; yang sudah diukur sendiri:
+`tsc` **exit 0** dan `npm test` **2.055 tes / 142 berkas hijau**.
+
+Nol branch rekan yang tertinggal.
 
 ⬇️ **Rilis terakhir `64a48fc`** — **panel admin Video Playly jadi TABEL + rating bisa DIKETIK.**
 Hasil sepuluh putaran koreksi owner dalam satu sesi, ditutup satu fitur baru. Daftar video kini

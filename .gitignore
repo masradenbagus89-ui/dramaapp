@@ -97,3 +97,15 @@ data/admins.json
 supabase_export.sql
 # Dump historis berisi dokumen app_data (termasuk daftar admin).
 migrasi-full.sql
+
+# === Laporan progress (docs/laporan/) — keputusan owner 2026-11-07 ===
+# Yang DI-COMMIT: skrip pembuatnya (_buat-*.py, _cek-*.py) + folder gambar/.
+# Ketiga potret layar di gambar/ adalah BAHAN laporan, bukan hasil: _buat-laporan.py
+# berhenti dengan error "gambar tidak ada" kalau salah satu hilang, jadi tanpa
+# gambar itu skripnya tak bisa membangun ulang laporannya.
+# Yang DIABAIKAN: hasil cetaknya. PDF + PPTX + pratinjau HTML = 1,99 MB per versi,
+# selalu bisa dibuat ulang dari skrip di atas, sementara binari besar menempel
+# PERMANEN di riwayat git (tak bisa dihapus tanpa menulis ulang sejarah repo publik).
+docs/laporan/*.pdf
+docs/laporan/*.pptx
+docs/laporan/pratinjau-*.html

@@ -48,7 +48,6 @@ function propsDasar(timpa: Partial<PlayerMenuProps> = {}): PlayerMenuProps {
       ],
       onPilih: vi.fn(),
     },
-    volumeStabil: { aktif: false, onUbah: vi.fn() },
     penguatSuara: { aktif: false, onUbah: vi.fn() },
     sinematik: { aktif: false, onUbah: vi.fn() },
     kualitas: {
@@ -93,10 +92,10 @@ describe("PlayerMenu — popup titik tiga", () => {
     expect(container.querySelector('[role="menu"]')).not.toBeNull();
   });
 
-  it("menampilkan KEENAM fitur menu dengan urutan yang diminta", () => {
-    // Susunan 2026-11-06: Subtitle, Kecepatan, Volume Stabil, Penguat suara,
-    // Pencahayaan sinematik, Kualitas video. Urutan ikut dijaga karena urutan
-    // itulah yang diminta, bukan sekadar keberadaan barisnya.
+  it("menampilkan KELIMA fitur menu dengan urutan yang diminta", () => {
+    // Susunan 2026-11-07: Subtitle, Kecepatan, Penguat suara, Pencahayaan
+    // sinematik, Kualitas video. Urutan ikut dijaga karena urutan itulah yang
+    // diminta, bukan sekadar keberadaan barisnya.
     render(propsDasar());
     klik(tombolMenu());
 
@@ -106,7 +105,6 @@ describe("PlayerMenu — popup titik tiga", () => {
     const urutan = [
       "Subtitle",
       "Kecepatan pemutar",
-      "Volume Stabil",
       "Penguat suara",
       "Pencahayaan sinematik",
       "Kualitas video",
@@ -115,14 +113,15 @@ describe("PlayerMenu — popup titik tiga", () => {
     urutan.forEach((u, i) => expect(label[i]).toContain(u));
   });
 
-  it("PiP TIDAK ada di menu", () => {
-    // PiP tetap tombol langsung di baris kontrol — muncul juga di sini berarti
-    // ada dua jalan ke pengaturan yang sama.
+  it("Volume Stabil & PiP TIDAK ada di menu", () => {
+    // Volume Stabil dikeluarkan (2026-11-07). PiP tetap tombol langsung di
+    // baris kontrol — muncul juga di sini berarti ada dua jalan ke pengaturan
+    // yang sama.
     render(propsDasar());
     klik(tombolMenu());
 
     const teks = container.textContent ?? "";
-    for (const label of ["PiP", "Pop-up"]) {
+    for (const label of ["Volume Stabil", "PiP", "Pop-up"]) {
       expect(teks).not.toContain(label);
     }
   });

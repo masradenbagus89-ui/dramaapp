@@ -4,15 +4,19 @@
 Permintaan: isi menu titik tiga di pemutar film Playly diganti jadi Subtitle (+ gaya
 subtitle), Kecepatan pemutar, Penguat suara, Pencahayaan sinematik, Kualitas video.
 
-Susunan menu sekarang (6 baris, urut):
+Susunan menu sekarang (5 baris, urut):
 1. **Subtitle** → halaman berisi pilihan bahasa + **Gaya subtitle** (ukuran teks & latar teks)
 2. **Kecepatan pemutar** → 0,5× · Normal · 1,25× · 1,5× · 2× (berfungsi)
-3. **Volume Stabil** — SENGAJA dipertahankan. Permintaan awal membuangnya, tapi mesinnya baru
-   dibangun owner 2026-11-03 (`88d3429`) dan menyala sendiri begitu Playly memasang izin CORS.
-   Rekan memilih mempertahankannya supaya hasil kerja owner tidak hilang.
-4. **Penguat suara** (tidak diubah, tetap tersambung ke mesin `88d3429`)
-5. **Pencahayaan sinematik** (tidak diubah)
-6. **Kualitas video** (nama baris dari "Kualitas" jadi "Kualitas video")
+3. **Penguat suara** (tidak diubah, tetap tersambung ke mesin `88d3429`)
+4. **Pencahayaan sinematik** (tidak diubah)
+5. **Kualitas video** (nama baris dari "Kualitas" jadi "Kualitas video")
+
+**Volume Stabil DIKELUARKAN dari menu** (keputusan rekan 2026-11-07, sesudah diberi tahu bahwa
+mesinnya baru dibangun owner 2026-11-03 di `88d3429`). Yang dihapus HANYA baris menu + state
+sakelarnya di `PlaylyPlayer.tsx`; pemutar sekarang mengirim `volumeStabil: false` tetap ke
+`useOlahSuara`. Mesin suaranya (`useOlahSuara.ts`, `lib/olah-suara.ts`, `tests/olah-suara.test.ts`)
+SENGAJA tidak disentuh — Penguat suara memakai rantai yang sama. Owner bisa memunculkan
+Volume Stabil lagi cukup dengan mengembalikan state + baris menunya.
 
 **Tombol langsung Subtitle & Kecepatan di baris kontrol bawah DIHAPUS** (keduanya pindah ke
 menu), supaya tiap pengaturan tetap punya satu jalan saja. Ini membalik keputusan owner
@@ -28,9 +32,10 @@ gaya subtitle yang aktif (teruji), tinggal disambungkan bila suatu hari ada berk
 - `app/components/player/PlayerMenu.tsx` — susunan baru + halaman Subtitle, Gaya subtitle,
   Kecepatan; popup dilebarkan `w-60` → `w-72` agar label tidak terpotong
 - `app/components/player/PlaylyPlayer.tsx` — tombol langsung subtitle & kecepatan dihapus
-  (beserta `siklusKecepatan`), nilainya dikirim ke menu
+  (beserta `siklusKecepatan`), nilainya dikirim ke menu; state `volumeStabil` dihapus,
+  `useOlahSuara` menerima `volumeStabil: false` tetap
 - `tests/player-menu.test.ts` — penjaga lama "Kecepatan tidak boleh di menu" dibalik;
-  + tes urutan 6 baris, kecepatan, subtitle terkunci, gaya subtitle
+  + tes urutan 5 baris (Volume Stabil tidak boleh muncul), kecepatan, subtitle terkunci, gaya subtitle
 
 Hanya dipakai pemutar Playly: halaman `/film` (grid Playly) dan `/tonton/[id]`. Pemutar
 episode drama memakai menu lain (`PlayerSettings.tsx`) — tidak disentuh.
@@ -52,12 +57,15 @@ Dijalankan di branch ini (basis `origin/main` 1938849):
   1 gagal, 11 lulus). Bukan akibat menu ini, tapi perlu dibereskan owner sebelum rilis
   berikutnya karena gerbang pra-rilis mensyaratkan `npm test` hijau.
 - `tests/player-menu.test.ts` → semua lulus
-- Dicek di layar (`next start` lokal, Chromium): menu tampil 6 baris urut; memilih 1,5×
+- Dicek di layar (`next start` lokal, Chromium): menu tampil urut (foto 2026-11-06, masih 6 baris sebelum Volume Stabil dikeluarkan); memilih 1,5×
   langsung tampil "1,5×" di menu; halaman Subtitle menampilkan alasan + Gaya subtitle terkunci.
+  Foto ulang 2026-11-07 (sesudah Volume Stabil dikeluarkan) TIDAK bisa diambil: API Playly
+  membalas HTTP 500 sehingga pemutar tidak mendapat alamat video. Susunan 5 baris dibuktikan
+  lewat tes `tests/player-menu.test.ts` (11/11 lulus) — owner tolong cek di layar sebelum rilis.
 
 ## 6. Cara owner mencoba
 1. Buka `/film` → klik salah satu film Playly sampai pemutarnya muncul.
-2. Klik titik tiga di kanan bawah → harus muncul 6 baris urut seperti di bagian 1. Baris
+2. Klik titik tiga di kanan bawah → harus muncul 5 baris urut seperti di bagian 1. Baris
    bawah pemutar tidak lagi punya tombol CC & speedometer.
 3. Klik **Kecepatan pemutar** → pilih **1,5×** → video lebih cepat dan baris menu menampilkan
    "1,5×". Klik **Subtitle** → tertulis alasan tidak ada subtitle, **Gaya subtitle** abu-abu.

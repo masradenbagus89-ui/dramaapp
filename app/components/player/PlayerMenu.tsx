@@ -14,7 +14,6 @@
 // tanpa menyeret ikut cara satu pemutar mengelola videonya.
 import { useEffect, useRef, useState } from "react";
 import {
-  AudioLines,
   Captions,
   Check,
   ChevronLeft,
@@ -71,13 +70,12 @@ export type SubtitleMenu = {
 
 // Susunan menu (permintaan 2026-11-06): Subtitle & Kecepatan KEMBALI masuk menu dan
 // tombol langsungnya di baris kontrol dihapus — tetap satu jalan ke tiap
-// pengaturan. Volume Stabil SENGAJA dipertahankan: mesinnya baru dibangun owner
-// 2026-11-03 dan menyala sendiri begitu sumber video memberi izin CORS. PiP
-// tetap tombol langsung, bukan di sini.
+// pengaturan. Volume Stabil dikeluarkan dari menu (permintaan 2026-11-07);
+// mesinnya di useOlahSuara tetap ada karena dipakai Penguat suara. PiP tetap
+// tombol langsung, bukan di sini.
 export type PlayerMenuProps = {
   subtitle: SubtitleMenu;
   kecepatan: PilihanMenu;
-  volumeStabil: SakelarMenu;
   penguatSuara: SakelarMenu;
   sinematik: SakelarMenu;
   kualitas: PilihanMenu;
@@ -94,7 +92,6 @@ type Laman = "utama" | "subtitle" | "gayaSubtitle" | "kecepatan" | "kualitas";
 export default function PlayerMenu({
   subtitle,
   kecepatan,
-  volumeStabil,
   penguatSuara,
   sinematik,
   kualitas,
@@ -156,11 +153,6 @@ export default function PlayerMenu({
 
         <div className="my-1 h-px bg-white/10" />
 
-        <BarisSakelar
-          ikon={<AudioLines className="size-4" />}
-          label="Volume Stabil"
-          sakelar={volumeStabil}
-        />
         <BarisSakelar
           ikon={<Volume2 className="size-4" />}
           label="Penguat suara"

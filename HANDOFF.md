@@ -76,7 +76,7 @@
 > ganti alamat tanpa `rm -rf .next` + nyala ulang akan tetap menyajikan alamat lama.
 
 
-**Terakhir diisi:** 2026-11-07 — ✅ **DI-COMMIT LOKAL (`f32b294`), ⏸️ BELUM DIRILIS atas keputusan owner: menu titik tiga pemutar Playly dari rekan DIGABUNG ke main dan DIPAKAI apa adanya.** Owner menarik branch rekan `feat/menu-pemutar-playly` (1 commit `06ed695`, tertinggal 4 commit, merge **nol bentrok**). Menu jadi 6 baris urut: Subtitle (+ Gaya subtitle) · Kecepatan pemutar · Volume Stabil · Penguat suara · Pencahayaan sinematik · Kualitas video; Subtitle & Kecepatan **tidak** punya tombol langsung di baris kontrol, PiP & layar penuh tetap punya. ⚠️ **Keputusan owner sempat BERUBAH di tengah** — tombol langsung CC & Kecepatan sudah dipulihkan penuh (membalik kembali ke permintaan 2026-09-28 `39be664`), lalu owner **melihat hasilnya di layar** dan membatalkannya: *"tetap pakai yang rekan saya kerjakan saja"*. Pemulihan dibuang sebelum sempat di-commit; `PlaylyPlayer.tsx` kini **persis** kerja rekan (`git status` kosong). 🪤 **Celah yang ditemukan di tengah putaran itu TETAP berguna dan sudah ditutup:** tidak ada SATU pun tes yang me-render `PlaylyPlayer`, jadi tombolnya bisa dihapus tanpa tes merah — dan `player-menu.test.ts` milik rekan **tidak** menangkap kalau sambungan menu→video putus (dibuktikan: sambungan diputus → tes rekan tetap 11 lulus). Penjaga baru `tests/pemutar-playly-kontrol.test.ts` (4 tes). ➕ Owner juga menyetujui penjaga SERUPA untuk menu pengaturan pemutar drama (`PlayerSettings`, yang juga nol tes): `tests/pemutar-drama-pengaturan.test.ts`, 8 tes. ❌ **Klaim rekan "1 tes gagal di `origin/main` murni" TIDAK berlaku di main terkini** — diuji ulang: `tests/episode-naik-ke-sidebar.test.ts` **12 lulus**, `npm test` penuh hijau. **Bukti:** build sukses · `tsc` exit 0 · **2.055 tes / 142 berkas hijau** (dari 2.040/140) · kedua penjaga diuji **MERAH lebih dulu** di 4 titik · **nol kode produksi disentuh** pada keadaan akhir. Tanpa SQL/env baru. ⚠️ **Verifikasi di produksi MUSTAHIL sekarang** — lihat blok peringatan Playly 500 di atas. ✅ **Di-commit lokal (sesi kedua, keputusan owner "commit dulu, tahan rilis"): `f32b294` penjaga tes + `cccf3ca` merge + `06ed695` rekan = 3 commit MENUNGGU; `origin/main` & `dramaku/main` masih `e486c17`.** Folder `docs/laporan/` ikut masuk git (skrip + 3 potret publik; PDF/PPTX/pratinjau di-gitignore). ⚠️ `npm run build` TIDAK diulang di sesi kedua (ada `next start -p 3100` yang sedang dipakai) — `tsc` exit 0 & 2.055 tes hijau sudah diukur sendiri. 🔍 **AUDIT seluruh tombol cari — 4 cacat ditemukan**, terbesar: kaca pembesar di navbar hitam ternyata **hiasan** (`pointer-events-none`), diklik nol reaksi. 🏷️ **Halaman Favorit disamakan namanya** — judul "Daftar Saya" (muncul di SATU tempat) kalah dari "Favorit" yang dipakai di seluruh situs; + **tombol Kembali** yang sengaja TIDAK memakai `router.back()` polos (itu melempar pengunjung baru keluar ke Google). 🧹 **"Menu Cepat" di /profile & menu Keamanan(2FA) di sidebar admin DIBUANG** (owner) — keluhan owner diverifikasi dan terbukti: "Download" menuju parameter yang tak pernah ditangani, "Bantuan" menuju halaman LOGIN. ⚠️ Menu itu ternyata pintu TERAKHIR ke /my-list, jadi "Favorit" dipindahkan ke menu akun di balik avatar. 🔑 **Login admin di LOKAL sekarang BISA** saat Supabase mati — sebabnya bukan password melainkan **503** (`isAdminEmail()` menanya Supabase sebelum password diperiksa); jalan keluarnya mode berkas resmi project ini (`ALLOW_FILE_MODE=1` + env Supabase dikosongkan), diuji sampai 200 `role:admin`. 🆕 **`/profile` jadi halaman AKUN** (keputusan owner): Lanjut Menonton · Riwayat Terbaru · Favorit dibuang dari sana (rumahnya `/beranda`, `/history`, `/my-list` — nol fitur hilang), diganti seksi **Akun** (nama + avatar) dan **Keamanan** (ubah password + 2FA, admin saja, komponennya dipakai ulang dari panel admin). 🪤 Kedua baris lama ternyata memanggil fungsi yang SAMA — dua judul untuk daftar yang sama. 🆕 **Gerbang pra-rilis kini SATU perintah: `npm run gerbang`** (keputusan owner) — kelima pemeriksaan §6 berurutan, menolak jalan kalau urutan `build`/`tsc` tertukar. Dijalankan sungguhan: percobaan PERTAMA **menangkap kesalahan nyata** (exit 1), sesudah diperbaiki **✓ LOLOS exit 0** dengan **2.066 tes / 143 berkas hijau**. **⬇️ Rincian di seksi `## 2026-11-07` di bawah.**
+**Terakhir diisi:** 2026-11-07 — ✅ **DI-COMMIT LOKAL (`f32b294`), ⏸️ BELUM DIRILIS atas keputusan owner: menu titik tiga pemutar Playly dari rekan DIGABUNG ke main dan DIPAKAI apa adanya.** Owner menarik branch rekan `feat/menu-pemutar-playly` (1 commit `06ed695`, tertinggal 4 commit, merge **nol bentrok**). Menu jadi 6 baris urut: Subtitle (+ Gaya subtitle) · Kecepatan pemutar · Volume Stabil · Penguat suara · Pencahayaan sinematik · Kualitas video; Subtitle & Kecepatan **tidak** punya tombol langsung di baris kontrol, PiP & layar penuh tetap punya. ⚠️ **Keputusan owner sempat BERUBAH di tengah** — tombol langsung CC & Kecepatan sudah dipulihkan penuh (membalik kembali ke permintaan 2026-09-28 `39be664`), lalu owner **melihat hasilnya di layar** dan membatalkannya: *"tetap pakai yang rekan saya kerjakan saja"*. Pemulihan dibuang sebelum sempat di-commit; `PlaylyPlayer.tsx` kini **persis** kerja rekan (`git status` kosong). 🪤 **Celah yang ditemukan di tengah putaran itu TETAP berguna dan sudah ditutup:** tidak ada SATU pun tes yang me-render `PlaylyPlayer`, jadi tombolnya bisa dihapus tanpa tes merah — dan `player-menu.test.ts` milik rekan **tidak** menangkap kalau sambungan menu→video putus (dibuktikan: sambungan diputus → tes rekan tetap 11 lulus). Penjaga baru `tests/pemutar-playly-kontrol.test.ts` (4 tes). ➕ Owner juga menyetujui penjaga SERUPA untuk menu pengaturan pemutar drama (`PlayerSettings`, yang juga nol tes): `tests/pemutar-drama-pengaturan.test.ts`, 8 tes. ❌ **Klaim rekan "1 tes gagal di `origin/main` murni" TIDAK berlaku di main terkini** — diuji ulang: `tests/episode-naik-ke-sidebar.test.ts` **12 lulus**, `npm test` penuh hijau. **Bukti:** build sukses · `tsc` exit 0 · **2.055 tes / 142 berkas hijau** (dari 2.040/140) · kedua penjaga diuji **MERAH lebih dulu** di 4 titik · **nol kode produksi disentuh** pada keadaan akhir. Tanpa SQL/env baru. ⚠️ **Verifikasi di produksi MUSTAHIL sekarang** — lihat blok peringatan Playly 500 di atas. ✅ **Di-commit lokal (sesi kedua, keputusan owner "commit dulu, tahan rilis"): `f32b294` penjaga tes + `cccf3ca` merge + `06ed695` rekan = 3 commit MENUNGGU; `origin/main` & `dramaku/main` masih `e486c17`.** Folder `docs/laporan/` ikut masuk git (skrip + 3 potret publik; PDF/PPTX/pratinjau di-gitignore). ⚠️ `npm run build` TIDAK diulang di sesi kedua (ada `next start -p 3100` yang sedang dipakai) — `tsc` exit 0 & 2.055 tes hijau sudah diukur sendiri. 💡 **BARU: saran judul muncul saat mengetik** (poster + judul + tahun) di 4 halaman berkatalog — nol permintaan jaringan tambahan, jadi tetap hidup walau Supabase dibatasi. 🔍 **AUDIT seluruh tombol cari — 4 cacat ditemukan**, terbesar: kaca pembesar di navbar hitam ternyata **hiasan** (`pointer-events-none`), diklik nol reaksi. 🏷️ **Halaman Favorit disamakan namanya** — judul "Daftar Saya" (muncul di SATU tempat) kalah dari "Favorit" yang dipakai di seluruh situs; + **tombol Kembali** yang sengaja TIDAK memakai `router.back()` polos (itu melempar pengunjung baru keluar ke Google). 🧹 **"Menu Cepat" di /profile & menu Keamanan(2FA) di sidebar admin DIBUANG** (owner) — keluhan owner diverifikasi dan terbukti: "Download" menuju parameter yang tak pernah ditangani, "Bantuan" menuju halaman LOGIN. ⚠️ Menu itu ternyata pintu TERAKHIR ke /my-list, jadi "Favorit" dipindahkan ke menu akun di balik avatar. 🔑 **Login admin di LOKAL sekarang BISA** saat Supabase mati — sebabnya bukan password melainkan **503** (`isAdminEmail()` menanya Supabase sebelum password diperiksa); jalan keluarnya mode berkas resmi project ini (`ALLOW_FILE_MODE=1` + env Supabase dikosongkan), diuji sampai 200 `role:admin`. 🆕 **`/profile` jadi halaman AKUN** (keputusan owner): Lanjut Menonton · Riwayat Terbaru · Favorit dibuang dari sana (rumahnya `/beranda`, `/history`, `/my-list` — nol fitur hilang), diganti seksi **Akun** (nama + avatar) dan **Keamanan** (ubah password + 2FA, admin saja, komponennya dipakai ulang dari panel admin). 🪤 Kedua baris lama ternyata memanggil fungsi yang SAMA — dua judul untuk daftar yang sama. 🆕 **Gerbang pra-rilis kini SATU perintah: `npm run gerbang`** (keputusan owner) — kelima pemeriksaan §6 berurutan, menolak jalan kalau urutan `build`/`tsc` tertukar. Dijalankan sungguhan: percobaan PERTAMA **menangkap kesalahan nyata** (exit 1), sesudah diperbaiki **✓ LOLOS exit 0** dengan **2.066 tes / 143 berkas hijau**. **⬇️ Rincian di seksi `## 2026-11-07` di bawah.**
 
 ---
 
@@ -131,6 +131,66 @@
 ## 2026-11-07 — ⏸️ Menu titik tiga pemutar Playly dari rekan DIGABUNG & DIPAKAI apa adanya (belum dirilis)
 
 Owner minta `git pull` + periksa branch yang dikerjakan rekan, lalu memutuskan apa yang diambil.
+
+### 💡 BARU: saran judul muncul SAAT MENGETIK (owner 2026-11-07)
+
+Owner: *"aku juga mau ketika kita sedang mengetik akan muncul pilihan"*. Bentuknya dipilih owner
+dari tiga opsi: **poster kecil + judul + tahun**, diklik langsung membuka halaman judul itu, dan
+muncul **di bar merah saja**.
+
+**Tempat:** `/` · `/beranda` · `/film` · `/discover`. Kotak cari navbar hitam **sengaja tidak**
+dapat saran (keputusan owner): komponen itu global dan tak punya katalog, jadi memberinya saran
+berarti mengambil katalog lewat jaringan — dan selama Supabase dibatasi, pengambilan itu **gagal**
+sehingga sarannya kosong justru di produksi.
+
+⚡ **Nol permintaan jaringan tambahan** — keempat halaman itu sudah punya katalognya, jadi fitur
+ini tetap hidup walau Supabase sedang dibatasi.
+
+**Dua jalur merakit indeks, sengaja, fungsinya sama** (`rakitIndeksSaran`): `/discover` merakit di
+**browser** dari prop yang sudah diterimanya (nol byte tambahan); `/`, `/beranda`, `/film` merakit
+di **server** lalu mengirim indeksnya.
+
+⚠️ **Biaya kiriman — diukur, bukan ditebak:** indeks ringan ±**158 byte/judul** → ±**77 KB mentah
+/ 20 KB terkompresi** untuk 500 judul. Dipakai indeks **5 field**, bukan objek `Drama` penuh (yang
+membawa `synopsis`/`gradient`/`heroImage` yang nol dipakai baris saran). Di pratinjau lokal
+halamannya kecil (`/film` 43 KB) **karena katalog lokal cuma 42 judul** — di produksi dengan ±489
+video Playly angkanya akan mendekati perkiraan di atas.
+
+#### Keputusan rancangan, tiap satu menutup cara gagal tertentu
+
+| Keputusan | Kalau dilanggar |
+|---|---|
+| Cocokkan **judul saja** (walau /discover juga cari di sinopsis) | judul yang cocok karena kata itu ada di SINOPSIS terbaca seperti hasil salah — *"kenapa film ini muncul?"* |
+| Minimal **2 huruf** | satu huruf mencocokkan ratusan judul → enam baris pertamanya praktis acak, dan daftar yang terasa acak diabaikan orang |
+| Maks **6 baris** + "Lihat semua hasil" | tanpa baris itu judul ke-7 tak terjangkau, daftar terbaca seperti katalog yang kurang |
+| Judul kembar dibuang | satu film bisa hadir sebagai drama DAN video Playly → dua baris identik beralamat beda, penonton menebak mana yang benar |
+| Daftar **menggantung**, tidak mendorong isi | kalau mendorong, poster di bawah bergeser tiap huruf diketik |
+| **Enter tanpa sorotan tidak dibajak** | penonton kehilangan jalan ke halaman hasil LENGKAP |
+
+🪤 **Jebakan terbesar fitur ini:** drama dan video Playly bentuk datanya mirip tapi **alamatnya
+beda** — `/drama/<id>` vs `/tonton/<slug>-<id>`. Memakai pola drama untuk video Playly
+menghasilkan saran yang diklik lalu **mendarat di 404**, dan itu lebih buruk daripada tidak ada
+saran. Dijaga tes khusus.
+
+#### 🪤 Uji-balik menemukan TESNYA SENDIRI yang lemah
+
+Percobaan "Enter polos dibajak" tetap **HIJAU**: dengan Enter yang selalu dibajak,
+`saran[-1].href` melempar TypeError sehingga `router.push` memang tidak terpanggil — **tesnya
+lulus karena handler-nya CRASH, bukan karena perilakunya benar.** Diperketat jadi memeriksa
+`defaultPrevented` (kontrak yang sesungguhnya), dan event ujinya diberi `cancelable: true` —
+tanpa itu `defaultPrevented` selalu `false` dan penjaganya hijau palsu lagi.
+
+**Aturan yang dipetik: `expect(x).not.toHaveBeenCalled()` bisa hijau karena kodenya ERROR.**
+Pasangkan selalu dengan pemeriksaan yang membuktikan jalur benarnya memang berjalan.
+
+💡 Gerbang menangkap satu kesalahan nyata di percobaan pertama: `category: "Aksi"` di data uji,
+padahal `Category` memakai nama **Inggris** (`"Action"`). vitest tidak memeriksa tipe, jadi 13 tes
+hijau sementara `npm run build` merah — bukti kedua hari ini bahwa "tes hijau" bukan pengganti
+gerbang.
+
+**Bukti:** 13 tes (aturan murni + perilaku di layar) · **diuji-balik 3 titik**, semuanya MERAH ·
+`npm run gerbang` **LOLOS exit 0**, **2.105 tes / 147 berkas hijau** · pratinjau `/`, `/beranda`,
+`/film`, `/discover` semua **200**.
 
 ### 🔍 Lanjutan: AUDIT seluruh tombol cari — 4 cacat, semuanya gagal SENYAP
 

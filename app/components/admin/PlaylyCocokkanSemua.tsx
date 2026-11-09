@@ -25,6 +25,7 @@
 import { useRef, useState } from "react";
 import { Check, Loader2, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import BantuanSingkat from "./BantuanSingkat";
 import {
   bersihkanJudulRilis,
   videoBelumDicocokkan,
@@ -169,23 +170,57 @@ export default function PlaylyCocokkanSemua({
 
   return (
     <section className="mt-4 rounded-xl border border-sky-500/30 bg-sky-500/5 p-4">
-      <h3 className="text-sm font-semibold text-white">Cocokkan semua ke IMDb sekaligus</h3>
-      <p className="mt-1 text-xs text-zinc-400">
-        Mencari otomatis dari judul tiap video, lalu{" "}
-        <strong className="text-zinc-200">menampilkan hasilnya untuk kamu periksa dulu</strong> —
-        tidak langsung disimpan. Video yang sudah punya data{" "}
-        <strong className="text-zinc-200">tidak ikut diproses</strong>, jadi isian yang kamu buat
-        sendiri aman. Yang belum punya data:{" "}
-        <strong className="text-zinc-200">{belumPunya.length} video</strong>.
-      </p>
-
-      {belumPunya.length > 40 && fase === "siap" && (
-        <p className="mt-2 text-xs text-amber-300">
-          Perlu diketahui: tiap video memakai 1 permintaan ke OMDb, dan 1 lagi saat disimpan.
-          Jatah akun gratis 1.000 per hari — {belumPunya.length} video memakai sekitar{" "}
-          {belumPunya.length * 2} kalau semuanya disimpan.
+      {/* Keterangan panjang masuk ke balik tombol "?" (owner 2026-11-09: "yang
+          lain rapi kenapa Cocokkan semua ke IMDb sekaligus tidak kamu buat rapi
+          juga"). Panel ini tadinya tiga paragraf penuh — paling tebal di
+          halaman — sementara dua panel di bawahnya sudah ringkas. Angkanya
+          tetap terlihat langsung; yang disembunyikan cuma kalimatnya. */}
+      <BantuanSingkat
+        label="Bagaimana pencocokan massal bekerja?"
+        judul={
+          <div className="flex min-w-0 flex-1 flex-col gap-1">
+            <h3 className="text-sm font-semibold text-white">
+              Cocokkan semua ke IMDb sekaligus
+            </h3>
+            <p className="text-xs text-zinc-500">
+              <strong className="text-sky-300">{belumPunya.length}</strong> belum
+              punya data
+              {belumPunya.length > 0 && (
+                <>
+                  {" · "}± {belumPunya.length * 2} permintaan OMDb dari jatah 1.000/hari
+                </>
+              )}
+            </p>
+          </div>
+        }
+      >
+        <p>
+          Mencari otomatis dari judul tiap video, lalu{" "}
+          <strong className="text-zinc-200">
+            menampilkan hasilnya untuk kamu periksa dulu
+          </strong>{" "}
+          — tidak langsung disimpan.
         </p>
-      )}
+        <p>
+          Video yang sudah punya data{" "}
+          <strong className="text-zinc-200">tidak ikut diproses</strong>, jadi
+          isian yang kamu buat sendiri aman.
+        </p>
+        <p>
+          Tiap video memakai <strong>1 permintaan</strong> ke OMDb, dan{" "}
+          <strong>1 lagi</strong> saat disimpan. Jatah akun gratis{" "}
+          <strong>1.000 per hari</strong> — {belumPunya.length} video memakai
+          sekitar <strong>{belumPunya.length * 2}</strong> kalau semuanya
+          disimpan.
+        </p>
+        <p>
+          Pencocokan otomatis bisa meleset pada judul yang mirip (terukur:
+          “Darkness of Man (2025)” sempat tercocok ke film 2024). Karena itu
+          hasilnya ditahan di layar sampai kamu menyetujuinya — poster dan
+          sinopsis film yang salah tayang ke penonton adalah kerusakan yang
+          tidak memunculkan error apa pun.
+        </p>
+      </BantuanSingkat>
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
         {!sedangJalan && (

@@ -177,7 +177,31 @@ riwayat blok peringatan lama ada di seksi `## 2026-11-09` di bawah.**
 
 ---
 
-## 2026-11-09 — ⏳ Durasi serial: poster + halaman detail + SETIAP baris episode. BELUM dirilis
+## 2026-11-09 — ✅ `5402dca` TAYANG: durasi serial (poster + detail + tiap episode) + pengisi otomatis
+
+> ✅ **TAYANG 2026-11-09, deploy ~60 detik, downtime nol.** Gerbang `npm run gerbang` LOLOS 5/5.
+> Dual push `dramaku` → `origin`, fast-forward. Diverifikasi di situs SUNGGUHAN (bukan dari build
+> hijau — itu jebakan yang sudah tercatat 28 Okt):
+> `/drama/putrinya-disakiti-dewa-perang-akhirnya-bangkit` → poster `1:47`, keterangan
+> `2025 · 1:47 · 55 episode · IMDb 8.9/10`, **55 baris episode** `Belum · 1:47`, nol "Durasi —";
+> beranda → nol label `01:59` palsu (yang `01:56` tersisa itu FILM, jam:menit — benar).
+>
+> 🪤 **GERBANG SEMPAT BERHENTI — dan ini yang perlu diwarisi sesi berikutnya.**
+> Percobaan pertama: `tests/beli-lalu-tonton.test.ts` merah 4 tes (+1 timeout di
+> `jeda-koin-iklan`). TIDAK diulang buta sampai hijau — itu persis "tes hijau palsu" yang
+> dicatat repo ini. Yang dilakukan: jalankan terpisah (hijau) → jalankan penuh lagi (merah 4) →
+> pasangkan dengan tes baru (hijau) → jalankan penuh lagi (hijau 2138). Kesimpulan berbukti:
+> berkas itu **flaky**, sebabnya struktural — ia menunggu dengan `await act(async () => {})`
+> bergelombang **TETAP** alih-alih menunggu KONDISI, jadi saat mesin sibuk (RDP bersama ~84
+> penyewa) rantai fetch palsunya belum selesai dan `src` belum terpasang. `FeedPlayer.tsx`
+> **tidak mengimpor satu pun** berkas yang diubah rilis ini (diperiksa langsung), jadi
+> kerapuhannya pra-ada, bukan dibawa perubahan durasi.
+> ⏸️ **BELUM diperbaiki.** Perbaikan yang benar: ganti gelombang tetap jadi menunggu kondisi
+> (mis. `vi.waitFor` sampai `src` terpasang). Menyentuh 4 tes penjaga paywall yang penting, jadi
+> menunggu keputusan owner. Selama belum diperbaiki, gerbang bisa berhenti acak pada rilis
+> BERIKUTNYA juga — jangan panik, selidiki dulu seperti di atas.
+
+### Bagian 1 — aturan durasi
 
 **Permintaan owner:** panel admin menulis "Durasi (tidak dipakai untuk serial)", padahal owner
 butuh durasi tampil di drama juga. Owner mengisi `1.47` untuk drama 55 episode. Kalimat
@@ -322,7 +346,7 @@ menghasilkan drama hantu) · `422` serial diberi `"119 min"`. Nol penulisan dari
 502 — itu yang diharapkan, bukan bug. Konsekuensinya: **tabel hasil ukur baru bisa dilihat
 sesudah rilis.**
 
-**🔴 BELUM dirilis — nol commit, nol push.** Sesudah rilis: buka panel admin → Daftar Drama →
+**✅ TAYANG di `5402dca`.** Cara memakainya: buka panel admin → Daftar Drama →
 "Mulai ukur" → periksa tabel → Simpan. 25 serial ber-`"119 min"` akan tercentang otomatis;
 drama yang durasinya sudah benar TIDAK.
 

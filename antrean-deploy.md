@@ -23,10 +23,25 @@
 > lengkap: `HANDOFF.md` seksi `## 2026-11-09`.
 
 
-**Terakhir dicek:** 2026-11-09 (**komputer OWNER**), **sesudah rilis `ae0a8a7`**.
-`HEAD` = `origin/main` = `dramaku/main` = **`ae0a8a7`**, working tree **bersih**. **NOL ANTREAN** —
-diuji per-branch: `git rev-list --count main..<branch>` = **0** untuk SELURUH branch di `origin`
-maupun `dramaku`.
+**Terakhir dicek:** 2026-11-09 (**komputer OWNER**), **sesudah rilis `5402dca`**.
+`HEAD` = `origin/main` = `dramaku/main` = **`5402dca`**, working tree **bersih**. **NOL ANTREAN.**
+
+> ✅ **RILIS `5402dca` TAYANG 2026-11-09 — durasi serial (poster + halaman detail + tiap baris
+> episode) & pengisi durasi otomatis dari berkas video.** Gerbang `npm run gerbang` LOLOS 5/5
+> (build · tsc 0 error · 2138 tes/149 berkas hijau · nol berkas rahasia). Dual push `dramaku`
+> lalu `origin`, fast-forward — nol pekerjaan orang lain tertimpa. **Deploy ~60 detik**,
+> diverifikasi di situs SUNGGUHAN, bukan dari build hijau:
+> `/drama/putrinya-disakiti-dewa-perang-akhirnya-bangkit` → poster `1:47`, keterangan
+> `2025 · 1:47 · 55 episode · IMDb 8.9/10`, 55 baris episode `Belum · 1:47`, **nol "Durasi —"**;
+> beranda → `1:47`/`1:26`/`1:15`/`1:29`/`2:41` muncul dan **nol label `01:59`** palsu
+> (`01:56` yang tersisa itu FILM — jam:menit, memang benar).
+>
+> ⚠️ **Gerbang sempat BERHENTI di percobaan pertama** — `tests/beli-lalu-tonton.test.ts` merah 4-5
+> tes. Diselidiki, BUKAN diulang buta: berkas itu **flaky** (hijau saat dijalankan sendiri, merah
+> acak saat bersama 149 berkas), sebabnya tes menunggu dengan `await act(async () => {})`
+> bergelombang TETAP alih-alih menunggu kondisi — kalau rantai fetch palsunya butuh satu gelombang
+> lebih banyak, `src` belum terpasang. `FeedPlayer.tsx` tidak mengimpor satu pun berkas yang
+> diubah rilis ini (diperiksa), jadi kerapuhannya pra-ada. **Belum diperbaiki — lihat HANDOFF.**
 
 ⬇️ **RILIS `d7bd07d..ae0a8a7` — catatan saja, nol kode produksi.** Gerbang `npm run gerbang`
 kelima pemeriksaan HIJAU (2105 tes lulus). Dual push cermin `dramaku` dulu lalu `origin`,

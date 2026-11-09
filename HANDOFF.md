@@ -177,6 +177,43 @@ riwayat blok peringatan lama ada di seksi `## 2026-11-09` di bawah.**
 
 ---
 
+## 2026-11-09 — ✅ `ab44e93` TAYANG: tiga panel alat bantu tab IMDb diseragamkan
+
+**Permintaan owner:** *"bisa tidak kamu lebih rapikan lagi agar UI nya enak dilihat"*.
+
+**Tiga hal yang membuat deretan panel terasa berantakan — semuanya disamakan:**
+1. **Tombol naik ke baris judul.** "Cocokkan semua" tadinya turun ke baris sendiri di bawah
+   judul sementara "Tebak kategori" di kanan, jadi panel pertama lebih tinggi dari dua
+   tetangganya dan deretan tombol tidak pernah sejajar. Kini ketiganya: judul + angka di kiri,
+   aksi + "?" di kanan.
+2. **Satu nada warna.** Dua panel berbingkai biru (`border-sky-500/30 bg-sky-500/5`) dan satu
+   abu — tiga nada bertumpuk membuat halaman ramai tanpa satu pun jadi lebih penting. Kini
+   semuanya bingkai netral; **warna HANYA dari ikon & tombol**, jadi mata tertuju ke yang bisa
+   diklik.
+3. **Jarak & padding seragam**: `mt-3` + `p-3` untuk ketiganya (tadinya campur `mt-4` / `p-4` /
+   `px-4 py-3`).
+
+Ditambah ikon di tiap judul (Search · Tags · Gauge · Star) supaya tiap panel terbaca sekilas.
+
+🪤 **TES SAYA SENDIRI YANG RAPUH, ikut diperbaiki — polanya layak diingat.** Tes "angka tetap
+terlihat" memotong HTML di kata `"hidden"` PERTAMA, lalu **tertipu oleh `aria-hidden`** milik
+ikon yang baru ditambahkan: potongannya berhenti sebelum angka dan tes merah padahal panelnya
+benar. Kini ia membandingkan **POSISI** (angka harus mendahului kotak keterangan), jadi tidak
+bisa tertipu atribut yang kebetulan mengandung kata itu.
+📌 **Aturan: jangan memotong HTML di kata yang juga muncul sebagai nama atribut** (`hidden`,
+`disabled`, `title`, `value`) — bandingkan posisi dua penanda yang jelas, atau beri penanda
+sendiri seperti `data-baris-video`.
+
+**Bukti:** `npm run gerbang` LOLOS 5/5 — build sukses, `tsc` 0 error, **2186 tes / 154 berkas
+hijau**. Tayang **50 detik**. Diverifikasi sesudahnya: bingkai netral baru ADA, bingkai biru lama
+**sudah hilang**, ketiga label tombol "?" + kedua tombol aksi ADA, situs 200 di empat alamat.
+
+📌 **Catatan verifikasi:** panel "Cocokkan semua" TIDAK bisa dilihat di localhost (tersembunyi
+pagar `fetchError` tanpa kunci Playly di `.env.local`) — perubahan apa pun di panel itu wajib
+dibuktikan lewat `tests/panel-admin-ringkas.test.ts`, bukan dengan membuka halaman.
+
+---
+
 ## 2026-11-09 — ✅ `603e09d` TAYANG: panel "Cocokkan semua ke IMDb" dirapikan (3 panel kini seragam)
 
 **Permintaan owner:** *"yang lain rapi kenapa Cocokkan semua ke IMDb sekaligus tidak kamu buat

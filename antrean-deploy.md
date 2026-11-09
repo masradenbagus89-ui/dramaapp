@@ -23,8 +23,14 @@
 > lengkap: `HANDOFF.md` seksi `## 2026-11-09`.
 
 
-**Terakhir dicek:** 2026-11-09 (**komputer OWNER**), **sesudah rilis `603e09d`**.
-`HEAD` = `origin/main` = `dramaku/main` = **`603e09d`**, working tree **bersih**. **NOL ANTREAN.**
+**Terakhir dicek:** 2026-11-09 (**komputer OWNER**), **sesudah rilis `ab44e93`**.
+`HEAD` = `origin/main` = `dramaku/main` = **`ab44e93`**, working tree **bersih**. **NOL ANTREAN.**
+
+> ✅ **RILIS `ab44e93` TAYANG 2026-11-09 (50 detik) — tiga panel alat bantu tab IMDb diseragamkan.**
+> Tombol naik ke baris judul · satu nada warna netral · jarak & padding sama. Gerbang LOLOS 5/5,
+> 2186 tes/154 berkas. Diverifikasi sesudah tayang: bingkai netral baru ADA, bingkai biru lama
+> (`border-sky-500/30 bg-sky-500/5`) **sudah hilang**, ketiga label tombol "?" + kedua tombol aksi
+> ADA. Situs 200 di `/`, `/beranda`, `/film`, `/api/dramas`.
 
 > ✅ **RILIS `603e09d` TAYANG 2026-11-09 (75 detik) — panel "Cocokkan semua ke IMDb" dirapikan.**
 > Ketiga panel massal di tab IMDb kini seragam. Gerbang LOLOS 5/5, 2186 tes/154 berkas.

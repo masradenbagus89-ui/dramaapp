@@ -23,12 +23,26 @@
 > lengkap: `HANDOFF.md` seksi `## 2026-11-09`.
 
 
-**Terakhir dicek:** 2026-11-09 (**komputer OWNER**), sesudah `git fetch origin` + `git fetch dramaku`.
-`HEAD` = `origin/main` = `dramaku/main` = **`d7bd07d`**, working tree **bersih**. **NOL ANTREAN** —
-diuji per-branch, bukan diasumsikan: `git rev-list --count main..<branch>` = **0** untuk SELURUH
-branch di `origin` maupun `dramaku`. Tidak ada satu pun commit menunggu rilis.
+**Terakhir dicek:** 2026-11-09 (**komputer OWNER**), **sesudah rilis `ae0a8a7`**.
+`HEAD` = `origin/main` = `dramaku/main` = **`ae0a8a7`**, working tree **bersih**. **NOL ANTREAN** —
+diuji per-branch: `git rev-list --count main..<branch>` = **0** untuk SELURUH branch di `origin`
+maupun `dramaku`.
 
-🩺 **Sesi ini nol rilis & nol kode diubah** — isinya pemeriksaan kondisi produksi yang catatan
+⬇️ **RILIS `d7bd07d..ae0a8a7` — catatan saja, nol kode produksi.** Gerbang `npm run gerbang`
+kelima pemeriksaan HIJAU (2105 tes lulus). Dual push cermin `dramaku` dulu lalu `origin`,
+fast-forward murni. **Deploy Railway sukses 82 detik** (`02:27:53Z` → `02:29:15Z`, dibuktikan
+lewat `gh api .../deployments/<id>/statuses`). **Downtime NOL**; smoke test **10 alamat semua
+200**, `/film` **489 judul**. Tanpa SQL migrasi, tanpa env baru.
+
+🪤 **Jebakan verifikasi baru:** deployment ber-environment **`Production`** itu **VERCEL**;
+Railway memakai nama **`ravishing-adaptation / production`**. Mengambil deployment terbaru
+(`.[0]`) lalu menunggu `success` akan melaporkan tayang padahal Railway masih `in_progress` —
+sudah terjadi di rilis ini. Kunci ke ID deployment Railway. Tambahan alasan untuk **MATIKAN
+`dramaapp.vercel.app`**.
+
+🔙 **Mundur:** `git revert ae0a8a7` lalu dual push (aman — isinya cuma catatan).
+
+🩺 **Isi sesi ini: nol kode PRODUKSI diubah** — pemeriksaan kondisi produksi yang catatan
 sendiri wajibkan ("uji ulang dulu sebelum menyimpulkan"), dan hasilnya membalik dua kesimpulan lama:
 Supabase + Playly pulih sendiri, lalu `dramaku.com` akhirnya ditelusuri sampai akar.
 

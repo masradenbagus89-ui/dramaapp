@@ -90,11 +90,11 @@
 > aftermarket** dari pemilik sekarang, harganya **jauh di atas** Rp200.000 dan belum pernah dicek.
 > Nama lain yang masih bebas jauh lebih murah.
 
-**Terakhir diisi:** 2026-11-09 — 🩺 **PEMERIKSAAN KONDISI, nol kode diubah, nol rilis.** Sesi dibuka
+**Terakhir diisi:** 2026-11-09 — ✅ **TAYANG `ae0a8a7` (catatan saja, nol kode produksi).** Deploy Railway **sukses 82 detik** (dibuat 02:27:53Z → `success` 02:29:15Z, dibuktikan lewat `gh api .../deployments/<id>/statuses`, BUKAN tebakan dari HTML), **downtime NOL**, smoke test **10 alamat semua 200**. Isinya 🩺 **PEMERIKSAAN KONDISI, nol kode diubah.** Sesi dibuka
 dengan `lanjut dari handoff`; yang dikerjakan adalah tugas yang catatan sendiri wajibkan: **uji ulang
 dulu sebelum menyimpulkan apa pun.** Hasilnya mengubah gambaran besar. ✅ **Dua dari tiga gangguan
 produksi SUDAH PULIH sendiri** — Supabase `402 → 200`, `/api/dramas` `500 → 200` (41 judul), `/film`
-dari "200 tapi nol film" → **369 judul**, halaman nonton `/drama/<id>` & `/feed/<id>` `500 → 200`,
+dari "200 tapi nol film" → **369 judul** (dan **489 judul** saat diukur ulang sore itu — katalog pulih penuh), halaman nonton `/drama/<id>` & `/feed/<id>` `500 → 200`,
 server Playly `500 galat_database → 200 ok:true`. Nol baris kode disentuh untuk itu; pemulihannya
 terjadi di sisi penyedia. 🔓 Akibat langsungnya: rilis `6b65e0a` dan `eeb339e` yang dulu tercatat
 "tak bisa dilihat siapa pun" **sekarang bisa dicoba owner** (butuh mata manusia — lihat blok di
@@ -174,6 +174,55 @@ riwayat blok peringatan lama ada di seksi `## 2026-11-09` di bawah.**
 **Rilis ke-1 hari ini:** (✅ **TAYANG `4dde5c0`**: tombol beranda "LIHAT SEMUA FILM UNGGULAN" → **"TEMUKAN TONTONAN FAVORITMU"** — labelnya salah di dua sisi (isinya drama berseri, bukan film; tujuannya katalog lengkap, bukan daftar unggulan). Dual push → Railway build sendiri → tayang ±60 detik, **downtime NOL**. Smoke test 5 alur: 4 langsung 200, `/drama/meg-2-the-trench` 500 SEKALI lalu 200 enam kali — cold start, dicatat bukan dihapus. ❌ **DIRALAT di rilis ke-2**: catatan asli di sini menyebut tombol itu "tergeser ke kanan di layar HP" sebagai gejala nyata. **Itu keliru** — cacat alat potret, bukan cacat situs; sudah diukur ulang dan tombolnya terpusat sempurna. Jangan diburu.)
 
 **Sebelumnya:** 2026-10-30 (tiga rilis beruntun, semuanya TAYANG: `5088bf2` genre bahasa Indonesia → `27973f0` koreksi owner Kerajaan/CEO/Lainnya → **`55894b8` dua tombol halaman drama yang selama ini TERPOTONG**. Downtime NOL. ⏸️ **DUA bahasan menunggu keputusan owner**, risetnya sudah selesai & nol kode diubah: "klik drama langsung play" dan "sinopsis film masih bahasa Inggris".)
+
+---
+
+## 2026-11-09 — ⏳ Durasi kini dipakai SERIAL juga (poster + halaman detail). BELUM dirilis
+
+**Permintaan owner:** panel admin menulis "Durasi (tidak dipakai untuk serial)", padahal owner
+butuh durasi tampil di drama juga. Owner sedang mengisi `1.47` untuk drama 55 episode.
+
+**Keputusan owner lewat popup (jangan ditebak ulang di sesi berikut):**
+1. `1.47` = **1 jam 47 menit** (BUKAN 1 menit 47 detik). Ditanyakan karena judulnya 55 episode —
+   khas drama pendek yang durasinya 1–2 menit — dan salah tafsir = poster memajang angka salah ke
+   penonton. Owner menjawab jam:menit.
+2. Tampil di **poster + halaman detail**, bukan salah satunya saja.
+
+**Bug yang ketahuan saat mengerjakan (ini akarnya, bukan sekadar label):** `menitDariRuntime` di
+`lib/format.ts` membaca `"1.47"` sebagai **1 menit** — titiknya diabaikan, angka pertama diambil.
+Jadi poster akan memajang `00:01`. Salah, tapi terlihat sah, jadi tak akan ada yang melapor.
+Sekarang `"1.47"` dan `"1:47"` dibaca **107 menit**. Menit WAJIB 2 digit 00–59; `"1.5"` sengaja
+TIDAK diterima sebagai jam (bisa 1,5 jam = 90 atau 1 jam 5 menit = 65 — menebak = mengarang).
+
+**Yang berubah:**
+- `lib/format.ts` — pola jam digital di `menitDariRuntime` + fungsi baru `durasiTampil` (untuk
+  halaman detail: rapikan kalau terbaca, **tampilkan apa adanya** kalau tidak — beda sengaja dari
+  poster yang memulangkan `null`).
+- `lib/lencana-kartu.ts` — `kananBawah` serial diisi `durasiSerial()`. **Membatalkan** aturan
+  2026-10-16 yang mengosongkan pojok itu untuk serial. Tanpa label cadangan: serial yang durasinya
+  kosong tetap tidak menggambar apa pun (film tetap menulis "FILM" karena pojok itu merangkap
+  penanda jenis).
+- `app/components/Poster.tsx` — hanya komentar; logikanya sudah menggambar `kananBawah` apa adanya.
+- `app/components/admin/DramaForm.tsx` — label jadi "Durasi per episode", placeholder `1.47`,
+  teks bantuan per keadaan, dan deskripsi kotak Lencana dibetulkan (sejak 2026-10-16 jumlah
+  episode ada di kanan-**atas**, teks lama masih menulis kanan-bawah).
+- `app/drama/[id]/page.tsx` — baris keterangan dirakit jadi satu daftar `keterangan`. Ikut
+  menutup cacat lama: pemisah `·` dihitung dari `drama.runtime` mentah, jadi `"N/A"` menyisakan
+  pemisah menggantung di depan "N ditonton".
+- Tes: `tests/lencana-kartu.test.ts` + `tests/poster-lencana-render.test.ts`.
+
+**⚠️ Dua tes yang mengunci aturan LAMA sengaja diubah, bukan dihapus** — "serial yang kebetulan
+punya runtime TIDAK memajang durasi" sekarang jadi kebalikannya. Kalau sesi berikut melihat
+riwayat ini dan mengira ada kemunduran: tidak, itu keputusan owner 2026-11-09 yang menimpa
+keputusan 2026-10-16.
+
+**Bukti dijalankan:** `npm test` → **2114 tes / 147 berkas hijau, exit 0**. `npx tsc --noEmit` →
+**exit 0**. Penjaga permanen ditambahkan untuk bug `1.47` → `00:01` (merah kalau kambuh) dan untuk
+kartu serial yang benar-benar **dirender** — bukan cuma aturannya yang benar.
+
+**🔴 BELUM dirilis — nol commit, nol push.** Owner menguji di situs asli, bukan localhost, jadi
+ini baru bisa dicoba setelah deploy. Jalankan `npm run gerbang` lalu push ke `origin main` +
+`dramaku` (dual push) kalau owner mengizinkan.
 
 ---
 
@@ -306,6 +355,39 @@ mengarahkan Google ke ketiadaan). Diukur di HTML yang benar-benar dikirim produk
 bersama. Tiga host lain di port 443 dari mesin yang SAMA (Railway, Supabase, Playly) terjawab
 normal, jadi penyumbatan lokal tidak bisa menjelaskan hasilnya — tapi kepastian penuh butuh owner
 membuka `dramaku.com` dari HP sendiri.
+
+### ✅ Rilis `ae0a8a7` — TAYANG (catatan saja, nol kode produksi)
+
+Owner: *"commit lalu push"*. Gerbang `npm run gerbang` **kelima pemeriksaan HIJAU (exit 0)** — build
+sukses · `tsc` 0 error · **2105 tes / 147 berkas lulus** · nol berkas rahasia di antrean. Dual push
+`d7bd07d..ae0a8a7`, cermin `dramaku` dulu lalu produksi `origin`, **fast-forward murni**.
+
+- **Deploy Railway sukses 82 detik** — deployment `7645540569` dibuat `02:27:53Z`, `success`
+  `02:29:15Z`. Dibuktikan lewat `gh api repos/.../deployments/<id>/statuses`, **bukan** tebakan dari
+  HTML (PELAJARAN 2 di seksi `eeb339e`).
+- **Downtime NOL** — `/beranda` = `200` di setiap pengecekan selama pergantian versi.
+- **Smoke test 10 alamat semua `200`**: `/` `/beranda` `/film` `/discover` `/katalog` `/api/dramas`
+  `/my-list` `/profile` `/drama/<id>` `/feed/<id>`. Katalog utuh: 41 judul di `/api/dramas`, dan
+  `/film` **489 judul** — naik dari 369 yang diukur pagi, jadi pemulihan katalog memang masih
+  berjalan bertahap sepanjang hari.
+
+### 🪤 DUA jebakan verifikasi deploy yang ditemukan di rilis ini
+
+**1. Deployment "Production" yang `success` itu VERCEL, bukan Railway.** Skrip pantauan pertama saya
+mengambil deployment **paling baru** (`.[0]`) lalu menunggu statusnya `success` — dan melaporkan
+"SUKSES" padahal yang sukses adalah `dramaapp-81kkmt7d3-dramaapp.vercel.app`, sementara Railway
+(host produksi sebenarnya) masih `in_progress`. Dua deployment dibuat untuk sha yang sama, dan
+**nama environment-nya menyesatkan**: Vercel memakai `Production`, Railway memakai
+`ravishing-adaptation / production`. **Cara benar: kunci ke ID deployment Railway**, atau saring
+berdasarkan `environment_url` yang mengandung `railway`. Jangan pernah pakai `.[0]` saja.
+➡️ Ini alasan konkret tambahan untuk pengingat lama **MATIKAN `dramaapp.vercel.app`** yang masih
+menggantung: selama Vercel ikut menerima deploy, setiap verifikasi rilis punya jebakan ini.
+
+**2. Jam mesin kerja tertinggal ±13 menit** (sudah pernah dicatat, terbukti lagi di sini). `git push`
+tercatat `02:14:23Z` menurut jam lokal, sementara GitHub mencatat deployment dibuat `02:27:53Z`.
+Selisih 13,5 menit itu **bukan** deploy yang lambat — itu jam mesin. **Hitung durasi deploy dari dua
+stempel waktu GitHub saja** (`created_at` → `status success`), jangan campur dengan jam lokal;
+kalau dicampur, laporannya jadi "deploy 13 menit" yang salah besar.
 
 ### Posisi repo & antrean
 

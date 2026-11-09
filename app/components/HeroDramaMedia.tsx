@@ -7,7 +7,7 @@ import type { Drama } from "@/lib/types";
 import { getProgressEntry } from "@/lib/progress";
 import { tujuanNonton } from "@/lib/tujuan-nonton";
 import {
-  HERO_TEASER_DELAY_MS,
+  DETAIL_TEASER_DELAY_MS,
   cuplikanSelesai,
   teaserSrc,
   trailerSrc,
@@ -54,14 +54,21 @@ export default function HeroDramaMedia({ drama }: { drama: Drama }) {
   // dan tidak sama sekali bagi yang memilih "kurangi animasi".
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const t = window.setTimeout(() => setSumber("trailer"), HERO_TEASER_DELAY_MS);
+    const t = window.setTimeout(() => setSumber("trailer"), DETAIL_TEASER_DELAY_MS);
     return () => window.clearTimeout(t);
   }, []);
 
   // Jeda saat kotak tergulung keluar layar — hemat kuota penonton & PC backup.
+  //
+  // ⚠️ Bergantung pada `sumber`, BUKAN dipasang sekali saat mount. Versi
+  // pertama memakai dependency kosong, jadi pengamat ini terpasang saat
+  // <video> belum dirender sama sekali: panggilan pertamanya menemukan
+  // videoRef kosong lalu keluar, dan sesudah video muncul ia tidak pernah
+  // dipanggil lagi selama penonton tidak menggulir. Akibatnya `play()` di
+  // sini tak pernah menyentuh video yang baru lahir.
   useEffect(() => {
     const box = boxRef.current;
-    if (!box) return;
+    if (!box || !sumber) return;
     const io = new IntersectionObserver(([entry]) => {
       const v = videoRef.current;
       if (!v) return;
@@ -70,7 +77,7 @@ export default function HeroDramaMedia({ drama }: { drama: Drama }) {
     });
     io.observe(box);
     return () => io.disconnect();
-  }, []);
+  }, [sumber]);
 
   const berhenti = () => {
     setSumber(null);
@@ -110,6 +117,14 @@ export default function HeroDramaMedia({ drama }: { drama: Drama }) {
           className={`absolute inset-0 h-full w-full object-cover object-top transition-opacity duration-500 ${
             playing ? "opacity-100" : "opacity-0"
           }`}
+          // Jaring pengaman: `autoPlay` saja kadang tidak cukup — elemen yang
+          // baru dibuat lewat pergantian `key` bisa selesai memuat sesudah
+          // browser melewatkan kesempatan autoplay-nya. Memanggil play() saat
+          // benar-benar siap membuat gambar bergerak secepat yang bisa, dan
+          // `.catch` menjaga penolakan browser tidak jadi error di console.
+          onCanPlay={(e) => {
+            e.currentTarget.play().catch(() => {});
+          }}
           onPlaying={() => setPlaying(true)}
           onTimeUpdate={(e) => {
             if (cuplikanSelesai(e.currentTarget.currentTime)) berhenti();
@@ -127,21 +142,21 @@ export default function HeroDramaMedia({ drama }: { drama: Drama }) {
           tidak pernah bisa ditekan — rusak SENYAP, nol error di layar. */}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/50 to-black/10" />
 
-      {playing && (
-        <span className="pointer-events-none absolute right-3 top-3 z-20 rounded-sm bg-black/70 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white md:text-[11px]">
-          ▶ Cuplikan
-        </span>
-      )}
+      {/* 🪦 Label "▶ Cuplikan" DIBUANG owner 2026-11-09. Ia menerangkan hal yang
+          sudah jelas dari layar (gambarnya memang sedang bergerak) sambil
+          menambah satu kotak hitam di pojok yang meramaikan tampilan. */}
 
       {/* Tombol play: satu-satunya bagian kotak ini yang bisa diklik. Sengaja
           BUKAN seluruh gambar — hero selebar layar yang jadi tautan raksasa
-          membuat penonton tak sengaja meninggalkan halaman saat hendak menggeser. */}
+          membuat penonton tak sengaja meninggalkan halaman saat hendak menggeser.
+          Ukurannya dikecilkan owner 2026-11-09; batas bawahnya 44px (h-11) —
+          di bawah itu tombol jadi sulit dikenai jari di HP. */}
       <Link
         href={tujuan.href}
         aria-label={`${tujuan.label}: ${drama.title}`}
-        className="absolute left-1/2 top-1/2 z-20 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white/80 bg-black/40 text-white backdrop-blur-sm transition hover:scale-110 hover:bg-black/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400 md:h-20 md:w-20"
+        className="absolute left-1/2 top-1/2 z-20 flex h-12 w-12 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border border-white/70 bg-black/35 text-white backdrop-blur-sm transition hover:scale-110 hover:bg-black/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400 md:h-14 md:w-14"
       >
-        <Play className="h-7 w-7 fill-current md:h-9 md:w-9" />
+        <Play className="h-5 w-5 fill-current md:h-6 md:w-6" />
       </Link>
     </div>
   );

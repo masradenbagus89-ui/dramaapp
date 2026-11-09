@@ -639,7 +639,16 @@ function HeroDrama({ drama }: { drama: Drama }) {
               </div>
               <div className="flex flex-col justify-end pb-2 md:pb-4">
                 <div className="flex items-center gap-2">
-                  <h1 className="title-gold text-2xl leading-tight md:text-4xl">{drama.title}</h1>
+                  {/* Dikecilkan + dibatasi lebarnya (owner 2026-11-09, "judul
+                      kecilkan sedikit ... biar rapi"). `max-w-2xl` yang
+                      mengerjakan kerapiannya: tanpa itu judul panjang
+                      membentang sampai menabrak panel EPISODE di kanan.
+                      Judul TIDAK dipotong — memangkasnya dengan line-clamp
+                      membuat penonton kehilangan sebagian nama drama, dan
+                      judul panjang justru lazim di katalog ini. */}
+                  <h1 className="title-gold max-w-2xl text-xl leading-tight md:text-3xl">
+                    {drama.title}
+                  </h1>
                   {/* Penanda berbayar — satu-satunya tempat kata "PREMIUM" masih
                       dipajang ke penonton (chip di poster dicabut owner
                       2026-09-23). Ikut mati bersama saklar koin: tanpa koin tak ada

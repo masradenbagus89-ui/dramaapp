@@ -69,3 +69,35 @@ describe("gambar besar hero: kepala tidak boleh terpotong", () => {
     expect(latar).not.toContain("object-top");
   });
 });
+
+// Owner 2026-11-09: "kenapa begitu masuk drama tidak langsung terputar harus
+// menggerakkan cursor". Ternyata bukan cursornya — gambar memang baru bergerak
+// sesudah ±3,6 detik (diukur di produksi). Tiga penjaga di bawah mengunci
+// perbaikannya, karena gejalanya mustahil kelihatan dari tes biasa: tidak ada
+// error, tidak ada tes merah, cuma gambar yang diam lebih lama dari yang
+// seharusnya.
+describe("cuplikan hero harus mulai secepat mungkin", () => {
+  const sumber = readFileSync(
+    join(process.cwd(), "app/components/HeroDramaMedia.tsx"),
+    "utf8",
+  );
+
+  it("memanggil play() begitu video siap, tidak hanya mengandalkan autoPlay", () => {
+    expect(sumber).toContain("onCanPlay");
+  });
+
+  it("pengamat layar dipasang ulang saat sumber video berganti", () => {
+    // Versi pertama memakai dependency KOSONG, jadi pengamat terpasang saat
+    // <video> belum lahir: panggilan pertamanya menemukan ref kosong lalu
+    // keluar, dan sesudah video muncul ia tak pernah dipanggil lagi selama
+    // penonton tidak menggulir — play() di sana jadi tak pernah kena sasaran.
+    expect(sumber).toMatch(/io\.observe\(box\)[\s\S]{0,200}?\}, \[sumber\]\)/);
+  });
+
+  it("label '▶ Cuplikan' sudah TIDAK dipajang lagi", () => {
+    // Dibuang owner: menerangkan hal yang sudah jelas dari layar sambil
+    // menambah kotak hitam di pojok. Yang tersisa hanya batu nisannya di
+    // komentar, jadi yang dilarang adalah teks yang benar-benar dirender.
+    expect(sumber).not.toMatch(/>\s*▶ Cuplikan/);
+  });
+});

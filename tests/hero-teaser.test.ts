@@ -8,6 +8,8 @@ import {
   splitHeroTitle,
   VIDEO_RETRY_LIMIT,
   trailerSrc,
+  HERO_TEASER_DELAY_MS,
+  DETAIL_TEASER_DELAY_MS,
   cuplikanSelesai,
   TRAILER_DURASI_DETIK,
 } from "../lib/hero-teaser";
@@ -149,6 +151,17 @@ describe("cuplikan series di gambar besar", () => {
   it("cuplikan berhenti tepat di TRAILER_DURASI_DETIK", () => {
     expect(cuplikanSelesai(TRAILER_DURASI_DETIK - 0.1)).toBe(false);
     expect(cuplikanSelesai(TRAILER_DURASI_DETIK)).toBe(true);
+  });
+
+  it("halaman detail menunggu lebih sebentar daripada halaman umum", () => {
+    // Owner 2026-11-09: "kenapa begitu masuk drama tidak langsung terputar".
+    // Diukur di produksi saat itu: 1,2 dtk jeda + 1,17 dtk mencoba trailer
+    // yang belum ada + 1,24 dtk byte pertama Ep 1 = ±3,6 detik gambar diam.
+    // Orang sampai ke halaman detail karena MENGKLIK judulnya, jadi tak perlu
+    // disaring selama pengunjung halaman umum.
+    expect(DETAIL_TEASER_DELAY_MS).toBeLessThan(HERO_TEASER_DELAY_MS);
+    // Tetap ada jedanya: nol detik berarti bot perayap pun ikut menarik video.
+    expect(DETAIL_TEASER_DELAY_MS).toBeGreaterThan(0);
   });
 
   it("video yang baru mulai tidak langsung dianggap selesai", () => {

@@ -21,6 +21,7 @@
 // koreksi tangan admin tak boleh tertimpa tebakan mesin.
 import { useRef, useState } from "react";
 import { Loader2, Square, Tags } from "lucide-react";
+import BantuanSingkat from "./BantuanSingkat";
 import { Button } from "@/components/ui/button";
 import {
   susunUsulKategori,
@@ -122,23 +123,53 @@ export default function KategoriIsiOtomatis({
   return (
     <section className="mt-4 rounded-xl border border-sky-500/30 bg-sky-500/5 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h3 className="flex items-center gap-2 text-sm font-semibold text-zinc-100">
-            <Tags className="size-4 text-sky-400" aria-hidden="true" />
-            Isi kategori otomatis dari genre IMDb
-          </h3>
-          <p className="mt-1 text-xs text-zinc-400">
-            Menebak kategori dari data IMDb yang <strong>sudah tersimpan</strong>
-            , jadi tidak memakai jatah permintaan OMDb sama sekali. Hasilnya
-            ditampilkan untuk kamu periksa dulu — tidak langsung disimpan.
+        {/* Keterangan panjang masuk ke balik tombol "?" (owner 2026-11-09:
+            "rapikan agar tulisannya tidak memenuhi layar"). Angkanya tetap
+            terlihat langsung — itu yang dicari mata; kalimatnya cuma perlu
+            dibaca sekali. */}
+        <BantuanSingkat
+          label="Bagaimana kategori ditebak?"
+          judul={
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
+              <h3 className="flex items-center gap-2 text-sm font-semibold text-zinc-100">
+                <Tags className="size-4 text-sky-400" aria-hidden="true" />
+                Isi kategori otomatis dari genre IMDb
+              </h3>
+              <p className="text-xs text-zinc-500">
+                <strong className="text-sky-300">{usul.length}</strong> bisa
+                diisi · {lewat["sudah-punya"]} sudah ada ·{" "}
+                {lewat["tanpa-imdb"]} tanpa IMDb ·{" "}
+                {lewat["genre-tak-cocok"]} genre tak cocok
+              </p>
+            </div>
+          }
+        >
+          <p>
+            Menebak kategori dari data IMDb yang{" "}
+            <strong className="text-zinc-200">sudah tersimpan</strong>, jadi{" "}
+            <strong>tidak memakai jatah permintaan OMDb sama sekali</strong>.
+            Hasilnya ditampilkan untuk kamu periksa dulu — tidak langsung
+            disimpan.
           </p>
-          <p className="mt-1 text-xs text-zinc-500">
-            <strong className="text-sky-300">{usul.length} video</strong> bisa
-            diisi otomatis · {lewat["sudah-punya"]} sudah punya kategori (tidak
-            disentuh) · {lewat["tanpa-imdb"]} belum ada data IMDb ·{" "}
-            {lewat["genre-tak-cocok"]} genrenya tidak punya padanan kategori
+          <p>
+            Genre yang lebih spesifik menang: film “Action, Romance” masuk{" "}
+            <strong>Romance</strong>, bukan Action — karena lebih dari separuh
+            katalog bergenre Action, dan kategori yang menampung segalanya tidak
+            membantu penonton menjelajah.
           </p>
-        </div>
+          <p>
+            <strong>{lewat["genre-tak-cocok"]} genre tak cocok</strong> dibiarkan
+            kosong, bukan dipaksakan: kebanyakan Horror dan Documentary, dan
+            DramaKu belum punya kategori untuk itu. Memaksakan Horror jadi
+            “Fantasy” membuat penonton yang membuka Fantasy menemukan film yang
+            salah.
+          </p>
+          <p>
+            <strong>Tycoon</strong>, <strong>Harem</strong>, dan{" "}
+            <strong>Time Travel</strong> tidak pernah ditebak — ketiganya untuk
+            drama pendek dan tak punya padanan genre IMDb mana pun.
+          </p>
+        </BantuanSingkat>
 
         <div className="flex shrink-0 items-center gap-2">
           {sibuk ? (

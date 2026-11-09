@@ -287,7 +287,7 @@ describe("daftar video berbaris kolom (owner: 'di bikin chart')", () => {
     // Bukti di tampilan, bukan cuma di hitungan: 60 video masuk, halaman
     // pertama (bawaan 50 baris) yang keluar.
     const html = renderPanel(60);
-    const baris = html.match(/<li /g) ?? [];
+    const baris = html.match(/data-baris-video/g) ?? [];
     expect(baris).toHaveLength(50);
     expect(html).toContain("Video 50");
     expect(html, "video ke-51 bocor ke halaman pertama").not.toContain(
@@ -316,7 +316,7 @@ describe("daftar video berbaris kolom (owner: 'di bikin chart')", () => {
   it("daftar pendek tidak kehilangan satu baris pun", () => {
     // Jaring untuk kesalahan off-by-one: 7 video harus tergambar tujuh-tujuhnya.
     const html = renderPanel(7);
-    expect(html.match(/<li /g) ?? []).toHaveLength(7);
+    expect(html.match(/data-baris-video/g) ?? []).toHaveLength(7);
     expect(html).toContain("Video 7");
   });
 

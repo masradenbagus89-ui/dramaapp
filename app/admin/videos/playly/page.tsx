@@ -216,6 +216,11 @@ export default async function PlaylyVideosPage() {
               initialKualitas={kualitas}
               initialJenis={jenis}
               initialRating={ratingManual}
+              /* Dibaca saja — panel ini tidak pernah mengubah link unduhan.
+                 Dibutuhkan supaya dropdown kualitas bisa menyebut HASIL
+                 turunannya ("Otomatis · HD") dan ringkasan di atas tabel bisa
+                 menghitung berapa yang benar-benar belum punya sumber. */
+              linkUnduhan={unduhan}
               belumSiapIds={belumSiapIds}
               fetchError={mitra.error}
               source={mitra.source}

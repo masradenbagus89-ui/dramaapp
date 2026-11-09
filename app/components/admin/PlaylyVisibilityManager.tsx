@@ -14,13 +14,18 @@
 // BERKAS videonya tidak — biasanya upload putus di tengah. Video begini sudah
 // otomatis tidak ditampilkan ke penonton; ditandai di sini supaya admin tahu
 // perbaikannya ada di dashboard Playly, bukan di DramaKu.
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { AlertTriangle, Eye, EyeOff, Info, Loader2, Star } from "lucide-react";
 import type { PlaylyVideo, PlaylySumber } from "@/lib/playly";
 import type { PlaylyImdbMap } from "@/lib/playly-imdb";
 import { DRAMA_QUALITY_OPTIONS, KATEGORI_ISI } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { saringDenganKetikan } from "@/lib/pencarian";
+import {
+  asalKualitas,
+  kelompokkanUnduhan,
+  ringkasIsian,
+} from "@/lib/ringkasan-isian-video";
 import { JENIS_BAWAAN, LABEL_JENIS, type JenisVideo } from "@/lib/jenis-video";
 import { parseRatingManual, ratingTampil } from "@/lib/rating-video";
 import {
@@ -33,6 +38,7 @@ import {
 import PlaylyImdbPicker from "./PlaylyImdbPicker";
 import PlaylyCocokkanSemua from "./PlaylyCocokkanSemua";
 import KategoriIsiOtomatis from "./KategoriIsiOtomatis";
+import RingkasanIsianVideo from "./RingkasanIsianVideo";
 import BantuanSingkat from "./BantuanSingkat";
 import PaginasiDaftar from "./PaginasiDaftar";
 import KotakCariDaftar from "./KotakCariDaftar";
@@ -180,6 +186,7 @@ export default function PlaylyVisibilityManager({
   initialKualitas = {},
   initialJenis = {},
   initialRating = {},
+  linkUnduhan = [],
   belumSiapIds,
   fetchError,
   source,
@@ -226,6 +233,24 @@ export default function PlaylyVisibilityManager({
    * dengan tangan.
    */
   initialRating?: Record<string, string>;
+  /**
+   * Link unduhan tiap video — HANYA dibaca, tidak pernah diubah di panel ini.
+   *
+   * Dibutuhkan karena kualitas poster diturunkan darinya
+   * (lib/kualitas-video.ts). Tanpa data ini, dropdown kualitas cuma bisa
+   * menulis "Otomatis" tanpa memberi tahu otomatisnya jadi apa — dan admin
+   * mustahil membedakan "sudah HD" dari "tidak ada sumbernya" tanpa membuka
+   * video satu per satu (owner 2026-11-09).
+   *
+   * Bawaannya daftar kosong supaya pemanggil lama tetap berlaku: tanpa data
+   * ini panelnya tetap jalan, cuma tidak bisa menyebut asal kualitasnya.
+   */
+  linkUnduhan?: readonly {
+    videoId: string;
+    provider: string;
+    quality: string;
+    url: string;
+  }[];
   /** Video yang berkasnya belum ada di Playly — tidak tampil ke penonton. */
   belumSiapIds: string[];
   /** Terisi kalau daftar gagal diambil dari Playly. */
@@ -536,6 +561,15 @@ export default function PlaylyVisibilityManager({
   // Dihitung dari `imdb` yang ADA DI STATE, bukan dari prop awal: begitu admin
   // mencocokkan sebuah video, angka di tombol saringan ikut turun seketika
   // tanpa perlu memuat ulang halaman.
+  // Link unduhan dikelompokkan SEKALI, bukan disaring ulang tiap baris:
+  // 489 video × 761 link = ratusan ribu perbandingan per render, cukup untuk
+  // membuat panel tersendat tiap satu dropdown disentuh.
+  const petaUnduhan = useMemo(() => kelompokkanUnduhan(linkUnduhan), [linkUnduhan]);
+  const ringkasan = useMemo(
+    () => ringkasIsian(videos, kualitas, ratingManual, imdb, petaUnduhan),
+    [videos, kualitas, ratingManual, imdb, petaUnduhan],
+  );
+
   const jumlahSaring = hitungImdb(videos, imdb);
   // DUA lapis saringan, dan urutannya penting: tombol saringan dulu (Semua /
   // Sudah ada IMDb / Belum), baru ketikan. Dibalik, angka di tombol saringan
@@ -727,6 +761,11 @@ export default function PlaylyVisibilityManager({
         }
       />
 
+      {/* Ringkasan kualitas & rating. Juga DI LUAR pagar `!fetchError`, dengan
+          alasan yang sama seperti panel kategori di atas: angkanya dihitung
+          dari data yang sudah tersimpan di sisi kita, bukan dari Playly. */}
+      <RingkasanIsianVideo ringkasan={ringkasan} />
+
       {pesan && (
         <p
           role="status"
@@ -876,6 +915,13 @@ export default function PlaylyVisibilityManager({
             return (
               <li
                 key={v.id}
+                // Penanda untuk tests/paginasi.test.ts. Sebelum ada ini tesnya
+                // menghitung SEMUA `<li>` di panel, jadi ia pecah begitu
+                // daftar lain ditambahkan — terjadi 2026-11-09 saat ringkasan
+                // kualitas & rating masuk (7 `<li>` baru, nol hubungannya
+                // dengan paginasi). Atributnya menyatakan apa yang sebenarnya
+                // diukur: baris video, bukan sembarang butir daftar.
+                data-baris-video=""
                 // Latar berselang-seling (zebra) + garis pemisah: di daftar
                 // puluhan baris, mata kehilangan jejak baris mana yang sedang
                 // dibaca tanpa keduanya.
@@ -981,7 +1027,19 @@ export default function PlaylyVisibilityManager({
                     disabled={sedangKualitas === v.id}
                     className="min-h-9 w-full min-w-0 rounded-full border border-zinc-700 bg-zinc-900 px-2 text-xs text-zinc-200 outline-none transition focus-visible:border-amber-400 disabled:opacity-50"
                   >
-                    <option value={KOSONG}>Otomatis</option>
+                    {/* Label "Otomatis" menyebut HASILnya, bukan cuma namanya
+                        (owner 2026-11-09). Tanpa ini, "Otomatis" pada video
+                        yang sudah HD dan pada video yang TIDAK punya sumber
+                        sama sekali terbaca persis sama — satu-satunya cara
+                        membedakannya adalah membuka video satu per satu. */}
+                    <option value={KOSONG}>
+                      {(() => {
+                        const asal = asalKualitas(v.id, kualitas, petaUnduhan);
+                        return asal.jenis === "turunan"
+                          ? `Otomatis · ${asal.nilai}`
+                          : "Otomatis · belum ada";
+                      })()}
+                    </option>
                     {DRAMA_QUALITY_OPTIONS.map((q) => (
                       <option key={q} value={q}>
                         {q}

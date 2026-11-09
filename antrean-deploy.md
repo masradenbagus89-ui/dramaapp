@@ -23,8 +23,13 @@
 > lengkap: `HANDOFF.md` seksi `## 2026-11-09`.
 
 
-**Terakhir dicek:** 2026-11-09 (**komputer OWNER**), **sesudah rilis `8f9beb8`**.
-`HEAD` = `origin/main` = `dramaku/main` = **`8f9beb8`**, working tree **bersih**. **NOL ANTREAN.**
+**Terakhir dicek:** 2026-11-09 (**komputer OWNER**), **sesudah rilis `96d4d3e`**.
+`HEAD` = `origin/main` = `dramaku/main` = **`96d4d3e`**, working tree **bersih**. **NOL ANTREAN.**
+
+> ✅ **RILIS `96d4d3e` TAYANG 2026-11-09 — durasi kosong diisi dari runtime IMDb + kartu `/film`
+> disamakan dengan beranda.** Gerbang LOLOS 5/5, 2204 tes/155 berkas. Diverifikasi di halaman
+> sungguhan: `/film` → 22 lencana tahun · 23 chip kualitas · 22 durasi · **nol** tahun tersisa di
+> baris teks. `/beranda` → durasi naik **8 → 18**. Situs 200 di empat alamat.
 
 > ✅ **RILIS `8f9beb8` TAYANG 2026-11-09 (50 detik) — lencana TAHUN di kartu video beranda +
 > warna tombol panel admin disamakan.** Gerbang LOLOS 5/5, 2190 tes/154 berkas. Diverifikasi

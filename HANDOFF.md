@@ -177,6 +177,61 @@ riwayat blok peringatan lama ada di seksi `## 2026-11-09` di bawah.**
 
 ---
 
+## 2026-11-09 — ✅ `96d4d3e` TAYANG: durasi kosong diisi dari runtime IMDb + `/film` disamakan
+
+**Permintaan owner:** *"iya aku mau keduanya terlihat persis sama lalu kamu cek kenapa ada film
+yang belum lengkap (tahun/durasi)"*.
+
+**KENAPA BELUM LENGKAP — DUA SEBAB BERBEDA**, diperiksa satu per satu pada kasus yang owner
+tunjuk di beranda:
+
+| Film | Tahun | Durasi | Sebab |
+|---|---|---|---|
+| Americana (2025) | ada | kosong | Playly kirim `durationSeconds: null` |
+| Kerajaan Planet Kera (2024) | **kosong** | kosong | **belum dicocokkan ke IMDb** |
+| Terror on the Prairie (2022) | ada | kosong | Playly kirim `null` |
+
+- **Tahun kosong: 81 video**, semuanya belum dicocokkan ke IMDb → tombol "Cocokkan semua"
+  menyelesaikannya (tahun + rating terisi bersamaan).
+- **Durasi kosong: 298 video**, Playly memang tidak mengirim `durationSeconds`.
+
+💡 **JALAN KELUAR YANG SEBELUMNYA TERLEWAT — pola yang BERULANG hari ini.** Data IMDb yang sudah
+dicocokkan punya `runtime` ("91 min") pada **443 dari 473** entri, dan **252** di antaranya milik
+video yang durasinya kosong. Datanya ada, cuma di laci sebelah — sama persis dengan tahun, rating,
+dan kualitas sebelumnya.
+📌 **Aturan yang diwariskan: sebelum menambah sumber data baru, periksa dulu apa yang SUDAH
+sampai ke komponen.** Empat kali hari ini jawabannya ternyata "sudah ada, cuma belum digambar".
+
+**Berkas:** `lib/durasi-video-publik.ts` (BARU) — `detikTayangan()` + `lengkapiDurasiVideo()`,
+dipasang di lapisan yang SAMA dengan `lengkapiKualitasVideo` (`playly-gabungan.ts`), jadi KEDUA
+sumber video (katalog + webhook) memakai aturan yang sama dan tak ada yang tertinggal.
+
+⚠️ **BATAS YANG DIJAGA: durasi dari Playly SELALU menang** — itu panjang BERKAS kita sendiri.
+Runtime IMDb adalah panjang FILMNYA menurut IMDb; biasanya berdekatan tapi tidak identik (kredit
+penutup, versi berbeda). Jadi ia HANYA mengisi yang kosong, tidak pernah menimpa. Aturan yang
+sama dengan kualitas turunan di `lib/kualitas-video.ts`. `durationSeconds` ikut diperbarui, bukan
+cuma labelnya — pemutar membaca detiknya, kartu membaca labelnya, dan dua bentuk dari satu data
+yang saling berbeda adalah bug paling sulit dilihat.
+
+**Kartu `/film` disamakan dengan beranda** (`PlaylyVideoGrid.tsx`): kualitas kanan-atas
+(sebelumnya `/film` tidak pernah memajangnya walau datanya ada — itu yang membuat kedua halaman
+berbeda) + tahun kiri-bawah sebagai lencana, DIBUANG dari baris teks supaya tidak tertulis dua
+kali.
+
+⚠️ **Satu tes lama DIUBAH, bukan dihapus:** ia mengunci `"2026 · Aksi"` di baris teks. Kini jadi
+DUA tes — satu memastikan tahun TIDAK di teks, satu memastikan tahun ADA di poster. Tanpa
+pasangan kedua, menghapus tahun dari KEDUA tempat juga akan lulus.
+
+**Bukti:** `npm run gerbang` LOLOS 5/5 — build sukses, `tsc` 0 error, **2204 tes / 155 berkas
+hijau**. Diverifikasi di halaman sungguhan sesudah tayang: `/film` → 22 lencana tahun · 23 chip
+kualitas · 22 durasi · **nol** tahun tersisa di baris teks; `/beranda` → durasi naik **8 → 18**.
+
+🪤 Dua tes (`jeda-akun-penonton`, `jeda-koin-iklan`) sempat merah di satu putaran dengan
+**"Test timed out in 5000ms"** — bukan assertion gagal. Lulus saat dijalankan terpisah (37 tes)
+dan pada putaran penuh berikutnya. Pola flaky yang sama dengan `beli-lalu-tonton`, sudah tercatat.
+
+---
+
 ## 2026-11-09 — ✅ `8f9beb8` TAYANG: lencana TAHUN di kartu video + warna tombol admin disamakan
 
 **Permintaan owner:** *"kenapa ini tampilannya belum rapi warna tidak sama jadi UInya kurang pas

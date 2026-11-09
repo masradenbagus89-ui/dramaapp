@@ -43,6 +43,11 @@
 > 300 vs 60 di tiga halaman lain yang membaca sumber SAMA). **"Bukan bug, cuma cache" bukan alasan
 > menutup laporan**: 300 tak pernah membeli apa pun di sini karena yang menahan isian manual adalah
 > `CATALOG_TTL_SECONDS` (60). Disamakan ke 60, nol panggilan tambahan ke Playly.
+> **Diukur di produksi sesudah tayang: umur cache `/film` = 60 detik persis** (dari `STALE` ke
+> `STALE` berikutnya, dihitung sejak halaman baru dibangun — bukan dari permintaan pertama).
+> 📌 Pengukuran PERTAMA sempat memberi "20 detik" dan itu **tidak konklusif**: mengukur dari
+> permintaan sembarang tidak tahu sudah berapa lama salinan itu duduk, jadi angkanya konsisten
+> dengan 60 MAUPUN 300. Titik mulai yang sah cuma satu — tepat sesudah halaman dibangun ulang.
 
 > ✅ **RILIS `2640da4` TAYANG 2026-11-09 — isian manual tahun & durasi video Playly.** Panel kecil
 > yang terbuka saat judul diklik. Gerbang LOLOS 5/5, 2235 tes/157

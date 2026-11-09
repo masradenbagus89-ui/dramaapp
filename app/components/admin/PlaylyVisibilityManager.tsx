@@ -22,6 +22,10 @@ import { DRAMA_QUALITY_OPTIONS, KATEGORI_ISI } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { saringDenganKetikan } from "@/lib/pencarian";
 import { formatDuration } from "@/lib/format";
+// Fungsi MURNI (nol impor Node) — aman diimpor komponen "use client" ini.
+// Lihat peringatan di lib/format.ts: mengimpor modul server ke sini membuat
+// `npm run build` GAGAL, dan tsc maupun vitest tidak menangkapnya.
+import { jelaskanDurasiManual } from "@/lib/meta-video-manual";
 import { Button } from "@/components/ui/button";
 import {
   asalKualitas,
@@ -1305,10 +1309,32 @@ export default function PlaylyVisibilityManager({
                               [v.id]: { ...d[v.id], durasi: e.target.value },
                             }))
                           }
-                          placeholder="2.25"
+                          placeholder="1:47:00"
                           className="h-8 w-24 rounded-md border border-zinc-700 bg-zinc-900 px-2 text-xs text-zinc-100 outline-none focus-visible:border-amber-400"
                         />
                       </label>
+
+                      {/* PRATINJAU — memperlihatkan hasil bacaan SEBELUM
+                          disimpan. Bukan hiasan: "1:45" berarti 1 menit 45
+                          detik dan "1:45:00" berarti 1 jam 45 menit, dua
+                          ketikan yang cuma beda ":00" di ekor, dan salah pilih
+                          TIDAK memunculkan error apa pun — angkanya langsung
+                          tayang ke penonton. Satu kalimat petunjuk lagi tetap
+                          bisa terlewat; angka yang terbaca di depan mata tidak. */}
+                      {(() => {
+                        const diketik = draftMeta[v.id]?.durasi;
+                        if (diketik === undefined || !diketik.trim()) return null;
+                        const terbaca = jelaskanDurasiManual(diketik);
+                        return terbaca ? (
+                          <span className="pb-1.5 text-[11px] text-emerald-400">
+                            = {terbaca}
+                          </span>
+                        ) : (
+                          <span className="pb-1.5 text-[11px] text-amber-400">
+                            belum terbaca — lihat contoh di bawah
+                          </span>
+                        );
+                      })()}
 
                       <Button
                         type="button"
@@ -1325,11 +1351,12 @@ export default function PlaylyVisibilityManager({
                       </Button>
 
                       <p className="w-full text-[11px] leading-relaxed text-zinc-500">
-                        Durasi ditulis <strong>menit.detik</strong> — aturan yang
-                        sama dengan kolom Durasi drama. “2.25” = 2 menit 25
-                        detik, “95.00” = 95 menit. Bentuk “95 min” juga terbaca
-                        kalau kamu menyalinnya dari IMDb.{" "}
-                        <strong>Dikosongkan = kembali ikut IMDb/Playly.</strong>
+                        Durasi ditulis{" "}
+                        <strong>persis seperti yang tampil di kartu</strong> —
+                        “1:47:00” = 1 jam 47 menit, “2:25” = 2 menit 25 detik.
+                        Bentuk “95 min” dari IMDb juga terbaca.{" "}
+                        <strong>Dikosongkan = kembali ikut IMDb/Playly.</strong>{" "}
+                        Perubahan tampil di situs dalam waktu sekitar 2 menit.
                       </p>
                     </div>
                   </div>

@@ -5,6 +5,7 @@
 // salah, dan tak ada yang melapor.
 import { describe, it, expect } from "vitest";
 import {
+  jelaskanDurasiManual,
   parseDurasiManual,
   parseTahunManual,
   TAHUN_MAKS,
@@ -102,5 +103,68 @@ describe("parseDurasiManual", () => {
     // Rantai utuh: yang diketik admin -> detik -> label di pojok poster.
     expect(formatDuration(parseDurasiManual("2.25")!)).toBe("2:25");
     expect(formatDuration(parseDurasiManual("95 min")!)).toBe("1:35:00");
+  });
+
+  it("regresi: '1:47:00' disalin dari kartu terbaca 1 MENIT, bukan 1 jam 47", () => {
+    // 🪤 Bug yang lolos ke produksi (owner menemukannya 2026-11-09, terukur
+    // sebelum perbaikan: nilainya 60 detik). Tak satu pun pola lama cocok
+    // dengan bentuk tiga-bagian, jadi ia jatuh ke `menitDariRuntime` yang
+    // mengambil angka PERTAMA dan membacanya 1 menit. Nol error — film 1 jam
+    // 47 menit tayang berlabel "1:00" ke penonton.
+    //
+    // Angka harapan dihitung TANGAN, bukan dari rumus kode: 1*3600 + 47*60.
+    expect(parseDurasiManual("1:47:00")).toBe(6420);
+    expect(parseDurasiManual("1:47:00")).not.toBe(60);
+  });
+
+  it("jam:menit:detik — bentuk yang tergambar di kartu film", () => {
+    expect(parseDurasiManual("1:45:00")).toBe(6300);
+    expect(parseDurasiManual("2:25:30")).toBe(8730);
+    expect(parseDurasiManual("1.45.00")).toBe(6300); // pemisah titik ikut sah
+    expect(parseDurasiManual("0:02:22")).toBe(142);
+  });
+
+  it("menyalin label kartu mana pun memulangkan durasi yang SAMA — pulang-pergi", () => {
+    // Jaminan yang membuat aturan ini bisa dijelaskan dalam satu kalimat
+    // ("tulis persis seperti di kartu"): apa pun yang digambar `formatDuration`
+    // harus terbaca kembali jadi detik yang sama persis. Kalau suatu hari salah
+    // satu bentuknya meleset, tes ini yang merah — bukan penonton yang
+    // menemukannya.
+    for (const detik of [142, 2700, 5700, 6420, 8730, 105]) {
+      expect(parseDurasiManual(formatDuration(detik))).toBe(detik);
+    }
+  });
+
+  it("menit & detik di atas 59 ditolak, bukan ditebak maksudnya", () => {
+    // "1:70:00" = salah ketik. Membacanya 1 jam 70 menit berarti memajang
+    // durasi karangan ke penonton tanpa seorang pun diberi tahu.
+    expect(parseDurasiManual("1:70:00")).toBeNull();
+    expect(parseDurasiManual("1:30:70")).toBeNull();
+  });
+
+  it("0:00:00 tidak pernah jadi durasi", () => {
+    expect(parseDurasiManual("0:00:00")).toBeNull();
+  });
+});
+
+describe("jelaskanDurasiManual — pratinjau yang dilihat admin sebelum menyimpan", () => {
+  it("menerjemahkan ketikan jadi kalimat awam", () => {
+    expect(jelaskanDurasiManual("1:47:00")).toBe("1 jam 47 menit");
+    expect(jelaskanDurasiManual("2:25")).toBe("2 menit 25 detik");
+    expect(jelaskanDurasiManual("95 min")).toBe("1 jam 35 menit");
+    expect(jelaskanDurasiManual("2:25:30")).toBe("2 jam 25 menit 30 detik");
+  });
+
+  it("MEMBEDAKAN dua ketikan mirip yang artinya jauh berbeda", () => {
+    // Inilah alasan pratinjau ini ada: keduanya cuma beda ":00" di ekor, dan
+    // salah pilih tidak memunculkan error apa pun.
+    expect(jelaskanDurasiManual("1:45")).toBe("1 menit 45 detik");
+    expect(jelaskanDurasiManual("1:45:00")).toBe("1 jam 45 menit");
+  });
+
+  it("yang tak terbaca memulangkan null — panel tak boleh memajang tebakan", () => {
+    expect(jelaskanDurasiManual("panjang")).toBeNull();
+    expect(jelaskanDurasiManual("")).toBeNull();
+    expect(jelaskanDurasiManual("1:70:00")).toBeNull();
   });
 });

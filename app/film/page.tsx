@@ -7,11 +7,26 @@ import { cn } from "@/lib/utils";
 import { BADAN_TERANG } from "@/app/components/beranda/shell";
 import KepalaFilm from "@/app/components/beranda/KepalaFilm";
 
-// Halaman disimpan & dipakai ulang, disegarkan tiap 300 detik — sama dengan
-// PLAYLY_PUBLIK_TTL_SECONDS di lib/playly.ts. Ditulis sebagai angka, bukan
-// konstanta impor, karena Next.js mensyaratkan nilai revalidate berupa angka
-// literal yang bisa dibaca saat build. Ubah keduanya bersamaan.
-export const revalidate = 300;
+// Halaman disimpan & dipakai ulang, disegarkan tiap 60 detik — SAMA dengan
+// /beranda, /discover, dan "/" yang membaca sumber yang sama persis
+// (getPlaylyVideosGabunganCached). Ditulis sebagai angka, bukan konstanta
+// impor, karena Next.js mensyaratkan nilai revalidate berupa angka literal
+// yang bisa dibaca saat build.
+//
+// 🪤 DULU 300 — dan itu terbaca owner sebagai "isian manual saya hilang"
+// (2026-11-09). Ia mengisi tahun & durasi satu video lalu melihat tiga halaman:
+// /beranda sudah memperlihatkannya, /film belum. Terukur hari itu: objek video
+// yang sama berisi `durationLabel: "1:45"` di /discover tapi masih `"-"` di
+// /film. Bukan data yang hilang — halaman ini yang menyimpan salinan lamanya
+// lima kali lebih lama, dan permintaan PERTAMA sesudah kedaluwarsa pun masih
+// menyajikan salinan itu (stale-while-revalidate).
+//
+// Angka 300 dulu disamakan dengan PLAYLY_PUBLIK_TTL_SECONDS, tapi yang menahan
+// isian manual bukan TTL Playly melainkan CATALOG_TTL_SECONDS (60 detik,
+// lib/dramas.ts) — jadi menyamakannya ke 60 membuat tundaan halaman ini sama
+// dengan tiga saudaranya tanpa menambah satu pun panggilan ke Playly: data
+// Playly-nya tetap ber-cache sendiri, yang dibangun ulang cuma HTML-nya.
+export const revalidate = 60;
 
 // Sebutan "Playly" sengaja DIBUANG dari seluruh tulisan yang dilihat penonton
 // (owner 2026-09-26): itu nama penyedia video, bukan sesuatu yang berarti bagi

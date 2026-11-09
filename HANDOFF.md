@@ -217,9 +217,13 @@ yang akhirnya diumumkan sendiri oleh panelnya — *"External network blocks affe
 Railway. We've found the cause and are working on a fix."*
 
 **Kegagalan 1 — "Railpack failed to prepare the build"** (`e997320`). Gagal di tahap *Build ›
-Build image* detik ke-52; *Deploy/Network/Post-deploy* tidak pernah dimulai. Push berhasil tapi
-~15 menit nol deploy, dan daftar chunk produksi IDENTIK dengan sebelum push — jadi bukan "deploy
-lambat", melainkan belum ada deploy sama sekali.
+Build image* detik ke-52; *Deploy/Network/Post-deploy* tidak pernah dimulai — artinya gagal saat
+MENYIAPKAN lingkungan, sebelum kode kita sempat dikompilasi sama sekali. Push berhasil (commit
+diverifikasi ada di GitHub lewat `gh api repos/<owner>/<repo>/commits/main`) tapi ~15 menit nol
+deploy, dan daftar chunk produksi IDENTIK dengan sebelum push — jadi bukan "deploy lambat",
+melainkan belum ada deploy sama sekali.
+**Penyelesaiannya: klik Redeploy di panel Railway (tombol ⋮ kanan atas).** Percobaan kedua
+langsung lolos dan tayang **dalam <25 detik**, nol baris kode diubah.
 
 **Kegagalan 2 — build mati di `npm run build`** (commit docs). Lognya menyebut sumbernya terang:
 ```
@@ -292,33 +296,6 @@ generik (`<li>`, `<div>`) mengukur hal yang salah — beri penanda pada yang ben
 hijau**. `tests/ringkasan-isian-video.test.ts` (13 tes) termasuk penjaga aritmatika yang merah
 kalau angkanya tidak berjumlah total. Verifikasi sesudah tayang lewat sidik-jari bundle: tujuh
 penanda ADA.
-
----
-
-## 2026-11-09 — 🪤 BUILD RAILWAY GAGAL "Railpack failed to prepare" — BUKAN kode, cukup Redeploy
-
-**Gejalanya menyesatkan:** push `e997320` berhasil (commit terverifikasi ada di GitHub lewat
-`gh api`), gerbang lokal LOLOS 5/5 — tapi **~15 menit nol deploy**, padahal dua rilis sebelumnya
-hari itu tayang dalam 60 detik. Daftar chunk yang dilayani produksi **identik** dengan sebelum
-push, jadi bukan "deploy lambat" melainkan **belum ada deploy sama sekali**.
-
-Panel Railway: **"Railpack failed to prepare the build"** — gagal di tahap *Build › Build image*
-detik ke-52; *Deploy · Network · Post-deploy* **tidak pernah dimulai**. Artinya gagal saat
-MENYIAPKAN lingkungan build, sebelum kode kita sempat dikompilasi sama sekali.
-
-**Tiga fakta yang membuktikan bukan repo kita — periksa ketiganya sebelum menyalahkan kode:**
-1. Commit itu **nol menyentuh konfigurasi build** (`git show --name-only` → cuma 3 komponen,
-   1 lib, 2 tes — tidak ada `package.json`/`Dockerfile`/konfigurasi Railway).
-2. `npm run build` **lolos** di komputer owner.
-3. Dua rilis sebelumnya hari itu (`aeffc15`, `bcf51f4`) **berhasil** dengan konfigurasi sama.
-
-**PENYELESAIANNYA: klik Redeploy di panel Railway (tombol ⋮ kanan atas).** Percobaan kedua
-langsung lolos dan tayang **dalam <25 detik**. Jadi gangguan sementara di Railpack — pembangun
-image milik Railway — bukan sesuatu yang perlu diperbaiki di kode.
-
-💡 **Build gagal TIDAK mengganti apa pun yang sedang tayang.** Selama percobaan gagal itu
-penonton tetap dilayani rilis lama yang sehat (`/api/health` → ok, beranda & `/api/dramas` 200).
-Itu memang guna gerbang build: yang rusak tidak pernah sampai ke penonton.
 
 ---
 

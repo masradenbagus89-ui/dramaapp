@@ -23,6 +23,39 @@
 > lengkap: `HANDOFF.md` seksi `## 2026-11-09`.
 
 
+**Terakhir dicek:** 2026-11-09 (**komputer OWNER**), **sesudah rilis `fa0a524`**.
+`HEAD` = `origin/main` = `dramaku/main` = **`fa0a524`**, working tree **bersih**. **NOL ANTREAN.**
+
+> ✅ **EMPAT RILIS BERUNTUN 2026-11-09 — gambar besar halaman `/drama/[id]` kini memutar cuplikan
+> + punya tombol play.** Urutan: `4e7b43a` (merge kerja rekan: trailer di poster KECIL) →
+> `9f48c2a` (dipindah ke gambar BESAR + tombol play + `object-top`) → `ac81a89` (montase
+> per-episode DIBUANG → cuplikan series) → `2b111e9` (label "CUPLIKAN" dihapus, judul & tombol
+> dikecilkan, bug pengamat layar) → `fa0a524` (langsung Ep 1 + mengulang tanpa berhenti).
+> Gerbang LOLOS 5/5 di tiap rilis; yang terakhir **2273 tes/160 berkas**.
+>
+> **Diverifikasi di produksi, bukan localhost:** `/drama/<id>` **200** nol error · judul
+> `max-w-2xl text-xl md:text-3xl` ✅ · tombol play `h-12 w-12` ✅ · teks "Cuplikan" **nol
+> kemunculan** ✅ · `/api/teaser?ep=1` → **206 `video/mp4`** diawali `ftypmp42`, byte pertama
+> **0,93 dtk** · badan respons dari hosting **0 byte** (307). Deploy tayang ~80 detik tiap push.
+>
+> 🪤 **"Harus menggerakkan cursor baru jalan" — cursornya TIDAK berpengaruh.** Terukur sebelum
+> perbaikan: 1,20 dtk jeda + **1,17 dtk mencoba `trailer.mp4` yang belum ada** + 1,24 dtk byte
+> pertama = **±3,6 detik** gambar diam. Cukup lama sampai terbaca "rusak", dan owner kebetulan
+> menggerakkan cursor sambil menunggu. **Pelajaran: jalan mundur ("kalau gagal pakai cadangan")
+> membuat SETIAP pengguna membayar waktu tunggu untuk mencari sesuatu yang tidak ada — ukur
+> biayanya dulu, baru rancang urutannya.** Ikut ditemukan: `IntersectionObserver` terpasang saat
+> `<video>` belum lahir, jadi `play()` di dalamnya tak pernah kena sasaran.
+>
+> 🪤 **Video "jangan berhenti" ≠ boleh jalan sampai habis.** Terukur: satu episode **26,8 MB**,
+> 30 detik pertamanya **10,7 MB**. Dibiarkan habis = hiasan latar menyedot data SEUKURAN menonton
+> satu episode, tiap kunjungan, termasuk dari orang yang cuma lewat. Dipakai pola yang sudah ada
+> (`teaserShouldLoop`): tak pernah berhenti, tapi mengulang dari memori browser.
+>
+> ⚠️ **MENGGANTUNG — belum diputuskan owner:** jalur `?jenis=trailer` sudah jadi & teruji (lengkap
+> dengan penjaga path-traversal) tapi **tidak dipanggil tampilan**. Hidupkan sesudah trailer
+> pertama dibuat, atau buang supaya tak ada kode menganggur. Cara menaruh trailer + cara
+> menyalakannya: `HANDOFF.md` seksi `## 2026-11-09 — fa0a524`.
+
 **Terakhir dicek:** 2026-11-09 (**komputer OWNER**), **sesudah rilis `04b4d43`**.
 `HEAD` = `origin/main` = `dramaku/main` = **`04b4d43`**, working tree **bersih**. **NOL ANTREAN.**
 

@@ -177,6 +177,88 @@ riwayat blok peringatan lama ada di seksi `## 2026-11-09` di bawah.**
 
 ---
 
+## 2026-11-09 — ✅ `fa0a524` TAYANG: gambar besar halaman drama memutar cuplikan + tombol play
+
+Empat rilis beruntun di hero halaman `/drama/[id]`, semuanya TAYANG & diverifikasi di produksi
+(bukan localhost). Urutan + apa yang berubah di tiap langkah:
+
+| Commit | Isi |
+|---|---|
+| `4e7b43a` | Merge kerja rekan `feat/trailer-poster-detail` — trailer montase di poster KECIL kiri-bawah |
+| `9f48c2a` | Trailer DIPINDAH ke gambar BESAR + tombol play + `object-top` (kepala tak terpotong) |
+| `ac81a89` | Montase per-episode DIBUANG → satu cuplikan series (trailer → jalan mundur Ep 1) |
+| `2b111e9` | Label "CUPLIKAN" dihapus, judul & tombol play dikecilkan, bug pengamat layar diperbaiki |
+| `fa0a524` | Langsung Episode 1 (buang pencarian trailer) + video mengulang tanpa berhenti |
+
+**Diukur di produksi sesudah `fa0a524`, bukan ditebak:**
+- `/drama/suami-mengkhianatinya-setelah-7-tahun` → **200**, nol error.
+- Judul `title-gold max-w-2xl text-xl md:text-3xl` ✅ · tombol play `h-12 w-12` (48px) ✅ ·
+  teks "Cuplikan" **nol kemunculan** ✅.
+- `/api/teaser?id=..&ep=1` → **206 `video/mp4`**, isi diawali `ftypmp42`, byte pertama **0,93 dtk**.
+- Badan respons `/api/teaser` dari hosting → **0 byte** (307 penunjuk arah). Fitur ini **nol byte**
+  membebani Railway; videonya mengalir langsung dari PC backup.
+
+### Keputusan owner hari ini + ALASANNYA (jangan dibalik tanpa membaca ini)
+
+1. **Trailer PINDAH ke gambar besar, poster kecil kembali diam.** Bukan ditambah: satu halaman
+   cukup menarik SATU video. Dua video sekaligus adalah pola yang dulu membakar 29,71 GB/11 hari
+   sampai hosting mematikan situs.
+2. **Mulai OTOMATIS, bukan hover.** "Arahkan cursor" tidak ada sama sekali di HP — pemicu hover
+   berarti penonton HP tak pernah melihat fitur ini.
+3. **`object-top` pada gambar DAN video.** `object-cover` sendirian memotong rata atas-bawah,
+   dan poster drama hampir selalu lebih tinggi dari kotak 16/9 → yang hilang justru wajah.
+   Kelebihannya kini dibuang dari BAWAH. Video wajib ikut, kalau tidak framing-nya LOMPAT
+   tepat saat video muncul.
+4. **Montase per-episode DIBUANG sesudah sempat tayang.** Potongan 6 detik diambil mulai detik
+   ke-5 tiap episode, dan detik ke-5 itu dipilih untuk melewati logo — BUKAN karena adegannya
+   bagus. Hasilnya mendarat di adegan acak (owner: close-up punggung kepala).
+5. **Langsung Episode 1, pencarian trailer dilepas dari tampilan.** Terukur: mencoba trailer
+   memakan **1,17 detik** tiap kunjungan selama belum ada satu pun `trailer.mp4` — dan memang
+   belum ada.
+6. **Video tidak pernah berhenti, TAPI yang diulang 30 detik pertama.** Terukur: satu episode
+   **26,8 MB**, 30 detik pertamanya **10,7 MB**. Membiarkannya jalan sampai habis = hiasan latar
+   menyedot data SEUKURAN menonton satu episode, tiap kunjungan, termasuk dari orang yang cuma
+   lewat. Pengulangan diputar dari memori browser, bukan diunduh lagi.
+
+### 🪤 Tiga pelajaran — ini bagian yang paling mahal diulang
+
+- **Memotong video otomatis di titik yang dipilih karena alasan TEKNIS tidak pernah menghasilkan
+  cuplikan yang menjual.** Detik ke-5 dipilih untuk melewati logo; tak seorang pun memeriksa
+  adegan apa yang ada di sana. Fiturnya tayang, lalu dibuang di hari yang sama.
+- **Jalan mundur ("kalau gagal, pakai cadangan") membuat SETIAP pengguna membayar waktu tunggu
+  untuk mencari sesuatu yang tidak ada.** Ukur biayanya dulu, baru rancang urutannya. Gejalanya
+  menipu: owner melaporkan "harus menggerakkan cursor" padahal cursor tak berpengaruh — gambar
+  memang baru bergerak sesudah ±3,6 detik.
+- **Tes yang hijau belum tentu menjaga.** Penjaga `object-top` versi pertama HIJAU PALSU: potongan
+  sumber yang diperiksa ikut memuat KOMENTAR yang menyebut "object-top". Ketahuan hanya karena
+  kodenya sengaja dirusak untuk diuji-balik. Sejak itu semua penjaga baru hari ini diuji-balik.
+
+### ⚠️ Yang MENGGANTUNG — untuk sesi berikutnya
+
+- **Jalur `?jenis=trailer` ADA, teruji, tapi TIDAK dipanggil tampilan.** Route +
+  penjaga path-traversal lengkap di `tests/teaser-redirect.test.ts`. Cara menyalakannya ditulis
+  di komentar `trailerSrc` (`lib/hero-teaser.ts`). **Keputusan owner belum diambil**: hidupkan
+  (sesudah membuat trailer pertama) atau buang supaya tak ada kode menganggur.
+- **Cara owner menambah trailer:** taruh berkas bernama `trailer.mp4` di folder drama itu di PC
+  backup — folder yang sama dengan `1.mp4`, `2.mp4` (`pc-backup-agent/Caddyfile:21` →
+  `C:\Users\USER\Downloads\video\<id-drama>\trailer.mp4`). Caddy melayani berdasarkan EKSTENSI
+  (`path *.mp4`), bukan nama, jadi tidak ada yang perlu diubah di sisi server.
+- **Gambar poster/hero mengalir LEWAT Railway** (`/_next/image`), bukan tersimpan di sana maupun
+  di Supabase. Terukur: 24,7 KB (w=256) · 113 KB (w=640) · 238 KB (w=1920); 23 gambar unik per
+  halaman detail; cache `HIT` menghemat unduhan masuk, TAPI byte keluar tetap dihitung tiap kali.
+  Saklar `images: { unoptimized: true }` memindahkannya ke imgur (nol byte Railway) dengan harga
+  gambar lebih besar bagi penonton. **Belum diputuskan** — owner perlu melihat kuota Railway dulu.
+
+### 🪤 Dua sesi bekerja di folder yang SAMA hari ini
+
+HEAD bergerak sendiri beberapa kali (`2640da4` → `bebbc7c` → `640b319`) dan berkas sesi lain muncul
+di `git status` milik sesi ini. Yang menyelamatkan: **commit per-berkas, bukan `git add -A`**.
+Kalau seluruh working tree diantre, pekerjaan sesi sebelah yang belum selesai ikut terilis.
+Satu rilis hari ini (`2640da4`, kerja sesi lain) bahkan ter-push SEBELUM gerbang pra-rilis selesai
+— urutannya terbalik dari aturan, untungnya gerbang yang menyusul tetap hijau.
+
+---
+
 ## 2026-11-09 — ✅ `04b4d43` TAYANG: durasi `j:mm:dd` terbaca 1 menit + `/film` tertahan cache
 
 Owner menguji isian manual (`2640da4`) langsung di produksi dan melaporkan DUA hal. Keduanya

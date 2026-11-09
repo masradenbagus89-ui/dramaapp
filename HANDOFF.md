@@ -177,6 +177,53 @@ riwayat blok peringatan lama ada di seksi `## 2026-11-09` di bawah.**
 
 ---
 
+## 2026-11-09 — ✅ `17b6dff` TAYANG: kotak cari tab IMDb + pilihan tampilan petak/baris
+
+**Permintaan owner:** *"IMDB perlu tombol search juga tidak"* + *"bisa tidak ini ada pilihan mau
+kita lihat sebagai list saja atau seperti yang sekarang"*.
+
+⚠️ **KOREKSI KLAIM SESI SEBELUMNYA — jangan warisi kekeliruannya.** Telusur `12c2c3b` melaporkan
+tab IMDb (`PlaylyVisibilityManager`, 500 judul) **"sudah punya search"**. ITU KELIRU: yang
+terhitung ternyata teks *"Cari di IMDb"* di komentar kode + tombol per-baris, bukan kotak cari
+daftar. Owner yang menangkapnya dari layar. **Pelajaran: menghitung kemunculan kata di berkas
+BUKAN bukti fitur ada** — yang membuktikan adalah nama komponennya. Penjaganya kini mengunci
+`KotakCariDaftar` + `saringDenganKetikan`, bukan kata "cari".
+
+**Tab IMDb:**
+- `KotakCariDaftar` sebaris dengan tombol saringan (`ml-auto`) — keduanya mempersempit daftar yang
+  SAMA, jadi memisahkannya membuat admin mengira salah satunya menimpa yang lain.
+- 🪤 **URUTAN PENYARING: tombol saringan DULU, baru ketikan.** Dibalik, angka di tombol
+  (*"Belum ada IMDb 83"*) ikut menyusut mengikuti ketikan — padahal angka itu dibaca admin
+  sebagai **sisa pekerjaan**, bukan jumlah hasil cari. Dikunci tes (urutan baris di berkas).
+- Pesan daftar kosong memeriksa **ketikan lebih dulu**: menyebut saringan saat yang salah
+  ketikannya membuat admin mengutak-atik tombol yang bukan penyebabnya.
+
+**Pilihan tampilan — `app/components/admin/PilihTampilanDaftar.tsx` (BARU):**
+- Dua tombol ikon petak/baris; dipakai di Daftar video Playly.
+- Pilihan diingat per-browser (`localStorage`, kunci `admin:tampilan:playly-video`).
+  🪤 Dibaca di `useEffect`, **BUKAN** sebagai nilai awal `useState`: HTML pertama dibuat di server
+  yang tidak punya localStorage, jadi membacanya di nilai awal memicu **hydration mismatch** dan
+  React bisa menolak menggambar seluruh panel. Tiap akses dibungkus `try/catch` — mode privat
+  melempar error saat localStorage disentuh.
+- Mode baris **TETAP menampilkan sampul**, cuma dikecilkan: sampul cara tercepat mengenali film,
+  membuangnya menghapus satu-satunya keunggulan daftar ini dibanding tabel biasa.
+- Satu daftar dua bentuk — yang berubah hanya KELASnya, isi barisnya tetap satu kode.
+
+**Bukti:** `npm run gerbang` LOLOS 5/5 — build sukses, `tsc` 0 error, **2156 tes / 151 berkas
+hijau**. Tes baru `tests/pilih-tampilan-daftar.test.ts` (4 tes) menolak saklar yang tergambar tapi
+tidak menandai keadaan aktif (`aria-pressed`) — kegagalan yang nol error dan tak terbaca pembaca
+layar. Verifikasi SESUDAH tayang lewat sidik-jari bundle `/admin/videos/playly`: enam penanda ADA.
+
+📌 **Catatan localhost (untuk sesi berikutnya):** tab **Daftar video Playly** TIDAK bisa diuji di
+localhost. Halaman `app/admin/videos/playly/page.tsx:237` memeriksa `status.configured` dan, kalau
+kunci Playly tidak ada, **tidak merender `PlaylyVideoPicker` sama sekali** — hanya ajakan "Pasang
+kunci". Kuncinya dicari di dua tempat: dokumen `playly:key` di database (**diperiksa: TIDAK ADA**,
+51 dokumen `app_data` dibaca langsung) dan env `PLAYLY_API_KEY` / `DASHBOARD_API_KEY` — produksi
+memakai yang kedua, `.env.local` tidak punya. Dua tab lain (**IMDb**, **Link download**) TETAP
+berisi di localhost karena menerima salinan dari server: `playly:cadangan` berisi **489 video**.
+
+---
+
 ## 2026-11-09 — ✅ `12c2c3b` TAYANG: kotak cari + kontrol halaman seragam di 3 daftar admin
 
 **Permintaan owner:** *"tambahkan kolom search di daftar drama dan pagination serta kamu telusuri

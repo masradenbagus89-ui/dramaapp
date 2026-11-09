@@ -23,8 +23,15 @@
 > lengkap: `HANDOFF.md` seksi `## 2026-11-09`.
 
 
-**Terakhir dicek:** 2026-11-09 (**komputer OWNER**), **sesudah rilis `12c2c3b`**.
-`HEAD` = `origin/main` = `dramaku/main` = **`12c2c3b`**, working tree **bersih**. **NOL ANTREAN.**
+**Terakhir dicek:** 2026-11-09 (**komputer OWNER**), **sesudah rilis `17b6dff`**.
+`HEAD` = `origin/main` = `dramaku/main` = **`17b6dff`**, working tree **bersih**. **NOL ANTREAN.**
+
+> ✅ **RILIS `17b6dff` TAYANG 2026-11-09 — kotak cari tab IMDb + pilihan tampilan petak/baris.**
+> Gerbang LOLOS 5/5, 2156 tes/151 berkas. Diverifikasi SESUDAH tayang lewat sidik-jari bundle
+> `/admin/videos/playly`: `"Tampilan petak"` · `"Tampilan baris"` · `"Bentuk tampilan daftar"` ·
+> `"Cari judul video"` · `"Kosongkan pencarian"` · `"Sebelumnya"` — keenamnya ADA.
+> ⚠️ **Koreksi klaim sesi sebelumnya:** tab IMDb dilaporkan "sudah punya search" — KELIRU, yang
+> terhitung teks "Cari di IMDb" di komentar & tombol per-baris. Owner yang menangkapnya.
 
 > ✅ **RILIS `12c2c3b` TAYANG 2026-11-09 — kotak cari + kontrol halaman seragam di 3 daftar admin**
 > (Daftar Drama · Daftar video Playly · Link download). Gerbang LOLOS 5/5, 2150 tes/150 berkas.

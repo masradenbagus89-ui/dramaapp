@@ -13,6 +13,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import KotakCariDaftar from "./KotakCariDaftar";
 import PaginasiDaftar from "./PaginasiDaftar";
 import { useDaftarAdmin } from "./useDaftarAdmin";
+import PilihTampilanDaftar, { useTampilanDaftar } from "./PilihTampilanDaftar";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -29,6 +30,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import EmbedPlayer from "@/app/components/EmbedPlayer";
+import { cn } from "@/lib/utils";
 import type { PlaylyVideo } from "@/lib/playly";
 import type { PlaylyEmbed } from "@/lib/store";
 
@@ -71,6 +73,7 @@ export default function PlaylyVideoPicker({
   // Judul video saja — itu satu-satunya teks yang tergambar di tiap petak,
   // jadi mencari di field lain membuat hasilnya terasa acak bagi admin.
   const daftar = useDaftarAdmin(videos, (v) => [v.title]);
+  const [tampilan, setTampilan] = useTampilanDaftar("admin:tampilan:playly-video");
 
   const muat = useCallback(async () => {
     setStatus("loading");
@@ -419,14 +422,17 @@ export default function PlaylyVideoPicker({
 
         {/* 4) Berhasil */}
         {status === "ready" && (
-          <KotakCariDaftar
-            className="mt-4"
-            nilai={daftar.ketikan}
-            onNilai={daftar.setKetikan}
-            jumlah={daftar.tersaring.length}
-            total={videos.length}
-            placeholder="Cari judul video…"
-          />
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <KotakCariDaftar
+              className="min-w-0 flex-1"
+              nilai={daftar.ketikan}
+              onNilai={daftar.setKetikan}
+              jumlah={daftar.tersaring.length}
+              total={videos.length}
+              placeholder="Cari judul video…"
+            />
+            <PilihTampilanDaftar nilai={tampilan} onNilai={setTampilan} />
+          </div>
         )}
 
         {status === "ready" && daftar.kosongKarenaCari && (
@@ -443,23 +449,52 @@ export default function PlaylyVideoPicker({
         )}
 
         {status === "ready" && daftar.tampil.length > 0 && (
-          <ul className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          // Satu daftar, dua bentuk. Yang berubah cuma KELASnya — isi tiap
+          // baris tetap komponen yang sama, jadi perubahan (mis. badge
+          // "Terpasang") tidak perlu ditulis dua kali lalu menyimpang.
+          <ul
+            className={
+              tampilan === "petak"
+                ? "mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
+                : "mt-4 divide-y divide-zinc-800 rounded-xl border border-zinc-800"
+            }
+          >
             {daftar.tampil.map((v) => {
               const dipilih = aktif?.id === v.id;
               const sudahDikaitkan = embeds.find((e) => e.videoId === v.id);
+              const baris = tampilan === "baris";
               return (
                 <li key={v.id}>
                   <button
                     type="button"
                     onClick={() => pilih(v)}
                     aria-current={dipilih ? "true" : undefined}
-                    className={`group w-full overflow-hidden rounded-xl border text-left transition ${
+                    className={cn(
+                      "group w-full overflow-hidden text-left transition",
+                      baris
+                        ? "flex items-center gap-3 px-3 py-2"
+                        : "rounded-xl border",
                       dipilih
-                        ? "border-amber-400 ring-2 ring-amber-400/40"
-                        : "border-zinc-800 hover:border-zinc-600"
-                    }`}
+                        ? baris
+                          ? "bg-amber-400/10"
+                          : "border-amber-400 ring-2 ring-amber-400/40"
+                        : baris
+                          ? "hover:bg-zinc-800/60"
+                          : "border-zinc-800 hover:border-zinc-600",
+                    )}
                   >
-                    <div className="relative aspect-video w-full bg-zinc-800">
+                    <div
+                      className={cn(
+                        "relative bg-zinc-800",
+                        // Sampul dikecilkan di mode baris, bukan dihilangkan:
+                        // sampul adalah cara tercepat mengenali film, dan
+                        // membuangnya menghapus satu-satunya keunggulan daftar
+                        // ini dibanding tabel biasa.
+                        baris
+                          ? "h-12 w-20 shrink-0 overflow-hidden rounded"
+                          : "aspect-video w-full",
+                      )}
+                    >
                       {v.thumbnail ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
@@ -473,24 +508,48 @@ export default function PlaylyVideoPicker({
                           <Film className="h-7 w-7 text-zinc-600" aria-hidden="true" />
                         </div>
                       )}
-                      <span className="absolute bottom-1 right-1 rounded bg-black/75 px-1.5 py-0.5 text-[11px] font-medium text-zinc-100">
-                        {v.durationLabel}
-                      </span>
-                      {sudahDikaitkan && (
-                        <span className="absolute left-1 top-1 rounded bg-emerald-500/90 px-1.5 py-0.5 text-[11px] font-semibold text-black">
-                          Terpasang
-                        </span>
+                      {/* Di mode baris, durasi & badge pindah ke kolom teks:
+                          di atas sampul 80px keduanya saling menimpa sampai
+                          tak terbaca. */}
+                      {!baris && (
+                        <>
+                          <span className="absolute bottom-1 right-1 rounded bg-black/75 px-1.5 py-0.5 text-[11px] font-medium text-zinc-100">
+                            {v.durationLabel}
+                          </span>
+                          {sudahDikaitkan && (
+                            <span className="absolute left-1 top-1 rounded bg-emerald-500/90 px-1.5 py-0.5 text-[11px] font-semibold text-black">
+                              Terpasang
+                            </span>
+                          )}
+                        </>
                       )}
                     </div>
-                    <div className="p-3">
-                      <p className="line-clamp-2 text-sm font-semibold text-zinc-100">
+                    <div className={baris ? "min-w-0 flex-1" : "p-3"}>
+                      <p
+                        className={cn(
+                          "text-sm font-semibold text-zinc-100",
+                          baris ? "truncate" : "line-clamp-2",
+                        )}
+                      >
                         {v.title}
                       </p>
-                      <p className="mt-1 line-clamp-1 text-xs text-zinc-400">
-                        {v.creator || "Kreator tidak dicantumkan"}
+                      <p className="mt-0.5 flex items-center gap-1.5 truncate text-xs text-zinc-400">
+                        {baris && (
+                          <>
+                            <span className="shrink-0 tabular-nums text-zinc-300">
+                              {v.durationLabel}
+                            </span>
+                            <span aria-hidden="true" className="text-zinc-600">
+                              ·
+                            </span>
+                          </>
+                        )}
+                        <span className="truncate">
+                          {v.creator || "Kreator tidak dicantumkan"}
+                        </span>
                       </p>
                       {sudahDikaitkan && (
-                        <p className="mt-1 line-clamp-1 text-[11px] text-emerald-300">
+                        <p className="mt-0.5 line-clamp-1 text-[11px] text-emerald-300">
                           Terpasang di: {judulDrama(sudahDikaitkan.dramaId)}
                           {sudahDikaitkan.episode ? ` · Eps ${sudahDikaitkan.episode}` : ""}
                         </p>

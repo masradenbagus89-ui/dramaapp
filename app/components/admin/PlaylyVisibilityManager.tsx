@@ -20,6 +20,7 @@ import type { PlaylyVideo, PlaylySumber } from "@/lib/playly";
 import type { PlaylyImdbMap } from "@/lib/playly-imdb";
 import { DRAMA_QUALITY_OPTIONS, KATEGORI_ISI } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { saringDenganKetikan } from "@/lib/pencarian";
 import { JENIS_BAWAAN, LABEL_JENIS, type JenisVideo } from "@/lib/jenis-video";
 import { parseRatingManual, ratingTampil } from "@/lib/rating-video";
 import {
@@ -33,6 +34,7 @@ import PlaylyImdbPicker from "./PlaylyImdbPicker";
 import PlaylyCocokkanSemua from "./PlaylyCocokkanSemua";
 import BantuanSingkat from "./BantuanSingkat";
 import PaginasiDaftar from "./PaginasiDaftar";
+import KotakCariDaftar from "./KotakCariDaftar";
 import {
   UKURAN_BAWAAN,
   HALAMAN_PERTAMA,
@@ -251,6 +253,9 @@ export default function PlaylyVisibilityManager({
   const [pesan, setPesan] = useState<Pesan | null>(null);
   /** Saringan "sudah / belum ada IMDb" (owner 2026-11-05: "biar mudah"). */
   const [saring, setSaring] = useState<SaringImdb>(SARING_BAWAAN);
+  // Kotak cari (owner 2026-11-09). Daftar ini 500 judul — tombol saringan saja
+  // tidak cukup untuk menemukan SATU judul tertentu.
+  const [ketikan, setKetikan] = useState("");
   // Paginasi (owner 2026-11-06). Nomor halaman TIDAK dibetulkan lewat efek —
   // lihat jepitHalaman di lib/paginasi.ts untuk alasannya.
   const [halaman, setHalaman] = useState<number>(HALAMAN_PERTAMA);
@@ -531,7 +536,12 @@ export default function PlaylyVisibilityManager({
   // mencocokkan sebuah video, angka di tombol saringan ikut turun seketika
   // tanpa perlu memuat ulang halaman.
   const jumlahSaring = hitungImdb(videos, imdb);
-  const videoTampil = saringVideoImdb(videos, imdb, saring);
+  // DUA lapis saringan, dan urutannya penting: tombol saringan dulu (Semua /
+  // Sudah ada IMDb / Belum), baru ketikan. Dibalik, angka di tombol saringan
+  // ikut menyusut mengikuti ketikan — padahal angka itu dibaca admin sebagai
+  // "berapa total yang belum dikerjakan", bukan "berapa hasil pencarian".
+  const videoSaringan = saringVideoImdb(videos, imdb, saring);
+  const videoTampil = saringDenganKetikan(videoSaringan, ketikan, (v) => [v.title]);
 
   // Dipotong SESUDAH disaring, bukan sebelum: memotong dulu lalu menyaring
   // akan menghasilkan halaman yang jumlah barisnya berubah-ubah (halaman 1
@@ -748,6 +758,19 @@ export default function PlaylyVisibilityManager({
               tandanya berhasil.
             </span>
           )}
+
+          {/* Kotak cari duduk SEBARIS dengan tombol saringan, bukan di atasnya:
+              keduanya mempersempit daftar yang sama, jadi memisahkannya membuat
+              admin mengira salah satunya menimpa yang lain. `ml-auto` mendorong
+              ke kanan supaya tombol saringan tetap jadi yang pertama dibaca. */}
+          <KotakCariDaftar
+            className="ml-auto"
+            nilai={ketikan}
+            onNilai={setKetikan}
+            jumlah={videoTampil.length}
+            total={videoSaringan.length}
+            placeholder="Cari judul video…"
+          />
         </div>
       )}
 
@@ -755,9 +778,26 @@ export default function PlaylyVisibilityManager({
         // Daftar kosong karena SARINGAN, bukan karena tidak ada video. Dua hal
         // itu wajib dibedakan: tanpa pesan ini, panel terbaca seperti rusak.
         <p className="mt-4 rounded-lg border border-zinc-700 p-4 text-center text-sm text-zinc-400">
-          {saring === "belum"
-            ? "Semua video sudah dicocokkan ke IMDb. Tidak ada yang tersisa."
-            : "Belum ada video yang cocok dengan saringan ini."}
+          {/* Ketikan diperiksa DULU: kalau admin sedang mencari, itulah sebab
+              yang paling mungkin — dan tindakannya beda dari mengganti
+              saringan. Menyebut saringan saat yang salah ketikannya membuat
+              admin mengutak-atik tombol yang bukan penyebabnya. */}
+          {ketikan.trim() !== "" ? (
+            <>
+              Tidak ada video yang cocok dengan “{ketikan}”.{" "}
+              <button
+                type="button"
+                onClick={() => setKetikan("")}
+                className="text-amber-600 underline-offset-2 hover:underline"
+              >
+                Kosongkan pencarian
+              </button>
+            </>
+          ) : saring === "belum" ? (
+            "Semua video sudah dicocokkan ke IMDb. Tidak ada yang tersisa."
+          ) : (
+            "Belum ada video yang cocok dengan saringan ini."
+          )}
         </p>
       )}
 

@@ -113,4 +113,35 @@ describe("daftar admin memakai SATU aturan yang sama", () => {
       );
     }
   });
+
+  it("tab IMDb punya kotak cari — PENJAGA SALAH-KLASIFIKASI 2026-11-09", () => {
+    // Panel ini (500 judul) sempat dilaporkan "sudah punya search" padahal
+    // belum: yang terhitung ternyata teks "Cari di IMDb" di komentar dan
+    // tombol per-baris, bukan kotak cari daftar. Owner yang menangkapnya.
+    //
+    // Dikunci lewat KotakCariDaftar — komponen, bukan kata "cari" — supaya
+    // kalimat apa pun di komentar tidak bisa lagi lolos sebagai bukti.
+    const { readFileSync } = require("node:fs") as typeof import("node:fs");
+    const isi = readFileSync(
+      "app/components/admin/PlaylyVisibilityManager.tsx",
+      "utf-8",
+    );
+    expect(isi).toContain("KotakCariDaftar");
+    expect(isi).toContain("saringDenganKetikan");
+  });
+
+  it("saringan tombol dihitung SEBELUM ketikan di tab IMDb", () => {
+    // Urutannya menentukan arti angka di tombol saringan ("Belum ada IMDb 83").
+    // Kalau ketikan ikut mengecilkannya, angka itu berubah makna dari "sisa
+    // pekerjaan" jadi "jumlah hasil cari" — tanpa ada yang terlihat salah.
+    const { readFileSync } = require("node:fs") as typeof import("node:fs");
+    const isi = readFileSync(
+      "app/components/admin/PlaylyVisibilityManager.tsx",
+      "utf-8",
+    );
+    const posSaringan = isi.indexOf("const videoSaringan");
+    const posKetikan = isi.indexOf("saringDenganKetikan(videoSaringan");
+    expect(posSaringan).toBeGreaterThan(-1);
+    expect(posKetikan).toBeGreaterThan(posSaringan);
+  });
 });

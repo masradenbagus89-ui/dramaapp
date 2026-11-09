@@ -91,7 +91,7 @@ describe("cuplikan hero harus mulai secepat mungkin", () => {
     // <video> belum lahir: panggilan pertamanya menemukan ref kosong lalu
     // keluar, dan sesudah video muncul ia tak pernah dipanggil lagi selama
     // penonton tidak menggulir — play() di sana jadi tak pernah kena sasaran.
-    expect(sumber).toMatch(/io\.observe\(box\)[\s\S]{0,200}?\}, \[sumber\]\)/);
+    expect(sumber).toMatch(/io\.observe\(box\)[\s\S]{0,200}?\}, \[mulai\]\)/);
   });
 
   it("label '▶ Cuplikan' sudah TIDAK dipajang lagi", () => {
@@ -99,5 +99,34 @@ describe("cuplikan hero harus mulai secepat mungkin", () => {
     // menambah kotak hitam di pojok. Yang tersisa hanya batu nisannya di
     // komentar, jadi yang dilarang adalah teks yang benar-benar dirender.
     expect(sumber).not.toMatch(/>\s*▶ Cuplikan/);
+  });
+});
+
+// Owner 2026-11-09: "langsung episode 1 saja dan video usahakan jangan
+// berhenti". Dua keputusan yang mudah hilang diam-diam saat kode dirapikan.
+describe("cuplikan hero: langsung Ep 1 dan tidak berhenti", () => {
+  const sumber = readFileSync(
+    join(process.cwd(), "app/components/HeroDramaMedia.tsx"),
+    "utf8",
+  );
+
+  it("memutar Episode 1 langsung, tidak mencoba trailer dulu", () => {
+    // Mencoba trailer lebih dulu memakan 1,17 detik (terukur) pada SETIAP
+    // kunjungan selama belum ada satu pun berkas trailer dibuat.
+    expect(sumber).toContain("teaserSrc(drama.id, 1)");
+    expect(sumber).not.toContain("trailerSrc(");
+  });
+
+  it("video mengulang, bukan berhenti di tengah jalan", () => {
+    expect(sumber).toContain("teaserShouldLoop");
+    // `loop` menangani episode yang lebih pendek dari jendela cuplikan.
+    expect(sumber).toMatch(/\n\s+loop\n/);
+  });
+
+  it("pengulangan tetap DIBATASI supaya unduhan tidak sebesar 1 episode", () => {
+    // Tanpa jendela ini browser menyedot seluruh episode (26,8 MB terukur)
+    // untuk sesuatu yang cuma hiasan latar. Ini bukan soal rapi — ini kuota
+    // PC backup owner.
+    expect(sumber).toContain("DETAIL_CUPLIKAN_SEC");
   });
 });

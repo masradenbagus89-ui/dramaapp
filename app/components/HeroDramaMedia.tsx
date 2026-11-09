@@ -7,37 +7,32 @@ import type { Drama } from "@/lib/types";
 import { getProgressEntry } from "@/lib/progress";
 import { tujuanNonton } from "@/lib/tujuan-nonton";
 import {
+  DETAIL_CUPLIKAN_SEC,
   DETAIL_TEASER_DELAY_MS,
-  cuplikanSelesai,
+  teaserShouldLoop,
   teaserSrc,
-  trailerSrc,
 } from "@/lib/hero-teaser";
 
 /**
- * Sumber video yang sedang dicoba. Urutannya SENGAJA menurun: yang paling
- * bagus dulu, lalu jalan mundur yang selalu tersedia.
- *   "trailer" — berkas trailer.mp4 buatan owner. Belum tentu ada.
- *   "ep1"     — pembukaan Episode 1. Selalu ada selama dramanya punya video.
- *   null      — diam (belum mulai, atau sudah selesai/menyerah).
- */
-type SumberCuplikan = "trailer" | "ep1" | null;
-
-/**
- * Lapisan hidup di ATAS gambar besar halaman detail: cuplikan yang mulai
- * sendiri, plus tombol play yang membawa penonton LANGSUNG ke tontonannya.
+ * Lapisan hidup di ATAS gambar besar halaman detail: cuplikan Episode 1 yang
+ * mulai sendiri dan tidak pernah berhenti, plus tombol play yang membawa
+ * penonton LANGSUNG ke tontonannya.
  *
  * ⚠️ Gambarnya sendiri SENGAJA ditinggal di `app/drama/[id]/page.tsx` yang
  * Server Component. Gambar itu LCP halaman ini (elemen terbesar yang
  * menentukan "halaman terasa cepat atau tidak"); memindahkannya ke komponen
  * client berarti menunda justru elemen yang paling menentukan kesan itu.
- * Komponen ini hanya menumpuk lapisan di atasnya.
  *
- * Gagal-aman berlapis: trailer tak ada → pembukaan Episode 1; itu pun gagal →
- * gambar diam tetap tampil. Tombol play TIDAK pernah ikut mati, karena
- * tujuannya sama sekali tidak bergantung pada video.
+ * KENAPA LANGSUNG EPISODE 1 (owner 2026-11-09): jalur trailer khusus sudah
+ * ada & teruji di server, tapi mencobanya lebih dulu memakan 1,17 detik pada
+ * SETIAP kunjungan selama belum ada satu pun berkas trailer — dan memang belum
+ * ada. Cara menyalakannya lagi ditulis di `trailerSrc` (lib/hero-teaser.ts).
+ *
+ * Gagal-aman: video gagal → gambar diam tetap tampil. Tombol play TIDAK ikut
+ * mati, karena tujuannya sama sekali tidak bergantung pada video.
  */
 export default function HeroDramaMedia({ drama }: { drama: Drama }) {
-  const [sumber, setSumber] = useState<SumberCuplikan>(null);
+  const [mulai, setMulai] = useState(false);
   const [playing, setPlaying] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -50,17 +45,17 @@ export default function HeroDramaMedia({ drama }: { drama: Drama }) {
     setTujuan(tujuanNonton(drama.id, getProgressEntry(drama.id)));
   }, [drama.id]);
 
-  // Mulai sesudah jeda (pengunjung sekejap & bot tak ikut menarik video),
-  // dan tidak sama sekali bagi yang memilih "kurangi animasi".
+  // Mulai sesudah jeda singkat (bot perayap & pengunjung sekejap tak ikut
+  // menarik video), dan tidak sama sekali bagi yang memilih "kurangi animasi".
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-    const t = window.setTimeout(() => setSumber("trailer"), DETAIL_TEASER_DELAY_MS);
+    const t = window.setTimeout(() => setMulai(true), DETAIL_TEASER_DELAY_MS);
     return () => window.clearTimeout(t);
   }, []);
 
   // Jeda saat kotak tergulung keluar layar — hemat kuota penonton & PC backup.
   //
-  // ⚠️ Bergantung pada `sumber`, BUKAN dipasang sekali saat mount. Versi
+  // ⚠️ Bergantung pada `mulai`, BUKAN dipasang sekali saat mount. Versi
   // pertama memakai dependency kosong, jadi pengamat ini terpasang saat
   // <video> belum dirender sama sekali: panggilan pertamanya menemukan
   // videoRef kosong lalu keluar, dan sesudah video muncul ia tidak pernah
@@ -68,7 +63,7 @@ export default function HeroDramaMedia({ drama }: { drama: Drama }) {
   // sini tak pernah menyentuh video yang baru lahir.
   useEffect(() => {
     const box = boxRef.current;
-    if (!box || !sumber) return;
+    if (!box || !mulai) return;
     const io = new IntersectionObserver(([entry]) => {
       const v = videoRef.current;
       if (!v) return;
@@ -77,37 +72,21 @@ export default function HeroDramaMedia({ drama }: { drama: Drama }) {
     });
     io.observe(box);
     return () => io.disconnect();
-  }, [sumber]);
-
-  const berhenti = () => {
-    setSumber(null);
-    setPlaying(false);
-  };
-
-  /**
-   * Satu sumber gagal → turun ke sumber berikutnya, habis itu menyerah.
-   *
-   * Trailer yang 404 BUKAN kerusakan: mayoritas drama memang belum punya
-   * berkas trailer, dan itulah justru alasan jalan mundur ini ada.
-   */
-  const turunSumber = () => {
-    setPlaying(false);
-    setSumber((kini) => (kini === "trailer" ? "ep1" : null));
-  };
+  }, [mulai]);
 
   return (
     <div ref={boxRef} className="absolute inset-0">
-      {sumber && (
+      {mulai && (
         <video
           ref={videoRef}
-          // `key` WAJIB berganti saat sumber berganti: tanpa itu React memakai
-          // ulang elemen <video> yang sama dan browser tidak selalu memuat
-          // ulang src barunya — jalan mundur ke Episode 1 jadi diam saja.
-          key={sumber}
-          src={sumber === "trailer" ? trailerSrc(drama.id) : teaserSrc(drama.id, 1)}
+          src={teaserSrc(drama.id, 1)}
           autoPlay
           muted
           playsInline
+          // `loop` untuk episode yang LEBIH PENDEK dari jendela cuplikan —
+          // tanpa ini video pendek berhenti di akhir berkasnya. Episode yang
+          // lebih panjang diulang lebih awal oleh onTimeUpdate di bawah.
+          loop
           preload="auto"
           aria-hidden
           // `object-top` WAJIB sama dengan gambar diamnya di page.tsx. Kalau
@@ -117,22 +96,37 @@ export default function HeroDramaMedia({ drama }: { drama: Drama }) {
           className={`absolute inset-0 h-full w-full object-cover object-top transition-opacity duration-500 ${
             playing ? "opacity-100" : "opacity-0"
           }`}
-          // Jaring pengaman: `autoPlay` saja kadang tidak cukup — elemen yang
-          // baru dibuat lewat pergantian `key` bisa selesai memuat sesudah
-          // browser melewatkan kesempatan autoplay-nya. Memanggil play() saat
-          // benar-benar siap membuat gambar bergerak secepat yang bisa, dan
+          // Jaring pengaman: `autoPlay` saja kadang tidak cukup — elemen bisa
+          // selesai memuat sesudah browser melewatkan kesempatan autoplay-nya.
           // `.catch` menjaga penolakan browser tidak jadi error di console.
           onCanPlay={(e) => {
             e.currentTarget.play().catch(() => {});
           }}
           onPlaying={() => setPlaying(true)}
           onTimeUpdate={(e) => {
-            if (cuplikanSelesai(e.currentTarget.currentTime)) berhenti();
+            // Ulang dari awal di detik ke-DETAIL_CUPLIKAN_SEC. INI yang menahan
+            // unduhan: tanpa baris ini browser terus menambah buffer sampai
+            // seluruh episode (26,8 MB terukur) tersedot, padahal yang terlihat
+            // cuma hiasan latar. Potongan yang diulang diputar dari memori,
+            // bukan diunduh lagi.
+            const v = e.currentTarget;
+            if (teaserShouldLoop(v.currentTime, v.duration, 0, DETAIL_CUPLIKAN_SEC)) {
+              v.currentTime = 0;
+            }
           }}
-          onEnded={berhenti}
-          onError={turunSumber}
+          // Video gagal = gambar diam tetap tampil. Tidak ada percobaan ulang:
+          // Episode 1 adalah sumber paling dasar yang ada — kalau ia pun gagal,
+          // mencoba lagi hanya menambah permintaan yang sama-sama gagal.
+          onError={() => {
+            setMulai(false);
+            setPlaying(false);
+          }}
         />
       )}
+
+      {/* 🪦 Label "▶ Cuplikan" DIBUANG owner 2026-11-09. Ia menerangkan hal yang
+          sudah jelas dari layar (gambarnya memang sedang bergerak) sambil
+          menambah satu kotak hitam di pojok yang meramaikan tampilan. */}
 
       {/* Gelap-bertingkat dipindah KE SINI dari page.tsx supaya video ikut
           digelapkan persis seperti gambar diamnya — tanpa itu tampilan melompat
@@ -142,15 +136,11 @@ export default function HeroDramaMedia({ drama }: { drama: Drama }) {
           tidak pernah bisa ditekan — rusak SENYAP, nol error di layar. */}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/50 to-black/10" />
 
-      {/* 🪦 Label "▶ Cuplikan" DIBUANG owner 2026-11-09. Ia menerangkan hal yang
-          sudah jelas dari layar (gambarnya memang sedang bergerak) sambil
-          menambah satu kotak hitam di pojok yang meramaikan tampilan. */}
-
       {/* Tombol play: satu-satunya bagian kotak ini yang bisa diklik. Sengaja
           BUKAN seluruh gambar — hero selebar layar yang jadi tautan raksasa
           membuat penonton tak sengaja meninggalkan halaman saat hendak menggeser.
-          Ukurannya dikecilkan owner 2026-11-09; batas bawahnya 44px (h-11) —
-          di bawah itu tombol jadi sulit dikenai jari di HP. */}
+          Ukurannya dikecilkan owner 2026-11-09; batas bawahnya 44px — di bawah
+          itu tombol jadi sulit dikenai jari di HP. */}
       <Link
         href={tujuan.href}
         aria-label={`${tujuan.label}: ${drama.title}`}

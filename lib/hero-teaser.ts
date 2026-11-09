@@ -62,19 +62,22 @@ export const CARD_PREVIEW_SEC = 10;
  * Pelajarannya: memotong otomatis di titik yang dipilih karena alasan TEKNIS
  * tidak pernah menghasilkan cuplikan yang menjual.
  */
-export const TRAILER_DURASI_DETIK = 30;
-
 /**
- * Cuplikan sudah cukup lama diputar → kembali ke gambar diam.
+ * Panjang potongan yang diulang terus di gambar besar halaman detail.
  *
- * KENAPA ADA BATASNYA: video datang dari PC backup owner lewat tunnel. Tab yang
- * dibiarkan terbuka berjam-jam jangan terus menarik video padahal tak ada yang
- * menonton. Trailer yang lebih pendek dari batas ini berhenti sendiri lewat
- * `onEnded`, jadi batas ini hanya menggigit pada video yang lebih panjang.
+ * Cuplikannya SENGAJA tidak pernah berhenti (owner 2026-11-09: "video usahakan
+ * jangan berhenti") — tapi yang diulang hanya potongan ini, bukan episode
+ * penuh. Diukur di produksi: satu episode = 26,8 MB, sedangkan 30 detik
+ * pertamanya ±10,7 MB. Mengulang potongan yang sama diputar dari memori
+ * browser, BUKAN diunduh lagi (pola yang sama dipakai hover kartu,
+ * CARD_PREVIEW_SEC di atas), jadi tab yang dibiarkan terbuka berjam-jam tetap
+ * berhenti menarik data di angka 10,7 MB — tidak ikut naik selama tabnya hidup.
+ *
+ * Tanpa batas ini, gambar hiasan yang jalan sendiri akan memakan data
+ * SEUKURAN menonton satu episode sungguhan, pada setiap kunjungan, termasuk
+ * dari orang yang cuma lewat.
  */
-export function cuplikanSelesai(currentTime: number): boolean {
-  return currentTime >= TRAILER_DURASI_DETIK;
-}
+export const DETAIL_CUPLIKAN_SEC = 30;
 
 export type TeaserStatus = "loading" | "playing" | "failed";
 
@@ -125,15 +128,18 @@ export function teaserSrc(dramaId: string, ep = 1): string {
 /**
  * Alamat trailer khusus drama ini (`trailer.mp4` di PC backup).
  *
- * Drama yang BELUM punya berkas trailer akan dibalas 404 oleh tunnel — itu
- * keadaan NORMAL, bukan error yang perlu diperbaiki. Pemanggil wajib menyiapkan
- * jalan mundur ke `teaserSrc(id, 1)` lewat `onError`, supaya gambar besar tetap
- * hidup di seluruh katalog sejak hari pertama, sebelum satu pun trailer dibuat.
+ * ⚠️ SENGAJA BELUM DIPAKAI TAMPILAN (owner 2026-11-09). Jalur servernya sudah
+ * jadi & teruji (`app/api/teaser/route.ts` + penjaga path-traversal di
+ * `tests/teaser-redirect.test.ts`), tapi gambar besar halaman detail langsung
+ * memutar Episode 1. Alasannya diukur, bukan selera: mencoba trailer lebih
+ * dulu memakan 1,17 detik pada SETIAP kunjungan selama belum ada satu pun
+ * berkas trailer dibuat — dan saat ini memang belum ada. Penonton membayar
+ * waktu tunggu untuk mencari berkas yang tidak ada.
  *
- * KENAPA deteksinya di BROWSER, bukan server memeriksa dulu: memeriksa di
- * server berarti satu permintaan HEAD tambahan ke PC backup pada SETIAP
- * kunjungan halaman detail — biaya tetap yang dibayar semua penonton demi
- * menghindari satu permintaan gagal yang tidak terlihat siapa pun.
+ * CARA MENYALAKANNYA nanti, sesudah owner membuat trailer pertama: di
+ * `HeroDramaMedia.tsx`, mulai dari sumber "trailer" lalu jatuh ke Episode 1
+ * saat `onError` (tunnel membalas 404 untuk drama tanpa trailer — itu keadaan
+ * NORMAL, bukan kerusakan).
  */
 export function trailerSrc(dramaId: string): string {
   return `/api/teaser?id=${encodeURIComponent(dramaId)}&jenis=trailer`;

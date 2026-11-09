@@ -10,8 +10,7 @@ import {
   trailerSrc,
   HERO_TEASER_DELAY_MS,
   DETAIL_TEASER_DELAY_MS,
-  cuplikanSelesai,
-  TRAILER_DURASI_DETIK,
+  DETAIL_CUPLIKAN_SEC,
 } from "../lib/hero-teaser";
 import type { Drama } from "../lib/types";
 
@@ -148,9 +147,21 @@ describe("cuplikan series di gambar besar", () => {
     expect(teaserSrc("dewa-abadi", 1)).toContain("ep=1");
   });
 
-  it("cuplikan berhenti tepat di TRAILER_DURASI_DETIK", () => {
-    expect(cuplikanSelesai(TRAILER_DURASI_DETIK - 0.1)).toBe(false);
-    expect(cuplikanSelesai(TRAILER_DURASI_DETIK)).toBe(true);
+  it("cuplikan MENGULANG di batas, bukan berhenti", () => {
+    // Owner 2026-11-09: "video usahakan jangan berhenti". Yang diulang hanya
+    // potongan awal — diukur di produksi, satu episode 26,8 MB sedangkan 30
+    // detik pertamanya ±10,7 MB, dan pengulangan diputar dari memori browser.
+    const durasiEpisode = 75; // 1:15, panjang khas episode di katalog ini
+    expect(teaserShouldLoop(DETAIL_CUPLIKAN_SEC + 0.1, durasiEpisode, 0, DETAIL_CUPLIKAN_SEC)).toBe(true);
+    expect(teaserShouldLoop(DETAIL_CUPLIKAN_SEC - 1, durasiEpisode, 0, DETAIL_CUPLIKAN_SEC)).toBe(false);
+  });
+
+  it("episode yang LEBIH PENDEK dari jendela tidak diulang paksa", () => {
+    // Video 20 detik tak punya detik ke-30 untuk dilompati; yang mengulangnya
+    // atribut `loop` di <video>, bukan perhitungan ini. Kalau baris ini
+    // mengembalikan true, currentTime dipaksa ke 0 terus-menerus dan video
+    // tersendat di awal.
+    expect(teaserShouldLoop(19, 20, 0, DETAIL_CUPLIKAN_SEC)).toBe(false);
   });
 
   it("halaman detail menunggu lebih sebentar daripada halaman umum", () => {
@@ -164,9 +175,10 @@ describe("cuplikan series di gambar besar", () => {
     expect(DETAIL_TEASER_DELAY_MS).toBeGreaterThan(0);
   });
 
-  it("video yang baru mulai tidak langsung dianggap selesai", () => {
-    // Penjaga arah tanda: `>=` yang tertukar jadi `<=` membuat cuplikan mati
-    // di detik pertama — gejalanya "videonya tidak jalan", bukan error.
-    expect(cuplikanSelesai(0)).toBe(false);
+  it("video yang baru mulai tidak langsung diulang", () => {
+    // Penjaga arah tanda: perbandingan yang tertukar membuat currentTime
+    // dipaksa balik ke 0 sejak detik pertama — gejalanya "videonya diam di
+    // awal terus", bukan error yang bisa dicari di console.
+    expect(teaserShouldLoop(0, 75, 0, DETAIL_CUPLIKAN_SEC)).toBe(false);
   });
 });

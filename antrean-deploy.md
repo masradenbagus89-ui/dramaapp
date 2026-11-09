@@ -23,8 +23,14 @@
 > lengkap: `HANDOFF.md` seksi `## 2026-11-09`.
 
 
-**Terakhir dicek:** 2026-11-09 (**komputer OWNER**), **sesudah rilis `ab44e93`**.
-`HEAD` = `origin/main` = `dramaku/main` = **`ab44e93`**, working tree **bersih**. **NOL ANTREAN.**
+**Terakhir dicek:** 2026-11-09 (**komputer OWNER**), **sesudah rilis `8f9beb8`**.
+`HEAD` = `origin/main` = `dramaku/main` = **`8f9beb8`**, working tree **bersih**. **NOL ANTREAN.**
+
+> ✅ **RILIS `8f9beb8` TAYANG 2026-11-09 (50 detik) — lencana TAHUN di kartu video beranda +
+> warna tombol panel admin disamakan.** Gerbang LOLOS 5/5, 2190 tes/154 berkas. Diverifikasi
+> SESUDAH tayang **di halaman sungguhan, bukan cuma bundle**: beranda produksi memajang 18 lencana
+> tahun (2022×6 · 2025×5 · 2024×2 · 2023×2 · 2021×2 · 2020×1), durasi tetap 8 di pojok kanan.
+> Panel admin: **nol sisa `bg-sky-600`**, 2 tombol simpan hijau. Situs 200 di empat alamat.
 
 > ✅ **RILIS `ab44e93` TAYANG 2026-11-09 (50 detik) — tiga panel alat bantu tab IMDb diseragamkan.**
 > Tombol naik ke baris judul · satu nada warna netral · jarak & padding sama. Gerbang LOLOS 5/5,

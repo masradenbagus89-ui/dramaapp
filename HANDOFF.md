@@ -177,6 +177,50 @@ riwayat blok peringatan lama ada di seksi `## 2026-11-09` di bawah.**
 
 ---
 
+## 2026-11-09 — ✅ `8f9beb8` TAYANG: lencana TAHUN di kartu video + warna tombol admin disamakan
+
+**Permintaan owner:** *"kenapa ini tampilannya belum rapi warna tidak sama jadi UInya kurang pas
+dan kamu tambahkan di kiri bawah buat tahun tayang otomatis karena di film belum ada tahun dan
+durasi"*.
+
+**1) Warna tombol.** Penyebabnya: "Cocokkan semua" dipaksa `bg-sky-600` (biru) sementara "Tebak
+kategori" memakai warna bawaan project (amber). Dua aksi **setara** dengan warna berbeda membuat
+salah satunya terbaca lebih penting. Override birunya dibuang.
+⚠️ Yang **sengaja tetap beda**: tombol **Simpan hijau** di KEDUA panel — warnanya membawa arti,
+bukan hiasan. Memulai pencarian bisa dibatalkan, menyimpan tidak.
+
+**2) Lencana TAHUN di kiri-bawah kartu video beranda.** 💡 Datanya **SUDAH ADA dan tinggal
+digambar** — pola yang sama persis dengan rating & kualitas 2026-10-31: `PlaylyVideoPublik` punya
+field `year` yang diisi dari data IMDb (`lib/playly-publik.ts:223`), tapi `KartuVideo` tidak
+pernah memajangnya. Diukur di produksi: **408 dari 489** video punya tahun; **81 sisanya adalah
+yang belum dicocokkan ke IMDb** — sama persis dengan yang kurang rating, jadi sekali "Cocokkan
+semua" dijalankan keduanya terisi bersamaan.
+Susunannya mengikuti poster drama (`Poster.tsx`): tahun kiri, durasi kanan — penonton membaca
+pojok yang sama untuk informasi yang sama di seluruh situs.
+
+📌 **TEMUAN — dua halaman menampilkan tahun dengan cara BERBEDA, dan itu dibiarkan:**
+- `/film` (`PlaylyVideoGrid`) **sudah punya sejak dulu** sebagai teks di bawah judul
+  (`"2022 · Aksi, Petualangan"`, baris 101 `metaFilm`).
+- **Beranda** (`KartuVideo`) tidak punya sama sekali — itu yang owner lihat; baris bawahnya cuma
+  genre.
+Lencana **sengaja TIDAK ditambahkan ke `/film`**: di sana tahunnya sudah terlihat, jadi lencana
+cuma duplikasi. Disebutkan ke owner, bukan diputuskan diam-diam.
+
+**Durasi:** sudah digambar kalau ada, tapi **282 dari 489** video memang tidak punya durasi dari
+Playly (`durationLabel === "-"`). Tidak ada sumber lain untuk menebaknya.
+
+**Bukti:** `npm run gerbang` LOLOS 5/5 — build sukses, `tsc` 0 error, **2190 tes / 154 berkas
+hijau**. Tayang **50 detik**, diverifikasi **di halaman sungguhan bukan cuma bundle**: beranda
+produksi memajang 18 lencana tahun, durasi tetap 8 di pojok kanan, panel admin nol sisa
+`bg-sky-600`.
+
+🪤 **Tes baru menjaga satu hal halus yang nol-error kalau rusak:** `justify-between` menarik
+satu-satunya anak ke KIRI kalau pasangannya hilang — jadi tanpa pengisi kosong, **durasi diam-diam
+pindah pojok pada 81 video yang tak punya tahun**. Dikunci di
+`tests/beranda-video-render.test.ts`.
+
+---
+
 ## 2026-11-09 — ✅ `ab44e93` TAYANG: tiga panel alat bantu tab IMDb diseragamkan
 
 **Permintaan owner:** *"bisa tidak kamu lebih rapikan lagi agar UI nya enak dilihat"*.

@@ -32,6 +32,40 @@ export const HERO_TEASER_DELAY_MS = 1200;
  */
 export const CARD_PREVIEW_SEC = 10;
 
+/**
+ * Trailer montase di kotak poster halaman detail: cuplikan pendek tiap episode
+ * diputar bergiliran (Ep 1 → Ep 2 → … → kembali ke Ep 1).
+ *
+ * Mulai di detik ke-TRAILER_START_SEC untuk melewati logo/intro pembuka yang
+ * sama di tiap episode. Hanya TRAILER_MAX_EP episode pertama yang digilir:
+ * drama 80 episode tak perlu montase 80 potong, dan episode akhir = spoiler.
+ */
+export const TRAILER_START_SEC = 5;
+export const TRAILER_CLIP_SEC = 6;
+export const TRAILER_MAX_EP = 8;
+/**
+ * Montase berhenti (kembali ke poster diam) sesudah diputar sekian putaran.
+ * KENAPA: video datang dari PC backup owner lewat tunnel — tab yang dibiarkan
+ * terbuka berjam-jam jangan terus menarik video tanpa ada yang menonton.
+ */
+export const TRAILER_MAX_ROUNDS = 2;
+
+/** Episode berikutnya dalam montase trailer; kembali ke 1 setelah batas. */
+export function nextTrailerEpisode(current: number, totalEpisodes: number): number {
+  const last = Math.max(1, Math.min(totalEpisodes, TRAILER_MAX_EP));
+  return current >= last ? 1 : current + 1;
+}
+
+/** Jumlah potongan total montase sebelum berhenti (putaran × episode digilir). */
+export function trailerTotalClips(totalEpisodes: number): number {
+  return Math.max(1, Math.min(totalEpisodes, TRAILER_MAX_EP)) * TRAILER_MAX_ROUNDS;
+}
+
+/** Cuplikan episode ini sudah cukup diputar → saatnya pindah episode. */
+export function trailerClipDone(currentTime: number, startAt: number): boolean {
+  return currentTime >= startAt + TRAILER_CLIP_SEC;
+}
+
 export type TeaserStatus = "loading" | "playing" | "failed";
 
 export function shouldGiveUpVideo(errorCount: number): boolean {

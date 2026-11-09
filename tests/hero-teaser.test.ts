@@ -7,6 +7,12 @@ import {
   teaserSrc,
   splitHeroTitle,
   VIDEO_RETRY_LIMIT,
+  nextTrailerEpisode,
+  trailerClipDone,
+  trailerTotalClips,
+  TRAILER_CLIP_SEC,
+  TRAILER_MAX_EP,
+  TRAILER_MAX_ROUNDS,
 } from "../lib/hero-teaser";
 import type { Drama } from "../lib/types";
 
@@ -121,5 +127,32 @@ describe("splitHeroTitle", () => {
 
   it("abaikan spasi berlebih", () => {
     expect(splitHeroTitle("A,  B ,C ")).toEqual(["A", "B", "C"]);
+  });
+});
+
+describe("trailer montase per episode", () => {
+  it("menggilir episode lalu kembali ke Ep 1 di batas TRAILER_MAX_EP", () => {
+    expect(nextTrailerEpisode(1, 43)).toBe(2);
+    expect(nextTrailerEpisode(TRAILER_MAX_EP, 43)).toBe(1);
+  });
+
+  it("drama pendek menggilir sebanyak episodenya saja", () => {
+    expect(nextTrailerEpisode(3, 3)).toBe(1);
+    expect(nextTrailerEpisode(1, 1)).toBe(1); // film: tetap Ep 1
+  });
+
+  it("jumlah episode 0/rusak tidak membuat montase kosong", () => {
+    expect(nextTrailerEpisode(1, 0)).toBe(1);
+    expect(trailerTotalClips(0)).toBe(TRAILER_MAX_ROUNDS);
+  });
+
+  it("total potongan = putaran x episode digilir", () => {
+    expect(trailerTotalClips(43)).toBe(TRAILER_MAX_EP * TRAILER_MAX_ROUNDS);
+    expect(trailerTotalClips(3)).toBe(3 * TRAILER_MAX_ROUNDS);
+  });
+
+  it("potongan selesai tepat sesudah TRAILER_CLIP_SEC dari titik mulai", () => {
+    expect(trailerClipDone(5 + TRAILER_CLIP_SEC - 0.1, 5)).toBe(false);
+    expect(trailerClipDone(5 + TRAILER_CLIP_SEC, 5)).toBe(true);
   });
 });

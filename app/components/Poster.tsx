@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 import type { Drama } from "@/lib/types";
 import { CHIP, CHIP_GELAP, warnaKualitas } from "@/app/components/lencana-gaya";
@@ -22,6 +22,12 @@ type Props = {
   showBadge?: boolean;
   /** Cuplikan episode 1 — hanya dimuat saat hover di desktop. */
   previewSrc?: string;
+  /**
+   * Lapisan media tambahan (mis. trailer montase halaman detail). Digambar di
+   * atas gambar poster tapi DI BAWAH lapisan lencana, supaya rating/EPS/tahun
+   * tetap terbaca selama video berputar.
+   */
+  media?: ReactNode;
 };
 
 // --- Bentuk lencana -------------------------------------------------------
@@ -54,6 +60,7 @@ export default function Poster({
   className,
   showBadge = true,
   previewSrc,
+  media,
 }: Props) {
   const [preview, setPreview] = useState(false);
   const delayRef = useRef(0);
@@ -130,6 +137,8 @@ export default function Poster({
           onError={stopPreview}
         />
       )}
+
+      {media}
 
       {/* ===== LAPISAN LENCANA — empat pojok, pola situs streaming katalog.
              Digambar di SINI (bukan di tiap kartu) karena semua kartu situs ini

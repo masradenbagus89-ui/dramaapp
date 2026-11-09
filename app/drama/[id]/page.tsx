@@ -7,7 +7,7 @@ import { SITE_URL, absoluteUrl, toMetaDescription } from "@/lib/site";
 import { dramaJsonLd, toJsonLdScript } from "@/lib/structured-data";
 import { isMovie, subtitleLabel, type Drama } from "@/lib/types";
 import { durasiTayangan } from "@/lib/format";
-import Poster from "@/app/components/Poster";
+import DramaTrailer from "@/app/components/DramaTrailer";
 import SaveButton from "@/app/components/SaveButton";
 import LikeButton from "@/app/components/LikeButton";
 import Comments from "@/app/components/Comments";
@@ -619,7 +619,7 @@ function HeroDrama({ drama }: { drama: Drama }) {
 
             <div className="absolute -bottom-16 left-4 right-4 flex gap-3 md:left-8 md:right-8 md:-bottom-20 md:gap-6">
               <div className="w-28 shrink-0 md:w-44">
-                <Poster drama={drama} showBadge={false} />
+                <DramaTrailer drama={drama} />
               </div>
               <div className="flex flex-col justify-end pb-2 md:pb-4">
                 <div className="flex items-center gap-2">

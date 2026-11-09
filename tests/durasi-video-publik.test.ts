@@ -37,11 +37,12 @@ describe("detikTayangan — Playly menang, IMDb jadi cadangan", () => {
 });
 
 describe("lengkapiDurasiVideo — isi yang kosong, jangan timpa yang ada", () => {
-  const video = (id: string, detik: number | null, label: string) => ({
-    id,
-    durationSeconds: detik,
-    durationLabel: label,
-  });
+  const video = (
+    id: string,
+    detik: number | null,
+    label: string,
+    year: string | null = null,
+  ) => ({ id, durationSeconds: detik, durationLabel: label, year });
 
   it("video tanpa durasi dapat label dari runtime IMDb", () => {
     // Kasus nyata yang owner tunjuk: Americana (2025) — Playly kirim null,
@@ -104,5 +105,82 @@ describe("lengkapiDurasiVideo — isi yang kosong, jangan timpa yang ada", () =>
 
   it("daftar kosong tidak melempar error", () => {
     expect(lengkapiDurasiVideo([], {})).toEqual([]);
+  });
+});
+
+describe("isian manual MENANG atas semua sumber otomatis", () => {
+  // Owner 2026-11-09: "kalau yang tidak ada gimana cara isi manualnya".
+  // Ini satu-satunya jalan mengisi film yang TIDAK ADA di IMDb sama sekali,
+  // jadi ia tidak boleh kalah oleh tebakan mana pun.
+  const video = (
+    id: string,
+    detik: number | null,
+    label: string,
+    year: string | null = null,
+  ) => ({ id, durationSeconds: detik, durationLabel: label, year });
+
+  it("tahun manual menimpa tahun dari IMDb", () => {
+    const hasil = lengkapiDurasiVideo(
+      [video("v1", null, "-", "2019")],
+      {},
+      { v1: { tahun: "2024" } },
+    );
+    expect(hasil[0].year).toBe("2024");
+  });
+
+  it("durasi manual menimpa durasi dari PLAYLY — koreksi sadar admin", () => {
+    // Pagar terpenting di sini. Durasi Playly normalnya menang atas IMDb,
+    // TAPI kalau admin sampai mengetiknya sendiri berarti ia sedang
+    // membetulkan angka yang salah — kalah di sini membuat koreksinya
+    // terlihat "tidak tersimpan" padahal tersimpan.
+    const hasil = lengkapiDurasiVideo(
+      [video("v1", 3600, "1:00:00")],
+      { v1: { runtime: "91 min" } },
+      { v1: { durasiDetik: 145 } },
+    );
+    expect(hasil[0].durationSeconds).toBe(145);
+    expect(hasil[0].durationLabel).toBe("2:25");
+  });
+
+  it("tanpa entri manual, urutan lama tetap berlaku", () => {
+    // Playly menang atas IMDb — perilaku sebelum fitur manual ada.
+    const hasil = lengkapiDurasiVideo(
+      [video("v1", 3600, "1:00:00", "2020")],
+      { v1: { runtime: "91 min" } },
+      {},
+    );
+    expect(hasil[0].durationSeconds).toBe(3600);
+    expect(hasil[0].year).toBe("2020");
+  });
+
+  it("manual boleh mengisi SALAH SATU saja", () => {
+    // Panel admin mengirim field yang diubah saja. Mengisi tahun tidak boleh
+    // ikut menghapus durasi yang sudah benar, dan sebaliknya.
+    const hanyaTahun = lengkapiDurasiVideo(
+      [video("v1", 3600, "1:00:00")],
+      {},
+      { v1: { tahun: "2024" } },
+    );
+    expect(hanyaTahun[0].year).toBe("2024");
+    expect(hanyaTahun[0].durationSeconds).toBe(3600);
+
+    const hanyaDurasi = lengkapiDurasiVideo(
+      [video("v1", null, "-", "2020")],
+      {},
+      { v1: { durasiDetik: 300 } },
+    );
+    expect(hanyaDurasi[0].year).toBe("2020");
+    expect(hanyaDurasi[0].durationLabel).toBe("5:00");
+  });
+
+  it("film yang TIDAK ADA di IMDb pun bisa lengkap", () => {
+    // Kasus yang memicu fitur ini: nol data IMDb, nol durasi dari Playly.
+    const hasil = lengkapiDurasiVideo(
+      [video("lokal", null, "-", null)],
+      {},
+      { lokal: { tahun: "2024", durasiDetik: 5400 } },
+    );
+    expect(hasil[0].year).toBe("2024");
+    expect(hasil[0].durationLabel).toBe("1:30:00");
   });
 });

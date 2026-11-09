@@ -16,7 +16,19 @@ import { readFileSync, existsSync } from "node:fs";
  * mengembalikan masalahnya di HP tanpa satu pun error.
  */
 describe("daftar episode naik ke sidebar halaman drama", () => {
-  const DRAMA = readFileSync("app/drama/[id]/page.tsx", "utf-8");
+  // 🪤 AKHIRAN BARIS DINORMALKAN — jangan dilepas. Tes ini mencocokkan pola
+  // yang memuat newline (">\n          Sinopsis"), dan di Windows git menulis
+  // berkas sumber dengan CRLF saat checkout. Akibatnya pola ber-`\n` TIDAK
+  // PERNAH cocok dan tesnya merah — bukan karena tata letaknya berubah,
+  // melainkan karena berkasnya baru disentuh git.
+  //
+  // Terjadi nyata 2026-11-09: tes ini merah di HEAD padahal gerbang rilis
+  // sebelumnya hijau. Bedanya cuma itu — berkas yang sempat ditulis ulang
+  // dengan LF oleh editor, lalu dikembalikan ke CRLF oleh git.
+  const DRAMA = readFileSync("app/drama/[id]/page.tsx", "utf-8").replace(
+    /\r\n/g,
+    "\n",
+  );
 
   it("komponen panel episode benar-benar ada", () => {
     expect(existsSync("app/components/film/PanelEpisode.tsx")).toBe(true);

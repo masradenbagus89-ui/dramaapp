@@ -37,6 +37,7 @@ import {
   getPlaylyJenisCached,
   getPlaylyKualitasCached,
   getPlaylyLinkUnduhanCached,
+  getPlaylyMetaManualCached,
   getPlaylyRatingCached,
   getPublishedPlaylyWebhookVideos,
   getPublishedPlaylyWebhookVideosCached,
@@ -255,6 +256,7 @@ async function rakitGabungan(
     kualitas,
     jenis,
     ratingManual,
+    metaManual,
   ] = await Promise.all([
     // Sudah menangkap kegagalannya sendiri: mengembalikan daftar kosong +
     // alasan, bukan melempar.
@@ -310,6 +312,12 @@ async function rakitGabungan(
     // Gagal baca = peta kosong, BUKAN halaman gagal: rating ketikan admin cuma
     // MENGUBAH angka di kartu. Tak terbaca = kartu memakai angka IMDb.
     getPlaylyRatingCached().catch(() => ({}) as Record<string, string>),
+    // Tahun & durasi KETIKAN admin. Gagal baca = peta kosong, dan itu
+    // gagal-aman: kartu kembali memakai sumber otomatis (IMDb / Playly),
+    // persis perilaku sebelum fitur isian manual ini ada.
+    getPlaylyMetaManualCached().catch(
+      () => ({}) as Record<string, { tahun?: string; durasiDetik?: number }>,
+    ),
   ]);
 
   // GAGAL-AMAN (skills/owasp/SKILL.md §1 A10 "jangan fail-open"): kalau daftar
@@ -355,6 +363,7 @@ async function rakitGabungan(
         ),
       ),
       imdb,
+      metaManual,
     ),
     jenis,
   );

@@ -53,6 +53,7 @@ vi.mock("../lib/store", () => ({
   // selengkap modul aslinya, kalau tidak seluruh berkas tes ini gagal
   // memuat — bukan karena perilakunya salah.
   getPlaylyRatingCached: async () => ({}),
+  getPlaylyMetaManualCached: async () => ({}),
   // Jenis tayangan (owner 2026-11-05). Peta KOSONG tetap, alasan sama dengan
   // dua di atas: berkas ini menguji aturan SALINAN, bukan aturan jenis — dan
   // peta kosong berarti semua video dihitung film, jadi tempelJenisVideo tidak

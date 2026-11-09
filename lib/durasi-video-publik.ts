@@ -22,7 +22,7 @@
 // tests/durasi-video-publik.test.ts.
 // -------------------------------------------------------------------------
 import { menitDariRuntime } from "./format";
-import { formatDuration } from "./playly";
+import { formatDuration } from "./format";
 
 /**
  * Durasi dalam DETIK untuk satu video. `null` = tidak ada sumber mana pun.
@@ -54,14 +54,48 @@ export function detikTayangan(
  * dilihat — pemutar membaca detiknya, kartu membaca labelnya.
  */
 export function lengkapiDurasiVideo<
-  T extends { id: string; durationSeconds: number | null; durationLabel: string },
->(videos: T[], imdb: Readonly<Record<string, { runtime?: string } | undefined>>): T[] {
+  T extends {
+    id: string;
+    durationSeconds: number | null;
+    durationLabel: string;
+    year: string | null;
+  },
+>(
+  videos: T[],
+  imdb: Readonly<Record<string, { runtime?: string } | undefined>>,
+  /**
+   * Tahun & durasi KETIKAN ADMIN. Menang atas semua sumber otomatis — itu
+   * satu-satunya jalan mengisi film yang tidak ada di IMDb sama sekali
+   * (owner 2026-11-09).
+   */
+  metaManual: Readonly<
+    Record<string, { tahun?: string; durasiDetik?: number } | undefined>
+  > = {},
+): T[] {
   return videos.map((v) => {
-    if (typeof v.durationSeconds === "number" && v.durationSeconds > 0) return v;
+    const manual = metaManual[v.id];
+    let hasil = v;
 
-    const detik = detikTayangan(v.durationSeconds, imdb[v.id]?.runtime);
-    if (detik === null) return v;
+    // --- TAHUN: ketikan admin menang atas IMDb.
+    if (manual?.tahun) {
+      hasil = { ...hasil, year: manual.tahun };
+    }
 
-    return { ...v, durationSeconds: detik, durationLabel: formatDuration(detik) };
+    // --- DURASI: ketikan admin menang, lalu Playly, lalu runtime IMDb.
+    // Urutannya bukan selera: yang diketik admin adalah koreksi SADAR atas
+    // dua sumber lain, jadi ia tak boleh kalah oleh keduanya.
+    const detik = manual?.durasiDetik
+      ? manual.durasiDetik
+      : detikTayangan(v.durationSeconds, imdb[v.id]?.runtime);
+
+    if (detik !== null && detik !== v.durationSeconds) {
+      hasil = {
+        ...hasil,
+        durationSeconds: detik,
+        durationLabel: formatDuration(detik),
+      };
+    }
+
+    return hasil;
   });
 }

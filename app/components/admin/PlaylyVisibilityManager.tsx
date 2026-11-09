@@ -21,6 +21,8 @@ import type { PlaylyImdbMap } from "@/lib/playly-imdb";
 import { DRAMA_QUALITY_OPTIONS, KATEGORI_ISI } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { saringDenganKetikan } from "@/lib/pencarian";
+import { formatDuration } from "@/lib/format";
+import { Button } from "@/components/ui/button";
 import {
   asalKualitas,
   kelompokkanUnduhan,
@@ -186,6 +188,7 @@ export default function PlaylyVisibilityManager({
   initialKualitas = {},
   initialJenis = {},
   initialRating = {},
+  initialMetaManual = {},
   linkUnduhan = [],
   belumSiapIds,
   fetchError,
@@ -233,6 +236,8 @@ export default function PlaylyVisibilityManager({
    * dengan tangan.
    */
   initialRating?: Record<string, string>;
+  /** Tahun & durasi ketikan admin (videoId -> nilai). Kosong = semua ikut sumber otomatis. */
+  initialMetaManual?: Record<string, { tahun?: string; durasiDetik?: number }>;
   /**
    * Link unduhan tiap video — HANYA dibaca, tidak pernah diubah di panel ini.
    *
@@ -276,6 +281,18 @@ export default function PlaylyVisibilityManager({
   // terjadi saat kotaknya ditinggalkan atau Enter ditekan.
   const [draftRating, setDraftRating] = useState<Record<string, string>>({});
   const [sedangRating, setSedangRating] = useState<string | null>(null);
+
+  // Tahun & durasi KETIKAN admin (owner 2026-11-09: "kalau yang tidak ada
+  // gimana cara isi manualnya"). Satu-satunya jalan mengisi film yang tidak
+  // ada di IMDb sama sekali.
+  const [metaManual, setMetaManual] =
+    useState<Record<string, { tahun?: string; durasiDetik?: number }>>(initialMetaManual);
+  // Ketikan yang BELUM disimpan, dipisah dari `metaManual` dengan alasan yang
+  // sama seperti draftRating: kalau digabung, tiap huruf yang diketik akan
+  // terbaca sebagai nilai tersimpan dan memicu tampilan ikut berubah.
+  const [draftMeta, setDraftMeta] =
+    useState<Record<string, { tahun?: string; durasi?: string }>>({});
+  const [sedangMeta, setSedangMeta] = useState<string | null>(null);
   const [pesan, setPesan] = useState<Pesan | null>(null);
   /** Saringan "sudah / belum ada IMDb" (owner 2026-11-05: "biar mudah"). */
   const [saring, setSaring] = useState<SaringImdb>(SARING_BAWAAN);
@@ -385,6 +402,59 @@ export default function PlaylyVisibilityManager({
    * akan MENGUNCI angka IMDb jadi rating manual — video itu lalu berhenti
    * mengikuti IMDb selamanya, tanpa ada yang memberi tahu.
    */
+  /**
+   * Simpan tahun & durasi ketikan admin untuk satu video.
+   *
+   * Dikirim bersamaan dalam SATU permintaan: keduanya diisi dari panel yang
+   * sama, dan memisahkannya berarti satu klik "Simpan" bisa berakhir dengan
+   * tahun tersimpan tapi durasi gagal — tanpa ada yang memberi tahu.
+   */
+  const simpanMeta = async (videoId: string) => {
+    const draft = draftMeta[videoId];
+    if (!draft) return;
+
+    setSedangMeta(videoId);
+    setPesan(null);
+    try {
+      const res = await fetch("/api/admin/playly/meta", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // Hanya field yang BENAR-BENAR disentuh yang dikirim. Field yang tidak
+        // ada di body sengaja tidak diubah server — tanpa itu, membetulkan
+        // durasi saja akan ikut menghapus tahun yang sudah benar.
+        body: JSON.stringify({
+          videoId,
+          ...(draft.tahun !== undefined ? { tahun: draft.tahun } : {}),
+          ...(draft.durasi !== undefined ? { durasi: draft.durasi } : {}),
+        }),
+      });
+      const data = (await res.json()) as {
+        meta?: Record<string, { tahun?: string; durasiDetik?: number }>;
+        error?: string;
+      };
+      if (!res.ok || !data.meta) {
+        setPesan({
+          jenis: "gagal",
+          teks: data.error ?? `Gagal menyimpan (HTTP ${res.status}).`,
+        });
+        return;
+      }
+      setMetaManual(data.meta);
+      setDraftMeta((d) => {
+        const { [videoId]: _buang, ...sisa } = d;
+        return sisa;
+      });
+      setPesan({ jenis: "ok", teks: "Tahun & durasi tersimpan." });
+    } catch {
+      setPesan({
+        jenis: "gagal",
+        teks: "Tidak bisa menghubungi server. Coba lagi.",
+      });
+    } finally {
+      setSedangMeta(null);
+    }
+  };
+
   const simpanRating = async (videoId: string, judul: string) => {
     const diketik = draftRating[videoId];
     if (diketik === undefined) return;
@@ -1178,11 +1248,91 @@ export default function PlaylyVisibilityManager({
                     dibuka — kalau selalu tampil, seluruh daftar kembali
                     bertinggi ganda. */}
                 {detail === v.id && (
-                  <p className="pb-2 text-xs leading-relaxed text-zinc-400">
-                    <strong className="text-zinc-200">{v.title}</strong>
-                    <br />
-                    {catatan}
-                  </p>
+                  <div className="pb-3">
+                    <p className="text-xs leading-relaxed text-zinc-400">
+                      <strong className="text-zinc-200">{v.title}</strong>
+                      <br />
+                      {catatan}
+                    </p>
+
+                    {/* ISIAN MANUAL tahun & durasi (owner 2026-11-09: "kalau
+                        yang tidak ada gimana cara isi manualnya"). Ditaruh di
+                        panel detail, BUKAN sebagai dua kolom tabel: owner
+                        memilihnya supaya tabel tetap lega dan ada ruang untuk
+                        menerangkan formatnya. Keduanya hanya perlu disentuh
+                        untuk film yang tak ada di IMDb — kasus minoritas, jadi
+                        tak pantas memakan lebar tabel setiap hari. */}
+                    <div className="mt-3 flex flex-wrap items-end gap-2 rounded-lg border border-zinc-800 bg-zinc-900/60 p-2.5">
+                      <label className="flex flex-col gap-1">
+                        <span className="text-[11px] font-medium text-zinc-400">
+                          Tahun
+                        </span>
+                        <input
+                          type="text"
+                          inputMode="numeric"
+                          value={
+                            draftMeta[v.id]?.tahun ??
+                            metaManual[v.id]?.tahun ??
+                            imdb[v.id]?.year ??
+                            ""
+                          }
+                          onChange={(e) =>
+                            setDraftMeta((d) => ({
+                              ...d,
+                              [v.id]: { ...d[v.id], tahun: e.target.value },
+                            }))
+                          }
+                          placeholder="2024"
+                          className="h-8 w-20 rounded-md border border-zinc-700 bg-zinc-900 px-2 text-xs text-zinc-100 outline-none focus-visible:border-amber-400"
+                        />
+                      </label>
+
+                      <label className="flex flex-col gap-1">
+                        <span className="text-[11px] font-medium text-zinc-400">
+                          Durasi
+                        </span>
+                        <input
+                          type="text"
+                          value={
+                            draftMeta[v.id]?.durasi ??
+                            (metaManual[v.id]?.durasiDetik
+                              ? formatDuration(metaManual[v.id]!.durasiDetik!)
+                              : "")
+                          }
+                          onChange={(e) =>
+                            setDraftMeta((d) => ({
+                              ...d,
+                              [v.id]: { ...d[v.id], durasi: e.target.value },
+                            }))
+                          }
+                          placeholder="2.25"
+                          className="h-8 w-24 rounded-md border border-zinc-700 bg-zinc-900 px-2 text-xs text-zinc-100 outline-none focus-visible:border-amber-400"
+                        />
+                      </label>
+
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={() => simpanMeta(v.id)}
+                        disabled={!draftMeta[v.id] || sedangMeta === v.id}
+                        className="bg-emerald-600 text-white hover:bg-emerald-500"
+                      >
+                        {sedangMeta === v.id ? (
+                          <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+                        ) : (
+                          "Simpan"
+                        )}
+                      </Button>
+
+                      <p className="w-full text-[11px] leading-relaxed text-zinc-500">
+                        Durasi ditulis <strong>menit.detik</strong> — aturan yang
+                        sama dengan kolom Durasi drama. “2.25” = 2 menit 25
+                        detik, “95.00” = 95 menit. Bentuk “95 min” juga terbaca
+                        kalau kamu menyalinnya dari IMDb.{" "}
+                        <strong>Dikosongkan = kembali ikut IMDb/Playly.</strong>
+                      </p>
+                    </div>
+                  </div>
                 )}
               </li>
             );

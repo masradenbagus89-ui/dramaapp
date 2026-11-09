@@ -174,3 +174,26 @@ export function durasiTayangan(
   const detik = detikDariDurasiEpisode(runtime);
   return detik === null ? null : fmtTime(detik);
 }
+
+/**
+ * Detik -> teks tampilan durasi video: "12:34", atau "1:02:34" kalau lebih
+ * dari sejam. `null` / angka tak masuk akal -> "-".
+ *
+ * 🪤 PINDAH KE SINI dari lib/playly.ts (2026-11-09) — jangan dikembalikan.
+ * Panel admin `PlaylyVisibilityManager` berlabel `"use client"` dan butuh
+ * fungsi ini untuk memperlihatkan durasi tersimpan di kotak isian. Mengimpornya
+ * dari lib/playly.ts menyeret `node:crypto` ke bundle browser, dan Turbopack
+ * menolaknya saat build dengan "the chunking context does not support external
+ * modules (request: node:fs)" — terukur, build GAGAL.
+ *
+ * Berkas ini murni (nol impor Node), jadi aman dipakai server MAUPUN browser.
+ * lib/playly.ts tetap me-re-export-nya supaya pemanggil lama tidak berubah.
+ */
+export function formatDuration(seconds: number | null): string {
+  if (seconds === null || !Number.isFinite(seconds) || seconds < 0) return "-";
+  const jam = Math.floor(seconds / 3600);
+  const menit = Math.floor((seconds % 3600) / 60);
+  const detik = Math.floor(seconds % 60);
+  const dd = String(detik).padStart(2, "0");
+  return jam > 0 ? `${jam}:${String(menit).padStart(2, "0")}:${dd}` : `${menit}:${dd}`;
+}

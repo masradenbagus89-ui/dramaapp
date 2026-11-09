@@ -912,6 +912,8 @@ type PlaylyFile = {
   kualitas?: PlaylyKualitasMap;
   /** Jenis tayangan pilihan admin per video (opsional: file lama tak punya). */
   jenis?: PlaylyJenisMap;
+  /** Tahun & durasi yang DIKETIK admin per video (opsional: file lama tak punya). */
+  metaManual?: PlaylyMetaManualMap;
 };
 const EMPTY_PLAYLY: PlaylyFile = {
   key: null,
@@ -1358,6 +1360,89 @@ export async function setPlaylyVideoRating(
   } else {
     const file = readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY);
     file.rating = baru;
+    writeLocal("playly.json", file);
+  }
+  return baru;
+}
+
+// ===========  TAHUN & DURASI KETIKAN ADMIN (playly:meta-manual)  ===========
+//
+// KENAPA ADA (owner 2026-11-09: "kalau yang tidak ada gimana cara isi
+// manualnya"): tahun & durasi selama ini HANYA bisa datang dari IMDb atau
+// Playly. Film yang tidak ada di IMDb — film lokal, rilisan sangat baru,
+// judul yang tidak ketemu — kedua pojok posternya kosong permanen.
+//
+// SATU dokumen untuk DUA field, beda dari kualitas/rating/jenis yang
+// masing-masing punya dokumen sendiri. Alasannya: keduanya selalu diisi dari
+// panel yang SAMA dan disimpan bersamaan, jadi memisahkannya berarti dua
+// penulisan database untuk satu klik "Simpan" — dan kalau yang kedua gagal,
+// video punya tahun tanpa durasi tanpa ada yang tahu.
+
+const PLAYLY_META_MANUAL_DOC = "playly:meta-manual";
+
+/**
+ * videoId -> { tahun, durasiDetik } ketikan admin.
+ *
+ * Field yang TIDAK ADA berarti "ikut sumber otomatis" (IMDb / Playly), bukan
+ * "sengaja dikosongkan" — sama dengan aturan rating & kualitas.
+ */
+export type PlaylyMetaManual = { tahun?: string; durasiDetik?: number };
+export type PlaylyMetaManualMap = Record<string, PlaylyMetaManual>;
+
+export async function getPlaylyMetaManual(): Promise<PlaylyMetaManualMap> {
+  if (useSupabase) {
+    return (await sbDocGet<PlaylyMetaManualMap>(PLAYLY_META_MANUAL_DOC)) ?? {};
+  }
+  return readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY).metaManual ?? {};
+}
+
+/** Versi ber-cache untuk HALAMAN PUBLIK — alasannya sama dengan getPlaylyRatingCached. */
+export async function getPlaylyMetaManualCached(): Promise<PlaylyMetaManualMap> {
+  if (useSupabase) {
+    return (
+      (await sbDocGet<PlaylyMetaManualMap>(PLAYLY_META_MANUAL_DOC, {
+        revalidate: CATALOG_TTL_SECONDS,
+      })) ?? {}
+    );
+  }
+  return readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY).metaManual ?? {};
+}
+
+/**
+ * Pasang tahun &/atau durasi satu video. Kirim `null` untuk MENGEMBALIKANNYA
+ * ke sumber otomatis.
+ *
+ * Entri yang kedua fieldnya habis DIHAPUS seluruhnya, bukan ditinggal sebagai
+ * objek kosong — alasan yang sama dengan setPlaylyVideoRating: `{}` yang
+ * tertinggal terbaca sebagai "sudah dikoreksi jadi tanpa apa-apa" oleh
+ * pembaca berikutnya, dan membuat peta ini menumpuk sampah selamanya.
+ */
+export async function setPlaylyVideoMetaManual(
+  videoId: string,
+  meta: { tahun?: string | null; durasiDetik?: number | null },
+): Promise<PlaylyMetaManualMap> {
+  const sekarang = await getPlaylyMetaManual();
+  const baru = { ...sekarang };
+  const entri: PlaylyMetaManual = { ...(baru[videoId] ?? {}) };
+
+  // `undefined` = field ini tidak ikut diubah; `null` = hapus.
+  if (meta.tahun !== undefined) {
+    if (meta.tahun) entri.tahun = meta.tahun;
+    else delete entri.tahun;
+  }
+  if (meta.durasiDetik !== undefined) {
+    if (meta.durasiDetik) entri.durasiDetik = meta.durasiDetik;
+    else delete entri.durasiDetik;
+  }
+
+  if (entri.tahun || entri.durasiDetik) baru[videoId] = entri;
+  else delete baru[videoId];
+
+  if (useSupabase) {
+    await sbDocSet(PLAYLY_META_MANUAL_DOC, baru);
+  } else {
+    const file = readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY);
+    file.metaManual = baru;
     writeLocal("playly.json", file);
   }
   return baru;

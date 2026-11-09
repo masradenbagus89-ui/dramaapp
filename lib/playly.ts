@@ -496,15 +496,12 @@ export function parseDurationSeconds(value: unknown): number | null {
   return null;
 }
 
-/** Detik -> teks tampilan: "12:34" atau "1:02:34" kalau lebih dari sejam. */
-export function formatDuration(seconds: number | null): string {
-  if (seconds === null || !Number.isFinite(seconds) || seconds < 0) return "-";
-  const jam = Math.floor(seconds / 3600);
-  const menit = Math.floor((seconds % 3600) / 60);
-  const detik = Math.floor(seconds % 60);
-  const dd = String(detik).padStart(2, "0");
-  return jam > 0 ? `${jam}:${String(menit).padStart(2, "0")}:${dd}` : `${menit}:${dd}`;
-}
+// Definisinya PINDAH ke lib/format.ts (2026-11-09) supaya komponen "use client"
+// bisa memakainya tanpa menyeret `node:crypto` berkas ini ke bundle browser —
+// alasan lengkapnya di sana. Di-import untuk dipakai di bawah, DAN di-re-export
+// supaya pemanggil lama tak perlu berubah.
+import { formatDuration } from "./format";
+export { formatDuration };
 
 /** Ubah daftar domain dari env jadi array rapi (tahan "https://" & garis miring). */
 export function parseAllowedHosts(raw: string | undefined | null): string[] {

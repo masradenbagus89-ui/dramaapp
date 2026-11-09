@@ -28,6 +28,7 @@ import {
   getPlaylyKualitas,
   getPlaylyLinkUnduhan,
   getPlaylyRating,
+  getPlaylyMetaManual,
 } from "@/lib/store";
 import { bacaDomainUnduhan } from "@/lib/playly-unduhan-domain";
 import AdminAccessDenied from "@/app/components/admin/AdminAccessDenied";
@@ -72,6 +73,7 @@ export default async function PlaylyVideosPage() {
     kualitas,
     jenis,
     ratingManual,
+    metaManual,
   ] = await Promise.all([
       getPlaylyKeyStatus(),
       getAllDramas(),
@@ -95,6 +97,7 @@ export default async function PlaylyVideosPage() {
       // video, kotak isian di layar ini harus memperlihatkan angka itu — bukan
       // salinan sebelum diketik.
       getPlaylyRating(),
+      getPlaylyMetaManual(),
     ]);
 
   /**
@@ -216,6 +219,7 @@ export default async function PlaylyVideosPage() {
               initialKualitas={kualitas}
               initialJenis={jenis}
               initialRating={ratingManual}
+              initialMetaManual={metaManual}
               /* Dibaca saja — panel ini tidak pernah mengubah link unduhan.
                  Dibutuhkan supaya dropdown kualitas bisa menyebut HASIL
                  turunannya ("Otomatis · HD") dan ringkasan di atas tabel bisa

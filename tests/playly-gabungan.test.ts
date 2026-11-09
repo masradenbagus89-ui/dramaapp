@@ -96,6 +96,7 @@ vi.mock("../lib/store", () => ({
   // selengkap modul aslinya, kalau tidak seluruh berkas tes ini gagal
   // memuat — bukan karena perilakunya salah.
   getPlaylyRatingCached: async () => ({}),
+  getPlaylyMetaManualCached: async () => ({}),
   // Jenis tayangan (owner 2026-11-05). Peta KOSONG: berkas ini menguji aturan
   // PENGGABUNGAN, dan aturan jenisnya sendiri sudah punya penjaga terpisah di
   // tests/jenis-video.test.ts.

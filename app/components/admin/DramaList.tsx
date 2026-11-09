@@ -10,6 +10,9 @@ import { isMovie, type Drama } from "@/lib/types";
 import { CATEGORY_COLORS } from "@/app/admin/constants";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import KotakCariDaftar from "./KotakCariDaftar";
+import PaginasiDaftar from "./PaginasiDaftar";
+import { useDaftarAdmin } from "./useDaftarAdmin";
 import {
   Table,
   TableBody,
@@ -28,11 +31,23 @@ export default function DramaList({
   onEdit: (drama: Drama) => void;
   onDelete: (id: string, title: string) => void;
 }) {
+  // Judul & kategori ikut dicari — mencari "action" atau "romance" wajar
+  // dilakukan karena kategorinya tertulis di tiap baris. `id` ikut karena itu
+  // yang harus sama dengan nama folder di PC backup, jadi admin kadang
+  // menelusurinya dari situ.
+  const daftar = useDaftarAdmin(dramas, (d) => [d.title, d.category, d.id]);
+
   return (
     <section id="daftar">
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-lg font-bold text-white">Daftar Drama</h2>
-        <span className="text-xs text-zinc-500">{dramas.length} total</span>
+        <KotakCariDaftar
+          nilai={daftar.ketikan}
+          onNilai={daftar.setKetikan}
+          jumlah={daftar.tersaring.length}
+          total={dramas.length}
+          placeholder="Cari judul, kategori, atau ID…"
+        />
       </div>
       <div className="overflow-hidden rounded-2xl border border-zinc-800">
         <Table>
@@ -44,7 +59,7 @@ export default function DramaList({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {dramas.map((d) => (
+            {daftar.tampil.map((d) => (
               <TableRow
                 key={d.id}
                 className="border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900/70"
@@ -101,16 +116,44 @@ export default function DramaList({
                 </TableCell>
               </TableRow>
             ))}
-            {dramas.length === 0 && (
+            {/* Dua sebab layar kosong, dan keduanya butuh tindakan BERBEDA:
+                katalog memang kosong (tambah drama) vs ketikan tak cocok
+                (ubah/kosongkan pencarian). Satu pesan untuk keduanya membuat
+                admin mengira datanya hilang. */}
+            {daftar.tampil.length === 0 && (
               <TableRow className="border-zinc-800 hover:bg-transparent">
                 <TableCell colSpan={3} className="p-6 text-center text-sm text-zinc-500">
-                  Belum ada drama. Tambahkan dari form di atas.
+                  {daftar.kosongKarenaCari ? (
+                    <>
+                      Tidak ada drama yang cocok dengan “{daftar.ketikan}”.{" "}
+                      <button
+                        type="button"
+                        onClick={() => daftar.setKetikan("")}
+                        className="text-amber-400 underline-offset-2 hover:underline"
+                      >
+                        Kosongkan pencarian
+                      </button>
+                    </>
+                  ) : (
+                    "Belum ada drama. Tambahkan dari form di atas."
+                  )}
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
       </div>
+
+      {daftar.tersaring.length > 0 && (
+        <PaginasiDaftar
+          className="mt-3"
+          total={daftar.tersaring.length}
+          halaman={daftar.halaman}
+          ukuran={daftar.ukuran}
+          onHalaman={daftar.setHalaman}
+          onUkuran={daftar.setUkuran}
+        />
+      )}
     </section>
   );
 }

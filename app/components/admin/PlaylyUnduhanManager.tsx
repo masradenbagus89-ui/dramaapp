@@ -15,6 +15,9 @@
 import { useState } from "react";
 import { Download, Loader2, PencilLine } from "lucide-react";
 import type { PlaylyVideo } from "@/lib/playly";
+import KotakCariDaftar from "./KotakCariDaftar";
+import PaginasiDaftar from "./PaginasiDaftar";
+import { useDaftarAdmin } from "./useDaftarAdmin";
 import {
   KUALITAS_UNDUHAN,
   LABEL_PROVIDER,
@@ -133,6 +136,11 @@ export default function PlaylyUnduhanManager({
   const jumlahPer = (videoId: string) => links.filter((l) => l.videoId === videoId).length;
   const jumlahTerisi = videos.filter((v) => jumlahPer(v.id) > 0).length;
 
+  // Judul video saja yang dicari — daftar ini tidak memajang kolom lain yang
+  // bisa dicocokkan mata admin, jadi mencari di field tersembunyi justru
+  // membuat hasilnya terasa acak ("kenapa video ini muncul?").
+  const daftar = useDaftarAdmin(videos, (v) => [v.title]);
+
   return (
     <section className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-5">
       <h2 className="text-base font-semibold text-white">Link download per video</h2>
@@ -152,8 +160,32 @@ export default function PlaylyUnduhanManager({
       )}
 
       {videos.length > 0 && (
+        <KotakCariDaftar
+          className="mt-4"
+          nilai={daftar.ketikan}
+          onNilai={daftar.setKetikan}
+          jumlah={daftar.tersaring.length}
+          total={videos.length}
+          placeholder="Cari judul video…"
+        />
+      )}
+
+      {daftar.kosongKarenaCari && (
+        <p className="mt-4 text-sm text-zinc-500">
+          Tidak ada video yang cocok dengan “{daftar.ketikan}”.{" "}
+          <button
+            type="button"
+            onClick={() => daftar.setKetikan("")}
+            className="text-amber-400 underline-offset-2 hover:underline"
+          >
+            Kosongkan pencarian
+          </button>
+        </p>
+      )}
+
+      {daftar.tampil.length > 0 && (
         <ul className="mt-4 divide-y divide-zinc-800">
-          {videos.map((v) => {
+          {daftar.tampil.map((v) => {
             const jumlah = jumlahPer(v.id);
             const terbuka = dibuka === v.id;
             return (
@@ -258,6 +290,17 @@ export default function PlaylyUnduhanManager({
             );
           })}
         </ul>
+      )}
+
+      {daftar.tersaring.length > 0 && (
+        <PaginasiDaftar
+          className="mt-4 border-t border-zinc-800 pt-3"
+          total={daftar.tersaring.length}
+          halaman={daftar.halaman}
+          ukuran={daftar.ukuran}
+          onHalaman={daftar.setHalaman}
+          onUkuran={daftar.setUkuran}
+        />
       )}
     </section>
   );

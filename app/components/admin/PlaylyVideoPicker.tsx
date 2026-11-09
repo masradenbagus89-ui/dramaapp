@@ -10,6 +10,9 @@
 // Empat keadaan tampilan sengaja dibedakan supaya tidak ada layar kosong yang
 // membingungkan: sedang memuat / gagal / belum ada video / berhasil.
 import { useCallback, useEffect, useRef, useState } from "react";
+import KotakCariDaftar from "./KotakCariDaftar";
+import PaginasiDaftar from "./PaginasiDaftar";
+import { useDaftarAdmin } from "./useDaftarAdmin";
 import {
   AlertTriangle,
   CheckCircle2,
@@ -64,6 +67,10 @@ export default function PlaylyVideoPicker({
   const [melepas, setMelepas] = useState<string | null>(null);
 
   const panelRef = useRef<HTMLDivElement | null>(null);
+
+  // Judul video saja — itu satu-satunya teks yang tergambar di tiap petak,
+  // jadi mencari di field lain membuat hasilnya terasa acak bagi admin.
+  const daftar = useDaftarAdmin(videos, (v) => [v.title]);
 
   const muat = useCallback(async () => {
     setStatus("loading");
@@ -412,8 +419,32 @@ export default function PlaylyVideoPicker({
 
         {/* 4) Berhasil */}
         {status === "ready" && (
+          <KotakCariDaftar
+            className="mt-4"
+            nilai={daftar.ketikan}
+            onNilai={daftar.setKetikan}
+            jumlah={daftar.tersaring.length}
+            total={videos.length}
+            placeholder="Cari judul video…"
+          />
+        )}
+
+        {status === "ready" && daftar.kosongKarenaCari && (
+          <p className="mt-4 text-sm text-zinc-500">
+            Tidak ada video yang cocok dengan “{daftar.ketikan}”.{" "}
+            <button
+              type="button"
+              onClick={() => daftar.setKetikan("")}
+              className="text-amber-400 underline-offset-2 hover:underline"
+            >
+              Kosongkan pencarian
+            </button>
+          </p>
+        )}
+
+        {status === "ready" && daftar.tampil.length > 0 && (
           <ul className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {videos.map((v) => {
+            {daftar.tampil.map((v) => {
               const dipilih = aktif?.id === v.id;
               const sudahDikaitkan = embeds.find((e) => e.videoId === v.id);
               return (
@@ -470,6 +501,17 @@ export default function PlaylyVideoPicker({
               );
             })}
           </ul>
+        )}
+
+        {status === "ready" && daftar.tersaring.length > 0 && (
+          <PaginasiDaftar
+            className="mt-4 border-t border-zinc-800 pt-3"
+            total={daftar.tersaring.length}
+            halaman={daftar.halaman}
+            ukuran={daftar.ukuran}
+            onHalaman={daftar.setHalaman}
+            onUkuran={daftar.setUkuran}
+          />
         )}
       </section>
 

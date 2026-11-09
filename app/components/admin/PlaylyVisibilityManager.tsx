@@ -32,6 +32,7 @@ import {
 } from "@/lib/saring-video-admin";
 import PlaylyImdbPicker from "./PlaylyImdbPicker";
 import PlaylyCocokkanSemua from "./PlaylyCocokkanSemua";
+import KategoriIsiOtomatis from "./KategoriIsiOtomatis";
 import BantuanSingkat from "./BantuanSingkat";
 import PaginasiDaftar from "./PaginasiDaftar";
 import KotakCariDaftar from "./KotakCariDaftar";
@@ -699,6 +700,32 @@ export default function PlaylyVisibilityManager({
       {!fetchError && (
         <PlaylyCocokkanSemua videos={videos} imdb={imdb} onPerbarui={setImdb} />
       )}
+
+      {/* ⚠️ SENGAJA DI LUAR pagar `!fetchError` — jangan "dirapikan" masuk ke
+          dalamnya bersama panel di atas.
+
+          `fetchError` berarti PLAYLY yang tidak menjawab. Panel di atas memang
+          pantas sembunyi saat itu (mencocokkan daftar yang mungkin basi).
+          Tebakan kategori TIDAK menyentuh Playly sama sekali: ia membaca genre
+          dari data IMDb yang sudah tersimpan, dan daftar videonya sendiri
+          datang dari salinan `playly:cadangan` yang tetap lengkap.
+
+          Ketahuan saat diperiksa di localhost 2026-11-09: dengan panel ini di
+          dalam pagar, ia lenyap persis di keadaan yang paling sering terjadi —
+          produksi pun sedang menampilkan "Playly tidak menjawab dalam 10
+          detik". Fitur yang mati justru saat paling dibutuhkan.
+
+          Ditaruh SESUDAH pencocokan IMDb karena urutan kerjanya memang begitu:
+          cocokkan dulu, baru tebak kategorinya. Panel ini menyembunyikan diri
+          sendiri kalau tidak ada yang bisa diusulkan. */}
+      <KategoriIsiOtomatis
+        videos={videos}
+        imdb={imdb}
+        kategoriSekarang={genres}
+        onTersimpan={(videoId, kategori) =>
+          setGenres((lama) => ({ ...lama, [videoId]: kategori }))
+        }
+      />
 
       {pesan && (
         <p

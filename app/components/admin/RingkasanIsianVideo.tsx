@@ -80,7 +80,7 @@ export default function RingkasanIsianVideo({
   if (total === 0) return null;
 
   return (
-    <section className="mt-4 rounded-xl border border-zinc-800 bg-zinc-900/40 px-4 py-3">
+    <section className="mt-3 rounded-xl border border-zinc-800 bg-zinc-900/40 p-3">
       <BantuanSingkat
         label="Apa arti angka kualitas & rating?"
         judul={

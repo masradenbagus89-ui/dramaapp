@@ -169,31 +169,38 @@ export default function PlaylyCocokkanSemua({
   if (videos.length === 0) return null;
 
   return (
-    <section className="mt-4 rounded-xl border border-sky-500/30 bg-sky-500/5 p-4">
-      {/* Keterangan panjang masuk ke balik tombol "?" (owner 2026-11-09: "yang
-          lain rapi kenapa Cocokkan semua ke IMDb sekaligus tidak kamu buat rapi
-          juga"). Panel ini tadinya tiga paragraf penuh — paling tebal di
-          halaman — sementara dua panel di bawahnya sudah ringkas. Angkanya
-          tetap terlihat langsung; yang disembunyikan cuma kalimatnya. */}
-      <BantuanSingkat
-        label="Bagaimana pencocokan massal bekerja?"
-        judul={
-          <div className="flex min-w-0 flex-1 flex-col gap-1">
-            <h3 className="text-sm font-semibold text-white">
-              Cocokkan semua ke IMDb sekaligus
-            </h3>
-            <p className="text-xs text-zinc-500">
-              <strong className="text-sky-300">{belumPunya.length}</strong> belum
-              punya data
-              {belumPunya.length > 0 && (
-                <>
-                  {" · "}± {belumPunya.length * 2} permintaan OMDb dari jatah 1.000/hari
-                </>
-              )}
-            </p>
-          </div>
-        }
-      >
+    // Tiga panel alat bantu di halaman ini (Cocokkan · Kategori · Ringkasan)
+    // memakai bingkai NETRAL yang sama (owner 2026-11-09: "lebih rapikan lagi
+    // agar UI nya enak dilihat"). Sebelumnya dua di antaranya berbingkai biru
+    // dan satu abu — tiga nada berbeda bertumpuk membuat halaman ramai tanpa
+    // satu pun di antaranya jadi lebih penting. Aksen warna kini cuma dari
+    // IKON dan TOMBOL, bukan dari latar seluruh kotak.
+    <section className="mt-3 rounded-xl border border-zinc-800 bg-zinc-900/40 p-3">
+      {/* Satu baris: judul + angka di kiri, aksi di kanan — tata letak yang
+          sama persis dengan dua panel tetangganya. Sebelumnya tombol panel ini
+          turun ke baris sendiri di bawah judul, jadi tingginya beda sendiri dan
+          deretan tombol tidak pernah sejajar. */}
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <BantuanSingkat
+          label="Bagaimana pencocokan massal bekerja?"
+          judul={
+            <div className="flex min-w-0 flex-1 flex-col gap-1">
+              <h3 className="flex items-center gap-2 text-sm font-semibold text-zinc-100">
+                <Search className="size-4 text-sky-400" aria-hidden="true" />
+                Cocokkan semua ke IMDb sekaligus
+              </h3>
+              <p className="text-xs text-zinc-500">
+                <strong className="text-sky-300">{belumPunya.length}</strong> belum
+                punya data
+                {belumPunya.length > 0 && (
+                  <>
+                    {" · "}± {belumPunya.length * 2} permintaan OMDb dari jatah 1.000/hari
+                  </>
+                )}
+              </p>
+            </div>
+          }
+        >
         <p>
           Mencari otomatis dari judul tiap video, lalu{" "}
           <strong className="text-zinc-200">
@@ -220,17 +227,18 @@ export default function PlaylyCocokkanSemua({
           sinopsis film yang salah tayang ke penonton adalah kerusakan yang
           tidak memunculkan error apa pun.
         </p>
-      </BantuanSingkat>
+        </BantuanSingkat>
 
-      <div className="mt-3 flex flex-wrap items-center gap-2">
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
         {!sedangJalan && (
           <Button
             type="button"
             onClick={mulai}
             disabled={belumPunya.length === 0}
-            className="h-9 rounded-full bg-sky-600 px-4 text-xs font-semibold text-white hover:bg-sky-500"
+            size="sm"
+            className="rounded-full bg-sky-600 px-4 text-xs font-semibold text-white hover:bg-sky-500"
           >
-            <Search className="size-4" />
+            <Search className="mr-1.5 size-3.5" />
             {baris.length > 0 ? "Cari ulang" : "Cocokkan semua"}
           </Button>
         )}
@@ -258,12 +266,14 @@ export default function PlaylyCocokkanSemua({
           <Button
             type="button"
             onClick={simpan}
-            className="h-9 rounded-full bg-emerald-600 px-4 text-xs font-semibold text-white hover:bg-emerald-500"
+            size="sm"
+            className="rounded-full bg-emerald-600 px-4 text-xs font-semibold text-white hover:bg-emerald-500"
           >
-            <Check className="size-4" />
+            <Check className="mr-1.5 size-3.5" />
             Simpan {terpilih} yang dicentang
           </Button>
         )}
+        </div>
       </div>
 
       {pesan && <p className="mt-2 text-xs text-amber-300">{pesan}</p>}

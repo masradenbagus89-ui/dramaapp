@@ -52,10 +52,20 @@ describe("PlaylyCocokkanSemua — panel ringkas seperti dua panel tetangganya", 
     // Inti perapiannya: yang disembunyikan cuma kalimatnya. Kalau angkanya
     // ikut masuk ke balik tombol, panel jadi rapi tapi tidak berguna —
     // admin harus mengklik dulu untuk tahu ada berapa yang perlu dikerjakan.
+    //
+    // 🪤 Diukur dengan membandingkan POSISI, bukan memotong HTML di kata
+    // "hidden": versi pertama tes ini memakai `indexOf("hidden")` dan tertipu
+    // oleh `aria-hidden` milik ikon — potongannya berhenti sebelum angka, lalu
+    // tes merah padahal panelnya benar.
     const html = render(50);
-    const sebelumKotak = html.slice(0, html.indexOf("hidden"));
-    expect(sebelumKotak).toContain("50");
-    expect(sebelumKotak).toContain("belum punya data");
+    const posAngka = html.indexOf("belum punya data");
+    const posKeterangan = html.indexOf("Tiap video memakai");
+
+    expect(posAngka, "ringkasan angka tidak tergambar").toBeGreaterThan(-1);
+    expect(posKeterangan, "kotak keterangan tidak tergambar").toBeGreaterThan(-1);
+    // Angka duduk di bagian JUDUL, jadi ia selalu mendahului kotak keterangan.
+    expect(posAngka).toBeLessThan(posKeterangan);
+    expect(html.slice(0, posKeterangan)).toContain("50");
   });
 
   it("menyebut ongkos OMDb di ringkasan, bukan cuma di dalam keterangan", () => {

@@ -23,8 +23,19 @@
 > lengkap: `HANDOFF.md` seksi `## 2026-11-09`.
 
 
-**Terakhir dicek:** 2026-11-09 (**komputer OWNER**), **sesudah rilis `96d4d3e`**.
-`HEAD` = `origin/main` = `dramaku/main` = **`96d4d3e`**, working tree **bersih**. **NOL ANTREAN.**
+**Terakhir dicek:** 2026-11-09 (**komputer OWNER**), **sesudah rilis `2640da4`**.
+`HEAD` = `origin/main` = `dramaku/main` = **`2640da4`**, working tree **bersih**. **NOL ANTREAN.**
+
+> ✅ **RILIS `2640da4` TAYANG 2026-11-09 — isian manual tahun & durasi video Playly.** Panel kecil
+> yang terbuka saat judul diklik; durasi ditulis menit.detik. Gerbang LOLOS 5/5, 2235 tes/157
+> berkas. Diverifikasi sesudah tayang: `"Dikosongkan = kembali ikut"` · `"menit.detik"` ADA di
+> bundle, `POST /api/admin/playly/meta` tanpa login → **401**. Situs 200 di empat alamat.
+>
+> 🪤 **GERBANG MENANGKAP BUILD GAGAL yang tsc & vitest LEWATKAN** — `import` modul server ke
+> komponen `"use client"` (`formatDuration` dari `lib/playly.ts` yang menyeret `node:crypto`).
+> Turbopack menolak: *"the chunking context does not support external modules (request: node:fs)"*.
+> Definisinya dipindah ke `lib/format.ts` (murni). **Pelajaran: `tsc` 0 error + tes hijau TIDAK
+> membuktikan build lolos** — hanya `npm run build` yang tahu batas server/klien.
 
 > ✅ **RILIS `96d4d3e` TAYANG 2026-11-09 — durasi kosong diisi dari runtime IMDb + kartu `/film`
 > disamakan dengan beranda.** Gerbang LOLOS 5/5, 2204 tes/155 berkas. Diverifikasi di halaman

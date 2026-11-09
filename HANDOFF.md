@@ -177,6 +177,61 @@ riwayat blok peringatan lama ada di seksi `## 2026-11-09` di bawah.**
 
 ---
 
+## 2026-11-09 — ✅ `2640da4` TAYANG: isian manual tahun & durasi video Playly
+
+**Permintaan owner:** *"kalau yang tidak ada gimana cara isi manualnya"*. Jawaban saat itu:
+**BELUM ADA**. Empat kolom lain (kategori · kualitas · jenis · rating) sudah punya isian manual;
+tahun & durasi hanya bisa datang dari IMDb atau Playly. Film yang tidak ada di IMDb — film lokal,
+rilisan sangat baru, judul yang tidak ketemu — kedua pojok posternya kosong permanen.
+
+**Bentuknya dipilih owner lewat popup:** panel kecil yang terbuka saat **judul diklik** (bukan dua
+kolom tabel — tabel sudah padat dan kasus ini minoritas), dan durasi ditulis **menit.detik** —
+aturan yang SAMA dengan kolom Durasi drama, supaya tidak ada dua cara yang harus diingat.
+
+⚠️ **URUTAN MENANG: ketikan admin > Playly > runtime IMDb.** Durasi Playly normalnya menang atas
+IMDb, TAPI kalau admin sampai mengetiknya sendiri berarti ia sedang membetulkan angka yang salah —
+kalah di situ membuat koreksinya terlihat *"tidak tersimpan"* padahal tersimpan. Dikunci tes.
+
+**Berkas:** `lib/meta-video-manual.ts` (parsing, fungsi murni) · dokumen `playly:meta-manual` di
+`lib/store.ts` · `app/api/admin/playly/meta/route.ts` · panel isian di `PlaylyVisibilityManager`.
+
+📌 **SATU dokumen untuk DUA field**, beda dari kualitas/rating/jenis yang masing-masing punya
+dokumen sendiri: keduanya selalu diisi dari panel yang SAMA dan disimpan bersamaan, jadi
+memisahkannya berarti satu klik Simpan bisa berakhir dengan tahun tersimpan tapi durasi gagal —
+tanpa ada yang memberi tahu.
+
+### 🪤 TIGA MASALAH YANG KETAHUAN SAAT MENGERJAKAN — semuanya layak diwarisi
+
+**1. BUILD GAGAL: modul server diimpor ke komponen klien.** `formatDuration` diimpor dari
+`lib/playly.ts` ke `PlaylyVisibilityManager` yang berlabel `"use client"`, dan itu menyeret
+`node:crypto` ke bundle browser. Turbopack menolak: *"the chunking context does not support
+external modules (request: node:fs)"*. Definisinya DIPINDAH ke `lib/format.ts` (modul murni, nol
+impor Node); `lib/playly.ts` me-re-export supaya pemanggil lama tak berubah.
+📌 **PELAJARAN: `tsc` 0 error + 2235 tes hijau TIDAK membuktikan build lolos.** Keduanya hijau
+saat build gagal — hanya `npm run build` yang tahu batas server/klien. Peringatan yang sama sudah
+tertulis di `lib/video-signature.ts`; sekarang terbukti lagi.
+
+**2. ADA TES YANG SUDAH MERAH DI HEAD** sebelum pekerjaan ini — dipastikan dengan `git stash -u`
+lalu menjalankannya di kondisi asli, tetap merah. Sebabnya **AKHIRAN BARIS**:
+`tests/episode-naik-ke-sidebar.test.ts` mencari pola `">\n          Sinopsis"` sementara git
+menulis berkas sumber dengan **CRLF** saat checkout di Windows — pola ber-`\n` TIDAK PERNAH cocok.
+Itu sebabnya ia bisa hijau di satu rilis lalu merah di rilis berikutnya **tanpa ada yang mengubah
+tata letak**: bedanya cuma berkas yang sempat ditulis ulang dengan LF oleh editor, lalu
+dikembalikan ke CRLF oleh git.
+📌 **Aturan: tes yang mencocokkan pola ber-newline terhadap BERKAS SUMBER wajib menormalkan
+`\r\n` → `\n` saat membaca.** Yang rentan hanya pola dengan karakter SEBELUM newline — `"\n}"`
+aman karena tetap cocok di dalam `"\r\n}"`. Empat tes lain diperiksa, semuanya aman.
+
+**3. 33 tes merah** karena `tests/playly-cadangan.test.ts` & `tests/playly-gabungan.test.ts`
+memalsukan `lib/store` dengan `vi.mock` dan belum tahu fungsi baru `getPlaylyMetaManualCached`.
+📌 Menambah satu fungsi ke `lib/store.ts` berarti memeriksa SEMUA berkas tes yang mem-mock-nya.
+
+**Bukti:** `npm run gerbang` LOLOS 5/5 — build sukses, `tsc` 0 error, **2235 tes / 157 berkas
+hijau**. Diverifikasi sesudah tayang: penanda isian ADA di bundle,
+`POST /api/admin/playly/meta` tanpa login → **401**, situs 200 di empat alamat.
+
+---
+
 ## 2026-11-09 — ✅ `96d4d3e` TAYANG: durasi kosong diisi dari runtime IMDb + `/film` disamakan
 
 **Permintaan owner:** *"iya aku mau keduanya terlihat persis sama lalu kamu cek kenapa ada film

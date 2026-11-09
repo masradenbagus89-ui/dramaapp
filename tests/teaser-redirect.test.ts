@@ -88,3 +88,53 @@ describe("GET /api/teaser — gagal-AMAN, tak pernah redirect asal", () => {
     expect(res.headers.get("Location")).toBeNull();
   });
 });
+
+// Jalur TRAILER ditambahkan owner 2026-11-09, menggantikan montase per-episode
+// yang hasilnya tidak menjual (potongan acak dari detik ke-5 tiap episode).
+describe("GET /api/teaser — jenis=trailer", () => {
+  it("menunjuk ke trailer.mp4, bukan ke nomor episode", async () => {
+    const res = await minta("?id=drama-uji&jenis=trailer");
+    expect(res.status).toBe(307);
+    expect(res.headers.get("Location")).toBe(
+      "https://contoh-tunnel.trycloudflare.com/drama-uji/trailer.mp4",
+    );
+  });
+
+  it("tetap MENUNJUK, nol byte video lewat server", async () => {
+    const res = await minta("?id=drama-uji&jenis=trailer");
+    expect(await res.text()).toBe("");
+  });
+
+  it("trailer boleh masuk cache bersama — isinya sama untuk semua orang", async () => {
+    const res = await minta("?id=drama-uji&jenis=trailer");
+    expect(res.headers.get("Cache-Control")).toContain("s-maxage");
+  });
+
+  it("jenis yang TIDAK dikenal ditolak, bukan diam-diam jadi episode", async () => {
+    // Gagal-AMAN (rak owasp A10). Kalau nilai aneh diam-diam dianggap
+    // permintaan episode biasa, salah paham di sisi pemanggil tersembunyi.
+    expect((await minta("?id=drama-uji&jenis=teaser")).status).toBe(400);
+    expect((await minta("?id=drama-uji&jenis=TRAILER")).status).toBe(400);
+  });
+
+  it("nama berkas TIDAK bisa disetir dari luar (anti path-traversal)", async () => {
+    // Inti kenapa `jenis` dibuat enum, bukan nama berkas bebas: route ini
+    // MENANDATANGANI alamat tujuannya, jadi nama berkas yang bisa disetir
+    // penonton berarti tanda tangan kita sendiri jadi kunci pembuka.
+    for (const jahat of [
+      "../../etc/passwd",
+      "..%2F..%2Fsecret.mp4",
+      "trailer.mp4",
+      "../1.mp4",
+    ]) {
+      const res = await minta(`?id=drama-uji&jenis=${encodeURIComponent(jahat)}`);
+      expect(res.status).toBe(400);
+      expect(res.headers.get("Location")).toBeNull();
+    }
+  });
+
+  it("id tetap divalidasi walau yang diminta trailer", async () => {
+    expect((await minta("?id=../rahasia&jenis=trailer")).status).toBe(400);
+    expect((await minta("?id=&jenis=trailer")).status).toBe(400);
+  });
+});

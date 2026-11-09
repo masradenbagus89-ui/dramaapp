@@ -33,37 +33,30 @@ export const HERO_TEASER_DELAY_MS = 1200;
 export const CARD_PREVIEW_SEC = 10;
 
 /**
- * Trailer montase di kotak poster halaman detail: cuplikan pendek tiap episode
- * diputar bergiliran (Ep 1 → Ep 2 → … → kembali ke Ep 1).
+ * Cuplikan di gambar besar halaman detail: SATU video yang mewakili seluruh
+ * series, bukan potongan tiap episode.
  *
- * Mulai di detik ke-TRAILER_START_SEC untuk melewati logo/intro pembuka yang
- * sama di tiap episode. Hanya TRAILER_MAX_EP episode pertama yang digilir:
- * drama 80 episode tak perlu montase 80 potong, dan episode akhir = spoiler.
+ * 🪦 KENAPA MONTASE DIBUANG (owner 2026-11-09, sesudah sempat tayang):
+ * versi sebelumnya merangkai potongan 6 detik dari Ep 1→Ep 2→… yang diambil
+ * mulai detik ke-5 tiap episode. Detik ke-5 dipilih untuk melewati logo
+ * pembuka — BUKAN karena detik ke-5 adalah adegan bagus. Hasilnya di produksi:
+ * cuplikan mendarat di adegan acak (owner melaporkan close-up punggung kepala),
+ * dan gambar yang berganti tiap 6 detik membuatnya terasa makin tak nyambung.
+ * Pelajarannya: memotong otomatis di titik yang dipilih karena alasan TEKNIS
+ * tidak pernah menghasilkan cuplikan yang menjual.
  */
-export const TRAILER_START_SEC = 5;
-export const TRAILER_CLIP_SEC = 6;
-export const TRAILER_MAX_EP = 8;
+export const TRAILER_DURASI_DETIK = 30;
+
 /**
- * Montase berhenti (kembali ke poster diam) sesudah diputar sekian putaran.
- * KENAPA: video datang dari PC backup owner lewat tunnel — tab yang dibiarkan
- * terbuka berjam-jam jangan terus menarik video tanpa ada yang menonton.
+ * Cuplikan sudah cukup lama diputar → kembali ke gambar diam.
+ *
+ * KENAPA ADA BATASNYA: video datang dari PC backup owner lewat tunnel. Tab yang
+ * dibiarkan terbuka berjam-jam jangan terus menarik video padahal tak ada yang
+ * menonton. Trailer yang lebih pendek dari batas ini berhenti sendiri lewat
+ * `onEnded`, jadi batas ini hanya menggigit pada video yang lebih panjang.
  */
-export const TRAILER_MAX_ROUNDS = 2;
-
-/** Episode berikutnya dalam montase trailer; kembali ke 1 setelah batas. */
-export function nextTrailerEpisode(current: number, totalEpisodes: number): number {
-  const last = Math.max(1, Math.min(totalEpisodes, TRAILER_MAX_EP));
-  return current >= last ? 1 : current + 1;
-}
-
-/** Jumlah potongan total montase sebelum berhenti (putaran × episode digilir). */
-export function trailerTotalClips(totalEpisodes: number): number {
-  return Math.max(1, Math.min(totalEpisodes, TRAILER_MAX_EP)) * TRAILER_MAX_ROUNDS;
-}
-
-/** Cuplikan episode ini sudah cukup diputar → saatnya pindah episode. */
-export function trailerClipDone(currentTime: number, startAt: number): boolean {
-  return currentTime >= startAt + TRAILER_CLIP_SEC;
+export function cuplikanSelesai(currentTime: number): boolean {
+  return currentTime >= TRAILER_DURASI_DETIK;
 }
 
 export type TeaserStatus = "loading" | "playing" | "failed";
@@ -110,6 +103,23 @@ export function swipeDirection(
  */
 export function teaserSrc(dramaId: string, ep = 1): string {
   return `/api/teaser?id=${encodeURIComponent(dramaId)}&ep=${ep}`;
+}
+
+/**
+ * Alamat trailer khusus drama ini (`trailer.mp4` di PC backup).
+ *
+ * Drama yang BELUM punya berkas trailer akan dibalas 404 oleh tunnel — itu
+ * keadaan NORMAL, bukan error yang perlu diperbaiki. Pemanggil wajib menyiapkan
+ * jalan mundur ke `teaserSrc(id, 1)` lewat `onError`, supaya gambar besar tetap
+ * hidup di seluruh katalog sejak hari pertama, sebelum satu pun trailer dibuat.
+ *
+ * KENAPA deteksinya di BROWSER, bukan server memeriksa dulu: memeriksa di
+ * server berarti satu permintaan HEAD tambahan ke PC backup pada SETIAP
+ * kunjungan halaman detail — biaya tetap yang dibayar semua penonton demi
+ * menghindari satu permintaan gagal yang tidak terlihat siapa pun.
+ */
+export function trailerSrc(dramaId: string): string {
+  return `/api/teaser?id=${encodeURIComponent(dramaId)}&jenis=trailer`;
 }
 
 /** Pilih 5 judul unggulan. Utamakan drama berseri (punya episode), bukan film IMDb 1 bagian. */

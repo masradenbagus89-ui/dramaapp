@@ -7,12 +7,9 @@ import {
   teaserSrc,
   splitHeroTitle,
   VIDEO_RETRY_LIMIT,
-  nextTrailerEpisode,
-  trailerClipDone,
-  trailerTotalClips,
-  TRAILER_CLIP_SEC,
-  TRAILER_MAX_EP,
-  TRAILER_MAX_ROUNDS,
+  trailerSrc,
+  cuplikanSelesai,
+  TRAILER_DURASI_DETIK,
 } from "../lib/hero-teaser";
 import type { Drama } from "../lib/types";
 
@@ -130,29 +127,33 @@ describe("splitHeroTitle", () => {
   });
 });
 
-describe("trailer montase per episode", () => {
-  it("menggilir episode lalu kembali ke Ep 1 di batas TRAILER_MAX_EP", () => {
-    expect(nextTrailerEpisode(1, 43)).toBe(2);
-    expect(nextTrailerEpisode(TRAILER_MAX_EP, 43)).toBe(1);
+// Montase per-episode DIBUANG owner 2026-11-09 (lihat batu nisan di
+// lib/hero-teaser.ts) — digantikan SATU video yang mewakili series.
+describe("cuplikan series di gambar besar", () => {
+  it("alamat trailer meminta jenis=trailer, bukan nomor episode", () => {
+    const src = trailerSrc("dewa-abadi");
+    expect(src).toContain("id=dewa-abadi");
+    expect(src).toContain("jenis=trailer");
+    // Kalau "ep=" ikut terkirim, route akan melayani episode — bukan trailer.
+    expect(src).not.toContain("ep=");
   });
 
-  it("drama pendek menggilir sebanyak episodenya saja", () => {
-    expect(nextTrailerEpisode(3, 3)).toBe(1);
-    expect(nextTrailerEpisode(1, 1)).toBe(1); // film: tetap Ep 1
+  it("id drama di-encode, tidak ditempel mentah", () => {
+    expect(trailerSrc("a b&c=1")).toBe("/api/teaser?id=a%20b%26c%3D1&jenis=trailer");
   });
 
-  it("jumlah episode 0/rusak tidak membuat montase kosong", () => {
-    expect(nextTrailerEpisode(1, 0)).toBe(1);
-    expect(trailerTotalClips(0)).toBe(TRAILER_MAX_ROUNDS);
+  it("jalan mundur memakai Episode 1, bukan episode acak", () => {
+    expect(teaserSrc("dewa-abadi", 1)).toContain("ep=1");
   });
 
-  it("total potongan = putaran x episode digilir", () => {
-    expect(trailerTotalClips(43)).toBe(TRAILER_MAX_EP * TRAILER_MAX_ROUNDS);
-    expect(trailerTotalClips(3)).toBe(3 * TRAILER_MAX_ROUNDS);
+  it("cuplikan berhenti tepat di TRAILER_DURASI_DETIK", () => {
+    expect(cuplikanSelesai(TRAILER_DURASI_DETIK - 0.1)).toBe(false);
+    expect(cuplikanSelesai(TRAILER_DURASI_DETIK)).toBe(true);
   });
 
-  it("potongan selesai tepat sesudah TRAILER_CLIP_SEC dari titik mulai", () => {
-    expect(trailerClipDone(5 + TRAILER_CLIP_SEC - 0.1, 5)).toBe(false);
-    expect(trailerClipDone(5 + TRAILER_CLIP_SEC, 5)).toBe(true);
+  it("video yang baru mulai tidak langsung dianggap selesai", () => {
+    // Penjaga arah tanda: `>=` yang tertukar jadi `<=` membuat cuplikan mati
+    // di detik pertama — gejalanya "videonya tidak jalan", bukan error.
+    expect(cuplikanSelesai(0)).toBe(false);
   });
 });

@@ -37,6 +37,20 @@ export const dynamic = "force-dynamic";
 // jadi XSS di domain kita karena beda origin.
 const ID_RE = /^[a-z0-9-]+$/i;
 
+/**
+ * Jenis berkas selain episode yang boleh diminta lewat route ini, beserta nama
+ * berkas TETAP-nya di PC backup.
+ *
+ * ⚠️ SENGAJA enum, BUKAN nama berkas bebas dari klien (rak owasp §4 —
+ * path traversal). Kalau route ini menerima `?berkas=` apa adanya, pemanggil
+ * bisa mengirim `../` atau menebak nama berkas lain milik PC backup, dan route
+ * ini dengan patuh MENANDATANGANINYA — tanda tangan kita sendiri yang jadi
+ * kunci pembuka. Dengan enum, nol karakter dari penonton yang sampai ke nama
+ * berkas; normalisasi path pun tak diperlukan karena tak ada path dari luar.
+ */
+const JENIS_TRAILER = "trailer";
+const BERKAS_TRAILER = "trailer.mp4";
+
 // Cache SENGAJA pendek — JANGAN dipanjangkan. Alamat tunnel berganti tiap PC
 // backup restart (sudah 5 kali kambuh, lihat HANDOFF.md), jadi redirect yang
 // disimpan lama = teaser menunjuk alamat mati sampai cache kedaluwarsa. 60 detik
@@ -58,6 +72,15 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id")?.trim() ?? "";
   const ep = Number(searchParams.get("ep") ?? "1");
+  // Kosong = permintaan episode biasa (perilaku lama, tak berubah).
+  const jenis = searchParams.get("jenis")?.trim() ?? "";
+  const mintaTrailer = jenis === JENIS_TRAILER;
+  // Gagal-AMAN (rak owasp A10): `jenis` yang diisi tapi TIDAK dikenal ditolak,
+  // bukan diam-diam dianggap permintaan episode biasa. Nilai aneh = salah paham
+  // di sisi pemanggil, dan menebakkan maksudnya menyembunyikan salah paham itu.
+  if (jenis && !mintaTrailer) {
+    return new NextResponse("Parameter tidak valid", { status: 400 });
+  }
   if (!ID_RE.test(id) || !Number.isInteger(ep) || ep < 1 || ep > 999) {
     return new NextResponse("Parameter tidak valid", { status: 400 });
   }
@@ -67,7 +90,14 @@ export async function GET(req: NextRequest) {
   // Episode 1..FREE_EPISODES lewat tanpa menyentuh database (lihat jalan
   // pintas di lib/paywall-guard.ts), jadi teaser hero & hover kartu — yang
   // SELALU ep 1 — tidak berubah perilakunya sedikit pun.
-  const akses = await periksaAksesEpisode(req, id, ep);
+  //
+  // Trailer diperiksa SEBAGAI episode 1, bukan dilewatkan begitu saja. Isinya
+  // memang bahan promosi yang boleh dilihat siapa pun, tapi melubangi gerbang
+  // ("kalau trailer, lewat") berarti menambah jalur yang tak ikut menua bersama
+  // aturan paywall — kalau suatu hari jatah gratis diperketat, jalur itu
+  // diam-diam tetap terbuka. Memeriksanya sebagai ep 1 membuat trailer selalu
+  // mengikuti aturan yang sama dengan episode paling gratis yang ada.
+  const akses = await periksaAksesEpisode(req, id, mintaTrailer ? 1 : ep);
   if (akses !== "boleh") {
     const { pesan, status } = balasanAksesDitolak(akses);
     return new NextResponse(pesan, {
@@ -84,7 +114,9 @@ export async function GET(req: NextRequest) {
     return new NextResponse("Sumber video belum di-set", { status: 404 });
   }
 
-  const fileName = `${ep}.mp4`;
+  // Nama berkas: dari enum (trailer) atau dari angka yang sudah divalidasi
+  // (episode). Dua-duanya TIDAK memuat teks mentah dari penonton.
+  const fileName = mintaTrailer ? BERKAS_TRAILER : `${ep}.mp4`;
   // DITANDATANGANI (Tahap B): mulai saat tunnel menegakkan, alamat polos
   // ditolak 403. Tanpa baris ini teaser hero & cuplikan kartu mati senyap —
   // `<video>` cuma gagal memuat, nol pesan error di layar.
@@ -102,9 +134,11 @@ export async function GET(req: NextRequest) {
     status: 307,
     headers: {
       Location: target,
-      // Hanya episode dalam jatah gratis yang jawabannya sama untuk semua
-      // orang — itu saja yang boleh masuk cache bersama. Lihat CACHE_PER_ORANG.
-      "Cache-Control": ep <= FREE_EPISODES ? REDIRECT_CACHE : CACHE_PER_ORANG,
+      // Hanya jawaban yang sama untuk SEMUA orang yang boleh masuk cache
+      // bersama. Trailer termasuk — ia bahan promosi yang identik bagi siapa
+      // pun, jadi tak ada yang bocor kalau disajikan ulang. Lihat CACHE_PER_ORANG.
+      "Cache-Control":
+        mintaTrailer || ep <= FREE_EPISODES ? REDIRECT_CACHE : CACHE_PER_ORANG,
     },
   });
 }

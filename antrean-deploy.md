@@ -23,8 +23,27 @@
 > lengkap: `HANDOFF.md` seksi `## 2026-11-09`.
 
 
-**Terakhir dicek:** 2026-11-09 (**komputer OWNER**), **sesudah rilis `aeffc15`**.
-`HEAD` = `origin/main` = `dramaku/main` = **`aeffc15`**, working tree **bersih**. **NOL ANTREAN.**
+**Terakhir dicek:** 2026-11-09 (**komputer OWNER**), **sesudah rilis `e997320`**.
+`HEAD` = `origin/main` = `dramaku/main` = **`e997320`**, working tree **bersih**. **NOL ANTREAN.**
+
+> ✅ **RILIS `e997320` TAYANG 2026-11-09 — asal kualitas & rating ditampilkan, panel dirapikan.**
+> Gerbang LOLOS 5/5, 2181 tes/153 berkas. Diverifikasi sesudah tayang lewat sidik-jari bundle:
+> `data-baris-video` · `Otomatis ·` · `Apa arti angka kualitas` · `Bagaimana kategori ditebak` ·
+> `belum ada sumber` · `bisa dicocokkan` · `buntu` — semuanya ADA. Situs 200 di `/`, `/beranda`,
+> `/api/dramas`, `/film`.
+>
+> 🪤 **BUILD RAILWAY GAGAL DULU, DAN BUKAN KARENA KODE — ini akan berulang, baca sebelum panik.**
+> Push berhasil (commit ada di GitHub), tapi ~15 menit nol deploy. Panel Railway:
+> **"Railpack failed to prepare the build"**, gagal di tahap *Build › Build image* detik ke-52,
+> *Deploy/Network/Post-deploy* tidak pernah dimulai.
+> Tiga fakta yang membuktikan bukan repo kita: (1) commit itu **nol menyentuh konfigurasi build**
+> — cuma 3 komponen + 1 lib + 2 tes; (2) `npm run build` lokal LOLOS; (3) dua rilis sebelumnya
+> hari itu (`aeffc15`, `bcf51f4`) berhasil dengan konfigurasi sama persis.
+> **Penyelesaiannya: klik Redeploy di panel Railway.** Percobaan kedua langsung lolos dan tayang
+> dalam <25 detik. Jadi ini gangguan sementara di Railpack (pembangun image Railway), bukan
+> sesuatu yang perlu diperbaiki di kode.
+> 💡 Build gagal TIDAK mengganti apa pun yang sedang tayang — penonton tetap dilayani rilis lama
+> selama percobaan gagal itu. Itu memang gunanya gerbang build.
 
 > ✅ **RILIS `aeffc15` TAYANG 2026-11-09 — isi kategori video Playly otomatis dari genre IMDb.**
 > Gerbang LOLOS 5/5, 2168 tes/152 berkas. Diverifikasi SESUDAH tayang lewat sidik-jari bundle

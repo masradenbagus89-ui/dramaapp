@@ -177,6 +177,83 @@ riwayat blok peringatan lama ada di seksi `## 2026-11-09` di bawah.**
 
 ---
 
+## 2026-11-09 — ✅ `e997320` TAYANG: asal kualitas & rating ditampilkan + panel dirapikan
+
+**Permintaan owner:** *"sekarang buat juga kualitas dan rating agar bisa otomatis seperti
+kategori"*, lalu *"rapikan agar tulisannya tidak memenuhi layar atau bikin dropdown"*.
+
+⚠️ **KOREKSI PREMIS — diukur dulu, dan hasilnya membalik arah pekerjaan.** Kualitas & rating
+**TERNYATA SUDAH OTOMATIS**, dan hasilnya sudah sampai ke penonton: beranda produksi memajang
+**16 label "HD" dan 4 "CAM"** saat diperiksa. Rating dari IMDb (`lib/rating-video.ts`
+`ratingTampil`), kualitas diturunkan dari link unduhan (`lib/kualitas-video.ts`).
+Angka produksi: kualitas **292 otomatis / 7 manual / 190 kosong** · rating **355 IMDb / 0 manual
+/ 134 kosong**.
+
+**Yang benar-benar hilang: cara MELIHATnya.** Dropdown kualitas cuma menulis "Otomatis" tanpa
+menyebut otomatisnya jadi apa — "sudah HD" dan "tidak ada sumbernya" terbaca persis sama, jadi
+satu-satunya cara tahu adalah membuka video satu per satu. Persis yang owner minta dihindari.
+
+**Yang dibangun:**
+- `lib/ringkasan-isian-video.ts` (BARU) — `asalKualitas` · `asalRating` · `kelompokkanUnduhan` ·
+  `ringkasIsian`. Fungsi murni.
+- Dropdown kualitas kini menulis **"Otomatis · HD"** / **"Otomatis · belum ada"**.
+- `app/components/admin/RingkasanIsianVideo.tsx` (BARU) — dua baris angka.
+- `PlaylyVisibilityManager` menerima prop `linkUnduhan` (**dibaca saja**, tak pernah diubah).
+
+📌 **RATING KOSONG SENGAJA DIBAGI DUA** karena tindakannya berbeda: yang **belum dicocokkan**
+masih bisa ditolong tombol "Cocokkan semua"; yang **sudah dicocokkan tapi IMDb-nya memang tak
+punya nilai** itu BUNTU. Digabung jadi satu angka, admin akan mengklik "Cocokkan semua" berulang
+kali untuk video yang hasilnya tidak akan pernah berubah.
+
+📌 **KUALITAS KOSONG TIDAK DITEBAK.** Playly cuma mengirim judul, durasi, kreator, sampul — nol
+data yang bisa membuktikan mutu berkas. `lib/kualitas-video.ts` sudah menulis aturannya sendiri:
+label CAM *"hanya boleh datang dari manusia"*. Jalan keluarnya disebut di panel: isi Link
+download, kualitas ikut terisi.
+
+**Rapi (permintaan kedua):** keterangan panjang pindah ke balik tombol **"?"** (`BantuanSingkat`
+— pola yang owner minta 2026-11-06 untuk keluhan yang sama). Angkanya tetap terlihat langsung.
+🪤 Disembunyikan lewat **CSS**, BUKAN dilepas dari DOM: di dalamnya ada angka yang dihitung ulang
+tiap render, dan melepasnya membuat angka itu berhenti menghitung lalu terbaca basi saat dibuka.
+
+**Ikut diperbaiki:** dua tes di `tests/paginasi.test.ts` menghitung **SEMUA `<li>`** di panel,
+jadi pecah begitu daftar lain ditambahkan — padahal paginasinya baik-baik saja. Baris video kini
+bertanda `data-baris-video` dan tesnya menghitung itu. **Aturan: tes yang menghitung elemen
+generik (`<li>`, `<div>`) mengukur hal yang salah — beri penanda pada yang benar-benar dimaksud.**
+
+**Bukti:** `npm run gerbang` LOLOS 5/5 — build sukses, `tsc` 0 error, **2181 tes / 153 berkas
+hijau**. `tests/ringkasan-isian-video.test.ts` (13 tes) termasuk penjaga aritmatika yang merah
+kalau angkanya tidak berjumlah total. Verifikasi sesudah tayang lewat sidik-jari bundle: tujuh
+penanda ADA.
+
+---
+
+## 2026-11-09 — 🪤 BUILD RAILWAY GAGAL "Railpack failed to prepare" — BUKAN kode, cukup Redeploy
+
+**Gejalanya menyesatkan:** push `e997320` berhasil (commit terverifikasi ada di GitHub lewat
+`gh api`), gerbang lokal LOLOS 5/5 — tapi **~15 menit nol deploy**, padahal dua rilis sebelumnya
+hari itu tayang dalam 60 detik. Daftar chunk yang dilayani produksi **identik** dengan sebelum
+push, jadi bukan "deploy lambat" melainkan **belum ada deploy sama sekali**.
+
+Panel Railway: **"Railpack failed to prepare the build"** — gagal di tahap *Build › Build image*
+detik ke-52; *Deploy · Network · Post-deploy* **tidak pernah dimulai**. Artinya gagal saat
+MENYIAPKAN lingkungan build, sebelum kode kita sempat dikompilasi sama sekali.
+
+**Tiga fakta yang membuktikan bukan repo kita — periksa ketiganya sebelum menyalahkan kode:**
+1. Commit itu **nol menyentuh konfigurasi build** (`git show --name-only` → cuma 3 komponen,
+   1 lib, 2 tes — tidak ada `package.json`/`Dockerfile`/konfigurasi Railway).
+2. `npm run build` **lolos** di komputer owner.
+3. Dua rilis sebelumnya hari itu (`aeffc15`, `bcf51f4`) **berhasil** dengan konfigurasi sama.
+
+**PENYELESAIANNYA: klik Redeploy di panel Railway (tombol ⋮ kanan atas).** Percobaan kedua
+langsung lolos dan tayang **dalam <25 detik**. Jadi gangguan sementara di Railpack — pembangun
+image milik Railway — bukan sesuatu yang perlu diperbaiki di kode.
+
+💡 **Build gagal TIDAK mengganti apa pun yang sedang tayang.** Selama percobaan gagal itu
+penonton tetap dilayani rilis lama yang sehat (`/api/health` → ok, beranda & `/api/dramas` 200).
+Itu memang guna gerbang build: yang rusak tidak pernah sampai ke penonton.
+
+---
+
 ## 2026-11-09 — ✅ `aeffc15` TAYANG: kategori video Playly diisi otomatis dari genre IMDb
 
 **Permintaan owner:** *"di video playly sebagian belum ada kategorinya bisa kamu buat otomatis

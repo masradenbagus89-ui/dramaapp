@@ -31,11 +31,14 @@ export default function PanelEpisode({
   episodes,
   posterImage,
   title,
+  durasiBaku = null,
 }: {
   dramaId: string;
   episodes: number;
   posterImage?: string;
   title: string;
+  /** Durasi per episode dari kolom Durasi drama — diteruskan apa adanya. */
+  durasiBaku?: string | null;
 }) {
   // Nol episode = panel tidak digambar sama sekali. Judul "EPISODE" di atas
   // ruang hampa terbaca seperti halaman gagal muat.
@@ -60,6 +63,7 @@ export default function PanelEpisode({
         episodes={episodes}
         posterImage={posterImage}
         title={title}
+        durasiBaku={durasiBaku}
         ringkas
         className="min-h-0 px-3 py-3 lg:flex-1 lg:overflow-y-auto"
       />

@@ -21,7 +21,7 @@
 // -------------------------------------------------------------------------
 import type { Drama, DramaQuality } from "./types";
 import { isMovie } from "./types";
-import { formatJamMenit, menitDariRuntime } from "./format";
+import { durasiTayangan } from "./format";
 
 export type LencanaKartu = {
   /** Kiri-atas: rating IMDb apa adanya ("8.4"). null = judul ini belum punya. */
@@ -53,15 +53,23 @@ export type LencanaKartu = {
    * null untuk FILM — film memajang durasinya di kanan-bawah.
    *
    * Dipindah ke atas 2026-10-16 atas permintaan owner (contoh: situs katalog
-   * pembanding menaruh jumlah episode di pojok kanan atas). Ini PINDAH, bukan
-   * TAMBAH: serial kehilangan label kanan-bawahnya, jadi jumlah lencana di
-   * poster tidak bertambah. Itu disengaja — chip "Premium" pernah dicabut dari
-   * poster justru karena kartunya jadi terlalu penuh (lihat Poster.tsx).
+   * pembanding menaruh jumlah episode di pojok kanan atas).
    */
   episodeKananAtas: string | null;
   /**
-   * Kanan-bawah: durasi film "02:45", atau "FILM" kalau durasinya tak terbaca.
-   * null untuk SERIAL — jumlah episodenya pindah ke `episodeKananAtas`.
+   * Kanan-bawah: durasi "02:45" — untuk FILM maupun SERIAL.
+   *
+   * FILM: "FILM" kalau durasinya tak terbaca, karena pojok itu sekaligus
+   * penanda jenisnya. SERIAL: `null` kalau durasinya belum diisi — serial sudah
+   * punya penandanya sendiri ("62 EPS") di kanan-atas, jadi label cadangan di
+   * sini cuma mengulang yang sudah ada.
+   *
+   * Serial IKUT memajang durasi sejak 2026-11-09 atas permintaan owner. Antara
+   * 2026-10-16 dan tanggal itu pojok ini sengaja dikosongkan untuk serial
+   * (jumlah episodenya baru pindah ke atas, dan kartu dijaga tidak bertambah
+   * penuh). Yang membuat penambahan ini tetap aman: durasi HANYA digambar kalau
+   * owner benar-benar mengisinya — katalog hari ini 34 dari 42 judul kosong,
+   * jadi mayoritas kartu tidak berubah sama sekali.
    */
   kananBawah: string | null;
   /** Pita bawah: "ONGOING"/"TAMAT". null = status belum diisi admin. */
@@ -90,7 +98,7 @@ export function lencanaKartu(d: Drama): LencanaKartu {
     kualitas: isMovie(d) ? (d.quality ?? null) : null,
     kiriBawah: d.year?.trim() ? d.year.trim() : null,
     episodeKananAtas: isMovie(d) ? null : `${d.episodes} EPS`,
-    kananBawah: isMovie(d) ? durasiFilm(d) : null,
+    kananBawah: isMovie(d) ? durasiFilm(d) : durasiSerial(d),
     // "Completed" ditampilkan sebagai "TAMAT" — kata yang dipakai penonton
     // Indonesia di situs streaming, bukan istilah database.
     status:
@@ -109,6 +117,18 @@ export function lencanaKartu(d: Drama): LencanaKartu {
  * menampilkan durasi pada sesuatu yang sebenarnya serial.
  */
 function durasiFilm(d: Drama): string {
-  const menit = menitDariRuntime(d.runtime);
-  return menit === null ? LABEL_FILM : formatJamMenit(menit);
+  return durasiTayangan(d.runtime, true) ?? LABEL_FILM;
+}
+
+/**
+ * Durasi PER EPISODE serial "1:47" — `null` kalau belum diisi/tak terbaca.
+ *
+ * Sengaja TANPA label cadangan, beda dari `durasiFilm` di atas: pojok ini pada
+ * film merangkap penanda jenis ("FILM"), sedangkan serial sudah ditandai
+ * "62 EPS" di kanan-atas. Menulis "SERIAL" di sini cuma mengulang, dan menulis
+ * "0:00" jauh lebih buruk — terbaca seperti durasi sungguhan padahal artinya
+ * "kami tak tahu".
+ */
+function durasiSerial(d: Drama): string | null {
+  return durasiTayangan(d.runtime, false);
 }

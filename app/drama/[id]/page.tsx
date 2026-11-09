@@ -6,6 +6,7 @@ import { getDramaCached } from "@/lib/dramas";
 import { SITE_URL, absoluteUrl, toMetaDescription } from "@/lib/site";
 import { dramaJsonLd, toJsonLdScript } from "@/lib/structured-data";
 import { isMovie, subtitleLabel, type Drama } from "@/lib/types";
+import { durasiTayangan } from "@/lib/format";
 import Poster from "@/app/components/Poster";
 import SaveButton from "@/app/components/SaveButton";
 import LikeButton from "@/app/components/LikeButton";
@@ -311,6 +312,7 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
                     episodes={drama.episodes}
                     posterImage={drama.posterImage || drama.heroImage}
                     title={drama.title}
+                    durasiBaku={durasiTayangan(drama.runtime, film)}
                   />
                 ) : (
                   panelTerkait
@@ -559,6 +561,20 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
  */
 function HeroDrama({ drama }: { drama: Drama }) {
   const film = isMovie(drama);
+  // Baris keterangan di bawah judul. Dirakit DULU sebagai daftar supaya satu
+  // sumber yang sama menentukan isinya DAN perlu-tidaknya pemisah " · " sebelum
+  // jumlah penonton. Sebelumnya keduanya dihitung terpisah, jadi nilai yang
+  // tersaring (mis. runtime "N/A") menyisakan pemisah menggantung di depan.
+  const keterangan = [
+    drama.year,
+    // "1:47" — aturan yang sama persis dengan lencana poster & daftar episode
+    // (owner 2026-11-09). Sebelumnya teks mentah dari panel admin, jadi satu
+    // drama bisa memajang "1.47" di sini dan bentuk lain di kartunya.
+    durasiTayangan(drama.runtime, film),
+    film ? "Film" : drama.episodes > 1 ? `${drama.episodes} episode` : "",
+    drama.imdbRating ? `IMDb ${drama.imdbRating}/10` : "",
+    drama.country,
+  ].filter((t): t is string => Boolean(t && t.trim()));
   return (
     /* `relative` WAJIB: poster & judul di dalamnya dipasang `absolute`, dan
        tanpa induk ber-`relative` keduanya akan mengacu ke elemen ber-posisi
@@ -631,18 +647,8 @@ function HeroDrama({ drama }: { drama: Drama }) {
                   </div>
                 )}
                 <p className="mt-1.5 text-xs text-zinc-300 md:text-sm">
-                  {[
-                    drama.year,
-                    drama.runtime,
-                    film ? "Film" : drama.episodes > 1 ? `${drama.episodes} episode` : "",
-                    drama.imdbRating ? `IMDb ${drama.imdbRating}/10` : "",
-                    drama.country,
-                  ]
-                    .filter(Boolean)
-                    .join(" · ")}
-                  {drama.year || drama.runtime || drama.imdbRating || drama.country
-                    ? " · "
-                    : ""}
+                  {keterangan.join(" · ")}
+                  {keterangan.length > 0 ? " · " : ""}
                   {drama.views} ditonton
                 </p>
               </div>

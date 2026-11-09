@@ -13,11 +13,17 @@ import {
 } from "@/lib/types";
 import { readUser, type User } from "@/lib/auth";
 import { slugify } from "@/lib/format";
-import { scanDrama, hardlinkDrama, type ScanResult } from "@/lib/admin-api";
+import {
+  scanDrama,
+  hardlinkDrama,
+  ukurDurasiDrama,
+  type ScanResult,
+} from "@/lib/admin-api";
 import TwoFactorSettings from "@/app/components/TwoFactorSettings";
 import SponsorAdsManager from "@/app/components/SponsorAdsManager";
 import AdminManager from "@/app/components/admin/AdminManager";
 import AdminDashboard from "@/app/components/admin/AdminDashboard";
+import DurasiUkurSemua from "@/app/components/admin/DurasiUkurSemua";
 import AdminSidebar from "@/app/components/admin/AdminSidebar";
 import DramaList from "@/app/components/admin/DramaList";
 import DramaForm from "@/app/components/admin/DramaForm";
@@ -84,6 +90,7 @@ export default function AdminPage() {
   const [language, setLanguage] = useState("");
 
   const [scanning, setScanning] = useState(false);
+  const [mengukurDurasi, setMengukurDurasi] = useState(false);
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
 
   const [submitting, setSubmitting] = useState(false);
@@ -138,6 +145,42 @@ export default function AdminPage() {
    */
   const applyScanCount = (max: number) =>
     setEpisodes(kind === "movie" ? MOVIE_EPISODE_COUNT : max);
+
+  /**
+   * Isi kolom Durasi dari berkas video sungguhan (owner 2026-11-09:
+   * "buat otomatis durasinya jadi saya cukup edit sedikit").
+   *
+   * Hanya MENGISI FORM — tidak menyimpan. Owner melihat angkanya dulu, boleh
+   * menyuntingnya, lalu menekan Simpan seperti biasa. Itu disengaja: isian
+   * massal 2026-09-22 ("119 min" ke 25 serial) jadi masalah justru karena
+   * angkanya masuk ke katalog tanpa pernah dilihat orang.
+   */
+  const onUkurDurasi = async () => {
+    setMessage(null);
+    if (!effectiveId) {
+      setMessage({
+        type: "error",
+        text: "Isi 'ID slug' atau 'Judul' dulu — saya butuh tahu folder mana yang videonya diukur.",
+      });
+      return;
+    }
+    if (!authUser) return;
+    setMengukurDurasi(true);
+    try {
+      const hasil = await ukurDurasiDrama(effectiveId, authUser.email);
+      if (!hasil.ok) {
+        setMessage({ type: "error", text: `Gagal mengukur durasi: ${hasil.error}` });
+        return;
+      }
+      setRuntime(hasil.teks);
+      setMessage({
+        type: "ok",
+        text: `Durasi episode ${hasil.ep} terbaca: ${hasil.teks} (${Math.round(hasil.detik)} detik). Periksa dulu, lalu tekan Simpan.`,
+      });
+    } finally {
+      setMengukurDurasi(false);
+    }
+  };
 
   const onScan = async () => {
     setMessage(null);
@@ -498,6 +541,8 @@ export default function AdminPage() {
           setLanguage={setLanguage}
           effectiveId={effectiveId}
           scanning={scanning}
+          mengukurDurasi={mengukurDurasi}
+          onUkurDurasi={onUkurDurasi}
           scanResult={scanResult}
           submitting={submitting}
           message={message}
@@ -509,6 +554,15 @@ export default function AdminPage() {
         </div>
 
         {bagian === "daftar" && (
+          <div className="space-y-4">
+            {/* Ditaruh DI ATAS daftar, bukan di bagian "Tambah Drama": yang
+                diisi adalah katalog yang sudah ada, dan hasilnya langsung
+                terlihat di daftar tepat di bawahnya. */}
+            <DurasiUkurSemua
+              dramas={dramas}
+              adminEmail={authUser.email}
+              onSelesai={refreshList}
+            />
           <DramaList
             dramas={dramas}
             /* Edit MEMBUKA bagian form dulu, baru mengisinya. Urutannya tidak
@@ -522,6 +576,7 @@ export default function AdminPage() {
             }}
             onDelete={onDelete}
           />
+          </div>
         )}
 
         {bagian === "kelola-admin" && (

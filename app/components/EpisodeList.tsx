@@ -31,6 +31,7 @@ export default function EpisodeList({
   episodes,
   posterImage,
   title,
+  durasiBaku = null,
   terang = false,
   ringkas = false,
   className = "mt-3",
@@ -39,6 +40,21 @@ export default function EpisodeList({
   episodes: number;
   posterImage?: string;
   title: string;
+  /**
+   * Durasi yang dipakai untuk episode yang BELUM pernah ditonton — sudah siap
+   * tampil ("1:47"), berasal dari kolom Durasi drama (owner 2026-11-09).
+   *
+   * KENAPA ADA: angka di baris ini selama ini datang dari riwayat tonton
+   * penonton itu sendiri (`episodeDurationSec` → `durationSec` yang dilaporkan
+   * pemutar). Artinya durasi baru muncul SESUDAH episode itu dibuka — penonton
+   * baru melihat "Durasi —" di seluruh 55 episode, justru saat ia paling butuh
+   * tahu panjangnya.
+   *
+   * Riwayat tonton tetap MENANG kalau ada: itu durasi berkas video yang
+   * sebenarnya, sedangkan nilai ini satu angka yang sama untuk semua episode.
+   * `null` = kolom Durasi drama kosong/tak terbaca, baris tetap "Durasi —".
+   */
+  durasiBaku?: string | null;
   /**
    * Gambar untuk LATAR TERANG (halaman film sejak owner 2026-10-29).
    * Default `false` = tampilan gelap seperti semula.
@@ -148,6 +164,10 @@ export default function EpisodeList({
         const watched = isEpisodeWatched(entry, ep);
         const current = entry?.episode === ep && !watched;
         const dur = episodeDurationSec(entry, ep);
+        // Riwayat tonton menang: itu durasi berkas video episode INI. Kolom
+        // Durasi drama cuma satu angka untuk semua episode, jadi dipakai
+        // sebagai cadangan — bukan sebaliknya.
+        const teksDurasi = dur > 0 ? fmtTime(dur) : durasiBaku;
         const status = watched
           ? "Ditonton"
           : current
@@ -196,14 +216,15 @@ export default function EpisodeList({
                 <p className={cn("text-[11px]", terang ? "text-zinc-500" : "text-zinc-500")}>
                   {/* Di kolom sempit badge status dibuang, jadi baris inilah
                       satu-satunya tempat status masih tertulis — digabung
-                      dengan durasi supaya tetap satu baris. */}
+                      dengan durasi supaya tetap satu baris.
+
+                      Urutan sumber durasi: riwayat tonton (durasi berkas video
+                      yang sebenarnya) → kolom Durasi drama → tidak tahu. */}
                   {ringkas
-                    ? dur > 0
-                      ? `${status} · ${fmtTime(dur)}`
+                    ? teksDurasi
+                      ? `${status} · ${teksDurasi}`
                       : status
-                    : dur > 0
-                      ? fmtTime(dur)
-                      : "Durasi —"}
+                    : (teksDurasi ?? "Durasi —")}
                 </p>
               </div>
               {!ringkas && (

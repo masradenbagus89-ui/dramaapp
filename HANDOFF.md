@@ -177,52 +177,154 @@ riwayat blok peringatan lama ada di seksi `## 2026-11-09` di bawah.**
 
 ---
 
-## 2026-11-09 — ⏳ Durasi kini dipakai SERIAL juga (poster + halaman detail). BELUM dirilis
+## 2026-11-09 — ⏳ Durasi serial: poster + halaman detail + SETIAP baris episode. BELUM dirilis
 
 **Permintaan owner:** panel admin menulis "Durasi (tidak dipakai untuk serial)", padahal owner
-butuh durasi tampil di drama juga. Owner sedang mengisi `1.47` untuk drama 55 episode.
+butuh durasi tampil di drama juga. Owner mengisi `1.47` untuk drama 55 episode. Kalimat
+penentunya, sesudah melihat temuan di bawah: *"intinya aku mau di setiap episode dan poster ada
+durasinya"*.
 
-**Keputusan owner lewat popup (jangan ditebak ulang di sesi berikut):**
-1. `1.47` = **1 jam 47 menit** (BUKAN 1 menit 47 detik). Ditanyakan karena judulnya 55 episode —
-   khas drama pendek yang durasinya 1–2 menit — dan salah tafsir = poster memajang angka salah ke
-   penonton. Owner menjawab jam:menit.
-2. Tampil di **poster + halaman detail**, bukan salah satunya saja.
+**⚠️ KEPUTUSAN YANG BERUBAH DI TENGAH SESI — baca ini sebelum menyentuh durasi lagi.**
+Popup pertama dijawab `1.47` = **1 jam 47 menit**. Dikerjakan begitu, lalu diuji di localhost dan
+ketahuan tidak mungkin: drama pendek 38-102 episode, dan satu judul berisi `"22.37"` yang berarti
+22 JAM per episode. Owner ditanya ulang dengan data di tangan dan menjawab **1-2 menit** →
+`1.47` = **1 menit 47 detik**. Jadi: **SERIAL = menit:detik, FILM = jam:menit.** Teks `"1.47"`
+yang sama persis berarti dua hal berbeda tergantung `kind` — itu disengaja, jangan "dirapikan"
+jadi satu aturan.
 
-**Bug yang ketahuan saat mengerjakan (ini akarnya, bukan sekadar label):** `menitDariRuntime` di
-`lib/format.ts` membaca `"1.47"` sebagai **1 menit** — titiknya diabaikan, angka pertama diambil.
-Jadi poster akan memajang `00:01`. Salah, tapi terlihat sah, jadi tak akan ada yang melapor.
-Sekarang `"1.47"` dan `"1:47"` dibaca **107 menit**. Menit WAJIB 2 digit 00–59; `"1.5"` sengaja
-TIDAK diterima sebagai jam (bisa 1,5 jam = 90 atau 1 jam 5 menit = 65 — menebak = mengarang).
+**🪤 TEMUAN TERBESAR — `"119 min"` di 25 dari 40 serial.** Dugaan pertama (sisa OMDb) **SALAH**,
+dan sempat tertulis di komentar kode sebelum dikoreksi. Yang benar: itu **isian massal keputusan
+owner 2026-09-22**, `supabase_migrations/isi_lencana_awal_dramas.sql`. Berkas SQL itu menyatakan
+sendiri angkanya *"BUKAN hasil pembacaan berkas video, IMDb, atau sumber lain"*, dan aman waktu
+itu justru karena **poster serial belum memajang durasi sama sekali** — catatannya menulis nilai
+ini *"hanya terlihat kalau judulnya diubah jadi film"*. Begitu serial ikut memajang durasi,
+beranda lokal langsung menampilkan **147 label `01:59`** untuk episode yang sebenarnya 1-3 menit.
+Terlihat sah, nol error, tak ada yang akan melapor.
+
+**Cara menutupnya TANPA menanam tebakan di kode:** aturan umum *"durasi episode ditulis
+menit:detik"*. Bentuk bersatuan (`"119 min"`, `"2 jam 45 menit"`) otomatis tidak dikenali sebagai
+durasi episode → tidak digambar. Angka `119` **sengaja tidak ada di dalam kode** — kalau
+di-hardcode, film yang suatu hari benar-benar 119 menit ikut hilang tanpa sebab.
 
 **Yang berubah:**
-- `lib/format.ts` — pola jam digital di `menitDariRuntime` + fungsi baru `durasiTampil` (untuk
-  halaman detail: rapikan kalau terbaca, **tampilkan apa adanya** kalau tidak — beda sengaja dari
-  poster yang memulangkan `null`).
-- `lib/lencana-kartu.ts` — `kananBawah` serial diisi `durasiSerial()`. **Membatalkan** aturan
-  2026-10-16 yang mengosongkan pojok itu untuk serial. Tanpa label cadangan: serial yang durasinya
-  kosong tetap tidak menggambar apa pun (film tetap menulis "FILM" karena pojok itu merangkap
-  penanda jenis).
-- `app/components/Poster.tsx` — hanya komentar; logikanya sudah menggambar `kananBawah` apa adanya.
-- `app/components/admin/DramaForm.tsx` — label jadi "Durasi per episode", placeholder `1.47`,
-  teks bantuan per keadaan, dan deskripsi kotak Lencana dibetulkan (sejak 2026-10-16 jumlah
-  episode ada di kanan-**atas**, teks lama masih menulis kanan-bawah).
-- `app/drama/[id]/page.tsx` — baris keterangan dirakit jadi satu daftar `keterangan`. Ikut
-  menutup cacat lama: pemisah `·` dihitung dari `drama.runtime` mentah, jadi `"N/A"` menyisakan
+- `lib/format.ts` — `detikDariDurasiEpisode()` (baca `"M.SS"`/`"M:SS"`) + `durasiTayangan(runtime,
+  film)` yang jadi **satu-satunya** aturan durasi, dipakai poster, halaman detail, daftar episode,
+  dan panel admin sekaligus. Pola jam digital juga ditambahkan ke `menitDariRuntime` untuk FILM.
+- `lib/lencana-kartu.ts` — `kananBawah` serial diisi durasi. **Membatalkan** aturan 2026-10-16
+  yang mengosongkan pojok itu untuk serial. Tanpa label cadangan (film tetap menulis "FILM"
+  karena pojok itu merangkap penanda jenis).
+- `app/components/EpisodeList.tsx` — prop baru `durasiBaku`. **Ini bagian "setiap episode"-nya.**
+  Sebelumnya angka di baris episode HANYA datang dari riwayat tonton penonton
+  (`episodeDurationSec` ← `durationSec` yang dilaporkan pemutar), jadi episode yang belum pernah
+  dibuka selalu tertulis "Durasi —". Riwayat tonton tetap MENANG kalau ada — itu durasi berkas
+  video yang sebenarnya; `durasiBaku` cuma cadangan satu-angka-untuk-semua.
+- `app/components/film/PanelEpisode.tsx` + `app/drama/[id]/page.tsx` — meneruskan nilainya.
+- `app/components/admin/DramaForm.tsx` — label "Durasi per episode", placeholder `1.47`, bantuan
+  menyebut MENIT.DETIK, dan deskripsi kotak Lencana dibetulkan (sejak 2026-10-16 jumlah episode
+  ada di kanan-**atas**, teks lama masih menulis kanan-bawah).
+- `app/drama/[id]/page.tsx` — baris keterangan dirakit jadi satu daftar `keterangan`; ikut menutup
+  cacat lama di mana pemisah `·` dihitung dari `drama.runtime` mentah sehingga `"N/A"` menyisakan
   pemisah menggantung di depan "N ditonton".
 - Tes: `tests/lencana-kartu.test.ts` + `tests/poster-lencana-render.test.ts`.
 
-**⚠️ Dua tes yang mengunci aturan LAMA sengaja diubah, bukan dihapus** — "serial yang kebetulan
-punya runtime TIDAK memajang durasi" sekarang jadi kebalikannya. Kalau sesi berikut melihat
-riwayat ini dan mengira ada kemunduran: tidak, itu keputusan owner 2026-11-09 yang menimpa
-keputusan 2026-10-16.
+**⚠️ Tes yang mengunci aturan LAMA sengaja diubah, bukan dihapus** — "serial yang kebetulan punya
+runtime TIDAK memajang durasi" kini jadi kebalikannya. Kalau sesi berikut mengira ada kemunduran:
+tidak, itu keputusan owner 2026-11-09 yang menimpa keputusan 2026-10-16.
 
-**Bukti dijalankan:** `npm test` → **2114 tes / 147 berkas hijau, exit 0**. `npx tsc --noEmit` →
-**exit 0**. Penjaga permanen ditambahkan untuk bug `1.47` → `00:01` (merah kalau kambuh) dan untuk
-kartu serial yang benar-benar **dirender** — bukan cuma aturannya yang benar.
+**Bukti dijalankan:** `npm test` → **2115 tes / 147 berkas hijau, exit 0**. `npx tsc --noEmit` →
+**exit 0**. Diuji juga di server dev lokal (127.0.0.1:3055, memakai Supabase produksi):
+- beranda: `01:59` × 147 **hilang**; muncul `1:47`, `1:26`, `1:15`, `1:29`, `2:41`
+- `/drama/putrinya-disakiti-dewa-perang-akhirnya-bangkit`: poster `1:47`, keterangan
+  `2025 · 1:47 · 55 episode · IMDb 8.9/10`, dan **55 baris episode** `Belum · 1:47` — nol "Durasi —"
+- `/drama/permaisuri-bangkit-di-dunia-modern` (berisi `"119 min"`): nol label durasi, 62 baris
+  episode "Belum" tanpa angka — jujur, bukan angka palsu
 
-**🔴 BELUM dirilis — nol commit, nol push.** Owner menguji di situs asli, bukan localhost, jadi
-ini baru bisa dicoba setelah deploy. Jalankan `npm run gerbang` lalu push ke `origin main` +
-`dramaku` (dual push) kalau owner mengizinkan.
+ℹ️ `0:00` yang muncul di beranda **bukan** dari perubahan ini (ada sebelum & sesudah). Itu kartu
+video **Playly** — `KartuVideo.tsx:101` hanya menyaring `durationLabel === "-"`, sedangkan server
+Playly mengirim `0:00`. Cacat terpisah, belum ditawarkan ke owner.
+
+### Bagian 2 — pengisi durasi OTOMATIS (owner: "buat otomatis, saya cukup edit sedikit")
+
+**Yang dibangun:** tombol **"Ukur dari video"** di sebelah kolom Durasi panel admin. Sekali klik,
+server membaca durasi SUNGGUHAN dari berkas video lalu mengisi kolomnya. Owner tinggal memeriksa
+dan menekan Simpan.
+
+- `lib/durasi-video.ts` (BARU) — `detikDariHeaderMp4()` membaca atom `mvhd` dari 256KB pertama
+  berkas, tanpa ffprobe (tidak terpasang di server) dan tanpa mengunduh video penuh.
+  `detikKeDurasiEpisode()` mengubahnya ke bentuk "1.47" yang sama dengan ketikan owner.
+- `app/api/admin/durasi/route.ts` (BARU) — admin-only, **MEMBACA saja, tidak menyimpan** (§3.7).
+  Penyimpanan tetap lewat tombol Simpan biasa, supaya angkanya dilihat manusia dulu — isian massal
+  2026-09-22 jadi masalah justru karena angkanya masuk katalog tanpa pernah dilihat siapa pun.
+- `lib/admin-api.ts` + `app/admin/page.tsx` + `app/components/admin/DramaForm.tsx` — tombol &
+  penyambungnya, mengikuti pola `onScan` yang sudah ada (logika jaringan di halaman, DramaForm
+  tetap komponen tampilan).
+
+**🔑 KENAPA HARUS DI SERVER, bukan skrip di komputer owner — jangan coba ulang jalur itu.**
+Berkas video dijaga tanda tangan (`lib/video-signature.ts`) yang butuh `VIDEO_SIGNING_SECRET`.
+Diukur sesi ini: tunnel HIDUP (alamat tersimpan di `app_data.videobase`, diperbarui 03:05 hari
+ini), tapi tiap berkas membalas **403** tanpa tanda tangan. Kunci itu ada di panel hosting dan
+TIDAK boleh disalin ke komputer kerja owner — mesin RDP sewaan bersama ~84 penyewa (§5.2).
+
+**Bukti dijalankan:** `npm test` → **2127 tes / 148 berkas hijau, exit 0**. `npx tsc --noEmit` →
+**exit 0**. `tests/durasi-video.test.ts` (12 tes) merakit potongan byte `mvhd` buatan, jadi
+pembacanya teruji tanpa video asli — termasuk mvhd versi 1 (tata letak berbeda; kalau versinya
+diabaikan hasilnya angka sampah yang tetap terlihat seperti durasi) dan penanda
+`duration = 0xFFFFFFFF` ("panjang tak diketahui") yang ditolak, bukan dibagi.
+Endpoint diuji lewat jalur asli di localhost (login admin → cookie sesi):
+`401` tanpa login · `400` untuk `id=../../etc/passwd`, `id` kosong, `ep=0` ·
+`502` + pesan "periksa VIDEO_SIGNING_SECRET" untuk drama nyata — persis yang diharapkan di
+localhost, dan membuktikan jalurnya hidup sampai menyentuh tunnel.
+
+**⚠️ BELUM TERBUKTI:** pembacaan video SUNGGUHAN menghasilkan angka benar. Itu tidak bisa diuji
+dari mesin owner (alasan di atas), hanya setelah tayang. Aman dicoba di produksi karena endpoint
+ini **tidak menyimpan apa pun** — gagal = pesan error, nol perubahan data.
+
+### Bagian 3 — pengisian MASSAL (owner: "lanjut ke massal dulu")
+
+**Yang dibangun:** panel **"Isi durasi otomatis dari video"** di atas Daftar Drama panel admin.
+Ukur semua judul sekali jalan → tabel hasil → centang → Simpan.
+
+- `app/components/admin/DurasiUkurSemua.tsx` (BARU) — meniru pola
+  `PlaylyCocokkanSemua.tsx`: satu per satu + jeda 200ms + bisa dihentikan di tengah +
+  **TINJAU DULU, BARU SIMPAN**. Tabelnya memperlihatkan nilai sekarang, hasil ukur, DAN bentuk
+  yang akan tergambar di poster — tiga kolom itu sengaja berdampingan supaya angka yang tak akan
+  pernah tergambar langsung kelihatan.
+- `POST /api/admin/durasi` (di route yang sama) — **endpoint SEMPIT: hanya kolom `runtime`.**
+  Klien cuma boleh mengirim `id` + `runtime`; isi drama selebihnya dibaca ulang dari database
+  lalu ditulis balik apa adanya.
+- `lib/durasi-video.ts` — `durasinyaSudahBenar()` + `dramaButuhDurasi()` dipindah ke lib
+  (bukan di dalam komponen) supaya bisa diuji tanpa merender apa pun — pola yang sama dipakai
+  `videoBelumDicocokkan` di `lib/playly-imdb.ts`.
+
+**⚠️ KENAPA endpoint sendiri, BUKAN `POST /api/admin/drama` — jangan "disederhanakan" nanti.**
+Endpoint itu menerima SELURUH data drama (route.ts:138). Dipakai untuk mengubah satu kolom pada
+40 drama, ia memaksa klien mengirim ulang seluruh isi tiap drama — dan satu field yang terlewat
+akan MENGHAPUS data yang benar, diam-diam, 40 kali.
+
+**Pagar "jangan timpa isian tangan":** drama yang durasinya SUDAH tergambar tidak dicentang
+otomatis. Hasil ukurnya tetap ditampilkan untuk dibandingkan; yang ditahan cuma centangnya.
+
+**Bukti dijalankan:** `npm test` → **2138 tes / 149 berkas hijau, exit 0**. `npx tsc --noEmit` →
+**exit 0**. Tes baru: `tests/admin-durasi-route.test.ts` (6 tes, database dipalsukan) +
+5 tes pagar di `tests/durasi-video.test.ts`. Yang terpenting di antaranya: body berisi
+`title`/`premium`/`synopsis`/`episodes` palsu dikirim bersama `runtime` → **hanya runtime yang
+berubah**, sisanya utuh (dibandingkan sebagai satu objek, bukan field per field, supaya field
+yang hilang tetap tertangkap saat katalog menambah kolom baru).
+
+Pagar diuji juga lewat jalur ASLI di localhost (login admin → cookie), **sengaja hanya kasus yang
+DITOLAK** karena localhost tersambung ke Supabase produksi — izin menulis milik owner, bukan tes:
+`400` path traversal · `400` id kosong · `400` runtime hilang/spasi · `404` id tak ada di katalog
+(penting: `upsertDrama` akan MEMBUAT baris kalau id belum ada — tanpa penjaga ini salah ketik id
+menghasilkan drama hantu) · `422` serial diberi `"119 min"`. Nol penulisan dari keenamnya.
+
+**⚠️ MASIH BELUM TERBUKTI, sama seperti Bagian 2:** pembacaan video SUNGGUHAN. Butuh
+`VIDEO_SIGNING_SECRET` yang hanya ada di panel hosting. Di localhost semua pengukuran membalas
+502 — itu yang diharapkan, bukan bug. Konsekuensinya: **tabel hasil ukur baru bisa dilihat
+sesudah rilis.**
+
+**🔴 BELUM dirilis — nol commit, nol push.** Sesudah rilis: buka panel admin → Daftar Drama →
+"Mulai ukur" → periksa tabel → Simpan. 25 serial ber-`"119 min"` akan tercentang otomatis;
+drama yang durasinya sudah benar TIDAK.
 
 ---
 

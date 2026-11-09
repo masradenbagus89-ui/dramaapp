@@ -9,7 +9,7 @@
 // shadcn/ui (Card, Input, Label, Textarea, Select, Checkbox, Button) — perilaku
 // & logika tetap sama persis.
 import { useState, type Dispatch, type SetStateAction, type RefObject, type FormEvent } from "react";
-import { formatJamMenit, menitDariRuntime, slugify } from "@/lib/format";
+import { durasiTayangan, slugify } from "@/lib/format";
 import {
   DRAMA_QUALITY_OPTIONS,
   DRAMA_STATUS_OPTIONS,
@@ -136,6 +136,8 @@ export default function DramaForm({
   setLanguage,
   effectiveId,
   scanning,
+  mengukurDurasi,
+  onUkurDurasi,
   scanResult,
   submitting,
   message,
@@ -208,6 +210,10 @@ export default function DramaForm({
   setLanguage: Dispatch<SetStateAction<string>>;
   effectiveId: string;
   scanning: boolean;
+  /** Sedang membaca durasi dari berkas video di PC backup. */
+  mengukurDurasi: boolean;
+  /** Isi kolom Durasi dari video sungguhan — MENGISI form, bukan menyimpan. */
+  onUkurDurasi: () => void;
   scanResult: ScanResult | null;
   submitting: boolean;
   message: { type: "ok" | "error"; text: string } | null;
@@ -219,10 +225,12 @@ export default function DramaForm({
   // yang tak berlaku (jumlah episode, centang berbayar).
   const isFilm = kind === "movie";
 
-  // Durasi yang BENAR-BENAR terbaca dari teks yang diketik owner. Dipakai untuk
-  // memperlihatkan hasil lencananya langsung di form — tanpa ini owner mengetik
-  // "1 setengah jam", menyimpan, lalu bingung kenapa lencananya tidak muncul.
-  const menitDurasi = menitDariRuntime(runtime);
+  // Durasi yang BENAR-BENAR terbaca dari teks yang diketik owner, sudah siap
+  // tampil. Dipakai untuk memperlihatkan hasilnya langsung di form — tanpa ini
+  // owner mengetik "1 setengah jam", menyimpan, lalu bingung kenapa durasinya
+  // tidak muncul. Aturannya beda film vs serial, jadi `isFilm` ikut: teks
+  // "1.47" berarti 1 jam 47 menit pada film dan 1 menit 47 detik pada episode.
+  const teksDurasi = durasiTayangan(runtime, isFilm);
 
   const [imdbId, setImdbId] = useState("");
   const [imdbLoading, setImdbLoading] = useState(false);
@@ -615,11 +623,11 @@ export default function DramaForm({
             Lencana kartu (yang tampil di pojok poster)
           </p>
           <p className="mt-0.5 text-xs text-zinc-500">
-            Empat label kecil: ⭐ rating (kiri-atas), kualitas (kanan-atas), tahun
-            (kiri-bawah), durasi atau jumlah episode (kanan-bawah). Kolom yang
-            dibiarkan KOSONG membuat lencananya tidak digambar sama sekali — itu
-            disengaja: poster tanpa label lebih jujur daripada label yang
-            mengarang.
+            Empat label kecil: ⭐ rating (kiri-atas), tahun (kiri-bawah), durasi
+            (kanan-bawah), dan di kanan-atas{" "}
+            {isFilm ? "kualitas video" : "jumlah episode"}. Kolom yang dibiarkan
+            KOSONG membuat lencananya tidak digambar sama sekali — itu disengaja:
+            poster tanpa label lebih jujur daripada label yang mengarang.
           </p>
           <div className="mt-3 grid gap-3 md:grid-cols-2">
             <div className="space-y-1.5">
@@ -683,34 +691,58 @@ export default function DramaForm({
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="drama-runtime" className="text-xs text-zinc-400">
-                Durasi {isFilm ? "film" : "(tidak dipakai untuk serial)"}
-              </Label>
+              <div className="flex items-end justify-between gap-2">
+                <Label htmlFor="drama-runtime" className="text-xs text-zinc-400">
+                  Durasi {isFilm ? "film" : "per episode"}
+                </Label>
+                {/* Mengisi kolom di sebelahnya dari berkas video sungguhan —
+                    TIDAK menyimpan. Ditaruh menempel pada kolomnya (bukan di
+                    deretan tombol bawah) supaya jelas kolom mana yang diisi.
+
+                    Dimatikan saat id belum ada: tanpa id, tidak ada folder yang
+                    bisa dibuka di PC backup — tombol yang bisa diklik lalu
+                    selalu gagal cuma bikin owner mengira fiturnya rusak. */}
+                <button
+                  type="button"
+                  onClick={onUkurDurasi}
+                  disabled={mengukurDurasi || !effectiveId}
+                  className="rounded-md border border-zinc-700 px-2 py-1 text-[11px] font-medium text-zinc-300 transition hover:border-amber-400 hover:text-amber-300 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {mengukurDurasi ? "Mengukur…" : "Ukur dari video"}
+                </button>
+              </div>
               <Input
                 id="drama-runtime"
                 value={runtime}
                 onChange={(e) => setRuntime(e.target.value)}
-                placeholder="165 min"
+                placeholder={isFilm ? "165 min" : "1.47"}
                 className="rounded-lg border-zinc-700 bg-zinc-900 text-sm text-white focus-visible:border-amber-400 focus-visible:ring-0"
               />
-              {!isFilm ? (
+              {/* Tiga keadaan, bedanya cuma pada FILM yang kosong: pojok
+                  kanan-bawah film merangkap penanda jenis, jadi ada cadangan
+                  “FILM”. Serial sudah ditandai “N EPS” di kanan-atas,
+                  jadi kosong = pojoknya memang tidak digambar. */}
+              {!runtime.trim() ? (
                 <p className="text-xs text-zinc-500">
-                  Serial memajang jumlah episode ({episodes} EPS) di pojok itu,
-                  bukan durasi — jadi kolom ini boleh dibiarkan.
+                  {isFilm
+                    ? "Kosong = pojok kanan-bawah memajang “FILM”."
+                    : "Kosong = poster & daftar episode tidak memajang durasi."}
                 </p>
-              ) : !runtime.trim() ? (
-                <p className="text-xs text-zinc-500">
-                  Kosong = pojok kanan-bawah memajang “FILM”.
-                </p>
-              ) : menitDurasi === null ? (
+              ) : teksDurasi === null ? (
                 <p className="text-xs font-medium text-rose-300">
-                  Tidak terbaca sebagai durasi → lencananya akan memajang “FILM”.
-                  Yang terbaca misalnya: “165 min”, “2 jam 45 menit”, “2h 45m”.
+                  Tidak terbaca sebagai durasi{isFilm ? " film" : " episode"} →{" "}
+                  {isFilm
+                    ? "lencananya akan memajang “FILM”"
+                    : "poster & daftar episode tidak memajang durasi"}
+                  .{" "}
+                  {isFilm
+                    ? "Yang terbaca misalnya: “165 min”, “2 jam 45 menit”, “2h 45m”, “1.47” (= 1 jam 47 menit)."
+                    : "Tulis MENIT.DETIK, misalnya “1.47” (= 1 menit 47 detik) atau “2.05”. Bentuk bersatuan seperti “119 min” sengaja TIDAK dipakai untuk episode."}
                 </p>
               ) : (
                 <p className="text-xs text-emerald-300">
-                  Tergambar di poster sebagai{" "}
-                  <span className="font-bold">{formatJamMenit(menitDurasi)}</span>
+                  Tergambar sebagai <span className="font-bold">{teksDurasi}</span>
+                  {isFilm ? "" : " (menit:detik) di poster & tiap baris episode"}
                 </p>
               )}
             </div>

@@ -60,13 +60,35 @@ describe("Poster — keempat pojok benar-benar tergambar", () => {
     expect(teks).toContain("01:26"); // 86 menit -> jam:menit
   });
 
-  it("serial memajang jumlah episode, bukan durasi", () => {
+  it("serial memajang jumlah episode di kanan-atas", () => {
     const teks = isiTeks(
       render(stub({ episodes: 62, quality: "HD", year: "2025", imdbRating: "8.2" })),
     );
     expect(teks).toContain("62 EPS");
     expect(teks).toContain("8.2");
     expect(teks).toContain("2025");
+  });
+
+  it("serial berdurasi benar-benar TERGAMBAR durasinya (owner 2026-11-09)", () => {
+    // Tes saudaranya di tests/lencana-kartu.test.ts cuma membuktikan ATURANnya
+    // benar. Yang ini membuktikan kartunya sungguh menggambarnya — pojok
+    // kanan-bawah serial sempat tidak dirender sama sekali antara 2026-10-16
+    // dan tanggal ini, jadi aturan yang benar saja tidak cukup jadi bukti.
+    const teks = isiTeks(
+      render(stub({ episodes: 55, runtime: "1.47", year: "2025", imdbRating: "8.9" })),
+    );
+    expect(teks).toContain("1:47");
+    expect(teks).toContain("55 EPS");
+    expect(teks).toContain("2025");
+    // Yang diketik owner ("1.47") TIDAK boleh bocor mentah ke poster.
+    expect(teks).not.toContain("1.47");
+  });
+
+  it("serial tanpa durasi tidak menggambar apa pun di kanan-bawah", () => {
+    const teks = isiTeks(render(stub({ episodes: 55, year: "2025" })));
+    expect(teks).toContain("55 EPS");
+    expect(teks).not.toContain("0:00");
+    expect(teks).not.toContain("FILM");
   });
 
   it("serial TIDAK memajang chip kualitas walau datanya terisi", () => {

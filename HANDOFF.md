@@ -177,6 +177,77 @@ riwayat blok peringatan lama ada di seksi `## 2026-11-09` di bawah.**
 
 ---
 
+## 2026-11-09 — ✅ `04b4d43` TAYANG: durasi `j:mm:dd` terbaca 1 menit + `/film` tertahan cache
+
+Owner menguji isian manual (`2640da4`) langsung di produksi dan melaporkan DUA hal. Keduanya
+ternyata bersebab berbeda, dan yang kedua jauh lebih serius dari yang terlihat di layar.
+
+### 🪤 BUG DIAM: menyalin label kartu menghasilkan 1 MENIT
+
+Terukur sebelum perbaikan, di kode yang baru tayang sehari sebelumnya:
+
+```
+parseDurasiManual("1:47:00") -> 60 detik   -> kartu menampilkan "1:00"
+parseDurasiManual("2:25:00") -> 120 detik  -> kartu menampilkan "2:00"
+```
+
+Tak satu pun pola lama mengenali bentuk TIGA-BAGIAN, jadi teksnya jatuh ke `menitDariRuntime`
+yang mengambil angka PERTAMA dan membacanya sebagai menit. Nol error — film 1 jam 47 menit
+tayang berlabel **"1:00"** ke penonton.
+
+📌 **PELAJARAN YANG LEBIH BESAR DARI BUG-NYA: jalur paling ALAMI adalah jalur paling SALAH.**
+`1:47:00` justru bentuk yang paling mungkin diketik, karena persis itu yang admin lihat di kartu
+lalu salin. Saat merancang isian manual (`2640da4`) aturannya diambil dari kolom Durasi DRAMA
+(menit.detik) tanpa menanyakan bentuk apa yang sebenarnya ADA di depan mata pemakainya. Pertanyaan
+yang seharusnya ditanyakan: *"apa yang akan disalin orang ke kotak ini?"* — bukan *"aturan mana
+yang sudah ada di tempat lain?"*
+
+Aturan barunya BERCERMIN ke tampilan kartu — tulis persis seperti yang tampil:
+`"1:47:00"` = 1 jam 47 menit · `"2:25"` = 2 menit 25 detik · `"95 min"` dari IMDb · `"145"` = 145
+menit. Bentuk lama TIDAK berubah artinya; pola tiga-bagian murni tambahan.
+
+⚠️ **Ditangani TERTUTUP** — begitu teks berbentuk tiga-bagian, hanya pola ketat yang lolos;
+selebihnya `null`, TIDAK diteruskan ke pola di bawah. Tanpa penutupan itu `"1:70:00"` jatuh ke
+pintu yang sama dan terbaca 1 menit juga. Ketahuan karena tes **MERAH di percobaan pertama** —
+tesnya menangkap lubang yang perbaikannya sendiri belum tutup.
+
+**PRATINJAU** di panel (`jelaskanDurasiManual`): memperlihatkan hasil bacaan sambil mengetik.
+`1:45` → "= 1 menit 45 detik" · `1:45:00` → "= 1 jam 45 menit". Dua ketikan yang cuma beda `:00`
+di ekor, arti jauh berbeda, dan salah pilih tak memunculkan error apa pun. 📌 Satu kalimat
+petunjuk lagi tetap bisa terlewat; **angka yang terbaca di depan mata tidak** — itu bedanya
+memberi tahu dan memperlihatkan.
+
+### 🪤 "Isian saya hilang di sebagian halaman" — ternyata cache, DAN tetap salah konfigurasi
+
+Diukur di produksi: objek video yang SAMA berisi `durationLabel: "1:45"` di `/discover` tapi masih
+`"-"` di `/film`. Sebabnya `/film` memakai `revalidate = 300` sementara `/beranda`, `/discover`,
+dan `/` memakai 60 — padahal **keempatnya membaca sumber yang sama persis**
+(`getPlaylyVideosGabunganCached`). Ditambah sifat ISR, permintaan PERTAMA sesudah kedaluwarsa pun
+masih menyajikan salinan lama.
+
+📌 **"Bukan bug, cuma cache" BUKAN alasan menutup laporan.** Angka 300 dulu disamakan dengan
+`PLAYLY_PUBLIK_TTL_SECONDS`, tapi yang menahan isian manual adalah `CATALOG_TTL_SECONDS` (60) —
+jadi 300 tidak pernah membeli apa pun di sini, cuma menunda. Disamakan ke 60; nol panggilan
+tambahan ke Playly karena data Playly ber-cache sendiri, yang dibangun ulang cuma HTML-nya.
+Panel juga kini menyebut "tampil di situs sekitar 2 menit", supaya menunggu tidak lagi terbaca
+sebagai "simpanan saya gagal".
+
+### Penjaga
+
+`tests/durasi-manual-seragam.test.ts` — keempat halaman publik WAJIB memakai `revalidate` yang
+sama dan tak boleh melebihi `CATALOG_TTL_SECONDS`. **Diuji-balik:** dikembalikan ke 300, tes merah
+dan menyebut berkasnya. Pratinjau dikunci lewat **NAMA FUNGSI**, bukan kata — kalimat di komentar
+bisa lolos sebagai bukti palsu, pemanggilan tidak (pelajaran penjaga kotak-cari, hari yang sama).
+Pembacaan berkas sumber dinormalkan CRLF→LF sejak awal.
+
+**Bukti:** `npm run gerbang` LOLOS 5/5 — build sukses, `tsc` 0 error, **2259 tes / 160 berkas
+hijau**.
+
+📌 Satu video yang terlanjur diisi (`1793241403054`, 105 detik) perlu diketik ulang owner — yang
+tersimpan adalah DETIKNYA, bukan teksnya, jadi perbaikan parser tidak menyentuhnya.
+
+---
+
 ## 2026-11-09 — ✅ `2640da4` TAYANG: isian manual tahun & durasi video Playly
 
 **Permintaan owner:** *"kalau yang tidak ada gimana cara isi manualnya"*. Jawaban saat itu:

@@ -23,13 +23,32 @@
 > lengkap: `HANDOFF.md` seksi `## 2026-11-09`.
 
 
-**Terakhir dicek:** 2026-11-09 (**komputer OWNER**), **sesudah rilis `2640da4`**.
-`HEAD` = `origin/main` = `dramaku/main` = **`2640da4`**, working tree **bersih**. **NOL ANTREAN.**
+**Terakhir dicek:** 2026-11-09 (**komputer OWNER**), **sesudah rilis `04b4d43`**.
+`HEAD` = `origin/main` = `dramaku/main` = **`04b4d43`**, working tree **bersih**. **NOL ANTREAN.**
+
+> ✅ **RILIS `04b4d43` TAYANG 2026-11-09 — dua temuan owner saat menguji `2640da4` di produksi.**
+> Gerbang LOLOS 5/5, **2259 tes/160 berkas**. Diverifikasi di bundle produksi: penanda baru
+> `"persis seperti yang tampil di kartu"` + `"1:47:00"` + pratinjau **ADA**, penanda lama
+> `"menit.detik"` **hilang**, parser tiga-bagian ikut ter-bundle
+> (`3600*Number(e[1])+60*Number(e[2])+Number(e[3])`). Situs 200 di lima alamat, admin **401**.
+>
+> 🪤 **BUG DIAM: menyalin label kartu menghasilkan 1 MENIT.** Terukur sebelum perbaikan —
+> `parseDurasiManual("1:47:00")` → **60 detik**, tayang berlabel `"1:00"`. Tak satu pun pola lama
+> mengenali bentuk tiga-bagian, jadi jatuh ke `menitDariRuntime` yang mengambil angka PERTAMA.
+> **Pelajaran: jalur paling ALAMI adalah jalur paling SALAH** — `1:47:00` justru bentuk yang paling
+> mungkin diketik, karena persis itu yang admin lihat di kartu lalu salin. Aturannya kini bercermin
+> ke tampilan kartu, + **pratinjau** yang memperlihatkan hasil bacaan sambil mengetik.
+>
+> 🪤 **"Isian saya hilang di sebagian halaman" = `/film` menahan cache 5× lebih lama** (`revalidate`
+> 300 vs 60 di tiga halaman lain yang membaca sumber SAMA). **"Bukan bug, cuma cache" bukan alasan
+> menutup laporan**: 300 tak pernah membeli apa pun di sini karena yang menahan isian manual adalah
+> `CATALOG_TTL_SECONDS` (60). Disamakan ke 60, nol panggilan tambahan ke Playly.
 
 > ✅ **RILIS `2640da4` TAYANG 2026-11-09 — isian manual tahun & durasi video Playly.** Panel kecil
-> yang terbuka saat judul diklik; durasi ditulis menit.detik. Gerbang LOLOS 5/5, 2235 tes/157
-> berkas. Diverifikasi sesudah tayang: `"Dikosongkan = kembali ikut"` · `"menit.detik"` ADA di
+> yang terbuka saat judul diklik. Gerbang LOLOS 5/5, 2235 tes/157
+> berkas. Diverifikasi sesudah tayang: `"Dikosongkan = kembali ikut"` ADA di
 > bundle, `POST /api/admin/playly/meta` tanpa login → **401**. Situs 200 di empat alamat.
+> ⚠️ Aturan durasi menit.detik yang dirilis di sini **diganti `04b4d43`** — lihat blok di atas.
 >
 > 🪤 **GERBANG MENANGKAP BUILD GAGAL yang tsc & vitest LEWATKAN** — `import` modul server ke
 > komponen `"use client"` (`formatDuration` dari `lib/playly.ts` yang menyeret `node:crypto`).

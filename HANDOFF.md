@@ -177,6 +177,78 @@ riwayat blok peringatan lama ada di seksi `## 2026-11-09` di bawah.**
 
 ---
 
+## 2026-11-09 — ✅ `12c2c3b` TAYANG: kotak cari + kontrol halaman seragam di 3 daftar admin
+
+**Permintaan owner:** *"tambahkan kolom search di daftar drama dan pagination serta kamu telusuri
+tab mana saja yang perlu search dan pagination kamu seragamkan"*.
+
+**HASIL TELUSUR — jumlah data DIUKUR dari produksi, bukan ditebak:**
+
+| Tab | Data | Keputusan |
+|---|---|---|
+| Daftar Drama | 41 drama | **dipasang** (permintaan eksplisit) |
+| Daftar video Playly (`PlaylyVideoPicker`) | ratusan | **dipasang** — temuan telusur, selama ini digambar SEMUA sekaligus |
+| Link download (`PlaylyUnduhanManager`) | ratusan | **dipasang** — sama |
+| Panel visibilitas IMDb (`PlaylyVisibilityManager`) | ratusan | sudah punya keduanya sejak 2026-11-06 |
+| Kelola Admin | 5 orang | **tidak** — muat satu layar |
+| Pemilih IMDb (`PlaylyImdbPicker`) | ≤10 kandidat | **tidak** — sudah punya kotak cari sendiri |
+| Bagian aktif Playly | 4-5 bagian | **tidak** |
+
+**FONDASI BERSAMA — ini yang membuat "seragam" bukan sekadar "mirip":**
+- `app/components/admin/useDaftarAdmin.ts` (BARU) — menyatukan tiga keputusan yang selalu muncul
+  bersama: saring dengan ketikan → jepit nomor halaman → potong baris yang tampil. Aturan aslinya
+  TETAP di `lib/pencarian.ts` & `lib/paginasi.ts` supaya bisa diuji tanpa React; hook ini cuma
+  menyimpan state.
+- `app/components/admin/KotakCariDaftar.tsx` (BARU) — kotak cari seragam: tombol ×, Escape
+  mengosongkan, jumlah hasil di sebelahnya.
+
+⚠️ **JANGAN salin-tempel pola ini ke daftar keempat nanti** — pakai hook + komponennya. Empat
+salinan pasti menyimpang (satu memakai ukuran bawaan beda, satu lupa menjepit nomor halaman).
+Dikunci oleh tes: `tests/admin-daftar-seragam.test.ts` membaca ketiga berkas dan menuntut
+`useDaftarAdmin` + `KotakCariDaftar` + `PaginasiDaftar` ada di semuanya.
+
+💡 **Pencariannya memakai `lib/pencarian.ts` yang SAMA dengan pencarian penonton**, jadi
+"CEO" = "ceo" = "Ceo" dan aksen diratakan di mana pun — bukan logika kedua yang bisa menyimpang.
+
+🪤 **Nomor halaman dijepit SAAT RENDER, bukan lewat efek.** Mengetik di kotak cari memendekkan
+daftar sehingga nomor halaman lama keluar rentang; lewat efek ada satu render di mana daftarnya
+KOSONG, dan layar kosong terbaca seperti panel rusak. Alasan lengkap di `lib/paginasi.ts`.
+
+💡 Layar kosong dibedakan DUA sebab karena tindakannya berbeda: katalog memang kosong (tambah
+drama) vs ketikan tak cocok (tombol "Kosongkan pencarian").
+
+**Bukti:** `npm run gerbang` LOLOS 5/5 — build sukses, `tsc` 0 error, **2150 tes / 150 berkas
+hijau**. Tes baru `tests/admin-daftar-seragam.test.ts` (7 tes) **menghitung baris yang
+BENAR-BENAR digambar** — kesalahan paling mudah saat memasang paginasi adalah tetap memetakan
+daftar penuh sambil memasang tombol halaman di bawahnya: tombolnya jadi hiasan, nol error, nol
+tes merah, baru ketahuan kalau ada yang mengklik.
+
+**Verifikasi SESUDAH tayang** lewat sidik-jari bundle (panel admin dirender di browser, jadi HTML
+server tidak membuktikan apa pun): `"Cari judul, kategori, atau ID"` · `"Kosongkan pencarian"` ·
+`"Sebelumnya"` ADA di chunk `/admin`; `"Cari judul video"` ADA di chunk `/admin/videos/playly`.
+
+---
+
+## 2026-11-09 — ℹ️ "Beranda tidak semua ada durasi" — BUKAN bug, nol kode diubah
+
+Owner melapor sesudah pengisian massal. Diukur, bukan ditebak:
+- `/api/dramas` produksi → **40 dari 40 serial** punya durasi tergambar. Data LENGKAP.
+- Beranda saat dicek pertama → **20 label durasi dari 97 kartu**, dan angkanya nilai LAMA
+  (`1:47`, `1:26`, `22:37`) — yaitu yang diisi manual owner SEBELUM pengukuran massal.
+- Header balasan: `x-nextjs-cache: HIT`, `Cache-Control: s-maxage=60, stale-while-revalidate=…`
+- Dicek ulang beberapa saat kemudian → **98 label durasi dari 97 kartu**. Lengkap.
+
+**Sebabnya ISR**: `app/page.tsx` & `app/beranda/page.tsx` memakai `export const revalidate = 60`,
+dan `CATALOG_TTL_SECONDS = 60` di `lib/dramas.ts`. Halaman jadi disimpan; perubahan katalog butuh
+sampai ~60 detik + satu kunjungan untuk menggantikan versi simpanan. **Itu rancangan, bukan
+kerusakan — jangan "perbaiki" dengan mematikan cache.**
+
+📌 Pelajaran untuk sesi berikutnya: laporan "sebagian data tidak muncul" sesudah perubahan katalog
+WAJIB dicek dulu ke `/api/dramas` (sumber) sebelum menyentuh kode tampilan. Di sini datanya sudah
+benar sejak awal.
+
+---
+
 ## 2026-11-09 — ✅ `77b68eb` TAYANG: PERBAIKAN pengukur durasi (2 cacat, 41/41 gagal → 5/5 terbaca)
 
 > 🔴 **Rilis `5402dca` tayang dengan fitur "Ukur dari video" RUSAK TOTAL** — owner melapor

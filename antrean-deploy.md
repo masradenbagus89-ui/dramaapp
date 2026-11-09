@@ -23,8 +23,15 @@
 > lengkap: `HANDOFF.md` seksi `## 2026-11-09`.
 
 
-**Terakhir dicek:** 2026-11-09 (**komputer OWNER**), **sesudah rilis `77b68eb`**.
-`HEAD` = `origin/main` = `dramaku/main` = **`77b68eb`**, working tree **bersih**. **NOL ANTREAN.**
+**Terakhir dicek:** 2026-11-09 (**komputer OWNER**), **sesudah rilis `12c2c3b`**.
+`HEAD` = `origin/main` = `dramaku/main` = **`12c2c3b`**, working tree **bersih**. **NOL ANTREAN.**
+
+> ✅ **RILIS `12c2c3b` TAYANG 2026-11-09 — kotak cari + kontrol halaman seragam di 3 daftar admin**
+> (Daftar Drama · Daftar video Playly · Link download). Gerbang LOLOS 5/5, 2150 tes/150 berkas.
+> Diverifikasi SESUDAH tayang lewat sidik-jari bundle (panel admin dirender di browser, jadi HTML
+> server tidak membuktikan apa pun): teks `"Cari judul, kategori, atau ID"` + `"Kosongkan
+> pencarian"` + `"Sebelumnya"` ADA di chunk `/admin`; `"Cari judul video"` ADA di chunk
+> `/admin/videos/playly` — wajar tidak ada di `/admin` karena tab itu halaman terpisah.
 
 > ✅ **RILIS `77b68eb` TAYANG 2026-11-09 — PERBAIKAN pengukur durasi.** Rilis `5402dca` sebelumnya
 > tayang dengan fitur "Ukur dari video" **rusak total** (0 terbaca dari 41). Dua cacat: pembaca

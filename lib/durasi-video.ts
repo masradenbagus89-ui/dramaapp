@@ -33,22 +33,60 @@ import { isMovie, type Drama } from "./types";
 export const BYTE_HEADER_DIBACA = 256 * 1024;
 
 /**
- * Baca durasi (DETIK) dari potongan awal berkas MP4. `null` = tidak ketemu.
+ * Dua tempat yang dicoba, berurutan: awal berkas lalu EKOR berkas.
  *
- * Cara kerjanya: cari penanda `mvhd` ("movie header"), lalu baca dua angka di
- * belakangnya — `timescale` (berapa satuan waktu per detik) dan `duration`
+ * KENAPA EKOR WAJIB ADA (diukur di produksi 2026-11-09): seluruh 41 video
+ * DramaKu berbentuk `ftyp · free · mdat` — data gambar langsung, `moov` di
+ * paling belakang. Versi pertama fitur ini cuma membaca awal berkas, dan
+ * hasilnya "gagal" pada 41 dari 41 judul. Bukan kasus langka yang bisa
+ * dibiarkan: itu bentuk SEMUA berkas di katalog ini.
+ *
+ * Nilai "-N" adalah suffix range HTTP = "N byte terakhir". Dicoba BELAKANGAN
+ * karena berkas ber-faststart (moov di depan) jauh lebih murah dibaca dari
+ * awal, dan tiap percobaan berarti satu permintaan ke tunnel PC backup rumahan.
+ */
+export const JANGKAUAN_DICOBA = [
+  `bytes=0-${BYTE_HEADER_DIBACA - 1}`,
+  `bytes=-${BYTE_HEADER_DIBACA}`,
+] as const;
+
+/**
+ * Ukuran baku atom `mvhd` — satu-satunya nilai sah per versi.
+ *
+ * Dipakai sebagai PENJAGA, bukan kerapian: pencarian 4 huruf "mvhd" di dalam
+ * berkas video pasti sesekali menabrak data gambar yang kebetulan berbunyi
+ * sama. Terbukti pada berkas produksi 2026-11-09 — kecocokan palsu terbaca
+ * sebagai `timescale = 3.865.645.486` lalu menghasilkan 0,00000026 detik.
+ * Angka itu tidak error; ia cuma salah.
+ */
+const UKURAN_MVHD: Record<number, number> = { 0: 108, 1: 120 };
+
+/**
+ * Baca durasi (DETIK) dari potongan berkas MP4. `null` = tidak ketemu.
+ *
+ * Cara kerjanya: cari atom `mvhd` ("movie header"), lalu baca dua angka di
+ * dalamnya — `timescale` (berapa satuan waktu per detik) dan `duration`
  * (panjang video dalam satuan itu). Durasi detik = duration / timescale.
  *
- * Dua versi atom `mvhd` punya tata letak berbeda, dan keduanya ditangani:
- *   versi 0 → timescale di +12, duration di +16, keduanya 32-bit
- *   versi 1 → timescale di +20, duration di +24, duration 64-bit
- * Mengabaikan versi 1 membuat video panjang/berpresisi tinggi terbaca sebagai
- * angka sampah, bukan gagal — jenis kerusakan yang paling sulit terlihat.
+ * ⚠️ TATA LETAK — JANGAN diubah tanpa membuka spesifikasinya (ISO/IEC
+ * 14496-12). Dihitung dari huruf "m" pada "mvhd":
+ *   versi 0: +8 creation(4) · +12 modification(4) · **+16 timescale(4)** · **+20 duration(4)**
+ *   versi 1: +8 creation(8) · +16 modification(8) · **+24 timescale(4)** · **+28 duration(8)**
+ *
+ * 🪤 Versi pertama berkas ini (2026-11-09, sempat TAYANG) memakai +12/+16 dan
+ * +20/+24 — meleset 4 byte, sehingga yang terbaca sebagai `timescale`
+ * sebenarnya `modification_time`. Itu TIDAK ketahuan oleh tes, karena tes
+ * ikut merakit byte dengan offset yang sama salahnya: tesnya memvalidasi kode
+ * terhadap asumsi kode itu sendiri. Penjaganya sekarang memakai angka dari
+ * berkas produksi SUNGGUHAN (timescale 1000, duration 135600 → 2:16), yang
+ * tidak bisa dibuat cocok oleh offset yang salah.
  */
 export function detikDariHeaderMp4(buf: Uint8Array): number | null {
   const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
-  // 32 byte sisa adalah ruang minimum yang dibutuhkan pembacaan versi 1.
-  for (let i = 0; i + 32 < buf.length; i++) {
+  // Mulai dari 4: ukuran atom duduk di 4 byte SEBELUM namanya, jadi kecocokan
+  // di posisi 0-3 tidak mungkin punya header yang sah.
+  // Sisa 36 byte adalah ruang minimum yang dibutuhkan pembacaan versi 1.
+  for (let i = 4; i + 36 <= buf.length; i++) {
     if (
       buf[i] !== 0x6d || // m
       buf[i + 1] !== 0x76 || // v
@@ -58,15 +96,19 @@ export function detikDariHeaderMp4(buf: Uint8Array): number | null {
       continue;
     }
     const versi = buf[i + 4];
+    // Kecocokan palsu disaring di sini — lihat UKURAN_MVHD. `continue`, bukan
+    // `return`: atom yang asli bisa saja muncul setelahnya.
+    if (view.getUint32(i - 4) !== UKURAN_MVHD[versi]) continue;
+
     const skala =
-      versi === 1 ? view.getUint32(i + 20) : view.getUint32(i + 12);
+      versi === 1 ? view.getUint32(i + 24) : view.getUint32(i + 16);
     const durasi =
-      versi === 1 ? Number(view.getBigUint64(i + 24)) : view.getUint32(i + 16);
+      versi === 1 ? Number(view.getBigUint64(i + 28)) : view.getUint32(i + 20);
 
     // `duration = 0xFFFFFFFF` adalah penanda baku "panjangnya tidak diketahui"
     // (siaran langsung / berkas yang perekamannya terputus). Angka itu harus
     // ditolak, bukan dibagi — hasilnya jadi durasi raksasa yang terlihat sah.
-    if (versi !== 1 && durasi === 0xffffffff) return null;
+    if (versi !== 1 && durasi === 0xffffffff) continue;
     if (skala > 0 && durasi > 0) return durasi / skala;
   }
   return null;

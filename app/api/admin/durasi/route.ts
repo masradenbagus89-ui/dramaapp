@@ -8,6 +8,7 @@ import { isMovie } from "@/lib/types";
 import { durasiTayangan } from "@/lib/format";
 import {
   BYTE_HEADER_DIBACA,
+  JANGKAUAN_DICOBA,
   detikDariHeaderMp4,
   detikKeDurasiEpisode,
 } from "@/lib/durasi-video";
@@ -110,45 +111,59 @@ export async function GET(req: NextRequest) {
       Date.now() / 1000,
     );
 
-    let res: Response;
-    try {
-      res = await fetch(url, {
-        cache: "no-store",
-        redirect: "manual",
-        headers: { Range: `bytes=0-${BYTE_HEADER_DIBACA - 1}` },
-        signal: AbortSignal.timeout(TIMEOUT_MS),
-      });
-    } catch (e) {
-      const m = e instanceof Error ? e.message : String(e);
-      return NextResponse.json(
-        {
-          error: `Tidak bisa membaca video episode ${ep}: ${m}. Pastikan Caddy + cloudflared masih jalan di PC backup.`,
-        },
-        { status: 502 },
-      );
-    }
+    // Dicoba dua kali: awal berkas, lalu EKOR berkas. Seluruh video DramaKu
+    // menaruh `moov` di belakang (diukur 2026-11-09 — 41 dari 41 judul), jadi
+    // percobaan kedua bukan jaring pengaman: itu jalur yang biasa dipakai.
+    // Berhenti pada percobaan pertama yang berhasil.
+    let detik: number | null = null;
+    let galatTerakhir: { pesan: string; status: number } | null = null;
 
-    // 206 = server menghormati Range (yang diharapkan); 200 = dia mengirim
-    // seluruh berkas. Keduanya bisa dipakai — headernya tetap di awal.
-    if (res.status !== 206 && res.status !== 200) {
-      const ditolak = res.status === 403;
-      return NextResponse.json(
-        {
-          error: ditolak
+    for (const jangkauan of JANGKAUAN_DICOBA) {
+      let res: Response;
+      try {
+        res = await fetch(url, {
+          cache: "no-store",
+          redirect: "manual",
+          headers: { Range: jangkauan },
+          signal: AbortSignal.timeout(TIMEOUT_MS),
+        });
+      } catch (e) {
+        const m = e instanceof Error ? e.message : String(e);
+        galatTerakhir = {
+          pesan: `Tidak bisa membaca video episode ${ep}: ${m}. Pastikan Caddy + cloudflared masih jalan di PC backup.`,
+          status: 502,
+        };
+        continue;
+      }
+
+      // 206 = server menghormati Range (yang diharapkan); 200 = dia mengirim
+      // seluruh berkas. Keduanya bisa dipakai.
+      if (res.status !== 206 && res.status !== 200) {
+        const ditolak = res.status === 403;
+        galatTerakhir = {
+          pesan: ditolak
             ? "Video menolak permintaan (403). Tanda tangan tidak diterima PC backup — periksa VIDEO_SIGNING_SECRET di panel hosting cocok dengan yang dipasang Caddy."
             : `Video episode ${ep} tidak terbaca (HTTP ${res.status}). Pastikan berkas "${ep}.mp4" ada di folder "${dramaId}".`,
-        },
-        { status: ditolak ? 502 : 404 },
-      );
+          status: ditolak ? 502 : 404,
+        };
+        continue;
+      }
+
+      detik = detikDariHeaderMp4(new Uint8Array(await res.arrayBuffer()));
+      if (detik !== null) break;
     }
 
-    const detik = detikDariHeaderMp4(new Uint8Array(await res.arrayBuffer()));
     if (detik === null) {
+      // Kegagalan JARINGAN dilaporkan apa adanya supaya owner tahu harus
+      // menyalakan PC backup, bukan menyunting berkas. Kalau byte-nya terbaca
+      // tapi durasinya tidak ada di kedua ujung, itu masalah berkasnya sendiri.
       return NextResponse.json(
         {
-          error: `Durasi tidak tertulis di ${BYTE_HEADER_DIBACA / 1024}KB pertama berkas. Video ini kemungkinan belum disiapkan untuk streaming (atom "moov" di akhir berkas) — durasinya perlu diisi manual.`,
+          error:
+            galatTerakhir?.pesan ??
+            `Durasi tidak tertulis di ${BYTE_HEADER_DIBACA / 1024}KB pertama maupun terakhir berkas. Durasinya perlu diisi manual.`,
         },
-        { status: 422 },
+        { status: galatTerakhir?.status ?? 422 },
       );
     }
 

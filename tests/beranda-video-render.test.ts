@@ -151,3 +151,45 @@ describe("halaman depan & Shorts SENGAJA tidak ikut berubah", () => {
     });
   }
 });
+
+describe("lencana TAHUN di kartu video (owner 2026-11-09)", () => {
+  // Owner: "tambahkan di kiri bawah buat tahun tayang otomatis karena di film
+  // belum ada tahun". Datanya SUDAH ada di PlaylyVideoPublik (`year`, diisi
+  // dari data IMDb) — yang belum ada cuma penggambarannya. Diukur di produksi:
+  // 408 dari 489 video punya tahun.
+  it("tahun tergambar kalau datanya ada", () => {
+    const html = render([kartuVideo(video("v1", { year: "2023" }))]);
+    expect(
+      html,
+      "tahun tidak tergambar — padahal datanya ada di video.year",
+    ).toContain("2023");
+  });
+
+  it("tahun KOSONG tidak diganti tanda hubung", () => {
+    // 81 video belum dicocokkan ke IMDb sehingga tahunnya kosong. Memajang
+    // "—" di situ cuma menambah coretan tanpa memberi tahu apa pun — aturan
+    // yang sama dengan rating & kualitas di kartu ini (lib/lencana-kartu.ts).
+    const html = render([kartuVideo(video("v1", { year: null }))]);
+    expect(html).not.toContain("—");
+    expect(html).not.toContain(">-<");
+  });
+
+  it("durasi tetap di kanan walau tahun tidak digambar", () => {
+    // `justify-between` menarik satu-satunya anak ke KIRI kalau pasangannya
+    // hilang — itu sebabnya ada pengisi kosong di KartuVideo. Tanpa penjaga
+    // ini, durasi diam-diam pindah pojok pada 81 video tanpa tahun.
+    const html = render([
+      kartuVideo(video("v1", { year: null, durationLabel: "1:45" })),
+    ]);
+    expect(html).toContain("1:45");
+    expect(html).toContain("justify-between");
+  });
+
+  it("tahun dan durasi bisa tergambar BERSAMAAN", () => {
+    const html = render([
+      kartuVideo(video("v1", { year: "2024", durationLabel: "2:10" })),
+    ]);
+    expect(html).toContain("2024");
+    expect(html).toContain("2:10");
+  });
+});

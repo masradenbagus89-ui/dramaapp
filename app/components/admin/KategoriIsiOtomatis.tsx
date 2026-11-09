@@ -197,7 +197,17 @@ export default function KategoriIsiOtomatis({
               >
                 Batal
               </Button>
-              <Button type="button" size="sm" onClick={simpan} disabled={dicentang === 0}>
+              {/* HIJAU untuk aksi menyimpan, sama dengan tombol simpan di
+                  panel "Cocokkan semua". Warnanya membawa arti di sini, bukan
+                  hiasan: memulai pencarian bisa dibatalkan, menyimpan tidak —
+                  jadi keduanya tidak boleh terlihat sama. */}
+              <Button
+                type="button"
+                size="sm"
+                onClick={simpan}
+                disabled={dicentang === 0}
+                className="bg-emerald-600 text-white hover:bg-emerald-500"
+              >
                 Simpan {dicentang} kategori
               </Button>
             </>

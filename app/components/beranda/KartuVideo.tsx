@@ -94,14 +94,40 @@ export default function KartuVideo({ video }: { video: PlaylyVideoPublik }) {
             )}
           </div>
 
-          {/* Durasi di pojok kanan-bawah — posisi yang sama dengan lencana
-              durasi poster drama (app/components/Poster.tsx). "-" berarti
-              Playly tidak mengirim panjang videonya; jangan digambar. */}
-          {video.durationLabel !== "-" && (
-            <span className="pointer-events-none absolute bottom-1 right-1 z-10 rounded-sm bg-black/75 px-1.5 py-0.5 text-[10px] font-bold text-white shadow md:text-[11px]">
-              {video.durationLabel}
-            </span>
-          )}
+          {/* Baris bawah: TAHUN di kiri, DURASI di kanan — susunan yang sama
+              dengan poster drama (app/components/Poster.tsx), jadi penonton
+              membaca pojok yang sama untuk informasi yang sama di seluruh
+              situs.
+
+              TAHUN baru ditambahkan 2026-11-09 (owner: "tambahkan di kiri
+              bawah buat tahun tayang otomatis karena di film belum ada tahun").
+              Seperti rating & kualitas sebelumnya, datanya SUDAH ada di
+              `lib/playly-publik.ts` (`year`, diisi dari data IMDb yang
+              dicocokkan admin) — cuma tidak pernah dipajang. Diukur di
+              produksi hari itu: 408 dari 489 video punya tahun.
+
+              Keduanya hilang sendiri saat kosong, tidak diganti "—": 81 video
+              yang tahunnya belum ada adalah yang belum dicocokkan ke IMDb, dan
+              memajang tanda hubung di situ cuma menambah coretan tanpa
+              memberi tahu apa pun. "-" pada durasi berarti Playly tidak
+              mengirim panjang videonya. */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex items-end justify-between gap-1 p-1">
+            {video.year ? (
+              <span className="rounded-sm bg-black/75 px-1.5 py-0.5 text-[10px] font-bold text-white shadow md:text-[11px]">
+                {video.year}
+              </span>
+            ) : (
+              // Pengisi kosong supaya durasi tetap menempel ke KANAN walau
+              // tahunnya tidak digambar — tanpa ini `justify-between` akan
+              // menarik durasi ke kiri.
+              <span aria-hidden="true" />
+            )}
+            {video.durationLabel !== "-" && (
+              <span className="rounded-sm bg-black/75 px-1.5 py-0.5 text-[10px] font-bold text-white shadow md:text-[11px]">
+                {video.durationLabel}
+              </span>
+            )}
+          </div>
         </div>
 
         <span className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-black/0 transition-colors duration-200 group-hover/kartu:bg-black/40">

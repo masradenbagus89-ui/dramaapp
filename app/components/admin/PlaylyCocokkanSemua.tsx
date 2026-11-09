@@ -236,8 +236,12 @@ export default function PlaylyCocokkanSemua({
             onClick={mulai}
             disabled={belumPunya.length === 0}
             size="sm"
-            className="rounded-full bg-sky-600 px-4 text-xs font-semibold text-white hover:bg-sky-500"
           >
+            {/* Warna BAWAAN tombol project, bukan `bg-sky-600` seperti dulu
+                (owner 2026-11-09: "warna tidak sama jadi UInya kurang pas").
+                Tombol ini dan "Tebak kategori" di panel sebelahnya sama-sama
+                aksi utama panelnya, jadi dua warna berbeda membuat salah
+                satunya terbaca lebih penting padahal setara. */}
             <Search className="mr-1.5 size-3.5" />
             {baris.length > 0 ? "Cari ulang" : "Cocokkan semua"}
           </Button>

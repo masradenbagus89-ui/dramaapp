@@ -177,6 +177,45 @@ riwayat blok peringatan lama ada di seksi `## 2026-11-09` di bawah.**
 
 ---
 
+## 2026-11-09 — ✅ `77b68eb` TAYANG: PERBAIKAN pengukur durasi (2 cacat, 41/41 gagal → 5/5 terbaca)
+
+> 🔴 **Rilis `5402dca` tayang dengan fitur "Ukur dari video" RUSAK TOTAL** — owner melapor
+> "sebagian gagal", padahal panelnya menulis **"0 terbaca dari 41"**. Kegagalan merata = satu
+> penyebab. Ternyata **DUA cacat bertumpuk**, diperbaiki di `77b68eb`.
+>
+> **Cacat 1 (membuat kegagalan 100%):** pembaca cuma meminta 256KB **AWAL** berkas. Seluruh 41
+> video DramaKu berbentuk `ftyp · free · mdat` — atom `moov` (tempat durasi) duduk di **paling
+> belakang**. Komentar kodenya sendiri sudah menyebut ini "batas yang diketahui" tapi
+> memperlakukannya sebagai kasus langka; ternyata itu bentuk SEMUA berkas. Perbaikan:
+> `JANGKAUAN_DICOBA` = `bytes=0-262143` lalu `bytes=-262144` (suffix range HTTP).
+>
+> **Cacat 2 (lebih berbahaya):** offset byte di dalam atom `mvhd` **meleset 4 byte** — `timescale`
+> dibaca di +12 (seharusnya +16), versi 1 di +20 (seharusnya +24), sehingga yang terbaca sebagai
+> timescale sebenarnya `modification_time`. Dari berkas produksi hasilnya **0,00000026 detik**:
+> bukan error, cuma salah. **Kalau cacat 1 saja yang diperbaiki, 41 drama memajang "0:00" dan tak
+> ada yang melapor.**
+>
+> ⭐ **KENAPA 12 TES HIJAU TIDAK MENANGKAPNYA — pelajaran terpenting sesi ini.** Helper `mvhd()`
+> di tesnya MENULIS byte pada offset yang sama salahnya dengan kodenya. Tesnya memvalidasi kode
+> terhadap asumsi kode itu sendiri, lalu lolos gerbang, lolos `tsc`, dan TAYANG. Helper kini
+> ditulis dari spesifikasi ISO/IEC 14496-12, + satu tes mengunci angka NYATA berkas produksi
+> (`timescale 1000 · duration 135600 → 2:16`) yang mustahil cocok kalau offsetnya bergeser lagi.
+> + penjaga kecocokan-palsu (ukuran atom wajib 108/120 — tanpa itu berkas produksi menghasilkan
+> `timescale 3.865.645.486`). Pelajaran lengkap: `docs/lintasai/INDEX.md`.
+>
+> 💡 **Nol angka sampah masuk katalog**, karena endpoint ini sengaja MEMBACA saja dan hasilnya
+> ditahan di layar sampai owner menekan Simpan. Pola "ukur → tinjau → simpan" terbukti bukan
+> kehati-hatian berlebihan.
+>
+> **Bukti SESUDAH TAYANG** (login admin produksi → panggil pengukur sungguhan, GET = nol tulis):
+> `2.00` (120 dtk) putrinya-disakiti · `2.16` (136) permaisuri-bangkit · `2.07` (127)
+> guru-misterius · `2.00` satu-pukulan-menantu · `2.00` dikira-sopir-lemah — **5 dari 5 terbaca**,
+> semuanya di rentang 2 menit (wajar untuk drama pendek).
+>
+> 📌 **Untuk owner:** drama "Putrinya Disakiti" terukur **2.00**, sedangkan isian tangan owner
+> `1.47` — selisih 13 detik. Karena `1.47` sudah tergambar sah, panel massal TIDAK mencentangnya
+> otomatis (pagar "jangan timpa isian tangan"). Centang manual kalau mau memakai hasil ukur.
+
 ## 2026-11-09 — ✅ `5402dca` TAYANG: durasi serial (poster + detail + tiap episode) + pengisi otomatis
 
 > ✅ **TAYANG 2026-11-09, deploy ~60 detik, downtime nol.** Gerbang `npm run gerbang` LOLOS 5/5.

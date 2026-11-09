@@ -23,8 +23,16 @@
 > lengkap: `HANDOFF.md` seksi `## 2026-11-09`.
 
 
-**Terakhir dicek:** 2026-11-09 (**komputer OWNER**), **sesudah rilis `5402dca`**.
-`HEAD` = `origin/main` = `dramaku/main` = **`5402dca`**, working tree **bersih**. **NOL ANTREAN.**
+**Terakhir dicek:** 2026-11-09 (**komputer OWNER**), **sesudah rilis `77b68eb`**.
+`HEAD` = `origin/main` = `dramaku/main` = **`77b68eb`**, working tree **bersih**. **NOL ANTREAN.**
+
+> ✅ **RILIS `77b68eb` TAYANG 2026-11-09 — PERBAIKAN pengukur durasi.** Rilis `5402dca` sebelumnya
+> tayang dengan fitur "Ukur dari video" **rusak total** (0 terbaca dari 41). Dua cacat: pembaca
+> cuma melihat 256KB AWAL berkas padahal `moov` ada di ekor, DAN offset byte `mvhd` meleset
+> 4 byte. 12 tes hijau tidak menangkapnya karena tesnya merakit data uji dengan offset yang sama
+> salahnya. Gerbang LOLOS 5/5 (2143 tes/149 berkas). **Diverifikasi SESUDAH tayang dengan
+> memanggil pengukur di produksi: 5 dari 5 judul terbaca** (`2.00` · `2.16` · `2.07` · `2.00` ·
+> `2.00`). Rincian + pelajaran: `HANDOFF.md` & `docs/lintasai/INDEX.md`.
 
 > ✅ **RILIS `5402dca` TAYANG 2026-11-09 — durasi serial (poster + halaman detail + tiap baris
 > episode) & pengisi durasi otomatis dari berkas video.** Gerbang `npm run gerbang` LOLOS 5/5

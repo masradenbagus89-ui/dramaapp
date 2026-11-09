@@ -40,14 +40,44 @@ const render = (videos: PlaylyVideoPublik[]) =>
   renderToStaticMarkup(createElement(PlaylyVideoGrid, { videos }));
 
 describe("PlaylyVideoGrid — isi kartu video", () => {
-  it("menampilkan tahun + genre di bawah judul", () => {
+  it("menampilkan genre di bawah judul, TAHUN pindah ke poster", () => {
+    // ⚠️ Keputusan owner 2026-11-09 ("aku mau keduanya terlihat persis sama"):
+    // tahun kini jadi LENCANA di pojok kiri-bawah poster, sama seperti kartu
+    // beranda (KartuVideo.tsx) — jadi dibuang dari baris teks ini supaya tidak
+    // tertulis DUA KALI pada kartu yang sama.
+    //
+    // Tes ini dulu mengunci "2026 · Aksi, Fiksi Ilmiah". Kalau sesi berikutnya
+    // melihat riwayatnya dan mengira ada kemunduran: tidak — tahunnya masih
+    // tergambar, cuma pindah tempat. Kedua sisi dikunci di bawah.
     const html = render([
       videoKartu({ year: "2026", genre: "Action, Sci-Fi" }),
     ]);
     // Genre OMDb tergambar dalam bahasa Indonesia sejak 2026-10-30
     // (lib/genre.ts); nilai aslinya di data tidak berubah.
-    expect(html).toContain("2026 · Aksi, Fiksi Ilmiah");
+    expect(html).toContain("Aksi, Fiksi Ilmiah");
+    expect(html).not.toContain("2026 · Aksi");
     expect(html).toContain("MOVIE_TITAN WAR THE LAST KING");
+  });
+
+  it("tahun tergambar sebagai lencana di pojok kiri-bawah poster", () => {
+    // Sisi sebaliknya, dan ini yang membuat tes di atas berarti: tanpa ini,
+    // menghapus tahun dari KEDUA tempat juga akan lulus.
+    const html = render([videoKartu({ year: "2026" })]);
+    expect(html).toContain("2026");
+    expect(html).toContain("bottom-1 left-1");
+  });
+
+  it("kualitas tergambar di kanan-atas, seperti kartu beranda", () => {
+    // Halaman /film sebelumnya TIDAK pernah memajang chip kualitas walau
+    // datanya sudah ada — itu yang membuat kedua halaman terlihat berbeda.
+    const html = render([videoKartu({ quality: "HD" })]);
+    expect(html).toContain("HD");
+    expect(html).toContain("right-1.5 top-1.5");
+  });
+
+  it("tahun KOSONG tidak meninggalkan lencana hampa", () => {
+    const html = render([videoKartu({ year: null })]);
+    expect(html).not.toContain("bottom-1 left-1");
   });
 
   it("TIDAK lagi menampilkan nama uploader di kartu", () => {

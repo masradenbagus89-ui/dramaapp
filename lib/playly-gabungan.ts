@@ -44,6 +44,7 @@ import {
 } from "./store";
 import type { PlaylyImdbMap } from "./playly-imdb";
 import { lengkapiKualitasVideo } from "./kualitas-video";
+import { lengkapiDurasiVideo } from "./durasi-video-publik";
 import { tempelUnduhanPlayly } from "./playly-unduhan";
 import { tempelJenisVideo } from "./jenis-video";
 
@@ -332,20 +333,28 @@ async function rakitGabungan(
   // Jenis ditempel di lapisan yang sama dengan provider & kualitas, dan dengan
   // alasan yang sama: satu tempat untuk KEDUA sumber, jadi tak ada video yang
   // diam-diam tertinggal tanpa jenis dan mendarat di baris yang salah.
+  // Durasi dilengkapi di lapisan yang SAMA dengan kualitas & jenis, dan dengan
+  // alasan yang sama: satu tempat untuk KEDUA sumber video (katalog + webhook),
+  // jadi tak ada yang diam-diam tertinggal tanpa durasi. Hanya mengisi yang
+  // kosong — durasi kiriman Playly adalah panjang berkas kita sendiri dan tidak
+  // pernah ditimpa runtime IMDb (lib/durasi-video-publik.ts).
   const videos = tempelJenisVideo(
-    lengkapiKualitasVideo(
-      tempelUnduhanPlayly(
-        gabungVideoPlayly(
-          katalog.videos,
-          webhookAman,
-          hiddenIds.ids,
-          genres,
-          imdb,
-          kualitas,
-          ratingManual,
+    lengkapiDurasiVideo(
+      lengkapiKualitasVideo(
+        tempelUnduhanPlayly(
+          gabungVideoPlayly(
+            katalog.videos,
+            webhookAman,
+            hiddenIds.ids,
+            genres,
+            imdb,
+            kualitas,
+            ratingManual,
+          ),
+          linkUnduhan,
         ),
-        linkUnduhan,
       ),
+      imdb,
     ),
     jenis,
   );

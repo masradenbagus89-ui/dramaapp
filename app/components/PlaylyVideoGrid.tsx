@@ -8,6 +8,8 @@
 // "Picture in picture") dan tidak bisa kita ubah karena isi iframe beda domain.
 // Konsekuensi yang disetujui owner: video tidak lagi lewat pemutar resmi
 // Playly, jadi hitungan tayang di dashboard mereka bisa berhenti bertambah.
+import { cn } from "@/lib/utils";
+import { warnaKualitas } from "@/app/components/lencana-gaya";
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { Film, Play, Star } from "lucide-react";
@@ -95,12 +97,11 @@ export default function PlaylyVideoGrid({
       <ul className="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-3">
         {tampil.map((v) => {
           const dipilih = aktif?.id === v.id;
-          // Tahun & genre digabung jadi satu baris "2026 · Action, Sci-Fi".
-          // Keduanya bisa null (video yang belum dikaitkan admin ke drama), jadi
-          // yang kosong dibuang dulu — supaya tidak tersisa pemisah "·" menggantung.
-          const metaFilm = [v.year, labelGenreGabungan(v.genre)]
-            .filter(Boolean)
-            .join(" · ");
+          // Tahun DIBUANG dari baris ini sejak 2026-11-09: ia sudah dipajang
+          // sebagai lencana di pojok kiri-bawah poster, sama seperti kartu
+          // beranda. Membiarkannya di dua tempat membuat tahun tertulis dua
+          // kali pada kartu yang sama.
+          const metaFilm = labelGenreGabungan(v.genre);
           return (
             <li key={v.id}>
               <button
@@ -140,10 +141,35 @@ export default function PlaylyVideoGrid({
                       <Play className="h-5 w-5 fill-white text-white" aria-hidden="true" />
                     </span>
                   </span>
+                  {/* Lencana ATAS: rating kiri, kualitas kanan — susunan yang
+                      SAMA PERSIS dengan kartu beranda (KartuVideo.tsx), owner
+                      2026-11-09: "aku mau keduanya terlihat persis sama".
+                      Sebelum ini halaman /film cuma punya rating; chip kualitas
+                      tidak pernah dipajang walau datanya sudah ada. */}
                   {v.rating && (
                     <span className="absolute left-1.5 top-1.5 flex items-center gap-0.5 rounded bg-black/75 px-1.5 py-0.5 text-[11px] font-bold text-amber-300">
                       <Star className="h-3 w-3 fill-amber-300" aria-hidden="true" />
                       {v.rating}
+                    </span>
+                  )}
+                  {v.quality && (
+                    <span
+                      className={cn(
+                        "absolute right-1.5 top-1.5 rounded px-1.5 py-0.5 text-[11px] font-bold",
+                        warnaKualitas(v.quality),
+                      )}
+                    >
+                      {v.quality}
+                    </span>
+                  )}
+
+                  {/* Baris BAWAH: tahun kiri, durasi kanan — juga sama dengan
+                      kartu beranda. Tahun tadinya cuma teks kecil di bawah
+                      judul; dipindah ke poster supaya penonton membaca pojok
+                      yang sama di kedua halaman. */}
+                  {v.year && (
+                    <span className="absolute bottom-1 left-1 rounded bg-black/75 px-1.5 py-0.5 text-[11px] font-medium text-zinc-100">
+                      {v.year}
                     </span>
                   )}
                   {v.durationLabel !== "-" && (

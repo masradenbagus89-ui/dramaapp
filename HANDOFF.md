@@ -177,6 +177,74 @@ riwayat blok peringatan lama ada di seksi `## 2026-11-09` di bawah.**
 
 ---
 
+## 2026-11-09 — ✅ `603e09d` TAYANG: panel "Cocokkan semua ke IMDb" dirapikan (3 panel kini seragam)
+
+**Permintaan owner:** *"yang lain rapi kenapa Cocokkan semua ke IMDb sekaligus tidak kamu buat
+rapi juga"*. Betul — panel itu **terlewat** saat perapian `e997320`, padahal justru yang paling
+tebal di halaman: tiga paragraf penuh, sementara dua panel di bawahnya sudah ringkas.
+
+Keterangan panjang pindah ke balik tombol **"?"** (`BantuanSingkat`), judul diikuti satu baris
+angka. **DUA angka yang menentukan keputusan admin tetap terlihat tanpa mengklik:** berapa video
+belum punya data, dan berapa ongkos OMDb-nya (89 video = 178 permintaan dari jatah 1.000/hari).
+
+Ketiga panel massal di tab IMDb kini seragam: **Cocokkan semua** · **Isi kategori otomatis** ·
+**Ringkasan kualitas & rating**.
+
+🪤 **KENAPA DIUJI DENGAN RENDER, BUKAN DIPERIKSA DI LOCALHOST** — ini berlaku untuk perubahan
+apa pun di panel ini nanti: `PlaylyCocokkanSemua` **tidak bisa dilihat di komputer owner**. Ia
+tersembunyi di balik pagar `{!fetchError && …}`, dan tanpa kunci Playly di `.env.local` pagar itu
+SELALU menutup. Tanpa tes render, satu-satunya cara memeriksanya adalah merilis dulu lalu
+berharap. `tests/panel-admin-ringkas.test.ts` (5 tes) merender panelnya sungguhan.
+
+📌 Satu tes menjaga hal yang paling mudah terlewat saat merapikan: **angkanya TIDAK boleh ikut
+masuk ke balik tombol**. Kalau ikut, panelnya rapi tapi jadi tidak berguna — admin harus mengklik
+dulu untuk tahu ada berapa yang perlu dikerjakan.
+
+⏸️ Spanduk merah **"N video belum siap" SENGAJA tidak disentuh**: itu peringatan yang hanya
+muncul saat ada masalah, dan menyembunyikan isinya di balik "?" berisiko membuatnya terlewat.
+Ditawarkan ke owner, belum diminta.
+
+**Bukti:** `npm run gerbang` LOLOS 5/5 — build sukses, `tsc` 0 error, **2186 tes / 154 berkas
+hijau**. Tayang **75 detik**, diverifikasi sesudahnya lewat sidik-jari bundle (tiga label tombol
+"?" ADA + angka tetap di luar tombol), situs 200 di empat alamat.
+
+---
+
+## 2026-11-09 — 🪤 DUA build Railway gagal hari ini, KEDUANYA bukan salah kode
+
+Dicatat bersama karena gejalanya beda tapi akarnya sama: **gangguan jaringan di sisi Railway**,
+yang akhirnya diumumkan sendiri oleh panelnya — *"External network blocks affecting access to
+Railway. We've found the cause and are working on a fix."*
+
+**Kegagalan 1 — "Railpack failed to prepare the build"** (`e997320`). Gagal di tahap *Build ›
+Build image* detik ke-52; *Deploy/Network/Post-deploy* tidak pernah dimulai. Push berhasil tapi
+~15 menit nol deploy, dan daftar chunk produksi IDENTIK dengan sebelum push — jadi bukan "deploy
+lambat", melainkan belum ada deploy sama sekali.
+
+**Kegagalan 2 — build mati di `npm run build`** (commit docs). Lognya menyebut sumbernya terang:
+```
+[playly] daftar video webhook tidak terbaca: Supabase tidak menjawab setelah 2 percobaan (TimeoutError)
+Failed to build /film/page: /film (attempt 2 of 3) because it took more than 60 seconds
+[dramas] katalog tak terjangkau, pakai berkas lokal: Error: Supabase select 503
+```
+
+💡 **PELAJARAN YANG PERLU DIWARISI: build kita BERGANTUNG pada Supabase.** `/film` dibuat saat
+build dan memanggil katalog; kalau Supabase tak terjangkau DARI RAILWAY, build gagal meski
+kodenya sempurna. Ini bukan sesuatu yang perlu "diperbaiki" — tapi kalau build gagal lagi dengan
+pesan Supabase timeout/503, **tunggu lalu Redeploy**, jangan cari-cari kesalahan di kode.
+
+**Cara memastikan ini bukan kode kita — tiga pemeriksaan, lakukan SEBELUM menyalahkan diri:**
+1. `git show --name-only <commit>` → adakah `package.json`/`Dockerfile`/konfigurasi build tersentuh?
+2. `npm run build` lokal → lolos?
+3. Rilis sebelumnya hari itu → berhasil dengan konfigurasi yang sama?
+Kalau ketiganya menjawab "aman", masalahnya di luar repo.
+
+💡 **Build gagal TIDAK PERNAH mengganti yang sedang tayang.** Selama kedua kegagalan itu penonton
+terus dilayani rilis sehat (diukur: `/`, `/beranda`, `/film`, `/api/dramas`, `/api/health` semua
+200). Itu memang guna gerbang build.
+
+---
+
 ## 2026-11-09 — ✅ `e997320` TAYANG: asal kualitas & rating ditampilkan + panel dirapikan
 
 **Permintaan owner:** *"sekarang buat juga kualitas dan rating agar bisa otomatis seperti

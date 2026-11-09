@@ -23,8 +23,14 @@
 > lengkap: `HANDOFF.md` seksi `## 2026-11-09`.
 
 
-**Terakhir dicek:** 2026-11-09 (**komputer OWNER**), **sesudah rilis `e997320`**.
-`HEAD` = `origin/main` = `dramaku/main` = **`e997320`**, working tree **bersih**. **NOL ANTREAN.**
+**Terakhir dicek:** 2026-11-09 (**komputer OWNER**), **sesudah rilis `603e09d`**.
+`HEAD` = `origin/main` = `dramaku/main` = **`603e09d`**, working tree **bersih**. **NOL ANTREAN.**
+
+> ✅ **RILIS `603e09d` TAYANG 2026-11-09 (75 detik) — panel "Cocokkan semua ke IMDb" dirapikan.**
+> Ketiga panel massal di tab IMDb kini seragam. Gerbang LOLOS 5/5, 2186 tes/154 berkas.
+> Diverifikasi sesudah tayang: `Bagaimana pencocokan massal bekerja` · `Bagaimana kategori
+> ditebak` · `Apa arti angka kualitas` ADA, dan angka (`belum punya data`, `jatah 1.000/hari`)
+> tetap di LUAR tombol "?". Situs 200 di `/`, `/beranda`, `/film`, `/api/dramas`.
 
 > ✅ **RILIS `e997320` TAYANG 2026-11-09 — asal kualitas & rating ditampilkan, panel dirapikan.**
 > Gerbang LOLOS 5/5, 2181 tes/153 berkas. Diverifikasi sesudah tayang lewat sidik-jari bundle:

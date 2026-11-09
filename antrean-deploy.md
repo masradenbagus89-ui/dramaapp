@@ -23,8 +23,16 @@
 > lengkap: `HANDOFF.md` seksi `## 2026-11-09`.
 
 
-**Terakhir dicek:** 2026-11-09 (**komputer OWNER**), **sesudah rilis `17b6dff`**.
-`HEAD` = `origin/main` = `dramaku/main` = **`17b6dff`**, working tree **bersih**. **NOL ANTREAN.**
+**Terakhir dicek:** 2026-11-09 (**komputer OWNER**), **sesudah rilis `aeffc15`**.
+`HEAD` = `origin/main` = `dramaku/main` = **`aeffc15`**, working tree **bersih**. **NOL ANTREAN.**
+
+> ✅ **RILIS `aeffc15` TAYANG 2026-11-09 — isi kategori video Playly otomatis dari genre IMDb.**
+> Gerbang LOLOS 5/5, 2168 tes/152 berkas. Diverifikasi SESUDAH tayang lewat sidik-jari bundle
+> `/admin/videos/playly`: `"Isi kategori otomatis dari genre IMDb"` · `"Tebak kategori"` ·
+> `"Genre IMDb"` · `"genrenya tidak punya padanan kategori"` — semuanya ADA.
+> 💡 **Nol permintaan OMDb**: genre dibaca dari `playly:imdb` yang sudah tersimpan (466 entri).
+> Diperiksa di localhost sebagai admin sebelum rilis: **293 bisa diisi otomatis**, 3 sudah punya
+> kategori, 27 belum ada data IMDb, 46 genre tanpa padanan.
 
 > ✅ **RILIS `17b6dff` TAYANG 2026-11-09 — kotak cari tab IMDb + pilihan tampilan petak/baris.**
 > Gerbang LOLOS 5/5, 2156 tes/151 berkas. Diverifikasi SESUDAH tayang lewat sidik-jari bundle

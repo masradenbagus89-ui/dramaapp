@@ -177,6 +177,56 @@ riwayat blok peringatan lama ada di seksi `## 2026-11-09` di bawah.**
 
 ---
 
+## 2026-11-09 — ✅ `aeffc15` TAYANG: kategori video Playly diisi otomatis dari genre IMDb
+
+**Permintaan owner:** *"di video playly sebagian belum ada kategorinya bisa kamu buat otomatis
+agar tidak perlu cek film satu persatu"*.
+
+**DIUKUR DULU, BARU DIRANCANG** (data produksi): 489 video, hanya **3** yang kategorinya terisi —
+padahal **466 SUDAH punya data IMDb** lengkap dengan genre. Datanya sudah ada; yang belum ada cuma
+terjemahannya.
+
+💡 **NOL permintaan OMDb untuk menebak.** Beda dari `PlaylyCocokkanSemua` yang memanggil OMDb
+sekali per video, panel ini membaca genre dari `playly:imdb` yang sudah tersimpan — menebak
+ratusan kategori selesai seketika tanpa menyentuh jatah harian. Yang perlu jaringan hanya
+penyimpanannya (`POST /api/admin/playly/genre`, endpoint yang sudah ada — tidak bikin baru).
+
+**TIGA KEPUTUSAN RANCANGAN, semuanya dari sebaran genre NYATA — jangan diubah tanpa mengukur ulang:**
+1. **Urutan `PETA_GENRE` = PRIORITAS**, yang lebih spesifik menang. `"Action, Romance"` → Romance.
+   Terukur: **279 dari 466** film bergenre Action; kategori yang menampung separuh katalog tidak
+   membantu penonton menjelajah.
+2. **Tycoon · Harem · Time Travel SENGAJA tidak pernah ditebak.** Ketiganya lahir untuk drama
+   pendek Cina dan tak punya padanan genre IMDb; menebaknya dari "Drama"/"Sci-Fi" = mengarang.
+   Dikunci tes — yang mau memetakannya harus menghapus tes itu lebih dulu (keputusan jadi sengaja).
+3. **Genre tanpa padanan dibiarkan kosong** (Horror 82 · Documentary · Animation · Western …).
+   Memaksakan Horror jadi "Fantasy" membuat penonton yang membuka Fantasy menemukan film salah.
+   ⏸️ Kalau owner mau kategori **Horror** ditambahkan, itu mengubah `CATEGORIES` di lib/types.ts
+   yang dipakai beranda + penyaring — keputusan owner, belum dikerjakan.
+
+🪤 **CACAT YANG KETAHUAN SAAT DIPERIKSA DI LOCALHOST — dan hampir lolos.** Panel ini awalnya
+ditaruh DI DALAM pagar `{!fetchError && …}` bersama `PlaylyCocokkanSemua`, akibatnya **tidak muncul
+sama sekali**. `fetchError` berarti **PLAYLY** yang tidak menjawab — sedangkan tebakan kategori
+tidak menyentuh Playly: genre dari data tersimpan, daftar video dari salinan `playly:cadangan`
+yang tetap lengkap. Kalau lolos, panelnya lenyap persis di keadaan **yang paling sering terjadi**:
+produksi pun sedang menampilkan *"Playly tidak menjawab dalam 10 detik"*. Alasannya kini ditulis
+panjang di kode supaya tidak "dirapikan" masuk lagi.
+📌 **Aturan yang diwariskan: sebelum menaruh panel baru di dalam pagar kondisi yang sudah ada,
+periksa apakah panel itu benar-benar BERGANTUNG pada hal yang dijaga pagar tersebut.**
+
+**Berkas:** `lib/kategori-otomatis.ts` (BARU, fungsi murni) ·
+`app/components/admin/KategoriIsiOtomatis.tsx` (BARU, pola tinjau-dulu-baru-simpan seperti
+`PlaylyCocokkanSemua`) · `app/components/admin/PlaylyVisibilityManager.tsx` (pasang panel).
+
+**Bukti:** `npm run gerbang` LOLOS 5/5 — build sukses, `tsc` 0 error, **2168 tes / 152 berkas
+hijau**. `tests/kategori-otomatis.test.ts` (12 tes) termasuk penjaga yang MERAH kalau nama
+kategori di `lib/types.ts` berubah tanpa `PETA_GENRE` ikut — kalau itu terjadi, video tersimpan ke
+kategori yang tak dikenal siapa pun dan **lenyap dari SEMUA baris beranda tanpa satu pun error**.
+Diperiksa di localhost sebagai admin: panel melaporkan **293 bisa diisi otomatis** · 3 sudah punya
+kategori · 27 belum ada data IMDb · 46 genre tanpa padanan. Verifikasi sesudah tayang lewat
+sidik-jari bundle: empat penanda ADA.
+
+---
+
 ## 2026-11-09 — ✅ `17b6dff` TAYANG: kotak cari tab IMDb + pilihan tampilan petak/baris
 
 **Permintaan owner:** *"IMDB perlu tombol search juga tidak"* + *"bisa tidak ini ada pilihan mau

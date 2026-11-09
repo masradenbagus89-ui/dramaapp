@@ -9,6 +9,330 @@
 >
 > **📦 UKURAN — sudah dirapikan 2026-11-05.** Berkas ini pernah membengkak jadi **10.509 baris (807 KB)**, dan ia dibaca PALING AWAL tiap sesi — jadi ukurannya memakan jatah konteks AI sebelum sempat menyentuh kode. Atas keputusan owner, catatan **sebelum 2026-10-15** dipindah ke `NEXT-SESSION.md` (nol baris dibuang, cuma pindah) sehingga berkas ini turun ke **~4.683 baris — hemat 56%**. ⚠️ **Kalau nanti membengkak lagi, JANGAN dipotong buta**: *"Utang teknis yang DISENGAJA"*, *"Jangan dilakukan"*, *"Performance /beranda: SUDAH SEHAT — jangan diulang"*, dan *"Berkas terkait"* adalah **aturan permanen**, bukan sejarah — keempatnya ada di DASAR berkas ini dan sengaja ditahan. Begitu pula pengingat aktif **MATIKAN dramaapp.vercel.app** yang syaratnya belum terpenuhi. Cara merapikannya: potong di batas seksi tanggal, tahan kepala + blok aturan di ekor, lalu VERIFIKASI jumlah baris lama = baru + yang dipindah.
 
+> ✅ **KONDISI PRODUKSI 2026-11-09 — SUPABASE & PLAYLY SUDAH PULIH. Dua blok peringatan merah
+> 2026-11-07 (Supabase 402 + Playly 500) DIHAPUS dari sini** karena syarat penghapusannya
+> ("200 = sudah pulih") sudah terpenuhi. Isi aslinya diturunkan ke seksi `## 2026-11-09` di bawah
+> sebagai riwayat — nol baris dibuang, cuma pindah.
+>
+> **Yang diukur sendiri 2026-11-09, bukan ditebak:**
+> - Supabase REST `dramas?select=id&limit=1` + header `Accept-Profile: dramaapp` → **200**
+>   (2026-11-07 masih **402**). Pembatasan kuota egress **sudah lepas**.
+> - `/api/dramas` di produksi → **200**, **41 judul** terbaca (2026-11-07 masih **500**).
+> - `/film` → **200** dengan **369 judul** + poster dari Playly (2026-11-07: 200 tapi **nol film**).
+> - Halaman nonton `/drama/<id>` & `/feed/<id>` → **200** (2026-11-07 masih **500**); di HTML-nya
+>   ada 2 tag `<video>` + tombol **Jeda · Pengaturan · Posisi video**.
+> - Server Playly `/api/public-video`: videoId `1788929757376` → **200 `ok:true`**
+>   (2026-11-07 **500 `galat_database`**). ⚠️ videoId `1788933611579` → **404 `not_found`** — itu
+>   video yang memang sudah tidak ada di sisi mitra, **bukan** gejala server mati. Jangan dipakai
+>   lagi sebagai sampel uji.
+> - Delapan alamat: `/` `/beranda` `/film` `/discover` `/katalog` `/api/dramas` `/my-list`
+>   `/profile` → semua **200**.
+>
+> 🔓 **Akibatnya dua rilis yang dulu tercatat "BELUM bisa dilihat siapa pun" kini BISA diuji
+> owner:** `6b65e0a` (tombol Putar/Jeda di TENGAH video + klik 2x sisi kanan/kiri = maju/mundur
+> 10 detik, di `/feed/<id>`) dan `eeb339e` (baris **Volume Stabil** keluar dari menu titik tiga
+> pemutar Playly, di `/film`). ⚠️ Keduanya butuh **mata manusia** — menu titik tiga dan posisi
+> tombol baru tergambar SESUDAH diklik di browser, jadi HTML dari server tidak bisa
+> membuktikannya. Jangan klaim terbukti tanpa itu.
+>
+> 🪤 **PELAJARAN — jangan ulangi arah kesimpulan ini.** Catatan 2026-11-07 menyimpulkan
+> *"memulihkan Supabase saja TIDAK akan memunculkan kembali film"* karena Playly ikut mati, lalu
+> mendaftar "empat lapis daftar film mati SEMUA". Ternyata **dua-duanya pulih sendiri** tanpa satu
+> baris kode diubah. Gangguan di sisi penyedia (kuota, database mitra) itu **berbatas waktu** —
+> **ukur ulang dulu** sebelum membangun jalan pintas untuk mengatasinya; kalau tidak, kita
+> menambah kode permanen untuk masalah sementara.
+
+> ✅ **DITUTUP — `dramaku.com` BUKAN MASALAH PRODUKSI. Domain itu TIDAK PERNAH MILIK KITA.**
+> ❌ **RALAT atas catatan 2026-11-07 DAN atas kesimpulan awal saya sendiri 2026-11-09.**
+>
+> Sejak 2026-11-07 catatan membawa baris *"`dramaku.com` TIDAK MENJAWAB"* seolah-olah itu gangguan
+> situs. **Itu alarm palsu.** Owner menanyakannya 2026-11-09 (*"seingat saya belum minta ada yang
+> diganti"*) — pertanyaan itu benar, dan penelusurannya membuktikan: tidak ada yang pernah diganti,
+> karena **tidak pernah ada yang dipasang**.
+>
+> **Bukti (lima, saling menguatkan):**
+> 1. `docs/pengajuan-domain-sendiri.md` (dibuat 2026-10-15) adalah **proposal MEMBELI domain**, dan
+>    `dramaku.com` disebut di sana hanya sebagai **contoh nama**: *"Satu nama domain, misalnya
+>    `dramaku.com` atau `dramaku.id`"*. Langkah pertama kalau disetujui: *"Owner **membeli** domain
+>    di registrar pilihan (Rumahweb / Niagahoster / Domainesia)."*
+> 2. `docs/migrasi-railway-tahap6-pindah-domain.md:7` — *"Tahap ini **BELUM dimulai** dan sengaja
+>    ditahan."*
+> 3. `NEXT_PUBLIC_SITE_URL` **tidak diisi** di `.env.local`, jadi situs memakai alamat cadangan
+>    Railway. Produksi membuktikannya: `canonical`, `og:url`, dan `sitemap.xml` semuanya
+>    `https://dramaapp-production-9e88.up.railway.app`, **nol** rujukan ke `dramaku.com`.
+> 4. Di seluruh kode, `dramaku.com` muncul **satu kali saja** — sebagai contoh di pesan error
+>    `lib/site.ts:61`. Bukan alamat yang dipakai.
+> 5. RDAP Verisign: `dramaku.com` terdaftar **2024-11-03** di registrar **Dynadot** — hampir **dua
+>    tahun SEBELUM** proposal beli domain ditulis. Nameserver-nya `ns3/ns4.afternic.com` (Afternic =
+>    pasar jual-beli domain milik GoDaddy), A record ke parkir `awsglobalaccelerator.com` yang tidak
+>    menjawab di port 80 maupun 443.
+>
+> **Artinya:** `dramaku.com` milik **orang lain**, terdaftar 2024, dan diparkir di marketplace.
+> Wajar ia tidak menjawab — ia memang bukan situs kita dan tidak pernah menunjuk ke aplikasi kita.
+> Tiga domain serumpun juga sudah dimiliki orang lain (`dramaku.id` & `dramaku.net` → nameserver
+> Cloudflare, `dramaku.org` → siteprotect).
+>
+> ❌ **JANGAN ikuti saran yang sempat saya tulis 2026-11-09 pagi** ("masuk panel registrar Dynadot,
+> ganti nameserver `afternic`"). **Itu keliru** — owner tidak punya dan tidak bisa punya akses ke
+> panel domain milik orang lain. Saran itu lahir dari asumsi tak teruji bahwa domainnya milik kita.
+>
+> 🪤 **PELAJARAN (ini yang berharga, bukan domainnya):** sebuah nama yang cuma **contoh** di
+> dokumen proposal ikut terbawa ke blok peringatan produksi, lalu diukur dengan `curl`, lalu
+> `http=000`-nya dicatat sebagai gangguan — dan bertahan **dua hari di tiga berkas catatan**
+> sebelum owner menangkapnya dengan satu kalimat ingatan. **Sebelum menaruh alamat apa pun di blok
+> peringatan, buktikan dulu alamat itu memang MILIK project ini** (ada di `NEXT_PUBLIC_SITE_URL`,
+> atau di panel hosting), bukan sekadar muncul di dokumen.
+>
+> ⏳ **Status sebenarnya: tidak ada yang rusak, tidak ada yang perlu dikerjakan.** Yang menggantung
+> cuma keputusan bisnis lama yang memang sengaja ditahan: **beli domain sendiri atau tidak**
+> (±Rp200.000/tahun, bukan hal mendesak, situs jalan normal tanpanya — `docs/pengajuan-domain-sendiri.md`).
+> ⚠️ Kalau nanti owner memang menginginkan nama `dramaku.com` secara spesifik, itu **pembelian
+> aftermarket** dari pemilik sekarang, harganya **jauh di atas** Rp200.000 dan belum pernah dicek.
+> Nama lain yang masih bebas jauh lebih murah.
+
+**Terakhir diisi:** 2026-11-09 — 🩺 **PEMERIKSAAN KONDISI, nol kode diubah, nol rilis.** Sesi dibuka
+dengan `lanjut dari handoff`; yang dikerjakan adalah tugas yang catatan sendiri wajibkan: **uji ulang
+dulu sebelum menyimpulkan apa pun.** Hasilnya mengubah gambaran besar. ✅ **Dua dari tiga gangguan
+produksi SUDAH PULIH sendiri** — Supabase `402 → 200`, `/api/dramas` `500 → 200` (41 judul), `/film`
+dari "200 tapi nol film" → **369 judul**, halaman nonton `/drama/<id>` & `/feed/<id>` `500 → 200`,
+server Playly `500 galat_database → 200 ok:true`. Nol baris kode disentuh untuk itu; pemulihannya
+terjadi di sisi penyedia. 🔓 Akibat langsungnya: rilis `6b65e0a` dan `eeb339e` yang dulu tercatat
+"tak bisa dilihat siapa pun" **sekarang bisa dicoba owner** (butuh mata manusia — lihat blok di
+atas). ❌ **Satu "gangguan" yang tersisa ternyata ALARM PALSU, dan owner yang menangkapnya:
+`dramaku.com` TIDAK PERNAH MILIK KITA.** Saya sempat menelusurinya sebagai gangguan sungguhan dan
+menulis 3 langkah perbaikan di panel registrar — lalu owner menjawab *"seingat saya belum minta ada
+yang diganti"*, dan ingatannya benar. Buktinya lima: `docs/pengajuan-domain-sendiri.md` adalah
+proposal **MEMBELI** domain yang menyebut `dramaku.com` cuma sebagai **contoh nama** · tahap pindah
+domain tercatat *"BELUM dimulai"* · `NEXT_PUBLIC_SITE_URL` **tidak diisi** · di kode nama itu muncul
+**sekali** sebagai contoh di pesan error (`lib/site.ts:61`) · dan RDAP menunjukkan ia terdaftar
+**2024-11-03** di Dynadot, **dua tahun sebelum** proposal beli domain ditulis — jadi milik orang
+lain, diparkir di marketplace Afternic. **Tidak ada yang rusak dan tidak ada yang perlu dikerjakan.**
+🪤 Pelajarannya: contoh nama di dokumen ikut naik pangkat jadi blok peringatan produksi, bertahan 2
+hari di 3 berkas, dan pengukuran teliti (`nslookup`/`curl`/RDAP) justru membuatnya makin meyakinkan
+— karena semuanya menjawab *"kenapa tidak menjawab?"*, bukan *"alamat ini milik kita atau bukan?"*.
+✅ Diperiksa juga: tidak ada dampak SEO — `canonical`/`og:url`/`sitemap.xml` produksi memakai alamat
+Railway. 📋 Posisi git: `HEAD` = `origin/main` = `dramaku/main` = **`d7bd07d`**, working tree
+**bersih**, **nol antrean** (nol branch di `origin` maupun `dramaku` yang punya commit di luar
+`main`). 🧹 Dibetulkan juga dua catatan yang BASI: baris "Terakhir diisi"/"Rilis terakhir" masih
+menunjuk `4fb6ecf` padahal dua rilis (`6b65e0a`, `eeb339e`) datang sesudahnya. **⬇️ Rincian +
+riwayat blok peringatan lama ada di seksi `## 2026-11-09` di bawah.**
+
+---
+
+**Sebelumnya 2026-11-07 — rilis besar 19 commit:** ✅ **TAYANG `e486c17..4fb6ecf` — RILIS BESAR 19 COMMIT, satu hari penuh kerja.** Dual push cermin `dramaku` dulu lalu produksi `origin` (urutan §5), tayang **±77 detik** (push 15:46:30 → versi baru terdeteksi 15:47:47), **downtime NOL** — `http=200` di SETIAP percobaan selama pergantian. Tanpa SQL/env baru (diperiksa sebelum push). Smoke test dibandingkan dengan **baseline yang diambil SEBELUM push**: `/my-list` judul "Favorit" 0→1 · "Daftar Saya" 1→0 · tombol Cari navbar 0→1 · `/profile` "Menu Cepat" 0 · indeks saran tergambar di `/`, `/beranda`, `/film` · sembilan alamat semua **200**. ⚠️ `/api/dramas` tetap **500** dan `dramaku.com` tetap tak menjawab — keduanya kondisi LAMA (Supabase diuji ulang 15:50: masih **402**), bukan akibat rilis ini. 🔙 Mundur: `git revert --no-commit e486c17..HEAD` lalu dual push, atau redeploy `e486c17` di panel Railway. ⬇️ **Isi rilisnya:** menu titik tiga pemutar Playly dari rekan DIGABUNG ke main dan DIPAKAI apa adanya.** menu titik tiga pemutar Playly dari rekan DIGABUNG ke main dan DIPAKAI apa adanya.** Owner menarik branch rekan `feat/menu-pemutar-playly` (1 commit `06ed695`, tertinggal 4 commit, merge **nol bentrok**). Menu jadi 6 baris urut: Subtitle (+ Gaya subtitle) · Kecepatan pemutar · Volume Stabil · Penguat suara · Pencahayaan sinematik · Kualitas video; Subtitle & Kecepatan **tidak** punya tombol langsung di baris kontrol, PiP & layar penuh tetap punya. ⚠️ **Keputusan owner sempat BERUBAH di tengah** — tombol langsung CC & Kecepatan sudah dipulihkan penuh (membalik kembali ke permintaan 2026-09-28 `39be664`), lalu owner **melihat hasilnya di layar** dan membatalkannya: *"tetap pakai yang rekan saya kerjakan saja"*. Pemulihan dibuang sebelum sempat di-commit; `PlaylyPlayer.tsx` kini **persis** kerja rekan (`git status` kosong). 🪤 **Celah yang ditemukan di tengah putaran itu TETAP berguna dan sudah ditutup:** tidak ada SATU pun tes yang me-render `PlaylyPlayer`, jadi tombolnya bisa dihapus tanpa tes merah — dan `player-menu.test.ts` milik rekan **tidak** menangkap kalau sambungan menu→video putus (dibuktikan: sambungan diputus → tes rekan tetap 11 lulus). Penjaga baru `tests/pemutar-playly-kontrol.test.ts` (4 tes). ➕ Owner juga menyetujui penjaga SERUPA untuk menu pengaturan pemutar drama (`PlayerSettings`, yang juga nol tes): `tests/pemutar-drama-pengaturan.test.ts`, 8 tes. ❌ **Klaim rekan "1 tes gagal di `origin/main` murni" TIDAK berlaku di main terkini** — diuji ulang: `tests/episode-naik-ke-sidebar.test.ts` **12 lulus**, `npm test` penuh hijau. **Bukti:** build sukses · `tsc` exit 0 · **2.055 tes / 142 berkas hijau** (dari 2.040/140) · kedua penjaga diuji **MERAH lebih dulu** di 4 titik · **nol kode produksi disentuh** pada keadaan akhir. Tanpa SQL/env baru. ⚠️ **Verifikasi di produksi MUSTAHIL sekarang** — lihat blok peringatan Playly 500 di atas. ✅ **Di-commit lokal (sesi kedua, keputusan owner "commit dulu, tahan rilis"): `f32b294` penjaga tes + `cccf3ca` merge + `06ed695` rekan = 3 commit MENUNGGU; `origin/main` & `dramaku/main` masih `e486c17`.** Folder `docs/laporan/` ikut masuk git (skrip + 3 potret publik; PDF/PPTX/pratinjau di-gitignore). ⚠️ `npm run build` TIDAK diulang di sesi kedua (ada `next start -p 3100` yang sedang dipakai) — `tsc` exit 0 & 2.055 tes hijau sudah diukur sendiri. 💡 **BARU: saran judul muncul saat mengetik** (poster + judul + tahun) di 4 halaman berkatalog — nol permintaan jaringan tambahan, jadi tetap hidup walau Supabase dibatasi. 🔍 **AUDIT seluruh tombol cari — 4 cacat ditemukan**, terbesar: kaca pembesar di navbar hitam ternyata **hiasan** (`pointer-events-none`), diklik nol reaksi. 🏷️ **Halaman Favorit disamakan namanya** — judul "Daftar Saya" (muncul di SATU tempat) kalah dari "Favorit" yang dipakai di seluruh situs; + **tombol Kembali** yang sengaja TIDAK memakai `router.back()` polos (itu melempar pengunjung baru keluar ke Google). 🧹 **"Menu Cepat" di /profile & menu Keamanan(2FA) di sidebar admin DIBUANG** (owner) — keluhan owner diverifikasi dan terbukti: "Download" menuju parameter yang tak pernah ditangani, "Bantuan" menuju halaman LOGIN. ⚠️ Menu itu ternyata pintu TERAKHIR ke /my-list, jadi "Favorit" dipindahkan ke menu akun di balik avatar. 🔑 **Login admin di LOKAL sekarang BISA** saat Supabase mati — sebabnya bukan password melainkan **503** (`isAdminEmail()` menanya Supabase sebelum password diperiksa); jalan keluarnya mode berkas resmi project ini (`ALLOW_FILE_MODE=1` + env Supabase dikosongkan), diuji sampai 200 `role:admin`. 🆕 **`/profile` jadi halaman AKUN** (keputusan owner): Lanjut Menonton · Riwayat Terbaru · Favorit dibuang dari sana (rumahnya `/beranda`, `/history`, `/my-list` — nol fitur hilang), diganti seksi **Akun** (nama + avatar) dan **Keamanan** (ubah password + 2FA, admin saja, komponennya dipakai ulang dari panel admin). 🪤 Kedua baris lama ternyata memanggil fungsi yang SAMA — dua judul untuk daftar yang sama. 🆕 **Gerbang pra-rilis kini SATU perintah: `npm run gerbang`** (keputusan owner) — kelima pemeriksaan §6 berurutan, menolak jalan kalau urutan `build`/`tsc` tertukar. Dijalankan sungguhan: percobaan PERTAMA **menangkap kesalahan nyata** (exit 1), sesudah diperbaiki **✓ LOLOS exit 0** dengan **2.066 tes / 143 berkas hijau**. **⬇️ Rincian di seksi `## 2026-11-07` di bawah.**
+
+---
+
+**Sebelumnya 2026-11-06:** ✅ **TAYANG `64a48fc` + `cfa7a94`: panel admin Video Playly jadi TABEL, dan rating kini BISA DIKETIK.** Sepuluh putaran perbaikan tampilan atas koreksi owner, berakhir dengan satu fitur baru. Daftar video jadi satu baris per video (Judul · Jenis · Kategori · Kualitas · IMDb · Rating · Aksi) dengan paginasi bernomor; menu sidebar "Video Playly" jadi grup berisi tiga; keterangan panjang pindah ke tombol "?". ⚠️ **Rating yang diketik DILIHAT PENONTON** (kartu video di beranda), jadi disaring di server — kotak isian di layar bukan pagar. Disimpan di dokumen SENDIRI `playly:rating`, bukan menumpang di `playly:imdb`; alasannya dua kerusakan senyap, rinciannya di seksi di bawah. Tanpa SQL/env baru. ⚠️ **Yang IKUT HILANG:** tombol "Sembunyikan" per video webhook, karena daftar video di halaman Webhook Playly dihapus atas permintaan owner. **Bukti:** build exit 0 · tsc exit 0 · **2.040 tes / 140 berkas hijau** (dari 1.970/137) · diuji-balik 2 titik → merah → dikembalikan hijau · diverifikasi di situs SUNGGUHAN: endpoint baru `/api/admin/playly/rating` **401** (sebelum rilis **404**), smoke test 8 alamat semua **200**. **⬇️ Rincian 10 putaran + semua jebakannya ada di seksi `## 2026-11-06 18:45` di bawah.** Rencana lengkap: `docs/lintasai/rencana/2026-11-06-sidebar-playly-divider-dan-bantuan.md`.
+
+---
+
+**Sebelumnya hari ini:** ✅ **TAYANG `df83931`: baris "Playly" di popup *Pilih provider download*.** Dual push `37d8003..df83931`, tayang ±80 detik, downtime NOL. ⚠️ **Barisnya BELUM akan muncul di video mana pun, dan itu BUKAN kerusakan kode** — izin unduh adalah saklar per-video milik pengunggah di Playly, bukan setelan kita. **⬇️ Rincian + cara owner membuktikannya ada di seksi `## 2026-11-06 08:33` di bawah.**
+
+**Sebelumnya 2026-11-05:** ✅ **TAYANG `32ae1c6`: SELURUH halaman penonton + admin kini berlatar putih.** 🪤 **Pelajaran: PEMETAAN SAYA SEBELUMNYA TIDAK LENGKAP** — saya menyatakan "tinggal 3 halaman" (/shorts, /history, /my-list), lalu owner menunjuk **/profile** yang juga gelap. Pemetaan ulang lewat HTML yang BENAR-BENAR dikirim server menemukan **lima**, bukan satu. Kelas `.tema-admin-terang` digeneralkan jadi `.tema-terang-penuh` (dipakai admin + halaman akun). ⚠️ Halaman MENONTON sengaja TETAP gelap. Dual push `7afb6cc..32ae1c6`, tayang ±82 detik, downtime NOL. Rinciannya di seksi teratas.
+
+**Sebelumnya hari ini:** ✅ **TAYANG `425cc34`: TIGA perbaikan panel admin sekaligus.** (1) 🧭 **Satu menu = satu tampilan** — lima menu sidebar ternyata BUKAN halaman terpisah, semuanya `/admin` yang sama; sekalian menutup menu **Keamanan (2FA) yang RUSAK** (targetnya `#keamanan` nol elemennya). (2) 🎨 **Teks bernada transparan tak lagi pucat** — cara kemarin bocor mendasar: `text-rose-100/90` adalah kelas BERBEDA dari `text-rose-100`. (3) 🔍 **Saringan "sudah / belum ada IMDb"** di daftar 489 video. Dual push `68b0069..425cc34`, tayang **±84 detik**, **downtime NOL**. Rinciannya di seksi teratas.
+
+**Sebelumnya hari ini:** ✅ **TAYANG `0cc1758`: PANEL ADMIN kini berlatar terang, seragam dengan beranda.** Owner: *"di admin kamu buat juga latar belakangnya sama dengan beranda jadi semua dashboard semua sinkron"*. ⭐ **477 kemunculan warna gelap dibalik TANPA menyentuh satu pun berkas komponen** — Tailwind v4 di sini mencetak warna sebagai VARIABEL, jadi paletnya cukup didefinisikan ulang di satu pembungkus (`app/globals.css`), saklarnya di `app/admin/layout.tsx`. 🪤 **TIGA jebakan senyap, semuanya ketahuan hanya karena hasilnya DIPANDANG** (lihat seksi teratas), dan 🪤 **DUA kesalahan METODE VERIFIKASI saya sendiri** — nyaris melaporkan 'deploy gagal' padahal sudah tayang. Dual push `60eb338..0cc1758`.
+
+**Sebelumnya hari ini:** ✅ **TAYANG `1dd0fd0`: panel admin Playly tak lagi HILANG saat Playly lambat.** 🪤 Owner melapor *"Dropdown paling kiri aku tidak ketemu"* — **dan memang tidak ada, bukan terlewat**: panel menyembunyikan DIRINYA SENDIRI begitu pengambilan daftar gagal (`if (fetchError) return`), jadi Playly telat 10 detik = daftar video + KETIGA dropdown lenyap. Senyap total: halaman admin tetap 200, build hijau, 1.886 tes hijau — yang hilang cuma alat kerjanya, dan **owner yang menemukan, bukan mesin, SESUDAH rilis**. Kini panel menyerah hanya kalau benar-benar nol video, dan halaman admin memakai salinan terakhir sebagai jaring. Dual push `d73fd0b..1dd0fd0`, downtime NOL.
+
+**Sebelumnya hari ini:** ✅ **TAYANG `d04a952`: DUA perbaikan sekaligus.** (1) 🎬 **Serial Playly bisa dipisahkan dari "Film Terbaru"** — dropdown Jenis di panel admin. (2) 🎨 **Latar putih seragam** di `/discover` (Jelajah + semua filter genre), `/film`, `/katalog`. Dual push `8f30108..d04a952`, tayang **±88 detik**, **downtime NOL** (http=200 di SETIAP percobaan selama pergantian versi). ⏳ **SATU langkah owner tersisa:** tandai video "Pemuda Miskin Mata Tembus Pandang Jadi Miliarder" jadi **Series** di panel admin — situs sengaja TIDAK berubah sampai itu dilakukan (bawaan `film`, supaya nol film ikut berpindah). Rinciannya di seksi teratas.
+
+**Sebelumnya hari ini (kini SUDAH tayang):** 🎬 `2f8fb6f`: serial Playly akhirnya bisa dipisahkan dari "Film Terbaru".** Owner: *"rekan saya upload drama dari playly tapi masuknya ke film terbaru, harusnya masuk ke series terbaru"*. Akar masalahnya **bukan salah logika — fiturnya memang belum pernah ada**: seluruh video Playly dilempar ke baris film tanpa kecuali. 🪤 **Tebakan otomatis DIUKUR dulu di 489 video produksi lalu DITOLAK** (pola judul cocok cuma 18, DUA di antaranya justru film; judul yang dikeluhkan owner tak terdeteksi; 58% durasi `null`). ⏳ **Menunggu izin push owner.** Rinciannya di seksi teratas.
+
+**Sebelumnya 2026-11-05:** 🔁 **VERIFIKASI SILANG 3 SESI.** Push yang diminta owner ternyata **sudah dilakukan sesi lain** (`4f28886` + 6 commit lain sudah di kedua remote). Nol kode diubah; yang dikerjakan: membetulkan catatan yang BASI — studio AI sudah di-commit (`d12d913`, 26 berkas) padahal masih tertulis "belum di-commit", dan `antrean-deploy.md` disegarkan ke `836a0b1`. 🪤 **Pelajaran: status "belum di-push" di catatan lama WAJIB dicek ulang lewat `git fetch`** — repo ini dikerjakan dari beberapa sesi. Rinciannya di seksi teratas.
+
+**Sebelumnya 2026-11-03:** 🔊 ✅ **TAYANG `88d3429`: Volume Stabil & Penguat suara AKHIRNYA BERFUNGSI.** Ternyata kedua sakelar selama ini dipasang MATI PERMANEN dan **nol `AudioContext` di seluruh project** — mesinnya memang tak pernah dibangun, jadi ini membangun dari nol, bukan membuka gerbang. Surat permintaan izin dikirim ke rekan Playly dan **mereka memasangnya hari itu juga**, sehingga fitur **hidup sendiri tanpa rilis ulang** (perancangannya terbukti benar). 🔴 **Bunyinya BELUM pernah didengar siapa pun** — mesin kerja ini server tanpa perangkat suara, semua pengukuran audio memulangkan nol; **uji dengar wajib manusia**, caranya di seksinya. ⚠️ Kalau DramaKu pindah domain, daftar origin WAJIB dikirim ulang ke Playly atau fitur suara mati lagi.
+
+**Sebelumnya hari itu:** 🎬 **BARU `drama-ai-studio/`: episode 1 jadi MP4 — 18/18 FOTO AI + 11/11 DIALOG MANDARIN DIUCAPKAN, biaya NOL** — 4 putaran. 💡 Temuan sampingan penting: **jam mesin ini tertinggal 13 menit** dari waktu sebenarnya. 🪤 Pelajaran termahal: **"ada sinyal audio" ≠ "terdengar"** (semua tenaga di sub-bass yang speaker kecil tak bunyikan) dan **"kamera bergerak" ≠ "terbaca bergerak"** (14%/7dtk = slideshow); dua-duanya lolos pemeriksaan teknis saya dan hanya ketahuan dari laporan owner (1080×1920, 97,04 dtk, subtitle Mandarin+Indonesia terbakar, wajah tokoh konsisten lintas adegan). Sub-proyek terisolasi; repo induk nol tersentuh (build OK, tsc exit 0, 1844 tes hijau). ⚠️ Yang dihasilkan **animatic**, BUKAN video AI — mesin berbayar sengaja belum disambung (nol kunci API). ✅ **SUDAH di-commit & di-push** (`d12d913`, 26 berkas ter-track) — status "belum di-commit" di catatan lama sudah TIDAK berlaku. · Sebelumnya: 🔍 **AUDIT HP + TABLET atas permintaan Kang Dedi: HASIL BERSIH, nol kode diubah.** 20/20 pengukuran (5 halaman × lebar 360/412/768/1024) menunjukkan `scrollWidth` sama persis dengan viewport — nol elemen meluber. 🪤 **PELAJARAN METODE PENTING**: potret `--window-size` di bawah ~476px MENYESATKAN (berkas PNG-nya selebar yang diminta, tapi viewport CSS yang dirender TIDAK) — jebakan ini sudah menipu TIGA kali. Cara yang benar (iframe + ukur `scrollWidth`) ada di seksinya.
+
+**Rilis terakhir:** 2026-11-07 — `eeb339e` (rekan: Volume Stabil keluar dari menu Playly; + commit docs `d7bd07d`). ⚠️ Baris ini pernah BASI menunjuk `4fb6ecf` — dibetulkan 2026-11-09 sesudah dicek `git merge-base --is-ancestor`.
+
+**Rilis sebelumnya:** 2026-11-07 — `6b65e0a` (rekan: pemutar episode, Putar di tengah + klik 2x ±10 detik).
+
+**Rilis sebelumnya:** 2026-11-07 — `4fb6ecf` (rilis besar 19 commit, lihat seksi `## 2026-11-07`).
+
+**Rilis sebelumnya:** 2026-11-03 — `88d3429` (fitur suara pemutar).
+
+**Rilis sebelumnya:** 2026-11-02, rilis ke-6 hari itu (✅ **TAYANG `784460c`**: **judul pemutar kini MEMUDAR bersama kontrol saat film berjalan**, memberi ruang penuh bagi terjemahan. 🔍 **AKAR MASALAH AKHIRNYA TERVERIFIKASI, dan tiga rilis sebelumnya mengejar yang salah**: teks yang menumpuk judul BUKAN subtitle aplikasi melainkan **hardsub — terbakar di dalam gambar video**, posisinya mustahil digeser. Dibuktikan: pagar CSS subtitle browser sudah benar di bundle produksi, DAN drama itu tak punya satu pun berkas subtitle (ep 1/2/13/14/15 semua 404). Keputusan owner dari tiga opsi. Dual push `329c573..784460c`, tayang **±80 detik**, **downtime NOL**. ❗ Temuan terpisah belum ditangani: katalog menjanjikan subtitle yang berkasnya tidak ada — rinciannya di seksinya.)
+
+**Rilis ke-5 hari ini:** (✅ **TAYANG `8ced118`**: **subtitle dua baris tak lagi menimpa judul** + tombol play dikecilkan 44→40px di HP. Owner mengirim tangkapan DevTools Galaxy Z Fold 6 (412×968) dengan teks saling menimpa. Sebabnya subtitle dibungkus `<span>` polos = elemen **INLINE**, dan pada elemen inline padding atas-bawah TIDAK menambah tinggi baris — kotak latarnya meluber keluar menimpa apa pun di atas & di bawahnya. Satu baris aman, dua baris langsung tabrakan. Perbaikan: `inline-block`. Dual push `32c7b0c..8ced118`, tayang **±80 detik**, **downtime NOL**. Rinciannya di seksinya.)
+
+**Rilis ke-4 hari ini:** (✅ **TAYANG `3d57145`**: **blok JUDUL pemutar turun ~26px di HP**. Putaran kedua dari `7c67a40` di bawah — ❌ **RALAT: rilis itu menggeser blok yang SALAH.** Owner menulis *"teks arti tulisannya"*, dibaca sebagai subtitle terjemahan; tangkapan layar putaran kedua memperjelas kotak merahnya menandai **judul + `Eps n / N`**, dan di gambar itu tak ada subtitle sama sekali. Ruangnya dipanen dengan memindahkan angka durasi dari barisnya sendiri di bawah tombol ke **samping garis geser** — ~18px kembali TANPA penonton kehilangan angkanya. Dual push `c0132cf..3d57145`, tayang **±70 detik**, **downtime NOL**. Rinciannya di seksinya.)
+
+**Rilis ke-3 hari ini:** (✅ **TAYANG `7c67a40`**: **subtitle di pemutar diturunkan di layar HP**. Owner: *"teks arti tulisannya terlalu ke tengah, buat turun sedikit."* Sebabnya tulisan `Eps n / N` di atasnya duduk di TENGAH tombol setinggi 44px, jadi subtitle ber-`mt-2` berhenti hanya ±20px di bawahnya dan terbaca menyatu dengan blok judul. Jarak dari judul +16px, subtitle turun 12px terhadap layar; layar lebar NOL perubahan. Dual push `ce0265c..7c67a40`, tayang **±90 detik**, **downtime NOL**. ⚠️ Ruang turunnya MENTOK — alasannya di seksinya, jangan diulang dari nol.)
+
+**Rilis ke-2 hari ini:** (✅ **TAYANG `91d1f5d`**: daftar episode di sidebar **menggulung sendiri ke episode terakhir ditonton**. Lanjutan langsung dari rilis ke-1 di bawah: sesudah daftar pindah ke kolom sempit, serial 45 episode selalu terbuka di episode 1. Sengaja **BUKAN** `scrollIntoView` — itu menggulung halamannya juga, melompatkan penonton melewati hero. Dual push `c190bdb..91d1f5d`, tayang **±50 detik**, **downtime NOL** (0 balasan bukan-200). Dibuktikan sampai ke isi bundle produksi. Rinciannya di seksinya.)
+
+**Rilis ke-1 hari ini:** (✅ **TAYANG `e90e967`**: daftar **Episode** dan **Drama Terkait** BERTUKAR TEMPAT di halaman `/drama/[id]`, **khusus serial**. Episode naik ke sidebar bingkai hero; Drama Terkait turun ke kartu putih ditata berpetak. Alasan owner: di HP penonton harus menggulung melewati 20 judul lain + sinopsis sebelum menemukan tombol episode. Halaman FILM nol perubahan. Dual push `fb5aca1..e90e967`, tayang **±130 detik**, **downtime NOL** — `http=200` di SETIAP percobaan selama pergantian versi. Smoke test 6/6 = 200. Rinciannya di seksinya.)
+
+**Rilis terakhir sebelum itu:** 2026-10-31, rilis ke-3 hari itu (✅ **TAYANG `7977f9c`**: **genre & negara akhirnya ikut menghitung FILM**. Klik "Komedi" dulu memulangkan "0 judul"; sekarang **1 drama + 64 film**. Menu Negara ternyata dibangun dari **SATU judul** — dari 40 drama cuma 1 punya kolom negara, yaitu film Meg 2 yang ko-produksi 6 negara, dan itulah seluruh isi dropdown yang dikeluhkan owner. Sekarang dihitung dari katalog lengkap → **Indonesia, Jepang, Korea, India, Thailand** ikut muncul, dibatasi 12 teratas. Sekalian: kata "Playly" dibuang dari layar penonton. Rinciannya + dua jebakan verifikasi di seksinya.)
+
+**Rilis ke-2 hari ini:** (✅ **TAYANG `a44ac67`**: poster FILM akhirnya punya **⭐ rating + chip HD**. Rating ternyata sudah ada di data sejak lama tapi tak pernah digambar (21 dari 24 film punya); kualitas memang tak punya sumber sama sekali, jadi atas keputusan owner diturunkan dari **link unduhan** (1080p → HD, 480p → SD) + dropdown koreksi di panel admin. Tayang ±90 detik, smoke test 5/5 = 200. ❌ **RALAT PENTING**: temuan "tombol tergeser di layar HP" yang dicatat sebelumnya **TIDAK PERNAH ADA** — itu cacat alat potret (Edge di mesin ini tak bisa < ±476px, jadi gambar hanya DIPOTONG). Sudah diukur ulang: tombol terpusat sempurna, nol pelebaran halaman. Rinciannya + cara memotret lebar HP yang BENAR ada di seksinya.)
+
+**Rilis ke-1 hari ini:** (✅ **TAYANG `4dde5c0`**: tombol beranda "LIHAT SEMUA FILM UNGGULAN" → **"TEMUKAN TONTONAN FAVORITMU"** — labelnya salah di dua sisi (isinya drama berseri, bukan film; tujuannya katalog lengkap, bukan daftar unggulan). Dual push → Railway build sendiri → tayang ±60 detik, **downtime NOL**. Smoke test 5 alur: 4 langsung 200, `/drama/meg-2-the-trench` 500 SEKALI lalu 200 enam kali — cold start, dicatat bukan dihapus. ❌ **DIRALAT di rilis ke-2**: catatan asli di sini menyebut tombol itu "tergeser ke kanan di layar HP" sebagai gejala nyata. **Itu keliru** — cacat alat potret, bukan cacat situs; sudah diukur ulang dan tombolnya terpusat sempurna. Jangan diburu.)
+
+**Sebelumnya:** 2026-10-30 (tiga rilis beruntun, semuanya TAYANG: `5088bf2` genre bahasa Indonesia → `27973f0` koreksi owner Kerajaan/CEO/Lainnya → **`55894b8` dua tombol halaman drama yang selama ini TERPOTONG**. Downtime NOL. ⏸️ **DUA bahasan menunggu keputusan owner**, risetnya sudah selesai & nol kode diubah: "klik drama langsung play" dan "sinopsis film masih bahasa Inggris".)
+
+---
+
+## 2026-11-09 — 🩺 Pemeriksaan kondisi: Supabase & Playly PULIH, `dramaku.com` akhirnya terdiagnosis
+
+Sesi dibuka dengan `lanjut dari handoff`. **Nol kode diubah, nol rilis, nol commit kode.** Yang
+dikerjakan adalah perintah yang catatan ini tulis sendiri untuk sesi berikutnya: *"Sebelum
+menyimpulkan apa pun di sesi berikutnya: uji ulang dulu."* Ternyata itu mengubah gambaran besar.
+
+### Apa yang diukur, dan angkanya
+
+| Yang diuji | 2026-11-07 | 2026-11-09 |
+|---|---|---|
+| Supabase REST `dramas?limit=1` (`Accept-Profile: dramaapp`) | **402** dibatasi | ✅ **200** |
+| `/api/dramas` produksi | **500** | ✅ **200** — **41 judul** |
+| `/film` | 200 tapi **nol film** | ✅ **200** — **369 judul** + poster Playly |
+| `/drama/<id>` · `/feed/<id>` | **500** | ✅ **200** (2 tag `<video>`, tombol Jeda·Pengaturan·Posisi video) |
+| Playly `/api/public-video?id=1788929757376` | **500 `galat_database`** | ✅ **200 `ok:true`** |
+| Playly `/api/public-video?id=1788933611579` | **500 `galat_database`** | ⚠️ **404 `not_found`** (video memang hilang di sisi mitra) |
+| `dramaku.com` | `http=000` dicatat sbg gangguan | ✅ **alarm palsu** — bukan domain kita, lihat ralat di bawah |
+
+Delapan alamat penonton + akun (`/`, `/beranda`, `/film`, `/discover`, `/katalog`, `/api/dramas`,
+`/my-list`, `/profile`) semua **200**.
+
+⚠️ **Jebakan sampel uji yang baru:** videoId `1788933611579` sekarang membalas **404 `not_found`**,
+bukan 500. Itu BUKAN tanda server Playly masih rusak — videonya memang sudah tidak ada di sisi
+mitra. Kalau sesi berikutnya memakai id itu untuk menguji Playly, ia akan salah menyimpulkan
+"masih mati". Pakai `1788929757376`, atau ambil id segar dari `data/playly.json` → `cadangan`.
+
+### 🪤 Pelajaran: gangguan penyedia itu BERBATAS WAKTU — ukur ulang sebelum membangun penangkalnya
+
+Catatan 2026-11-07 menyimpulkan *"memulihkan Supabase saja TIDAK akan memunculkan kembali film"*
+dan mendaftar **"empat lapis daftar film mati SEMUA"**. Kesimpulan itu benar **pada hari itu**, tapi
+dua hari kemudian dua lapis terbesar pulih **sendiri**, nol baris kode diubah.
+
+Kalau sesi ini langsung percaya catatan lama, kandidat pekerjaannya adalah "bangun cadangan katalog
+yang lebih tahan" — kode permanen untuk masalah sementara, yang harus dirawat selamanya
+(AGENTS.md §4.4). Aturan praktisnya: **status gangguan pihak ketiga di catatan WAJIB diuji ulang di
+awal sesi**, sama seperti status "belum di-push" yang wajib dicek lewat `git fetch` (pelajaran
+2026-11-05).
+
+### 🔎 `dramaku.com`: ditelusuri, lalu DIRALAT — ternyata bukan domain kita
+
+Ini satu-satunya gangguan yang tersisa, dan 2026-11-07 ia tercatat *"Belum ditelusuri sebabnya
+(DNS? domain custom di Railway?) — jangan diklaim sudah diperiksa."* Sekarang sudah diperiksa.
+
+**Rantai buktinya:**
+
+1. `https://dramaku.com` → `http=000` (timeout 20 dtk) · `http://dramaku.com` → `http=000` ·
+   `https://www.dramaku.com` → `http=000`. Tidak ada TLS handshake sama sekali — koneksi TCP-nya
+   saja tidak pernah terbuka.
+2. `nslookup -type=NS dramaku.com` → **`ns3.afternic.com`, `ns4.afternic.com`**. Afternic itu pasar
+   jual-beli domain (milik GoDaddy). **Inilah temuan kuncinya:** DNS domain ini tidak dipegang oleh
+   kita, melainkan oleh halaman parkir marketplace.
+3. A record → `13.248.169.48` + `76.223.54.146`. Reverse-DNS keduanya
+   `a904c694c05102f30.awsglobalaccelerator.com` — infrastruktur parkir itu. **Bukan** Railway:
+   `dramaapp-production-9e88.up.railway.app` dari mesin yang sama resolve ke `153.52.255.78`.
+4. Diuji langsung ke tiap IP dengan `curl --resolve dramaku.com:443:<ip>` → dua-duanya timeout.
+5. RDAP Verisign (`https://rdap.verisign.com/com/v1/domain/dramaku.com`): status **`active`**,
+   registrar **Dynadot** (IANA 472), registrasi **2024-11-03**, kedaluwarsa **2027-11-03**.
+   Jadi domainnya **tidak** kedaluwarsa dan **tidak** hilang.
+
+**❌ RALAT — kesimpulan di atas BENAR sebagai pengukuran, tapi SALAH sebagai kesimpulan.**
+
+Versi pertama seksi ini (ditulis pagi 2026-11-09) menyimpulkan *"nama domainnya masih milik kita"*
+dan menyuruh owner masuk panel registrar Dynadot untuk mengganti nameserver. **Itu keliru.** Owner
+membacanya lalu menjawab: *"seingat saya belum minta ada yang diganti"* — dan ingatannya benar.
+Penelusuran lanjutan membuktikan domain itu **tidak pernah milik project ini**.
+
+**Bukti bahwa `dramaku.com` bukan milik kita — lima, saling menguatkan:**
+
+1. `docs/pengajuan-domain-sendiri.md` (2026-10-15) adalah **proposal MEMBELI domain**. `dramaku.com`
+   muncul di sana sebagai **contoh nama**, bukan milik: *"Satu nama domain, misalnya `dramaku.com`
+   atau `dramaku.id`"*. Langkah pertama bila disetujui: *"Owner **membeli** domain di registrar
+   pilihan (Rumahweb / Niagahoster / Domainesia)."*
+2. `docs/migrasi-railway-tahap6-pindah-domain.md:7` — *"Tahap ini **BELUM dimulai** dan sengaja
+   ditahan."*
+3. `NEXT_PUBLIC_SITE_URL` **tidak diisi** di `.env.local`. Produksi membuktikannya: `canonical`,
+   `og:url`, dan seluruh `<loc>` di `sitemap.xml` memakai alamat Railway — **nol** rujukan ke
+   `dramaku.com`.
+4. Di seluruh kode, `dramaku.com` muncul **satu kali**: contoh di pesan error `lib/site.ts:61`.
+   (`admin@dramaku.com` di `data/admins.json` itu alamat email bawaan, tidak ada hubungannya dengan
+   DNS situs.)
+5. RDAP: terdaftar **2024-11-03** di **Dynadot** — hampir **dua tahun sebelum** proposal beli domain
+   ditulis. Mustahil itu hasil pembelian kita.
+
+**Artinya yang BENAR:** `dramaku.com` milik **orang lain**, terdaftar 2024, dan diparkir di
+marketplace Afternic. Ia tidak menjawab karena memang bukan situs kita — bukan karena rusak.
+Tiga domain serumpun juga sudah dimiliki orang lain: `dramaku.id` & `dramaku.net` (nameserver
+Cloudflare) dan `dramaku.org` (siteprotect).
+
+**Yang harus dilakukan: TIDAK ADA.** Tidak ada yang rusak, tidak ada yang perlu diperbaiki, dan
+tidak ada panel yang bisa owner masuki — panel domain itu milik pemilik lain. Yang tersisa hanyalah
+keputusan bisnis lama yang memang sengaja ditahan: beli domain sendiri atau tidak
+(±Rp200.000/tahun, `docs/pengajuan-domain-sendiri.md`).
+
+⚠️ Kalau suatu saat owner menginginkan nama `dramaku.com` **secara spesifik**, itu pembelian
+**aftermarket** dari pemiliknya sekarang — harganya jauh di atas harga domain baru dan **belum
+pernah dicek** (halaman jual Afternic tidak bisa dibuka dari mesin ini; jangan mengarang angkanya).
+
+### 🪤 PELAJARAN — contoh di dokumen jangan naik pangkat jadi alarm produksi
+
+Ini bagian yang layak diingat, jauh lebih berharga daripada domainnya sendiri.
+
+Rantainya: sebuah nama yang cuma **contoh** di dokumen proposal (`misalnya dramaku.com`) ikut
+terbawa ke blok peringatan produksi di `HANDOFF.md` 2026-11-07 → diukur dengan `curl` → `http=000`
+→ dicatat sebagai gangguan sejajar dengan Supabase 402 dan Playly 500 → bertahan **dua hari di tiga
+berkas catatan** → pagi 2026-11-09 malah "ditelusuri sampai akar" dan melahirkan **tiga langkah
+perbaikan yang mustahil dikerjakan**. Yang memutus rantai itu bukan mesin, melainkan **satu kalimat
+ingatan owner**.
+
+Kenapa pengukurannya tidak menolong: `nslookup`, `curl`, dan RDAP semuanya menjawab pertanyaan
+*"kenapa alamat ini tidak menjawab?"* dengan rapi — tapi tak satu pun menjawab pertanyaan yang
+seharusnya ditanyakan lebih dulu, yaitu **"alamat ini memang milik kita atau bukan?"**. Pengukuran
+yang teliti atas pertanyaan yang salah tetap menghasilkan kesimpulan yang salah, dan justru terlihat
+meyakinkan karena angkanya banyak.
+
+**Aturan yang berlaku seterusnya:** sebelum menaruh alamat apa pun di blok peringatan produksi,
+buktikan dulu alamat itu milik project ini — ada di `NEXT_PUBLIC_SITE_URL`, di panel hosting, atau
+di catatan pembelian. Muncul di dokumen **bukan** bukti kepemilikan.
+
+
+✅ **Diperiksa dan AMAN: domain mati ini tidak merusak SEO.** Dulu ada risiko nyata soal ini
+(`lib/site.ts:12-20` mencatat alamat cadangan yang menunjuk situs mati = canonical + sitemap
+mengarahkan Google ke ketiadaan). Diukur di HTML yang benar-benar dikirim produksi:
+`<link rel="canonical">`, `og:url`, dan seluruh `<loc>` di `sitemap.xml` memakai
+`https://dramaapp-production-9e88.up.railway.app`. Nol rujukan ke `dramaku.com`.
+
+⚠️ **Batas pengukuran (jujur):** semua timeout di atas diukur dari mesin kerja ini, yaitu server RDP
+bersama. Tiga host lain di port 443 dari mesin yang SAMA (Railway, Supabase, Playly) terjawab
+normal, jadi penyumbatan lokal tidak bisa menjelaskan hasilnya — tapi kepastian penuh butuh owner
+membuka `dramaku.com` dari HP sendiri.
+
+### Posisi repo & antrean
+
+- `HEAD` = `origin/main` = `dramaku/main` = **`d7bd07d`**, working tree **bersih** (diverifikasi
+  sesudah `git fetch origin` + `git fetch dramaku`).
+- **Nol antrean rilis.** Diuji per-branch: nol branch di `origin` maupun `dramaku` yang punya commit
+  di luar `main` (`git rev-list --count main..<branch>` = 0 untuk semuanya).
+- Rilis terakhir tetap **`eeb339e`** (+ commit docs `d7bd07d`).
+
+### 🧹 Dua catatan BASI yang dibetulkan di sesi ini
+
+1. Baris **"Terakhir diisi"** di kepala berkas ini masih menceritakan `4fb6ecf` (rilis 19 commit),
+   padahal **dua rilis datang sesudahnya** (`6b65e0a` lalu `eeb339e`). Dikonfirmasi dengan
+   `git merge-base --is-ancestor 4fb6ecf eeb339e` → benar, `4fb6ecf` yang lebih lama.
+2. Baris **"Rilis terakhir:"** menunjuk `4fb6ecf` dengan alasan yang sama → dibetulkan ke `eeb339e`.
+
+Pelajarannya sama dengan 2026-11-05: **sesi yang menambahkan seksi tanggal baru sering lupa
+memperbarui ringkasan di kepala berkas**, sehingga sesi berikutnya membaca status rilis yang salah
+di baris paling pertama yang ia baca.
+
+### 📦 ARSIP — isi dua blok peringatan merah 2026-11-07 yang dihapus dari kepala berkas
+
+Disimpan utuh di bawah ini supaya nol baris dibuang (aturan 📦 UKURAN di kepala berkas). **Status
+teknisnya sudah TIDAK berlaku** — Supabase 200, Playly 200, lihat tabel di atas. Yang masih berguna
+dari sini: cara menyalakan pemutar Playly di lokal tanpa server sungguhan (paragraf terakhir), dan
+rekam jejak bagaimana keempat lapis daftar film ditelusuri.
+
 > 🔴 **KONDISI PRODUKSI 2026-11-07 — DATABASE SUPABASE DIBATASI (kuota egress habis).**
 > Ditemukan tak sengaja saat `npm run build` rutin: Supabase membalas **HTTP 402**
 > `"Service for this project is restricted due to the following violations: exceed_egress_quota.
@@ -75,58 +399,6 @@
 > (`toHttpsUrl` menolak http polos), dan hasil `fetchPlaylyVideoUrl` di-cache **300 detik** —
 > ganti alamat tanpa `rm -rf .next` + nyala ulang akan tetap menyajikan alamat lama.
 
-
-**Terakhir diisi:** 2026-11-07 — ✅ **TAYANG `e486c17..4fb6ecf` — RILIS BESAR 19 COMMIT, satu hari penuh kerja.** Dual push cermin `dramaku` dulu lalu produksi `origin` (urutan §5), tayang **±77 detik** (push 15:46:30 → versi baru terdeteksi 15:47:47), **downtime NOL** — `http=200` di SETIAP percobaan selama pergantian. Tanpa SQL/env baru (diperiksa sebelum push). Smoke test dibandingkan dengan **baseline yang diambil SEBELUM push**: `/my-list` judul "Favorit" 0→1 · "Daftar Saya" 1→0 · tombol Cari navbar 0→1 · `/profile` "Menu Cepat" 0 · indeks saran tergambar di `/`, `/beranda`, `/film` · sembilan alamat semua **200**. ⚠️ `/api/dramas` tetap **500** dan `dramaku.com` tetap tak menjawab — keduanya kondisi LAMA (Supabase diuji ulang 15:50: masih **402**), bukan akibat rilis ini. 🔙 Mundur: `git revert --no-commit e486c17..HEAD` lalu dual push, atau redeploy `e486c17` di panel Railway. ⬇️ **Isi rilisnya:** menu titik tiga pemutar Playly dari rekan DIGABUNG ke main dan DIPAKAI apa adanya.** menu titik tiga pemutar Playly dari rekan DIGABUNG ke main dan DIPAKAI apa adanya.** Owner menarik branch rekan `feat/menu-pemutar-playly` (1 commit `06ed695`, tertinggal 4 commit, merge **nol bentrok**). Menu jadi 6 baris urut: Subtitle (+ Gaya subtitle) · Kecepatan pemutar · Volume Stabil · Penguat suara · Pencahayaan sinematik · Kualitas video; Subtitle & Kecepatan **tidak** punya tombol langsung di baris kontrol, PiP & layar penuh tetap punya. ⚠️ **Keputusan owner sempat BERUBAH di tengah** — tombol langsung CC & Kecepatan sudah dipulihkan penuh (membalik kembali ke permintaan 2026-09-28 `39be664`), lalu owner **melihat hasilnya di layar** dan membatalkannya: *"tetap pakai yang rekan saya kerjakan saja"*. Pemulihan dibuang sebelum sempat di-commit; `PlaylyPlayer.tsx` kini **persis** kerja rekan (`git status` kosong). 🪤 **Celah yang ditemukan di tengah putaran itu TETAP berguna dan sudah ditutup:** tidak ada SATU pun tes yang me-render `PlaylyPlayer`, jadi tombolnya bisa dihapus tanpa tes merah — dan `player-menu.test.ts` milik rekan **tidak** menangkap kalau sambungan menu→video putus (dibuktikan: sambungan diputus → tes rekan tetap 11 lulus). Penjaga baru `tests/pemutar-playly-kontrol.test.ts` (4 tes). ➕ Owner juga menyetujui penjaga SERUPA untuk menu pengaturan pemutar drama (`PlayerSettings`, yang juga nol tes): `tests/pemutar-drama-pengaturan.test.ts`, 8 tes. ❌ **Klaim rekan "1 tes gagal di `origin/main` murni" TIDAK berlaku di main terkini** — diuji ulang: `tests/episode-naik-ke-sidebar.test.ts` **12 lulus**, `npm test` penuh hijau. **Bukti:** build sukses · `tsc` exit 0 · **2.055 tes / 142 berkas hijau** (dari 2.040/140) · kedua penjaga diuji **MERAH lebih dulu** di 4 titik · **nol kode produksi disentuh** pada keadaan akhir. Tanpa SQL/env baru. ⚠️ **Verifikasi di produksi MUSTAHIL sekarang** — lihat blok peringatan Playly 500 di atas. ✅ **Di-commit lokal (sesi kedua, keputusan owner "commit dulu, tahan rilis"): `f32b294` penjaga tes + `cccf3ca` merge + `06ed695` rekan = 3 commit MENUNGGU; `origin/main` & `dramaku/main` masih `e486c17`.** Folder `docs/laporan/` ikut masuk git (skrip + 3 potret publik; PDF/PPTX/pratinjau di-gitignore). ⚠️ `npm run build` TIDAK diulang di sesi kedua (ada `next start -p 3100` yang sedang dipakai) — `tsc` exit 0 & 2.055 tes hijau sudah diukur sendiri. 💡 **BARU: saran judul muncul saat mengetik** (poster + judul + tahun) di 4 halaman berkatalog — nol permintaan jaringan tambahan, jadi tetap hidup walau Supabase dibatasi. 🔍 **AUDIT seluruh tombol cari — 4 cacat ditemukan**, terbesar: kaca pembesar di navbar hitam ternyata **hiasan** (`pointer-events-none`), diklik nol reaksi. 🏷️ **Halaman Favorit disamakan namanya** — judul "Daftar Saya" (muncul di SATU tempat) kalah dari "Favorit" yang dipakai di seluruh situs; + **tombol Kembali** yang sengaja TIDAK memakai `router.back()` polos (itu melempar pengunjung baru keluar ke Google). 🧹 **"Menu Cepat" di /profile & menu Keamanan(2FA) di sidebar admin DIBUANG** (owner) — keluhan owner diverifikasi dan terbukti: "Download" menuju parameter yang tak pernah ditangani, "Bantuan" menuju halaman LOGIN. ⚠️ Menu itu ternyata pintu TERAKHIR ke /my-list, jadi "Favorit" dipindahkan ke menu akun di balik avatar. 🔑 **Login admin di LOKAL sekarang BISA** saat Supabase mati — sebabnya bukan password melainkan **503** (`isAdminEmail()` menanya Supabase sebelum password diperiksa); jalan keluarnya mode berkas resmi project ini (`ALLOW_FILE_MODE=1` + env Supabase dikosongkan), diuji sampai 200 `role:admin`. 🆕 **`/profile` jadi halaman AKUN** (keputusan owner): Lanjut Menonton · Riwayat Terbaru · Favorit dibuang dari sana (rumahnya `/beranda`, `/history`, `/my-list` — nol fitur hilang), diganti seksi **Akun** (nama + avatar) dan **Keamanan** (ubah password + 2FA, admin saja, komponennya dipakai ulang dari panel admin). 🪤 Kedua baris lama ternyata memanggil fungsi yang SAMA — dua judul untuk daftar yang sama. 🆕 **Gerbang pra-rilis kini SATU perintah: `npm run gerbang`** (keputusan owner) — kelima pemeriksaan §6 berurutan, menolak jalan kalau urutan `build`/`tsc` tertukar. Dijalankan sungguhan: percobaan PERTAMA **menangkap kesalahan nyata** (exit 1), sesudah diperbaiki **✓ LOLOS exit 0** dengan **2.066 tes / 143 berkas hijau**. **⬇️ Rincian di seksi `## 2026-11-07` di bawah.**
-
----
-
-**Sebelumnya 2026-11-06:** ✅ **TAYANG `64a48fc` + `cfa7a94`: panel admin Video Playly jadi TABEL, dan rating kini BISA DIKETIK.** Sepuluh putaran perbaikan tampilan atas koreksi owner, berakhir dengan satu fitur baru. Daftar video jadi satu baris per video (Judul · Jenis · Kategori · Kualitas · IMDb · Rating · Aksi) dengan paginasi bernomor; menu sidebar "Video Playly" jadi grup berisi tiga; keterangan panjang pindah ke tombol "?". ⚠️ **Rating yang diketik DILIHAT PENONTON** (kartu video di beranda), jadi disaring di server — kotak isian di layar bukan pagar. Disimpan di dokumen SENDIRI `playly:rating`, bukan menumpang di `playly:imdb`; alasannya dua kerusakan senyap, rinciannya di seksi di bawah. Tanpa SQL/env baru. ⚠️ **Yang IKUT HILANG:** tombol "Sembunyikan" per video webhook, karena daftar video di halaman Webhook Playly dihapus atas permintaan owner. **Bukti:** build exit 0 · tsc exit 0 · **2.040 tes / 140 berkas hijau** (dari 1.970/137) · diuji-balik 2 titik → merah → dikembalikan hijau · diverifikasi di situs SUNGGUHAN: endpoint baru `/api/admin/playly/rating` **401** (sebelum rilis **404**), smoke test 8 alamat semua **200**. **⬇️ Rincian 10 putaran + semua jebakannya ada di seksi `## 2026-11-06 18:45` di bawah.** Rencana lengkap: `docs/lintasai/rencana/2026-11-06-sidebar-playly-divider-dan-bantuan.md`.
-
----
-
-**Sebelumnya hari ini:** ✅ **TAYANG `df83931`: baris "Playly" di popup *Pilih provider download*.** Dual push `37d8003..df83931`, tayang ±80 detik, downtime NOL. ⚠️ **Barisnya BELUM akan muncul di video mana pun, dan itu BUKAN kerusakan kode** — izin unduh adalah saklar per-video milik pengunggah di Playly, bukan setelan kita. **⬇️ Rincian + cara owner membuktikannya ada di seksi `## 2026-11-06 08:33` di bawah.**
-
-**Sebelumnya 2026-11-05:** ✅ **TAYANG `32ae1c6`: SELURUH halaman penonton + admin kini berlatar putih.** 🪤 **Pelajaran: PEMETAAN SAYA SEBELUMNYA TIDAK LENGKAP** — saya menyatakan "tinggal 3 halaman" (/shorts, /history, /my-list), lalu owner menunjuk **/profile** yang juga gelap. Pemetaan ulang lewat HTML yang BENAR-BENAR dikirim server menemukan **lima**, bukan satu. Kelas `.tema-admin-terang` digeneralkan jadi `.tema-terang-penuh` (dipakai admin + halaman akun). ⚠️ Halaman MENONTON sengaja TETAP gelap. Dual push `7afb6cc..32ae1c6`, tayang ±82 detik, downtime NOL. Rinciannya di seksi teratas.
-
-**Sebelumnya hari ini:** ✅ **TAYANG `425cc34`: TIGA perbaikan panel admin sekaligus.** (1) 🧭 **Satu menu = satu tampilan** — lima menu sidebar ternyata BUKAN halaman terpisah, semuanya `/admin` yang sama; sekalian menutup menu **Keamanan (2FA) yang RUSAK** (targetnya `#keamanan` nol elemennya). (2) 🎨 **Teks bernada transparan tak lagi pucat** — cara kemarin bocor mendasar: `text-rose-100/90` adalah kelas BERBEDA dari `text-rose-100`. (3) 🔍 **Saringan "sudah / belum ada IMDb"** di daftar 489 video. Dual push `68b0069..425cc34`, tayang **±84 detik**, **downtime NOL**. Rinciannya di seksi teratas.
-
-**Sebelumnya hari ini:** ✅ **TAYANG `0cc1758`: PANEL ADMIN kini berlatar terang, seragam dengan beranda.** Owner: *"di admin kamu buat juga latar belakangnya sama dengan beranda jadi semua dashboard semua sinkron"*. ⭐ **477 kemunculan warna gelap dibalik TANPA menyentuh satu pun berkas komponen** — Tailwind v4 di sini mencetak warna sebagai VARIABEL, jadi paletnya cukup didefinisikan ulang di satu pembungkus (`app/globals.css`), saklarnya di `app/admin/layout.tsx`. 🪤 **TIGA jebakan senyap, semuanya ketahuan hanya karena hasilnya DIPANDANG** (lihat seksi teratas), dan 🪤 **DUA kesalahan METODE VERIFIKASI saya sendiri** — nyaris melaporkan 'deploy gagal' padahal sudah tayang. Dual push `60eb338..0cc1758`.
-
-**Sebelumnya hari ini:** ✅ **TAYANG `1dd0fd0`: panel admin Playly tak lagi HILANG saat Playly lambat.** 🪤 Owner melapor *"Dropdown paling kiri aku tidak ketemu"* — **dan memang tidak ada, bukan terlewat**: panel menyembunyikan DIRINYA SENDIRI begitu pengambilan daftar gagal (`if (fetchError) return`), jadi Playly telat 10 detik = daftar video + KETIGA dropdown lenyap. Senyap total: halaman admin tetap 200, build hijau, 1.886 tes hijau — yang hilang cuma alat kerjanya, dan **owner yang menemukan, bukan mesin, SESUDAH rilis**. Kini panel menyerah hanya kalau benar-benar nol video, dan halaman admin memakai salinan terakhir sebagai jaring. Dual push `d73fd0b..1dd0fd0`, downtime NOL.
-
-**Sebelumnya hari ini:** ✅ **TAYANG `d04a952`: DUA perbaikan sekaligus.** (1) 🎬 **Serial Playly bisa dipisahkan dari "Film Terbaru"** — dropdown Jenis di panel admin. (2) 🎨 **Latar putih seragam** di `/discover` (Jelajah + semua filter genre), `/film`, `/katalog`. Dual push `8f30108..d04a952`, tayang **±88 detik**, **downtime NOL** (http=200 di SETIAP percobaan selama pergantian versi). ⏳ **SATU langkah owner tersisa:** tandai video "Pemuda Miskin Mata Tembus Pandang Jadi Miliarder" jadi **Series** di panel admin — situs sengaja TIDAK berubah sampai itu dilakukan (bawaan `film`, supaya nol film ikut berpindah). Rinciannya di seksi teratas.
-
-**Sebelumnya hari ini (kini SUDAH tayang):** 🎬 `2f8fb6f`: serial Playly akhirnya bisa dipisahkan dari "Film Terbaru".** Owner: *"rekan saya upload drama dari playly tapi masuknya ke film terbaru, harusnya masuk ke series terbaru"*. Akar masalahnya **bukan salah logika — fiturnya memang belum pernah ada**: seluruh video Playly dilempar ke baris film tanpa kecuali. 🪤 **Tebakan otomatis DIUKUR dulu di 489 video produksi lalu DITOLAK** (pola judul cocok cuma 18, DUA di antaranya justru film; judul yang dikeluhkan owner tak terdeteksi; 58% durasi `null`). ⏳ **Menunggu izin push owner.** Rinciannya di seksi teratas.
-
-**Sebelumnya 2026-11-05:** 🔁 **VERIFIKASI SILANG 3 SESI.** Push yang diminta owner ternyata **sudah dilakukan sesi lain** (`4f28886` + 6 commit lain sudah di kedua remote). Nol kode diubah; yang dikerjakan: membetulkan catatan yang BASI — studio AI sudah di-commit (`d12d913`, 26 berkas) padahal masih tertulis "belum di-commit", dan `antrean-deploy.md` disegarkan ke `836a0b1`. 🪤 **Pelajaran: status "belum di-push" di catatan lama WAJIB dicek ulang lewat `git fetch`** — repo ini dikerjakan dari beberapa sesi. Rinciannya di seksi teratas.
-
-**Sebelumnya 2026-11-03:** 🔊 ✅ **TAYANG `88d3429`: Volume Stabil & Penguat suara AKHIRNYA BERFUNGSI.** Ternyata kedua sakelar selama ini dipasang MATI PERMANEN dan **nol `AudioContext` di seluruh project** — mesinnya memang tak pernah dibangun, jadi ini membangun dari nol, bukan membuka gerbang. Surat permintaan izin dikirim ke rekan Playly dan **mereka memasangnya hari itu juga**, sehingga fitur **hidup sendiri tanpa rilis ulang** (perancangannya terbukti benar). 🔴 **Bunyinya BELUM pernah didengar siapa pun** — mesin kerja ini server tanpa perangkat suara, semua pengukuran audio memulangkan nol; **uji dengar wajib manusia**, caranya di seksinya. ⚠️ Kalau DramaKu pindah domain, daftar origin WAJIB dikirim ulang ke Playly atau fitur suara mati lagi.
-
-**Sebelumnya hari itu:** 🎬 **BARU `drama-ai-studio/`: episode 1 jadi MP4 — 18/18 FOTO AI + 11/11 DIALOG MANDARIN DIUCAPKAN, biaya NOL** — 4 putaran. 💡 Temuan sampingan penting: **jam mesin ini tertinggal 13 menit** dari waktu sebenarnya. 🪤 Pelajaran termahal: **"ada sinyal audio" ≠ "terdengar"** (semua tenaga di sub-bass yang speaker kecil tak bunyikan) dan **"kamera bergerak" ≠ "terbaca bergerak"** (14%/7dtk = slideshow); dua-duanya lolos pemeriksaan teknis saya dan hanya ketahuan dari laporan owner (1080×1920, 97,04 dtk, subtitle Mandarin+Indonesia terbakar, wajah tokoh konsisten lintas adegan). Sub-proyek terisolasi; repo induk nol tersentuh (build OK, tsc exit 0, 1844 tes hijau). ⚠️ Yang dihasilkan **animatic**, BUKAN video AI — mesin berbayar sengaja belum disambung (nol kunci API). ✅ **SUDAH di-commit & di-push** (`d12d913`, 26 berkas ter-track) — status "belum di-commit" di catatan lama sudah TIDAK berlaku. · Sebelumnya: 🔍 **AUDIT HP + TABLET atas permintaan Kang Dedi: HASIL BERSIH, nol kode diubah.** 20/20 pengukuran (5 halaman × lebar 360/412/768/1024) menunjukkan `scrollWidth` sama persis dengan viewport — nol elemen meluber. 🪤 **PELAJARAN METODE PENTING**: potret `--window-size` di bawah ~476px MENYESATKAN (berkas PNG-nya selebar yang diminta, tapi viewport CSS yang dirender TIDAK) — jebakan ini sudah menipu TIGA kali. Cara yang benar (iframe + ukur `scrollWidth`) ada di seksinya.
-
-**Rilis terakhir:** 2026-11-07 — `4fb6ecf` (rilis besar 19 commit, lihat seksi teratas).
-
-**Rilis sebelumnya:** 2026-11-03 — `88d3429` (fitur suara pemutar).
-
-**Rilis sebelumnya:** 2026-11-02, rilis ke-6 hari itu (✅ **TAYANG `784460c`**: **judul pemutar kini MEMUDAR bersama kontrol saat film berjalan**, memberi ruang penuh bagi terjemahan. 🔍 **AKAR MASALAH AKHIRNYA TERVERIFIKASI, dan tiga rilis sebelumnya mengejar yang salah**: teks yang menumpuk judul BUKAN subtitle aplikasi melainkan **hardsub — terbakar di dalam gambar video**, posisinya mustahil digeser. Dibuktikan: pagar CSS subtitle browser sudah benar di bundle produksi, DAN drama itu tak punya satu pun berkas subtitle (ep 1/2/13/14/15 semua 404). Keputusan owner dari tiga opsi. Dual push `329c573..784460c`, tayang **±80 detik**, **downtime NOL**. ❗ Temuan terpisah belum ditangani: katalog menjanjikan subtitle yang berkasnya tidak ada — rinciannya di seksinya.)
-
-**Rilis ke-5 hari ini:** (✅ **TAYANG `8ced118`**: **subtitle dua baris tak lagi menimpa judul** + tombol play dikecilkan 44→40px di HP. Owner mengirim tangkapan DevTools Galaxy Z Fold 6 (412×968) dengan teks saling menimpa. Sebabnya subtitle dibungkus `<span>` polos = elemen **INLINE**, dan pada elemen inline padding atas-bawah TIDAK menambah tinggi baris — kotak latarnya meluber keluar menimpa apa pun di atas & di bawahnya. Satu baris aman, dua baris langsung tabrakan. Perbaikan: `inline-block`. Dual push `32c7b0c..8ced118`, tayang **±80 detik**, **downtime NOL**. Rinciannya di seksinya.)
-
-**Rilis ke-4 hari ini:** (✅ **TAYANG `3d57145`**: **blok JUDUL pemutar turun ~26px di HP**. Putaran kedua dari `7c67a40` di bawah — ❌ **RALAT: rilis itu menggeser blok yang SALAH.** Owner menulis *"teks arti tulisannya"*, dibaca sebagai subtitle terjemahan; tangkapan layar putaran kedua memperjelas kotak merahnya menandai **judul + `Eps n / N`**, dan di gambar itu tak ada subtitle sama sekali. Ruangnya dipanen dengan memindahkan angka durasi dari barisnya sendiri di bawah tombol ke **samping garis geser** — ~18px kembali TANPA penonton kehilangan angkanya. Dual push `c0132cf..3d57145`, tayang **±70 detik**, **downtime NOL**. Rinciannya di seksinya.)
-
-**Rilis ke-3 hari ini:** (✅ **TAYANG `7c67a40`**: **subtitle di pemutar diturunkan di layar HP**. Owner: *"teks arti tulisannya terlalu ke tengah, buat turun sedikit."* Sebabnya tulisan `Eps n / N` di atasnya duduk di TENGAH tombol setinggi 44px, jadi subtitle ber-`mt-2` berhenti hanya ±20px di bawahnya dan terbaca menyatu dengan blok judul. Jarak dari judul +16px, subtitle turun 12px terhadap layar; layar lebar NOL perubahan. Dual push `ce0265c..7c67a40`, tayang **±90 detik**, **downtime NOL**. ⚠️ Ruang turunnya MENTOK — alasannya di seksinya, jangan diulang dari nol.)
-
-**Rilis ke-2 hari ini:** (✅ **TAYANG `91d1f5d`**: daftar episode di sidebar **menggulung sendiri ke episode terakhir ditonton**. Lanjutan langsung dari rilis ke-1 di bawah: sesudah daftar pindah ke kolom sempit, serial 45 episode selalu terbuka di episode 1. Sengaja **BUKAN** `scrollIntoView` — itu menggulung halamannya juga, melompatkan penonton melewati hero. Dual push `c190bdb..91d1f5d`, tayang **±50 detik**, **downtime NOL** (0 balasan bukan-200). Dibuktikan sampai ke isi bundle produksi. Rinciannya di seksinya.)
-
-**Rilis ke-1 hari ini:** (✅ **TAYANG `e90e967`**: daftar **Episode** dan **Drama Terkait** BERTUKAR TEMPAT di halaman `/drama/[id]`, **khusus serial**. Episode naik ke sidebar bingkai hero; Drama Terkait turun ke kartu putih ditata berpetak. Alasan owner: di HP penonton harus menggulung melewati 20 judul lain + sinopsis sebelum menemukan tombol episode. Halaman FILM nol perubahan. Dual push `fb5aca1..e90e967`, tayang **±130 detik**, **downtime NOL** — `http=200` di SETIAP percobaan selama pergantian versi. Smoke test 6/6 = 200. Rinciannya di seksinya.)
-
-**Rilis terakhir sebelum itu:** 2026-10-31, rilis ke-3 hari itu (✅ **TAYANG `7977f9c`**: **genre & negara akhirnya ikut menghitung FILM**. Klik "Komedi" dulu memulangkan "0 judul"; sekarang **1 drama + 64 film**. Menu Negara ternyata dibangun dari **SATU judul** — dari 40 drama cuma 1 punya kolom negara, yaitu film Meg 2 yang ko-produksi 6 negara, dan itulah seluruh isi dropdown yang dikeluhkan owner. Sekarang dihitung dari katalog lengkap → **Indonesia, Jepang, Korea, India, Thailand** ikut muncul, dibatasi 12 teratas. Sekalian: kata "Playly" dibuang dari layar penonton. Rinciannya + dua jebakan verifikasi di seksinya.)
-
-**Rilis ke-2 hari ini:** (✅ **TAYANG `a44ac67`**: poster FILM akhirnya punya **⭐ rating + chip HD**. Rating ternyata sudah ada di data sejak lama tapi tak pernah digambar (21 dari 24 film punya); kualitas memang tak punya sumber sama sekali, jadi atas keputusan owner diturunkan dari **link unduhan** (1080p → HD, 480p → SD) + dropdown koreksi di panel admin. Tayang ±90 detik, smoke test 5/5 = 200. ❌ **RALAT PENTING**: temuan "tombol tergeser di layar HP" yang dicatat sebelumnya **TIDAK PERNAH ADA** — itu cacat alat potret (Edge di mesin ini tak bisa < ±476px, jadi gambar hanya DIPOTONG). Sudah diukur ulang: tombol terpusat sempurna, nol pelebaran halaman. Rinciannya + cara memotret lebar HP yang BENAR ada di seksinya.)
-
-**Rilis ke-1 hari ini:** (✅ **TAYANG `4dde5c0`**: tombol beranda "LIHAT SEMUA FILM UNGGULAN" → **"TEMUKAN TONTONAN FAVORITMU"** — labelnya salah di dua sisi (isinya drama berseri, bukan film; tujuannya katalog lengkap, bukan daftar unggulan). Dual push → Railway build sendiri → tayang ±60 detik, **downtime NOL**. Smoke test 5 alur: 4 langsung 200, `/drama/meg-2-the-trench` 500 SEKALI lalu 200 enam kali — cold start, dicatat bukan dihapus. ❌ **DIRALAT di rilis ke-2**: catatan asli di sini menyebut tombol itu "tergeser ke kanan di layar HP" sebagai gejala nyata. **Itu keliru** — cacat alat potret, bukan cacat situs; sudah diukur ulang dan tombolnya terpusat sempurna. Jangan diburu.)
-
-**Sebelumnya:** 2026-10-30 (tiga rilis beruntun, semuanya TAYANG: `5088bf2` genre bahasa Indonesia → `27973f0` koreksi owner Kerajaan/CEO/Lainnya → **`55894b8` dua tombol halaman drama yang selama ini TERPOTONG**. Downtime NOL. ⏸️ **DUA bahasan menunggu keputusan owner**, risetnya sudah selesai & nol kode diubah: "klik drama langsung play" dan "sinopsis film masih bahasa Inggris".)
 
 ---
 

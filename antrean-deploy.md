@@ -1,35 +1,46 @@
 # Antrean deploy
 
 > **Cara pakai:** ketik **`cek antrean-deploy`** atau **`lanjut dari handoff`**.
-> AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Vercel, lalu **perbarui tabel di bawah**.
+> AI wajib `git fetch origin` + `git fetch dramaku`, bandingkan `origin/main` vs `dramaku/main` vs produksi Railway (`dramaapp-production-9e88.up.railway.app`), lalu **perbarui tabel di bawah**.
 
-> 🔴 **KONDISI PRODUKSI 2026-11-07 — DATABASE SUPABASE DIBATASI (kuota egress habis).**
-> Ditemukan tak sengaja saat `npm run build` rutin: Supabase membalas **HTTP 402**
-> `"Service for this project is restricted due to the following violations: exceed_egress_quota.
-> The project owner must upgrade their plan or remove spend caps to restore service."`
-> Diuji langsung ke REST Supabase (bukan lewat aplikasi): **402** dengan kunci, jadi ini
-> pembatasan di sisi Supabase — **bukan** akibat rilis `64a48fc`, dan bukan bug kode.
+> ✅ **KONDISI PRODUKSI 2026-11-09 — SUPABASE SUDAH PULIH, blok peringatan 402 DIHAPUS dari sini**
+> (syaratnya memang itu: *"200 = sudah pulih, hapus blok peringatan ini"*). Riwayat lengkap blok
+> lama + semua angka sebelum/sesudah ada di `HANDOFF.md` seksi `## 2026-11-09`.
 >
-> **Dampak yang SUDAH terukur di situs sungguhan:**
-> - `/api/dramas` → **500** (beberapa jam sebelumnya masih **200**).
-> - Halaman penonton `/`, `/beranda`, `/film`, `/discover`, `/katalog` → masih **200**, karena
->   jatuh ke salinan/berkas lokal. ⚠️ **Jangan simpulkan "situs baik-baik saja" dari angka 200
->   itu** — isinya bisa basi dan tidak ikut berubah.
-> - **Panel admin tidak bisa MENYIMPAN apa pun** (rating, kategori, jenis, kualitas,
->   sembunyikan) selama pembatasan berlaku: semuanya menulis ke Supabase.
->
-> **Yang harus dilakukan (BUKAN pekerjaan AI — perlu pemilik akun Supabase):** naikkan paket
-> atau lepas spend cap di dashboard Supabase project `nvblmpkwyzbpdbshyvzw`. Catatan lama
-> menyebut owner **tidak punya akses dashboard** Supabase (yang ada hanya jalur SQL dari repo),
-> jadi kemungkinan perlu minta ke pemegang akunnya. Kuota egress free tier juga mereset tiap
-> awal siklus bulanan.
->
-> **Sebelum menyimpulkan apa pun di sesi berikutnya:** uji ulang dulu —
-> `curl -s -o /dev/null -w "%{http_code}" <SUPABASE_URL>/rest/v1/dramas?select=id&limit=1`
-> dengan header `apikey` + `Authorization` + `Accept-Profile: dramaapp`. **402** = masih
-> dibatasi · **200** = sudah pulih, hapus blok peringatan ini.
+> Diukur sendiri 2026-11-09: Supabase REST **200** (dari **402**) · `/api/dramas` **200** dengan
+> **41 judul** (dari **500**) · `/film` **369 judul** (sebelumnya 200 tapi nol film) ·
+> `/drama/<id>` & `/feed/<id>` **200** (dari **500**) · server Playly **200 `ok:true`**
+> (dari **500 `galat_database`**). Nol baris kode diubah — pemulihannya di sisi penyedia.
+
+> ✅ **DITUTUP — `dramaku.com` BUKAN gangguan dan BUKAN domain kita.** Sejak 2026-11-07 catatan
+> membawa baris *"dramaku.com tidak menjawab"* seolah gangguan produksi; 2026-11-09 owner
+> menangkapnya (*"seingat saya belum minta ada yang diganti"*) dan penelusuran membenarkannya:
+> nama itu cuma **contoh** di proposal beli domain (`docs/pengajuan-domain-sendiri.md`), sementara
+> domain aslinya terdaftar orang lain sejak 2024 dan diparkir di marketplace Afternic.
+> `NEXT_PUBLIC_SITE_URL` tidak diisi, jadi situs memakai alamat Railway — nol dampak ke rilis
+> maupun SEO. **Tidak ada yang perlu dikerjakan.** ❌ Abaikan saran "masuk panel Dynadot" yang
+> sempat ditulis pagi 2026-11-09 — itu keliru, panelnya milik orang lain. Ralat + pelajaran
+> lengkap: `HANDOFF.md` seksi `## 2026-11-09`.
 
 
+**Terakhir dicek:** 2026-11-09 (**komputer OWNER**), sesudah `git fetch origin` + `git fetch dramaku`.
+`HEAD` = `origin/main` = `dramaku/main` = **`d7bd07d`**, working tree **bersih**. **NOL ANTREAN** —
+diuji per-branch, bukan diasumsikan: `git rev-list --count main..<branch>` = **0** untuk SELURUH
+branch di `origin` maupun `dramaku`. Tidak ada satu pun commit menunggu rilis.
+
+🩺 **Sesi ini nol rilis & nol kode diubah** — isinya pemeriksaan kondisi produksi yang catatan
+sendiri wajibkan ("uji ulang dulu sebelum menyimpulkan"), dan hasilnya membalik dua kesimpulan lama:
+Supabase + Playly pulih sendiri, lalu `dramaku.com` akhirnya ditelusuri sampai akar.
+
+🔓 **Dua rilis yang dulu tercatat "belum bisa dibuktikan tayang" kini BISA diuji owner:** `6b65e0a`
+(pemutar episode di `/feed/<id>`) dan `eeb339e` (menu titik tiga pemutar Playly di `/film`) —
+halaman keduanya sudah **200** dan daftar filmnya terisi. ⚠️ Butuh mata manusia: menu & posisi
+tombol baru tergambar sesudah diklik di browser.
+
+🧹 **10 branch lama di cermin `dramaku` masih nol gunanya** (isinya 100% ada di `main`) — daftarnya
+di catatan 2026-11-07 di bawah. Menghapusnya tetap keputusan owner, belum dikerjakan.
+
+<!-- riwayat cek sebelumnya -->
 **Terakhir dicek:** 2026-11-07 ~19:25 (**komputer OWNER**), **sesudah rilis `eeb339e`**.
 `HEAD` = `origin/main` = `dramaku/main` = **`eeb339e`**. **Nol antrean** — SELURUH branch di
 cermin `dramaku` (11 branch) isinya sudah ada di `main`; nol commit menunggu.
@@ -48,7 +59,6 @@ BUKAN tebakan dari HTML — lihat PELAJARAN 2 di `HANDOFF.md`). **Downtime NOL**
 `feat/playly-modal-unduhan`, `feat/playly-webhook`, `fix/playly-otomatis`,
 `gabung/unduhan-sendcm`, `redesign/playly-card`. Menghapusnya = keputusan owner, belum dikerjakan.
 
-<!-- riwayat cek sebelumnya -->
 **Terakhir dicek:** 2026-11-07 ~18:45 (**komputer OWNER**), **sesudah rilis `6b65e0a`**.
 `HEAD` = `origin/main` = `dramaku/main` = **`6b65e0a`** (diverifikasi `git fetch origin` +
 `git fetch dramaku`). **Nol antrean rilis.**

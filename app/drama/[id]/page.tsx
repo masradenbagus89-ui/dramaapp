@@ -7,7 +7,8 @@ import { SITE_URL, absoluteUrl, toMetaDescription } from "@/lib/site";
 import { dramaJsonLd, toJsonLdScript } from "@/lib/structured-data";
 import { isMovie, subtitleLabel, type Drama } from "@/lib/types";
 import { durasiTayangan } from "@/lib/format";
-import DramaTrailer from "@/app/components/DramaTrailer";
+import HeroDramaMedia from "@/app/components/HeroDramaMedia";
+import Poster from "@/app/components/Poster";
 import SaveButton from "@/app/components/SaveButton";
 import LikeButton from "@/app/components/LikeButton";
 import Comments from "@/app/components/Comments";
@@ -600,16 +601,27 @@ function HeroDrama({ drama }: { drama: Drama }) {
                     fill
                     priority
                     sizes="(max-width: 768px) 100vw, 1280px"
-                    className={`object-cover ${drama.heroDim ? "brightness-90" : "brightness-100"}`}
+                    /* `object-top` BUKAN gaya bebas — owner 2026-11-09: kepala
+                       tokoh terpotong di tepi atas. Poster drama hampir selalu
+                       lebih tinggi daripada kotak 16/9 ini, dan `object-cover`
+                       sendirian memotong RATA atas-bawah sehingga wajah — satu
+                       hal yang paling menentukan orang mengklik atau tidak —
+                       justru yang hilang. Dengan `object-top` gambar ditempel ke
+                       atas, jadi kelebihannya dibuang dari BAWAH (kaki/latar),
+                       bukan dari kepala. */
+                    className={`object-cover object-top ${drama.heroDim ? "brightness-90" : "brightness-100"}`}
                   />
                 </>
               )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-black/10" />
+              {/* Lapisan hidup: trailer montase + tombol play. Gelap-bertingkat
+                  yang dulu di sini ikut pindah ke dalamnya, supaya video dan
+                  gambar diam digelapkan dengan cara yang sama persis. */}
+              <HeroDramaMedia drama={drama} />
             </div>
             <Button
               asChild
               size="icon"
-              className="absolute left-3 top-3 rounded-full bg-black/60 text-white hover:bg-black/60 md:hidden"
+              className="absolute left-3 top-3 z-30 rounded-full bg-black/60 text-white hover:bg-black/60 md:hidden"
               aria-label="Kembali"
             >
               <Link href="/beranda">
@@ -619,7 +631,11 @@ function HeroDrama({ drama }: { drama: Drama }) {
 
             <div className="absolute -bottom-16 left-4 right-4 flex gap-3 md:left-8 md:right-8 md:-bottom-20 md:gap-6">
               <div className="w-28 shrink-0 md:w-44">
-                <DramaTrailer drama={drama} />
+                {/* Gambar diam. Trailernya pindah ke gambar besar (owner
+                    2026-11-09): satu halaman cukup menarik SATU video dari PC
+                    backup — dua video sekaligus pernah membuat hosting
+                    mematikan situs karena kuota transfer habis. */}
+                <Poster drama={drama} />
               </div>
               <div className="flex flex-col justify-end pb-2 md:pb-4">
                 <div className="flex items-center gap-2">

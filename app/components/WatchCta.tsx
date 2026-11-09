@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { getProgressEntry } from "@/lib/progress";
+import { tujuanNonton } from "@/lib/tujuan-nonton";
 import { Button } from "@/components/ui/button";
 import { Play } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -14,18 +15,13 @@ export default function WatchCta({
   dramaId: string;
   className?: string;
 }) {
-  const [href, setHref] = useState(`/feed/${dramaId}?ep=1`);
-  const [label, setLabel] = useState("Mulai Nonton");
+  // Aturan "lanjut atau mulai" tinggal di lib/tujuan-nonton.ts — dipakai
+  // bersama gambar besar hero, supaya dua tombol di halaman yang SAMA tak
+  // pernah mengarah ke episode yang berbeda.
+  const [tujuan, setTujuan] = useState(() => tujuanNonton(dramaId, null));
 
   useEffect(() => {
-    const entry = getProgressEntry(dramaId);
-    if (!entry) {
-      setHref(`/feed/${dramaId}?ep=1`);
-      setLabel("Mulai Nonton");
-      return;
-    }
-    setHref(`/feed/${dramaId}`);
-    setLabel("Lanjut Nonton");
+    setTujuan(tujuanNonton(dramaId, getProgressEntry(dramaId)));
   }, [dramaId]);
 
   return (
@@ -36,9 +32,9 @@ export default function WatchCta({
         className,
       )}
     >
-      <Link href={href}>
+      <Link href={tujuan.href}>
         <Play className="size-4 fill-current text-current" />
-        {label}
+        {tujuan.label}
       </Link>
     </Button>
   );

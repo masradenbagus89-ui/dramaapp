@@ -40,11 +40,14 @@
 > **Akarnya:** tes menunggu rantai async dengan jumlah gelombang `act()` yang TETAP; di mesin
 > sibuk (RDP bersama puluhan penyewa) pemeriksaan jalan sebelum rantai selesai. Kini menunggu
 > KONDISI. **Diuji-balik 4 arah semua MERAH** · **6 putaran hijau sambil suite penuh berjalan** ·
-> gerbang **LOLOS 5/5** dengan **2272 tes / 160 berkas**.
+> gerbang **LOLOS 5/5** dengan **2273 tes / 160 berkas**.
 >
-> ⚠️ **Angka tes: 2272, bukan 2273.** Entri `fa0a524` di bawah menulis 2273. Diperiksa: nol
-> berkas tes berubah antara `fa0a524` dan `615e2a4`, nol `it.skip`/`it.todo` di `tests/`. Pakai
-> **2272** sebagai acuan.
+> ❌ **RALAT (ditulis kemudian hari itu juga): yang benar 2273 — entri `fa0a524` di bawah SUDAH
+> benar.** Di sini sempat tertulis *"2272, bukan 2273"*; itu keliru. Dibuktikan dengan dua laporan
+> `vitest --reporter=json` atas kode yang sama (`git stash` → 2273, dikembalikan → 2276 = +3 tes
+> baru), lalu 3 putaran stabil. 🪤 **Jumlah tes BUKAN sifat tetap dari kode**:
+> `tests/kepala-situs.test.ts` membuat satu tes per `page.tsx` yang ada di disk (113 tes dari 21
+> halaman). Jangan pakai selisih 1-2 tes untuk menyalahkan catatan lama.
 >
 > 💰 **Pertanyaan tagihan Railway DIJAWAB & DITUTUP, nol kode diubah.** Gambar poster/hero
 > **bukan** penyebab tagihan membesar: `/beranda` mengirim **1,17 MB** lewat hosting per

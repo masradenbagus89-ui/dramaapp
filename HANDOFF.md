@@ -101,7 +101,7 @@ berlapis (dompet → `unlocked` → minta alamat → `srcMap` → mulai putar), 
 (RDP bersama puluhan penyewa) pemeriksaan jalan sebelum rantai selesai dan gerbang berhenti di
 berkas yang tak ada hubungannya dengan perubahan yang diuji. Kini menunggu **KONDISI** + pesan
 gagal yang menyebut apa yang ditunggu. **Diuji-balik 4 arah SEMUA MERAH**, **6 putaran hijau
-sambil suite penuh berjalan**, gerbang **LOLOS 5/5** (**2272 tes / 160 berkas**). 💰 **Pertanyaan
+sambil suite penuh berjalan**, gerbang **LOLOS 5/5** (**2273 tes / 160 berkas** — angka 2272 yang sempat ditulis di sini SALAH, ralatnya di seksi 2026-11-10). 💰 **Pertanyaan
 owner "apakah ukuran gambar poster/hero memperbesar tagihan Railway" DIJAWAB: TIDAK, bahasan
 DITUTUP, nol kode diubah.** Terukur dari browser sungguhan (Edge + DevTools Protocol, layar HP):
 `/beranda` mengirim **1,17 MB** lewat hosting kita per kunjungan (gambar cuma 437 KB dari itu),
@@ -240,7 +240,7 @@ dengan perubahan yang sedang diuji (terjadi 2026-11-09).
   tak memperbarui `unlocked`.
 - **6 putaran berturut-turut HIJAU sambil suite penuh berjalan** di mesin yang sama — kondisi
   persis yang dulu membuatnya gagal.
-- Gerbang `npm run gerbang` **LOLOS 5/5**: build sukses · `tsc` exit 0 · **2272 tes / 160 berkas
+- Gerbang `npm run gerbang` **LOLOS 5/5**: build sukses · `tsc` exit 0 · **2273 tes / 160 berkas
   hijau** · nol berkas rahasia di antrean.
 - Dual push `615e2a4..bd7343c` (cermin `dramaku` dulu, lalu produksi `origin`). Deploy Railway
   **sukses 72 detik** (dibuat 01:13:07Z → `success` 01:14:19Z, dibuktikan lewat
@@ -255,10 +255,22 @@ ulang di LUAR jendela pengukuran. Komentar di berkasnya sudah dibetulkan supaya 
 lebih dari yang terbukti. Kalau nanti perlu dijaga: tes terpisah yang memicu render ulang
 berturut-turut.
 
-⚠️ **Angka jumlah tes: terukur 2272, bukan 2273.** Catatan 2026-11-09 menulis 2273. Diperiksa:
-berkas tes **nol berubah** antara `fa0a524` dan `615e2a4` (`git diff --stat`), nol `it.skip`/
-`it.todo` di seluruh `tests/`, dan jumlah `it()` di berkas yang saya ubah tetap 4. Jadi 2272 yang
-benar; jangan kaget kalau selisih 1 itu muncul lagi di catatan lama.
+❌ **RALAT atas koreksi saya sendiri, beberapa jam kemudian — yang BENAR 2273, bukan 2272.**
+Di sini sempat tertulis *"terukur 2272, bukan 2273 … catatan 2026-11-09 salah"*. **Catatan kemarin
+yang benar.** Dibuktikan dengan membandingkan dua laporan `vitest --reporter=json` atas kode yang
+SAMA: `git stash` perubahan hari ini → **2273**, dikembalikan → **2276** (= 2273 + 3 tes baru),
+dan satu-satunya berkas yang jumlahnya berbeda `hero-gambar-besar.test.ts` (9 → 12). Tiga putaran
+berturut-turut sesudahnya: 2276, 2276, 2276 — **stabil**.
+
+🪤 **Pelajaran yang lebih berharga daripada angkanya: JUMLAH TES BUKAN SIFAT TETAP DARI KODE.**
+`tests/kepala-situs.test.ts` mendaftarkan **satu tes per `page.tsx` yang ADA DI DISK**
+(`routeDiDisk()`, 113 tes dari 21 halaman), dan `tests/search-bar-submit.test.ts` memindai folder
+dengan cara serupa. Jadi totalnya mengikuti isi folder kerja saat itu — dan repo ini memang
+dikerjakan dari beberapa sesi di folder yang sama. **Jangan pakai selisih 1-2 tes sebagai bukti
+untuk menyalahkan catatan lama**; bandingkan per-berkas (`--reporter=json`) kalau benar-benar
+perlu. ⚠️ Saya TIDAK bisa membuktikan tes mana yang hilang pada dua pembacaan 2272 pagi itu —
+keduanya sudah lewat dan tak terulang dalam 5 pembacaan berikutnya. Yang pasti: mekanisme yang
+membuat angka itu bisa bergeser memang ADA di dua berkas di atas.
 
 ### Bagian 2 — "Apakah gambar poster/hero memperbesar tagihan Railway?" JAWABANNYA TIDAK
 

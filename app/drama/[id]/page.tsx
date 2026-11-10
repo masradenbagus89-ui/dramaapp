@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
@@ -286,15 +287,20 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
              (owner 2026-10-29, menyamakan dengan halaman tonton).
 
              ⚠️ TANPA `overflow-hidden`, dan itu WAJIB: poster judul sengaja
-             MENJOROK keluar dari kotak gambar hero (`absolute -bottom-16` di
-             bawah). Dengan `overflow-hidden`, poster itu terpotong rapi — dan
-             tidak ada error apa pun yang memberi tahu. Gantinya `pb-20` di
+             MENJOROK keluar dari kotak gambar hero (`sm:absolute sm:-bottom-16`
+             di bawah). Dengan `overflow-hidden`, poster itu terpotong rapi — dan
+             tidak ada error apa pun yang memberi tahu. Gantinya `sm:pb-20` di
              kolom kiri memberi ruang supaya poster mendarat DI DALAM bingkai
-             gelap, bukan menggantung di atas latar abu. */}
+             gelap, bukan menggantung di atas latar abu.
+
+             Ruang itu HANYA dipasang dari `sm:` ke atas (owner 2026-11-10): di
+             HP bloknya tidak lagi menggantung, jadi `pb-20` di sana berubah
+             fungsi jadi 80px lubang kosong antara keterangan film dan daftar
+             EPISODE. `pb-4` secukupnya untuk jarak baca. */}
       <div className="mx-auto max-w-7xl px-0 pt-4 md:px-6">
         <div className="bg-black shadow-lg shadow-black/30 md:rounded-xl">
           <div className="grid lg:grid-cols-[minmax(0,1fr)_320px]">
-            <div className="min-w-0 pb-20 md:pb-24">
+            <div className="min-w-0 pb-4 sm:pb-20 md:pb-24">
               <HeroDrama drama={drama} />
             </div>
             {/* ⚠️ `lg:absolute lg:inset-0` — INILAH yang membuat daftarnya
@@ -560,6 +566,15 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
  * maupun menggantung di luar bingkai. Pemotongan seperti itu tidak menimbulkan
  * error apa pun — yang hilang cuma separuh poster.
  */
+/**
+ * Panjang maksimal satu butir keterangan hero yang masih dijaga UTUH (tidak
+ * boleh dipatahkan browser di tengah). 16 huruf menampung butir terpanjang yang
+ * memang harus dibaca sebagai satu kesatuan — "IMDb 10.0/10" (12), "123 episode"
+ * (11), "1.2K ditonton" (13) — tanpa ikut menahan daftar negara ko-produksi
+ * yang bisa puluhan huruf dan justru harus boleh membungkus.
+ */
+const BATAS_BUTIR_UTUH = 16;
+
 function HeroDrama({ drama }: { drama: Drama }) {
   const film = isMovie(drama);
   // Baris keterangan di bawah judul. Dirakit DULU sebagai daftar supaya satu
@@ -629,7 +644,37 @@ function HeroDrama({ drama }: { drama: Drama }) {
               </Link>
             </Button>
 
-            <div className="absolute -bottom-16 left-4 right-4 flex gap-3 md:left-8 md:right-8 md:-bottom-20 md:gap-6">
+            {/* DI HP: blok ini mengalir DI BAWAH gambar (bukan `absolute`),
+                jadi nol bagian film yang tertutup — owner 2026-11-10, putaran
+                kedua: "dari sisi UI nya masih belum pas ... untuk semua versi HP".
+
+                KENAPA bukan sekadar mengecilkan huruf lagi (putaran pertama):
+                tinggi blok ini TIDAK ditentukan teksnya melainkan POSTER kecil
+                di kiri — terukur tetap 149px pada ukuran huruf 20/18/16/15/14px.
+                Dengan `-bottom-16` (64px), blok setinggi 149px SELALU menimpa
+                bingkai video 85px, berapa pun ukuran hurufnya. Jadi memperkecil
+                judul hanya mengurangi tinggi TEKS-nya, tak pernah memindahkan
+                bloknya. Satu-satunya perbaikan yang berlaku di SEMUA lebar HP
+                adalah mengeluarkannya dari posisi `absolute`.
+
+                Mulai `sm:` (640px) desain lama dipertahankan UTUH: di sana
+                bingkai 16/9 sudah tinggi (≥360px), tumpangan 85px itu kecil
+                dan justru bagian dari tampilannya. */}
+            <div className="mt-4 flex gap-3 px-3 sm:absolute sm:-bottom-16 sm:left-4 sm:right-4 sm:mt-0 sm:px-0 md:-bottom-20 md:left-8 md:right-8 md:gap-6">
+              {/* ⚠️ POSTER KECIL INI DIPERTAHANKAN ATAS KEPUTUSAN OWNER
+                  (2026-11-10: "poster kecil bawah jangan di hilangkan").
+
+                  Saya sempat menyembunyikannya di HP karena ia menggandakan dua
+                  hal — gambarnya sama dengan gambar hero di atasnya, dan
+                  lencananya (rating · "43 EPS" · tahun · durasi dari
+                  `lencanaKartu()`) mengulang persis isi baris keterangan di
+                  sebelahnya. Owner melihat hasilnya lalu memintanya kembali.
+                  JANGAN disembunyikan lagi tanpa persetujuan baru.
+
+                  Lebarnya 112px (`w-28`) dan itu BUKAN angka bebas: diuji 96px
+                  supaya judul dapat ruang lebih lega, dan lencana "43 EPS"
+                  langsung pecah jadi dua baris ("43" / "EPS"). 112px lebar
+                  minimum yang masih memuat lencananya utuh. */}
               <div className="w-28 shrink-0 md:w-44">
                 {/* Gambar diam. Trailernya pindah ke gambar besar (owner
                     2026-11-09): satu halaman cukup menarik SATU video dari PC
@@ -637,7 +682,13 @@ function HeroDrama({ drama }: { drama: Drama }) {
                     mematikan situs karena kuota transfer habis. */}
                 <Poster drama={drama} />
               </div>
-              <div className="flex flex-col justify-end pb-2 md:pb-4">
+              {/* Di HP teks DIPUSATKAN terhadap poster. Dengan `justify-end`,
+                  judul 2 baris + keterangan hanya mengisi separuh bawah tinggi
+                  poster dan menyisakan lubang kosong ±70px tepat di atas judul
+                  — terlihat seperti teksnya melorot. Dari `sm:` ke atas tetap
+                  rata-bawah, karena di sana blok ini menjorok ke atas bingkai
+                  dan dasar teks memang harus sejajar dasar poster. */}
+              <div className="flex min-w-0 flex-col justify-center pb-0 sm:justify-end sm:pb-2 md:pb-4">
                 <div className="flex items-center gap-2">
                   {/* Dikecilkan + dibatasi lebarnya (owner 2026-11-09, "judul
                       kecilkan sedikit ... biar rapi"). `max-w-2xl` yang
@@ -645,8 +696,19 @@ function HeroDrama({ drama }: { drama: Drama }) {
                       membentang sampai menabrak panel EPISODE di kanan.
                       Judul TIDAK dipotong — memangkasnya dengan line-clamp
                       membuat penonton kehilangan sebagian nama drama, dan
-                      judul panjang justru lazim di katalog ini. */}
-                  <h1 className="title-gold max-w-2xl text-xl leading-tight md:text-3xl">
+                      judul panjang justru lazim di katalog ini.
+
+                      15px di HP, dan angkanya ditentukan oleh POSTER di
+                      sebelahnya — bukan selera. Poster 112px + jarak memakan
+                      ±124px, jadi kolom judul tinggal ±200px. Disweep di
+                      browser pada judul 44 huruf, jumlah barisnya:
+                        layar 390px: 15px = 2 baris · 16px = 3 · 18px = 3
+                        layar 320px: 15px = 3 baris · 16px = 3 · 18px = 4
+                      15px pilihan terbaik yang masih terbaca. Sempat dicoba
+                      18px saat poster disembunyikan (judul dapat lebar penuh,
+                      18px pun cukup 2 baris) — poster dikembalikan owner, jadi
+                      ukurannya ikut kembali. `sm:text-xl` ke atas NOL berubah. */}
+                  <h1 className="title-gold max-w-2xl text-[15px] leading-tight sm:text-xl md:text-3xl">
                     {drama.title}
                   </h1>
                   {/* Penanda berbayar — satu-satunya tempat kata "PREMIUM" masih
@@ -671,10 +733,61 @@ function HeroDrama({ drama }: { drama: Drama }) {
                     ))}
                   </div>
                 )}
+                {/* Keterangan dipecah per-butir, BUKAN satu string panjang
+                    ber-" · " (owner 2026-11-10: "UI nya terlihat berantakan").
+
+                    Sebabnya terlihat di tangkapan layar owner: satu string
+                    panjang dipatahkan browser di spasi MANA SAJA, sehingga
+                    "IMDb 9.0/10" terbelah jadi "IMDb" di ujung baris dan
+                    "9.0/10" di baris berikutnya — satu fakta jadi terbaca dua
+                    potong. `whitespace-nowrap` per butir membuat patahannya
+                    hanya boleh terjadi DI ANTARA butir.
+
+                    Pemisah "·" sengaja menempel di EKOR butir, bukan di
+                    kepalanya: kalau di kepala, baris baru bisa dimulai dengan
+                    titik mengambang yang tak jelas milik siapa. */}
                 <p className="mt-1.5 text-xs text-zinc-300 md:text-sm">
-                  {keterangan.join(" · ")}
-                  {keterangan.length > 0 ? " · " : ""}
-                  {drama.views} ditonton
+                  {[...keterangan, `${drama.views} ditonton`].map(
+                    (butir, i, semua) => (
+                      <Fragment key={butir}>
+                      <span
+                        // Butir PENDEK dijaga utuh; butir panjang dibiarkan
+                        // membungkus. Batasnya diukur, bukan dikira: butir
+                        // terpanjang yang masih wajar utuh adalah
+                        // "IMDb 10.0/10" (12 huruf) dan "123 episode", sedangkan
+                        // negara ko-produksi bisa "United States, China,
+                        // Thailand, ..." — ditahan utuh, ia TIDAK memperlebar
+                        // halaman (pembungkusnya overflow-hidden) melainkan
+                        // TERPOTONG DIAM-DIAM di tepi kanan, dan penonton
+                        // melihat kalimat terputus tanpa tanda apa pun.
+                        className={
+                          butir.length <= BATAS_BUTIR_UTUH
+                            ? "whitespace-nowrap"
+                            : undefined
+                        }
+                      >
+                        {butir}
+                        {i < semua.length - 1 && (
+                          <span aria-hidden className="pl-1.5 text-zinc-500">
+                            ·
+                          </span>
+                        )}
+                      </span>
+                      {/* SPASI SUNGGUHAN antar butir — bukan hiasan, ini
+                          satu-satunya TITIK PUTUS yang dimiliki baris ini.
+                          Elemen <span> yang ditempel rapat tanpa spasi tidak
+                          memberi browser tempat untuk berganti baris, dan
+                          karena tiap butir ber-`whitespace-nowrap`, seluruh
+                          baris jadi satu untaian yang tak bisa dipatahkan: ia
+                          melewati tepi kanan lalu TERPOTONG DIAM-DIAM oleh
+                          `overflow-hidden` kartu. Halaman tidak melebar, tidak
+                          ada error — keterangan penonton cuma hilang separuh.
+                          Tertangkap saat poster dikembalikan (kolom menyempit
+                          ±124px), bukan sebelumnya. */}
+                      {i < semua.length - 1 && " "}
+                      </Fragment>
+                    ),
+                  )}
                 </p>
               </div>
             </div>

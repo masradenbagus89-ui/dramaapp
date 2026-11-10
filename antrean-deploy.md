@@ -23,6 +23,26 @@
 > lengkap: `HANDOFF.md` seksi `## 2026-11-09`.
 
 
+**Terakhir dicek:** 2026-11-10 (**komputer OWNER**), **sesudah rilis `db4fa72`**.
+`HEAD` = `origin/main` = `dramaku/main` = **`304756f`**, working tree **bersih**. **NOL ANTREAN.**
+
+> ✅ **`db4fa72` TAYANG: blok judul hero di HP dirapikan — nol bagian film yang tertutup.**
+> Dual push `3d2d1c6..304756f` (cermin `dramaku` dulu, lalu produksi `origin`). Deploy **sukses
+> 81 detik** (06:44:02Z → 06:45:23Z, dibuktikan lewat `gh api .../deployments/7675476111/statuses`),
+> **downtime NOL** — 12 percobaan selama pergantian versi semuanya **200**.
+>
+> **Diverifikasi DI SITUS SUNGGUHAN, bukan dari build lokal:** kelas baru ada di HTML produksi
+> (judul 15px ✅ · blok `sm:absolute` ✅ · tepi `px-3` ✅ · poster TETAP tampil ✅ · `sm:pb-20` ✅),
+> dan diukur dengan browser di produksi: 320/360/390/428px semuanya blok `static` mulai **16px di
+> BAWAH** tepi gambar, nol meluber; 768px `absolute` seperti semula. Smoke test 8 alamat **200**.
+>
+> 🪤 **Tiga putaran pertama MELESET** karena mengejar ukuran huruf, padahal yang menimpa gambar
+> adalah BLOK POSTERNYA (tinggi 149px, tetap sama di ukuran huruf 20/18/16/15/14px).
+> ⚠️ **Poster kecil DIPERTAHANKAN atas keputusan owner** — jangan disembunyikan lagi tanpa izin.
+> ⏳ **DITAHAN, menunggu keputusan owner:** lencana "CAM"/"EXCLUSIVE" di poster FILM terpotong
+> di tepi kanan. Sudah ada di produksi SEBELUM hari ini (dibuktikan dengan memotret produksi);
+> perbaikannya menyentuh komponen `Poster` yang dipakai SEMUA kartu di situs.
+
 **Terakhir dicek:** 2026-11-10 (**komputer OWNER**), **sesudah rilis `bd7343c`**.
 `HEAD` = `origin/main` = `dramaku/main` = **`bd7343c`**, working tree **bersih**. **NOL ANTREAN**
 (17 branch di kedua remote diperiksa satu per satu dengan `git rev-list --count origin/main..<branch>`

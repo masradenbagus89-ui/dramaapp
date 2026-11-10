@@ -90,7 +90,34 @@
 > aftermarket** dari pemilik sekarang, harganya **jauh di atas** Rp200.000 dan belum pernah dicek.
 > Nama lain yang masih bebas jauh lebih murah.
 
-**Terakhir diisi:** 2026-11-10 — ✅ **TAYANG `bd7343c`: gerbang rilis tak lagi ngadat acak
+**Terakhir diisi:** 2026-11-10 — ✅ **TAYANG `db4fa72`: blok judul hero di HP dirapikan, nol
+bagian film yang tertutup.** Deploy Railway **sukses 81 detik** (push 06:44:02Z → `success`
+06:45:23Z, dibuktikan lewat `gh api .../deployments/7675476111/statuses`), **downtime NOL** (12
+percobaan selama pergantian versi semuanya 200). **Empat putaran koreksi owner** dari tangkapan
+layar HP, dan tiga putaran pertama MELESET dengan sebab yang sama. 🪤 **Pelajaran utama: yang
+menimpa gambar BUKAN ukuran hurufnya, melainkan BLOK POSTERNYA** — blok `absolute -bottom-16`
+setinggi 149px (tinggi POSTER, bukan teks) selalu menimpa bingkai video 85px; terukur TETAP 85px
+pada ukuran huruf 20/18/16/15/14px. Perbaikan sebenarnya: di HP blok itu MENGALIR di bawah
+gambar. Sekarang terukur **di situs sungguhan**: 320/360/390/428px semuanya blok `static`, mulai
+**16px di BAWAH** tepi gambar, nol meluber; 768px `absolute` seperti semula. Ikut dirapikan: tepi
+kiri disamakan `px-3` dengan panel EPISODE (dulu meleset 4px, dikunci **tes lintas-berkas**),
+lubang kosong 80px dibuang, keterangan dipecah per butir, teks dipusatkan terhadap poster.
+⚠️ **Poster kecil DIPERTAHANKAN atas keputusan owner** (*“jangan di hilangkan”*) — sempat saya
+sembunyikan karena menggandakan gambar hero + mengulang lencananya; jangan diulang tanpa izin.
+🪤 **Dua cacat saya sendiri, keduanya TERPOTONG DIAM-DIAM** (halaman tidak melebar, nol error):
+`whitespace-nowrap` di semua butir membuat daftar negara film tak bisa membungkus, dan elemen
+butir yang ditempel rapat tanpa spasi menghilangkan titik putus baris. Keduanya ditangkap sebelum
+rilis — yang kedua hanya muncul SESUDAH poster dikembalikan (kolom menyempit ±124px).
+**Bukti:** penjaga 9 → **21 tes**, **diuji-balik 6 arah semua MERAH**, satu penjaga DIPERKETAT
+sesudah ketahuan terlalu longgar, gerbang **LOLOS 5/5** (**2285 tes / 160 berkas**), dan layar
+lebar dibuktikan NOL berubah dengan mengukur produksi + versi baru BERDAMPINGAN. ⏳ Temuan
+terpisah yang DITAHAN: lencana "CAM"/"EXCLUSIVE" di poster FILM terpotong — sudah ada di
+produksi sebelum hari ini, perbaikannya menyentuh komponen `Poster` milik SEMUA kartu di situs.
+**⬇️ Rincian + tabel 4 putaran ada di seksi `## 2026-11-10 — db4fa72` di bawah.**
+
+---
+
+**Sebelumnya 2026-11-10 — gerbang rilis & tagihan Railway:** ✅ **TAYANG `bd7343c`: gerbang rilis tak lagi ngadat acak
 (nol kode produksi disentuh).** Deploy Railway **sukses 72 detik** (dibuat 01:13:07Z →
 `success` 01:14:19Z, dibuktikan lewat `gh api .../deployments/<id>/statuses`), **downtime NOL**
 (30 percobaan selama pergantian versi semuanya 200), smoke test sesudah tayang **10 alamat +
@@ -172,7 +199,9 @@ riwayat blok peringatan lama ada di seksi `## 2026-11-09` di bawah.**
 
 **Sebelumnya hari itu:** 🎬 **BARU `drama-ai-studio/`: episode 1 jadi MP4 — 18/18 FOTO AI + 11/11 DIALOG MANDARIN DIUCAPKAN, biaya NOL** — 4 putaran. 💡 Temuan sampingan penting: **jam mesin ini tertinggal 13 menit** dari waktu sebenarnya. 🪤 Pelajaran termahal: **"ada sinyal audio" ≠ "terdengar"** (semua tenaga di sub-bass yang speaker kecil tak bunyikan) dan **"kamera bergerak" ≠ "terbaca bergerak"** (14%/7dtk = slideshow); dua-duanya lolos pemeriksaan teknis saya dan hanya ketahuan dari laporan owner (1080×1920, 97,04 dtk, subtitle Mandarin+Indonesia terbakar, wajah tokoh konsisten lintas adegan). Sub-proyek terisolasi; repo induk nol tersentuh (build OK, tsc exit 0, 1844 tes hijau). ⚠️ Yang dihasilkan **animatic**, BUKAN video AI — mesin berbayar sengaja belum disambung (nol kunci API). ✅ **SUDAH di-commit & di-push** (`d12d913`, 26 berkas ter-track) — status "belum di-commit" di catatan lama sudah TIDAK berlaku. · Sebelumnya: 🔍 **AUDIT HP + TABLET atas permintaan Kang Dedi: HASIL BERSIH, nol kode diubah.** 20/20 pengukuran (5 halaman × lebar 360/412/768/1024) menunjukkan `scrollWidth` sama persis dengan viewport — nol elemen meluber. 🪤 **PELAJARAN METODE PENTING**: potret `--window-size` di bawah ~476px MENYESATKAN (berkas PNG-nya selebar yang diminta, tapi viewport CSS yang dirender TIDAK) — jebakan ini sudah menipu TIGA kali. Cara yang benar (iframe + ukur `scrollWidth`) ada di seksinya.
 
-**Rilis terakhir:** 2026-11-10 — `bd7343c` (tes beli-lalu-tonton menunggu kondisi; nol kode produksi).
+**Rilis terakhir:** 2026-11-10 — `db4fa72` (blok judul hero HP dirapikan; + commit docs `304756f`).
+
+**Rilis sebelumnya:** 2026-11-10 — `bd7343c` (tes beli-lalu-tonton menunggu kondisi; nol kode produksi).
 
 **Rilis sebelumnya:** 2026-11-09 — `fa0a524` (cuplikan hero halaman drama; + commit docs `615e2a4`).
 
@@ -203,6 +232,96 @@ riwayat blok peringatan lama ada di seksi `## 2026-11-09` di bawah.**
 **Rilis ke-1 hari ini:** (✅ **TAYANG `4dde5c0`**: tombol beranda "LIHAT SEMUA FILM UNGGULAN" → **"TEMUKAN TONTONAN FAVORITMU"** — labelnya salah di dua sisi (isinya drama berseri, bukan film; tujuannya katalog lengkap, bukan daftar unggulan). Dual push → Railway build sendiri → tayang ±60 detik, **downtime NOL**. Smoke test 5 alur: 4 langsung 200, `/drama/meg-2-the-trench` 500 SEKALI lalu 200 enam kali — cold start, dicatat bukan dihapus. ❌ **DIRALAT di rilis ke-2**: catatan asli di sini menyebut tombol itu "tergeser ke kanan di layar HP" sebagai gejala nyata. **Itu keliru** — cacat alat potret, bukan cacat situs; sudah diukur ulang dan tombolnya terpusat sempurna. Jangan diburu.)
 
 **Sebelumnya:** 2026-10-30 (tiga rilis beruntun, semuanya TAYANG: `5088bf2` genre bahasa Indonesia → `27973f0` koreksi owner Kerajaan/CEO/Lainnya → **`55894b8` dua tombol halaman drama yang selama ini TERPOTONG**. Downtime NOL. ⏸️ **DUA bahasan menunggu keputusan owner**, risetnya sudah selesai & nol kode diubah: "klik drama langsung play" dan "sinopsis film masih bahasa Inggris".)
+
+---
+
+## 2026-11-10 — ✅ `db4fa72` TAYANG: blok judul hero HP dirapikan (4 putaran koreksi owner)
+
+Owner menguji di HP dan mengirim tangkapan layar **empat kali**; tiap koreksi mengubah arah
+perbaikan. Urutannya penting karena tiga putaran pertama MELESET, dan alasannya sama:
+
+| Putaran | Kata owner | Yang saya kerjakan | Hasil |
+|---|---|---|---|
+| 1 | *"tulisan judulnya menutupi film, coba perkecil"* | judul 20px → 15px | ❌ masih menumpuk |
+| 2 | *"UI masih belum pas, untuk semua versi HP"* | blok diturunkan ke bawah gambar | ✅ nol menutupi |
+| 3 | *"UI nya terlihat berantakan ... buat yang terbaik"* | poster disembunyikan, judul 18px, tepi disejajarkan, keterangan dipecah | ✅ rapi, ❌ poster hilang |
+| 4 | *"sudah oke tetapi poster kecil bawah jangan di hilangkan"* | poster dikembalikan, judul balik 15px, teks dipusatkan | ✅ **TAYANG** |
+
+### 🪤 PELAJARAN UTAMA — kenapa putaran 1 meleset, dan ini mudah terulang
+
+**Yang menimpa gambar BUKAN hurufnya, melainkan BLOK POSTERNYA.** Blok poster+judul dipasang
+`absolute -bottom-16` (digantung 64px di bawah tepi gambar) dan tingginya **149px — ditentukan
+poster, bukan teks**. Terukur: pada ukuran huruf 20/18/16/15/14px tinggi blok **tetap 149px** dan
+tumpangannya **tetap 85px**. Jadi mengecilkan judul hanya mengurangi tinggi TEKS di dalam blok;
+bloknya tak pernah bergerak.
+
+**Aturan yang lahir: sebelum menuruti "perkecil X supaya tidak menimpa Y", UKUR dulu apa yang
+sebenarnya menentukan posisi X.** Kalau yang menentukan elemen lain (di sini: poster), mengubah X
+akan terasa "sudah dikerjakan" tapi gejalanya bertahan — dan client melapor lagi, kali ini dengan
+nada lebih keras. Satu perintah `getBoundingClientRect` di 5 ukuran huruf menjawabnya dalam 2 menit.
+
+### Yang dikerjakan (HP saja — layar ≥640px NOL berubah)
+
+- **Blok judul MENGALIR di bawah gambar**, tidak lagi `absolute`. Nol bagian film tertutup di
+  320/360/390/412/428px (blok mulai **16px di BAWAH** tepi gambar).
+- **`pb-20` → `sm:pb-20`.** Ruang 80px itu disediakan untuk blok yang menggantung; di HP ia berubah
+  fungsi jadi lubang kosong antara keterangan dan daftar EPISODE.
+- **Tepi kiri disamakan `px-3`** dengan panel EPISODE (sebelumnya `px-4` — meleset 4px; terbaca
+  "tidak rapi" tanpa bisa ditunjuk sebabnya). Dikunci **tes lintas-berkas**.
+- **Judul `text-[15px]`** di HP. Disweep di browser pada judul 44 huruf: layar 390px → 15px = 2
+  baris · 16px = 3 · 18px = 3; layar 320px → 15px = 3 · 18px = 4.
+- **Teks dipusatkan** terhadap poster (`justify-end` menyisakan lubang ±70px tepat di atas judul).
+- **Keterangan dipecah per butir** + spasi antar butir.
+
+### ⚠️ POSTER KECIL DIPERTAHANKAN — keputusan owner, jangan diulang tanpa izin
+
+Saya sempat menyembunyikannya di HP dengan alasan yang masih benar: gambarnya **sama** dengan
+gambar hero di atasnya, dan lencananya (⭐rating · "43 EPS" · tahun · durasi dari `lencanaKartu()`)
+**mengulang persis** isi baris keterangan di sebelahnya — tiap fakta tampil dua kali, dua format,
+bersebelahan. Owner melihat hasilnya lalu memintanya kembali. **Lebarnya tetap `w-28` (112px):**
+diuji 96px dan lencana "43 EPS" langsung pecah jadi dua baris.
+
+### 🪤 DUA CACAT YANG SAYA BUAT SENDIRI — keduanya TERPOTONG DIAM-DIAM
+
+Keduanya jenis kerusakan yang paling sulit ditangkap: **halaman tidak melebar, nol error, nol tes
+merah** — teks penonton cuma hilang separuh di tepi kanan, dimakan `overflow-hidden`.
+
+1. **`whitespace-nowrap` dipasang ke SEMUA butir.** Daftar negara ko-produksi film ("United States,
+   China, Thailand, Germany, Canada, United Kingdom") jadi tak bisa membungkus. Ketahuan hanya
+   karena saya memotret halaman **FILM**, bukan cuma halaman drama. Perbaikannya bersyarat panjang
+   (`BATAS_BUTIR_UTUH = 16`).
+2. **Elemen butir ditempel rapat tanpa spasi.** Elemen `<span>` berurutan tanpa spasi **tidak
+   memberi browser titik putus**, dan karena tiap butir ber-`whitespace-nowrap`, SELURUH baris jadi
+   satu untaian tak terpatahkan. Muncul hanya **sesudah poster dikembalikan** (kolom menyempit
+   ±124px) — tidak terlihat di putaran sebelumnya.
+
+**Aturan: sesudah menyempitkan sebuah kolom, uji ulang SEMUA baris teks di dalamnya — termasuk di
+halaman jenis lain (film vs serial).** Lebar kolom yang berkurang mengubah teks yang sebelumnya
+aman menjadi terpotong, dan pemotongannya tidak menimbulkan gejala apa pun.
+
+### Bukti
+
+- Penjaga `tests/hero-gambar-besar.test.ts`: **9 → 21 tes**, membaca sumber dengan **komentar
+  dibuang** (komentar di berkas itu sengaja menyebut "20px"/"text-base" sebagai catatan pengukuran
+  — tanpa dibuang, penjaganya hijau palsu).
+- **Diuji-balik 6 arah, semuanya MERAH**: poster disembunyikan lagi · poster dikecilkan 96px ·
+  judul kembali ke ukuran desktop · spasi antar butir dibuang · blok `absolute` sejak layar
+  terkecil · tepi panel EPISODE digeser.
+- **Satu penjaga DIPERKETAT sesudah ketahuan terlalu longgar**: tes penyelarasan semula mencari
+  `px-3` di mana saja dalam `PanelEpisode.tsx`, padahal kelas itu dipakai di baris lain juga —
+  menggeser judulnya ke `px-5` tetap lolos. Kini membaca `className` elemen judulnya langsung.
+  🪤 Pelajaran: **penjaga yang mencari sebuah kelas "di mana saja dalam berkas" hampir selalu
+  terlalu longgar** — kelas utilitas memang berulang.
+- Gerbang `npm run gerbang` **LOLOS 5/5**: build sukses · `tsc` exit 0 · **2285 tes / 160 berkas**.
+- **Layar lebar dibuktikan NOL berubah** dengan mengukur produksi (kode lama) dan versi baru
+  **berdampingan** di 640/768/1280px — posisi blok, tumpangan, ukuran huruf sama persis.
+
+### ⏳ Temuan TERPISAH yang belum dikerjakan (sudah ada di produksi, bukan dari rilis ini)
+
+Lencana **"CAM" dan "EXCLUSIVE" di poster FILM terpotong** di tepi kanan. Dibuktikan dengan
+memotret produksi: cacatnya **sudah ada sebelum** kerja hari ini. Perbaikannya menyentuh komponen
+`Poster` yang dipakai **semua kartu di seluruh situs** (beranda, /film, katalog), jadi ditahan
+sampai owner memutuskan.
 
 ---
 

@@ -176,7 +176,7 @@ riwayat blok peringatan lama ada di seksi `## 2026-11-09` di bawah.**
 
 **Rilis sebelumnya:** 2026-11-09 — `fa0a524` (cuplikan hero halaman drama; + commit docs `615e2a4`).
 
-**Rilis terakhir:** 2026-11-07 — `eeb339e` (rekan: Volume Stabil keluar dari menu Playly; + commit docs `d7bd07d`). ⚠️ Baris ini pernah BASI menunjuk `4fb6ecf` — dibetulkan 2026-11-09 sesudah dicek `git merge-base --is-ancestor`.
+**Rilis sebelumnya:** 2026-11-07 — `eeb339e` (rekan: Volume Stabil keluar dari menu Playly; + commit docs `d7bd07d`). ⚠️ Baris ini pernah BASI menunjuk `4fb6ecf` — dibetulkan 2026-11-09 sesudah dicek `git merge-base --is-ancestor`.
 
 **Rilis sebelumnya:** 2026-11-07 — `6b65e0a` (rekan: pemutar episode, Putar di tengah + klik 2x ±10 detik).
 

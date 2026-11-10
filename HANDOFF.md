@@ -90,7 +90,32 @@
 > aftermarket** dari pemilik sekarang, harganya **jauh di atas** Rp200.000 dan belum pernah dicek.
 > Nama lain yang masih bebas jauh lebih murah.
 
-**Terakhir diisi:** 2026-11-09 — ✅ **TAYANG `ae0a8a7` (catatan saja, nol kode produksi).** Deploy Railway **sukses 82 detik** (dibuat 02:27:53Z → `success` 02:29:15Z, dibuktikan lewat `gh api .../deployments/<id>/statuses`, BUKAN tebakan dari HTML), **downtime NOL**, smoke test **10 alamat semua 200**. Isinya 🩺 **PEMERIKSAAN KONDISI, nol kode diubah.** Sesi dibuka
+**Terakhir diisi:** 2026-11-10 — ✅ **TAYANG `bd7343c`: gerbang rilis tak lagi ngadat acak
+(nol kode produksi disentuh).** Deploy Railway **sukses 72 detik** (dibuat 01:13:07Z →
+`success` 01:14:19Z, dibuktikan lewat `gh api .../deployments/<id>/statuses`), **downtime NOL**
+(30 percobaan selama pergantian versi semuanya 200), smoke test sesudah tayang **10 alamat +
+halaman detail drama semua 200**. Dua tugas dari daftar menggantung, keduanya keputusan owner
+hari ini. 🔧 **`tests/beli-lalu-tonton.test.ts` tak lagi rapuh (flaky)** — akarnya struktural:
+ia menunggu rantai async dengan jumlah `await act(async () => {})` yang TETAP, padahal rantainya
+berlapis (dompet → `unlocked` → minta alamat → `srcMap` → mulai putar), jadi di mesin sibuk
+(RDP bersama puluhan penyewa) pemeriksaan jalan sebelum rantai selesai dan gerbang berhenti di
+berkas yang tak ada hubungannya dengan perubahan yang diuji. Kini menunggu **KONDISI** + pesan
+gagal yang menyebut apa yang ditunggu. **Diuji-balik 4 arah SEMUA MERAH**, **6 putaran hijau
+sambil suite penuh berjalan**, gerbang **LOLOS 5/5** (**2272 tes / 160 berkas**). 💰 **Pertanyaan
+owner "apakah ukuran gambar poster/hero memperbesar tagihan Railway" DIJAWAB: TIDAK, bahasan
+DITUTUP, nol kode diubah.** Terukur dari browser sungguhan (Edge + DevTools Protocol, layar HP):
+`/beranda` mengirim **1,17 MB** lewat hosting kita per kunjungan (gambar cuma 437 KB dari itu),
+`/drama/<id>` **653 KB** (gambar 77 KB) — sisanya langsung dari IMDb & imgur. Dengan tarif resmi
+**$0,05/GB**, 10.000 kunjungan beranda ≈ **$0,57** dan porsi gambarnya ≈ **$0,21**. Mematikan
+optimasi justru merugikan penonton: poster asli **±12x lebih besar** (321 KB → 25 KB terukur).
+📌 **Trailer DITAHAN owner** (*“kebanyakan drama tidak ada trailernya”*) — jalurnya jangan dibuang.
+🪤 Dua jebakan pengukuran hari ini: menjumlahkan gambar dari HTML melebih-lebihkan **45x**, dan
+alamat tunnel mati di `/api/teaser` ternyata cuma **cache 60 detik**, bukan kerusakan. **⬇️
+Rincian + angkanya ada di seksi `## 2026-11-10` di bawah.**
+
+---
+
+**Sebelumnya 2026-11-09 — pemeriksaan kondisi:** ✅ **TAYANG `ae0a8a7` (catatan saja, nol kode produksi).** Deploy Railway **sukses 82 detik** (dibuat 02:27:53Z → `success` 02:29:15Z, dibuktikan lewat `gh api .../deployments/<id>/statuses`, BUKAN tebakan dari HTML), **downtime NOL**, smoke test **10 alamat semua 200**. Isinya 🩺 **PEMERIKSAAN KONDISI, nol kode diubah.** Sesi dibuka
 dengan `lanjut dari handoff`; yang dikerjakan adalah tugas yang catatan sendiri wajibkan: **uji ulang
 dulu sebelum menyimpulkan apa pun.** Hasilnya mengubah gambaran besar. ✅ **Dua dari tiga gangguan
 produksi SUDAH PULIH sendiri** — Supabase `402 → 200`, `/api/dramas` `500 → 200` (41 judul), `/film`
@@ -147,6 +172,10 @@ riwayat blok peringatan lama ada di seksi `## 2026-11-09` di bawah.**
 
 **Sebelumnya hari itu:** 🎬 **BARU `drama-ai-studio/`: episode 1 jadi MP4 — 18/18 FOTO AI + 11/11 DIALOG MANDARIN DIUCAPKAN, biaya NOL** — 4 putaran. 💡 Temuan sampingan penting: **jam mesin ini tertinggal 13 menit** dari waktu sebenarnya. 🪤 Pelajaran termahal: **"ada sinyal audio" ≠ "terdengar"** (semua tenaga di sub-bass yang speaker kecil tak bunyikan) dan **"kamera bergerak" ≠ "terbaca bergerak"** (14%/7dtk = slideshow); dua-duanya lolos pemeriksaan teknis saya dan hanya ketahuan dari laporan owner (1080×1920, 97,04 dtk, subtitle Mandarin+Indonesia terbakar, wajah tokoh konsisten lintas adegan). Sub-proyek terisolasi; repo induk nol tersentuh (build OK, tsc exit 0, 1844 tes hijau). ⚠️ Yang dihasilkan **animatic**, BUKAN video AI — mesin berbayar sengaja belum disambung (nol kunci API). ✅ **SUDAH di-commit & di-push** (`d12d913`, 26 berkas ter-track) — status "belum di-commit" di catatan lama sudah TIDAK berlaku. · Sebelumnya: 🔍 **AUDIT HP + TABLET atas permintaan Kang Dedi: HASIL BERSIH, nol kode diubah.** 20/20 pengukuran (5 halaman × lebar 360/412/768/1024) menunjukkan `scrollWidth` sama persis dengan viewport — nol elemen meluber. 🪤 **PELAJARAN METODE PENTING**: potret `--window-size` di bawah ~476px MENYESATKAN (berkas PNG-nya selebar yang diminta, tapi viewport CSS yang dirender TIDAK) — jebakan ini sudah menipu TIGA kali. Cara yang benar (iframe + ukur `scrollWidth`) ada di seksinya.
 
+**Rilis terakhir:** 2026-11-10 — `bd7343c` (tes beli-lalu-tonton menunggu kondisi; nol kode produksi).
+
+**Rilis sebelumnya:** 2026-11-09 — `fa0a524` (cuplikan hero halaman drama; + commit docs `615e2a4`).
+
 **Rilis terakhir:** 2026-11-07 — `eeb339e` (rekan: Volume Stabil keluar dari menu Playly; + commit docs `d7bd07d`). ⚠️ Baris ini pernah BASI menunjuk `4fb6ecf` — dibetulkan 2026-11-09 sesudah dicek `git merge-base --is-ancestor`.
 
 **Rilis sebelumnya:** 2026-11-07 — `6b65e0a` (rekan: pemutar episode, Putar di tengah + klik 2x ±10 detik).
@@ -174,6 +203,128 @@ riwayat blok peringatan lama ada di seksi `## 2026-11-09` di bawah.**
 **Rilis ke-1 hari ini:** (✅ **TAYANG `4dde5c0`**: tombol beranda "LIHAT SEMUA FILM UNGGULAN" → **"TEMUKAN TONTONAN FAVORITMU"** — labelnya salah di dua sisi (isinya drama berseri, bukan film; tujuannya katalog lengkap, bukan daftar unggulan). Dual push → Railway build sendiri → tayang ±60 detik, **downtime NOL**. Smoke test 5 alur: 4 langsung 200, `/drama/meg-2-the-trench` 500 SEKALI lalu 200 enam kali — cold start, dicatat bukan dihapus. ❌ **DIRALAT di rilis ke-2**: catatan asli di sini menyebut tombol itu "tergeser ke kanan di layar HP" sebagai gejala nyata. **Itu keliru** — cacat alat potret, bukan cacat situs; sudah diukur ulang dan tombolnya terpusat sempurna. Jangan diburu.)
 
 **Sebelumnya:** 2026-10-30 (tiga rilis beruntun, semuanya TAYANG: `5088bf2` genre bahasa Indonesia → `27973f0` koreksi owner Kerajaan/CEO/Lainnya → **`55894b8` dua tombol halaman drama yang selama ini TERPOTONG**. Downtime NOL. ⏸️ **DUA bahasan menunggu keputusan owner**, risetnya sudah selesai & nol kode diubah: "klik drama langsung play" dan "sinopsis film masih bahasa Inggris".)
+
+---
+
+## 2026-11-10 — ✅ `bd7343c` TAYANG: gerbang rilis tak lagi ngadat acak + tagihan gambar Railway diukur
+
+Dua tugas, keduanya dari daftar "menggantung" yang dicatat sesi sebelumnya. Keputusan owner
+hari ini: **trailer DITAHAN** (*"kebanyakan drama tidak ada trailernya"*), **tagihan gambar
+DIJAWAB**, **tes rapuh DIPERBAIKI**.
+
+### Bagian 1 — Tes rapuh `tests/beli-lalu-tonton.test.ts` SUDAH diperbaiki (dirilis)
+
+**Akar masalahnya struktural, bukan kebetulan.** Berkas itu menunggu rantai async dengan
+sejumlah `await act(async () => {})` yang **TETAP**. Rantainya berlapis: jawaban dompet →
+state `unlocked` berubah → efek minta `/api/video-url` → jawaban → `srcMap` berubah → efek
+memulai pemutaran. Jadi "berapa gelombang yang cukup" bergantung kecepatan mesin — dan mesin
+kerja project ini server RDP bersama puluhan penyewa. Begitu mesin sibuk, pemeriksaan jalan
+sebelum rantai selesai, lalu gerbang pra-rilis berhenti di berkas yang **tak ada hubungannya**
+dengan perubahan yang sedang diuji (terjadi 2026-11-09).
+
+**Yang diubah (nol kode produksi disentuh):**
+- `tungguSampai(syarat, label)` — menunggu sampai KONDISI terpenuhi, batas 8 detik, dan pesan
+  gagalnya menyebut apa yang ditunggu: *"menunggu alamat episode yang BARU DIBAYAR terpasang …
+  rantai alamat video kemungkinan PUTUS, bukan sekadar lambat"*. Ini pengganti `test timed out`
+  yang tak memberi petunjuk apa pun ke sesi berikutnya.
+- `tungguTenang()` — titik awal tenang sebelum klik tombol beli.
+- `vi.setConfig({ testTimeout: 20_000 })` — plafon untuk mesin sibuk, **bukan** penutup tes
+  lambat: di mesin sepi tes ini selesai dalam puluhan milidetik karena menunggu kondisi.
+- Tes "SEBELUM dibeli" kini menunggu alamat episode GRATIS terpasang **lebih dulu**. Itu yang
+  membuat pemeriksaan "`src` episode terkunci kosong" punya arti — tanpa itu, `null` bisa berarti
+  *"memang tidak diberi"* ATAU *"belum sempat"*, dan yang kedua lulus tanpa membuktikan apa pun.
+
+**Bukti:**
+- **Diuji-balik 4 arah, SEMUA MERAH** (kode produksi dirusak sengaja lalu dipulihkan): dep
+  `unlocked` dibuang · penanda 403 tak dilepas · syarat alamat-sudah-ada dibuang · pembelian
+  tak memperbarui `unlocked`.
+- **6 putaran berturut-turut HIJAU sambil suite penuh berjalan** di mesin yang sama — kondisi
+  persis yang dulu membuatnya gagal.
+- Gerbang `npm run gerbang` **LOLOS 5/5**: build sukses · `tsc` exit 0 · **2272 tes / 160 berkas
+  hijau** · nol berkas rahasia di antrean.
+- Dual push `615e2a4..bd7343c` (cermin `dramaku` dulu, lalu produksi `origin`). Deploy Railway
+  **sukses 72 detik** (dibuat 01:13:07Z → `success` 01:14:19Z, dibuktikan lewat
+  `gh api .../deployments/7670684916/statuses`, bukan tebakan). **Downtime NOL** — 30 percobaan
+  selama pergantian versi semuanya 200. Smoke test sesudah tayang: **10 alamat + halaman detail
+  drama semua 200**, `/api/teaser` tetap 307 (pola hemat, benar).
+
+🪤 **BATAS yang dicatat di kode, bukan disembunyikan.** Pemeriksaan "tepat 1 permintaan sesudah
+beli" **TIDAK** membuktikan pembukuan `sudahDiminta` di komponen masih hidup: diuji-balik dengan
+melumpuhkan pembukuan itu, tes ini tetap **HIJAU**, karena permintaan berulang lahir dari render
+ulang di LUAR jendela pengukuran. Komentar di berkasnya sudah dibetulkan supaya tidak mengklaim
+lebih dari yang terbukti. Kalau nanti perlu dijaga: tes terpisah yang memicu render ulang
+berturut-turut.
+
+⚠️ **Angka jumlah tes: terukur 2272, bukan 2273.** Catatan 2026-11-09 menulis 2273. Diperiksa:
+berkas tes **nol berubah** antara `fa0a524` dan `615e2a4` (`git diff --stat`), nol `it.skip`/
+`it.todo` di seluruh `tests/`, dan jumlah `it()` di berkas yang saya ubah tetap 4. Jadi 2272 yang
+benar; jangan kaget kalau selisih 1 itu muncul lagi di catatan lama.
+
+### Bagian 2 — "Apakah gambar poster/hero memperbesar tagihan Railway?" JAWABANNYA TIDAK
+
+Pertanyaan owner atas bahasan menggantung dari sesi sebelumnya. **Nol kode diubah — bahasan ini
+DITUTUP.** Keputusan: **biarkan optimasi gambar menyala**; saklar `images: { unoptimized: true }`
+JANGAN dinyalakan.
+
+**Tarif resmi Railway** (`docs.railway.com/reference/pricing`, dibaca hari ini — bukan ingatan):
+egress **$0,05/GB** · CPU **$20/vCPU/bulan** · RAM **$10/GB/bulan** · Hobby $5/bln termasuk $5
+pemakaian · Pro $20/bln termasuk $20.
+
+**Diukur sendiri dengan browser Edge sungguhan lewat DevTools Protocol** (layar HP 390×844, cache
+kosong), bukan dijumlahkan dari HTML:
+
+| Satu kunjungan | Total diunduh | Dari hosting kita (= ditagih) | Porsi gambar |
+|---|---|---|---|
+| `/beranda` | 1,87 MB | **1,17 MB** (63%) | 437 KB |
+| `/drama/<id>` | 849 KB | **653 KB** (77%) | 77 KB |
+
+Sisanya mengalir **langsung** dari IMDb (`m.media-amazon.com`) & imgur — nol byte lewat Railway.
+
+Uangnya: 1 GB ≈ **870 kunjungan beranda**. 10.000 kunjungan/bulan ≈ 11,4 GB ≈ **$0,57**, dan
+porsi gambarnya saja ≈ **$0,21**. 100.000 kunjungan ≈ $5,72, gambar ≈ $2,09.
+
+**Kalau optimasi DIMATIKAN, penonton yang rugi** (diukur, 4 poster): asli 321/279/249/193 KB →
+lewat Railway 25/24/22/18 KB = **±12x lebih kecil**. Beranda akan naik dari 437 KB gambar jadi
+±6 MB per kunjungan, demi menghemat ±Rp3.500 per 10.000 kunjungan.
+
+Dua fakta yang memperkuat keputusan itu:
+- Hasil optimasi **disimpan server** (`x-nextjs-cache: HIT`) & browser menyimpannya **1 tahun**
+  (`max-age=31536000`) → tenaga CPU dibayar sekali per ukuran, pengunjung yang kembali unduh nol.
+- **Cuplikan hero nol membebani Railway**: `/api/teaser` menjawab **307** (0 byte), videonya
+  mengalir langsung dari PC backup. Diukur hari ini.
+
+👉 **Yang pantas owner pantau di panel Railway bukan gambar, tapi CPU & RAM** — keduanya ditagih
+per bulan dan jalan 24 jam walau nol pengunjung; itu yang memakan jatah $5/$20 lebih dulu.
+
+### 🪤 Pelajaran metode — dua jebakan pengukuran, keduanya menipu saya hari ini
+
+1. **Menjumlahkan semua gambar yang DISEBUT halaman melebih-lebihkan 45x.** Cara pertama saya
+   mengambil tiap `/_next/image` di HTML → `/beranda` keluar **86 MB**. Yang benar **1,17 MB**:
+   `next/image` memasang `loading="lazy"`, jadi browser cuma mengunduh yang terlihat, dan hanya
+   SATU ukuran per gambar (bukan semua varian `srcset`). **Pertanyaan biaya harus diukur dari
+   browser, bukan dari daftar URL.**
+2. **Alamat tunnel yang mati di `/api/teaser` bisa cuma CACHE, bukan kerusakan.** Saya sempat
+   melapor "satu temuan nyata": `/api/teaser` menunjuk `eur-dept-bridges-hoped.trycloudflare.com`
+   yang **NXDOMAIN di dua resolver**. Ternyata alamat tunnel PC backup baru berganti
+   (`california-similarly-grey-candidate`) dan `/api/teaser` membawa `Cache-Control: s-maxage=60`
+   → CDN menyajikan alamat LAMA sampai 60 detik. Videonya sendiri **206 `video/mp4`**, sehat.
+   **Fakta mekanisme yang tetap berguna: selama ≤60 detik sesudah PC backup restart, cuplikan
+   hero menunjuk alamat mati, lalu pulih sendiri.** Sebelum menaikkan temuan jadi "gangguan",
+   ukur ULANG sesudah umur cache lewat.
+
+### ⚠️ Yang MENGGANTUNG sesudah hari ini
+
+- **Trailer (`?jenis=trailer`) DITAHAN atas keputusan owner 2026-11-10** — *"kebanyakan drama
+  tidak ada trailernya"*. Jalur + penjaga `tests/teaser-redirect.test.ts` TETAP ada dan teruji;
+  cara menyalakannya di komentar `trailerSrc` (`lib/hero-teaser.ts`). **Jangan dibuang** — owner
+  menahannya, bukan menolaknya.
+- **Dua bahasan lama masih menunggu keputusan owner** (riset selesai, nol kode): "klik drama
+  langsung play" dan "sinopsis film masih bahasa Inggris".
+- **`tests/jeda-koin-iklan.test.ts` belum disentuh.** Catatan 2026-11-09 menyebut ia ikut timeout.
+  Diperiksa: berkas itu **tidak** memakai pola gelombang tetap (ia menguji route API, bukan
+  komponen), jadi timeout-nya gejala mesin sibuk + banyak `await import` route — bukan cacat yang
+  sama. Kalau ngadat lagi, kandidat perbaikannya menaikkan `testTimeout` di `vitest.config.ts`
+  (menyentuh SEMUA 160 berkas tes, jadi perlu izin owner).
 
 ---
 

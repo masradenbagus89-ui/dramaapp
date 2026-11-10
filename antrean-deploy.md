@@ -23,6 +23,42 @@
 > lengkap: `HANDOFF.md` seksi `## 2026-11-09`.
 
 
+**Terakhir dicek:** 2026-11-10 (**komputer OWNER**), **sesudah rilis `bd7343c`**.
+`HEAD` = `origin/main` = `dramaku/main` = **`bd7343c`**, working tree **bersih**. **NOL ANTREAN**
+(17 branch di kedua remote diperiksa satu per satu dengan `git rev-list --count origin/main..<branch>`
+— nol punya commit di luar `main`).
+
+> ✅ **`bd7343c` TAYANG: tes `beli-lalu-tonton` tak lagi rapuh — gerbang rilis berhenti ngadat acak.**
+> **Nol kode produksi disentuh** (`git diff` cuma `tests/beli-lalu-tonton.test.ts`), jadi yang
+> dilihat penonton nol bergeser. Dual push `615e2a4..bd7343c` (cermin `dramaku` dulu, lalu
+> produksi `origin`). Deploy **sukses 72 detik** (01:13:07Z → 01:14:19Z, dibuktikan lewat
+> `gh api repos/.../deployments/7670684916/statuses`), **downtime NOL** — 30 percobaan selama
+> pergantian versi semuanya **200**. Smoke test sesudah tayang: `/` `/beranda` `/film`
+> `/discover` `/katalog` `/api/dramas` `/my-list` `/profile` `/history` `/shorts` +
+> `/drama/<id>` → **semua 200**, `/api/teaser` **307** (pola hemat, benar).
+>
+> **Akarnya:** tes menunggu rantai async dengan jumlah gelombang `act()` yang TETAP; di mesin
+> sibuk (RDP bersama puluhan penyewa) pemeriksaan jalan sebelum rantai selesai. Kini menunggu
+> KONDISI. **Diuji-balik 4 arah semua MERAH** · **6 putaran hijau sambil suite penuh berjalan** ·
+> gerbang **LOLOS 5/5** dengan **2272 tes / 160 berkas**.
+>
+> ⚠️ **Angka tes: 2272, bukan 2273.** Entri `fa0a524` di bawah menulis 2273. Diperiksa: nol
+> berkas tes berubah antara `fa0a524` dan `615e2a4`, nol `it.skip`/`it.todo` di `tests/`. Pakai
+> **2272** sebagai acuan.
+>
+> 💰 **Pertanyaan tagihan Railway DIJAWAB & DITUTUP, nol kode diubah.** Gambar poster/hero
+> **bukan** penyebab tagihan membesar: `/beranda` mengirim **1,17 MB** lewat hosting per
+> kunjungan (gambar 437 KB), `/drama/<id>` **653 KB** (gambar 77 KB) — terukur dari browser
+> sungguhan, bukan dijumlahkan dari HTML. Tarif resmi **$0,05/GB** → 10.000 kunjungan beranda
+> ≈ **$0,57** (porsi gambar ≈ $0,21). Mematikan optimasi membuat poster **±12x lebih besar**
+> bagi penonton. **Saklar `images: { unoptimized: true }` JANGAN dinyalakan.** Yang pantas
+> dipantau di panel Railway: **CPU & RAM** ($20/vCPU/bln, $10/GB/bln, jalan 24 jam walau nol
+> pengunjung) — itu yang memakan jatah lebih dulu.
+>
+> 📌 **Trailer `?jenis=trailer` DITAHAN owner 2026-11-10** (*“kebanyakan drama tidak ada
+> trailernya”*). Entri `fa0a524` di bawah menandainya "belum diputuskan" — sekarang sudah:
+> **ditahan, bukan dibuang.** Jalur + penjaga `tests/teaser-redirect.test.ts` tetap ada.
+
 **Terakhir dicek:** 2026-11-09 (**komputer OWNER**), **sesudah rilis `fa0a524`**.
 `HEAD` = `origin/main` = `dramaku/main` = **`fa0a524`**, working tree **bersih**. **NOL ANTREAN.**
 

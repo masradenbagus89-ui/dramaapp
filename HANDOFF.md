@@ -90,7 +90,7 @@
 > aftermarket** dari pemilik sekarang, harganya **jauh di atas** Rp200.000 dan belum pernah dicek.
 > Nama lain yang masih bebas jauh lebih murah.
 
-**Terakhir diisi:** 2026-11-11 — ⚡ **SIAP RILIS (belum dipush): halaman admin Video Playly tak lagi menyandera layar.** Owner mengeluh *"klik IMDb lama terbukanya"*. 🪤 **Tersangka pertama saya SALAH** — bukan pengambilan daftar berhalaman, melainkan halaman menanyakan **SETIAP video satu per satu** ke Playly. Diukur, bukan ditaksir: **489 video** (dihitung dari HTML `/film` produksi) ÷ **4 bersamaan** = **±123 giliran berurutan**, × **≥0,386 detik** per perjalanan (diukur `curl` 2×) = **lantai ≥47 detik** tiap halaman dibuka. ❌ **Satu langkah rencana DIBATALKAN sebelum dikerjakan**: cache 5 menit untuk pemeriksaan itu **nol efek**, karena `force-dynamic` memaksa SETIAP `fetch` di halaman jadi `no-store` (dokumen Next 16, `caching-without-cache-components.md:97-99`). **Yang dikerjakan:** `loading.tsx` baru (kerangka + sidebar muncul seketika, menu tetap bisa diklik) · pemeriksaan 489 video **tidak lagi di-`await`** (Promise-nya dioper ke panel, pola resmi Next) · panel menggambar tabel duluan, penanda menyusul, dengan **2 pagar kejujuran** (spanduk "sedang memeriksa" + angka *Tampil ke penonton* tampil "…" bukan angka yang pasti kelebihan). **Bukti:** gerbang **LOLOS 5/5** (**161 berkas / 2292 tes, 0 gagal**) · **uji-balik 5 titik SEMUA MERAH** lalu hijau lagi · **nol tes hilang dibuktikan** (tanpa berkas baru: 160/**2284**; dengan: 161/**2292** = selisih persis 8). ⚠️ **Jujur soal batasnya:** total kerja server **tidak** berkurang — Playly tetap ditanyai 489 kali, yang berubah cuma urutan tampil. **⬇️ Rincian + 3 batas yang masih ada di seksi `## 2026-11-11 — ⚡` di bawah.**
+**Terakhir diisi:** 2026-11-11 — ⚡ **SIAP RILIS (belum dipush): halaman admin Video Playly tak lagi menyandera layar.** Owner mengeluh *"klik IMDb lama terbukanya"*. 🪤 **Tersangka pertama saya SALAH** — bukan pengambilan daftar berhalaman, melainkan halaman menanyakan **SETIAP video satu per satu** ke Playly. Diukur, bukan ditaksir: **489 video** (dihitung dari HTML `/film` produksi) ÷ **4 bersamaan** = **±123 giliran berurutan**, × **≥0,386 detik** per perjalanan (diukur `curl` 2×) = **lantai ≥47 detik** tiap halaman dibuka. ❌ **Satu langkah rencana DIBATALKAN sebelum dikerjakan**: cache 5 menit untuk pemeriksaan itu **nol efek**, karena `force-dynamic` memaksa SETIAP `fetch` di halaman jadi `no-store` (dokumen Next 16, `caching-without-cache-components.md:97-99`). **Yang dikerjakan:** `loading.tsx` baru (kerangka + sidebar muncul seketika, menu tetap bisa diklik) · pemeriksaan 489 video **tidak lagi di-`await`** (Promise-nya dioper ke panel, pola resmi Next) · panel menggambar tabel duluan, penanda menyusul, dengan **2 pagar kejujuran** (spanduk "sedang memeriksa" + angka *Tampil ke penonton* tampil "…" bukan angka yang pasti kelebihan). **Bukti:** gerbang **LOLOS 5/5** (**161 berkas / 2292 tes, 0 gagal**) · **uji-balik 5 titik SEMUA MERAH** lalu hijau lagi · **nol tes hilang dibuktikan** (tanpa berkas baru: 160/**2284**; dengan: 161/**2292** = selisih persis 8). 🪤 **SESUDAH TAYANG ketahuan cacat buatan sendiri, sudah ditambal:** kerangka `loading.tsx` adalah *static shell* yang dikirim SEBELUM penjaga sesi di `app/admin/layout.tsx` selesai, jadi 2 kalimatnya (*"Video dari Playly"*, *"ratusan video"*) terbaca pengunjung yang BELUM login. Bukan data & bukan endpoint (8 hal diperiksa satu per satu: aman), tapi melemahkan janji layout.tsx — kini kerangkanya nol kata khas admin, dijaga 8 kata terlarang + uji-balik. ⭐ **Aturan: isi `loading.tsx` mana pun di bawah `/admin` = PUBLIK.** ⚠️ **Jujur soal batasnya:** total kerja server **tidak** berkurang — Playly tetap ditanyai 489 kali, yang berubah cuma urutan tampil. **⬇️ Rincian + 3 batas yang masih ada di seksi `## 2026-11-11 — ⚡` di bawah.**
 
 ---
 
@@ -309,6 +309,38 @@ eksplisit di kodenya supaya tidak ada yang mencoba lagi.
 - **Ketiga panel tetap dirakit sekaligus** walau cuma satu yang dilihat. Sebabnya teknis: penanda
   `#imdb` di alamat **tidak ikut terkirim ke server**, jadi server tak bisa tahu menu mana yang
   diklik. Mengubahnya = mengganti hash jadi query param, perubahan cakupan yang belum diminta.
+
+### 🪤 CACAT BUATAN SENDIRI yang ketahuan SESUDAH `8ca0509` tayang — kerangka bocor ke pengunjung belum login
+
+`8ca0509` tayang **87 detik** (push 03:12:31Z → `success` 03:13:58Z, dibuktikan lewat
+`gh api .../deployments/7700649367/statuses`), **downtime NOL** (61+ percobaan semuanya 200),
+smoke test **11 alamat semua 200**. Lalu pemeriksaan tambahan menemukan cacatnya.
+
+**Gejalanya:** membuka `/admin/videos/playly` **tanpa login** → HTML-nya memuat judul
+*"Video dari Playly"* + kalimat *"Memuat daftar video dari Playly… Daftarnya panjang (ratusan
+video)"*. Keduanya kalimat dari `loading.tsx` versi pertama.
+
+**SEBABNYA — ini yang berharga untuk diingat.** Kerangka `loading.tsx` adalah **"static shell"**:
+React mengirimkannya **DULUAN**, sebelum `app/admin/layout.tsx` selesai `await cookies()` +
+memeriksa sesi dan menggantinya dengan layar penolakan. Jadi **apa pun yang ditulis di `loading.tsx`
+terbaca siapa saja** — penjaga di layout TIDAK melindunginya, walau secara struktur folder kerangka
+itu "di dalam" layout.
+
+**Diukur, bukan ditaksir — dan batasnya jelas.** Yang BOCOR: 2 kalimat itu saja. Yang AMAN
+(diperiksa satu per satu di HTML produksi): nama menu sidebar · `Tambah Drama` · `Daftar Drama` ·
+`Webhook Playly` · `Kunci Playly` · `IMDb` · `Link download` · `admin/settings` · seluruh data video.
+Jadi ini **bukan** kebocoran data maupun endpoint. Tetap ditutup karena `app/admin/layout.tsx`
+menjanjikan terang-terangan *"isi panelnya tidak pernah ikut terkirim"* — dan §5.3 melarang
+melemahkan pengaman, sekecil apa pun.
+
+**Tambalannya:** kerangka kini **nol kata khas admin** — kotak abu-abu + satu kata netral
+**"Memuat…"**. Sidebar sungguhan DILEPAS dari kerangka (isinya nama-nama menu panel) dan diganti
+kotak kosong seukurannya; manfaat untuk admin tidak berubah (layar tetap langsung merespons).
+Penjaga permanen `tests/panel-playly-tanpa-menunggu.test.ts` memeriksa **8 kata terlarang** di
+kerangka itu — diuji-balik: satu kata dikembalikan → **MERAH**, dibuang lagi → hijau.
+
+⭐ **ATURAN untuk `loading.tsx` MANA PUN di bawah `/admin`: perlakukan isinya sebagai PUBLIK.**
+Penjaga sesi di layout tidak sempat berjalan sebelum kerangka terkirim.
 
 ---
 

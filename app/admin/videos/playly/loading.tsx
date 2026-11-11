@@ -12,10 +12,19 @@
 // ditukar dengan halaman sungguhan begitu datanya siap.
 // (node_modules/next/dist/docs/01-app/02-guides/streaming.md)
 //
-// AKSES TETAP TERJAGA: berkas ini dirender DI DALAM app/admin/layout.tsx, yang
-// menolak sesi non-admin sebelum children-nya digambar. Jadi kerangka ini tidak
-// pernah sampai ke pengunjung yang belum login — ia tidak memuat data apa pun.
-import AdminSidebar from "@/app/components/admin/AdminSidebar";
+// ⚠️ KERANGKA INI SENGAJA TANPA KATA-KATA KHAS ADMIN — jangan ditambahi.
+// Diukur di produksi 2026-11-11 (versi pertama berkas ini): isi kerangka IKUT
+// TERKIRIM ke pengunjung yang BELUM login. Sebabnya kerangka = "static shell"
+// yang React kirim DULUAN, sebelum app/admin/layout.tsx selesai memeriksa
+// cookie sesi dan menggantinya dengan layar penolakan. Jadi kalimat apa pun di
+// sini terbaca siapa saja.
+//
+// Versi pertama membocorkan judul "Video dari Playly" + kalimat "Daftarnya
+// panjang (ratusan video)". Bukan data dan bukan alamat endpoint, tapi tetap
+// melemahkan janji yang ditulis app/admin/layout.tsx: "isi panelnya tidak
+// pernah ikut terkirim". Sekarang isinya cuma kotak abu-abu + kata "Memuat…"
+// yang netral — manfaatnya untuk admin tetap sama (layar langsung merespons),
+// kebocorannya nol. Dijaga tests/panel-playly-tanpa-menunggu.test.ts.
 
 /** Berapa baris palsu yang digambar — sekadar memberi bentuk, bukan data. */
 const BARIS_CONTOH = 6;
@@ -23,28 +32,23 @@ const BARIS_CONTOH = 6;
 export default function MemuatHalamanPlayly() {
   return (
     <div className="mx-auto max-w-7xl gap-6 px-4 pb-10 pt-6 md:grid md:grid-cols-[220px_1fr] md:px-6">
-      {/* Sidebar sengaja ikut digambar: menunya tetap terbaca dan bisa diklik
-          selama menunggu, jadi admin tidak terjebak di layar kosong. */}
-      <AdminSidebar />
+      {/* Kolom sidebar ditahan bentuknya saja. Sidebar sungguhan TIDAK dipasang
+          di sini: isinya nama-nama menu panel admin, dan apa pun di kerangka ini
+          terbaca pengunjung yang belum login (lihat catatan di atas). */}
+      <div className="hidden md:block" aria-hidden="true">
+        <div className="animate-pulse space-y-2 rounded-2xl border border-zinc-800 bg-zinc-900/50 p-3">
+          {Array.from({ length: 8 }, (_, i) => (
+            <div key={i} className="h-7 rounded bg-zinc-800" />
+          ))}
+        </div>
+      </div>
 
       <div className="space-y-6">
-        <header>
-          <p className="text-xs uppercase tracking-wider text-zinc-500">Konten</p>
-          <h1 className="mt-1 text-2xl font-bold text-white">Video dari Playly</h1>
-        </header>
-
-        {/* Dikatakan apa adanya, bukan cuma kotak abu-abu berkedip: layar yang
-            sedang sibuk harus bisa dibedakan dari layar yang rusak. */}
-        <p
-          role="status"
-          aria-live="polite"
-          className="flex items-start gap-2 rounded-xl border border-sky-500/30 bg-sky-500/10 p-3 text-xs leading-relaxed text-sky-100"
-        >
-          <span>
-            Memuat daftar video dari Playly… Daftarnya panjang (ratusan video),
-            jadi bagian ini butuh beberapa detik. Menu di samping sudah bisa
-            diklik.
-          </span>
+        {/* Satu kata netral, bukan kotak berkedip tanpa keterangan: layar yang
+            sedang sibuk harus bisa dibedakan dari layar yang rusak — dan
+            "Memuat…" tidak memberi tahu apa pun tentang isi panelnya. */}
+        <p role="status" aria-live="polite" className="text-sm text-zinc-400">
+          Memuat…
         </p>
 
         <section className="animate-pulse rounded-2xl border border-zinc-800 bg-zinc-900/50 p-5">

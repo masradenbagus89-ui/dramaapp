@@ -171,13 +171,37 @@ describe("panel Playly tidak menunggu pemeriksaan berkas sebelum tampil", () => 
 });
 
 describe("halaman Playly punya kerangka yang tampil seketika", () => {
-  it("loading.tsx menggambar sidebar + keterangan sedang memuat", () => {
+  it("loading.tsx menggambar kerangka + keterangan sedang memuat", () => {
     const html = renderToStaticMarkup(h(MemuatHalamanPlayly));
 
-    // Sidebar ikut digambar supaya menu tetap bisa diklik selama menunggu.
-    expect(html).toContain("Dashboard");
-    expect(html).toContain("IMDb");
-    expect(html).toContain("Memuat daftar video dari Playly");
+    // Layar yang sibuk harus bisa dibedakan dari layar yang rusak.
+    expect(html).toContain("Memuat…");
+    expect(html).toContain("animate-pulse");
+  });
+
+  it("kerangka TIDAK membocorkan kata khas panel admin", () => {
+    // 🪤 DIUKUR DI PRODUKSI 2026-11-11, bukan kekhawatiran teoretis. Versi
+    // pertama loading.tsx memuat judul "Video dari Playly" + kalimat
+    // "Daftarnya panjang (ratusan video)", dan KEDUANYA terkirim ke pengunjung
+    // yang BELUM login: kerangka adalah "static shell" yang React kirim DULUAN,
+    // sebelum app/admin/layout.tsx selesai memeriksa cookie dan menggantinya
+    // dengan layar penolakan. Menu sidebar & nama endpoint tidak ikut bocor,
+    // tapi dua kalimat itu sudah cukup membuat janji di layout.tsx ("isi
+    // panelnya tidak pernah ikut terkirim") jadi tidak benar.
+    const html = renderToStaticMarkup(h(MemuatHalamanPlayly));
+
+    for (const rahasia of [
+      "Playly",
+      "Video dari",
+      "ratusan video",
+      "Dashboard",
+      "IMDb",
+      "Kelola Admin",
+      "Webhook",
+      "Kunci",
+    ]) {
+      expect(html, `kata "${rahasia}" bocor ke pengunjung yang belum login`).not.toContain(rahasia);
+    }
   });
 
   it("page.tsx TIDAK menunggu pemeriksaan berkas selesai", () => {

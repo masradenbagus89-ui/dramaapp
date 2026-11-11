@@ -295,6 +295,17 @@ MERAH** lalu hijau lagi (ingatan dimatikan · "tidak tahu" disimpan sebagai aman
 dibuang · gerbang admin dibuang · saringan id dilonggarkan · batas 1000 dibuang · panel berhenti
 meminta · halaman kembali memeriksa sendiri) · **nol tes hilang:** 2293 + 14 tes baru = 2307, klop.
 
+✅ **TAYANG `e9c2f83`** — deploy **sukses 73 detik** (push 03:48:09Z → `success`
+03:49:27Z, dibuktikan lewat `gh api .../deployments/7701180508/statuses`), **downtime NOL** (53
+percobaan selama pergantian versi semuanya 200).
+
+**Dibuktikan DI SITUS SUNGGUHAN, dengan pembanding yang diambil SEBELUM push:**
+- Endpoint baru `/api/admin/playly/belum-siap`: **404 sebelum rilis** (memang belum ada) →
+  **401 sesudah rilis**. Dua hal terbukti sekaligus: kode barunya benar-benar tayang, DAN
+  gerbang adminnya menolak pengunjung tanpa login di produksi — bukan cuma di tes.
+- Smoke test **10 alamat penonton semua 200**, dan `/film` tetap **489 video** → penonton nol
+  tergeser.
+
 ⚠️ **Yang TETAP sama:** buka PERTAMA kali (atau sesudah 5 menit) tetap memakan waktu — 489
 pemeriksaan harus dijalankan sekali. Yang hilang adalah pengulangannya. Dan karena halaman tidak
 lagi menunggu, waktu itu tidak dirasakan sebagai layar diam.

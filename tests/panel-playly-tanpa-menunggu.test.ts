@@ -52,13 +52,31 @@ const VIDEO_B = video("v2", "Kaisar Kembali Ke Masa Lalu");
 
 const PESAN_MEMERIKSA = "Memeriksa berkas tiap video ke Playly";
 
-type PropBelumSiap = string[] | Promise<string[]>;
+/** Jawaban tiruan dari /api/admin/playly/belum-siap. */
+let jawabanEndpoint: (() => Promise<Response>) | null = null;
+let permintaan: { url: string; ids: string[] }[] = [];
 
-function panel(belumSiapIds: PropBelumSiap) {
+function pasangFetchTiruan() {
+  permintaan = [];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (globalThis as any).fetch = async (url: string, init?: RequestInit) => {
+    permintaan.push({ url, ids: JSON.parse(String(init?.body ?? "{}")).ids ?? [] });
+    if (!jawabanEndpoint) throw new Error("jawaban endpoint belum disiapkan");
+    return jawabanEndpoint();
+  };
+}
+
+const balas = (body: unknown) =>
+  new Response(JSON.stringify(body), {
+    status: 200,
+    headers: { "Content-Type": "application/json" },
+  });
+
+function panel(belumSiapIds?: string[]) {
   return h(PlaylyVisibilityManager, {
     videos: [VIDEO_A, VIDEO_B],
     initialHidden: [],
-    belumSiapIds,
+    ...(belumSiapIds ? { belumSiapIds } : {}),
     fetchError: null,
     source: "mitra" as const,
     creators: ["dramaku"],
@@ -68,7 +86,7 @@ function panel(belumSiapIds: PropBelumSiap) {
 let wadah: HTMLDivElement | null = null;
 let akar: Root | null = null;
 
-async function pasang(belumSiapIds: PropBelumSiap) {
+async function pasang(belumSiapIds?: string[]) {
   wadah = document.createElement("div");
   document.body.appendChild(wadah);
   akar = createRoot(wadah);
@@ -84,7 +102,7 @@ async function tungguSampai(syarat: () => boolean, label: string, batasMs = 8_00
   while (!syarat()) {
     if (Date.now() > batas) {
       throw new Error(
-        `menunggu ${label} lewat ${batasMs}ms — rantai promise kemungkinan PUTUS, bukan sekadar lambat`,
+        `menunggu ${label} lewat ${batasMs}ms — rantai pengambilan kemungkinan PUTUS, bukan sekadar lambat`,
       );
     }
     await act(async () => {
@@ -96,6 +114,8 @@ async function tungguSampai(syarat: () => boolean, label: string, batasMs = 8_00
 beforeEach(() => {
   wadah = null;
   akar = null;
+  jawabanEndpoint = null;
+  pasangFetchTiruan();
 });
 
 afterEach(async () => {
@@ -105,8 +125,9 @@ afterEach(async () => {
 
 describe("panel Playly tidak menunggu pemeriksaan berkas sebelum tampil", () => {
   it("tabel video SUDAH tergambar saat pemeriksaan masih berjalan", async () => {
-    // Promise yang tidak pernah selesai = keadaan "Playly sedang lambat".
-    const el = await pasang(new Promise<string[]>(() => {}));
+    // Endpoint yang tidak pernah menjawab = keadaan "Playly sedang lambat".
+    jawabanEndpoint = () => new Promise<Response>(() => {});
+    const el = await pasang();
 
     // Inilah yang dulu kosong selama ~47 detik.
     expect(el.textContent).toContain(VIDEO_A.title);
@@ -114,28 +135,29 @@ describe("panel Playly tidak menunggu pemeriksaan berkas sebelum tampil", () => 
   });
 
   it("mengatakan apa adanya bahwa pemeriksaannya BELUM selesai", async () => {
-    const el = await pasang(new Promise<string[]>(() => {}));
+    jawabanEndpoint = () => new Promise<Response>(() => {});
+    const el = await pasang();
 
     // Tanpa baris ini, tabel tanpa satu pun penanda terbaca sebagai "semua
     // video aman" — kesimpulan yang salah dan tak ada yang mengoreksinya.
     expect(el.textContent).toContain(PESAN_MEMERIKSA);
-    // Angka "Tampil ke penonton" PASTI kelebihan selagi memeriksa, jadi
-    // sengaja belum ditampilkan sebagai angka.
+    // Angka "Tampil ke penonton" PASTI kelebihan selagi memeriksa.
     expect(el.textContent).toContain("…");
   });
 
-  it("penanda 'belum siap' muncul SESUDAH pemeriksaan selesai", async () => {
-    let selesaikan: ((ids: string[]) => void) | null = null;
-    const nanti = new Promise<string[]>((res) => {
-      selesaikan = res;
-    });
-    const el = await pasang(nanti);
+  it("meminta ke endpoint yang benar, membawa id video yang tampil", async () => {
+    jawabanEndpoint = () => new Promise<Response>(() => {});
+    await pasang();
+    await tungguSampai(() => permintaan.length > 0, "permintaan terkirim");
 
-    expect(el.textContent).not.toContain("1 video belum siap");
+    expect(permintaan[0].url).toBe("/api/admin/playly/belum-siap");
+    expect(permintaan[0].ids).toEqual([VIDEO_A.id, VIDEO_B.id]);
+  });
 
-    await act(async () => {
-      selesaikan!([VIDEO_B.id]);
-    });
+  it("penanda 'belum siap' muncul SESUDAH jawaban tiba", async () => {
+    jawabanEndpoint = async () => balas({ ok: true, ids: [VIDEO_B.id], diperiksa: 2 });
+    const el = await pasang();
+
     await tungguSampai(
       () => el.textContent?.includes("1 video belum siap") ?? false,
       "penanda 'belum siap' tergambar",
@@ -146,10 +168,13 @@ describe("panel Playly tidak menunggu pemeriksaan berkas sebelum tampil", () => 
     expect(el.textContent).not.toContain(PESAN_MEMERIKSA);
   });
 
-  it("pemeriksaan yang GAGAL tidak merusak panel", async () => {
+  it("endpoint GAGAL tidak merusak panel", async () => {
     // Gagal memeriksa bukan alasan menghapus alat kerja admin dari layar —
     // jebakan yang sama pernah kena di tests/panel-playly-tahan-gangguan.ts.
-    const el = await pasang(Promise.reject(new Error("Playly tidak menjawab")));
+    jawabanEndpoint = async () => {
+      throw new Error("jaringan putus");
+    };
+    const el = await pasang();
 
     await tungguSampai(
       () => !(el.textContent?.includes(PESAN_MEMERIKSA) ?? true),
@@ -159,14 +184,13 @@ describe("panel Playly tidak menunggu pemeriksaan berkas sebelum tampil", () => 
     expect(el.textContent).toContain("Tampil ke penonton");
   });
 
-  it("bentuk ARRAY lama tetap bekerja persis seperti dulu", () => {
-    // Pemanggil & tes lama mengirim array. Kalau ini merah, perubahan tadi
-    // memutus pemanggil lain — bukan sekadar menambah kemampuan.
-    const html = renderToStaticMarkup(panel([VIDEO_B.id]));
+  it("prop berisi daftar = NOL permintaan jaringan", async () => {
+    // Pemanggil yang sudah tahu jawabannya tidak boleh memicu pemeriksaan ulang.
+    const el = await pasang([VIDEO_B.id]);
 
-    expect(html).toContain("1 video belum siap");
-    expect(html).not.toContain(PESAN_MEMERIKSA);
-    expect(html).toContain(VIDEO_A.title);
+    expect(permintaan).toHaveLength(0);
+    expect(el.textContent).toContain("1 video belum siap");
+    expect(el.textContent).not.toContain(PESAN_MEMERIKSA);
   });
 });
 
@@ -211,21 +235,10 @@ describe("halaman Playly punya kerangka yang tampil seketika", () => {
     // ~47 detik lebih lambat).
     const sumber = readFileSync("app/admin/videos/playly/page.tsx", "utf8");
 
-    // Yang dilarang SPESIFIK: halaman menunggu hasilnya. `await` DI DALAM
-    // periksaBerkasBelumSiap sendiri justru benar dan harus tetap ada.
-    expect(sumber).not.toMatch(/await\s+periksaBerkasBelumSiap/);
-    expect(sumber).toContain(
-      "const belumSiapIds = periksaBerkasBelumSiap(mitra.videos, konfigurasi)",
-    );
-  });
-
-  it("pemeriksaannya tetap DIBATASI 4 sekaligus, bukan dilepas serentak", () => {
-    // Pelajaran 2026-10-06: melepas 172 panggilan sekaligus membuat Playly
-    // timeout dan SELURUH sampul di halaman PENONTON ikut kosong. Memindahkan
-    // pemeriksaan ke latar belakang tidak boleh diam-diam membuang pagar itu.
-    const sumber = readFileSync("app/admin/videos/playly/page.tsx", "utf8");
-
-    expect(sumber).toMatch(/await\s+petaBerbatasPlayly\(videos,/);
-    expect(sumber).not.toMatch(/Promise\.all\(\s*videos/);
+    // Halaman TIDAK BOLEH lagi memeriksa berkas sama sekali — pekerjaan itu
+    // kini milik /api/admin/playly/belum-siap yang hasilnya bisa diingat.
+    expect(sumber).not.toContain("fetchPlaylyDetailPublik");
+    expect(sumber).not.toContain("petaBerbatasPlayly");
+    expect(sumber).not.toContain("belumSiapIds");
   });
 });

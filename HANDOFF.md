@@ -90,7 +90,11 @@
 > aftermarket** dari pemilik sekarang, harganya **jauh di atas** Rp200.000 dan belum pernah dicek.
 > Nama lain yang masih bebas jauh lebih murah.
 
-**Terakhir diisi:** 2026-11-11 — ⚡ **SIAP RILIS (belum dipush): halaman admin Video Playly tak lagi menyandera layar.** Owner mengeluh *"klik IMDb lama terbukanya"*. 🪤 **Tersangka pertama saya SALAH** — bukan pengambilan daftar berhalaman, melainkan halaman menanyakan **SETIAP video satu per satu** ke Playly. Diukur, bukan ditaksir: **489 video** (dihitung dari HTML `/film` produksi) ÷ **4 bersamaan** = **±123 giliran berurutan**, × **≥0,386 detik** per perjalanan (diukur `curl` 2×) = **lantai ≥47 detik** tiap halaman dibuka. ❌ **Satu langkah rencana DIBATALKAN sebelum dikerjakan**: cache 5 menit untuk pemeriksaan itu **nol efek**, karena `force-dynamic` memaksa SETIAP `fetch` di halaman jadi `no-store` (dokumen Next 16, `caching-without-cache-components.md:97-99`). **Yang dikerjakan:** `loading.tsx` baru (kerangka + sidebar muncul seketika, menu tetap bisa diklik) · pemeriksaan 489 video **tidak lagi di-`await`** (Promise-nya dioper ke panel, pola resmi Next) · panel menggambar tabel duluan, penanda menyusul, dengan **2 pagar kejujuran** (spanduk "sedang memeriksa" + angka *Tampil ke penonton* tampil "…" bukan angka yang pasti kelebihan). **Bukti:** gerbang **LOLOS 5/5** (**161 berkas / 2292 tes, 0 gagal**) · **uji-balik 5 titik SEMUA MERAH** lalu hijau lagi · **nol tes hilang dibuktikan** (tanpa berkas baru: 160/**2284**; dengan: 161/**2292** = selisih persis 8). 🪤 **SESUDAH TAYANG ketahuan cacat buatan sendiri, sudah ditambal:** kerangka `loading.tsx` adalah *static shell* yang dikirim SEBELUM penjaga sesi di `app/admin/layout.tsx` selesai, jadi 2 kalimatnya (*"Video dari Playly"*, *"ratusan video"*) terbaca pengunjung yang BELUM login. Bukan data & bukan endpoint (8 hal diperiksa satu per satu: aman), tapi melemahkan janji layout.tsx — kini kerangkanya nol kata khas admin, dijaga 8 kata terlarang + uji-balik. ⭐ **Aturan: isi `loading.tsx` mana pun di bawah `/admin` = PUBLIK.** ⚠️ **Jujur soal batasnya:** total kerja server **tidak** berkurang — Playly tetap ditanyai 489 kali, yang berubah cuma urutan tampil. **⬇️ Rincian + 3 batas yang masih ada di seksi `## 2026-11-11 — ⚡` di bawah.**
+**Terakhir diisi:** 2026-11-11 (ke-2) — ⚡ **SIAP RILIS: pemeriksaan 489 video KELUAR dari halaman admin, hasilnya diingat 5 menit.** Lanjutan `8ca0509` atas pilihan owner ("hanya yang bikin ringan"): kalau yang pertama memperbaiki URUTAN TAMPIL, yang ini memangkas **kerja servernya**. Pemeriksaan pindah ke endpoint baru `/api/admin/playly/belum-siap` + `lib/playly-berkas-siap.ts`; buka kedua dalam 5 menit = **nol** panggilan ke Playly. 🪤 **Dua jebakan dihindari karena membaca dokumen dulu:** cache bawaan Next akan NOL EFEK di sini — `force-dynamic` memaksa semua `fetch` jadi `no-store`, DAN `fetchCache: 'auto'` tidak men-cache `fetch` sesudah Request-time API (cek cookie admin wajib lebih dulu). Keduanya nol error, cuma diam-diam tidak bekerja. 🪤 **Pengaman tabrakan sempat saya tulis salah** (satu kunci untuk seluruh pemeriksaan → permintaan kedua pulang dengan sebagian id belum terperiksa, senyap); diganti kunci per-video. **Bukti:** gerbang **LOLOS 5/5** (**163 berkas / 2307 tes, 0 gagal**) · **uji-balik 8 titik SEMUA MERAH** · nol tes hilang (2293 + 14 = 2307, klop). ⚠️ Buka PERTAMA kali tetap memakan waktu — yang hilang pengulangannya. **⬇️ Rincian di seksi `## 2026-11-11 (ke-2)` di bawah.**
+
+---
+
+**Sebelumnya hari ini — urutan tampil:** ⚡ **SIAP RILIS (belum dipush): halaman admin Video Playly tak lagi menyandera layar.** Owner mengeluh *"klik IMDb lama terbukanya"*. 🪤 **Tersangka pertama saya SALAH** — bukan pengambilan daftar berhalaman, melainkan halaman menanyakan **SETIAP video satu per satu** ke Playly. Diukur, bukan ditaksir: **489 video** (dihitung dari HTML `/film` produksi) ÷ **4 bersamaan** = **±123 giliran berurutan**, × **≥0,386 detik** per perjalanan (diukur `curl` 2×) = **lantai ≥47 detik** tiap halaman dibuka. ❌ **Satu langkah rencana DIBATALKAN sebelum dikerjakan**: cache 5 menit untuk pemeriksaan itu **nol efek**, karena `force-dynamic` memaksa SETIAP `fetch` di halaman jadi `no-store` (dokumen Next 16, `caching-without-cache-components.md:97-99`). **Yang dikerjakan:** `loading.tsx` baru (kerangka + sidebar muncul seketika, menu tetap bisa diklik) · pemeriksaan 489 video **tidak lagi di-`await`** (Promise-nya dioper ke panel, pola resmi Next) · panel menggambar tabel duluan, penanda menyusul, dengan **2 pagar kejujuran** (spanduk "sedang memeriksa" + angka *Tampil ke penonton* tampil "…" bukan angka yang pasti kelebihan). **Bukti:** gerbang **LOLOS 5/5** (**161 berkas / 2292 tes, 0 gagal**) · **uji-balik 5 titik SEMUA MERAH** lalu hijau lagi · **nol tes hilang dibuktikan** (tanpa berkas baru: 160/**2284**; dengan: 161/**2292** = selisih persis 8). 🪤 **SESUDAH TAYANG ketahuan cacat buatan sendiri, sudah ditambal:** kerangka `loading.tsx` adalah *static shell* yang dikirim SEBELUM penjaga sesi di `app/admin/layout.tsx` selesai, jadi 2 kalimatnya (*"Video dari Playly"*, *"ratusan video"*) terbaca pengunjung yang BELUM login. Bukan data & bukan endpoint (8 hal diperiksa satu per satu: aman), tapi melemahkan janji layout.tsx — kini kerangkanya nol kata khas admin, dijaga 8 kata terlarang + uji-balik. ⭐ **Aturan: isi `loading.tsx` mana pun di bawah `/admin` = PUBLIK.** ⚠️ **Jujur soal batasnya:** total kerja server **tidak** berkurang — Playly tetap ditanyai 489 kali, yang berubah cuma urutan tampil. **⬇️ Rincian + 3 batas yang masih ada di seksi `## 2026-11-11 — ⚡` di bawah.**
 
 ---
 
@@ -240,6 +244,60 @@ riwayat blok peringatan lama ada di seksi `## 2026-11-09` di bawah.**
 **Rilis ke-1 hari ini:** (✅ **TAYANG `4dde5c0`**: tombol beranda "LIHAT SEMUA FILM UNGGULAN" → **"TEMUKAN TONTONAN FAVORITMU"** — labelnya salah di dua sisi (isinya drama berseri, bukan film; tujuannya katalog lengkap, bukan daftar unggulan). Dual push → Railway build sendiri → tayang ±60 detik, **downtime NOL**. Smoke test 5 alur: 4 langsung 200, `/drama/meg-2-the-trench` 500 SEKALI lalu 200 enam kali — cold start, dicatat bukan dihapus. ❌ **DIRALAT di rilis ke-2**: catatan asli di sini menyebut tombol itu "tergeser ke kanan di layar HP" sebagai gejala nyata. **Itu keliru** — cacat alat potret, bukan cacat situs; sudah diukur ulang dan tombolnya terpusat sempurna. Jangan diburu.)
 
 **Sebelumnya:** 2026-10-30 (tiga rilis beruntun, semuanya TAYANG: `5088bf2` genre bahasa Indonesia → `27973f0` koreksi owner Kerajaan/CEO/Lainnya → **`55894b8` dua tombol halaman drama yang selama ini TERPOTONG**. Downtime NOL. ⏸️ **DUA bahasan menunggu keputusan owner**, risetnya sudah selesai & nol kode diubah: "klik drama langsung play" dan "sinopsis film masih bahasa Inggris".)
+
+---
+
+## 2026-11-11 (ke-2) — ⚡ Pemeriksaan 489 video KELUAR dari halaman admin + diingat 5 menit (SIAP RILIS)
+
+Owner memilih lanjutan "hanya yang bikin ringan" dari dua tawaran. Ini melanjutkan `8ca0509`
+(urutan tampil) dengan memangkas **kerja servernya sendiri**, bukan cuma urutannya.
+
+**Sebelum:** halaman admin memeriksa 489 video tiap kali dibuka, hasilnya tidak pernah bisa
+disimpan (`force-dynamic` memaksa semua `fetch` jadi `no-store`).
+**Sesudah:** pemeriksaannya milik `/api/admin/playly/belum-siap`, dan hasilnya diingat **5 menit**.
+Buka kedua dalam 5 menit = **nol** panggilan ke Playly.
+
+**Berkas:**
+- BARU `lib/playly-berkas-siap.ts` — ingatan per-video + pengaman tabrakan.
+- BARU `app/api/admin/playly/belum-siap/route.ts` — POST `{ids}` → `{ok, ids, diperiksa}`.
+- `page.tsx` — pemeriksaannya DIBUANG seluruhnya (termasuk import yang jadi yatim).
+- `PlaylyVisibilityManager.tsx` — prop `belumSiapIds` jadi **opsional**; kalau kosong, panel
+  memintanya sendiri ke endpoint sesudah tabelnya tergambar.
+
+**🪤 JEBAKAN YANG DIHINDARI KARENA MEMBACA DOKUMEN DULU — cache bawaan Next akan NOL EFEK di sini.**
+Rencana awal: `fetch(..., { next: { revalidate: 300 } })`. Dokumen Next 16 membatalkannya **dua
+kali**: (1) di halaman, `force-dynamic` memaksa setiap `fetch` jadi `no-store`
+(`caching-without-cache-components.md:97-99`); (2) di route handler, setelan bawaan
+`fetchCache: 'auto'` **tidak** men-cache `fetch` yang dipanggil SESUDAH Request-time API —
+sedangkan cek sesi admin (membaca cookie) wajib lebih dulu (dokumen yang sama, :126). Keduanya
+**nol error**; yang terjadi cuma "cache-nya tidak bekerja" tanpa ada yang tahu. Karena itu
+ingatannya dibuat sendiri — sederhana, dan **bisa diuji mesin** (7 tes), sedangkan "apakah Data
+Cache Next benar-benar aktif di produksi" tidak bisa dibuktikan dari luar.
+Batasnya ditulis di kodenya: hilang saat deploy ulang (isinya penghematan, bukan data) · per-instance
+kalau nanti diperbanyak (akibat terburuk: pekerjaan terulang, BUKAN hasil salah).
+
+**🪤 PENGAMAN TABRAKAN SEMPAT SAYA TULIS SALAH — dan lubangnya senyap.** Versi pertama memakai SATU
+kunci untuk seluruh pemeriksaan: permintaan kedua yang daftarnya BERBEDA ikut menunggu, lalu pulang
+dengan sebagian id **belum terperiksa tanpa ada yang tahu**. Diganti kunci **per video**. Ini bukan
+kasus teoretis — keluhan aslinya "lama", dan admin yang tak sabar mengklik menunya lagi; tanpa
+pengaman, 489 panggilan jadi 978.
+
+**Keamanan (route baru = titik risiko; palang rak menahan sampai `backend` + `owasp` dibaca):**
+gerbang admin **default-deny** · anti-CSRF + pembatas laju 30/menit (`guardMutation`, 429-nya sudah
+membawa `Retry-After`) · bentuk id disaring `^[A-Za-z0-9_-]{1,64}$` karena id ikut dirangkai jadi
+alamat ke Playly · batas 1000 id · pesan 500 generik, detail hanya ke log server.
+⚠️ **Satu aturan rak sengaja disimpangi + alasannya:** rak backend §1 meminta **422** untuk kegagalan
+validasi isi; project ini konsisten memakai **400** (terhitung 93 vs 7 di `app/api`). Mengikuti rak
+di SATU endpoint justru membuat klien menghadapi dua konvensi. Kenyataan kode menang (§4.3).
+
+**Bukti:** gerbang **LOLOS 5/5** — **163 berkas / 2307 tes, 0 gagal** · **uji-balik 8 titik SEMUA
+MERAH** lalu hijau lagi (ingatan dimatikan · "tidak tahu" disimpan sebagai aman · pengaman tabrakan
+dibuang · gerbang admin dibuang · saringan id dilonggarkan · batas 1000 dibuang · panel berhenti
+meminta · halaman kembali memeriksa sendiri) · **nol tes hilang:** 2293 + 14 tes baru = 2307, klop.
+
+⚠️ **Yang TETAP sama:** buka PERTAMA kali (atau sesudah 5 menit) tetap memakan waktu — 489
+pemeriksaan harus dijalankan sekali. Yang hilang adalah pengulangannya. Dan karena halaman tidak
+lagi menunggu, waktu itu tidak dirasakan sebagai layar diam.
 
 ---
 

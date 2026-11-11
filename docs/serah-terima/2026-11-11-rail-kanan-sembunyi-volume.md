@@ -39,10 +39,8 @@ Tidak.
 Diuji di atas main terkini (ac24fd8) + commit ini:
 ALLOW_FILE_MODE=1 next build -> sukses (21/21 halaman)
 npx tsc --noEmit -> exit 0
-vitest -> 2310 lulus, 1 gagal: tests/hero-gambar-besar.test.ts (tidak tersentuh; regex `
-\s+loop
-`
-  gagal karena checkout Windows memakai CRLF — rapuh di Windows, bukan dari perubahan ini)
+vitest -> 2310 lulus, 1 gagal: tests/hero-gambar-besar.test.ts (tidak tersentuh; pola tes mencari akhir baris LF
+  sehingga gagal karena checkout Windows memakai CRLF — rapuh di Windows, bukan dari perubahan ini)
 
 ## 6. Cara owner mencoba
 1. Buka satu drama, lalu tekan Tonton sampai masuk pemutar /feed/<id>, dan putar videonya.

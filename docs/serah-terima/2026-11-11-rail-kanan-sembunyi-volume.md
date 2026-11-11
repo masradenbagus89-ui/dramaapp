@@ -1,5 +1,10 @@
 # 2026-11-11 — Rail ikon kanan pemutar drama ikut sembunyi + tombol Volume
 
+> **Tarik branch `feat/rail-sembunyi-volume`** (dibuat dari `main` terkini `ac24fd8` + 1 commit).
+> JANGAN pakai commit `01a48b0` / `ceac484` di branch `feat/link-unduhan-provider-kualitas`:
+> branch itu tertinggal dari `main` dan `01a48b0` menduplikasi tugas Play-tengah yang SUDAH
+> tayang (`6b65e0a`). Dibiarkan apa adanya (tidak di-force-push) supaya tak ada yang hilang.
+
 ## 1. Apa yang berubah + kenapa
 Di pemutar drama (`/feed/[id]`), deretan ikon di kanan layar (poster, Suka, Komen, Simpan,
 Bagikan, Unduh) dulu tampil terus, sehingga menutupi film. Sekarang deretan itu memudar
@@ -31,9 +36,13 @@ Tidak.
 Tidak.
 
 ## 5. Bukti
-rm -rf .next && npm run build -> sukses
-npx tsc --noEmit -> 0 error (exit 0)
-npm test -> 93 berkas, 1372 tes lulus
+Diuji di atas main terkini (ac24fd8) + commit ini:
+ALLOW_FILE_MODE=1 next build -> sukses (21/21 halaman)
+npx tsc --noEmit -> exit 0
+vitest -> 2310 lulus, 1 gagal: tests/hero-gambar-besar.test.ts (tidak tersentuh; regex `
+\s+loop
+`
+  gagal karena checkout Windows memakai CRLF — rapuh di Windows, bukan dari perubahan ini)
 
 ## 6. Cara owner mencoba
 1. Buka satu drama, lalu tekan Tonton sampai masuk pemutar /feed/<id>, dan putar videonya.

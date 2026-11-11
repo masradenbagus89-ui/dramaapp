@@ -90,7 +90,15 @@
 > aftermarket** dari pemilik sekarang, harganya **jauh di atas** Rp200.000 dan belum pernah dicek.
 > Nama lain yang masih bebas jauh lebih murah.
 
-**Terakhir diisi:** 2026-11-10 — ✅ **TAYANG `db4fa72`: blok judul hero di HP dirapikan, nol
+**Terakhir diisi:** 2026-11-11 — ⚡ **SIAP RILIS (belum dipush): halaman admin Video Playly tak lagi menyandera layar.** Owner mengeluh *"klik IMDb lama terbukanya"*. 🪤 **Tersangka pertama saya SALAH** — bukan pengambilan daftar berhalaman, melainkan halaman menanyakan **SETIAP video satu per satu** ke Playly. Diukur, bukan ditaksir: **489 video** (dihitung dari HTML `/film` produksi) ÷ **4 bersamaan** = **±123 giliran berurutan**, × **≥0,386 detik** per perjalanan (diukur `curl` 2×) = **lantai ≥47 detik** tiap halaman dibuka. ❌ **Satu langkah rencana DIBATALKAN sebelum dikerjakan**: cache 5 menit untuk pemeriksaan itu **nol efek**, karena `force-dynamic` memaksa SETIAP `fetch` di halaman jadi `no-store` (dokumen Next 16, `caching-without-cache-components.md:97-99`). **Yang dikerjakan:** `loading.tsx` baru (kerangka + sidebar muncul seketika, menu tetap bisa diklik) · pemeriksaan 489 video **tidak lagi di-`await`** (Promise-nya dioper ke panel, pola resmi Next) · panel menggambar tabel duluan, penanda menyusul, dengan **2 pagar kejujuran** (spanduk "sedang memeriksa" + angka *Tampil ke penonton* tampil "…" bukan angka yang pasti kelebihan). **Bukti:** gerbang **LOLOS 5/5** (**161 berkas / 2292 tes, 0 gagal**) · **uji-balik 5 titik SEMUA MERAH** lalu hijau lagi · **nol tes hilang dibuktikan** (tanpa berkas baru: 160/**2284**; dengan: 161/**2292** = selisih persis 8). ⚠️ **Jujur soal batasnya:** total kerja server **tidak** berkurang — Playly tetap ditanyai 489 kali, yang berubah cuma urutan tampil. **⬇️ Rincian + 3 batas yang masih ada di seksi `## 2026-11-11 — ⚡` di bawah.**
+
+---
+
+**Sebelumnya hari ini — CAPTCHA ditahan:** ⏸️ **CAPTCHA pemutar drama (kerja rekan) DITAHAN atas keputusan owner, dan DIKELUARKAN lagi dari `main` lokal.** **Nol rilis hari ini, nol kode produksi berubah:** `HEAD` = `origin/main` = `dramaku/main` = **`a96161c`**, dan folder kerja **sama persis** dengan commit yang sedang tayang. 🪤 **Pemicunya temuan saya: nol jejak permintaan owner** untuk CAPTCHA di seluruh catatan pada commit SEBELUM kerja rekan (`git grep` `captcha|turnstile|anti-bot` → **nol hasil**), padahal fiturnya mengubah yang dirasakan **SEMUA** penonton (tekan Play → wajib centang verifikasi tiap 30 menit) — pola persis 2026-09-23 ("DOWNLOAD EP 1" dipasang lalu diminta hapus). Pembandingnya: perlindungan video **sudah** jalan sejak 2026-10-27 (alamat dicuri = **403**), jadi CAPTCHA lapis TAMBAHAN, bukan lubang yang masih terbuka. **Kerjanya tidak hilang** — utuh di `dramaku/feat/captcha-pemutar-drama` (`284ebf6`, 0 commit tertinggal); ambil lagi dengan `git merge dramaku/feat/captcha-pemutar-drama`. ⚠️ **Dikeluarkan dari `main` (`git reset --keep a96161c`, bukan `--hard`) justru supaya tidak ikut terkirim diam-diam** — `main` yang berdiri 2 commit di depan produksi membuat push rutin berikutnya mengirim 3 commit. ⚠️ **Kalau nanti dipakai, 2 syarat:** owner mengisi `TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET_KEY` di Railway, dan **ranjau CSP ditambal dulu** (2 baris — kalau CSP ditegakkan tanpa itu, SELURUH video mati senyap). ✅ Ikut diverifikasi hari ini: **`AUTH_SECRET` ADA di produksi** (kalau kosong + kunci Turnstile diisi = seluruh video mati senyap juga). **⬇️ Rincian di seksi `## 2026-11-11` di bawah.**
+
+---
+
+**Sebelumnya 2026-11-10 — rilis `db4fa72`:** ✅ **TAYANG `db4fa72`: blok judul hero di HP dirapikan, nol
 bagian film yang tertutup.** Deploy Railway **sukses 81 detik** (push 06:44:02Z → `success`
 06:45:23Z, dibuktikan lewat `gh api .../deployments/7675476111/statuses`), **downtime NOL** (12
 percobaan selama pergantian versi semuanya 200). **Empat putaran koreksi owner** dari tangkapan
@@ -232,6 +240,98 @@ riwayat blok peringatan lama ada di seksi `## 2026-11-09` di bawah.**
 **Rilis ke-1 hari ini:** (✅ **TAYANG `4dde5c0`**: tombol beranda "LIHAT SEMUA FILM UNGGULAN" → **"TEMUKAN TONTONAN FAVORITMU"** — labelnya salah di dua sisi (isinya drama berseri, bukan film; tujuannya katalog lengkap, bukan daftar unggulan). Dual push → Railway build sendiri → tayang ±60 detik, **downtime NOL**. Smoke test 5 alur: 4 langsung 200, `/drama/meg-2-the-trench` 500 SEKALI lalu 200 enam kali — cold start, dicatat bukan dihapus. ❌ **DIRALAT di rilis ke-2**: catatan asli di sini menyebut tombol itu "tergeser ke kanan di layar HP" sebagai gejala nyata. **Itu keliru** — cacat alat potret, bukan cacat situs; sudah diukur ulang dan tombolnya terpusat sempurna. Jangan diburu.)
 
 **Sebelumnya:** 2026-10-30 (tiga rilis beruntun, semuanya TAYANG: `5088bf2` genre bahasa Indonesia → `27973f0` koreksi owner Kerajaan/CEO/Lainnya → **`55894b8` dua tombol halaman drama yang selama ini TERPOTONG**. Downtime NOL. ⏸️ **DUA bahasan menunggu keputusan owner**, risetnya sudah selesai & nol kode diubah: "klik drama langsung play" dan "sinopsis film masih bahasa Inggris".)
+
+---
+
+## 2026-11-11 — ⚡ Halaman admin Video Playly tak lagi menyandera layar (SIAP RILIS, belum dipush)
+
+Owner: *"kenapa ketika saya klik kotak merah IMDb lama terbuka nya"* → lalu *"kerjakan perbaikannya"*.
+
+**🪤 BIANG KELADINYA BUKAN YANG SAYA DUGA PERTAMA KALI.** Jawaban awal saya menyebut pengambilan
+daftar berhalaman (5-6 permintaan) sebagai tersangka utama. **Salah.** Yang sesungguhnya menahan
+layar: halaman menanyakan **SETIAP video satu per satu** ke Playly lewat `fetchPlaylyDetailPublik`,
+untuk tahu berkasnya masih ada atau tidak. Angkanya **diukur, bukan ditaksir**:
+
+| Yang diukur | Hasil | Cara mengukurnya |
+|---|---|---|
+| Jumlah video Playly | **489** | id video dihitung dari HTML `/film` produksi |
+| Dijalankan bersamaan | **4** | `PLAYLY_MAKS_BERSAMAAN` di `lib/playly.ts:1366` |
+| Giliran berurutan | **±123** | 489 ÷ 4 |
+| 1 perjalanan ke Playly | **≥0,386 detik** | `curl` ke `/api/catalog` (dua percobaan: 0,386 & 0,384) |
+| **Lantai waktu tunggu** | **≥47 detik** | 123 × 0,386 — dan ini lantai, bukan rata-rata |
+
+**❌ SATU LANGKAH RENCANA DIBATALKAN SEBELUM DIKERJAKAN.** Saya berniat memberi cache 5 menit pada
+pemeriksaan itu. Dokumen Next 16 membatalkannya: `node_modules/next/dist/docs/01-app/02-guides/
+caching-without-cache-components.md:97-99` menyatakan `dynamic = "force-dynamic"` **setara dengan
+memaksa SETIAP `fetch` di halaman itu jadi `{ cache: 'no-store', next: { revalidate: 0 } }`**.
+Halaman ini `force-dynamic` (`page.tsx:45`), jadi angka cache berapa pun di dalamnya **nol efek**.
+Komentar "revalidateSeconds = 0" yang lama pun sebenarnya sudah redundan. Catatan itu ditulis
+eksplisit di kodenya supaya tidak ada yang mencoba lagi.
+
+**Yang dikerjakan — 3 berkas kode + 1 berkas tes:**
+
+1. **BARU `app/admin/videos/playly/loading.tsx`** — kerangka halaman + sidebar tampil **seketika**,
+   dengan kalimat "Memuat daftar video dari Playly…". Next memakainya sebagai isi `<Suspense>`
+   otomatis untuk `page.tsx` di folder yang sama. Menu samping tetap bisa diklik selama menunggu.
+   ⚠️ Akses tetap terjaga: `loading.tsx` dirender DI DALAM `app/admin/layout.tsx` yang menolak sesi
+   non-admin sebelum children digambar, dan berkas ini nol memuat data.
+2. **`page.tsx`** — pemeriksaan 489 video dipindah ke fungsi `periksaBerkasBelumSiap()` yang
+   **TIDAK di-`await`**; Promise-nya dioper apa adanya ke panel (pola resmi "pass the promise down",
+   `01-getting-started/06-fetching-data.md:241`). Fungsinya dibungkus `try/catch` → **tidak pernah
+   melempar**, karena promise tertolak tanpa penangkap bisa menjatuhkan proses server.
+3. **`PlaylyVisibilityManager.tsx`** — prop `belumSiapIds` kini menerima `string[]` **atau**
+   `Promise<string[]>` (satu nama, dua bentuk — pemanggil & tes lama nol berubah). Tabel tergambar
+   duluan, penanda menyusul.
+   ⚠️ **Dua pagar kejujuran** supaya "belum tahu" tidak terbaca sebagai "semua aman": ada spanduk
+   *"Memeriksa berkas tiap video ke Playly…"*, dan angka **Tampil ke penonton** sengaja tampil
+   **"…"** bukan angka — selagi memeriksa angkanya PASTI kelebihan.
+4. **BARU `tests/panel-playly-tanpa-menunggu.test.ts`** — 8 tes.
+
+**Bukti:**
+- Gerbang `npm run gerbang` **LOLOS 5/5** — build ✓ · `tsc` 0 error ✓ · **161 berkas / 2292 tes, 0 gagal** ✓ · nol berkas rahasia ✓.
+- **Uji-balik 5 titik, SEMUA MERAH** lalu dikembalikan hijau: (A) halaman kembali `await` pemeriksaan ·
+  (B) spanduk "sedang memeriksa" dihapus · (C) hasil promise diabaikan · (D) pagar 4-sekaligus
+  diganti `Promise.all` · (E) `loading.tsx` dihapus.
+- **Nol tes hilang — dibuktikan, bukan diasumsikan:** suite dijalankan TANPA berkas tes baru →
+  **160 berkas / 2284 tes**; dengan berkas baru → **161 / 2292**. Selisih **persis 8** = jumlah tes
+  yang ditulis. (Catatan lama menyebut dasar 2285; yang benar 2284. Jangan dipakai menyalahkan
+  catatan lain — jumlah tes di repo ini memang tidak tetap, `tests/kepala-situs.test.ts` membuat
+  satu tes per `page.tsx` yang ada di disk.)
+
+**⚠️ BATAS YANG MASIH ADA — dikatakan terang-terangan:**
+- **Total kerja server TIDAK berkurang.** Playly tetap ditanyai 489 kali tiap halaman dibuka; yang
+  berubah cuma URUTAN TAMPIL — admin tak lagi menatap layar diam. Memangkas kerjanya sendiri butuh
+  pendekatan lain (endpoint terpisah yang boleh di-cache, atau memeriksa hanya video di halaman yang
+  sedang dilihat) dan itu **belum dikerjakan**.
+- **Kalau sambungan putus di tengah** (mis. proxy memutus respons panjang), spanduk "Memeriksa
+  berkas…" bisa bertahan selamanya. Risikonya kecil — sebelum perbaikan ini halaman menahan ~47
+  detik dan Railway tidak memutusnya — tapi belum dibuktikan di produksi.
+- **Ketiga panel tetap dirakit sekaligus** walau cuma satu yang dilihat. Sebabnya teknis: penanda
+  `#imdb` di alamat **tidak ikut terkirim ke server**, jadi server tak bisa tahu menu mana yang
+  diklik. Mengubahnya = mengganti hash jadi query param, perubahan cakupan yang belum diminta.
+
+---
+
+## 2026-11-11 — ⏸️ CAPTCHA pemutar drama (kerja rekan) DITAHAN atas keputusan owner + DIKELUARKAN dari `main` lokal
+
+**Keputusan owner 2026-11-11: JANGAN dirilis dulu.** Disajikan 3 pilihan (tahan / rilis-kode-dengan-saklar-MATI / rilis-dan-langsung-nyalakan); owner memilih **tahan**. Penonton **nol melihat perubahan** — CAPTCHA tidak pernah tayang.
+
+**Kerjanya TIDAK hilang dan masih gampang diambil.** Utuh di branch remote cermin `dramaku/feat/captcha-pemutar-drama` (`284ebf6`), bercabang dari `a96161c` → **0 commit tertinggal**, jadi merge-nya akan tetap bersih kapan pun. Mengambilnya kembali: **`git merge dramaku/feat/captcha-pemutar-drama`** (satu perintah, nol bentrok). ⚠️ Catatan rekan ada **DI DALAM** branch itu (`docs/serah-terima/2026-11-10-captcha-pemutar-drama.md`) — berkasnya **tidak ada** di `main`, jadi jangan dicari di folder kerja.
+
+**Kenapa dikeluarkan dari `main`, bukan cuma "jangan dipush".** Sesi 2026-11-10 sudah men-merge-nya ke `main` lokal, jadi `main` berdiri **2 commit di depan** produksi. Selama itu dibiarkan, sesi berikutnya yang mengerjakan perbaikan kecil apa pun lalu push seperti biasa akan **mengirim 3 commit** — CAPTCHA ikut tayang tanpa ada yang sengaja memutuskannya. Dijalankan **`git reset --keep a96161c`** (bukan `--hard`: `--keep` **membatalkan diri** kalau ada perubahan lokal yang akan tertimpa, `--hard` menghapusnya tanpa tanya). Terukur sesudahnya: `HEAD` = `origin/main` = `dramaku/main` = **`a96161c`**, selisih **nol commit**, 12 berkas CAPTCHA hilang dari folder kerja, catatan HANDOFF yang belum di-commit **tetap aman**. Folder kerja sekarang **sama persis dengan commit yang sedang tayang** — itu bukti terkuat bahwa nol kerusakan ikut tertinggal, lebih kuat daripada build ulang. Jaring kedua: merge `8079dc7` masih ada di `git reflog`.
+
+**🪤 TEMUAN YANG MEMICU KEPUTUSAN INI — nol jejak permintaan owner.** `git grep` ke `HANDOFF.md`, `NEXT-SESSION.md`, `antrean-deploy.md`, dan `docs/` **pada commit `a96161c` (sebelum kerja rekan)** untuk `captcha|turnstile|anti-bot|memanen video` → **nol hasil**. Rekan sendiri **tidak** mengklaim ini permintaan owner, jadi ini bukan klaim palsu — tapi fiturnya **mengubah yang dirasakan SEMUA penonton** (tekan Play → wajib centang kotak verifikasi, berulang tiap 30 menit). Pola 2026-09-23 persis begini: tombol "DOWNLOAD EP 1" dipasang → owner melihatnya di situs → minta dihapus. **ATURAN: fitur rekan yang terlihat/terasa penonton → sajikan ke owner SEBELUM dirilis, walau seluruh bukti teknisnya sudah hijau.** Pembanding yang ikut menentukan: **perlindungan video sudah jalan sejak 2026-10-27** — alamat video bertanda tangan, alamat polos yang dicuri orang dijawab **403**. CAPTCHA = lapis **TAMBAHAN**, bukan menutup lubang yang masih terbuka.
+
+**Isi fiturnya (untuk kalau nanti dipertimbangkan lagi):** penonton tekan Play di `/feed/<id>` → CAPTCHA Cloudflare Turnstile → lolos → video jalan. Tiket cookie `dramaku_tonton` (HttpOnly, HMAC `AUTH_SECRET`) berlaku 30 menit. Gerbang sesungguhnya ada di **SERVER**: `/api/video-url` balas **401** tanpa tiket, jadi alamat video tak pernah lahir untuk bot. Playly, tombol Unduh, dan paywall koin **TIDAK** tersentuh.
+
+**Bukti yang SUDAH dijalankan di komputer owner (tetap berlaku — jangan diulang dari nol kalau nanti dipakai):**
+- `npm run gerbang` → **5/5 hijau**, **161** berkas tes, **2298 tes lulus, 0 gagal**. (Rekan melaporkan 1 tes merah `hero-gambar-besar` di komputernya — di sini **hijau**, jadi itu soal akhir baris CRLF lokal dia, bukan kode.)
+- `tests/tonton-akses.test.ts` → **13 tes hijau**, termasuk gagal-aman: Cloudflare tak terjangkau = **ditolak**, bukan diloloskan.
+- Pemanggil `/api/video-url` ditelusuri: **hanya** `FeedPlayer.tsx`, dan FeedPlayer hanya dipakai `app/feed/[id]/page.tsx` → yang terkena cuma `/feed/<id>`, nol layar lain rusak senyap.
+- Kunci Turnstile kosong → gerbang otomatis **MATI** (`lib/turnstile.ts:32` di branch itu) dan pemutar jalan seperti sekarang. Jadi urutan rilis terbalik tidak mematikan video massal.
+- ✅ **BARU 2026-11-11: `AUTH_SECRET` dipastikan ADA di produksi Railway** — diukur, bukan ditebak: POST `/api/auth/login` dengan email palsu menjawab **401 `Email atau password salah.`**, BUKAN **500** `AUTH_SECRET belum di-set` yang akan keluar **lebih dulu** kalau kosong (`app/api/auth/login/route.ts:112-118`). **Kenapa ini penting:** tiket CAPTCHA ditandatangani `AUTH_SECRET`; kalau kunci Turnstile diisi sementara `AUTH_SECRET` kosong, penonton lolos CAPTCHA → cookie terbit → `/api/video-url` **tetap 401** → **seluruh video mati senyap, tanpa pesan error**. Sekarang terbukti jebakan itu tidak aktif.
+
+**🪤 RANJAU CSP YANG MASIH MENGGANTUNG DI BRANCH (belum ditambal — jangan rilis sebelum ini dikerjakan).** `challenges.cloudflare.com` dipakai di 2 berkas branch itu (`GerbangCaptcha.tsx:13` memuat script widget, `lib/turnstile.ts:12` memanggil siteverify dari server) tapi muncul **0 kali** di `next.config.ts`. **Sekarang belum berbahaya** — header masih `Content-Security-Policy-Report-Only` (mencatat, tidak memblokir). **Tapi** `next.config.ts:76-80` menyebut rencana menegakkannya sungguhan; begitu itu dilakukan tanpa menambah host Cloudflare ke `script-src` (`next.config.ts:127`) + `frame-src` (`:140`), widget gagal dimuat → penonton tak pernah bisa lolos → gerbang server tetap menolak → **SELURUH video mati total tanpa pesan error jelas**. Tambalnya **2 baris**. Catatan: `connect-src` **tidak** perlu ditambah — siteverify dipanggil dari server, bukan dari browser.
 
 ---
 

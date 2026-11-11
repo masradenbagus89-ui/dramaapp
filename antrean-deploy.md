@@ -23,6 +23,14 @@
 > lengkap: `HANDOFF.md` seksi `## 2026-11-09`.
 
 
+**Terakhir dicek:** 2026-11-11 (**komputer OWNER**). `HEAD` = `origin/main` = `dramaku/main` = **`a96161c`**, working tree bersih (hanya berkas catatan). **NOL ANTREAN — dan itu DISENGAJA.**
+
+> ⏸️ **SATU branch rekan DITAHAN atas keputusan owner — JANGAN dirilis: `dramaku/feat/captcha-pemutar-drama` (`284ebf6`)**, isinya CAPTCHA Cloudflare Turnstile sebelum memutar episode drama.
+>
+> Sesi 2026-11-10 sudah men-merge-nya ke `main` lokal; **2026-11-11 owner memutuskan tahan dulu**, dan merge-nya **dikeluarkan lagi** dari `main` (`git reset --keep a96161c`) supaya tak bisa ikut terkirim diam-diam pada push berikutnya. **Akibatnya branch ini akan SELALU muncul sebagai "belum di-deploy" setiap kali antrean diperiksa — itu BENAR, bukan antrean yang terlewat.** Jangan dirilis tanpa keputusan baru dari owner.
+>
+> Alasannya (nol jejak permintaan owner + perlindungan video sudah ada sejak 2026-10-27) dan **2 syarat kalau nanti dipakai** (owner mengisi `TURNSTILE_SITE_KEY` + `TURNSTILE_SECRET_KEY` di Railway · ranjau CSP 2 baris ditambal dulu): `HANDOFF.md` seksi `## 2026-11-11`.
+
 **Terakhir dicek:** 2026-11-10 (**komputer OWNER**), **sesudah rilis `db4fa72`**.
 `HEAD` = `origin/main` = `dramaku/main` = **`304756f`**, working tree **bersih**. **NOL ANTREAN.**
 

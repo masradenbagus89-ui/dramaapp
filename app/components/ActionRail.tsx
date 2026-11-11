@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { DownloadProvider } from "@/lib/types";
 import DownloadModal from "./DownloadModal";
+import VolumeControl from "./player/VolumeControl";
 
 // Rail ikon vertikal ala Melolo/TikTok yang menempel di sisi kanan feed.
 // Pakai ulang store like (/api/likes) + myList (simpan) yang sudah ada.
@@ -18,6 +19,8 @@ export default function ActionRail({
   posterImage,
   onComment,
   providers = [],
+  visible = true,
+  sound,
 }: {
   dramaId: string;
   title: string;
@@ -30,6 +33,17 @@ export default function ActionRail({
    * (PlayerSettings.tsx:153), jadi tidak ada yang hilang.
    */
   providers?: DownloadProvider[];
+  /**
+   * false = rail memudar (video sedang berputar & kontrol disembunyikan);
+   * ketuk layar memunculkannya lagi. Default true supaya pemanggil lama aman.
+   */
+  visible?: boolean;
+  /** Ada = tombol Volume digambar di rail; tidak ada = tanpa tombol volume. */
+  sound?: {
+    volume: number;
+    muted: boolean;
+    onChange: (next: { volume: number; muted: boolean }) => void;
+  };
 }) {
   const [liked, setLikedState] = useState(false);
   const [saved, setSavedState] = useState(false);
@@ -105,7 +119,12 @@ export default function ActionRail({
 
   return (
     <>
-      <div className="pointer-events-auto absolute bottom-32 right-2 z-20 flex flex-col items-center gap-4">
+      <div
+        className={cn(
+          "absolute bottom-32 right-2 z-20 flex flex-col items-center gap-4 transition-opacity duration-300",
+          visible ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0",
+        )}
+      >
         <Link
           href={`/drama/${dramaId}`}
           className="h-9 w-9 overflow-hidden rounded-full border-2 border-amber-400/80 bg-zinc-800 shadow-lg ring-2 ring-black/20 transition-transform hover:scale-105"
@@ -141,6 +160,15 @@ export default function ActionRail({
         <RailButton label="Bagikan" onClick={onShare}>
           <Share2 />
         </RailButton>
+
+        {sound && (
+          <VolumeControl
+            volume={sound.volume}
+            muted={sound.muted}
+            hidden={!visible}
+            onChange={sound.onChange}
+          />
+        )}
 
         {providers.length > 0 && (
           <RailButton label="Unduh" onClick={() => setDownloadOpen(true)}>

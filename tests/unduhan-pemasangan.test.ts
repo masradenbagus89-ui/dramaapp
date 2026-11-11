@@ -173,7 +173,7 @@ describe("pemutar /feed — daftar provider sampai ke rail ikon", () => {
     // dipasang di dalamnya tetap tertimbun lapisan lain di layar pemutar,
     // walau angkanya lebih besar. Penutup </div> wajib mendahului modal.
     const isi = sumber("app/components/ActionRail.tsx");
-    const rail = isi.indexOf('className="pointer-events-auto absolute bottom-32');
+    const rail = isi.indexOf('"absolute bottom-32 right-2');
     expect(rail, "div rail tidak ketemu").toBeGreaterThan(-1);
     const tutupRail = isi.indexOf("</div>", rail);
     const modal = isi.indexOf("<DownloadModal");

@@ -81,6 +81,7 @@ export default function FeedPlayer({
   const [controlsVisible, setControlsVisible] = useState(true);
   const [tick, setTick] = useState(0); // bump utk reset timer auto-hide kontrol
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [sound, setSound] = useState({ volume: 1, muted: false });
   const [episodesOpen, setEpisodesOpen] = useState(false);
   const [seeking, setSeeking] = useState(false);
   // Episode yang sumbernya benar-benar gagal dimuat (mis. PC backup / tunnel
@@ -524,11 +525,26 @@ export default function FeedPlayer({
     };
   }, [persistProgress]);
 
+  // Volume berlaku ke SEMUA video yang ter-mount (slide sebelah ikut), supaya
+  // geser ke episode berikutnya tidak tiba-tiba kembali keras/bisu.
+  useEffect(() => {
+    for (const v of Object.values(videoRefs.current)) {
+      if (!v) continue;
+      v.volume = sound.volume;
+      v.muted = sound.muted;
+    }
+  }, [sound, active]);
+
   // Auto-hide kontrol biar video jadi fokus; sentuh layar utk memunculkan lagi.
   const revealControls = useCallback(() => {
     setControlsVisible(true);
     setTick((t) => t + 1);
   }, []);
+
+  const changeSound = (next: { volume: number; muted: boolean }) => {
+    setSound(next);
+    revealControls(); // sedang mengatur → jangan biarkan rail memudar di tengah geser
+  };
 
   useEffect(() => {
     // Jangan sembunyikan saat jeda / menu kebuka / overlay aktif.
@@ -677,6 +693,8 @@ export default function FeedPlayer({
                       setVideoRatio(v.videoWidth / v.videoHeight);
                     }
                     v.playbackRate = speed;
+                    v.volume = sound.volume;
+                    v.muted = sound.muted;
                     // Restore posisi setelah ganti resolusi, atau lanjut dari riwayat.
                     if (pendingSeek.current != null) {
                       v.currentTime = pendingSeek.current;
@@ -785,6 +803,8 @@ export default function FeedPlayer({
           posterImage={posterImage}
           onComment={() => setCommentsOpen(true)}
           providers={providers}
+          visible={controlsVisible}
+          sound={{ ...sound, onChange: changeSound }}
         />
 
         {/* Gerigi pengaturan di kanan atas — panel bawah sengaja hanya judul +

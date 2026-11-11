@@ -339,6 +339,24 @@ kotak kosong seukurannya; manfaat untuk admin tidak berubah (layar tetap langsun
 Penjaga permanen `tests/panel-playly-tanpa-menunggu.test.ts` memeriksa **8 kata terlarang** di
 kerangka itu — diuji-balik: satu kata dikembalikan → **MERAH**, dibuang lagi → hijau.
 
+✅ **TAMBALANNYA TAYANG `7c4651f`** — deploy **sukses 74 detik** (push 03:19:15Z → `success`
+03:20:33Z, dibuktikan lewat `gh api .../deployments/7700753761/statuses`), **downtime NOL** (65
+percobaan selama pergantian versi semuanya 200). Diverifikasi DI SITUS SUNGGUHAN sesudah tayang:
+HTML `/admin/videos/playly` tanpa login **nol** memuat "Video dari Playly" · "Memuat daftar video" ·
+"ratusan video" · nama menu sidebar · nama endpoint. Smoke test **11 alamat semua 200**, dan `/film`
+tetap **489 video** (penonton nol tergeser).
+
+⏳ **TEMUAN TERPISAH yang SENGAJA TIDAK saya kerjakan — menunggu keputusan owner.** Pemeriksaan di
+atas masih menemukan kata "Playly" 4 kali di HTML tanpa login, dan asalnya **BUKAN** kerangka
+melainkan `metadata` halaman: `<title>Video Playly — Admin DramaKu</title>` +
+`<meta name="description" content="Pilih video dari Playly dan kaitkan ke drama…">`
+(`app/admin/videos/playly/page.tsx:49-50`). **Sudah ada SEBELUM pekerjaan hari ini** — dibuktikan
+dengan `git show a96161c:…` (ada) dan `git diff a96161c..HEAD` atas berkas itu (nol baris
+metadata tersentuh). Halamannya ber-`robots: noindex`, jadi tidak masuk Google. **Tidak saya ubah
+sendiri karena judul itu yang muncul di tab browser admin** — mengubahnya = mengubah yang sudah
+jalan, dan itu keputusan owner (§4.4). Kalau mau ditutup: pindahkan judul ke dalam komponen yang
+hanya dirender sesudah sesi terverifikasi, atau samarkan jadi "Admin DramaKu" saja.
+
 ⭐ **ATURAN untuk `loading.tsx` MANA PUN di bawah `/admin`: perlakukan isinya sebagai PUBLIK.**
 Penjaga sesi di layout tidak sempat berjalan sebelum kerangka terkirim.
 

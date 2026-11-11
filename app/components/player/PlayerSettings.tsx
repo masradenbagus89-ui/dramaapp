@@ -48,7 +48,7 @@ export default function PlayerSettings({
   onToggleFullscreen,
 }: PlayerSettingsProps) {
   return (
-    <div className="relative ml-auto">
+    <div className="relative">
       <Button
         type="button"
         variant="ghost"
@@ -66,7 +66,7 @@ export default function PlayerSettings({
       </Button>
 
       {open && (
-        <div className="absolute bottom-full right-0 mb-2 w-72 rounded-xl border border-zinc-700 bg-zinc-900/95 p-3 shadow-xl backdrop-blur">
+        <div className="absolute right-0 top-full mt-2 max-h-[70dvh] w-72 overflow-y-auto rounded-xl border border-zinc-700 bg-zinc-900/95 p-3 shadow-xl backdrop-blur">
           <p className="mb-1.5 flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-zinc-500">
             <Gauge className="size-3" />
             Kecepatan

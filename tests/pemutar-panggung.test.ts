@@ -115,7 +115,7 @@ describe("Panggung pemutar feed — tombol wajib di dalam bingkai video", () => 
       "<ActionRail", // rail Suka / Komen / Simpan / Bagikan
       "<PlayerControls", // kontrol bawah + tombol gerigi
       'aria-label="Kembali"',
-      'aria-label="Putar"',
+      'aria-label={paused ? "Putar" : "Jeda"}', // tombol putar/jeda tengah
     ]) {
       expect(
         dalam.includes(penanda),

@@ -14,7 +14,7 @@
 // BERKAS videonya tidak — biasanya upload putus di tengah. Video begini sudah
 // otomatis tidak ditampilkan ke penonton; ditandai di sini supaya admin tahu
 // perbaikannya ada di dashboard Playly, bukan di DramaKu.
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, Eye, EyeOff, Info, Loader2, Star } from "lucide-react";
 import type { PlaylyVideo, PlaylySumber } from "@/lib/playly";
 import type { PlaylyImdbMap } from "@/lib/playly-imdb";
@@ -164,7 +164,8 @@ function KartuAngka({
   dari,
 }: {
   label: string;
-  nilai: number;
+  /** Teks diizinkan supaya angka yang BELUM pasti bisa tampil sebagai "…". */
+  nilai: number | string;
   dari?: number;
 }) {
   return (
@@ -260,8 +261,18 @@ export default function PlaylyVisibilityManager({
     quality: string;
     url: string;
   }[];
-  /** Video yang berkasnya belum ada di Playly — tidak tampil ke penonton. */
-  belumSiapIds: string[];
+  /**
+   * Video yang berkasnya belum ada di Playly — tidak tampil ke penonton.
+   *
+   * BOLEH BERUPA PROMISE (owner 2026-11-11): memeriksanya berarti menanyakan
+   * SETIAP video ke Playly satu per satu, dan menunggu itu selesai dulu membuat
+   * seluruh halaman admin diam ~47 detik tiap dibuka. Dengan promise, tabelnya
+   * tergambar lebih dulu dan penandanya menyusul.
+   *
+   * Bentuk array TETAP diterima supaya pemanggil & tes lama tidak perlu diubah —
+   * satu nama, dua bentuk, bukan dua prop yang artinya sama.
+   */
+  belumSiapIds: string[] | Promise<string[]>;
   /** Terisi kalau daftar gagal diambil dari Playly. */
   fetchError: string | null;
   source: PlaylySumber;
@@ -270,6 +281,38 @@ export default function PlaylyVisibilityManager({
   creators: string[];
 }) {
   const [hidden, setHidden] = useState<Set<string>>(new Set(initialHidden));
+
+  // Hasil pemeriksaan "berkasnya ada atau tidak" kalau ia datang sebagai
+  // promise. `null` = belum tiba (beda dari `[]` = sudah tiba dan hasilnya
+  // kosong) — bedanya penting, karena nol penanda TANPA keterangan terbaca
+  // sebagai "semua video aman", padahal pemeriksaannya belum selesai.
+  const [hasilBelumSiap, setHasilBelumSiap] = useState<string[] | null>(null);
+  const menungguBerkas = !Array.isArray(belumSiapIds) && hasilBelumSiap === null;
+  const belumSiapAktif = Array.isArray(belumSiapIds)
+    ? belumSiapIds
+    : (hasilBelumSiap ?? []);
+
+  useEffect(() => {
+    // Bentuk array = hasilnya sudah ada di tangan; berhenti di sini supaya tidak
+    // ada setState yang memicu render ulang tanpa henti saat pemanggil mengirim
+    // array baru tiap render.
+    if (Array.isArray(belumSiapIds)) return;
+    let batal = false;
+    belumSiapIds
+      .then((ids) => {
+        if (!batal) setHasilBelumSiap(ids);
+      })
+      // Gagal memeriksa bukan alasan merusak panel: dianggap "tidak ada yang
+      // ketahuan belum siap", dan keterangan "sedang memeriksa" ikut hilang
+      // supaya tidak berputar selamanya.
+      .catch(() => {
+        if (!batal) setHasilBelumSiap([]);
+      });
+    return () => {
+      batal = true;
+    };
+  }, [belumSiapIds]);
+
   const [genres, setGenres] = useState<Record<string, string>>(initialGenres);
   const [imdb, setImdb] = useState<PlaylyImdbMap>(initialImdb);
   const [sedangProses, setSedangProses] = useState<string | null>(null);
@@ -658,7 +701,7 @@ export default function PlaylyVisibilityManager({
   const halamanAman = jepitHalaman(halaman, videoTampil.length, ukuran);
   const videoHalaman = potongHalaman(videoTampil, halamanAman, ukuran);
 
-  const belumSiap = new Set(belumSiapIds);
+  const belumSiap = new Set(belumSiapAktif);
   const jumlahTampil = videos.filter(
     (v) => !hidden.has(v.id) && !belumSiap.has(v.id),
   ).length;
@@ -736,7 +779,11 @@ export default function PlaylyVisibilityManager({
             <KartuAngka label="Total video" nilai={videos.length} />
             <KartuAngka
               label="Tampil ke penonton"
-              nilai={jumlahTampil}
+              /* Selagi pemeriksaan berjalan angkanya PASTI kelebihan (video
+                 yang berkasnya hilang belum ketahuan), jadi lebih jujur
+                 menampilkan titik-titik daripada angka yang sebentar lagi
+                 berubah sendiri tanpa penjelasan. */
+              nilai={menungguBerkas ? "…" : jumlahTampil}
               dari={videos.length}
             />
             <KartuAngka
@@ -773,6 +820,18 @@ export default function PlaylyVisibilityManager({
             {fetchError} Daftar di bawah dipakai dari salinan terakhir, jadi
             video yang baru saja di-upload mungkin belum muncul. Pengaturan yang
             kamu simpan di sini tetap tersimpan dengan benar.
+          </Spanduk>
+        )}
+
+        {/* Selama hasilnya belum tiba, katakan apa adanya. Tanpa baris ini,
+            tabel tanpa satu pun penanda "belum siap" terbaca sebagai "semua
+            video aman" — kesimpulan yang salah dan tak ada yang mengoreksinya. */}
+        {menungguBerkas && (
+          <Spanduk nada="info" ikon={Loader2}>
+            Memeriksa berkas tiap video ke Playly… Tabel di bawah sudah bisa
+            dipakai; penanda <strong>belum siap</strong> dan angka{" "}
+            <strong>Tampil ke penonton</strong> menyusul setelah pemeriksaan
+            selesai.
           </Spanduk>
         )}
 

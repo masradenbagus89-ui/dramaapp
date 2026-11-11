@@ -14,6 +14,8 @@ import {
   fetchPlaylyVideosKita,
   getPlaylyKeyStatus,
   readPlaylyConfig,
+  type PlaylyConfig,
+  type PlaylyVideo,
 } from "@/lib/playly";
 // Aturan "boleh tampil / belum" sengaja diambil dari sumber yang SAMA dengan
 // halaman penonton, bukan disalin ulang — satu konsep, satu tempat.
@@ -50,6 +52,45 @@ export const metadata: Metadata = {
   description: "Pilih video dari Playly dan kaitkan ke drama di katalog DramaKu.",
   robots: { index: false, follow: false }, // halaman admin: jangan masuk Google
 };
+
+/**
+ * Video mana yang catatannya ada di Playly tapi BERKASNYA tidak (upload putus
+ * di tengah / file dihapus). Sejak 2026-10-06 halaman penonton TIDAK lagi
+ * membuangnya sendiri (lihat lib/playly-publik.ts), jadi penanda ini berubah
+ * fungsi: dulu menjelaskan "kenapa videoku hilang dari situs", sekarang
+ * memperingatkan "video ini tampil tapi akan gagal saat diklik — upload ulang
+ * di Playly".
+ *
+ * Dibatasi petaBerbatasPlayly, BUKAN Promise.all: melepas 172 panggilan
+ * sekaligus membuat Playly timeout (terukur 2026-10-06). Halaman admin jarang
+ * dibuka, tapi kalau membanjiri ia merusak sampul di halaman PENONTON juga —
+ * batas yang sama, server yang sama.
+ *
+ * revalidateSeconds = 0 mengikuti pemanggilan lain di halaman ini: admin harus
+ * melihat keadaan SEKARANG. (Catatan jujur: halaman ini `force-dynamic`, dan
+ * Next 16 memaksa SETIAP fetch di dalamnya jadi `no-store` — jadi angka berapa
+ * pun di sini tidak mengubah apa-apa. Ditulis eksplisit supaya niatnya terbaca
+ * kalau `force-dynamic` suatu saat dilepas.)
+ *
+ * TIDAK PERNAH MELEMPAR: dipanggil tanpa `await`, dan promise yang ditolak tapi
+ * tak ada yang menangkap bisa menjatuhkan proses server. Gagal = daftar kosong
+ * = nol penanda, bukan halaman rusak.
+ */
+async function periksaBerkasBelumSiap(
+  videos: PlaylyVideo[],
+  konfigurasi: PlaylyConfig,
+): Promise<string[]> {
+  try {
+    const hasil = await petaBerbatasPlayly(videos, async (v) =>
+      bolehTampilKePenonton(await fetchPlaylyDetailPublik(v.id, konfigurasi, 0))
+        ? null
+        : v.id,
+    );
+    return hasil.filter((id): id is string => id !== null);
+  } catch {
+    return [];
+  }
+}
 
 export default async function PlaylyVideosPage() {
   const jar = await cookies();
@@ -126,27 +167,13 @@ export default async function PlaylyVideosPage() {
           .catch(() => mitra.videos)
       : mitra.videos;
 
-  // Video yang catatannya ada di Playly tapi BERKASNYA tidak (upload putus di
-  // tengah / file dihapus). Sejak 2026-10-06 halaman penonton TIDAK lagi
-  // membuangnya sendiri (lihat lib/playly-publik.ts), jadi penanda di sini
-  // berubah fungsi: dulu menjelaskan "kenapa videoku hilang dari situs",
-  // sekarang memperingatkan "video ini tampil tapi akan gagal saat diklik —
-  // upload ulang di Playly".
-  //
-  // Dibatasi petaBerbatasPlayly, BUKAN Promise.all: melepas 172 panggilan
-  // sekaligus membuat Playly timeout (terukur 2026-10-06). Halaman admin jarang
-  // dibuka, tapi kalau membanjiri ia merusak sampul di halaman PENONTON juga —
-  // batas yang sama, server yang sama.
-  //
-  // revalidateSeconds = 0 mengikuti pemanggilan di atas: admin harus melihat
-  // keadaan SEKARANG, bukan salinan 5 menit lalu.
-  const belumSiapIds = (
-    await petaBerbatasPlayly(mitra.videos, async (v) =>
-      bolehTampilKePenonton(await fetchPlaylyDetailPublik(v.id, konfigurasi, 0))
-        ? null
-        : v.id,
-    )
-  ).filter((id): id is string => id !== null);
+  // ⚠️ SENGAJA TIDAK DI-`await` (owner 2026-11-11: "kenapa klik IMDb lama
+  // terbukanya"). Inilah bagian TERBERAT halaman ini, dan dulu ia menahan
+  // seluruh layar sampai selesai. Promise-nya dioper apa adanya ke panel, yang
+  // menggambar tabelnya lebih dulu lalu memasang penandanya begitu hasil ini
+  // tiba — pola resmi "pass the promise down"
+  // (node_modules/next/dist/docs/01-app/01-getting-started/06-fetching-data.md).
+  const belumSiapIds = periksaBerkasBelumSiap(mitra.videos, konfigurasi);
 
   // Dropdown hanya butuh 3 kolom; sisanya tidak perlu ikut ke browser.
   const pilihanDrama = dramas.map((d) => ({

@@ -90,7 +90,59 @@
 > aftermarket** dari pemilik sekarang, harganya **jauh di atas** Rp200.000 dan belum pernah dicek.
 > Nama lain yang masih bebas jauh lebih murah.
 
-**Terakhir diisi:** 2026-11-11 (ke-2) — ⚡ **SIAP RILIS: pemeriksaan 489 video KELUAR dari halaman admin, hasilnya diingat 5 menit.** Lanjutan `8ca0509` atas pilihan owner ("hanya yang bikin ringan"): kalau yang pertama memperbaiki URUTAN TAMPIL, yang ini memangkas **kerja servernya**. Pemeriksaan pindah ke endpoint baru `/api/admin/playly/belum-siap` + `lib/playly-berkas-siap.ts`; buka kedua dalam 5 menit = **nol** panggilan ke Playly. 🪤 **Dua jebakan dihindari karena membaca dokumen dulu:** cache bawaan Next akan NOL EFEK di sini — `force-dynamic` memaksa semua `fetch` jadi `no-store`, DAN `fetchCache: 'auto'` tidak men-cache `fetch` sesudah Request-time API (cek cookie admin wajib lebih dulu). Keduanya nol error, cuma diam-diam tidak bekerja. 🪤 **Pengaman tabrakan sempat saya tulis salah** (satu kunci untuk seluruh pemeriksaan → permintaan kedua pulang dengan sebagian id belum terperiksa, senyap); diganti kunci per-video. **Bukti:** gerbang **LOLOS 5/5** (**163 berkas / 2307 tes, 0 gagal**) · **uji-balik 8 titik SEMUA MERAH** · nol tes hilang (2293 + 14 = 2307, klop). ⚠️ Buka PERTAMA kali tetap memakan waktu — yang hilang pengulangannya. **⬇️ Rincian di seksi `## 2026-11-11 (ke-2)` di bawah.**
+**Terakhir diisi:** 2026-11-13 — ✅ **`2ad015b` + `8d8c1ba` TAYANG.** Tata letak pemutar beres dalam tiga putaran permintaan owner: tombol **Eps turun ke baris paling bawah**, tombol **volume pindah ke sebelah angka durasi**, rail ikon kanan **diperkecil & dirapatkan** (36px/20px/jarak 8px), dan garis volume tegak **diganti tombol + / −** karena terukur berdiri di **x=391 pada layar 393px = di luar layar HP**. Rinciannya di seksi `## 2026-11-13` di bawah.
+
+---
+
+## 🚦 LANJUT DARI SINI (sesi baru, 2026-11-13)
+
+**Keadaan:** `HEAD` = `origin/main` = `dramaku/main`, working tree **bersih**, semua pekerjaan
+sudah **TAYANG dan terbukti** di situs sungguhan. Supabase sempat mati total 2026-11-12 sore
+(PGRST002) dan **sudah pulih** 2026-11-13 pagi (6/6 berhasil, 22–94 ms). Tidak ada yang rusak.
+
+### ❓ DUA keputusan yang MENUNGGU OWNER — jangan dikerjakan tanpa jawabannya
+
+**1. Branch rekan `feat/link-unduhan-provider-kualitas` (4 commit, di repo cermin `dramaku`).**
+Rekan sendiri sudah memeriksanya dan menyimpulkan **TIDAK siap ditarik apa adanya**: simulasi merge
+menunjukkan **bentrok di 8 berkas**, dan menariknya akan **menimpa keputusan owner yang baru tayang
+hari ini** (rail 36px, Eps di bawah, volume sebaris durasi). Laporannya lengkap dengan tabel
+perbedaan + tiga pilihan A/B/C ada di branch itu:
+`docs/serah-terima/2026-11-12-laporan-tarik-branch-pemutar.md`.
+Dua commit pertamanya (`01a48b0`, `ceac484`) **sudah ada di produksi** lewat jalur lain — jangan
+ditarik ulang. Yang benar-benar baru cuma `bde27ee`.
+→ **Yang hanya dipunyai rekan dan belum ada di produksi: tombol LAYAR PENUH di panel bawah.**
+Rekomendasi (pilihan B milik rekan): minta rekan mengerjakan ulang ide itu DI ATAS `main` terbaru
+supaya nol bentrok, bukan menarik `bde27ee`.
+
+**2. Jaring pengaman saat database menggantung.** Saat Supabase mati kemarin, `/feed/<id>` dan
+`/api/dramas` membalas **500** ke penonton, sementara `/` `/beranda` `/film` tetap hidup dari cache.
+Pola jaring pengaman sudah ADA untuk data Playly (`playly:cadangan`) tapi **belum untuk jalur
+drama**. Sudah ditawarkan ke owner, **belum dijawab**. Mengubah perilaku halaman yang dilihat semua
+penonton → butuh izin.
+
+### 🔧 Keadaan mesin kerja saat sesi ini ditutup
+
+- **Server dev MATI** (sengaja — `npm run gerbang` menghapus `.next` yang dipakainya).
+  Nyalakan: `npx next dev -p 3088`, lalu buka lewat **`localhost`**, JANGAN `127.0.0.1`.
+- 🪤 **`127.0.0.1` membuat Next 16 menolak aset `/_next/` dengan 403**, sehingga React tidak pernah
+  terpasang: halaman tergambar normal tapi **semua tombol mati, nol pesan error**. Ini menipu dua
+  putaran pengukuran sesi ini.
+- 💡 **Kalau database mati lagi dan localhost ikut error**, hidupkan mode berkas:
+  `SUPABASE_URL= SUPABASE_SERVICE_ROLE_KEY= SUPABASE_KEY= NEXT_PUBLIC_SUPABASE_URL= npx next dev -p 3088`
+  → semua data dari `data/*.json` (42 judul). ⚠️ Yang disimpan dari mode ini **tidak** masuk
+  database produksi.
+- 🪤 **Sisipan ke HANDOFF.md WAJIB dicocokkan sebagai AWAL BARIS** (`/^## 2026-/`). Sesi ini merusak
+  berkas ini sekali karena penandanya ketemu di tengah kalimat lebih dulu — satu kalimat terpotong
+  dan ekornya jadi judul yatim. Sudah diperbaiki (nol judul yatim, jumlah baris sama persis).
+- 🪤 **Tes jsdom tidak menghitung tata letak sama sekali.** Pertanyaan "apakah ini terlihat & bisa
+  disentuh di HP" hanya bisa dijawab browser sungguhan — 17 tes hijau sementara tombolnya ada di
+  luar layar. Skrip ukur Chrome headless yang dipakai sesi ini ada di folder scratchpad sesi
+  (tidak dicommit); pola intinya: `Emulation.setDeviceMetricsOverride` 393×852 → tunggu KONDISI
+  `Object.keys(el).some(k => k.startsWith("__react"))` → klik → `getBoundingClientRect`.
+
+---
+
+**Sebelumnya:** 2026-11-11 (ke-2) — ⚡ **SIAP RILIS: pemeriksaan 489 video KELUAR dari halaman admin, hasilnya diingat 5 menit.** Lanjutan `8ca0509` atas pilihan owner ("hanya yang bikin ringan"): kalau yang pertama memperbaiki URUTAN TAMPIL, yang ini memangkas **kerja servernya**. Pemeriksaan pindah ke endpoint baru `/api/admin/playly/belum-siap` + `lib/playly-berkas-siap.ts`; buka kedua dalam 5 menit = **nol** panggilan ke Playly. 🪤 **Dua jebakan dihindari karena membaca dokumen dulu:** cache bawaan Next akan NOL EFEK di sini — `force-dynamic` memaksa semua `fetch` jadi `no-store`, DAN `fetchCache: 'auto'` tidak men-cache `fetch` sesudah Request-time API (cek cookie admin wajib lebih dulu). Keduanya nol error, cuma diam-diam tidak bekerja. 🪤 **Pengaman tabrakan sempat saya tulis salah** (satu kunci untuk seluruh pemeriksaan → permintaan kedua pulang dengan sebagian id belum terperiksa, senyap); diganti kunci per-video. **Bukti:** gerbang **LOLOS 5/5** (**163 berkas / 2307 tes, 0 gagal**) · **uji-balik 8 titik SEMUA MERAH** · nol tes hilang (2293 + 14 = 2307, klop). ⚠️ Buka PERTAMA kali tetap memakan waktu — yang hilang pengulangannya. **⬇️ Rincian di seksi `## 2026-11-11 (ke-2)` di bawah.**
 
 ---
 

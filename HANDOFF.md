@@ -247,7 +247,12 @@ riwayat blok peringatan lama ada di seksi `## 2026-11-09` di bawah.**
 
 ---
 
-## 2026-11-11 (ke-3) — 🆕 "Isi manual": lengkapi data BANYAK film sekali jalan (DI-COMMIT `56d174c`, BELUM dipush)
+## 2026-11-11 (ke-3) — 🆕 "Isi manual": lengkapi data BANYAK film sekali jalan (✅ **TAYANG** `56d174c`, dirilis 2026-11-12)
+
+> ✅ **TAYANG 2026-11-12** bersama fitur rekan (rail ikon + Volume) dalam satu rilis
+> `ac24fd8` → `91c9396`. Gerbang hijau (2359 tes). Bukti terkuat dari situs sungguhan:
+> `POST /api/admin/playly/massal` berubah **404 → 401** — rutenya baru ada sesudah deploy, dan
+> penjaga adminnya bekerja. Rincian + tabel smoke test: `antrean-deploy.md` seksi 2026-11-12.
 
 **Permintaan owner (apa adanya):** *"sebagian film kan tidak ada di imdb dan saya harus isi manual
 contohnya kualitas, rating dll, kalau diisi satu persatu akan makan waktu bisa kamu buatkan agar

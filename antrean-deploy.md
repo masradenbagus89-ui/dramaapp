@@ -23,7 +23,49 @@
 > lengkap: `HANDOFF.md` seksi `## 2026-11-09`.
 
 
-**Terakhir dicek:** 2026-11-11 (**komputer OWNER**). `HEAD` = `origin/main` = `dramaku/main` = **`a96161c`**, working tree bersih (hanya berkas catatan). **NOL ANTREAN — dan itu DISENGAJA.**
+**Terakhir dicek:** 2026-11-12 (**komputer OWNER**). `HEAD` = `origin/main` = `dramaku/main` = **`91c9396`**, working tree **bersih**. ✅ **RILIS BARU SAJA DIKERJAKAN & TERBUKTI TAYANG** — rincian di bawah.
+
+### ✅ 2026-11-12 — RILIS `ac24fd8` → `91c9396` (5 commit, TAYANG)
+
+Dua pekerjaan terpisah naik bersamaan, atas perintah owner (*"rilis"*):
+
+1. **Rail ikon kanan ikut sembunyi + tombol Volume** (rekan, branch `feat/rail-sembunyi-volume`,
+   3 commit `315de5a`/`bfcf7f6`/`102c74f`). Ditarik dengan fast-forward, nol bentrok — branch-nya
+   memang dibuat di atas `main` terkini.
+2. **"Isi manual": isi data banyak film Playly sekali jalan** (`56d174c`) + koreksi catatan
+   (`91c9396`). Panel ini sudah ada di folder kerja sejak 2026-11-11 tapi **belum pernah
+   di-commit**; pintunya dipindah dari sidebar ke baris saringan IMDb atas permintaan owner.
+
+**Gerbang pra-rilis:** `npm run gerbang` → kelima pemeriksaan hijau (build sukses · `tsc` exit 0 ·
+**2359 tes lulus / 167 berkas / 0 gagal** · 22 berkas di antrean push, **nol** berkas rahasia).
+
+**Bukti TAYANG (diukur di situs sungguhan, bukan localhost):**
+
+| Yang diperiksa | Hasil |
+|---|---|
+| `POST /api/admin/playly/massal` | **404 → 401** — penanda terkuat: rutenya baru ada SESUDAH deploy, dan penjaga adminnya bekerja |
+| `/` beranda | 200 (793 KB) |
+| `/api/health` | `{"ok":true,"sumberData":"database"}` |
+| `/api/dramas` | 200, **41 judul** |
+| `/film` | 200 |
+| `/admin/videos/playly` | 200 dan **tetap terkunci login** |
+| `/feed/<id>` | 200, `aria-label="Volume"` **ada** → fitur rekan tayang |
+
+**Rollback 1-baris kalau ada yang rusak:** `git revert --no-edit ac24fd8..HEAD` lalu push ulang,
+atau tekan **Redeploy** pada deployment sebelumnya di panel Railway. Keduanya tidak menghapus
+riwayat.
+
+⚠️ **Yang TIDAK bisa diverifikasi dari luar:** isi panel admin (tombol "Isi manual" di baris
+saringan IMDb) — halamannya terkunci login, jadi yang terbukti dari luar hanya bahwa gerbangnya
+tetap mengunci. Tampilan dalamnya perlu mata owner yang sudah login.
+
+### Antrean SESUDAH rilis ini (diukur 2026-11-12)
+
+| Branch rekan | Belum masuk | Tertinggal dari `main` | Putusan |
+|---|---|---|---|
+| `feat/captcha-pemutar-drama` | 1 commit | 12 | ⏸️ **DITAHAN owner** — lihat blok di bawah. Terverifikasi **tidak** ikut terkirim pada rilis ini. |
+| `feat/link-unduhan-provider-kualitas` | 2 commit | **267** | ❌ **JANGAN ditarik.** Rekan sendiri menandainya (commit `bfcf7f6`): isinya menduplikasi pekerjaan yang sudah tayang (`6b65e0a` Play-tengah) dan branch-nya dibangun di atas kode lama. Menariknya menyentuh 411 berkas dan mengulang jebakan `redesign/playly-card` (tertinggal 54 commit → 2 kemunduran senyap). Dibiarkan apa adanya supaya tak ada yang hilang. |
+| 6 branch lain | 0 commit | — | ✅ sudah masuk `main`, aman diabaikan. |
 
 > ⏸️ **SATU branch rekan DITAHAN atas keputusan owner — JANGAN dirilis: `dramaku/feat/captcha-pemutar-drama` (`284ebf6`)**, isinya CAPTCHA Cloudflare Turnstile sebelum memutar episode drama.
 >

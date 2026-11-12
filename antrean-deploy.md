@@ -23,7 +23,26 @@
 > lengkap: `HANDOFF.md` seksi `## 2026-11-09`.
 
 
-**Terakhir dicek:** 2026-11-12 (**komputer OWNER**). `HEAD` = `origin/main` = `dramaku/main` = **`4fc033c`**. ✅ **RILIS KEDUA HARI INI SUDAH DIDORONG** (tata letak pemutar) — rincian di bawah.
+**Terakhir dicek:** 2026-11-13 (**komputer OWNER**). `HEAD` = `origin/main` = `dramaku/main` = **`2ad015b`**. ✅ **TAYANG & terbukti di layar HP** — rincian di bawah.
+
+
+### ✅ 2026-11-13 — RILIS `aa0ebff` → `2ad015b` (1 commit, dua remote)
+
+**Isi:** garis volume tegak diganti **tombol + / −** di pemutar. Garis lama memakai
+`-rotate-90`, dan `transform` tidak mengubah ruang yang DIPESAN elemen — kotak 96px meluber dari
+wadah 24px lalu diputar, sehingga di layar 393px ia berdiri di **x=391 = praktis di luar layar**.
+Ikon speaker kedua di dalam panel ikut dibuang (dua ikon = terbaca "terpisah").
+
+**Gerbang:** `npm run gerbang` **LOLOS 5/5** (build 0 · tsc 0 · **168 berkas / 2377 tes** · nol
+berkas rahasia). Push `dramaku` → `origin`. Tayang ±1 menit.
+
+**Bukti tayang** (Chrome headless 393px, situs produksi): panel `x=333..381` utuh di dalam layar ·
+tombol naik/turun **40×40px** terlihat · **1** ikon speaker · `/` `/beranda` `/film` `/api/dramas`
+semuanya **200**. Potret: `C:\Users\user18\Downloads\pemutar-volume-PRODUKSI.png`.
+
+⚠️ **Supabase sempat MATI TOTAL 2026-11-12 sore** (PGRST002, produksi `/api/dramas` & `/feed/<id>`
+→ 500), **pulih sendiri 2026-11-13 pagi** (6/6, 22–94ms). Rinciannya + cara menghidupkan localhost
+saat database mati ada di `HANDOFF.md` seksi `## 2026-11-13`.
 
 ### ✅ 2026-11-12 (ke-2) — RILIS `c60a6ef` → `4fc033c` (1 commit, didorong ke DUA remote)
 

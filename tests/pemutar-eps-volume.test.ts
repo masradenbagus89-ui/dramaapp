@@ -178,62 +178,122 @@ describe("volume pindah ke SAMPING angka durasi", () => {
     );
   });
 
-  it("diklik → garis pengatur muncul KE ATAS, diklik lagi tertutup", () => {
+  it("diklik → tombol + / − muncul KE ATAS, diklik lagi tertutup", () => {
     pasang();
-    expect(container.querySelector('[aria-label="Atur volume"]')).toBeNull();
+    expect(container.querySelector('[aria-label="Naikkan volume"]')).toBeNull();
 
     klik(cari('[aria-label="Volume"]'));
-    const geser = cari('[aria-label="Atur volume"]');
+    const naik = cari('[aria-label="Naikkan volume"]');
+    expect(container.querySelector('[aria-label="Turunkan volume"]')).toBeTruthy();
+
     // `bottom-full` = berdiri di atas ikonnya. Kalau hilang, panelnya jatuh
     // menimpa angka durasi & garis geser — dua kontrol yang paling sering
     // dipakai justru tertutup.
-    const panel = geser.closest("div.absolute");
+    const panel = naik.closest("div.absolute");
     expect(panel, "panel volume bukan elemen absolute").toBeTruthy();
     expect(
       panel!.className,
       "panel volume tidak membuka ke atas (bottom-full hilang)",
     ).toContain("bottom-full");
-    // Garisnya tegak: diputar -90 derajat.
-    expect(geser.className, "garis volume tidak tegak").toContain("-rotate-90");
 
     klik(cari('[aria-label="Volume"]'));
-    expect(container.querySelector('[aria-label="Atur volume"]')).toBeNull();
+    expect(container.querySelector('[aria-label="Naikkan volume"]')).toBeNull();
   });
 
-  it("menggeser garisnya melaporkan volume baru ke pemutar", () => {
+  it("🪤 NOL elemen diputar — itu yang dulu melempar garis volume keluar layar", () => {
+    // Diukur di Chrome headless pada layar 393px (situs produksi, 2026-11-12):
+    // garis volume berdiri di x=391 selebar 16px, jadi praktis SELURUHNYA di
+    // luar layar. Sebabnya `transform` tidak mengubah ruang yang DIPESAN
+    // elemen: kotak asli 96px meluber ~48px dari wadah 24px, LALU diputar,
+    // sehingga pusat hasil putarannya ikut terlempar sejauh itu.
+    //
+    // Gejalanya SENYAP — nol error, garisnya cuma tidak ada di tempatnya. Di
+    // layar lebar ia masih terlihat (cuma "agak misah"), jadi memeriksanya di
+    // desktop saja TIDAK menangkap ini.
     pasang();
     klik(cari('[aria-label="Volume"]'));
-    const geser = cari('[aria-label="Atur volume"]') as HTMLInputElement;
+    const panel = cari('[aria-label="Naikkan volume"]').closest("div.absolute")!;
+    expect(
+      panel.innerHTML,
+      "ada elemen diputar lagi di panel volume — kelas kesalahan yang sama kembali terbuka",
+    ).not.toMatch(/rotate-/);
 
-    act(() => {
-      const setter = Object.getOwnPropertyDescriptor(
-        window.HTMLInputElement.prototype,
-        "value",
-      )?.set;
-      setter?.call(geser, "0.3");
-      geser.dispatchEvent(new Event("input", { bubbles: true }));
-      geser.dispatchEvent(new Event("change", { bubbles: true }));
-    });
-
-    expect(terakhir).toEqual({ volume: 0.3, muted: false });
+    // Dirapatkan ke tepi KANAN tombolnya, bukan dipusatkan: tombol ini elemen
+    // paling kanan di barisnya, jadi panel yang dipusatkan punya separuh badan
+    // yang menggantung keluar layar.
+    expect(panel.className, "panel tidak dirapatkan ke kanan").toContain("right-0");
   });
 
-  it("digeser sampai 0 = BISU, bukan sekadar pelan", () => {
+  it("tombol + menaikkan volume dan melaporkannya ke pemutar", () => {
+    pasang({
+      sound: { volume: 0.5, muted: false, onChange: (n: { volume: number; muted: boolean }) => (terakhir = n) },
+    } as never);
+    klik(cari('[aria-label="Volume"]'));
+    klik(cari('[aria-label="Naikkan volume"]'));
+    expect(terakhir).toEqual({ volume: 0.6, muted: false });
+  });
+
+  it("tombol − sampai 0 = BISU, bukan sekadar pelan", () => {
     // Safari iPhone mengabaikan `video.volume`; di sana yang efektif cuma
-    // bisu/tidak. Tanpa `muted: true`, menggeser ke 0 di iPhone tidak
+    // bisu/tidak. Tanpa `muted: true`, menurunkan ke 0 di iPhone tidak
     // membisukan apa pun — suara tetap keras, nol error.
+    pasang({
+      sound: { volume: 0.1, muted: false, onChange: (n: { volume: number; muted: boolean }) => (terakhir = n) },
+    } as never);
+    klik(cari('[aria-label="Volume"]'));
+    klik(cari('[aria-label="Turunkan volume"]'));
+    expect(terakhir).toEqual({ volume: 0, muted: true });
+  });
+
+  it("dinaikkan dari keadaan BISU ikut menyalakan suaranya lagi", () => {
+    // 🪤 Tanpa `muted: false` di sini, angka persen naik di layar tapi suaranya
+    // tetap diam — dan tak ada satu pun yang memberi tahu kenapa.
+    pasang({
+      sound: { volume: 0, muted: true, onChange: (n: { volume: number; muted: boolean }) => (terakhir = n) },
+    } as never);
+    klik(cari('[aria-label="Volume"]'));
+    klik(cari('[aria-label="Naikkan volume"]'));
+    expect(terakhir).toEqual({ volume: 0.1, muted: false });
+  });
+
+  it("tombolnya mati di batas: + saat penuh, − saat sudah bisu", () => {
+    pasang({
+      sound: { volume: 1, muted: false, onChange: (n: { volume: number; muted: boolean }) => (terakhir = n) },
+    } as never);
+    klik(cari('[aria-label="Volume"]'));
+    expect((cari('[aria-label="Naikkan volume"]') as HTMLButtonElement).disabled).toBe(
+      true,
+    );
+    expect(
+      (cari('[aria-label="Turunkan volume"]') as HTMLButtonElement).disabled,
+    ).toBe(false);
+  });
+
+  it("angka persen ikut berubah — bukti ketukannya berhasil", () => {
+    // Di HP, besar-kecil suara diatur tombol fisik, jadi tanpa angka di layar
+    // ketukan yang berhasil dan yang mati terasa persis sama.
+    pasang({
+      sound: { volume: 0.4, muted: false, onChange: () => {} },
+    } as never);
+    klik(cari('[aria-label="Volume"]'));
+    expect(container.textContent).toContain("40%");
+
+    pasang({
+      sound: { volume: 0, muted: true, onChange: () => {} },
+    } as never);
+    expect(container.textContent).toContain("Bisu");
+  });
+
+  it("SATU ikon speaker saja di layar — bukan dua yang terbaca terpisah", () => {
+    // Owner 2026-11-12: "kenapa itu jadi terpisah". Versi sebelumnya punya
+    // ikon speaker kedua DI DALAM panel, dan dua ikon speaker di satu layar
+    // terbaca sebagai dua kontrol yang berbeda.
     pasang();
     klik(cari('[aria-label="Volume"]'));
-    const geser = cari('[aria-label="Atur volume"]') as HTMLInputElement;
-    act(() => {
-      const setter = Object.getOwnPropertyDescriptor(
-        window.HTMLInputElement.prototype,
-        "value",
-      )?.set;
-      setter?.call(geser, "0");
-      geser.dispatchEvent(new Event("change", { bubbles: true }));
-    });
-    expect(terakhir).toEqual({ volume: 0, muted: true });
+    const ikon = container.querySelectorAll(
+      '[aria-label="Volume"], [aria-label="Bisukan"], [aria-label="Nyalakan suara"]',
+    );
+    expect(ikon.length, "ikon speaker lebih dari satu").toBe(1);
   });
 
   it("panel tertutup sendiri saat kontrol memudar", () => {
@@ -241,10 +301,10 @@ describe("volume pindah ke SAMPING angka durasi", () => {
     // sedang berjalan.
     pasang({ controlsVisible: true });
     klik(cari('[aria-label="Volume"]'));
-    expect(container.querySelector('[aria-label="Atur volume"]')).toBeTruthy();
+    expect(container.querySelector('[aria-label="Naikkan volume"]')).toBeTruthy();
 
     pasang({ controlsVisible: false });
-    expect(container.querySelector('[aria-label="Atur volume"]')).toBeNull();
+    expect(container.querySelector('[aria-label="Naikkan volume"]')).toBeNull();
   });
 
   it("tanpa prop sound → tanpa tombol volume (pemanggil lama aman)", () => {

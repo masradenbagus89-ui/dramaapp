@@ -31,6 +31,7 @@ import AdminSidebar from "@/app/components/admin/AdminSidebar";
 import PlaylyVideoPicker from "@/app/components/admin/PlaylyVideoPicker";
 import { getPlaylyVideosGabunganCached } from "@/lib/playly-gabungan";
 import PlaylyVisibilityManager from "@/app/components/admin/PlaylyVisibilityManager";
+import PlaylyIsiCepat from "@/app/components/admin/PlaylyIsiCepat";
 import PlaylyUnduhanManager from "@/app/components/admin/PlaylyUnduhanManager";
 import PlaylyBagianAktif from "@/app/components/admin/PlaylyBagianAktif";
 import BantuanSingkat from "@/app/components/admin/BantuanSingkat";
@@ -201,6 +202,31 @@ export default async function PlaylyVideosPage() {
               fetchError={mitra.error}
               source={mitra.source}
               creators={konfigurasi.creators}
+            />
+          }
+          isiCepat={
+            /* ISI CEPAT (owner 2026-11-11): lengkapi kualitas/rating/tahun/
+               durasi banyak film sekaligus. Dipisah dari panel IMDb di atas
+               karena tabel itu sudah tujuh kolom dan lebarnya mepet — menambah
+               centang + Tahun + Durasi ke sana menyisakan beberapa huruf untuk
+               judul film.
+
+               Sengaja TIDAK dibungkus syarat `!fetchError`: panel ini sama
+               sekali tidak menyentuh Playly — daftar videonya boleh datang dari
+               salinan terakhir, dan semua isiannya disimpan ke database KITA.
+               Mematikannya saat Playly lambat berarti fitur ini hilang justru
+               di keadaan yang paling sering terjadi. */
+            <PlaylyIsiCepat
+              videos={videoPanel}
+              imdb={imdb}
+              awal={{
+                jenis,
+                kategori: genres,
+                kualitas,
+                rating: ratingManual,
+                meta: metaManual,
+              }}
+              linkUnduhan={unduhan}
             />
           }
           unduhan={

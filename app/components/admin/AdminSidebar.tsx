@@ -18,7 +18,11 @@ import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { ADS_ENABLED } from "@/lib/saklar-fitur";
 import { parseBagianAdmin } from "@/lib/bagian-admin";
-import { parseBagianPlayly, RUTE_PLAYLY } from "@/lib/bagian-playly";
+import {
+  menuBagianPlayly,
+  parseBagianPlayly,
+  RUTE_PLAYLY,
+} from "@/lib/bagian-playly";
 import {
   Home,
   Plus,
@@ -69,6 +73,14 @@ const NAV_ITEMS: EntriAdmin[] = [
       // mana yang tayang + lengkapi datanya, baru isi link download, baru
       // (opsional) kaitkan ke drama.
       { href: `${RUTE_PLAYLY}#imdb`, label: "IMDb", icon: Star },
+      // "Isi manual" (#isi-cepat) SENGAJA TIDAK ada di sini (owner 2026-11-11:
+      // "pindahkan isi cepat ke filter yang ada di imdb biar lebih rapi").
+      // Pintu masuknya kini duduk sebaris dengan saringan IMDb di
+      // PlaylyVisibilityManager.tsx — tepat di sebelah "Belum ada IMDb", yaitu
+      // daftar film yang justru butuh panel itu. Menu ini jadi lebih pendek,
+      // dan pintunya berdiri di tempat kebutuhannya muncul.
+      // 🪤 Jangan tambahkan kembali ke sini tanpa membuang yang di sana: dua
+      // pintu ke panel yang sama membuat admin mengira keduanya beda layar.
       { href: `${RUTE_PLAYLY}#unduhan`, label: "Link download", icon: Download },
       { href: `${RUTE_PLAYLY}#daftar`, label: "Daftar video Playly", icon: ListVideo },
     ],
@@ -105,6 +117,18 @@ const NAV_ITEMS: EntriAdmin[] = [
 const PARSER_BAGIAN: Record<string, (hash: string) => string> = {
   "/admin": parseBagianAdmin,
   [RUTE_PLAYLY]: parseBagianPlayly,
+};
+
+/**
+ * Bagian yang sedang dibuka → bagian yang MEWAKILINYA di menu. Perlu karena
+ * tidak setiap bagian punya baris menu sendiri: "Isi manual" dibuka dari
+ * dalam panel IMDb, jadi yang menyala adalah menu IMDb.
+ *
+ * Halaman yang tidak terdaftar di sini memakai bagiannya apa adanya — jadi
+ * menambah halaman ber-bagian berikutnya tidak perlu menyentuh peta ini.
+ */
+const BAGIAN_KE_MENU: Record<string, (bagian: string) => string> = {
+  [RUTE_PLAYLY]: menuBagianPlayly,
 };
 
 export default function AdminSidebar() {
@@ -150,7 +174,11 @@ export default function AdminSidebar() {
     if (pathname !== basis) return false;
     const parse = PARSER_BAGIAN[basis];
     if (!parse) return false;
-    return parse(bagian) === parse(hash);
+    // Bagian yang sedang dibuka diterjemahkan dulu ke bagian yang mewakilinya
+    // di menu; tanpa ini, bagian tanpa baris menu sendiri memadamkan sidebar.
+    const keMenu = BAGIAN_KE_MENU[basis];
+    const kini = parse(hash);
+    return parse(bagian) === (keMenu ? keMenu(kini) : kini);
   };
 
   /**

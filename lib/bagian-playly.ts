@@ -26,7 +26,11 @@
 // -------------------------------------------------------------------------
 
 /** Panel yang bisa ditampilkan di halaman Video Playly. */
-export type BagianPlayly = "imdb" | "unduhan" | "daftar";
+export type BagianPlayly =
+  | "imdb"
+  | "isi-cepat"
+  | "unduhan"
+  | "daftar";
 
 /**
  * Daftar bagian yang SAH. Ditulis sekali di sini dan dipakai ulang oleh
@@ -35,6 +39,7 @@ export type BagianPlayly = "imdb" | "unduhan" | "daftar";
  */
 export const BAGIAN_PLAYLY_SAH: readonly BagianPlayly[] = [
   "imdb",
+  "isi-cepat",
   "unduhan",
   "daftar",
 ] as const;
@@ -72,12 +77,22 @@ export function parseBagianPlayly(
 
 /**
  * Judul tiap bagian — dipakai sebagai kepala halaman supaya admin selalu tahu
- * sedang berada di panel mana. Ejaannya sengaja SAMA dengan label menu di
- * sidebar; judul yang berbeda dari menu yang baru diklik terbaca seperti salah
- * halaman.
+ * sedang berada di panel mana. Ejaannya sengaja SAMA dengan label pintu
+ * masuknya; judul yang berbeda dari menu yang baru diklik terbaca seperti
+ * salah halaman.
+ *
+ * "isi-cepat" DINAMAI "Isi manual" (owner 2026-11-11). Nama lamanya menjanjikan
+ * yang tidak ditepati — mengisi puluhan film tetap butuh mengetik. Yang
+ * sebenarnya membedakan panel ini dari IMDb adalah JALURNYA manual, dan nama
+ * itu menjelaskan dirinya sendiri saat berdiri di sebelah saringan
+ * "Belum ada IMDb". Nama bagian (hash `#isi-cepat`) SENGAJA tidak ikut diubah:
+ * ia sudah tertanam di alamat yang bisa di-bookmark dan di kunci localStorage
+ * `dramaku:isi-cepat:draft` yang menyimpan isian belum tersimpan — mengubahnya
+ * membuang draft admin tanpa satu pun peringatan.
  */
 export const JUDUL_BAGIAN_PLAYLY: Record<BagianPlayly, string> = {
   imdb: "IMDb",
+  "isi-cepat": "Isi manual",
   unduhan: "Link download",
   daftar: "Daftar video Playly",
 };
@@ -88,6 +103,8 @@ export const JUDUL_BAGIAN_PLAYLY: Record<BagianPlayly, string> = {
  */
 export const KETERANGAN_BAGIAN_PLAYLY: Record<BagianPlayly, string> = {
   imdb: "Atur video mana yang tampil ke penonton, lalu lengkapi poster & sinopsisnya dari IMDb.",
+  "isi-cepat":
+    "Lengkapi kualitas, rating, tahun & durasi BANYAK film sekaligus — untuk film yang tidak ada di IMDb.",
   unduhan: "Isi link download tiap video — 5 provider × 2 kualitas.",
   daftar: "Kaitkan video Playly ke drama di katalog DramaKu (opsional).",
 };
@@ -96,4 +113,34 @@ export const KETERANGAN_BAGIAN_PLAYLY: Record<BagianPlayly, string> = {
  *  halaman mustahil memakai ejaan yang berbeda. */
 export function alamatBagianPlayly(bagian: BagianPlayly): string {
   return `${RUTE_PLAYLY}#${bagian}`;
+}
+
+/**
+ * Bagian yang pintunya TIDAK di sidebar melainkan DI DALAM panel lain,
+ * dipetakan ke bagian induknya.
+ *
+ * KENAPA ADA (owner 2026-11-11): sejak "Isi manual" pindah ke baris saringan
+ * panel IMDb, ia tak punya baris menu sendiri lagi. Tanpa peta ini, membukanya
+ * membuat SELURUH menu sidebar padam sekaligus — tidak ada yang menyala, dan
+ * admin kehilangan penanda "saya sedang di mana". Itu kerusakan SENYAP: tak
+ * ada error, cuma sidebar yang terbaca seperti salah halaman.
+ *
+ * Menyalakan IMDb juga jujur, bukan akal-akalan: pintu "Isi manual" memang
+ * berada di dalam panel IMDb, jadi admin memang sedang berada di area itu.
+ */
+const INDUK_BAGIAN_PLAYLY: Partial<Record<BagianPlayly, BagianPlayly>> = {
+  "isi-cepat": "imdb",
+};
+
+/**
+ * Bagian mana yang mewakili `bagian` di sidebar — dirinya sendiri, atau
+ * induknya kalau ia tak punya baris menu sendiri.
+ *
+ * Menerima `string` (bukan `BagianPlayly`) karena pemanggilnya di sidebar
+ * bekerja dengan peta lintas-halaman yang bertipe longgar; nilai asing
+ * dipulangkan apa adanya sehingga tak ada yang menyala — sama persis dengan
+ * perilaku sebelum peta ini ada.
+ */
+export function menuBagianPlayly(bagian: string): string {
+  return INDUK_BAGIAN_PLAYLY[bagian as BagianPlayly] ?? bagian;
 }

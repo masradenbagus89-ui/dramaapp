@@ -45,6 +45,12 @@ import {
 } from "./playly-unduhan";
 import { bacaDomainUnduhan } from "./playly-unduhan-domain";
 import type { PlaylyImdbMap, PlaylyImdbMeta } from "./playly-imdb";
+import {
+  hitungVideoBerubah,
+  terapkanIsianMassal,
+  type IsianBersih,
+  type PetaIsian,
+} from "./isian-massal-video";
 
 export type Admin = { email: string; name: string; addedAt: string };
 export type AdminsFile = { admins: Admin[] };
@@ -1510,6 +1516,117 @@ export async function setPlaylyVideoJenis(
     writeLocal("playly.json", file);
   }
   return baru;
+}
+
+// ===========  ISI MASSAL LIMA DOKUMEN SEKALIGUS  ===========================
+//
+// KENAPA ADA (owner 2026-11-11): "bisa kamu buatkan agar saya bisa mengisinya
+// sekali jalan agar tidak perlu isi persatu film". Kelima dokumen isian di
+// atas (genre · kualitas · rating · meta-manual · jenis) punya fungsi set
+// satuannya masing-masing, dan untuk SATU video itu memang bentuk yang benar.
+//
+// ⚠️ UNTUK BANYAK VIDEO, MEMANGGILNYA BERULANG ADALAH BUG, BUKAN SEKADAR
+// LAMBAT. Tiap set satuan membaca SELURUH dokumen lalu menulisnya kembali
+// utuh. Dipanggil 40 kali untuk 40 video, tulisan ke-2 dibangun dari salinan
+// yang dibaca SEBELUM tulisan ke-1 selesai — perubahan yang duluan hilang
+// tanpa satu pun error (lost update). Fungsi ini membacanya SEKALI, menerapkan
+// semua perubahan di memori, lalu menulis SEKALI per dokumen.
+//
+// Dokumen yang isinya TIDAK berubah sama sekali tidak ikut ditulis: menulis
+// ulang dokumen tanpa perubahan cuma memperlebar jendela bentrok dengan
+// penulis lain (webhook, admin lain) tanpa menghasilkan apa pun.
+//
+// BATAS JUJUR yang sama dengan dokumen bersama lainnya di berkas ini: ini
+// tetap baca-ubah-tulis, jadi dua penulis dalam jeda milidetik yang sama masih
+// bisa saling menimpa. Yang dihilangkan di sini adalah bentrok yang DIPASTIKAN
+// terjadi (40 tulisan beruntun ke dokumen yang sama), bukan bentrok yang
+// kebetulan. Hilang sepenuhnya begitu naik ke tabel ber-UNIQUE per video.
+
+/** Kelima peta sesudah penyimpanan — dipulangkan supaya layar admin tidak
+ *  perlu memanggil GET lagi dan tidak ada jendela waktu menampilkan data usang. */
+export type IsianMassalTersimpan = {
+  jenis: PlaylyJenisMap;
+  kategori: PlaylyGenreMap;
+  kualitas: PlaylyKualitasMap;
+  rating: PlaylyRatingMap;
+  meta: PlaylyMetaManualMap;
+};
+
+/** Nama dokumen tiap peta. Satu tabel supaya mustahil ada peta yang diterapkan
+ *  di memori tapi lupa ditulis ke dokumennya. */
+const DOKUMEN_ISIAN: Record<keyof PetaIsian, string> = {
+  jenis: PLAYLY_JENIS_DOC,
+  kategori: PLAYLY_GENRE_DOC,
+  kualitas: PLAYLY_KUALITAS_DOC,
+  rating: PLAYLY_RATING_DOC,
+  meta: PLAYLY_META_MANUAL_DOC,
+};
+
+/** Field tiap peta di berkas lokal (jalur tanpa Supabase). Ejaannya berbeda
+ *  dari nama dokumen — "kategori" disimpan sebagai "genre" sejak awal. */
+const FIELD_LOKAL_ISIAN: Record<keyof PetaIsian, keyof PlaylyFile> = {
+  jenis: "jenis",
+  kategori: "genre",
+  kualitas: "kualitas",
+  rating: "rating",
+  meta: "metaManual",
+};
+
+/**
+ * Simpan banyak perubahan isian video dalam satu jalan.
+ *
+ * Memulangkan kelima peta terbaru + berapa VIDEO yang benar-benar berubah.
+ * Angka itu dihitung dengan membandingkan sebelum/sesudah, bukan dari panjang
+ * daftar kiriman: layar mengirim semua baris yang disentuh termasuk yang
+ * dikembalikan ke nilai semula, dan melaporkan panjang daftar berarti mengaku
+ * menyimpan sesuatu yang tidak berubah.
+ */
+export async function simpanIsianMassalPlayly(
+  perubahan: readonly IsianBersih[],
+): Promise<{ peta: IsianMassalTersimpan; jumlahVideo: number }> {
+  const [jenis, kategori, kualitas, rating, meta] = await Promise.all([
+    getPlaylyJenis(),
+    getPlaylyGenres(),
+    getPlaylyKualitas(),
+    getPlaylyRating(),
+    getPlaylyMetaManual(),
+  ]);
+
+  const lama: PetaIsian = { jenis, kategori, kualitas, rating, meta };
+  const { baru, berubah } = terapkanIsianMassal(lama, perubahan);
+  const jumlahVideo = hitungVideoBerubah(lama, baru, perubahan);
+
+  // Nol perubahan -> nol tulisan. Bukan optimasi: menulis ulang kelima dokumen
+  // untuk kiriman yang isinya sama persis berarti mengambil risiko menimpa
+  // pekerjaan penulis lain demi perubahan yang tidak ada.
+  if (berubah.length > 0) {
+    if (useSupabase) {
+      await Promise.all(
+        berubah.map((k) => sbDocSet(DOKUMEN_ISIAN[k], baru[k])),
+      );
+    } else {
+      // Berkas lokal ditulis SEKALI untuk kelima peta — membaca-menulisnya per
+      // peta mengulang jebakan lost update yang persis sedang dihindari.
+      const file = readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY);
+      for (const k of berubah) {
+        // Cast dibutuhkan karena tiap field punya tipe petanya sendiri;
+        // pasangan nama -> tipe dijamin oleh FIELD_LOKAL_ISIAN di atas.
+        (file as Record<string, unknown>)[FIELD_LOKAL_ISIAN[k]] = baru[k];
+      }
+      writeLocal("playly.json", file);
+    }
+  }
+
+  return {
+    peta: {
+      jenis: baru.jenis,
+      kategori: baru.kategori,
+      kualitas: baru.kualitas,
+      rating: baru.rating,
+      meta: baru.meta,
+    },
+    jumlahVideo,
+  };
 }
 
 // ===========  METADATA IMDb VIDEO PLAYLY (playly:imdb)  ====================

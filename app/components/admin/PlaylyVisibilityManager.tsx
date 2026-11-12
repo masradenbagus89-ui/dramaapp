@@ -15,7 +15,19 @@
 // otomatis tidak ditampilkan ke penonton; ditandai di sini supaya admin tahu
 // perbaikannya ada di dashboard Playly, bukan di DramaKu.
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, Eye, EyeOff, Info, Loader2, Star } from "lucide-react";
+import {
+  AlertTriangle,
+  Eye,
+  EyeOff,
+  Info,
+  ListChecks,
+  Loader2,
+  Star,
+} from "lucide-react";
+import {
+  alamatBagianPlayly,
+  JUDUL_BAGIAN_PLAYLY,
+} from "@/lib/bagian-playly";
 import type { PlaylyVideo, PlaylySumber } from "@/lib/playly";
 import type { PlaylyImdbMap } from "@/lib/playly-imdb";
 import { DRAMA_QUALITY_OPTIONS, KATEGORI_ISI } from "@/lib/types";
@@ -963,6 +975,31 @@ export default function PlaylyVisibilityManager({
               </button>
             );
           })}
+
+          {/* PINTU MASUK panel "Isi manual" (owner 2026-11-11: "pindahkan isi
+              cepat ke filter yang ada di imdb biar lebih rapi"). Dulu sebuah
+              menu di sidebar; dipindah ke sini karena DI SINILAH kebutuhannya
+              muncul — admin menyaring "Belum ada IMDb", melihat film yang
+              poster/tahun/rating-nya tak bisa diisi otomatis, lalu butuh
+              mengisinya tangan. Sidebar ikut jadi lebih pendek.
+
+              ⚠️ SENGAJA TIDAK berbentuk tombol bundar seperti tiga saringan di
+              kirinya. Ketiganya MEMPERSEMPIT daftar di halaman yang sama; yang
+              ini BERPINDAH panel. Bentuk yang seragam membuat admin mengklik
+              sambil menunggu daftarnya menyusut, lalu bingung karena layarnya
+              berganti. Tiga penanda bahwa ini jenis lain: garis pemisah, sudut
+              kotak (rounded-md bawaan Button), dan ikon.
+
+              Labelnya diambil dari JUDUL_BAGIAN_PLAYLY, bukan diketik ulang —
+              judul panel dan tombol yang membukanya jadi mustahil menyimpang. */}
+          <span aria-hidden className="mx-1 h-5 w-px shrink-0 bg-zinc-700" />
+          <Button asChild variant="outline" size="sm">
+            <a href={alamatBagianPlayly("isi-cepat")}>
+              <ListChecks className="size-3.5" />
+              {JUDUL_BAGIAN_PLAYLY["isi-cepat"]}
+            </a>
+          </Button>
+
           {saring === "belum" && jumlahSaring.belum > 0 && (
             // Kalimat ini mencegah kebingungan yang pasti muncul: saat saringan
             // "Belum" aktif, video yang BARU SAJA dicocokkan langsung lenyap

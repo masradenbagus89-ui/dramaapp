@@ -28,9 +28,19 @@ import {
 
 export default function PlaylyBagianAktif({
   imdb,
+  isiCepat,
   unduhan,
   daftar,
-}: Record<BagianPlayly, ReactNode>) {
+}: {
+  imdb: ReactNode;
+  /** Nama bagiannya "isi-cepat" (dipakai sebagai hash alamat), tapi propnya
+   *  ditulis tanpa tanda hubung — atribut JSX bertanda hubung sah secara
+   *  sintaks tapi melewati sebagian pemeriksaan tipe, dan prop yang salah
+   *  ketik lalu lolos diam-diam menghasilkan panel KOSONG tanpa error. */
+  isiCepat: ReactNode;
+  unduhan: ReactNode;
+  daftar: ReactNode;
+}) {
   const [bagian, setBagian] = useState<BagianPlayly>(BAGIAN_PLAYLY_BAWAAN);
 
   // Hash dibaca lewat efek, BUKAN saat render: `window` tidak ada saat HTML
@@ -48,7 +58,12 @@ export default function PlaylyBagianAktif({
     };
   }, []);
 
-  const panel: Record<BagianPlayly, ReactNode> = { imdb, unduhan, daftar };
+  const panel: Record<BagianPlayly, ReactNode> = {
+    imdb,
+    "isi-cepat": isiCepat,
+    unduhan,
+    daftar,
+  };
 
   return (
     <div className="space-y-6">

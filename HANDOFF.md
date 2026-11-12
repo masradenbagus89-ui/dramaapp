@@ -247,6 +247,142 @@ riwayat blok peringatan lama ada di seksi `## 2026-11-09` di bawah.**
 
 ---
 
+## 2026-11-11 (ke-3) — 🆕 Menu "Isi cepat": lengkapi data BANYAK film sekali jalan (BELUM dipush)
+
+**Permintaan owner (apa adanya):** *"sebagian film kan tidak ada di imdb dan saya harus isi manual
+contohnya kualitas, rating dll, kalau diisi satu persatu akan makan waktu bisa kamu buatkan agar
+saya bisa mengisinya sekali jalan agar tidak perlu isi persatu film"*.
+
+**Keputusan owner lewat popup (2026-11-11):** bentuk = **KEDUANYA** (centang-banyak → terapkan satu
+nilai, DITAMBAH ketik-semua → Simpan sekali) · cakupan = **6 kolom** (Jenis · Kategori · Kualitas ·
+Rating · Tahun · Durasi).
+
+**Yang berubah bagi owner:** sidebar admin → grup *Video Playly* dapat baris menu baru **"Isi cepat"**
+(`/admin/videos/playly#isi-cepat`), tepat di bawah IMDb. Isinya satu tabel: kotak centang + judul +
+enam kotak isian. Bawaannya hanya menampilkan film yang **datanya belum lengkap**. Tabel IMDb yang
+lama **tidak disentuh sama sekali**.
+
+**Kenapa layar sendiri, bukan menumpang tabel IMDb:** tabel itu sudah 7 kolom dan lebarnya sudah
+mepet — catatan ukuran di `KOLOM_BARIS` (`PlaylyVisibilityManager.tsx`) mencatat judul film cuma
+kebagian ±124px. Menambah centang + Tahun + Durasi ke sana menyisakan beberapa huruf untuk judul,
+keluhan yang sudah pernah owner sampaikan 2026-11-06.
+
+**🪤 DUA JEBAKAN YANG DITUTUP — keduanya kerusakan SENYAP, bukan "lambat":**
+
+1. **Rate-limit.** `guardMutation` membatasi **60 permintaan/menit per endpoint per IP**. Mengisi 100
+   film lewat jalur satuan = ±400 permintaan → **429 di tengah jalan**, sebagian tersimpan sebagian
+   tidak, dan layar tidak punya cara menyatukan keadaan itu kembali.
+2. **Lost update.** Tiap `setPlaylyVideo*` di `lib/store.ts` membaca **seluruh** dokumen lalu
+   menulisnya utuh. Puluhan tulisan beruntun = tulisan belakangan **menimpa** yang duluan, nol error.
+
+Penutupnya: **satu endpoint baru** `POST /api/admin/playly/massal` — baca kelima dokumen sekali,
+terapkan semua perubahan di memori, tulis sekali **hanya** ke dokumen yang isinya benar-benar
+berubah.
+
+**🪤 BEDA SENGAJA DARI JALUR SATUAN (jangan "diseragamkan" nanti):** di endpoint satuan, nilai yang
+tak terbaca penyaring berarti *"kosongkan, kembali ke otomatis"* — aman karena orangnya sedang
+memandangi kotak itu. Di jalur massal 40 baris dikirim sekaligus, jadi itu berarti **menghapus
+diam-diam nilai yang sudah benar**. Di sini kotak KOSONG (= kembali ke otomatis) dibedakan dari
+kotak BERISI TAPI TAK TERBACA (= ditolak, dilaporkan balik, kotaknya ditandai merah di layar).
+
+**Pre-mortem yang masuk ke rancangan** ("semua jadi tapi NOL guna — kenapa?"): owner mengisi 40 film
+lalu ketikannya hilang. Penangkalnya: (a) peringatan `beforeunload` saat ada isian belum tersimpan;
+(b) panel disembunyikan—bukan dilepas—saat pindah menu (dijamin `PlaylyBagianAktif`); (c) simpan
+gagal → **draft TIDAK dihapus**, isian tetap di layar; (d) balasan server menyebut angka pasti
+berapa film berubah.
+
+**Berkas:**
+- `lib/isian-massal-video.ts` (BARU) — penyaringan kiriman + penerapan ke 5 peta + penilaian
+  kelengkapan. Fungsi murni semua.
+- `lib/store.ts` — `simpanIsianMassalPlayly()` (satu baca, satu tulis per dokumen).
+- `app/api/admin/playly/massal/route.ts` (BARU).
+- `app/components/admin/PlaylyIsiCepat.tsx` (BARU) — panelnya.
+- `lib/bagian-playly.ts`, `app/components/admin/AdminSidebar.tsx`,
+  `app/components/admin/PlaylyBagianAktif.tsx`, `app/admin/videos/playly/page.tsx` — mendaftarkan
+  bagian + menu barunya.
+
+**Bukti (dijalankan, bukan dibaca):**
+- `npm run build` → **exit 0**, dan `/api/admin/playly/massal` terdaftar di daftar route build.
+- `npx tsc --noEmit` → **exit 0**.
+- `npm test` → **167 berkas / 2354 tes, semua hijau**.
+- Tes baru: `tests/isian-massal-video.test.ts` (22) · `tests/admin-playly-massal-route.test.ts` (12)
+  · `tests/isi-cepat-panel.test.ts` (10). `tests/bagian-playly.test.ts` diperluas.
+- **Diuji-balik 6 titik, semuanya merah** saat dirusak: pembedaan kosong-vs-ngawur · hapus kunci saat
+  dikosongkan · laporan dokumen-berubah · nama dokumen kategori tertukar · tulis-semua-dokumen ·
+  draft dibuang saat simpan gagal. Plus pemetaan prop panel.
+
+**⚠️ CATATAN JUJUR 1 — tes rapuh yang BUKAN dari kerja ini.**
+`tests/jeda-koin-iklan.test.ts > "6 route koin + 3 route iklan membalas 404"` **gagal timeout 5000ms**
+pada putaran suite PERTAMA, lalu **hijau** sendirian (2,5 detik) dan **hijau** pada putaran suite
+kedua. Polanya sama persis dengan kerapuhan waktu yang sudah tercatat 2026-11-10 (mesin kerja =
+RDP bersama puluhan penyewa). Tesnya mengimpor 9 route dalam satu `it` ber-timeout bawaan 5 detik.
+**Belum diperbaiki** — di luar cakupan permintaan ini, tapi pantas dijadwalkan: gerbang pra-rilis
+bisa berhenti di berkas yang tak ada hubungannya dengan perubahan yang sedang diuji.
+
+**⚠️ CATATAN JUJUR 2 — gerbang belum dijalankan dalam bentuk penuhnya.**
+`npm run gerbang` dimulai dengan `rm -rf .next`, dan saat kerja ini selesai ada **`next dev -p 3088`
+yang sedang berjalan** memakai folder itu. Ketiga pemeriksaan intinya (build → tsc → test) tetap
+dijalankan berurutan dan semuanya lolos, tapi **tanpa `.next` dibersihkan lebih dulu**. Sebelum
+push ke `origin main`: hentikan server dev itu lalu jalankan `npm run gerbang` apa adanya.
+
+**Belum dikerjakan (sengaja):** poster & sinopsis manual untuk film tanpa IMDb (butuh unggah gambar
+— cakupan baru) · audit-trail per perubahan (dokumen `playly:*` lama pun belum punya) · undo sesudah
+tersimpan (pembatalnya = mengosongkan kotak, sama seperti kolom yang sudah ada).
+
+**Rencana lengkapnya:** `docs/lintasai/rencana/2026-11-11-isi-massal-data-video.md`.
+
+### Pemakaian pertama owner (2026-11-11, sore) — panel JALAN, tapi isian sempat hilang
+
+**Yang berhasil:** panel tergambar benar di `localhost:3088` — 316 film "belum lengkap" dari 399,
+kotak kuning muncul saat diketik, pratinjau "Durasi = 1 jam 47 menit" bekerja, bar "4 isian di 2
+film belum tersimpan" menahan isian.
+
+**Yang gagal:** halaman melempar layar merah `Supabase tidak menjawab setelah 2 percobaan
+(TimeoutError)` dari `lib/supabase.ts:219` `ambilBaca`, dan **4 isian owner ikut hilang**. Diperiksa
+langsung ke database: ketiga film di layar (`L'Été dernier (2023)` id 1794282710166 · `Мавка (2023)`
+id 1794301725644 · `Saw X (2023)` id 1794369451986) **nol entri** di rating/meta/kualitas/genre.
+
+**🪤 PENYEBAB PALING MUNGKIN: BEBAN MESIN, BUKAN DATABASE — dan bebannya dari sesi AI sendiri.**
+Owner mencoba panel persis saat `npm run build` + 2354 tes sedang berjalan di mesin yang sama.
+Yang diukur (bukan ditebak):
+- Supabase **sehat**: 6/6 permintaan 200, **34–245 ms**; lima dokumen panel sekaligus **110 ms**;
+  dokumen terbesar `playly:imdb` **479 KB dalam 196 ms**.
+- Playly **sehat**: `/api/videos` → 401 (butuh kunci, artinya hidup) dalam **±0,4 detik**.
+- Server dev melambat **12×** di bawah beban (0,07 → 0,88 detik) pada permintaan paling RINGAN
+  (`/api/dramas`). Halaman admin menjalankan **12 pekerjaan sekaligus**, jadi jauh lebih berat, dan
+  batas waktu Supabase cuma **6 detik** (`BATAS_WAKTU_MS`, `MAKS_COBA_BACA = 2`).
+- Bukti paling telak: `tests/jeda-koin-iklan.test.ts` **gagal timeout 5000 ms saat mesin dibebani**
+  (dua kali, dua tes), lalu **hijau** saat senggang. Pola kerapuhan waktu yang sudah tercatat
+  2026-11-10.
+
+⭐ **ATURAN: jangan menyuruh owner menguji di localhost selagi build/tes berat berjalan di mesin
+yang sama.** Mesin ini RDP bersama puluhan penyewa; beban dari sesi AI sendiri cukup untuk membuat
+batas waktu 6 detik terlampaui, dan gejalanya menyamar jadi "server database bermasalah".
+
+⚠️ **BATAS JUJUR:** belum bisa dibuktikan 100% — jalur halaman admin butuh cookie login owner, dan
+`cookies.txt` di root kosong, jadi dari sesi ini halaman itu hanya memulangkan layar
+"akses ditolak" (0,09 detik, nol query). Semua yang BISA diukur menunjuk ke beban mesin.
+
+**Perbaikan yang dipasang (bukan menunggu kepastian penyebab):** isian yang belum tersimpan kini
+dicatat di browser (`localStorage`, kunci `dramaku:isi-cepat:draft`). Halaman error / di-refresh /
+tab ditutup → begitu panel dibuka lagi isiannya kembali, disertai spanduk kuning yang mengatakan
+isian itu **belum tersimpan**. Dibuang sendiri begitu penyimpanan berhasil; **TIDAK** dibuang kalau
+penyimpanan gagal. `beforeunload` saja tidak cukup — yang terjadi bukan tab ditutup, melainkan
+halamannya sendiri gagal dirender.
+
+Penjaganya: 3 tes baru di `tests/isi-cepat-panel.test.ts` (13 tes total), **diuji-balik 2 titik,
+keduanya merah**. Bukti: `npm run build` exit 0 · `npx tsc --noEmit` exit 0 · `npm test`
+**167 berkas / 2357 tes hijau**.
+
+**Masih terbuka (belum dikerjakan, menunggu izin owner):** halaman `/admin/videos/playly` memakai
+satu `Promise.all` berisi 12 pekerjaan — **satu** pembacaan gagal = SELURUH halaman mati, keempat
+panelnya ikut hilang. Jaring semacam ini sudah ada untuk Playly (`videoPanel` jatuh ke salinan
+terakhir), tapi belum untuk Supabase.
+
+
+
+---
+
 ## 2026-11-11 (ke-2) — ⚡ Pemeriksaan 489 video KELUAR dari halaman admin + diingat 5 menit (SIAP RILIS)
 
 Owner memilih lanjutan "hanya yang bikin ringan" dari dua tawaran. Ini melanjutkan `8ca0509`

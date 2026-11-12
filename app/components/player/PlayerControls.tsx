@@ -1,11 +1,13 @@
 "use client";
 
 import { fmtTime } from "@/lib/format";
-import { LayoutGrid, ChevronRight } from "lucide-react";
+import { LayoutGrid, ChevronRight, Maximize, Minimize } from "lucide-react";
+import VolumeControl from "./VolumeControl";
 
 // Panel bawah pemutar feed: judul + episode + subtitle + bar posisi + timer.
-// Tombol putar ada di tengah video & gerigi di kanan atas (FeedPlayer) —
-// panel ini sengaja hanya menampilkan waktu (permintaan 2026-11-07).
+// Tombol putar ada di tengah video & gerigi di kanan atas (FeedPlayer).
+// Di atas bar, rata kanan: Volume + Layar penuh berdampingan (permintaan
+// 2026-11-12 — dulu Volume ada di rail kanan dan membuat rail terlalu tinggi).
 export default function PlayerControls({
   title,
   currentEp,
@@ -21,6 +23,9 @@ export default function PlayerControls({
   onSeekMove,
   onSeekUp,
   onOpenEpisodes,
+  sound,
+  isFullscreen,
+  onToggleFullscreen,
 }: {
   title: string;
   currentEp: number;
@@ -37,6 +42,13 @@ export default function PlayerControls({
   onSeekMove: (e: React.PointerEvent<HTMLDivElement>) => void;
   onSeekUp: (e: React.PointerEvent<HTMLDivElement>) => void;
   onOpenEpisodes: () => void;
+  sound: {
+    volume: number;
+    muted: boolean;
+    onChange: (next: { volume: number; muted: boolean }) => void;
+  };
+  isFullscreen: boolean;
+  onToggleFullscreen: () => void;
 }) {
   return (
     <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30 flex flex-col bg-gradient-to-t from-black/85 via-black/35 to-transparent pb-7 pt-10">
@@ -72,6 +84,23 @@ export default function PlayerControls({
             controlsVisible ? "opacity-100" : "pointer-events-none opacity-0"
           }`}
         >
+        <div className="pointer-events-auto mb-0.5 flex justify-end gap-1">
+          <VolumeControl
+            volume={sound.volume}
+            muted={sound.muted}
+            hidden={!controlsVisible}
+            onChange={sound.onChange}
+          />
+          <button
+            type="button"
+            onClick={onToggleFullscreen}
+            aria-label={isFullscreen ? "Keluar layar penuh" : "Layar penuh"}
+            className="flex h-10 w-10 items-center justify-center rounded-full text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)] hover:bg-white/10 active:scale-95"
+          >
+            {isFullscreen ? <Minimize className="size-5" /> : <Maximize className="size-5" />}
+          </button>
+        </div>
+
         <div
           ref={seekBarRef}
           onPointerDown={onSeekDown}

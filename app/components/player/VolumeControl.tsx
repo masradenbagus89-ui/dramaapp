@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react";
 import { Volume2, VolumeX } from "lucide-react";
 
-// Tombol volume untuk rail kanan pemutar drama. Ketuk ikon → garis pengatur
-// muncul di KIRI ikon (bukan lewat hover seperti PlaylyPlayer: di HP tidak ada
-// hover). Catatan: Safari iPhone mengabaikan `video.volume` (hanya tombol fisik
-// HP yang bisa), jadi di sana yang efektif cuma bisu/tidak — geser ke 0 = bisu.
+// Tombol volume di panel bawah pemutar drama (sebelah kiri tombol layar
+// penuh). Ketuk ikon → garis pengatur muncul SEJAJAR di kiri ikon, satu baris
+// dengan tombol layar penuh (permintaan 2026-11-12). Bukan lewat hover
+// seperti PlaylyPlayer: di HP tidak ada hover). Catatan: Safari iPhone
+// mengabaikan `video.volume` (hanya tombol fisik HP yang bisa), jadi di sana
+// yang efektif cuma bisu/tidak — geser ke 0 = bisu.
 export default function VolumeControl({
   volume,
   muted,
@@ -15,7 +17,7 @@ export default function VolumeControl({
 }: {
   volume: number;
   muted: boolean;
-  /** Rail sedang memudar → tutup garisnya supaya tidak tertinggal terbuka. */
+  /** Kontrol sedang memudar → tutup garisnya supaya tidak tertinggal terbuka. */
   hidden: boolean;
   onChange: (next: { volume: number; muted: boolean }) => void;
 }) {
@@ -27,30 +29,22 @@ export default function VolumeControl({
   }, [hidden]);
 
   return (
-    <div className="relative flex flex-col items-center gap-0.5">
+    <div className="relative flex items-center">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-label="Volume"
-        className="flex h-11 w-11 items-center justify-center rounded-full text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)] transition-transform hover:scale-110 hover:bg-white/10 active:scale-95"
+        title={silent ? "Bisu" : `${Math.round(volume * 100)}%`}
+        className="flex h-10 w-10 items-center justify-center rounded-full text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)] hover:bg-white/10 active:scale-95"
       >
-        {silent ? <VolumeX className="size-6" /> : <Volume2 className="size-6" />}
+        {silent ? <VolumeX className="size-5" /> : <Volume2 className="size-5" />}
       </button>
-      <span className="text-[10px] font-medium text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
-        {silent ? "Bisu" : `${Math.round(volume * 100)}%`}
-      </span>
 
       {open && (
-        <div className="absolute right-full top-1 mr-1 flex h-9 items-center gap-2 rounded-full bg-black/80 px-3 ring-1 ring-white/10">
-          <button
-            type="button"
-            onClick={() => onChange({ volume: volume === 0 ? 1 : volume, muted: !silent })}
-            aria-label={silent ? "Nyalakan suara" : "Bisukan"}
-            className="text-white"
-          >
-            {silent ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
-          </button>
+        // Tanpa ikon speaker kedua di dalam garis: tepat di sebelahnya sudah
+        // ada tombol speaker. Bisu = geser ke 0.
+        <div className="absolute right-full top-1/2 mr-1 flex h-9 -translate-y-1/2 items-center gap-2 rounded-full bg-black/80 px-3 ring-1 ring-white/10">
           <input
             type="range"
             min={0}
@@ -64,6 +58,9 @@ export default function VolumeControl({
             aria-label="Atur volume"
             className="h-1 w-24 cursor-pointer accent-amber-400"
           />
+          <span className="w-8 text-right text-[11px] tabular-nums text-white/80">
+            {silent ? "Bisu" : `${Math.round(volume * 100)}%`}
+          </span>
         </div>
       )}
     </div>

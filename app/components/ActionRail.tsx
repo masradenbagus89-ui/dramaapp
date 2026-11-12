@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { DownloadProvider } from "@/lib/types";
 import DownloadModal from "./DownloadModal";
-import VolumeControl from "./player/VolumeControl";
 
 // Rail ikon vertikal ala Melolo/TikTok yang menempel di sisi kanan feed.
 // Pakai ulang store like (/api/likes) + myList (simpan) yang sudah ada.
@@ -20,7 +19,6 @@ export default function ActionRail({
   onComment,
   providers = [],
   visible = true,
-  sound,
 }: {
   dramaId: string;
   title: string;
@@ -38,12 +36,6 @@ export default function ActionRail({
    * ketuk layar memunculkannya lagi. Default true supaya pemanggil lama aman.
    */
   visible?: boolean;
-  /** Ada = tombol Volume digambar di rail; tidak ada = tanpa tombol volume. */
-  sound?: {
-    volume: number;
-    muted: boolean;
-    onChange: (next: { volume: number; muted: boolean }) => void;
-  };
 }) {
   const [liked, setLikedState] = useState(false);
   const [saved, setSavedState] = useState(false);
@@ -121,13 +113,18 @@ export default function ActionRail({
     <>
       <div
         className={cn(
-          "absolute bottom-32 right-2 z-20 flex flex-col items-center gap-4 transition-opacity duration-300",
+          // Rail di TENGAH tinggi video (permintaan owner 2026-11-12: digantung
+          // dari bawah terlalu jauh dari gerigi, dari atas terlalu naik).
+          // Layar pendek (<720px) → digantung dari bawah (bottom-40 = di atas
+          // baris Volume + Layar penuh), kalau tidak rail menabraknya.
+          // Jarak seragam gap-3; poster mb-2 sebagai "kepala" rail.
+          "absolute right-2 top-1/2 z-20 flex -translate-y-1/2 flex-col items-center gap-3 transition-opacity duration-300 [@media(max-height:720px)]:bottom-40 [@media(max-height:720px)]:top-auto [@media(max-height:720px)]:translate-y-0",
           visible ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0",
         )}
       >
         <Link
           href={`/drama/${dramaId}`}
-          className="h-9 w-9 overflow-hidden rounded-full border-2 border-amber-400/80 bg-zinc-800 shadow-lg ring-2 ring-black/20 transition-transform hover:scale-105"
+          className="mb-2 h-10 w-10 overflow-hidden rounded-full border-2 border-amber-400/80 bg-zinc-800 shadow-lg ring-2 ring-black/20 transition-transform hover:scale-105"
           aria-label="Detail drama"
         >
           {posterImage ? (
@@ -160,15 +157,6 @@ export default function ActionRail({
         <RailButton label="Bagikan" onClick={onShare}>
           <Share2 />
         </RailButton>
-
-        {sound && (
-          <VolumeControl
-            volume={sound.volume}
-            muted={sound.muted}
-            hidden={!visible}
-            onChange={sound.onChange}
-          />
-        )}
 
         {providers.length > 0 && (
           <RailButton label="Unduh" onClick={() => setDownloadOpen(true)}>

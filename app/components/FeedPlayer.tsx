@@ -682,7 +682,6 @@ export default function FeedPlayer({
           onComment={() => setCommentsOpen(true)}
           providers={providers}
           visible={controlsVisible}
-          sound={{ ...sound, onChange: changeSound }}
         />
 
         {/* Gerigi pengaturan di kanan atas — panel bawah sengaja hanya judul +
@@ -690,7 +689,7 @@ export default function FeedPlayer({
             kontrol lain; disembunyikan saat episode terkunci seperti dulu. */}
         {!lockedActive && (
           <div
-            className={`absolute right-3 top-3 z-30 transition-opacity duration-300 ${
+            className={`absolute right-3 top-6 z-30 transition-opacity duration-300 ${
               controlsVisible ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"
             }`}
           >
@@ -728,6 +727,9 @@ export default function FeedPlayer({
           onSeekMove={onSeekMove}
           onSeekUp={onSeekUp}
           onOpenEpisodes={() => setEpisodesOpen(true)}
+          sound={{ ...sound, onChange: changeSound }}
+          isFullscreen={isFullscreen}
+          onToggleFullscreen={toggleFullscreen}
         />
 
         {/* Tombol putar/jeda di TENGAH video. Saat jeda: lapisan inset-0 supaya

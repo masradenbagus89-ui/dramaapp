@@ -804,7 +804,6 @@ export default function FeedPlayer({
           onComment={() => setCommentsOpen(true)}
           providers={providers}
           visible={controlsVisible}
-          sound={{ ...sound, onChange: changeSound }}
         />
 
         {/* Gerigi pengaturan di kanan atas — panel bawah sengaja hanya judul +
@@ -850,6 +849,10 @@ export default function FeedPlayer({
           onSeekMove={onSeekMove}
           onSeekUp={onSeekUp}
           onOpenEpisodes={() => setEpisodesOpen(true)}
+          /* Volume pindah ke sini dari ActionRail (owner 2026-11-12): tempatnya
+             sebaris dengan angka durasi. `changeSound` ikut memunculkan kontrol
+             lagi supaya panelnya tidak memudar di tengah geser. */
+          sound={{ ...sound, onChange: changeSound }}
         />
 
         {/* Tombol putar/jeda di TENGAH video. Saat jeda: lapisan inset-0 supaya

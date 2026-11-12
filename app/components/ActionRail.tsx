@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { DownloadProvider } from "@/lib/types";
 import DownloadModal from "./DownloadModal";
-import VolumeControl from "./player/VolumeControl";
 
 // Rail ikon vertikal ala Melolo/TikTok yang menempel di sisi kanan feed.
 // Pakai ulang store like (/api/likes) + myList (simpan) yang sudah ada.
@@ -20,7 +19,6 @@ export default function ActionRail({
   onComment,
   providers = [],
   visible = true,
-  sound,
 }: {
   dramaId: string;
   title: string;
@@ -38,12 +36,6 @@ export default function ActionRail({
    * ketuk layar memunculkannya lagi. Default true supaya pemanggil lama aman.
    */
   visible?: boolean;
-  /** Ada = tombol Volume digambar di rail; tidak ada = tanpa tombol volume. */
-  sound?: {
-    volume: number;
-    muted: boolean;
-    onChange: (next: { volume: number; muted: boolean }) => void;
-  };
 }) {
   const [liked, setLikedState] = useState(false);
   const [saved, setSavedState] = useState(false);
@@ -121,7 +113,12 @@ export default function ActionRail({
     <>
       <div
         className={cn(
-          "absolute bottom-32 right-2 z-20 flex flex-col items-center gap-4 transition-opacity duration-300",
+          // `gap-2` (8px), bukan `gap-4` (owner 2026-11-12: "untuk komen dan
+          // yang lainnya bisa di perkecil lalu di dekatkan jadi tidak terlalu
+          // tinggi"). Rail yang terlalu jangkung memanjang sampai menutupi
+          // gambar film dari atas ke bawah — dan ruang kosong antar ikonlah
+          // yang paling banyak memakannya, bukan ikonnya sendiri.
+          "absolute bottom-32 right-2 z-20 flex flex-col items-center gap-2 transition-opacity duration-300",
           visible ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0",
         )}
       >
@@ -161,14 +158,13 @@ export default function ActionRail({
           <Share2 />
         </RailButton>
 
-        {sound && (
-          <VolumeControl
-            volume={sound.volume}
-            muted={sound.muted}
-            hidden={!visible}
-            onChange={sound.onChange}
-          />
-        )}
+        {/* 🪤 TOMBOL VOLUME SUDAH TIDAK DI SINI (owner 2026-11-12: "volume
+            pindahkan ke samping durasi"). Tempatnya kini di panel bawah,
+            sebaris dengan angka durasi — lihat PlayerControls.tsx.
+            Jangan dipasang kembali ke rail tanpa membuang yang di sana: dua
+            tombol volume di satu layar membuat penonton mengira keduanya
+            mengatur hal yang berbeda. Penjaganya:
+            tests/action-rail-tampil.test.ts. */}
 
         {providers.length > 0 && (
           <RailButton label="Unduh" onClick={() => setDownloadOpen(true)}>
@@ -216,17 +212,31 @@ function RailButton({
         aria-label={label}
         className={cn(
           // Tanpa lingkaran gelap: ikon telanjang + bayangan, mengikuti acuan
-          // pemutar Playly. Kotak sentuhnya tetap 44px (ambang nyaman di HP)
-          // walau gambarnya 24px, jadi mengecilkan tampilan tidak membuat
-          // tombolnya jadi susah ditekan.
-          "h-11 w-11 rounded-full transition-transform hover:scale-110 hover:bg-white/10 active:scale-95 [&_svg:not([class*='size-'])]:size-6",
+          // pemutar Playly.
+          //
+          // 📐 36px kotak sentuh + ikon 20px (owner 2026-11-12: "bisa di
+          // perkecil lalu di dekatkan jadi tidak terlalu tinggi"). Sebelumnya
+          // 44px + ikon 24px.
+          //
+          // ⚠️ 36px ADA DI BAWAH ambang sentuh nyaman 44px, dan itu pertukaran
+          // yang DIPILIH owner, bukan kelalaian — rail enam ikon pada 44px
+          // memanjang menutupi gambar film. JANGAN dikecilkan lagi di bawah
+          // ini: di bawah ±32px jempol mulai sering meleset, dan tombol
+          // "Suka"/"Simpan" yang meleset ke "Bagikan" membuka panel berbagi
+          // tanpa diminta.
+          "h-9 w-9 rounded-full transition-transform hover:scale-110 hover:bg-white/10 active:scale-95 [&_svg:not([class*='size-'])]:size-5",
           "drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]",
           active ? activeColor : "text-white",
         )}
       >
         {children}
       </Button>
-      <span className="text-[10px] font-medium text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">{label}</span>
+      {/* `leading-none` + 9px: label dua-tiga kata ("Tersimpan") tetap satu
+          baris, dan tinggi barisnya tidak lagi menambah jarak tersembunyi
+          antar ikon — itulah sisa ketinggian yang tidak kelihatan asalnya. */}
+      <span className="text-[9px] font-medium leading-none text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]">
+        {label}
+      </span>
     </div>
   );
 }

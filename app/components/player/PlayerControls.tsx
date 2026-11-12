@@ -2,6 +2,7 @@
 
 import { fmtTime } from "@/lib/format";
 import { LayoutGrid, ChevronRight } from "lucide-react";
+import VolumeControl from "./VolumeControl";
 
 // Panel bawah pemutar feed: judul + episode + subtitle + garis geser + timer.
 // Tombol putar ada di TENGAH video & gerigi di kanan atas (FeedPlayer) —
@@ -21,6 +22,7 @@ export default function PlayerControls({
   onSeekMove,
   onSeekUp,
   onOpenEpisodes,
+  sound,
 }: {
   title: string;
   currentEp: number;
@@ -37,6 +39,20 @@ export default function PlayerControls({
   onSeekMove: (e: React.PointerEvent<HTMLDivElement>) => void;
   onSeekUp: (e: React.PointerEvent<HTMLDivElement>) => void;
   onOpenEpisodes: () => void;
+  /**
+   * Ada = tombol volume digambar DI SAMPING angka durasi (owner 2026-11-12).
+   * Tidak ada = tanpa tombol volume, pemanggil lama tetap aman.
+   *
+   * ⚠️ Sampai 2026-11-11 tombol ini milik ActionRail (rail ikon kanan). Kalau
+   * suatu saat dipasang kembali di sana, BUANG yang di sini — dua tombol
+   * volume di satu layar membuat penonton mengira keduanya mengatur hal yang
+   * berbeda. Penjaganya: tests/action-rail-tampil.test.ts.
+   */
+  sound?: {
+    volume: number;
+    muted: boolean;
+    onChange: (next: { volume: number; muted: boolean }) => void;
+  };
 }) {
   /* `pb-6` di HP (bukan `pb-7`): 4px terakhir yang ikut menurunkan seluruh isi
      panel. JANGAN turun lagi di bawah ini — garis geser kini baris paling
@@ -72,24 +88,12 @@ export default function PlayerControls({
         <h1 className="line-clamp-2 text-[13px] font-semibold leading-tight text-white/95 drop-shadow-md">
           {title}
         </h1>
-        {isMovie ? (
+        {/* Tombol "Eps n / N" DIPINDAH ke bawah garis geser (owner 2026-11-12:
+            "episode pindahkan ke bawah"). Yang tertinggal di sini cuma
+            penanda FILM — ia keterangan, bukan tombol, jadi tempatnya memang
+            menempel pada judul. */}
+        {isMovie && (
           <p className="mt-1 text-[11px] font-medium text-white/70">Film</p>
-        ) : (
-          <button
-            onClick={onOpenEpisodes}
-            /* ⚠️ `pointer-events` WAJIB ikut `controlsVisible`, tidak boleh
-               `pointer-events-auto` permanen. `pointer-events-none` di induk
-               yang memudar TIDAK mematikan anak yang menyalakannya sendiri —
-               tombol ini akan tetap bisa ditekan walau tak terlihat, sehingga
-               ketukan untuk memunculkan kontrol malah membuka daftar episode. */
-            className={`mt-1 flex min-h-11 items-center gap-1 text-[11px] font-medium text-white/70 active:text-white ${
-              controlsVisible ? "pointer-events-auto" : "pointer-events-none"
-            }`}
-          >
-            <LayoutGrid className="h-3.5 w-3.5" />
-            Eps {currentEp} / {episodes}
-            <ChevronRight className="h-3 w-3" strokeWidth={2.5} />
-          </button>
         )}
       </div>
 
@@ -192,7 +196,40 @@ export default function PlayerControls({
           <span className="shrink-0 text-[11px] tabular-nums text-white/80">
             {fmtTime(curTime)} / {fmtTime(dur)}
           </span>
+
+          {/* VOLUME — tepat di samping angka durasi (owner 2026-11-12).
+              Pindahan dari rail ikon kanan; garis pengaturnya naik ke ATAS
+              supaya tidak menimpa angka durasi & garis geser di baris ini. */}
+          {sound && (
+            <VolumeControl
+              volume={sound.volume}
+              muted={sound.muted}
+              hidden={!controlsVisible}
+              onChange={sound.onChange}
+            />
+          )}
         </div>
+
+        {/* "Eps n / N" — BARIS PALING BAWAH (owner 2026-11-12: "episode
+            pindahkan ke bawah"). Sebelumnya menempel di bawah judul.
+
+            ⚠️ `pointer-events` WAJIB ikut `controlsVisible`, tidak boleh
+            `pointer-events-auto` permanen. `pointer-events-none` di induk yang
+            memudar TIDAK mematikan anak yang menyalakannya sendiri — tombol
+            ini akan tetap bisa ditekan walau tak terlihat, sehingga ketukan
+            untuk memunculkan kontrol malah membuka daftar episode. */}
+        {!isMovie && (
+          <button
+            onClick={onOpenEpisodes}
+            className={`flex min-h-11 items-center gap-1 text-[11px] font-medium text-white/70 active:text-white ${
+              controlsVisible ? "pointer-events-auto" : "pointer-events-none"
+            }`}
+          >
+            <LayoutGrid className="h-3.5 w-3.5" />
+            Eps {currentEp} / {episodes}
+            <ChevronRight className="h-3 w-3" strokeWidth={2.5} />
+          </button>
+        )}
         </div>
       )}
     </div>

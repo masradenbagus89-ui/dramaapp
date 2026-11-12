@@ -90,7 +90,74 @@
 > aftermarket** dari pemilik sekarang, harganya **jauh di atas** Rp200.000 dan belum pernah dicek.
 > Nama lain yang masih bebas jauh lebih murah.
 
-**Terakhir diisi:** 2026-11-11 (ke-2) — ⚡ **SIAP RILIS: pemeriksaan 489 video KELUAR dari halaman admin, hasilnya diingat 5 menit.** Lanjutan `8ca0509` atas pilihan owner ("hanya yang bikin ringan"): kalau yang pertama memperbaiki URUTAN TAMPIL, yang ini memangkas **kerja servernya**. Pemeriksaan pindah ke endpoint baru `/api/admin/playly/belum-siap` + `lib/playly-berkas-siap.ts`; buka kedua dalam 5 menit = **nol** panggilan ke Playly. 🪤 **Dua jebakan dihindari karena membaca dokumen dulu:** cache bawaan Next akan NOL EFEK di sini — `force-dynamic` memaksa semua `fetch` jadi `no-store`, DAN `fetchCache: 'auto'` tidak men-cache `fetch` sesudah Request-time API (cek cookie admin wajib lebih dulu). Keduanya nol error, cuma diam-diam tidak bekerja. 🪤 **Pengaman tabrakan sempat saya tulis salah** (satu kunci untuk seluruh pemeriksaan → permintaan kedua pulang dengan sebagian id belum terperiksa, senyap); diganti kunci per-video. **Bukti:** gerbang **LOLOS 5/5** (**163 berkas / 2307 tes, 0 gagal**) · **uji-balik 8 titik SEMUA MERAH** · nol tes hilang (2293 + 14 = 2307, klop). ⚠️ Buka PERTAMA kali tetap memakan waktu — yang hilang pengulangannya. **⬇️ Rincian di seksi `## 2026-11-11 (ke-2)` di bawah.**
+**Terakhir diisi:** 2026-11-11 (ke-2) — ⚡ **SIAP RILIS: pemeriksaan 489 video KELUAR dari halaman admin, hasilnya diingat 5 menit.** Lanjutan `8ca0509` atas pilihan owner ("hanya yang bikin ringan"): kalau yang pertama memperbaiki URUTAN TAMPIL, yang ini memangkas **kerja servernya**. Pemeriksaan pindah ke endpoint baru `/api/admin/playly/belum-siap` + `lib/playly-berkas-siap.ts`; buka kedua dalam 5 menit = **nol** panggilan ke Playly. 🪤 **Dua jebakan dihindari karena membaca dokumen dulu:** cache bawaan Next akan NOL EFEK di sini — `force-dynamic` memaksa semua `fetch` jadi `no-store`, DAN `fetchCache: 'auto'` tidak men-cache `fetch` sesudah Request-time API (cek cookie admin wajib lebih dulu). Keduanya nol error, cuma diam-diam tidak bekerja. 🪤 **Pengaman tabrakan sempat saya tulis salah** (satu kunci untuk seluruh pemeriksaan → permintaan kedua pulang dengan sebagian id belum terperiksa, senyap); diganti kunci per-video. **Bukti:** gerbang **LOLOS 5/5** (**163 berkas / 2307 tes, 0 gagal**) · **uji-balik 8 titik SEMUA MERAH** · nol tes hilang (2293 + 14 = 2307, klop). ⚠️ Buka PERTAMA kali tetap memakan waktu — yang hilang pengulangannya. **⬇️ Rincian di seksi `## 2026-11-12 — 🎬 Pemutar: tombol Eps turun ke bawah + volume pindah ke samping durasi (BELUM dipush)
+
+**Permintaan owner (dua tangkapan layar pemutar):** *"1 episode pindahkan ke bawah · 2 volume
+pindahkan ke samping durasi dan ketika di klik volumenya ke atas"*.
+
+**Yang berubah bagi penonton:**
+- Tombol **"Eps n / N"** tidak lagi menempel di bawah judul — kini **baris paling bawah**, di bawah
+  garis geser + angka durasi.
+- Tombol **volume** pindah dari rail ikon kanan ke **sebelah angka durasi**. Diketuk → garis
+  pengaturnya berdiri **TEGAK KE ATAS** (bukan mendatar ke kiri seperti versi rail).
+- Rail kanan kini: poster · Suka · Komen · Simpan · Bagikan (+ Unduh bila ada) — **tanpa volume**.
+
+**Keputusan yang diambil sendiri (owner boleh membalik):** angka persen ("100%") tidak lagi tampil
+di baris bawah — baris itu sudah berisi garis geser + durasi, dan menambah teks di sana
+memadatkannya. Persennya muncul **di dalam panel** saat ikonnya diketuk.
+
+**🪤 JEBATAN YANG DITUTUP DULUAN (pre-mortem, bukan sesudah kejadian):** panel bawah pemutar
+memasang `pointer-events-none` **permanen** di pembungkus terluarnya supaya ketukan di area kosong
+tembus ke video. Anak yang tidak menyalakan `pointer-events-auto` sendiri jadi tombol yang
+**terlihat normal tapi tidak bisa diklik** — nol error, gejalanya cuma "kok tidak ngapa-ngapain".
+Itu persis jebakan yang sudah tercatat untuk tombol Eps 2026-11-02; tombol volume baru ini melewati
+pintu yang sama, jadi penjaganya dipasang sekalian.
+
+**Putaran kedua (owner, hari yang sama): rail diperkecil & dirapatkan.**
+*"untuk komen dan yang lainnya bisa di perkecil lalu di dekatkan jadi tidak terlalu tinggi"*.
+Kotak sentuh 44px -> **36px**, ikon 24px -> **20px**, jarak antar ikon 16px -> **8px**, label 10px
+-> **9px + leading-none**. Perkiraan dari angka di kode (bukan diukur di browser): rail turun dari
+±421px jadi ±311px, sekitar **seperempat lebih pendek**.
+
+⚠️ **36px ADA DI BAWAH ambang sentuh nyaman 44px — itu pertukaran yang DIPILIH owner, bukan
+kelalaian.** Batas bawahnya dikunci tes: di bawah ±32px jempol mulai sering meleset, dan "Suka"
+yang meleset ke "Bagikan" membuka panel berbagi tanpa diminta.
+
+🪤 **Screenshot owner pada putaran kedua masih memperlihatkan volume DI RAIL** — itu halaman yang
+belum di-refresh, bukan perubahan yang gagal. Dibuktikan dengan menghitung dari HTML yang
+benar-benar dikirim server: **tepat 1** tombol `aria-label="Volume"`, posisinya SESUDAH garis
+geser (panel bawah), dan nol label persen di area rail.
+
+**Berkas:**
+- `app/components/player/VolumeControl.tsx` — ditulis ulang: ikon ringkas + panel tegak ke atas.
+  Garis tegaknya memakai `-rotate-90` DENGAN pembungkus berukuran tetap (elemen yang diputar tetap
+  memakan kotak aslinya; tanpa pembungkus, panelnya menyusut setipis garis). `appearance:
+  slider-vertical` sengaja TIDAK dipakai — sudah tak didukung browser modern dan gagal DIAM.
+- `app/components/player/PlayerControls.tsx` — tombol Eps turun ke bawah baris geser; prop `sound?`
+  baru menggambar tombol volume di samping durasi.
+- `app/components/ActionRail.tsx` — prop `sound` + import VolumeControl DIBUANG.
+- `app/components/FeedPlayer.tsx` — `sound` dioper ke PlayerControls, bukan lagi ke ActionRail.
+
+**Bukti (dijalankan, bukan dibaca):**
+- `npm test` → **168 berkas / 2371 tes hijau** · `npx tsc --noEmit` **exit 0** · `npm run build`
+  **exit 0**.
+- Tes baru `tests/pemutar-eps-volume.test.ts` (12 tes) + `tests/action-rail-tampil.test.ts` ditulis
+  ulang jadi penjaga ARAH SEBALIKNYA (rail tidak boleh menggambar volume lagi — tepat satu pintu).
+- `tests/posisi-teks-pemutar.test.ts` yang lama **tetap hijau**: keputusan owner 2026-11-02 (judul
+  memudar, subtitle tidak boleh masuk blok kontrol, area sentuh 44px, seekBarRef di garisnya) tidak
+  ada yang dilanggar.
+- **Diuji-balik 3 titik, semuanya merah:** tombol volume tanpa `pointer-events-auto` · panel volume
+  membuka ke bawah (`top-full`) · tombol Eps dikembalikan ke atas garis geser.
+- Halaman sungguhan di `localhost:3088/feed/napi-baru-jurus-master-menggemparkan-dunia` → **200**,
+  dan di HTML-nya urutan terukur: garis geser (21686) → volume (22275) → Eps (23630).
+
+⚠️ **Server dev mati sendiri saat `npm run build` dijalankan** (build menulis ke `.next` yang sedang
+dipakai `next dev`). Dinyalakan ulang dengan `npx next dev -p 3088`. Ini sisi lain dari pelajaran
+2026-11-11: build/tes berat dan server dev tidak bisa hidup berdampingan di mesin ini.
+
+---
+
+## 2026-11-11 (ke-2)` di bawah.**
 
 ---
 

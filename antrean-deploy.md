@@ -23,7 +23,41 @@
 > lengkap: `HANDOFF.md` seksi `## 2026-11-09`.
 
 
-**Terakhir dicek:** 2026-11-12 (**komputer OWNER**). `HEAD` = `origin/main` = `dramaku/main` = **`91c9396`**, working tree **bersih**. ✅ **RILIS BARU SAJA DIKERJAKAN & TERBUKTI TAYANG** — rincian di bawah.
+**Terakhir dicek:** 2026-11-12 (**komputer OWNER**). `HEAD` = `origin/main` = `dramaku/main` = **`4fc033c`**. ✅ **RILIS KEDUA HARI INI SUDAH DIDORONG** (tata letak pemutar) — rincian di bawah.
+
+### ✅ 2026-11-12 (ke-2) — RILIS `c60a6ef` → `4fc033c` (1 commit, didorong ke DUA remote)
+
+**Isi:** tata letak pemutar drama atas permintaan owner hari itu juga —
+(1) tombol **"Eps n / N"** turun dari bawah judul ke **baris paling bawah** (di bawah garis geser +
+angka durasi); (2) tombol **volume LEPAS dari rail ikon kanan**, kini **sebaris dengan angka
+durasi**, garis pengaturnya berdiri **tegak ke atas**; (3) putaran kedua: rail diperkecil &
+dirapatkan (44px/24px/jarak 16px → **36px/20px/jarak 8px**, label 10px → 9px `leading-none`).
+
+**Gerbang pra-rilis:** `npm run gerbang` → **LOLOS 5/5** (hapus `.next` · build exit 0 · `tsc`
+exit 0 · **2372 tes lulus / 168 berkas / 0 gagal** · **0 berkas rahasia** di antrean push).
+
+**Urutan push:** `dramaku` (cermin) dulu → `origin` (produksi) sesudahnya. Keduanya
+`c60a6ef..4fc033c`, fast-forward, nol bentrok.
+
+**✅ TERBUKTI TAYANG** (±1 menit sesudah push, percobaan ke-3). Smoke test memeriksa **ISI**,
+bukan cuma HTTP 200 — delapan hal diukur dari HTML yang benar-benar dilayani produksi:
+tombol volume **tepat 1** · volume **sesudah** garis geser (panel bawah) · Eps **sesudah** garis
+geser (baris paling bawah) · rail `h-9 w-9` · **nol** sisa `h-11 w-11` · jarak `gap-2` · label
+`text-[9px]` · volume **tidak lagi** di area rail. Halaman lain ikut sehat: `/` `/beranda`
+`/film` `/api/dramas` semuanya **200**.
+
+**Yang perlu diketahui sesi berikutnya:**
+- 🪤 **`npm run build` MEMATIKAN `next dev` yang sedang jalan** — keduanya memperebutkan folder
+  `.next`. Terbukti dua kali 2026-11-12. Hentikan server dev dulu (lewat PID; `TaskStop` tidak
+  cukup), baru jalankan gerbang.
+- 🪤 **`next-env.d.ts` berubah SENDIRI saat `next dev` jalan**: isinya menunjuk
+  `./.next/dev/types/...`, sedangkan versi yang benar untuk produksi menunjuk `./.next/types/...`.
+  **Jangan ikut di-commit versi dev-nya** — `npm run build` memulihkannya sendiri, jadi cukup
+  jalankan gerbang dulu lalu `git add` berkas yang memang dikerjakan (bukan `git add -A`).
+- Smoke test produksi memeriksa **ISI**, bukan cuma HTTP 200: jumlah tombol volume harus **tepat 1**
+  dan posisinya **sesudah** garis geser, serta rail memakai `h-9 w-9` (bukan `h-11 w-11`).
+  "HTTP 200" saja cuma membuktikan versi LAMA masih melayani dengan baik.
+
 
 ### ✅ 2026-11-12 — RILIS `ac24fd8` → `91c9396` (5 commit, TAYANG)
 

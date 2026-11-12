@@ -90,7 +90,7 @@
 > aftermarket** dari pemilik sekarang, harganya **jauh di atas** Rp200.000 dan belum pernah dicek.
 > Nama lain yang masih bebas jauh lebih murah.
 
-**Terakhir diisi:** 2026-11-11 (ke-2) — ⚡ **SIAP RILIS: pemeriksaan 489 video KELUAR dari halaman admin, hasilnya diingat 5 menit.** Lanjutan `8ca0509` atas pilihan owner ("hanya yang bikin ringan"): kalau yang pertama memperbaiki URUTAN TAMPIL, yang ini memangkas **kerja servernya**. Pemeriksaan pindah ke endpoint baru `/api/admin/playly/belum-siap` + `lib/playly-berkas-siap.ts`; buka kedua dalam 5 menit = **nol** panggilan ke Playly. 🪤 **Dua jebakan dihindari karena membaca dokumen dulu:** cache bawaan Next akan NOL EFEK di sini — `force-dynamic` memaksa semua `fetch` jadi `no-store`, DAN `fetchCache: 'auto'` tidak men-cache `fetch` sesudah Request-time API (cek cookie admin wajib lebih dulu). Keduanya nol error, cuma diam-diam tidak bekerja. 🪤 **Pengaman tabrakan sempat saya tulis salah** (satu kunci untuk seluruh pemeriksaan → permintaan kedua pulang dengan sebagian id belum terperiksa, senyap); diganti kunci per-video. **Bukti:** gerbang **LOLOS 5/5** (**163 berkas / 2307 tes, 0 gagal**) · **uji-balik 8 titik SEMUA MERAH** · nol tes hilang (2293 + 14 = 2307, klop). ⚠️ Buka PERTAMA kali tetap memakan waktu — yang hilang pengulangannya. **⬇️ Rincian di seksi `## 2026-11-12 — 🎬 Pemutar: tombol Eps turun ke bawah + volume pindah ke samping durasi (BELUM dipush)
+**Terakhir diisi:** 2026-11-11 (ke-2) — ⚡ **SIAP RILIS: pemeriksaan 489 video KELUAR dari halaman admin, hasilnya diingat 5 menit.** Lanjutan `8ca0509` atas pilihan owner ("hanya yang bikin ringan"): kalau yang pertama memperbaiki URUTAN TAMPIL, yang ini memangkas **kerja servernya**. Pemeriksaan pindah ke endpoint baru `/api/admin/playly/belum-siap` + `lib/playly-berkas-siap.ts`; buka kedua dalam 5 menit = **nol** panggilan ke Playly. 🪤 **Dua jebakan dihindari karena membaca dokumen dulu:** cache bawaan Next akan NOL EFEK di sini — `force-dynamic` memaksa semua `fetch` jadi `no-store`, DAN `fetchCache: 'auto'` tidak men-cache `fetch` sesudah Request-time API (cek cookie admin wajib lebih dulu). Keduanya nol error, cuma diam-diam tidak bekerja. 🪤 **Pengaman tabrakan sempat saya tulis salah** (satu kunci untuk seluruh pemeriksaan → permintaan kedua pulang dengan sebagian id belum terperiksa, senyap); diganti kunci per-video. **Bukti:** gerbang **LOLOS 5/5** (**163 berkas / 2307 tes, 0 gagal**) · **uji-balik 8 titik SEMUA MERAH** · nol tes hilang (2293 + 14 = 2307, klop). ⚠️ Buka PERTAMA kali tetap memakan waktu — yang hilang pengulangannya. **⬇️ Rincian di seksi `## 2026-11-12 — ✅ `4fc033c` TAYANG: Eps turun ke bawah + Volume pindah ke samping durasi
 
 **Permintaan owner (dua tangkapan layar pemutar):** *"1 episode pindahkan ke bawah · 2 volume
 pindahkan ke samping durasi dan ketika di klik volumenya ke atas"*.
@@ -150,6 +150,13 @@ geser (panel bawah), dan nol label persen di area rail.
   membuka ke bawah (`top-full`) · tombol Eps dikembalikan ke atas garis geser.
 - Halaman sungguhan di `localhost:3088/feed/napi-baru-jurus-master-menggemparkan-dunia` → **200**,
   dan di HTML-nya urutan terukur: garis geser (21686) → volume (22275) → Eps (23630).
+
+**✅ TERBUKTI TAYANG** (±1 menit sesudah push, percobaan ke-3). Smoke test memeriksa **ISI**,
+bukan cuma HTTP 200 — delapan hal diukur dari HTML yang benar-benar dilayani produksi:
+tombol volume **tepat 1** · volume **sesudah** garis geser (panel bawah) · Eps **sesudah** garis
+geser (baris paling bawah) · rail `h-9 w-9` · **nol** sisa `h-11 w-11` · jarak `gap-2` · label
+`text-[9px]` · volume **tidak lagi** di area rail. Halaman lain ikut sehat: `/` `/beranda`
+`/film` `/api/dramas` semuanya **200**.
 
 ⚠️ **Server dev mati sendiri saat `npm run build` dijalankan** (build menulis ke `.next` yang sedang
 dipakai `next dev`). Dinyalakan ulang dengan `npx next dev -p 3088`. Ini sisi lain dari pelajaran

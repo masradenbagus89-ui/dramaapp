@@ -247,7 +247,7 @@ riwayat blok peringatan lama ada di seksi `## 2026-11-09` di bawah.**
 
 ---
 
-## 2026-11-11 (ke-3) — 🆕 Menu "Isi cepat": lengkapi data BANYAK film sekali jalan (BELUM dipush)
+## 2026-11-11 (ke-3) — 🆕 "Isi manual": lengkapi data BANYAK film sekali jalan (DI-COMMIT `56d174c`, BELUM dipush)
 
 **Permintaan owner (apa adanya):** *"sebagian film kan tidak ada di imdb dan saya harus isi manual
 contohnya kualitas, rating dll, kalau diisi satu persatu akan makan waktu bisa kamu buatkan agar
@@ -257,10 +257,29 @@ saya bisa mengisinya sekali jalan agar tidak perlu isi persatu film"*.
 nilai, DITAMBAH ketik-semua → Simpan sekali) · cakupan = **6 kolom** (Jenis · Kategori · Kualitas ·
 Rating · Tahun · Durasi).
 
-**Yang berubah bagi owner:** sidebar admin → grup *Video Playly* dapat baris menu baru **"Isi cepat"**
-(`/admin/videos/playly#isi-cepat`), tepat di bawah IMDb. Isinya satu tabel: kotak centang + judul +
-enam kotak isian. Bawaannya hanya menampilkan film yang **datanya belum lengkap**. Tabel IMDb yang
-lama **tidak disentuh sama sekali**.
+**Yang berubah bagi owner:** panel baru berisi satu tabel — kotak centang + judul + enam kotak
+isian. Bawaannya hanya menampilkan film yang **datanya belum lengkap**. Tabel IMDb yang lama
+**tidak disentuh sama sekali**.
+
+**⚠️ PINTU MASUKNYA BUKAN DI SIDEBAR (dikoreksi 2026-11-12).** Versi pertama memasang baris menu
+**"Isi cepat"** di grup *Video Playly*; owner memintanya dipindah di hari yang sama: *"kamu
+pindahkan isi cepat ke filter yang ada di imdb biar lebih rapi tapi judulnya jangan isi cepat kamu
+ganti dengan yang lebih enak"*. Sekarang pintunya **tombol "Isi manual"** yang duduk sebaris dengan
+saringan IMDb — sesudah `Belum ada IMDb`, sebelum kotak cari. Alamatnya **tetap**
+`/admin/videos/playly#isi-cepat`: hash itu sudah tertanam di bookmark dan di kunci localStorage
+`dramaku:isi-cepat:draft` yang menyimpan isian belum tersimpan, jadi menggantinya membuang draft
+admin diam-diam.
+
+Tiga hal yang mudah dikira bug kalau tidak tahu:
+- **sidebar tidak lagi punya baris "Isi cepat"** — itu disengaja, bukan hilang;
+- saat panel itu terbuka, yang menyala di sidebar adalah **IMDb** (lewat `menuBagianPlayly`).
+  Tanpa itu seluruh sidebar padam dan penanda posisi hilang — nol error;
+- tombolnya **sengaja tidak berbentuk pil** seperti tiga saringan di kirinya: ketiganya
+  mempersempit daftar di halaman yang sama, yang ini **berpindah panel**.
+
+Penjaga lama "tiap bagian wajib punya menu di sidebar" (`tests/bagian-playly.test.ts`) tidak
+dihapus, hanya diperlebar jadi **"tepat satu pintu, di sidebar ATAU di dalam panel"** — jadi
+menambahkannya kembali ke sidebar tanpa membuang tombolnya akan **MERAH**, bukan diam.
 
 **Kenapa layar sendiri, bukan menumpang tabel IMDb:** tabel itu sudah 7 kolom dan lebarnya sudah
 mepet — catatan ukuran di `KOLOM_BARIS` (`PlaylyVisibilityManager.tsx`) mencatat judul film cuma

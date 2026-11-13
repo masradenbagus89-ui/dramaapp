@@ -90,7 +90,9 @@
 > aftermarket** dari pemilik sekarang, harganya **jauh di atas** Rp200.000 dan belum pernah dicek.
 > Nama lain yang masih bebas jauh lebih murah.
 
-**Terakhir diisi:** 2026-11-13 (sore) — ⏸️ **`1cbe220` SIAP TAYANG, BELUM dipush ke produksi.** Putaran KETIGA kontrol volume: owner menolak bentuk tombol `+` / `−` dan mengirim contoh gambar, jadi pengatur volume kini **garis geser tegak berbentuk kapsul** (jalur kuning + bulatan penggeser). Diukur di Chrome headless layar 393px: kapsul `x=345..381` **utuh di dalam layar**, geser jari atas→100% / tengah→50% / bawah→bisu, nol elemen diputar. Gerbang lolos 5/5 (2383 tes hijau). `git push origin main` = TOMBOL RILIS → **menunggu izin owner**. Rinciannya di seksi pertama `## 2026-11-13` di bawah.
+**Terakhir diisi:** 2026-11-13 (sore) — ⏸️ **DUA commit SIAP TAYANG, BELUM dipush ke produksi: `1cbe220` + `754061d`.** (1) Kapsul geser volume — **sudah dilihat & disetujui owner di localhost**. (2) Tombol **Layar penuh** di baris durasi: keputusan owner atas branch rekan — branch `feat/link-unduhan-provider-kualitas` **tidak ditarik** (tertinggal 275 commit, bentrok 8 berkas, akan membatalkan 3 keputusan owner yang sudah tayang), hanya **idenya** yang dibangun ulang di atas `main`. Gerbang lolos 5/5 (**169 berkas / 2389 tes hijau**). `git push origin main` = TOMBOL RILIS → **menunggu izin owner**.
+
+**Rincian kontrol volume (putaran KETIGA):** owner menolak bentuk tombol `+` / `−` dan mengirim contoh gambar, jadi pengatur volume kini **garis geser tegak berbentuk kapsul** (jalur kuning + bulatan penggeser). Diukur di Chrome headless layar 393px: kapsul `x=345..381` **utuh di dalam layar**, geser jari atas→100% / tengah→50% / bawah→bisu, nol elemen diputar. Gerbang lolos 5/5 (2383 tes hijau). `git push origin main` = TOMBOL RILIS → **menunggu izin owner**. Rinciannya di seksi pertama `## 2026-11-13` di bawah.
 
 **Sebelumnya hari ini:** ✅ **`2ad015b` + `8d8c1ba` TAYANG.** Tata letak pemutar beres dalam tiga putaran permintaan owner: tombol **Eps turun ke baris paling bawah**, tombol **volume pindah ke sebelah angka durasi**, rail ikon kanan **diperkecil & dirapatkan** (36px/20px/jarak 8px), dan garis volume tegak **diganti tombol + / −** karena terukur berdiri di **x=391 pada layar 393px = di luar layar HP**. Rinciannya di seksi `## 2026-11-13` di bawah.
 
@@ -98,26 +100,20 @@
 
 ## 🚦 LANJUT DARI SINI (sesi baru, 2026-11-13)
 
-**Keadaan:** `HEAD` = `1cbe220`, **satu commit DI DEPAN** `origin/main` — perbaikan bentuk kontrol
-volume (garis geser kapsul) sudah di-commit, gerbang lolos 5/5, tapi **belum dipush** karena push
-ke `origin main` = tombol rilis. Supabase sempat mati total 2026-11-12 sore (PGRST002) dan **sudah
-pulih** 2026-11-13 pagi (6/6 berhasil, 22–94 ms). Tidak ada yang rusak.
+**Keadaan:** `HEAD` = `754061d`, **tiga commit DI DEPAN** `origin/main` (kapsul volume `1cbe220`,
+catatannya `ec58bd9`, tombol layar penuh `754061d`) — semuanya sudah lolos gerbang 5/5 dan sudah
+didorong ke repo cermin `dramaku`, tapi **belum dipush ke `origin`** karena itu tombol rilis.
+Supabase sempat mati total 2026-11-12 sore (PGRST002) dan **sudah pulih** 2026-11-13 pagi
+(6/6 berhasil, 22–94 ms). Tidak ada yang rusak.
 
-### ❓ DUA keputusan yang MENUNGGU OWNER — jangan dikerjakan tanpa jawabannya
+### ❓ SATU keputusan yang MENUNGGU OWNER — jangan dikerjakan tanpa jawabannya
 
-**1. Branch rekan `feat/link-unduhan-provider-kualitas` (4 commit, di repo cermin `dramaku`).**
-Rekan sendiri sudah memeriksanya dan menyimpulkan **TIDAK siap ditarik apa adanya**: simulasi merge
-menunjukkan **bentrok di 8 berkas**, dan menariknya akan **menimpa keputusan owner yang baru tayang
-hari ini** (rail 36px, Eps di bawah, volume sebaris durasi). Laporannya lengkap dengan tabel
-perbedaan + tiga pilihan A/B/C ada di branch itu:
-`docs/serah-terima/2026-11-12-laporan-tarik-branch-pemutar.md`.
-Dua commit pertamanya (`01a48b0`, `ceac484`) **sudah ada di produksi** lewat jalur lain — jangan
-ditarik ulang. Yang benar-benar baru cuma `bde27ee`.
-→ **Yang hanya dipunyai rekan dan belum ada di produksi: tombol LAYAR PENUH di panel bawah.**
-Rekomendasi (pilihan B milik rekan): minta rekan mengerjakan ulang ide itu DI ATAS `main` terbaru
-supaya nol bentrok, bukan menarik `bde27ee`.
+**~~1. Branch rekan `feat/link-unduhan-provider-kualitas`~~ — ✅ SUDAH DIJAWAB 2026-11-13.** Owner
+memilih "ambil tombol Layar penuh saja"; branch **tidak ditarik**, idenya dibangun ulang di atas
+`main` (`754061d`). Rinciannya di seksi `## 2026-11-13 — ✅ KEPUTUSAN OWNER` di bawah. Jangan
+dibuka lagi sebagai bahasan menggantung.
 
-**2. Jaring pengaman saat database menggantung.** Saat Supabase mati kemarin, `/feed/<id>` dan
+**1. Jaring pengaman saat database menggantung.** Saat Supabase mati kemarin, `/feed/<id>` dan
 `/api/dramas` membalas **500** ke penonton, sementara `/` `/beranda` `/film` tetap hidup dari cache.
 Pola jaring pengaman sudah ADA untuk data Playly (`playly:cadangan`) tapi **belum untuk jalur
 drama**. Sudah ditawarkan ke owner, **belum dijawab**. Mengubah perilaku halaman yang dilihat semua
@@ -299,6 +295,59 @@ riwayat blok peringatan lama ada di seksi `## 2026-11-09` di bawah.**
 **Rilis ke-1 hari ini:** (✅ **TAYANG `4dde5c0`**: tombol beranda "LIHAT SEMUA FILM UNGGULAN" → **"TEMUKAN TONTONAN FAVORITMU"** — labelnya salah di dua sisi (isinya drama berseri, bukan film; tujuannya katalog lengkap, bukan daftar unggulan). Dual push → Railway build sendiri → tayang ±60 detik, **downtime NOL**. Smoke test 5 alur: 4 langsung 200, `/drama/meg-2-the-trench` 500 SEKALI lalu 200 enam kali — cold start, dicatat bukan dihapus. ❌ **DIRALAT di rilis ke-2**: catatan asli di sini menyebut tombol itu "tergeser ke kanan di layar HP" sebagai gejala nyata. **Itu keliru** — cacat alat potret, bukan cacat situs; sudah diukur ulang dan tombolnya terpusat sempurna. Jangan diburu.)
 
 **Sebelumnya:** 2026-10-30 (tiga rilis beruntun, semuanya TAYANG: `5088bf2` genre bahasa Indonesia → `27973f0` koreksi owner Kerajaan/CEO/Lainnya → **`55894b8` dua tombol halaman drama yang selama ini TERPOTONG**. Downtime NOL. ⏸️ **DUA bahasan menunggu keputusan owner**, risetnya sudah selesai & nol kode diubah: "klik drama langsung play" dan "sinopsis film masih bahasa Inggris".)
+
+---
+
+## 2026-11-13 — ✅ KEPUTUSAN OWNER: branch rekan TIDAK ditarik utuh, hanya tombol Layar penuh (`754061d`)
+
+**Permintaan owner:** *"sekarang kamu tarik branch rekan saya"*. Disajikan tiga pilihan beserta
+akibatnya, owner memilih **"Ambil tombol Layar penuh saja"**. Ini menjawab keputusan nomor 1 yang
+sejak 2026-11-12 tercatat menggantung di kepala berkas ini — **bahasan itu sekarang TUTUP.**
+
+**Kenapa tidak di-`merge` (ini bagian yang penting untuk sesi berikutnya).** Branch
+`feat/link-unduhan-provider-kualitas` di repo cermin `dramaku` tertinggal **275 commit** dari
+`main`. Isinya 4 commit:
+
+| Commit branch | Isi | Kenyataan di produksi |
+|---|---|---|
+| `01a48b0` | Play di tengah + ketuk 2× maju/mundur 10 detik | **Sudah ada** sebagai `6b65e0a` |
+| `ceac484` | Rail ikut sembunyi + tombol Volume | **Sudah ada** sebagai `315de5a` |
+| `bde27ee` | Volume + Layar penuh, rail di tengah | **Bentrok di 8 berkas** |
+| `766051f` | Laporan serah-terima rekan | Dokumen, bukan kode |
+
+Menarik `bde27ee` utuh akan **membatalkan tiga keputusan owner yang sudah tayang**: kapsul geser
+volume (disetujui owner hari ini juga), tombol **Eps** di baris paling bawah, dan rail ikon kanan
+**36px**. Rekan sendiri tidak menyarankannya (pilihan C di laporannya,
+`docs/serah-terima/2026-11-12-laporan-tarik-branch-pemutar.md` di branch itu). Jadi yang diambil
+hanya **ide** tombol layar penuh, ditulis ulang di atas `main` terbaru → nol bentrok, nol
+kemunduran.
+
+**Yang dipasang:** tombol layar penuh 36px di ujung kanan baris durasi, sesudah tombol volume.
+Memakai `toggleFullscreen` yang **sama** dengan menu gerigi — satu fungsi, dua pintu, jadi keduanya
+mustahil menyimpang perilaku. Baris "Layar penuh" di menu gerigi **sengaja tidak dihapus**:
+fungsinya sama tapi keduanya tak pernah terlihat bersamaan (menu harus dibuka dulu), dan
+membuangnya = mengubah fitur lama yang masih dipakai.
+
+**Diukur di Chrome headless, layar 393px, halaman `/feed` sungguhan:**
+
+```
+tombol layar penuh  x=345..381   -> utuh di dalam layar
+kapsul volume       x=301..337   -> utuh (bergeser ke kiri, tetap aman)
+garis geser         lebar 216px  -> masih lega, ketukan tidak melompat
+geser volume        atas 100% / tengah 50% / bawah bisu  (tidak berubah)
+```
+
+🎁 **Efek samping yang menguntungkan:** karena kapsul volume bergeser ke kiri, ia **tidak lagi
+menutupi** label "Simpan"/"Bagikan" di rail kanan — cacat kecil yang dicatat jujur di seksi
+sebelumnya hari ini hilang dengan sendirinya.
+
+**Bukti:** `npm run gerbang` **LOLOS 5/5** — build exit 0, tsc exit 0, **169 berkas / 2389 tes
+hijau**, nol berkas rahasia. Tes baru `tests/pemutar-layar-penuh.test.ts` (6 tes).
+
+**📨 Yang perlu owner sampaikan ke rekan (1 kalimat, supaya dia tidak mengerjakan ulang):** branch
+`feat/link-unduhan-provider-kualitas` **tidak akan ditarik**; tombol layar penuhnya sudah dipasang
+di atas `main`, dan ide rail-di-tengah + gerigi `top-6` **tidak dipakai** karena rail 36px adalah
+keputusan owner. Branch itu boleh ditutup.
 
 ---
 

@@ -23,8 +23,49 @@
 > lengkap: `HANDOFF.md` seksi `## 2026-11-09`.
 
 
-**Terakhir dicek:** 2026-11-13 (**komputer OWNER**). `HEAD` = `origin/main` = `dramaku/main` = **`2ad015b`**. ✅ **TAYANG & terbukti di layar HP** — rincian di bawah.
+**Terakhir dicek:** 2026-11-13 malam (**komputer OWNER**). `HEAD` = `origin/main` = `dramaku/main` = **`a9ae869`**. ✅ **TAYANG & terbukti diukur DI PRODUKSI** — empat pekerjaan pemutar sekaligus, downtime NOL. Rincian di bawah.
 
+
+### ✅ 2026-11-13 (malam) — RILIS `53fbc5c` → `a9ae869` (7 commit, dua remote)
+
+**Isi — empat pekerjaan pemutar sekaligus, semuanya permintaan owner hari itu:**
+
+| Commit | Isi |
+|---|---|
+| `1cbe220` | Volume berdiri jadi **garis geser kapsul** (menggantikan tombol + / − yang ditolak owner) |
+| `754061d` | Tombol **Layar penuh** di baris durasi — ide dari branch rekan, **dibangun ulang** di atas `main` |
+| `357ba7d` | Menu **Kualitas video** film jadi tangga resolusi, bukan cuma "Auto" |
+| `a9ae869` | Baris **Auto** dikembalikan + ikon layar penuh diseragamkan jadi **panah diagonal** |
+
+**Branch rekan `feat/link-unduhan-provider-kualitas` TIDAK ditarik** (keputusan owner): tertinggal
+275 commit, bentrok 8 berkas, dan akan membatalkan tiga keputusan owner yang sudah tayang. Yang
+diambil hanya idenya. Branch itu boleh ditutup.
+
+**Gerbang:** `npm run gerbang` **LOLOS 5/5** (build 0 · tsc 0 · **170 berkas / 2404 tes** · nol
+berkas rahasia). Push `dramaku` → `origin`, Railway membangun sendiri.
+
+**Downtime NOL** — selama pemantauan pergantian versi, balasan bukan-200 = **0**.
+
+**Bukti tayang, diukur DI PRODUKSI** (Chrome headless):
+- `/feed/<id>` layar 393px: kapsul volume `x=301..337` utuh · tombol panah layar penuh
+  `x=345..381` utuh · garis geser masih 216px · geser jari atas **100%** / tengah **50%** /
+  bawah **bisu** · 1 ikon speaker · nol elemen diputar.
+- `/tonton/1791538930880` (berkas 1916×1036): menu **"Auto (1080p) / 1080p HD / 720p HD / 480p"**
+  dengan Auto tercentang; klik 1080p memindahkan centang.
+- Smoke test: `/` `/beranda` `/film` `/discover` `/katalog` `/api/dramas` `/my-list` `/profile`
+  `/feed/<id>` → **9/9 = 200**.
+
+⚠️ `/tonton/<id>` **gagal sekali** (habis waktu 30 detik) lalu **200 dalam 0 detik** pada
+percobaan ulang — **cold start** sesudah deploy, pola yang sama pernah tercatat di rilis `4dde5c0`.
+Dicatat, bukan dihapus.
+
+⚠️ **Utang teknis yang DISENGAJA ikut tayang:** memilih kualitas di menu film **tidak** mengganti
+berkas yang diputar — Playly cuma mengirim satu berkas (`variants` kosong di 10 dari 10 film yang
+diukur). Owner tahu dan tetap memilihnya. Dua pagar menjaganya: daftar tak pernah menawarkan angka
+di atas resolusi berkasnya, dan ada catatan jujur di bawah daftar. Rincian + cara melunasi:
+`lib/kualitas-pemutar.ts` dan `HANDOFF.md` seksi `## 2026-11-13`.
+
+---
 
 ### ✅ 2026-11-13 — RILIS `aa0ebff` → `2ad015b` (1 commit, dua remote)
 

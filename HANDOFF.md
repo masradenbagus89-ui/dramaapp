@@ -90,9 +90,9 @@
 > aftermarket** dari pemilik sekarang, harganya **jauh di atas** Rp200.000 dan belum pernah dicek.
 > Nama lain yang masih bebas jauh lebih murah.
 
-**Terakhir diisi:** 2026-11-13 (sore) — ⏸️ **TIGA pekerjaan SIAP TAYANG, BELUM dipush ke produksi: `1cbe220` + `754061d` + `357ba7d`.** (1) **Kapsul geser volume** di pemutar drama — sudah dilihat & disetujui owner di localhost. (2) Tombol **Layar penuh** di baris durasi: keputusan owner atas branch rekan — branch `feat/link-unduhan-provider-kualitas` **tidak ditarik** (tertinggal 275 commit, bentrok 8 berkas, akan membatalkan 3 keputusan owner yang sudah tayang), hanya **idenya** yang dibangun ulang di atas `main`. (3) Menu **Kualitas video** di pemutar FILM jadi **1080p/720p/480p** menggantikan "Auto" — ⚠️ **utang teknis yang DISENGAJA**: pilihannya tidak mengganti berkas karena Playly cuma mengirim satu berkas (`variants` kosong di 10 dari 10 film), owner tahu dan tetap memilihnya. Gerbang lolos 5/5 (**170 berkas / 2401 tes hijau**). `git push origin main` = TOMBOL RILIS → **menunggu izin owner**.
+**Terakhir diisi:** 2026-11-13 (malam) — ✅ **RILIS `53fbc5c → a9ae869` TAYANG, downtime NOL.** Empat pekerjaan pemutar sekaligus: (1) volume berdiri jadi **garis geser kapsul**, (2) tombol **Layar penuh** di baris durasi (ide branch rekan, dibangun ulang di atas `main` — branch aslinya TIDAK ditarik), (3) menu **Kualitas video** film jadi **Auto (1080p) / 1080p HD / 720p HD / 480p**, (4) **Auto** dipertahankan + ikon layar penuh diseragamkan jadi panah. Semua diukur ulang DI PRODUKSI, bukan di localhost. Smoke test 9/9 = 200 (satu cold start di `/tonton`, dicatat di seksi rilis). Rinciannya di seksi `## 2026-11-13 (malam)` di bawah.
 
-**Rincian kontrol volume (putaran KETIGA):** owner menolak bentuk tombol `+` / `−` dan mengirim contoh gambar, jadi pengatur volume kini **garis geser tegak berbentuk kapsul** (jalur kuning + bulatan penggeser). Diukur di Chrome headless layar 393px: kapsul `x=345..381` **utuh di dalam layar**, geser jari atas→100% / tengah→50% / bawah→bisu, nol elemen diputar. Gerbang lolos 5/5 (2383 tes hijau). `git push origin main` = TOMBOL RILIS → **menunggu izin owner**. Rinciannya di seksi pertama `## 2026-11-13` di bawah.
+**Rincian kontrol volume (putaran KETIGA):** owner menolak bentuk tombol `+` / `−` dan mengirim contoh gambar, jadi pengatur volume kini **garis geser tegak berbentuk kapsul** (jalur kuning + bulatan penggeser). Diukur di Chrome headless layar 393px: kapsul `x=345..381` **utuh di dalam layar**, geser jari atas→100% / tengah→50% / bawah→bisu, nol elemen diputar. Gerbang lolos 5/5 (2383 tes hijau). ✅ **Sudah TAYANG** dalam rilis `53fbc5c → a9ae869` malam itu juga.
 
 **Sebelumnya hari ini:** ✅ **`2ad015b` + `8d8c1ba` TAYANG.** Tata letak pemutar beres dalam tiga putaran permintaan owner: tombol **Eps turun ke baris paling bawah**, tombol **volume pindah ke sebelah angka durasi**, rail ikon kanan **diperkecil & dirapatkan** (36px/20px/jarak 8px), dan garis volume tegak **diganti tombol + / −** karena terukur berdiri di **x=391 pada layar 393px = di luar layar HP**. Rinciannya di seksi `## 2026-11-13` di bawah.
 
@@ -100,12 +100,9 @@
 
 ## 🚦 LANJUT DARI SINI (sesi baru, 2026-11-13)
 
-**Keadaan:** `HEAD` = `357ba7d`, **lima commit DI DEPAN** `origin/main` (kapsul volume `1cbe220`,
-tombol layar penuh `754061d`, menu kualitas film `357ba7d`, + 2 catatan) — semuanya sudah lolos
-gerbang 5/5 dan sudah didorong ke repo cermin `dramaku`, tapi **belum dipush ke `origin`** karena
-itu tombol rilis.
-Supabase sempat mati total 2026-11-12 sore (PGRST002) dan **sudah pulih** 2026-11-13 pagi
-(6/6 berhasil, 22–94 ms). Tidak ada yang rusak.
+**Keadaan:** `HEAD` = `origin/main` = `dramaku/main` = **`a9ae869`**, working tree bersih,
+seluruh pekerjaan **TAYANG dan terbukti di situs sungguhan**. Supabase sempat mati total
+2026-11-12 sore (PGRST002) dan **sudah pulih** 2026-11-13 pagi. Tidak ada yang rusak.
 
 ### ❓ SATU keputusan yang MENUNGGU OWNER — jangan dikerjakan tanpa jawabannya
 
@@ -299,6 +296,43 @@ riwayat blok peringatan lama ada di seksi `## 2026-11-09` di bawah.**
 
 ---
 
+## 2026-11-13 (malam) — ✅ RILIS `53fbc5c → a9ae869` TAYANG: empat pekerjaan pemutar sekaligus
+
+Owner memberi izin rilis sesudah memeriksa keempatnya di localhost. **Dual push** `dramaku` →
+`origin`, Railway membangun sendiri, **downtime NOL**.
+
+| Commit | Isi | Bukti di PRODUKSI |
+|---|---|---|
+| `1cbe220` | Volume berdiri jadi **garis geser kapsul** (ganti tombol + / −) | kapsul `x=301..337` utuh di layar 393px; jari: atas 100% / tengah 50% / bawah bisu |
+| `754061d` | Tombol **Layar penuh** di baris durasi (ide branch rekan, dibangun ulang) | tombol `x=345..381` utuh di layar |
+| `357ba7d` | Menu **Kualitas video** film jadi tangga resolusi | "Auto (1080p) / 1080p HD / 720p HD / 480p" |
+| `a9ae869` | **Auto** kembali ke daftar + ikon layar penuh **diseragamkan jadi panah** | Auto tercentang; klik 1080p memindahkan centang |
+
+**Pemantauan saat pergantian versi:** balasan **bukan-200 = NOL** — situs melayani normal selama
+Railway mengganti versi. Smoke test sesudah tayang: `/` `/beranda` `/film` `/discover` `/katalog`
+`/api/dramas` `/my-list` `/profile` `/feed/<id>` → **9/9 = 200**.
+
+⚠️ **Satu catatan jujur, bukan kerusakan:** `/tonton/1791538930880` **gagal sekali** (habis waktu
+30 detik) pada smoke test pertama, lalu **200 dalam 0 detik** pada percobaan ulang. Itu **cold
+start** — halaman pertama kali dibangun ulang sesudah deploy. Pola yang sama pernah tercatat pada
+rilis `4dde5c0`. Dicatat, bukan dihapus.
+
+🪤 **Alat ukur — jebakan yang menipu saya sendiri di rilis ini.** Pendeteksi "sudah tayang atau
+belum" versi pertama memakai `grep -c ... || echo 0` di shell. Saat polanya **tidak** ketemu,
+`grep -c` sudah mencetak `0` **lalu** `|| echo 0` mencetak `0` lagi — hasilnya string dua baris
+yang tidak sama dengan `"0"`, sehingga perbandingan `[ "$ada" != "0" ]` **selalu benar** dan skrip
+melaporkan **"TAYANG" pada percobaan pertama padahal versinya belum berganti**. Nol error. Kalau
+saya tidak memeriksa ulang, laporan "sudah tayang" itu akan sampai ke owner sebagai kebohongan yang
+tidak disengaja. **Pelajaran: jangan pakai `grep -c` sebagai nilai boolean di shell** — pakai
+`node -e` yang mengembalikan satu kata, seperti versi perbaikannya.
+
+**Potret yang disimpan untuk owner** (di `Downloads`, tidak dicommit):
+`volume-baru-layar-HP-393px.png` · `pemutar-volume-plus-layar-penuh-393px.png` ·
+`kualitas-video-film-1080p.png` · `kualitas-video-dengan-auto.png` ·
+`ikon-layar-penuh-panah-drama.png`
+
+---
+
 ## 2026-11-13 — ⏸️ Menu "Kualitas video" film jadi 1080p/720p/480p (keputusan owner, UTANG TEKNIS disengaja)
 
 **Permintaan owner:** *"di bagian film kualitas video isinya jangan hanya auto tapi tambahkan
@@ -412,7 +446,7 @@ keputusan owner. Branch itu boleh ditutup.
 
 ---
 
-## 2026-11-13 — ⏸️ `1cbe220` SIAP TAYANG (belum dipush): volume berdiri jadi garis geser kapsul
+## 2026-11-13 — ✅ `1cbe220` TAYANG: volume berdiri jadi garis geser kapsul
 
 **Permintaan owner (putaran KETIGA untuk kontrol yang sama):** *"perbaiki volume berdiri jangan
 seperti itu, jadikan seperti SS 2"* — dikirim bersama dua tangkapan layar: SS1 = keadaan sekarang
@@ -460,7 +494,7 @@ hijau**, nol berkas rahasia di antrean. Tes volume naik jadi **23**, dengan penj
 jepit, `touch-none`, arah geser (gampang terbalik: koordinat layar tumbuh ke bawah sementara volume
 tumbuh ke atas), dan **bentuknya sendiri** — kalau tombol `+` / `−` kembali, tesnya merah.
 
-**⏸️ Status: BELUM tayang.** Commit `1cbe220` ada di `main` lokal; `git push origin main` = TOMBOL
+**✅ Status: TAYANG** (rilis `53fbc5c → a9ae869`, downtime nol). Saat seksi ini ditulis ia masih menunggu izin; `git push origin main` = TOMBOL
 RILIS dan izinnya milik owner. Owner menguji di situs sungguhan, jadi ia baru bisa melihat bentuk
 barunya sesudah push.
 

@@ -27,8 +27,13 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-/** Satu pilihan di dalam submenu (Subtitle / Kecepatan / Kualitas). */
-export type OpsiMenu = { nilai: string; label: string };
+/**
+ * Satu pilihan di dalam submenu (Subtitle / Kecepatan / Kualitas).
+ *
+ * `lencana` = teks kecil di kanan label, mis. "HD" pada 1080p/720p. Opsional
+ * karena hanya daftar kualitas yang memakainya; submenu lain tidak berubah.
+ */
+export type OpsiMenu = { nilai: string; label: string; lencana?: string | null };
 
 /**
  * Sakelar hidup-mati. `alasanMati` yang terisi berarti fitur ini TIDAK bisa
@@ -371,6 +376,18 @@ function DaftarOpsi({ pilihan }: { pilihan: PilihanMenu }) {
             {o.nilai === pilihan.nilai && <Check className="size-4 text-amber-400" />}
           </span>
           <span className="flex-1 truncate">{o.label}</span>
+          {/* Lencana "HD" — penanda sekilas tanpa menambah baris, sama seperti
+              pemutar video pada umumnya. `aria-hidden` karena pembaca layar
+              sudah mengucapkan labelnya ("1080p"); mengeja "HD" sesudahnya
+              hanya menambah bunyi tanpa menambah arti. */}
+          {o.lencana && (
+            <span
+              aria-hidden="true"
+              className="ml-1 shrink-0 rounded bg-amber-400/90 px-1 text-[9px] font-bold leading-4 text-black"
+            >
+              {o.lencana}
+            </span>
+          )}
         </button>
       ))}
     </>

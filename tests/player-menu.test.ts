@@ -222,6 +222,35 @@ describe("PlayerMenu — popup titik tiga", () => {
     expect(onPilih).toHaveBeenCalledWith("720");
   });
 
+  it("Kualitas: lencana HD tergambar di baris yang punya, tidak di yang lain", () => {
+    // Penanda sekilas seperti pemutar pada umumnya (contoh gambar owner
+    // 2026-11-13). Lencana yang muncul di SEMUA baris sama tidak bergunanya
+    // dengan yang tidak muncul sama sekali.
+    render(
+      propsDasar({
+        kualitas: {
+          nilai: "1080p",
+          opsi: [
+            { nilai: "1080p", label: "1080p", lencana: "HD" },
+            { nilai: "720p", label: "720p", lencana: "HD" },
+            { nilai: "480p", label: "480p", lencana: null },
+          ],
+          onPilih: vi.fn(),
+        },
+      }),
+    );
+    klik(tombolMenu());
+    klik(tombolBerteks("Kualitas video"));
+
+    const baris = (teks: string) =>
+      [...container.querySelectorAll('[role="menuitemradio"]')].find((b) =>
+        (b.textContent ?? "").includes(teks),
+      );
+    expect(baris("1080p")?.textContent).toContain("HD");
+    expect(baris("720p")?.textContent).toContain("HD");
+    expect(baris("480p")?.textContent, "480p tidak boleh berlencana HD").not.toContain("HD");
+  });
+
   it("menutup saat tombol Escape ditekan", () => {
     render(propsDasar());
     klik(tombolMenu());

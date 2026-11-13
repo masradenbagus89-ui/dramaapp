@@ -40,6 +40,7 @@ import {
   type IzinSuara,
 } from "@/lib/olah-suara";
 import PlayerMenu, { type OpsiMenu } from "./PlayerMenu";
+import { daftarKualitas } from "@/lib/kualitas-pemutar";
 
 const KECEPATAN: OpsiMenu[] = [
   { nilai: "0.5", label: "0,5×" },
@@ -132,6 +133,11 @@ export default function PlaylyPlayer({
   const [fullscreen, setFullscreen] = useState(false);
   const [kontrolTampil, setKontrolTampil] = useState(true);
   const [menuTerbuka, setMenuTerbuka] = useState(false);
+  /* Ukuran gambar video yang SEBENARNYA, dibaca dari metadata berkasnya.
+     Satu-satunya sumber jujur soal resolusi: balasan Playly tidak menyebutnya
+     sama sekali (diperiksa 2026-11-13, 10 dari 10 film). 0×0 = belum dimuat. */
+  const [ukuranAsli, setUkuranAsli] = useState({ lebar: 0, tinggi: 0 });
+  const [kualitas, setKualitas] = useState<string | null>(null);
 
   // Alamat berkas diambil SAAT DIPUTAR, bukan saat halaman dirender: alamatnya
   // bertanda tangan dan hanya berlaku ~6 jam, sedangkan halaman /playly
@@ -310,6 +316,11 @@ export default function PlaylyPlayer({
 
   const sedangMemuat = !videoUrl && !gagal;
 
+  /* Daftar kualitas lahir dari ukuran berkasnya, bukan dari daftar tetap:
+     film 720p tidak boleh menawarkan 1080p. Aturannya fungsi murni supaya
+     bisa diuji tanpa browser (lib/kualitas-pemutar.ts). */
+  const opsiKualitas = daftarKualitas(ukuranAsli.lebar, ukuranAsli.tinggi);
+
   return (
     <div
       ref={wadahRef}
@@ -371,6 +382,15 @@ export default function PlaylyPlayer({
           onPause={() => setPaused(true)}
           onTimeUpdate={(e) => setCurTime(e.currentTarget.currentTime)}
           onDurationChange={(e) => setDur(e.currentTarget.duration || 0)}
+          /* Resolusi berkas baru diketahui SESUDAH metadata dimuat — sebelum
+             itu videoWidth/videoHeight keduanya 0. Daftar kualitas di menu
+             menunggu angka ini, bukan menebaknya. */
+          onLoadedMetadata={(e) =>
+            setUkuranAsli({
+              lebar: e.currentTarget.videoWidth,
+              tinggi: e.currentTarget.videoHeight,
+            })
+          }
           onVolumeChange={(e) => {
             setVolume(e.currentTarget.volume);
             setMuted(e.currentTarget.muted);
@@ -548,17 +568,27 @@ export default function PlaylyPlayer({
                   alasanMati: alasanSuaraMati,
                 }}
                 sinematik={{ aktif: sinematik, onUbah: setSinematik }}
-                // Kualitas tampil apa adanya (keputusan owner 2026-09-09):
-                // Playly TIDAK mengirim varian resolusi — dicek ke API mereka,
-                // kosong di 9 dari 9 video. Daftar pilihannya sengaja tidak
-                // dikarang supaya tidak ada tombol yang diklik lalu tidak
-                // terjadi apa-apa.
+                /* KUALITAS — keputusan owner 2026-11-13 (menggantikan keputusan
+                   2026-09-09 yang hanya menampilkan "Auto").
+
+                   ⚠️ UTANG TEKNIS YANG DISENGAJA: memilih kualitas di sini
+                   TIDAK mengganti berkas yang diputar — Playly memang hanya
+                   mengirim satu berkas (`variants` kosong di 10 dari 10 film
+                   yang diukur 2026-11-13). Owner tahu konsekuensinya dan tetap
+                   memilih menampilkan tangganya. Cara melunasi + alasan
+                   lengkapnya di lib/kualitas-pemutar.ts.
+
+                   Yang tetap dijaga jujur: angka tertinggi di daftar tidak
+                   pernah melebihi resolusi berkasnya, dan catatan di bawah
+                   daftar menyebut apa adanya supaya penonton yang memilih
+                   kualitas rendah demi kuota tidak salah mengira. */
                 kualitas={{
-                  nilai: "auto",
-                  opsi: [{ nilai: "auto", label: "Auto" }],
-                  onPilih: () => undefined,
-                  catatan:
-                    "Sumber video ini hanya menyediakan satu kualitas, jadi tidak ada pilihan lain.",
+                  nilai: kualitas ?? opsiKualitas[0]?.nilai ?? "auto",
+                  opsi: opsiKualitas.length ? opsiKualitas : [{ nilai: "auto", label: "Auto" }],
+                  onPilih: setKualitas,
+                  catatan: opsiKualitas.length
+                    ? "Sumber film ini satu berkas, jadi pilihan di atas tidak mengubah ukuran datanya."
+                    : "Kualitas terbaca setelah video mulai dimuat.",
                 }}
               />
 

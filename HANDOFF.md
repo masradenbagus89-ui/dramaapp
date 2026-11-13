@@ -90,7 +90,7 @@
 > aftermarket** dari pemilik sekarang, harganya **jauh di atas** Rp200.000 dan belum pernah dicek.
 > Nama lain yang masih bebas jauh lebih murah.
 
-**Terakhir diisi:** 2026-11-13 (sore) — ⏸️ **DUA commit SIAP TAYANG, BELUM dipush ke produksi: `1cbe220` + `754061d`.** (1) Kapsul geser volume — **sudah dilihat & disetujui owner di localhost**. (2) Tombol **Layar penuh** di baris durasi: keputusan owner atas branch rekan — branch `feat/link-unduhan-provider-kualitas` **tidak ditarik** (tertinggal 275 commit, bentrok 8 berkas, akan membatalkan 3 keputusan owner yang sudah tayang), hanya **idenya** yang dibangun ulang di atas `main`. Gerbang lolos 5/5 (**169 berkas / 2389 tes hijau**). `git push origin main` = TOMBOL RILIS → **menunggu izin owner**.
+**Terakhir diisi:** 2026-11-13 (sore) — ⏸️ **TIGA pekerjaan SIAP TAYANG, BELUM dipush ke produksi: `1cbe220` + `754061d` + `357ba7d`.** (1) **Kapsul geser volume** di pemutar drama — sudah dilihat & disetujui owner di localhost. (2) Tombol **Layar penuh** di baris durasi: keputusan owner atas branch rekan — branch `feat/link-unduhan-provider-kualitas` **tidak ditarik** (tertinggal 275 commit, bentrok 8 berkas, akan membatalkan 3 keputusan owner yang sudah tayang), hanya **idenya** yang dibangun ulang di atas `main`. (3) Menu **Kualitas video** di pemutar FILM jadi **1080p/720p/480p** menggantikan "Auto" — ⚠️ **utang teknis yang DISENGAJA**: pilihannya tidak mengganti berkas karena Playly cuma mengirim satu berkas (`variants` kosong di 10 dari 10 film), owner tahu dan tetap memilihnya. Gerbang lolos 5/5 (**170 berkas / 2401 tes hijau**). `git push origin main` = TOMBOL RILIS → **menunggu izin owner**.
 
 **Rincian kontrol volume (putaran KETIGA):** owner menolak bentuk tombol `+` / `−` dan mengirim contoh gambar, jadi pengatur volume kini **garis geser tegak berbentuk kapsul** (jalur kuning + bulatan penggeser). Diukur di Chrome headless layar 393px: kapsul `x=345..381` **utuh di dalam layar**, geser jari atas→100% / tengah→50% / bawah→bisu, nol elemen diputar. Gerbang lolos 5/5 (2383 tes hijau). `git push origin main` = TOMBOL RILIS → **menunggu izin owner**. Rinciannya di seksi pertama `## 2026-11-13` di bawah.
 
@@ -100,9 +100,10 @@
 
 ## 🚦 LANJUT DARI SINI (sesi baru, 2026-11-13)
 
-**Keadaan:** `HEAD` = `754061d`, **tiga commit DI DEPAN** `origin/main` (kapsul volume `1cbe220`,
-catatannya `ec58bd9`, tombol layar penuh `754061d`) — semuanya sudah lolos gerbang 5/5 dan sudah
-didorong ke repo cermin `dramaku`, tapi **belum dipush ke `origin`** karena itu tombol rilis.
+**Keadaan:** `HEAD` = `357ba7d`, **lima commit DI DEPAN** `origin/main` (kapsul volume `1cbe220`,
+tombol layar penuh `754061d`, menu kualitas film `357ba7d`, + 2 catatan) — semuanya sudah lolos
+gerbang 5/5 dan sudah didorong ke repo cermin `dramaku`, tapi **belum dipush ke `origin`** karena
+itu tombol rilis.
 Supabase sempat mati total 2026-11-12 sore (PGRST002) dan **sudah pulih** 2026-11-13 pagi
 (6/6 berhasil, 22–94 ms). Tidak ada yang rusak.
 
@@ -295,6 +296,66 @@ riwayat blok peringatan lama ada di seksi `## 2026-11-09` di bawah.**
 **Rilis ke-1 hari ini:** (✅ **TAYANG `4dde5c0`**: tombol beranda "LIHAT SEMUA FILM UNGGULAN" → **"TEMUKAN TONTONAN FAVORITMU"** — labelnya salah di dua sisi (isinya drama berseri, bukan film; tujuannya katalog lengkap, bukan daftar unggulan). Dual push → Railway build sendiri → tayang ±60 detik, **downtime NOL**. Smoke test 5 alur: 4 langsung 200, `/drama/meg-2-the-trench` 500 SEKALI lalu 200 enam kali — cold start, dicatat bukan dihapus. ❌ **DIRALAT di rilis ke-2**: catatan asli di sini menyebut tombol itu "tergeser ke kanan di layar HP" sebagai gejala nyata. **Itu keliru** — cacat alat potret, bukan cacat situs; sudah diukur ulang dan tombolnya terpusat sempurna. Jangan diburu.)
 
 **Sebelumnya:** 2026-10-30 (tiga rilis beruntun, semuanya TAYANG: `5088bf2` genre bahasa Indonesia → `27973f0` koreksi owner Kerajaan/CEO/Lainnya → **`55894b8` dua tombol halaman drama yang selama ini TERPOTONG**. Downtime NOL. ⏸️ **DUA bahasan menunggu keputusan owner**, risetnya sudah selesai & nol kode diubah: "klik drama langsung play" dan "sinopsis film masih bahasa Inggris".)
+
+---
+
+## 2026-11-13 — ⏸️ Menu "Kualitas video" film jadi 1080p/720p/480p (keputusan owner, UTANG TEKNIS disengaja)
+
+**Permintaan owner:** *"di bagian film kualitas video isinya jangan hanya auto tapi tambahkan
+seperti SS1"* — contoh gambarnya daftar **1080p HD / 720p HD / 480p**.
+
+### 🪤 YANG HARUS DIBACA SEBELUM MENYENTUH FITUR INI
+
+**Pilihan di menu itu TIDAK mengganti berkas yang diputar.** Bukan bug, bukan pekerjaan setengah
+jadi — **tidak ada berkas lain untuk diganti.** Diukur 2026-11-13 ke `/api/public-video` Playly
+untuk **10 film yang sedang tayang**: field `variants` (tempat Playly menyimpan versi
+1080p/720p/480p) **KOSONG di 10 dari 10**; yang ada hanya satu `videoUrl` mp4.
+
+Owner diberi tahu akibatnya — penonton yang memilih 480p demi hemat kuota **tetap** mengunduh
+berkas penuh — dan **tetap memilih menampilkannya** (dari tiga pilihan yang disajikan). Ini utang
+teknis yang disengaja, bukan kelalaian.
+
+**Cara melunasinya** kalau suatu saat Playly mengaktifkan olah-ulang video: `variants` akan terisi
+alamat per kualitas → ambil daftarnya dari sana, ganti `src` video saat dipilih, kembalikan
+`currentTime` supaya penonton tidak terlempar ke awal. Bentuk keluaran `lib/kualitas-pemutar.ts`
+sudah disiapkan sama, jadi yang berubah cuma sumber daftarnya.
+
+**Dua pagar yang menjaga ini tidak jadi bohong penuh:**
+1. Daftar **tidak pernah** menawarkan angka di ATAS resolusi berkasnya. Film 720p menampilkan
+   720p/480p/360p — menjanjikan "1080p" pada berkas 720p adalah janji yang bahkan secara teori tak
+   bisa ditepati; angka yang sama atau lebih rendah masih mungkin ditepati nanti.
+2. Catatan di bawah daftar menyebut apa adanya: *"Sumber film ini satu berkas, jadi pilihan di atas
+   tidak mengubah ukuran datanya."* ⚠️ Kalau owner minta catatan ini dihapus, hapus **catatannya**
+   saja — jangan ikut menghapus pagar nomor 1.
+
+### 🪤 Kelas kualitas TIDAK boleh dihitung dari tinggi saja
+
+Film bioskop dipotong jadi layar lebar. Diukur dari berkas sungguhan:
+
+```
+Sentimental Value    1916x1036   -> kelas 1080p  (tinggi saja: salah jadi "720p")
+An Alien Asked Me…   1920x1080   -> 1080p
+Bolehkah Sekali Saja 1280x720    -> 720p
+Ayo Balikan          1280x720    -> 720p
+The Crow             1280x688    -> kelas 720p   (tinggi saja: salah jadi "480p")
+```
+
+Yang dipakai **tinggi efektif**: `max(tinggi, lebar × 9/16)`, toleransi 5%. Salah di sini tidak
+memunculkan error apa pun — cuma angka keliru di layar penonton.
+
+**Berkas:** `lib/kualitas-pemutar.ts` (aturan murni) · `app/components/player/PlayerMenu.tsx`
+(`OpsiMenu` dapat `lencana` → badge HD) · `app/components/player/PlaylyPlayer.tsx` (membaca
+`videoWidth`/`videoHeight` saat metadata siap).
+
+**Bukti:** `npm run gerbang` **LOLOS 5/5** — **170 berkas / 2401 tes hijau**. Diukur juga di Chrome
+pada halaman `/tonton` yang betul-betul jalan: film 1916×1036 → "1080p HD / 720p HD / 480p" dengan
+1080p tercentang; film 1280×720 → "720p HD / 480p / 360p"; centang berpindah saat baris lain
+diklik.
+
+💡 **Pemutar film JALAN di localhost** (ini mengoreksi anggapan lama "video tidak bisa dicoba di
+lokal"): `/tonton/<videoId>` memuat mp4 langsung dari penyimpanan Playly dan berhasil diputar dari
+mesin ini. Yang memang kosong di lokal cuma **daftar** film di `/film`, karena katalog Playly
+sekarang menuntut kunci API.
 
 ---
 

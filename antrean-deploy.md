@@ -23,7 +23,34 @@
 > lengkap: `HANDOFF.md` seksi `## 2026-11-09`.
 
 
-**Terakhir dicek:** 2026-11-13 malam (**komputer OWNER**). `HEAD` = `origin/main` = `dramaku/main` = **`a9ae869`**. ✅ **TAYANG & terbukti diukur DI PRODUKSI** — empat pekerjaan pemutar sekaligus, downtime NOL. Rincian di bawah.
+**Terakhir dicek:** 2026-11-13 malam, sesi ke-2 (**komputer OWNER**). `HEAD` = `origin/main` = `dramaku/main` = **`19b0d32`**. Didorong ke dua remote sesudah owner menyatakan "sudah ok"; gerbang pra-rilis lolos kelimanya. Rincian di bawah.
+
+
+### ⏳ 2026-11-13 (malam, sesi ke-2) — RILIS `a9ae869` → `19b0d32` (1 commit, dua remote)
+
+**Didorong ke dua remote 2026-11-13 malam sesudah owner menyatakan "sudah ok".** `dramaku` dulu (cermin, tidak merilis apa pun), baru `origin main` (TOMBOL RILIS). Diverifikasi: `HEAD` = `origin/main` = `dramaku/main` = **`19b0d32`**.
+
+**Isi — lima permintaan owner berturut-turut dalam satu sesi:**
+
+| Bagian | Isi |
+|---|---|
+| Keamanan | **2FA dihapus tuntas** — 11 berkas. Verifikasi login dilepas DULU, baru UI-nya |
+| Katalog | **Kategori 7 → 67** + warna otomatis lewat palet |
+| Panel admin | Dropdown kategori jadi **kolom cari** (`PilihKategori.tsx`) |
+| Pencarian | **Satu aturan untuk seluruh situs**: yang tampil harus diawali yang diketik |
+| Navbar | Kotak cari navbar akhirnya punya **daftar saran** (`/api/saran` + `useDaftarSaran`) |
+
+**Gerbang pra-rilis: kelimanya lolos** — `.next` dihapus · `npm run build` OK · `npx tsc --noEmit` 0 error · **2457 tes hijau** (172 berkas) · nol berkas rahasia.
+
+🪤 **Catatan jalannya gerbang:** `npm run gerbang` berakhir **exit 127 di tengah `npm test`** — prosesnya terputus, BUKAN tesnya gagal. Tiga langkah pertama terbukti lolos dari keluarannya; `npm test` lalu dijalankan terpisah (`npx vitest run` → exit 0, 2457 hijau) dan langkah ke-5 diperiksa tangan. Ini gejala yang sudah dikenal di mesin ini — jangan simpulkan "gerbang gagal" dari exit code-nya saja, baca berkas keluarannya.
+
+⚠️ **YANG BERUBAH BAGI PENONTON, dan ini keputusan owner yang disengaja:** pencarian jadi lebih sempit. Mengetik `knight` atau `dark knight` TIDAK lagi menemukan "The Dark Knight" — judul harus diketik dari depan. Owner diberi dua contoh konkret ini SEBELUM memutuskan, lalu tetap meminta penyeragaman. Jalan pulangnya: `cocokSemuaKata` di `lib/pencarian.ts` sengaja tidak dihapus; mengembalikannya cukup di dua tempat (`saringDenganKetikan` + `filterAndSortDramas`).
+
+📌 **Tidak ada SQL maupun env baru.** Kolom `category` bertipe teks bebas tanpa CHECK constraint, jadi 60 kategori baru tidak butuh migration. `/api/saran` memakai fungsi cached yang sudah ada.
+
+**Smoke test produksi:** lihat hasilnya di `HANDOFF.md` seksi yang sama.
+
+---
 
 
 ### ✅ 2026-11-13 (malam) — RILIS `53fbc5c` → `a9ae869` (7 commit, dua remote)

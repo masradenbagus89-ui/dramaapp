@@ -296,7 +296,7 @@ riwayat blok peringatan lama ada di seksi `## 2026-11-09` di bawah.**
 
 ---
 
-## 2026-11-13 (malam) — ⏸️ SIAP RILIS, BELUM DI-PUSH: 2FA dihapus + kategori 7 → 67 + kolom cari + prefix search
+## 2026-11-13 (malam) — ✅ RILIS `a9ae869` → `19b0d32` TAYANG: 2FA dihapus + kategori 7 → 67 + kolom cari + satu aturan cari
 
 **Permintaan owner, DUA putaran dalam satu sesi — semuanya sudah dikerjakan:**
 Putaran 1: (1) "2FA kamu hapus" · (2) "tambahkan isi kategori karena pilihan genrenya sedikit, kamu buat yang lengkap".
@@ -306,7 +306,7 @@ Putaran 2 (sesudah owner melihat hasilnya): (3) "masih belum lengkap buat 30 gen
 - **Prefix Search dipasang di DUA-DUANYA** (kolom genre admin + kotak cari penonton), bukan admin saja. Owner melampirkan gambar kotak cari penonton, dan itu memang yang dimaksud.
 - **6 genre terakhir diambil dari sisa genre IMDb**, bukan genre khas drama Asia (Silat/Sekolah/Medis/dll). Alasan yang menang: genre IMDb bisa diisi OTOMATIS oleh tombol "Isi otomatis kategori"; genre khas drama harus diketik tangan selamanya karena IMDb tak punya nama itu.
 
-**Status: gerbang pra-rilis LOLOS kelima-limanya, tapi BELUM di-push.** `npm run gerbang` → `.next` dihapus ✓ · `npm run build` ✓ · `npx tsc --noEmit` **0 error** ✓ · `npm test` **2410 tes / 170 berkas, SEMUA hijau** ✓ · nol berkas rahasia ✓. Push ke `origin main` = TOMBOL RILIS, izinnya milik owner (AGENTS.md §5.5) — **belum diminta, jadi belum dikerjakan.** Juga belum di-commit.
+**Status: TAYANG.** Di-commit sebagai `19b0d32` lalu didorong ke DUA remote (`dramaku` dulu, baru `origin main`) 2026-11-13 malam sesudah owner menyatakan "sudah ok". Diverifikasi: `HEAD` = `origin/main` = `dramaku/main` = `19b0d32`. Gerbang pra-rilis lolos kelima-limanya. `npm run gerbang` → `.next` dihapus ✓ · `npm run build` ✓ · `npx tsc --noEmit` **0 error** ✓ · `npm test` **2410 tes / 170 berkas, SEMUA hijau** ✓ · nol berkas rahasia ✓. Push ke `origin main` = TOMBOL RILIS, izinnya milik owner (AGENTS.md §5.5) — **belum diminta, jadi belum dikerjakan.** Juga belum di-commit.
 
 ### 1. 2FA dihapus TUNTAS — 11 berkas, bukan cuma kartunya
 
@@ -532,6 +532,21 @@ Menyalin logika saran (sorotan panah, buka-tutup, Escape, Enter-saat-disorot, kl
 - pengambilan indeks di navbar dijaga ambang huruf — pagar BIAYA, supaya ia tak menembak katalog di tiap halaman;
 - `lib/discover.ts` tidak boleh kembali memakai `cocokSemuaKata`.
 
+
+### ✅ SMOKE TEST PRODUKSI — diukur sendiri, bukan ditebak
+
+Deploy Railway mendarat **~90 detik** sesudah push. Diukur di situs SUNGGUHAN (`dramaapp-production-9e88.up.railway.app`):
+
+| Yang diperiksa | Hasil |
+|---|---|
+| `/api/auth/2fa` & `/api/auth/2fa/setup` | **404** — penanda TERKUAT: rutenya benar-benar lenyap, jadi yang tayang memang versi baru |
+| Halaman `/login` | 200, **nol jejak 2FA** di HTML-nya (dicari: `login-2fa`, "Kode 2FA", "authenticator") |
+| `/api/saran` (endpoint BARU) | 200, `ok:true`, **553 judul** — lebih banyak dari lokal (468) karena katalog produksi lebih lengkap |
+| Delapan alamat | `/` `/beranda` `/film` `/login` `/profile` `/discover` `/api/dramas` `/api/saran` → semua **200** |
+
+⚠️ **Yang BELUM terbukti dan butuh mata manusia:** kolom cari kategori 67 pilihan, daftar saran di navbar, dan perilaku pencarian baru semuanya hanya tergambar SESUDAH diklik/diketik di browser. HTML dari server tidak bisa membuktikannya. Jangan klaim terbukti tanpa itu — langkah kliknya ada di bawah.
+
+---
 
 ### Cara owner mencoba sendiri (sesudah di-push & tayang)
 

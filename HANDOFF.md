@@ -90,15 +90,18 @@
 > aftermarket** dari pemilik sekarang, harganya **jauh di atas** Rp200.000 dan belum pernah dicek.
 > Nama lain yang masih bebas jauh lebih murah.
 
-**Terakhir diisi:** 2026-11-13 — ✅ **`2ad015b` + `8d8c1ba` TAYANG.** Tata letak pemutar beres dalam tiga putaran permintaan owner: tombol **Eps turun ke baris paling bawah**, tombol **volume pindah ke sebelah angka durasi**, rail ikon kanan **diperkecil & dirapatkan** (36px/20px/jarak 8px), dan garis volume tegak **diganti tombol + / −** karena terukur berdiri di **x=391 pada layar 393px = di luar layar HP**. Rinciannya di seksi `## 2026-11-13` di bawah.
+**Terakhir diisi:** 2026-11-13 (sore) — ⏸️ **`1cbe220` SIAP TAYANG, BELUM dipush ke produksi.** Putaran KETIGA kontrol volume: owner menolak bentuk tombol `+` / `−` dan mengirim contoh gambar, jadi pengatur volume kini **garis geser tegak berbentuk kapsul** (jalur kuning + bulatan penggeser). Diukur di Chrome headless layar 393px: kapsul `x=345..381` **utuh di dalam layar**, geser jari atas→100% / tengah→50% / bawah→bisu, nol elemen diputar. Gerbang lolos 5/5 (2383 tes hijau). `git push origin main` = TOMBOL RILIS → **menunggu izin owner**. Rinciannya di seksi pertama `## 2026-11-13` di bawah.
+
+**Sebelumnya hari ini:** ✅ **`2ad015b` + `8d8c1ba` TAYANG.** Tata letak pemutar beres dalam tiga putaran permintaan owner: tombol **Eps turun ke baris paling bawah**, tombol **volume pindah ke sebelah angka durasi**, rail ikon kanan **diperkecil & dirapatkan** (36px/20px/jarak 8px), dan garis volume tegak **diganti tombol + / −** karena terukur berdiri di **x=391 pada layar 393px = di luar layar HP**. Rinciannya di seksi `## 2026-11-13` di bawah.
 
 ---
 
 ## 🚦 LANJUT DARI SINI (sesi baru, 2026-11-13)
 
-**Keadaan:** `HEAD` = `origin/main` = `dramaku/main`, working tree **bersih**, semua pekerjaan
-sudah **TAYANG dan terbukti** di situs sungguhan. Supabase sempat mati total 2026-11-12 sore
-(PGRST002) dan **sudah pulih** 2026-11-13 pagi (6/6 berhasil, 22–94 ms). Tidak ada yang rusak.
+**Keadaan:** `HEAD` = `1cbe220`, **satu commit DI DEPAN** `origin/main` — perbaikan bentuk kontrol
+volume (garis geser kapsul) sudah di-commit, gerbang lolos 5/5, tapi **belum dipush** karena push
+ke `origin main` = tombol rilis. Supabase sempat mati total 2026-11-12 sore (PGRST002) dan **sudah
+pulih** 2026-11-13 pagi (6/6 berhasil, 22–94 ms). Tidak ada yang rusak.
 
 ### ❓ DUA keputusan yang MENUNGGU OWNER — jangan dikerjakan tanpa jawabannya
 
@@ -296,6 +299,73 @@ riwayat blok peringatan lama ada di seksi `## 2026-11-09` di bawah.**
 **Rilis ke-1 hari ini:** (✅ **TAYANG `4dde5c0`**: tombol beranda "LIHAT SEMUA FILM UNGGULAN" → **"TEMUKAN TONTONAN FAVORITMU"** — labelnya salah di dua sisi (isinya drama berseri, bukan film; tujuannya katalog lengkap, bukan daftar unggulan). Dual push → Railway build sendiri → tayang ±60 detik, **downtime NOL**. Smoke test 5 alur: 4 langsung 200, `/drama/meg-2-the-trench` 500 SEKALI lalu 200 enam kali — cold start, dicatat bukan dihapus. ❌ **DIRALAT di rilis ke-2**: catatan asli di sini menyebut tombol itu "tergeser ke kanan di layar HP" sebagai gejala nyata. **Itu keliru** — cacat alat potret, bukan cacat situs; sudah diukur ulang dan tombolnya terpusat sempurna. Jangan diburu.)
 
 **Sebelumnya:** 2026-10-30 (tiga rilis beruntun, semuanya TAYANG: `5088bf2` genre bahasa Indonesia → `27973f0` koreksi owner Kerajaan/CEO/Lainnya → **`55894b8` dua tombol halaman drama yang selama ini TERPOTONG**. Downtime NOL. ⏸️ **DUA bahasan menunggu keputusan owner**, risetnya sudah selesai & nol kode diubah: "klik drama langsung play" dan "sinopsis film masih bahasa Inggris".)
+
+---
+
+## 2026-11-13 — ⏸️ `1cbe220` SIAP TAYANG (belum dipush): volume berdiri jadi garis geser kapsul
+
+**Permintaan owner (putaran KETIGA untuk kontrol yang sama):** *"perbaiki volume berdiri jangan
+seperti itu, jadikan seperti SS 2"* — dikirim bersama dua tangkapan layar: SS1 = keadaan sekarang
+di HP (kotak hitam berisi tombol `+`, tulisan `100%`, tombol `−`), SS2 = bentuk yang diinginkan
+(kapsul hitam ramping berisi garis tegak kuning + bulatan penggeser).
+
+**Yang diganti:** dua tombol `+` / `−` beserta angka persennya (`2ad015b`, dipasang pagi ini) →
+SATU garis geser tegak. **Yang TIDAK dikembalikan: rotasi.** Tegaknya sekarang karena memang
+DIGAMBAR tegak (tinggi 96px > lebar 6px), bukan karena `-rotate-90` — itu jebakan yang melempar
+garis volume ke `x=391` pada layar 393px kemarin. Penjaganya di tes tetap berdiri, jadi kelas
+kesalahan itu tidak bisa kembali diam-diam.
+
+**Diukur di browser SUNGGUHAN** (Chrome headless + DevTools Protocol, layar 393px = iPhone 14 Pro,
+halaman `/feed` yang betul-betul jalan — bukan jsdom, yang tidak menghitung tata letak sama sekali):
+
+```
+kapsul   x=345..381  (lebar 36, tinggi 120)   -> utuh di dalam layar 393px
+jalur    x=349..377  (lebar 28, tinggi  96)   -> utuh di dalam layar
+jari di ujung atas    -> 100%
+jari di tengah        ->  50%
+jari di ujung bawah   ->   0%  + ikon berubah jadi speaker-dicoret
+elemen diputar: 0        ikon speaker: 1
+```
+
+**Tiga hal yang TIDAK kelihatan dari tampilannya tapi menentukan ia terasa rusak atau tidak:**
+
+1. **`touch-none` pada jalur geser.** Feed berpindah episode lewat gulir-sentuh ASLI browser
+   (`snap-y snap-mandatory overflow-y-scroll`, `FeedPlayer.tsx:645`). Tanpa `touch-action: none`,
+   jari yang menarik volume ke atas ikut menggulir feed — penonton melompat ke episode berikutnya
+   padahal cuma mau mengeraskan suara. Nol error, dan mustahil tertangkap di desktop.
+2. **Zona jepit 4% di dua ujung.** Pengukuran pertama memperlihatkan jempol yang mentok di tepi
+   kapsul mendarat ~2px dari ujung jalur = **98% / 2%**. Yang 2% itu praktis diam TAPI ikon speaker
+   tetap menyala, jadi penonton yang mau membisukan mengira kontrolnya rusak. Sesudah dijepit:
+   tepat 100% / bisu.
+3. **Pointer capture + penanda `menggeser`.** Jari boleh keluar dari kapsul yang ramping ini tanpa
+   geserannya putus di tengah jalan, dan kursor yang cuma LEWAT (tanpa ditekan) tidak ikut mengubah
+   volume.
+
+Papan ketik ikut dilayani (panah atas/bawah 10%, Home/End) dan `role="slider"` memakai
+`aria-valuetext` "Bisu" — di pembaca layar "0%" dan "Bisu" terdengar sama saja padahal hanya satu
+yang menjelaskan.
+
+**Bukti:** `npm run gerbang` **LOLOS 5/5** — build exit 0, tsc exit 0, **168 berkas / 2383 tes
+hijau**, nol berkas rahasia di antrean. Tes volume naik jadi **23**, dengan penjaga baru untuk zona
+jepit, `touch-none`, arah geser (gampang terbalik: koordinat layar tumbuh ke bawah sementara volume
+tumbuh ke atas), dan **bentuknya sendiri** — kalau tombol `+` / `−` kembali, tesnya merah.
+
+**⏸️ Status: BELUM tayang.** Commit `1cbe220` ada di `main` lokal; `git push origin main` = TOMBOL
+RILIS dan izinnya milik owner. Owner menguji di situs sungguhan, jadi ia baru bisa melihat bentuk
+barunya sesudah push.
+
+**Catatan jujur, bukan cacat baru:** kapsul volume berdiri di jalur rail ikon kanan, jadi label
+**Simpan** dan **Bagikan** di belakangnya tertutup sebagian selama panel terbuka (ujung hurufnya
+mengintip di sisi kanan kapsul). Perilaku ini sama persis dengan versi tombol `+` / `−` kemarin —
+panelnya malah lebih ramping sekarang (36px, dulu 48px). Dicatat supaya tidak dikira kemunduran
+baru kalau nanti terlihat di tangkapan layar.
+
+**Alat ukurnya:** skrip Chrome headless sesi ini ada di folder scratchpad (tidak dicommit). Pola
+intinya: `Emulation.setDeviceMetricsOverride` 393×852 + `setTouchEmulationEnabled` → tunggu
+KONDISI (bukan tunggu waktu) → **ketuk tengah layar dulu** supaya kontrol muncul (kontrol memudar
+sendiri 3,5 detik dan panel volume menolak terbuka saat memudar — itu disengaja) → baru ketuk
+tombol volumenya → `Input.dispatchTouchEvent` untuk menggeser → `Page.captureScreenshot` untuk
+diperiksa mata.
 
 ---
 

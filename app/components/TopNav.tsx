@@ -12,6 +12,9 @@ import { cn } from "@/lib/utils";
 import { Search } from "lucide-react";
 import { punyaNavbarAtas } from "@/lib/navigasi-halaman";
 import { alamatCari, TUJUAN_CARI } from "@/lib/nav-katalog";
+import DaftarSaran from "./beranda/DaftarSaran";
+import { useDaftarSaran } from "./beranda/useDaftarSaran";
+import { MIN_HURUF_SARAN, type SaranCari } from "@/lib/saran-cari";
 import { AKUN_PENONTON_ENABLED } from "@/lib/saklar-fitur";
 import { TEKS_KOTAK_CARI } from "./beranda/SearchBar";
 
@@ -81,6 +84,54 @@ export default function TopNav() {
   // situs menganggap penonton sudah login sementara yang lain belum.
   const { user, mounted, perluMasukUlang } = usePenonton();
   const [searchQuery, setSearchQuery] = useState("");
+
+  /**
+   * Indeks judul untuk daftar saran — DIAMBIL MALAS (owner 2026-11-13:
+   * "telusuri detail lagi semua search harus seragam").
+   *
+   * Kotak cari ini satu-satunya kotak cari di /film, /katalog, /profile dan
+   * seluruh panel admin, tapi sampai hari ini ia tidak punya saran sementara
+   * kotak di beranda punya. Owner mengetik di sini, tak terjadi apa-apa, lalu
+   * wajar menyimpulkan kotaknya rusak.
+   *
+   * 🪤 KENAPA diambil di browser, bukan dioper dari server seperti halaman
+   * publik: komponen ini dirender dari `app/layout.tsx`, yang berlaku untuk
+   * SEMUA halaman. Mengambil katalog di sana berarti panel admin dan halaman
+   * error ikut menunggu data yang tak pernah mereka pakai. Dengan cara ini
+   * biayanya NOL sampai penonton benar-benar mengetik — dan sesudah terambil
+   * sekali, ia dipakai ulang selama halaman terbuka.
+   */
+  const [indeksSaran, setIndeksSaran] = useState<SaranCari[] | undefined>();
+  const sedangAmbil = useRef(false);
+
+  useEffect(() => {
+    // Ambang sengaja sama dengan `MIN_HURUF_SARAN` — tak ada gunanya mengambil
+    // indeks pada huruf pertama kalau daftarnya memang belum digambar.
+    if (searchQuery.trim().length < MIN_HURUF_SARAN) return;
+    if (indeksSaran || sedangAmbil.current) return;
+    sedangAmbil.current = true;
+    fetch("/api/saran")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { saran?: SaranCari[] } | null) => setIndeksSaran(d?.saran ?? []))
+      // Gagal-DIAM: saran cuma kenyamanan. Kotaknya tetap bekerja penuh lewat
+      // Enter, jadi memunculkan pesan error di sini hanya akan
+      // mengkhawatirkan penonton tentang sesuatu yang tak menghalanginya.
+      .catch(() => setIndeksSaran([]));
+  }, [searchQuery, indeksSaran]);
+
+  // Hook yang SAMA dengan kotak cari lebar di beranda — sorotan, buka-tutup,
+  // papan ketik, dan klik-di-luar ditulis sekali di app/components/beranda/
+  // useDaftarSaran.ts. Itulah yang membuat kedua kotak mustahil menyimpang.
+  const {
+    saran,
+    tampil: saranTampil,
+    sorot,
+    setSorot,
+    tutupSaran,
+    pembungkusRef,
+    onKeyDown: onKeyDownSaran,
+  } = useDaftarSaran(searchQuery, indeksSaran);
+
   const linkRefs = useRef<Record<string, HTMLAnchorElement | null>>({});
   const [pill, setPill] = useState<{ left: number; width: number } | null>(null);
 
@@ -202,7 +253,11 @@ export default function TopNav() {
           action={TUJUAN_CARI}
           method="get"
           role="search"
-          className="ml-auto hidden max-w-xs flex-1 md:flex"
+          // `relative`: daftar saran di bawah diposisikan terhadap form ini,
+          // dan `pembungkusRef` memakainya untuk membedakan klik di dalam
+          // (memilih saran) dari klik di luar (menutup daftar).
+          ref={pembungkusRef as React.RefObject<HTMLFormElement>}
+          className="relative ml-auto hidden max-w-xs flex-1 md:flex"
         >
           <div className="relative w-full">
             {/* 🪤 Kaca pembesar ini dulu `pointer-events-none` — MURNI hiasan.
@@ -226,9 +281,23 @@ export default function TopNav() {
               // ditulis terpisah di sini dan tertinggal saat yang lebar
               // diperbarui (owner 2026-09-22).
               placeholder={TEKS_KOTAK_CARI}
+              onKeyDown={onKeyDownSaran}
+              role="combobox"
+              aria-expanded={saranTampil}
+              aria-autocomplete="list"
               className="rounded-full border-zinc-800 bg-zinc-900 pl-9 text-sm text-white placeholder:text-zinc-500 focus-visible:border-amber-400 focus-visible:ring-0"
             />
           </div>
+
+          {saranTampil && (
+            <DaftarSaran
+              saran={saran}
+              aktif={sorot}
+              hrefSemua={alamatCari(searchQuery)}
+              onPilih={tutupSaran}
+              onSorot={setSorot}
+            />
+          )}
         </form>
 
         <div className="flex items-center gap-2">

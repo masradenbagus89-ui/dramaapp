@@ -30,7 +30,8 @@ import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, Check, Loader2, Save, X } from "lucide-react";
 import type { PlaylyVideo } from "@/lib/playly";
 import type { PlaylyImdbMap } from "@/lib/playly-imdb";
-import { DRAMA_QUALITY_OPTIONS, KATEGORI_ISI } from "@/lib/types";
+import { DRAMA_QUALITY_OPTIONS } from "@/lib/types";
+import PilihKategori from "./PilihKategori";
 import { cn } from "@/lib/utils";
 import { saringDenganKetikan } from "@/lib/pencarian";
 import { formatDuration } from "@/lib/format";
@@ -594,21 +595,17 @@ export default function PlaylyIsiCepat({
 
             <label className="flex flex-col gap-1">
               <span className="text-[11px] text-sky-200/80">Kategori</span>
-              <select
-                aria-label="Terapkan kategori ke film tercentang"
-                value={borongan.kategori}
-                onChange={(e) =>
-                  setBorongan((b) => ({ ...b, kategori: e.target.value }))
+              <PilihKategori
+                label="Terapkan kategori ke film tercentang"
+                nilai={borongan.kategori}
+                onPilih={(nilaiBaru) =>
+                  setBorongan((b) => ({ ...b, kategori: nilaiBaru }))
                 }
-                className="min-h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-xs text-zinc-200"
-              >
-                <option value={LEWATI}>— tidak diubah —</option>
-                {KATEGORI_ISI.map((k) => (
-                  <option key={k} value={k}>
-                    {k}
-                  </option>
-                ))}
-              </select>
+                // Di kotak borongan, nilai kosong (`LEWATI`) berarti "jangan
+                // sentuh kolom ini" — BUKAN "kosongkan kategorinya".
+                teksKosong="— tidak diubah —"
+                className="min-h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-xs text-zinc-200"
+              />
             </label>
 
             <label className="flex flex-col gap-1">
@@ -797,21 +794,17 @@ export default function PlaylyIsiCepat({
                       ))}
                     </select>
 
-                    <select
-                      aria-label={`Kategori untuk ${v.title}`}
-                      value={nilaiTampil(v, "kategori")}
-                      onChange={(e) =>
-                        ubahDraft(v.id, "kategori", e.target.value)
+                    {/* Kolom CARI, bukan <select> (owner 2026-11-13): 30
+                        kategori terlalu panjang untuk dipindai mata satu per
+                        satu. Lihat app/components/admin/PilihKategori.tsx. */}
+                    <PilihKategori
+                      label={`Kategori untuk ${v.title}`}
+                      nilai={nilaiTampil(v, "kategori")}
+                      onPilih={(nilaiBaru) =>
+                        ubahDraft(v.id, "kategori", nilaiBaru)
                       }
                       className={kelasKotak(v.id, "kategori")}
-                    >
-                      <option value="">Tanpa kategori</option>
-                      {KATEGORI_ISI.map((k) => (
-                        <option key={k} value={k}>
-                          {k}
-                        </option>
-                      ))}
-                    </select>
+                    />
 
                     <select
                       aria-label={`Kualitas untuk ${v.title}`}

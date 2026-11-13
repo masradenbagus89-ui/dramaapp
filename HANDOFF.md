@@ -296,6 +296,254 @@ riwayat blok peringatan lama ada di seksi `## 2026-11-09` di bawah.**
 
 ---
 
+## 2026-11-13 (malam) — ⏸️ SIAP RILIS, BELUM DI-PUSH: 2FA dihapus + kategori 7 → 67 + kolom cari + prefix search
+
+**Permintaan owner, DUA putaran dalam satu sesi — semuanya sudah dikerjakan:**
+Putaran 1: (1) "2FA kamu hapus" · (2) "tambahkan isi kategori karena pilihan genrenya sedikit, kamu buat yang lengkap".
+Putaran 2 (sesudah owner melihat hasilnya): (3) "masih belum lengkap buat 30 genre" · (4) "katagori kamu rubah menjadi kolom search ketika di klik keluar genre nya" · (5) "untuk search gunakan Prefix Search".
+
+**Dua keputusan owner lewat popup di putaran 2** — dicatat karena keduanya menyingkirkan tafsir lain yang sama masuk akalnya:
+- **Prefix Search dipasang di DUA-DUANYA** (kolom genre admin + kotak cari penonton), bukan admin saja. Owner melampirkan gambar kotak cari penonton, dan itu memang yang dimaksud.
+- **6 genre terakhir diambil dari sisa genre IMDb**, bukan genre khas drama Asia (Silat/Sekolah/Medis/dll). Alasan yang menang: genre IMDb bisa diisi OTOMATIS oleh tombol "Isi otomatis kategori"; genre khas drama harus diketik tangan selamanya karena IMDb tak punya nama itu.
+
+**Status: gerbang pra-rilis LOLOS kelima-limanya, tapi BELUM di-push.** `npm run gerbang` → `.next` dihapus ✓ · `npm run build` ✓ · `npx tsc --noEmit` **0 error** ✓ · `npm test` **2410 tes / 170 berkas, SEMUA hijau** ✓ · nol berkas rahasia ✓. Push ke `origin main` = TOMBOL RILIS, izinnya milik owner (AGENTS.md §5.5) — **belum diminta, jadi belum dikerjakan.** Juga belum di-commit.
+
+### 1. 2FA dihapus TUNTAS — 11 berkas, bukan cuma kartunya
+
+Yang dihapus: `app/api/auth/2fa/` (4 route) · `app/components/TwoFactorSettings.tsx` · `lib/totp.ts` · blok `getTwoFA`/`setTwoFA`/`isTwoFAEnabled` di `lib/store.ts` · verifikasi TOTP di `app/api/auth/login/route.ts` · UI `need2fa` di `app/login/page.tsx` · render kartu di `app/admin/page.tsx` **dan** `app/profile/page.tsx` (dua tempat — kartu di gambar owner yang `/profile`).
+
+🪤 **KENAPA harus tuntas, bukan kartunya saja.** Kalau cuma UI-nya dibuang sementara verifikasi di login dibiarkan, admin yang 2FA-nya sudah aktif akan **terkunci selamanya** — tak ada lagi tombol untuk mematikannya. Urutan yang benar: lepas verifikasi login DULU, baru UI-nya.
+
+**Yang SENGAJA tidak ikut dilepas** (dicatat supaya tak ada yang mengira login jadi longgar): rate-limit 10 percobaan/menit (`guardMutation`), perbandingan password tahan-waktu (`crypto.timingSafeEqual`), gagal-TUTUP di blok `catch`, cookie `HttpOnly`. Yang hilang **hanya** lapis kedua.
+
+⚠️ **Konsekuensi yang sudah disampaikan ke owner:** siapa pun yang tahu password admin kini bisa langsung masuk panel. Saat dihapus statusnya memang NONAKTIF, jadi tidak ada penurunan keamanan hari itu. Rak `skills/auth/SKILL.md` §2 butir 7 menyebut 2FA "WAJIB untuk data sensitif/admin" — **disimpangi atas perintah langsung owner**, bukan karena terlewat.
+
+📌 Dokumen `twofa:<email>` di `app_data` **sengaja TIDAK dihapus** dari database. Tak ada lagi kode yang membacanya (inert), dan menghapus baris produksi demi kerapian = risiko tanpa manfaat.
+
+### 2. Kategori 7 → 24 — akar masalahnya TIGA daftar kembar
+
+🪤 **Sebab "pilihan genrenya sedikit" bukan daftarnya pendek, tapi dropdown-nya membaca daftar yang SALAH.** Ada **tiga** salinan ketikan tangan berisi 7 kategori yang sama: `lib/types.ts` (sumber), `app/admin/constants.ts`, dan `lib/imdb-tool.ts`. Menambah kategori di satu tempat → dua dropdown lain tetap pendek, **tanpa satu pun error** (dua daftar yang sama-sama sah memang tak bertabrakan). Dua salinan itu kini **diturunkan** dari `KATEGORI_ISI`, jadi masalah ini tidak bisa terulang.
+
+17 kategori baru memakai **ejaan genre IMDb persis** ("Sci-Fi", bukan "SciFi") — bukan selera: `lib/kategori-otomatis.ts` mencocokkannya dengan genre IMDb tersimpan, jadi ejaan menyimpang = pencocokan meleset diam-diam. Label Indonesia ke-17-nya ternyata **sudah ada** di `lib/genre.ts`.
+
+**Tak perlu SQL.** `supabase_migrations/2026-08-29_schema_lengkap_dramaapp.sql:20` → `category text not null`, **tanpa CHECK constraint**. Beranda juga aman: `availableGenres()` (`lib/beranda-catalog.ts:169`) menghitung dari katalog nyata, jadi kategori kosong **tidak** jadi baris hampa.
+
+**`PETA_GENRE` diperluas 4 → 21 baris.** Dua kompromi lama hilang: "Action" tak lagi menampung Adventure+War+Crime+Thriller (279 dari 466 film), dan Drama (153) + Horror (82) tak lagi pulang kosong. "Drama" ditaruh **paling bawah** — hampir semua film serius menyandangnya, jadi mendahulukannya akan menyedot seluruh katalog ke satu kamar.
+
+### 3. Penjaga baru + tiga tes yang premisnya BERUBAH (bukan dilonggarkan)
+
+Ditambah di `tests/genre-accent.test.ts`: tiap kategori wajib punya aksen **dan** lencana sendiri, plus `CATEGORY_OPTIONS === KATEGORI_ISI`. **Diuji-balik:** satu nama kunci di-typo → tes merah dengan pesan menyebut kategori mana yang hilang; berkas dikembalikan, hijau lagi. Alasan penjaga ini ada: 34 entri warna diketik tangan di dua berkas, dan satu typo cuma membuat chip jatuh ke abu-abu FALLBACK — nol error.
+
+Tes yang ekspektasinya diperbarui, semua karena perilakunya **sengaja** berubah: `"Action, Drama, Western"` → kini **Western** (bukan Action) · `"Action, Sci-Fi"` → kini **Sci-Fi** (bukan Fantasy) · `Horror`/`Documentary`/`Animation` → kini punya kamar (bukan `null`). Pagar "genre tak terpetakan tetap `null`" **tidak** ikut longgar — contohnya diganti ke Short/News/Talk-Show/Reality-TV.
+
+🪤 `tests/genre-accent.test.ts` dulu memakai **"Western"** sebagai contoh "nama tak dikenal". Western kini kategori resmi, jadi tesnya merah — dan merahnya BENAR. Contohnya diganti "Steampunk", **plus penjaga** yang merah kalau Steampunk kelak jadi kategori resmi (tanpa itu, tesnya "lolos" sambil berhenti menguji apa pun).
+
+### 4. Kategori 24 → 30 (putaran 2)
+
+Enam terakhir semuanya genre IMDb resmi: **Music · Film-Noir · Short · Reality-TV · Game-Show · Talk-Show**. Label Indonesianya sudah tersedia di `lib/genre.ts` sejak lama, jadi nol yang perlu diterjemahkan ulang. Yang TETAP tak terpetakan tinggal dua: `News` dan `Adult`.
+
+Dua koreksi rancangan yang ikut terbawa, keduanya memperbaiki salah-kamar yang sebelumnya senyap:
+
+- **`Music` dipisah dari `Musical`.** Dua genre IMDb yang berbeda: "Musical" = tokohnya bernyanyi (La La Land), "Music" = film TENTANG musik tanpa harus bernyanyi (Bohemian Rhapsody). Selama Music menumpang di Musical, semua film Music masuk rak yang salah.
+- **`Short` sengaja ditaruh PALING BAWAH di `PETA_GENRE`, di bawah `Drama` sekalipun.** Di IMDb "Short" itu penanda DURASI, bukan genre isi, dan hampir selalu berpasangan ("Short, Comedy"). Kalau diprioritaskan, seluruh film pendek menumpuk di satu rak dan penonton kehilangan genre aslinya. Dikunci tes: `tebakKategori("Short, Comedy")` → `Comedy`.
+
+### 5. Dropdown kategori → KOLOM CARI (`PilihKategori.tsx`)
+
+Komponen baru `app/components/admin/PilihKategori.tsx` menggantikan `<select>` di **dua** panel: `PlaylyIsiCepat.tsx` (kotak per-baris **dan** kotak borongan) + `PlaylyVisibilityManager.tsx`.
+
+Pencariannya memanggil `cocokSemuaKata` dari `lib/pencarian.ts` — fungsi yang **sama** dengan kotak cari penonton. Disengaja: kalau kotak ini punya aturan cocok sendiri, dua permukaan cari berperilaku beda dan tak ada error saat keduanya menyimpang. Bisa dicari dua bahasa — ketik "horor" (Indonesia) maupun "hor" (Inggris) sama-sama menemukan `Horror`.
+
+🪤 **Jebakan string kosong yang hampir terlewat.** Nilai `""` punya DUA arti berbeda di panel yang sama, dan keduanya benar: di kotak per-baris = "video ini tanpa kategori", di kotak borongan (`LEWATI`) = "kolom ini jangan diubah". Karena itu komponennya punya prop `teksKosong` — memakai satu teks untuk keduanya akan membuat tombol borongan berbohong tentang apa yang akan terjadi.
+
+⚠️ **Keputusan lama yang sengaja dibalik, dicatat supaya tidak dikira kelalaian.** `PlaylyVisibilityManager.tsx` punya komentar tertulis yang memilih `<select>` bawaan dengan alasan *"daftarnya 8 pilihan tetap, dan di HP select bawaan membuka pemilih layar-penuh yang lebih enak dipakai"*. Alasan pertamanya GUGUR (kini 30 pilihan). Alasan HP-nya **masih benar dan tidak dibantah** — ia kalah karena panel itu dipakai dari desktop (tabel 8 kolom yang mustahil muat di HP). Kalau ternyata dipakai dari HP juga, kembalikan `<select>` **di berkas itu saja**; `PlaylyIsiCepat.tsx` tetap kolom cari. Petunjuknya sudah ditulis di komentar berkasnya.
+
+📌 **`DramaForm.tsx` SENGAJA belum diubah** (masih Radix `Select`). Bukan kelalaian: kategori di sana **wajib diisi** (`Kategori *`), sementara `PilihKategori` selalu menyediakan baris kosong — memasangnya begitu saja akan membuka celah mengosongkan field wajib. Perlu prop "tanpa baris kosong" dulu. Sudah ditawarkan ke owner, menunggu jawaban.
+
+### 6. PREFIX SEARCH di `lib/pencarian.ts` — menyentuh SELURUH situs
+
+Satu baris yang berubah di `cocokSemuaKata`: dari `gabungan.includes(k)` jadi `(" " + gabungan).includes(" " + k)`. Spasi di depan = "harus mengawali sebuah kata".
+
+**Ini bukan perubahan lokal.** Fungsi itu dipakai 6 permukaan sekaligus: katalog drama (`lib/discover.ts`), video Playly (`HasilPlayly.tsx`), saran ketik (`lib/saran-cari.ts`), daftar admin (`useDaftarAdmin.ts`), dan kedua panel Playly.
+
+**Diperiksa, bukan ditebak:** seluruh tes pencarian yang ada memakai kata utuh dari depan, jadi NOL kegagalan produksi lama yang kambuh — "spider man", "transformers last knight", "knight dark", "ceo" semuanya tetap hijau. Harga yang dibayar, dan ini jujur: potongan TENGAH kata berhenti bekerja. Penonton yang cuma ingat "...formers" tidak lagi menemukan "Transformers".
+
+🪤 Ditulis dengan satu spasi di depan, **bukan** `split(" ")` lalu `some()`. Keduanya memberi jawaban sama, tapi fungsi ini dipanggil untuk TIAP judul pada TIAP ketikan huruf — memecah string jadi array di jalur sepanas itu bikin sampah memori sia-sia.
+
+### 7. Tes: 2410 → 2434 (24 tes baru, nol yang dilonggarkan)
+
+Berkas baru `tests/pilih-kategori.test.ts` (17 tes, jsdom) menguji komponen pengganti `<select>`: begitu alat bawaan browser diganti buatan sendiri, SELURUH perilaku yang dulu gratis jadi tanggung jawab kita. Yang dikunci: keyboard (panah/Enter/Escape), klik di luar menutup, daftar kosong tetap bersuara, `disabled` tidak bisa dibuka, dan — paling penting — **klik baris memulangkan nilai Inggris (`Horror`), bukan labelnya (`Horor`)**; kalau yang terkirim label, `parseKategoriVideo` menolaknya dan kategorinya diam-diam jadi kosong.
+
+Di `tests/pencarian.test.ts` ditambah 5 tes prefix search, termasuk satu yang khusus membuktikan **pencarian lama tidak ikut rusak**. Baris pembeda yang paling berguna: `cocokSemuaKata(["orror"], "Horror")` harus `false` — kalau ia hijau, berarti aturannya diam-diam kembali ke `includes` mentah.
+
+Tes yang ekspektasinya berubah, semua karena perilakunya sengaja diubah: `tests/playly-genre.test.ts` kini memeriksa `PilihKategori` (daftar kategorinya pindah ke sana, bukan hilang) + tes baru yang menolak salah satu panel merakit daftar kategori sendiri lagi.
+
+
+### 8. PUTARAN 3 — genre jadi 67, dan prefix search kolom genre DIPERBAIKI
+
+Owner mengirim gambar berisi daftar **60 genre** ("genre masih belum lengkap coba kamu lihat") + satu keluhan: *"search masih belum pas, saya mau ketika ketik s muncul semua yang berawalan s"*.
+
+**8a. Kenapa hasilnya 67, bukan 60 — dan kenapa itu DISENGAJA.**
+
+🪤 Daftar owner **tidak memuat `Tycoon` dan `Time Travel`**. Keduanya tetap dipertahankan, dan ini bukan kelalaian: diukur dari `GET /api/dramas` produksi 2026-11-13 → **Tycoon dipakai 4 judul, Time Travel 1 judul**. Menghapus nama kategori yang masih dipakai membuat `parseKategoriVideo` menolak nilai tersimpannya, dan kelima judul itu kehilangan kategori **tanpa satu pun pesan error** — hilang dari baris beranda, tak ada yang melapor. Hitungannya: 60 nama owner + 7 yang dipertahankan (Tycoon, Time Travel, Film-Noir, Short, Reality-TV, Game-Show, Talk-Show) = **67**.
+
+📌 `"Historical"` dari daftar owner **tidak** ditambahkan sebagai nama baru — ia sudah ada sebagai `"History"` (ejaan IMDb, dipakai pencocokan otomatis) dengan label "Sejarah". Dua kategori yang artinya sama persis cuma membuat owner ragu harus pilih yang mana.
+
+⚠️ **Konsekuensi yang melekat pada daftar ini, bukan bug:** mayoritas nama baru (Wuxia, Xianxia, Xuanhuan, Isekai, Cultivation, Workplace, Revenge, …) **tidak ada di IMDb**, jadi tombol "Isi otomatis kategori" tak akan pernah mengisinya — harus dipilih tangan. Ini persis trade-off yang disampaikan ke owner di popup putaran 2, dan waktu itu ia memilih jalur IMDb justru untuk menghindarinya. Putaran 3 membalik pilihan itu; owner sudah diberi tahu.
+
+**8b. Prefix search kolom genre: `cocokSemuaKata` → `diawaliKetikan`.**
+
+🪤 **Kesalahan saya di putaran 2, ditemukan owner.** Kolom genre sengaja dibuat memanggil `cocokSemuaKata` — fungsi yang sama dengan kotak cari penonton — dengan alasan konsistensi. Itu keliru: aturan pencarian JUDUL mengizinkan **tiap kata** jadi titik awal, jadi mengetik `s` ikut memunculkan **Talk-Show** dan **Game-Show** (kata keduanya diawali "s", namanya tidak). Benar untuk judul film yang panjang dan diingat sepotong-sepotong; salah untuk nama genre yang pendek dan diketik dari huruf pertama.
+
+Perbaikannya fungsi BARU `diawaliKetikan` di `lib/pencarian.ts`, bersebelahan dengan yang lama. **Keduanya sengaja hidup berdampingan** — bukan satu menggantikan yang lain:
+- `cocokSemuaKata` → cari JUDUL FILM. "knight" WAJIB menemukan "The Dark Knight".
+- `diawaliKetikan` → pilih NAMA GENRE. "s" hanya yang namanya berawalan s.
+
+Diukur sesudah perbaikan: ketik `s` → 11 hasil, nol di antaranya Talk-Show/Game-Show. Ketik `w` → War, Western, Wuxia, Workplace.
+
+📌 **Yang masih mungkin mengganggu owner, dicatat supaya tidak dikira bug:** ketik `s` juga memunculkan **History**, **Martial Arts**, dan **Espionage** — karena LABEL Indonesia-nya ("Sejarah", "Silat", "Spionase") memang diawali "s". Itu konsekuensi dari fitur cari-dua-bahasa, dan labelnya tampil di samping namanya sehingga alasannya terlihat. Kalau owner mau label Indonesia dikeluarkan dari pencarian, cukup oper satu teks saja ke `diawaliKetikan` di `PilihKategori.tsx` — tapi ia lalu kehilangan kemampuan mengetik "horor" untuk menemukan "Horror".
+
+**8c. Warna: dari daftar manual jadi PALET.**
+
+67 kategori × 2 berkas = 134 entri warna ketikan tangan, dan tiap salah ketik membuat satu kategori diam-diam kehilangan warnanya. Diganti **palet + hash nama**: `PALET` di `lib/genre-accent.ts` dan `PALET_LENCANA` + `warnaKategori()` di `app/admin/constants.ts`.
+
+Tiga lapis, dari paling spesifik: (1) entri manual — warna yang **sudah tayang**, dikunci supaya tidak bergeser; (2) palet, untuk kategori resmi yang belum didata; (3) `FALLBACK` putih, untuk nama yang bukan kategori kita sama sekali. Lapis 3 sengaja dipertahankan: `drama.genre` dari OMDb itu teks bebas ("Steampunk"), dan memberinya warna acak = mengubah tampilan yang tak diminta siapa pun.
+
+🪤 Hash-nya dari **huruf nama**, bukan urutan daftar. Kalau dari urutan, menyisipkan satu kategori di tengah menggeser SEMUA warna sesudahnya — dan tak ada tes yang merah. Dikunci `tests/genre-accent.test.ts` ("warna kategori STABIL" + "warna kategori LAMA tidak ikut bergeser").
+
+`AdminDashboard.tsx` dan `DramaList.tsx` kini memanggil `warnaKategori()`; tanpa itu 37 kategori baru tampil kelabu semua.
+
+**8d. Tes: 2434 → 2444.** Enam tes baru untuk `diawaliKetikan` (termasuk satu yang membandingkannya LANGSUNG dengan `cocokSemuaKata` supaya bedanya tak bisa disalahpahami), dua untuk stabilitas warna, dan dua di `tests/pilih-kategori.test.ts` — satu memakai Talk-Show/Game-Show sebagai patokan justru karena merekalah yang dulu salah muncul, satu lagi menguji SELURUH kategori terhadap aturannya dan menyebut nama yang bocor kalau aturannya dilonggarkan.
+
+Daftar `SENGAJA_TETAP_INGGRIS` di `tests/genre-label.test.ts` bertambah: Melodrama, Gangster, Wuxia, Xianxia, Xuanhuan, Isekai. Empat terakhir istilah drama Asia yang memang tak punya padanan Indonesia — "Wuxia" jadi "Pendekar" malah membuat penggemarnya tak mengenalinya.
+
+
+### 9. PUTARAN 4 — "yang muncul pun harus ro, dan berlaku di SEMUA search"
+
+Owner mengirim gambar: mengetik `ro` di kolom genre memunculkan **Historical Romance**. Keluhannya tepat — di layar baris itu terbaca diawali "Hi".
+
+**9a. Sebabnya: mencari di teks yang TIDAK TAMPIL.**
+
+Kolom genre mencocokkan dua teks — nama yang tampil besar (`Historical Romance`) DAN label Indonesia kecil di sampingnya (`Romansa Sejarah`). Yang kedua diawali "ro", jadi barisnya lolos. Logikanya bisa dijelaskan, tapi tidak bisa DILIHAT: daftar yang barisnya tak terlihat nyambung dengan ketikan terbaca seperti pencarian rusak.
+
+Perbaikan: `PilihKategori.tsx` kini mencocokkan **hanya `o.utama`** — nama yang benar-benar tampil. Aturannya jadi sesederhana yang terlihat: *apa yang tampil harus diawali apa yang diketik.*
+
+Sesudah: `ro` → Romance, Romantic Comedy, Road Trip. `s` → 8 nama, nol bocor.
+
+⚠️ **Yang hilang, disengaja & sudah disampaikan ke owner:** mengetik `horor` tak lagi menemukan `Horror`; yang menemukan cuma `hor`. Mengetik `silat` tak lagi menemukan `Martial Arts`; yang menemukan `mar`. Label Indonesia tetap DIGAMBAR sebagai keterangan — ia cuma tidak ikut dicari.
+
+**9b. "Berlaku di semua search" — ternyata masalah yang sama ada di CARI FILM, lebih parah.**
+
+Diukur pada katalog produksi 2026-11-13, mengetik `ro` di kotak cari penonton:
+
+| | hasil |
+|---|---|
+| total yang muncul | **12 judul** |
+| judulnya mengandung "ro" | **0** |
+| muncul lewat sinopsis/kategori saja | **12** |
+
+Penyebabnya sama persis: `filterAndSortDramas` ikut mencari di `category`, `labelGenre(category)`, dan `synopsis` — **ketiganya tidak tampil di kartu hasil**.
+
+🪤 **Sekaligus menutup ketidakcocokan lama yang belum pernah tercatat:** daftar SARAN saat mengetik (`lib/saran-cari.ts:104`) SELAMA INI cuma mencari judul. Jadi penonton melihat 3 saran, menekan Enter, lalu mendapat 12 hasil yang berbeda — tanpa cara menebak mana yang benar. Sekarang keduanya berdasar yang sama.
+
+Diubah:
+- `lib/discover.ts` → `cocokSemuaKata(kataCari, d.title)` saja.
+- `app/components/beranda/HasilPlayly.tsx` → `title`, `creator`, `dramaTitle`. Genre + label Indonesianya dibuang; `dramaTitle` DIPERTAHANKAN karena memang tergambar di kartu ("dari: <judul>").
+
+Aturan yang dipakai memilih: **field boleh dicari hanya kalau ia TERGAMBAR di hasilnya**, supaya penonton selalu bisa melihat sendiri kenapa sesuatu muncul.
+
+⚠️ **Yang hilang, dan ini perlu keputusan owner kalau terasa:** mengetik `Aksi` tak lagi memulangkan seluruh film berkategori Action. Penyaring genre TIDAK hilang — ia pindah ke tempat yang memang untuk itu (dropdown Genre di bar penyaring + menu katalog), yang hasilnya terlihat sebagai pilihan aktif alih-alih tebak-tebakan di kotak cari. Komentar lama di `discover.ts` yang sengaja menambahkan `labelGenre` ke pencarian sudah diganti, lengkap dengan alasannya.
+
+📌 **Yang TIDAK diubah, sengaja:** aturan `cocokSemuaKata` ("tiap kata boleh jadi titik awal") tetap dipakai untuk JUDUL. Diukur: kalau judul juga dipaksa "diawali ketikan", mengetik `dark knight` dan `knight` sama-sama jadi **NOL HASIL** — dua kegagalan produksi yang sudah pernah diperbaiki dan dikunci di `tests/pencarian.test.ts`. Permintaan "berlaku di semua search" dipenuhi dengan menyamakan **field mana yang boleh dicari**, bukan dengan menyeragamkan cara mencocokkan judul.
+
+**9c. Tes: 2444 → 2445.** Di `tests/pilih-kategori.test.ts`: satu tes baru memakai **Historical Romance** sebagai patokan (persis baris yang owner tunjuk di gambarnya), dan tes "label Indonesia ikut dicari" DIBALIK jadi menegaskan sebaliknya — lengkap dengan alasan kenapa, supaya sesi berikutnya tidak "memperbaikinya" kembali.
+
+
+### 10. PUTARAN 5 — "dua search ini belum seragam": SATU aturan untuk seluruh situs
+
+Owner mengirim dua gambar: kotak cari PENONTON (ketik `ha`) dan kotak cari ADMIN di Isi manual (ketik `sp`). Keduanya memunculkan judul yang kata cocoknya ada di **TENGAH** — "Menguasai **Ha**rem Kaisar", "Holiday **Sp**ecial", "The Accidental **Sp**y".
+
+**Keduanya sebenarnya SUDAH memakai aturan yang sama** (`cocokSemuaKata`). Yang owner maksud "belum seragam" adalah: belum seragam dengan **kolom genre** yang baru diperbaiki di putaran 4. Jadi permintaannya satu aturan untuk semuanya.
+
+**10a. Yang berubah.** `saringDenganKetikan` dan `filterAndSortDramas` kini memakai `diawaliKetikan`. Lewat dua fungsi itu, SELURUH permukaan cari ikut berubah sekaligus: kotak cari penonton, daftar saran saat mengetik, video Playly, daftar film di `PlaylyIsiCepat` + `PlaylyVisibilityManager`, dan daftar admin (`useDaftarAdmin`).
+
+Aturannya sekarang satu kalimat: **apa yang TAMPIL harus DIAWALI apa yang DIKETIK.**
+
+Diverifikasi dengan judul PERSIS dari kedua gambar owner — `ha` menyisakan Halloween Ends + Harold; `sp` menyisakan Spirited + Speak No Evil + Spider-Man. Sisanya hilang, termasuk "A Time for Bravery … ITA-**SP**A-ENG" yang dulu lolos lewat potongan kode bahasa di judul.
+
+**10b. 🪤 HARGA YANG DIBAYAR — jangan "perbaiki" tanpa tanya owner.**
+
+Ini **MEMBALIK perbaikan 2026-09-12** yang dulu juga diminta owner. Dua kegagalan ini sengaja dihidupkan kembali:
+- `knight` TIDAK lagi menemukan "The Dark Knight"
+- `dark knight` TIDAK lagi menemukan "The Dark Knight" (judulnya diawali "The")
+
+Kedua contoh itu **disampaikan ke owner sebagai angka konkret SEBELUM ia memutuskan** (putaran 4), lalu ia tetap meminta penyeragaman di putaran 5. Keputusannya, bukan kelalaian.
+
+📌 `cocokSemuaKata` **sengaja TIDAK dihapus** dari `lib/pencarian.ts`. Ia menganggur, dan itu disengaja: kalau owner kelak merasa pencarian terlalu sempit, yang dikembalikan tinggal fungsi itu di dua tempat (`saringDenganKetikan` + `filterAndSortDramas`). Jangan dibuang sebagai "dead code".
+
+**10c. Tes: 2445 → 2449.** Tujuh tes yang mengunci perilaku lama DIBALIK, masing-masing dengan catatan kenapa — termasuk kalimat tegas bahwa merahnya bukan bug yang perlu diperbaiki. Pola yang dipakai: tiap tes yang dibalik tetap menunjukkan **apa yang masih bekerja** di baris berikutnya (`transformers` tetap menemukan, `the dark` tetap menemukan), supaya pembaca berikutnya tahu batas barunya di mana.
+
+Ditambah satu describe baru **"KESERAGAMAN — semua kotak cari situs memakai SATU aturan"** dengan judul uji disalin persis dari kedua gambar owner. Tes paling berguna di sana: `filterAndSortDramas` (jalur penonton) dan `saringDenganKetikan` (jalur admin) diadu memberi jawaban yang SAMA untuk ketikan yang sama — kalau salah satunya kelak diubah sendirian, baris itu merah.
+
+Tes aksen & spasi-ganda Playly TIDAK dihapus, hanya ketikannya dimulai dari awal judul — yang diuji di sana (perataan "í"→"i", spasi ganda dirapatkan) memang masih berlaku dan masih penting.
+
+
+### 11. PUTARAN 6 — AUDIT seluruh kotak cari ("telusuri detail lagi semua search harus seragam")
+
+Owner mengirim gambar `/admin/videos/playly#unduhan`: mengetik `du` di kotak cari navbar, tidak terjadi apa-apa.
+
+**11a. Hasil penelusuran — SEMUA kotak cari di aplikasi:**
+
+| # | Kotak cari | Berkas | Status |
+|---|---|---|---|
+| 1 | Cari film (bar merah beranda) | `beranda/SearchBar.tsx` | ✅ sudah seragam |
+| 2 | **Cari film (navbar hitam)** | `TopNav.tsx` | ❌ **tidak punya saran** → diperbaiki |
+| 3 | Daftar Drama admin | `admin/DramaList.tsx` | ✅ lewat `useDaftarAdmin` |
+| 4 | Link download per video | `admin/PlaylyUnduhanManager.tsx` | ✅ lewat `useDaftarAdmin` |
+| 5 | Pilih video Playly | `admin/PlaylyVideoPicker.tsx` | ✅ lewat `useDaftarAdmin` |
+| 6 | Isi manual (judul film) | `admin/PlaylyIsiCepat.tsx` | ✅ `saringDenganKetikan` |
+| 7 | Daftar video Playly | `admin/PlaylyVisibilityManager.tsx` | ✅ `saringDenganKetikan` |
+| 8 | Kolom genre | `admin/PilihKategori.tsx` | ✅ `diawaliKetikan` |
+
+📌 **Koreksi atas dugaan awal saya:** nomor 3–5 sempat terlihat seperti menyaring sendiri karena tidak muncul di `grep` pemakai `lib/pencarian`. Ternyata ketiganya lewat hook `useDaftarAdmin`, yang memanggilnya. Sudah seragam sejak awal — jangan "perbaiki" lagi.
+
+**11b. Yang benar-benar rusak: kotak navbar tidak punya DAFTAR SARAN.**
+
+Kotak itu sebenarnya **berfungsi** — Enter/klik kaca pembesar mengirim ke `/discover`. Yang hilang: dropdown saran. Owner mengetik `du`, tak ada yang muncul, dan wajar menyimpulkan kotaknya mati.
+
+Ini bukan kotak sembarangan: ia **SATU-SATUNYA** kotak cari di `/film`, `/katalog`, `/profile`, dan seluruh panel admin.
+
+**11c. Kenapa tidak bisa sekadar mengoper `indeksSaran` seperti halaman publik.**
+
+Halaman publik merakit indeks di SERVER dari katalog yang memang sudah mereka ambil. `TopNav` dirender dari `app/layout.tsx` — berlaku untuk **semua** halaman. Mengambil katalog di sana berarti panel admin dan halaman error ikut menunggu data yang tak pernah dipakainya.
+
+Jalan keluarnya dua bagian:
+- **`app/api/saran/route.ts`** (baru) — memulangkan indeks JADI lewat `rakitIndeksSaran`, perakit yang sama dengan halaman publik, jadi isi saran di navbar dan beranda mustahil berbeda. `revalidate = 60`, gagal-DIAM (`{ok:false, saran:[]}`) karena saran cuma kenyamanan. Terukur: **468 judul, 108 KB**.
+- **`TopNav` mengambilnya MALAS** — baru menembak `/api/saran` saat ketikan mencapai `MIN_HURUF_SARAN`, lalu dipakai ulang selama halaman terbuka. Biaya **nol** sampai fiturnya benar-benar dipakai.
+
+**11d. 🪤 Logika saran DIEKSTRAK, bukan disalin — `beranda/useDaftarSaran.ts` (baru).**
+
+Menyalin logika saran (sorotan panah, buka-tutup, Escape, Enter-saat-disorot, klik-di-luar) ke `TopNav` akan melahirkan kembaran ketiga yang pasti menyimpang — persis jenis masalah yang baru dibereskan untuk daftar kategori, dan persis yang owner keluhkan lima putaran ini. Jadi ±40 baris itu dipindah ke hook dan dipakai BERDUA. `SearchBar` ikut dialihkan ke sana; perilakunya tidak berubah, cuma alamat kodenya.
+
+**11e. Tes: 2449 → 2457.** Berkas baru `tests/search-seragam.test.ts` (8 tes) — pagar yang SELAMA INI HILANG, dan ketiadaannya itulah sebab owner harus menemukan ketidakseragaman satu per satu dari layar selama lima putaran. Yang dijaga:
+- tiap penyaring memakai `lib/pencarian.ts`, bukan aturan sendiri;
+- **tak satu pun** menyaring dengan `toLowerCase().includes()` — bentuk penyimpangan yang paling mungkin muncul saat orang menambah kotak cari baru;
+- kedua kotak cari situs memakai `useDaftarSaran` **dan** menggambar `DaftarSaran` yang sama;
+- `pilihSaran` hanya dipanggil dari hook, tak boleh dari kotak cari mana pun (tanda ada yang merakit daftarnya sendiri);
+- pengambilan indeks di navbar dijaga ambang huruf — pagar BIAYA, supaya ia tak menembak katalog di tiap halaman;
+- `lib/discover.ts` tidak boleh kembali memakai `cocokSemuaKata`.
+
+
+### Cara owner mencoba sendiri (sesudah di-push & tayang)
+
+1. **2FA hilang:** buka `/profile` → seksi **Keamanan** → harus tinggal kotak ubah password, kartu kuning "Aktifkan 2FA" sudah tidak ada. Login admin juga tidak pernah lagi meminta kode 6 digit.
+2. **Kategori jadi KOLOM CARI, isinya 67:** buka panel admin → **Video dari Playly** → **Isi manual** → klik kotak **KATEGORI** di baris film mana pun. Yang muncul bukan lagi dropdown panjang, tapi kotak ketik + daftar. Ketik `hor` → tinggal **Horror**. Ketik `horor` (Indonesia) → juga **Horror**. Kosongkan ketikan → **67 pilihan** lengkap. Panah atas/bawah + Enter juga jalan, Escape menutup.
+3. **Bukti Prefix Search bekerja:** di kotak itu ketik `orror` → harus **tidak ada hasil** ("Tidak ada genre yang diawali…"). Lalu ketik `s` → harus muncul Sci-Fi, Sport, Survival, Supernatural, School, Superhero, Slice of Life, Short… dan **TIDAK** ada Talk-Show / Game-Show. Kalau keduanya masih muncul, perbaikan putaran 3 tidak aktif.
+4. **Prefix Search di kotak cari penonton:** buka beranda → kotak **"Cari film di DramaKu"** → ketik judul dari DEPAN seperti biasa (hasil sama seperti dulu). Bedanya: mengetik potongan TENGAH kata sekarang tidak memulangkan apa-apa — itu memang yang diminta, bukan bug.
+5. **Isi otomatis jauh lebih banyak kena:** tombol **Isi otomatis kategori** sekarang bisa menebak Horror/Drama/Dokumenter/Animasi/Music/Film-Noir yang sebelumnya selalu dilewati. Film yang kategorinya **sudah** diisi tangan tetap tidak ditimpa.
+
+---
+
+
 ## 2026-11-13 (malam) — ✅ RILIS `53fbc5c → a9ae869` TAYANG: empat pekerjaan pemutar sekaligus
 
 Owner memberi izin rilis sesudah memeriksa keempatnya di localhost. **Dual push** `dramaku` →

@@ -2,12 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import crypto from "node:crypto";
 import {
   isAdminEmail,
-  getTwoFA,
   getAdminPassword,
   getViewerAccount,
 } from "@/lib/store";
 import { verifyPassword } from "@/lib/admin-password";
-import { verifyTotp } from "@/lib/totp";
 import {
   signAdminSession,
   signViewerSession,
@@ -46,10 +44,9 @@ export async function POST(req: NextRequest) {
   if (blocked) return blocked;
 
   try {
-    const { email, password, token } = (await req.json()) as {
+    const { email, password } = (await req.json()) as {
       email?: string;
       password?: string;
-      token?: string;
     };
     const e = String(email ?? "").trim();
     if (!e.includes("@")) {
@@ -81,22 +78,11 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Password admin salah." }, { status: 401 });
       }
 
-      // Lapis kedua: kalau admin ini sudah mengaktifkan 2FA, wajib kode TOTP.
-      const tf = await getTwoFA(e);
-      if (tf.enabled && tf.secret) {
-        const t = String(token ?? "").trim();
-        if (!t) {
-          // Password benar, tapi butuh kode 2FA → minta klien menampilkan input.
-          return NextResponse.json({ ok: false, need2fa: true });
-        }
-        if (!verifyTotp(tf.secret, t)) {
-          return NextResponse.json(
-            { error: "Kode 2FA salah atau kedaluwarsa.", need2fa: true },
-            { status: 401 },
-          );
-        }
-      }
-
+      // Lapis kedua (2FA/TOTP) DIHAPUS 2026-11-13 atas permintaan owner.
+      // Password yang benar kini satu-satunya syarat masuk panel admin.
+      // Pagar yang TETAP berdiri di jalur ini: rate-limit 10 percobaan/menit
+      // (guardMutation di atas), perbandingan password tahan-waktu, dan
+      // gagal-TUTUP di blok catch — ketiganya sengaja tidak ikut dilepas.
       const res = NextResponse.json({ ok: true, role: "admin", email: e, name });
       res.cookies.set(
         ADMIN_COOKIE,

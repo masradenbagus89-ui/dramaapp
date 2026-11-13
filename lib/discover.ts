@@ -1,8 +1,7 @@
 import type { Category, Drama } from "./types";
 import { CATEGORIES, isMovie } from "./types";
 import { parseViews } from "./format";
-import { cocokSemuaKata, pecahKataKunci } from "./pencarian";
-import { labelGenre } from "./genre";
+import { diawaliKetikan } from "./pencarian";
 
 export const SORT_OPTIONS = [
   { value: "relevance", label: "Paling sesuai" },
@@ -233,9 +232,11 @@ export function filterAndSortDramas(
     genre = "all",
   } = options;
 
-  // Dipecah SEKALI di sini, bukan di dalam perulangan: aturannya sama untuk
-  // seluruh katalog, jadi tak ada gunanya menghitung ulang tiap drama.
-  const kataCari = pecahKataKunci(query);
+  // Ketikan tak lagi dipecah jadi kata-kata di sini: sejak pencarian
+  // diseragamkan jadi "judul harus DIAWALI ketikan" (owner 2026-11-13),
+  // yang dibandingkan adalah ketikan UTUH dengan awal judul — memecahnya
+  // justru menghapus informasi urutan yang kini menentukan.
+  const ketikan = query ?? "";
   const ratingThreshold = minRating === "all" ? 0 : Number(minRating);
 
   let result = dramas.filter((d) => {
@@ -245,19 +246,28 @@ export function filterAndSortDramas(
       ratingThreshold === 0
         ? true
         : parseImdb(d.imdbRating) >= ratingThreshold;
-    // Field yang dicari sengaja TETAP tiga ini; yang berubah cuma CARA
-    // mencocokkannya (lib/pencarian.ts), supaya hasil pencarian tidak
-    // tiba-tiba melebar ke kolom yang tak pernah dimaksud penonton.
-    // `labelGenre` ikut dicocokkan supaya ketikan "Aksi" — kata yang penonton
-    // BACA di kartu sejak label genre diindonesiakan — menemukan kategori yang
-    // tersimpan sebagai "Action". Ejaan aslinya tetap dicocokkan juga.
-    const matchQ = cocokSemuaKata(
-      kataCari,
-      d.title,
-      d.category,
-      labelGenre(d.category),
-      d.synopsis,
-    );
+    // ⚠️ DIPERSEMPIT JADI JUDUL SAJA — owner 2026-11-13: "begitu ketik ro,
+    // yang muncul pun harus ro dan berlaku di semua search".
+    //
+    // Sebelumnya ikut mencari di `category`, `labelGenre(category)`, dan
+    // `synopsis`. Niatnya baik, akibatnya tidak: ketiganya TIDAK TAMPIL di
+    // kartu hasil, jadi penonton melihat deretan judul yang sama sekali tak
+    // terlihat nyambung dengan ketikannya. Diukur pada katalog produksi
+    // 2026-11-13 — mengetik "ro" memulangkan 12 judul dan NOL di antaranya
+    // punya "ro" di judulnya; semuanya ikut lewat sinopsis.
+    //
+    // Sekaligus menutup ketidakcocokan yang sudah lama ada: daftar saran
+    // saat mengetik (lib/saran-cari.ts) SELAMA INI cuma mencari judul. Jadi
+    // penonton melihat 3 saran, menekan Enter, lalu mendapat 12 hasil yang
+    // berbeda — tanpa cara menebak mana yang benar. Sekarang keduanya
+    // memakai dasar yang sama.
+    //
+    // Yang HILANG, dan ini disengaja: mengetik "Aksi" tak lagi memulangkan
+    // seluruh film berkategori Action. Penyaring genre tidak ikut hilang —
+    // ia pindah ke tempat yang memang untuk itu: dropdown Genre di bar
+    // penyaring dan menu katalog, yang hasilnya bisa dilihat penonton
+    // sebagai pilihan aktif, bukan tebak-tebakan di kotak cari.
+    const matchQ = diawaliKetikan(ketikan, d.title);
     return (
       matchCat &&
       matchYear &&

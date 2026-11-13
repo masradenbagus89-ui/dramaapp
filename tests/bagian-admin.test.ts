@@ -74,8 +74,10 @@ describe("menu sidebar dan isi halaman tidak boleh menyimpang", () => {
   });
 
   it('menu "Keamanan (2FA)" TIDAK dipasang kembali ke sidebar', () => {
-    // Dibuang owner 2026-11-07: panel 2FA-nya kini ada di /profile (seksi
+    // Dibuang owner 2026-11-07: panelnya kini ada di /profile (seksi
     // Keamanan), jadi menu ini jadi jalan KEDUA ke pengaturan yang sama.
+    // Sejak 2026-11-13 isinya tinggal password — 2FA dihapus owner — tapi
+    // pagar ini TETAP berlaku: duanya-jalan-ke-satu-tempat masalahnya sama.
     //
     // Dijaga karena memasangnya kembali terasa seperti "melengkapi sidebar"
     // bagi siapa pun yang tak tahu sejarahnya — ikonnya masih terdaftar di

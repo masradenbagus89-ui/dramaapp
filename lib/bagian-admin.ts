@@ -91,7 +91,7 @@ export const KETERANGAN_BAGIAN: Record<BagianAdmin, string> = {
   tambah: "Isi data drama baru, atau ubah drama yang dipilih dari Daftar Drama.",
   daftar: "Semua drama di katalog — bisa diubah atau dihapus dari sini.",
   "kelola-admin": "Siapa saja yang boleh membuka panel ini.",
-  keamanan: "Password admin dan verifikasi dua langkah (2FA).",
+  keamanan: "Password admin.",
   iklan: "Iklan sponsor yang tampil di halaman penonton.",
 };
 

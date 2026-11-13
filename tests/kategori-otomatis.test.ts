@@ -16,7 +16,13 @@ import { KATEGORI_ISI } from "../lib/types";
 describe("tebakKategori — genre IMDb jadi kategori DramaKu", () => {
   it("memakai nilai NYATA dari katalog Playly", () => {
     // Keempatnya disalin apa adanya dari data produksi 2026-11-09.
-    expect(tebakKategori("Action, Drama, Western")).toBe("Action");
+    //
+    // ⚠️ Nilai harapan baris pertama BERUBAH 2026-11-13 ("Action" -> "Western")
+    // dan itu DISENGAJA, bukan tes yang dilonggarkan: sejak owner menambah 17
+    // kategori, "Western" punya kamar sendiri dan diperiksa lebih dulu karena
+    // jauh lebih khas. Film action-drama-koboi memang lebih berguna dicari di
+    // rak Koboi daripada ikut tenggelam bersama 279 film Action lainnya.
+    expect(tebakKategori("Action, Drama, Western")).toBe("Western");
     expect(tebakKategori("Comedy")).toBe("Comedy");
     expect(tebakKategori("Fantasy")).toBe("Fantasy");
     expect(tebakKategori("Romance")).toBe("Romance");
@@ -28,19 +34,54 @@ describe("tebakKategori — genre IMDb jadi kategori DramaKu", () => {
     // fiturnya jadi tidak berguna untuk menjelajah.
     expect(tebakKategori("Action, Romance")).toBe("Romance");
     expect(tebakKategori("Action, Comedy")).toBe("Comedy");
-    expect(tebakKategori("Action, Sci-Fi")).toBe("Fantasy");
-    // Dan Action tetap menang atas genre yang TIDAK dipetakan.
+    // Dulu "Fantasy" — Sci-Fi menumpang di sana karena belum punya kamar
+    // sendiri. Sejak 2026-11-13 ia punya, jadi tebakannya kini tepat.
+    expect(tebakKategori("Action, Sci-Fi")).toBe("Sci-Fi");
+    // Action tetap menang atas "Drama", yang sengaja ditaruh PALING BAWAH:
+    // hampir semua film serius ikut menyandang genre itu, jadi mendahulukannya
+    // akan menyedot hampir seluruh katalog ke satu kamar.
     expect(tebakKategori("Drama, Action")).toBe("Action");
   });
 
-  it("genre tanpa padanan memulangkan null, BUKAN kategori asal-asalan", () => {
-    // 53 video nyata berakhir di sini. Memaksakan Horror jadi "Fantasy"
-    // membuat penonton yang membuka Fantasy menemukan film yang salah.
-    expect(tebakKategori("Horror")).toBeNull();
-    expect(tebakKategori("Documentary")).toBeNull();
-    expect(tebakKategori("Drama, Western")).toBeNull();
-    expect(tebakKategori("Animation")).toBeNull();
-    expect(tebakKategori("Short")).toBeNull();
+  it("genre yang KINI punya kamar sendiri tidak lagi pulang kosong", () => {
+    // Inilah yang owner keluhkan 2026-11-13 ("pilihan genrenya sedikit").
+    // Sebelum hari itu kelima baris di bawah semuanya memulangkan null —
+    // bukan karena genrenya tak terbaca, tapi karena DramaKu belum punya
+    // kategori untuk menampungnya. Horror saja 82 film.
+    expect(tebakKategori("Horror")).toBe("Horror");
+    expect(tebakKategori("Documentary")).toBe("Documentary");
+    expect(tebakKategori("Animation")).toBe("Animation");
+    expect(tebakKategori("Drama, Western")).toBe("Western");
+    expect(tebakKategori("Drama")).toBe("Drama");
+  });
+
+  it("genre tanpa padanan TETAP memulangkan null, bukan kategori asal-asalan", () => {
+    // Pagar ini tidak ikut longgar. Genre di bawah sengaja tidak dipetakan
+    // (alasannya di lib/types.ts), dan memaksakannya masuk kategori "aman"
+    // akan menyembunyikan kegagalan: tak ada error, cuma rak berisi film yang
+    // salah kamar.
+    //
+    // Tinggal DUA sejak owner menaikkan katalog ke 30 kategori (2026-11-13):
+    // Short/Talk-Show/Reality-TV yang dulu di sini kini punya kamar sendiri.
+    expect(tebakKategori("News")).toBeNull();
+    expect(tebakKategori("Adult")).toBeNull();
+  });
+
+  it("'Short' kalah dari genre isi — ia penanda DURASI, bukan genre", () => {
+    // Film pendek di IMDb hampir selalu berpasangan ("Short, Comedy"). Kalau
+    // Short menang, seluruh film pendek menumpuk di satu rak dan penonton
+    // kehilangan genre aslinya. Ia hanya dipakai saat berdiri sendirian.
+    expect(tebakKategori("Short, Comedy")).toBe("Comedy");
+    expect(tebakKategori("Short, Horror")).toBe("Horror");
+    expect(tebakKategori("Short")).toBe("Short");
+  });
+
+  it("'Music' dan 'Musical' TIDAK lagi satu kamar", () => {
+    // Dua genre IMDb yang berbeda: "Musical" = tokohnya bernyanyi (La La
+    // Land), "Music" = film tentang musik (Bohemian Rhapsody). Sampai
+    // 2026-11-13 Music menumpang di Musical, jadi semuanya salah kamar.
+    expect(tebakKategori("Musical")).toBe("Musical");
+    expect(tebakKategori("Music")).toBe("Music");
   });
 
   it("teks kosong / rusak tidak menghasilkan tebakan", () => {
@@ -108,12 +149,17 @@ describe("susunUsulKategori — usulan untuk seluruh katalog", () => {
 
   it("mengusulkan hanya yang bisa ditebak", () => {
     const { usul, lewat } = susunUsulKategori(videos, imdb, { "4": "Romance" });
-    expect(usul).toHaveLength(1);
-    expect(usul[0]).toMatchObject({ videoId: "1", kategori: "Action" });
+    // Dua usulan sejak 2026-11-13, bukan satu: video "2" bergenre Horror yang
+    // dulu terpaksa dilewati ("genre-tak-cocok") kini punya kamarnya sendiri.
+    // Yang TIDAK berubah: video 3 tetap dilewati karena tak punya data IMDb,
+    // dan video 4 tetap dilewati karena kategorinya sudah diisi tangan.
+    expect(usul).toHaveLength(2);
+    expect(usul[0]).toMatchObject({ videoId: "1", kategori: "Thriller" });
+    expect(usul[1]).toMatchObject({ videoId: "2", kategori: "Horror" });
     expect(lewat).toEqual({
       "sudah-punya": 1,
       "tanpa-imdb": 1,
-      "genre-tak-cocok": 1,
+      "genre-tak-cocok": 0,
     });
   });
 

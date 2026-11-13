@@ -9,7 +9,7 @@
 // Pemetaan data di Supabase:
 //   - Dokumen JSON  -> tabel `app_data` (key -> value jsonb):
 //       "admins", "comments:<id>", "rating:<id>", "ads",
-//       "coinmeta:<email>", "twofa:<email>", "adminpass:<email>",
+//       "coinmeta:<email>", "adminpass:<email>",
 //       "viewerpass:<email>", "order:<orderId>".
 //   - Counter atomik -> tabel + RPC:
 //       likes   (RPC like_change), wallets (RPC coin_add/coin_spend_unlock),
@@ -556,41 +556,10 @@ export async function setCoinMeta(email: string, meta: CoinMeta): Promise<void> 
   writeLocal("wallets.json", data);
 }
 
-// =====================  2FA / TOTP (admin)  ================================
-// Dokumen app_data "twofa:<email>". (Lokal: data/twofa.json, sudah .gitignore.)
-
-export type TwoFA = {
-  secret?: string; // aktif (terverifikasi)
-  enabled?: boolean;
-  pending?: string; // hasil setup, belum diverifikasi
-};
-
-type TwoFAFile = { twofa: Record<string, TwoFA> };
-
-function twofaKey(email: string): string {
-  return `twofa:${normEmail(email)}`;
-}
-
-export async function getTwoFA(email: string): Promise<TwoFA> {
-  const e = normEmail(email);
-  if (useSupabase) return (await sbDocGet<TwoFA>(twofaKey(e))) ?? {};
-  return readLocal<TwoFAFile>("twofa.json", { twofa: {} }).twofa[e] ?? {};
-}
-
-export async function setTwoFA(email: string, data: TwoFA): Promise<void> {
-  const e = normEmail(email);
-  if (useSupabase) {
-    await sbDocSet(twofaKey(e), data);
-    return;
-  }
-  const file = readLocal<TwoFAFile>("twofa.json", { twofa: {} });
-  file.twofa[e] = data;
-  writeLocal("twofa.json", file);
-}
-
-export async function isTwoFAEnabled(email: string): Promise<boolean> {
-  return Boolean((await getTwoFA(email)).enabled);
-}
+// 2FA/TOTP DIHAPUS 2026-11-13 (owner). Dokumen `twofa:<email>` yang terlanjur
+// tersimpan sengaja TIDAK dihapus dari database: tak ada lagi kode yang
+// membacanya, jadi ia inert — dan menghapus baris produksi demi kerapian
+// adalah risiko yang tak sepadan dengan manfaatnya.
 
 // =====================  PASSWORD ADMIN PER-AKUN  ===========================
 // Dokumen app_data "adminpass:<email>" -> { hash, salt } (scrypt, lihat

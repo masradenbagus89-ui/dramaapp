@@ -67,6 +67,51 @@ const NAMA_INDONESIA: Record<string, string> = {
   "Game-Show": "Kuis",
   "Talk-Show": "Talk Show",
   "Reality-TV": "Reality TV",
+
+  // --- 37 genre dari daftar owner 2026-11-13 ---
+  // Enam di antaranya SENGAJA tetap berbentuk aslinya: Melodrama, Gangster,
+  // Wuxia, Xianxia, Xuanhuan, Isekai. Empat yang terakhir istilah drama Asia
+  // yang memang tak punya padanan Indonesia — menerjemahkan "Wuxia" jadi
+  // "Pendekar" justru membuat penggemarnya tak mengenalinya. Pengecualian itu
+  // didaftarkan satu per satu di tests/genre-label.test.ts, bukan dilewati
+  // dengan aturan umum, supaya genre baru yang LUPA diterjemahkan tetap merah.
+  "Martial Arts": "Silat",
+  Melodrama: "Melodrama",
+  "Romantic Comedy": "Komedi Romantis",
+  "Slice of Life": "Keseharian",
+  Superhero: "Pahlawan Super",
+  Detective: "Detektif",
+  Gangster: "Gangster",
+  Revenge: "Balas Dendam",
+  Cultivation: "Kultivasi",
+  Wuxia: "Wuxia",
+  Xianxia: "Xianxia",
+  Xuanhuan: "Xuanhuan",
+  Isekai: "Isekai",
+  "Historical Romance": "Romansa Sejarah",
+  Urban: "Perkotaan",
+  Apocalyptic: "Kiamat",
+  Dystopian: "Distopia",
+  Survival: "Bertahan Hidup",
+  Psychological: "Psikologis",
+  "Psychological Thriller": "Thriller Psikologis",
+  Supernatural: "Supranatural",
+  Mythology: "Mitologi",
+  Military: "Militer",
+  Political: "Politik",
+  Kids: "Anak-anak",
+  School: "Sekolah",
+  Medical: "Medis",
+  Legal: "Hukum",
+  Business: "Bisnis",
+  Workplace: "Dunia Kerja",
+  Teen: "Remaja",
+  "Coming of Age": "Beranjak Dewasa",
+  Tragedy: "Tragedi",
+  Disaster: "Bencana",
+  "Road Trip": "Perjalanan",
+  Espionage: "Spionase",
+  "Dark Fantasy": "Fantasi Gelap",
 };
 
 /**

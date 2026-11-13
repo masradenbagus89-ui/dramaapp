@@ -58,13 +58,64 @@ describe("labelGenre — nilai data Inggris jadi label Indonesia", () => {
     // di lib/types.ts, tes ini MERAH sampai labelnya didaftarkan. Tanpa ini,
     // kategori baru muncul di menu dalam bahasa Inggris dan tak ada yang tahu.
     //
-    // Sejak owner mengubah "Harem" jadi "Kerajaan" (2026-10-30), TIDAK ADA
-    // lagi kategori yang dikecualikan selain "Semua" — yang memang sudah kata
-    // Indonesia. Pagarnya jadi lebih ketat daripada versi pagi ini.
+    // Daftar di bawah adalah SATU-SATUNYA yang boleh tetap berbentuk Inggris,
+    // dan tiap namanya disebut SENGAJA — bukan aturan umum "lewati yang sama".
+    // Bedanya penting: dengan daftar eksplisit, kategori baru yang lupa
+    // diterjemahkan tetap MERAH. Kalau pagarnya dilonggarkan jadi "asal
+    // labelnya sama, anggap sengaja", pagar ini berhenti menjaga apa pun.
+    //
+    // Alasan ketiganya (sudah tertulis juga di lib/genre.ts): kata Inggrisnya
+    // SUDAH jadi istilah sehari-hari penonton Indonesia. "Drama" memang kata
+    // Indonesia. Memaksa "Thriller" jadi "Menegangkan" dan "Anime" jadi
+    // "Animasi Jepang" justru membuat genrenya tak dikenali.
+    const SENGAJA_TETAP_INGGRIS = [
+      // Kata Inggrisnya sudah jadi istilah sehari-hari penonton Indonesia.
+      "Drama",
+      "Thriller",
+      "Anime",
+      "Melodrama",
+      "Gangster",
+      // Istilah drama Asia yang memang tak punya padanan Indonesia.
+      // Menerjemahkan "Wuxia" jadi "Pendekar" justru membuat penggemarnya
+      // tidak mengenalinya lagi.
+      "Wuxia",
+      "Xianxia",
+      "Xuanhuan",
+      "Isekai",
+    ];
+
     const belumDiterjemahkan = CATEGORIES.filter(
-      (k) => k !== "Semua" && labelGenre(k) === k,
+      (k) =>
+        k !== "Semua" &&
+        !SENGAJA_TETAP_INGGRIS.includes(k) &&
+        labelGenre(k) === k,
     );
     expect(belumDiterjemahkan).toEqual([]);
+  });
+
+  it("daftar pengecualian tidak boleh memuat nama yang sudah bukan kategori", () => {
+    // Penjaga untuk penjaganya. Kalau kelak "Anime" dihapus dari CATEGORIES,
+    // namanya akan tertinggal di SENGAJA_TETAP_INGGRIS sebagai pengecualian
+    // yang tak menjaga apa-apa — dan pengecualian basi itulah yang membuat
+    // orang berikutnya menambah nama ke sana tanpa berpikir.
+    const SENGAJA_TETAP_INGGRIS = [
+      // Kata Inggrisnya sudah jadi istilah sehari-hari penonton Indonesia.
+      "Drama",
+      "Thriller",
+      "Anime",
+      "Melodrama",
+      "Gangster",
+      // Istilah drama Asia yang memang tak punya padanan Indonesia.
+      // Menerjemahkan "Wuxia" jadi "Pendekar" justru membuat penggemarnya
+      // tidak mengenalinya lagi.
+      "Wuxia",
+      "Xianxia",
+      "Xuanhuan",
+      "Isekai",
+    ];
+    for (const nama of SENGAJA_TETAP_INGGRIS) {
+      expect(CATEGORIES, `"${nama}" bukan kategori lagi`).toContain(nama);
+    }
   });
 
   it("nama di luar daftar dipulangkan apa adanya, bukan dibuang", () => {

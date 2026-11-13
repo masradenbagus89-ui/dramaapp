@@ -9,7 +9,7 @@ import Link from "next/link";
 import type { Drama } from "@/lib/types";
 import { computeAdminStats } from "@/lib/admin-stats";
 import { formatViews } from "@/lib/format";
-import { CATEGORY_COLORS } from "@/app/admin/constants";
+import { warnaKategori } from "@/app/admin/constants";
 import StatCard from "@/app/components/admin/StatCard";
 import PlaylyStatusCard from "@/app/components/admin/PlaylyStatusCard";
 import KatalogStatusCard from "@/app/components/admin/KatalogStatusCard";
@@ -102,7 +102,7 @@ export default function AdminDashboard({ dramas }: { dramas: Drama[] }) {
                 <span className="w-28 shrink-0 text-xs text-zinc-300">{cat}</span>
                 <div className="flex-1 h-2 overflow-hidden rounded-full bg-zinc-800">
                   <div
-                    className={`h-full ${CATEGORY_COLORS[cat] ?? "bg-zinc-500"}`}
+                    className={`h-full ${warnaKategori(cat)}`}
                     style={{ width: `${(count / maxCategoryCount) * 100}%` }}
                   />
                 </div>

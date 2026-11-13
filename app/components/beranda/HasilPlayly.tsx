@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { saringDenganKetikan } from "@/lib/pencarian";
 import type { PlaylyVideoPublik } from "@/lib/playly-publik";
-import { labelGenreGabungan } from "@/lib/genre";
 import PlaylyVideoGrid from "../PlaylyVideoGrid";
 
 /**
@@ -30,10 +29,11 @@ export const JUDUL_BAGIAN = "Film & Video Lainnya";
 /**
  * Video Playly mana yang cocok dengan ketikan penonton.
  *
- * Empat field yang dicari dipilih dari sudut pandang penonton: dia mengingat
- * JUDUL video, nama KREATOR, judul DRAMA tempat video itu dipakai, atau
- * GENRE-nya. Sinopsis tidak ada di data Playly (lihat PlaylyVideo di
- * lib/playly.ts), jadi tidak ada yang hilang dengan tidak menyebutnya.
+ * TIGA field yang dicari dipilih dengan satu aturan: semuanya TERGAMBAR di
+ * kartu hasil — judul video, nama kreator, dan judul drama tempat video itu
+ * dipakai. Jadi penonton selalu bisa melihat SENDIRI kenapa sebuah kartu
+ * muncul, tanpa menebak. Sinopsis tidak ada di data Playly (lihat PlaylyVideo
+ * di lib/playly.ts), jadi tak ada yang hilang dengan tidak menyebutnya.
  *
  * Dipisah jadi fungsi sendiri supaya pemanggil bisa menghitung jumlah yang
  * cocok TANPA merender apa pun — dipakai pesan "tidak ada judul yang cocok" di
@@ -43,14 +43,16 @@ export function cariVideoPlayly(
   videos: PlaylyVideoPublik[],
   ketikan: string,
 ): PlaylyVideoPublik[] {
+  // ⚠️ DIPERSEMPIT — owner 2026-11-13, alasan lengkap di lib/discover.ts.
+  // Dulu ikut mencari `genre` + label Indonesianya; keduanya tidak tampil di
+  // kartu hasil, jadi penonton melihat judul yang tak terlihat nyambung
+  // dengan ketikannya. `dramaTitle` DIPERTAHANKAN karena ia memang tergambar
+  // di kartu ("dari: <judul drama>"), jadi hasilnya tetap bisa dijelaskan
+  // hanya dengan melihat layar.
   return saringDenganKetikan(videos, ketikan, (v) => [
     v.title,
     v.creator,
     v.dramaTitle,
-    v.genre,
-    // Alasannya sama dengan di lib/discover.ts: yang penonton baca di kartu
-    // adalah label Indonesia, jadi itu pun harus bisa diketik.
-    labelGenreGabungan(v.genre),
   ]);
 }
 

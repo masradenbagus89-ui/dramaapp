@@ -32,16 +32,70 @@ export type KategoriIsi = Exclude<Category, "Semua">;
  * mengarang. Video yang seharusnya masuk situ tetap perlu diisi tangan — dan
  * itu jauh lebih baik daripada 50 judul yang salah kamar.
  *
- * Genre yang TIDAK terdaftar (Drama 153 · Horror 82 · Documentary · Animation
- * · Biography · Western · Short …) sengaja dibiarkan tak terpetakan. DramaKu
- * memang belum punya kategori untuk mereka; memaksakan Horror jadi "Fantasy"
- * membuat penonton yang membuka Fantasy menemukan film yang salah.
+ * ── DIPERLUAS 2026-11-13, bersama 17 kategori baru di lib/types.ts ──
+ *
+ * Sampai kemarin peta ini cuma punya 4 baris, dan itu memaksa dua kompromi
+ * yang sekarang tidak perlu lagi:
+ *
+ *   1. "Action" terpaksa menampung Adventure + War + Crime + Thriller
+ *      sekaligus — 279 dari 466 film. Kategori yang memuat lebih dari separuh
+ *      katalog tidak membantu penonton menjelajah apa pun.
+ *   2. Genre terbesar justru dibiarkan kosong karena belum ada kamarnya:
+ *      Drama (153 film) dan Horror (82) pulang tanpa kategori.
+ *
+ * Sekarang tiap genre punya kamarnya sendiri, jadi aturan "yang lebih
+ * SPESIFIK menang" di atas kembali jadi urusan sebenarnya: memilih di antara
+ * genre ganda ("Action, Romance"), bukan menambal kamar yang tak ada.
+ *
+ * URUTAN tetap = PRIORITAS. Yang khas & memisahkan ditaruh di atas; "Drama"
+ * sengaja hampir PALING BAWAH karena hampir semua film serius ikut menyandang
+ * genre itu — menaruhnya di atas akan menyedot hampir seluruh katalog ke satu
+ * kamar, persis kesalahan yang baru saja diperbaiki.
+ *
+ * Genre IMDb yang TETAP tak terpetakan (Short · News · Game-Show · Talk-Show
+ * · Reality-TV · Film-Noir · Adult) memang tidak punya kategori di sini, dan
+ * itu disengaja — lihat alasannya di lib/types.ts.
  */
 export const PETA_GENRE: readonly (readonly [KategoriIsi, readonly string[]])[] = [
+  // --- Paling khas: sekali genre ini muncul, hampir pasti itu identitasnya ---
+  ["Anime", ["Anime"]],
+  ["Documentary", ["Documentary"]],
+  // "Music" DIPISAH dari "Musical" 2026-11-13, saat ia jadi kategori sendiri.
+  // Keduanya genre IMDb yang berbeda: "Musical" = film yang tokohnya bernyanyi
+  // (La La Land), "Music" = film TENTANG musik tanpa harus bernyanyi
+  // (Bohemian Rhapsody). Selama menumpang, semua film Music salah kamar.
+  ["Musical", ["Musical"]],
+  ["Music", ["Music"]],
+  ["Game-Show", ["Game-Show"]],
+  ["Talk-Show", ["Talk-Show"]],
+  ["Reality-TV", ["Reality-TV"]],
+  ["Film-Noir", ["Film-Noir"]],
+  ["Western", ["Western"]],
+  ["Sport", ["Sport"]],
+  ["Biography", ["Biography"]],
+  ["History", ["History"]],
+  ["War", ["War"]],
+  ["Animation", ["Animation"]],
+  ["Family", ["Family"]],
+  // --- Genre inti penonton film ---
+  ["Horror", ["Horror"]],
   ["Romance", ["Romance"]],
   ["Comedy", ["Comedy"]],
-  ["Fantasy", ["Fantasy", "Sci-Fi"]],
-  ["Action", ["Action", "Adventure", "War", "Crime", "Thriller"]],
+  ["Fantasy", ["Fantasy"]],
+  ["Sci-Fi", ["Sci-Fi"]],
+  ["Mystery", ["Mystery"]],
+  ["Crime", ["Crime"]],
+  ["Thriller", ["Thriller"]],
+  ["Adventure", ["Adventure"]],
+  ["Action", ["Action"]],
+  // --- Jaring terakhir: dipakai hanya kalau tak ada satu pun di atas cocok ---
+  ["Drama", ["Drama"]],
+  // "Short" SENGAJA paling bawah, di bawah Drama sekalipun. Di IMDb ia bukan
+  // genre isi melainkan penanda DURASI, dan hampir selalu datang berpasangan
+  // ("Short, Comedy"). Kalau diprioritaskan, seluruh film pendek berakhir di
+  // satu rak dan penonton kehilangan genre aslinya. Di posisi ini ia hanya
+  // dipakai saat "Short" benar-benar satu-satunya keterangan yang ada.
+  ["Short", ["Short"]],
 ] as const;
 
 /**

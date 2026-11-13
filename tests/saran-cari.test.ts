@@ -92,13 +92,28 @@ describe("pilihSaran — aturan memilih baris", () => {
     expect(pilihSaran("di", indeks).length).toBeGreaterThan(0);
   });
 
-  it("mencocokkan semua kata, di mana pun letaknya dalam judul", () => {
-    const hasil = pilihSaran("pedang diremehkan", indeks);
-    expect(hasil.map((s) => s.judul)).toEqual(["Master Pedang yang Diremehkan"]);
+  it("judul dicocokkan dari AWAL, bukan dari kata mana pun di tengahnya", () => {
+    // ⚠️ DIBALIK 2026-11-13 atas keputusan owner. Tes ini dulu berbunyi
+    // "mencocokkan semua kata, di mana pun letaknya dalam judul" dan
+    // mengharapkan "pedang diremehkan" menemukan "Master Pedang yang
+    // Diremehkan". Owner meminta seluruh pencarian situs diseragamkan jadi
+    // "yang tampil harus DIAWALI yang diketik", sesudah dua putaran keluhan
+    // dan gambar yang menunjukkan kata cocok di tengah judul.
+    //
+    // Jadi yang merah di sini BUKAN kemunduran yang tak disengaja — ini
+    // perilaku yang diminta. Kalau kelak terasa terlalu sempit, yang
+    // dikembalikan `cocokSemuaKata` (lib/pencarian.ts, sengaja tidak dihapus).
+    expect(pilihSaran("pedang diremehkan", indeks)).toEqual([]);
+    expect(pilihSaran("master pedang", indeks).map((s) => s.judul)).toEqual([
+      "Master Pedang yang Diremehkan",
+    ]);
   });
 
   it("judul yang tidak cocok tidak ikut terbawa", () => {
-    expect(pilihSaran("hujan", indeks).map((s) => s.judul)).toEqual(["Kota Hujan"]);
+    // "hujan" ada di TENGAH "Kota Hujan", jadi tak lagi cocok — sama alasan
+    // dengan tes di atas. Dicari dari awalnya: "kota".
+    expect(pilihSaran("hujan", indeks)).toEqual([]);
+    expect(pilihSaran("kota", indeks).map((s) => s.judul)).toEqual(["Kota Hujan"]);
   });
 
   it("judul kembar dari dua sumber hanya muncul SEKALI", () => {

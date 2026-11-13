@@ -53,7 +53,7 @@ beforeEach(() => {
     },
   );
 
-  // Beberapa anak komponen (2FA, dompet koin, kode pemulihan) menembak API
+  // Beberapa anak komponen (dompet koin, kode pemulihan) menembak API
   // saat dipasang. Balasan kosong yang SAH sudah cukup: yang diuji di sini
   // susunan halamannya, bukan isi tiap panel.
   vi.stubGlobal(
@@ -131,7 +131,7 @@ describe("/profile — halaman akun", () => {
     expect(teks()).toContain("Akun");
   });
 
-  it("ADMIN melihat seksi Keamanan berisi ubah password & 2FA", async () => {
+  it("ADMIN melihat seksi Keamanan berisi ubah password", async () => {
     masuk("admin");
     await render();
 

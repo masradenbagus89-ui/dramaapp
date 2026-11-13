@@ -1,12 +1,120 @@
+// -------------------------------------------------------------------------
+// KATEGORI KATALOG.
+//
+// Diperluas 2026-11-13 (owner: "tambahkan isi kategori karena pilihan genrenya
+// sedikit, kamu buat yang lengkap"). Sebelumnya cuma 7 — semuanya lahir untuk
+// drama pendek Asia — padahal katalog Playly sekarang mayoritas film Barat
+// (Prey, Morbius, Moonfall …), jadi hampir semuanya terpaksa "Tanpa kategori".
+//
+// Nama tambahannya SENGAJA memakai ejaan genre IMDb persis ("Sci-Fi", bukan
+// "SciFi"). Alasannya bukan selera: lib/kategori-otomatis.ts mencocokkan
+// kategori dengan genre IMDb yang sudah tersimpan, jadi ejaan yang menyimpang
+// membuat pencocokannya meleset DIAM-DIAM — tanpa error, cuma kategori yang
+// tak pernah terisi.
+//
+// Yang sengaja TIDAK dimasukkan: "Adult" (keputusan isi situs, milik owner,
+// bukan AI) serta News/Short/Game-Show/Talk-Show/Reality-TV/Film-Noir (bukan
+// yang dicari penonton situs film; cuma memanjangkan dropdown).
+//
+// 🪤 Daftar ini dan `CATEGORIES` di bawah WAJIB sama. Itu bukan sekadar
+// kerapian — tapi TypeScript sudah menjaganya: isi array yang bukan anggota
+// union ini langsung merah saat typecheck, jadi keduanya mustahil menyimpang.
+// -------------------------------------------------------------------------
 export type Category =
   | "Semua"
+  // --- Kurasi DramaKu (drama pendek Asia; tak punya padanan genre IMDb) ---
   | "Romance"
   | "Tycoon"
   | "Harem"
   | "Time Travel"
+  // --- Genre film & serial (ejaan mengikuti IMDb) ---
   | "Action"
+  | "Adventure"
   | "Comedy"
-  | "Fantasy";
+  | "Drama"
+  | "Fantasy"
+  | "Sci-Fi"
+  | "Horror"
+  | "Thriller"
+  | "Mystery"
+  | "Crime"
+  | "War"
+  | "Western"
+  | "Animation"
+  | "Anime"
+  | "Family"
+  | "History"
+  | "Biography"
+  | "Documentary"
+  | "Musical"
+  | "Sport"
+  // --- Enam genre IMDb terakhir (owner 2026-11-13: "buat 30 genre") ---
+  // Dipilih owner dari dua tawaran; yang ini menang karena SEMUANYA genre
+  // IMDb resmi, jadi tombol "Isi otomatis kategori" bisa mengisinya sendiri.
+  // Tawaran yang kalah (Silat/Sekolah/Medis/dll) lebih cocok untuk drama Asia
+  // tapi harus diisi tangan selamanya — IMDb tak punya genre itu.
+  | "Music"
+  | "Film-Noir"
+  | "Short"
+  | "Reality-TV"
+  | "Game-Show"
+  | "Talk-Show"
+  // ── 37 genre dari daftar owner (2026-11-13, putaran 3) ────────────────
+  // Owner mengirim daftar 60 genre bergambar. Yang di bawah ini bagian yang
+  // belum ada; sisanya sudah terdaftar di atas.
+  //
+  // 🪤 Daftar owner TIDAK memuat "Tycoon" dan "Time Travel", tapi keduanya
+  // TETAP dipertahankan — bukan kelalaian. Diukur di katalog produksi
+  // 2026-11-13: Tycoon dipakai 4 judul, Time Travel 1 judul. Menghapusnya
+  // membuat `parseKategoriVideo` menolak nilai tersimpan mereka, dan kelima
+  // judul itu kehilangan kategori tanpa satu pun pesan error.
+  //
+  // "Historical" dari daftar owner sengaja TIDAK ditambahkan sebagai nama
+  // baru: ia sudah ada sebagai "History" (ejaan IMDb, dipakai pencocokan
+  // otomatis) dengan label Indonesia "Sejarah". Dua kategori yang artinya
+  // sama persis cuma membuat owner ragu harus memilih yang mana.
+  //
+  // Mayoritas nama di bawah TIDAK ada di IMDb (Wuxia, Isekai, Cultivation,
+  // Workplace …), jadi tombol "Isi otomatis kategori" tak akan pernah
+  // mengisinya — harus dipilih tangan. Itu konsekuensi yang melekat pada
+  // daftar ini, bukan sesuatu yang bisa diperbaiki di kode.
+  | "Martial Arts"
+  | "Melodrama"
+  | "Romantic Comedy"
+  | "Slice of Life"
+  | "Superhero"
+  | "Detective"
+  | "Gangster"
+  | "Revenge"
+  | "Cultivation"
+  | "Wuxia"
+  | "Xianxia"
+  | "Xuanhuan"
+  | "Isekai"
+  | "Historical Romance"
+  | "Urban"
+  | "Apocalyptic"
+  | "Dystopian"
+  | "Survival"
+  | "Psychological"
+  | "Psychological Thriller"
+  | "Supernatural"
+  | "Mythology"
+  | "Military"
+  | "Political"
+  | "Kids"
+  | "School"
+  | "Medical"
+  | "Legal"
+  | "Business"
+  | "Workplace"
+  | "Teen"
+  | "Coming of Age"
+  | "Tragedy"
+  | "Disaster"
+  | "Road Trip"
+  | "Espionage"
+  | "Dark Fantasy";
 
 /** Jenis tayangan: serial berepisode, atau film 1 video utuh. */
 export type DramaKind = "series" | "movie";
@@ -328,15 +436,95 @@ export function resolveKindRules(body: {
   };
 }
 
+/**
+ * Urutannya = urutan yang dilihat admin di dropdown, dan itu disengaja:
+ * kurasi DramaKu dulu (paling sering dipakai owner), baru genre film urut
+ * dari yang paling banyak isinya di katalog. Mengurutkannya A-Z akan membuat
+ * "Animation" dan "Biography" menempati dua baris teratas padahal nyaris tak
+ * pernah dipilih.
+ */
 export const CATEGORIES: Category[] = [
   "Semua",
+  // Kurasi DramaKu
   "Romance",
   "Tycoon",
   "Harem",
   "Time Travel",
+  // Genre film & serial
   "Action",
+  "Adventure",
   "Comedy",
+  "Drama",
   "Fantasy",
+  "Sci-Fi",
+  "Horror",
+  "Thriller",
+  "Mystery",
+  "Crime",
+  "War",
+  "Western",
+  "Animation",
+  "Anime",
+  "Family",
+  "History",
+  "Biography",
+  "Documentary",
+  "Musical",
+  "Music",
+  "Sport",
+  // Enam terakhir sengaja di DASAR daftar: keenamnya paling jarang dipilih
+  // untuk katalog film, jadi menaruhnya di atas cuma memaksa owner menggulung
+  // melewatinya tiap kali. Kolom cari di panel admin membuat posisi ini tidak
+  // lagi jadi beban — ketik "kui" langsung dapat Kuis.
+  // ── Daftar 60 genre kiriman owner (urutannya mengikuti gambarnya) ──
+  // Ditaruh setelah kategori lama supaya posisi yang sudah dihafal owner
+  // tidak bergeser. Kolom cari membuat urutan tak lagi jadi beban: ketik
+  // "wu" langsung dapat Wuxia tanpa menggulung 67 baris.
+  "Martial Arts",
+  "Melodrama",
+  "Romantic Comedy",
+  "Slice of Life",
+  "Superhero",
+  "Detective",
+  "Gangster",
+  "Revenge",
+  "Cultivation",
+  "Wuxia",
+  "Xianxia",
+  "Xuanhuan",
+  "Isekai",
+  "Historical Romance",
+  "Urban",
+  "Apocalyptic",
+  "Dystopian",
+  "Survival",
+  "Psychological",
+  "Psychological Thriller",
+  "Supernatural",
+  "Mythology",
+  "Military",
+  "Political",
+  "Kids",
+  "School",
+  "Medical",
+  "Legal",
+  "Business",
+  "Workplace",
+  "Teen",
+  "Coming of Age",
+  "Tragedy",
+  "Disaster",
+  "Road Trip",
+  "Espionage",
+  "Dark Fantasy",
+  // Lima di bawah TIDAK ada di daftar owner. Dipertahankan karena baru
+  // dipasang beberapa jam sebelumnya di sesi yang sama dan bisa saja sudah
+  // dipakai; membuangnya berisiko membuat video yatim tanpa gejala.
+  "Film-Noir",
+  "Short",
+  "Reality-TV",
+  "Game-Show",
+  "Talk-Show",
 ];
 
 /**

@@ -19,7 +19,6 @@ import {
   ukurDurasiDrama,
   type ScanResult,
 } from "@/lib/admin-api";
-import TwoFactorSettings from "@/app/components/TwoFactorSettings";
 import SponsorAdsManager from "@/app/components/SponsorAdsManager";
 import AdminManager from "@/app/components/admin/AdminManager";
 import AdminDashboard from "@/app/components/admin/AdminDashboard";
@@ -583,18 +582,11 @@ export default function AdminPage() {
           <AdminManager currentAdminEmail={authUser.email} />
         )}
 
-        {/* Password dan 2FA disatukan di bagian "Keamanan": keduanya menjawab
-            pertanyaan yang sama ("bagaimana akun admin dilindungi?"), dan
-            memisahkannya berarti satu menu lagi yang isinya cuma satu kotak.
-            Sekaligus menutup menu "Keamanan (2FA)" yang SELAMA INI RUSAK —
-            targetnya `#keamanan` tidak pernah ada di halaman, jadi diklik pun
-            tidak membawa ke mana-mana. */}
-        {bagian === "keamanan" && (
-          <>
-            <AdminPasswordSettings />
-            <TwoFactorSettings />
-          </>
-        )}
+        {/* Bagian "Keamanan" menjawab satu pertanyaan: bagaimana akun admin
+            dilindungi? Sejak 2FA dihapus (owner 2026-11-13) isinya tinggal
+            password — tetap jadi bagian sendiri, bukan dilebur, supaya
+            tautan `#keamanan` yang sudah tersebar tidak jadi mati. */}
+        {bagian === "keamanan" && <AdminPasswordSettings />}
 
         {/* Pengatur iklan sponsor — ikut mati bersama saklar iklan
             (lib/saklar-fitur.ts). Disembunyikan, bukan dibiarkan: mengatur

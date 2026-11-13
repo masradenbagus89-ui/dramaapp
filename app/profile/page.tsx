@@ -40,7 +40,6 @@ import RecoverySection from "@/app/components/RecoverySection";
 import AdBanner from "@/app/components/AdBanner";
 import TombolKembali from "@/app/components/TombolKembali";
 import AdminPasswordSettings from "@/app/components/admin/AdminPasswordSettings";
-import TwoFactorSettings from "@/app/components/TwoFactorSettings";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -310,7 +309,7 @@ export default function ProfilePage() {
                 <JudulSeksi
                   ikon={<ShieldCheck className="size-5" />}
                   teks="Keamanan"
-                  keterangan="Password pribadi dan verifikasi 2 langkah untuk akun pengelola."
+                  keterangan="Password pribadi untuk akun pengelola."
                 />
                 {/* Komponen yang SAMA dipakai panel admin -- sengaja dipakai
                     ulang, bukan ditulis ulang. Server mengenali admin dari
@@ -319,7 +318,6 @@ export default function ProfilePage() {
                     dari sesi non-admin tetap dijawab 403. */}
                 <div className="space-y-4">
                   <AdminPasswordSettings />
-                  <TwoFactorSettings />
                 </div>
               </section>
             )}

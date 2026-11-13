@@ -10,6 +10,7 @@
 // Banner lebar (hero) tidak ada di OMDb — opsional lewat TMDB_API_KEY.
 // -------------------------------------------------------------------------
 import { slugify } from "./format";
+import { KATEGORI_ISI } from "./types";
 
 const OMDB_FETCH_MS = 8_000;
 const MAX_SEASONS_TO_COUNT = 15;
@@ -36,15 +37,11 @@ export function resolveOmdbApiKey(raw: string | undefined): string {
 const OMDB_API_KEY = resolveOmdbApiKey(process.env.OMDB_API_KEY);
 const TMDB_API_KEY = (process.env.TMDB_API_KEY ?? "").trim();
 
-const CATEGORY_OPTIONS = [
-  "Romance",
-  "Tycoon",
-  "Harem",
-  "Time Travel",
-  "Action",
-  "Comedy",
-  "Fantasy",
-];
+// Salinan ketikan tangan berisi 7 kategori DIBUANG 2026-11-13 — sekarang
+// `guessCategory` membaca KATEGORI_ISI dari sumbernya (lihat import di atas).
+// Selama ini fungsi itu cuma pernah bisa menebak 7 nama tersebut, jadi film
+// bergenre Horror/Drama/Thriller selalu pulang dengan tangan kosong walau
+// genre IMDb-nya sudah terbaca jelas.
 
 export type OmdbTitleKind = "movie" | "series" | "episode" | "game" | "";
 
@@ -167,7 +164,7 @@ export function parseOmdbKind(type: string | undefined): OmdbTitleKind {
 /** Coba cocokkan genre OMDb dengan kategori yang tersedia di DramaKu. */
 function guessCategory(genre: string): string | null {
   const parts = genre.split(",").map((g) => g.trim().toLowerCase());
-  for (const c of CATEGORY_OPTIONS) {
+  for (const c of KATEGORI_ISI) {
     if (parts.includes(c.toLowerCase())) return c;
   }
   return null;

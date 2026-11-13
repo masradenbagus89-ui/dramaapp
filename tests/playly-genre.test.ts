@@ -132,12 +132,44 @@ describe("panel admin benar-benar memasang dropdown kategorinya", () => {
   });
 
   it("panelnya menawarkan seluruh kategori + pilihan mengosongkan", () => {
+    // Sejak 2026-11-13 kedua hal yang dijaga di sini TIDAK lagi ditulis di
+    // panelnya sendiri: dropdown <select> diganti kolom cari, dan daftar
+    // kategori + baris "Tanpa kategori" pindah ke PilihKategori.tsx. Yang
+    // dijaga tetap SAMA — cuma alamatnya yang berubah, jadi tesnya mengikuti
+    // ke sana alih-alih dilonggarkan.
     const panel = readFileSync(
       "app/components/admin/PlaylyVisibilityManager.tsx",
       "utf-8",
     );
-    expect(panel).toContain("KATEGORI_ISI");
-    expect(panel).toContain("Tanpa kategori");
+    expect(
+      panel,
+      "panel tidak lagi memakai pemilih kategori bersama — kategori baru " +
+        "tidak akan sampai ke sini",
+    ).toContain("PilihKategori");
     expect(panel).toContain("/api/admin/playly/genre");
+
+    const pemilih = readFileSync(
+      "app/components/admin/PilihKategori.tsx",
+      "utf-8",
+    );
+    expect(pemilih).toContain("KATEGORI_ISI");
+    expect(pemilih).toContain("Tanpa kategori");
+  });
+
+  it("kolom cepat juga memakai pemilih kategori yang SAMA", () => {
+    // Dua panel memilih kategori untuk video yang sama. Kalau salah satunya
+    // kembali memakai daftar sendiri, keduanya bisa menawarkan pilihan yang
+    // berbeda untuk data yang sama — persis kekembaran yang baru dibereskan
+    // di app/admin/constants.ts.
+    const cepat = readFileSync(
+      "app/components/admin/PlaylyIsiCepat.tsx",
+      "utf-8",
+    );
+    expect(cepat).toContain("PilihKategori");
+    expect(
+      cepat,
+      "PlaylyIsiCepat merakit daftar kategorinya sendiri lagi — pakai " +
+        "PilihKategori supaya kedua panel tak bisa menyimpang",
+    ).not.toContain("KATEGORI_ISI");
   });
 });

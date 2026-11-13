@@ -7,7 +7,7 @@
 // perilaku & aksi tetap sama persis.
 import Link from "next/link";
 import { isMovie, type Drama } from "@/lib/types";
-import { CATEGORY_COLORS } from "@/app/admin/constants";
+import { warnaKategori } from "@/app/admin/constants";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import KotakCariDaftar from "./KotakCariDaftar";
@@ -82,7 +82,7 @@ export default function DramaList({
                 </TableCell>
                 <TableCell>
                   <Badge variant="outline" className="border-zinc-700 text-zinc-300">
-                    <span className={`mr-0.5 inline-block h-2 w-2 rounded-full ${CATEGORY_COLORS[d.category] ?? "bg-zinc-500"}`} />
+                    <span className={`mr-0.5 inline-block h-2 w-2 rounded-full ${warnaKategori(d.category)}`} />
                     {d.category}
                   </Badge>
                 </TableCell>

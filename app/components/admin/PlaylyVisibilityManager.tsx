@@ -30,7 +30,8 @@ import {
 } from "@/lib/bagian-playly";
 import type { PlaylyVideo, PlaylySumber } from "@/lib/playly";
 import type { PlaylyImdbMap } from "@/lib/playly-imdb";
-import { DRAMA_QUALITY_OPTIONS, KATEGORI_ISI } from "@/lib/types";
+import { DRAMA_QUALITY_OPTIONS } from "@/lib/types";
+import PilihKategori from "./PilihKategori";
 import { cn } from "@/lib/utils";
 import { saringDenganKetikan } from "@/lib/pencarian";
 import { formatDuration } from "@/lib/format";
@@ -1173,25 +1174,26 @@ export default function PlaylyVisibilityManager({
                   )}
                 </label>
 
-                {/* Kategori untuk baris beranda. Memakai <select> bawaan,
-                    bukan dropdown berhias: daftarnya 8 pilihan tetap, dan
-                    di HP select bawaan membuka pemilih layar-penuh yang jauh
-                    lebih enak dipakai daripada daftar kecil buatan sendiri. */}
+                {/* Kategori untuk baris beranda.
+                    ⚠️ DULU memakai <select> bawaan, dengan alasan tertulis:
+                    "daftarnya 8 pilihan tetap, dan di HP select bawaan
+                    membuka pemilih layar-penuh yang lebih enak dipakai".
+                    Alasan pertamanya GUGUR 2026-11-13 — owner menaikkan
+                    kategori jadi 30, dan menggulung 30 baris jauh lebih buruk
+                    daripada mengetik 3 huruf. Alasan HP-nya masih benar dan
+                    tidak dibantah; ia kalah karena panel ini dipakai dari
+                    desktop (tabel 8 kolom yang mustahil muat di layar HP).
+                    Kalau ternyata dipakai dari HP juga, kembalikan <select>
+                    DI SINI saja — PlaylyIsiCepat.tsx tetap kolom cari. */}
                 <label className="flex min-w-0 items-center gap-1.5">
                   <span className="sr-only">Kategori untuk {v.title}</span>
-                  <select
-                    value={genres[v.id] ?? KOSONG}
-                    onChange={(e) => ubahGenre(v.id, e.target.value)}
+                  <PilihKategori
+                    label={`Kategori untuk ${v.title}`}
+                    nilai={genres[v.id] ?? KOSONG}
+                    onPilih={(nilaiBaru) => ubahGenre(v.id, nilaiBaru)}
                     disabled={sedangGenre === v.id}
                     className="min-h-9 w-full min-w-0 rounded-full border border-zinc-700 bg-zinc-900 px-2 text-xs text-zinc-200 outline-none transition focus-visible:border-amber-400 disabled:opacity-50"
-                  >
-                    <option value={KOSONG}>Tanpa kategori</option>
-                    {KATEGORI_ISI.map((k) => (
-                      <option key={k} value={k}>
-                        {k}
-                      </option>
-                    ))}
-                  </select>
+                  />
                   {sedangGenre === v.id && (
                     <Loader2
                       className="h-3.5 w-3.5 animate-spin text-zinc-400"

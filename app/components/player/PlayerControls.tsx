@@ -1,7 +1,7 @@
 "use client";
 
 import { fmtTime } from "@/lib/format";
-import { LayoutGrid, ChevronRight } from "lucide-react";
+import { LayoutGrid, ChevronRight, Maximize, Minimize } from "lucide-react";
 import VolumeControl from "./VolumeControl";
 
 // Panel bawah pemutar feed: judul + episode + subtitle + garis geser + timer.
@@ -23,6 +23,7 @@ export default function PlayerControls({
   onSeekUp,
   onOpenEpisodes,
   sound,
+  fullscreen,
 }: {
   title: string;
   currentEp: number;
@@ -52,6 +53,20 @@ export default function PlayerControls({
     volume: number;
     muted: boolean;
     onChange: (next: { volume: number; muted: boolean }) => void;
+  };
+  /**
+   * Ada = tombol layar penuh digambar di ujung kanan baris durasi (owner
+   * 2026-11-13, mengambil ide dari branch rekan). Tidak ada = tanpa tombol,
+   * pemanggil lama tetap aman.
+   *
+   * Dibungkus jadi SATU objek, bukan dua prop terpisah `isFullscreen` +
+   * `onToggleFullscreen`: keadaan dan cara mengubahnya selalu dipakai
+   * berpasangan, dan satu prop opsional membuat "tidak ada tombol" mustahil
+   * ditulis setengah jalan.
+   */
+  fullscreen?: {
+    active: boolean;
+    onToggle: () => void;
   };
 }) {
   /* `pb-6` di HP (bukan `pb-7`): 4px terakhir yang ikut menurunkan seluruh isi
@@ -207,6 +222,32 @@ export default function PlayerControls({
               hidden={!controlsVisible}
               onChange={sound.onChange}
             />
+          )}
+
+          {/* LAYAR PENUH — ide dari branch rekan `feat/link-unduhan-provider-
+              kualitas` (`bde27ee`), dipasang ulang DI ATAS tata letak ini atas
+              keputusan owner 2026-11-13. Branch aslinya ikut membawa desain
+              volume versi lama; menariknya utuh akan membatalkan kapsul geser
+              + Eps di baris bawah + rail 36px yang sudah tayang, jadi yang
+              diambil hanya tombol ini.
+
+              Sengaja TIDAK menghapus baris "Layar penuh" di menu gerigi:
+              fungsinya sama persis, tapi keduanya tidak pernah terlihat
+              bersamaan (menu harus dibuka dulu), jadi tak ada dua tombol yang
+              terbaca sebagai dua hal berbeda. Membuangnya = mengubah fitur
+              lama yang masih dipakai, dan itu keputusan owner, bukan efek
+              samping. */}
+          {fullscreen && (
+            <button
+              type="button"
+              onClick={fullscreen.onToggle}
+              aria-label={fullscreen.active ? "Keluar layar penuh" : "Layar penuh"}
+              /* 36px — disamakan dengan tombol volume di sebelahnya. Ukuran
+                 lain membuat baris ini terlihat miring sebelah. */
+              className="pointer-events-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)] transition-transform hover:bg-white/10 active:scale-95"
+            >
+              {fullscreen.active ? <Minimize className="size-5" /> : <Maximize className="size-5" />}
+            </button>
           )}
         </div>
 

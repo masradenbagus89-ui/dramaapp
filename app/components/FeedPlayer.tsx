@@ -853,6 +853,11 @@ export default function FeedPlayer({
              sebaris dengan angka durasi. `changeSound` ikut memunculkan kontrol
              lagi supaya panelnya tidak memudar di tengah geser. */
           sound={{ ...sound, onChange: changeSound }}
+          /* Layar penuh ikut muncul di baris durasi (owner 2026-11-13, ide
+             dari branch rekan). Memakai `toggleFullscreen` yang SAMA dengan
+             menu gerigi — satu fungsi, dua pintu, jadi keduanya mustahil
+             menyimpang perilaku. */
+          fullscreen={{ active: isFullscreen, onToggle: toggleFullscreen }}
         />
 
         {/* Tombol putar/jeda di TENGAH video. Saat jeda: lapisan inset-0 supaya

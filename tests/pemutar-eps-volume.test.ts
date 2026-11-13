@@ -6,7 +6,9 @@
 //      garis geser (sebelumnya menempel di bawah judul);
 //   2. "volume pindahkan ke samping durasi dan ketika di klik volumenya ke
 //      atas" -> tombol volume pindah dari rail ikon kanan ke sebelah angka
-//      durasi, dan garis pengaturnya membuka TEGAK KE ATAS.
+//      durasi, dan pengaturnya membuka TEGAK KE ATAS.
+// Putaran ketiga (2026-11-13): bentuk pengaturnya jadi GARIS GESER berbentuk
+// kapsul (contoh gambar dari owner), bukan lagi dua tombol + / −.
 //
 // Yang dijaga di sini semuanya rusak SENYAP — tak satu pun memunculkan error:
 //   A. tombol di panel bawah yang lupa `pointer-events-auto` TERLIHAT NORMAL
@@ -15,7 +17,10 @@
 //      memudar hilang — ketukan untuk memunculkan kontrol malah membuka daftar
 //      episode;
 //   C. urutan yang diam-diam kembali seperti semula (Eps naik lagi ke bawah
-//      judul) tetap menggambar layar yang "kelihatan benar" sekilas.
+//      judul) tetap menggambar layar yang "kelihatan benar" sekilas;
+//   D. garis volume yang diputar `-rotate-90` berdiri DI LUAR layar HP;
+//   E. garis volume tanpa `touch-none` membuat jari yang menggesernya malah
+//      melompat ke episode berikutnya (feed berpindah lewat gulir asli).
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { createElement, act } from "react";
 import { createRoot, type Root } from "react-dom/client";
@@ -62,6 +67,24 @@ function pasang(ubah: Partial<Parameters<typeof PlayerControls>[0]> = {}) {
   });
 }
 
+/** Pasang pemutar dengan keadaan suara tertentu lalu pastikan panel volumenya
+ *  TERBUKA. Dipanggil dua kali berturut-turut, render keduanya memakai
+ *  komponen yang SAMA — panelnya masih terbuka, jadi mengetuk tombolnya lagi
+ *  justru MENUTUP. Karena itu ketukannya bersyarat. */
+function pasangSuara(volume: number, muted: boolean) {
+  pasang({
+    sound: {
+      volume,
+      muted,
+      onChange: (n: { volume: number; muted: boolean }) => (terakhir = n),
+    },
+  } as never);
+  if (!container.querySelector('[aria-label="Atur volume"]')) {
+    klik(cari('[aria-label="Volume"]'));
+  }
+  return cari('[aria-label="Atur volume"]');
+}
+
 function cari(sel: string): HTMLElement {
   const el = container.querySelector(sel);
   if (!el) throw new Error(`tidak ada di layar: ${sel}`);
@@ -71,6 +94,37 @@ function cari(sel: string): HTMLElement {
 function klik(el: Element) {
   act(() => {
     el.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+  });
+}
+
+function tekanTombol(el: Element, key: string) {
+  act(() => {
+    el.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true }));
+  });
+}
+
+/** jsdom TIDAK menghitung tata letak — `getBoundingClientRect()` selalu nol.
+ *  Jalur geser dipalsukan tingginya supaya rumus "posisi jari → volume" bisa
+ *  diuji; yang diuji di sini rumusnya, BUKAN tata letaknya (itu cuma bisa
+ *  dibuktikan browser sungguhan). Jalur: y 100 (atas/keras) .. 196 (bawah/bisu). */
+function palsukanTinggiJalur(el: HTMLElement) {
+  el.getBoundingClientRect = () =>
+    ({
+      top: 100,
+      bottom: 196,
+      height: 96,
+      left: 0,
+      right: 28,
+      width: 28,
+      x: 0,
+      y: 100,
+      toJSON: () => ({}),
+    }) as DOMRect;
+}
+
+function sentuh(el: Element, tipe: string, clientY: number) {
+  act(() => {
+    el.dispatchEvent(new MouseEvent(tipe, { bubbles: true, clientY }));
   });
 }
 
@@ -178,18 +232,16 @@ describe("volume pindah ke SAMPING angka durasi", () => {
     );
   });
 
-  it("diklik → tombol + / − muncul KE ATAS, diklik lagi tertutup", () => {
+  it("diklik → garis geser muncul KE ATAS, diklik lagi tertutup", () => {
     pasang();
-    expect(container.querySelector('[aria-label="Naikkan volume"]')).toBeNull();
+    expect(container.querySelector('[aria-label="Atur volume"]')).toBeNull();
 
-    klik(cari('[aria-label="Volume"]'));
-    const naik = cari('[aria-label="Naikkan volume"]');
-    expect(container.querySelector('[aria-label="Turunkan volume"]')).toBeTruthy();
+    const jalur = pasangSuara(1, false);
 
     // `bottom-full` = berdiri di atas ikonnya. Kalau hilang, panelnya jatuh
     // menimpa angka durasi & garis geser — dua kontrol yang paling sering
     // dipakai justru tertutup.
-    const panel = naik.closest("div.absolute");
+    const panel = jalur.closest("div.absolute");
     expect(panel, "panel volume bukan elemen absolute").toBeTruthy();
     expect(
       panel!.className,
@@ -197,7 +249,18 @@ describe("volume pindah ke SAMPING angka durasi", () => {
     ).toContain("bottom-full");
 
     klik(cari('[aria-label="Volume"]'));
+    expect(container.querySelector('[aria-label="Atur volume"]')).toBeNull();
+  });
+
+  it("bentuknya GARIS GESER tegak, bukan tombol + / − (owner 2026-11-13)", () => {
+    // Putaran ketiga: owner menolak bentuk dua tombol dan mengirim contoh
+    // kapsul berisi garis geser. Kalau tombol + / − kembali, itu kemunduran ke
+    // bentuk yang sudah ditolak — bukan sekadar beda selera.
+    const jalur = pasangSuara(1, false);
+    expect(jalur.getAttribute("role")).toBe("slider");
+    expect(jalur.getAttribute("aria-orientation")).toBe("vertical");
     expect(container.querySelector('[aria-label="Naikkan volume"]')).toBeNull();
+    expect(container.querySelector('[aria-label="Turunkan volume"]')).toBeNull();
   });
 
   it("🪤 NOL elemen diputar — itu yang dulu melempar garis volume keluar layar", () => {
@@ -210,9 +273,11 @@ describe("volume pindah ke SAMPING angka durasi", () => {
     // Gejalanya SENYAP — nol error, garisnya cuma tidak ada di tempatnya. Di
     // layar lebar ia masih terlihat (cuma "agak misah"), jadi memeriksanya di
     // desktop saja TIDAK menangkap ini.
-    pasang();
-    klik(cari('[aria-label="Volume"]'));
-    const panel = cari('[aria-label="Naikkan volume"]').closest("div.absolute")!;
+    //
+    // `-translate-x-1/2`/`translate-y-1/2` pada bulatan penggeser BUKAN rotasi
+    // — itu cuma memusatkan bulatan di titiknya, dan ia memang disengaja.
+    const jalur = pasangSuara(1, false);
+    const panel = jalur.closest("div.absolute")!;
     expect(
       panel.innerHTML,
       "ada elemen diputar lagi di panel volume — kelas kesalahan yang sama kembali terbuka",
@@ -224,72 +289,146 @@ describe("volume pindah ke SAMPING angka durasi", () => {
     expect(panel.className, "panel tidak dirapatkan ke kanan").toContain("right-0");
   });
 
-  it("tombol + menaikkan volume dan melaporkannya ke pemutar", () => {
-    pasang({
-      sound: { volume: 0.5, muted: false, onChange: (n: { volume: number; muted: boolean }) => (terakhir = n) },
-    } as never);
-    klik(cari('[aria-label="Volume"]'));
-    klik(cari('[aria-label="Naikkan volume"]'));
-    expect(terakhir).toEqual({ volume: 0.6, muted: false });
+  it("🪤 jalur gesernya touch-none — kalau tidak, geseran jadi pindah episode", () => {
+    // Feed berpindah episode lewat gulir-sentuh ASLI browser (`snap-y
+    // snap-mandatory overflow-y-scroll`). Tanpa `touch-action: none`, jari yang
+    // menarik volume ke atas ikut menggulir feed: penonton melompat ke episode
+    // berikutnya padahal cuma mau mengeraskan suara. Nol error.
+    const jalur = pasangSuara(1, false);
+    expect(jalur.className, "jalur volume kehilangan touch-none").toContain(
+      "touch-none",
+    );
   });
 
-  it("tombol − sampai 0 = BISU, bukan sekadar pelan", () => {
+  it("digeser ke TENGAH jalur → volume ±50%", () => {
+    const jalur = pasangSuara(1, false);
+    palsukanTinggiJalur(jalur);
+    sentuh(jalur, "pointerdown", 148); // 100 + 96/2
+    expect(terakhir).toEqual({ volume: 0.5, muted: false });
+  });
+
+  it("digeser ke UJUNG ATAS = penuh, ke UJUNG BAWAH = bisu", () => {
+    // Arah ini gampang terbalik (koordinat layar tumbuh ke bawah, volume tumbuh
+    // ke atas) dan kalau terbalik tidak ada satu pun error — suaranya saja yang
+    // mengecil ketika penonton menariknya ke atas.
+    const jalur = pasangSuara(0.5, false);
+    palsukanTinggiJalur(jalur);
+
+    sentuh(jalur, "pointerdown", 100);
+    expect(terakhir, "ujung ATAS bukan volume penuh").toEqual({
+      volume: 1,
+      muted: false,
+    });
+
+    sentuh(jalur, "pointerdown", 196);
+    expect(terakhir, "ujung BAWAH bukan bisu").toEqual({
+      volume: 0,
+      muted: true,
+    });
+  });
+
+  it("🪤 jari yang MENTOK di tepi = penuh / bisu bulat, bukan 98% / 2%", () => {
+    // Diukur di Chrome headless (layar 393px): jempol yang mentok di tepi
+    // kapsul mendarat ~2px dari ujung jalur. Tanpa zona jepit hasilnya 2% —
+    // praktis diam TAPI ikon speaker tetap menyala, dan penonton yang mau
+    // membisukan mengira kontrolnya rusak. Mengejar piksel terakhir dengan
+    // jempol itu mustahil.
+    const jalur = pasangSuara(0.5, false);
+    palsukanTinggiJalur(jalur);
+
+    sentuh(jalur, "pointerdown", 102); // 2px dari ujung ATAS
+    expect(terakhir, "mentok atas belum dibulatkan jadi penuh").toEqual({
+      volume: 1,
+      muted: false,
+    });
+
+    sentuh(jalur, "pointerdown", 194); // 2px dari ujung BAWAH
+    expect(terakhir, "mentok bawah belum dibulatkan jadi bisu").toEqual({
+      volume: 0,
+      muted: true,
+    });
+
+    // Tapi zona jepitnya TIPIS — bagian tengah jalur tetap bebas, bukan ikut
+    // melompat ke ujung.
+    sentuh(jalur, "pointerdown", 110);
+    expect(terakhir!.volume, "zona jepit kelebaran — tengah ikut melompat").toBeLessThan(1);
+  });
+
+  it("jari yang meleset KELUAR jalur tetap dijepit di 0..1", () => {
+    const jalur = pasangSuara(0.5, false);
+    palsukanTinggiJalur(jalur);
+    sentuh(jalur, "pointerdown", 20); // jauh di atas kapsul
+    expect(terakhir).toEqual({ volume: 1, muted: false });
+    sentuh(jalur, "pointerdown", 400); // jauh di bawah kapsul
+    expect(terakhir).toEqual({ volume: 0, muted: true });
+  });
+
+  it("digeser TERUS (pointermove) mengubah volume, sesudah dilepas tidak lagi", () => {
+    // Tanpa pemeriksaan `menggeser`, kursor yang cuma LEWAT di atas kapsul
+    // (tanpa ditekan) ikut mengubah volume — di tetikus itu terasa seperti
+    // volume yang berubah sendiri.
+    const jalur = pasangSuara(0.5, false);
+    palsukanTinggiJalur(jalur);
+
+    sentuh(jalur, "pointermove", 124);
+    expect(terakhir, "bergerak padahal belum ditekan").toBeNull();
+
+    sentuh(jalur, "pointerdown", 148);
+    sentuh(jalur, "pointermove", 124); // 3/4 tinggi dari bawah
+    expect(terakhir).toEqual({ volume: 0.75, muted: false });
+
+    sentuh(jalur, "pointerup", 124);
+    terakhir = null;
+    sentuh(jalur, "pointermove", 196);
+    expect(terakhir, "masih mengikuti kursor sesudah dilepas").toBeNull();
+  });
+
+  it("panah papan ketik menaikkan & menurunkan 10%", () => {
+    const jalur = pasangSuara(0.5, false);
+    tekanTombol(jalur, "ArrowUp");
+    expect(terakhir).toEqual({ volume: 0.6, muted: false });
+    tekanTombol(jalur, "ArrowDown");
+    expect(terakhir).toEqual({ volume: 0.4, muted: false });
+  });
+
+  it("turun sampai 0 = BISU, bukan sekadar pelan", () => {
     // Safari iPhone mengabaikan `video.volume`; di sana yang efektif cuma
     // bisu/tidak. Tanpa `muted: true`, menurunkan ke 0 di iPhone tidak
     // membisukan apa pun — suara tetap keras, nol error.
-    pasang({
-      sound: { volume: 0.1, muted: false, onChange: (n: { volume: number; muted: boolean }) => (terakhir = n) },
-    } as never);
-    klik(cari('[aria-label="Volume"]'));
-    klik(cari('[aria-label="Turunkan volume"]'));
+    const jalur = pasangSuara(0.1, false);
+    tekanTombol(jalur, "ArrowDown");
     expect(terakhir).toEqual({ volume: 0, muted: true });
   });
 
   it("dinaikkan dari keadaan BISU ikut menyalakan suaranya lagi", () => {
-    // 🪤 Tanpa `muted: false` di sini, angka persen naik di layar tapi suaranya
+    // 🪤 Tanpa `muted: false` di sini, bulatan naik di layar tapi suaranya
     // tetap diam — dan tak ada satu pun yang memberi tahu kenapa.
-    pasang({
-      sound: { volume: 0, muted: true, onChange: (n: { volume: number; muted: boolean }) => (terakhir = n) },
-    } as never);
-    klik(cari('[aria-label="Volume"]'));
-    klik(cari('[aria-label="Naikkan volume"]'));
+    const jalur = pasangSuara(0, true);
+    tekanTombol(jalur, "ArrowUp");
     expect(terakhir).toEqual({ volume: 0.1, muted: false });
   });
 
-  it("tombolnya mati di batas: + saat penuh, − saat sudah bisu", () => {
-    pasang({
-      sound: { volume: 1, muted: false, onChange: (n: { volume: number; muted: boolean }) => (terakhir = n) },
-    } as never);
-    klik(cari('[aria-label="Volume"]'));
-    expect((cari('[aria-label="Naikkan volume"]') as HTMLButtonElement).disabled).toBe(
-      true,
-    );
+  it("posisi bulatan & nilainya ikut volume — bukti geseran berhasil", () => {
+    // Di HP besar-kecil suara diatur tombol fisik, jadi tanpa bulatan yang
+    // benar-benar berpindah, geseran yang berhasil dan yang mati terasa sama.
+    let jalur = pasangSuara(0.4, false);
+    expect(jalur.getAttribute("aria-valuenow")).toBe("40");
+    expect(jalur.getAttribute("aria-valuetext")).toBe("40%");
+    expect(jalur.innerHTML, "bagian terisi tidak ikut 40%").toContain("40%");
+
+    jalur = pasangSuara(0, true);
+    expect(jalur.getAttribute("aria-valuenow")).toBe("0");
     expect(
-      (cari('[aria-label="Turunkan volume"]') as HTMLButtonElement).disabled,
-    ).toBe(false);
-  });
-
-  it("angka persen ikut berubah — bukti ketukannya berhasil", () => {
-    // Di HP, besar-kecil suara diatur tombol fisik, jadi tanpa angka di layar
-    // ketukan yang berhasil dan yang mati terasa persis sama.
-    pasang({
-      sound: { volume: 0.4, muted: false, onChange: () => {} },
-    } as never);
-    klik(cari('[aria-label="Volume"]'));
-    expect(container.textContent).toContain("40%");
-
-    pasang({
-      sound: { volume: 0, muted: true, onChange: () => {} },
-    } as never);
-    expect(container.textContent).toContain("Bisu");
+      jalur.getAttribute("aria-valuetext"),
+      "pembaca layar mengucapkan '0%', bukan 'Bisu'",
+    ).toBe("Bisu");
   });
 
   it("SATU ikon speaker saja di layar — bukan dua yang terbaca terpisah", () => {
     // Owner 2026-11-12: "kenapa itu jadi terpisah". Versi sebelumnya punya
     // ikon speaker kedua DI DALAM panel, dan dua ikon speaker di satu layar
     // terbaca sebagai dua kontrol yang berbeda.
-    pasang();
-    klik(cari('[aria-label="Volume"]'));
+    pasangSuara(1, false);
     const ikon = container.querySelectorAll(
       '[aria-label="Volume"], [aria-label="Bisukan"], [aria-label="Nyalakan suara"]',
     );
@@ -297,14 +436,14 @@ describe("volume pindah ke SAMPING angka durasi", () => {
   });
 
   it("panel tertutup sendiri saat kontrol memudar", () => {
-    // Kalau tidak, kotak hitamnya tertinggal menggantung di atas film yang
+    // Kalau tidak, kapsul hitamnya tertinggal menggantung di atas film yang
     // sedang berjalan.
     pasang({ controlsVisible: true });
     klik(cari('[aria-label="Volume"]'));
-    expect(container.querySelector('[aria-label="Naikkan volume"]')).toBeTruthy();
+    expect(container.querySelector('[aria-label="Atur volume"]')).toBeTruthy();
 
     pasang({ controlsVisible: false });
-    expect(container.querySelector('[aria-label="Naikkan volume"]')).toBeNull();
+    expect(container.querySelector('[aria-label="Atur volume"]')).toBeNull();
   });
 
   it("tanpa prop sound → tanpa tombol volume (pemanggil lama aman)", () => {

@@ -52,22 +52,50 @@ describe("kelasKualitas — angka yang ditampilkan ke penonton", () => {
 });
 
 describe("daftarKualitas — isi menu", () => {
-  it("film 1080p menampilkan 1080p / 720p / 480p seperti contoh owner", () => {
+  it("film 1080p menampilkan Auto + 1080p / 720p / 480p seperti contoh owner", () => {
     const opsi = daftarKualitas(1920, 1080);
-    expect(opsi.map((o) => o.label)).toEqual(["1080p", "720p", "480p"]);
+    expect(opsi.map((o) => o.label)).toEqual([
+      "Auto (1080p)",
+      "1080p",
+      "720p",
+      "480p",
+    ]);
   });
 
   it("🪤 film 720p TIDAK menawarkan 1080p", () => {
     // Janji yang bahkan secara teori tidak bisa ditepati: berkasnya memang
     // tidak punya piksel sebanyak itu. Menawarkannya = menipu dua lapis.
     const opsi = daftarKualitas(1280, 720);
-    expect(opsi.map((o) => o.label)).toEqual(["720p", "480p", "360p"]);
+    expect(opsi.map((o) => o.label)).toEqual([
+      "Auto (720p)",
+      "720p",
+      "480p",
+      "360p",
+    ]);
     expect(opsi.map((o) => o.label)).not.toContain("1080p");
   });
 
-  it("kualitas asli selalu jadi baris PERTAMA (yang tercentang)", () => {
-    expect(daftarKualitas(1916, 1036)[0].label).toBe("1080p");
-    expect(daftarKualitas(1280, 688)[0].label).toBe("720p");
+  it("🪤 baris Auto WAJIB ada dan selalu paling atas", () => {
+    // Owner 2026-11-13: "auto jangan dihilangkan". Tanpa baris ini penonton
+    // wajib memilih angka walau tidak paham bedanya — dan tak ada jalan
+    // kembali ke "biar pemutar yang memutuskan".
+    for (const [l, t] of [[1920, 1080], [1280, 720], [1916, 1036], [640, 360]]) {
+      const opsi = daftarKualitas(l, t);
+      expect(opsi[0].nilai, `Auto hilang pada ${l}x${t}`).toBe("auto");
+      expect(opsi[0].label).toContain("Auto");
+    }
+  });
+
+  it("label Auto menyebut angka yang sedang dipakai", () => {
+    // "Auto" polos terbaca seperti pilihan yang menyembunyikan sesuatu;
+    // penonton tidak punya cara tahu ia sedang menonton 1080p atau 480p.
+    expect(daftarKualitas(1916, 1036)[0].label).toBe("Auto (1080p)");
+    expect(daftarKualitas(1280, 688)[0].label).toBe("Auto (720p)");
+  });
+
+  it("kualitas asli jadi baris pertama SESUDAH Auto", () => {
+    expect(daftarKualitas(1916, 1036)[1].label).toBe("1080p");
+    expect(daftarKualitas(1280, 688)[1].label).toBe("720p");
   });
 
   it("lencana HD hanya untuk 720p ke atas", () => {
@@ -81,16 +109,18 @@ describe("daftarKualitas — isi menu", () => {
     expect(daftarKualitas(0, 0)).toEqual([]);
   });
 
-  it("daftarnya tidak pernah lebih dari 3 baris", () => {
+  it("daftarnya tidak pernah lebih dari Auto + 3 baris", () => {
     // Menu pemutar itu sempit; tangga penuh (2160p…360p) akan memanjang
     // melewati tepi layar HP.
-    expect(daftarKualitas(3840, 2160).length).toBe(3);
-    expect(daftarKualitas(1920, 1080).length).toBe(3);
+    expect(daftarKualitas(3840, 2160).length).toBe(4);
+    expect(daftarKualitas(1920, 1080).length).toBe(4);
   });
 
-  it("nilai yang disimpan sama dengan labelnya — satu nama untuk satu hal", () => {
+  it("nilai tangga sama dengan labelnya — satu nama untuk satu hal", () => {
     // Nilai dan label yang berbeda ("hd1080" vs "1080p") memaksa penerjemahan
-    // di dua tempat, dan itu sumber salah-centang yang senyap.
-    for (const o of daftarKualitas(1920, 1080)) expect(o.nilai).toBe(o.label);
+    // di dua tempat, dan itu sumber salah-centang yang senyap. Baris Auto
+    // dikecualikan: labelnya sengaja membawa angka yang sedang dipakai,
+    // sedangkan nilainya harus tetap "auto" apa pun resolusinya.
+    for (const o of daftarKualitas(1920, 1080).slice(1)) expect(o.nilai).toBe(o.label);
   });
 });

@@ -4,7 +4,7 @@ import { OFF } from "@/lib/subtitles";
 import { subtitleLabel } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Settings, Download, Maximize, Minimize, Gauge, MonitorPlay, Captions } from "lucide-react";
+import { Settings, Download, Maximize2, Minimize2, Gauge, MonitorPlay, Captions } from "lucide-react";
 
 const SPEEDS = [0.5, 1, 1.25, 1.5, 2];
 
@@ -163,7 +163,7 @@ export default function PlayerSettings({
               onClick={onToggleFullscreen}
               className="flex-1 bg-zinc-800 text-xs font-bold text-zinc-100 hover:bg-zinc-700"
             >
-              {isFullscreen ? <Minimize className="size-4" /> : <Maximize className="size-4" />}
+              {isFullscreen ? <Minimize2 className="size-4" /> : <Maximize2 className="size-4" />}
               {isFullscreen ? "Keluar" : "Layar penuh"}
             </Button>
           </div>

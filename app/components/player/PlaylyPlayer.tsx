@@ -581,7 +581,11 @@ export default function PlaylyPlayer({
                    Yang tetap dijaga jujur: angka tertinggi di daftar tidak
                    pernah melebihi resolusi berkasnya, dan catatan di bawah
                    daftar menyebut apa adanya supaya penonton yang memilih
-                   kualitas rendah demi kuota tidak salah mengira. */
+                   kualitas rendah demi kuota tidak salah mengira.
+
+                   Baris "Auto" tetap ada dan jadi pilihan bawaan (owner
+                   2026-11-13, putaran kedua: "auto jangan dihilangkan") —
+                   daftarnya dibentuk di lib/kualitas-pemutar.ts. */
                 kualitas={{
                   nilai: kualitas ?? opsiKualitas[0]?.nilai ?? "auto",
                   opsi: opsiKualitas.length ? opsiKualitas : [{ nilai: "auto", label: "Auto" }],

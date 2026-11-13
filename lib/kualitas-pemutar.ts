@@ -53,6 +53,10 @@ const AMBANG_HD = 720;
  */
 const JUMLAH_TANGGA = 3;
 
+/** Nilai yang disimpan untuk baris "Auto". Satu tempat, supaya pemutar dan
+ *  daftar ini tidak pernah memakai ejaan yang berbeda. */
+export const NILAI_AUTO = "auto";
+
 /** Pilihan kualitas siap tampil di menu pemutar. */
 export type OpsiKualitas = {
   /** Nilai yang disimpan pemutar, mis. "1080p". */
@@ -87,21 +91,35 @@ export function kelasKualitas(lebar: number, tinggi: number): Tangga | null {
 
 /**
  * Daftar pilihan kualitas untuk menu, dari ukuran gambar video yang sedang
- * diputar. Paling atas = kualitas asli berkasnya (yang terpilih), diikuti
- * anak tangga di bawahnya.
+ * diputar: baris **Auto** di paling atas (pilihan bawaan), lalu kualitas asli
+ * berkasnya, lalu anak tangga di bawahnya.
  *
- * Ukuran belum diketahui → daftar KOSONG. Pemanggil menampilkan "Auto"
- * seperti sebelumnya; menebak "1080p" sebelum metadata dimuat berarti angka
- * di layar bisa berubah sendiri sedetik kemudian.
+ * 🪤 "Auto" WAJIB ADA dan wajib paling atas (owner 2026-11-13, putaran kedua:
+ * *"sudah ada tapi auto jangan dihilangkan"*). Versi pertama menggantinya
+ * dengan tangga resolusi saja, dan itu menghapus satu-satunya baris yang
+ * artinya "biarkan pemutar yang memutuskan" — penonton jadi wajib memilih
+ * angka walau tidak paham bedanya.
+ *
+ * Labelnya menyebut angka yang sedang dipakai ("Auto (1080p)") supaya baris
+ * ini tidak terbaca sebagai pilihan yang menyembunyikan sesuatu.
+ *
+ * Ukuran belum diketahui → daftar KOSONG. Pemanggil menampilkan "Auto" polos;
+ * menebak "1080p" sebelum metadata dimuat berarti angka di layar bisa berubah
+ * sendiri sedetik kemudian.
  */
 export function daftarKualitas(lebar: number, tinggi: number): OpsiKualitas[] {
   const kelas = kelasKualitas(lebar, tinggi);
   if (!kelas) return [];
 
   const mulai = TANGGA.indexOf(kelas);
-  return TANGGA.slice(mulai, mulai + JUMLAH_TANGGA).map((t) => ({
+  const tangga = TANGGA.slice(mulai, mulai + JUMLAH_TANGGA).map((t) => ({
     nilai: t.label,
     label: t.label,
     lencana: t.tinggi >= AMBANG_HD ? "HD" : null,
   }));
+
+  return [
+    { nilai: NILAI_AUTO, label: `Auto (${kelas.label})`, lencana: null },
+    ...tangga,
+  ];
 }

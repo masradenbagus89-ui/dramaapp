@@ -1,7 +1,7 @@
 "use client";
 
 import { fmtTime } from "@/lib/format";
-import { LayoutGrid, ChevronRight, Maximize, Minimize } from "lucide-react";
+import { LayoutGrid, ChevronRight, Maximize2, Minimize2 } from "lucide-react";
 import VolumeControl from "./VolumeControl";
 
 // Panel bawah pemutar feed: judul + episode + subtitle + garis geser + timer.
@@ -246,7 +246,7 @@ export default function PlayerControls({
                  lain membuat baris ini terlihat miring sebelah. */
               className="pointer-events-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)] transition-transform hover:bg-white/10 active:scale-95"
             >
-              {fullscreen.active ? <Minimize className="size-5" /> : <Maximize className="size-5" />}
+              {fullscreen.active ? <Minimize2 className="size-5" /> : <Maximize2 className="size-5" />}
             </button>
           )}
         </div>

@@ -127,6 +127,21 @@ describe("tombol Layar penuh di baris durasi", () => {
     expect(cari('[aria-label="Volume"]').className).toContain("h-9");
   });
 
+  it("🪤 ikonnya SERAGAM dengan pemutar film: panah diagonal, bukan kurung sudut", () => {
+    // Owner 2026-11-13: "untuk layar diperbesar kamu seragamkan jadi seperti
+    // yang di film berbentuk panah". Pemutar film (PlaylyPlayer) memakai
+    // Maximize2/Minimize2 — panah diagonal. Dua ikon berbeda untuk satu
+    // fungsi yang sama membuat penonton mengira keduanya berbeda guna, dan
+    // tidak ada error apa pun yang menandainya.
+    pasang();
+    const masuk = cari('[aria-label="Layar penuh"]').querySelector("svg");
+    expect(masuk?.getAttribute("class") ?? "").toContain("maximize-2");
+
+    pasang({ fullscreen: { active: true, onToggle: () => diketuk++ } });
+    const keluar = cari('[aria-label="Keluar layar penuh"]').querySelector("svg");
+    expect(keluar?.getAttribute("class") ?? "").toContain("minimize-2");
+  });
+
   it("tanpa prop fullscreen → tanpa tombol (pemanggil lama aman)", () => {
     act(() => {
       root.render(

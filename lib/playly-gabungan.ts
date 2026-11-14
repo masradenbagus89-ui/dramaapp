@@ -48,6 +48,7 @@ import { lengkapiKualitasVideo } from "./kualitas-video";
 import { lengkapiDurasiVideo } from "./durasi-video-publik";
 import { tempelUnduhanPlayly } from "./playly-unduhan";
 import { tempelJenisVideo } from "./jenis-video";
+import { urutMenurutTahunRilis } from "./tahun-film";
 
 export type PlaylyGabunganResult = {
   videos: PlaylyVideoPublik[];
@@ -346,26 +347,43 @@ async function rakitGabungan(
   // jadi tak ada yang diam-diam tertinggal tanpa durasi. Hanya mengisi yang
   // kosong — durasi kiriman Playly adalah panjang berkas kita sendiri dan tidak
   // pernah ditimpa runtime IMDb (lib/durasi-video-publik.ts).
-  const videos = tempelJenisVideo(
-    lengkapiDurasiVideo(
-      lengkapiKualitasVideo(
-        tempelUnduhanPlayly(
-          gabungVideoPlayly(
-            katalog.videos,
-            webhookAman,
-            hiddenIds.ids,
-            genres,
-            imdb,
-            kualitas,
-            ratingManual,
+  //
+  // URUTAN AKHIR = TAHUN RILIS, terbaru lebih dulu (owner 2026-11-14: "seragam
+  // ikut tahun rilis"). Menggantikan urutan lama "terbaru di-upload", yang
+  // menaruh film 2021 yang baru diunggah kemarin di atas film 2026.
+  //
+  // ⚠️ DIPASANG DI SINI, PALING LUAR — bukan di dalam `gabungVideoPlayly`.
+  // Alasannya mengikat: `lengkapiDurasiVideo` di bawah inilah yang menempelkan
+  // TAHUN KETIKAN ADMIN ke `year` (lib/durasi-video-publik.ts). Mengurut lebih
+  // dalam berarti mengurut SEBELUM koreksi admin masuk — tiap tahun yang
+  // dibetulkan admin dengan tangan akan diabaikan oleh urutannya, dan tak ada
+  // satu pun error yang memberi tahu.
+  //
+  // Satu-satunya pemanggil aturan ini, dengan sengaja: seluruh halaman (/film,
+  // /discover, beranda, baris genre, hasil cari) membaca daftar dari sini, jadi
+  // urutannya mustahil menyimpang antar halaman.
+  const videos = urutMenurutTahunRilis(
+    tempelJenisVideo(
+      lengkapiDurasiVideo(
+        lengkapiKualitasVideo(
+          tempelUnduhanPlayly(
+            gabungVideoPlayly(
+              katalog.videos,
+              webhookAman,
+              hiddenIds.ids,
+              genres,
+              imdb,
+              kualitas,
+              ratingManual,
+            ),
+            linkUnduhan,
           ),
-          linkUnduhan,
         ),
+        imdb,
+        metaManual,
       ),
-      imdb,
-      metaManual,
+      jenis,
     ),
-    jenis,
   );
   // Katalog didahulukan karena ia sumber utama halaman ini; kalau dua-duanya
   // bermasalah, satu kalimat sudah cukup untuk pengunjung.
@@ -409,9 +427,15 @@ async function rakitGabungan(
           // saat Playly bermasalah. Tanpa baris ini seluruh serial yang sudah
           // ditandai owner akan diam-diam kembali ke baris film justru saat
           // halaman sedang bertahan hidup.
-          videos: tempelJenisVideo(
-            lengkapiKualitasVideo(tempelUnduhanPlayly(aman, linkUnduhan)),
-            jenis,
+          // Diurut tahun rilis juga — kalau tidak, urutan situs DIAM-DIAM
+          // berubah jadi urutan lama tepat saat halaman sedang bertahan hidup,
+          // dan gejalanya ("kok film lama naik ke depan?") akan terbaca sebagai
+          // bug baru, bukan sebagai tanda sumber videonya sedang bermasalah.
+          videos: urutMenurutTahunRilis(
+            tempelJenisVideo(
+              lengkapiKualitasVideo(tempelUnduhanPlayly(aman, linkUnduhan)),
+              jenis,
+            ),
           ),
           error,
           dariCadangan: true,

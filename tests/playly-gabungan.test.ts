@@ -32,6 +32,13 @@ const state = {
   imdb: {} as PlaylyImdbMap,
   /** Baris link unduhan (dokumen playly:link-unduhan). */
   unduhan: [] as LinkUnduhan[],
+  /**
+   * Tahun & durasi KETIKAN ADMIN (dokumen playly:meta-manual, owner
+   * 2026-11-09). Dibuat bisa diatur per-tes karena urutan tahun rilis WAJIB
+   * memakai koreksi admin ini — tiruan yang selalu kosong akan membuat
+   * penjaganya lulus tanpa membuktikan apa pun.
+   */
+  metaManual: {} as Record<string, { tahun?: string; durasiDetik?: number }>,
   /** Dinyalakan untuk meniru Supabase yang tidak bisa dihubungi. */
   webhookGagal: false,
   hiddenGagal: false,
@@ -96,7 +103,7 @@ vi.mock("../lib/store", () => ({
   // selengkap modul aslinya, kalau tidak seluruh berkas tes ini gagal
   // memuat — bukan karena perilakunya salah.
   getPlaylyRatingCached: async () => ({}),
-  getPlaylyMetaManualCached: async () => ({}),
+  getPlaylyMetaManualCached: async () => state.metaManual,
   // Jenis tayangan (owner 2026-11-05). Peta KOSONG: berkas ini menguji aturan
   // PENGGABUNGAN, dan aturan jenisnya sendiri sudah punya penjaga terpisah di
   // tests/jenis-video.test.ts.
@@ -167,6 +174,7 @@ beforeEach(() => {
   state.genre = {};
   state.imdb = {};
   state.unduhan = [];
+  state.metaManual = {};
   state.webhookGagal = false;
   state.hiddenGagal = false;
   state.genreGagal = false;
@@ -696,5 +704,106 @@ describe("(g) kategori pilihan admin menempel lewat KEDUA pintu", () => {
     expect(videos).toHaveLength(1);
     expect(videos[0].kategori).toBeNull();
     expect(error).toBeNull();
+  });
+});
+
+// ================  URUTAN AKHIR: TAHUN RILIS, TERBARU DULU  ===============
+//
+// Owner 2026-11-14, dua permintaan berurutan: (1) "film terbaru kamu rubah
+// daftarnya lihat dari tahunnya bukan dari yang baru di upload", lalu (2)
+// "seragam ikut tahun rilis" — yaitu berlaku untuk SELURUH halaman.
+//
+// Diuji DI SINI, bukan cuma di tests/tahun-film.test.ts, dan bedanya penting:
+// berkas itu membuktikan fungsi pengurutnya benar; berkas ini membuktikan
+// daftar yang benar-benar sampai ke halaman memang sudah lewat pengurut itu —
+// SESUDAH seluruh penempelan metadata selesai.
+describe("urutan akhir daftar = tahun rilis, terbaru lebih dulu", () => {
+  it("film tahun terbaru naik ke depan walau diunggah paling lama", () => {
+    // Persis keluhan owner: yang notifikasinya PALING BARU adalah film 2021.
+    state.webhook = [
+      barisWebhook("baru-upload", {
+        title: "Hitman's Wife's Bodyguard (2021)",
+        receivedAt: "2026-11-13T22:00:00.000Z",
+      }),
+      barisWebhook("lama-upload", {
+        title: "The Mongoose (2026)",
+        receivedAt: "2026-11-01T08:00:00.000Z",
+      }),
+    ];
+
+    return getPlaylyVideosGabungan().then(({ videos }) => {
+      expect(videos.map((v) => v.id)).toEqual(["lama-upload", "baru-upload"]);
+    });
+  });
+
+  it("KETIKAN ADMIN ikut menentukan urutan, bukan cuma tahun IMDb", async () => {
+    // ⚠️ Inilah yang memaksa pengurut dipasang di lapisan PALING LUAR. Tahun
+    // ketikan admin baru ditempel oleh lengkapiDurasiVideo; mengurut lebih
+    // dalam akan mengabaikan koreksi admin tanpa satu pun error.
+    //
+    // Urutan masuknya SENGAJA sudah "salah": tanpa pengurut, `imdb-2024` ada
+    // di depan karena notifikasinya lebih baru. Kalau daftar masuknya kebetulan
+    // sudah benar, tes ini akan lulus walau pengurutnya dicabut — hijau palsu.
+    state.webhook = [
+      barisWebhook("imdb-2024", {
+        title: "Film IMDb (2024)",
+        receivedAt: "2026-11-13T22:00:00.000Z",
+      }),
+      barisWebhook("dikoreksi", {
+        title: "Film Tanpa Tahun",
+        receivedAt: "2026-11-01T08:00:00.000Z",
+      }),
+    ];
+    state.metaManual = { dikoreksi: { tahun: "2026" } };
+
+    const { videos } = await getPlaylyVideosGabungan();
+
+    expect(videos.map((v) => v.id)).toEqual(["dikoreksi", "imdb-2024"]);
+  });
+
+  it("video tanpa tahun turun ke belakang tapi TIDAK hilang", async () => {
+    state.webhook = [
+      barisWebhook("tanpa-tahun", { title: "Novocaine" }),
+      barisWebhook("ada-tahun", { title: "The Mongoose (2026)" }),
+    ];
+
+    const { videos } = await getPlaylyVideosGabungan();
+
+    expect(videos).toHaveLength(2);
+    expect(videos.map((v) => v.id)).toEqual(["ada-tahun", "tanpa-tahun"]);
+  });
+
+  it("video KATALOG ikut terurut bersama webhook, tidak lagi selalu di bawah", async () => {
+    // Aturan lama "webhook di atas, katalog di bawah" ada karena sisi katalog
+    // tak punya data waktu sama sekali. Tahun rilis MEMANG dipunyai keduanya,
+    // jadi memisahkannya jadi dua blok tidak lagi jujur — film katalog 2026
+    // berhak di depan video webhook 2019.
+    state.katalog.videos = [
+      kartuKatalog("katalog-2026", { title: "Katalog Baru", year: "2026" }),
+    ];
+    state.webhook = [
+      barisWebhook("webhook-2019", { title: "Webhook Lawas (2019)" }),
+    ];
+
+    const { videos } = await getPlaylyVideosGabungan();
+
+    expect(videos.map((v) => v.id)).toEqual(["katalog-2026", "webhook-2019"]);
+  });
+
+  it("tahun SAMA: urutan lama (terbaru di-upload dulu) tetap berlaku", async () => {
+    state.webhook = [
+      barisWebhook("upload-lama", {
+        title: "Film A (2026)",
+        receivedAt: "2026-11-01T08:00:00.000Z",
+      }),
+      barisWebhook("upload-baru", {
+        title: "Film B (2026)",
+        receivedAt: "2026-11-13T22:00:00.000Z",
+      }),
+    ];
+
+    const { videos } = await getPlaylyVideosGabungan();
+
+    expect(videos.map((v) => v.id)).toEqual(["upload-baru", "upload-lama"]);
   });
 });

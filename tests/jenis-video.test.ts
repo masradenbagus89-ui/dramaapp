@@ -209,7 +209,14 @@ describe("halaman memisahkan SEBELUM memotong", () => {
       expect(posPisah).toBeGreaterThan(0);
       expect(posSlice).toBeGreaterThan(posPisah);
       // Yang dipotong WAJIB hasil pemisahan, bukan daftar gabungan.
-      expect(isi).toContain("film.slice(0, TAB_GRID_ITEMS)");
+      //
+      // Dicocokkan dengan POLA, bukan teks persis: sejak 2026-11-14 daftar film
+      // dibungkus pengurut tahun lebih dulu — `urutFilmMenurutTahun(film)
+      // .slice(...)` (lib/tahun-film.ts). Pembungkus itu tidak melanggar aturan
+      // yang dijaga di sini; yang dijaga adalah "yang dipotong berasal dari
+      // `film`, bukan dari `videos`". Mengunci ejaannya berarti tiap penyesuaian
+      // sah ikut merah dan penjaganya dilemahkan orang supaya diam.
+      expect(isi).toMatch(/\bfilm\)?\.slice\(0, TAB_GRID_ITEMS\)/);
       expect(isi).not.toContain("videos.slice(0, TAB_GRID_ITEMS)");
     });
   }

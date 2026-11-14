@@ -45,6 +45,13 @@ export default async function LandingPage() {
    * Kerusakannya senyap: tak ada error, cuma barisnya menyusut sendiri.
    */
   const { film, series } = pisahFilmSeries(videos);
+  /**
+   * Sudah terurut TAHUN RILIS (terbaru lebih dulu) sejak dirakit di
+   * lib/playly-gabungan.ts — owner 2026-11-14: "seragam ikut tahun rilis".
+   * Halaman ini SENGAJA tidak mengurut lagi: aturan yang disalin ke tiap
+   * halaman cepat atau lambat menyimpang, dan menyimpangnya tak memunculkan
+   * error — cuma urutan yang berbeda antar halaman.
+   */
   const filmTerbaru = film.slice(0, TAB_GRID_ITEMS);
   // Jatah serial Playly di seksi "Series Terbaru" sengaja dibatasi supaya satu
   // drama berepisode banyak tidak mendorong keluar drama katalog — alasannya di

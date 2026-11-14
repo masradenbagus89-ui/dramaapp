@@ -210,7 +210,12 @@ export default function TabKatalogTampilan({
           <SeksiKatalog
             idSeksi={`seksi-${KUNCI_BARIS_VIDEO}`}
             judul={JUDUL_BARIS_VIDEO}
-            keterangan="Film layar lebar — terbaru lebih dulu."
+            /* "tahun rilis" disebut EKSPLISIT sejak 2026-11-14: barisnya tidak
+               lagi diurut dari waktu upload (lib/tahun-film.ts), dan kalimat
+               lama "terbaru lebih dulu" bisa dibaca dua arti — penonton yang
+               mengira ini daftar unggahan terbaru akan menyimpulkan urutannya
+               rusak. */
+            keterangan="Film layar lebar — tahun rilis terbaru lebih dulu."
             kartu={videos.map(bungkusVideo)}
             hrefSemua="/film"
           />

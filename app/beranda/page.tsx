@@ -46,6 +46,8 @@ export default async function BerandaPage() {
   // ditulis lengkap di app/page.tsx (seksi Film menyusut sendiri kalau ada
   // serial di deretan teratas).
   const { film, series } = pisahFilmSeries(videos);
+  // Sudah terurut TAHUN RILIS sejak dirakit di lib/playly-gabungan.ts; halaman
+  // ini sengaja tidak mengurut lagi — alasannya di app/page.tsx.
   const filmTerbaru = film.slice(0, TAB_GRID_ITEMS);
   const seriesTerbaru = series.slice(0, MAKS_SERIES_PLAYLY_DI_SEKSI);
   const genres = availableGenres(dramas);

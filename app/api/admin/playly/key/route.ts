@@ -7,6 +7,7 @@ import {
   savePlaylyKey,
   deletePlaylyKey,
 } from "@/lib/playly";
+import { segarkanCachePublik } from "@/lib/cache-publik";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -50,6 +51,7 @@ export async function POST(req: NextRequest) {
   try {
     const { key } = (await req.json()) as { key?: string };
     await savePlaylyKey(String(key ?? ""), email);
+    segarkanCachePublik();
     // Sengaja balas ulang STATUS (tersamar), bukan kunci yang barusan dikirim.
     return NextResponse.json({ ok: true, status: await getPlaylyKeyStatus() });
   } catch (err) {
@@ -76,6 +78,7 @@ export async function DELETE(req: NextRequest) {
 
   try {
     await deletePlaylyKey();
+    segarkanCachePublik();
     return NextResponse.json({ ok: true, status: await getPlaylyKeyStatus() });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Gagal mencabut kunci.";

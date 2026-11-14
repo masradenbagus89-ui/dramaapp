@@ -9,6 +9,7 @@ import {
   ImdbLookupError,
 } from "@/lib/imdb-tool";
 import { posterAman, type PlaylyImdbMeta } from "@/lib/playly-imdb";
+import { segarkanCachePublik } from "@/lib/cache-publik";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -140,6 +141,7 @@ export async function POST(req: NextRequest) {
   try {
     const draft = await fetchImdbDraft(imdbId);
     const imdb = await setPlaylyVideoImdb(videoId, keMeta(draft, sumber));
+    segarkanCachePublik();
     return NextResponse.json({ ok: true, imdb });
   } catch (err) {
     return balasError(err, "Gagal mengambil data dari OMDb.");
@@ -175,6 +177,7 @@ export async function DELETE(req: NextRequest) {
 
   try {
     const imdb = await setPlaylyVideoImdb(videoId, null);
+    segarkanCachePublik();
     return NextResponse.json({ ok: true, imdb });
   } catch (err) {
     return balasError(err, "Gagal melepas data IMDb.");

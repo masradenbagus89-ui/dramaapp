@@ -9,6 +9,7 @@ import {
   type LinkUnduhanMasuk,
 } from "@/lib/playly-unduhan";
 import { bacaDomainUnduhan } from "@/lib/playly-unduhan-domain";
+import { segarkanCachePublik } from "@/lib/cache-publik";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -125,6 +126,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const links = await gantiPlaylyLinkUnduhanVideo(videoId, sah);
+    segarkanCachePublik();
     return NextResponse.json({ ok: true, links, disimpan: sah.length });
   } catch (err) {
     return gagalServer("menyimpan link unduhan", err);

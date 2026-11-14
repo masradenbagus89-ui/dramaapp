@@ -26,7 +26,7 @@ export default function HistoryPage() {
 
   useEffect(() => {
     const ac = new AbortController();
-    fetch("/api/dramas", { signal: ac.signal })
+    fetch("/api/katalog", { signal: ac.signal })
       .then((r) => r.json())
       .then((data: Drama[]) => {
         setAllDramas(Array.isArray(data) ? data : []);

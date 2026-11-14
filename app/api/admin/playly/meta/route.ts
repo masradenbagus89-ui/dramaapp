@@ -3,6 +3,7 @@ import { isAdminRequest, getAdminEmail } from "@/lib/session";
 import { guardMutation } from "@/lib/request-guard";
 import { getPlaylyMetaManual, setPlaylyVideoMetaManual } from "@/lib/store";
 import { parseDurasiManual, parseTahunManual } from "@/lib/meta-video-manual";
+import { segarkanCachePublik } from "@/lib/cache-publik";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -99,6 +100,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const meta = await setPlaylyVideoMetaManual(videoId, { tahun, durasiDetik });
+    segarkanCachePublik();
     return NextResponse.json({ ok: true, meta });
   } catch (err) {
     const message =

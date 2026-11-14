@@ -17,7 +17,7 @@ export default function MyListPage() {
   const [allDramas, setAllDramas] = useState<Drama[]>([]);
 
   useEffect(() => {
-    fetch("/api/dramas")
+    fetch("/api/katalog")
       .then((r) => r.json())
       .then((data: Drama[]) => setAllDramas(data))
       .catch(() => setAllDramas([]));

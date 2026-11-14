@@ -3,6 +3,7 @@ import { isAdminRequest, getAdminEmail } from "@/lib/session";
 import { guardMutation } from "@/lib/request-guard";
 import { getPlaylyGenres, setPlaylyVideoGenre } from "@/lib/store";
 import { parseKategoriVideo } from "@/lib/types";
+import { segarkanCachePublik } from "@/lib/cache-publik";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -90,6 +91,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const genres = await setPlaylyVideoGenre(videoId, kategori);
+    segarkanCachePublik();
     return NextResponse.json({ ok: true, genres });
   } catch (err) {
     const message =

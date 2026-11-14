@@ -13,6 +13,7 @@ import { warnaKategori } from "@/app/admin/constants";
 import StatCard from "@/app/components/admin/StatCard";
 import PlaylyStatusCard from "@/app/components/admin/PlaylyStatusCard";
 import KatalogStatusCard from "@/app/components/admin/KatalogStatusCard";
+import SegarkanCacheCard from "@/app/components/admin/SegarkanCacheCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
@@ -79,6 +80,9 @@ export default function AdminDashboard({ dramas }: { dramas: Drama[] }) {
             menghitung daftar yang sudah terlanjur dipilihkan, jadi ia tetap
             terlihat wajar justru saat sumbernya salah. */}
         <KatalogStatusCard />
+
+        {/* Tombol buang cache manual — lihat lib/cache-publik.ts. */}
+        <SegarkanCacheCard />
       </section>
 
       <Card className="rounded-2xl border-zinc-800 bg-zinc-900/40">

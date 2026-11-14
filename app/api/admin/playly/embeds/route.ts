@@ -14,6 +14,7 @@ import {
   isAllowedPlaylyEmbedUrl,
   readPlaylyConfig,
 } from "@/lib/playly";
+import { segarkanCachePublik } from "@/lib/cache-publik";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -143,6 +144,7 @@ export async function POST(req: NextRequest) {
     };
     await upsertPlaylyEmbed(embed);
 
+    segarkanCachePublik();
     return NextResponse.json({ ok: true, embed, dramaTitle: drama.title });
   } catch (err) {
     if (err instanceof PlaylyError) {
@@ -176,6 +178,7 @@ export async function DELETE(req: NextRequest) {
     if (!terhapus) {
       return NextResponse.json({ error: "Kaitan itu sudah tidak ada." }, { status: 404 });
     }
+    segarkanCachePublik();
     return NextResponse.json({ ok: true, removed: id });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Gagal melepas kaitan video.";

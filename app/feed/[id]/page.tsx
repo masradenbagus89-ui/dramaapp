@@ -1,14 +1,18 @@
 import { notFound } from "next/navigation";
-import { getDrama } from "@/lib/dramas";
+import { getDramaCached } from "@/lib/dramas";
 import { isMovie } from "@/lib/types";
 import FeedPlayer from "@/app/components/FeedPlayer";
 
+// Halaman tetap dibangun per permintaan (nomor episode dibaca dari ?ep=), tapi
+// DATA dramanya diambil dari cache yang sama dengan /drama/[id]. Sebelumnya tiap
+// penonton yang menekan Tonton = 3 query Supabase; kini paling banyak 3 per 60
+// detik. Simpan di panel admin membuang cache ini seketika (lib/cache-publik.ts).
 export const dynamic = "force-dynamic";
 
 export default async function FeedPage(props: PageProps<"/feed/[id]">) {
   const { id } = await props.params;
   const sp = await props.searchParams;
-  const drama = await getDrama(id);
+  const drama = await getDramaCached(id);
   if (!drama) notFound();
 
   const rawEp = Array.isArray(sp?.ep) ? sp.ep[0] : sp?.ep;

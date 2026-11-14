@@ -6,6 +6,7 @@ import {
   bacaKirimanMassal,
   MAKS_VIDEO_PER_KIRIM,
 } from "@/lib/isian-massal-video";
+import { segarkanCachePublik } from "@/lib/cache-publik";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -125,6 +126,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const { peta, jumlahVideo } = await simpanIsianMassalPlayly(bersih);
+    segarkanCachePublik();
     return NextResponse.json({
       ok: true,
       tersimpan: jumlahVideo,

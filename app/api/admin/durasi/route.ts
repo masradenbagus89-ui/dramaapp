@@ -12,6 +12,7 @@ import {
   detikDariHeaderMp4,
   detikKeDurasiEpisode,
 } from "@/lib/durasi-video";
+import { segarkanCachePublik } from "@/lib/cache-publik";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -258,6 +259,7 @@ export async function POST(req: NextRequest) {
 
     await upsertDrama({ ...drama, runtime });
 
+    segarkanCachePublik();
     return NextResponse.json({ ok: true, id, runtime, tergambar });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Gagal menyimpan durasi";

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { isAdminRequest, getAdminEmail } from "@/lib/session";
 import { guardMutation } from "@/lib/request-guard";
 import { getPlaylyHiddenIds, setPlaylyVideoHidden } from "@/lib/store";
+import { segarkanCachePublik } from "@/lib/cache-publik";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -76,6 +77,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const hidden = await setPlaylyVideoHidden(videoId, body.hidden);
+    segarkanCachePublik();
     return NextResponse.json({ ok: true, hidden });
   } catch (err) {
     const message =

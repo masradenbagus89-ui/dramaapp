@@ -16,6 +16,7 @@ import {
 } from "@/lib/dramas";
 import { simpanKualitas } from "@/lib/kualitas-drama";
 import { simpanUnduhan } from "@/lib/unduhan";
+import { segarkanCachePublik } from "@/lib/cache-publik";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -282,6 +283,7 @@ export async function POST(req: NextRequest) {
     if (providersProvided) await simpanUnduhan(drama.id, providers);
 
     const action = isNew ? "added" : "updated";
+    segarkanCachePublik();
     return NextResponse.json({ ok: true, id: drama.id, action, drama });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Gagal simpan drama";
@@ -306,6 +308,7 @@ export async function DELETE(req: NextRequest) {
     }
     await removeDrama(id.trim());
 
+    segarkanCachePublik();
     return NextResponse.json({ ok: true, removed: { id: drama.id, title: drama.title } });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Gagal hapus drama";

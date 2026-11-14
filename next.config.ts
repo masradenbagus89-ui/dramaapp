@@ -1,5 +1,8 @@
 import type { NextConfig } from "next";
 
+/** 1 hari segar + 7 hari boleh dipakai sambil diperbarui di belakang. Gambar `public/` jarang diganti. */
+const SIMPAN_GAMBAR_PUBLIK = "public, max-age=86400, stale-while-revalidate=604800";
+
 const nextConfig: NextConfig = {
   // Izinkan dev server diakses dari PC lain di jaringan lokal yang sama.
   // Tambahkan IP/hostname laptop Anda di sini supaya HMR (auto-reload) jalan
@@ -171,6 +174,17 @@ const nextConfig: NextConfig = {
           { key: "Content-Security-Policy-Report-Only", value: csp },
         ],
       },
+      // Masa simpan di browser untuk gambar di folder `public/` (2026-11-14).
+      // Tanpa ini berkas `public/` dikirim `max-age=0` — browser menanyakan
+      // ulang TIAP kali halaman dibuka (terukur ~0,27 dtk per berkas di
+      // produksi, walau jawabannya "tidak berubah"). JS/CSS (`/_next/static`)
+      // dan `/_next/image` TIDAK perlu diatur: Next.js sudah memberinya 1 tahun.
+      // ⚠️ Mengganti gambar dengan NAMA BERKAS YANG SAMA bisa terlihat versi
+      // lama sampai 1 hari di browser yang pernah membukanya → pakai nama baru.
+      ...["/posters/:path*", "/logo.png", "/logo-mark.png"].map((source) => ({
+        source,
+        headers: [{ key: "Cache-Control", value: SIMPAN_GAMBAR_PUBLIK }],
+      })),
     ];
   },
 };

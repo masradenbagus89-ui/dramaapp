@@ -3,6 +3,7 @@ import { isAdminRequest, getAdminEmail } from "@/lib/session";
 import { guardMutation } from "@/lib/request-guard";
 import { getPlaylyKualitas, setPlaylyVideoKualitas } from "@/lib/store";
 import { parseDramaQuality } from "@/lib/types";
+import { segarkanCachePublik } from "@/lib/cache-publik";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -95,6 +96,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const kualitas = await setPlaylyVideoKualitas(videoId, label);
+    segarkanCachePublik();
     return NextResponse.json({ ok: true, kualitas });
   } catch (err) {
     const message =

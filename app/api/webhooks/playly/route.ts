@@ -12,6 +12,7 @@ import {
   upsertPlaylyWebhookVideo,
   type PlaylyWebhookVideo,
 } from "@/lib/store";
+import { segarkanCachePublik } from "@/lib/cache-publik";
 
 // runtime "nodejs" WAJIB: verifikasi memakai node:crypto, yang tidak tersedia
 // di Edge runtime. Tanpa baris ini route bisa gagal di produksi walau lolos di
@@ -152,6 +153,9 @@ export async function POST(req: NextRequest) {
         penarikan.status,
         receivedAt,
       );
+      // Video yang DITARIK harus hilang dari halaman penonton sekarang juga,
+      // bukan menunggu cache /film habis (300 detik).
+      if (ketemu) segarkanCachePublik();
       // Tidak ketemu pun tetap 200: tak ada yang perlu disembunyikan berarti
       // keadaannya SUDAH seperti yang Playly minta. Membalas 404 malah membuat
       // mereka mengirim ulang selamanya untuk sesuatu yang sudah beres — dan
@@ -179,11 +183,13 @@ export async function POST(req: NextRequest) {
           400,
         );
       }
+      const downloads = await simpanUnduhan(payload.downloads!);
+      segarkanCachePublik();
       return balas({
         ok: true,
         event: payload.event,
         videoId: payload.videoId,
-        downloads: await simpanUnduhan(payload.downloads!),
+        downloads,
       });
     }
 
@@ -207,6 +213,7 @@ export async function POST(req: NextRequest) {
     // 500 lalu mengirim ulang — dan pengiriman ulang itu aman di kedua langkah
     // (video by videoId, link by kombinasi unik).
     const downloads = payload.downloads ? await simpanUnduhan(payload.downloads) : undefined;
+    segarkanCachePublik();
 
     // (4) Balasan pendek. Playly cuma perlu tahu "diterima"; isi panjang di sini
     // memperlambat balasan, dan balasan lambat membuat gateway mana pun

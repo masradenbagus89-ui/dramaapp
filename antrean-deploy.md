@@ -23,8 +23,32 @@
 > lengkap: `HANDOFF.md` seksi `## 2026-11-09`.
 
 
-**Terakhir dicek:** 2026-11-14 (**komputer OWNER**). `HEAD` = `origin/main` = `dramaku/main` = **`00f06d2`**. Didorong ke dua remote sesudah owner menulis "rilis"; gerbang pra-rilis lolos kelimanya. 🪤 Folder kerja masih memuat **16 berkas sesi audit keamanan** yang SENGAJA belum di-commit — jangan `git add -A`. Rincian di bawah.
+**Terakhir dicek:** 2026-11-14 siang (**komputer OWNER**). `HEAD` = `origin/main` = `dramaku/main` = **`a09bfc8`** — 3 commit dari 3 sesi didorong sekaligus sesudah owner menulis "rilis"; gerbang lolos kelimanya. 🪤 **22 berkas sesi audit keamanan masih menggantung, JANGAN `git add -A`.** Rincian di bawah.
 
+
+### ✅ 2026-11-14 (siang) — RILIS `f6b1c03` → `a09bfc8` (3 commit, 3 sesi, dua remote)
+
+**Didorong sesudah owner menulis "rilis".** `dramaku` dulu (cermin), baru `origin main` (TOMBOL RILIS). Diverifikasi: `HEAD` = `origin/main` = `dramaku/main` = **`a09bfc8`**.
+
+| Commit | Sesi | Isi |
+|---|---|---|
+| `749b0db` | rekan (`perf/cache-katalog`) | cache halaman penonton dibuang otomatis saat admin menyimpan + tombol **Segarkan cache** |
+| `3f917c2` | sesi utama | payload IMDb admin **525 KB → 57 KB** + ingatan "berkas siap" bertahan melewati restart |
+| `a09bfc8` | sesi Film Terbaru | urutan video SE-SITUS ikut **tahun rilis**, bukan waktu upload |
+
+**Gerbang pra-rilis: kelimanya lolos** — `.next` dihapus · `npm run build` OK · `npx tsc --noEmit` 0 error · **2516 tes hijau** (176 berkas) · nol berkas rahasia. Dijalankan pada tree berisi PERSIS ketiga commit itu; pekerjaan sesi audit dipinggirkan dengan `git stash` lebih dulu, lalu dipulihkan byte-identik.
+
+🪤 **Gerbang jalan PERTAMA gagal palsu:** worker build Next crash (`exited with code: 4294967295`) dan skripnya keluar exit 127. Bukan kode kita — diulang dari awal, lolos kelimanya. Jangan simpulkan "gerbang gagal" dari exit code saja; baca berkas keluarannya.
+
+**Smoke test produksi:** 10 alamat semua **200** · `/api/katalog` (endpoint BARU) 200 dengan `x-nextjs-cache: HIT` · `/logo-mark.png` kini `max-age=86400` (dulu 0) · baris **Film Terbaru** di `/` → **20 kartu teratas semuanya 2026** · `/film` → 20 lencana tahun urut menurun.
+
+📌 **Tidak ada SQL maupun env baru.** Dokumen `playly:berkas-siap` dibuat sendiri saat halaman admin Video Playly pertama kali dibuka (`app_data` bertipe key→jsonb, tanpa migration).
+
+⏳ **Manfaat "ingatan bertahan restart" baru terasa mulai rilis BERIKUTNYA** — dokumennya belum ada saat deploy ini mendarat, jadi buka pertama masih ±47 detik sekaligus mengisinya.
+
+⚠️ **22 berkas sesi AUDIT KEAMANAN masih menggantung dan SENGAJA belum di-commit.** `HANDOFF.md` yang di-commit adalah versi **tanpa** seksi audit — `origin` repo PUBLIK, dan seksi itu menjelaskan kelemahan yang perbaikannya belum tayang. `docs/lintasai/INDEX.md` belum di-commit sama sekali (catatan tiga sesi berselang-seling di sana). **JANGAN `git add -A`.**
+
+---
 
 ### ✅ 2026-11-14 — RILIS `9b15d1d` → `00f06d2` (1 commit, dua remote)
 

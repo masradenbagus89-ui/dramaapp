@@ -90,11 +90,52 @@
 > aftermarket** dari pemilik sekarang, harganya **jauh di atas** Rp200.000 dan belum pernah dicek.
 > Nama lain yang masih bebas jauh lebih murah.
 
-**Terakhir diisi:** 2026-11-14 — ✅ **RILIS `9b15d1d` → `00f06d2` TAYANG.** Tombol **garis-tiga** (hamburger) dihapus dari SELURUH aplikasi atas permintaan owner, dan tautan **"Masuk sebagai pengelola"** ikut hilang bersamanya karena ia hidup di dalam menu itu. Admin & Keluar tidak jadi yatim — keduanya sudah pindah ke menu avatar sejak 2026-09-26, diperiksa sebelum dihapus. Jalan masuk pengelola yang tersisa: ketik alamat `/login`, atau kaki situs di `/` dan `/drama/<id>`. Gerbang 5/5 (**2455 tes**), smoke test produksi 9/9 = 200. 🪤 **Folder kerja sedang dipakai BERSAMA sesi audit keamanan — 16 berkas miliknya SENGAJA belum di-commit; JANGAN `git add -A`.** Rinciannya di seksi `## 2026-11-14` di bawah.
+**Terakhir diisi:** 2026-11-14 (siang) — ✅ **RILIS `f6b1c03` → `a09bfc8` TAYANG: 3 commit, 3 sesi, 1 deploy.** (1) Cache halaman penonton dibuang otomatis saat admin menyimpan + tombol **Segarkan cache** (kerja rekan). (2) Payload data IMDb ke browser admin **525 KB → 57 KB** (−89%) + ingatan "berkas siap" kini **bertahan melewati restart**. (3) Urutan video SE-SITUS ikut **tahun rilis**, bukan waktu upload — terbukti di produksi: 20 kartu teratas semuanya **2026**. Gerbang 5/5 (**2516 tes**), smoke test 10/10 = 200. ⏳ Manfaat (2) bagian ingatan baru terasa mulai rilis BERIKUTNYA. 🪤 **TIGA sesi menulis di folder yang sama; 22 berkas sesi audit masih menggantung — JANGAN `git add -A`.** Rinciannya di seksi `## 2026-11-14 (siang)` di bawah.
 
 **Rincian kontrol volume (putaran KETIGA):** owner menolak bentuk tombol `+` / `−` dan mengirim contoh gambar, jadi pengatur volume kini **garis geser tegak berbentuk kapsul** (jalur kuning + bulatan penggeser). Diukur di Chrome headless layar 393px: kapsul `x=345..381` **utuh di dalam layar**, geser jari atas→100% / tengah→50% / bawah→bisu, nol elemen diputar. Gerbang lolos 5/5 (2383 tes hijau). ✅ **Sudah TAYANG** dalam rilis `53fbc5c → a9ae869` malam itu juga.
 
 **Sebelumnya hari ini:** ✅ **`2ad015b` + `8d8c1ba` TAYANG.** Tata letak pemutar beres dalam tiga putaran permintaan owner: tombol **Eps turun ke baris paling bawah**, tombol **volume pindah ke sebelah angka durasi**, rail ikon kanan **diperkecil & dirapatkan** (36px/20px/jarak 8px), dan garis volume tegak **diganti tombol + / −** karena terukur berdiri di **x=391 pada layar 393px = di luar layar HP**. Rinciannya di seksi `## 2026-11-13` di bawah.
+
+---
+
+## 2026-11-14 — 🎬 Urutan video SE-SITUS ikut TAHUN RILIS, bukan waktu upload (⏳ BELUM di-commit, BELUM di-push)
+
+**Dua permintaan owner berurutan:** (1) *"film terbaru kamu rubah daftarnya lihat dari tahunnya bukan dari yang baru di upload biar terupdate film yang benar benar baru"* — disertai tangkapan layar baris **Film Terbaru**; lalu (2) *"seragam ikut tahun rilis"* sesudah ditawari apakah halaman lain ikut.
+
+**Yang salah:** daftar video diurut dari `receivedAt` = **kapan diunggah**, bukan tahun rilis. Film 2021 yang baru diunggah kemarin duduk di posisi 1 di atas film 2026.
+
+**🪤 Jebakan yang hampir membuat perbaikannya jadi KEBALIKANNYA.** Pendekatan jelas — "urutkan saja pakai kolom `year`" — justru melempar film terbaru ke buntut. Diukur dari 481 video tayang: **377** punya kolom `year`, **70** tahunnya hanya ada di dalam judul `(2026)`, **34** tak punya sama sekali. Yang menentukan bukan angka 70-nya, tapi **siapa**: **12 video paling depan saat owner melapor — persis yang di layarnya — semuanya `year`-nya `null`**, karena upload terbaru selalu yang paling belakangan dicocokkan metadatanya.
+
+**Aturannya** (`lib/tahun-film.ts`, fungsi murni): kolom `year` dulu (ketikan admin sudah menang atas IMDb di `lib/durasi-video-publik.ts`) → kalau kosong baca tahun **dalam kurung** di judul (pagar: tanpa kurung, "Blade Runner 2049" jadi film 2049) → tahun sama pakai urutan upload (sort stabil) → tanpa tahun ke belakang, **tidak dibuang**.
+
+**📍 DIPASANG DI SATU TEMPAT: `rakitGabungan` (`lib/playly-gabungan.ts`), lapisan PALING LUAR.** Dua alasan mengikat:
+1. "Seragam" cuma bisa dijamin satu pemanggil — halaman yang mengurut sendiri boleh menyimpang, dan penonton melihat urutan berubah hanya karena pindah halaman, nol error.
+2. **Harus sesudah seluruh penempelan metadata.** `lengkapiDurasiVideo` lah yang menempelkan **tahun ketikan admin** ke `year`. Mengurut lebih dalam = mengabaikan koreksi admin, diam-diam.
+
+**Jalur CADANGAN ikut diurut** — kalau tidak, urutan situs balik ke aturan lama persis saat sumber video sedang bermasalah, dan gejalanya terbaca sebagai bug baru.
+
+**Cakupan sekarang:** `/`, `/beranda`, `/film`, `/discover`, hasil pencarian, baris genre. Serial Playly ikut (jalur rakitnya satu; baru 1 video ditandai serial). Katalog drama Supabase **tidak** tersentuh — ia punya urutan sendiri di `lib/discover.ts`.
+
+**Aturan lama yang digantikan:** "webhook di atas, katalog di bawah" (dua blok terpisah karena sisi katalog tak punya data waktu). Tahun rilis dipunyai keduanya, jadi pemisahan itu tidak lagi jujur. `gabungVideoPlayly` sendiri **tidak diubah** — urutan internalnya tetap jadi tie-break.
+
+**Batas yang diketahui:** 13 dari 481 video punya tahun IMDb yang beda dari judulnya, sebagian jelas salah-cocok — `Pitfall (2025)` tercatat **1962**, `외계+인 2부 (2024)` → **1991**, `老板娘3 (2023)` → **2010**. Masalah akurasi metadata, bukan urutan; pembetulannya tanpa kode baru: isi kolom **Tahun** di panel admin.
+
+**📌 Angkanya POTRET SESAAT** — terukur bergerak dalam setengah jam yang sama (`year` terisi **377 → 444**, entri `playly:imdb` **493 → 560**; admin sedang melengkapi metadata). Jangan simpulkan "pembacaan judul sudah tak perlu": selama video baru masuk lebih cepat dari pencocokan metadatanya, upload terbaru akan selalu jadi kelompok yang `year`-nya paling sering kosong.
+
+**Bukti:**
+- `npm run gerbang` → **LOLOS 5/5**, exit 0 — **2509 tes / 178 berkas** hijau, `build` exit 0, `tsc --noEmit` exit 0 (sesudah build), nol berkas rahasia di antrean. `/` & `/beranda` tetap **○ Static**.
+- `tests/playly-gabungan.test.ts` — **5 tes perilaku** di titik rakit (termasuk "ketikan admin ikut menentukan urutan" dan "video katalog ikut terurut bersama webhook"). `tests/tahun-film.test.ts` — aturan tahunnya + penjaga "aturannya tidak tercecer ke halaman".
+- **Diuji-balik → 4 tes MERAH**, dipasang lagi → hijau.
+- Fungsi aslinya dijalankan atas **data produksi**: 20 teratas berubah dari campuran 2016–2026 (+1 tanpa tahun) jadi **seluruhnya 2026, nol tanpa tahun yang bocor**.
+
+**🪤 TIGA PELAJARAN TES dari sesi ini (sudah masuk `docs/lintasai/INDEX.md`):**
+1. **Uji-balik yang merusak SINTAKS bukan uji-balik.** Mutasi pertama saya meninggalkan trailing comma → SyntaxError → berkas tes gagal dimuat, jumlah tes diam-diam turun **67 → 24**. Layar menunjukkan "1 failed | 23 passed" — terlihat berhasil, padahal 43 tes yang seharusnya merah tak pernah jalan. **Baca jumlah "Test Files"; mutasi harus mengubah PERILAKU, bukan kemampuan berkas dimuat.**
+2. **Satu tes sempat HIJAU PALSU** karena urutan data masukannya kebetulan sudah benar. **Data uji untuk penjaga urutan wajib dimulai dari urutan yang SALAH.**
+3. **Penjaga yang mengunci EJAAN akan dilemahkan orang supaya diam.** `tests/jenis-video.test.ts` mengunci `film.slice(...)` sehingga pembungkus yang sah ikut merah; diganti pola.
+
+**Berkas:** baru `lib/tahun-film.ts`, `tests/tahun-film.test.ts`, `docs/lintasai/rencana/2026-11-14-urutan-film-terbaru-menurut-tahun.md` · diubah `lib/playly-gabungan.ts`, `app/page.tsx`, `app/beranda/page.tsx`, `app/components/beranda/TabKatalogTampilan.tsx` (keterangan seksi → "tahun rilis terbaru lebih dulu"), `tests/playly-gabungan.test.ts`, `tests/jenis-video.test.ts`, `docs/lintasai/INDEX.md`.
+
+⚠️ **Belum di-commit.** Folder kerja ini dipakai beberapa sesi sekaligus dan ada perubahan sesi lain yang belum di-commit (audit keamanan) — **stage per-berkas, jangan `git add -A`.**
 
 ---
 
@@ -167,6 +208,55 @@ Akibatnya gerbang yang pertama saya jalankan (**2465 tes**) memuat pekerjaan DUA
 3. **Sesudah login:** avatar bulat muncul di kanan atas → klik → **Admin** dan **Keluar** ada di situ.
 
 ❓ **Kalau mengetik alamat terasa merepotkan:** tautan "Masuk sebagai pengelola" bisa dikembalikan **khusus `/beranda`** tanpa menghidupkan tombol garis-tiganya. Satu baris. Belum dikerjakan — menunggu owner.
+
+---
+
+## 2026-11-14 (siang) — ✅ RILIS `f6b1c03` → `a09bfc8` TAYANG: cache halaman penonton (rekan) + payload admin + urutan tahun rilis
+
+**Tiga commit sekaligus, tiga sesi berbeda, satu deploy.** `HEAD` = `origin/main` = `dramaku/main` = **`a09bfc8`**. Gerbang pra-rilis **LOLOS 5/5** (**176 berkas / 2516 tes**, `tsc` 0 error, nol berkas rahasia) — dijalankan pada tree yang berisi PERSIS ketiga commit itu, sesudah pekerjaan sesi audit dipinggirkan dengan `git stash`.
+
+| Commit | Sesi | Isi |
+|---|---|---|
+| `749b0db` | rekan (`perf/cache-katalog`) | cache halaman penonton dibuang otomatis saat admin menyimpan + tombol **Segarkan cache** |
+| `3f917c2` | sesi ini | payload IMDb admin **525 KB → 57 KB** + ingatan "berkas siap" bertahan melewati restart |
+| `a09bfc8` | sesi Film Terbaru | urutan video SE-SITUS ikut **tahun rilis**, bukan waktu upload |
+
+### ✅ Smoke test produksi — diukur sendiri sesudah tayang
+
+| Yang diperiksa | Hasil |
+|---|---|
+| 10 alamat (`/` `/beranda` `/film` `/katalog` `/discover` `/login` `/profile` `/api/dramas` `/api/saran` `/api/katalog`) | semua **200** |
+| `/api/katalog` (endpoint BARU) | **200** — penanda terkuat bahwa versi baru benar-benar tayang (sebelumnya 404) |
+| Header `/api/katalog` | `s-maxage=60, stale-while-revalidate` + `x-nextjs-cache: HIT` |
+| Header `/logo-mark.png` | `public, max-age=86400, stale-while-revalidate=604800` (sebelumnya `max-age=0`) |
+| Baris **Film Terbaru** di `/` | **20 kartu teratas semuanya 2026** (sebelum perbaikan: campuran 2021–2026, satu tanpa tahun di posisi 13) |
+| Kartu di `/film` | 20 lencana tahun pertama **semua 2026, urut menurun** |
+| Teks baris | sudah berbunyi *"Film layar lebar — tahun rilis terbaru lebih dulu."* |
+
+🪤 **Pengukuran urutan sempat SALAH dan hampir dilaporkan sebagai kegagalan.** Pola `>(19|20)\d\d<` menangkap angka tahun di **tombol menu Tahun pada strip kuning** (`href="/discover?year=2025"`), bukan cuma lencana kartu — hasilnya terbaca "tidak urut" padahal kartunya urut sempurna. Diulang dengan pola lencana kartu (`absolute bottom-1 left-1`). ⭐ **Aturan: sebelum menyimpulkan dari HTML produksi, cetak KONTEKS di sekitar angka yang kamu tangkap — bukan cuma angkanya.**
+
+### Yang BELUM bisa dibuktikan dari luar — butuh mata owner
+
+Ketiganya hanya tergambar di balik login admin, jadi HTML dari server tidak bisa membuktikannya:
+1. **Tombol "Segarkan cache"** di Dashboard admin (kerja rekan) — klik, harus muncul *"Beres. Pengunjung berikutnya melihat data terbaru."*
+2. **Pembuangan cache saat simpan** — ubah judul satu drama → Simpan → buka `/drama/<id>` di tab penyamaran → perubahan harus langsung terlihat, bukan setelah 1 menit. ⚠️ Rekan belum bisa mengujinya terhadap Supabase sungguhan (komputernya memakai mode berkas).
+3. **Panel Video Playly lebih ringan** — akibat payload IMDb turun 89%.
+
+### ⏳ Manfaat B baru terasa mulai rilis BERIKUTNYA
+
+Diperiksa sesudah deploy: dokumen `playly:berkas-siap` **belum ada** di database — wajar, ia baru ditulis saat halaman admin Video Playly dibuka pertama kali. Jadi:
+- **Buka pertama sekarang: masih ±47 detik** (sekaligus mengisi dokumennya).
+- **Tiap rilis sesudah itu: cepat**, karena ingatannya diwarisi dari dokumen tadi.
+
+💡 Owner bisa "memanaskannya" sekali sekarang dengan membuka panel Video Playly dan membiarkannya selesai.
+
+### 🪤 TIGA sesi menulis ke folder kerja yang SAMA hari ini
+
+Sesi audit keamanan masih berjalan dan sudah menumpuk **22 berkas** yang belum di-commit. Rinciannya sengaja TIDAK ditulis di sini — lihat alasannya di paragraf berikutnya; daftar lengkapnya ada di `LAPORAN-AKHIR-AUDIT-KEAMANAN.txt` (akar repo, tidak dilacak git).
+
+**`HANDOFF.md` ini dan `docs/lintasai/INDEX.md` SENGAJA tidak di-commit utuh.** Keduanya memuat catatan ketiga sesi, dan catatan audit menjelaskan kelemahan yang **perbaikannya belum tayang** — `origin` adalah repo **PUBLIK**, jadi menerbitkannya lebih dulu sama dengan mengumumkannya. Yang di-commit: versi berkas ini **tanpa** seksi audit. Catatan audit tetap utuh di salinan kerja komputer owner, menunggu perbaikannya ikut dirilis.
+
+⚠️ **JANGAN `git add -A` di folder ini.** Cara aman meminggirkan pekerjaan sesi lain (dipakai & terbukti 2× hari ini): salin ke scratchpad → `git stash push --include-untracked` → gerbang → `git stash pop` → **cocokkan byte per byte** (pop memulangkan berkas dengan akhir baris LF→CRLF; isi tetap utuh, pulihkan dari cadangan).
 
 ---
 

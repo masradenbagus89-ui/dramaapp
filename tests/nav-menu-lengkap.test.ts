@@ -14,6 +14,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { BATAS_MENU_NEGARA, saringFilm } from "../lib/film-jelajah";
+import { labelNegara } from "../lib/negara";
 import {
   buildNavMenus,
   GENRE_FILM,
@@ -500,5 +501,47 @@ describe("7. Nol baris menu yang 'diklik tapi halamannya sama'", () => {
     expect(
       saringFilm([video({ kategori: "Horror" })], { kind: "movie" }),
     ).toHaveLength(1);
+  });
+});
+
+// ===========================================================================
+// 8. LABEL NEGARA — menu naik 12 -> 24 nama, dan separuhnya sempat berbahasa
+// Inggris ("Czech Republic" berdiri di antara "Cina" dan "Korea").
+// ===========================================================================
+describe("8. Tiap negara di menu punya nama Indonesia", () => {
+  it("24 negara teratas katalog tidak ada yang tertinggal Inggris", () => {
+    // Fallback `labelNegara` sengaja memulangkan nama asli — lebih baik
+    // terbaca daripada chipnya hilang. Tapi daftar separuh-Indonesia terbaca
+    // seperti terjemahan yang belum selesai, dan itu yang paling cepat
+    // terlihat atasan saat menu dibuka.
+    const BELUM_DITERJEMAHKAN = [
+      "Ireland",
+      "Hungary",
+      "Czech Republic",
+      "South Africa",
+      "Iceland",
+      "Finland",
+    ];
+    for (const n of BELUM_DITERJEMAHKAN) {
+      expect(labelNegara(n), `${n} masih tergambar dalam bahasa Inggris`).not.toBe(n);
+    }
+  });
+
+  it("nama asing yang BELUM terdaftar tetap tergambar apa adanya", () => {
+    // Pagar yang TIDAK boleh ikut longgar: katalog yang tumbuh tidak pernah
+    // kehilangan chip hanya karena namanya belum sempat didaftarkan.
+    expect(labelNegara("Negara Antah Berantah")).toBe("Negara Antah Berantah");
+  });
+
+  it("alamatnya TETAP memakai nama asli, bukan labelnya", () => {
+    // Kalau label ikut masuk ke alamat, chip "Cina" tergambar rapi lalu
+    // memulangkan halaman hampa — rusak tanpa satu pun pesan error.
+    const menus = buildNavMenus(
+      [drama({ country: "China" }), drama({ id: "b", country: "Japan" })] as never,
+      [],
+    );
+    const negara = menus.find((m) => m.key === "negara");
+    expect(negara?.items.map((i) => i.href)).toContain("/discover?negara=China");
+    expect(negara?.items.map((i) => i.label)).toContain("Cina");
   });
 });

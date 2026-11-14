@@ -83,6 +83,9 @@ describe("buildNavMenus", () => {
     // Owner menentukan keenam tulisan ini dari situs katalog pembanding
     // (2026-09-21, ditegaskan dua kali). Dikunci di sini karena sudah dua kali
     // jadi soal — label bukan detail teknis yang boleh diganti sambil lalu.
+    // ⚠️ "Lainnya" sempat diubah jadi "Genre Lainnya" pada hari yang sama,
+    // lalu owner MENGOREKSI: "cukup tulisan lainnya (jangan genre lainnya)".
+    // Keenamnya dikunci di sini karena label sudah TIGA kali jadi soal.
     expect(buildNavMenus(KAYA).map((m) => m.label)).toEqual([
       "Genre",
       "Series",
@@ -97,7 +100,8 @@ describe("buildNavMenus", () => {
     // `key` dipakai React & tes; memisahkannya dari label itu yang membuat
     // tulisan bisa diganti kapan saja tanpa menyentuh apa pun yang lain.
     expect(kunciMenu(KAYA)).toContain("jenis");
-    expect(kunciMenu(KAYA)).toContain("lainnya");
+    // `key` "lainnya" SENGAJA dipertahankan walau labelnya kini "Genre
+    // Lainnya" — itu justru inti aturan yang diuji di sini.
   });
 
   it("membuang menu Negara & Tahun saat kolomnya kosong", () => {
@@ -171,8 +175,10 @@ describe("buildNavMenus", () => {
   });
 
   it("menawarkan penyaring rating IMDb di menu Lainnya", () => {
-    // Dropdown rating di bar cari dilepas 2026-09-21; pilihannya pindah ke sini
-    // supaya penyaringnya tidak ikut hilang. KAYA punya satu judul 8.5.
+    // Dropdown rating di bar cari dilepas 2026-09-21; pilihannya pindah ke
+    // menu "Lainnya". Sempat dipindah ke "Populer" pada 2026-11-14, lalu
+    // DIKEMBALIKAN hari itu juga — owner: "populer jangan dimasukkan IMDB".
+    // KAYA punya satu judul 8.5.
     const lainnya = buildNavMenus(KAYA).find((m) => m.key === "lainnya");
     const label = lainnya?.items.map((i) => i.label) ?? [];
     expect(label).toContain("IMDb 7+");

@@ -12,7 +12,15 @@
 //   3. Menu Populer memakai label baru DAN tidak kehilangan pilihan lama.
 //   4. Tahun terbaru berdiri paling depan — di dropdown MAUPUN strip kuning.
 import { describe, it, expect } from "vitest";
-import { buildNavMenus, STRIP_KATALOG } from "../lib/nav-katalog";
+import { readFileSync } from "node:fs";
+import {
+  buildNavMenus,
+  GENRE_FILM,
+  KOLOM_GENRE,
+  KOLOM_NEGARA,
+  KOLOM_TAHUN,
+  STRIP_KATALOG,
+} from "../lib/nav-katalog";
 import type { Drama } from "../lib/types";
 import type { PlaylyVideoPublik } from "../lib/playly-publik";
 
@@ -44,6 +52,14 @@ function video(lebih: Partial<PlaylyVideoPublik> = {}): PlaylyVideoPublik {
     rating: null,
     ...lebih,
   } as unknown as PlaylyVideoPublik;
+}
+
+/** Buang komentar `//` dan `/* *\/` supaya pemeriksaan isi berkas tidak
+ *  lulus/gagal dari kalimat penjelasnya sendiri. */
+function tanpaKomentar(sumber: string): string {
+  return sumber
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/^[ 	]*\/\/.*$/gm, "");
 }
 
 const labelMenu = (menus: ReturnType<typeof buildNavMenus>, key: string) =>
@@ -192,5 +208,217 @@ describe("4. Tahun terbaru paling depan", () => {
     );
     expect(tahun).toEqual([...tahun].sort((a, b) => Number(b) - Number(a)));
     expect(tahun.length, "strip kehilangan chip tahunnya").toBeGreaterThan(1);
+  });
+});
+
+// ===========================================================================
+// 5. PEMBAGIAN MENU GENRE vs LAINNYA — owner 2026-11-14, putaran koreksi
+// sesudah melihat localhost: "untuk genre kamu buat khusus genre film,
+// populer jangan dimasukkan IMDB, lainnya isi dengan dracin, k-drama dan
+// sejenisnya dan cukup tulisan lainnya".
+// ===========================================================================
+describe("5. Genre khusus film, sisanya di Lainnya", () => {
+  /** Campuran genre film + kategori khas drama Asia. */
+  const menus = buildNavMenus(
+    [
+      drama({ id: "a", category: "Action" }),
+      drama({ id: "b", category: "Tycoon" }),
+      drama({ id: "c", category: "Harem" }),
+      drama({ id: "d", category: "Time Travel" }),
+    ],
+    [video({ kategori: "Horror" })],
+  );
+  const genre = menus.find((m) => m.key === "genre");
+  const lainnya = menus.find((m) => m.key === "lainnya");
+
+  it("menu Genre HANYA berisi genre film", () => {
+    const liar = (genre?.items ?? []).filter(
+      (i) => !/cat=(Action|Horror)\b/.test(i.href),
+    );
+    expect(
+      liar.map((i) => i.label),
+      "kategori khas drama bocor ke menu Genre",
+    ).toEqual([]);
+  });
+
+  it("kategori khas drama pindah ke menu Lainnya", () => {
+    const href = lainnya?.items.map((i) => i.href) ?? [];
+    expect(href).toContain("/discover?cat=Tycoon");
+    expect(href).toContain("/discover?cat=Harem");
+    expect(href).toContain("/discover?cat=Time+Travel");
+  });
+
+  it("menu Lainnya bernama persis 'Lainnya'", () => {
+    // Owner mengoreksi "Genre Lainnya" -> "Lainnya" pada hari yang sama.
+    expect(lainnya?.label).toBe("Lainnya");
+  });
+
+  it("nol kategori HILANG — tiap kategori berisi punya satu rumah", () => {
+    // Pagar paling penting: memisahkan daftar itu gampang membuang yang
+    // tidak masuk kedua saringan, dan hilangnya nol error.
+    const semua = [
+      ...(genre?.items ?? []),
+      ...(lainnya?.items ?? []),
+    ].map((i) => i.href);
+    for (const h of [
+      "/discover?cat=Action",
+      "/discover?cat=Horror",
+      "/discover?cat=Tycoon",
+      "/discover?cat=Harem",
+      "/discover?cat=Time+Travel",
+    ]) {
+      expect(semua, `${h} tidak punya rumah di menu mana pun`).toContain(h);
+    }
+  });
+
+  it("nol kategori KEMBAR di dua menu", () => {
+    const a = new Set(genre?.items.map((i) => i.href) ?? []);
+    const kembar = (lainnya?.items ?? []).filter((i) => a.has(i.href));
+    expect(kembar.map((i) => i.label)).toEqual([]);
+  });
+
+  it("menu Populer TIDAK memuat IMDb lagi", () => {
+    const kaya = buildNavMenus(
+      [drama({ imdbRating: "8.5", year: "2026" })] as never,
+      [],
+    );
+    const populer = kaya.find((m) => m.key === "populer");
+    expect(
+      populer?.items.filter((i) => i.label.startsWith("IMDb")).map((i) => i.label),
+      "owner meminta IMDb KELUAR dari menu Populer",
+    ).toEqual([]);
+    // ...tapi tidak boleh hilang dari situs.
+    const lain = kaya.find((m) => m.key === "lainnya");
+    expect(lain?.items.map((i) => i.href)).toContain("/discover?rating=7");
+  });
+
+  it("daftar GENRE_FILM memakai ejaan yang dikenal pencocokan otomatis", () => {
+    // Ejaan yang menyimpang ("SciFi" bukan "Sci-Fi") membuat satu genre
+    // diam-diam terbuang dari menu walau katalognya punya isi.
+    const peta = readFileSync("lib/kategori-otomatis.ts", "utf-8");
+    for (const g of ["Action", "Sci-Fi", "Film-Noir", "Reality-TV"]) {
+      expect(GENRE_FILM).toContain(g);
+      expect(peta, `${g} tidak dikenal PETA_GENRE`).toContain(`"${g}"`);
+    }
+  });
+
+  it("menu panjang dapat KOLOM, menu pendek tidak", () => {
+    // Kolom banyak untuk daftar pendek justru lebih sulit dibaca — mata harus
+    // melompat antar kolom untuk lima baris.
+    expect(genre?.kolom).toBe(KOLOM_GENRE);
+    expect(lainnya?.kolom).toBeUndefined();
+  });
+
+  it("Tahun & Negara ikut dapat kolom, jumlahnya sesuai panjang label", () => {
+    const kaya = buildNavMenus(
+      [
+        drama({ id: "a", year: "2026", country: "South Korea" }),
+        drama({ id: "b", year: "2025", country: "Japan" }),
+      ] as never,
+      [],
+    );
+    expect(kaya.find((m) => m.key === "tahun")?.kolom).toBe(KOLOM_TAHUN);
+    expect(kaya.find((m) => m.key === "negara")?.kolom).toBe(KOLOM_NEGARA);
+    // "2026" jauh lebih pendek dari "Selandia Baru" — kolomnya wajib beda.
+    expect(KOLOM_TAHUN).toBeGreaterThan(KOLOM_NEGARA);
+  });
+
+  it("NavMenus menggambar kolomnya sebagai kelas UTUH", () => {
+    // 🪤 Pagar paling penting di berkas ini. Tailwind memindai kode sebagai
+    // TEKS, jadi kelas yang dirangkai saat jalan (`grid-cols-${n}`) tidak
+    // pernah ikut ke CSS: menunya tetap satu kolom, nol error, dan tidak ada
+    // tes render yang bisa menangkapnya (kelasnya tetap tertulis di HTML).
+    // 🪤 Komentar DIBUANG dulu — pelajaran docs/lintasai/INDEX.md: tes yang
+    // memeriksa isi berkas bisa lulus (atau gagal) dari komentarnya sendiri.
+    // Versi pertama tes ini MERAH padahal kodenya benar, karena komentar di
+    // NavMenus.tsx menjelaskan pola `grid-cols-${…}` yang justru dilarangnya.
+    const sumber = tanpaKomentar(
+      readFileSync("app/components/beranda/NavMenus.tsx", "utf-8"),
+    );
+    expect(sumber).not.toMatch(/grid-cols-\$\{/);
+    for (const kelas of ["sm:grid-cols-2", "lg:grid-cols-3", "sm:grid-cols-4"]) {
+      expect(sumber, `kelas ${kelas} tidak ditulis utuh`).toContain(kelas);
+    }
+    // Selalu mulai satu kolom di HP — lihat alasannya di komentar berkas itu.
+    expect(sumber).toContain("grid-cols-1");
+    expect(sumber).toContain("m.kolom");
+  });
+
+  it("tinggi dropdown mengikuti TINGGI LAYAR, bukan angka tetap", () => {
+    // Daftar Genre kini 23 baris. Batas tetap seperti `max-h-80` membuat
+    // pilihan terakhir harus digulir di dalam kotak kecil — persis yang
+    // diminta owner supaya hilang ("tampilkan semua, buat yang rapi").
+    const sumber = readFileSync(
+      "app/components/beranda/NavMenus.tsx",
+      "utf-8",
+    );
+    expect(sumber).not.toContain("max-h-80");
+    expect(sumber).toContain("vh");
+  });
+});
+
+// ===========================================================================
+// 6. DRAMA ASIA (Dracin / K-Drama) — owner 2026-11-14 memilih "jalan 1":
+// isi kolom Negara, lalu barisnya muncul.
+// ===========================================================================
+describe("6. Baris drama Asia menyala dari data, bukan daftar tetap", () => {
+  it("TIDAK digambar saat kolom negara masih kosong", () => {
+    // Keadaan produksi hari ini: 40 dari 41 drama `country`-nya null.
+    // Menggambar "Dracin" sekarang = menu yang diklik lalu memulangkan film
+    // Hollywood ber-negara-produksi China. Lebih baik tidak ada.
+    // `undefined`, bukan `null`: itu bentuk "kolom kosong" menurut tipe Drama.
+    const menus = buildNavMenus([drama({ country: undefined })] as never, []);
+    const label = menus.find((m) => m.key === "lainnya")?.items.map((i) => i.label) ?? [];
+    expect(label).not.toContain("Dracin");
+    expect(label).not.toContain("K-Drama");
+  });
+
+  it("MUNCUL sendiri begitu ada serial dari negara itu", () => {
+    const menus = buildNavMenus(
+      [
+        drama({ id: "a", kind: "series", country: "China" }),
+        drama({ id: "b", kind: "series", country: "South Korea" }),
+      ] as never,
+      [],
+    );
+    const lainnya = menus.find((m) => m.key === "lainnya");
+    const href = lainnya?.items.map((i) => i.href) ?? [];
+    expect(href).toContain("/discover?negara=China&kind=series");
+    expect(href).toContain("/discover?negara=South+Korea&kind=series");
+  });
+
+  it("FILM dari negara itu TIDAK menghidupkan barisnya", () => {
+    // "Dracin" berarti DRAMA China. Satu film ko-produksi China tidak boleh
+    // memunculkan baris yang isinya bukan drama.
+    const menus = buildNavMenus(
+      [drama({ kind: "movie", country: "China" })] as never,
+      [],
+    );
+    const label = menus.find((m) => m.key === "lainnya")?.items.map((i) => i.label) ?? [];
+    expect(label).not.toContain("Dracin");
+  });
+
+  it("kolom negara berisi DAFTAR tetap cocok", () => {
+    // Nilai aslinya sering "United States, China, Thailand" — disamakan utuh
+    // akan melewatkan hampir semua judul ko-produksi.
+    const menus = buildNavMenus(
+      [drama({ kind: "series", country: "United States, China, Germany" })] as never,
+      [],
+    );
+    const label = menus.find((m) => m.key === "lainnya")?.items.map((i) => i.label) ?? [];
+    expect(label).toContain("Dracin");
+  });
+
+  it("isian Negara di panel admin TIDAK boleh dikunci lagi", () => {
+    // 🪤 Lingkaran setan yang baru dibuka: panel berisi kotak Negara dulu
+    // hanya digambar kalau salah satu fieldnya SUDAH terisi — jadi Negara
+    // mustahil diisi pertama kali. Tanpa penjaga ini, syarat itu gampang
+    // dipasang kembali "supaya panelnya tidak ramai", dan jalan 1 mati lagi
+    // tanpa satu pun error.
+    const sumber = tanpaKomentar(
+      readFileSync("app/components/admin/DramaForm.tsx", "utf-8"),
+    );
+    expect(sumber).not.toMatch(/\{\(imdbIdMeta \|\|[^)]*country\) && \(/);
+    expect(sumber, "kotak Negara hilang dari form").toContain(">Negara<");
   });
 });

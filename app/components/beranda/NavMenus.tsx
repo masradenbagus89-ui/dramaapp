@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 /**
  * Deretan menu dropdown di bar cari — pola situs katalog streaming: satu baris
@@ -22,6 +23,22 @@ import { ChevronDown } from "lucide-react";
  * dilipat ke tombol hamburger: menu yang butuh dua klik untuk terlihat sama
  * saja dengan menu yang disembunyikan, padahal justru ini yang diminta owner.
  */
+/**
+ * Kelas grid per jumlah kolom. Ditulis UTUH sebagai teks, bukan dirangkai
+ * (`grid-cols-${n}`): Tailwind memindai kode sebagai teks biasa, jadi nama
+ * kelas yang baru terbentuk saat program berjalan TIDAK pernah ikut ke CSS —
+ * hasilnya menu tetap satu kolom, tanpa satu pun error.
+ *
+ * Jenjangnya naik bertahap mengikuti lebar layar, dan selalu MULAI dari satu
+ * kolom: di HP (393px) kolom banyak membuat nama panjang seperti "Dokumenter"
+ * atau "Selandia Baru" terpotong.
+ */
+const KELAS_KOLOM: Record<number, string> = {
+  2: "grid grid-cols-1 gap-x-1 sm:w-[21rem] sm:grid-cols-2",
+  3: "grid grid-cols-1 gap-x-1 sm:w-[21rem] sm:grid-cols-2 lg:w-[30rem] lg:grid-cols-3",
+  4: "grid grid-cols-2 gap-x-1 w-[13rem] sm:w-[23rem] sm:grid-cols-4",
+};
+
 export default function NavMenus({ menus }: { menus: NavMenu[] }) {
   if (menus.length === 0) return null;
 
@@ -40,7 +57,14 @@ export default function NavMenus({ menus }: { menus: NavMenu[] }) {
           </DropdownMenuTrigger>
           <DropdownMenuContent
             align="start"
-            className="max-h-80 min-w-44 border-zinc-700 bg-zinc-900 text-zinc-200"
+            className={cn(
+              // Tinggi dibatasi TINGGI LAYAR, bukan angka tetap: dropdown yang
+              // lebih panjang dari layar membuat pilihan terakhir mustahil
+              // dicapai di HP — ia tergambar di bawah tepi layar dan daftarnya
+              // tidak ikut bergulir bersama halaman.
+              "max-h-[min(70vh,34rem)] min-w-44 overflow-y-auto border-zinc-700 bg-zinc-900 text-zinc-200",
+              m.kolom && KELAS_KOLOM[m.kolom],
+            )}
           >
             {m.items.map((item) => (
               <DropdownMenuItem

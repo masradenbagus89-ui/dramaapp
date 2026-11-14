@@ -41,7 +41,122 @@ export type NavMenu = {
   key: string;
   label: string;
   items: NavItem[];
+  /**
+   * Berapa KOLOM saat dropdown ini digambar di layar lebar (owner 2026-11-14:
+   * "genre, populer, tahun kamu tampilkan semua, buat yang rapi").
+   *
+   * Tujuannya satu: seluruh pilihan terlihat SEKALIGUS, tanpa menggulir di
+   * dalam kotak kecil. Angkanya mengikuti panjang label, bukan selera —
+   * `KOLOM_TAHUN` muat 4 karena "2026" pendek, sementara nama genre seperti
+   * "Dokumenter" cuma muat 3.
+   *
+   * Di layar HP jumlahnya diturunkan sendiri oleh NavMenus.tsx; kolom banyak
+   * pada lebar 393px membuat tiap nama terpotong, dan nama terpotong lebih
+   * buruk daripada daftar yang sedikit lebih panjang. Berkas ini hanya
+   * menyatakan NIAT; kelas CSS-nya ada di sana.
+   *
+   * Tidak diisi = satu kolom (menu pendek: Series, Populer, Lainnya).
+   */
+  kolom?: 2 | 3 | 4;
 };
+
+/**
+ * GENRE FILM resmi — menu "Genre" hanya memuat nama dari daftar ini
+ * (owner 2026-11-14: "untuk genre kamu buat khusus genre film").
+ *
+ * Isinya daftar genre baku IMDb/OMDb, bukan karangan sendiri: pencocokan
+ * otomatis (`PETA_GENRE` di lib/kategori-otomatis.ts) memakai ejaan yang sama,
+ * jadi nama yang menyimpang di sini membuat sebuah genre film diam-diam
+ * terbuang dari menu walau katalognya punya isi.
+ *
+ * ⚠️ Yang SENGAJA tidak ada di sini: kategori khas drama Asia (Tycoon, Harem,
+ * Time Travel, Wuxia, Cultivation, …). Ia bukan genre film, dan tempatnya di
+ * menu "Lainnya" — lihat `KATEGORI_DRAMA` di bawah.
+ */
+export const GENRE_FILM: readonly string[] = [
+  "Action",
+  "Adventure",
+  "Animation",
+  "Biography",
+  "Comedy",
+  "Crime",
+  "Documentary",
+  "Drama",
+  "Family",
+  "Fantasy",
+  "Film-Noir",
+  "Game-Show",
+  "History",
+  "Horror",
+  "Music",
+  "Musical",
+  "Mystery",
+  "News",
+  "Reality-TV",
+  "Romance",
+  "Sci-Fi",
+  "Short",
+  "Sport",
+  "Talk-Show",
+  "Thriller",
+  "War",
+  "Western",
+];
+
+const SET_GENRE_FILM = new Set(GENRE_FILM.map((g) => g.toLowerCase()));
+
+/**
+ * Jumlah kolom tiap dropdown panjang, dipilih dari PANJANG LABELNYA.
+ *
+ * Diuji dengan nama terpanjang yang benar-benar ada di katalog:
+ *   - Genre  : "Dokumenter", "Fiksi Ilmiah", "Reality TV"  -> 3 kolom
+ *   - Tahun  : "2026" (4 huruf)                            -> 4 kolom
+ *   - Negara : "Selandia Baru"                             -> 2 kolom
+ * Menaikkan angkanya membuat nama terpanjang terpotong — dan nama genre yang
+ * terpotong membuat penonton tidak tahu apa yang akan diklik.
+ */
+export const KOLOM_GENRE = 3 as const;
+export const KOLOM_TAHUN = 4 as const;
+export const KOLOM_NEGARA = 2 as const;
+
+/**
+ * Baris DRAMA ASIA di menu "Lainnya" (owner 2026-11-14: "lainnya isi dengan
+ * dracin, k-drama dan sejenisnya").
+ *
+ * Tiap baris = serial DARI negara itu, bukan film-nya: `kind=series` ikut
+ * dipasang supaya nama "Dracin" (drama China) tidak memulangkan film Hollywood
+ * yang kebetulan ber-negara-produksi China.
+ *
+ * ⚠️ BARISNYA BELUM TENTU MUNCUL, dan itu disengaja. Syaratnya ada serial yang
+ * kolom `country`-nya memang terisi. Diukur 2026-11-14: kolom itu terisi pada
+ * 1 dari 41 drama, karena isiannya di panel admin MUSTAHIL dicapai (lihat
+ * catatan di DramaForm.tsx). Sesudah kuncinya dibuka hari ini, owner tinggal
+ * mengisi negara tiap drama dan baris-baris ini menyala sendiri — tanpa
+ * menyentuh berkas ini lagi.
+ */
+const DRAMA_ASIA: readonly { label: string; negara: string }[] = [
+  { label: "Dracin", negara: "China" },
+  { label: "K-Drama", negara: "South Korea" },
+  { label: "J-Drama", negara: "Japan" },
+  { label: "Drama Thailand", negara: "Thailand" },
+  { label: "Drama Taiwan", negara: "Taiwan" },
+];
+
+/**
+ * Apakah drama ini diproduksi di negara tersebut? Kolomnya berisi DAFTAR
+ * ("United States, China, Thailand"), jadi dicocokkan per potongan — bukan
+ * disamakan utuh, yang akan melewatkan hampir semua judul ko-produksi.
+ */
+function dramaDariNegara(d: Drama, negara: string): boolean {
+  return String(d.country ?? "")
+    .split(",")
+    .some((n) => n.trim().toLowerCase() === negara.toLowerCase());
+}
+
+/** Apakah nama ini genre film (bukan kategori khas drama)? */
+function genreFilmResmi(nama: string): boolean {
+  return SET_GENRE_FILM.has(nama.toLowerCase());
+}
 
 /**
  * Semua tautan menuju /discover. KENAPA satu tujuan: hanya halaman itu yang
@@ -118,9 +233,12 @@ function menu(
   key: string,
   label: string,
   items: (NavItem | null)[],
+  hiasan: { kolom?: 2 | 3 | 4 } = {},
 ): NavMenu | null {
   const isi = items.filter((i): i is NavItem => i !== null);
-  return isi.length >= MIN_ITEM_MENU ? { key, label, items: isi } : null;
+  return isi.length >= MIN_ITEM_MENU
+    ? { key, label, items: isi, ...hiasan }
+    : null;
 }
 
 /**
@@ -259,27 +377,52 @@ export function buildNavMenus(
     : 0;
   const subIndo = hitung(dramas, (d) => Boolean(d.subtitles?.includes("id")));
 
+  /**
+   * SELURUH genre berisi, urut terbanyak. Dipecah dua di bawah: 20 pertama di
+   * menu "Genre", sisanya di menu "Genre Lainnya" (owner 2026-11-14 memilih
+   * bentuk dua kolom sesudah menu Genre tumbuh dari 6 jadi 24+ pilihan).
+   *
+   * 🪤 Tombol "GENRE LAINNYA" di DASAR dropdown sengaja TIDAK dipakai, walau
+   * itu bentuk yang dikirim owner. Satu-satunya halaman yang bisa dituju
+   * tombol itu (`/discover`) menyusun daftar genrenya sendiri dari katalog
+   * DRAMA saja (FilterKatalog.tsx:44) — jadi tombolnya akan menjanjikan
+   * "genre lainnya" lalu memulangkan daftar yang justru LEBIH PENDEK. Menu
+   * bersebelahan memberi teks yang sama tanpa tautan yang berbohong.
+   */
+  const semuaGenre: (NavItem & { nilai: string })[] = [
+    ...kategoriBerisi(dramas, videos).map((g) => ({
+      nilai: g,
+      label: labelGenre(g),
+      href: tautan({ cat: g }),
+    })),
+    ...genreSinema(dramas, videos).map((g) => ({
+      nilai: g,
+      label: labelGenre(g),
+      href: tautan({ genre: g }),
+    })),
+  ];
+  /**
+   * Dipecah menurut JENISNYA, bukan menurut jumlah (owner 2026-11-14).
+   * Putaran sebelumnya memotong di angka 20 lalu menaruh sisanya di menu
+   * "Genre Lainnya" — owner menilai pembagian itu tak bermakna bagi penonton:
+   * yang dicari orang di menu Genre adalah genre FILM.
+   */
+  const genreFilmMenu = semuaGenre.filter((i) => genreFilmResmi(i.nilai));
+  const kategoriDramaMenu = semuaGenre.filter((i) => !genreFilmResmi(i.nilai));
+
   const kandidat: (NavMenu | null)[] = [
     menu(
       "genre",
       "Genre",
-      // Dua sumber yang SENGAJA digabung dalam satu menu: kategori kurasi
+      // Dua sumber yang SENGAJA digabung dalam satu daftar: kategori kurasi
       // DramaKu (?cat=) lebih dulu, lalu genre sinema OMDb (?genre=) yang
       // BELUM terwakili kategori mana pun. Tanpa penyaringan itu, "Action"
       // akan muncul dua kali dengan arti berbeda — penonton mengira menunya
       // rusak. Keduanya sudah dihitung dari katalog, jadi tiap pilihannya
       // dijamin berisi.
       // Label diterjemahkan, alamatnya TIDAK — lihat catatan di `NavItem`.
-      [
-        ...kategoriBerisi(dramas, videos).map((g) => ({
-          label: labelGenre(g),
-          href: tautan({ cat: g }),
-        })),
-        ...genreSinema(dramas, videos).map((g) => ({
-          label: labelGenre(g),
-          href: tautan({ genre: g }),
-        })),
-      ],
+      genreFilmMenu,
+      { kolom: KOLOM_GENRE },
     ),
     // ⚠️ SEJARAH KEPUTUSAN — jangan "dikembalikan" oleh sesi berikutnya.
     // 2026-09-21 owner meminta label "Series" & "+ More" ditulis PERSIS seperti
@@ -332,6 +475,12 @@ export function buildNavMenus(
     // menambahkannya butuh jumlah komentar per judul ikut dibawa ke katalog.
     // Menulis tautannya tanpa itu = menu yang terlihat hidup tapi memulangkan
     // urutan apa adanya.
+    // Menampung DUA hal sejak 2026-11-14: pengurutan (sort) + penyaring yang
+    // dulu tinggal di menu "Lainnya". Menu itu dipakai ulang untuk sisa genre
+    // atas pilihan owner, jadi isinya pindah ke sini supaya nol fitur hilang.
+    // MURNI PENGURUTAN sejak 2026-11-14 (owner: "populer jangan dimasukkan
+    // IMDB"). Penyaring — Sub Indo, ambang IMDb, akses, status — pindah ke
+    // menu "Lainnya" di bawah; nol pilihan hilang dari situs.
     menu("populer", "Populer", [
       { label: "Terpopuler", href: tautan({ sort: "populer" }) },
       adaRating
@@ -349,6 +498,7 @@ export function buildNavMenus(
         label: labelNegara(n),
         href: tautan({ negara: n }),
       })),
+      { kolom: KOLOM_NEGARA },
     ),
     // Owner 2026-11-14: "tahun mulai dari tahun terbaru". Urutannya SUDAH
     // menurun sejak dulu (`tahunBerisi` & `getYearOptions` sama-sama
@@ -363,11 +513,36 @@ export function buildNavMenus(
         label: y,
         href: tautan({ year: y }),
       })),
+      { kolom: KOLOM_TAHUN },
     ),
     // Tempat sisa — padanan "+ More". Pilihan Gratis hanya berarti kalau
     // katalog memuat KEDUANYA; kalau semua judul gratis, ia cuma memulangkan
     // katalog utuh.
+    // "LAINNYA" — owner 2026-11-14: "lainnya isi dengan dracin, k-drama dan
+    // sejenisnya dan cukup tulisan lainnya (jangan genre lainnya)".
+    //
+    // Isinya dua kelompok, kategori khas drama Asia LEBIH DULU:
+    //   1. Kategori yang BUKAN genre film (Tycoon, Harem, Time Travel, dan
+    //      kelak Wuxia/Cultivation/dll begitu owner memakainya di admin) —
+    //      inilah "dan sejenisnya" yang bisa dibangun dari data hari ini.
+    //   2. Penyaring yang dikeluarkan dari menu Populer, supaya tidak hilang
+    //      dari situs: Sub Indo, akses, status, ambang IMDb, Semua Judul.
+    //
+    // ⚠️ "Dracin"/"K-Drama" sebagai baris TERSENDIRI belum dibuat, dan itu
+    // keputusan sadar: satu-satunya data asal-negara yang kita punya ada di
+    // kolom `country`, dan kolom itu KOSONG untuk 40 dari 41 drama (diukur
+    // 2026-11-14). Membuat baris "Dracin" dari `?negara=China` hari ini
+    // memulangkan 9 FILM yang kebetulan ber-negara-produksi China — bukan
+    // drama China yang dimaksud. Begitu kolom negara diisi dari panel admin,
+    // barisnya bisa ditambahkan dan langsung benar.
     menu("lainnya", "Lainnya", [
+      // Drama Asia menurut negara — paling atas karena inilah yang owner cari.
+      ...DRAMA_ASIA.map(({ label, negara }) =>
+        hitung(dramas, (d) => !isMovie(d) && dramaDariNegara(d, negara)) > 0
+          ? { label, href: tautan({ negara, kind: "series" }) }
+          : null,
+      ),
+      ...kategoriDramaMenu,
       subIndo > 0 ? { label: "Sub Indo", href: tautan({ sub: "id" }) } : null,
       gratis > 0 && koin > 0
         ? { label: "Gratis", href: tautan({ akses: "gratis" }) }
@@ -379,18 +554,14 @@ export function buildNavMenus(
       tayang > 0
         ? { label: "Masih Tayang", href: tautan({ status: "ongoing" }) }
         : null,
-      // Penyaring rating IMDb. Dulu berupa dropdown tersendiri di bar cari;
-      // dropdown itu dilepas 2026-09-21 (owner: bar cari terlalu ramai), jadi
-      // pilihannya pindah ke sini supaya fungsinya tidak ikut hilang. Ambang
-      // yang tidak dipunyai satu judul pun tidak digambar.
+      // Ambang yang tidak dipunyai satu judul pun tidak digambar — tombol yang
+      // memulangkan seluruh katalog seolah bekerja lebih menyesatkan daripada
+      // tombol yang tidak ada.
       ...AMBANG_IMDB.map((r) =>
         hitung(dramas, (d) => parseImdb(d.imdbRating) >= Number(r)) > 0
           ? { label: `IMDb ${r}+`, href: tautan({ rating: r }) }
           : null,
       ),
-      // "Judul A-Z" PINDAH ke menu Populer 2026-11-14 — ia pengurutan,
-      // bukan penyaring. Dibiarkan di dua tempat = satu pilihan yang sama
-      // muncul dua kali di bar yang sama.
       { label: "Semua Judul", href: TUJUAN },
     ]),
   ];

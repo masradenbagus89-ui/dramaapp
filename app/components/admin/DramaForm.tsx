@@ -785,13 +785,26 @@ export default function DramaForm({
           />
         </div>
 
-        {(imdbIdMeta || director || writer || stars || imdbRating || country) && (
-          <div className="mt-4 rounded-xl border border-indigo-500/30 bg-indigo-950/20 p-4">
+        {/* 🪤 PANEL INI DULU DISEMBUNYIKAN sampai salah satu fieldnya terisi
+            (`imdbIdMeta || director || … || country`), dan itu lingkaran
+            setan: isian Negara baru muncul kalau Negara sudah ada isinya.
+            Terukur 2026-11-14 — 40 dari 41 drama tidak punya metadata IMDb,
+            jadi kotak Negara & Bahasa-nya MUSTAHIL dicapai dari layar, dan
+            tidak ada pesan error apa pun yang memberi tahu. Akibatnya menu
+            "Negara" di situs menampilkan negara produksi SATU judul saja.
+            Alasan yang sama sudah dipakai untuk Tahun/Durasi/Rating di
+            kalimat bawah ("harus bisa diisi walau tidak diambil dari OMDb") —
+            di sini tinggal diberlakukan juga. */}
+        <div className="mt-4 rounded-xl border border-indigo-500/30 bg-indigo-950/20 p-4">
             <p className="text-sm font-semibold text-indigo-200">
               Metadata IMDb (ikut tersimpan)
             </p>
             <p className="mt-0.5 text-xs text-zinc-500">
-              Diisi otomatis dari “Ambil draft”. Boleh dikosongkan manual kalau perlu.
+              Diisi otomatis dari “Ambil draft”, atau ketik sendiri — tidak perlu
+              menunggu data IMDb. <strong className="text-zinc-300">Negara</strong>{" "}
+              yang menentukan isi menu Negara &amp; baris drama Asia (Dracin,
+              K-Drama) di situs. Tulis ejaan Inggris: <code>China</code>,{" "}
+              <code>South Korea</code>, <code>Japan</code>, <code>Thailand</code>.
               Tahun, Durasi, dan Rating IMDb pindah ke kotak “Lencana kartu” di
               atas (2026-09-22) — ketiganya dipajang di poster, jadi harus bisa
               diisi walau drama ini tidak diambil dari OMDb.
@@ -870,8 +883,7 @@ export default function DramaForm({
                 />
               </div>
             </div>
-          </div>
-        )}
+        </div>
 
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <div className="space-y-1.5">

@@ -188,9 +188,13 @@ describe("buildNavMenus", () => {
   });
 
   it("menyembunyikan urutan Rating & Tahun saat katalog tak punya datanya", () => {
+    // Label "Paling Banyak Ditonton" DIGANTI "Terpopuler" 2026-11-14 (owner:
+    // "populer juga perbaiki") — menyamakan kata dengan situs katalog
+    // pembanding. Yang diuji tetap sama: pilihan yang datanya nol harus
+    // HILANG, bukan tergambar lalu memulangkan urutan apa adanya.
     const populer = buildNavMenus(POLOS).find((m) => m.key === "populer");
     const label = populer?.items.map((i) => i.label) ?? [];
-    expect(label).toContain("Paling Banyak Ditonton");
+    expect(label).toContain("Terpopuler");
     expect(label).not.toContain("Rating Tertinggi");
     expect(label).not.toContain("Tahun Terbaru");
   });
@@ -245,8 +249,12 @@ describe("STRIP_KATALOG (daftar tetap milik owner)", () => {
       "Jepang",
       "Korea",
       "Thailand",
-      "2025",
+      // ⚠️ DIBALIK 2026-11-14 (owner: "tahun mulai dari tahun terbaru").
+      // Strip ini satu-satunya tempat di situs yang tahunnya MENAIK; menu
+      // dropdown "Tahun" sudah menurun sejak dulu. Merahnya tes lama bukan
+      // bug — urutannya memang sengaja diubah.
       "2026",
+      "2025",
       "Terpopuler",
     ]);
   });

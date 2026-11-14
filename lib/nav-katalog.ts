@@ -16,16 +16,13 @@
 // -------------------------------------------------------------------------
 import type { Drama } from "./types";
 import { isMovie } from "./types";
-import { availableGenres, countWithRating, countWithYear } from "./beranda-catalog";
-import {
-  getGenreOptions,
-  getYearOptions,
-  parseImdb,
-} from "./discover";
+import { countWithRating, countWithYear } from "./beranda-catalog";
+import { getGenreOptions, parseImdb } from "./discover";
 import { labelGenre } from "./genre";
 import { labelNegara } from "./negara";
 import { opsiNegaraGabungan } from "./film-jelajah";
 import type { PlaylyVideoPublik } from "./playly-publik";
+import { tahunRilis } from "./tahun-film";
 import { PAYWALL_ENABLED } from "./saklar-fitur";
 
 /**
@@ -127,17 +124,92 @@ function menu(
 }
 
 /**
+ * Urutkan nilai dari peta hitungan: terbanyak dulu, lalu abjad Indonesia.
+ * Aturan yang sama dengan `availableGenres` — ditulis sekali di sini supaya
+ * daftar gabungan di bawah tidak punya urutan sendiri.
+ */
+function urutTerbanyak(hitungan: Map<string, number>): string[] {
+  return [...hitungan.entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "id"))
+    .map(([nilai]) => nilai);
+}
+
+/**
+ * KATEGORI KURASI yang benar-benar punya isi — dari katalog drama DAN video.
+ *
+ * 🪤 KENAPA VIDEO WAJIB IKUT DIHITUNG (owner 2026-11-14: "seragamkan semua
+ * genre karena yang di beranda masih sedikit, bisa lihat di admin"). Sebelum
+ * hari ini menu Genre dihitung dari `dramas` SAJA. Diukur di produksi: katalog
+ * drama cuma 41 judul dengan **6** kategori, sedangkan video Playly 397 judul
+ * dengan **24** kategori. Jadi menunya memang jujur — ia cuma melihat 7% isi
+ * situs. Nol error, dan tidak ada yang bisa menebaknya dari layar.
+ *
+ * `/discover` SUDAH menyaring video (`saringFilm` di lib/film-jelajah.ts
+ * mengenal `category`), jadi tiap kategori yang ditambahkan di sini tetap
+ * memulangkan hasil — aturan "menu tak boleh memulangkan halaman hampa" di
+ * kepala berkas ini TIDAK dilonggarkan.
+ */
+function kategoriBerisi(dramas: Drama[], videos: PlaylyVideoPublik[]): string[] {
+  const hitungan = new Map<string, number>();
+  const tambah = (nilai: string | null | undefined) => {
+    const v = (nilai ?? "").trim();
+    if (v) hitungan.set(v, (hitungan.get(v) ?? 0) + 1);
+  };
+  for (const d of dramas) tambah(d.category);
+  // Hanya `kategori` (pilihan admin dari daftar resmi) — BUKAN `genre` teks
+  // bebas OMDb. `?cat=` divalidasi `parseCategory` terhadap CATEGORIES, jadi
+  // nama di luar daftar itu jatuh ke "Semua" dan menunya memulangkan katalog
+  // utuh: terlihat hidup, padahal tidak menyaring apa pun.
+  for (const v of videos) tambah(v.kategori);
+  return urutTerbanyak(hitungan);
+}
+
+/**
  * Genre sinema OMDb yang BELUM terwakili kategori kurasi DramaKu.
  *
  * Katalog memuat dua sistem genre sekaligus (lihat `genreDari` di
  * lib/discover.ts). Yang namanya bertabrakan dibuang di sini SEKALI, supaya
  * menu dropdown dan chip strip tak pernah menyimpang aturannya.
+ *
+ * Ikut menghitung video sejak 2026-11-14, alasan sama dengan `kategoriBerisi`.
  */
-function genreSinema(dramas: Drama[]): string[] {
+function genreSinema(
+  dramas: Drama[],
+  videos: PlaylyVideoPublik[] = [],
+): string[] {
   const kategori = new Set(
-    availableGenres(dramas).map((g) => g.toLowerCase()),
+    kategoriBerisi(dramas, videos).map((g) => g.toLowerCase()),
   );
-  return getGenreOptions(dramas).filter((g) => !kategori.has(g.toLowerCase()));
+  const hitungan = new Map<string, number>();
+  for (const g of getGenreOptions(dramas)) {
+    hitungan.set(g, (hitungan.get(g) ?? 0) + 1);
+  }
+  for (const v of videos) {
+    // `genre` OMDb bisa berisi DAFTAR ("Action, Sci-Fi") — dipecah supaya tiap
+    // nama bisa jadi satu pilihan menu, sejajar dengan `genreFilm`.
+    for (const g of (v.genre ?? "").split(",")) {
+      const nama = g.trim();
+      if (nama) hitungan.set(nama, (hitungan.get(nama) ?? 0) + 1);
+    }
+  }
+  return urutTerbanyak(hitungan).filter((g) => !kategori.has(g.toLowerCase()));
+}
+
+/**
+ * Tahun rilis yang benar-benar punya isi, terbaru dulu — drama DAN video.
+ *
+ * Memakai `tahunRilis` (lib/tahun-film.ts), bukan kolom `year` mentah: 70 dari
+ * 481 video tayang menyimpan tahunnya HANYA di dalam judul `(2026)`. Membaca
+ * kolomnya saja membuat tahun-tahun itu hilang dari menu padahal filmnya ada.
+ */
+function tahunBerisi(dramas: Drama[], videos: PlaylyVideoPublik[]): string[] {
+  const set = new Set<string>();
+  for (const d of dramas) if (d.year) set.add(d.year);
+  for (const v of videos) {
+    const t = tahunRilis({ title: v.title, year: v.year });
+    if (t) set.add(String(t));
+  }
+  return [...set].sort((a, b) => Number(b) - Number(a));
 }
 
 /**
@@ -199,11 +271,11 @@ export function buildNavMenus(
       // dijamin berisi.
       // Label diterjemahkan, alamatnya TIDAK — lihat catatan di `NavItem`.
       [
-        ...availableGenres(dramas).map((g) => ({
+        ...kategoriBerisi(dramas, videos).map((g) => ({
           label: labelGenre(g),
           href: tautan({ cat: g }),
         })),
-        ...genreSinema(dramas).map((g) => ({
+        ...genreSinema(dramas, videos).map((g) => ({
           label: labelGenre(g),
           href: tautan({ genre: g }),
         })),
@@ -217,17 +289,57 @@ export function buildNavMenus(
     // `key`-nya sengaja TIDAK ikut berubah ("jenis"/"lainnya"): itu kunci
     // internal yang dipakai React & tes, dan menggantinya cuma menambah risiko
     // tanpa satu pun perubahan yang terlihat penonton.
+    // Diperluas 2026-11-14 (owner: "series kamu tambahkan ex. daftar series").
+    // Tiap baris di sini MENGGABUNG dua penyaring yang sudah ada (`kind` +
+    // `status`/`sort`), bukan fitur baru — `bacaFilter` di lib/discover.ts
+    // membaca keduanya dari alamat yang sama, jadi gabungannya memang bekerja.
+    // Syarat `> 0` dipertahankan supaya baris yang belum ada isinya hilang
+    // sendiri, bukan jadi halaman hampa.
     menu("jenis", "Series", [
-      serial > 0 ? { label: "Serial", href: tautan({ kind: "series" }) } : null,
-      film > 0 ? { label: "Film", href: tautan({ kind: "movie" }) } : null,
+      serial > 0 ? { label: "Daftar Serial", href: tautan({ kind: "series" }) } : null,
+      serial > 0 && adaTahun
+        ? {
+            label: "Serial Terbaru",
+            href: tautan({ kind: "series", sort: "year" }),
+          }
+        : null,
+      serial > 0 && tayang > 0
+        ? {
+            label: "Serial Masih Tayang",
+            href: tautan({ kind: "series", status: "ongoing" }),
+          }
+        : null,
+      serial > 0 && tamat > 0
+        ? {
+            label: "Serial Sudah Tamat",
+            href: tautan({ kind: "series", status: "completed" }),
+          }
+        : null,
+      film > 0 ? { label: "Daftar Film", href: tautan({ kind: "movie" }) } : null,
+      film > 0 && adaTahun
+        ? {
+            label: "Film Terbaru",
+            href: tautan({ kind: "movie", sort: "year" }),
+          }
+        : null,
     ]),
+    // Diperbaiki 2026-11-14 (owner: "populer juga perbaiki"). Labelnya
+    // diseragamkan dengan kata yang dipakai situs katalog pembanding
+    // ("Terpopuler", "Rating"), dan "Judul A-Z" dipindahkan KE SINI dari menu
+    // "Lainnya" — ia memang pengurutan, bukan penyaring, jadi tempatnya di
+    // sini. ⚠️ Yang TIDAK bisa dibuat: "Komen Terbanyak" & "Baru Diupload" —
+    // `sortCatalog` (lib/discover.ts) tidak punya kedua urutan itu, dan
+    // menambahkannya butuh jumlah komentar per judul ikut dibawa ke katalog.
+    // Menulis tautannya tanpa itu = menu yang terlihat hidup tapi memulangkan
+    // urutan apa adanya.
     menu("populer", "Populer", [
-      { label: "Paling Banyak Ditonton", href: tautan({ sort: "populer" }) },
-      { label: "Episode Terbanyak", href: tautan({ sort: "episodes" }) },
+      { label: "Terpopuler", href: tautan({ sort: "populer" }) },
       adaRating
         ? { label: "Rating Tertinggi", href: tautan({ sort: "rating" }) }
         : null,
       adaTahun ? { label: "Tahun Terbaru", href: tautan({ sort: "year" }) } : null,
+      { label: "Episode Terbanyak", href: tautan({ sort: "episodes" }) },
+      { label: "Judul A-Z", href: tautan({ sort: "title" }) },
     ]),
     menu(
       "negara",
@@ -238,10 +350,19 @@ export function buildNavMenus(
         href: tautan({ negara: n }),
       })),
     ),
+    // Owner 2026-11-14: "tahun mulai dari tahun terbaru". Urutannya SUDAH
+    // menurun sejak dulu (`tahunBerisi` & `getYearOptions` sama-sama
+    // `Number(b) - Number(a)`); yang benar-benar salah adalah strip kuning di
+    // bawah — lihat catatan di STRIP_KATALOG. Yang diperbaiki di sini:
+    // daftarnya kini ikut menghitung tahun dari katalog VIDEO, jadi tahun yang
+    // hanya dipunyai film tidak lagi hilang dari menu.
     menu(
       "tahun",
       "Tahun",
-      getYearOptions(dramas).map((y) => ({ label: y, href: tautan({ year: y }) })),
+      tahunBerisi(dramas, videos).map((y) => ({
+        label: y,
+        href: tautan({ year: y }),
+      })),
     ),
     // Tempat sisa — padanan "+ More". Pilihan Gratis hanya berarti kalau
     // katalog memuat KEDUANYA; kalau semua judul gratis, ia cuma memulangkan
@@ -267,7 +388,9 @@ export function buildNavMenus(
           ? { label: `IMDb ${r}+`, href: tautan({ rating: r }) }
           : null,
       ),
-      { label: "Judul A-Z", href: tautan({ sort: "title" }) },
+      // "Judul A-Z" PINDAH ke menu Populer 2026-11-14 — ia pengurutan,
+      // bukan penyaring. Dibiarkan di dua tempat = satu pilihan yang sama
+      // muncul dua kali di bar yang sama.
       { label: "Semua Judul", href: TUJUAN },
     ]),
   ];
@@ -322,7 +445,11 @@ export const STRIP_KATALOG: NavItem[] = [
   { label: labelNegara("Japan"), href: tautan({ negara: "Japan" }) },
   { label: labelNegara("South Korea"), href: tautan({ negara: "South Korea" }) },
   { label: labelNegara("Thailand"), href: tautan({ negara: "Thailand" }) },
-  { label: "2025", href: tautan({ year: "2025" }) },
+  // ⚠️ TERBARU DULU (owner 2026-11-14: "tahun mulai dari tahun terbaru").
+  // Sebelumnya 2025 berdiri di depan 2026 — satu-satunya tempat di situs
+  // yang tahunnya menaik, dan itulah yang terlihat owner di strip kuning.
+  // Menu dropdown "Tahun" sudah menurun sejak dulu.
   { label: "2026", href: tautan({ year: "2026" }) },
+  { label: "2025", href: tautan({ year: "2025" }) },
   { label: "Terpopuler", href: tautan({ sort: "populer" }) },
 ];

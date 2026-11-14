@@ -13,6 +13,7 @@
 //   4. Tahun terbaru berdiri paling depan — di dropdown MAUPUN strip kuning.
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
+import { BATAS_MENU_NEGARA, saringFilm } from "../lib/film-jelajah";
 import {
   buildNavMenus,
   GENRE_FILM,
@@ -287,9 +288,10 @@ describe("5. Genre khusus film, sisanya di Lainnya", () => {
       populer?.items.filter((i) => i.label.startsWith("IMDb")).map((i) => i.label),
       "owner meminta IMDb KELUAR dari menu Populer",
     ).toEqual([]);
-    // ...tapi tidak boleh hilang dari situs.
-    const lain = kaya.find((m) => m.key === "lainnya");
-    expect(lain?.items.map((i) => i.href)).toContain("/discover?rating=7");
+    // ...dan 2026-11-14 keluar dari SELURUH navbar ("lainnya kamu hapus yang
+    // ada IMDBnya"). Alamatnya tetap hidup; yang dilepas cuma tombolnya.
+    const semua = kaya.flatMap((m) => m.items.map((i) => i.href));
+    expect(semua.filter((h) => h.includes("rating="))).toEqual([]);
   });
 
   it("daftar GENRE_FILM memakai ejaan yang dikenal pencocokan otomatis", () => {
@@ -420,5 +422,83 @@ describe("6. Baris drama Asia menyala dari data, bukan daftar tetap", () => {
     );
     expect(sumber).not.toMatch(/\{\(imdbIdMeta \|\|[^)]*country\) && \(/);
     expect(sumber, "kotak Negara hilang dari form").toContain(">Negara<");
+  });
+});
+
+// ===========================================================================
+// 7. ATURAN KERAS: tiap baris menu HARUS mengubah halaman yang dilihat owner.
+// ===========================================================================
+describe("7. Nol baris menu yang 'diklik tapi halamannya sama'", () => {
+  /**
+   * Penyaring yang DIKENAL daftar film (`saringFilm` di lib/film-jelajah.ts).
+   * Di luar daftar ini, sebuah penyaring hanya mengenai katalog drama —
+   * sementara daftar FILM-lah yang memenuhi layar (ratusan judul), jadi
+   * halamannya nyaris tidak berubah dan tombolnya terbaca seperti mati.
+   */
+  const DIKENAL_FILM = new Set(["cat", "genre", "negara", "year", "kind", "q"]);
+
+  /**
+   * `sort` SENGAJA dikecualikan: ia MENGURUT, bukan MENYARING. Grid drama di
+   * bagian atas halaman benar-benar berubah urutannya saat diklik, jadi
+   * halamannya tidak "sama" — yang tidak ikut berubah cuma urutan daftar film
+   * di bawahnya. Itu batas yang diketahui, bukan tombol mati.
+   */
+  const MENGURUT = new Set(["sort"]);
+
+  const menus = buildNavMenus(
+    [
+      drama({ id: "a", category: "Tycoon", kind: "series", country: "China" }),
+      drama({ id: "b", category: "Action", year: "2026", imdbRating: "8.5" }),
+    ] as never,
+    [video({ kategori: "Horror" })],
+  );
+
+  for (const m of menus) {
+    it(`menu "${m.label}" hanya memakai penyaring yang dikenal daftar film`, () => {
+      const liar: string[] = [];
+      for (const item of m.items) {
+        const p = new URLSearchParams(item.href.split("?")[1] ?? "");
+        // `kind=series` membuat daftar film KOSONG, jadi apa pun yang
+        // dipasangkan dengannya tetap mengubah halaman secara kasatmata.
+        if (p.get("kind") === "series") continue;
+        for (const k of p.keys()) {
+          if (!DIKENAL_FILM.has(k) && !MENGURUT.has(k)) {
+            liar.push(`${item.label} -> ?${k}=`);
+          }
+        }
+      }
+      expect(
+        liar,
+        `baris ini memakai penyaring yang TIDAK mengenai daftar film, jadi ` +
+          `halamannya nyaris tak berubah saat diklik: ${liar.join(", ")}`,
+      ).toEqual([]);
+    });
+  }
+
+  it("menu Negara menampung lebih dari 12 negara", () => {
+    // 🪤 Lubang yang ketahuan dari uji-balik: menurunkan BATAS_MENU_NEGARA
+    // kembali ke 12 TIDAK memerahkan satu pun tes. Owner 2026-11-14 minta
+    // "negara bisa kamu tambahkan lagi negaranya" — tanpa pagar ini, angka
+    // itu gampang dikecilkan lagi "supaya menunya pendek", dan keluhannya
+    // kembali tanpa ada yang tahu.
+    const banyakNegara = Array.from({ length: 30 }, (_, i) =>
+      drama({ id: `n${i}`, country: `Negara${String(i).padStart(2, "0")}` }),
+    );
+    const menus = buildNavMenus(banyakNegara as never, []);
+    const negara = menus.find((m) => m.key === "negara");
+    expect(BATAS_MENU_NEGARA).toBeGreaterThanOrEqual(24);
+    expect(negara?.items.length).toBe(BATAS_MENU_NEGARA);
+    expect(negara?.items.length).toBeGreaterThan(12);
+  });
+
+  it("penyaring Serial benar-benar mengosongkan daftar film", () => {
+    // Pagar untuk perbaikan di saringFilm. Tanpa ini, "Daftar Serial" kembali
+    // memulangkan ratusan film di bawah grid — tepat keluhan owner.
+    expect(saringFilm([video({ kategori: "Horror" })], { kind: "series" })).toEqual(
+      [],
+    );
+    expect(
+      saringFilm([video({ kategori: "Horror" })], { kind: "movie" }),
+    ).toHaveLength(1);
   });
 });

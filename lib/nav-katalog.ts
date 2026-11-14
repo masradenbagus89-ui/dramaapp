@@ -111,13 +111,15 @@ const SET_GENRE_FILM = new Set(GENRE_FILM.map((g) => g.toLowerCase()));
  * Diuji dengan nama terpanjang yang benar-benar ada di katalog:
  *   - Genre  : "Dokumenter", "Fiksi Ilmiah", "Reality TV"  -> 3 kolom
  *   - Tahun  : "2026" (4 huruf)                            -> 4 kolom
- *   - Negara : "Selandia Baru"                             -> 2 kolom
+ *   - Negara : "Selandia Baru"                             -> 3 kolom sejak
+ *     daftarnya dinaikkan 12 -> 24 (owner 2026-11-14); 2 kolom membuatnya
+ *     12 baris, lebih panjang daripada menu Genre di sebelahnya.
  * Menaikkan angkanya membuat nama terpanjang terpotong — dan nama genre yang
  * terpotong membuat penonton tidak tahu apa yang akan diklik.
  */
 export const KOLOM_GENRE = 3 as const;
 export const KOLOM_TAHUN = 4 as const;
-export const KOLOM_NEGARA = 2 as const;
+export const KOLOM_NEGARA = 3 as const;
 
 /**
  * Baris DRAMA ASIA di menu "Lainnya" (owner 2026-11-14: "lainnya isi dengan
@@ -535,6 +537,25 @@ export function buildNavMenus(
     // memulangkan 9 FILM yang kebetulan ber-negara-produksi China — bukan
     // drama China yang dimaksud. Begitu kolom negara diisi dari panel admin,
     // barisnya bisa ditambahkan dan langsung benar.
+    // "LAINNYA" — owner 2026-11-14.
+    //
+    // ⚠️ ATURAN KERAS BARU: tiap baris di sini WAJIB memakai penyaring yang
+    // ikut mengenai DAFTAR FILM (`saringFilm` di lib/film-jelajah.ts mengenal
+    // category, genre, negara, year, kind). Owner melaporkan "setiap di klik
+    // yang muncul halaman sama" — sebabnya penyaring khas drama (Sub Indo,
+    // ambang IMDb, akses koin, status tamat/tayang) TIDAK dikenal daftar
+    // film, sementara daftar itulah yang memenuhi layar. Menu yang bekerja
+    // dengan benar jadi terlihat seperti menu yang mati.
+    //
+    // Yang DIBUANG dari menu ini pada hari itu, beserta sebabnya:
+    //   - IMDb 7+/8+/9+  -> diminta owner langsung ("hapus yang ada IMDBnya")
+    //   - Sub Indo       -> `sub` tak dikenal saringFilm
+    //   - Gratis / Pakai Koin -> `akses` tak dikenal saringFilm (lagipula
+    //                      koin sedang dijeda, jadi keduanya sudah nol)
+    //   - Sudah Tamat / Masih Tayang -> `status` tak dikenal saringFilm
+    // Keempatnya TIDAK hilang dari situs: alamatnya tetap hidup
+    // (`?sub=id`, `?rating=7`, `?status=completed`) dan bar filter di
+    // /discover masih menyediakannya. Yang dilepas cuma tombolnya di navbar.
     menu("lainnya", "Lainnya", [
       // Drama Asia menurut negara — paling atas karena inilah yang owner cari.
       ...DRAMA_ASIA.map(({ label, negara }) =>
@@ -543,25 +564,6 @@ export function buildNavMenus(
           : null,
       ),
       ...kategoriDramaMenu,
-      subIndo > 0 ? { label: "Sub Indo", href: tautan({ sub: "id" }) } : null,
-      gratis > 0 && koin > 0
-        ? { label: "Gratis", href: tautan({ akses: "gratis" }) }
-        : null,
-      koin > 0 ? { label: "Pakai Koin", href: tautan({ akses: "koin" }) } : null,
-      tamat > 0
-        ? { label: "Sudah Tamat", href: tautan({ status: "completed" }) }
-        : null,
-      tayang > 0
-        ? { label: "Masih Tayang", href: tautan({ status: "ongoing" }) }
-        : null,
-      // Ambang yang tidak dipunyai satu judul pun tidak digambar — tombol yang
-      // memulangkan seluruh katalog seolah bekerja lebih menyesatkan daripada
-      // tombol yang tidak ada.
-      ...AMBANG_IMDB.map((r) =>
-        hitung(dramas, (d) => parseImdb(d.imdbRating) >= Number(r)) > 0
-          ? { label: `IMDb ${r}+`, href: tautan({ rating: r }) }
-          : null,
-      ),
       { label: "Semua Judul", href: TUJUAN },
     ]),
   ];

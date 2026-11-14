@@ -67,15 +67,19 @@ function hasilDariTautan(dramas: Drama[], href: string): Drama[] {
 }
 
 describe("buildNavMenus", () => {
-  it("membuat enam menu saat datanya memang terisi", () => {
+  it("membuat lima menu inti saat datanya memang terisi", () => {
     // Urutannya sejajar dengan situs katalog pembanding.
+    //
+    // ⚠️ Menu keenam ("lainnya") TIDAK di daftar ini sejak 2026-11-14: isinya
+    // kini kategori khas drama + negara drama Asia, dan katalog uji ini tidak
+    // punya keduanya — jadi menunya hilang sendiri, persis seperti yang
+    // seharusnya. Kemunculannya diuji terpisah di tests/nav-menu-lengkap.
     expect(kunciMenu(KAYA)).toEqual([
       "genre",
       "jenis",
       "populer",
       "negara",
       "tahun",
-      "lainnya",
     ]);
   });
 
@@ -85,14 +89,14 @@ describe("buildNavMenus", () => {
     // jadi soal — label bukan detail teknis yang boleh diganti sambil lalu.
     // ⚠️ "Lainnya" sempat diubah jadi "Genre Lainnya" pada hari yang sama,
     // lalu owner MENGOREKSI: "cukup tulisan lainnya (jangan genre lainnya)".
-    // Keenamnya dikunci di sini karena label sudah TIGA kali jadi soal.
+    // Labelnya diuji di tests/nav-menu-lengkap (menunya butuh data khusus);
+    // kelima ini dikunci di sini karena sudah TIGA kali jadi soal.
     expect(buildNavMenus(KAYA).map((m) => m.label)).toEqual([
       "Genre",
       "Series",
       "Populer",
       "Negara",
       "Tahun",
-      "Lainnya",
     ]);
   });
 
@@ -174,23 +178,21 @@ describe("buildNavMenus", () => {
     }
   });
 
-  it("menawarkan penyaring rating IMDb di menu Lainnya", () => {
-    // Dropdown rating di bar cari dilepas 2026-09-21; pilihannya pindah ke
-    // menu "Lainnya". Sempat dipindah ke "Populer" pada 2026-11-14, lalu
-    // DIKEMBALIKAN hari itu juga — owner: "populer jangan dimasukkan IMDB".
-    // KAYA punya satu judul 8.5.
-    const lainnya = buildNavMenus(KAYA).find((m) => m.key === "lainnya");
-    const label = lainnya?.items.map((i) => i.label) ?? [];
-    expect(label).toContain("IMDb 7+");
-    expect(label).toContain("IMDb 8+");
-    // Tak satu pun judul mencapai 9, jadi ambang itu tidak digambar.
-    expect(label).not.toContain("IMDb 9+");
+  it("TIDAK lagi menawarkan ambang IMDb di menu mana pun", () => {
+    // ⚠️ DIBALIK 2026-11-14 (owner: "lainnya kamu hapus yang ada IMDBnya").
+    // Sebab teknisnya ikut menguatkan: `?rating=` tidak dikenal `saringFilm`,
+    // jadi mengkliknya TIDAK mengubah daftar film yang memenuhi layar —
+    // tombol yang bekerja dengan benar terlihat seperti tombol mati.
+    // Alamatnya TIDAK dimatikan: `/discover?rating=7` tetap berfungsi.
+    const semua = buildNavMenus(KAYA).flatMap((m) => m.items.map((i) => i.label));
+    expect(semua.filter((l) => l.startsWith("IMDb"))).toEqual([]);
   });
 
-  it("tidak menawarkan rating sama sekali saat katalog tak punya nilainya", () => {
-    const lainnya = buildNavMenus(POLOS).find((m) => m.key === "lainnya");
-    const label = lainnya?.items.map((i) => i.label) ?? [];
-    expect(label.filter((l) => l.startsWith("IMDb"))).toHaveLength(0);
+  it("katalog polos pun nol ambang IMDb", () => {
+    const semua = buildNavMenus(POLOS).flatMap((m) =>
+      m.items.map((i) => i.label),
+    );
+    expect(semua.filter((l) => l.startsWith("IMDb"))).toHaveLength(0);
   });
 
   it("menyembunyikan urutan Rating & Tahun saat katalog tak punya datanya", () => {

@@ -27,18 +27,22 @@ import { negaraDari, pecahDaftar, type FilterDramaOptions } from "./discover";
 /**
  * Berapa negara yang boleh masuk menu.
  *
- * KENAPA DIBATASI: begitu 443 film ikut dihitung, daftar negara melar jauh
- * melewati yang muat di layar. Owner sudah pernah menolak menu yang kepanjangan
- * — strip genre sempat tumbuh jadi 29 chip dan dinilai "terlalu banyak tulisan
- * dan negara lainnya" (lihat lib/nav-katalog.ts). 12 dipilih karena itu kira-
- * kira jumlah baris yang masih terbaca sekali pandang dalam satu dropdown,
- * tanpa menggulir.
+ * KENAPA DIBATASI: katalog memuat 62 negara, dan ekornya berisi puluhan
+ * negara dengan satu-dua judul saja — daftar sepanjang itu membuat negara yang
+ * benar-benar berisi jadi sulit ditemukan.
+ *
+ * ⚠️ ANGKANYA NAIK 12 -> 24 pada 2026-11-14 (owner: "negara bisa kamu
+ * tambahkan lagi negaranya"). Alasan angka 12 yang lama — "jumlah baris yang
+ * masih terbaca sekali pandang dalam satu dropdown, tanpa menggulir" — sudah
+ * TIDAK berlaku: menu Negara kini digambar DUA/TIGA kolom (`KOLOM_NEGARA` di
+ * lib/nav-katalog.ts), jadi 24 nama muat dalam 8 baris, lebih pendek daripada
+ * 12 nama satu kolom yang dulu.
  *
  * Yang terpotong TIDAK hilang dari situs: negaranya tetap bisa dicapai lewat
  * alamat `?negara=<nama>` dan tetap ikut tersaring. Yang dibatasi cuma isi
  * menunya.
  */
-export const BATAS_MENU_NEGARA = 12;
+export const BATAS_MENU_NEGARA = 24;
 
 /** Samakan huruf besar-kecil sebelum dibandingkan. OMDb tidak konsisten. */
 const samakan = (teks: string) => teks.trim().toLowerCase();
@@ -106,7 +110,23 @@ export function saringFilm(
   videos: PlaylyVideoPublik[],
   options: FilterDramaOptions = {},
 ): PlaylyVideoPublik[] {
-  const { category = "Semua", genre = "all", negara = "all", year = "all" } = options;
+  const {
+    category = "Semua",
+    genre = "all",
+    negara = "all",
+    year = "all",
+    kind = "all",
+  } = options;
+  // 🪤 `kind` DULU DIABAIKAN di sini, dan itu bug yang dilaporkan owner
+  // 2026-11-14: "ketika di klik harus bisa kebuka film filmnya, jangan setiap
+  // di klik yang muncul halaman sama". Penyaring Serial/Film hanya mengenai
+  // katalog drama, sementara daftar film di bawahnya tidak berubah sedikit
+  // pun — dan daftar itulah yang memenuhi layar (ratusan judul). Jadi menu
+  // yang bekerja dengan benar TERLIHAT seperti menu yang mati.
+  //
+  // Video Playly SELALU film, tak pernah serial: ia satuan tayang tunggal
+  // tanpa nomor episode. Jadi "serial" = nol film, "film" = semuanya.
+  if (kind === "series") return [];
   return videos.filter(
     (v) =>
       cocokSatuGenre(v, category) &&

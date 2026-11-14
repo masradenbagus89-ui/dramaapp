@@ -231,16 +231,42 @@ function hitung(dramas: Drama[], cocok: (d: Drama) => boolean): number {
  * `items` bertipe (NavItem | null)[] supaya pemanggil bisa menulis syaratnya
  * sebaris (`ada ? item : null`) tanpa merakit array bertahap.
  */
+/**
+ * Baris penutup "Lainnya" di dasar tiap dropdown (owner 2026-11-14: "genre di
+ * bawah tulisan perang kamu tambahkan lainnya ... tambahkan juga tulisan
+ * lainnya" untuk menu yang lain).
+ *
+ * Ia menuju halaman jelajah TANPA penyaring — satu-satunya halaman yang
+ * memuat SELURUH judul sekaligus, lengkap dengan bar penyaringnya sendiri.
+ * Jadi "Lainnya" di sini berarti "tidak satu pun dari pilihan di atas; lihat
+ * semuanya lalu saring sendiri".
+ *
+ * 🪤 Sengaja TIDAK memasang alamat berbeda-beda per menu hanya supaya
+ * kelihatan berbeda: tiap menu menawarkan sumbu yang berbeda (genre, negara,
+ * tahun), tapi "selain yang di atas" bermuara ke tempat yang sama. Alamat
+ * karangan yang terlihat spesifik tapi memulangkan hasil yang sama persis
+ * justru itu yang dikeluhkan owner.
+ */
+const BARIS_LAINNYA: NavItem = { label: "Lainnya", href: TUJUAN };
+
 function menu(
   key: string,
   label: string,
   items: (NavItem | null)[],
-  hiasan: { kolom?: 2 | 3 | 4 } = {},
+  hiasan: { kolom?: 2 | 3 | 4; tanpaLainnya?: boolean } = {},
 ): NavMenu | null {
   const isi = items.filter((i): i is NavItem => i !== null);
-  return isi.length >= MIN_ITEM_MENU
-    ? { key, label, items: isi, ...hiasan }
-    : null;
+  if (isi.length < MIN_ITEM_MENU) return null;
+  // Ditambahkan SESUDAH ambang MIN_ITEM_MENU dinilai: baris penutup bukan
+  // "isi" menu, dan menu berisi satu pilihan + "Lainnya" tetap cuma menambah
+  // satu klik untuk sampai ke tempat yang sama.
+  const { tanpaLainnya, ...sisa } = hiasan;
+  return {
+    key,
+    label,
+    items: tanpaLainnya ? isi : [...isi, BARIS_LAINNYA],
+    ...sisa,
+  };
 }
 
 /**
@@ -564,8 +590,11 @@ export function buildNavMenus(
           : null,
       ),
       ...kategoriDramaMenu,
+      // Menu ini TIDAK ikut dapat baris penutup "Lainnya": namanya sudah
+      // "Lainnya", dan "Semua Judul" di bawah ini alamatnya sama persis —
+      // dua baris kembar di satu dropdown.
       { label: "Semua Judul", href: TUJUAN },
-    ]),
+    ], { tanpaLainnya: true }),
   ];
 
   return kandidat.filter((m): m is NavMenu => m !== null);

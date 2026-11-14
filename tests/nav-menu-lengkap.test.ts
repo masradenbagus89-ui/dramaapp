@@ -64,6 +64,13 @@ function tanpaKomentar(sumber: string): string {
     .replace(/^[ 	]*\/\/.*$/gm, "");
 }
 
+/**
+ * Baris penutup "Lainnya"/"Semua Judul" menuju `/discover` polos. Ia bukan
+ * ISI menu — ia jalan keluar — jadi tes tentang isi menu membuangnya dulu.
+ */
+const tanpaPenutup = <T extends { href: string }>(items: T[]): T[] =>
+  items.filter((i) => i.href !== "/discover");
+
 const labelMenu = (menus: ReturnType<typeof buildNavMenus>, key: string) =>
   menus.find((m) => m.key === key)?.items.map((i) => i.label) ?? [];
 const hrefMenu = (menus: ReturnType<typeof buildNavMenus>, key: string) =>
@@ -190,7 +197,11 @@ describe("4. Tahun terbaru paling depan", () => {
       ] as Drama[],
       [],
     );
-    expect(labelMenu(menus, "tahun")).toEqual(["2026", "2024", "2021"]);
+    expect(
+      tanpaPenutup(menus.find((m) => m.key === "tahun")?.items ?? []).map(
+        (i) => i.label,
+      ),
+    ).toEqual(["2026", "2024", "2021"]);
   });
 
   it("tahun yang hanya dipunyai VIDEO ikut masuk", () => {
@@ -199,7 +210,11 @@ describe("4. Tahun terbaru paling depan", () => {
       [drama({ year: "2024" })],
       [video({ title: "Film Baru (2026)", year: null })],
     );
-    expect(labelMenu(menus, "tahun")).toEqual(["2026", "2024"]);
+    expect(
+      tanpaPenutup(menus.find((m) => m.key === "tahun")?.items ?? []).map(
+        (i) => i.label,
+      ),
+    ).toEqual(["2026", "2024"]);
   });
 
   it("strip kuning juga menaruh tahun terbaru lebih dulu", () => {
@@ -234,7 +249,7 @@ describe("5. Genre khusus film, sisanya di Lainnya", () => {
   const lainnya = menus.find((m) => m.key === "lainnya");
 
   it("menu Genre HANYA berisi genre film", () => {
-    const liar = (genre?.items ?? []).filter(
+    const liar = tanpaPenutup(genre?.items ?? []).filter(
       (i) => !/cat=(Action|Horror)\b/.test(i.href),
     );
     expect(
@@ -274,8 +289,10 @@ describe("5. Genre khusus film, sisanya di Lainnya", () => {
   });
 
   it("nol kategori KEMBAR di dua menu", () => {
-    const a = new Set(genre?.items.map((i) => i.href) ?? []);
-    const kembar = (lainnya?.items ?? []).filter((i) => a.has(i.href));
+    const a = new Set(tanpaPenutup(genre?.items ?? []).map((i) => i.href));
+    const kembar = tanpaPenutup(lainnya?.items ?? []).filter((i) =>
+      a.has(i.href),
+    );
     expect(kembar.map((i) => i.label)).toEqual([]);
   });
 
@@ -488,8 +505,8 @@ describe("7. Nol baris menu yang 'diklik tapi halamannya sama'", () => {
     const menus = buildNavMenus(banyakNegara as never, []);
     const negara = menus.find((m) => m.key === "negara");
     expect(BATAS_MENU_NEGARA).toBeGreaterThanOrEqual(24);
-    expect(negara?.items.length).toBe(BATAS_MENU_NEGARA);
-    expect(negara?.items.length).toBeGreaterThan(12);
+    expect(tanpaPenutup(negara?.items ?? []).length).toBe(BATAS_MENU_NEGARA);
+    expect(tanpaPenutup(negara?.items ?? []).length).toBeGreaterThan(12);
   });
 
   it("penyaring Serial benar-benar mengosongkan daftar film", () => {
@@ -543,5 +560,83 @@ describe("8. Tiap negara di menu punya nama Indonesia", () => {
     const negara = menus.find((m) => m.key === "negara");
     expect(negara?.items.map((i) => i.href)).toContain("/discover?negara=China");
     expect(negara?.items.map((i) => i.label)).toContain("Cina");
+  });
+});
+
+// ===========================================================================
+// 9. BARIS PENUTUP "LAINNYA" — owner 2026-11-14: "genre di bawah tulisan
+// perang kamu tambahkan lainnya ... tambahkan juga tulisan lainnya".
+// ===========================================================================
+describe("9. Tiap dropdown punya jalan keluar 'Lainnya'", () => {
+  const menus = buildNavMenus(
+    [
+      drama({ id: "a", category: "Action", year: "2026", country: "Japan" }),
+      drama({ id: "b", category: "Tycoon", year: "2025", country: "China" }),
+    ] as never,
+    [video({ kategori: "Horror" })],
+  );
+
+  for (const m of menus.filter((x) => x.key !== "lainnya")) {
+    it(`menu "${m.label}" diakhiri baris Lainnya`, () => {
+      const akhir = m.items[m.items.length - 1];
+      expect(akhir.label).toBe("Lainnya");
+      expect(akhir.href).toBe("/discover");
+    });
+  }
+
+  it("menu Lainnya TIDAK dapat baris kembar", () => {
+    // Namanya sudah "Lainnya" dan ia sudah punya "Semua Judul" ber-alamat
+    // sama — dua baris identik dalam satu dropdown.
+    const lainnya = menus.find((m) => m.key === "lainnya");
+    const kePolos = (lainnya?.items ?? []).filter((i) => i.href === "/discover");
+    expect(kePolos.length).toBeLessThanOrEqual(1);
+  });
+
+  it("baris penutup TIDAK menolong menu yang isinya kurang", () => {
+    // Ia ditambahkan SESUDAH ambang MIN_ITEM_MENU dinilai. Kalau dihitung
+    // sebagai isi, menu berisi satu pilihan akan lolos — dan itu cuma
+    // menambah satu klik untuk sampai ke tempat yang sama.
+    // Katalog dengan SATU genre saja -> menu Genre cuma punya 1 pilihan.
+    const sedikit = buildNavMenus([drama({ category: "Action" })], []);
+    expect(sedikit.find((m) => m.key === "genre")).toBeUndefined();
+  });
+});
+
+// ===========================================================================
+// 10. HASIL /discover DISATUKAN — owner 2026-11-14: "hasil yang di munculkan
+// jangan dipisah antara drama dan film, kamu jadikan satu".
+// ===========================================================================
+describe("10. Drama & film tergambar di SATU daftar", () => {
+  const sumber = tanpaKomentar(
+    readFileSync("app/components/DramaBrowser.tsx", "utf-8"),
+  );
+
+  it("tidak ada lagi bagian film terpisah di bawah grid", () => {
+    // 🪤 Inilah sebab keluhan "setiap diklik halamannya sama": grid atas
+    // sering cuma 0-1 judul (katalog drama 41), sementara ratusan film yang
+    // benar-benar cocok duduk di bagian bawah yang mudah dikira bagian lain
+    // halaman.
+    expect(sumber).not.toMatch(/<HasilPlayly\b/);
+  });
+
+  it("kedua jenis kartu digambar di grid yang SAMA", () => {
+    // Keduanya berbentuk poster 2:3, jadi satu grid memang cocok.
+    expect(sumber).toContain("<CatalogCard");
+    expect(sumber).toContain("<KartuVideo");
+    expect((sumber.match(/className=\{GRID_CLASS\}/g) ?? []).length).toBe(1);
+  });
+
+  it("hitungannya SATU angka, bukan 'N drama · M film'", () => {
+    // Dua angka di atas dua daftar membuat penonton mengira hasilnya habis
+    // di angka pertama.
+    expect(sumber).toContain("{hasil.length} judul");
+    expect(sumber).not.toMatch(/\{filtered\.length\} drama/);
+  });
+
+  it("keadaan kosong dinilai dari daftar GABUNGAN", () => {
+    // Dulu "Tidak ada drama yang cocok" bisa muncul padahal ada 123 film
+    // cocok di bawahnya — pesan yang menyuruh penonton menyerah.
+    expect(sumber).toContain("hasil.length === 0");
+    expect(sumber).not.toContain("filtered.length === 0");
   });
 });

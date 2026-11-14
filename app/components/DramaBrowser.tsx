@@ -19,7 +19,8 @@ import type { PlaylyVideoPublik } from "@/lib/playly-publik";
 import CatalogCard from "./beranda/CatalogCard";
 import StripKatalog from "./beranda/StripKatalog";
 import { chromeKatalog } from "./beranda/KepalaKatalog";
-import HasilPlayly, { cariVideoPlayly } from "./beranda/HasilPlayly";
+import { cariVideoPlayly } from "./beranda/HasilPlayly";
+import KartuVideo from "./beranda/KartuVideo";
 import { saringFilm } from "@/lib/film-jelajah";
 import SearchBar, { KELAS_MENEMPEL_KEPALA } from "./beranda/SearchBar";
 import { BADAN_TERANG, GRID_CLASS, SHELL } from "./beranda/shell";
@@ -188,6 +189,32 @@ export default function DramaBrowser({
     [playlyVideos, filter],
   );
 
+  /**
+   * SATU daftar hasil: drama + film, digambar di grid yang sama.
+   *
+   * KENAPA (owner 2026-11-14): halaman ini dulu memisahkannya jadi grid drama
+   * di atas dan bagian "Film & Video Lainnya" di bawah. Akibatnya mengklik
+   * genre apa pun terasa "halamannya sama" — grid atas sering cuma berisi
+   * 0-1 judul (katalog drama 41 judul), sementara ratusan film yang benar-
+   * benar cocok duduk di bagian bawah yang mudah dikira bagian lain halaman.
+   *
+   * Keduanya memang bisa disatukan: `KartuVideo` sudah berbentuk poster 2:3,
+   * persis `CatalogCard`. Yang hilang cuma pemutar sisipan milik
+   * `PlaylyVideoGrid` — kartu video di sini membuka halaman tontonnya, sama
+   * seperti kartu video di /beranda.
+   *
+   * Drama lebih dulu, lalu film: keduanya sudah terurut sendiri oleh
+   * penyaringnya masing-masing, dan mengaduk ulang urutan itu akan membuang
+   * arti pilihan "Terpopuler"/"Tahun Terbaru" yang baru saja dipilih penonton.
+   */
+  const hasil = useMemo(
+    () => [
+      ...filtered.map((d) => ({ jenis: "drama" as const, id: d.id, drama: d })),
+      ...videoPlayly.map((v) => ({ jenis: "video" as const, id: v.id, video: v })),
+    ],
+    [filtered, videoPlayly],
+  );
+
   // Ketikan pencarian DIPERTAHANKAN — alasannya sama dengan `adaFilterAktif`.
   const resetFilters = () => terapkan({ ...FILTER_KOSONG, q: filter.q });
 
@@ -274,8 +301,12 @@ export default function DramaBrowser({
                 berbunyi palsu cepat dimatikan orang. */}
             <span className="font-bold text-white terang:text-zinc-900">Jelajah Drama &amp; Film</span>{" "}
             &mdash;{" "}
-            {filtered.length} drama
-            {videoPlayly.length > 0 ? ` · ${videoPlayly.length} film` : ""}
+            {/* SATU angka sejak 2026-11-14 (owner: "jangan dipisah antara
+                drama dan film, kamu jadikan satu"). Sebelumnya berbunyi
+                "1 drama · 123 film" di atas DUA daftar terpisah, dan hasil
+                yang cocok paling banyak justru ada di daftar bawah yang
+                mudah dikira bagian lain halaman. */}
+            {hasil.length} judul
             {keteranganFilter(filter)}
             {filter.q ? ` untuk "${filter.q}"` : ""}
           </h1>
@@ -293,25 +324,12 @@ export default function DramaBrowser({
           )}
         </div>
 
-        {filtered.length === 0 ? (
-          /* Ruang kosongnya MENGECIL kalau ada film yang cocok di bawah
-             (owner 2026-10-31). Blok setinggi `py-16` berisi ikon besar
-             membuat penonton mengira halamannya habis sampai di situ, lalu
-             berhenti menggulir — padahal hasilnya ada persis di bawahnya. */
-          <div
-            className={cn(
-              "flex flex-col items-center gap-3 text-center",
-              videoPlayly.length > 0 ? "py-6" : "py-16",
-            )}
-          >
-            {videoPlayly.length === 0 && <Search className="size-8 text-zinc-700 terang:text-zinc-400" />}
-            <p className="text-sm text-zinc-500 terang:text-zinc-600">Tidak ada drama yang cocok.</p>
-            {videoPlayly.length > 0 && (
-              <p className="text-sm font-medium text-amber-400 terang:text-amber-700">
-                Tapi ada {videoPlayly.length} film yang cocok &mdash; ada di
-                bawah halaman ini.
-              </p>
-            )}
+        {hasil.length === 0 ? (
+          <div className="flex flex-col items-center gap-3 py-16 text-center">
+            <Search className="size-8 text-zinc-700 terang:text-zinc-400" />
+            <p className="text-sm text-zinc-500 terang:text-zinc-600">
+              Tidak ada judul yang cocok.
+            </p>
             {adaFilterAktif && (
               <Button
                 type="button"
@@ -326,13 +344,15 @@ export default function DramaBrowser({
           </div>
         ) : (
           <div className={GRID_CLASS}>
-            {filtered.map((drama) => (
-              <CatalogCard key={drama.id} drama={drama} />
-            ))}
+            {hasil.map((item) =>
+              item.jenis === "drama" ? (
+                <CatalogCard key={`d-${item.id}`} drama={item.drama} />
+              ) : (
+                <KartuVideo key={`v-${item.id}`} video={item.video} />
+              ),
+            )}
           </div>
         )}
-
-        <HasilPlayly videos={videoPlayly} ketikan={filter.q} />
       </div>
       </div>
     </>

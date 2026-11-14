@@ -73,6 +73,63 @@ export type PlaylyImdbMeta = {
 export type PlaylyImdbMap = Record<string, PlaylyImdbMeta>;
 
 /**
+ * Field yang BENAR-BENAR dibaca layar admin di browser — daftar-putih
+ * pemangkasan payload.
+ *
+ * KENAPA ADA (owner 2026-11-14: "panel admin loading lama"). Diukur dulu,
+ * bukan ditebak: dokumen `playly:imdb` berisi 493 video / **479 KB**, dan
+ * halaman admin Video Playly mengirimnya UTUH ke browser tiap kali dibuka.
+ * Field terbesarnya `synopsis` (188 KB) — dan tak satu pun layar admin
+ * membacanya. Sinopsis tetap tersimpan & tetap dipakai halaman PENONTON;
+ * yang berubah hanya apa yang diseberangkan ke browser admin.
+ *
+ * ⚠️ Ini daftar-putih, jadi menambah pemakaian baru di browser WAJIB menambah
+ * nama field di sini juga. Lupa = nilainya `undefined` diam-diam (nol error,
+ * cuma kolomnya kosong) — karena itu `tests/imdb-ringkas.test.ts` membaca
+ * SENDIRI kelima komponen pemakainya dan merah kalau ada field di luar daftar
+ * ini yang dibaca dari peta imdb.
+ *
+ * Asal tiap nama (diaudit satu per satu 2026-11-14, bukan disalin dari tipe):
+ *   title  -> PlaylyImdbPicker (label chip "Judul (Tahun)")
+ *   year   -> PlaylyImdbPicker · PlaylyVisibilityManager · PlaylyIsiCepat
+ *   rating -> PlaylyVisibilityManager · PlaylyIsiCepat
+ *   genre  -> KategoriIsiOtomatis, lewat susunUsulKategori()
+ * PlaylyCocokkanSemua memakai petanya HANYA untuk cek "sudah ada entri atau
+ * belum", jadi ia tidak menambah field apa pun.
+ */
+export const FIELD_IMDB_ADMIN = ["title", "year", "rating", "genre"] as const;
+
+/** Satu entri IMDb sebagaimana dilihat browser admin — 4 field, bukan 17. */
+export type PlaylyImdbRingkas = Pick<
+  PlaylyImdbMeta,
+  (typeof FIELD_IMDB_ADMIN)[number]
+>;
+
+/** Peta videoId -> entri ringkas. Keanggotaannya sama dengan peta penuh. */
+export type PlaylyImdbMapRingkas = Record<string, PlaylyImdbRingkas>;
+
+/**
+ * Pangkas peta IMDb ke field yang dipakai browser admin.
+ *
+ * Keanggotaan peta DIPERTAHANKAN persis (video yang punya entri tetap punya
+ * entri, walau keempat nilainya kosong) — `videoBelumDicocokkan` dan panel
+ * "Cocokkan semua" menilai dari ADA/TIDAKNYA entri, jadi membuang entri
+ * "kosong" akan membuat video yang sudah dicocokkan ikut dicocokkan ulang.
+ */
+export function ringkasImdbUntukAdmin(peta: PlaylyImdbMap): PlaylyImdbMapRingkas {
+  const hasil: PlaylyImdbMapRingkas = {};
+  for (const [videoId, meta] of Object.entries(peta)) {
+    hasil[videoId] = {
+      title: meta.title,
+      year: meta.year,
+      rating: meta.rating,
+      genre: meta.genre,
+    };
+  }
+  return hasil;
+}
+
+/**
  * Video mana yang boleh ikut pencocokan MASSAL: yang belum punya data saja.
  *
  * PAGAR TERPENTING di fitur pencocokan massal, dan sebabnya bukan teori —
@@ -87,7 +144,10 @@ export type PlaylyImdbMap = Record<string, PlaylyImdbMeta>;
  */
 export function videoBelumDicocokkan<T extends { id: string }>(
   videos: T[],
-  imdb: PlaylyImdbMap,
+  // Menilai ADA/TIDAKNYA entri saja, jadi bentuk entrinya tidak relevan —
+  // ditulis longgar supaya peta PENUH (server) maupun peta RINGKAS (browser,
+  // lihat `ringkasImdbUntukAdmin`) sama-sama diterima tanpa konversi.
+  imdb: Record<string, unknown>,
 ): T[] {
   return videos.filter((v) => !imdb[v.id]);
 }

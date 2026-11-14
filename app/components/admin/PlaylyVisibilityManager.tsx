@@ -29,7 +29,7 @@ import {
   JUDUL_BAGIAN_PLAYLY,
 } from "@/lib/bagian-playly";
 import type { PlaylyVideo, PlaylySumber } from "@/lib/playly";
-import type { PlaylyImdbMap } from "@/lib/playly-imdb";
+import type { PlaylyImdbMapRingkas } from "@/lib/playly-imdb";
 import { DRAMA_QUALITY_OPTIONS } from "@/lib/types";
 import PilihKategori from "./PilihKategori";
 import { cn } from "@/lib/utils";
@@ -230,7 +230,7 @@ export default function PlaylyVisibilityManager({
    * Bawaannya peta kosong dengan alasan yang sama seperti `initialGenres`:
    * fitur ini baru ada 2026-10-08, jadi pemanggil lama tetap berlaku apa adanya.
    */
-  initialImdb?: PlaylyImdbMap;
+  initialImdb?: PlaylyImdbMapRingkas;
   /**
    * Kualitas yang sudah DIKOREKSI admin (videoId -> "HD"/"CAM"/...).
    *
@@ -343,7 +343,7 @@ export default function PlaylyVisibilityManager({
   }, [pakaiProp, kunciVideo]);
 
   const [genres, setGenres] = useState<Record<string, string>>(initialGenres);
-  const [imdb, setImdb] = useState<PlaylyImdbMap>(initialImdb);
+  const [imdb, setImdb] = useState<PlaylyImdbMapRingkas>(initialImdb);
   const [sedangProses, setSedangProses] = useState<string | null>(null);
   const [sedangGenre, setSedangGenre] = useState<string | null>(null);
   const [kualitas, setKualitas] = useState<Record<string, string>>(initialKualitas);

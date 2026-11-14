@@ -8,7 +8,11 @@ import {
   isValidImdbId,
   ImdbLookupError,
 } from "@/lib/imdb-tool";
-import { posterAman, type PlaylyImdbMeta } from "@/lib/playly-imdb";
+import {
+  posterAman,
+  ringkasImdbUntukAdmin,
+  type PlaylyImdbMeta,
+} from "@/lib/playly-imdb";
 import { segarkanCachePublik } from "@/lib/cache-publik";
 
 export const runtime = "nodejs";
@@ -26,10 +30,19 @@ export const dynamic = "force-dynamic";
  * `tt…` sendiri. OMDb tetap terjangkau, dan ia bisa mencari lewat judul.
  *
  * KONTRAK
- *   GET                         -> { ok, imdb: Record<videoId, PlaylyImdbMeta> }
+ *   GET                         -> { ok, imdb: PlaylyImdbMapRingkas }
  *   GET ?cari=<judul>&tahun=    -> { ok, kandidat: KandidatOmdb[] }   (boleh kosong)
  *   POST { videoId, imdbId }    -> { ok, imdb }   (ambil dari OMDb lalu simpan)
  *   DELETE { videoId }          -> { ok, imdb }   (lepas kecocokan)
+ *
+ *   ⚠️ Ketiga balasan `imdb` sengaja RINGKAS (4 field), bukan dokumen penuh
+ *   (17 field / 479 KB) — owner 2026-11-14. Yang TERSIMPAN tetap lengkap dan
+ *   halaman penonton tetap memakai yang lengkap; yang dipangkas hanya apa yang
+ *   diseberangkan ke browser admin (rak backend §2 butir 4: jangan kirim kolom
+ *   yang tak dipakai). Paling terasa di panel "Cocokkan semua": ia memanggil
+ *   endpoint ini SEKALI PER VIDEO, jadi dulu peta 479 KB itu dikirim ulang
+ *   ratusan kali dalam satu kali klik. Daftar-putih fieldnya + alasan tiap
+ *   nama: `FIELD_IMDB_ADMIN` di lib/playly-imdb.ts.
  *
  *   401 belum login · 400 body/permintaan tak terbaca · 422 isi tak lolos
  *   validasi · 404 ID tak ada di OMDb · 429 terlalu sering · 502/503 OMDb
@@ -66,7 +79,10 @@ export async function GET(req: NextRequest) {
   // Tanpa ?cari= -> kembalikan peta tersimpan (dipakai layar admin saat dimuat).
   if (!cari) {
     try {
-      return NextResponse.json({ ok: true, imdb: await getPlaylyImdb() });
+      return NextResponse.json({
+        ok: true,
+        imdb: ringkasImdbUntukAdmin(await getPlaylyImdb()),
+      });
     } catch (err) {
       return balasError(err, "Gagal membaca data IMDb tersimpan.");
     }
@@ -142,7 +158,7 @@ export async function POST(req: NextRequest) {
     const draft = await fetchImdbDraft(imdbId);
     const imdb = await setPlaylyVideoImdb(videoId, keMeta(draft, sumber));
     segarkanCachePublik();
-    return NextResponse.json({ ok: true, imdb });
+    return NextResponse.json({ ok: true, imdb: ringkasImdbUntukAdmin(imdb) });
   } catch (err) {
     return balasError(err, "Gagal mengambil data dari OMDb.");
   }
@@ -178,7 +194,7 @@ export async function DELETE(req: NextRequest) {
   try {
     const imdb = await setPlaylyVideoImdb(videoId, null);
     segarkanCachePublik();
-    return NextResponse.json({ ok: true, imdb });
+    return NextResponse.json({ ok: true, imdb: ringkasImdbUntukAdmin(imdb) });
   } catch (err) {
     return balasError(err, "Gagal melepas data IMDb.");
   }

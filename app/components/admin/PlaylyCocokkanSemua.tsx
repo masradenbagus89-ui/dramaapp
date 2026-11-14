@@ -29,7 +29,7 @@ import BantuanSingkat from "./BantuanSingkat";
 import {
   bersihkanJudulRilis,
   videoBelumDicocokkan,
-  type PlaylyImdbMap,
+  type PlaylyImdbMapRingkas,
 } from "@/lib/playly-imdb";
 import type { PlaylyVideo } from "@/lib/playly";
 
@@ -59,8 +59,8 @@ export default function PlaylyCocokkanSemua({
   onPerbarui,
 }: {
   videos: PlaylyVideo[];
-  imdb: PlaylyImdbMap;
-  onPerbarui: (imdb: PlaylyImdbMap) => void;
+  imdb: PlaylyImdbMapRingkas;
+  onPerbarui: (imdb: PlaylyImdbMapRingkas) => void;
 }) {
   const [fase, setFase] = useState<Fase>("siap");
   const [kemajuan, setKemajuan] = useState({ selesai: 0, total: 0 });
@@ -125,7 +125,7 @@ export default function PlaylyCocokkanSemua({
     setPesan(null);
     setKemajuan({ selesai: 0, total: dipilih.length });
 
-    let petaTerbaru: PlaylyImdbMap = imdb;
+    let petaTerbaru: PlaylyImdbMapRingkas = imdb;
     let gagal = 0;
     for (let i = 0; i < dipilih.length; i++) {
       if (berhenti.current) break;
@@ -137,7 +137,7 @@ export default function PlaylyCocokkanSemua({
           // `otomatis: true` -> baris ditandai sumber "otomatis" di server.
           body: JSON.stringify({ videoId: b.videoId, imdbId: b.kandidat!.imdbId, otomatis: true }),
         });
-        const data = (await res.json()) as { imdb?: PlaylyImdbMap; error?: string };
+        const data = (await res.json()) as { imdb?: PlaylyImdbMapRingkas; error?: string };
         if (res.ok && data.imdb) {
           petaTerbaru = data.imdb;
           onPerbarui(data.imdb);

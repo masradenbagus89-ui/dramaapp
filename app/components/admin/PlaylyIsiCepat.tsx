@@ -29,7 +29,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { AlertTriangle, Check, Loader2, Save, X } from "lucide-react";
 import type { PlaylyVideo } from "@/lib/playly";
-import type { PlaylyImdbMap } from "@/lib/playly-imdb";
+import type { PlaylyImdbMapRingkas } from "@/lib/playly-imdb";
 import { DRAMA_QUALITY_OPTIONS } from "@/lib/types";
 import PilihKategori from "./PilihKategori";
 import { cn } from "@/lib/utils";
@@ -116,7 +116,7 @@ export default function PlaylyIsiCepat({
 }: {
   videos: PlaylyVideo[];
   /** Data IMDb — dibaca saja, untuk tahu nilai mana yang sudah terisi otomatis. */
-  imdb?: PlaylyImdbMap;
+  imdb?: PlaylyImdbMapRingkas;
   /** Kelima peta isian yang sudah tersimpan, dirakit halaman di server. */
   awal: PetaIsian;
   /** Link unduhan — dibaca saja, supaya kolom Kualitas bisa menyebut hasil

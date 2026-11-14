@@ -863,6 +863,7 @@ const PLAYLY_KEY_DOC = "playly:key";
 const PLAYLY_EMBEDS_DOC = "playly:embeds";
 const PLAYLY_HIDDEN_DOC = "playly:hidden";
 const PLAYLY_WEBHOOK_DOC = "playly:webhook";
+const PLAYLY_BERKAS_SIAP_DOC = "playly:berkas-siap";
 /** Dokumen link unduhan per video. Kuncinya dipusatkan di lib/playly-unduhan.ts. */
 const PLAYLY_LINK_UNDUHAN_DOC = KUNCI_LINK_UNDUHAN;
 
@@ -1013,6 +1014,37 @@ export async function removePlaylyEmbed(videoId: string): Promise<boolean> {
 // dan itu persis kegagalan senyap yang membuat fitur ini macet sebelumnya.
 
 /** videoId yang disembunyikan admin. Kosong = semua video mitra tampil. */
+/**
+ * Satu baris ingatan "berkas video sudah ada di Playly atau belum".
+ * `kedaluwarsa` = waktu epoch-ms saat baris ini berhenti dianggap segar.
+ */
+export type BarisBerkasSiap = { belumSiap: boolean; kedaluwarsa: number };
+export type IngatanBerkasSiap = Record<string, BarisBerkasSiap>;
+
+/**
+ * Ingatan "berkas siap" yang BERTAHAN melewati restart (owner 2026-11-14).
+ *
+ * KENAPA ADA: ingatannya hidup di memori proses (lib/playly-berkas-siap.ts),
+ * dan tiap deploy menghapusnya — jadi buka PERTAMA sesudah rilis membayar
+ * lagi lantai ≥47 detik untuk memeriksa ratusan video satu per satu. Dokumen
+ * ini salinan cadangannya; memorinya tetap jadi jalur cepat.
+ *
+ * Ini CACHE, bukan data: hilang = pelan, bukan salah. Karena itu mode berkas
+ * (tanpa Supabase) sengaja memulangkan peta kosong alih-alih menulis berkas —
+ * menambah berkas lokal untuk sesuatu yang boleh hilang itu beban tanpa guna.
+ */
+export async function getIngatanBerkasSiap(): Promise<IngatanBerkasSiap> {
+  if (!useSupabase) return {};
+  return (await sbDocGet<IngatanBerkasSiap>(PLAYLY_BERKAS_SIAP_DOC)) ?? {};
+}
+
+export async function setIngatanBerkasSiap(
+  peta: IngatanBerkasSiap,
+): Promise<void> {
+  if (!useSupabase) return;
+  await sbDocSet(PLAYLY_BERKAS_SIAP_DOC, peta);
+}
+
 export async function getPlaylyHiddenIds(): Promise<string[]> {
   if (useSupabase) return (await sbDocGet<string[]>(PLAYLY_HIDDEN_DOC)) ?? [];
   return readLocal<PlaylyFile>("playly.json", EMPTY_PLAYLY).hidden ?? [];

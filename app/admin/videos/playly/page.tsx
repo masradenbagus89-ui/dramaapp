@@ -26,6 +26,7 @@ import {
   getPlaylyMetaManual,
 } from "@/lib/store";
 import { bacaDomainUnduhan } from "@/lib/playly-unduhan-domain";
+import { ringkasImdbUntukAdmin } from "@/lib/playly-imdb";
 import AdminAccessDenied from "@/app/components/admin/AdminAccessDenied";
 import AdminSidebar from "@/app/components/admin/AdminSidebar";
 import PlaylyVideoPicker from "@/app/components/admin/PlaylyVideoPicker";
@@ -123,6 +124,19 @@ export default async function PlaylyVideosPage() {
       : mitra.videos;
 
   // Dropdown hanya butuh 3 kolom; sisanya tidak perlu ikut ke browser.
+  /**
+   * Data IMDb yang DIKIRIM KE BROWSER — 4 field, bukan 17 (owner 2026-11-14:
+   * "panel admin loading lama").
+   *
+   * Diukur dulu, bukan ditebak: dokumen penuhnya 493 video / 479 KB, dan
+   * SELURUHNYA diseberangkan tiap halaman ini dibuka — padahal field
+   * terbesarnya (`synopsis`, 188 KB) tidak dibaca satu pun layar admin.
+   * Dipangkas SEKALI di sini lalu dipakai dua panel, supaya tidak ada yang
+   * diam-diam memakai versi penuhnya lagi. Daftar-putih + alasan tiap field:
+   * `FIELD_IMDB_ADMIN` di lib/playly-imdb.ts.
+   */
+  const imdbRingkas = ringkasImdbUntukAdmin(imdb);
+
   const pilihanDrama = dramas.map((d) => ({
     id: d.id,
     title: d.title,
@@ -189,7 +203,7 @@ export default async function PlaylyVideosPage() {
               videos={videoPanel}
               initialHidden={hidden}
               initialGenres={genres}
-              initialImdb={imdb}
+              initialImdb={imdbRingkas}
               initialKualitas={kualitas}
               initialJenis={jenis}
               initialRating={ratingManual}
@@ -218,7 +232,7 @@ export default async function PlaylyVideosPage() {
                di keadaan yang paling sering terjadi. */
             <PlaylyIsiCepat
               videos={videoPanel}
-              imdb={imdb}
+              imdb={imdbRingkas}
               awal={{
                 jenis,
                 kategori: genres,

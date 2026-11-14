@@ -29,7 +29,7 @@ import {
   type UsulKategori,
 } from "@/lib/kategori-otomatis";
 import type { PlaylyVideo } from "@/lib/playly";
-import type { PlaylyImdbMap } from "@/lib/playly-imdb";
+import type { PlaylyImdbMapRingkas } from "@/lib/playly-imdb";
 
 /**
  * Jeda antar penyimpanan, milidetik.
@@ -50,7 +50,7 @@ export default function KategoriIsiOtomatis({
   onTersimpan,
 }: {
   videos: PlaylyVideo[];
-  imdb: PlaylyImdbMap;
+  imdb: PlaylyImdbMapRingkas;
   /** videoId -> kategori yang sudah tersimpan. */
   kategoriSekarang: Record<string, string>;
   /** Dipanggil tiap satu kategori berhasil disimpan, supaya tabel induk segar. */

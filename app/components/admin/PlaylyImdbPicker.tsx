@@ -17,7 +17,11 @@
 // akan membuat satu berkas mengurus tiga alur yang tak berhubungan.
 import { useState } from "react";
 import { Check, Loader2, Search, X } from "lucide-react";
-import { bersihkanJudulRilis, type PlaylyImdbMap, type PlaylyImdbMeta } from "@/lib/playly-imdb";
+import {
+  bersihkanJudulRilis,
+  type PlaylyImdbMapRingkas,
+  type PlaylyImdbRingkas,
+} from "@/lib/playly-imdb";
 
 /** Satu kandidat dari OMDb, sebatas yang digambar di layar. */
 type Kandidat = {
@@ -40,9 +44,9 @@ export default function PlaylyImdbPicker({
   /** Judul mentah dari Playly — dipakai sebagai isi awal kotak pencarian. */
   judulVideo: string;
   /** Data yang sudah tersimpan untuk video ini, kalau ada. */
-  meta?: PlaylyImdbMeta;
+  meta?: PlaylyImdbRingkas;
   /** Dipanggil dengan peta TERBARU dari server sesudah simpan/lepas. */
-  onPerbarui: (imdb: PlaylyImdbMap) => void;
+  onPerbarui: (imdb: PlaylyImdbMapRingkas) => void;
 }) {
   const [terbuka, setTerbuka] = useState(false);
   const [kata, setKata] = useState("");
@@ -104,7 +108,7 @@ export default function PlaylyImdbPicker({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ videoId, imdbId }),
       });
-      const data = (await res.json()) as { imdb?: PlaylyImdbMap; error?: string };
+      const data = (await res.json()) as { imdb?: PlaylyImdbMapRingkas; error?: string };
       if (!res.ok) {
         setPesan({ jenis: "gagal", teks: data.error ?? "Gagal menyimpan." });
         return;
@@ -136,7 +140,7 @@ export default function PlaylyImdbPicker({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ videoId }),
       });
-      const data = (await res.json()) as { imdb?: PlaylyImdbMap; error?: string };
+      const data = (await res.json()) as { imdb?: PlaylyImdbMapRingkas; error?: string };
       if (!res.ok) {
         setPesan({ jenis: "gagal", teks: data.error ?? "Gagal melepas." });
         return;

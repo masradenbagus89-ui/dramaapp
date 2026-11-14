@@ -117,9 +117,14 @@ describe("buildNavMenus", () => {
     expect(kunci).not.toContain("tahun");
   });
 
-  it("membuang menu Jenis saat katalog cuma punya satu jenis", () => {
-    // Tidak ada film, jadi "Jenis" cuma akan berisi satu pilihan.
-    expect(kunciMenu(POLOS)).not.toContain("jenis");
+  it("menu Series HILANG saat katalog tak punya serial sama sekali", () => {
+    // ⚠️ Premisnya BERUBAH 2026-11-14. Dulu menu ini hilang kalau katalog cuma
+    // punya SATU jenis (semua serial atau semua film), karena isinya memang
+    // cuma "Serial" + "Film". Owner merombaknya jadi enam baris yang SEMUANYA
+    // tentang serial ("Daftar Film" & "Film Terbaru" dicoret), jadi yang
+    // menentukan sekarang cuma: ada serial atau tidak.
+    const semuaFilm = POLOS.map((d) => ({ ...d, kind: "movie" as const }));
+    expect(kunciMenu(semuaFilm)).not.toContain("jenis");
   });
 
   it("memecah negara gabungan dari OMDb jadi pilihan terpisah", () => {
@@ -207,12 +212,23 @@ describe("buildNavMenus", () => {
     expect(label).not.toContain("Tahun Terbaru");
   });
 
-  it("mengarahkan semua tautan ke /discover", () => {
+  it("mengarahkan tautan ke halaman yang MEMBACA penyaringnya", () => {
     // /discover satu-satunya halaman yang membaca penyaring dari alamat URL.
-    // Kalau ada yang menunjuk /beranda, tautannya akan diabaikan diam-diam.
-    for (const menu of buildNavMenus(KAYA)) {
-      for (const item of menu.items) {
-        expect(item.href.startsWith("/discover")).toBe(true);
+    // Kalau ada yang menunjuk /beranda, tautannya diabaikan DIAM-DIAM.
+    //
+    // ⚠️ /katalog?tab= ikut sah sejak 2026-11-14: halaman itu membaca `?tab=`
+    // lewat `parseTab` (app/components/beranda/TabKatalog.tsx:64) dan memuat
+    // persis daftar yang diminta menu Series — Terbaru/Populer/Unggulan/
+    // Update. Memakai ulang halaman yang sudah ada jauh lebih aman daripada
+    // merakit aturannya kedua kali di /discover.
+    for (const m of buildNavMenus(KAYA)) {
+      for (const i of m.items) {
+        expect(
+          i.href === "/katalog" ||
+            i.href.startsWith("/katalog?tab=") ||
+            i.href.startsWith("/discover"),
+          `${m.label} > ${i.label} menunjuk ${i.href}`,
+        ).toBe(true);
       }
     }
   });

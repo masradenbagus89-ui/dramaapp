@@ -124,7 +124,7 @@ describe("1. Menu Genre ikut menghitung katalog VIDEO", () => {
   });
 });
 
-describe("2. Menu Series lebih dari dua baris", () => {
+describe("2. Menu Series = enam baris yang ditentukan owner", () => {
   const menus = buildNavMenus(
     [
       drama({ id: "a", kind: "series", status: "Ongoing", year: "2026" }),
@@ -133,29 +133,55 @@ describe("2. Menu Series lebih dari dua baris", () => {
     ] as Drama[],
     [],
   );
+  const href = () =>
+    menus.find((m) => m.key === "jenis")?.items.map((i) => i.href) ?? [];
+  const label = () =>
+    menus.find((m) => m.key === "jenis")?.items.map((i) => i.label) ?? [];
 
-  it("memuat daftar serial, serial terbaru, dan kedua statusnya", () => {
-    const href = hrefMenu(menus, "jenis");
-    expect(href).toContain("/discover?kind=series");
-    expect(href).toContain("/discover?kind=series&sort=year");
-    expect(href).toContain("/discover?kind=series&status=ongoing");
-    expect(href).toContain("/discover?kind=series&status=completed");
+  it("keenam barisnya persis yang diminta owner", () => {
+    // Owner 2026-11-14 menyebutnya satu per satu. Dikunci di sini karena
+    // daftar menu ini sudah empat kali berubah dalam satu hari.
+    expect(label().slice(0, 6)).toEqual([
+      "Semua Series",
+      "Terbaru",
+      "Populer",
+      "Unggulan",
+      "Update",
+      "Tamat",
+    ]);
   });
 
-  it("film tidak hilang dari menu itu", () => {
-    expect(hrefMenu(menus, "jenis")).toContain("/discover?kind=movie");
+  it("tiap baris menunjuk daftar yang BERBEDA", () => {
+    // Inti permintaan owner: "pastikan setiap kita klik harus muncul daftar
+    // film yang kita klik". Alamat kembar = dua tombol, satu hasil.
+    const alamat = href().filter((h) => h !== "/discover");
+    expect(new Set(alamat).size).toBe(alamat.length);
   });
 
-  it("baris yang katalognya KOSONG tidak digambar", () => {
-    // Aturan paling tua berkas ini: menu tak boleh menjanjikan yang tak ada.
-    // Katalog tanpa serial sama sekali -> nol baris serial.
-    const tanpaSerial = buildNavMenus(
-      [drama({ kind: "movie", status: "Completed" })] as Drama[],
+  it("memakai ulang halaman tab yang sudah ada, bukan aturan baru", () => {
+    expect(href()).toContain("/katalog?tab=terpopuler");
+    expect(href()).toContain("/katalog?tab=unggulan");
+    expect(href()).toContain("/katalog?tab=update");
+  });
+
+  it("'Daftar Film' & 'Film Terbaru' DICORET owner — tidak boleh kembali", () => {
+    expect(label()).not.toContain("Daftar Film");
+    expect(label()).not.toContain("Film Terbaru");
+    expect(href()).not.toContain("/discover?kind=movie");
+  });
+
+  it("'Tamat' hilang selama belum ada serial yang tamat", () => {
+    // Satu-satunya baris TANPA cadangan: daftar yang jatuh ke "semua serial"
+    // akan berbohong tentang isinya. Diukur 2026-11-14: nol dari 41 judul
+    // berstatus Completed, jadi hari ini barisnya memang tidak digambar.
+    const tanpaTamat = buildNavMenus(
+      [drama({ kind: "series", status: "Ongoing" })] as Drama[],
       [],
     );
-    expect(
-      hrefMenu(tanpaSerial, "jenis").filter((h) => h.includes("kind=series")),
-    ).toEqual([]);
+    const l =
+      tanpaTamat.find((m) => m.key === "jenis")?.items.map((i) => i.label) ?? [];
+    expect(l).not.toContain("Tamat");
+    expect(l).toContain("Semua Series");
   });
 });
 
@@ -475,6 +501,9 @@ describe("7. Nol baris menu yang 'diklik tapi halamannya sama'", () => {
     it(`menu "${m.label}" hanya memakai penyaring yang dikenal daftar film`, () => {
       const liar: string[] = [];
       for (const item of m.items) {
+        // /katalog?tab= punya halamannya sendiri yang memuat daftar itu utuh
+        // (lib/tab-katalog.ts), jadi ia tidak perlu dikenal `saringFilm`.
+        if (item.href.startsWith("/katalog")) continue;
         const p = new URLSearchParams(item.href.split("?")[1] ?? "");
         // `kind=series` membuat daftar film KOSONG, jadi apa pun yang
         // dipasangkan dengannya tetap mengubah halaman secara kasatmata.

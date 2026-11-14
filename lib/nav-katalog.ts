@@ -466,31 +466,37 @@ export function buildNavMenus(
     // membaca keduanya dari alamat yang sama, jadi gabungannya memang bekerja.
     // Syarat `> 0` dipertahankan supaya baris yang belum ada isinya hilang
     // sendiri, bukan jadi halaman hampa.
+    /**
+     * MENU SERIES — owner 2026-11-14 menentukan sendiri keenam barisnya:
+     * "Semua Series, Terbaru, Populer, Unggulan, Update, Tamat", dan mencoret
+     * "Daftar Film" + "Film Terbaru" (menu ini memang tentang SERIAL).
+     *
+     * 🪤 Empat baris menunjuk `/katalog?tab=…`, BUKAN `/discover`. Itu bukan
+     * ketidakkonsistenan: halaman itu sudah lama memuat persis daftar yang
+     * owner minta (lib/tab-katalog.ts `isiTab`), lengkap dengan cadangan yang
+     * membuatnya TIDAK PERNAH kosong — "Unggulan" jatuh ke serial berbayar
+     * lalu ke semua serial kalau belum ada yang ditandai admin, "Update"
+     * jatuh ke serial terbaru kalau belum ada yang berstatus Ongoing.
+     * Merakit ulang aturannya di sini = dua sumber kebenaran yang pasti
+     * menyimpang (§3.3).
+     *
+     * ⚠️ "Tamat" TIDAK punya cadangan, dan itu disengaja: daftar yang jatuh
+     * ke "semua serial" saat tak ada yang tamat akan BERBOHONG tentang yang
+     * ditampilkannya. Jadi barisnya digerbangi data sungguhan dan hilang
+     * sendiri selama belum ada serial berstatus Completed — diukur
+     * 2026-11-14: nol dari 41 judul. Kolomnya ADA di panel admin ("Status
+     * tayang"), jadi barisnya menyala sendiri begitu owner mengisinya.
+     */
     menu("jenis", "Series", [
-      serial > 0 ? { label: "Daftar Serial", href: tautan({ kind: "series" }) } : null,
-      serial > 0 && adaTahun
+      serial > 0 ? { label: "Semua Series", href: tautan({ kind: "series" }) } : null,
+      serial > 0 ? { label: "Terbaru", href: "/katalog" } : null,
+      serial > 0 ? { label: "Populer", href: "/katalog?tab=terpopuler" } : null,
+      serial > 0 ? { label: "Unggulan", href: "/katalog?tab=unggulan" } : null,
+      serial > 0 ? { label: "Update", href: "/katalog?tab=update" } : null,
+      tamat > 0
         ? {
-            label: "Serial Terbaru",
-            href: tautan({ kind: "series", sort: "year" }),
-          }
-        : null,
-      serial > 0 && tayang > 0
-        ? {
-            label: "Serial Masih Tayang",
-            href: tautan({ kind: "series", status: "ongoing" }),
-          }
-        : null,
-      serial > 0 && tamat > 0
-        ? {
-            label: "Serial Sudah Tamat",
+            label: "Tamat",
             href: tautan({ kind: "series", status: "completed" }),
-          }
-        : null,
-      film > 0 ? { label: "Daftar Film", href: tautan({ kind: "movie" }) } : null,
-      film > 0 && adaTahun
-        ? {
-            label: "Film Terbaru",
-            href: tautan({ kind: "movie", sort: "year" }),
           }
         : null,
     ]),

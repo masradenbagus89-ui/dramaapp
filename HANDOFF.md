@@ -90,11 +90,83 @@
 > aftermarket** dari pemilik sekarang, harganya **jauh di atas** Rp200.000 dan belum pernah dicek.
 > Nama lain yang masih bebas jauh lebih murah.
 
-**Terakhir diisi:** 2026-11-13 (malam) — ✅ **RILIS `53fbc5c → a9ae869` TAYANG, downtime NOL.** Empat pekerjaan pemutar sekaligus: (1) volume berdiri jadi **garis geser kapsul**, (2) tombol **Layar penuh** di baris durasi (ide branch rekan, dibangun ulang di atas `main` — branch aslinya TIDAK ditarik), (3) menu **Kualitas video** film jadi **Auto (1080p) / 1080p HD / 720p HD / 480p**, (4) **Auto** dipertahankan + ikon layar penuh diseragamkan jadi panah. Semua diukur ulang DI PRODUKSI, bukan di localhost. Smoke test 9/9 = 200 (satu cold start di `/tonton`, dicatat di seksi rilis). Rinciannya di seksi `## 2026-11-13 (malam)` di bawah.
+**Terakhir diisi:** 2026-11-14 — ✅ **RILIS `9b15d1d` → `00f06d2` TAYANG.** Tombol **garis-tiga** (hamburger) dihapus dari SELURUH aplikasi atas permintaan owner, dan tautan **"Masuk sebagai pengelola"** ikut hilang bersamanya karena ia hidup di dalam menu itu. Admin & Keluar tidak jadi yatim — keduanya sudah pindah ke menu avatar sejak 2026-09-26, diperiksa sebelum dihapus. Jalan masuk pengelola yang tersisa: ketik alamat `/login`, atau kaki situs di `/` dan `/drama/<id>`. Gerbang 5/5 (**2455 tes**), smoke test produksi 9/9 = 200. 🪤 **Folder kerja sedang dipakai BERSAMA sesi audit keamanan — 16 berkas miliknya SENGAJA belum di-commit; JANGAN `git add -A`.** Rinciannya di seksi `## 2026-11-14` di bawah.
 
 **Rincian kontrol volume (putaran KETIGA):** owner menolak bentuk tombol `+` / `−` dan mengirim contoh gambar, jadi pengatur volume kini **garis geser tegak berbentuk kapsul** (jalur kuning + bulatan penggeser). Diukur di Chrome headless layar 393px: kapsul `x=345..381` **utuh di dalam layar**, geser jari atas→100% / tengah→50% / bawah→bisu, nol elemen diputar. Gerbang lolos 5/5 (2383 tes hijau). ✅ **Sudah TAYANG** dalam rilis `53fbc5c → a9ae869` malam itu juga.
 
 **Sebelumnya hari ini:** ✅ **`2ad015b` + `8d8c1ba` TAYANG.** Tata letak pemutar beres dalam tiga putaran permintaan owner: tombol **Eps turun ke baris paling bawah**, tombol **volume pindah ke sebelah angka durasi**, rail ikon kanan **diperkecil & dirapatkan** (36px/20px/jarak 8px), dan garis volume tegak **diganti tombol + / −** karena terukur berdiri di **x=391 pada layar 393px = di luar layar HP**. Rinciannya di seksi `## 2026-11-13` di bawah.
+
+---
+
+## 2026-11-14 — ✅ RILIS `9b15d1d` → `00f06d2` TAYANG: tombol garis-tiga + tautan "Masuk sebagai pengelola" dihapus
+
+**Permintaan owner:** *"kamu sembunyikan menu masuk sebagai pengelola, dan hilangkan garis 3"* (dua tangkapan layar `/beranda`).
+
+**Status: TAYANG.** `HEAD` = `origin/main` = `dramaku/main` = **`00f06d2`**. Deploy Railway mendarat di percobaan ke-3 (±50 detik). Gerbang pra-rilis **LOLOS 5/5** — dan ini diukur pada tree yang BENAR-BENAR dipush, bukan tree campuran (lihat "Jebakan" di bawah): **172 berkas / 2455 tes**, `tsc` 0 error, nol berkas rahasia di antrean.
+
+### Satu tombol, tiga halaman
+
+`MenuAplikasi` di `app/components/beranda/KepalaKatalog.tsx` ternyata **satu-satunya** hamburger di seluruh aplikasi (dibuktikan `grep '<Menu '` → 1 hasil). Ia dipakai `/beranda`, `/discover`, dan `app/not-found.tsx`. Menghapusnya sekaligus menghapus tautan "Masuk sebagai pengelola" yang hidup DI DALAMNYA — dua permintaan owner beres dengan satu perubahan.
+
+### 🪤 Kenapa boleh dihapus — komentar di berkas itu melarangnya, dan komentarnya sudah BASI
+
+Komentar lama berbunyi: *"⚠️ Menu aplikasi TIDAK boleh sekadar dibuang. Di layar komputer inilah satu-satunya jalan menuju Playly, Admin, dan tombol Keluar."* Itu benar pada 2026-09-21 dan **sudah tidak benar** pada hari ini. Diperiksa satu per satu sebelum dihapus, bukan diasumsikan:
+
+| Isi menu | Rumah barunya |
+|---|---|
+| Admin · Keluar | `MenuAkun` (avatar kanan atas), sejak 2026-09-26 |
+| Beranda | logo `LogoDramaKu` di sebelahnya |
+| Playly | sudah dilepas dari daftarnya 2026-09-26 |
+| Masuk · Daftar | dijeda `AKUN_PENONTON_ENABLED` sejak 2026-10-29 |
+
+⭐ **Pelajaran:** komentar "jangan dihapus" di kode itu POTRET keadaan saat ditulis, bukan hukum abadi. Ia wajib dibaca, tapi tiap butirnya diperiksa ulang ke kenyataan hari ini — di sini 4 dari 4 alasannya sudah gugur.
+
+### ⚠️ YANG BENAR-BENAR HILANG — bukan kelalaian, ini yang diminta owner
+
+1. **Tautan ke `/login` di `/beranda`, `/discover`, `/film`, `/katalog`.** Diukur di produksi sesudah tayang: yang MASIH punya tautan "Masuk sebagai pengelola" tinggal **`/`** dan **`/drama/<id>`** (lewat kaki situs). Owner masuk panel dengan mengetik alamat `/login`, atau dari kaki halaman depan.
+   📐 Ini **tidak** menaikkan maupun menurunkan keamanan — `skills/auth/SKILL.md`: *"menyembunyikan tombol di layar BUKAN kontrol izin"*. Password, rate-limit 10 percobaan/menit, dan cookie sesi bertanda tangan di server tidak disentuh sama sekali.
+2. **Peringatan "Masuk ulang dengan password admin"** (`perluMasukUlang`) di kedua halaman katalog. Masih tergambar sebagai pita di `TopNav`, yang hidup di `/admin` · `/profile` · `/history` · `/my-list` · `/shorts`.
+
+### Tes: 8 harapan DIBALIK + 5 penjaga baru (2457 → 2455)
+
+Tes-tes yang DULU memaksa tombol itu ADA, kini memaksa kebalikannya — masing-masing dengan alasan tertulis supaya sesi berikutnya tidak "memperbaikinya" kembali:
+- `tests/kepala-situs.test.ts` — describe "menu garis-tiga" (6 tes) diganti describe "tombol garis-tiga sudah DILEPAS" (5 tes), plus tes 404 dibalik.
+- `tests/jeda-akun-penonton.test.ts` — penjaga *"ADA JALAN ke /login"* dulu menuntut DUA jalan; kini satu (kaki situs). Yang kedua dibalik jadi `not.toContain`.
+- `tests/strip-katalog.test.ts` — penanda `aria-label="Menu halaman"` dikeluarkan dari `TANDA_KEPALA`; membiarkannya membuat kerangka & kepala asli sama-sama merah padahal keduanya memang sudah cocok.
+
+🪤 **Dua jebakan yang hampir membuat penjaga baru jadi hiasan:**
+- Penjaga pertama saya tulis `not.toContain("Masuk sebagai pengelola")` pada `KepalaKatalog.tsx` — **selalu merah**, karena komentar di berkas itu MENJELASKAN penghapusan dan ikut tertangkap cocok-teks. Diganti `href="/login"`.
+- Penyusur `app/**/*.tsx` bisa "lulus" dengan memulangkan daftar KOSONG. Diberi jaring pengaman `expect(berkas.length).toBeGreaterThanOrEqual(50)`.
+
+**Uji-balik 2 titik, keduanya MERAH lalu hijau lagi:** hamburger + `href="/login"` dipasang balik → **4 tes merah**; logo dibuang dari `brand` → **4 tes merah**.
+
+### 🪤 JEBAKAN SESI INI — folder kerja dipakai BERSAMA sesi lain
+
+Saat sesi ini mulai, `git status` **bersih**. Di tengah jalan muncul **16 berkas yang bukan pekerjaan saya** (11 diubah + 5 baru) dari sesi **audit keamanan** yang jalan paralel di folder yang sama.
+
+Akibatnya gerbang yang pertama saya jalankan (**2465 tes**) memuat pekerjaan DUA sesi — ia tidak membuktikan apa pun tentang yang akan dipush. Yang dipakai sebagai bukti rilis adalah gerbang KEDUA (**2455 tes**), dijalankan sesudah pekerjaan audit dipinggirkan dengan `git stash`.
+
+⭐ **Cara aman meminggirkan pekerjaan orang lain** (dipakai & terbukti di sesi ini): salin dulu ke-16 berkas apa adanya ke folder scratchpad → `git stash push --include-untracked` → jalankan gerbang → `git stash pop` → **cocokkan byte per byte dengan cadangan**. Pencocokan itu bukan formalitas: `stash pop` memulangkan **14 dari 16** berkas dengan akhir baris berubah LF → CRLF (nol isi berubah). Dipulihkan dari cadangan sampai **16/16 byte-identik**.
+
+📌 **16 berkas audit itu SENGAJA tidak ikut di-commit.** Laporannya ada di `LAPORAN-AKHIR-AUDIT-KEAMANAN.txt` (akar repo, tidak dilacak git) dan catatannya sudah ditulis sesi itu ke salinan kerja `HANDOFF.md` — keduanya menunggu keputusan owner. ⚠️ **`origin` adalah repo PUBLIK**, jadi catatan itu tidak boleh ikut ter-commit sebelum perbaikannya tayang. **JANGAN `git add -A` di folder ini.**
+
+### ✅ Smoke test produksi — diukur sendiri sesudah tayang
+
+| Yang diperiksa | Hasil |
+|---|---|
+| 9 alamat (`/` `/beranda` `/discover` `/film` `/katalog` `/login` `/profile` `/api/dramas` `/api/saran`) | semua **200** |
+| `aria-label="Menu halaman"` di 5 halaman | **nol** — tombolnya benar-benar lenyap |
+| Logo `alt="DramaKu"` di 5 halaman | **ada semua** — tidak ikut terbuang |
+| "Masuk sebagai pengelola" | tinggal di `/` dan `/drama/<id>` |
+| `/api/dramas` · `/api/saran` | 41 judul · 511 judul |
+
+### Cara owner mencoba sendiri
+
+1. Buka `/beranda` → pojok kiri atas: **tidak ada lagi tombol tiga garis**, tinggal logo. Klik logonya → tetap ke Beranda.
+2. **Login admin:** buka alamat `/login` langsung (simpan sebagai bookmark), atau dari halaman depan `/` gulir ke kaki situs → tautan abu-abu **"Masuk sebagai pengelola"**.
+3. **Sesudah login:** avatar bulat muncul di kanan atas → klik → **Admin** dan **Keluar** ada di situ.
+
+❓ **Kalau mengetik alamat terasa merepotkan:** tautan "Masuk sebagai pengelola" bisa dikembalikan **khusus `/beranda`** tanpa menghidupkan tombol garis-tiganya. Satu baris. Belum dikerjakan — menunggu owner.
 
 ---
 

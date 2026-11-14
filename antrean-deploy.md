@@ -23,8 +23,26 @@
 > lengkap: `HANDOFF.md` seksi `## 2026-11-09`.
 
 
-**Terakhir dicek:** 2026-11-13 malam, sesi ke-2 (**komputer OWNER**). `HEAD` = `origin/main` = `dramaku/main` = **`19b0d32`**. Didorong ke dua remote sesudah owner menyatakan "sudah ok"; gerbang pra-rilis lolos kelimanya. Rincian di bawah.
+**Terakhir dicek:** 2026-11-14 (**komputer OWNER**). `HEAD` = `origin/main` = `dramaku/main` = **`00f06d2`**. Didorong ke dua remote sesudah owner menulis "rilis"; gerbang pra-rilis lolos kelimanya. 🪤 Folder kerja masih memuat **16 berkas sesi audit keamanan** yang SENGAJA belum di-commit — jangan `git add -A`. Rincian di bawah.
 
+
+### ✅ 2026-11-14 — RILIS `9b15d1d` → `00f06d2` (1 commit, dua remote)
+
+**Didorong 2026-11-14 sesudah owner menulis "rilis".** `dramaku` dulu (cermin, tidak merilis apa pun), baru `origin main` (TOMBOL RILIS). Diverifikasi: `HEAD` = `origin/main` = `dramaku/main` = **`00f06d2`**.
+
+**Isi — satu permintaan owner, satu perubahan:** tombol **garis-tiga** (hamburger) dihapus dari kepala situs `/beranda` · `/discover` · halaman 404. Tautan **"Masuk sebagai pengelola"** ikut hilang karena ia hidup di dalam menu itu. 7 berkas: 2 kode + 5 tes.
+
+**Gerbang pra-rilis: kelimanya lolos** — `.next` dihapus · `npm run build` OK · `npx tsc --noEmit` 0 error · **2455 tes hijau** (172 berkas) · nol berkas rahasia di antrean push.
+
+⚠️ **YANG BERUBAH BAGI PENGELOLA (owner sendiri), bukan bagi penonton:** `/beranda`, `/discover`, `/film`, `/katalog` tidak lagi punya tautan ke `/login`. Yang tersisa: ketik alamat `/login`, atau kaki situs di `/` dan `/drama/<id>`. Keamanan tidak berubah — menyembunyikan tautan bukan kontrol izin; password, rate-limit, dan cookie sesi di server sama persis.
+
+📌 **Tidak ada SQL maupun env baru.** Murni penghapusan komponen UI.
+
+🪤 **FOLDER KERJA DIPAKAI BERSAMA — 16 berkas BUKAN milik rilis ini masih menggantung.** Sesi **audit keamanan** berjalan paralel di folder yang sama dan meninggalkan 11 berkas diubah + 5 baru, **belum di-commit atas keputusan owner**. Gerbang rilis ini dijalankan SESUDAH pekerjaan itu dipinggirkan (`git stash`), jadi angka 2455 memang mengukur yang dipush — bukan tree campuran (yang berjumlah 2465). ⚠️ **`origin` repo PUBLIK**, jadi catatan audit tidak boleh ikut ter-commit sebelum perbaikannya tayang. **JANGAN `git add -A` di folder ini.**
+
+**Smoke test produksi:** deploy mendarat di percobaan ke-3 (±50 detik). 9 alamat → semua **200**; `aria-label="Menu halaman"` **nol** di 5 halaman; logo `alt="DramaKu"` **ada** di kelimanya; `/api/dramas` 41 judul; `/api/saran` 511 judul.
+
+---
 
 ### ⏳ 2026-11-13 (malam, sesi ke-2) — RILIS `a9ae869` → `19b0d32` (1 commit, dua remote)
 

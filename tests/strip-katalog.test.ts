@@ -230,13 +230,19 @@ describe("chip strip & menu yang SUNGGUHAN digambar halaman", () => {
     }
   });
 
-  it("bar cari memasang tombol menu halaman pengganti navbar", () => {
-    // Navbar hitam disembunyikan di halaman ini, jadi tombol inilah satu-satunya
-    // jalan ke Discover/Playly/Admin/Keluar di layar komputer.
+  it("bar cari TIDAK lagi memasang tombol garis-tiga, tapi tetap berlogo", () => {
+    // ⚠️ DIBALIK 2026-11-14. Tes ini dulu memaksa tombol menu ADA di sini
+    // ("satu-satunya jalan ke Discover/Playly/Admin/Keluar di layar
+    // komputer"). Alasan itu sudah tidak berlaku: Admin & Keluar pindah ke
+    // menu avatar (`MenuAkun`) sejak 2026-09-26, dan owner melepas tombolnya
+    // 2026-11-14. Merahnya tes lama bukan bug.
+    //
+    // Logonya TETAP dijaga — ia dulu menumpang di dalam tombol itu, jadi
+    // inilah titik paling mungkin ia ikut terbuang tanpa ada yang sadar.
     const html = renderToStaticMarkup(
       createElement(DramaBrowser, { dramas: KATALOG }),
     );
-    expect(html).toContain('aria-label="Menu halaman"');
+    expect(html).not.toContain('aria-label="Menu halaman"');
     expect(html).toContain('alt="DramaKu"');
   });
 
@@ -369,7 +375,10 @@ describe("kerangka kepala /discover", () => {
   const TANDA_KEPALA: Array<[string, string]> = [
     ["bar merah", "from-rose-700 via-rose-600 to-pink-600"],
     ["logo situs", 'alt="DramaKu"'],
-    ["tombol menu garis-tiga", 'aria-label="Menu halaman"'],
+    // "tombol menu garis-tiga" dikeluarkan dari daftar ini 2026-11-14 — owner
+    // melepas tombolnya, jadi penandanya tidak ada lagi di kepala MANA PUN.
+    // Membiarkannya di sini membuat kerangka & kepala asli sama-sama merah
+    // padahal keduanya memang sudah cocok.
     // Kotak cari TIDAK lagi duduk di bar sejak 2026-10-29 (owner: pencarian
     // jadi tombol di seluruh situs), jadi `placeholder` & `role="search"`
     // memang sudah tidak ada di HTML awal. Penggantinya TOMBOLNYA — itulah

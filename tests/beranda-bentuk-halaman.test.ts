@@ -13,7 +13,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { ROW_MIN_ITEMS } from "../lib/beranda-catalog";
 import type { Drama } from "../lib/types";
 
-// Sejak 2026-09-21 CatalogBrowser memasang KepalaKatalog (tombol garis-tiga +
+// Sejak 2026-09-21 CatalogBrowser memasang KepalaKatalog (logo +
 // tombol akun), yang memakai usePathname/useRouter — keduanya cuma hidup di
 // dalam runtime Next, jadi harus dipalsukan di sini.
 vi.mock("next/navigation", () => ({

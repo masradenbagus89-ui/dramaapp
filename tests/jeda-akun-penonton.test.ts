@@ -152,10 +152,19 @@ describe("TRIPWIRE saklar akun penonton", () => {
     // waktu itu.
     const { readFileSync } = await import("node:fs");
 
-    // Dua jalan, SENGAJA, karena masing-masing punya lubang sendiri:
-    //   • kaki situs — tidak digambar di /beranda (owner melepasnya 28 Okt);
-    //   • menu garis-tiga — hadir di /beranda, /discover, dan halaman film.
-    // Kalau salah satu hilang, yang lain masih menyelamatkan.
+    // ⚠️ DULU dijaga DUA jalan; tinggal SATU sejak 2026-11-14.
+    //
+    // Jalan kedua adalah menu garis-tiga di /beranda & /discover. Owner
+    // meminta tombol itu dihapus ("sembunyikan menu masuk sebagai pengelola,
+    // dan hilangkan garis 3"), jadi harapan lamanya DIBALIK — merahnya tes
+    // lama bukan bug yang perlu diperbaiki.
+    //
+    // Akibat yang melekat pada keputusan itu, ditulis di sini supaya tidak
+    // ditemukan lagi dengan cara yang mahal: /beranda TIDAK menggambar kaki
+    // situs (owner melepasnya 28 Okt), jadi di halaman itu TIDAK ADA tautan
+    // ke /login sama sekali — owner membukanya dengan mengetik alamat.
+    // Kaki situs tetap memuatnya di /discover & halaman film, dan itulah satu
+    // jalan yang tersisa; kalau ia ikut hilang, tes ini merah.
     const kaki = readFileSync(
       "app/components/beranda/FooterSitus.tsx",
       "utf-8",
@@ -167,28 +176,40 @@ describe("TRIPWIRE saklar akun penonton", () => {
 
     expect(
       kaki,
-      "kaki situs kehilangan jalan masuk pengelola",
+      "kaki situs kehilangan jalan masuk pengelola — sejak tombol " +
+        "garis-tiga dilepas, inilah SATU-SATUNYA tautan ke /login di " +
+        "seluruh situs",
     ).toContain('href="/login"');
+    // Dicocokkan dengan `href="/login"`, BUKAN dengan kalimat "Masuk sebagai
+    // pengelola": berkas itu menjelaskan penghapusan ini di komentarnya, dan
+    // cocok-teks ikut menangkap komentar (pelajaran tests/kepala-situs).
     expect(
       menu,
-      "menu garis-tiga kehilangan jalan masuk pengelola — di /beranda " +
-        "(tanpa kaki situs) owner tak punya jalan ke dashboard sama sekali",
-    ).toContain("Masuk sebagai pengelola");
+      "tautan /login muncul lagi di kepala katalog — owner " +
+        "menyembunyikannya 2026-11-14; memasangnya kembali harus keputusan " +
+        "owner yang sadar",
+    ).not.toContain('href="/login"');
   });
 
   it("jalan pengelola TIDAK ikut dijeda saklar penonton", async () => {
     // Justru saat `AKUN_PENONTON_ENABLED` MATI-lah tautan ini paling
     // dibutuhkan. Menggerbanginya dengan saklar yang sama = mengulang persis
     // kesalahan yang baru diperbaiki.
+    // Sumbernya PINDAH 2026-11-14: tautan ini dulu hidup di menu garis-tiga
+    // `KepalaKatalog.tsx`; tombol itu dihapus owner, jadi yang tersisa — dan
+    // yang wajib dijaga — tautan di kaki situs.
     const { readFileSync } = await import("node:fs");
-    const menu = readFileSync(
-      "app/components/beranda/KepalaKatalog.tsx",
+    const kaki = readFileSync(
+      "app/components/beranda/FooterSitus.tsx",
       "utf-8",
     );
-    const i = menu.indexOf("Masuk sebagai pengelola");
+    const i = kaki.indexOf("Masuk sebagai pengelola");
+    expect(i, "tautan pengelola tidak ditemukan di kaki situs").toBeGreaterThan(
+      -1,
+    );
     // Ambil blok cabang tempat tautan itu hidup; `AKUN_PENONTON_ENABLED`
     // tidak boleh menjadi syaratnya.
-    const blok = menu.slice(Math.max(0, i - 600), i);
+    const blok = kaki.slice(Math.max(0, i - 600), i);
     expect(
       blok.includes("AKUN_PENONTON_ENABLED ?"),
       "tautan pengelola berada di cabang yang digerbangi saklar penonton",

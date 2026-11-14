@@ -23,7 +23,7 @@ vi.mock("next/navigation", () => ({
 
 const { default: TopNav } = await import("../app/components/TopNav");
 const { LINKS } = await import("../app/components/TopNav");
-const { MenuAplikasi, TUJUAN, TAUTAN_AKUN } = await import(
+const { chromeKatalog } = await import(
   "../app/components/beranda/KepalaKatalog"
 );
 
@@ -113,50 +113,76 @@ describe("navbar hitam (TopNav)", () => {
   });
 });
 
-describe("menu garis-tiga (pengganti navbar di halaman berkatalog)", () => {
-  it("membawa SEMUA tujuan yang dulu ada di navbar", () => {
-    // Diperiksa dari DAFTARNYA, bukan dari HTML: isi dropdown Radix baru
-    // dirender saat menunya dibuka, jadi memeriksanya lewat render statis
-    // selalu memulangkan "tidak ada" — dan itu bukan bug.
-    expect(TUJUAN.map((t) => t.href)).toEqual(["/beranda", "/admin"]);
+// ===========================================================================
+// TOMBOL GARIS-TIGA DIHAPUS — owner 2026-11-14 ("sembunyikan menu masuk
+// sebagai pengelola, dan hilangkan garis 3").
+//
+// ⚠️ Describe ini DULU menjaga kebalikannya: 6 tes yang memaksa tombol itu ADA
+// beserta seluruh isinya. Merahnya tes-tes itu BUKAN bug yang perlu
+// diperbaiki — perilakunya memang sengaja dibalik atas permintaan owner.
+//
+// Yang dijaga sekarang bukan sekadar "tombolnya hilang" — itu setengah cerita,
+// dan setengah cerita persis yang bisa membuat sebuah halaman berakhir tanpa
+// jalan ke mana pun tanpa satu pun error. Jadi tiap tujuan yang dulu hidup di
+// dalam tombol itu diperiksa DUA ARAH: hilang dari kepala katalog, DAN
+// penggantinya benar-benar ada.
+// ===========================================================================
+describe("tombol garis-tiga sudah DILEPAS dari kepala katalog", () => {
+  /** Kepala katalog apa adanya: logo + deretan menu + tombol akun. */
+  const chrome = chromeKatalog([]);
+  // Dibungkus `div` supaya `brand` yang bertipe ReactNode bisa dirender
+  // apa adanya; bungkusnya tidak ikut diperiksa.
+  const brand = renderToStaticMarkup(createElement("div", null, chrome.brand));
+
+  it("kepala katalog TIDAK lagi menggambar tombol menu", () => {
+    expect(
+      brand,
+      "tombol garis-tiga muncul lagi di kepala katalog — owner melepasnya " +
+        "2026-11-14; memasangnya kembali harus keputusan owner yang sadar",
+    ).not.toContain('aria-label="Menu halaman"');
   });
 
-  it("daftarnya TIDAK menyimpang dari navbar hitam", () => {
-    // Keduanya navigasi yang sama dalam dua bentuk. Kalau salah satu bertambah
-    // tujuan dan satunya tidak, sebagian halaman kehilangan jalan ke sana
-    // tergantung halaman mana yang sedang dibuka — rusak yang SENYAP.
-    const dariNavbar = LINKS.map((l) => ({ href: l.href, label: l.label }));
-    const dariMenu = TUJUAN.map((t) => ({ href: t.href, label: t.label }));
-    expect(dariMenu).toEqual(dariNavbar);
+  it("identitas situs TIDAK ikut hilang bersama tombolnya", () => {
+    // Logo dulu menumpang di dalam `MenuAplikasi`. Kalau ia ikut terbuang,
+    // kepala katalog kehilangan nama situs DAN satu-satunya jalan ke /beranda
+    // dari halaman ini — rusak yang senyap.
+    expect(brand).toContain('alt="DramaKu"');
+    expect(brand).toContain('href="/beranda"');
   });
 
-  it("menandai Admin sebagai khusus admin di KEDUA daftar", () => {
-    // Kalau tandanya hilang di salah satu, menu Admin bocor ke penonton biasa.
-    expect(TUJUAN.find((t) => t.href === "/admin")?.adminOnly).toBe(true);
-    expect(LINKS.find((l) => l.href === "/admin")?.adminOnly).toBe(true);
+  it("tak ada tombol garis-tiga tersisa di SELURUH aplikasi", () => {
+    // Penyusur berkas, bukan render: tombolnya bisa saja hidup di komponen
+    // yang tidak dirender tes mana pun. `aria-label` dipakai sebagai penanda
+    // karena itulah yang dicari pembaca layar maupun tes lain.
+    const berkas = berkasTsxDiDisk();
+    // Jaring pengaman penyusurnya sendiri — kalau ia memulangkan daftar
+    // kosong, tes ini "lulus" tanpa memeriksa apa pun (kegagalan paling
+    // senyap; pelajaran dari penyusur route di bawah).
+    expect(berkas.length).toBeGreaterThanOrEqual(50);
+    const sisa = berkas.filter((f) =>
+      readFileSync(f, "utf-8").includes('aria-label="Menu halaman"'),
+    );
+    expect(sisa, `masih ada tombol garis-tiga di: ${sisa.join(", ")}`).toEqual(
+      [],
+    );
   });
 
-  it("menyediakan tombolnya sendiri, bukan cuma daftar tersembunyi", () => {
-    const html = render("/beranda", MenuAplikasi);
-    expect(html).toContain('aria-label="Menu halaman"');
-    // Logo ikut pindah ke sini — tanpa ini halaman berkatalog kehilangan
-    // identitas situsnya sama sekali.
-    expect(html).toContain('alt="DramaKu"');
+  it("Admin & Keluar TIDAK yatim — keduanya pindah ke menu avatar", () => {
+    // Inilah syarat yang membuat penghapusan di atas aman. Kalau menu avatar
+    // kelak kehilangan salah satunya, admin tak punya jalan ke panelnya dari
+    // /beranda sama sekali (kaki situs tidak digambar di sana).
+    expect(TUJUAN_AKUN.find((t) => t.href === "/admin")?.adminOnly).toBe(true);
+    expect(
+      readFileSync("app/components/MenuAkun.tsx", "utf-8"),
+      "menu avatar kehilangan tombol Keluar — sejak tombol garis-tiga " +
+        "dilepas, inilah satu-satunya jalan keluar di /beranda & /discover",
+    ).toContain("Keluar");
   });
 
-  it("menyimpan jalan MASUK ke akun dengan alamat yang benar", () => {
-    // Sejak tombol Masuk/Daftar dilepas dari bar cari (owner 2026-09-21),
-    // menu ini SATU-SATUNYA jalan masuk di /beranda & /discover. Diperiksa dari
-    // daftarnya, bukan dari HTML: isi dropdown Radix baru dirender saat menunya
-    // dibuka — salah alamat di sini terbukti LOLOS dari tes berbasis render.
-    expect(TAUTAN_AKUN.map((t) => t.href)).toEqual(["/login", "/daftar"]);
-    expect(TAUTAN_AKUN.map((t) => t.label)).toEqual(["Masuk", "Daftar"]);
-  });
-
-  it("TIDAK menawarkan Admin untuk penonton biasa", () => {
-    // Render server selalu "belum login" (localStorage tak ada di server),
-    // jadi ini sekaligus memastikan menu Admin tidak bocor ke HTML publik.
-    expect(render("/beranda", MenuAplikasi)).not.toContain('href="/admin"');
+  it("Admin tetap TIDAK bocor ke penonton biasa", () => {
+    // Pagar lama yang TIDAK ikut longgar: render server selalu "belum login",
+    // jadi /admin tak boleh muncul di HTML publik kepala katalog.
+    expect(brand).not.toContain('href="/admin"');
   });
 });
 
@@ -226,6 +252,17 @@ describe("navigasi tahan nilai pathname yang tak terduga", () => {
     expect(punyaNavbarAtas("/shortsan")).toBe(false);
   });
 });
+
+/** Semua berkas .tsx di bawah `app/` — dipakai penjaga "tombol garis-tiga sudah dilepas". */
+function berkasTsxDiDisk(dir = "app"): string[] {
+  const hasil: string[] = [];
+  for (const entri of readdirSync(dir, { withFileTypes: true })) {
+    const jalur = join(dir, entri.name);
+    if (entri.isDirectory()) hasil.push(...berkasTsxDiDisk(jalur));
+    else if (entri.name.endsWith(".tsx")) hasil.push(jalur);
+  }
+  return hasil;
+}
 
 /** Semua route halaman yang benar-benar ADA di disk (bukan daftar tulis-tangan). */
 function routeDiDisk(dir = "app", prefix = ""): string[] {
@@ -398,13 +435,14 @@ const { default: NotFound } = await import("../app/not-found");
 describe("halaman 404 tetap punya jalan ke seluruh situs", () => {
   const html = renderToStaticMarkup(createElement(NotFound));
 
-  it("membawa tombol menu berisi seluruh tujuan", () => {
-    expect(
-      html,
-      "halaman 404 tanpa tombol menu: penonton nyasar tak bisa mencapai " +
-        "Shorts/Playly/My List/Profile dari sini, dan TopNav memang diam di " +
-        "alamat asing sejak penyaringnya jadi allowlist",
-    ).toContain('aria-label="Menu halaman"');
+  it("TIDAK lagi membawa tombol garis-tiga", () => {
+    // ⚠️ Tes ini DIBALIK 2026-11-14. Sebelumnya ia memaksa tombol menu ADA di
+    // sini, karena `TopNav` & `BottomNav` memang diam di alamat asing
+    // (penyaringnya allowlist). Owner melepas tombolnya dari seluruh
+    // aplikasi, jadi yang menggantikan perannya di halaman ini adalah DUA
+    // tombol di badan halaman — dijaga tes di bawah, dan itu yang membuat
+    // penghapusan ini tidak mengurung penonton nyasar.
+    expect(html).not.toContain('aria-label="Menu halaman"');
   });
 
   it("membawa identitas situs", () => {
@@ -489,7 +527,10 @@ describe("susunan kepala katalog punya SATU sumber", () => {
         `${berkas} merakit susunan kepalanya sendiri — kalau salah satu ` +
           `pemakai bertambah/berkurang tombol, halaman terasa seperti situs ` +
           `berbeda dan kepala situs melompat saat isi halaman masuk`,
-      ).not.toMatch(/brand:\s*<MenuAplikasi/);
+        // Penandanya diperbarui 2026-11-14: dulu `<MenuAplikasi`, komponen
+        // yang kini sudah tidak ada — pola yang mustahil cocok membuat
+        // penjaga ini "hijau" tanpa menguji apa pun.
+      ).not.toMatch(/brand:\s*<LogoDramaKu/);
     });
   }
 });
@@ -547,8 +588,11 @@ describe("menu dilepas dari tampilan, halamannya TETAP hidup", () => {
     it(`${alamat} TIDAK muncul lagi sebagai menu`, () => {
       // Kalau suatu saat dipasang balik, ini merah lebih dulu — memasangnya
       // kembali harus keputusan owner yang sadar, bukan sisipan diam-diam.
+      //
+      // Dulu daftar KEDUA (`TUJUAN` milik tombol garis-tiga) ikut diperiksa
+      // di sini; tombolnya dilepas 2026-11-14 sehingga daftar itu tak ada
+      // lagi. Yang tersisa `LINKS` — satu-satunya daftar menu yang hidup.
       expect(LINKS.map((l) => l.href)).not.toContain(alamat);
-      expect(TUJUAN.map((t) => t.href)).not.toContain(alamat);
     });
   }
 

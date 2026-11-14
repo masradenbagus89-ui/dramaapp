@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import {
-  LogoDramaKu,
-  MenuAplikasi,
-} from "@/app/components/beranda/KepalaKatalog";
+import { LogoDramaKu } from "@/app/components/beranda/KepalaKatalog";
 
 // Halaman 404 milik DramaKu, menggantikan bawaan Next.js yang memaksa latar
 // PUTIH + teks Inggris — asing di situs bertema gelap berbahasa Indonesia, dan
@@ -25,10 +22,16 @@ import {
 //
 // Jadi navigasinya DIPASANG SENDIRI di sini, bukan dengan melonggarkan
 // allowlist-nya (melonggarkan = mengembalikan bug kedipan halaman depan).
-// `MenuAplikasi` dipilih karena ia memuat SELURUH tujuan situs dalam satu
-// tombol, dan tidak butuh data katalog sama sekali — halaman error tidak boleh
-// bergantung pada database yang mungkin justru sedang bermasalah.
-// Penjaganya: tests/kepala-situs.test.ts.
+//
+// ⚠️ 2026-11-14: navigasinya dulu `MenuAplikasi` (tombol garis-tiga berisi
+// seluruh tujuan). Tombol itu dihapus dari seluruh aplikasi atas permintaan
+// owner, jadi yang tersisa di sini logo + DUA tombol di badan halaman
+// (Beranda & Jelajahi Drama) — keduanya sudah ada sejak awal dan dijaga
+// tests/kepala-situs.test.ts. Halaman ini tetap tidak boleh bergantung pada
+// data katalog: ia muncul justru saat sesuatu sedang tidak beres.
+//
+// Yang hilang di sini: jalan satu-klik ke /admin bagi admin yang nyasar.
+// Jalan penggantinya logo → /beranda → menu avatar → Admin.
 
 export const metadata: Metadata = {
   title: "Halaman tidak ditemukan",
@@ -41,14 +44,13 @@ export const metadata: Metadata = {
 export default function NotFound() {
   return (
     <>
-      {/* Kepala situs ringkas: logo + satu tombol menu berisi seluruh tujuan.
-          Sengaja TIDAK memakai bar cari merah — bar itu butuh daftar menu yang
-          dihitung dari katalog (buildNavMenus), dan halaman error tidak boleh
-          bergantung pada pembacaan database. */}
+      {/* Kepala situs ringkas: logo saja. Sengaja TIDAK memakai bar cari merah
+          — bar itu butuh daftar menu yang dihitung dari katalog
+          (buildNavMenus), dan halaman error tidak boleh bergantung pada
+          pembacaan database. */}
       <div className="border-b border-zinc-800 bg-black/95">
         <div className="shell-wide mx-auto flex h-14 items-center gap-3 px-4 md:px-6">
           <LogoDramaKu />
-          <MenuAplikasi />
         </div>
       </div>
 

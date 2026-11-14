@@ -1,24 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useCallback } from "react";
-import { clearUser } from "@/lib/auth";
 import CoinChip from "../CoinChip";
 import MenuAkun from "../MenuAkun";
 import { usePenonton } from "../usePenonton";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
-import { LogOut, Menu } from "lucide-react";
 import type { NavMenu } from "@/lib/nav-katalog";
-import { AKUN_PENONTON_ENABLED } from "@/lib/saklar-fitur";
 import NavMenus from "./NavMenus";
 import type { SearchBarChrome } from "./SearchBar";
 
@@ -30,57 +16,33 @@ import type { SearchBarChrome } from "./SearchBar";
  * katalog pembanding: cukup DUA baris (bar cari + strip kuning). Navbar hitam
  * karena itu disembunyikan di kedua halaman, dan isinya pindah ke sini.
  *
- * ⚠️ Menu aplikasi TIDAK boleh sekadar dibuang. Di layar komputer inilah
- * satu-satunya jalan menuju Playly, Admin, dan tombol Keluar — `BottomNav`
- * hanya muncul di HP (`md:hidden`) dan cuma memuat dua tujuan. Membuangnya
- * berarti halaman-halaman itu hanya bisa dibuka dengan mengetik alamatnya
- * sendiri, dan tidak ada error apa pun yang memberi tahu.
+ * ⚠️ TOMBOL GARIS-TIGA (`MenuAplikasi`) DIHAPUS 2026-11-14 atas permintaan
+ * owner ("sembunyikan menu masuk sebagai pengelola, dan hilangkan garis 3").
+ * Ia satu-satunya hamburger di seluruh aplikasi, dipakai /beranda, /discover,
+ * dan halaman 404.
+ *
+ * Komentar lama di sini berbunyi "TIDAK boleh sekadar dibuang — inilah
+ * satu-satunya jalan menuju Playly, Admin, dan tombol Keluar". Itu benar pada
+ * 2026-09-21 dan sudah TIDAK benar lagi; diperiksa satu per satu sebelum
+ * dihapus, bukan diasumsikan:
+ *   • Admin & Keluar  → pindah ke `MenuAkun` (avatar) sejak 2026-09-26, dan
+ *     `TombolAkun` di bawah memasangnya di kedua halaman ini.
+ *   • Beranda         → logo di `LogoDramaKu` menuju ke sana.
+ *   • Playly          → sudah dilepas dari daftarnya sejak 2026-09-26.
+ *   • Masuk/Daftar    → dijeda `AKUN_PENONTON_ENABLED` sejak 2026-10-29.
+ *
+ * ⚠️ YANG BENAR-BENAR HILANG, dicatat supaya tidak dikira kelalaian:
+ *   1. Tautan "Masuk sebagai pengelola" di /beranda & /discover. Kaki situs
+ *      masih memuatnya (`FooterSitus.tsx`), tapi kaki itu TIDAK digambar di
+ *      /beranda — jadi di halaman itu satu-satunya jalan ke panel admin kini
+ *      mengetik alamat `/login` sendiri. Itu memang yang diminta owner.
+ *      Menyembunyikan tautan BUKAN kontrol izin (`skills/auth/SKILL.md`):
+ *      penjagaannya tetap di server — password, rate-limit, cookie sesi
+ *      bertanda tangan. Jadi keamanan tidak naik maupun turun karena ini.
+ *   2. Peringatan "Masuk ulang dengan password admin" (`perluMasukUlang`) di
+ *      kedua halaman ini. Ia masih tergambar sebagai pita di `TopNav`, yang
+ *      hidup di /admin · /profile · /history · /my-list · /shorts.
  */
-
-/** Satu tujuan di menu aplikasi. */
-type Tujuan = { href: string; label: string; adminOnly?: boolean };
-
-/**
- * Jalan MASUK ke akun, untuk penonton yang belum login.
- *
- * Sejak 2026-09-21 keduanya cuma ada di dalam menu garis-tiga ini — tombolnya
- * di bar cari dilepas atas permintaan owner ("dobel"). Artinya di /beranda &
- * /discover inilah SATU-SATUNYA jalan masuk, jadi alamatnya diekspor supaya
- * bisa diuji: isi dropdown Radix tidak tergambar di HTML sampai menunya dibuka,
- * sehingga salah alamat di sini TIDAK akan tertangkap tes yang memeriksa hasil
- * render (terbukti lolos saat diuji-rusak 2026-09-21).
- */
-export const TAUTAN_AKUN = [
-  { href: "/login", label: "Masuk" },
-  { href: "/daftar", label: "Daftar" },
-] as const;
-
-/**
- * Daftarnya WAJIB sama dengan `LINKS` di app/components/TopNav.tsx — kedua
- * tempat menampilkan navigasi yang sama, hanya bentuknya yang berbeda (baris
- * menu vs daftar di balik tombol), dan tiap halaman memakai salah satunya.
- * Kalau bertambah tujuan baru, tambahkan di KEDUANYA.
- *
- * Diekspor supaya kewajiban itu bisa DIUJI, bukan sekadar dijanjikan komentar:
- * lihat tests/kepala-situs.test.ts. Isi dropdown Radix tidak tergambar di HTML
- * sampai menunya dibuka, jadi memeriksanya dari hasil render mustahil.
- *
- * ⚠️ Discover · Shorts · My List · Playly · Profile sengaja DILEPAS dari daftar
- * ini bersamaan dengan `LINKS` (tiga yang pertama owner 2026-09-25, dua
- * terakhir owner 2026-09-26). Alasan lengkap + daftar jalan yang tersisa menuju
- * kelima halaman itu ditulis SEKALI di app/components/TopNav.tsx, di atas
- * `LINKS` — jangan disalin ke sini supaya tak ada dua versi yang bisa
- * menyimpang. Route kelimanya TETAP hidup; yang hilang hanya tombolnya.
- *
- * Khusus Profile: jalannya TIDAK putus, ia pindah ke menu di balik avatar
- * (`MenuAkun`) yang dipasang `TombolAkun` di dasar berkas ini.
- */
-export const TUJUAN: Tujuan[] = [
-  { href: "/beranda", label: "Beranda" },
-  { href: "/admin", label: "Admin", adminOnly: true },
-];
-
-const ITEM_CLASS = "cursor-pointer text-sm focus:bg-zinc-800 focus:text-amber-400";
 
 /**
  * Lambang + nama situs di ujung kiri bar cari.
@@ -116,149 +78,27 @@ export function LogoDramaKu({ href = "/beranda" }: { href?: string }) {
 }
 
 /**
- * Tombol garis-tiga + logo, dipasang di ujung KIRI bar cari lewat
- * `SearchBarChrome.brand`. Isinya seluruh navigasi aplikasi.
- */
-export function MenuAplikasi() {
-  const pathname = usePathname() ?? "/";
-  const router = useRouter();
-  const { user, mounted, perluMasukUlang } = usePenonton();
-
-  const keluar = useCallback(() => {
-    if (!confirm("Yakin mau keluar dari akun?")) return;
-    clearUser();
-    router.push("/");
-  }, [router]);
-
-  const tujuan = TUJUAN.filter((t) => !t.adminOnly || user?.role === "admin");
-
-  return (
-    <div className="flex items-center gap-2">
-      <DropdownMenu>
-        <DropdownMenuTrigger
-          aria-label="Menu halaman"
-          className="flex size-9 shrink-0 items-center justify-center rounded-sm text-white transition-colors outline-none hover:bg-black/25 focus-visible:bg-black/25 data-[state=open]:bg-black/30"
-        >
-          <Menu className="size-5" />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent
-          align="start"
-          className="min-w-52 border-zinc-700 bg-zinc-900 text-zinc-200"
-        >
-          {tujuan.map((t) => (
-            <DropdownMenuItem key={t.href} asChild className={ITEM_CLASS}>
-              <Link
-                href={t.href}
-                className={cn(
-                  pathname.startsWith(t.href) && "font-semibold text-amber-400",
-                )}
-              >
-                {t.label}
-              </Link>
-            </DropdownMenuItem>
-          ))}
-
-          {/* Peringatan yang dulu jadi pita kuning di bawah navbar. Tanpa ini,
-              akun yang baru diangkat jadi admin tak punya petunjuk kenapa menu
-              Admin belum muncul untuknya. */}
-          {mounted && perluMasukUlang && (
-            <>
-              <DropdownMenuSeparator className="bg-zinc-700" />
-              <DropdownMenuItem asChild className={ITEM_CLASS}>
-                <Link href="/login" className="text-amber-400">
-                  Masuk ulang dengan password admin
-                </Link>
-              </DropdownMenuItem>
-            </>
-          )}
-
-          {mounted && user ? (
-            <>
-              <DropdownMenuSeparator className="bg-zinc-700" />
-              <DropdownMenuLabel className="text-xs font-normal text-zinc-500">
-                Masuk sebagai {user.name}
-              </DropdownMenuLabel>
-              <DropdownMenuItem
-                onClick={keluar}
-                className={cn(ITEM_CLASS, "text-red-400 focus:text-red-300")}
-              >
-                <LogOut className="size-4" />
-                Keluar
-              </DropdownMenuItem>
-            </>
-          ) : (
-            <>
-              {/* JALAN MASUK PENGELOLA — selalu ada, TIDAK digerbangi
-                  `AKUN_PENONTON_ENABLED` (owner 2026-10-29).
-
-                  Kaki situs juga memuat tautan yang sama, TAPI kaki itu tidak
-                  digambar di /beranda (owner melepasnya 2026-10-28) — padahal
-                  /beranda justru halaman yang paling sering dibuka owner.
-                  Menu garis-tiga ini hadir di /beranda, /discover, DAN semua
-                  halaman film, jadi inilah jalan yang paling bisa diandalkan.
-
-                  Tertutup di balik satu klik, jadi tidak mengajak penonton
-                  mendaftar — yang persis jadi alasan tombol Masuk/Daftar
-                  dijeda. Kata "pengelola" dipilih supaya penonton tahu ini
-                  bukan untuk mereka. */}
-              <DropdownMenuSeparator className="bg-zinc-700" />
-              <DropdownMenuItem asChild className={ITEM_CLASS}>
-                <Link href="/login" className="text-zinc-400">
-                  Masuk sebagai pengelola
-                </Link>
-              </DropdownMenuItem>
-            </>
-          )}
-
-          {!mounted || user ? null : AKUN_PENONTON_ENABLED ? (
-            /* Masuk & Daftar ada DI SINI, bukan sebagai tombol di bar cari —
-               owner 2026-09-21: tombolnya dobel dengan ajakan di badan halaman.
-               Tapi menghapusnya begitu saja akan membuat halaman ini tak punya
-               jalan masuk sama sekali (badan /beranda & /discover cuma berisi
-               poster), jadi keduanya dipindah, bukan dibuang.
-
-               DIJEDA 2026-10-29 bersama seluruh akun penonton. Catatan di atas
-               tentang "tak punya jalan masuk" sengaja DIPERTAHANKAN: ia berlaku
-               lagi persis begitu saklarnya dinyalakan kembali. */
-            <>
-              <DropdownMenuSeparator className="bg-zinc-700" />
-              {TAUTAN_AKUN.map((t) => (
-                <DropdownMenuItem key={t.href} asChild className={ITEM_CLASS}>
-                  <Link
-                    href={t.href}
-                    className={cn(
-                      t.href === "/daftar" && "font-semibold text-amber-400",
-                    )}
-                  >
-                    {t.label}
-                  </Link>
-                </DropdownMenuItem>
-              ))}
-            </>
-          ) : null}
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      <LogoDramaKu />
-    </div>
-  );
-}
-
-/**
  * Ujung KANAN bar cari (`SearchBarChrome.trailing`): saldo koin + avatar akun.
  *
- * Tombol Masuk · Daftar tetap TIDAK di sini, melainkan di menu garis-tiga.
- * Owner 2026-09-21: keduanya dobel dengan ajakan yang sudah ada di badan
- * halaman, dan bar ini harus seringkas situs katalog pembanding. Saldo koin
+ * Tombol Masuk · Daftar tetap TIDAK di sini. Owner 2026-09-21: keduanya dobel
+ * dengan ajakan yang sudah ada di badan halaman, dan bar ini harus seringkas
+ * situs katalog pembanding. Dulu keduanya pindah ke menu garis-tiga; sejak
+ * tombol itu dilepas (2026-11-14) mereka memang tidak tergambar di mana pun —
+ * dan itu tidak menghilangkan apa-apa, karena `AKUN_PENONTON_ENABLED` sudah
+ * menjedanya sejak 2026-10-29. Saldo koin
  * tetap di luar menu karena ia ANGKA yang perlu dilihat sekilas —
  * menyembunyikannya di balik satu klik membuat penonton tidak tahu sisa
  * koinnya sebelum membuka episode berbayar.
  *
  * Avatar ditambahkan 2026-09-26 dan itu WAJIB, bukan hiasan: "Profile" dilepas
- * dari `TUJUAN` pada hari yang sama, jadi tanpa avatar di sini halaman
+ * dari daftar menu pada hari yang sama, jadi tanpa avatar di sini halaman
  * berkatalog kehilangan satu-satunya jalan ke halaman Profil di layar komputer
  * (`BottomNav` cuma muncul di HP). `MenuAkun` diam sendiri saat belum login,
  * jadi bar tetap seringkas sebelumnya untuk pengunjung baru.
+ *
+ * Sejak tombol garis-tiga dilepas (2026-11-14) perannya BERTAMBAH: avatar ini
+ * kini juga satu-satunya jalan ke **Admin** dan tombol **Keluar** di /beranda
+ * & /discover. Dijaga tests/kepala-situs.test.ts.
  */
 export function TombolAkun() {
   const { user, mounted } = usePenonton();
@@ -273,8 +113,12 @@ export function TombolAkun() {
 }
 
 /**
- * Susunan kepala situs untuk halaman BERKATALOG: logo + menu garis-tiga di
- * kiri, deretan menu dropdown di tengah, tombol akun di kanan.
+ * Susunan kepala situs untuk halaman BERKATALOG: logo di kiri, deretan menu
+ * dropdown di tengah, tombol akun di kanan.
+ *
+ * Tombol garis-tiga dulu berdiri di kiri logo; dilepas 2026-11-14 atas
+ * permintaan owner — alasan + daftar jalan yang tersisa ada di komentar
+ * kepala berkas ini.
  *
  * ⚠️ Kenapa jadi fungsi bersama dan bukan ditulis di tiap pemakainya
  * (owner 2026-09-22): susunan ini dipakai TIGA kali — kepala `/beranda`
@@ -293,7 +137,7 @@ export function TombolAkun() {
  */
 export function chromeKatalog(menus: NavMenu[]): SearchBarChrome {
   return {
-    brand: <MenuAplikasi />,
+    brand: <LogoDramaKu />,
     menus: <NavMenus menus={menus} />,
     trailing: <TombolAkun />,
   };

@@ -101,7 +101,8 @@ describe("kotak cari kerangka /discover", () => {
   });
 
   it("memakai susunan kepala bersama, bukan susunan sendiri", () => {
-    // chromeKatalog() memasang logo + menu garis-tiga + tombol akun.
+    // chromeKatalog() memasang logo + deretan menu + tombol akun.
+    // (Tombol garis-tiga dilepas owner 2026-11-14.)
     const chrome = render().chrome;
     expect(chrome).toBeTruthy();
     expect(chrome?.brand).toBeTruthy();

@@ -90,11 +90,23 @@
 > aftermarket** dari pemilik sekarang, harganya **jauh di atas** Rp200.000 dan belum pernah dicek.
 > Nama lain yang masih bebas jauh lebih murah.
 
-**Terakhir diisi:** 2026-11-14 (siang) — ✅ **RILIS `f6b1c03` → `a09bfc8` TAYANG: 3 commit, 3 sesi, 1 deploy.** (1) Cache halaman penonton dibuang otomatis saat admin menyimpan + tombol **Segarkan cache** (kerja rekan). (2) Payload data IMDb ke browser admin **525 KB → 57 KB** (−89%) + ingatan "berkas siap" kini **bertahan melewati restart**. (3) Urutan video SE-SITUS ikut **tahun rilis**, bukan waktu upload — terbukti di produksi: 20 kartu teratas semuanya **2026**. Gerbang 5/5 (**2516 tes**), smoke test 10/10 = 200. ⏳ Manfaat (2) bagian ingatan baru terasa mulai rilis BERIKUTNYA. 🪤 **TIGA sesi menulis di folder yang sama; 22 berkas sesi audit masih menggantung — JANGAN `git add -A`.** Rinciannya di seksi `## 2026-11-14 (siang)` di bawah.
+**Terakhir diisi:** 2026-11-15 — menu Genre dan Negara disamakan dengan Tahun (4 kolom, semua pilihan terlihat tanpa digulir). Rincian di seksi `## 2026-11-15` di bawah. Sebelumnya: ✅ **RILIS `f6b1c03` → `a09bfc8` TAYANG.** (1) Cache halaman penonton dibuang otomatis saat admin menyimpan + tombol **Segarkan cache** (kerja rekan). (2) Payload data IMDb ke browser admin **525 KB → 57 KB** (−89%) + ingatan "berkas siap" kini **bertahan melewati restart**. (3) Urutan video SE-SITUS ikut **tahun rilis**, bukan waktu upload — terbukti di produksi: 20 kartu teratas semuanya **2026**. Gerbang 5/5 (**2516 tes**), smoke test 10/10 = 200. ⏳ Manfaat (2) bagian ingatan baru terasa mulai rilis BERIKUTNYA. 🪤 **TIGA sesi menulis di folder yang sama; 22 berkas sesi audit masih menggantung — JANGAN `git add -A`.** Rinciannya di seksi `## 2026-11-14 (siang)` di bawah.
 
 **Rincian kontrol volume (putaran KETIGA):** owner menolak bentuk tombol `+` / `−` dan mengirim contoh gambar, jadi pengatur volume kini **garis geser tegak berbentuk kapsul** (jalur kuning + bulatan penggeser). Diukur di Chrome headless layar 393px: kapsul `x=345..381` **utuh di dalam layar**, geser jari atas→100% / tengah→50% / bawah→bisu, nol elemen diputar. Gerbang lolos 5/5 (2383 tes hijau). ✅ **Sudah TAYANG** dalam rilis `53fbc5c → a9ae869` malam itu juga.
 
 **Sebelumnya hari ini:** ✅ **`2ad015b` + `8d8c1ba` TAYANG.** Tata letak pemutar beres dalam tiga putaran permintaan owner: tombol **Eps turun ke baris paling bawah**, tombol **volume pindah ke sebelah angka durasi**, rail ikon kanan **diperkecil & dirapatkan** (36px/20px/jarak 8px), dan garis volume tegak **diganti tombol + / −** karena terukur berdiri di **x=391 pada layar 393px = di luar layar HP**. Rinciannya di seksi `## 2026-11-13` di bawah.
+
+---
+
+## 2026-11-15 — Menu Genre & Negara tampil sekaligus seperti Tahun
+
+Owner: *"untuk genre dan negara kamu samakan dengan tahun jadi begitu klik genre langsung muncul semua tanpa perlu scroll"*.
+
+**Yang salah:** Genre dan Negara cuma 3 kolom, dan di layar di bawah 1024px turun jadi 1–2 kolom. 24 nama jadi belasan baris, lebih tinggi dari kotak menu, jadi muncul scrollbar. Tahun tidak begitu karena angkanya pendek dan sudah 4 kolom sejak lebar 640px.
+
+**Yang diubah:** `KOLOM_GENRE` dan `KOLOM_NEGARA` jadi 4, sama dengan Tahun. Selnya lebih lebar (`lebarNama`) supaya "Fiksi Ilmiah" dan "Uni Emirat Arab" tetap satu baris — kalau terbungkus, scrollbar kembali. Di HP mulai 2 kolom, bukan 4, supaya nama tidak terpotong.
+
+**Bukti:** `tests/nav-menu-lengkap.test.ts` + `tests/nav-katalog.test.ts` — 79 tes hijau. Server lokal `http://localhost:3000/beranda` sudah menyala; owner yang mengklik menunya.
 
 ---
 

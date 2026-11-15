@@ -34,9 +34,8 @@ import { negaraDari, pecahDaftar, type FilterDramaOptions } from "./discover";
  * ⚠️ ANGKANYA NAIK 12 -> 24 pada 2026-11-14 (owner: "negara bisa kamu
  * tambahkan lagi negaranya"). Alasan angka 12 yang lama — "jumlah baris yang
  * masih terbaca sekali pandang dalam satu dropdown, tanpa menggulir" — sudah
- * TIDAK berlaku: menu Negara kini digambar DUA/TIGA kolom (`KOLOM_NEGARA` di
- * lib/nav-katalog.ts), jadi 24 nama muat dalam 8 baris, lebih pendek daripada
- * 12 nama satu kolom yang dulu.
+ * TIDAK berlaku: menu Negara digambar 4 kolom seperti Tahun (`KOLOM_NEGARA`
+ * di lib/nav-katalog.ts), jadi 24 nama muat dalam 6 baris.
  *
  * Yang terpotong TIDAK hilang dari situs: negaranya tetap bisa dicapai lewat
  * alamat `?negara=<nama>` dan tetap ikut tersaring. Yang dibatasi cuma isi

@@ -29,15 +29,29 @@ import { cn } from "@/lib/utils";
  * kelas yang baru terbentuk saat program berjalan TIDAK pernah ikut ke CSS —
  * hasilnya menu tetap satu kolom, tanpa satu pun error.
  *
- * Jenjangnya naik bertahap mengikuti lebar layar, dan selalu MULAI dari satu
- * kolom: di HP (393px) kolom banyak membuat nama panjang seperti "Dokumenter"
- * atau "Selandia Baru" terpotong.
+ * Jenjangnya naik bertahap mengikuti lebar layar. Tahun (angka 4 huruf)
+ * memakai sel sempit. Genre dan Negara memakai sel lebar (`lebarNama`) supaya
+ * "Fiksi Ilmiah" dan "Uni Emirat Arab" tetap SATU baris — kalau terbungkus,
+ * tingginya naik dan scrollbar yang diminta owner hilang justru kembali.
+ *
+ * Di HP keduanya mulai 2 kolom, bukan 4: 4 kolom pada lebar 393px memotong
+ * nama. 2 kolom untuk 24 nama = 12 baris, masih muat di tinggi layar HP.
  */
 const KELAS_KOLOM: Record<number, string> = {
   2: "grid grid-cols-1 gap-x-1 sm:w-[21rem] sm:grid-cols-2",
   3: "grid grid-cols-1 gap-x-1 sm:w-[21rem] sm:grid-cols-2 lg:w-[30rem] lg:grid-cols-3",
   4: "grid grid-cols-2 gap-x-1 w-[13rem] sm:w-[23rem] sm:grid-cols-4",
 };
+
+/** 4 kolom seperti Tahun, tetapi selnya cukup untuk nama negara/genre. */
+const KELAS_EMPAT_NAMA =
+  "grid grid-cols-2 gap-x-1 w-[22rem] whitespace-nowrap sm:w-[36rem] sm:grid-cols-4";
+
+function kelasKolom(menu: NavMenu): string | undefined {
+  if (!menu.kolom) return undefined;
+  if (menu.kolom === 4 && menu.lebarNama) return KELAS_EMPAT_NAMA;
+  return KELAS_KOLOM[menu.kolom];
+}
 
 export default function NavMenus({ menus }: { menus: NavMenu[] }) {
   if (menus.length === 0) return null;
@@ -63,7 +77,7 @@ export default function NavMenus({ menus }: { menus: NavMenu[] }) {
               // dicapai di HP — ia tergambar di bawah tepi layar dan daftarnya
               // tidak ikut bergulir bersama halaman.
               "max-h-[min(70vh,34rem)] min-w-44 overflow-y-auto border-zinc-700 bg-zinc-900 text-zinc-200",
-              m.kolom && KELAS_KOLOM[m.kolom],
+              kelasKolom(m),
             )}
           >
             {m.items.map((item) => (

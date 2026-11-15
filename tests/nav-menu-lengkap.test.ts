@@ -365,8 +365,12 @@ describe("5. Genre khusus film, sisanya di Lainnya", () => {
     );
     expect(kaya.find((m) => m.key === "tahun")?.kolom).toBe(KOLOM_TAHUN);
     expect(kaya.find((m) => m.key === "negara")?.kolom).toBe(KOLOM_NEGARA);
-    // "2026" jauh lebih pendek dari "Selandia Baru" — kolomnya wajib beda.
-    expect(KOLOM_TAHUN).toBeGreaterThan(KOLOM_NEGARA);
+    // Owner 2026-11-15: Genre & Negara harus sama dengan Tahun (4 kolom,
+    // semua pilihan terlihat tanpa digulir). Yang beda cuma lebar sel.
+    expect(KOLOM_GENRE).toBe(KOLOM_TAHUN);
+    expect(KOLOM_NEGARA).toBe(KOLOM_TAHUN);
+    expect(kaya.find((m) => m.key === "negara")?.lebarNama).toBe(true);
+    expect(kaya.find((m) => m.key === "tahun")?.lebarNama).toBeUndefined();
   });
 
   it("NavMenus menggambar kolomnya sebagai kelas UTUH", () => {
@@ -382,12 +386,14 @@ describe("5. Genre khusus film, sisanya di Lainnya", () => {
       readFileSync("app/components/beranda/NavMenus.tsx", "utf-8"),
     );
     expect(sumber).not.toMatch(/grid-cols-\$\{/);
-    for (const kelas of ["sm:grid-cols-2", "lg:grid-cols-3", "sm:grid-cols-4"]) {
+    for (const kelas of ["sm:grid-cols-2", "lg:grid-cols-3", "sm:grid-cols-4", "w-[36rem]"]) {
       expect(sumber, `kelas ${kelas} tidak ditulis utuh`).toContain(kelas);
     }
-    // Selalu mulai satu kolom di HP — lihat alasannya di komentar berkas itu.
+    // Selalu mulai satu kolom di HP untuk menu pendek — lihat komentar berkas.
+    // Genre/Negara mulai 2 kolom (bukan 1) supaya 24 nama tidak harus digulir.
     expect(sumber).toContain("grid-cols-1");
-    expect(sumber).toContain("m.kolom");
+    expect(sumber).toContain("whitespace-nowrap");
+    expect(sumber).toContain("lebarNama");
   });
 
   it("tinggi dropdown mengikuti TINGGI LAYAR, bukan angka tetap", () => {

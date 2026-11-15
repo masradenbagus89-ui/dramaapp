@@ -46,9 +46,11 @@ export type NavMenu = {
    * "genre, populer, tahun kamu tampilkan semua, buat yang rapi").
    *
    * Tujuannya satu: seluruh pilihan terlihat SEKALIGUS, tanpa menggulir di
-   * dalam kotak kecil. Angkanya mengikuti panjang label, bukan selera —
-   * `KOLOM_TAHUN` muat 4 karena "2026" pendek, sementara nama genre seperti
-   * "Dokumenter" cuma muat 3.
+   * dalam kotak kecil. Genre, Negara, dan Tahun sama-sama 4 kolom (owner
+   * 2026-11-15: klik Genre/Negara harus langsung menampilkan semua, seperti
+   * Tahun). Bedanya cuma LEBAR sel: nama "Uni Emirat Arab" butuh sel lebih
+   * lebar dari angka "2026", kalau tidak nama itu terbungkus dua baris dan
+   * scrollbar muncul lagi.
    *
    * Di layar HP jumlahnya diturunkan sendiri oleh NavMenus.tsx; kolom banyak
    * pada lebar 393px membuat tiap nama terpotong, dan nama terpotong lebih
@@ -58,6 +60,11 @@ export type NavMenu = {
    * Tidak diisi = satu kolom (menu pendek: Series, Populer, Lainnya).
    */
   kolom?: 2 | 3 | 4;
+  /**
+   * Labelnya nama panjang (Genre, Negara), bukan angka tahun. NavMenus
+   * memakai sel yang lebih lebar supaya tetap satu baris.
+   */
+  lebarNama?: boolean;
 };
 
 /**
@@ -106,20 +113,21 @@ export const GENRE_FILM: readonly string[] = [
 const SET_GENRE_FILM = new Set(GENRE_FILM.map((g) => g.toLowerCase()));
 
 /**
- * Jumlah kolom tiap dropdown panjang, dipilih dari PANJANG LABELNYA.
+ * Jumlah kolom tiap dropdown panjang.
  *
- * Diuji dengan nama terpanjang yang benar-benar ada di katalog:
- *   - Genre  : "Dokumenter", "Fiksi Ilmiah", "Reality TV"  -> 3 kolom
- *   - Tahun  : "2026" (4 huruf)                            -> 4 kolom
- *   - Negara : "Selandia Baru"                             -> 3 kolom sejak
- *     daftarnya dinaikkan 12 -> 24 (owner 2026-11-14); 2 kolom membuatnya
- *     12 baris, lebih panjang daripada menu Genre di sebelahnya.
- * Menaikkan angkanya membuat nama terpanjang terpotong — dan nama genre yang
- * terpotong membuat penonton tidak tahu apa yang akan diklik.
+ * Genre, Negara, dan Tahun sama-sama 4 (owner 2026-11-15: "samakan dengan
+ * tahun, begitu diklik langsung muncul semua tanpa scroll"). Dulu Genre dan
+ * Negara cuma 3 kolom, dan di layar di bawah 1024px malah 1–2 kolom, jadi
+ * 24 nama jadi belasan baris yang harus digulir. Tahun tidak begitu karena
+ * angkanya pendek dan sudah 4 kolom sejak lebar 640px.
+ *
+ * Yang menjaga nama tidak terpotong bukan jumlah kolomnya, melainkan LEBAR
+ * sel (`lebarNama` di NavMenus). "Fiksi Ilmiah" dan "Uni Emirat Arab" wajib
+ * tetap satu baris.
  */
-export const KOLOM_GENRE = 3 as const;
+export const KOLOM_GENRE = 4 as const;
 export const KOLOM_TAHUN = 4 as const;
-export const KOLOM_NEGARA = 3 as const;
+export const KOLOM_NEGARA = 4 as const;
 
 /**
  * Baris DRAMA ASIA di menu "Lainnya" (owner 2026-11-14: "lainnya isi dengan
@@ -253,7 +261,7 @@ function menu(
   key: string,
   label: string,
   items: (NavItem | null)[],
-  hiasan: { kolom?: 2 | 3 | 4; tanpaLainnya?: boolean } = {},
+  hiasan: { kolom?: 2 | 3 | 4; lebarNama?: boolean; tanpaLainnya?: boolean } = {},
 ): NavMenu | null {
   const isi = items.filter((i): i is NavItem => i !== null);
   if (isi.length < MIN_ITEM_MENU) return null;
@@ -450,7 +458,7 @@ export function buildNavMenus(
       // dijamin berisi.
       // Label diterjemahkan, alamatnya TIDAK — lihat catatan di `NavItem`.
       genreFilmMenu,
-      { kolom: KOLOM_GENRE },
+      { kolom: KOLOM_GENRE, lebarNama: true },
     ),
     // ⚠️ SEJARAH KEPUTUSAN — jangan "dikembalikan" oleh sesi berikutnya.
     // 2026-09-21 owner meminta label "Series" & "+ More" ditulis PERSIS seperti
@@ -532,7 +540,7 @@ export function buildNavMenus(
         label: labelNegara(n),
         href: tautan({ negara: n }),
       })),
-      { kolom: KOLOM_NEGARA },
+      { kolom: KOLOM_NEGARA, lebarNama: true },
     ),
     // Owner 2026-11-14: "tahun mulai dari tahun terbaru". Urutannya SUDAH
     // menurun sejak dulu (`tahunBerisi` & `getYearOptions` sama-sama

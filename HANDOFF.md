@@ -98,6 +98,18 @@
 
 ---
 
+## 2026-11-15 — Daftar "Perlu dicek" untuk video Playly bertanda segitiga
+
+Owner: film di daftar video Playly yang ada tanda segitiga dipisah supaya mudah dicek.
+
+**Apa tandanya:** segitiga di kiri judul = berkas videonya belum ada di Playly (upload putus). Film itu sudah tidak tayang ke penonton.
+
+**Yang diubah:** judul itu keluar dari daftar biasa. Tombol **Perlu dicek** (di deretan Semua / Sudah ada IMDb / Belum ada IMDb) menukar isi tabel yang sama — bukan kotak kedua. Owner menolak kotak 59 baris yang menumpuk di atas daftar ("jangan menumpuk seperti itu"). Halaman penonton tidak diubah.
+
+**Bukti:** `tests/daftar-perlu-cek.test.ts` bersama tes paginasi dan panel Playly — 61 tes hijau.
+
+---
+
 ## 2026-11-15 — Menu Genre & Negara tampil sekaligus seperti Tahun
 
 Owner: *"untuk genre dan negara kamu samakan dengan tahun jadi begitu klik genre langsung muncul semua tanpa perlu scroll"*.
@@ -148,6 +160,125 @@ Owner: *"untuk genre dan negara kamu samakan dengan tahun jadi begitu klik genre
 **Berkas:** baru `lib/tahun-film.ts`, `tests/tahun-film.test.ts`, `docs/lintasai/rencana/2026-11-14-urutan-film-terbaru-menurut-tahun.md` · diubah `lib/playly-gabungan.ts`, `app/page.tsx`, `app/beranda/page.tsx`, `app/components/beranda/TabKatalogTampilan.tsx` (keterangan seksi → "tahun rilis terbaru lebih dulu"), `tests/playly-gabungan.test.ts`, `tests/jenis-video.test.ts`, `docs/lintasai/INDEX.md`.
 
 ⚠️ **Belum di-commit.** Folder kerja ini dipakai beberapa sesi sekaligus dan ada perubahan sesi lain yang belum di-commit (audit keamanan) — **stage per-berkas, jangan `git add -A`.**
+
+---
+
+## 2026-11-14 — 🔐 AUDIT KEAMANAN PENUH: 4 temuan, SEMUA diperbaiki (SQL sudah dijalankan ke DB; kode BELUM di-commit)
+
+**Laporan lengkap: `LAPORAN-AKHIR-AUDIT-KEAMANAN.txt`** (di akar repo, belum terlacak git). Artefak + diff + hasil uji-balik: `D:\Users\user18\security-audit-results\dramaapp\2026-11-14T01-41-14` (di LUAR repo).
+
+**Status audit: INCOMPLETE, dan itu apa adanya.** Ketujuh scanner yang diminta (Semgrep, OSV-Scanner, Gitleaks, Trivy, ZAP, Burp, Nuclei) **tidak terpasang** dan sengaja TIDAK dipasang — mesin ini server sewaan bersama dan owner bukan administrator. DAST juga diblokir: di mesin ini port loopback bisa dipegang penyewa lain, jadi "127.0.0.1 balas 200" tidak membuktikan yang menjawab aplikasi kita. Yang terlaksana PENUH: audit source-first atas 58 route + 747 commit, dengan pengganti manual yang disebut apa adanya di laporan §3.
+
+**Kabar baiknya: postur keamanan project ini KUAT, dan itu terbukti bukan kesopanan.** Jejak audit 2026-10-24 nyata — RLS menyala di 5 tabel, hak EXECUTE 3 fungsi koin dicabut dari PUBLIC, header keamanan lengkap, tanda tangan kedua webhook benar (Midtrans `sha512`+`timingSafeEqual`; koin dikredit dari `order.coins` TERSIMPAN bukan dari angka kiriman), `service_role` server-only, nol SQL injection, nol XSS (escaping JSON-LD DIUJI JALAN), dan **nol secret asli di seluruh 747 commit**. Nol temuan Critical, nol High, nol Medium yang aktif hari ini.
+
+### Yang diperbaiki + sudah DIUJI-BALIK (gerbang 5 langkah hijau: build + tsc 0 error + 2467 tes)
+
+| ID | Apa | Berkas | Penjaga baru |
+|---|---|---|---|
+| SEC-001 | Cookie cacat (`dramaku_tamu=%`) membuat `decodeURIComponent` MELEMPAR → halaman komentar/rating balas **500**, bukan "belum login". Jalur PUBLIK & cookie berumur 1 tahun | `lib/session.ts` | `tests/cookie-cacat.test.ts` (4 tes) |
+| SEC-003 | 4 dari 19 route admin kehilangan cek asal permintaan yang dimiliki 15 saudaranya | `lib/request-guard.ts` + 4 route admin | `tests/admin-csrf-gate.test.ts` (3 tes, **struktural** — route admin BARU yang lupa penjaga ikut merah) |
+| SEC-004 | Header `x-admin-email` dikirim tiap permintaan admin padahal **NOL kode membacanya** (sudah digantikan cookie HMAC sejak HANDOFF.md:7138) | `lib/admin-api.ts`, `app/admin/page.tsx`, `DurasiUkurSemua.tsx` | — (penghapusan dead code; dijaga `tsc` + 2467 tes) |
+
+⚠️ **`guardAsal` sengaja TANPA pembatas laju** (bukan `guardMutation` utuh): `admin/durasi` dipakai pengisian MASSAL durasi (`lib/admin-api.ts`), satu klik menembaknya puluhan kali. Memasang rate-limit di situ akan membuat fitur admin yang sudah jalan gagal separuh jalan — itu perubahan cakupan, bukan perbaikan.
+
+### ✅ SEC-002 SUDAH DIJALANKAN KE DATABASE (2026-11-14, owner: "kamu yang jalankan SQL nya")
+
+Dijalankan dua tahap: **simulasi dulu** (tanpa `--jalankan` → SQL dieksekusi lalu di-`rollback`, exit 0) lalu **sungguhan** (`--jalankan` → exit 0, `DISIMPAN (commit)`).
+
+🔍 **Tidak berhenti di pesan "berhasil"** (§2.3). Definisi fungsi dibaca ULANG dari database lewat `pg_get_functiondef`, komentarnya dibuang, lalu diperiksa: (1) memuat `for update` → **YA**; (2) kunci diambil SEBELUM cek `unlocks` → **YA**; (3) pola lama baca-saldo-tanpa-kunci → **SUDAH HILANG**.
+
+🔒 **Nol hal yang melonggar**, dibuktikan pakai pemeriksa project sendiri `python scripts/cek_rls_dramaapp.py` (cuma baca): RLS tetap NYALA di 5 tabel; `EXECUTE coin_spend_unlock` tetap `service_role=True anon=False authenticated=False`; hak tabel anon/authenticated tetap kosong; USAGE schema tetap tertutup. Tanda tangan fungsi tidak berubah, jadi grant-nya memang tidak perlu dipasang ulang — itu kini terbukti, bukan diprediksi.
+
+⚠️ Yang disentuh: **1 fungsi**. Nol tabel, nol baris, nol kolom. Nol commit git, nol push.
+
+🪤 Jalur SQL ke produksi memakai `C:\Users\user18\Downloads\password.txt` — **password itu HIDUP** (terbukti 2026-11-14). Catatan di `lib/kualitas-drama.ts:14-15` yang menyebutnya *"sudah tidak berlaku"* kini **sudah basi** (lihat temuan sampingan di bawah).
+
+### 🔴 YANG MASIH HARUS OWNER KERJAKAN
+
+`dramaapp.coin_spend_unlock` membaca saldo → memeriksa → menulis **tanpa kunci baris**, jadi klik serentak membelanjakan koin yang sama dua kali: saldo 8 koin bisa membuka 10 episode dan saldonya jadi MINUS. Perbaikannya menambah `for update` + memindahkan pembacaan ke ATAS pemeriksaan `exists` (menutup juga tarik-koin-dua-kali untuk episode yang sama). Tarif, alur, bentuk balasan, sifat idempoten, dan tanda tangan fungsi **tidak** berubah — jadi hak EXECUTE dari migrasi 2026-10-24 tetap menempel dan `lib/store.ts` tak perlu disentuh.
+
+🪤 **KENAPA MENDESAK WALAU KOIN SEDANG DIJEDA.** Hari ini TIDAK bisa dipicu (`lib/saklar-fitur.ts` `PAYWALL_ENABLED = false` → route koin 404). Tapi berkas saklar yang sama menjanjikan penyalaan ulang **"nol migration SQL, nol env baru"** — jadi satu `false`→`true` nanti menghidupkan lubangnya **tanpa satu pun langkah yang mengingatkan**. `tests/koin-kunci-baris.test.ts` menjaga SUMBER SQL-nya, **bukan** database.
+
+#### ✅ Env Railway SUDAH DIPERIKSA owner 2026-11-14 — hasilnya BERSIH
+
+Owner membuka panel Railway (16 Service Variables) dan mengirim potretnya:
+
+- `ENABLE_DEMO_TOPUP` → **TIDAK ADA**. Saklar cetak-koin-gratis mati, risiko kehilangan pendapatan **nol**.
+- `ADMIN_BOOTSTRAP_EMAIL` → **TIDAK ADA**. Nol admin permanen lewat env.
+- `AUTH_SECRET` → **ADA** (nilainya tersamar, jadi yang terbukti cuma keberadaannya — bukan kekuatannya).
+
+Daftar itu dipakai untuk satu pemeriksaan yang sebelumnya mustahil: mencocokkan env yang **dibaca kode** dengan env yang **benar-benar ada**. Hasil: 15 dari 16 memang terpakai; satu-satunya yang tidak (`RAILPACK_NODE_VERSION`) adalah variabel platform Railway, **bukan** rahasia menganggur. Env yang dibaca kode tapi tak di-set semuanya jatuh ke default aman — **kecuali satu**, yang jadi SEC-006 di bawah.
+
+🪤 Catatan cara kerja: versi pertama skrip pencocok saya memakai regex `process.env.X` dan salah melaporkan 7 env sebagai "tidak dipakai" — kode membacanya lewat objek alias (`env.DASHBOARD_API_KEY` di `lib/dashboard-videos.ts:311`). Cari **nama env**-nya, jangan pola aksesnya.
+
+#### ✅ SEC-006 SUDAH DIPERBAIKI (owner memilih opsi (a)) — pagar daftar-host yang tadinya mati
+
+Tiga daftar-izin host, tiga perilaku berbeda saat daftarnya kosong:
+
+| Berkas | Daftar kosong berarti |
+|---|---|
+| `lib/external-video.ts:158` | `return false` → tolak semua ✅ |
+| `lib/playly.ts:596` | `return false` ✅ (+ digabung `DEFAULT_PLAYLY_EMBED_HOSTS`, jadi tak pernah kosong) |
+| `lib/dashboard-videos.ts:108` | `return true; // tidak dibatasi` → **IZINKAN SEMUA** ❌ |
+
+Daftar itu diisi `DASHBOARD_VIDEO_HOSTS`, dan env tersebut **tidak ada** di Railway. Jadi pagarnya **sedang tidak berlaku**, bukan sekadar bisa-tidak-berlaku: alamat video apa pun dari dashboard hulu diteruskan ke penonton lewat `/api/videos` (GET **publik**, tanpa penjaga).
+
+**Kenapa Low, bukan lebih tinggi** (jujur): `toHttpsUrl` memaksa `https`, alamatnya dipakai sebagai sumber video (bukan disuntik sebagai HTML), dan ini **bukan** jalur penyerang anonim — butuh dashboard hulu yang dikuasai/disusupi, sedangkan hulu itu dikonfigurasi owner sendiri. Tampaknya juga disengaja (komentarnya menulis *"tidak dibatasi"*). Yang membuatnya tetap layak dicatat: pagar yang mati **nol gejala di layar**, dan dua saudaranya di repo yang sama melakukan kebalikannya.
+
+**DIKERJAKAN 2026-11-14, opsi (a).** Ditambahkan `DEFAULT_DASHBOARD_VIDEO_HOSTS` + `pilihDaftarHost()` di `lib/dashboard-videos.ts`, sehingga daftar host **tidak pernah lagi kosong** — itulah yang menutup lubangnya.
+
+`hostAllowed` **sengaja tidak disentuh**: mengubah "kosong = izinkan" jadi "tolak" melawan kontrak yang sengaja dikunci `tests/dashboard-videos.test.ts:105` dan merusak ~15 tes. Pola `lib/playly.ts:771` memang bukan mengubah pencocoknya, melainkan menjamin daftarnya terisi.
+
+Isi daftarnya beserta dasarnya: `supabase.co` (tipe `DashboardVideo.videoUrl` menyatakan alamatnya Supabase Storage) · `playly-hosting-video.up.railway.app` + `playly-dashboard.vercel.app` (`lib/playly-alamat.ts:24,33`) · `trycloudflare.com` + `amasyaforum.com` (daftar `sumberVideo` di CSP, `next.config.ts:102-106`).
+
+⚠️ **BATAS JUJUR — pagarnya nyata tapi BELUM rapat.** `supabase.co` itu lebar: meloloskan project Supabase **siapa pun**, bukan cuma milik kita. Tetap dimasukkan karena project ref Playly **tidak bisa diketahui dari repo ini** (fixture tes cuma pakai placeholder `xyz.supabase.co`), dan menebak lalu salah = **seluruh video dashboard hilang**. Hasilnya: naik dari *"host mana pun di internet"* → *"Supabase mana pun + host video kita yang dikenal"*.
+
+🔧 **Cara menutupnya rapat (2 menit, milik owner):** buka `/api/videos` di situs yang tayang, lihat host pada field `videoUrl`, lalu isi `DASHBOARD_VIDEO_HOSTS` di Railway dengan host persisnya. Env **menggantikan** daftar bawaan (sengaja beda dari `playly.ts` yang menambahi), jadi entri lebar itu benar-benar hilang.
+
+Penjaga: `tests/dashboard-host-bawaan.test.ts` (7 tes) — **diuji-balik**: 4/7 merah di perilaku lama, termasuk *"MENOLAK host asing"*. Nol tes lama rusak (44/44 lulus saat ketiga berkas tes dashboard dijalankan bersama).
+
+#### Env lain yang dibaca kode tapi tak di-set — semuanya AMAN
+- `ENABLE_DEMO_TOPUP` → **harus KOSONG**. Kalau bernilai `1` di produksi, siapa pun yang login bisa MENCETAK KOIN tanpa bayar. Ini satu-satunya jalur di seluruh audit yang bisa langsung berarti kehilangan pendapatan.
+- `ADMIN_BOOTSTRAP_EMAIL` → harus kosong kecuali sedang memulihkan akses (kalau terisi, email itu permanen jadi admin).
+- `AUTH_SECRET` → minimal 32 karakter acak.
+
+### SEC-005 sengaja DIBIARKAN TERBUKA (keputusan menunggu owner)
+
+`npm audit` melaporkan 6 kerentanan (3 high, 3 moderate) di akar — **semuanya rantai devDependencies**, nol yang ikut ke produksi. `npm audit fix` DICOBA: berhasil jadi "0 vulnerabilities" (semua naik versi MINOR) **tapi lalu menghancurkan 64 berkas tes** — `vite 8.0.16→8.3.8` berhenti me-resolve alias `@` bergaya prefix di `vitest.config.ts`. 🪤 **`build` dan `tsc` TETAP LOLOS**, jadi kalau cuma itu yang dijalankan kerusakannya tak terlihat. Dibatalkan: `package-lock.json` dipulihkan + `npm ci`, `git diff` dipastikan **KOSONG**. Menukar jaring 2467 tes demi 6 CVE dev-only = pertukaran buruk. Pilihan owner ada di laporan NV-006 (rekomendasi: biarkan terbuka).
+
+### ℹ️ SESI LAIN SEMPAT BERBAGI WORKING TREE — sudah beres sendiri
+
+Saat audit ini selesai (09:44), `ListAgents` menunjukkan **2 sesi Claude lain** hidup di repo yang sama (`dramaapp-d0` 17 jam, `dramaapp-df` 1 jam). Sesi lain itu mengubah **7 berkas pada 09:23-09:28** — redesign UI, BUKAN kerja audit: `app/components/beranda/KepalaKatalog.tsx` (240 baris), `app/not-found.tsx`, dan 5 berkas tes (`beranda-bentuk-halaman`, `jeda-akun-penonton`, `kepala-situs`, `kerangka-discover`, `strip-katalog`). Jumlah tes ikut turun 2467 → 2465.
+
+**Saya tidak menyentuh satu pun dari ketujuhnya**, dan perubahan audit saya diperiksa masih utuh sesudahnya (3 blok catch di `session.ts`, `guardAsal` di 6 handler, nol `x-admin-email`, 10/10 tes penjaga hijau).
+
+✅ **SUDAH BERES 09:50** — sesi itu meng-commit sendiri pekerjaannya sebagai `00f06d2 feat(kepala-situs): hapus tombol garis-tiga + tautan "Masuk sebagai pengelola"`, jadi working tree kini bersih dan tinggal 16 berkas audit. Risiko tercampur **hilang**.
+
+🪤 Tetap **stage per-berkas, jangan `git add -A`**, selama masih ada sesi lain hidup — perintah siap pakai ada di scratchpad sesi: `commit-audit-saja.sh` + `pesan-commit-audit.txt`.
+
+**Angka tes bergeser 2467 → 2465** karena commit `00f06d2` mengubah 2 tes milik redesign mereka — bukan kerja audit. Diuji ulang di atas basis baru: `build` lolos, `npx tsc --noEmit` **exit 0 / 0 error**, `npm test` **175 berkas / 2465 lulus**. Yang mengisolasi kerja audit saja: gerbang sebelumnya di basis `9b15d1d`, **2467 tes EXIT 0**.
+
+🪤 Saat dijalankan berbarengan dengan build sesi lain, `npm run gerbang` sempat mati di langkah 3 dengan **exit 127 palsu** (rebutan sumber daya, bukan kode rusak). Dijalankan terpisah, `tsc` dan `npm test` keduanya exit 0.
+
+### Belum di-commit — 18 berkas
+
+12 diubah: `lib/session.ts`, `lib/request-guard.ts`, `lib/admin-api.ts`, `lib/dashboard-videos.ts`, `app/admin/page.tsx`, `app/components/admin/DurasiUkurSemua.tsx`, `app/api/admin/{ads,drama,durasi,hardlink}/route.ts` + berkas catatan ini & `docs/lintasai/INDEX.md`
+
+6 baru: `LAPORAN-AKHIR-AUDIT-KEAMANAN.txt`, `supabase_migrations/2026-11-14_kunci_baris_dompet_koin.sql`, `tests/{cookie-cacat,koin-kunci-baris,admin-csrf-gate,dashboard-host-bawaan}.test.ts`
+
+`npm run gerbang` **EXIT 0** (175 berkas / 2467 tes — naik dari 172/2457). Push belum dilakukan: `git push origin main` = TOMBOL RILIS, izin owner. Sesudah tayang, smoke test yang menyentuh kode yang diubah: buka halaman drama → tulis komentar → beri rating → buka panel admin → simpan satu drama.
+
+### 🔎 TEMUAN SAMPINGAN — utang teknis `quality` kini BISA dibayar
+
+Potret skrip SQL menyebut kolom `quality` **belum ada** di `dramaapp.dramas` (diperiksa langsung: tabelnya punya 29 kolom, `kind` & `status` ADA, `quality` TIDAK). Itu **bukan bug** — `lib/kualitas-drama.ts` sengaja menyimpannya sebagai dokumen JSON di tabel `app_data`, dan utang teknisnya ditulis terbuka di sana.
+
+**Tapi ALASANNYA sudah tidak berlaku.** Baris 12-18 berkas itu menyebut kolomnya tak dibuat karena *"SEMUA jalur ke sana tertutup pada 2026-09-22 — password database di Downloads/password.txt sudah tidak berlaku"*. Audit ini **membuktikan jalur itu hidup** dengan menjalankan DDL lewat password yang sama persis. Jadi "CARA NAIK KELAS" di baris 35-37 (jalankan `supabase_migrations/add_quality_to_dramas.sql`, pindahkan isi dokumen ke kolomnya, kembalikan `quality` ke `dramaToRow`/`rowToDrama`, hapus berkas itu) sekarang **bisa dikerjakan**.
+
+Manfaat yang terasa: label kualitas dijaga `CHECK constraint` di database (bukan cuma kode), nol pembacaan tambahan per katalog, dan hilangnya risiko tulisan-tertimpa saat dua admin menyimpan bersamaan. **Belum saya kerjakan** — ini menyentuh `lib/dramas.ts` + perpindahan data, jadi keputusan owner. Biaya: satu sesi kerja + 1 DDL.
+
+### Pelajaran yang dicatat ke `docs/lintasai/INDEX.md` (4)
+
+Lubang-yang-tidur di balik saklar fitur · tes-pemeriksa-teks bisa lulus dari komentarnya sendiri (jebakan ini benar-benar menipu tes saya sendiri, ketahuan saat uji-balik) · `npm audit fix` mematikan jaring tes sementara `build` tetap hijau · skrip sisipan wajib memakai akhir-baris berkas tujuan.
 
 ---
 

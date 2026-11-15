@@ -163,6 +163,31 @@ function Spanduk({
   );
 }
 
+/** Judul kolom tabel. Satu fungsi supaya daftar Perlu dicek dan daftar
+ *  utama mustahil beda kolom — judul yang menunjuk kontrol salah tidak
+ *  memunculkan error. */
+function JudulKolom() {
+  return (
+    <div
+      className={cn(
+        // Tanpa padding horizontal sendiri — lihat catatan di
+        // pembungkusnya. `sm:grid` saja (bukan `grid`) supaya `hidden`
+        // tetap berlaku di layar sempit.
+        "hidden border-b border-zinc-800 pb-2 text-[11px] font-semibold uppercase tracking-wide text-zinc-500 sm:grid",
+        KOLOM_BARIS,
+      )}
+    >
+      <span>Judul</span>
+      <span>Jenis</span>
+      <span>Kategori</span>
+      <span>Kualitas</span>
+      <span>IMDb</span>
+      <span>Rating</span>
+      <span>Aksi</span>
+    </div>
+  );
+}
+
 /**
  * Satu angka ringkasan.
  *
@@ -372,6 +397,11 @@ export default function PlaylyVisibilityManager({
   const [pesan, setPesan] = useState<Pesan | null>(null);
   /** Saringan "sudah / belum ada IMDb" (owner 2026-11-05: "biar mudah"). */
   const [saring, setSaring] = useState<SaringImdb>(SARING_BAWAAN);
+  // Daftar film bertanda segitiga. Sengaja BUKAN kotak kedua di atas tabel
+  // (owner 2026-11-15: "jangan menumpuk seperti itu") — 59 baris penuh
+  // mendorong daftar biasa keluar layar. Tombol ini menukar ISI tabel yang
+  // sama, jadi tetap satu daftar.
+  const [lihatPeringatan, setLihatPeringatan] = useState(false);
   // Kotak cari (owner 2026-11-09). Daftar ini 500 judul — tombol saringan saja
   // tidak cukup untuk menemukan SATU judul tertentu.
   const [ketikan, setKetikan] = useState("");
@@ -716,376 +746,43 @@ export default function PlaylyVisibilityManager({
     [videos, kualitas, ratingManual, imdb, petaUnduhan],
   );
 
-  const jumlahSaring = hitungImdb(videos, imdb);
+  // Video bertanda segitiga (berkasnya belum ada di Playly) DIKELUARKAN
+  // dari daftar biasa. Owner 2026-11-15: tandanya tercampur di ratusan baris.
+  // Angka tombol Semua/Sudah/Belum dihitung dari sisanya supaya sama dengan
+  // baris yang terlihat. Tombol "Perlu dicek" menampilkan kelompok itu di
+  // tabel yang sama — bukan kotak kedua yang menumpuk di atas.
+  const belumSiap = new Set(belumSiapAktif);
+  const videoBiasa = videos.filter((v) => !belumSiap.has(v.id));
+  const videoPeringatan = videos.filter((v) => belumSiap.has(v.id));
+  const jumlahSaring = hitungImdb(videoBiasa, imdb);
   // DUA lapis saringan, dan urutannya penting: tombol saringan dulu (Semua /
   // Sudah ada IMDb / Belum), baru ketikan. Dibalik, angka di tombol saringan
   // ikut menyusut mengikuti ketikan — padahal angka itu dibaca admin sebagai
   // "berapa total yang belum dikerjakan", bukan "berapa hasil pencarian".
-  const videoSaringan = saringVideoImdb(videos, imdb, saring);
+  const videoSaringan = saringVideoImdb(videoBiasa, imdb, saring);
   const videoTampil = saringDenganKetikan(videoSaringan, ketikan, (v) => [v.title]);
+  const videoPeringatanTampil = saringDenganKetikan(videoPeringatan, ketikan, (v) => [v.title]);
 
   // Dipotong SESUDAH disaring, bukan sebelum: memotong dulu lalu menyaring
   // akan menghasilkan halaman yang jumlah barisnya berubah-ubah (halaman 1
   // berisi 12 baris, halaman 2 berisi 40) tanpa ada yang salah di layar.
   const halamanAman = jepitHalaman(halaman, videoTampil.length, ukuran);
-  const videoHalaman = potongHalaman(videoTampil, halamanAman, ukuran);
-
-  const belumSiap = new Set(belumSiapAktif);
+  const potonganBiasa = potongHalaman(videoTampil, halamanAman, ukuran);
+  const halamanCek = jepitHalaman(halaman, videoPeringatanTampil.length, ukuran);
+  const potonganCek = potongHalaman(videoPeringatanTampil, halamanCek, ukuran);
+  const videoHalaman = lihatPeringatan ? potonganCek : potonganBiasa;
+  const halamanTabel = lihatPeringatan ? halamanCek : halamanAman;
+  const totalTabel = lihatPeringatan ? videoPeringatanTampil.length : videoTampil.length;
   const jumlahTampil = videos.filter(
     (v) => !hidden.has(v.id) && !belumSiap.has(v.id),
   ).length;
   const jumlahSeries = videos.filter((v) => jenis[v.id] === "series").length;
   const jumlahImdb = videos.filter((v) => imdb[v.id]).length;
 
-  return (
-    <section className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-5">
-      {/* Keterangan Jenis/Kategori/IMDb pindah ke balik tombol "?" (owner
-          2026-11-06: "jadi klo orang mau baca tinggal klik"). Isinya sama
-          persis — yang berubah cuma: tiga paragraf itu tidak lagi mendorong
-          daftar videonya jauh ke bawah layar tiap panel dibuka. */}
-      <BantuanSingkat
-        label="Apa arti Jenis, Kategori, dan Cari di IMDb?"
-        judul={
-          <h2 className="text-base font-semibold text-white">
-            Video yang tampil di halaman penonton
-          </h2>
-        }
-      >
-
-        {/* Ketiga keterangan ini SELALU dirender, tidak lagi bersyarat
-            "ada video": tombol "?" yang diklik lalu tidak menampilkan apa-apa
-            terbaca seperti tombol rusak. Yang bersyarat cuma ANGKA-nya, dan
-            angka itu kini duduk di baris ringkas di luar kotak — tempatnya
-            memang di baris status, bukan terkubur di tengah penjelasan. */}
-        <p>
-          <strong className="text-zinc-200">Jenis</strong> menentukan video ini
-          masuk baris <strong className="text-zinc-200">&quot;Film Terbaru&quot;</strong> atau{" "}
-          <strong className="text-zinc-200">&quot;Series Terbaru&quot;</strong> di
-          beranda. Bawaannya <em>Film</em>, jadi pilih <em>Series</em> untuk
-          episode drama berseri. Playly tidak pernah memberi tahu kita sebuah
-          video itu film atau serial, jadi pilihan di sinilah satu-satunya yang
-          menentukan. Perubahan terlihat di situs dalam ±1 menit.
-        </p>
-
-        {/* Keterangan kategori ditulis di sini, bukan di sebelah tiap
-            dropdown: aturannya sama untuk semua baris, dan mengulangnya 46
-            kali cuma membuat daftar jadi padat tanpa menambah kejelasan. */}
-        <p>
-          <strong className="text-zinc-200">Kategori</strong> menentukan video
-          ikut muncul di baris genre beranda (mis. &quot;Drama Action&quot;).
-          Dibiarkan <em>Tanpa kategori</em> pun videonya{" "}
-          <strong className="text-zinc-200">tetap tampil</strong> di baris
-          &quot;Film Terbaru&quot; di atas beranda — jadi tidak ada video yang
-          hilang karena belum diisi. Perubahan terlihat di situs dalam ±1 menit.
-        </p>
-
-        {/* Keterangan IMDb ditulis sekali di sini, bukan di sebelah tiap
-            tombol — alasan yang sama dengan keterangan kategori di atas. */}
-        <p>
-          <strong className="text-zinc-200">Cari di IMDb</strong> mengisi poster,
-          sinopsis, genre, tahun, dan rating untuk video itu. Playly tidak pernah
-          mengirim data ini, jadi tanpa diisi kartunya memang tampil polos —
-          itulah kenapa video di sini terlihat beda dari film yang kamu tambahkan
-          sendiri. Kotak pencariannya{" "}
-          <strong className="text-zinc-200">sudah terisi otomatis</strong> dari
-          judul videonya, jadi biasanya tinggal tekan <em>Cari</em> lalu pilih
-          film yang benar.
-        </p>
-      </BantuanSingkat>
-
-      {/* RINGKASAN ANGKA. Keempatnya dihitung ulang tiap render, jadi begitu
-          sebuah video disembunyikan / ditandai Series / dicocokkan ke IMDb,
-          angkanya bergerak seketika tanpa memuat ulang halaman. */}
-      {videos.length === 0 ? (
-        <p className="mt-3 text-sm text-zinc-400">
-          Belum ada video di akun Playly kita. Upload dulu di dashboard Playly —
-          begitu ter-upload, video langsung muncul di sini dan di halaman
-          penonton.
-        </p>
-      ) : (
-        <>
-          <dl className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-            <KartuAngka label="Total video" nilai={videos.length} />
-            <KartuAngka
-              label="Tampil ke penonton"
-              /* Selagi pemeriksaan berjalan angkanya PASTI kelebihan (video
-                 yang berkasnya hilang belum ketahuan), jadi lebih jujur
-                 menampilkan titik-titik daripada angka yang sebentar lagi
-                 berubah sendiri tanpa penjelasan. */
-              nilai={menungguBerkas ? "…" : jumlahTampil}
-              dari={videos.length}
-            />
-            <KartuAngka
-              label="Ditandai Series"
-              nilai={jumlahSeries}
-              dari={videos.length}
-            />
-            <KartuAngka
-              label="Sudah ada IMDb"
-              nilai={jumlahImdb}
-              dari={videos.length}
-            />
-          </dl>
-          <p className="mt-2 text-xs text-zinc-500">
-            Semua video tampil otomatis; sembunyikan yang tidak ingin
-            ditayangkan.
-          </p>
-        </>
-      )}
-
-      {/* SEMUA PEMBERITAHUAN DIKUMPULKAN DI SATU TEMPAT (owner 2026-11-06:
-          "rapikan lagi agar UI nya lebih bagus"). Sebelumnya ketiganya
-          berserak — satu di atas kalimat status, dua lagi terselip di bawah
-          tombol pencocokan massal — sehingga peringatan penting bisa terlewat
-          karena posisinya berpindah tergantung spanduk mana yang muncul. */}
-      <div className="mt-4 space-y-2 empty:hidden">
-        {/* Pengambilan bermasalah TAPI daftarnya masih ada (dari salinan
-            terakhir). Peringatannya tetap tampil — jujur bahwa daftar ini bisa
-            ketinggalan video yang baru di-upload — tanpa menyandera seluruh
-            panel seperti sebelum 2026-11-05. Penandaan yang disimpan dari sini
-            TETAP sah: ia menulis ke database kita sendiri, bukan ke Playly. */}
-        {fetchError && (
-          <Spanduk nada="peringatan" ikon={AlertTriangle}>
-            {fetchError} Daftar di bawah dipakai dari salinan terakhir, jadi
-            video yang baru saja di-upload mungkin belum muncul. Pengaturan yang
-            kamu simpan di sini tetap tersimpan dengan benar.
-          </Spanduk>
-        )}
-
-        {/* Selama hasilnya belum tiba, katakan apa adanya. Tanpa baris ini,
-            tabel tanpa satu pun penanda "belum siap" terbaca sebagai "semua
-            video aman" — kesimpulan yang salah dan tak ada yang mengoreksinya. */}
-        {menungguBerkas && (
-          <Spanduk nada="info" ikon={Loader2}>
-            Memeriksa berkas tiap video ke Playly… Tabel di bawah sudah bisa
-            dipakai; penanda <strong>belum siap</strong> dan angka{" "}
-            <strong>Tampil ke penonton</strong> menyusul setelah pemeriksaan
-            selesai.
-          </Spanduk>
-        )}
-
-        {belumSiap.size > 0 && (
-          <Spanduk nada="bahaya" ikon={AlertTriangle}>
-            <strong>{belumSiap.size} video belum siap.</strong> Catatannya ada di
-            Playly (judul, durasi, sampul), tapi file videonya tidak — biasanya
-            karena upload putus di tengah. Video ini <strong>tidak</strong>{" "}
-            ditampilkan ke penonton, karena kalau diklik yang muncul cuma layar
-            &quot;Video belum tersedia&quot;. Perbaikannya di dashboard Playly:
-            upload ulang videonya sampai 100% selesai, lalu buka lagi halaman
-            ini.
-          </Spanduk>
-        )}
-
-        {/* Dikatakan apa adanya: daftar ini TIDAK datang dari kunci mitra, jadi
-            jangan sampai ada yang mengira kuncinya sudah jalan padahal belum. */}
-        {source === "katalog-publik" && videos.length > 0 && (
-          <Spanduk nada="info" ikon={Info}>
-            Daftar ini diambil dari katalog publik Playly dan disaring ke akun{" "}
-            <strong>{creators.join(", ")}</strong>, karena kunci mitra sedang
-            tidak diterima Playly. Videonya tetap hanya milik akun kita. Kalau
-            ada akun Playly baru, tambahkan lewat Environment Variable{" "}
-            <code>PLAYLY_CREATOR</code> (dipisah koma) — isinya MENAMBAH daftar
-            bawaan, bukan menggantikannya.
-          </Spanduk>
-        )}
-      </div>
-
-      {/* Pencocokan massal. Diletakkan SESUDAH keterangan dan SEBELUM daftar:
-          urutan kerjanya memang begitu — pahami dulu apa yang diisi, kerjakan
-          borongan, baru rapikan sisanya satu per satu di daftar di bawah. */}
-      {!fetchError && (
-        <PlaylyCocokkanSemua videos={videos} imdb={imdb} onPerbarui={setImdb} />
-      )}
-
-      {/* ⚠️ SENGAJA DI LUAR pagar `!fetchError` — jangan "dirapikan" masuk ke
-          dalamnya bersama panel di atas.
-
-          `fetchError` berarti PLAYLY yang tidak menjawab. Panel di atas memang
-          pantas sembunyi saat itu (mencocokkan daftar yang mungkin basi).
-          Tebakan kategori TIDAK menyentuh Playly sama sekali: ia membaca genre
-          dari data IMDb yang sudah tersimpan, dan daftar videonya sendiri
-          datang dari salinan `playly:cadangan` yang tetap lengkap.
-
-          Ketahuan saat diperiksa di localhost 2026-11-09: dengan panel ini di
-          dalam pagar, ia lenyap persis di keadaan yang paling sering terjadi —
-          produksi pun sedang menampilkan "Playly tidak menjawab dalam 10
-          detik". Fitur yang mati justru saat paling dibutuhkan.
-
-          Ditaruh SESUDAH pencocokan IMDb karena urutan kerjanya memang begitu:
-          cocokkan dulu, baru tebak kategorinya. Panel ini menyembunyikan diri
-          sendiri kalau tidak ada yang bisa diusulkan. */}
-      <KategoriIsiOtomatis
-        videos={videos}
-        imdb={imdb}
-        kategoriSekarang={genres}
-        onTersimpan={(videoId, kategori) =>
-          setGenres((lama) => ({ ...lama, [videoId]: kategori }))
-        }
-      />
-
-      {/* Ringkasan kualitas & rating. Juga DI LUAR pagar `!fetchError`, dengan
-          alasan yang sama seperti panel kategori di atas: angkanya dihitung
-          dari data yang sudah tersimpan di sisi kita, bukan dari Playly. */}
-      <RingkasanIsianVideo ringkasan={ringkasan} />
-
-      {pesan && (
-        <p
-          role="status"
-          className={`mt-3 text-sm ${
-            pesan.jenis === "ok" ? "text-emerald-400" : "text-rose-400"
-          }`}
-        >
-          {pesan.teks}
-        </p>
-      )}
-
-      {/* SARINGAN IMDb (owner 2026-11-05: "biar mudah"). Ditaruh tepat di atas
-          daftar, bukan di kepala panel: ia menjelaskan isi daftar di bawahnya,
-          dan keterangan yang jauh dari yang dijelaskan mudah terlewat.
-
-          Angkanya dihitung ulang tiap render, jadi begitu sebuah video
-          dicocokkan, hitungannya bergerak seketika — admin melihat sisanya
-          berkurang tanpa memuat ulang halaman. */}
-      {videos.length > 0 && (
-        <div className="mt-4 flex flex-wrap items-center gap-2">
-          {(Object.keys(LABEL_SARING) as SaringImdb[]).map((pilihan) => {
-            const dipakai = saring === pilihan;
-            return (
-              <button
-                key={pilihan}
-                type="button"
-                onClick={() => {
-                  setSaring(pilihan);
-                  // 🪤 Tanpa baris ini: sedang di halaman 3 "Semua" (359
-                  // video) lalu klik "Belum ada IMDb" (61 video, cuma 1
-                  // halaman) = halaman 3 tidak ada, daftarnya kosong. Penjepit
-                  // di lib/paginasi.ts menahan kerusakannya, tapi melompat ke
-                  // halaman terakhir tanpa diminta tetap membingungkan.
-                  setHalaman(HALAMAN_PERTAMA);
-                }}
-                aria-pressed={dipakai}
-                className={cn(
-                  "rounded-full border px-3 py-1.5 text-xs font-semibold transition",
-                  dipakai
-                    ? "border-amber-500 bg-amber-500/15 text-amber-700"
-                    : "border-zinc-700 text-zinc-400 hover:border-amber-400 hover:text-amber-700",
-                )}
-              >
-                {LABEL_SARING[pilihan]}{" "}
-                <span className="font-bold">{jumlahSaring[pilihan]}</span>
-              </button>
-            );
-          })}
-
-          {/* PINTU MASUK panel "Isi manual" (owner 2026-11-11: "pindahkan isi
-              cepat ke filter yang ada di imdb biar lebih rapi"). Dulu sebuah
-              menu di sidebar; dipindah ke sini karena DI SINILAH kebutuhannya
-              muncul — admin menyaring "Belum ada IMDb", melihat film yang
-              poster/tahun/rating-nya tak bisa diisi otomatis, lalu butuh
-              mengisinya tangan. Sidebar ikut jadi lebih pendek.
-
-              ⚠️ SENGAJA TIDAK berbentuk tombol bundar seperti tiga saringan di
-              kirinya. Ketiganya MEMPERSEMPIT daftar di halaman yang sama; yang
-              ini BERPINDAH panel. Bentuk yang seragam membuat admin mengklik
-              sambil menunggu daftarnya menyusut, lalu bingung karena layarnya
-              berganti. Tiga penanda bahwa ini jenis lain: garis pemisah, sudut
-              kotak (rounded-md bawaan Button), dan ikon.
-
-              Labelnya diambil dari JUDUL_BAGIAN_PLAYLY, bukan diketik ulang —
-              judul panel dan tombol yang membukanya jadi mustahil menyimpang. */}
-          <span aria-hidden className="mx-1 h-5 w-px shrink-0 bg-zinc-700" />
-          <Button asChild variant="outline" size="sm">
-            <a href={alamatBagianPlayly("isi-cepat")}>
-              <ListChecks className="size-3.5" />
-              {JUDUL_BAGIAN_PLAYLY["isi-cepat"]}
-            </a>
-          </Button>
-
-          {saring === "belum" && jumlahSaring.belum > 0 && (
-            // Kalimat ini mencegah kebingungan yang pasti muncul: saat saringan
-            // "Belum" aktif, video yang BARU SAJA dicocokkan langsung lenyap
-            // dari daftar — itu benar, tapi tanpa penjelasan terbaca seperti
-            // videonya terhapus.
-            <span className="text-xs text-zinc-500">
-              Video hilang dari daftar ini begitu selesai dicocokkan — itu
-              tandanya berhasil.
-            </span>
-          )}
-
-          {/* Kotak cari duduk SEBARIS dengan tombol saringan, bukan di atasnya:
-              keduanya mempersempit daftar yang sama, jadi memisahkannya membuat
-              admin mengira salah satunya menimpa yang lain. `ml-auto` mendorong
-              ke kanan supaya tombol saringan tetap jadi yang pertama dibaca. */}
-          <KotakCariDaftar
-            className="ml-auto"
-            nilai={ketikan}
-            onNilai={setKetikan}
-            jumlah={videoTampil.length}
-            total={videoSaringan.length}
-            placeholder="Cari judul video…"
-          />
-        </div>
-      )}
-
-      {videos.length > 0 && videoTampil.length === 0 && (
-        // Daftar kosong karena SARINGAN, bukan karena tidak ada video. Dua hal
-        // itu wajib dibedakan: tanpa pesan ini, panel terbaca seperti rusak.
-        <p className="mt-4 rounded-lg border border-zinc-700 p-4 text-center text-sm text-zinc-400">
-          {/* Ketikan diperiksa DULU: kalau admin sedang mencari, itulah sebab
-              yang paling mungkin — dan tindakannya beda dari mengganti
-              saringan. Menyebut saringan saat yang salah ketikannya membuat
-              admin mengutak-atik tombol yang bukan penyebabnya. */}
-          {ketikan.trim() !== "" ? (
-            <>
-              Tidak ada video yang cocok dengan “{ketikan}”.{" "}
-              <button
-                type="button"
-                onClick={() => setKetikan("")}
-                className="text-amber-600 underline-offset-2 hover:underline"
-              >
-                Kosongkan pencarian
-              </button>
-            </>
-          ) : saring === "belum" ? (
-            "Semua video sudah dicocokkan ke IMDb. Tidak ada yang tersisa."
-          ) : (
-            "Belum ada video yang cocok dengan saringan ini."
-          )}
-        </p>
-      )}
-
-      {videos.length > 0 && (
-        // 🪤 PADDING HORIZONTAL HANYA DI SINI. Sebelumnya baris judul kolom
-        // dan tiap baris video sama-sama ber-`px-2` di tempatnya
-        // masing-masing — kesejajarannya bergantung pada dua nilai yang
-        // KEBETULAN sama, dan nilai yang kebetulan sama adalah nilai yang
-        // menyimpang begitu salah satunya disunting. Sekarang keduanya
-        // mulai dari tepi yang sama persis, jadi mustahil meleset.
-        <div className="mt-4 px-1">
-          {/* Judul kolom — inilah yang membuat daftar terbaca seperti tabel.
-              Hanya muncul di layar yang kolomnya memang sejajar (sm ke atas);
-              di bawah itu kontrolnya jatuh jadi 2 kolom, jadi judul kolom di
-              sana justru menunjuk ke kontrol yang salah. */}
-          <div
-            className={cn(
-              // Tanpa padding horizontal sendiri — lihat catatan di
-              // pembungkusnya. `sm:grid` saja (bukan `grid`) supaya `hidden`
-              // tetap berlaku di layar sempit.
-              "hidden border-b border-zinc-800 pb-2 text-[11px] font-semibold uppercase tracking-wide text-zinc-500 sm:grid",
-              KOLOM_BARIS,
-            )}
-          >
-            <span>Judul</span>
-            <span>Jenis</span>
-            <span>Kategori</span>
-            <span>Kualitas</span>
-            <span>IMDb</span>
-            <span>Rating</span>
-            <span>Aksi</span>
-          </div>
-
-          <ul className="divide-y divide-zinc-800">
-          {videoHalaman.map((v) => {
+  // Satu gambar baris untuk KEDUA daftar. Menyalin JSX-nya dua kali
+  // membuat dropdown di daftar "Perlu dicek" menyimpang dari daftar utama
+  // tanpa ada yang error — admin mengira salah satunya rusak.
+  const gambarBaris = (v: PlaylyVideo) => {
             const tersembunyi = hidden.has(v.id);
             const belumAdaFile = belumSiap.has(v.id);
             const proses = sedangProses === v.id;
@@ -1477,7 +1174,364 @@ export default function PlaylyVisibilityManager({
                 )}
               </li>
             );
+          };
+
+  return (
+    <section className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-5">
+      {/* Keterangan Jenis/Kategori/IMDb pindah ke balik tombol "?" (owner
+          2026-11-06: "jadi klo orang mau baca tinggal klik"). Isinya sama
+          persis — yang berubah cuma: tiga paragraf itu tidak lagi mendorong
+          daftar videonya jauh ke bawah layar tiap panel dibuka. */}
+      <BantuanSingkat
+        label="Apa arti Jenis, Kategori, dan Cari di IMDb?"
+        judul={
+          <h2 className="text-base font-semibold text-white">
+            Video yang tampil di halaman penonton
+          </h2>
+        }
+      >
+
+        {/* Ketiga keterangan ini SELALU dirender, tidak lagi bersyarat
+            "ada video": tombol "?" yang diklik lalu tidak menampilkan apa-apa
+            terbaca seperti tombol rusak. Yang bersyarat cuma ANGKA-nya, dan
+            angka itu kini duduk di baris ringkas di luar kotak — tempatnya
+            memang di baris status, bukan terkubur di tengah penjelasan. */}
+        <p>
+          <strong className="text-zinc-200">Jenis</strong> menentukan video ini
+          masuk baris <strong className="text-zinc-200">&quot;Film Terbaru&quot;</strong> atau{" "}
+          <strong className="text-zinc-200">&quot;Series Terbaru&quot;</strong> di
+          beranda. Bawaannya <em>Film</em>, jadi pilih <em>Series</em> untuk
+          episode drama berseri. Playly tidak pernah memberi tahu kita sebuah
+          video itu film atau serial, jadi pilihan di sinilah satu-satunya yang
+          menentukan. Perubahan terlihat di situs dalam ±1 menit.
+        </p>
+
+        {/* Keterangan kategori ditulis di sini, bukan di sebelah tiap
+            dropdown: aturannya sama untuk semua baris, dan mengulangnya 46
+            kali cuma membuat daftar jadi padat tanpa menambah kejelasan. */}
+        <p>
+          <strong className="text-zinc-200">Kategori</strong> menentukan video
+          ikut muncul di baris genre beranda (mis. &quot;Drama Action&quot;).
+          Dibiarkan <em>Tanpa kategori</em> pun videonya{" "}
+          <strong className="text-zinc-200">tetap tampil</strong> di baris
+          &quot;Film Terbaru&quot; di atas beranda — jadi tidak ada video yang
+          hilang karena belum diisi. Perubahan terlihat di situs dalam ±1 menit.
+        </p>
+
+        {/* Keterangan IMDb ditulis sekali di sini, bukan di sebelah tiap
+            tombol — alasan yang sama dengan keterangan kategori di atas. */}
+        <p>
+          <strong className="text-zinc-200">Cari di IMDb</strong> mengisi poster,
+          sinopsis, genre, tahun, dan rating untuk video itu. Playly tidak pernah
+          mengirim data ini, jadi tanpa diisi kartunya memang tampil polos —
+          itulah kenapa video di sini terlihat beda dari film yang kamu tambahkan
+          sendiri. Kotak pencariannya{" "}
+          <strong className="text-zinc-200">sudah terisi otomatis</strong> dari
+          judul videonya, jadi biasanya tinggal tekan <em>Cari</em> lalu pilih
+          film yang benar.
+        </p>
+      </BantuanSingkat>
+
+      {/* RINGKASAN ANGKA. Keempatnya dihitung ulang tiap render, jadi begitu
+          sebuah video disembunyikan / ditandai Series / dicocokkan ke IMDb,
+          angkanya bergerak seketika tanpa memuat ulang halaman. */}
+      {videos.length === 0 ? (
+        <p className="mt-3 text-sm text-zinc-400">
+          Belum ada video di akun Playly kita. Upload dulu di dashboard Playly —
+          begitu ter-upload, video langsung muncul di sini dan di halaman
+          penonton.
+        </p>
+      ) : (
+        <>
+          <dl className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <KartuAngka label="Total video" nilai={videos.length} />
+            <KartuAngka
+              label="Tampil ke penonton"
+              /* Selagi pemeriksaan berjalan angkanya PASTI kelebihan (video
+                 yang berkasnya hilang belum ketahuan), jadi lebih jujur
+                 menampilkan titik-titik daripada angka yang sebentar lagi
+                 berubah sendiri tanpa penjelasan. */
+              nilai={menungguBerkas ? "…" : jumlahTampil}
+              dari={videos.length}
+            />
+            <KartuAngka
+              label="Ditandai Series"
+              nilai={jumlahSeries}
+              dari={videos.length}
+            />
+            <KartuAngka
+              label="Sudah ada IMDb"
+              nilai={jumlahImdb}
+              dari={videos.length}
+            />
+          </dl>
+          <p className="mt-2 text-xs text-zinc-500">
+            Semua video tampil otomatis; sembunyikan yang tidak ingin
+            ditayangkan.
+          </p>
+        </>
+      )}
+
+      {/* SEMUA PEMBERITAHUAN DIKUMPULKAN DI SATU TEMPAT (owner 2026-11-06:
+          "rapikan lagi agar UI nya lebih bagus"). Sebelumnya ketiganya
+          berserak — satu di atas kalimat status, dua lagi terselip di bawah
+          tombol pencocokan massal — sehingga peringatan penting bisa terlewat
+          karena posisinya berpindah tergantung spanduk mana yang muncul. */}
+      <div className="mt-4 space-y-2 empty:hidden">
+        {/* Pengambilan bermasalah TAPI daftarnya masih ada (dari salinan
+            terakhir). Peringatannya tetap tampil — jujur bahwa daftar ini bisa
+            ketinggalan video yang baru di-upload — tanpa menyandera seluruh
+            panel seperti sebelum 2026-11-05. Penandaan yang disimpan dari sini
+            TETAP sah: ia menulis ke database kita sendiri, bukan ke Playly. */}
+        {fetchError && (
+          <Spanduk nada="peringatan" ikon={AlertTriangle}>
+            {fetchError} Daftar di bawah dipakai dari salinan terakhir, jadi
+            video yang baru saja di-upload mungkin belum muncul. Pengaturan yang
+            kamu simpan di sini tetap tersimpan dengan benar.
+          </Spanduk>
+        )}
+
+        {/* Selama hasilnya belum tiba, katakan apa adanya. Tanpa baris ini,
+            tabel tanpa satu pun penanda "belum siap" terbaca sebagai "semua
+            video aman" — kesimpulan yang salah dan tak ada yang mengoreksinya. */}
+        {menungguBerkas && (
+          <Spanduk nada="info" ikon={Loader2}>
+            Memeriksa berkas tiap video ke Playly… Tabel di bawah sudah bisa
+            dipakai; penanda <strong>belum siap</strong> dan angka{" "}
+            <strong>Tampil ke penonton</strong> menyusul setelah pemeriksaan
+            selesai.
+          </Spanduk>
+        )}
+
+        {belumSiap.size > 0 && (
+          <Spanduk nada="bahaya" ikon={AlertTriangle}>
+            <strong>{belumSiap.size} video belum siap.</strong> Catatannya ada di
+            Playly (judul, durasi, sampul), tapi file videonya tidak — biasanya
+            karena upload putus di tengah. Video ini <strong>tidak</strong>{" "}
+            ditampilkan ke penonton, karena kalau diklik yang muncul cuma layar
+            &quot;Video belum tersedia&quot;. Perbaikannya di dashboard Playly:
+            upload ulang videonya sampai 100% selesai, lalu buka lagi halaman
+            ini. Judulnya tidak dicampur di daftar — klik tombol{" "}
+            <strong>Perlu dicek</strong> di atas tabel untuk melihatnya.
+          </Spanduk>
+        )}
+
+        {/* Dikatakan apa adanya: daftar ini TIDAK datang dari kunci mitra, jadi
+            jangan sampai ada yang mengira kuncinya sudah jalan padahal belum. */}
+        {source === "katalog-publik" && videos.length > 0 && (
+          <Spanduk nada="info" ikon={Info}>
+            Daftar ini diambil dari katalog publik Playly dan disaring ke akun{" "}
+            <strong>{creators.join(", ")}</strong>, karena kunci mitra sedang
+            tidak diterima Playly. Videonya tetap hanya milik akun kita. Kalau
+            ada akun Playly baru, tambahkan lewat Environment Variable{" "}
+            <code>PLAYLY_CREATOR</code> (dipisah koma) — isinya MENAMBAH daftar
+            bawaan, bukan menggantikannya.
+          </Spanduk>
+        )}
+      </div>
+
+      {/* Pencocokan massal. Diletakkan SESUDAH keterangan dan SEBELUM daftar:
+          urutan kerjanya memang begitu — pahami dulu apa yang diisi, kerjakan
+          borongan, baru rapikan sisanya satu per satu di daftar di bawah. */}
+      {!fetchError && (
+        <PlaylyCocokkanSemua videos={videos} imdb={imdb} onPerbarui={setImdb} />
+      )}
+
+      {/* ⚠️ SENGAJA DI LUAR pagar `!fetchError` — jangan "dirapikan" masuk ke
+          dalamnya bersama panel di atas.
+
+          `fetchError` berarti PLAYLY yang tidak menjawab. Panel di atas memang
+          pantas sembunyi saat itu (mencocokkan daftar yang mungkin basi).
+          Tebakan kategori TIDAK menyentuh Playly sama sekali: ia membaca genre
+          dari data IMDb yang sudah tersimpan, dan daftar videonya sendiri
+          datang dari salinan `playly:cadangan` yang tetap lengkap.
+
+          Ketahuan saat diperiksa di localhost 2026-11-09: dengan panel ini di
+          dalam pagar, ia lenyap persis di keadaan yang paling sering terjadi —
+          produksi pun sedang menampilkan "Playly tidak menjawab dalam 10
+          detik". Fitur yang mati justru saat paling dibutuhkan.
+
+          Ditaruh SESUDAH pencocokan IMDb karena urutan kerjanya memang begitu:
+          cocokkan dulu, baru tebak kategorinya. Panel ini menyembunyikan diri
+          sendiri kalau tidak ada yang bisa diusulkan. */}
+      <KategoriIsiOtomatis
+        videos={videos}
+        imdb={imdb}
+        kategoriSekarang={genres}
+        onTersimpan={(videoId, kategori) =>
+          setGenres((lama) => ({ ...lama, [videoId]: kategori }))
+        }
+      />
+
+      {/* Ringkasan kualitas & rating. Juga DI LUAR pagar `!fetchError`, dengan
+          alasan yang sama seperti panel kategori di atas: angkanya dihitung
+          dari data yang sudah tersimpan di sisi kita, bukan dari Playly. */}
+      <RingkasanIsianVideo ringkasan={ringkasan} />
+
+      {pesan && (
+        <p
+          role="status"
+          className={`mt-3 text-sm ${
+            pesan.jenis === "ok" ? "text-emerald-400" : "text-rose-400"
+          }`}
+        >
+          {pesan.teks}
+        </p>
+      )}
+
+      {/* SARINGAN IMDb (owner 2026-11-05: "biar mudah"). Ditaruh tepat di atas
+          daftar, bukan di kepala panel: ia menjelaskan isi daftar di bawahnya,
+          dan keterangan yang jauh dari yang dijelaskan mudah terlewat.
+
+          Angkanya dihitung ulang tiap render, jadi begitu sebuah video
+          dicocokkan, hitungannya bergerak seketika — admin melihat sisanya
+          berkurang tanpa memuat ulang halaman. */}
+      {videos.length > 0 && (
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          {(Object.keys(LABEL_SARING) as SaringImdb[]).map((pilihan) => {
+            const dipakai = saring === pilihan;
+            return (
+              <button
+                key={pilihan}
+                type="button"
+                onClick={() => {
+                  setSaring(pilihan);
+                  setLihatPeringatan(false);
+                  // 🪤 Tanpa baris ini: sedang di halaman 3 "Semua" (359
+                  // video) lalu klik "Belum ada IMDb" (61 video, cuma 1
+                  // halaman) = halaman 3 tidak ada, daftarnya kosong. Penjepit
+                  // di lib/paginasi.ts menahan kerusakannya, tapi melompat ke
+                  // halaman terakhir tanpa diminta tetap membingungkan.
+                  setHalaman(HALAMAN_PERTAMA);
+                }}
+                aria-pressed={dipakai && !lihatPeringatan}
+                className={cn(
+                  "rounded-full border px-3 py-1.5 text-xs font-semibold transition",
+                  dipakai
+                    ? "border-amber-500 bg-amber-500/15 text-amber-700"
+                    : "border-zinc-700 text-zinc-400 hover:border-amber-400 hover:text-amber-700",
+                )}
+              >
+                {LABEL_SARING[pilihan]}{" "}
+                <span className="font-bold">{jumlahSaring[pilihan]}</span>
+              </button>
+            );
           })}
+
+          {videoPeringatan.length > 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                setLihatPeringatan((nyala) => !nyala);
+                setHalaman(HALAMAN_PERTAMA);
+              }}
+              aria-pressed={lihatPeringatan}
+              className={cn(
+                "inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-semibold transition",
+                lihatPeringatan
+                  ? "border-rose-700 bg-rose-700/10 text-rose-700"
+                  : "border-rose-700/40 text-rose-700 hover:bg-rose-700/10",
+              )}
+            >
+              <AlertTriangle className="size-3.5 shrink-0" aria-hidden="true" />
+              Perlu dicek{" "}
+              <span className="font-bold">{videoPeringatan.length}</span>
+            </button>
+          )}
+
+          {/* PINTU MASUK panel "Isi manual" (owner 2026-11-11: "pindahkan isi
+              cepat ke filter yang ada di imdb biar lebih rapi"). Dulu sebuah
+              menu di sidebar; dipindah ke sini karena DI SINILAH kebutuhannya
+              muncul — admin menyaring "Belum ada IMDb", melihat film yang
+              poster/tahun/rating-nya tak bisa diisi otomatis, lalu butuh
+              mengisinya tangan. Sidebar ikut jadi lebih pendek.
+
+              ⚠️ SENGAJA TIDAK berbentuk tombol bundar seperti tiga saringan di
+              kirinya. Ketiganya MEMPERSEMPIT daftar di halaman yang sama; yang
+              ini BERPINDAH panel. Bentuk yang seragam membuat admin mengklik
+              sambil menunggu daftarnya menyusut, lalu bingung karena layarnya
+              berganti. Tiga penanda bahwa ini jenis lain: garis pemisah, sudut
+              kotak (rounded-md bawaan Button), dan ikon.
+
+              Labelnya diambil dari JUDUL_BAGIAN_PLAYLY, bukan diketik ulang —
+              judul panel dan tombol yang membukanya jadi mustahil menyimpang. */}
+          <span aria-hidden className="mx-1 h-5 w-px shrink-0 bg-zinc-700" />
+          <Button asChild variant="outline" size="sm">
+            <a href={alamatBagianPlayly("isi-cepat")}>
+              <ListChecks className="size-3.5" />
+              {JUDUL_BAGIAN_PLAYLY["isi-cepat"]}
+            </a>
+          </Button>
+
+          {saring === "belum" && jumlahSaring.belum > 0 && (
+            // Kalimat ini mencegah kebingungan yang pasti muncul: saat saringan
+            // "Belum" aktif, video yang BARU SAJA dicocokkan langsung lenyap
+            // dari daftar — itu benar, tapi tanpa penjelasan terbaca seperti
+            // videonya terhapus.
+            <span className="text-xs text-zinc-500">
+              Video hilang dari daftar ini begitu selesai dicocokkan — itu
+              tandanya berhasil.
+            </span>
+          )}
+
+          {/* Kotak cari duduk SEBARIS dengan tombol saringan, bukan di atasnya:
+              keduanya mempersempit daftar yang sama, jadi memisahkannya membuat
+              admin mengira salah satunya menimpa yang lain. `ml-auto` mendorong
+              ke kanan supaya tombol saringan tetap jadi yang pertama dibaca. */}
+          <KotakCariDaftar
+            className="ml-auto"
+            nilai={ketikan}
+            onNilai={setKetikan}
+            jumlah={totalTabel}
+            total={lihatPeringatan ? videoPeringatan.length : videoSaringan.length}
+            placeholder="Cari judul video…"
+          />
+        </div>
+      )}
+
+      {videos.length > 0 && totalTabel === 0 && (
+        // Daftar kosong karena SARINGAN, bukan karena tidak ada video. Dua hal
+        // itu wajib dibedakan: tanpa pesan ini, panel terbaca seperti rusak.
+        <p className="mt-4 rounded-lg border border-zinc-700 p-4 text-center text-sm text-zinc-400">
+          {/* Ketikan diperiksa DULU: kalau admin sedang mencari, itulah sebab
+              yang paling mungkin — dan tindakannya beda dari mengganti
+              saringan. Menyebut saringan saat yang salah ketikannya membuat
+              admin mengutak-atik tombol yang bukan penyebabnya. */}
+          {ketikan.trim() !== "" ? (
+            <>
+              Tidak ada video yang cocok dengan “{ketikan}”.{" "}
+              <button
+                type="button"
+                onClick={() => setKetikan("")}
+                className="text-amber-600 underline-offset-2 hover:underline"
+              >
+                Kosongkan pencarian
+              </button>
+            </>
+          ) : saring === "belum" ? (
+            "Semua video sudah dicocokkan ke IMDb. Tidak ada yang tersisa."
+          ) : (
+            "Belum ada video yang cocok dengan saringan ini."
+          )}
+        </p>
+      )}
+
+      {videoHalaman.length > 0 && (
+        // 🪤 PADDING HORIZONTAL HANYA DI SINI. Sebelumnya baris judul kolom
+        // dan tiap baris video sama-sama ber-`px-2` di tempatnya
+        // masing-masing — kesejajarannya bergantung pada dua nilai yang
+        // KEBETULAN sama, dan nilai yang kebetulan sama adalah nilai yang
+        // menyimpang begitu salah satunya disunting. Sekarang keduanya
+        // mulai dari tepi yang sama persis, jadi mustahil meleset.
+        <div className="mt-4 px-1" data-daftar-video="">
+          {/* Judul kolom — inilah yang membuat daftar terbaca seperti tabel.
+              Hanya muncul di layar yang kolomnya memang sejajar (sm ke atas);
+              di bawah itu kontrolnya jatuh jadi 2 kolom, jadi judul kolom di
+              sana justru menunjuk ke kontrol yang salah. */}
+          <JudulKolom />
+
+          <ul className="divide-y divide-zinc-800">
+          {videoHalaman.map(gambarBaris)}
           </ul>
         </div>
       )}
@@ -1485,11 +1539,11 @@ export default function PlaylyVisibilityManager({
       {/* SATU-SATUNYA kontrol halaman, di bawah daftar (owner 2026-11-06:
           "yang di atas kamu hapus"). Sebelumnya dipasang dua kali; owner
           menilai yang atas cuma menambah baris tanpa menambah guna. */}
-      {videoTampil.length > 0 && (
+      {totalTabel > 0 && (
         <PaginasiDaftar
           className="mt-4 border-t border-zinc-800 pt-3"
-          total={videoTampil.length}
-          halaman={halamanAman}
+          total={totalTabel}
+          halaman={halamanTabel}
           ukuran={ukuran}
           onHalaman={setHalaman}
           onUkuran={setUkuran}

@@ -192,10 +192,16 @@ describe("panel admin memakai aturan itu, bukan versi sendiri", () => {
   it("memotong SESUDAH menyaring, bukan sebelum", () => {
     // Memotong dulu lalu menyaring menghasilkan halaman yang jumlah barisnya
     // berubah-ubah (halaman 1 berisi 12 baris, halaman 2 berisi 40).
-    const posSaring = PANEL.indexOf("saringVideoImdb(videos");
-    const posPotong = PANEL.indexOf("potongHalaman(videoTampil");
+    // Komentar dibuang dulu: kalimat di komentar bisa membuat penjaga ini
+    // hijau walau urutan kodenya sudah terbalik.
+    const kode = PANEL.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+    const posPisah = kode.indexOf("!belumSiap.has");
+    const posSaring = kode.indexOf("saringVideoImdb(");
+    const posPotong = kode.indexOf("potongHalaman(videoTampil");
+    expect(posPisah, "video bertanda harus dikeluarkan sebelum disaring").toBeGreaterThan(-1);
     expect(posSaring).toBeGreaterThan(-1);
     expect(posPotong).toBeGreaterThan(-1);
+    expect(posPisah, "pisah tanda HARUS mendahului saringan").toBeLessThan(posSaring);
     expect(posSaring, "saring HARUS mendahului potong").toBeLessThan(posPotong);
   });
 
@@ -467,7 +473,10 @@ describe("daftar video berbaris kolom (owner: 'di bikin chart')", () => {
     // sama adalah nilai yang menyimpang begitu salah satunya disunting.
     // Sekarang paddingnya satu, di pembungkus daftar, jadi header dan baris
     // mulai dari tepi yang sama persis dan mustahil meleset.
-    expect(PANEL).toContain('<div className="mt-4 px-1">');
+    // Atribut data-daftar-video menempel di pembungkus yang sama. Yang dijaga
+    // adalah paddingnya SATU, bukan ejaan tag tanpa atribut.
+    const bungkus = PANEL.match(/mt-4 px-1/g) ?? [];
+    expect(bungkus, "padding samping daftar harus tetap satu pembungkus").toHaveLength(1);
 
     const header = PANEL.slice(PANEL.indexOf("border-b border-zinc-800"));
     expect(

@@ -23,7 +23,26 @@
 > lengkap: `HANDOFF.md` seksi `## 2026-11-09`.
 
 
-**Terakhir dicek:** 2026-11-14 siang (**komputer OWNER**). `HEAD` = `origin/main` = `dramaku/main` = **`a09bfc8`** — 3 commit dari 3 sesi didorong sekaligus sesudah owner menulis "rilis"; gerbang lolos kelimanya. 🪤 **22 berkas sesi audit keamanan masih menggantung, JANGAN `git add -A`.** Rincian di bawah.
+**Terakhir dicek:** 2026-11-16 (**komputer OWNER**). Owner minta tayangkan `feat/link-unduhan-provider-kualitas` (`58b1cf8`). Digabung ke `main` (bukan fast-forward: `main` unggul 298 commit). Pemutar produksi dipertahankan. Env baru di hosting belum diisi di sesi ini. 🪤 **Berkas sisa lokal masih menggantung, JANGAN `git add -A`.**
+
+### 2026-11-16 — gabung isi otomatis link unduhan (Drive, Mega, tabel, Cocokkan semua)
+
+**Izin:** owner menulis "tayangkan link-unduhan-provider-kualitas" karena rekan menunggu.
+
+| Yang ditayangkan | Dampak |
+|---|---|
+| Panel `/admin/videos/playly` | admin bisa mengisi link dari folder Drive/Mega, lewat tabel, atau Cocokkan semua |
+| Penonton | nol sampai admin menekan Simpan. Tanpa env folder, tombol hanya bilang belum diatur |
+
+**Env yang harus diisi di panel hosting supaya tombolnya bekerja:** `GOOGLE_DRIVE_API_KEY`, `PLAYLY_UNDUHAN_DRIVE_FOLDER`, `PLAYLY_UNDUHAN_MEGA_FOLDER`.
+
+**Urutan push:** `dramaku` dulu (cermin), lalu `origin main` (tombol rilis).
+
+**Rollback:** `git revert -m 1 <sha merge> && git push dramaku main && git push origin main`
+
+---
+
+**Sebelumnya, 2026-11-14 siang.** `HEAD` = `origin/main` = `dramaku/main` = **`a09bfc8`** — 3 commit dari 3 sesi didorong sekaligus sesudah owner menulis "rilis"; gerbang lolos kelimanya. 🪤 **22 berkas sesi audit keamanan masih menggantung, JANGAN `git add -A`.** Rincian di bawah.
 
 
 ### ✅ 2026-11-14 (siang) — RILIS `f6b1c03` → `a09bfc8` (3 commit, 3 sesi, dua remote)

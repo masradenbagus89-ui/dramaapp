@@ -90,11 +90,27 @@
 > aftermarket** dari pemilik sekarang, harganya **jauh di atas** Rp200.000 dan belum pernah dicek.
 > Nama lain yang masih bebas jauh lebih murah.
 
-**Terakhir diisi:** 2026-11-15 — menu Genre dan Negara disamakan dengan Tahun (4 kolom, semua pilihan terlihat tanpa digulir). Rincian di seksi `## 2026-11-15` di bawah. Sebelumnya: ✅ **RILIS `f6b1c03` → `a09bfc8` TAYANG.** (1) Cache halaman penonton dibuang otomatis saat admin menyimpan + tombol **Segarkan cache** (kerja rekan). (2) Payload data IMDb ke browser admin **525 KB → 57 KB** (−89%) + ingatan "berkas siap" kini **bertahan melewati restart**. (3) Urutan video SE-SITUS ikut **tahun rilis**, bukan waktu upload — terbukti di produksi: 20 kartu teratas semuanya **2026**. Gerbang 5/5 (**2516 tes**), smoke test 10/10 = 200. ⏳ Manfaat (2) bagian ingatan baru terasa mulai rilis BERIKUTNYA. 🪤 **TIGA sesi menulis di folder yang sama; 22 berkas sesi audit masih menggantung — JANGAN `git add -A`.** Rinciannya di seksi `## 2026-11-14 (siang)` di bawah.
+**Terakhir diisi:** 2026-11-16 — isi otomatis link unduhan Google Drive & Mega digabung dari `feat/link-unduhan-provider-kualitas` (`58b1cf8`). Pemutar yang sudah tayang tidak ditimpa. Rincian di seksi `## 2026-11-16 — isi otomatis link unduhan` di bawah. Sebelumnya: 2026-11-15 — menu Genre dan Negara disamakan dengan Tahun (4 kolom, semua pilihan terlihat tanpa digulir). Rincian di seksi `## 2026-11-15` di bawah. Sebelumnya: ✅ **RILIS `f6b1c03` → `a09bfc8` TAYANG.** (1) Cache halaman penonton dibuang otomatis saat admin menyimpan + tombol **Segarkan cache** (kerja rekan). (2) Payload data IMDb ke browser admin **525 KB → 57 KB** (−89%) + ingatan "berkas siap" kini **bertahan melewati restart**. (3) Urutan video SE-SITUS ikut **tahun rilis**, bukan waktu upload — terbukti di produksi: 20 kartu teratas semuanya **2026**. Gerbang 5/5 (**2516 tes**), smoke test 10/10 = 200. ⏳ Manfaat (2) bagian ingatan baru terasa mulai rilis BERIKUTNYA. 🪤 **TIGA sesi menulis di folder yang sama; 22 berkas sesi audit masih menggantung — JANGAN `git add -A`.** Rinciannya di seksi `## 2026-11-14 (siang)` di bawah.
 
 **Rincian kontrol volume (putaran KETIGA):** owner menolak bentuk tombol `+` / `−` dan mengirim contoh gambar, jadi pengatur volume kini **garis geser tegak berbentuk kapsul** (jalur kuning + bulatan penggeser). Diukur di Chrome headless layar 393px: kapsul `x=345..381` **utuh di dalam layar**, geser jari atas→100% / tengah→50% / bawah→bisu, nol elemen diputar. Gerbang lolos 5/5 (2383 tes hijau). ✅ **Sudah TAYANG** dalam rilis `53fbc5c → a9ae869` malam itu juga.
 
 **Sebelumnya hari ini:** ✅ **`2ad015b` + `8d8c1ba` TAYANG.** Tata letak pemutar beres dalam tiga putaran permintaan owner: tombol **Eps turun ke baris paling bawah**, tombol **volume pindah ke sebelah angka durasi**, rail ikon kanan **diperkecil & dirapatkan** (36px/20px/jarak 8px), dan garis volume tegak **diganti tombol + / −** karena terukur berdiri di **x=391 pada layar 393px = di luar layar HP**. Rinciannya di seksi `## 2026-11-13` di bawah.
+
+---
+
+## 2026-11-16 — isi otomatis link unduhan Drive & Mega
+
+Owner minta branch `feat/link-unduhan-provider-kualitas` ditayangkan karena rekan menunggu. Commit sumber: `58b1cf8`.
+
+**Yang masuk ke produksi:** di `/admin/videos/playly` ada isi otomatis dari Google Drive, isi otomatis dari Mega, tabel cepat, dan tombol Cocokkan semua. Tiga route baru hanya bisa dibuka admin: `GET /api/admin/playly/unduhan/drive`, `GET /api/admin/playly/unduhan/mega`, `POST /api/admin/playly/unduhan/cocokkan`. Mereka hanya mengusulkan link; yang menulis tetap tombol Simpan yang sudah ada.
+
+**Yang sengaja tidak ditimpa:** tata letak pemutar yang sudah tayang (volume kapsul di samping durasi, Eps di baris bawah, rail ikon rapat). Menarik desain pemutar dari branch ini akan mengembalikan tampilan lama. Next tetap `16.4.3`. Paket baru: `megajs`.
+
+**Env di hosting, kosong = tombol bilang "belum diatur":** `GOOGLE_DRIVE_API_KEY`, `PLAYLY_UNDUHAN_DRIVE_FOLDER`, `PLAYLY_UNDUHAN_MEGA_FOLDER`. Bukan rahasia di repo. Tanpa ketiga nilai itu, situs lain tetap jalan, tombol isi otomatis belum bisa mengisi.
+
+**Bukti sebelum push:** 5 berkas tes unduhan, 72 hijau. `tsc` bersih untuk kode yang di-commit. Dua tes lama gagal di Windows karena akhir baris CRLF (`hero-gambar-besar`, `saring-video-admin`) dan berkasnya tidak ikut gabungan ini.
+
+**Rollback:** `git revert -m 1 <sha merge ini> && git push dramaku main && git push origin main`
 
 ---
 

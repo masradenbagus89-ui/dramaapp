@@ -11,9 +11,10 @@
 // peringatan apa pun. Membukanya bergantian membuat keadaan itu mustahil.
 //
 // Daftar video & link datang dari server sebagai props (halaman ini
-// force-dynamic) — satu-satunya panggilan jaringan terjadi saat Simpan ditekan.
+// force-dynamic) — panggilan jaringan hanya terjadi saat Simpan atau tombol
+// "Isi dari ..." (Google Drive / Mega) ditekan.
 import { useState } from "react";
-import { Download, Loader2, PencilLine } from "lucide-react";
+import { Download, HardDriveDownload, Loader2, PencilLine } from "lucide-react";
 import type { PlaylyVideo } from "@/lib/playly";
 import KotakCariDaftar from "./KotakCariDaftar";
 import PaginasiDaftar from "./PaginasiDaftar";
@@ -28,8 +29,19 @@ import {
   type ProviderUnduhan,
 } from "@/lib/playly-unduhan";
 import { Button } from "@/components/ui/button";
+import PlaylyUnduhanTabel from "./PlaylyUnduhanTabel";
 
 type Pesan = { jenis: "ok" | "gagal"; teks: string };
+
+/**
+ * Sumber isi otomatis. Tiap route membalas bentuk yang sama ({ saran, ganda })
+ * dan hanya mengisi kotak milik provider-nya sendiri.
+ */
+const SUMBER_OTOMATIS = {
+  drive: { provider: "google", label: "Google Drive", endpoint: "/api/admin/playly/unduhan/drive" },
+  mega: { provider: "mega", label: "Mega", endpoint: "/api/admin/playly/unduhan/mega" },
+} as const satisfies Record<string, { provider: ProviderUnduhan; label: string; endpoint: string }>;
+type SumberOtomatis = keyof typeof SUMBER_OTOMATIS;
 
 /** Kunci satu kotak isian: "google|1080p". */
 type KunciKotak = `${ProviderUnduhan}|${KualitasUnduhan}`;
@@ -63,7 +75,11 @@ export default function PlaylyUnduhanManager({
   /** Alasan penolakan per kotak, dari balasan server. */
   const [salah, setSalah] = useState<Partial<Record<KunciKotak, string>>>({});
   const [menyimpan, setMenyimpan] = useState(false);
+  /** Sumber yang sedang dibaca; null = tidak ada. Satu per satu supaya isian tak saling timpa. */
+  const [mencari, setMencari] = useState<SumberOtomatis | null>(null);
   const [pesan, setPesan] = useState<Pesan | null>(null);
+  /** "tabel" = semua video sekaligus (PlaylyUnduhanTabel); "per-video" = panel lama + isi otomatis Drive/Mega. */
+  const [tampilan, setTampilan] = useState<"tabel" | "per-video">("tabel");
 
   const buka = (videoId: string) => {
     setPesan(null);
@@ -133,6 +149,59 @@ export default function PlaylyUnduhanManager({
     }
   };
 
+  /**
+   * Isi kotak satu provider dari folder sumbernya (Drive: lib/playly-unduhan-drive.ts,
+   * Mega: lib/playly-unduhan-mega.ts). Hanya MENGISI draft — tidak menyimpan.
+   * Admin tetap memeriksa lalu menekan Simpan, jadi link salah tak pernah
+   * langsung tampil ke penonton.
+   */
+  const isiOtomatis = async (sumber: SumberOtomatis, videoId: string) => {
+    const { provider, label, endpoint } = SUMBER_OTOMATIS[sumber];
+    setMencari(sumber);
+    setPesan(null);
+    setSalah({});
+    try {
+      const res = await fetch(`${endpoint}?videoId=${encodeURIComponent(videoId)}`);
+      const data = (await res.json()) as {
+        saran?: { quality: KualitasUnduhan; url: string }[];
+        ganda?: { quality: KualitasUnduhan; nama: string[] }[];
+        error?: string;
+      };
+      if (!res.ok) {
+        setPesan({ jenis: "gagal", teks: data.error ?? `Gagal membaca ${label}.` });
+        return;
+      }
+      const saran = data.saran ?? [];
+      const ganda = data.ganda ?? [];
+      setDraft((d) => {
+        const baru = { ...d };
+        for (const s of saran) baru[`${provider}|${s.quality}`] = s.url;
+        return baru;
+      });
+      const catatanGanda = ganda
+        .map((g) => `${g.quality}: ada ${g.nama.length} file cocok (${g.nama.join(", ")}), pilih manual`)
+        .join(". ");
+      if (saran.length === 0) {
+        setPesan({
+          jenis: "gagal",
+          teks: catatanGanda || `Tidak ada file di folder ${label} yang namanya memuat ID ${videoId} dan 1080p/480p.`,
+        });
+        return;
+      }
+      setPesan({
+        jenis: "ok",
+        teks: `${saran.length} link ${label} terisi (${saran.map((s) => s.quality).join(", ")}). Periksa, lalu tekan Simpan link.${catatanGanda ? " " + catatanGanda + "." : ""}`,
+      });
+    } catch {
+      setPesan({
+        jenis: "gagal",
+        teks: "Tidak bisa menghubungi server. Cek koneksi internet lalu coba lagi.",
+      });
+    } finally {
+      setMencari(null);
+    }
+  };
+
   const jumlahPer = (videoId: string) => links.filter((l) => l.videoId === videoId).length;
   const jumlahTerisi = videos.filter((v) => jumlahPer(v.id) > 0).length;
 
@@ -147,10 +216,39 @@ export default function PlaylyUnduhanManager({
       <p className="mt-1 text-sm text-zinc-400">
         {videos.length === 0
           ? "Belum ada video di akun Playly kita, jadi belum ada yang bisa diisi."
-          : `${jumlahTerisi} dari ${videos.length} video sudah punya link. Untuk banyak video sekaligus, pakai skrip impor CSV (npm run impor:unduhan).`}
+          : `${jumlahTerisi} dari ${videos.length} video sudah punya link.`}
       </p>
 
-      {pesan && (
+      {videos.length > 0 && (
+        <div className="mt-3 inline-flex rounded-full border border-zinc-700 p-0.5 text-xs font-semibold" role="group" aria-label="Cara mengisi link">
+          {([
+            ["tabel", "Tabel cepat (semua film)"],
+            ["per-video", "Per film + isi dari Drive/Mega"],
+          ] as const).map(([nilai, label]) => (
+            <button
+              key={nilai}
+              type="button"
+              onClick={() => {
+                setTampilan(nilai);
+                setPesan(null);
+                setDibuka(null);
+              }}
+              aria-pressed={tampilan === nilai}
+              className={`rounded-full px-3 py-1.5 transition ${
+                tampilan === nilai ? "bg-zinc-100 text-zinc-900" : "text-zinc-300 hover:text-white"
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {videos.length > 0 && tampilan === "tabel" && (
+        <PlaylyUnduhanTabel videos={videos} links={links} domain={domain} onTersimpan={setLinks} />
+      )}
+
+      {pesan && tampilan === "per-video" && (
         <p
           role="status"
           className={`mt-3 text-sm ${pesan.jenis === "ok" ? "text-emerald-400" : "text-rose-400"}`}
@@ -159,7 +257,7 @@ export default function PlaylyUnduhanManager({
         </p>
       )}
 
-      {videos.length > 0 && (
+      {videos.length > 0 && tampilan === "per-video" && (
         <KotakCariDaftar
           className="mt-4"
           nilai={daftar.ketikan}
@@ -170,7 +268,7 @@ export default function PlaylyUnduhanManager({
         />
       )}
 
-      {daftar.kosongKarenaCari && (
+      {tampilan === "per-video" && daftar.kosongKarenaCari && (
         <p className="mt-4 text-sm text-zinc-500">
           Tidak ada video yang cocok dengan “{daftar.ketikan}”.{" "}
           <button
@@ -183,7 +281,7 @@ export default function PlaylyUnduhanManager({
         </p>
       )}
 
-      {daftar.tampil.length > 0 && (
+      {tampilan === "per-video" && daftar.tampil.length > 0 && (
         <ul className="mt-4 divide-y divide-zinc-800">
           {daftar.tampil.map((v) => {
             const jumlah = jumlahPer(v.id);
@@ -264,16 +362,33 @@ export default function PlaylyUnduhanManager({
                       Kotak dikosongkan = link kombinasi itu dihapus. Link wajib https dan
                       domainnya milik provider yang sama.
                     </p>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Button
                         type="button"
                         onClick={() => simpan(v.id)}
-                        disabled={menyimpan}
+                        disabled={menyimpan || mencari !== null}
                         className="h-9 rounded-full bg-pink-600 px-5 text-xs font-bold text-white hover:bg-pink-500"
                       >
                         {menyimpan && <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />}
                         Simpan link
                       </Button>
+                      {(Object.keys(SUMBER_OTOMATIS) as SumberOtomatis[]).map((sumber) => (
+                        <Button
+                          key={sumber}
+                          type="button"
+                          variant="outline"
+                          onClick={() => isiOtomatis(sumber, v.id)}
+                          disabled={menyimpan || mencari !== null}
+                          className="h-9 rounded-full border-zinc-700 bg-transparent px-4 text-xs font-semibold text-zinc-300 hover:border-zinc-500"
+                        >
+                          {mencari === sumber ? (
+                            <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+                          ) : (
+                            <HardDriveDownload className="size-3.5" aria-hidden="true" />
+                          )}
+                          Isi dari {SUMBER_OTOMATIS[sumber].label}
+                        </Button>
+                      ))}
                       <Button
                         type="button"
                         variant="outline"

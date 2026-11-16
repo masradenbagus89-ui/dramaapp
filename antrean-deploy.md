@@ -38,7 +38,7 @@
 
 **Urutan push:** `dramaku` dulu (cermin), lalu `origin main` (tombol rilis).
 
-**Rollback:** `git revert -m 1 <sha merge> && git push dramaku main && git push origin main`
+**Rollback:** `git revert -m 1 9d1caf6 && git push dramaku main && git push origin main`
 
 ---
 

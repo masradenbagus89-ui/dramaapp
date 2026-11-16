@@ -110,7 +110,7 @@ Owner minta branch `feat/link-unduhan-provider-kualitas` ditayangkan karena reka
 
 **Bukti sebelum push:** 5 berkas tes unduhan, 72 hijau. `tsc` bersih untuk kode yang di-commit. Dua tes lama gagal di Windows karena akhir baris CRLF (`hero-gambar-besar`, `saring-video-admin`) dan berkasnya tidak ikut gabungan ini.
 
-**Rollback:** `git revert -m 1 <sha merge ini> && git push dramaku main && git push origin main`
+**Rollback:** `git revert -m 1 9d1caf6 && git push dramaku main && git push origin main`
 
 ---
 

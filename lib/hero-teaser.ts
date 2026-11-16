@@ -21,21 +21,15 @@ export const PLAYING_ROTATE_MS = 20_000;
 export const HERO_TEASER_DELAY_MS = 1200;
 
 /**
- * Jeda khusus gambar besar halaman DETAIL — sengaja jauh lebih pendek dari
- * HERO_TEASER_DELAY_MS di atas.
+ * Jeda khusus gambar besar halaman DETAIL.
  *
- * KENAPA BEDA (owner 2026-11-09, "kenapa begitu masuk drama tidak langsung
- * terputar"): jeda panjang itu dirancang untuk menyaring pengunjung sekejap
- * dan bot di halaman yang ditemui TANPA sengaja. Halaman detail bukan itu —
- * orang sampai ke sini karena mengklik judulnya, jadi minatnya sudah
- * ditunjukkan sebelum halaman terbuka.
- *
- * Diukur di produksi sebelum diubah: 1,2 dtk jeda + 1,17 dtk mencoba trailer
- * yang belum ada + 1,24 dtk byte pertama Episode 1 = ±3,6 detik gambar diam.
- * Cukup lama sampai terbaca "videonya tidak jalan", bukan "videonya sedang
- * dimuat".
+ * NOL (owner 2026-11-16, "tidak langsung jalan videonya"). Orang sampai ke
+ * halaman ini karena sudah mengklik judulnya, jadi jeda penyaring bot yang
+ * dipakai hero beranda (`HERO_TEASER_DELAY_MS`) di sini justru terbaca sebagai
+ * video yang tidak mau mulai. Unduhan tetap dibatasi potongan
+ * `DETAIL_CUPLIKAN_SEC`, bukan dengan menunda mulai.
  */
-export const DETAIL_TEASER_DELAY_MS = 500;
+export const DETAIL_TEASER_DELAY_MS = 0;
 
 /**
  * Panjang cuplikan hover di kartu drama (detik) sebelum diulang dari awal.

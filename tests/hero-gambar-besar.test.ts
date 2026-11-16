@@ -53,12 +53,20 @@ describe("gambar besar hero: kepala tidak boleh terpotong", () => {
     expect(gambarUtama).toContain("object-top");
   });
 
-  it("video trailer memakai framing yang SAMA dengan gambarnya", () => {
-    // Beda framing = tampilan melompat tepat saat video muncul; penonton
-    // melihatnya sebagai gambar bergeser, bukan trailer yang mulai.
+  it("video trailer menampilkan SELURUH bingkai, tidak dipotong", () => {
+    // Owner 2026-11-16: episode 1 dipakai sebagai trailer, tapi object-cover
+    // memotong bingkai supaya mengisi kotak 16/9 — adegannya tidak utuh.
+    // Gambar diam di atasnya TETAP object-cover object-top (kepala poster
+    // jangan hilang). Yang tidak boleh dipotong adalah videonya.
     const video = elemen(sumberMedia, "<video");
-    expect(video).toContain("object-cover");
-    expect(video).toContain("object-top");
+    expect(video).toContain("object-contain");
+    expect(video).not.toContain("object-cover");
+    expect(video).not.toContain("object-top");
+    // Poster kecil menimpa bawah bingkai mulai 640px. Video harus berhenti
+    // di atasnya. `h-full` membatalkan `bottom`, jadi ia dilarang di sini.
+    expect(video).toContain("sm:bottom-[86px]");
+    expect(video).toContain("md:bottom-[155px]");
+    expect(video).not.toContain("h-full");
   });
 
   it("latar blur SENGAJA tetap dipusatkan", () => {
@@ -84,6 +92,25 @@ describe("cuplikan hero harus mulai secepat mungkin", () => {
 
   it("memanggil play() begitu video siap, tidak hanya mengandalkan autoPlay", () => {
     expect(sumber).toContain("onCanPlay");
+  });
+
+  it("tetap memasang video walau Windows mematikan animasi", () => {
+    // prefers-reduced-motion: reduce membatalkan <video> sama sekali.
+    // Gejalanya: poster diam, nol permintaan /api/teaser, nol error.
+    const bersih = sumber
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/^\s*\/\/.*$/gm, "");
+    expect(bersih).not.toContain("prefers-reduced-motion");
+  });
+
+  it("memaksa properti muted sebelum play, supaya autoplay tidak ditolak", () => {
+    // Atribut `muted` di JSX saja pernah tidak cukup: browser menolak play()
+    // yang dianggap bersuara, janji ditelan .catch, dan layar tetap diam.
+    const bersih = sumber
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/^\s*\/\/.*$/gm, "");
+    expect(bersih).toContain(".muted = true");
+    expect(bersih).toContain("paksaMain");
   });
 
   it("pengamat layar dipasang ulang saat sumber video berganti", () => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Play } from "lucide-react";
 import type { Drama } from "@/lib/types";
@@ -31,11 +31,31 @@ import {
  * Gagal-aman: video gagal → gambar diam tetap tampil. Tombol play TIDAK ikut
  * mati, karena tujuannya sama sekali tidak bergantung pada video.
  */
+
+/**
+ * Mulai putar, dan pastikan video BENAR-BENAR bisu sebelum minta play.
+ *
+ * KENAPA bukan cukup atribut `muted` di JSX: browser menolak autoplay yang
+ * bersuara. Kalau properti `muted` belum terpasang saat `play()` dipanggil,
+ * janji itu ditolak diam-diam (`.catch` kosong) dan layar tetap gambar diam —
+ * persis keluhan "videonya tidak langsung jalan". Menetapkan properti di sini
+ * menutup celah itu, baik dari ref, dari `onCanPlay`, maupun dari pengamat layar.
+ */
+function paksaMain(video: HTMLVideoElement) {
+  video.muted = true;
+  const mulai = video.play();
+  if (mulai) mulai.catch(() => {});
+}
+
 export default function HeroDramaMedia({ drama }: { drama: Drama }) {
   const [mulai, setMulai] = useState(false);
   const [playing, setPlaying] = useState(false);
   const boxRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const pasangVideo = useCallback((el: HTMLVideoElement | null) => {
+    videoRef.current = el;
+    if (el) paksaMain(el);
+  }, []);
 
   // Tujuan tombol play. Nilai AWAL sengaja "Mulai Nonton": `localStorage` cuma
   // ada di browser, jadi menebaknya saat render server bikin HTML server dan
@@ -45,10 +65,15 @@ export default function HeroDramaMedia({ drama }: { drama: Drama }) {
     setTujuan(tujuanNonton(drama.id, getProgressEntry(drama.id)));
   }, [drama.id]);
 
-  // Mulai sesudah jeda singkat (bot perayap & pengunjung sekejap tak ikut
-  // menarik video), dan tidak sama sekali bagi yang memilih "kurangi animasi".
+  // Pasang video segera. Jeda detail sudah 0 (lib/hero-teaser.ts).
+  //
+  // ⚠️ JANGAN batalkan video saat `prefers-reduced-motion: reduce`.
+  // Owner 2026-11-16: sesudah klik dari beranda, episode 1 harus langsung
+  // jalan. Di Windows yang mematikan animasi (dan di sesi remote), media
+  // query itu bernilai "reduce". Versi lama keluar di sini, jadi <video>
+  // tidak pernah lahir, /api/teaser tidak pernah diminta, dan layar tetap
+  // poster diam — tanpa error.
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const t = window.setTimeout(() => setMulai(true), DETAIL_TEASER_DELAY_MS);
     return () => window.clearTimeout(t);
   }, []);
@@ -67,7 +92,7 @@ export default function HeroDramaMedia({ drama }: { drama: Drama }) {
     const io = new IntersectionObserver(([entry]) => {
       const v = videoRef.current;
       if (!v) return;
-      if (entry.isIntersecting) v.play().catch(() => {});
+      if (entry.isIntersecting) paksaMain(v);
       else v.pause();
     });
     io.observe(box);
@@ -78,7 +103,7 @@ export default function HeroDramaMedia({ drama }: { drama: Drama }) {
     <div ref={boxRef} className="absolute inset-0">
       {mulai && (
         <video
-          ref={videoRef}
+          ref={pasangVideo}
           src={teaserSrc(drama.id, 1)}
           autoPlay
           muted
@@ -89,18 +114,28 @@ export default function HeroDramaMedia({ drama }: { drama: Drama }) {
           loop
           preload="auto"
           aria-hidden
-          // `object-top` WAJIB sama dengan gambar diamnya di page.tsx. Kalau
-          // video dipusatkan sementara gambar ditempel ke atas, framing-nya
-          // LOMPAT tepat saat video muncul — dan penonton melihatnya sebagai
-          // gambar yang tiba-tiba bergeser, bukan sebagai cuplikan yang mulai.
-          className={`absolute inset-0 h-full w-full object-cover object-top transition-opacity duration-500 ${
+          // `object-contain` (owner 2026-11-16): episode drama sering lebih
+          // tinggi daripada kotak 16/9 ini. `object-cover` mengisi kotak dengan
+          // MEMOTONG bingkai, jadi yang terlihat cuma sepotong adegan. Contain
+          // menampilkan SELURUH bingkai; sisa kotak jadi pita hitam, bukan
+          // bagian video yang hilang. `bg-black` membuat pita itu hitam, bukan
+          // gambar diam yang mengintip di samping.
+          //
+          // `sm:bottom` / `md:bottom` mengangkat video di atas poster kecil.
+          // Poster 3/4: lebar 112px → tinggi 149px, juntai 64px, menimpa 85px;
+          // lebar 176px → tinggi 235px, juntai 80px, menimpa 155px. Tanpa
+          // angkat ini, bagian bawah adegan ketutup poster — layar terlihat
+          // kepotong walau object-fit-nya sudah benar. Di HP poster tidak
+          // menumpuk (mengalir di bawah gambar), jadi bottom tetap 0.
+          // JANGAN tambah `h-full`: tinggi 100% mengabaikan `bottom` dan video
+          // kembali menyelip di bawah poster.
+          className={`absolute inset-x-0 top-0 bottom-0 bg-black object-contain transition-opacity duration-500 sm:bottom-[86px] md:bottom-[155px] ${
             playing ? "opacity-100" : "opacity-0"
           }`}
           // Jaring pengaman: `autoPlay` saja kadang tidak cukup — elemen bisa
           // selesai memuat sesudah browser melewatkan kesempatan autoplay-nya.
-          // `.catch` menjaga penolakan browser tidak jadi error di console.
           onCanPlay={(e) => {
-            e.currentTarget.play().catch(() => {});
+            paksaMain(e.currentTarget);
           }}
           onPlaying={() => setPlaying(true)}
           onTimeUpdate={(e) => {
@@ -128,13 +163,15 @@ export default function HeroDramaMedia({ drama }: { drama: Drama }) {
           sudah jelas dari layar (gambarnya memang sedang bergerak) sambil
           menambah satu kotak hitam di pojok yang meramaikan tampilan. */}
 
-      {/* Gelap-bertingkat dipindah KE SINI dari page.tsx supaya video ikut
-          digelapkan persis seperti gambar diamnya — tanpa itu tampilan melompat
-          jadi terang saat video muncul.
+      {/* Gelap HANYA di bawah, tempat judul menumpuk. Versi lama
+          (`via-black/50` sampai ke atas) menggelapkan seluruh adegan, jadi
+          video yang sudah jalan tetap terlihat seperti layar gelap terpotong.
+          Lapisan ini menutupi gambar diam DAN video, jadi keduanya tetap
+          sama terangnya — tidak melompat saat video muncul.
           ⚠️ `pointer-events-none` WAJIB: lapisan ini menutupi SELURUH kotak,
           jadi tanpa itu ia menelan setiap klik dan tombol play di bawahnya
           tidak pernah bisa ditekan — rusak SENYAP, nol error di layar. */}
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/50 to-black/10" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
 
       {/* Tombol play: satu-satunya bagian kotak ini yang bisa diklik. Sengaja
           BUKAN seluruh gambar — hero selebar layar yang jadi tautan raksasa

@@ -98,6 +98,26 @@
 
 ---
 
+## 2026-11-16 — cuplikan drama tidak langsung jalan
+
+Owner: sesudah klik drama dari beranda, layar tetap poster diam.
+
+**Penyebab yang diubah di kode:** Windows mematikan animasi (`prefers-reduced-motion: reduce`). Kode lama menganggap itu larangan, jadi tag video tidak pernah dibuat dan `/api/teaser` tidak pernah diminta. Sekarang video tetap dipasang. Tes `tests/hero-gambar-besar.test.ts` + `tests/hero-teaser.test.ts` = 45 hijau.
+
+**Yang masih menghalangi putar:** `/api/teaser` membalas 307 ke alamat `.mp4` TANPA tanda tangan. PC backup membalas **403** `Alamat video tidak sah.` `VIDEO_SIGNING_SECRET` tidak aktif di server lokal ini (sama seperti catatan lama: kunci itu ada di panel hosting, bukan di mesin ini). Selama kunci lokal tidak sama dengan PC backup, episode tidak bisa diputar dari localhost.
+
+DramaKu lokal: `http://localhost:3010` (port 3000 dipakai ManageDay).
+
+---
+
+## 2026-11-15 — ✅ RILIS `ca00f33` TAYANG
+
+Owner menulis "sekarang kamu rilis". Commit ini sudah ada di `origin/main` dan `dramaku/main` sejak push sebelumnya. Railway produksi **success** 13:09:13Z (deployment `7803867705`, sha `ca00f33`). Vercel Production **success** (deployment `7803875221`). Smoke: `/` `/beranda` `/film` `/admin/videos/playly` di Railway semua **200**.
+
+Isi: tombol **Perlu dicek** di panel video Playly. Bukan tabel kedua.
+
+---
+
 ## 2026-11-15 — Daftar "Perlu dicek" untuk video Playly bertanda segitiga
 
 Owner: film di daftar video Playly yang ada tanda segitiga dipisah supaya mudah dicek.

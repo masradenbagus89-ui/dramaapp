@@ -164,15 +164,13 @@ describe("cuplikan series di gambar besar", () => {
     expect(teaserShouldLoop(19, 20, 0, DETAIL_CUPLIKAN_SEC)).toBe(false);
   });
 
-  it("halaman detail menunggu lebih sebentar daripada halaman umum", () => {
-    // Owner 2026-11-09: "kenapa begitu masuk drama tidak langsung terputar".
-    // Diukur di produksi saat itu: 1,2 dtk jeda + 1,17 dtk mencoba trailer
-    // yang belum ada + 1,24 dtk byte pertama Ep 1 = ±3,6 detik gambar diam.
-    // Orang sampai ke halaman detail karena MENGKLIK judulnya, jadi tak perlu
-    // disaring selama pengunjung halaman umum.
+  it("halaman detail memutar segera, tanpa jeda penyaring bot", () => {
+    // Owner 2026-11-16: "tidak langsung jalan videonya". Jeda 500 ms yang
+    // tersisa sesudah keluhan 2026-11-09 masih terbaca sebagai video yang
+    // tidak mulai. Orang sampai ke halaman ini karena sudah mengklik judul.
+    // Jeda penyaring bot tetap ada di hero beranda (HERO_TEASER_DELAY_MS).
+    expect(DETAIL_TEASER_DELAY_MS).toBe(0);
     expect(DETAIL_TEASER_DELAY_MS).toBeLessThan(HERO_TEASER_DELAY_MS);
-    // Tetap ada jedanya: nol detik berarti bot perayap pun ikut menarik video.
-    expect(DETAIL_TEASER_DELAY_MS).toBeGreaterThan(0);
   });
 
   it("video yang baru mulai tidak langsung diulang", () => {

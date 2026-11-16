@@ -118,7 +118,9 @@ Owner minta branch `feat/link-unduhan-provider-kualitas` ditayangkan karena reka
 
 Owner: sesudah klik drama dari beranda, layar tetap poster diam.
 
-**Penyebab yang diubah di kode:** Windows mematikan animasi (`prefers-reduced-motion: reduce`). Kode lama menganggap itu larangan, jadi tag video tidak pernah dibuat dan `/api/teaser` tidak pernah diminta. Sekarang video tetap dipasang. Tes `tests/hero-gambar-besar.test.ts` + `tests/hero-teaser.test.ts` = 45 hijau.
+**Penyebab yang diubah di kode:** Windows mematikan animasi (`prefers-reduced-motion: reduce`). Kode lama menganggap itu larangan, jadi tag video tidak pernah dibuat dan `/api/teaser` tidak pernah diminta. Sekarang video tetap dipasang.
+
+**Framing disamakan (2026-11-16 sore):** gambar diam masih `object-cover`, jadi poster tinggi terpotong (sering cuma topi/wajah) sementara poster lebar utuh. Gambar dan video sekarang sama-sama `object-contain` di kotak yang sama. Sisa ruang diisi latar blur. Tes hero 45 hijau.
 
 **Yang masih menghalangi putar:** `/api/teaser` membalas 307 ke alamat `.mp4` TANPA tanda tangan. PC backup membalas **403** `Alamat video tidak sah.` `VIDEO_SIGNING_SECRET` tidak aktif di server lokal ini (sama seperti catatan lama: kunci itu ada di panel hosting, bukan di mesin ini). Selama kunci lokal tidak sama dengan PC backup, episode tidak bisa diputar dari localhost.
 

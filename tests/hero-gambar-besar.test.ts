@@ -1,12 +1,11 @@
-// Penjaga FRAMING GAMBAR BESAR halaman drama — owner 2026-11-09
-// ("bagian atas tidak kepotong ... kalau mau potong, potong dari bawah agar
-// UI tetap enak dilihat, tidak kepala yang terpotong").
+// Penjaga FRAMING GAMBAR BESAR halaman drama.
 //
-// KERUSAKAN YANG DIJAGA: kotak hero ber-rasio 16/9, sedangkan poster drama
-// hampir selalu lebih TINGGI dari itu. `object-cover` sendirian memotong rata
-// atas-bawah, jadi yang hilang justru wajah tokoh — satu hal yang paling
-// menentukan orang mengklik atau tidak. `object-top` menempelkan gambar ke
-// tepi atas sehingga kelebihannya dibuang dari BAWAH.
+// Dulu (2026-11-09) gambar dipotong dari bawah (`object-cover object-top`)
+// supaya kepala tidak hilang. Owner 2026-11-16 melihat hasilnya beda-beda:
+// poster yang sudah lebar tampak utuh, poster yang tinggi tinggal sepotong
+// (sering cuma topi/wajah). Aturan baru: JANGAN potong. Gambar dan video
+// memakai `object-contain` di kotak yang sama. Sisa ruang diisi latar blur
+// yang sudah ada, jadi semua drama tampil utuh dengan cara yang sama.
 //
 // ⚠️ KENAPA TES INI MEMBACA SUMBER, BUKAN MERENDER: kerusakannya murni soal
 // PEMOTONGAN gambar, dan jsdom tidak punya mesin tata letak — ia tidak
@@ -46,27 +45,25 @@ function elemen(sumber: string, penanda: string): string {
     .replace(/^\s*\/\/.*$/gm, ""); // komentar baris //
 }
 
-describe("gambar besar hero: kepala tidak boleh terpotong", () => {
-  it("gambar utama ditempel ke ATAS, bukan dipusatkan", () => {
+describe("gambar besar hero: tidak boleh ada yang terpotong", () => {
+  it("gambar utama menampilkan SELURUH poster, tidak dipotong", () => {
     const gambarUtama = elemen(sumberHalaman, "alt={drama.title}");
-    expect(gambarUtama).toContain("object-cover");
-    expect(gambarUtama).toContain("object-top");
+    expect(gambarUtama).toContain("object-contain");
+    expect(gambarUtama).not.toContain("object-cover");
+    expect(gambarUtama).not.toContain("object-top");
   });
 
-  it("video trailer menampilkan SELURUH bingkai, tidak dipotong", () => {
-    // Owner 2026-11-16: episode 1 dipakai sebagai trailer, tapi object-cover
-    // memotong bingkai supaya mengisi kotak 16/9 — adegannya tidak utuh.
-    // Gambar diam di atasnya TETAP object-cover object-top (kepala poster
-    // jangan hilang). Yang tidak boleh dipotong adalah videonya.
+  it("video trailer memakai kotak dan potongan yang SAMA dengan gambarnya", () => {
+    // Beda kotak = tampilan meloncat saat video muncul, dan drama yang
+    // videonya lebih tinggi terlihat kepotong sementara yang lain utuh.
     const video = elemen(sumberMedia, "<video");
     expect(video).toContain("object-contain");
+    expect(video).toContain("inset-0");
     expect(video).not.toContain("object-cover");
     expect(video).not.toContain("object-top");
-    // Poster kecil menimpa bawah bingkai mulai 640px. Video harus berhenti
-    // di atasnya. `h-full` membatalkan `bottom`, jadi ia dilarang di sini.
-    expect(video).toContain("sm:bottom-[86px]");
-    expect(video).toContain("md:bottom-[155px]");
-    expect(video).not.toContain("h-full");
+    expect(video).not.toContain("sm:bottom-");
+    expect(video).not.toContain("md:bottom-");
+    expect(video).not.toContain("bg-black");
   });
 
   it("latar blur SENGAJA tetap dipusatkan", () => {

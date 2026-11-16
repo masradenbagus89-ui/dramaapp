@@ -616,15 +616,15 @@ function HeroDrama({ drama }: { drama: Drama }) {
                     fill
                     priority
                     sizes="(max-width: 768px) 100vw, 1280px"
-                    /* `object-top` BUKAN gaya bebas — owner 2026-11-09: kepala
-                       tokoh terpotong di tepi atas. Poster drama hampir selalu
-                       lebih tinggi daripada kotak 16/9 ini, dan `object-cover`
-                       sendirian memotong RATA atas-bawah sehingga wajah — satu
-                       hal yang paling menentukan orang mengklik atau tidak —
-                       justru yang hilang. Dengan `object-top` gambar ditempel ke
-                       atas, jadi kelebihannya dibuang dari BAWAH (kaki/latar),
-                       bukan dari kepala. */
-                    className={`object-cover object-top ${drama.heroDim ? "brightness-90" : "brightness-100"}`}
+                    /* `object-contain` — owner 2026-11-16: hasilnya beda-beda,
+                       ada drama yang gambarnya kepotong. `object-cover` mengisi
+                       kotak 16/9 dengan membuang sisi yang tidak muat, jadi
+                       poster tinggi tinggal sepotong (sering cuma kepala/topi)
+                       sementara poster yang sudah lebar tampak utuh. Contain
+                       menampilkan SELURUH gambar. Sisa kiri-kanan diisi latar
+                       blur di belakangnya, jadi semua drama memakai cara yang
+                       sama. */
+                    className={`object-contain object-center ${drama.heroDim ? "brightness-90" : "brightness-100"}`}
                   />
                 </>
               )}

@@ -114,22 +114,13 @@ export default function HeroDramaMedia({ drama }: { drama: Drama }) {
           loop
           preload="auto"
           aria-hidden
-          // `object-contain` (owner 2026-11-16): episode drama sering lebih
-          // tinggi daripada kotak 16/9 ini. `object-cover` mengisi kotak dengan
-          // MEMOTONG bingkai, jadi yang terlihat cuma sepotong adegan. Contain
-          // menampilkan SELURUH bingkai; sisa kotak jadi pita hitam, bukan
-          // bagian video yang hilang. `bg-black` membuat pita itu hitam, bukan
-          // gambar diam yang mengintip di samping.
-          //
-          // `sm:bottom` / `md:bottom` mengangkat video di atas poster kecil.
-          // Poster 3/4: lebar 112px → tinggi 149px, juntai 64px, menimpa 85px;
-          // lebar 176px → tinggi 235px, juntai 80px, menimpa 155px. Tanpa
-          // angkat ini, bagian bawah adegan ketutup poster — layar terlihat
-          // kepotong walau object-fit-nya sudah benar. Di HP poster tidak
-          // menumpuk (mengalir di bawah gambar), jadi bottom tetap 0.
-          // JANGAN tambah `h-full`: tinggi 100% mengabaikan `bottom` dan video
-          // kembali menyelip di bawah poster.
-          className={`absolute inset-x-0 top-0 bottom-0 bg-black object-contain transition-opacity duration-500 sm:bottom-[86px] md:bottom-[155px] ${
+          // Kotak dan object-fit SAMA dengan gambar diam di page.tsx.
+          // Kalau video lebih pendek atau digeser (`bottom` lain, latar hitam),
+          // drama yang episodenya tegak terlihat kepotong/sempit sementara
+          // yang melebar tampak utuh — owner 2026-11-16: "hasilnya beda-beda".
+          // Latar video dibiarkan tembus supaya blur di belakangnya yang mengisi
+          // sisi kosong, bukan pita hitam.
+          className={`absolute inset-0 h-full w-full object-contain object-center transition-opacity duration-500 ${
             playing ? "opacity-100" : "opacity-0"
           }`}
           // Jaring pengaman: `autoPlay` saja kadang tidak cukup — elemen bisa

@@ -23,7 +23,24 @@
 > lengkap: `HANDOFF.md` seksi `## 2026-11-09`.
 
 
-**Terakhir dicek:** 2026-11-17. Owner menulis "ok sekarang kamu deploy". `HEAD` = `origin/main` = `dramaku/main` = **`c7d491e`** (`f7111e0..c7d491e`). 🪤 **Berkas sisa lokal masih menggantung, JANGAN `git add -A`.**
+**Terakhir dicek:** 2026-11-17. Owner menulis "deploy" untuk daftar Playly. Fitur = **`63fdaad`**. Catatan rilis sebelumnya `b89747a`. 🪤 **Berkas sisa lokal masih menggantung, JANGAN `git add -A`.**
+
+### ✅ 2026-11-17 — RILIS `b89747a` → `63fdaad` (daftar Playly bertahap)
+
+**Didorong sesudah owner menulis "deploy".** `dramaku` dulu (cermin), baru `origin main` (TOMBOL RILIS).
+
+| Yang ditayangkan | Dampak bagi admin |
+|---|---|
+| Daftar video Playly | film halaman pertama muncul dulu, sisanya menyusul |
+| Layar | kotak abu-abu hanya selama belum ada satu film pun |
+
+**Tidak ada SQL maupun env baru.** Gerbang lima langkah penuh tidak dijalankan. Tes yang hijau: `tests/playly-paginasi.test.ts` dan `tests/daftar-playly-bertahap.test.ts` (14 tes).
+
+**Rollback:** `git revert 63fdaad && git push dramaku main && git push origin main`
+
+---
+
+**Sebelumnya, 2026-11-17.** Owner menulis "ok sekarang kamu deploy" untuk tampilan beranda. Fitur `c7d491e`, catatan `b89747a`.
 
 ### ✅ 2026-11-17 — RILIS `f7111e0` → `c7d491e` (1 commit, dua remote)
 

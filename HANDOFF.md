@@ -100,7 +100,7 @@
 
 ## 2026-11-17 — daftar Playly muncul bertahap
 
-Owner: buka Daftar video Playly, loading lama, layar kosong. Ditayangkan atas perintah deploy.
+Owner: buka Daftar video Playly, loading lama, layar kosong. Commit `63fdaad` didorong ke `dramaku` lalu `origin main`.
 
 **Yang berubah:** panel itu tidak lagi menunggu seluruh halaman Playly. Halaman pertama langsung digambar, halaman berikutnya disambung. Kotak abu-abu hanya muncul kalau belum ada satu film pun.
 

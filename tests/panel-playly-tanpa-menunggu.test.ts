@@ -159,9 +159,12 @@ describe("panel Playly tidak menunggu pemeriksaan berkas sebelum tampil", () => 
     const el = await pasang();
 
     await tungguSampai(
-      () => el.textContent?.includes("1 video belum siap") ?? false,
-      "penanda 'belum siap' tergambar",
+      () => el.textContent?.includes("Perlu dicek") ?? false,
+      "tombol Perlu dicek tergambar",
     );
+    // Penjelasan panjangnya tidak menempel di atas tabel. Ia baru muncul
+    // sesudah tombol Perlu dicek diklik.
+    expect(el.textContent).not.toContain("1 video belum siap");
 
     // Keterangan "sedang memeriksa" harus HILANG begitu hasilnya tiba —
     // kalau tidak, ia berputar selamanya dan jadi kebisingan.
@@ -189,7 +192,8 @@ describe("panel Playly tidak menunggu pemeriksaan berkas sebelum tampil", () => 
     const el = await pasang([VIDEO_B.id]);
 
     expect(permintaan).toHaveLength(0);
-    expect(el.textContent).toContain("1 video belum siap");
+    expect(el.textContent).toContain("Perlu dicek");
+    expect(el.textContent).not.toContain("1 video belum siap");
     expect(el.textContent).not.toContain(PESAN_MEMERIKSA);
   });
 });

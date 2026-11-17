@@ -15,6 +15,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { readFileSync } from "node:fs";
 import PlaylyVisibilityManager from "../app/components/admin/PlaylyVisibilityManager";
+import KeteranganSumberPlayly from "../app/components/admin/KeteranganSumberPlayly";
 import { LABEL_JENIS } from "../lib/jenis-video";
 
 const video = (id: string, title: string) => ({
@@ -50,15 +51,37 @@ describe("panel admin tetap bisa dipakai saat Playly bermasalah", () => {
     expect(html).toContain(`>${LABEL_JENIS.series}</option>`);
     expect(html).toContain(`>${LABEL_JENIS.film}</option>`);
     expect(html).toContain("Pemuda Miskin Mata Tembus Pandang");
+    // Tombol ini bertanya ke OMDb, bukan ke Playly. Menyembunyikannya saat
+    // Playly bermasalah membuatnya hilang terus di localhost owner, karena
+    // kunci Playly di sana memang belum terpasang (owner 2026-11-17).
+    expect(html).toContain("Cocokkan semua ke IMDb sekaligus");
   });
 
   it("peringatannya tetap tampil — jujur bahwa daftarnya bisa ketinggalan", () => {
     // Menampilkan daftar TANPA peringatan sama buruknya: owner akan mengira
     // daftar itu mutakhir, lalu bingung kenapa video yang baru di-upload tak
-    // ada. Dua-duanya harus muncul bersamaan.
-    const html = render([video("v1", "Judul Apa Saja")], PESAN_GANGGUAN);
+    // ada. Kalimatnya ada di dalam ikon "?" judul "Video dari Playly"
+    // (2026-11-17), jadi yang diperiksa adalah kotak gabungannya.
+    const html = renderToStaticMarkup(
+      createElement(KeteranganSumberPlayly, {
+        galat: PESAN_GANGGUAN,
+        dariKatalogPublik: true,
+        akun: ["coklat", "ayy"],
+        adaDaftar: true,
+      }),
+    );
     expect(html).toContain(PESAN_GANGGUAN);
     expect(html).toContain("salinan terakhir");
+    expect(html).toContain("coklat, ayy");
+
+    const halaman = readFileSync("app/admin/videos/playly/page.tsx", "utf8");
+    const pengantar = halaman.slice(halaman.indexOf("pengantar={"));
+    const buka = pengantar.indexOf("<BantuanSingkat");
+    const isi = pengantar.indexOf("<KeteranganSumberPlayly");
+    const tutup = pengantar.indexOf("</BantuanSingkat>");
+    expect(buka).toBeGreaterThan(-1);
+    expect(isi).toBeGreaterThan(buka);
+    expect(tutup).toBeGreaterThan(isi);
   });
 
   it("menyerah HANYA kalau benar-benar tak ada video untuk ditampilkan", () => {

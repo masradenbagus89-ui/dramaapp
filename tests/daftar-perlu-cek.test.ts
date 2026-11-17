@@ -55,6 +55,9 @@ describe("film bertanda segitiga tidak menumpuk di atas daftar", () => {
       "data-daftar-perlu-cek",
     );
     expect(html).toContain("Perlu dicek");
+    expect(html, "penjelasan belum siap tidak menempel sebelum diklik").not.toContain(
+      "video belum siap",
+    );
     expect(html).not.toContain("Video lain");
     expect(biasa).toContain("Film nomor 001");
     expect(biasa).toContain("Film nomor 003");
@@ -108,6 +111,7 @@ describe("film bertanda segitiga tidak menumpuk di atas daftar", () => {
     const tabel = wadah.querySelector("[data-daftar-video]")?.textContent ?? "";
     expect(tabel).toContain("Film nomor 002");
     expect(tabel).not.toContain("Film nomor 001");
+    expect(wadah.textContent).toContain("1 video belum siap");
     expect(wadah.querySelectorAll("[data-daftar-video]")).toHaveLength(1);
     expect(wadah.querySelector("[data-daftar-perlu-cek]")).toBeNull();
 

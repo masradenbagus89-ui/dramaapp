@@ -90,11 +90,85 @@
 > aftermarket** dari pemilik sekarang, harganya **jauh di atas** Rp200.000 dan belum pernah dicek.
 > Nama lain yang masih bebas jauh lebih murah.
 
-**Terakhir diisi:** 2026-11-16 — isi otomatis link unduhan Google Drive & Mega digabung dari `feat/link-unduhan-provider-kualitas` (`58b1cf8`). Pemutar yang sudah tayang tidak ditimpa. Rincian di seksi `## 2026-11-16 — isi otomatis link unduhan` di bawah. Sebelumnya: 2026-11-15 — menu Genre dan Negara disamakan dengan Tahun (4 kolom, semua pilihan terlihat tanpa digulir). Rincian di seksi `## 2026-11-15` di bawah. Sebelumnya: ✅ **RILIS `f6b1c03` → `a09bfc8` TAYANG.** (1) Cache halaman penonton dibuang otomatis saat admin menyimpan + tombol **Segarkan cache** (kerja rekan). (2) Payload data IMDb ke browser admin **525 KB → 57 KB** (−89%) + ingatan "berkas siap" kini **bertahan melewati restart**. (3) Urutan video SE-SITUS ikut **tahun rilis**, bukan waktu upload — terbukti di produksi: 20 kartu teratas semuanya **2026**. Gerbang 5/5 (**2516 tes**), smoke test 10/10 = 200. ⏳ Manfaat (2) bagian ingatan baru terasa mulai rilis BERIKUTNYA. 🪤 **TIGA sesi menulis di folder yang sama; 22 berkas sesi audit masih menggantung — JANGAN `git add -A`.** Rinciannya di seksi `## 2026-11-14 (siang)` di bawah.
+**Terakhir diisi:** 2026-11-17 — panel admin Playly dirapikan (judul IMDb di atas, keterangan di ikon tanya, Perlu dicek, Cocokkan semua sekotak dengan Tebak kategori). Rincian di seksi `## 2026-11-17 — cocokkan dan tebak satu kotak` di bawah. Perbaikan login lokal masih belum di-commit. Sebelumnya: 2026-11-16 — isi otomatis link unduhan Google Drive & Mega digabung dari `feat/link-unduhan-provider-kualitas` (`58b1cf8`). Pemutar yang sudah tayang tidak ditimpa. Rincian di seksi `## 2026-11-16 — isi otomatis link unduhan` di bawah. Sebelumnya: 2026-11-15 — menu Genre dan Negara disamakan dengan Tahun (4 kolom, semua pilihan terlihat tanpa digulir). Rincian di seksi `## 2026-11-15` di bawah. Sebelumnya: ✅ **RILIS `f6b1c03` → `a09bfc8` TAYANG.** (1) Cache halaman penonton dibuang otomatis saat admin menyimpan + tombol **Segarkan cache** (kerja rekan). (2) Payload data IMDb ke browser admin **525 KB → 57 KB** (−89%) + ingatan "berkas siap" kini **bertahan melewati restart**. (3) Urutan video SE-SITUS ikut **tahun rilis**, bukan waktu upload — terbukti di produksi: 20 kartu teratas semuanya **2026**. Gerbang 5/5 (**2516 tes**), smoke test 10/10 = 200. ⏳ Manfaat (2) bagian ingatan baru terasa mulai rilis BERIKUTNYA. 🪤 **TIGA sesi menulis di folder yang sama; 22 berkas sesi audit masih menggantung — JANGAN `git add -A`.** Rinciannya di seksi `## 2026-11-14 (siang)` di bawah.
 
 **Rincian kontrol volume (putaran KETIGA):** owner menolak bentuk tombol `+` / `−` dan mengirim contoh gambar, jadi pengatur volume kini **garis geser tegak berbentuk kapsul** (jalur kuning + bulatan penggeser). Diukur di Chrome headless layar 393px: kapsul `x=345..381` **utuh di dalam layar**, geser jari atas→100% / tengah→50% / bawah→bisu, nol elemen diputar. Gerbang lolos 5/5 (2383 tes hijau). ✅ **Sudah TAYANG** dalam rilis `53fbc5c → a9ae869` malam itu juga.
 
 **Sebelumnya hari ini:** ✅ **`2ad015b` + `8d8c1ba` TAYANG.** Tata letak pemutar beres dalam tiga putaran permintaan owner: tombol **Eps turun ke baris paling bawah**, tombol **volume pindah ke sebelah angka durasi**, rail ikon kanan **diperkecil & dirapatkan** (36px/20px/jarak 8px), dan garis volume tegak **diganti tombol + / −** karena terukur berdiri di **x=391 pada layar 393px = di luar layar HP**. Rinciannya di seksi `## 2026-11-13` di bawah.
+
+---
+
+## 2026-11-17 — cocokkan dan tebak satu kotak
+
+Owner: "Cocokkan semua" dan "Tebak kategori" dijadikan satu tempat, diatur rapi.
+
+**Yang berubah:** dua baris itu sekarang satu kotak dengan garis pemisah. Tombol dan angkanya tetap. Ringkasan Kualitas dan Rating tetap kotak sendiri di bawahnya.
+
+**Cara cek:** buka `/admin/videos/playly`. Di atas tabel ada satu kotak: baris atas Cocokkan semua, baris bawah Tebak kategori.
+
+---
+
+## 2026-11-17 — tombol cocokkan semua muncul
+
+Owner: tombol "Cocokkan semua ke IMDb sekaligus" tidak ada di halaman.
+
+**Penyebab:** tombol itu disembunyikan setiap kali Playly mengirim pesan gangguan. Kunci Playly di komputer ini belum terpasang, jadi pesannya selalu ada dan tombolnya tidak pernah muncul. Pencocokan IMDb bertanya ke OMDb, bukan ke Playly.
+
+**Yang berubah:** tombolnya tampil lagi selama ada daftar video, termasuk saat Playly bermasalah.
+
+**Cara cek:** buka `/admin/videos/playly`. Di atas "Isi kategori otomatis" ada baris **Cocokkan semua ke IMDb sekaligus**.
+
+---
+
+## 2026-11-17 — keterangan di ikon tanya
+
+Owner: semua keterangan "Video dari Playly" (Kunci API, Akun, dan dua paragraf penjelasan) masuk ke ikon tanda tanya.
+
+**Yang berubah:** halaman hanya menampilkan judul "Video dari Playly" dan ikon "?". Teksnya baru muncul setelah ikon diklik.
+
+**Cara cek:** buka `/admin/videos/playly`. Di bawah judul IMDb hanya ada "Video dari Playly" plus ikon "?". Klik ikon itu — muncul bagian Kunci API, Akun, lalu penjelasan video.
+
+---
+
+## 2026-11-17 — keterangan sumber digabung
+
+Owner: dua aturan (kotak kuning kunci API dan kotak biru katalog publik) digabung, ditaruh di atas "Video dari Playly", susunannya lebih mudah dibaca.
+
+**Yang berubah:** keduanya tidak lagi menumpuk di tengah panel. Satu kotak, dua bagian berlabel **Kunci API** dan **Akun**, duduk di atas judul "Video dari Playly". Isinya sama. Kalau kunci sudah jalan dan daftar bukan dari katalog publik, kotak itu tidak muncul.
+
+**Cara cek:** buka `/admin/videos/playly`. Di atas "Video dari Playly" ada satu kotak dengan dua bagian. Dua kotak kuning dan biru di tengah panel sudah tidak ada.
+
+---
+
+## 2026-11-17 — kotak belum siap di Perlu dicek
+
+Owner: kotak merah "59 video belum siap" (ditandai panah) masuk ke Perlu dicek.
+
+**Yang berubah:** kotak itu tidak lagi menempel di atas tabel. Angka tetap ada di tombol **Perlu dicek**. Kalimat penjelasannya muncul di atas daftar begitu tombol itu diklik.
+
+**Cara cek:** buka `/admin/videos/playly`. Kotak merah panjang tidak ada di atas. Klik **Perlu dicek** — kotak itu muncul, dan tabel berganti ke video yang belum siap.
+
+---
+
+## 2026-11-17 — judul IMDb di atas
+
+Owner: dari screenshot, pindahkan IMDb ke atas dan "Video dari Playly" ke bawahnya.
+
+**Yang berubah:** di `/admin/videos/playly`, urutan kepala halaman sekarang: label Konten, judul bagian yang sedang dibuka (IMDb / Link download / Daftar video Playly), lalu judul "Video dari Playly" beserta tombol "?". Isi panel (angka, tabel, tombol cocokkan) tidak ikut pindah. Menu sidebar tidak berubah.
+
+**Cara cek:** buka `http://localhost:3010/admin/videos/playly` (sudah login). Yang paling atas harus "IMDb", di bawahnya "Video dari Playly".
+
+---
+
+## 2026-11-17 — login lokal tidak mengirim password
+
+Owner: masuk sebagai admin di localhost ditolak. Belum di-commit.
+
+**Penyebab:** tombol Masuk tidak mengirim password. Halaman cuma memuat ulang ke `/login?`. Server tidak pernah memeriksa akun. Server dev di port 3010 juga sempat macet (tidak membalas) lalu dinyalakan ulang.
+
+**Yang berubah:** form login sekarang benar-benar dikirim ke server, termasuk kalau JavaScript halaman belum menempel. Kalau password salah, muncul kalimat merah — bukan halaman yang diam. Kalau benar dan datang dari panel admin, kembali ke panel itu di alamat yang sama (127.0.0.1 tetap 127.0.0.1). Pintu admin tidak dilepas.
+
+**Cara cek:** buka `http://127.0.0.1:3010/login?next=/admin/videos/playly`, ketik email admin dan password admin (titik-titik di kotak password bukan isian tersimpan), klik Masuk.
 
 ---
 

@@ -32,6 +32,7 @@ import AdminSidebar from "@/app/components/admin/AdminSidebar";
 import PlaylyVideoPicker from "@/app/components/admin/PlaylyVideoPicker";
 import { getPlaylyVideosGabunganCached } from "@/lib/playly-gabungan";
 import PlaylyVisibilityManager from "@/app/components/admin/PlaylyVisibilityManager";
+import KeteranganSumberPlayly from "@/app/components/admin/KeteranganSumberPlayly";
 import PlaylyIsiCepat from "@/app/components/admin/PlaylyIsiCepat";
 import PlaylyUnduhanManager from "@/app/components/admin/PlaylyUnduhanManager";
 import PlaylyBagianAktif from "@/app/components/admin/PlaylyBagianAktif";
@@ -148,52 +149,61 @@ export default async function PlaylyVideosPage() {
       <AdminSidebar />
 
       <div className="space-y-6">
-        <header>
-          <p className="text-xs uppercase tracking-wider text-zinc-500">Konten</p>
-          {/* Keterangan panjangnya disembunyikan di balik tombol "?" (owner
-              2026-11-06). Isinya tetap sama persis — yang berubah cuma: tidak
-              lagi mendorong isi panel ke bawah layar tiap halaman dibuka. */}
-          <BantuanSingkat
-            label="Apa itu video Playly?"
-            judul={
-              <h1 className="mt-1 text-2xl font-bold text-white">
-                Video dari Playly
-              </h1>
-            }
-          >
-          <p className="max-w-2xl">
-            Video di akun Playly kita tampil{" "}
-            <strong className="text-zinc-200">otomatis</strong> sebagai film
-            biasa di{" "}
-            <Link href="/beranda" className="text-amber-400 underline">
-              Beranda
-            </Link>
-            , dan tiap video punya halaman tontonnya sendiri yang alamatnya bisa
-            dibagikan. Penonton tidak melihat nama &quot;Playly&quot; di mana pun
-            (owner 2026-09-26) — halaman{" "}
-            <Link href="/film" className="text-amber-400 underline">
-              daftar lengkapnya
-            </Link>{" "}
-            tetap ada tapi tidak lagi punya tombol di navbar.
-          </p>
-          <p className="max-w-2xl">
-            Mengaitkan video ke drama (menu &quot;Daftar video Playly&quot;)
-            sifatnya{" "}
-            <strong className="text-zinc-200">opsional</strong> — hanya untuk
-            memberi label &quot;bagian dari drama X&quot;. Yang menentukan video
-            masuk baris genre beranda adalah{" "}
-            <strong className="text-zinc-200">Kategori</strong> di menu{" "}
-            <strong className="text-zinc-200">IMDb</strong>. Video DramaKu
-            sendiri tetap berjalan seperti biasa.
-          </p>
-          </BantuanSingkat>
-        </header>
-
         {/* Tiga panel yang dulu bertumpuk kini dipilih lewat menu sidebar
             (owner 2026-11-06: "sidebar kiri video playly terlalu panjang").
             Ketiganya tetap dirakit DI SINI — datanya cuma bisa diambil di
-            server — dan PlaylyBagianAktif hanya memilih mana yang terlihat. */}
+            server — dan PlaylyBagianAktif hanya memilih mana yang terlihat.
+
+            Urutan kepala (owner 2026-11-17): judul bagian (IMDb / Link
+            download / Daftar) di atas, pengantar "Video dari Playly" di
+            bawahnya. Keterangan panjang tetap di balik tombol "?" supaya
+            tidak mendorong tabel ke bawah tiap halaman dibuka. */}
         <PlaylyBagianAktif
+          kategori="Konten"
+          pengantar={
+            <BantuanSingkat
+              label="Apa itu video Playly?"
+              judul={
+                <h2 className="text-xl font-bold text-white">
+                  Video dari Playly
+                </h2>
+              }
+            >
+              {/* Kunci API, akun, dan keterangan halaman — semuanya di balik
+                  ikon "?" (owner 2026-11-17). */}
+              <KeteranganSumberPlayly
+                galat={mitra.error}
+                dariKatalogPublik={mitra.source === "katalog-publik"}
+                akun={konfigurasi.creators}
+                adaDaftar={videoPanel.length > 0}
+              />
+              <p className="max-w-2xl">
+                Video di akun Playly kita tampil{" "}
+                <strong className="text-zinc-200">otomatis</strong> sebagai film
+                biasa di{" "}
+                <Link href="/beranda" className="text-amber-400 underline">
+                  Beranda
+                </Link>
+                , dan tiap video punya halaman tontonnya sendiri yang alamatnya
+                bisa dibagikan. Penonton tidak melihat nama &quot;Playly&quot; di
+                mana pun (owner 2026-09-26) — halaman{" "}
+                <Link href="/film" className="text-amber-400 underline">
+                  daftar lengkapnya
+                </Link>{" "}
+                tetap ada tapi tidak lagi punya tombol di navbar.
+              </p>
+              <p className="max-w-2xl">
+                Mengaitkan video ke drama (menu &quot;Daftar video Playly&quot;)
+                sifatnya{" "}
+                <strong className="text-zinc-200">opsional</strong> — hanya
+                untuk memberi label &quot;bagian dari drama X&quot;. Yang
+                menentukan video masuk baris genre beranda adalah{" "}
+                <strong className="text-zinc-200">Kategori</strong> di menu{" "}
+                <strong className="text-zinc-200">IMDb</strong>. Video DramaKu
+                sendiri tetap berjalan seperti biasa.
+              </p>
+            </BantuanSingkat>
+          }
           imdb={
             /* Sengaja TIDAK dibungkus syarat "kunci sudah dipasang": sejak ada
                jalur katalog publik tersaring, video kita tetap tampil walau

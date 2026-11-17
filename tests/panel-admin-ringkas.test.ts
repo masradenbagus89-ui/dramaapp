@@ -5,10 +5,10 @@
 // Ringkasan kualitas & rating — harus memakai pola yang sama: angka terlihat
 // langsung, keterangan panjang di balik tombol "?" (BantuanSingkat).
 //
-// Kenapa diuji dengan RENDER, bukan cuma membaca berkas: panel "Cocokkan
-// semua" TIDAK bisa dilihat di localhost (tersembunyi oleh pagar `fetchError`
-// karena kunci Playly tidak ada di komputer owner), jadi tanpa tes ini
-// satu-satunya cara memeriksanya adalah merilis dulu lalu berharap.
+// Kenapa diuji dengan RENDER, bukan cuma membaca berkas: bentuk panel ini
+// (angka terlihat, keterangan di balik "?") tidak kelihatan dari berkas
+// sumbernya saja. Pagar `fetchError` yang dulu menyembunyikannya di localhost
+// sudah dilepas 2026-11-17 — pencocokan ini tidak membutuhkan Playly.
 import { describe, it, expect } from "vitest";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";

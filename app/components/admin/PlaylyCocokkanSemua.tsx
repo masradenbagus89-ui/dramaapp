@@ -175,7 +175,7 @@ export default function PlaylyCocokkanSemua({
     // dan satu abu — tiga nada berbeda bertumpuk membuat halaman ramai tanpa
     // satu pun di antaranya jadi lebih penting. Aksen warna kini cuma dari
     // IKON dan TOMBOL, bukan dari latar seluruh kotak.
-    <section className="mt-3 rounded-xl border border-zinc-800 bg-zinc-900/40 p-3">
+    <div className="p-3">
       {/* Satu baris: judul + angka di kiri, aksi di kanan — tata letak yang
           sama persis dengan dua panel tetangganya. Sebelumnya tombol panel ini
           turun ke baris sendiri di bawah judul, jadi tingginya beda sendiri dan
@@ -345,6 +345,6 @@ export default function PlaylyCocokkanSemua({
           </ul>
         </>
       )}
-    </section>
+    </div>
   );
 }

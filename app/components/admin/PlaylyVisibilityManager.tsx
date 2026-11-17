@@ -19,7 +19,6 @@ import {
   AlertTriangle,
   Eye,
   EyeOff,
-  Info,
   ListChecks,
   Loader2,
   Star,
@@ -128,10 +127,9 @@ const KOLOM_BARIS =
   "grid-cols-2 gap-1 sm:grid-cols-[minmax(0,1fr)_72px_108px_88px_124px_72px_36px] sm:items-center";
 
 /**
- * Warna tiap nada spanduk. Dikumpulkan di satu peta supaya tiga spanduk di
- * panel ini (gangguan pengambilan · video belum siap · sumber katalog publik)
- * mustahil menyimpang bentuknya — sebelumnya masing-masing menulis ulang
- * rentetan kelas sendiri, dan yang satu sudah terlanjur beda ukuran teks.
+ * Warna tiap nada spanduk. Dikumpulkan di satu peta supaya spanduk di panel
+ * ini mustahil menyimpang bentuknya. Keterangan kunci API dan katalog publik
+ * tidak lagi di sini — keduanya digabung di KeteranganSumberPlayly.
  */
 const NADA_SPANDUK = {
   peringatan: "border-amber-500/40 bg-amber-500/10 text-amber-100",
@@ -235,8 +233,6 @@ export default function PlaylyVisibilityManager({
   linkUnduhan = [],
   belumSiapIds,
   fetchError,
-  source,
-  creators,
 }: {
   /** Seluruh video milik akun kita, termasuk yang sedang disembunyikan. */
   videos: PlaylyVideo[];
@@ -315,9 +311,13 @@ export default function PlaylyVisibilityManager({
   belumSiapIds?: string[];
   /** Terisi kalau daftar gagal diambil dari Playly. */
   fetchError: string | null;
+  /**
+   * Tetap diterima supaya pemanggil lama tidak putus. Keterangannya tidak
+   * digambar di sini lagi — owner 2026-11-17 memindahkannya ke
+   * KeteranganSumberPlayly, di atas judul "Video dari Playly".
+   */
   source: PlaylySumber;
-  /** Nama akun Playly yang dipakai menyaring saat jalur kunci tidak terpakai.
-   * Jamak sejak 2026-10-06: kunci DramaKu mencakup tiga akun sekaligus. */
+  /** Nama akun Playly yang dipakai menyaring saat jalur kunci tidak terpakai. */
   creators: string[];
 }) {
   const [hidden, setHidden] = useState<Set<string>>(new Set(initialHidden));
@@ -1272,24 +1272,10 @@ export default function PlaylyVisibilityManager({
         </>
       )}
 
-      {/* SEMUA PEMBERITAHUAN DIKUMPULKAN DI SATU TEMPAT (owner 2026-11-06:
-          "rapikan lagi agar UI nya lebih bagus"). Sebelumnya ketiganya
-          berserak — satu di atas kalimat status, dua lagi terselip di bawah
-          tombol pencocokan massal — sehingga peringatan penting bisa terlewat
-          karena posisinya berpindah tergantung spanduk mana yang muncul. */}
+      {/* Pemberitahuan yang berubah SELAGI panel terbuka. Keterangan kunci
+          API dan katalog publik tidak di sini — digabung di atas judul
+          "Video dari Playly". */}
       <div className="mt-4 space-y-2 empty:hidden">
-        {/* Pengambilan bermasalah TAPI daftarnya masih ada (dari salinan
-            terakhir). Peringatannya tetap tampil — jujur bahwa daftar ini bisa
-            ketinggalan video yang baru di-upload — tanpa menyandera seluruh
-            panel seperti sebelum 2026-11-05. Penandaan yang disimpan dari sini
-            TETAP sah: ia menulis ke database kita sendiri, bukan ke Playly. */}
-        {fetchError && (
-          <Spanduk nada="peringatan" ikon={AlertTriangle}>
-            {fetchError} Daftar di bawah dipakai dari salinan terakhir, jadi
-            video yang baru saja di-upload mungkin belum muncul. Pengaturan yang
-            kamu simpan di sini tetap tersimpan dengan benar.
-          </Spanduk>
-        )}
 
         {/* Selama hasilnya belum tiba, katakan apa adanya. Tanpa baris ini,
             tabel tanpa satu pun penanda "belum siap" terbaca sebagai "semua
@@ -1303,65 +1289,50 @@ export default function PlaylyVisibilityManager({
           </Spanduk>
         )}
 
-        {belumSiap.size > 0 && (
-          <Spanduk nada="bahaya" ikon={AlertTriangle}>
-            <strong>{belumSiap.size} video belum siap.</strong> Catatannya ada di
-            Playly (judul, durasi, sampul), tapi file videonya tidak — biasanya
-            karena upload putus di tengah. Video ini <strong>tidak</strong>{" "}
-            ditampilkan ke penonton, karena kalau diklik yang muncul cuma layar
-            &quot;Video belum tersedia&quot;. Perbaikannya di dashboard Playly:
-            upload ulang videonya sampai 100% selesai, lalu buka lagi halaman
-            ini. Judulnya tidak dicampur di daftar — klik tombol{" "}
-            <strong>Perlu dicek</strong> di atas tabel untuk melihatnya.
-          </Spanduk>
-        )}
+        {/* Kotak "video belum siap" TIDAK di sini. Owner 2026-11-17: pindah
+            ke dalam tampilan tombol "Perlu dicek", supaya tidak mendorong
+            tabel ke bawah tiap halaman dibuka. Tombolnya tetap di baris
+            saringan dan angkanya tetap kelihatan. */}
 
-        {/* Dikatakan apa adanya: daftar ini TIDAK datang dari kunci mitra, jadi
-            jangan sampai ada yang mengira kuncinya sudah jalan padahal belum. */}
-        {source === "katalog-publik" && videos.length > 0 && (
-          <Spanduk nada="info" ikon={Info}>
-            Daftar ini diambil dari katalog publik Playly dan disaring ke akun{" "}
-            <strong>{creators.join(", ")}</strong>, karena kunci mitra sedang
-            tidak diterima Playly. Videonya tetap hanya milik akun kita. Kalau
-            ada akun Playly baru, tambahkan lewat Environment Variable{" "}
-            <code>PLAYLY_CREATOR</code> (dipisah koma) — isinya MENAMBAH daftar
-            bawaan, bukan menggantikannya.
-          </Spanduk>
-        )}
       </div>
 
       {/* Pencocokan massal. Diletakkan SESUDAH keterangan dan SEBELUM daftar:
           urutan kerjanya memang begitu — pahami dulu apa yang diisi, kerjakan
-          borongan, baru rapikan sisanya satu per satu di daftar di bawah. */}
-      {!fetchError && (
-        <PlaylyCocokkanSemua videos={videos} imdb={imdb} onPerbarui={setImdb} />
+          borongan, baru rapikan sisanya satu per satu di daftar di bawah.
+
+          SENGAJA DI LUAR pagar `fetchError` (owner 2026-11-17: "cocokkan semua
+          ke IMDb sekaligus mana kok tidak ada"). Pagar itu menyembunyikan
+          tombol ini setiap kali Playly mengirim pesan gangguan. Di komputer
+          owner kunci Playly memang belum terpasang, jadi pesannya selalu ada
+          dan tombolnya tidak pernah muncul. Pencocokan ini bertanya ke OMDb,
+          bukan ke Playly — daftar video yang sudah ada di layar cukup. */}
+      {/* Cocokkan semua + Tebak kategori dalam SATU kotak (owner 2026-11-17).
+          Dua bingkai terpisah membuat dua alat yang urutan kerjanya sama
+          (cocokkan dulu, baru tebak) terbaca seperti dua pekerjaan yang tidak
+          berhubungan. Garis pemisah di dalam kotak menjaga tombolnya tetap
+          sejajar. */}
+      {videos.length > 0 && (
+        <section
+          aria-label="Isi banyak video sekaligus"
+          className="mt-3 divide-y divide-zinc-800 overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/40"
+        >
+          <PlaylyCocokkanSemua videos={videos} imdb={imdb} onPerbarui={setImdb} />
+
+          {/* ⚠️ SENGAJA DI LUAR pagar `!fetchError`. Tebakan kategori tidak
+              menyentuh Playly: ia membaca genre dari data IMDb yang sudah
+              tersimpan. Menyembunyikannya saat Playly lambat membuatnya hilang
+              justru saat paling dibutuhkan (terukur 2026-11-09). Panel ini
+              menyembunyikan diri sendiri kalau tidak ada yang bisa diusulkan. */}
+          <KategoriIsiOtomatis
+            videos={videos}
+            imdb={imdb}
+            kategoriSekarang={genres}
+            onTersimpan={(videoId, kategori) =>
+              setGenres((lama) => ({ ...lama, [videoId]: kategori }))
+            }
+          />
+        </section>
       )}
-
-      {/* ⚠️ SENGAJA DI LUAR pagar `!fetchError` — jangan "dirapikan" masuk ke
-          dalamnya bersama panel di atas.
-
-          `fetchError` berarti PLAYLY yang tidak menjawab. Panel di atas memang
-          pantas sembunyi saat itu (mencocokkan daftar yang mungkin basi).
-          Tebakan kategori TIDAK menyentuh Playly sama sekali: ia membaca genre
-          dari data IMDb yang sudah tersimpan, dan daftar videonya sendiri
-          datang dari salinan `playly:cadangan` yang tetap lengkap.
-
-          Ketahuan saat diperiksa di localhost 2026-11-09: dengan panel ini di
-          dalam pagar, ia lenyap persis di keadaan yang paling sering terjadi —
-          produksi pun sedang menampilkan "Playly tidak menjawab dalam 10
-          detik". Fitur yang mati justru saat paling dibutuhkan.
-
-          Ditaruh SESUDAH pencocokan IMDb karena urutan kerjanya memang begitu:
-          cocokkan dulu, baru tebak kategorinya. Panel ini menyembunyikan diri
-          sendiri kalau tidak ada yang bisa diusulkan. */}
-      <KategoriIsiOtomatis
-        videos={videos}
-        imdb={imdb}
-        kategoriSekarang={genres}
-        onTersimpan={(videoId, kategori) =>
-          setGenres((lama) => ({ ...lama, [videoId]: kategori }))
-        }
-      />
 
       {/* Ringkasan kualitas & rating. Juga DI LUAR pagar `!fetchError`, dengan
           alasan yang sama seperti panel kategori di atas: angkanya dihitung
@@ -1486,6 +1457,23 @@ export default function PlaylyVisibilityManager({
             total={lihatPeringatan ? videoPeringatan.length : videoSaringan.length}
             placeholder="Cari judul video…"
           />
+        </div>
+      )}
+
+      {/* Penjelasan "belum siap" hanya saat daftar Perlu dicek sedang
+          terbuka (owner 2026-11-17). Kalimat "klik tombolnya" dibuang karena
+          admin sudah berada di daftar itu. */}
+      {lihatPeringatan && belumSiap.size > 0 && (
+        <div className="mt-3">
+          <Spanduk nada="bahaya" ikon={AlertTriangle}>
+            <strong>{belumSiap.size} video belum siap.</strong> Catatannya ada di
+            Playly (judul, durasi, sampul), tapi file videonya tidak — biasanya
+            karena upload putus di tengah. Video ini <strong>tidak</strong>{" "}
+            ditampilkan ke penonton, karena kalau diklik yang muncul cuma layar
+            &quot;Video belum tersedia&quot;. Perbaikannya di dashboard Playly:
+            upload ulang videonya sampai 100% selesai, lalu buka lagi halaman
+            ini. Daftar di bawah ini judul-judul itu.
+          </Spanduk>
         </div>
       )}
 

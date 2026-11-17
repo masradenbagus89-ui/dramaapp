@@ -27,11 +27,21 @@ import {
 } from "@/lib/bagian-playly";
 
 export default function PlaylyBagianAktif({
+  kategori,
+  pengantar,
   imdb,
   isiCepat,
   unduhan,
   daftar,
 }: {
+  /** Label kecil di atas judul bagian, misalnya "Konten". */
+  kategori?: string;
+  /**
+   * Blok yang duduk DI BAWAH judul bagian dan DI ATAS panel.
+   * Owner 2026-11-17: judul bagian (IMDb) di atas, pengantar
+   * "Video dari Playly" di bawahnya.
+   */
+  pengantar?: ReactNode;
   imdb: ReactNode;
   /** Nama bagiannya "isi-cepat" (dipakai sebagai hash alamat), tapi propnya
    *  ditulis tanpa tanda hubung — atribut JSX bertanda hubung sah secara
@@ -67,16 +77,24 @@ export default function PlaylyBagianAktif({
 
   return (
     <div className="space-y-6">
-      {/* Kepala bagian: penanda posisi. Tanpa ini, tiga panel yang bergantian
-          di tempat yang sama sulit dibedakan sekilas. */}
+      {/* Kepala bagian di ATAS pengantar halaman (owner 2026-11-17: "IMDb
+          jadi di atas, di bawahnya Video dari Playly"). Tanpa kepala ini,
+          tiga panel yang bergantian di tempat yang sama sulit dibedakan. */}
       <div>
-        <h2 className="text-xl font-bold text-white">
+        {kategori ? (
+          <p className="text-xs uppercase tracking-wider text-zinc-500">
+            {kategori}
+          </p>
+        ) : null}
+        <h1 className="mt-1 text-2xl font-bold text-white">
           {JUDUL_BAGIAN_PLAYLY[bagian]}
-        </h2>
+        </h1>
         <p className="mt-1 text-sm text-zinc-400">
           {KETERANGAN_BAGIAN_PLAYLY[bagian]}
         </p>
       </div>
+
+      {pengantar}
 
       {(Object.keys(panel) as BagianPlayly[]).map((nama) => (
         <div key={nama} className={bagian === nama ? undefined : "hidden"}>

@@ -123,7 +123,7 @@ export default function KategoriIsiOtomatis({
   return (
     // Bingkai NETRAL yang sama dengan dua panel tetangganya — lihat alasannya
     // di PlaylyCocokkanSemua.tsx. Aksen warna cuma dari ikon & tombol.
-    <section className="mt-3 rounded-xl border border-zinc-800 bg-zinc-900/40 p-3">
+    <div className="p-3">
       <div className="flex flex-wrap items-start justify-between gap-3">
         {/* Keterangan panjang masuk ke balik tombol "?" (owner 2026-11-09:
             "rapikan agar tulisannya tidak memenuhi layar"). Angkanya tetap
@@ -273,6 +273,6 @@ export default function KategoriIsiOtomatis({
           </table>
         </div>
       )}
-    </section>
+    </div>
   );
 }

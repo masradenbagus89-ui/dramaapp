@@ -15,7 +15,7 @@ import { describe, it, expect } from "vitest";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import TabKatalogTampilan from "../app/components/beranda/TabKatalogTampilan";
-import { JUDUL_BARIS_VIDEO, KUNCI_BARIS_VIDEO } from "../lib/beranda-video";
+import { KUNCI_BARIS_VIDEO, JUDUL_BARIS_VIDEO } from "../lib/beranda-video";
 import { TAB_BAWAAN } from "../lib/tab-katalog";
 import type { Drama } from "../lib/types";
 import type { PlaylyVideoPublik } from "../lib/playly-publik";
@@ -77,10 +77,13 @@ describe('seksi "Film Terbaru" di halaman depan', () => {
   it("berisi FILM saja — tak ada drama yang menyelinap ke dalamnya", () => {
     const html = render([film(1)]);
     const mulai = html.indexOf(`id="seksi-${KUNCI_BARIS_VIDEO}"`);
-    const berikut = html.indexOf('id="seksi-terbaru"');
+    const series = html.indexOf('id="seksi-terbaru"');
+    const berikut = html.indexOf('id="seksi-unggulan"');
 
-    expect(mulai).toBeGreaterThanOrEqual(0);
-    expect(berikut).toBeGreaterThan(mulai); // seksi film ADA DI ATAS seksi drama
+    // Series Terbaru di ATAS Film Terbaru (owner 2026-11-17).
+    expect(series).toBeGreaterThanOrEqual(0);
+    expect(mulai).toBeGreaterThan(series);
+    expect(berikut).toBeGreaterThan(mulai);
     const isiSeksiFilm = html.slice(mulai, berikut);
     expect(isiSeksiFilm).toContain("Film Layar Lebar 1");
     expect(isiSeksiFilm).not.toContain("Drama Serial");
@@ -100,7 +103,8 @@ describe('seksi "Film Terbaru" di halaman depan', () => {
   it("seksi drama TIDAK ikut kemasukan film", () => {
     const html = render([film(1)]);
     const mulaiDrama = html.indexOf('id="seksi-terbaru"');
-    const isiSeksiDrama = html.slice(mulaiDrama);
+    const mulaiFilm = html.indexOf(`id="seksi-${KUNCI_BARIS_VIDEO}"`);
+    const isiSeksiDrama = html.slice(mulaiDrama, mulaiFilm);
 
     expect(isiSeksiDrama).toContain("Drama Serial 0");
     expect(isiSeksiDrama).not.toContain("Film Layar Lebar");

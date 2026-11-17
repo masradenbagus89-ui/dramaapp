@@ -7,24 +7,11 @@ import { cn } from "@/lib/utils";
 
 /**
  * SATU seksi katalog di halaman depan: judul + tombol "Semua" sejajar di satu
- * baris, lalu SATU BARIS poster yang bisa digeser ke kiri/kanan lewat panah di
- * kedua ujungnya.
+ * baris, lalu SATU baris poster yang digeser ke samping.
  *
- * ⚠️ BENTUKNYA SUDAH BERGANTI EMPAT KALI dalam dua hari — baca ini sebelum
- * mengubahnya lagi, supaya tidak memutar balik ke bentuk yang sudah ditolak:
- *   - 2026-10-09 baris geser diganti GRID bertumpuk (owner: "sama persis
- *     seperti LK21"), supaya poster ke-8 dan seterusnya ikut terlihat.
- *   - 2026-10-10 pagi grid itu dipotong jadi satu baris penuh: jumlah kolomnya
- *     mengikuti lebar layar sedangkan isinya tetap 20, jadi baris terakhir
- *     selalu tersisa separuh (17 poster lalu 3) dan owner membacanya sebagai
- *     "tidak rapi".
- *   - 2026-10-10 sore owner meminta panah geser di ujungnya. Itu MENGEMBALIKAN
- *     bentuk baris geser — dan sekaligus menutup utang teknis potongan tadi:
- *     poster yang tidak muat dulu tetap ada di HTML dan masih bisa dijangkau
- *     tombol Tab walau tak terlihat. Sekarang tidak ada lagi yang disembunyikan.
- *   - 2026-10-10 sore (lagi) tombol "Semua" dikembalikan SEJAJAR judul. Ia
- *     sempat turun ke bawah barisan mencontoh situs pembanding; dengan baris
- *     yang bisa digeser, tombol di bawah justru terseret jauh dari judulnya.
+ * Owner 2026-11-17: jangan dua baris. Tetap satu baris, panah di kanan
+ * (dan kiri untuk kembali) supaya film dan dramanya bisa digeser.
+ * Tombol "Semua" tetap sejajar judul.
  *
  * Isinya `KartuKatalog`, BUKAN `Drama[]`: seksi "Film Terbaru" berisi video
  * sedangkan seksi tab berisi drama. Memakai bentuk campuran yang sudah dipakai
@@ -56,7 +43,7 @@ export default function SeksiKatalog({
       aria-label={judul}
       /* scroll-mt menahan judul dari balik bar cari yang menempel di atas —
          tanpa ini lompatan mendarat tepat di bawah bar dan judulnya tertutup. */
-      className="scroll-mt-28 pb-6"
+      className="scroll-mt-28 pb-2"
     >
       {/* ===== Kepala seksi: judul di kiri, tombol "Semua" SEJAJAR di kanan
              (owner 2026-10-10, putaran keempat). Tombol sempat dipindah ke
@@ -65,7 +52,7 @@ export default function SeksiKatalog({
              jauh ke bawah saat barisan posternya panjang. ===== */}
       <div className={cn(SHELL, "flex items-end justify-between gap-3 pt-4")}>
         <div className="min-w-0">
-          <h2 className="truncate text-base font-bold text-white terang:text-zinc-900 md:text-lg">
+          <h2 className="truncate text-sm font-extrabold uppercase tracking-wide text-white terang:text-zinc-900 md:text-base">
             {judul}
           </h2>
           <p className="mt-0.5 truncate text-[11px] text-zinc-500 terang:text-zinc-600">
@@ -83,13 +70,7 @@ export default function SeksiKatalog({
         </Button>
       </div>
 
-      {/* `panahSelalu` (owner 2026-10-10: "diujung kasih tanda panah agar bisa
-          geser ke kanan/kiri"): di seksi yang padat poster, panah yang baru
-          muncul saat kursor lewat sama saja dengan tidak ada — penonton tidak
-          punya petunjuk bahwa masih ada judul di sebelah kanan. Baris unggulan
-          di puncak halaman tetap memakai panah yang muncul saat hover, supaya
-          poster besarnya tidak tertutup begitu halaman dibuka. */}
-      <div className={cn(SHELL, "mt-2")}>
+      <div className={cn(SHELL, "mt-3")}>
         <BarisGeser kartu={kartu} panahSelalu />
       </div>
     </section>

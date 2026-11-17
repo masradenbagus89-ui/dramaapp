@@ -135,7 +135,10 @@ export default function KartuVideo({ video }: { video: PlaylyVideoPublik }) {
         </span>
       </div>
 
-      <h3 className="mt-1.5 line-clamp-2 text-[13px] font-bold leading-snug text-white terang:text-zinc-900 transition-colors group-hover/kartu:text-amber-400 terang:group-hover/kartu:text-amber-700 md:text-sm">
+      <h3
+        title={video.title}
+        className="mt-1 line-clamp-1 text-xs font-bold leading-snug text-white terang:text-zinc-900 transition-colors group-hover/kartu:text-amber-400 terang:group-hover/kartu:text-amber-700 md:text-[13px]"
+      >
         {video.title}
       </h3>
       {label && (

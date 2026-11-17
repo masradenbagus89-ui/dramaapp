@@ -31,6 +31,8 @@ export default function BarisGeser({
   cardClass = ROW_CARD_CLASS,
   cardHrefPrefix,
   panahSelalu = false,
+  susunan = "geser",
+  gridClass,
 }: {
   kartu: KartuKatalog[];
   /**
@@ -65,10 +67,39 @@ export default function BarisGeser({
    * besar saat halaman baru dibuka.
    */
   panahSelalu?: boolean;
+  /**
+   * "grid" = dinding poster yang membungkus (seksi halaman depan, bentuk LK21).
+   * "geser" = satu baris yang digeser (baris unggulan). Kartunya tetap yang sama.
+   */
+  susunan?: "geser" | "grid";
+  /** Kelas grid. Wajib diisi kalau `susunan` = "grid". */
+  gridClass?: string;
 }) {
   const scroller = useRef<HTMLDivElement>(null);
 
   if (kartu.length === 0) return null;
+
+  const daftarKartu = kartu.map((k) =>
+    k.jenis === "drama" ? (
+      <div
+        key={`d-${k.drama.id}`}
+        className={susunan === "grid" ? "min-w-0" : cardClass}
+      >
+        <CatalogCard
+          drama={k.drama}
+          href={cardHrefPrefix ? `${cardHrefPrefix}/${k.drama.id}` : undefined}
+        />
+      </div>
+    ) : (
+      <div key={`v-${k.video.id}`} className={susunan === "grid" ? "min-w-0" : cardClass}>
+        <KartuVideo video={k.video} />
+      </div>
+    ),
+  );
+
+  if (susunan === "grid") {
+    return <div className={gridClass}>{daftarKartu}</div>;
+  }
 
   const geser = (arah: -1 | 1) => {
     const el = scroller.current;
@@ -118,20 +149,7 @@ export default function BarisGeser({
         ref={scroller}
         className="no-scrollbar flex gap-2 overflow-x-auto scroll-smooth md:gap-2.5"
       >
-        {kartu.map((k) =>
-          k.jenis === "drama" ? (
-            <div key={`d-${k.drama.id}`} className={cardClass}>
-              <CatalogCard
-                drama={k.drama}
-                href={cardHrefPrefix ? `${cardHrefPrefix}/${k.drama.id}` : undefined}
-              />
-            </div>
-          ) : (
-            <div key={`v-${k.video.id}`} className={cardClass}>
-              <KartuVideo video={k.video} />
-            </div>
-          ),
-        )}
+        {daftarKartu}
       </div>
     </div>
   );

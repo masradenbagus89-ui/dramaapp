@@ -34,6 +34,7 @@ export default function FeaturedRow({
   cardHrefPrefix,
   cardClass = ROW_CARD_CLASS,
   tombolBawah = true,
+  panahSelalu = false,
 }: {
   /** Baris berisi drama saja — bentuk lama, dipakai empat pemanggil. */
   dramas?: Drama[];
@@ -68,6 +69,8 @@ export default function FeaturedRow({
    * Default `true` supaya pemanggil lama tidak berubah sama sekali.
    */
   tombolBawah?: boolean;
+  /** true = panah geser selalu kelihatan, bukan hanya saat kursor lewat. */
+  panahSelalu?: boolean;
 }) {
   // Satu daftar untuk digambar. `items` menang kalau diisi; kalau tidak,
   // `dramas` dibungkus di sini supaya pemanggil lama tak perlu tahu apa-apa
@@ -101,17 +104,14 @@ export default function FeaturedRow({
           kartu={kartu}
           cardClass={cardClass}
           cardHrefPrefix={cardHrefPrefix}
+          panahSelalu={panahSelalu}
         />
 
-        {/* Tulisannya SENGAJA tidak menyebut "film" (keputusan owner 2026-10-31).
-            Dua sebab, keduanya terbaca dari kode di atas: baris ini diisi
-            `featuredHeroSlides` yang justru MENYARING drama berseri
-            (lib/hero-teaser.ts, `episodes >= 5`), dan `href` bawaannya
-            `/discover` = katalog LENGKAP drama + film, bukan daftar unggulan.
-            Jadi label lama "Lihat semua film unggulan" salah di kedua sisi.
-            "Tontonan" dipilih mengikuti kosakata yang sudah dipakai halaman
-            drama saat daftarnya campuran ("Tontonan Lain", app/drama/[id]/
-            page.tsx) — satu konsep, satu nama (§3.3). */}
+        {/* Tulisannya tetap "tontonan", bukan "film" (keputusan owner
+            2026-10-31, dipertahankan 2026-11-17). Tombol ini menuju katalog
+            lengkap (`href`, bawaan `/discover`), bukan halaman /film saja.
+            Menyebut "film" di tombol akan menjanjikan daftar yang lebih
+            sempit daripada tujuan kliknya. */}
         {!title && tombolBawah && (
           <div className="mt-4 flex justify-center">
             <Button

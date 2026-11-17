@@ -98,13 +98,11 @@ export default function TabKatalogTampilan({
    */
   seksiLengkap?: boolean;
   /**
-   * Film dari penyedia video luar, untuk seksi "Film Terbaru" (owner
-   * 2026-10-09: "khusus buat film bukan drama"). Sudah terurut terbaru-dulu
-   * oleh lib/playly-gabungan.ts — JANGAN diurut ulang di sini.
+   * Film untuk seksi putih "Film Terbaru". Halaman pemanggil mengisi ini
+   * dari daftar film yang BELUM tampil di baris hitam. Sudah terurut tahun.
    *
-   * Kosong = seksinya tidak digambar sama sekali. Itu keadaan NORMAL, bukan
-   * error: sumber video luar butuh kunci API yang hanya ada di server
-   * produksi, jadi di komputer lokal daftarnya memang selalu kosong.
+   * Kosong = seksinya tidak digambar sama sekali. Itu keadaan NORMAL saat
+   * sumber video luar sedang mati, bukan error.
    */
   videos?: PlaylyVideoPublik[];
   /**
@@ -204,54 +202,57 @@ export default function TabKatalogTampilan({
                menggambar tombolnya, jadi nama di tab dan nama di seksi mustahil
                menyimpang (aturan yang sudah ada di lib/tab-katalog.ts). ===== */
         <>
-          {/* FILM paling atas, terpisah dari tab drama. Tab mana pun yang
-              sedang dipilih, seksi ini tetap di urutan pertama: isinya bukan
-              salah satu tab, melainkan jenis tayangan yang berbeda. */}
-          <SeksiKatalog
-            idSeksi={`seksi-${KUNCI_BARIS_VIDEO}`}
-            judul={JUDUL_BARIS_VIDEO}
-            /* "tahun rilis" disebut EKSPLISIT sejak 2026-11-14: barisnya tidak
-               lagi diurut dari waktu upload (lib/tahun-film.ts), dan kalimat
-               lama "terbaru lebih dulu" bisa dibaca dua arti — penonton yang
-               mengira ini daftar unggahan terbaru akan menyimpulkan urutannya
-               rusak. */
-            keterangan="Film layar lebar — tahun rilis terbaru lebih dulu."
-            kartu={videos.map(bungkusVideo)}
-            hrefSemua="/film"
-          />
-          {[tabAktif, ...tabs.filter((t) => t.key !== tabAktif.key)].map((t) => (
-            <SeksiKatalog
-              key={t.key}
-              idSeksi={`seksi-${t.key}`}
-              judul={t.judul}
-              keterangan={t.keterangan}
-              /* SERIAL dari penyedia luar ikut HANYA ke seksi "Series Terbaru"
-                 (tab bawaan), dan sengaja tidak ke tab lain: "Series Unggulan"
-                 butuh penanda `exclusive`, "Series Update" butuh status Ongoing,
-                 "Terpopuler" butuh jumlah penonton, "Rekomendasi" butuh rating —
-                 video Playly tidak punya satu pun dari data itu. Menaruhnya di
-                 sana berarti mengaku judul ini unggulan/populer tanpa seorang
-                 pun pernah menilainya.
+          {/* Urutan owner 2026-11-17: Series Terbaru dulu, Film Terbaru
+              persis di bawahnya, baru seksi tab yang lain. Film tidak boleh
+              di atas series — dua judul "terbaru" yang berurutan dengan isi
+              film dulu membuat penonton mengira series-nya tidak ada.
+              Tab yang diklik tetap naik ke urutan pertama supaya kliknya
+              terasa; film tetap menempel tepat di bawah seksi pertama itu. */}
+          {(() => {
+            const urutan = [tabAktif, ...tabs.filter((t) => t.key !== tabAktif.key)];
+            const gambarSeksi = (t: (typeof urutan)[number]) => (
+              <SeksiKatalog
+                key={t.key}
+                idSeksi={`seksi-${t.key}`}
+                judul={t.judul}
+                keterangan={t.keterangan}
+                /* SERIAL dari penyedia luar ikut HANYA ke seksi "Series Terbaru"
+                   (tab bawaan), dan sengaja tidak ke tab lain: "Series Unggulan"
+                   butuh penanda `exclusive`, "Series Update" butuh status Ongoing,
+                   "Terpopuler" butuh jumlah penonton, "Rekomendasi" butuh rating —
+                   video Playly tidak punya satu pun dari data itu. Menaruhnya di
+                   sana berarti mengaku judul ini unggulan/populer tanpa seorang
+                   pun pernah menilainya.
 
-                 Ditaruh di DEPAN drama katalog, bukan di ekor: seksi memuat 20
-                 kartu dan yang di ekor praktis tak pernah terlihat tanpa
-                 menggeser jauh — owner yang baru saja menandai sebuah video akan
-                 menyimpulkan fiturnya tidak jalan. Aturan yang sama sudah
-                 dipakai baris genre di lib/beranda-video.ts. */
-              kartu={[
-                ...(t.key === TAB_BAWAAN ? videoSeries.map(bungkusVideo) : []),
-                ...isiTabLengkap(dramas, t.key)
-                  .slice(0, TAB_GRID_ITEMS)
-                  .map(bungkusDrama),
-              ].slice(0, TAB_GRID_ITEMS)}
-              /* Tujuan "SEMUA" = /katalog, halaman yang memang dibuat untuk
-                 membuka SATU tab secara penuh (lihat app/katalog/page.tsx).
-                 Dulu tombol ini memakai `?semua=1` di halaman yang sama — itu
-                 masuk akal waktu halaman depan cuma menampilkan satu tab, tapi
-                 sekarang ada enam seksi dan "semua" jadi ambigu. */
-              hrefSemua={t.key === TAB_BAWAAN ? "/katalog" : `/katalog?tab=${t.key}`}
-            />
-          ))}
+                   Ditaruh di DEPAN drama katalog, bukan di ekor: seksi memuat 20
+                   kartu dan yang di ekor praktis tak pernah terlihat tanpa
+                   menggeser jauh — owner yang baru saja menandai sebuah video akan
+                   menyimpulkan fiturnya tidak jalan. Aturan yang sama sudah
+                   dipakai baris genre di lib/beranda-video.ts. */
+                kartu={[
+                  ...(t.key === TAB_BAWAAN ? videoSeries.map(bungkusVideo) : []),
+                  ...isiTabLengkap(dramas, t.key)
+                    .slice(0, TAB_GRID_ITEMS)
+                    .map(bungkusDrama),
+                ].slice(0, TAB_GRID_ITEMS)}
+                hrefSemua={t.key === TAB_BAWAAN ? "/katalog" : `/katalog?tab=${t.key}`}
+              />
+            );
+            const [pertama, ...lanjutan] = urutan;
+            return (
+              <>
+                {pertama ? gambarSeksi(pertama) : null}
+                <SeksiKatalog
+                  idSeksi={`seksi-${KUNCI_BARIS_VIDEO}`}
+                  judul={JUDUL_BARIS_VIDEO}
+                  keterangan="Film layar lebar — tahun rilis terbaru lebih dulu."
+                  kartu={videos.map(bungkusVideo)}
+                  hrefSemua="/film"
+                />
+                {lanjutan.map(gambarSeksi)}
+              </>
+            );
+          })()}
         </>
       ) : (
         <>

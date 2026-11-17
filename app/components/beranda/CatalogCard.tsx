@@ -52,10 +52,13 @@ export default function CatalogCard({
         </span>
       </div>
 
-      <h3 className="mt-1.5 line-clamp-2 text-[13px] font-bold leading-snug text-white terang:text-zinc-900 transition-colors group-hover/kartu:text-amber-400 terang:group-hover/kartu:text-amber-700 md:text-sm">
+      <h3
+        title={drama.title}
+        className="mt-1 line-clamp-1 text-xs font-bold leading-snug text-white terang:text-zinc-900 transition-colors group-hover/kartu:text-amber-400 terang:group-hover/kartu:text-amber-700 md:text-[13px]"
+      >
         {drama.title}
       </h3>
-      <p className="mt-0.5 line-clamp-1 text-[11px] text-zinc-500 terang:text-zinc-600 md:text-xs">
+      <p className="mt-0.5 line-clamp-1 text-[11px] text-zinc-500 terang:text-zinc-600">
         {labelGenre(drama.category)}
       </p>
     </Link>

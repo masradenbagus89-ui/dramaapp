@@ -3,7 +3,8 @@ import { getAllDramasCachedSafe } from "@/lib/dramas";
 import { TAB_GRID_ITEMS } from "@/lib/tab-katalog";
 import { MAKS_SERIES_PLAYLY_DI_SEKSI, pisahFilmSeries } from "@/lib/jenis-video";
 import { getPlaylyVideosGabunganCached } from "@/lib/playly-gabungan";
-import { featuredHeroSlides } from "@/lib/hero-teaser";
+import { bungkusVideo } from "@/lib/beranda-video";
+import { siapkanTampilanDepan } from "@/lib/baris-atas";
 import { availableGenres, FEATURED_ROW_COUNT } from "@/lib/beranda-catalog";
 import { buildNavMenus } from "@/lib/nav-katalog";
 import { rakitIndeksSaran } from "@/lib/saran-cari";
@@ -25,7 +26,6 @@ export const metadata: Metadata = {
 
 export default async function BerandaPage() {
   const dramas = await getAllDramasCachedSafe();
-  const slides = featuredHeroSlides(dramas, FEATURED_ROW_COUNT);
 
   // Video Playly untuk bagian hasil pencarian di bawah grid (owner 2026-09-12).
   // Judul seperti "Beyond The Last Signal" ada di sini, BUKAN di katalog
@@ -48,16 +48,24 @@ export default async function BerandaPage() {
   const { film, series } = pisahFilmSeries(videos);
   // Sudah terurut TAHUN RILIS sejak dirakit di lib/playly-gabungan.ts; halaman
   // ini sengaja tidak mengurut lagi — alasannya di app/page.tsx.
-  const filmTerbaru = film.slice(0, TAB_GRID_ITEMS);
-  const seriesTerbaru = series.slice(0, MAKS_SERIES_PLAYLY_DI_SEKSI);
+  // Sama dengan halaman depan. Jangan diurut ulang di halaman ini.
+  const { barisAtas, filmDiDepan, seriesSisa, dramaSisa } = siapkanTampilanDepan({
+    film,
+    series,
+    drama: dramas,
+    jumlahBaris: FEATURED_ROW_COUNT,
+    jumlahFilm: TAB_GRID_ITEMS,
+  });
+  const heroItems = barisAtas.map((b) => bungkusVideo(b.item));
+  const seriesTerbaru = seriesSisa.slice(0, MAKS_SERIES_PLAYLY_DI_SEKSI);
   const genres = availableGenres(dramas);
   // Film ikut dioper — alasan sama dengan halaman depan.
   const menus = buildNavMenus(dramas, videos);
 
-  if (slides.length === 0) {
+  if (dramas.length === 0 && film.length === 0 && series.length === 0) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-20 text-center text-sm text-zinc-500">
-        Belum ada drama. Tambahkan dari panel admin.
+        Belum ada tontonan. Tambahkan dari panel admin.
       </div>
     );
   }
@@ -85,9 +93,9 @@ export default async function BerandaPage() {
           ⚠️ SLOT IKLAN DI HALAMAN INI TETAP TIDAK ADA (owner 2026-09-08) —
           jangan dikembalikan tanpa perintah baru. */}
       <BadanKatalog
-        dramas={dramas}
-        heroSlides={slides}
-        filmTerbaru={filmTerbaru}
+        dramas={dramaSisa}
+        heroItems={heroItems}
+        filmDiDepan={filmDiDepan}
         seriesTerbaru={seriesTerbaru}
         genres={genres}
         /* WAJIB "/beranda", jangan "/": RedirectIfAuthed memantulkan penonton

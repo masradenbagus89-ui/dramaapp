@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { getAllDramasCachedSafe } from "@/lib/dramas";
 import { getPlaylyVideosGabunganCached } from "@/lib/playly-gabungan";
-import { featuredHeroSlides } from "@/lib/hero-teaser";
+import { bungkusVideo } from "@/lib/beranda-video";
+import { siapkanTampilanDepan } from "@/lib/baris-atas";
 import RedirectIfAuthed from "@/app/components/RedirectIfAuthed";
 import BadanKatalog from "@/app/components/beranda/BadanKatalog";
 import PublicTopBars from "@/app/components/beranda/PublicTopBars";
@@ -52,12 +53,17 @@ export default async function LandingPage() {
    * halaman cepat atau lambat menyimpang, dan menyimpangnya tak memunculkan
    * error — cuma urutan yang berbeda antar halaman.
    */
-  const filmTerbaru = film.slice(0, TAB_GRID_ITEMS);
-  // Jatah serial Playly di seksi "Series Terbaru" sengaja dibatasi supaya satu
-  // drama berepisode banyak tidak mendorong keluar drama katalog — alasannya di
-  // lib/jenis-video.ts `MAKS_SERIES_PLAYLY_DI_SEKSI`.
-  const seriesTerbaru = series.slice(0, MAKS_SERIES_PLAYLY_DI_SEKSI);
-  const heroSlides = featuredHeroSlides(dramas, FEATURED_ROW_COUNT);
+  // Baris hitam hanya kartu yang punya gambar, dan judulnya tidak diulang
+  // di seksi bawah. Aturannya satu, di lib/baris-atas.ts.
+  const { barisAtas, filmDiDepan, seriesSisa, dramaSisa } = siapkanTampilanDepan({
+    film,
+    series,
+    drama: dramas,
+    jumlahBaris: FEATURED_ROW_COUNT,
+    jumlahFilm: TAB_GRID_ITEMS,
+  });
+  const heroItems = barisAtas.map((b) => bungkusVideo(b.item));
+  const seriesTerbaru = seriesSisa.slice(0, MAKS_SERIES_PLAYLY_DI_SEKSI);
   // Genre yang BENAR-BENAR berisi, untuk kolom "Genre Populer" di kaki situs.
   // Dihitung di server dari katalog yang sudah di tangan — nol pembacaan
   // tambahan, dan yang terkirim ke browser cuma daftar nama.
@@ -99,9 +105,9 @@ export default async function LandingPage() {
           lagi di sini: dua salinan pasti melenceng, dan itu yang sudah terjadi
           sampai hari ini. Lihat app/components/beranda/BadanKatalog.tsx. */}
       <BadanKatalog
-        dramas={dramas}
-        heroSlides={heroSlides}
-        filmTerbaru={filmTerbaru}
+        dramas={dramaSisa}
+        heroItems={heroItems}
+        filmDiDepan={filmDiDepan}
         seriesTerbaru={seriesTerbaru}
         genres={genres}
         heroHref="/discover"

@@ -139,7 +139,13 @@ export function trailerSrc(dramaId: string): string {
   return `/api/teaser?id=${encodeURIComponent(dramaId)}&jenis=trailer`;
 }
 
-/** Pilih 5 judul unggulan. Utamakan drama berseri (punya episode), bukan film IMDb 1 bagian. */
+/**
+ * Pilih 5 judul unggulan. Utamakan drama berseri (punya episode), bukan film IMDb 1 bagian.
+ *
+ * Halaman depan dan /beranda TIDAK memakai ini lagi sejak 2026-11-17:
+ * baris paling atas diisi film terbaru menurut tahun. Jangan dipasang
+ * kembali ke kedua halaman itu.
+ */
 export function featuredHeroSlides(dramas: Drama[], max = 5): Drama[] {
   const withArt = dramas.filter((d) => d.heroImage || d.posterImage);
   const pool = withArt.length > 0 ? withArt : dramas;

@@ -101,6 +101,16 @@ export const ROW_CARD_CLASS =
 export const ROW_KATEGORI_CARD_CLASS =
   "w-[92px] shrink-0 sm:w-[104px] md:w-[116px] lg:w-[128px]";
 
+/**
+ * Lebar satu poster di baris hitam paling atas.
+ *
+ * Lebih kecil dari `ROW_CARD_CLASS` supaya di layar lebar muat belasan poster
+ * sekaligus, seperti deretan unggulan LK21. Tidak mengubah `ROW_CARD_CLASS`
+ * karena angka itu masih dipakai baris lain.
+ */
+export const HERO_CARD_CLASS =
+  "w-[104px] shrink-0 sm:w-[116px] md:w-[124px] lg:w-[132px]";
+
 /** Bentuk seragam untuk dropdown penyaring yang dititipkan ke bar cari. */
 export const TRIGGER_CLASS =
   "h-9 w-full rounded-sm border-black/20 bg-black/25 text-xs font-semibold text-white focus:ring-0 md:w-auto [&>span]:text-white";

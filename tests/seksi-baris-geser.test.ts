@@ -1,11 +1,10 @@
-// Penjaga bentuk SEKSI HALAMAN DEPAN (owner 2026-10-10 sore): satu baris
-// poster yang bisa digeser, panah di kedua ujungnya, tombol "Semua" di bawah.
+// Penjaga bentuk SEKSI HALAMAN DEPAN (owner 2026-11-17): SATU baris poster
+// yang digeser, panah di kanan (dan kiri untuk kembali). Bukan dua baris.
 //
-// ⚠️ KENAPA DITES, bukan cukup dilihat: ketiganya kerusakan SENYAP. Panah yang
-// hilang, tombol yang balik ke kanan judul, atau tulisan yang berganti lagi
-// TIDAK memunculkan error apa pun — halamannya tetap tampil, cuma kembali ke
-// bentuk yang sudah ditolak owner. Bentuk seksi ini sudah berganti TIGA kali
-// dalam dua hari; tes inilah yang menahannya supaya tidak berputar lagi.
+// ⚠️ KENAPA DITES, bukan cukup dilihat: balik ke dua baris, panah yang hilang,
+// atau tombol "Semua" yang jatuh ke bawah barisan TIDAK memunculkan error
+// apa pun — halamannya tetap tampil, cuma kembali ke bentuk yang sudah
+// ditolak. Tes inilah yang menahannya.
 import { describe, it, expect } from "vitest";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -39,32 +38,16 @@ const render = (jumlah: number) =>
     }),
   );
 
-describe("seksi halaman depan — baris geser + panah + tombol Semua", () => {
-  it("punya panah geser di KEDUA ujung", () => {
-    const html = render(20);
-
-    expect(html).toContain('aria-label="Geser ke kiri"');
-    expect(html).toContain('aria-label="Geser ke kanan"');
-  });
-
-  it("panahnya SELALU terlihat, bukan cuma saat kursor lewat", () => {
-    // `opacity-0` = panah tersembunyi sampai di-hover. Di seksi yang padat
-    // poster itu sama saja dengan tidak ada petunjuk bisa digeser.
-    const html = render(20);
-
-    expect(html).toContain("opacity-90");
-    // Pola panah-tersembunyi milik baris unggulan. Dicek pola spesifiknya,
-    // bukan "opacity-0" mentah: kartu poster punya lapisan hover sendiri yang
-    // memang memakai opacity-0, dan itu bukan panah.
-    expect(html).not.toContain("group-hover/geser:opacity-100");
-  });
-
-  it("barisnya memang bisa digeser, bukan dipotong", () => {
+describe("seksi halaman depan — satu baris + panah kanan", () => {
+  it("satu baris yang bisa digeser, bukan dua baris poster", () => {
     const html = render(20);
 
     expect(html).toContain("overflow-x-auto");
-    // Pemotong baris lama (`grid-baris-penuh`) sudah dibuang — dengan baris
-    // geser tak ada lagi poster yang disembunyikan dari tombol Tab.
+    expect(html).toContain('aria-label="Geser ke kanan"');
+    expect(html).toContain('aria-label="Geser ke kiri"');
+    expect(html).toContain("opacity-90");
+    expect(html).not.toContain("grid-cols-2");
+    expect(html).not.toContain("xl:grid-cols-10");
     expect(html).not.toContain("grid-baris-penuh");
   });
 

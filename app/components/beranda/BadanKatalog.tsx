@@ -1,12 +1,13 @@
 import { Suspense, type ReactNode } from "react";
 import type { Drama } from "@/lib/types";
 import type { PlaylyVideoPublik } from "@/lib/playly-publik";
+import type { KartuKatalog } from "@/lib/beranda-video";
 import FeaturedRow from "./FeaturedRow";
 import FooterSitus from "./FooterSitus";
 import TabKatalog from "./TabKatalog";
 import TabKatalogTampilan from "./TabKatalogTampilan";
 import { TAB_BAWAAN } from "@/lib/tab-katalog";
-import { BADAN_TERANG } from "./shell";
+import { BADAN_TERANG, HERO_CARD_CLASS } from "./shell";
 
 /**
  * BADAN BERSAMA halaman katalog utama — dipakai `/` (landing, untuk yang belum
@@ -26,8 +27,8 @@ import { BADAN_TERANG } from "./shell";
  */
 export default function BadanKatalog({
   dramas,
-  heroSlides,
-  filmTerbaru,
+  heroItems,
+  filmDiDepan,
   seriesTerbaru = [],
   genres,
   basePath,
@@ -36,14 +37,22 @@ export default function BadanKatalog({
   slotAtas,
 }: {
   dramas: Drama[];
-  /** Poster unggulan di baris paling atas (hero). */
-  heroSlides: Drama[];
-  /** Film dari penyedia luar untuk seksi "Film Terbaru". Kosong = seksi tak digambar. */
-  filmTerbaru: PlaylyVideoPublik[];
+  /**
+   * Isi baris hitam paling atas: campuran film, drama katalog, dan series
+   * (lib/baris-atas.ts). Bentuk kartu campuran supaya film tidak dipaksa
+   * jadi objek drama palsu.
+   */
+  heroItems: KartuKatalog[];
+  /**
+   * Film untuk seksi putih "Film Terbaru". Halaman pemanggil sudah
+   * membuang film yang ada di baris hitam, supaya dua deretan tidak kembar.
+   * Kosong = seksi tak digambar.
+   */
+  filmDiDepan: PlaylyVideoPublik[];
   /**
    * SERIAL dari penyedia luar, untuk seksi "Series Terbaru" (owner 2026-11-05).
    *
-   * Terpisah dari `filmTerbaru` dan sudah dipisah+dipotong oleh halaman
+   * Terpisah dari `filmDiDepan` dan sudah dipisah+dipotong oleh halaman
    * pemanggil, bukan di sini: potongannya harus terjadi SESUDAH pemisahan,
    * kalau tidak seksi Film menyusut tiap ada serial di deretan teratas
    * (alasan lengkapnya di app/page.tsx).
@@ -83,7 +92,12 @@ export default function BadanKatalog({
     <>
       {/* HERO — SATU baris poster unggulan berlatar HITAM (owner 2026-10-09).
           Latarnya gelap karena berada DI LUAR pembungkus tema-terang di bawah. */}
-      <FeaturedRow dramas={heroSlides} href={heroHref} />
+      <FeaturedRow
+        items={heroItems}
+        href={heroHref}
+        cardClass={HERO_CARD_CLASS}
+        panahSelalu
+      />
 
       {/* SLOT ATAS — pengisinya yang membawa pemisahnya sendiri.
           Sejak 2026-10-29 kedua pengisi (`LanjutMenonton` di `/`, `PanelLipat`
@@ -120,7 +134,7 @@ export default function BadanKatalog({
               tab={TAB_BAWAAN}
               semua={false}
               seksiLengkap
-              videos={filmTerbaru}
+              videos={filmDiDepan}
               videoSeries={seriesTerbaru}
               basePath={basePath}
             />
@@ -129,7 +143,7 @@ export default function BadanKatalog({
           <TabKatalog
             dramas={dramas}
             seksiLengkap
-            videos={filmTerbaru}
+            videos={filmDiDepan}
             videoSeries={seriesTerbaru}
             basePath={basePath}
           />

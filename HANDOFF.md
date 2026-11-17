@@ -98,6 +98,66 @@
 
 ---
 
+## 2026-11-17 — seksi satu baris + panah kanan
+
+Owner: jangan dua baris, tetap satu baris, panah di kanan supaya film dan drama bisa digeser. Empat catatan 2026-11-17 di bawah ini ditayangkan bersama atas perintah deploy.
+
+**Yang berubah:** Series Terbaru, Film Terbaru, dan seksi di bawahnya kembali satu baris geser. Panah merah muda di kanan selalu kelihatan di layar lebar (panah kiri untuk kembali). Baris hitam di atas juga panahnya selalu kelihatan.
+
+**Cara cek:** segarkan `http://127.0.0.1:3010/`. Series Terbaru satu baris poster. Klik panah kanan, poster bergeser.
+
+---
+
+## 2026-11-17 — baris atas film saja
+
+Owner: drama jangan ditaruh di tampilan atas, cukup film, dan selalu yang terbaru. Belum di-commit.
+
+**Yang berubah:** baris hitam hanya film yang punya sampul, diambil dari depan daftar yang sudah diurut tahun. Begitu ada film lebih baru, ia masuk ke depan sendiri. Drama tetap di Series Terbaru di bawah, dan film yang sudah di atas tidak diulang di Film Terbaru.
+
+**Cara cek:** segarkan `http://127.0.0.1:3010/`. Baris hitam tidak ada lencana EPS. Di bawahnya Series Terbaru, lalu Film Terbaru.
+
+---
+
+## 2026-11-17 — baris atas utuh, series lalu film, judul tidak kembar
+
+Owner: baris paling atas terlihat setengah-setengah, lalu minta urutan Series Terbaru dulu baru Film Terbaru, dan judul yang sama jangan muncul dua kali. Belum di-commit.
+
+**Yang berubah:** baris hitam hanya menampilkan kartu yang punya gambar (film tanpa sampul tidak lagi jadi kotak hitam di deretan itu). Di bawah tab, urutannya Series Terbaru lalu Film Terbaru. Judul yang sudah ada di baris hitam tidak diulang di kedua seksi itu.
+
+**Cara cek:** segarkan `http://127.0.0.1:3010/` di jendela lebar. Baris hitam harus poster utuh. Di bawah tab: Series Terbaru, lalu Film Terbaru, judulnya beda dari baris atas.
+
+---
+
+## 2026-11-17 — film kembali di blok putih
+
+Owner: "ko film nya ga ada". Seksi putih paling atas sempat hanya series, dan belum ada video yang ditandai series, jadi blok film tidak tergambar sama sekali. Belum di-commit.
+
+**Yang berubah:** seksi **Film Terbaru** kembali di bawah tab. Isinya film yang belum ada di baris hitam, supaya tidak kembar dengan deretan atas. Series yang ditandai admin tetap masuk ke seksi tab Series Terbaru.
+
+**Cara cek:** segarkan `http://127.0.0.1:3010/` — di bawah tab ada judul Film Terbaru berisi poster film (tahun, durasi), bukan hanya series.
+
+---
+
+## 2026-11-17 — tampilan halaman depan rapat seperti LK21
+
+Owner mengirim tangkapan Layarkaca21 dan minta halaman depan mengikuti bentuk itu. Belum di-commit.
+
+**Yang berubah:** seksi di bawah tab (Series Terbaru, Series Unggulan, dan seterusnya) bukan lagi satu baris yang digeser. Sekarang dinding poster kecil: 2 kolom di HP, 10 kolom di layar lebar, jadi 20 poster = tepat 2 baris penuh. Judul seksi huruf besar, tombol Semua tetap di kanan judul. Baris hitam di atas tetap satu deret yang bisa digeser, posternya diperkecil supaya lebih banyak yang kelihatan. Banner oranye dan teks telegram LK21 tidak disalin.
+
+**Cara cek:** `http://127.0.0.1:3010/` di jendela lebar — di bawah tab harus kelihatan beberapa baris poster sekaligus, bukan satu baris dengan panah.
+
+---
+
+## 2026-11-17 — atas campuran film/drama/series, bawah series terbaru
+
+Owner: deretan atas dan blok "Film Terbaru" di bawah terlihat sama. Belum di-commit.
+
+**Yang berubah:** baris hitam di `/` dan `/beranda` berisi campuran film, drama katalog, dan series (jatah per jenis, lalu diurut tahun — `lib/baris-atas.ts`). Blok putih pertama yang tadi "Film Terbaru" sekarang **Series Terbaru**. Series tidak ditempel lagi di depan seksi tab, supaya tidak kembar dua kali.
+
+**Cara cek:** `http://127.0.0.1:3010/` — baris hitam campur (ada yang ke halaman drama, ada yang ke tonton). Blok putih pertama berjudul Series Terbaru, isinya bukan salinan baris hitam.
+
+---
+
 ## 2026-11-16 — isi otomatis link unduhan Drive & Mega
 
 Owner minta branch `feat/link-unduhan-provider-kualitas` ditayangkan karena rekan menunggu. Commit sumber: `58b1cf8`.

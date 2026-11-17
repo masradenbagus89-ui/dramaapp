@@ -15,7 +15,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { readFileSync } from "node:fs";
 import TabKatalogTampilan from "../app/components/beranda/TabKatalogTampilan";
-import { JUDUL_BARIS_VIDEO, KUNCI_BARIS_VIDEO } from "../lib/beranda-video";
+import { KUNCI_BARIS_VIDEO, JUDUL_BARIS_VIDEO } from "../lib/beranda-video";
 import { TAB_BAWAAN, TAB_GRID_ITEMS } from "../lib/tab-katalog";
 import {
   JENIS_BAWAAN,
@@ -138,10 +138,11 @@ describe("seksi beranda memisahkan film dari serial", () => {
 
     const mulaiFilm = html.indexOf(`id="seksi-${KUNCI_BARIS_VIDEO}"`);
     const mulaiSeries = html.indexOf(`id="seksi-${TAB_BAWAAN}"`);
-    expect(mulaiFilm).toBeGreaterThanOrEqual(0);
-    expect(mulaiSeries).toBeGreaterThan(mulaiFilm);
+    const mulaiBerikut = html.indexOf('id="seksi-unggulan"');
+    expect(mulaiSeries).toBeGreaterThanOrEqual(0);
+    expect(mulaiFilm).toBeGreaterThan(mulaiSeries);
 
-    const blokFilm = html.slice(mulaiFilm, mulaiSeries);
+    const blokFilm = html.slice(mulaiFilm, mulaiBerikut);
     expect(blokFilm).toContain("Film Layar Lebar");
     expect(blokFilm).not.toContain("Drama Berseri");
   });
@@ -201,22 +202,16 @@ describe("halaman memisahkan SEBELUM memotong", () => {
   // justru upload terbaru yang paling sering memicunya. Tak ada error, cuma
   // baris yang menyusut sendiri.
   for (const halaman of ["app/page.tsx", "app/beranda/page.tsx"]) {
-    it(`${halaman} memanggil pisahFilmSeries sebelum slice`, () => {
+    it(`${halaman} memisah film dan serial sebelum memotong seksi film`, () => {
       const isi = readFileSync(halaman, "utf8");
       const posPisah = isi.indexOf("pisahFilmSeries(videos)");
-      const posSlice = isi.indexOf(".slice(0, TAB_GRID_ITEMS)");
+      const posPotong = isi.indexOf("siapkanTampilanDepan(");
 
       expect(posPisah).toBeGreaterThan(0);
-      expect(posSlice).toBeGreaterThan(posPisah);
-      // Yang dipotong WAJIB hasil pemisahan, bukan daftar gabungan.
-      //
-      // Dicocokkan dengan POLA, bukan teks persis: sejak 2026-11-14 daftar film
-      // dibungkus pengurut tahun lebih dulu — `urutFilmMenurutTahun(film)
-      // .slice(...)` (lib/tahun-film.ts). Pembungkus itu tidak melanggar aturan
-      // yang dijaga di sini; yang dijaga adalah "yang dipotong berasal dari
-      // `film`, bukan dari `videos`". Mengunci ejaannya berarti tiap penyesuaian
-      // sah ikut merah dan penjaganya dilemahkan orang supaya diam.
-      expect(isi).toMatch(/\bfilm\)?\.slice\(0, TAB_GRID_ITEMS\)/);
+      expect(posPotong).toBeGreaterThan(posPisah);
+      // Bukan potongan mentah kepala daftar film (itu yang membuat deretan
+      // atas dan bawah kembar) dan bukan potongan daftar gabungan.
+      expect(isi).not.toMatch(/\bfilm\)?\.slice\(0,\s*TAB_GRID_ITEMS\s*\)/);
       expect(isi).not.toContain("videos.slice(0, TAB_GRID_ITEMS)");
     });
   }

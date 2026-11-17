@@ -1,44 +1,18 @@
 // Halaman pilih & pasang video Playly — /admin/videos/playly
 //
-// PENJAGA AKSES: sama seperti halaman setelan Playly, halaman ini dijaga DI
-// SERVER lewat cookie sesi admin yang ditandatangani saat login. Daftar drama
-// dan kaitan yang sudah ada juga diambil di server, jadi begitu halaman muncul
-// isinya sudah siap (tidak ada kedipan "memuat" untuk bagian ini).
+// PENJAGA AKSES: cookie sesi admin diperiksa di server. Daftar film TIDAK
+// ditunggu di sini. Menunggunya di fungsi halaman membuat seluruh layar
+// (termasuk menu) tetap kerangka abu-abu "Memuat…" sampai Playly selesai
+// mengirim ratusan video — itulah yang owner lihat saat datang dari beranda.
+// Menu digambar dulu; daftar menyusul di dalam <Suspense>.
 import type { Metadata } from "next";
-import Link from "next/link";
+import { Suspense } from "react";
 import { cookies } from "next/headers";
 import { ADMIN_COOKIE, verifyAdminSessionToken } from "@/lib/session";
-import {
-  fetchPlaylyVideosKita,
-  getPlaylyKeyStatus,
-  readPlaylyConfig,
-} from "@/lib/playly";
-import { getAllDramas } from "@/lib/dramas";
-import {
-  getPlaylyEmbeds,
-  getPlaylyGenres,
-  getPlaylyHiddenIds,
-  getPlaylyImdb,
-  getPlaylyJenis,
-  getPlaylyKualitas,
-  getPlaylyLinkUnduhan,
-  getPlaylyRating,
-  getPlaylyMetaManual,
-} from "@/lib/store";
-import { bacaDomainUnduhan } from "@/lib/playly-unduhan-domain";
-import { ringkasImdbUntukAdmin } from "@/lib/playly-imdb";
 import AdminAccessDenied from "@/app/components/admin/AdminAccessDenied";
 import AdminSidebar from "@/app/components/admin/AdminSidebar";
-import PlaylyVideoPicker from "@/app/components/admin/PlaylyVideoPicker";
-import { getPlaylyVideosGabunganCached } from "@/lib/playly-gabungan";
-import PlaylyVisibilityManager from "@/app/components/admin/PlaylyVisibilityManager";
-import KeteranganSumberPlayly from "@/app/components/admin/KeteranganSumberPlayly";
-import PlaylyIsiCepat from "@/app/components/admin/PlaylyIsiCepat";
-import PlaylyUnduhanManager from "@/app/components/admin/PlaylyUnduhanManager";
-import PlaylyBagianAktif from "@/app/components/admin/PlaylyBagianAktif";
-import BantuanSingkat from "@/app/components/admin/BantuanSingkat";
-import { Button } from "@/components/ui/button";
-import { AlertTriangle, KeyRound } from "lucide-react";
+import IsiPanelPlayly from "./IsiPanelPlayly";
+import KerangkaIsiPlayly from "./KerangkaIsiPlayly";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -46,7 +20,7 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: "Video Playly — Admin DramaKu",
   description: "Pilih video dari Playly dan kaitkan ke drama di katalog DramaKu.",
-  robots: { index: false, follow: false }, // halaman admin: jangan masuk Google
+  robots: { index: false, follow: false },
 };
 
 export default async function PlaylyVideosPage() {
@@ -54,248 +28,12 @@ export default async function PlaylyVideosPage() {
   const email = await verifyAdminSessionToken(jar.get(ADMIN_COOKIE)?.value);
   if (!email) return <AdminAccessDenied />;
 
-  const konfigurasi = readPlaylyConfig();
-
-  // revalidateSeconds = 0 -> jalur admin selalu minta data SEGAR ke Playly,
-  // supaya video yang baru di-upload langsung kelihatan di sini. Halaman
-  // penonton yang memakai versi ber-cache.
-  const [
-    status,
-    dramas,
-    embeds,
-    mitra,
-    hidden,
-    genres,
-    imdb,
-    unduhan,
-    kualitas,
-    jenis,
-    ratingManual,
-    metaManual,
-  ] = await Promise.all([
-      getPlaylyKeyStatus(),
-      getAllDramas(),
-      getPlaylyEmbeds(),
-      fetchPlaylyVideosKita(konfigurasi, 0),
-      getPlaylyHiddenIds(),
-      getPlaylyGenres(),
-      // Versi TANPA cache, alasan sama dengan getPlaylyLinkUnduhan di bawah:
-      // begitu owner memasang data IMDb, layar ini harus menampilkannya.
-      getPlaylyImdb(),
-      // Jalur admin -> versi TANPA cache: begitu owner menyimpan link, layar ini
-      // harus menampilkan keadaan sekarang, bukan salinan 5 menit lalu.
-      getPlaylyLinkUnduhan(),
-      // Versi TANPA cache, alasan sama: begitu owner mengoreksi kualitas sebuah
-      // film, dropdown di layar ini harus memperlihatkan keadaan sekarang.
-      getPlaylyKualitas(),
-      // Versi TANPA cache, alasan sama: begitu owner menandai sebuah video
-      // sebagai Series, dropdown di layar ini harus memperlihatkannya.
-      getPlaylyJenis(),
-      // Versi TANPA cache, alasan sama: begitu owner mengetik rating sebuah
-      // video, kotak isian di layar ini harus memperlihatkan angka itu — bukan
-      // salinan sebelum diketik.
-      getPlaylyRating(),
-      getPlaylyMetaManual(),
-    ]);
-
-  /**
-   * JARING PENGAMAN panel admin (owner 2026-11-05: "dropdown paling kiri aku
-   * tidak ketemu").
-   *
-   * Masalahnya: `fetchPlaylyVideosKita` di atas sengaja TANPA cache supaya
-   * admin melihat keadaan sekarang — tapi konsekuensinya satu kali Playly telat
-   * menjawab 10 detik membuat daftarnya KOSONG, dan panel pengaturan ikut
-   * hilang dari layar bersama ketiga dropdown-nya. Owner jadi tidak bisa
-   * menandai apa pun sampai Playly kebetulan sedang cepat.
-   *
-   * Halaman PENONTON sudah lama kebal terhadap gangguan yang sama lewat salinan
-   * terakhir (lib/playly-gabungan.ts). Di sini salinan itu dipakai ulang — jadi
-   * ini bukan mekanisme baru, melainkan jaring yang sudah terbukti.
-   *
-   * Hanya dipanggil SAAT GAGAL, jadi jalur normal tidak kena beban tambahan.
-   * Daftar cadangan cukup untuk menandai video (Jenis/Kategori/Kualitas disimpan
-   * ke database KITA, bukan ke Playly), dan panelnya tetap memasang peringatan
-   * bahwa isinya bisa ketinggalan video yang baru di-upload.
-   */
-  const videoPanel =
-    mitra.error && mitra.videos.length === 0
-      ? await getPlaylyVideosGabunganCached()
-          .then((r) => r.videos)
-          .catch(() => mitra.videos)
-      : mitra.videos;
-
-  // Dropdown hanya butuh 3 kolom; sisanya tidak perlu ikut ke browser.
-  /**
-   * Data IMDb yang DIKIRIM KE BROWSER — 4 field, bukan 17 (owner 2026-11-14:
-   * "panel admin loading lama").
-   *
-   * Diukur dulu, bukan ditebak: dokumen penuhnya 493 video / 479 KB, dan
-   * SELURUHNYA diseberangkan tiap halaman ini dibuka — padahal field
-   * terbesarnya (`synopsis`, 188 KB) tidak dibaca satu pun layar admin.
-   * Dipangkas SEKALI di sini lalu dipakai dua panel, supaya tidak ada yang
-   * diam-diam memakai versi penuhnya lagi. Daftar-putih + alasan tiap field:
-   * `FIELD_IMDB_ADMIN` di lib/playly-imdb.ts.
-   */
-  const imdbRingkas = ringkasImdbUntukAdmin(imdb);
-
-  const pilihanDrama = dramas.map((d) => ({
-    id: d.id,
-    title: d.title,
-    episodes: d.episodes,
-  }));
-
   return (
     <div className="mx-auto max-w-7xl gap-6 px-4 pb-10 pt-6 md:grid md:grid-cols-[220px_1fr] md:px-6">
       <AdminSidebar />
-
-      <div className="space-y-6">
-        {/* Tiga panel yang dulu bertumpuk kini dipilih lewat menu sidebar
-            (owner 2026-11-06: "sidebar kiri video playly terlalu panjang").
-            Ketiganya tetap dirakit DI SINI — datanya cuma bisa diambil di
-            server — dan PlaylyBagianAktif hanya memilih mana yang terlihat.
-
-            Urutan kepala (owner 2026-11-17): judul bagian (IMDb / Link
-            download / Daftar) di atas, pengantar "Video dari Playly" di
-            bawahnya. Keterangan panjang tetap di balik tombol "?" supaya
-            tidak mendorong tabel ke bawah tiap halaman dibuka. */}
-        <PlaylyBagianAktif
-          kategori="Konten"
-          pengantar={
-            <BantuanSingkat
-              label="Apa itu video Playly?"
-              judul={
-                <h2 className="text-xl font-bold text-white">
-                  Video dari Playly
-                </h2>
-              }
-            >
-              {/* Kunci API, akun, dan keterangan halaman — semuanya di balik
-                  ikon "?" (owner 2026-11-17). */}
-              <KeteranganSumberPlayly
-                galat={mitra.error}
-                dariKatalogPublik={mitra.source === "katalog-publik"}
-                akun={konfigurasi.creators}
-                adaDaftar={videoPanel.length > 0}
-              />
-              <p className="max-w-2xl">
-                Video di akun Playly kita tampil{" "}
-                <strong className="text-zinc-200">otomatis</strong> sebagai film
-                biasa di{" "}
-                <Link href="/beranda" className="text-amber-400 underline">
-                  Beranda
-                </Link>
-                , dan tiap video punya halaman tontonnya sendiri yang alamatnya
-                bisa dibagikan. Penonton tidak melihat nama &quot;Playly&quot; di
-                mana pun (owner 2026-09-26) — halaman{" "}
-                <Link href="/film" className="text-amber-400 underline">
-                  daftar lengkapnya
-                </Link>{" "}
-                tetap ada tapi tidak lagi punya tombol di navbar.
-              </p>
-              <p className="max-w-2xl">
-                Mengaitkan video ke drama (menu &quot;Daftar video Playly&quot;)
-                sifatnya{" "}
-                <strong className="text-zinc-200">opsional</strong> — hanya
-                untuk memberi label &quot;bagian dari drama X&quot;. Yang
-                menentukan video masuk baris genre beranda adalah{" "}
-                <strong className="text-zinc-200">Kategori</strong> di menu{" "}
-                <strong className="text-zinc-200">IMDb</strong>. Video DramaKu
-                sendiri tetap berjalan seperti biasa.
-              </p>
-            </BantuanSingkat>
-          }
-          imdb={
-            /* Sengaja TIDAK dibungkus syarat "kunci sudah dipasang": sejak ada
-               jalur katalog publik tersaring, video kita tetap tampil walau
-               kunci ditolak — jadi menyembunyikan panel ini justru membuat
-               admin mengira tak ada apa-apa. */
-            <PlaylyVisibilityManager
-              videos={videoPanel}
-              initialHidden={hidden}
-              initialGenres={genres}
-              initialImdb={imdbRingkas}
-              initialKualitas={kualitas}
-              initialJenis={jenis}
-              initialRating={ratingManual}
-              initialMetaManual={metaManual}
-              /* Dibaca saja — panel ini tidak pernah mengubah link unduhan.
-                 Dibutuhkan supaya dropdown kualitas bisa menyebut HASIL
-                 turunannya ("Otomatis · HD") dan ringkasan di atas tabel bisa
-                 menghitung berapa yang benar-benar belum punya sumber. */
-              linkUnduhan={unduhan}
-              fetchError={mitra.error}
-              source={mitra.source}
-              creators={konfigurasi.creators}
-            />
-          }
-          isiCepat={
-            /* ISI CEPAT (owner 2026-11-11): lengkapi kualitas/rating/tahun/
-               durasi banyak film sekaligus. Dipisah dari panel IMDb di atas
-               karena tabel itu sudah tujuh kolom dan lebarnya mepet — menambah
-               centang + Tahun + Durasi ke sana menyisakan beberapa huruf untuk
-               judul film.
-
-               Sengaja TIDAK dibungkus syarat `!fetchError`: panel ini sama
-               sekali tidak menyentuh Playly — daftar videonya boleh datang dari
-               salinan terakhir, dan semua isiannya disimpan ke database KITA.
-               Mematikannya saat Playly lambat berarti fitur ini hilang justru
-               di keadaan yang paling sering terjadi. */
-            <PlaylyIsiCepat
-              videos={videoPanel}
-              imdb={imdbRingkas}
-              awal={{
-                jenis,
-                kategori: genres,
-                kualitas,
-                rating: ratingManual,
-                meta: metaManual,
-              }}
-              linkUnduhan={unduhan}
-            />
-          }
-          unduhan={
-            /* Urutan menunya mengikuti urutan kerja: tentukan dulu video mana
-               yang tayang, baru isi link unduhannya. Sengaja tidak dibungkus
-               syarat "kunci sudah dipasang", alasannya sama dengan panel di
-               atas. */
-            <PlaylyUnduhanManager
-              videos={videoPanel}
-              initialLinks={unduhan}
-              domain={bacaDomainUnduhan()}
-            />
-          }
-          daftar={
-            status.configured ? (
-              <PlaylyVideoPicker dramas={pilihanDrama} initialEmbeds={embeds} />
-            ) : (
-              // Tanpa kunci, memuat daftar video pasti gagal. Jadi jangan
-              // tampilkan pesan error — arahkan langsung ke langkah yang benar.
-              <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-5">
-                <p className="flex items-start gap-2 text-sm text-amber-100">
-                  <AlertTriangle
-                    className="mt-0.5 h-4 w-4 shrink-0"
-                    aria-hidden="true"
-                  />
-                  <span>
-                    Kunci API Playly belum dipasang, jadi daftar videonya belum
-                    bisa diambil. Pasang kuncinya dulu, baru kembali ke halaman
-                    ini.
-                  </span>
-                </p>
-                <Button
-                  asChild
-                  className="mt-4 min-h-11 rounded-full px-5 text-sm font-semibold"
-                >
-                  <Link href="/admin/settings/playly">
-                    <KeyRound className="size-4" aria-hidden="true" />
-                    Pasang kunci Playly
-                  </Link>
-                </Button>
-              </div>
-            )
-          }
-        />
-      </div>
+      <Suspense fallback={<KerangkaIsiPlayly />}>
+        <IsiPanelPlayly />
+      </Suspense>
     </div>
   );
 }

@@ -22,6 +22,7 @@ export default function AdminManager({
   currentAdminEmail: string;
 }) {
   const [admins, setAdmins] = useState<AdminEntry[]>([]);
+  const [memuat, setMemuat] = useState(true);
   const [newAdminEmail, setNewAdminEmail] = useState("");
   const [newAdminName, setNewAdminName] = useState("");
   const [newAdminPassword, setNewAdminPassword] = useState("");
@@ -34,7 +35,8 @@ export default function AdminManager({
     fetch("/api/admins")
       .then((r) => r.json())
       .then((data: { admins?: AdminEntry[] }) => setAdmins(data.admins ?? []))
-      .catch(() => setAdmins([]));
+      .catch(() => setAdmins([]))
+      .finally(() => setMemuat(false));
   };
 
   useEffect(refreshAdmins, []);
@@ -111,7 +113,7 @@ export default function AdminManager({
           variant="secondary"
           className="rounded-full bg-zinc-800 text-xs font-normal text-zinc-400"
         >
-          {admins.length} admin
+          {memuat ? "…" : `${admins.length} admin`}
         </Badge>
       </div>
       <Card className="gap-0 rounded-2xl border-zinc-800 bg-zinc-900/40 py-0">
@@ -175,7 +177,12 @@ export default function AdminManager({
           )}
 
           <div className="mt-5 divide-y divide-zinc-800 overflow-hidden rounded-xl border border-zinc-800">
-            {admins.map((a) => {
+            {memuat ? (
+              <p role="status" className="bg-zinc-900/40 p-4 text-sm text-zinc-300">
+                Daftar admin sedang diambil.
+              </p>
+            ) : (
+            admins.map((a) => {
               const isMe = a.email.toLowerCase() === currentAdminEmail.toLowerCase();
               const isLast = admins.length <= 1;
               return (
@@ -219,8 +226,9 @@ export default function AdminManager({
                   </Button>
                 </div>
               );
-            })}
-            {admins.length === 0 && (
+            })
+            )}
+            {!memuat && admins.length === 0 && (
               <div className="p-6 text-center text-sm text-zinc-500">
                 Belum ada admin terdaftar.
               </div>

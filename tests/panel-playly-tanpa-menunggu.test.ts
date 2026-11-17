@@ -32,6 +32,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { readFileSync } from "node:fs";
 import PlaylyVisibilityManager from "../app/components/admin/PlaylyVisibilityManager";
 import MemuatHalamanPlayly from "../app/admin/videos/playly/loading";
+import KerangkaIsiPlayly from "../app/admin/videos/playly/KerangkaIsiPlayly";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const anyGlobal = globalThis as any;
@@ -237,12 +238,32 @@ describe("halaman Playly punya kerangka yang tampil seketika", () => {
     // petaBerbatasPlayly cukup untuk memulangkan keluhan owner, dan tidak ada
     // tes perilaku yang bisa menangkapnya (hasil akhirnya sama persis, cuma
     // ~47 detik lebih lambat).
-    const sumber = readFileSync("app/admin/videos/playly/page.tsx", "utf8");
+    const halaman = readFileSync("app/admin/videos/playly/page.tsx", "utf8");
+    const isi = readFileSync("app/admin/videos/playly/IsiPanelPlayly.tsx", "utf8");
 
     // Halaman TIDAK BOLEH lagi memeriksa berkas sama sekali — pekerjaan itu
     // kini milik /api/admin/playly/belum-siap yang hasilnya bisa diingat.
-    expect(sumber).not.toContain("fetchPlaylyDetailPublik");
-    expect(sumber).not.toContain("petaBerbatasPlayly");
-    expect(sumber).not.toContain("belumSiapIds");
+    for (const sumber of [halaman, isi]) {
+      expect(sumber).not.toContain("fetchPlaylyDetailPublik");
+      expect(sumber).not.toContain("petaBerbatasPlayly");
+      expect(sumber).not.toContain("belumSiapIds");
+    }
+  });
+
+  it("menu tergambar dulu, daftar film tidak ditunggu di page.tsx", () => {
+    // Owner 2026-11-17: dari beranda ke IMDb layarnya kosong lama ("Memuat…").
+    // page.tsx yang kembali `await` katalog sebelum `return` memulangkan itu,
+    // karena loading.tsx baru diganti setelah SELURUH fungsi halaman selesai.
+    const halaman = readFileSync("app/admin/videos/playly/page.tsx", "utf8");
+    expect(halaman).toContain("<Suspense");
+    expect(halaman).toContain("<KerangkaIsiPlayly />");
+    expect(halaman).not.toContain("fetchPlaylyVideosKita");
+    expect(halaman).not.toContain("Promise.all");
+  });
+
+  it("kerangka sesudah login menyebut IMDb dan bahwa daftar sedang diambil", () => {
+    const html = renderToStaticMarkup(h(KerangkaIsiPlayly));
+    expect(html).toContain("IMDb");
+    expect(html).toContain("Daftar film sedang diambil.");
   });
 });

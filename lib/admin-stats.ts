@@ -79,3 +79,23 @@ export function persenDariJumlah(jumlah: readonly number[]): number[] {
   }
   return bulat;
 }
+
+/**
+ * Hitung kategori yang TERPASANG di film Playly (panel IMDb), bukan kategori
+ * drama lama.
+ *
+ * Peta yang masuk adalah videoId → nama kategori. Film tanpa kategori tidak
+ * ada di peta, jadi tidak ikut. Dua film dengan kategori yang sama dihitung
+ * dua. Urutan: terbanyak dulu.
+ */
+export function hitungKategoriFilm(
+  genres: Readonly<Record<string, string>>,
+): [string, number][] {
+  const counts = new Map<string, number>();
+  for (const nama of Object.values(genres)) {
+    const kategori = nama.trim();
+    if (!kategori) continue;
+    counts.set(kategori, (counts.get(kategori) ?? 0) + 1);
+  }
+  return [...counts.entries()].sort((a, b) => b[1] - a[1]);
+}

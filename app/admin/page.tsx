@@ -98,6 +98,7 @@ export default function AdminPage() {
     text: string;
   } | null>(null);
   const [dramas, setDramas] = useState<Drama[]>([]);
+  const [memuatDaftar, setMemuatDaftar] = useState(true);
   const formRef = useRef<HTMLFormElement>(null);
 
   const effectiveId = id.trim() || (title.trim() ? slugify(title) : "");
@@ -130,8 +131,9 @@ export default function AdminPage() {
   const refreshList = () => {
     fetch("/api/dramas")
       .then((r) => r.json())
-      .then((data: Drama[]) => setDramas(data))
-      .catch(() => setDramas([]));
+      .then((data: Drama[]) => setDramas(Array.isArray(data) ? data : []))
+      .catch(() => setDramas([]))
+      .finally(() => setMemuatDaftar(false));
   };
 
   useEffect(refreshList, []);
@@ -434,48 +436,46 @@ export default function AdminPage() {
     }
   };
 
-  if (!authChecked) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center px-4">
-        <p className="text-sm text-zinc-500">Memeriksa akses...</p>
-      </div>
-    );
-  }
-
-  if (!authUser || authUser.role !== "admin") {
-    return (
-      <div className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center gap-3 px-4 text-center">
-        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-500/15 text-red-400">
-          <Lock className="h-7 w-7" />
-        </div>
-        <h1 className="text-xl font-bold text-white">Akses ditolak</h1>
-        <p className="text-sm text-zinc-400">
-          Halaman ini hanya untuk admin. Login dengan email yang sudah terdaftar di daftar admin DramaKu untuk mengakses.
-        </p>
-        <Button
-          asChild
-          className="mt-2 rounded-full bg-amber-400 px-5 text-sm font-bold text-black hover:bg-amber-300"
-        >
-          <Link href="/beranda">← Kembali ke Beranda</Link>
-        </Button>
-      </div>
-    );
-  }
-
   return (
     <div className="mx-auto max-w-7xl gap-6 px-4 pb-10 pt-6 md:grid md:grid-cols-[220px_1fr] md:px-6">
       <AdminSidebar />
 
       <div className="space-y-6">
-        {/* KEPALA BAGIAN — admin selalu tahu sedang berada di mana. Sebelum
-            2026-11-05 enam bagian bertumpuk tanpa penanda posisi sama sekali,
-            dan begitu digulung semuanya terasa menyatu (keluhan owner). */}
         <header>
           <h1 className="text-2xl font-bold text-white">{JUDUL_BAGIAN[bagian]}</h1>
           <p className="mt-1 text-sm text-zinc-400">{KETERANGAN_BAGIAN[bagian]}</p>
         </header>
 
-        {bagian === "dashboard" && <AdminDashboard dramas={dramas} />}
+        {!authChecked ? (
+          <p role="status" className="text-sm text-zinc-300">
+            Memeriksa akses…
+          </p>
+        ) : !authUser || authUser.role !== "admin" ? (
+          <div className="flex max-w-md flex-col items-start gap-3">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-red-500/15 text-red-400">
+              <Lock className="h-7 w-7" />
+            </div>
+            <h2 className="text-xl font-bold text-white">Akses ditolak</h2>
+            <p className="text-sm text-zinc-400">
+              Halaman ini hanya untuk admin. Login dengan email yang sudah terdaftar di daftar admin DramaKu untuk mengakses.
+            </p>
+            <Button
+              asChild
+              className="mt-2 rounded-full bg-amber-400 px-5 text-sm font-bold text-black hover:bg-amber-300"
+            >
+              <Link href="/beranda">← Kembali ke Beranda</Link>
+            </Button>
+          </div>
+        ) : (
+          <>
+        {bagian === "dashboard" &&
+          (memuatDaftar ? (
+            <p role="status" className="text-sm text-zinc-300">
+              Daftar drama sedang diambil.
+            </p>
+          ) : (
+            <AdminDashboard dramas={dramas} />
+          ))}
 
         {/* Form SENGAJA tetap dirender (disembunyikan dengan `hidden`), bukan
             dilepas dari halaman. Alasannya nyata: isinya diisi dari tombol Edit
@@ -552,7 +552,12 @@ export default function AdminPage() {
 
         </div>
 
-        {bagian === "daftar" && (
+        {bagian === "daftar" &&
+          (memuatDaftar ? (
+            <p role="status" className="text-sm text-zinc-300">
+              Daftar drama sedang diambil.
+            </p>
+          ) : (
           <div className="space-y-4">
             {/* Ditaruh DI ATAS daftar, bukan di bagian "Tambah Drama": yang
                 diisi adalah katalog yang sudah ada, dan hasilnya langsung
@@ -576,7 +581,7 @@ export default function AdminPage() {
             onDelete={onDelete}
           />
           </div>
-        )}
+          ))}
 
         {bagian === "kelola-admin" && (
           <AdminManager currentAdminEmail={authUser.email} />
@@ -592,6 +597,8 @@ export default function AdminPage() {
             (lib/saklar-fitur.ts). Disembunyikan, bukan dibiarkan: mengatur
             daftar iklan yang tidak akan tayang membuang waktu admin. */}
         {ADS_ENABLED && bagian === "iklan" && <SponsorAdsManager />}
+          </>
+        )}
       </div>
     </div>
   );

@@ -1,15 +1,15 @@
 // Kerangka halaman Video Playly — tampil SEKETIKA saat menunya diklik.
 //
 // KENAPA ADA (owner 2026-11-11: "kenapa ketika saya klik IMDb lama terbukanya").
-// page.tsx mengumpulkan seluruh datanya di server DULU, dan bagian terberatnya
-// menanyakan SETIAP video ke Playly satu per satu (489 video, maksimal 4
-// sekaligus = ~123 giliran berurutan; satu perjalanan ke Playly terukur ≥0,39
-// detik). Selama itu browser masih menggambar halaman LAMA tanpa tanda apa pun,
-// jadi menunya terasa tidak merespons dan admin mengkliknya berkali-kali.
+// Berkas ini hanya menutup jeda singkat sampai cookie admin selesai diperiksa.
+// Daftar film TIDAK ditunggu di sini — itu pekerjaan IsiPanelPlayly, dan selama
+// daftar belum ada yang tampil adalah KerangkaIsiPlayly (judul IMDb), bukan
+// kotak abu-abu ini. Dulu page.tsx menunggu seluruh katalog sebelum menggambar
+// apa pun, sehingga "Memuat…" bertahan puluhan detik.
 //
 // CARA KERJANYA: Next.js memakai berkas ini sebagai isi <Suspense> otomatis
 // untuk page.tsx di folder yang sama — kerangka ini dikirim lebih dulu, lalu
-// ditukar dengan halaman sungguhan begitu datanya siap.
+// ditukar begitu pemeriksaan sesi selesai.
 // (node_modules/next/dist/docs/01-app/02-guides/streaming.md)
 //
 // ⚠️ KERANGKA INI SENGAJA TANPA KATA-KATA KHAS ADMIN — jangan ditambahi.

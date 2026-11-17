@@ -4,6 +4,7 @@
 import { describe, it, expect } from "vitest";
 import {
   computeAdminStats,
+  hitungKategoriFilm,
   lengkapiDistribusiKategori,
   persenDariJumlah,
 } from "../lib/admin-stats";
@@ -113,5 +114,27 @@ describe("persenDariJumlah — batang kategori tetap satu baris", () => {
   it("total nol tidak membagi", () => {
     expect(persenDariJumlah([0, 0])).toEqual([0, 0]);
     expect(persenDariJumlah([])).toEqual([]);
+  });
+});
+
+describe("hitungKategoriFilm — grafik mengikuti film IMDb", () => {
+  it("peta kosong tidak punya kategori aktif", () => {
+    expect(hitungKategoriFilm({})).toEqual([]);
+  });
+
+  it("menghitung film per kategori dan mengabaikan yang kosong", () => {
+    expect(
+      hitungKategoriFilm({
+        a: "Mystery",
+        b: "Action",
+        c: "Mystery",
+        d: "  ",
+        e: "Fantasy",
+      }),
+    ).toEqual([
+      ["Mystery", 2],
+      ["Action", 1],
+      ["Fantasy", 1],
+    ]);
   });
 });

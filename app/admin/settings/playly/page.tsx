@@ -17,15 +17,12 @@
 // layout itu suatu hari dihapus atau salah di-refactor, halaman ini masih
 // berdiri sendiri.
 import type { Metadata } from "next";
-import Link from "next/link";
+import { Suspense } from "react";
 import { cookies } from "next/headers";
 import { ADMIN_COOKIE, verifyAdminSessionToken } from "@/lib/session";
-import { getPlaylyKeyStatus, DEFAULT_PLAYLY_API_URL } from "@/lib/playly";
 import AdminAccessDenied from "@/app/components/admin/AdminAccessDenied";
 import AdminSidebar from "@/app/components/admin/AdminSidebar";
-import PlaylyKeyForm from "@/app/components/admin/PlaylyKeyForm";
-import { Button } from "@/components/ui/button";
-import { Film } from "lucide-react";
+import IsiKunciPlayly from "./IsiKunciPlayly";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -40,11 +37,6 @@ export default async function PlaylySettingsPage() {
   const jar = await cookies();
   const email = await verifyAdminSessionToken(jar.get(ADMIN_COOKIE)?.value);
   if (!email) return <AdminAccessDenied />;
-
-  // Status diambil di SERVER: yang menyeberang ke browser hanya bentuk
-  // tersamar ("plyk_••••••••json"), tidak pernah kunci aslinya.
-  const status = await getPlaylyKeyStatus();
-  const apiUrl = process.env.PLAYLY_API_URL?.trim() || DEFAULT_PLAYLY_API_URL;
 
   return (
     <div className="mx-auto max-w-7xl gap-6 px-4 pb-10 pt-6 md:grid md:grid-cols-[220px_1fr] md:px-6">
@@ -63,24 +55,17 @@ export default async function PlaylySettingsPage() {
           </p>
         </header>
 
-        <PlaylyKeyForm initialStatus={status} apiUrl={apiUrl} adminEmail={email} />
-
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
-          <h2 className="text-sm font-bold text-white">Langkah berikutnya</h2>
-          <p className="mt-1 text-sm text-zinc-400">
-            Setelah kunci tersimpan dan uji sambungan berhasil, pilih video mana
-            yang mau ditampilkan di DramaKu.
-          </p>
-          <Button
-            asChild
-            className="mt-4 min-h-11 rounded-full px-5 text-sm font-semibold"
-          >
-            <Link href="/admin/videos/playly">
-              <Film className="size-4" aria-hidden="true" />
-              Pilih video Playly
-            </Link>
-          </Button>
-        </div>
+        {/* Status kunci dibaca di server, tapi TIDAK menahan judul di atas.
+            Yang menyeberang ke browser tetap hanya bentuk tersamar. */}
+        <Suspense
+          fallback={
+            <p role="status" className="text-sm text-zinc-300">
+              Status kunci sedang diambil.
+            </p>
+          }
+        >
+          <IsiKunciPlayly email={email} />
+        </Suspense>
       </div>
     </div>
   );

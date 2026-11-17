@@ -4,11 +4,12 @@
 // Kategori. Dipisah dari app/admin/page.tsx. Komponen ini menghitung
 // ringkasannya sendiri dari daftar drama (computeAdminStats), jadi halaman
 // induk cukup menyuplai daftar drama. Tampilan & angka sama persis.
-import { useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { KATEGORI_ISI, type Drama } from "@/lib/types";
 import {
   computeAdminStats,
+  hitungKategoriFilm,
   lengkapiDistribusiKategori,
   persenDariJumlah,
 } from "@/lib/admin-stats";
@@ -19,15 +20,50 @@ import PlaylyStatusCard from "@/app/components/admin/PlaylyStatusCard";
 import KatalogStatusCard from "@/app/components/admin/KatalogStatusCard";
 import SegarkanCacheCard from "@/app/components/admin/SegarkanCacheCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+
+/** Kategori yang punya film tapi bagiannya di bawah 1% jangan tertulis 0%. */
+function teksPersen(persen: number, jumlah: number): string {
+  return jumlah > 0 && persen === 0 ? "<1%" : `${persen}%`;
+}
 
 export default function AdminDashboard({ dramas }: { dramas: Drama[] }) {
   const stats = useMemo(() => computeAdminStats(dramas), [dramas]);
-  // Daftar resmi lengkap, bukan hanya kategori yang kebetulan punya drama.
-  // Yang kosong tetap ditulis (angka 0) supaya admin melihat seluruh katalog.
+  // Grafik ini menghitung kategori FILM di panel IMDb, bukan kategori drama
+  // lama. Drama lama cuma puluhan judul, sedangkan film yang sudah diberi
+  // kategori jauh lebih banyak — kalau sumbernya drama, grafik tetap bilang
+  // "belum dipakai" untuk kategori yang di film sudah terpasang.
+  const [hitungFilm, setHitungFilm] = useState<[string, number][] | null>(null);
+  const [galatKategori, setGalatKategori] = useState<string | null>(null);
+  const [memuatKategori, setMemuatKategori] = useState(false);
+
+  const muatKategoriFilm = useCallback(async () => {
+    setMemuatKategori(true);
+    setGalatKategori(null);
+    try {
+      const res = await fetch("/api/admin/playly/genre");
+      const data = (await res.json()) as {
+        genres?: Record<string, string>;
+        error?: string;
+      };
+      if (!res.ok) {
+        setGalatKategori(data.error ?? "Kategori film tidak terbaca.");
+        return;
+      }
+      setHitungFilm(hitungKategoriFilm(data.genres ?? {}));
+    } catch {
+      setGalatKategori("Tidak bisa menghubungi server. Coba lagi.");
+    } finally {
+      setMemuatKategori(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void muatKategoriFilm();
+  }, [muatKategoriFilm]);
+
   const distribusi = useMemo(
-    () => lengkapiDistribusiKategori(stats.byCategory, KATEGORI_ISI),
-    [stats.byCategory],
+    () => lengkapiDistribusiKategori(hitungFilm ?? [], KATEGORI_ISI),
+    [hitungFilm],
   );
   const { kosong, persen } = useMemo(() => {
     const terisi = distribusi.filter(([, jumlah]) => jumlah > 0);
@@ -113,23 +149,34 @@ export default function AdminDashboard({ dramas }: { dramas: Drama[] }) {
           <CardTitle className="text-base font-semibold text-white">
             Distribusi Kategori
           </CardTitle>
-          <Badge
-            variant="secondary"
-            className="bg-zinc-800 text-xs font-normal text-zinc-400"
+          <button
+            type="button"
+            onClick={() => void muatKategoriFilm()}
+            disabled={memuatKategori}
+            title="Muat ulang dari kategori yang terpasang di film IMDb"
+            className="rounded-full bg-zinc-800 px-2.5 py-0.5 text-xs font-normal text-zinc-400 hover:text-zinc-200 disabled:opacity-60"
           >
-            {stats.byCategory.length} kategori aktif
-          </Badge>
+            {memuatKategori
+              ? "Memuat…"
+              : `${hitungFilm?.length ?? 0} kategori aktif`}
+          </button>
         </CardHeader>
         <CardContent className="space-y-2.5">
-          {dramas.length === 0 ? (
-            <p className="text-sm text-zinc-500">Belum ada drama.</p>
+          {galatKategori ? (
+            <p className="text-sm text-rose-400">{galatKategori}</p>
+          ) : hitungFilm === null ? (
+            <p className="text-sm text-zinc-500">Membaca kategori film…</p>
+          ) : hitungFilm.length === 0 ? (
+            <p className="text-sm text-zinc-500">
+              Belum ada film yang diberi kategori.
+            </p>
           ) : (
             <>
               <div
                 className="flex h-3 overflow-hidden rounded-full bg-zinc-800"
                 role="img"
                 aria-label={persen
-                  .map((b) => `${b.kategori} ${b.persen}%`)
+                  .map((b) => `${b.kategori} ${teksPersen(b.persen, b.jumlah)}`)
                   .join(", ")}
               >
                 {persen.map((b) => (
@@ -137,13 +184,13 @@ export default function AdminDashboard({ dramas }: { dramas: Drama[] }) {
                     key={b.kategori}
                     className={warnaKategori(b.kategori)}
                     style={{ width: `${b.persen}%` }}
-                    title={`${b.kategori} ${b.persen}% (${b.jumlah})`}
+                    title={`${b.kategori} ${teksPersen(b.persen, b.jumlah)} (${b.jumlah})`}
                   />
                 ))}
               </div>
               <p className="text-xs leading-5 text-zinc-300">
                 {persen
-                  .map((b) => `${b.kategori} ${b.persen}%`)
+                  .map((b) => `${b.kategori} ${teksPersen(b.persen, b.jumlah)}`)
                   .join(" · ")}
               </p>
               {kosong.length > 0 ? (

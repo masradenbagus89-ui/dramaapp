@@ -4,6 +4,12 @@ import type { NextConfig } from "next";
 const SIMPAN_GAMBAR_PUBLIK = "public, max-age=86400, stale-while-revalidate=604800";
 
 const nextConfig: NextConfig = {
+  // Kebijakan upgrade Next: hanya tambal keamanan, bukan loncat ke fitur baru.
+  // Dipasang saat naik 16.4.3 → 16.4.6 karena versi lama kena advisory.
+  experimental: {
+    agentUpgrade: "security",
+  },
+
   // Izinkan dev server diakses dari PC lain di jaringan lokal yang sama.
   // Tambahkan IP/hostname laptop Anda di sini supaya HMR (auto-reload) jalan
   // saat dibuka dari PC kedua.

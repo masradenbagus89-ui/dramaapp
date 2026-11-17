@@ -98,6 +98,20 @@
 
 ---
 
+## 2026-11-17 — rilis tampilan beranda
+
+Owner menulis "ok sekarang kamu deploy". Commit `c7d491e` didorong ke `dramaku` dulu, lalu `origin main`. Keduanya sama: `f7111e0..c7d491e`.
+
+**Yang tayang:** baris hitam hanya film yang punya sampul, tahun terbaru di depan. Di bawahnya Series Terbaru, lalu Film Terbaru. Keduanya satu baris geser; panah kanan selalu kelihatan di layar lebar.
+
+**Sudah diukur di produksi** `https://dramaapp-production-9e88.up.railway.app/` → **200**. Di atas seksi Series Terbaru: 14 tautan film, 0 tautan drama, 0 lencana EPS. Seksi series ada sebelum Film Terbaru.
+
+**Cara cek:** buka situs produksi dan segarkan. Baris hitam poster film (tanpa lencana EPS). Klik panah kanan, poster bergeser. Series Terbaru satu baris, lalu Film Terbaru, judulnya tidak sama dengan baris atas.
+
+**Tidak ikut commit:** `next-env.d.ts` (jejak mesin lokal), berkas audit, `data/viewers.json`, SQL dompet koin, dan tes yang bukan bagian tampilan ini. Jangan `git add -A`.
+
+---
+
 ## 2026-11-17 — seksi satu baris + panah kanan
 
 Owner: jangan dua baris, tetap satu baris, panah di kanan supaya film dan drama bisa digeser. Empat catatan 2026-11-17 di bawah ini ditayangkan bersama atas perintah deploy.

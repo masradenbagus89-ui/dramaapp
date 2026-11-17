@@ -23,7 +23,27 @@
 > lengkap: `HANDOFF.md` seksi `## 2026-11-09`.
 
 
-**Terakhir dicek:** 2026-11-16 (**komputer OWNER**). Owner minta tayangkan `feat/link-unduhan-provider-kualitas` (`58b1cf8`). Digabung ke `main` (bukan fast-forward: `main` unggul 298 commit). Pemutar produksi dipertahankan. Env baru di hosting belum diisi di sesi ini. 🪤 **Berkas sisa lokal masih menggantung, JANGAN `git add -A`.**
+**Terakhir dicek:** 2026-11-17. Owner menulis "ok sekarang kamu deploy". `HEAD` = `origin/main` = `dramaku/main` = **`c7d491e`** (`f7111e0..c7d491e`). 🪤 **Berkas sisa lokal masih menggantung, JANGAN `git add -A`.**
+
+### ✅ 2026-11-17 — RILIS `f7111e0` → `c7d491e` (1 commit, dua remote)
+
+**Didorong sesudah owner menulis "deploy".** `dramaku` dulu (cermin), baru `origin main` (TOMBOL RILIS).
+
+| Yang ditayangkan | Dampak bagi penonton |
+|---|---|
+| Baris hitam paling atas | hanya film yang punya sampul, tahun terbaru di depan |
+| Series Terbaru lalu Film Terbaru | satu baris geser, panah kanan selalu kelihatan di layar lebar |
+| Judul | film yang sudah di baris hitam tidak diulang di Film Terbaru |
+
+**Tidak ada SQL maupun env baru.** Gerbang lima langkah penuh (hapus `.next`, build, tsc, seluruh tes) **tidak** dijalankan di rilis ini. Yang hijau sebelumnya: tes tampilan beranda yang disentuh.
+
+**Smoke test produksi** `https://dramaapp-production-9e88.up.railway.app/` → **200**. Di atas `seksi-terbaru`: **14** tautan `/tonton/`, **0** tautan `/drama/`, **0** lencana EPS. `id="seksi-terbaru"` muncul sebelum `id="seksi-video-terbaru"`. Lebar kartu baris atas `w-[104px]` ada di HTML.
+
+**Rollback:** `git revert c7d491e && git push dramaku main && git push origin main`
+
+---
+
+**Sebelumnya, 2026-11-16.** Owner minta tayangkan `feat/link-unduhan-provider-kualitas` (`58b1cf8`). Digabung ke `main` (bukan fast-forward: `main` unggul 298 commit). Pemutar produksi dipertahankan. Env baru di hosting belum diisi di sesi ini. 🪤 **Berkas sisa lokal masih menggantung, JANGAN `git add -A`.**
 
 ### 2026-11-16 — gabung isi otomatis link unduhan (Drive, Mega, tabel, Cocokkan semua)
 

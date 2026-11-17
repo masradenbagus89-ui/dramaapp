@@ -23,7 +23,25 @@
 > lengkap: `HANDOFF.md` seksi `## 2026-11-09`.
 
 
-**Terakhir dicek:** 2026-11-17. Owner menulis "tayangkan" untuk rapikan panel Playly. `HEAD` = `origin/main` = `dramaku/main` = **`225d519`**. Hosting Railway dan Vercel sama-sama melaporkan sukses untuk commit itu. 🪤 **Berkas sisa lokal masih menggantung, JANGAN `git add -A`.**
+**Terakhir dicek:** 2026-11-17. Owner menulis "deploy" untuk grafik kategori. Fitur = **`2b0ea47`**. Catatan rilis Playly sebelumnya `225d519`. 🪤 **Berkas sisa lokal masih menggantung, JANGAN `git add -A`.**
+
+### ✅ 2026-11-17 — RILIS `225d519` → `2b0ea47` (grafik kategori persentase)
+
+**Didorong sesudah owner menulis "deploy".** `dramaku` dulu (cermin), baru `origin main` (TOMBOL RILIS).
+
+| Yang ditayangkan | Dampak bagi admin |
+|---|---|
+| Distribusi Kategori | satu batang persentase, bukan satu baris per kategori |
+| Teks di bawah batang | nama dan persen kategori yang punya drama |
+| Belum dipakai | kategori resmi yang masih kosong, dirangkai rapat |
+
+**Tidak ada SQL maupun env baru.** Penonton tidak berubah. Tes `tests/admin-stats.test.ts` hijau (11 tes).
+
+**Rollback:** `git revert 2b0ea47 && git push dramaku main && git push origin main`
+
+---
+
+**Terakhir dicek sebelumnya:** 2026-11-17. Owner menulis "tayangkan" untuk rapikan panel Playly. `HEAD` saat itu = **`225d519`**.
 
 ### ✅ 2026-11-17 — RILIS `532bc38` → `225d519` (rapikan panel Playly)
 

@@ -9,6 +9,10 @@
 //
 // Empat keadaan tampilan sengaja dibedakan supaya tidak ada layar kosong yang
 // membingungkan: sedang memuat / gagal / belum ada video / berhasil.
+//
+// Daftar TIDAK menunggu seluruh halaman Playly. Halaman pertama langsung
+// digambar; halaman berikutnya disambung di belakang (owner 2026-11-17:
+// layar jangan kosong lama).
 import { useCallback, useEffect, useRef, useState } from "react";
 import KotakCariDaftar from "./KotakCariDaftar";
 import PaginasiDaftar from "./PaginasiDaftar";
@@ -35,6 +39,13 @@ import type { PlaylyVideo } from "@/lib/playly";
 import type { PlaylyEmbed } from "@/lib/store";
 
 type Status = "loading" | "error" | "empty" | "ready";
+
+/**
+ * Plafon halaman yang diminta browser.
+ * Angkanya sama dengan PLAYLY_MAKS_HALAMAN di lib/playly.ts. Berkas itu
+ * tidak diimpor ke sini: isinya jalan di server dan membawa kunci Playly.
+ */
+const MAKS_HALAMAN_DAFTAR = 10;
 type Pesan = { type: "ok" | "error"; text: string };
 
 export type PilihanDrama = { id: string; title: string; episodes: number };
@@ -53,6 +64,8 @@ export default function PlaylyVideoPicker({
 }) {
   const [status, setStatus] = useState<Status>("loading");
   const [videos, setVideos] = useState<PlaylyVideo[]>([]);
+  const [menyusul, setMenyusul] = useState(false);
+  const [peringatanSisa, setPeringatanSisa] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
   // Catatan dari server saat daftar TIDAK datang dari kunci mitra (mis. kunci
   // belum dipasang / ditolak, jadi dipakai katalog publik Playly).
@@ -69,6 +82,9 @@ export default function PlaylyVideoPicker({
   const [melepas, setMelepas] = useState<string | null>(null);
 
   const panelRef = useRef<HTMLDivElement | null>(null);
+  // Naik tiap "Muat ulang". Putaran lama berhenti begitu angkanya berubah,
+  // supaya jawaban halaman belakang tidak menyusup ke daftar yang baru.
+  const giliran = useRef(0);
 
   // Judul video saja — itu satu-satunya teks yang tergambar di tiap petak,
   // jadi mencari di field lain membuat hasilnya terasa acak bagi admin.
@@ -76,31 +92,95 @@ export default function PlaylyVideoPicker({
   const [tampilan, setTampilan] = useTampilanDaftar("admin:tampilan:playly-video");
 
   const muat = useCallback(async () => {
-    setStatus("loading");
+    const saya = ++giliran.current;
     setErrorMsg("");
-    setCatatan("");
+    setPeringatanSisa("");
+    setMenyusul(true);
+    // Jangan kosongkan film yang sudah ada. Kotak abu-abu hanya saat belum
+    // ada satu pun judul — itulah layar kosong yang dikeluhkan.
+    setStatus((sekarang) => (sekarang === "ready" ? sekarang : "loading"));
+
+    let offset = 0;
+    let halaman = 1;
+    let sumber: string | null = null;
+    let kumpulan: PlaylyVideo[] = [];
+    let sudahAdaIsi = false;
+
     try {
-      const res = await fetch("/api/admin/playly/videos", { cache: "no-store" });
-      const data = (await res.json()) as {
-        ok?: boolean;
-        videos?: PlaylyVideo[];
-        error?: string;
-        note?: string | null;
-      };
+      for (;;) {
+        const qs = new URLSearchParams({ bertahap: "1", offset: String(offset) });
+        if (sumber) qs.set("source", sumber);
+        const res = await fetch(`/api/admin/playly/videos?${qs}`, { cache: "no-store" });
+        if (giliran.current !== saya) return;
+        const data = (await res.json()) as {
+          ok?: boolean;
+          videos?: PlaylyVideo[];
+          error?: string;
+          note?: string | null;
+          source?: string;
+          offsetBerikutnya?: number | null;
+        };
+        if (giliran.current !== saya) return;
 
-      if (!res.ok || !data.ok) {
-        setErrorMsg(data.error ?? `Gagal memuat daftar video (HTTP ${res.status}).`);
-        setStatus("error");
-        return;
+        if (!res.ok || !data.ok) {
+          if (!sudahAdaIsi) {
+            setErrorMsg(data.error ?? `Gagal memuat daftar video (HTTP ${res.status}).`);
+            setStatus("error");
+          } else {
+            setPeringatanSisa(
+              "Sebagian film sudah tampil. Sisanya gagal dimuat — tekan Muat ulang.",
+            );
+          }
+          return;
+        }
+
+        const list = data.videos ?? [];
+        if (!sudahAdaIsi) {
+          kumpulan = list;
+          sudahAdaIsi = true;
+          setCatatan(data.note ?? "");
+        } else {
+          const ada = new Set(kumpulan.map((v) => v.id));
+          for (const v of list) {
+            if (ada.has(v.id)) continue;
+            ada.add(v.id);
+            kumpulan.push(v);
+          }
+        }
+        setVideos([...kumpulan]);
+        if (data.source === "mitra" || data.source === "katalog-publik") {
+          sumber = data.source;
+        }
+
+        const lanjut =
+          typeof data.offsetBerikutnya === "number" && data.offsetBerikutnya > offset;
+        if (kumpulan.length === 0 && !lanjut) {
+          setStatus("empty");
+          return;
+        }
+        setStatus("ready");
+        if (!lanjut) return;
+        if (halaman >= MAKS_HALAMAN_DAFTAR) {
+          setPeringatanSisa(
+            "Sebagian film sudah tampil. Batas halaman tercapai — tekan Muat ulang kalau masih kurang.",
+          );
+          return;
+        }
+        halaman += 1;
+        offset = data.offsetBerikutnya as number;
       }
-
-      const list = data.videos ?? [];
-      setCatatan(data.note ?? "");
-      setVideos(list);
-      setStatus(list.length > 0 ? "ready" : "empty");
     } catch {
-      setErrorMsg("Tidak bisa menghubungi server DramaKu. Cek koneksi lalu coba lagi.");
-      setStatus("error");
+      if (giliran.current !== saya) return;
+      if (!sudahAdaIsi) {
+        setErrorMsg("Tidak bisa menghubungi server DramaKu. Cek koneksi lalu coba lagi.");
+        setStatus("error");
+      } else {
+        setPeringatanSisa(
+          "Sebagian film sudah tampil. Sisanya gagal dimuat — tekan Muat ulang.",
+        );
+      }
+    } finally {
+      if (giliran.current === saya) setMenyusul(false);
     }
   }, []);
 
@@ -366,7 +446,7 @@ export default function PlaylyVideoPicker({
             className="min-h-11 rounded-full px-4 text-xs font-semibold"
           >
             <RefreshCw
-              className={`h-4 w-4 ${status === "loading" ? "animate-spin" : ""}`}
+              className={`h-4 w-4 ${status === "loading" || menyusul ? "animate-spin" : ""}`}
               aria-hidden="true"
             />
             Muat ulang
@@ -445,6 +525,19 @@ export default function PlaylyVideoPicker({
             >
               Kosongkan pencarian
             </button>
+          </p>
+        )}
+
+        {menyusul && status === "ready" && (
+          <p className="mt-3 text-sm text-zinc-400">
+            {videos.length} film sudah tampil. Sisanya menyusul.
+          </p>
+        )}
+
+        {peringatanSisa && status === "ready" && (
+          <p className="mt-3 flex items-start gap-2 text-sm text-amber-200">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <span>{peringatanSisa}</span>
           </p>
         )}
 

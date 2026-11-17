@@ -26,7 +26,9 @@ vi.mock("@/lib/store", () => ({
   clearPlaylyKeyRecord: async () => {},
 }));
 
-const { fetchPlaylyVideosKita, readPlaylyConfig } = await import("../lib/playly");
+const { fetchPlaylyVideosKita, fetchPlaylyVideosHalaman, readPlaylyConfig } = await import(
+  "../lib/playly"
+);
 
 /** Config dari env KOSONG — hasilnya sama di laptop siapa pun dan di CI. */
 const CONFIG = readPlaylyConfig({});
@@ -290,5 +292,35 @@ describe("pengaman paginasi", () => {
 
     // 10 halaman x 5 video yang sama = tetap 5 baris, bukan 50.
     expect(hasil.videos).toHaveLength(5);
+  });
+});
+
+describe("satu halaman admin — jangan menunggu seluruh daftar", () => {
+  it("halaman pertama berhenti di situ dan memberi offset berikutnya", async () => {
+    const semua = Array.from({ length: 42 }, (_, i) => videoPalsu(i + 1));
+    const diminta = pasangPlaylyPalsu(semua, { batasServer: 20 });
+    pakaiKunci(true);
+
+    const hasil = await fetchPlaylyVideosHalaman(0, null, CONFIG);
+
+    expect(hasil.source).toBe("mitra");
+    expect(hasil.videos).toHaveLength(20);
+    expect(hasil.videos[0].title).toBe("Video ke-1");
+    expect(hasil.offsetBerikutnya).toBe(20);
+    // Satu panggilan. Kalau fungsi ini diam-diam mengambil semua halaman,
+    // angkanya jadi 3 dan layar admin kembali menunggu seluruh daftar.
+    expect(diminta).toHaveLength(1);
+  });
+
+  it("halaman berikutnya memakai offset yang diminta, bukan mengulang dari nol", async () => {
+    const semua = Array.from({ length: 42 }, (_, i) => videoPalsu(i + 1));
+    pasangPlaylyPalsu(semua, { batasServer: 20 });
+    pakaiKunci(true);
+
+    const hasil = await fetchPlaylyVideosHalaman(20, "mitra", CONFIG);
+
+    expect(hasil.videos.map((v) => v.title)).toContain("Video ke-21");
+    expect(hasil.videos.map((v) => v.title)).not.toContain("Video ke-1");
+    expect(hasil.offsetBerikutnya).toBe(40);
   });
 });

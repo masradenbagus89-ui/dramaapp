@@ -1010,6 +1010,53 @@ function bacaPenandaHalaman(data: unknown): { count: number | null; hasMore: boo
  * bentuk balasan yang sama, dan dulu keduanya punya bug yang sama. Satu tempat
  * supaya perbaikannya tidak perlu diingat dua kali.
  */
+type HasilSatuHalaman = PlaylyVideoResult & {
+  /** null = Playly bilang tidak ada lagi. Angka = offset halaman berikutnya. */
+  offsetBerikutnya: number | null;
+};
+
+/**
+ * Satu halaman Playly saja.
+ *
+ * Dipisah dari pengambilan-seluruhnya supaya panel admin bisa menggambar
+ * halaman pertama dulu. Aturan maju-offset tetap sama: sebanyak yang
+ * BENAR-BENAR dikirim, bukan sebanyak yang diminta.
+ */
+async function ambilSatuHalamanPlayly(
+  baseUrl: string,
+  headers: Record<string, string>,
+  pesan401: string,
+  config: PlaylyConfig,
+  offset: number,
+  revalidateSeconds?: number,
+): Promise<HasilSatuHalaman> {
+  const data = await ambilJsonPlayly(
+    urlHalamanPlayly(baseUrl, offset),
+    headers,
+    pesan401,
+    revalidateSeconds,
+  );
+  lemparKalauBadanGagal(data);
+
+  const hasil = normalizePlaylyVideos(data, config.allowedHosts, config.embedPattern);
+  const { count, hasMore } = bacaPenandaHalaman(data);
+  if (!hasMore) {
+    return { videos: hasil.videos, rejected: hasil.rejected, offsetBerikutnya: null };
+  }
+
+  const maju = count ?? hasil.videos.length + hasil.rejected.length;
+  // Halaman yang tidak memajukan apa pun tapi mengaku `hasMore` = balasan
+  // tidak masuk akal. Berhenti, jangan berputar di tempat.
+  if (maju <= 0) {
+    return { videos: hasil.videos, rejected: hasil.rejected, offsetBerikutnya: null };
+  }
+  return {
+    videos: hasil.videos,
+    rejected: hasil.rejected,
+    offsetBerikutnya: offset + maju,
+  };
+}
+
 async function ambilSemuaHalamanPlayly(
   baseUrl: string,
   headers: Record<string, string>,
@@ -1025,33 +1072,22 @@ async function ambilSemuaHalamanPlayly(
   let offset = 0;
 
   for (let halaman = 1; halaman <= PLAYLY_MAKS_HALAMAN; halaman++) {
-    const data = await ambilJsonPlayly(
-      urlHalamanPlayly(baseUrl, offset),
+    const hasil = await ambilSatuHalamanPlayly(
+      baseUrl,
       headers,
       pesan401,
+      config,
+      offset,
       revalidateSeconds,
     );
-    lemparKalauBadanGagal(data);
-
-    const hasil = normalizePlaylyVideos(data, config.allowedHosts, config.embedPattern);
     for (const v of hasil.videos) {
       if (sudahAda.has(v.id)) continue;
       sudahAda.add(v.id);
       videos.push(v);
     }
     rejected.push(...hasil.rejected);
-
-    const { count, hasMore } = bacaPenandaHalaman(data);
-    if (!hasMore) return { videos, rejected };
-
-    // Maju sebanyak yang BENAR-BENAR dikirim Playly, bukan sebanyak yang kita
-    // minta: kalau mereka melayani lebih sedikit dari `limit`, memakai angka
-    // permintaan akan melompati video yang belum terambil.
-    const maju = count ?? hasil.videos.length + hasil.rejected.length;
-    // Halaman yang tidak memajukan apa pun tapi mengaku `hasMore` = balasan
-    // tidak masuk akal. Berhenti, jangan berputar di tempat.
-    if (maju <= 0) return { videos, rejected };
-    offset += maju;
+    if (hasil.offsetBerikutnya == null) return { videos, rejected };
+    offset = hasil.offsetBerikutnya;
   }
 
   // Sampai di sini artinya batas pengaman yang menghentikan, bukan Playly.
@@ -1072,8 +1108,7 @@ async function fetchVideoMitra(
   return ambilSemuaHalamanPlayly(
     config.videosUrl,
     buildPlaylyHeaders(apiKey),
-    "Playly menolak kunci kita (kunci salah, sudah dicabut, atau kedaluwarsa). " +
-      "Minta kunci baru ke Playly, lalu perbarui di Setelan → Playly.",
+    PESAN_DITOLAK_MITRA,
     config,
     revalidateSeconds,
   );
@@ -1108,11 +1143,7 @@ async function fetchVideoKatalogPublik(
     // Kunci dititipkan lewat HEADER, bukan query ?key= yang juga dilayani Playly:
     // query ikut tercetak di log server/proxy mana pun yang dilewati, header tidak.
     apiKey ? buildPlaylyHeaders(apiKey) : { Accept: "application/json" },
-    apiKey
-      ? "Playly menolak kunci kita di katalog (kunci salah, sudah dicabut, atau " +
-          "kedaluwarsa). Minta kunci baru ke Playly, lalu perbarui di Setelan → Playly."
-      : "Katalog Playly kini WAJIB memakai kunci API (berlaku 22 September 2026), " +
-          "sedangkan kunci kita belum dipasang. Pasang di Setelan → Playly.",
+    apiKey ? PESAN_DITOLAK_KATALOG : PESAN_KATALOG_WAJIB_KUNCI,
     config,
     revalidateSeconds,
   );
@@ -1159,9 +1190,87 @@ export async function fetchPlaylyVideos(
   return {
     ...hasil,
     source: "katalog-publik",
-    note:
-      "Kunci API Playly belum dipasang, jadi daftar ini diambil dari katalog publik Playly. " +
-      "Pasang kunci di Setelan → Playly kalau ingin dibatasi ke video akun mitra saja.",
+    note: CATATAN_TANPA_KUNCI,
+  };
+}
+
+const CATATAN_TANPA_KUNCI =
+  "Kunci API Playly belum dipasang, jadi daftar ini diambil dari katalog publik Playly. " +
+  "Pasang kunci di Setelan → Playly kalau ingin dibatasi ke video akun mitra saja.";
+
+const PESAN_DITOLAK_MITRA =
+  "Playly menolak kunci kita (kunci salah, sudah dicabut, atau kedaluwarsa). " +
+  "Minta kunci baru ke Playly, lalu perbarui di Setelan → Playly.";
+
+const PESAN_DITOLAK_KATALOG =
+  "Playly menolak kunci kita di katalog (kunci salah, sudah dicabut, atau " +
+  "kedaluwarsa). Minta kunci baru ke Playly, lalu perbarui di Setelan → Playly.";
+
+const PESAN_KATALOG_WAJIB_KUNCI =
+  "Katalog Playly kini WAJIB memakai kunci API (berlaku 22 September 2026), " +
+  "sedangkan kunci kita belum dipasang. Pasang di Setelan → Playly.";
+
+export type PlaylyHalamanHasil = PlaylyFetchResult & {
+  /** null = halaman terakhir. Angka = offset yang diminta ke Playly berikutnya. */
+  offsetBerikutnya: number | null;
+};
+
+/**
+ * Satu halaman daftar admin.
+ *
+ * `sumberDipinta` dipakai halaman BERIKUTNYA supaya offset milik jalur mitra
+ * tidak dipakai ulang di katalog (dua daftar itu bukan halaman yang sama).
+ * Halaman pertama boleh kosong: server yang memilih jalur.
+ */
+export async function fetchPlaylyVideosHalaman(
+  offsetMentah: number,
+  sumberDipinta: string | null = null,
+  config: PlaylyConfig = readPlaylyConfig(),
+): Promise<PlaylyHalamanHasil> {
+  const offset = Number.isFinite(offsetMentah) ? Math.max(0, Math.floor(offsetMentah)) : 0;
+  const paksaKatalog = sumberDipinta === "katalog-publik";
+  const apiKey = await getPlaylyKey();
+
+  if (!paksaKatalog && apiKey) {
+    try {
+      const hasil = await ambilSatuHalamanPlayly(
+        config.videosUrl,
+        buildPlaylyHeaders(apiKey),
+        PESAN_DITOLAK_MITRA,
+        config,
+        offset,
+      );
+      return { ...hasil, source: "mitra", note: null };
+    } catch (err) {
+      // Halaman lanjutan yang 401 jangan dialihkan ke katalog pada offset yang
+      // sama: offset itu milik daftar mitra, bukan katalog.
+      if (!(err instanceof PlaylyError) || err.status !== 401 || offset !== 0) throw err;
+      const hasil = await ambilSatuHalamanPlayly(
+        config.catalogUrl,
+        buildPlaylyHeaders(apiKey),
+        PESAN_DITOLAK_KATALOG,
+        config,
+        0,
+      );
+      return {
+        ...hasil,
+        source: "katalog-publik",
+        note: `${err.message} Sementara ini daftar diambil dari katalog publik Playly.`,
+      };
+    }
+  }
+
+  const hasil = await ambilSatuHalamanPlayly(
+    config.catalogUrl,
+    apiKey ? buildPlaylyHeaders(apiKey) : { Accept: "application/json" },
+    apiKey ? PESAN_DITOLAK_KATALOG : PESAN_KATALOG_WAJIB_KUNCI,
+    config,
+    offset,
+  );
+  return {
+    ...hasil,
+    source: "katalog-publik",
+    note: !apiKey && offset === 0 ? CATATAN_TANPA_KUNCI : null,
   };
 }
 

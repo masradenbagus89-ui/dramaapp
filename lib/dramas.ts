@@ -226,6 +226,18 @@ export const CATALOG_TTL_SECONDS = 60;
  * Jalur tulis, admin, dan koin TETAP pakai `getAllDramas`/`getDrama`.
  */
 export async function getAllDramasCached(): Promise<Drama[]> {
+  // Saat `next build`, jangan hubungi Supabase.
+  //
+  // KENAPA: halaman publik di-prerender di langkah itu. Pada 2026-11-17
+  // Railway membatalkan image karena Supabase membalas error saat /discover
+  // memanggil katalog (stack: ensureOk di lib/supabase.ts → fungsi ini →
+  // app/discover/page.tsx, lalu `npm run build` exit 1). HTML hasil build
+  // memakai berkas lokal; katalog hidup diambil lagi paling lambat
+  // CATALOG_TTL_SECONDS sesudah situs tayang. Jalur admin, tulis, dan koin
+  // tidak memakai fungsi ini — kegagalan di sana tetap terlihat.
+  if (process.env.NEXT_PHASE === "phase-production-build") {
+    return readLocalDramas();
+  }
   if (useSupabase) {
     // KETIGA pembacaan WAJIB ber-cache. Satu saja yang tidak, seluruh halaman
     // pemanggil dibangun ulang untuk tiap pengunjung (lib/supabase.ts:204).

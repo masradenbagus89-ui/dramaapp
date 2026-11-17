@@ -23,7 +23,25 @@
 > lengkap: `HANDOFF.md` seksi `## 2026-11-09`.
 
 
-**Terakhir dicek:** 2026-11-17. Owner menulis "deploy" untuk grafik kategori. Fitur = **`2b0ea47`**. Catatan rilis Playly sebelumnya `225d519`. 🪤 **Berkas sisa lokal masih menggantung, JANGAN `git add -A`.**
+**Terakhir dicek:** 2026-11-17. `f47ccbb` gagal dibangun di Railway karena Supabase error saat prerender `/discover`. Perbaikan ada di kerjaan lokal (katalog publik tidak menghubungi database selama `next build`). `npx next build` lokal exit 0. Perbaikan ikut commit yang didorong. Beranda produksi tetap **200** (versi lama).
+
+### ❌ 2026-11-17 — RILIS `b7bd3f8` → `f47ccbb` GAGAL DIBANGUN
+
+**Didorong sesudah owner menulis "sekarang tayang".** `dramaku` dulu, lalu `origin main`. Build tidak selesai, jadi perubahan belum terlihat di situs.
+
+| Yang seharusnya tayang | Dampak bagi admin |
+|---|---|
+| Semua menu admin | judul tampil dulu, isi menyusul |
+| Daftar film Playly | diingat 1 menit, tidak diunduh ulang tiap buka |
+| Distribusi Kategori | menghitung kategori film IMDb |
+
+**Bukti:** GitHub deployment `f47ccbb` state **failure**. Screenshot Railway: `npm run build` exit 1, stack `ensureOk` → `lib/dramas.ts` → `app/discover/page.tsx`. Produksi tetap **200**.
+
+**Rollback:** tidak dijalankan. Versi yang gagal tidak menggantikan yang sedang jalan.
+
+---
+
+**Terakhir dicek sebelumnya:** 2026-11-17. Owner menulis "deploy" untuk grafik kategori. Fitur = **`2b0ea47`**. Catatan rilis Playly sebelumnya `225d519`. 🪤 **Berkas sisa lokal masih menggantung, JANGAN `git add -A`.**
 
 ### ✅ 2026-11-17 — RILIS `225d519` → `2b0ea47` (grafik kategori persentase)
 
@@ -36,6 +54,8 @@
 | Belum dipakai | kategori resmi yang masih kosong, dirangkai rapat |
 
 **Tidak ada SQL maupun env baru.** Penonton tidak berubah. Tes `tests/admin-stats.test.ts` hijau (11 tes).
+
+**Bukti tayang:** Railway dan Vercel Production status **success** untuk `b7bd3f8` (commit catatan di atas `2b0ea47`). `https://dramaapp-production-9e88.up.railway.app/` dan `/admin` menjawab **200**. Isi grafik di produksi belum dilihat dengan login admin.
 
 **Rollback:** `git revert 2b0ea47 && git push dramaku main && git push origin main`
 

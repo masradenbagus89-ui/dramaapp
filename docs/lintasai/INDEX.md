@@ -7,6 +7,8 @@
 
 ## Rencana
 
+- 🪤 **PELAJARAN 2026-11-17 (ke-3) — ERROR SUPABASE SAAT PRERENDER MEMBATALKAN SELURUH IMAGE.** Railway menolak `f47ccbb`: `ensureOk` melempar saat `/discover` memanggil `getAllDramasCached`, lalu `npm run build` exit 1. Try/catch di `getAllDramasCachedSafe` tidak mencegah kegagalan image itu. Perbaikannya: selama `NEXT_PHASE=phase-production-build`, katalog publik membaca `data/dramas.json` dan tidak menghubungi Supabase. Katalog hidup menyusul lewat `revalidate` 60 detik. Penjaga: `tests/katalog-saat-build.test.ts`.
+
 - 🪤 **PELAJARAN 2026-11-17 (ke-2) — POLA "JUDUL DULU" HARUS DI SETIAP HALAMAN ADMIN, BUKAN CUMA YANG BARU DIKELUHKAN.** IMDb sudah tidak menunggu katalog, tapi Dashboard masih sempat menulis "0 drama" dan Kunci/Webhook masih menunggu database sebelum judulnya ada. Penjaga: `tests/admin-jangan-menunggu.test.ts`.
 
 - 🪤 **PELAJARAN 2026-11-17 — LAYAR "MEMUAT…" YANG LAMA BUKAN KARENA PEMERIKSAAN PER VIDEO LAGI.** Itu sudah dipindah 2026-11-11. Yang tersisa: `page.tsx` menunggu seluruh katalog Playly (dan pembacaan database) SEBELUM `return`, jadi `loading.tsx` — kotak abu-abu tanpa menu — bertahan sampai semuanya selesai. Cache `revalidate` Next tidak menolong di halaman `force-dynamic` (pelajaran 2026-11-11 ke-2). Perbaikannya: menu digambar dulu (`Suspense`), daftar film diingat di proses selama 1 menit (`lib/playly-daftar-admin.ts`). Penjaga: `tests/panel-playly-tanpa-menunggu.test.ts` + `tests/playly-daftar-admin.test.ts`.

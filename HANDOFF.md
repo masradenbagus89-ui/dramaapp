@@ -90,11 +90,65 @@
 > aftermarket** dari pemilik sekarang, harganya **jauh di atas** Rp200.000 dan belum pernah dicek.
 > Nama lain yang masih bebas jauh lebih murah.
 
-**Terakhir diisi:** 2026-11-17 — ✅ grafik Distribusi Kategori (`2b0ea47`) diminta deploy. Satu batang persentase. Rincian di seksi `## 2026-11-17 — distribusi kategori lengkap`. Rincian di seksi `## 2026-11-17 — distribusi kategori lengkap` di bawah. Sebelumnya: ✅ **RILIS `532bc38` → `225d519` TAYANG.** Panel admin Playly yang dirapikan (judul IMDb di atas, keterangan di ikon tanya, Perlu dicek, Cocokkan semua sekotak dengan Tebak kategori) sudah di Railway. Beranda produksi **200**. Rincian di seksi `## 2026-11-17 — rapikan panel Playly tayang` di bawah. Perbaikan login lokal masih belum di-commit. Sebelumnya: 2026-11-16 — isi otomatis link unduhan Google Drive & Mega digabung dari `feat/link-unduhan-provider-kualitas` (`58b1cf8`). Pemutar yang sudah tayang tidak ditimpa. Rincian di seksi `## 2026-11-16 — isi otomatis link unduhan` di bawah. Sebelumnya: 2026-11-15 — menu Genre dan Negara disamakan dengan Tahun (4 kolom, semua pilihan terlihat tanpa digulir). Rincian di seksi `## 2026-11-15` di bawah. Sebelumnya: ✅ **RILIS `f6b1c03` → `a09bfc8` TAYANG.** (1) Cache halaman penonton dibuang otomatis saat admin menyimpan + tombol **Segarkan cache** (kerja rekan). (2) Payload data IMDb ke browser admin **525 KB → 57 KB** (−89%) + ingatan "berkas siap" kini **bertahan melewati restart**. (3) Urutan video SE-SITUS ikut **tahun rilis**, bukan waktu upload — terbukti di produksi: 20 kartu teratas semuanya **2026**. Gerbang 5/5 (**2516 tes**), smoke test 10/10 = 200. ⏳ Manfaat (2) bagian ingatan baru terasa mulai rilis BERIKUTNYA. 🪤 **TIGA sesi menulis di folder yang sama; 22 berkas sesi audit masih menggantung — JANGAN `git add -A`.** Rinciannya di seksi `## 2026-11-14 (siang)` di bawah.
+**Terakhir diisi:** 2026-11-17 — build `f47ccbb` gagal karena Supabase error saat prerender `/discover`. Perbaikannya: katalog publik tidak menghubungi database selama `next build` (berkas lokal dulu, katalog hidup menyusul paling lambat 1 menit sesudah tayang). `npx next build` lokal **exit 0**, 23/23 halaman. Perbaikan ini ikut commit yang didorong supaya image `f47ccbb` yang gagal bisa tergantikan. Rincian di seksi `## 2026-11-17 — tayang gagal f47ccbb`. Sebelumnya: pola "judul dulu, isi menyusul" dipasang di seluruh menu admin. Menu dan judul IMDb tampil dulu; daftar yang sudah diambil tidak diunduh ulang selama 1 menit. Belum di-commit, belum tayang. Rincian di seksi `## 2026-11-17 — IMDb tidak layar kosong`. Sebelumnya: grafik Distribusi Kategori sekarang menghitung kategori film di panel IMDb, bukan 41 drama lama. Lencana "kategori aktif" bisa diklik untuk memuat ulang. Belum di-commit. Rincian di seksi `## 2026-11-17 — distribusi ikut film IMDb`. Sebelumnya: ✅ grafik Distribusi Kategori (`2b0ea47`) diminta deploy. Satu batang persentase. Rincian di seksi `## 2026-11-17 — distribusi kategori lengkap`. Rincian di seksi `## 2026-11-17 — distribusi kategori lengkap` di bawah. Sebelumnya: ✅ **RILIS `532bc38` → `225d519` TAYANG.** Panel admin Playly yang dirapikan (judul IMDb di atas, keterangan di ikon tanya, Perlu dicek, Cocokkan semua sekotak dengan Tebak kategori) sudah di Railway. Beranda produksi **200**. Rincian di seksi `## 2026-11-17 — rapikan panel Playly tayang` di bawah. Perbaikan login lokal masih belum di-commit. Sebelumnya: 2026-11-16 — isi otomatis link unduhan Google Drive & Mega digabung dari `feat/link-unduhan-provider-kualitas` (`58b1cf8`). Pemutar yang sudah tayang tidak ditimpa. Rincian di seksi `## 2026-11-16 — isi otomatis link unduhan` di bawah. Sebelumnya: 2026-11-15 — menu Genre dan Negara disamakan dengan Tahun (4 kolom, semua pilihan terlihat tanpa digulir). Rincian di seksi `## 2026-11-15` di bawah. Sebelumnya: ✅ **RILIS `f6b1c03` → `a09bfc8` TAYANG.** (1) Cache halaman penonton dibuang otomatis saat admin menyimpan + tombol **Segarkan cache** (kerja rekan). (2) Payload data IMDb ke browser admin **525 KB → 57 KB** (−89%) + ingatan "berkas siap" kini **bertahan melewati restart**. (3) Urutan video SE-SITUS ikut **tahun rilis**, bukan waktu upload — terbukti di produksi: 20 kartu teratas semuanya **2026**. Gerbang 5/5 (**2516 tes**), smoke test 10/10 = 200. ⏳ Manfaat (2) bagian ingatan baru terasa mulai rilis BERIKUTNYA. 🪤 **TIGA sesi menulis di folder yang sama; 22 berkas sesi audit masih menggantung — JANGAN `git add -A`.** Rinciannya di seksi `## 2026-11-14 (siang)` di bawah.
 
 **Rincian kontrol volume (putaran KETIGA):** owner menolak bentuk tombol `+` / `−` dan mengirim contoh gambar, jadi pengatur volume kini **garis geser tegak berbentuk kapsul** (jalur kuning + bulatan penggeser). Diukur di Chrome headless layar 393px: kapsul `x=345..381` **utuh di dalam layar**, geser jari atas→100% / tengah→50% / bawah→bisu, nol elemen diputar. Gerbang lolos 5/5 (2383 tes hijau). ✅ **Sudah TAYANG** dalam rilis `53fbc5c → a9ae869` malam itu juga.
 
 **Sebelumnya hari ini:** ✅ **`2ad015b` + `8d8c1ba` TAYANG.** Tata letak pemutar beres dalam tiga putaran permintaan owner: tombol **Eps turun ke baris paling bawah**, tombol **volume pindah ke sebelah angka durasi**, rail ikon kanan **diperkecil & dirapatkan** (36px/20px/jarak 8px), dan garis volume tegak **diganti tombol + / −** karena terukur berdiri di **x=391 pada layar 393px = di luar layar HP**. Rinciannya di seksi `## 2026-11-13` di bawah.
+
+---
+
+## 2026-11-17 — tayang gagal f47ccbb
+
+Owner menulis "sekarang tayang". Kode `f47ccbb` sudah di `dramaku` dan `origin`. Railway dan Vercel Production status **failure**. Beranda produksi tetap **200** — versi yang jalan masih yang lama.
+
+**Akarnya (screenshot Railway):** `npm run build` exit 1. Supabase membalas error saat Next merender `/discover`. Stack: `ensureOk` → `lib/dramas.ts` `getAllDramasCached` → `app/discover/page.tsx`.
+
+**Perbaikan:** selama `next build`, `getAllDramasCached` membaca `data/dramas.json` dan tidak menghubungi Supabase. Sesudah situs tayang, halaman publik mengambil katalog hidup paling lambat 60 detik. Jalur admin, tulis, dan koin tidak berubah.
+
+**Bukti lokal:** `npx next build` exit 0. 23/23 halaman, termasuk `/discover`. Tidak ada lagi baris `Supabase select`. Penjaga: `tests/katalog-saat-build.test.ts`.
+
+**Rollback `f47ccbb` tidak dijalankan** — image-nya tidak pernah menggantikan yang sedang jalan.
+
+---
+
+## 2026-11-17 — kerangka admin seragam
+
+Owner: cara buka IMDb (judul dulu, jangan layar kosong) diseragamkan ke semua fitur admin.
+
+**Yang berubah:** Dashboard, Daftar Drama, dan Kelola Admin menampilkan menu plus kalimat "sedang diambil" — bukan angka 0 atau "belum ada". Kunci Playly dan Webhook menampilkan judulnya dulu; status dari database menyusul. Kalau database tidak menjawab, yang tampil kalimat "belum terbaca", bukan halaman error kosong. Tambah Drama dan Keamanan tidak mengambil daftar, jadi judulnya langsung berisi form. Iklan masih dimatikan saklarnya.
+
+**Yang tidak diubah:** daftar film Playly tetap satu-satunya yang diingat 1 menit. Data yang admin simpan sendiri (drama, admin, kunci) tetap dibaca baru supaya perubahan tidak tertunda.
+
+**Bukti:** 46 tes hijau pada berkas penjaga ini. Empat alamat admin di mesin lokal menjawab 200 dalam waktu di bawah satu detik untuk pengunjung yang belum login (layar penolakan, bukan hang). Mata admin yang sudah login belum dicek di browser sesi ini.
+
+**Cara cek:** buka tiap menu admin. Judul bagian harus ada sebelum angka atau tabelnya terisi. Belum tayang.
+
+---
+
+## 2026-11-17 — IMDb tidak layar kosong
+
+Owner: dari beranda lalu buka admin/IMDb, loading lama dan layarnya kosong.
+
+**Penyebab:** halaman menunggu seluruh katalog Playly selesai sebelum menggambar menu. Yang kelihatan selama itu cuma kerangka abu-abu "Memuat…".
+
+**Yang berubah:** sesudah login dicek, menu kiri dan judul IMDb langsung tampil, dengan kalimat "Daftar film sedang diambil." Daftar yang berhasil diambil diingat 1 menit di proses server. Bukaan berikutnya dalam semenit memakai ingatan itu. Video yang baru di-upload kelihatan saat halaman dibuka lagi sesudah semenit, bukan di bukaan yang sedang menunggu. Bukaan pertama sesudah deploy tetap menunggu Playly, tapi menunya sudah ada.
+
+**Bukti:** 14 tes hijau (`tests/panel-playly-tanpa-menunggu.test.ts`, `tests/playly-daftar-admin.test.ts`). Di mesin lokal, jawaban halaman sudah memuat judul IMDb dan kalimat itu pada detik ke-6,5, sementara jawaban selesai pada detik ke-12,5. Database sempat tidak menjawab saat percobaan kedua, jadi bukaan kedua tidak terukur di browser.
+
+**Cara cek:** buka beranda, masuk admin, klik IMDb. Menu dan judul IMDb harus ada sebelum tabel film. Belum tayang — produksi masih yang lama sampai diminta deploy.
+
+---
+
+## 2026-11-17 — distribusi ikut film IMDb
+
+Owner: banyak kategori tertulis "belum dipakai" padahal di film IMDb sudah terpakai. Klik "kategori aktif" harus memperbarui angkanya.
+
+**Penyebab:** grafik menghitung kategori 41 drama lama, bukan kategori yang dipasang di film panel IMDb.
+
+**Yang berubah:** grafik membaca kategori film. Lencana "kategori aktif" jadi tombol; diklik, angkanya dimuat ulang dari film. Kategori yang belum dipasang di film mana pun tetap di "Belum dipakai".
+
+**Cara cek:** buka dashboard admin. Batang dan teks persen harus memuat kategori yang terlihat di tabel IMDb (misalnya Mystery, History, Fantasy), bukan cuma enam kategori drama lama. Klik lencana "kategori aktif" untuk memuat ulang.
 
 ---
 
@@ -104,7 +158,7 @@ Owner: lengkapi bagian Distribusi Kategori sesuai kategori yang ada.
 
 **Yang berubah:** kategori yang punya drama tidak lagi satu batang per baris. Semuanya jadi satu batang berwarna yang terbagi menurut persentase, plus satu baris teks seperti "Action 54%". Kategori yang masih kosong tetap dirangkai rapat di bawah judul "Belum dipakai". Lencana "kategori aktif" tetap menghitung yang punya drama saja. Kalau nanti lebih banyak kategori terpakai, yang bertambah hanya teksnya, bukan baris baru ke bawah.
 
-**Cara cek:** buka dashboard admin, gulir ke Distribusi Kategori. Satu batang, lalu teks persen, lalu "Belum dipakai". Owner menulis "deploy".
+**Cara cek:** buka `https://dramaapp-production-9e88.up.railway.app/admin`, masuk sebagai admin, gulir ke Distribusi Kategori. Satu batang, lalu teks persen, lalu "Belum dipakai". Hosting sudah melaporkan sukses; mata admin di produksi belum dicek.
 
 ---
 

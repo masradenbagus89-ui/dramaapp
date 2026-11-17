@@ -90,11 +90,31 @@
 > aftermarket** dari pemilik sekarang, harganya **jauh di atas** Rp200.000 dan belum pernah dicek.
 > Nama lain yang masih bebas jauh lebih murah.
 
-**Terakhir diisi:** 2026-11-17 — panel admin Playly dirapikan (judul IMDb di atas, keterangan di ikon tanya, Perlu dicek, Cocokkan semua sekotak dengan Tebak kategori). Rincian di seksi `## 2026-11-17 — cocokkan dan tebak satu kotak` di bawah. Perbaikan login lokal masih belum di-commit. Sebelumnya: 2026-11-16 — isi otomatis link unduhan Google Drive & Mega digabung dari `feat/link-unduhan-provider-kualitas` (`58b1cf8`). Pemutar yang sudah tayang tidak ditimpa. Rincian di seksi `## 2026-11-16 — isi otomatis link unduhan` di bawah. Sebelumnya: 2026-11-15 — menu Genre dan Negara disamakan dengan Tahun (4 kolom, semua pilihan terlihat tanpa digulir). Rincian di seksi `## 2026-11-15` di bawah. Sebelumnya: ✅ **RILIS `f6b1c03` → `a09bfc8` TAYANG.** (1) Cache halaman penonton dibuang otomatis saat admin menyimpan + tombol **Segarkan cache** (kerja rekan). (2) Payload data IMDb ke browser admin **525 KB → 57 KB** (−89%) + ingatan "berkas siap" kini **bertahan melewati restart**. (3) Urutan video SE-SITUS ikut **tahun rilis**, bukan waktu upload — terbukti di produksi: 20 kartu teratas semuanya **2026**. Gerbang 5/5 (**2516 tes**), smoke test 10/10 = 200. ⏳ Manfaat (2) bagian ingatan baru terasa mulai rilis BERIKUTNYA. 🪤 **TIGA sesi menulis di folder yang sama; 22 berkas sesi audit masih menggantung — JANGAN `git add -A`.** Rinciannya di seksi `## 2026-11-14 (siang)` di bawah.
+**Terakhir diisi:** 2026-11-17 — grafik Distribusi Kategori di dashboard admin jadi satu batang persentase. Owner menulis "deploy". Rincian di seksi `## 2026-11-17 — distribusi kategori lengkap` di bawah. Sebelumnya: ✅ **RILIS `532bc38` → `225d519` TAYANG.** Panel admin Playly yang dirapikan (judul IMDb di atas, keterangan di ikon tanya, Perlu dicek, Cocokkan semua sekotak dengan Tebak kategori) sudah di Railway. Beranda produksi **200**. Rincian di seksi `## 2026-11-17 — rapikan panel Playly tayang` di bawah. Perbaikan login lokal masih belum di-commit. Sebelumnya: 2026-11-16 — isi otomatis link unduhan Google Drive & Mega digabung dari `feat/link-unduhan-provider-kualitas` (`58b1cf8`). Pemutar yang sudah tayang tidak ditimpa. Rincian di seksi `## 2026-11-16 — isi otomatis link unduhan` di bawah. Sebelumnya: 2026-11-15 — menu Genre dan Negara disamakan dengan Tahun (4 kolom, semua pilihan terlihat tanpa digulir). Rincian di seksi `## 2026-11-15` di bawah. Sebelumnya: ✅ **RILIS `f6b1c03` → `a09bfc8` TAYANG.** (1) Cache halaman penonton dibuang otomatis saat admin menyimpan + tombol **Segarkan cache** (kerja rekan). (2) Payload data IMDb ke browser admin **525 KB → 57 KB** (−89%) + ingatan "berkas siap" kini **bertahan melewati restart**. (3) Urutan video SE-SITUS ikut **tahun rilis**, bukan waktu upload — terbukti di produksi: 20 kartu teratas semuanya **2026**. Gerbang 5/5 (**2516 tes**), smoke test 10/10 = 200. ⏳ Manfaat (2) bagian ingatan baru terasa mulai rilis BERIKUTNYA. 🪤 **TIGA sesi menulis di folder yang sama; 22 berkas sesi audit masih menggantung — JANGAN `git add -A`.** Rinciannya di seksi `## 2026-11-14 (siang)` di bawah.
 
 **Rincian kontrol volume (putaran KETIGA):** owner menolak bentuk tombol `+` / `−` dan mengirim contoh gambar, jadi pengatur volume kini **garis geser tegak berbentuk kapsul** (jalur kuning + bulatan penggeser). Diukur di Chrome headless layar 393px: kapsul `x=345..381` **utuh di dalam layar**, geser jari atas→100% / tengah→50% / bawah→bisu, nol elemen diputar. Gerbang lolos 5/5 (2383 tes hijau). ✅ **Sudah TAYANG** dalam rilis `53fbc5c → a9ae869` malam itu juga.
 
 **Sebelumnya hari ini:** ✅ **`2ad015b` + `8d8c1ba` TAYANG.** Tata letak pemutar beres dalam tiga putaran permintaan owner: tombol **Eps turun ke baris paling bawah**, tombol **volume pindah ke sebelah angka durasi**, rail ikon kanan **diperkecil & dirapatkan** (36px/20px/jarak 8px), dan garis volume tegak **diganti tombol + / −** karena terukur berdiri di **x=391 pada layar 393px = di luar layar HP**. Rinciannya di seksi `## 2026-11-13` di bawah.
+
+---
+
+## 2026-11-17 — distribusi kategori lengkap
+
+Owner: lengkapi bagian Distribusi Kategori sesuai kategori yang ada.
+
+**Yang berubah:** kategori yang punya drama tidak lagi satu batang per baris. Semuanya jadi satu batang berwarna yang terbagi menurut persentase, plus satu baris teks seperti "Action 54%". Kategori yang masih kosong tetap dirangkai rapat di bawah judul "Belum dipakai". Lencana "kategori aktif" tetap menghitung yang punya drama saja. Kalau nanti lebih banyak kategori terpakai, yang bertambah hanya teksnya, bukan baris baru ke bawah.
+
+**Cara cek:** buka dashboard admin, gulir ke Distribusi Kategori. Satu batang, lalu teks persen, lalu "Belum dipakai". Owner menulis "deploy".
+
+---
+
+## 2026-11-17 — rapikan panel Playly tayang
+
+Owner menulis "tayangkan". Commit `225d519` sudah di `dramaku` dan `origin main`. Railway dan Vercel melaporkan deployment **success**. Beranda produksi `https://dramaapp-production-9e88.up.railway.app/` menjawab **200**. `dramaapp.vercel.app` mengalihkan ke Railway.
+
+**Yang tayang:** judul IMDb di atas "Video dari Playly", keterangan di ikon "?", kotak belum siap hanya di Perlu dicek, Cocokkan semua dan Tebak kategori satu kotak. Tidak ada SQL atau env baru. Penonton tidak berubah.
+
+**Belum dicek dengan mata di produksi:** halaman admin butuh login, jadi susunan tombolnya baru terbukti di localhost. Rollback: `git revert 225d519` lalu dorong kedua remote.
 
 ---
 
@@ -178,7 +198,7 @@ Owner: buka Daftar video Playly, loading lama, layar kosong. Commit `63fdaad` di
 
 **Yang berubah:** panel itu tidak lagi menunggu seluruh halaman Playly. Halaman pertama langsung digambar, halaman berikutnya disambung. Kotak abu-abu hanya muncul kalau belum ada satu film pun.
 
-**Cara cek:** buka `/admin/videos/playly`, klik menu Daftar video Playly. Beberapa film harus muncul dulu, lalu teks “Sisanya menyusul”, lalu film lain bertambah. Belum tayang di produksi.
+**Cara cek:** buka `/admin/videos/playly`, klik menu Daftar video Playly. Beberapa film harus muncul dulu, lalu teks “Sisanya menyusul”, lalu film lain bertambah. Sudah tayang bersama `63fdaad` (catatan di `antrean-deploy.md`).
 
 ---
 

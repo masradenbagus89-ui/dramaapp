@@ -2,7 +2,11 @@
 // Mengunci cara dashboard admin menghitung ringkasan, supaya pemisahan dari
 // app/admin/page.tsx tidak diam-diam mengubah angka yang tampil.
 import { describe, it, expect } from "vitest";
-import { computeAdminStats } from "../lib/admin-stats";
+import {
+  computeAdminStats,
+  lengkapiDistribusiKategori,
+  persenDariJumlah,
+} from "../lib/admin-stats";
 import type { Drama } from "../lib/types";
 
 function drama(
@@ -59,5 +63,55 @@ describe("computeAdminStats — ringkasan dashboard admin", () => {
       ["Romance", 2],
       ["Action", 1],
     ]);
+  });
+});
+
+describe("lengkapiDistribusiKategori — grafik memakai daftar resmi", () => {
+  const daftar = ["Romance", "Action", "Fantasy"];
+
+  it("kategori yang belum dipakai tetap muncul dengan angka nol, di bawah yang terisi", () => {
+    expect(
+      lengkapiDistribusiKategori(
+        [
+          ["Action", 1],
+          ["Romance", 2],
+        ],
+        daftar,
+      ),
+    ).toEqual([
+      ["Romance", 2],
+      ["Action", 1],
+      ["Fantasy", 0],
+    ]);
+  });
+
+  it("kategori di data yang tidak ada di daftar resmi tidak dibuang", () => {
+    expect(lengkapiDistribusiKategori([["Lawas", 3]], ["Romance"])).toEqual([
+      ["Lawas", 3],
+      ["Romance", 0],
+    ]);
+  });
+
+  it("tanpa drama, urutannya mengikuti daftar resmi dan semuanya nol", () => {
+    expect(lengkapiDistribusiKategori([], daftar)).toEqual([
+      ["Romance", 0],
+      ["Action", 0],
+      ["Fantasy", 0],
+    ]);
+  });
+});
+
+describe("persenDariJumlah — batang kategori tetap satu baris", () => {
+  it("persen bulat berjumlah 100 dan urutannya tidak berubah", () => {
+    expect(persenDariJumlah([22, 12, 4, 1, 1, 1])).toEqual([54, 29, 10, 3, 2, 2]);
+  });
+
+  it("dua banding satu menjadi 67 dan 33", () => {
+    expect(persenDariJumlah([2, 1])).toEqual([67, 33]);
+  });
+
+  it("total nol tidak membagi", () => {
+    expect(persenDariJumlah([0, 0])).toEqual([0, 0]);
+    expect(persenDariJumlah([])).toEqual([]);
   });
 });

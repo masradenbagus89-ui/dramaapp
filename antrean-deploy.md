@@ -23,7 +23,26 @@
 > lengkap: `HANDOFF.md` seksi `## 2026-11-09`.
 
 
-**Terakhir dicek:** 2026-11-17. Owner menulis "deploy" untuk daftar Playly. Fitur = **`63fdaad`**. Catatan rilis sebelumnya `b89747a`. 🪤 **Berkas sisa lokal masih menggantung, JANGAN `git add -A`.**
+**Terakhir dicek:** 2026-11-17. Owner menulis "tayangkan" untuk rapikan panel Playly. `HEAD` = `origin/main` = `dramaku/main` = **`225d519`**. Hosting Railway dan Vercel sama-sama melaporkan sukses untuk commit itu. 🪤 **Berkas sisa lokal masih menggantung, JANGAN `git add -A`.**
+
+### ✅ 2026-11-17 — RILIS `532bc38` → `225d519` (rapikan panel Playly)
+
+**Didorong sesudah owner menulis "push", lalu "tayangkan".** `dramaku` dulu (cermin), baru `origin main` (TOMBOL RILIS).
+
+| Yang ditayangkan | Dampak bagi admin |
+|---|---|
+| Kepala `/admin/videos/playly` | judul IMDb di atas, "Video dari Playly" di bawahnya |
+| Ikon "?" | kunci API, akun, dan penjelasan hanya muncul setelah diklik |
+| Perlu dicek | kotak "belum siap" hanya muncul di tampilan itu |
+| Satu kotak alat | Cocokkan semua dan Tebak kategori sebaris, meski Playly mengirim gangguan |
+
+**Tidak ada SQL maupun env baru.** Penonton tidak berubah. Gerbang lima langkah penuh tidak dijalankan.
+
+**Bukti tayang:** GitHub deployment `225d519` status **success** di Railway (`ravishing-adaptation / production`) dan di Vercel Production. `https://dramaapp-production-9e88.up.railway.app/` → **200**. `/admin/videos/playly` di alamat yang sama → **200** (tanpa login, jadi isi panelnya tidak dilihat di produksi). `dramaapp.vercel.app` membalas **308** ke alamat Railway.
+
+**Rollback:** `git revert 225d519 && git push dramaku main && git push origin main`
+
+---
 
 ### ✅ 2026-11-17 — RILIS `b89747a` → `63fdaad` (daftar Playly bertahap)
 

@@ -6,8 +6,12 @@
 // induk cukup menyuplai daftar drama. Tampilan & angka sama persis.
 import { useMemo } from "react";
 import Link from "next/link";
-import type { Drama } from "@/lib/types";
-import { computeAdminStats } from "@/lib/admin-stats";
+import { KATEGORI_ISI, type Drama } from "@/lib/types";
+import {
+  computeAdminStats,
+  lengkapiDistribusiKategori,
+  persenDariJumlah,
+} from "@/lib/admin-stats";
 import { formatViews } from "@/lib/format";
 import { warnaKategori } from "@/app/admin/constants";
 import StatCard from "@/app/components/admin/StatCard";
@@ -19,7 +23,26 @@ import { Badge } from "@/components/ui/badge";
 
 export default function AdminDashboard({ dramas }: { dramas: Drama[] }) {
   const stats = useMemo(() => computeAdminStats(dramas), [dramas]);
-  const maxCategoryCount = stats.byCategory[0]?.[1] ?? 1;
+  // Daftar resmi lengkap, bukan hanya kategori yang kebetulan punya drama.
+  // Yang kosong tetap ditulis (angka 0) supaya admin melihat seluruh katalog.
+  const distribusi = useMemo(
+    () => lengkapiDistribusiKategori(stats.byCategory, KATEGORI_ISI),
+    [stats.byCategory],
+  );
+  const { kosong, persen } = useMemo(() => {
+    const terisi = distribusi.filter(([, jumlah]) => jumlah > 0);
+    const bagian = persenDariJumlah(terisi.map(([, jumlah]) => jumlah));
+    return {
+      kosong: distribusi.filter(([, jumlah]) => jumlah === 0),
+      // Satu batang untuk semua kategori terpakai. Tinggi kartu tidak bertambah
+      // kalau kategori yang terisi makin banyak — yang bertambah hanya teks persen.
+      persen: terisi.map(([kategori, jumlah], i) => ({
+        kategori,
+        jumlah,
+        persen: bagian[i] ?? 0,
+      })),
+    };
+  }, [distribusi]);
 
   return (
     <>
@@ -98,21 +121,40 @@ export default function AdminDashboard({ dramas }: { dramas: Drama[] }) {
           </Badge>
         </CardHeader>
         <CardContent className="space-y-2.5">
-          {stats.byCategory.length === 0 ? (
+          {dramas.length === 0 ? (
             <p className="text-sm text-zinc-500">Belum ada drama.</p>
           ) : (
-            stats.byCategory.map(([cat, count]) => (
-              <div key={cat} className="flex items-center gap-3">
-                <span className="w-28 shrink-0 text-xs text-zinc-300">{cat}</span>
-                <div className="flex-1 h-2 overflow-hidden rounded-full bg-zinc-800">
+            <>
+              <div
+                className="flex h-3 overflow-hidden rounded-full bg-zinc-800"
+                role="img"
+                aria-label={persen
+                  .map((b) => `${b.kategori} ${b.persen}%`)
+                  .join(", ")}
+              >
+                {persen.map((b) => (
                   <div
-                    className={`h-full ${warnaKategori(cat)}`}
-                    style={{ width: `${(count / maxCategoryCount) * 100}%` }}
+                    key={b.kategori}
+                    className={warnaKategori(b.kategori)}
+                    style={{ width: `${b.persen}%` }}
+                    title={`${b.kategori} ${b.persen}% (${b.jumlah})`}
                   />
-                </div>
-                <span className="w-8 shrink-0 text-right text-xs text-zinc-400">{count}</span>
+                ))}
               </div>
-            ))
+              <p className="text-xs leading-5 text-zinc-300">
+                {persen
+                  .map((b) => `${b.kategori} ${b.persen}%`)
+                  .join(" · ")}
+              </p>
+              {kosong.length > 0 ? (
+                <div className="border-t border-zinc-800 pt-3">
+                  <p className="text-xs text-zinc-500">Belum dipakai</p>
+                  <p className="mt-1.5 text-xs leading-5 text-zinc-400">
+                    {kosong.map(([cat]) => cat).join(" · ")}
+                  </p>
+                </div>
+              ) : null}
+            </>
           )}
         </CardContent>
       </Card>

@@ -444,6 +444,21 @@ export const DURATION_KEYS = [
 export const THUMB_KEYS = [
   "thumbnail", "thumbnailUrl", "thumbnail_url", "thumb", "poster", "cover", "image",
 ];
+/**
+ * Kapan videonya diunggah di Playly.
+ *
+ * "createdAt" DIDAHULUKAN karena itulah yang benar-benar dikirim kedua endpoint
+ * (dibuktikan 2026-11-21 dengan menarik 668 video mitra: 668 dari 668 punya
+ * field ini, nol yang kosong). Bentuknya BEDA antar endpoint dan keduanya sah:
+ *   /api/videos  -> angka epoch milidetik (1793955382874)
+ *   /api/catalog -> teks ISO ("2026-11-21T05:42:19.43+00:00")
+ * Nama lain di daftar ini belum pernah terlihat; ada sebagai jaring kalau
+ * Playly mengganti ejaan, pola yang sama dengan daftar-daftar di atas.
+ */
+export const UPLOADED_KEYS = [
+  "createdAt", "created_at", "uploadedAt", "uploaded_at",
+  "publishedAt", "published_at", "tanggal", "waktuUpload",
+];
 
 /** Satu video Playly dalam bentuk standar yang dipakai UI kita. */
 export type PlaylyVideo = {
@@ -458,6 +473,21 @@ export type PlaylyVideo = {
   /** Alamat player siap tempel — sudah lolos https + daftar domain. */
   embedUrl: string;
   thumbnail: string | null;
+  /**
+   * Kapan videonya diunggah di Playly, sebagai ISO UTC. null = tidak diketahui.
+   *
+   * SENGAJA OPSIONAL (`?`), bukan wajib, dan itu bukan kemalasan tipe: objek
+   * PlaylyVideo lahir dari TIGA tempat yang tidak semuanya punya tanggal —
+   * (1) parser di bawah (punya, sejak 2026-11-21), (2) baris webhook lewat
+   * lib/playly-gabungan.ts, (3) SALINAN CADANGAN di database
+   * (lib/store.ts:1112) yang isinya ditulis SEBELUM field ini ada. Menandainya
+   * wajib memaksa ketiganya menyetor nilai, dan satu-satunya nilai yang bisa
+   * dikarang di sana adalah tanggal palsu — tepat jenis kerusakan senyap yang
+   * tidak akan dilaporkan siapa pun. Pembacanya (lib/upload-harian.ts) sudah
+   * menghitung "tanggal tidak diketahui" sebagai kelompok tersendiri yang
+   * ditampilkan apa adanya.
+   */
+  uploadedAt?: string | null;
 };
 
 export type RejectedVideo = { reason: string; value: string };
@@ -476,6 +506,46 @@ export function pickString(rec: Record<string, unknown>, keys: string[]): string
     if (typeof v === "number" && Number.isFinite(v)) return String(v);
   }
   return null;
+}
+
+/**
+ * Batas bawah epoch yang masih masuk akal untuk video Playly: 1 Jan 2020 UTC.
+ *
+ * Gunanya memisahkan DETIK dari MILIDETIK tanpa menebak: angka epoch dalam
+ * detik untuk tahun 2026 berukuran ~1,79 miliar — jauh DI BAWAH batas ini —
+ * sedangkan dalam milidetik ~1,79 triliun, jauh di atasnya. Tanpa pemisahan
+ * itu, satu nilai dalam detik akan dibaca sebagai 20 Januari 1970 dan video
+ * yang baru diunggah masuk kelompok "lebih dari 7 hari lalu" — salah tanpa
+ * satu pun error.
+ */
+const EPOCH_MS_MINIMAL = Date.UTC(2020, 0, 1);
+
+/**
+ * Waktu unggah bisa datang sebagai angka epoch milidetik (1793955382874,
+ * /api/videos) ATAU teks ISO ("2026-11-21T05:42:19.43+00:00", /api/catalog).
+ * Keduanya diubah jadi SATU bentuk: ISO UTC. Tak terbaca -> null.
+ *
+ * Satu bentuk keluaran dipaksa di sini, bukan di pemakainya, karena
+ * pembandingnya nanti cuma teks (lib/upload-harian.ts). Kalau dua bentuk
+ * dibiarkan lewat, perbandingan "video ini tanggal berapa" akan benar untuk
+ * satu endpoint dan diam-diam salah untuk yang lain.
+ */
+export function parseWaktuUpload(value: unknown): string | null {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    // Angka yang terlalu kecil = kemungkinan besar satuannya DETIK.
+    const ms = value < EPOCH_MS_MINIMAL ? value * 1000 : value;
+    const t = new Date(ms);
+    return Number.isNaN(t.getTime()) ? null : t.toISOString();
+  }
+  if (typeof value !== "string") return null;
+  const s = value.trim();
+  if (!s) return null;
+  // Teks yang isinya angka saja (mis. "1793955382874") diperlakukan sebagai
+  // epoch, bukan diserahkan ke Date — `new Date("1793955382874")` memulangkan
+  // Invalid Date, jadi tanggalnya akan hilang tanpa alasan yang kelihatan.
+  if (/^\d+$/.test(s)) return parseWaktuUpload(Number(s));
+  const t = new Date(s);
+  return Number.isNaN(t.getTime()) ? null : t.toISOString();
 }
 
 /**
@@ -729,6 +799,12 @@ export function normalizePlaylyVideos(
       creator: pickString(rec, CREATOR_KEYS) ?? "",
       embedUrl: url.toString(),
       thumbnail,
+      // Dibaca dari field MENTAH, bukan lewat pickString: pickString mengubah
+      // angka jadi teks, dan epoch milidetik yang sudah jadi teks tidak lagi
+      // bisa dibedakan dari tahun. parseWaktuUpload yang memutuskan satuannya.
+      uploadedAt: parseWaktuUpload(
+        UPLOADED_KEYS.map((k) => rec[k]).find((v) => v !== undefined && v !== null),
+      ),
     });
   });
 

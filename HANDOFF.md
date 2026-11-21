@@ -90,11 +90,72 @@
 > aftermarket** dari pemilik sekarang, harganya **jauh di atas** Rp200.000 dan belum pernah dicek.
 > Nama lain yang masih bebas jauh lebih murah.
 
-**Terakhir diisi:** 2026-11-17 — build `f47ccbb` gagal karena Supabase error saat prerender `/discover`. Perbaikannya: katalog publik tidak menghubungi database selama `next build` (berkas lokal dulu, katalog hidup menyusul paling lambat 1 menit sesudah tayang). `npx next build` lokal **exit 0**, 23/23 halaman. Perbaikan ini ikut commit yang didorong supaya image `f47ccbb` yang gagal bisa tergantikan. Rincian di seksi `## 2026-11-17 — tayang gagal f47ccbb`. Sebelumnya: pola "judul dulu, isi menyusul" dipasang di seluruh menu admin. Menu dan judul IMDb tampil dulu; daftar yang sudah diambil tidak diunduh ulang selama 1 menit. Belum di-commit, belum tayang. Rincian di seksi `## 2026-11-17 — IMDb tidak layar kosong`. Sebelumnya: grafik Distribusi Kategori sekarang menghitung kategori film di panel IMDb, bukan 41 drama lama. Lencana "kategori aktif" bisa diklik untuk memuat ulang. Belum di-commit. Rincian di seksi `## 2026-11-17 — distribusi ikut film IMDb`. Sebelumnya: ✅ grafik Distribusi Kategori (`2b0ea47`) diminta deploy. Satu batang persentase. Rincian di seksi `## 2026-11-17 — distribusi kategori lengkap`. Rincian di seksi `## 2026-11-17 — distribusi kategori lengkap` di bawah. Sebelumnya: ✅ **RILIS `532bc38` → `225d519` TAYANG.** Panel admin Playly yang dirapikan (judul IMDb di atas, keterangan di ikon tanya, Perlu dicek, Cocokkan semua sekotak dengan Tebak kategori) sudah di Railway. Beranda produksi **200**. Rincian di seksi `## 2026-11-17 — rapikan panel Playly tayang` di bawah. Perbaikan login lokal masih belum di-commit. Sebelumnya: 2026-11-16 — isi otomatis link unduhan Google Drive & Mega digabung dari `feat/link-unduhan-provider-kualitas` (`58b1cf8`). Pemutar yang sudah tayang tidak ditimpa. Rincian di seksi `## 2026-11-16 — isi otomatis link unduhan` di bawah. Sebelumnya: 2026-11-15 — menu Genre dan Negara disamakan dengan Tahun (4 kolom, semua pilihan terlihat tanpa digulir). Rincian di seksi `## 2026-11-15` di bawah. Sebelumnya: ✅ **RILIS `f6b1c03` → `a09bfc8` TAYANG.** (1) Cache halaman penonton dibuang otomatis saat admin menyimpan + tombol **Segarkan cache** (kerja rekan). (2) Payload data IMDb ke browser admin **525 KB → 57 KB** (−89%) + ingatan "berkas siap" kini **bertahan melewati restart**. (3) Urutan video SE-SITUS ikut **tahun rilis**, bukan waktu upload — terbukti di produksi: 20 kartu teratas semuanya **2026**. Gerbang 5/5 (**2516 tes**), smoke test 10/10 = 200. ⏳ Manfaat (2) bagian ingatan baru terasa mulai rilis BERIKUTNYA. 🪤 **TIGA sesi menulis di folder yang sama; 22 berkas sesi audit masih menggantung — JANGAN `git add -A`.** Rinciannya di seksi `## 2026-11-14 (siang)` di bawah.
+**Terakhir diisi:** 2026-11-17 — kotak tempel tautan IMDb ditambahkan di panel pencarian per video. Belum di-commit, belum tayang. Di layar yang sedang terbuka, "A Princesa da Yakuza" ketemu kalau nama di kotak diganti jadi "Yakuza Princess" (tt10715446). Rincian di seksi `## 2026-11-17 — tempel tautan IMDb`. Sebelumnya: ✅ `ed8be85` TAYANG. Next.js 16.4.3 → 16.4.6 (tambal advisory). Railway dan Vercel success. Beranda dan `/discover` **200**. Catatan ini masih lokal. Sebelumnya: ✅ `16bd03f` TAYANG. Railway dan Vercel status success. `f47ccbb` gagal karena Supabase error saat prerender `/discover`; perbaikannya katalog publik tidak menghubungi database selama `next build`. Beranda dan `/discover` produksi **200**. Rincian di seksi `## 2026-11-17 — tayang gagal f47ccbb`. Sebelumnya: pola "judul dulu, isi menyusul" dipasang di seluruh menu admin. Menu dan judul IMDb tampil dulu; daftar yang sudah diambil tidak diunduh ulang selama 1 menit. Belum di-commit, belum tayang. Rincian di seksi `## 2026-11-17 — IMDb tidak layar kosong`. Sebelumnya: grafik Distribusi Kategori sekarang menghitung kategori film di panel IMDb, bukan 41 drama lama. Lencana "kategori aktif" bisa diklik untuk memuat ulang. Belum di-commit. Rincian di seksi `## 2026-11-17 — distribusi ikut film IMDb`. Sebelumnya: ✅ grafik Distribusi Kategori (`2b0ea47`) diminta deploy. Satu batang persentase. Rincian di seksi `## 2026-11-17 — distribusi kategori lengkap`. Rincian di seksi `## 2026-11-17 — distribusi kategori lengkap` di bawah. Sebelumnya: ✅ **RILIS `532bc38` → `225d519` TAYANG.** Panel admin Playly yang dirapikan (judul IMDb di atas, keterangan di ikon tanya, Perlu dicek, Cocokkan semua sekotak dengan Tebak kategori) sudah di Railway. Beranda produksi **200**. Rincian di seksi `## 2026-11-17 — rapikan panel Playly tayang` di bawah. Perbaikan login lokal masih belum di-commit. Sebelumnya: 2026-11-16 — isi otomatis link unduhan Google Drive & Mega digabung dari `feat/link-unduhan-provider-kualitas` (`58b1cf8`). Pemutar yang sudah tayang tidak ditimpa. Rincian di seksi `## 2026-11-16 — isi otomatis link unduhan` di bawah. Sebelumnya: 2026-11-15 — menu Genre dan Negara disamakan dengan Tahun (4 kolom, semua pilihan terlihat tanpa digulir). Rincian di seksi `## 2026-11-15` di bawah. Sebelumnya: ✅ **RILIS `f6b1c03` → `a09bfc8` TAYANG.** (1) Cache halaman penonton dibuang otomatis saat admin menyimpan + tombol **Segarkan cache** (kerja rekan). (2) Payload data IMDb ke browser admin **525 KB → 57 KB** (−89%) + ingatan "berkas siap" kini **bertahan melewati restart**. (3) Urutan video SE-SITUS ikut **tahun rilis**, bukan waktu upload — terbukti di produksi: 20 kartu teratas semuanya **2026**. Gerbang 5/5 (**2516 tes**), smoke test 10/10 = 200. ⏳ Manfaat (2) bagian ingatan baru terasa mulai rilis BERIKUTNYA. 🪤 **TIGA sesi menulis di folder yang sama; 22 berkas sesi audit masih menggantung — JANGAN `git add -A`.** Rinciannya di seksi `## 2026-11-14 (siang)` di bawah.
 
 **Rincian kontrol volume (putaran KETIGA):** owner menolak bentuk tombol `+` / `−` dan mengirim contoh gambar, jadi pengatur volume kini **garis geser tegak berbentuk kapsul** (jalur kuning + bulatan penggeser). Diukur di Chrome headless layar 393px: kapsul `x=345..381` **utuh di dalam layar**, geser jari atas→100% / tengah→50% / bawah→bisu, nol elemen diputar. Gerbang lolos 5/5 (2383 tes hijau). ✅ **Sudah TAYANG** dalam rilis `53fbc5c → a9ae869` malam itu juga.
 
 **Sebelumnya hari ini:** ✅ **`2ad015b` + `8d8c1ba` TAYANG.** Tata letak pemutar beres dalam tiga putaran permintaan owner: tombol **Eps turun ke baris paling bawah**, tombol **volume pindah ke sebelah angka durasi**, rail ikon kanan **diperkecil & dirapatkan** (36px/20px/jarak 8px), dan garis volume tegak **diganti tombol + / −** karena terukur berdiri di **x=391 pada layar 393px = di luar layar HP**. Rinciannya di seksi `## 2026-11-13` di bawah.
+
+---
+
+## 2026-11-21 — tampilan HP halaman depan ala contoh owner
+
+Owner: *"aku mau di dramaku tampilan HP seperti image 2 hanya untuk tampilan HP karena tampilan desktop sudah ok"* (kirim 2 tangkapan layar: yang sekarang vs yang diinginkan).
+
+**Temuan yang mengecilkan pekerjaan:** bentuk "judul + Lihat Semua + poster digeser ke samping" di contoh itu **sudah ada** di kode (`SeksiKatalog` → `BarisGeser`). Yang membuatnya terlihat beda cuma TIGA hal: badan halaman dipaksa PUTIH di semua ukuran layar, ada deret tab + tombol FILTER di atasnya, dan menu bawah cuma 2 tombol.
+
+**Keputusan owner (popup 4 pertanyaan):** banner besar bergambar **TIDAK USAH** · bagian putih **diganti** baris geser gelap · banner promo tengah **jangan dipasang** (menguatkan keputusan 2026-09-08 nol iklan di halaman depan) · menu bawah **Home · Series · Movies · Filter · Profile** (owner menolak tombol "Share" di contoh — di HP, Profile satu-satunya pintu ke akun & koin).
+
+**Yang dibangun** (semuanya dibatasi `md:`/`max-md:`, layar komputer nol perubahan): cabang kedua `@custom-variant terang` di `app/globals.css` + konstanta `BADAN_TERANG_MD` (gelap di HP, putih dari 768px) · prop `tabHanyaDesktop` menyembunyikan deret tab + FILTER di HP **hanya di halaman depan** · tombol "Semua" jadi tautan "Lihat Semua ›" di HP · `BottomNav` 2 → 5 tombol · kepala situs gelap + strip kuning disembunyikan di HP pada `/` & `/beranda` saja. Rinciannya: `docs/lintasai/rencana/2026-11-21-tampilan-hp-beranda-ala-image2.md`.
+
+🪤 **Kenapa BUKAN dua susunan `md:hidden` + `hidden md:block`:** itu mengirim tiap kartu poster DUA KALI ke pengunjung halaman paling ramai, membuat `id` seksi kembar (lompatan `#seksi-…` mendarat salah), dan melipatgandakan hitungan kartu di tes. Satu DOM yang temanya berganti mengikuti lebar layar menghindari ketiganya.
+
+**Bukti SEBAGIAN — gerbang BELUM lengkap.** Drive `C:` penuh (`ENOSPC`) dan shell mati-hidup sepanjang sesi; ruangnya sempat lega ±1 menit, cukup untuk satu perintah:
+
+- ✅ `npx vitest run` atas **6 berkas tes yang menyentuh perubahan ini** (`badan-terang`, `kepala-situs`, `filter-katalog`, `strip-katalog`, `tombol-cari`, `jenis-video`) → **exit 0, 182 tes lulus**. Termasuk penjaga yang diperbarui: `kepala-situs` (2 → 5 tab) dan `badan-terang` (+2 tes baru untuk saklar `tema-terang-md`).
+- ❌ `npm test` penuh, `npx tsc --noEmit`, dan `npm run build` **BELUM** — C: penuh lagi tepat saat dijalankan.
+
+🪤 **JANGAN jalankan `npm run gerbang` begitu saja di sesi berikutnya:** langkah pertamanya menghapus `.next`, dan ada `next dev -p 3010` milik sesi lain (PID 43264 saat diperiksa) yang sedang memakainya. Hentikan dev server itu dulu, atau jalankan build di worktree terpisah seperti sesi 2026-11-21 sebelumnya.
+
+**Langkah berikutnya:** kosongkan ruang C: → `npm run gerbang` (sesudah dev server mati) → **lihat dengan mata di HP sungguhan**; gerbang tidak bisa menilai warna.
+
+---
+
+## 2026-11-21 — filter "siapa upload hari ini" di panel IMDb
+
+Owner: *"di admin/IMDB ada list film film yang ada keterangan siapa yang upload dari playly bisa kamu buat filternya agar ketahuan hari ini siapa saja yang upload dan berapa banyak film"*.
+
+**Temuan yang mengubah segalanya:** Playly **sudah mengirim** tanggal upload (`createdAt`) di **668 dari 668** video mitra — nol kosong. Yang tidak ada selama ini adalah *pembacaannya*: tipe `PlaylyVideo` tak punya field tanggal, jadi parser membuangnya diam-diam. Bentuknya beda antar-endpoint: `/api/videos` mengirim epoch milidetik (`1793955382874`), `/api/catalog` mengirim teks ISO.
+
+**Keputusan owner (popup):** rentang **Hari ini · Kemarin · 7 hari · Semua**; video yang upload-nya putus **tetap dihitung** tapi ditandai.
+
+**Yang dibangun:** `lib/upload-harian.ts` (aturan hitung, murni) + `app/components/admin/UploadHarianPlayly.tsx` (panel) + field `uploadedAt` di `lib/playly.ts` + saringan terpasang di `PlaylyVisibilityManager`. Tanggal upload juga ikut tampil di baris tiap video. Rinciannya: `docs/lintasai/rencana/2026-11-21-filter-upload-harian-playly.md`.
+
+**Angka nyata saat dikerjakan:** ayy 281 · tbchairulm 254 · coklat 132 · cantika 1. **Hari ini (21 Nov) nol upload**, terakhir 18 Nov (tbchairulm 3, coklat 2) — karena itu panel menyebut tanggal terakhirnya saat rentangnya kosong, supaya "hari libur" tidak terbaca seperti "fitur rusak".
+
+**Bentuk akhir (sesudah 4 putaran revisi owner di hari yang sama):** empat tombol IMDb (Semua / Sudah ada IMDb / Belum ada IMDb / Perlu dicek) diringkas jadi **satu dropdown**, saringan upload jadi **dua dropdown pendek**, kotak cari sejajar. Angka yang menentukan: baris itu butuh ±990px, panelnya ±750px — penghematan 350px dari tombol IMDb itulah yang membuat semuanya muat. Riwayat lengkap tiap putaran + alasan penolakannya ada di berkas rencana; **jangan diputar balik**.
+
+**Bukti:** `tests/upload-harian.test.ts` **60 lulus**; `npm test` penuh **2730 lulus / 12 gagal yang SUDAH merah di `ed8be85`** (dibuktikan dengan menjalankan tes yang sama di worktree HEAD) — nol regresi; uji-balik 2 mutasi → 3 dan 2 tes merah; preview nyata di localhost:3100 → HTTP 200.
+
+🔴 **`npm run build` GAGAL — dan bukan karena fitur ini.** `✓ Compiled successfully`, lalu `Failed to type check` pada **dua berkas tes yang belum dikenal git**: `tests/admin-csrf-gate.test.ts` (memanggil `guardAsal` yang tak ada di `lib/request-guard`) dan `tests/dashboard-host-bawaan.test.ts` (`pilihDaftarHost` + `DEFAULT_DASHBOARD_VIDEO_HOSTS` tak ada di `lib/dashboard-videos`). Dibuktikan dengan `tsc -p` yang mengecualikan HANYA dua berkas itu → **exit 0**. **Gerbang pra-rilis akan gagal sampai keduanya diselesaikan atau dihapus — ini memblokir rilis APA PUN, bukan cuma fitur ini.**
+
+⚠️ **Versi Next terpasang ≠ yang di package.json.** `package.json` minta **16.4.6** (commit `ed8be85` soal keamanan), tapi `node_modules` lokal masih **16.4.3** — `npm install` belum pernah dijalankan sesudah commit itu. Produksi kemungkinan aman (Railway menjalankan `npm ci` saat deploy), tapi **semua build & tes lokal sejak itu berjalan di atas versi berlubang**. Perbaikannya satu perintah: `npm install`.
+
+⏳ **BELUM DI-PUSH.** Perlu `npm run gerbang` + izin rilis owner.
+
+---
+
+## 2026-11-17 — tempel tautan IMDb
+
+Owner: pencarian otomatis tidak ketemu, di browser ketemu, tidak ada tempat menempel tautan IMDb.
+
+**Akarnya:** OMDb mencari judul resmi. "A Princesa da Yakuza" + tahun 2021 membalas "Movie not found". "Yakuza Princess" + 2021 membalas `tt10715446` — persis halaman yang dibuka owner. Diukur dengan kunci OMDb lokal, kunci tidak dicetak.
+
+**Yang ditambah:** di popup "Cari di IMDb" ada kotak "Tempel tautan atau kodenya". Menerima `tt10715446` atau tautan `imdb.com/title/tt…`. Yang dikirim ke server tetap kode `tt…` lewat POST yang sudah ada; tautan tidak diunduh. Ditandai `manual`, jadi "Cocokkan semua" tidak menimpa pilihan ini.
+
+**Bukti:** `tests/playly-imdb.test.ts` + `tests/imdb-ringkas.test.ts` + `tests/paginasi.test.ts` = 70 lulus. Kotak ini belum diklik di panel admin yang sedang login.
+
+**Cara di layar SEKARANG (sebelum rilis):** ubah nama di popup jadi judul Inggris di halaman IMDb, tahun biarkan, klik Cari, klik hasilnya.
 
 ---
 

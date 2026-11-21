@@ -20,6 +20,7 @@ import {
   Eye,
   EyeOff,
   ListChecks,
+  ListFilter,
   Loader2,
   Star,
 } from "lucide-react";
@@ -53,7 +54,22 @@ import {
   saringVideoImdb,
   type SaringImdb,
 } from "@/lib/saring-video-admin";
+import {
+  FRASA_RENTANG,
+  RENTANG_BAWAAN,
+  formatTanggalWIB,
+  hariIniWIB,
+  saringPengunggah,
+  saringRentangUpload,
+  tanggalWIB,
+  type RentangUpload,
+} from "@/lib/upload-harian";
 import PlaylyImdbPicker from "./PlaylyImdbPicker";
+import DropdownSaringan from "./DropdownSaringan";
+import {
+  KontrolUploadPlayly,
+  RingkasUploadPlayly,
+} from "./UploadHarianPlayly";
 import PlaylyCocokkanSemua from "./PlaylyCocokkanSemua";
 import KategoriIsiOtomatis from "./KategoriIsiOtomatis";
 import RingkasanIsianVideo from "./RingkasanIsianVideo";
@@ -72,6 +88,27 @@ type Pesan = { jenis: "ok" | "gagal"; teks: string };
 
 /** Nilai dropdown yang berarti "belum dipilihkan kategori". */
 const KOSONG = "";
+
+/**
+ * Nilai saringan IMDb yang BUKAN milik SaringImdb: "tampilkan daftar video
+ * yang berkasnya belum sampai di Playly".
+ *
+ * Ia hidup di dropdown yang sama karena bagi admin keempatnya satu pertanyaan
+ * ("daftar di bawah ini isinya apa"), padahal di dalam kode ia disimpan di
+ * state terpisah (`lihatPeringatan`) — daftar peringatan memang bukan hasil
+ * penyaringan IMDb, melainkan kumpulan video yang dikeluarkan dari daftar
+ * biasa. Nilainya sengaja tidak mungkin bentrok dengan nilai SaringImdb.
+ */
+const PILIH_PERLU_DICEK = "perlu-dicek";
+
+/**
+ * Seberapa sering tanggal "hari ini" diperiksa ulang selagi panel terbuka.
+ *
+ * Satu menit: cukup rapat supaya pergantian hari tidak pernah terlewat lebih
+ * dari semenit, dan cukup jarang untuk tidak berarti apa-apa bagi browser —
+ * yang dikerjakan cuma membandingkan dua teks tanggal.
+ */
+const SELANG_CEK_TANGGAL_MS = 60_000;
 
 /**
  * Tata kolom baris kontrol tiap video (owner 2026-11-06: "kamu rapikan kalau
@@ -397,6 +434,27 @@ export default function PlaylyVisibilityManager({
   const [pesan, setPesan] = useState<Pesan | null>(null);
   /** Saringan "sudah / belum ada IMDb" (owner 2026-11-05: "biar mudah"). */
   const [saring, setSaring] = useState<SaringImdb>(SARING_BAWAAN);
+  // Saringan "upload hari ini / kemarin / 7 hari" + nama pengunggahnya
+  // (owner 2026-11-21). Bawaannya "semua": panel yang baru dibuka harus
+  // terlihat persis seperti sebelum fitur ini ada.
+  const [rentang, setRentang] = useState<RentangUpload>(RENTANG_BAWAAN);
+  const [pengunggah, setPengunggah] = useState<string | null>(null);
+  // Tanggal hari ini menurut WIB — bukan menurut zona mesin.
+  //
+  // 🪤 Dihitung lewat state + efek, bukan langsung saat render, karena
+  // komponen ini juga dirender di server (Railway = UTC). Nilai awalnya sudah
+  // sama di kedua sisi (lib/upload-harian.ts memaku zonanya ke Asia/Jakarta),
+  // jadi tidak ada hydration mismatch; efek di bawah yang mengurus kasus
+  // sisanya: halaman admin yang dibiarkan terbuka melewati tengah malam.
+  // Tanpa efek itu, tombol "Upload hari ini" diam-diam masih menghitung hari
+  // KEMARIN sampai halamannya dimuat ulang — angka salah tanpa satu pun tanda.
+  const [hariIni, setHariIni] = useState<string>(() => hariIniWIB());
+  useEffect(() => {
+    const segarkan = () => setHariIni(hariIniWIB());
+    segarkan();
+    const timer = setInterval(segarkan, SELANG_CEK_TANGGAL_MS);
+    return () => clearInterval(timer);
+  }, []);
   // Daftar film bertanda segitiga. Sengaja BUKAN kotak kedua di atas tabel
   // (owner 2026-11-15: "jangan menumpuk seperti itu") — 59 baris penuh
   // mendorong daftar biasa keluar layar. Tombol ini menukar ISI tabel yang
@@ -752,8 +810,25 @@ export default function PlaylyVisibilityManager({
   // baris yang terlihat. Tombol "Perlu dicek" menampilkan kelompok itu di
   // tabel yang sama — bukan kotak kedua yang menumpuk di atas.
   const belumSiap = new Set(belumSiapAktif);
-  const videoBiasa = videos.filter((v) => !belumSiap.has(v.id));
-  const videoPeringatan = videos.filter((v) => belumSiap.has(v.id));
+  // Saringan UPLOAD jadi lapis PALING LUAR (owner 2026-11-21), di atas
+  // pemisahan "belum siap" maupun saringan IMDb. Urutan ini disengaja: begitu
+  // owner memilih "Upload hari ini", SEMUA angka di bawahnya harus ikut
+  // menjawab pertanyaan yang sama ("dari upload hari ini, berapa yang sudah
+  // ada IMDb"). Kalau dipasang di lapis dalam, tombol IMDb tetap memajang
+  // angka seluruh katalog sementara tabelnya cuma berisi hari ini — dua angka
+  // yang sama-sama benar di layar yang sama, dan tak ada yang memberi tahu
+  // mana yang sedang dibaca.
+  //
+  // Rentang bawaan "semua" + pengunggah null = tidak menyaring apa pun, jadi
+  // panel yang baru dibuka berperilaku persis seperti sebelum fitur ini ada.
+  const videoRentang = saringRentangUpload(videos, rentang, hariIni);
+  // Penyaringan nama dipinjam dari lib, BUKAN diketik ulang di sini: ia harus
+  // persis sama dengan cara angka di dropdown dihitung. Beda sedikit saja —
+  // trim, huruf besar/kecil — dan dropdown bertuliskan "coklat (6)" akan
+  // membuka daftar berisi 0 baris, tanpa satu pun error.
+  const videoTerpilih = saringPengunggah(videoRentang, pengunggah);
+  const videoBiasa = videoTerpilih.filter((v) => !belumSiap.has(v.id));
+  const videoPeringatan = videoTerpilih.filter((v) => belumSiap.has(v.id));
   const jumlahSaring = hitungImdb(videoBiasa, imdb);
   // DUA lapis saringan, dan urutannya penting: tombol saringan dulu (Semua /
   // Sudah ada IMDb / Belum), baru ketikan. Dibalik, angka di tombol saringan
@@ -790,6 +865,11 @@ export default function PlaylyVisibilityManager({
             // dari daftar, bukan rantai ternary yang saling menutupi.
             const catatan = [
               v.creator || "tanpa nama kreator",
+              // Tanggal upload ikut di baris nama (owner 2026-11-21): tanpa
+              // ini, panel di atas bilang "tbchairulm 14 film hari ini" tapi
+              // barisnya sendiri tak bisa dipakai memastikan — owner harus
+              // percaya angkanya begitu saja.
+              formatTanggalWIB(tanggalWIB(v.uploadedAt)),
               v.durationLabel !== "-" ? v.durationLabel : null,
               belumAdaFile ? "file videonya belum ada di Playly — upload ulang di sana" : null,
               tersembunyi ? "disembunyikan" : null,
@@ -1359,56 +1439,55 @@ export default function PlaylyVisibilityManager({
           berkurang tanpa memuat ulang halaman. */}
       {videos.length > 0 && (
         <div className="mt-4 flex flex-wrap items-center gap-2">
-          {(Object.keys(LABEL_SARING) as SaringImdb[]).map((pilihan) => {
-            const dipakai = saring === pilihan;
-            return (
-              <button
-                key={pilihan}
-                type="button"
-                onClick={() => {
-                  setSaring(pilihan);
-                  setLihatPeringatan(false);
-                  // 🪤 Tanpa baris ini: sedang di halaman 3 "Semua" (359
-                  // video) lalu klik "Belum ada IMDb" (61 video, cuma 1
-                  // halaman) = halaman 3 tidak ada, daftarnya kosong. Penjepit
-                  // di lib/paginasi.ts menahan kerusakannya, tapi melompat ke
-                  // halaman terakhir tanpa diminta tetap membingungkan.
-                  setHalaman(HALAMAN_PERTAMA);
-                }}
-                aria-pressed={dipakai && !lihatPeringatan}
-                className={cn(
-                  "rounded-full border px-3 py-1.5 text-xs font-semibold transition",
-                  dipakai
-                    ? "border-amber-500 bg-amber-500/15 text-amber-700"
-                    : "border-zinc-700 text-zinc-400 hover:border-amber-400 hover:text-amber-700",
-                )}
-              >
-                {LABEL_SARING[pilihan]}{" "}
-                <span className="font-bold">{jumlahSaring[pilihan]}</span>
-              </button>
-            );
-          })}
+          {/* 🪤 EMPAT TOMBOL (Semua · Sudah ada IMDb · Belum ada IMDb · Perlu
+              dicek) DIRINGKAS JADI SATU DROPDOWN — keputusan owner 2026-11-21
+              sesudah melihat barisnya terpotong di layar sendiri.
 
-          {videoPeringatan.length > 0 && (
-            <button
-              type="button"
-              onClick={() => {
-                setLihatPeringatan((nyala) => !nyala);
-                setHalaman(HALAMAN_PERTAMA);
-              }}
-              aria-pressed={lihatPeringatan}
-              className={cn(
-                "inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-semibold transition",
-                lihatPeringatan
-                  ? "border-rose-700 bg-rose-700/10 text-rose-700"
-                  : "border-rose-700/40 text-rose-700 hover:bg-rose-700/10",
-              )}
-            >
-              <AlertTriangle className="size-3.5 shrink-0" aria-hidden="true" />
-              Perlu dicek{" "}
-              <span className="font-bold">{videoPeringatan.length}</span>
-            </button>
-          )}
+              Sebabnya diukur, bukan ditebak: isi baris ini butuh ±990px
+              sedangkan panelnya ±750px, jadi kotak cari terdorong menimpa
+              dropdown di sebelahnya. Empat tombol memakan ±470px; satu
+              dropdown ±130px — selisih itulah yang membuat SEMUANYA muat tanpa
+              ada yang terpotong.
+
+              Yang HILANG dan owner sudah menyetujuinya: keempat angka tidak
+              lagi terlihat sekaligus tanpa membuka dropdown. Yang DIJAGA:
+              "Perlu dicek" tetap menukar isi tabel yang sama (bukan tabel
+              kedua) — dijaga tests/daftar-perlu-cek.test.ts. */}
+          <DropdownSaringan
+            label="Saring menurut kelengkapan data IMDb"
+            ikon={lihatPeringatan ? AlertTriangle : ListFilter}
+            nilai={lihatPeringatan ? PILIH_PERLU_DICEK : saring}
+            nada={lihatPeringatan ? "bahaya" : "amber"}
+            // "Semua" tanpa peringatan = pilihan bawaannya; apa pun selain itu
+            // berarti daftar di bawah sedang dipersempit, dan itu harus
+            // kelihatan dari warnanya.
+            aktif={lihatPeringatan || saring !== SARING_BAWAAN}
+            onNilai={(v) => {
+              const perluDicek = v === PILIH_PERLU_DICEK;
+              setLihatPeringatan(perluDicek);
+              if (!perluDicek) setSaring(v as SaringImdb);
+              // 🪤 Tanpa baris ini: sedang di halaman 3 "Semua" (359 video)
+              // lalu pilih "Belum ada IMDb" (61 video, cuma 1 halaman) =
+              // halaman 3 tidak ada, daftarnya kosong. Penjepit di
+              // lib/paginasi.ts menahan kerusakannya, tapi melompat ke halaman
+              // terakhir tanpa diminta tetap membingungkan.
+              setHalaman(HALAMAN_PERTAMA);
+            }}
+          >
+            {(Object.keys(LABEL_SARING) as SaringImdb[]).map((pilihan) => (
+              <option key={pilihan} value={pilihan}>
+                {LABEL_SARING[pilihan]} ({jumlahSaring[pilihan]})
+              </option>
+            ))}
+            {/* Baris ini cuma ada kalau memang ada yang perlu dicek — sama
+                seperti tombolnya dulu. Pilihan yang selalu tampil tapi selalu
+                nol melatih admin mengabaikannya. */}
+            {videoPeringatan.length > 0 && (
+              <option value={PILIH_PERLU_DICEK}>
+                ⚠ Perlu dicek ({videoPeringatan.length})
+              </option>
+            )}
+          </DropdownSaringan>
 
           {/* PINTU MASUK panel "Isi manual" (owner 2026-11-11: "pindahkan isi
               cepat ke filter yang ada di imdb biar lebih rapi"). Dulu sebuah
@@ -1434,6 +1513,41 @@ export default function PlaylyVisibilityManager({
             </a>
           </Button>
 
+          {/* SARINGAN UPLOAD + KOTAK CARI — SATU kelompok (owner 2026-11-21:
+              "bisa kamu jadikan satu agar searchnya bisa sejajar").
+
+              🪤 KENAPA DIBUNGKUS, bukan dibiarkan jadi tiga anak lepas di
+              baris ini: barisnya `flex-wrap`, jadi tiap anak membungkus
+              SENDIRI-SENDIRI begitu ruang habis. Di layar owner (panel ±756px)
+              dua dropdown masih muat tapi kotak carinya tidak, lalu ia turun
+              sendirian ke baris berikutnya — persis yang difoto. Dibungkus
+              begini ketiganya jadi SATU satuan: mereka selalu sejajar satu
+              sama lain, dan kalau ruangnya benar-benar kurang mereka turun
+              BERSAMA, tetap sebaris.
+
+              `min-w-0` wajib: tanpa itu kotak cari menolak menyusut di bawah
+              lebar isinya dan pembungkusnya ikut melar melewati panel.
+
+              Dropdown, bukan tombol bundar seperti tiga saringan di kiri: dua
+              kontrol ini punya 4 dan belasan pilihan — membentangkan semuanya
+              jadi tombol mengembalikan kepenuhan yang baru saja dihemat. */}
+          <div className="ml-auto flex min-w-0 flex-1 items-center justify-end gap-2">
+            <KontrolUploadPlayly
+              videos={videos}
+              hariIni={hariIni}
+              rentang={rentang}
+              pengunggah={pengunggah}
+              onPilih={(r, orang) => {
+                setRentang(r);
+                setPengunggah(orang);
+                // Alasan yang sama dengan tombol saringan IMDb di atas: nomor
+                // halaman yang tertinggal di halaman 3 membuat daftar hasil
+                // saringan baru tampil KOSONG, padahal isinya ada di halaman 1.
+                setHalaman(HALAMAN_PERTAMA);
+                setLihatPeringatan(false);
+              }}
+            />
+
           {saring === "belum" && jumlahSaring.belum > 0 && (
             // Kalimat ini mencegah kebingungan yang pasti muncul: saat saringan
             // "Belum" aktif, video yang BARU SAJA dicocokkan langsung lenyap
@@ -1445,18 +1559,35 @@ export default function PlaylyVisibilityManager({
             </span>
           )}
 
-          {/* Kotak cari duduk SEBARIS dengan tombol saringan, bukan di atasnya:
-              keduanya mempersempit daftar yang sama, jadi memisahkannya membuat
-              admin mengira salah satunya menimpa yang lain. `ml-auto` mendorong
-              ke kanan supaya tombol saringan tetap jadi yang pertama dibaca. */}
-          <KotakCariDaftar
-            className="ml-auto"
-            nilai={ketikan}
-            onNilai={setKetikan}
-            jumlah={totalTabel}
-            total={lihatPeringatan ? videoPeringatan.length : videoSaringan.length}
-            placeholder="Cari judul video…"
-          />
+            {/* Kotak cari duduk SEBARIS dengan saringan, bukan di atasnya:
+                semuanya mempersempit daftar yang sama, jadi memisahkannya
+                membuat admin mengira salah satunya menimpa yang lain.
+                `ml-auto` pindah ke pembungkus di atas — dipasang di sini juga
+                ia akan mendorong kotak cari menjauh dari kedua dropdown,
+                justru memutus kesejajaran yang sedang dibangun. */}
+            <KotakCariDaftar
+              className="min-w-0"
+              nilai={ketikan}
+              onNilai={setKetikan}
+              jumlah={totalTabel}
+              total={lihatPeringatan ? videoPeringatan.length : videoSaringan.length}
+              placeholder="Cari judul video…"
+            />
+          </div>
+
+          {/* Keterangan saringan upload — satu baris tipis, LEBAR PENUH di
+              bawah baris saringan (`basis-full`), bukan kotak tersendiri.
+              Menyembunyikan diri saat tak ada yang disaring, jadi tata letak
+              bawaannya persis seperti sebelum fitur ini ada. */}
+          <div className="basis-full">
+            <RingkasUploadPlayly
+              videos={videos}
+              hariIni={hariIni}
+              rentang={rentang}
+              pengunggah={pengunggah}
+              belumSiap={belumSiap}
+            />
+          </div>
         </div>
       )}
 
@@ -1494,6 +1625,27 @@ export default function PlaylyVisibilityManager({
                 className="text-amber-600 underline-offset-2 hover:underline"
               >
                 Kosongkan pencarian
+              </button>
+            </>
+          ) : rentang !== "semua" ? (
+            // Diperiksa SEBELUM saringan IMDb: saat daftar kosong karena
+            // rentang waktu, menyebut IMDb mengirim owner mengutak-atik tombol
+            // yang bukan penyebabnya. Tombol pemulihnya ikut disediakan —
+            // tanpa itu owner harus menebak sendiri cara kembali.
+            <>
+              Tidak ada video di rentang{" "}
+              <strong className="text-zinc-300">{FRASA_RENTANG[rentang]}</strong>
+              {pengunggah && <> milik {pengunggah}</>}.{" "}
+              <button
+                type="button"
+                onClick={() => {
+                  setRentang(RENTANG_BAWAAN);
+                  setPengunggah(null);
+                  setHalaman(HALAMAN_PERTAMA);
+                }}
+                className="text-amber-600 underline-offset-2 hover:underline"
+              >
+                Tampilkan semua tanggal
               </button>
             </>
           ) : saring === "belum" ? (

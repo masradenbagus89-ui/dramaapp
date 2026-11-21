@@ -100,12 +100,20 @@ describe("film bertanda segitiga tidak menumpuk di atas daftar", () => {
       );
     });
 
-    const tombol = [...wadah.querySelectorAll("button")].find((b) =>
-      b.textContent?.includes("Perlu dicek"),
+    // 2026-11-21: "Perlu dicek" BUKAN tombol lagi — ia jadi salah satu baris
+    // di dropdown saringan IMDb (owner meringkas empat tombol jadi satu
+    // dropdown karena barisnya tidak muat dan menimpa kotak cari). Yang
+    // DIJAGA tes ini tidak berubah sedikit pun: memilihnya harus MENUKAR isi
+    // tabel yang sama, bukan menambah tabel kedua. Hanya cara menekannya yang
+    // disesuaikan.
+    const pilihan = [...wadah.querySelectorAll("option")].find((o) =>
+      o.textContent?.includes("Perlu dicek"),
     );
-    expect(tombol, "tombol Perlu dicek tidak ada").toBeTruthy();
+    expect(pilihan, "pilihan Perlu dicek tidak ada").toBeTruthy();
+    const dropdown = pilihan!.closest("select")!;
     await act(async () => {
-      tombol!.click();
+      dropdown.value = pilihan!.value;
+      dropdown.dispatchEvent(new Event("change", { bubbles: true }));
     });
 
     const tabel = wadah.querySelector("[data-daftar-video]")?.textContent ?? "";

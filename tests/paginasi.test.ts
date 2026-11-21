@@ -207,9 +207,18 @@ describe("panel admin memakai aturan itu, bukan versi sendiri", () => {
 
   it("mengganti saringan memulangkan ke halaman pertama", () => {
     // Lihat kejadian nyata #1 di kepala berkas ini.
-    const blok = PANEL.slice(PANEL.indexOf("setSaring(pilihan)"));
+    //
+    // 🪤 Dicari "setSaring(" saja, BUKAN "setSaring(pilihan)". Versi lama
+    // mengunci nama argumennya, dan begitu empat tombol saringan diringkas
+    // jadi dropdown (owner 2026-11-21) argumennya berganti nama — `indexOf`
+    // memulangkan -1, `slice(-1)` memberi satu karakter terakhir berkas, dan
+    // tesnya merah karena ALASAN YANG SALAH: bukan karena penjagaannya bobol,
+    // tapi karena polanya terlalu kaku. Yang dijaga tetap sama persis:
+    // panggilan setSaring WAJIB diikuti setHalaman(HALAMAN_PERTAMA).
+    const pos = PANEL.indexOf("setSaring(");
+    expect(pos, "panggilan setSaring tidak ditemukan di panel").toBeGreaterThan(-1);
     expect(
-      blok.slice(0, 600),
+      PANEL.slice(pos, pos + 600),
       "setSaring tidak diikuti setHalaman(HALAMAN_PERTAMA)",
     ).toContain("setHalaman(HALAMAN_PERTAMA)");
   });

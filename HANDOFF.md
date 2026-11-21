@@ -141,7 +141,9 @@ Owner: *"di admin/IMDB ada list film film yang ada keterangan siapa yang upload 
 
 ⚠️ **Versi Next terpasang ≠ yang di package.json.** `package.json` minta **16.4.6** (commit `ed8be85` soal keamanan), tapi `node_modules` lokal masih **16.4.3** — `npm install` belum pernah dijalankan sesudah commit itu. Produksi kemungkinan aman (Railway menjalankan `npm ci` saat deploy), tapi **semua build & tes lokal sejak itu berjalan di atas versi berlubang**. Perbaikannya satu perintah: `npm install`.
 
-⏳ **BELUM DI-PUSH.** Perlu `npm run gerbang` + izin rilis owner.
+✅ **TAYANG `9720b0c`** (2026-11-21, izin owner: "sudah ok commit dan push"). `dramaku` dulu, lalu `origin main`. Bukti tayang: `/film` produksi memuat penanda `uploadedAt` — field yang baru lahir di commit ini, jadi build Railway terbukti memakai kode baru. Smoke test 2 putaran enam alamat semua **200**. 🪤 `/api/dramas` sempat 500 **sekali** tepat sesudah push lalu normal — peralihan container saat deploy, bukan gangguan.
+
+🪤 **Distage PER-BERKAS (12 berkas).** Ada sesi lain yang sedang bekerja di folder kerja yang sama (`app/components/beranda/*`, `BottomNav.tsx`, `app/globals.css`, dan tes-tesnya) — semuanya **sengaja tidak ikut**. `docs/lintasai/rencana/2026-11-21-tampilan-hp-beranda-ala-image2.md` milik sesi itu IKUT terbawa, supaya tautan yang mereka tambahkan di `INDEX.md` tidak menunjuk berkas yang tidak ada.
 
 ---
 

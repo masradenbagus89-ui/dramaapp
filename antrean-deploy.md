@@ -23,7 +23,37 @@
 > lengkap: `HANDOFF.md` seksi `## 2026-11-09`.
 
 
-**Terakhir dicek:** 2026-11-17. `f47ccbb` gagal dibangun di Railway karena Supabase error saat prerender `/discover`. Perbaikan ada di kerjaan lokal (katalog publik tidak menghubungi database selama `next build`). `npx next build` lokal exit 0. Perbaikan ikut commit yang didorong. Beranda produksi tetap **200** (versi lama).
+**Terakhir dicek:** 2026-11-21. ✅ `9720b0c` **TAYANG** (filter "siapa upload hari ini" di panel IMDb). `dramaku` dulu, lalu `origin` — keduanya `ed8be85..9720b0c`. Railway build **sukses**.
+
+### ✅ 2026-11-21 — RILIS `9720b0c` TAYANG (filter upload harian di panel IMDb)
+
+**Bukti tayang (bukan sekadar "situs hidup"):** `/film` di produksi memuat penanda `uploadedAt` —
+field yang baru lahir di commit ini, jadi kemunculannya membuktikan build Railway memakai kode baru.
+Smoke test 2 putaran: `/` · `/beranda` · `/film` · `/api/dramas` · `/discover` ·
+`/admin/videos/playly` semua **200**.
+🪤 `/api/dramas` sempat **500 sekali** tepat sesudah push, lalu 200 pada permintaan berikutnya —
+itu peralihan container saat Railway men-deploy, **bukan gangguan**. Jangan dikejar.
+
+Didorong sesudah owner menulis "sudah ok commit dan push". `dramaku` dulu, lalu `origin main`.
+12 berkas, nol berkas env/kunci. Pekerjaan sesi lain yang ada di folder kerja (beranda/*, BottomNav,
+globals.css) **sengaja TIDAK ikut** — distage per-berkas.
+
+**🔴 YANG WAJIB DICEK OWNER DI RAILWAY:** `npm run build` di komputer **GAGAL** di langkah typecheck —
+tapi penyebabnya **dua berkas tes yang belum dikenal git** dan karena itu **tidak ikut terdorong**:
+`tests/admin-csrf-gate.test.ts` (memanggil `guardAsal` yang belum ada di `lib/request-guard`) dan
+`tests/dashboard-host-bawaan.test.ts` (`pilihDaftarHost` + `DEFAULT_DASHBOARD_VIDEO_HOSTS` belum ada
+di `lib/dashboard-videos`). Railway meng-clone repo, jadi kedua berkas itu tidak ada di sana dan
+build **seharusnya** lolos — dibuktikan di komputer dengan `tsc -p` yang mengecualikan persis dua
+berkas itu → **exit 0**. "Seharusnya" belum sama dengan "terbukti": **buka Railway, pastikan
+deployment `9720b0c` berstatus success.**
+
+**⚠️ Gerbang pra-rilis TIDAK bisa lolos di komputer** selama kedua berkas tes itu ada. Sampai
+diselesaikan atau dihapus, `npm run gerbang` akan selalu merah — dan itu memblokir rilis APA PUN,
+bukan cuma yang ini.
+
+**⚠️ Next.js lokal ≠ yang di repo:** `package.json` minta **16.4.6**, `node_modules` komputer masih
+**16.4.3** (`npm install` belum dijalankan sesudah `ed8be85`). Railway menjalankan `npm ci` sendiri
+jadi produksi memakai 16.4.6, tapi semua build & tes lokal sejak itu berjalan di atas versi berlubang.
 
 ### ❌ 2026-11-17 — RILIS `b7bd3f8` → `f47ccbb` GAGAL DIBANGUN
 

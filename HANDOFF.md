@@ -98,6 +98,66 @@
 
 ---
 
+## 2026-11-23 — 🔐 celah `data/adminpass.json` ditutup 2 lapis + penjaga (belum di-commit)
+
+**Celahnya.** `data/adminpass.json` berisi **hash password admin** untuk login localhost —
+sekerabat `data/twofa.json` yang sudah lama ada di `.gitignore` (baris 19). Tapi `adminpass.json`
+tak pernah dicantumkan, jadi di komputer mana pun yang memilikinya ia bisa ikut ter-commit ke repo
+**publik** tanpa satu pun peringatan. Ditemukan dari catatan serah-terima rekan: dia membuatnya
+untuk login lokal lalu menutupnya lewat `.git/info/exclude` — pengecualian yang hanya berlaku di
+komputernya dan **tidak ikut terbawa git**, jadi di komputer owner celahnya tetap terbuka.
+
+**Ditutup di DUA lapis, bukan satu.** `.gitignore` sendirian bukan jaminan: ia TIDAK berlaku untuk
+berkas yang sudah terlacak, dan bisa ditembus `git add -f`.
+
+| Lapis | Berkas | Isi |
+|---|---|---|
+| 1 — pencegahan | `.gitignore:25` | `data/adminpass.json` + komentar alasannya |
+| 2 — penahan rilis | `scripts/gerbang-pra-rilis.mjs` | pola `/(^\|\/)data\/adminpass\.json$/` masuk `POLA_RAHASIA`, dipakai langkah 5 gerbang |
+| penjaga | `tests/gerbang-pra-rilis.test.ts` | masuk daftar tersangka, `toHaveLength(9)` → `(10)` |
+
+**Bukti (dijalankan, bukan dibaca):**
+- `git check-ignore -v data/adminpass.json` → **exit 0**, menunjuk `.gitignore:25`.
+- Uji nyata: berkasnya **dibuat sungguhan**, lalu `git status --porcelain -- data/` **tidak**
+  menampilkannya (yang muncul cuma `data/viewers.json` milik sesi lain), dan
+  `git status --ignored` menandainya `!!` = diabaikan tegas. Berkas uji lalu dihapus.
+- `tests/gerbang-pra-rilis.test.ts` → **11 tes lulus, exit 0**.
+- **Uji-balik**: pola `adminpass` dihapus dari `POLA_RAHASIA` → tesnya **MERAH**; berkas dipulihkan
+  dan hash-nya cocok. Jadi penjaganya nyata, bukan tes yang kebetulan hijau.
+- Ketiga berkas tetap **CRLF murni** (nol LF telanjang) — berkas ini mudah jadi campur.
+
+**Batas yang jujur:**
+- Berkasnya **tidak ada** di komputer owner, jadi ini murni pencegahan — bukan memadamkan kebocoran
+  yang sedang berlangsung.
+- Riwayat git lama tidak diperiksa dalam perbaikan ini. Kalau berkas ini pernah ter-commit di masa
+  lalu, `.gitignore` **tidak** mengeluarkannya dari riwayat (soal yang sama sudah dicatat untuk
+  `data/admins.json` di `.gitignore:93`).
+- `.git/info/exclude` di komputer rekan kini mubazir tapi tak berbahaya; tak perlu disentuh.
+
+**Gerbang penuh TIDAK dijalankan ulang untuk perubahan ini** — sesi lain menyalakan `next dev
+-p 3177`, dan langkah 1 gerbang menghapus `.next` yang sedang dipakainya. Yang dijalankan sebagai
+gantinya: `npm test` penuh (tidak menyentuh `.next`). `build` + `tsc` sudah terbukti hijau atas kode
+aplikasi yang sama persis beberapa menit sebelumnya, dan ketiga berkas yang diubah di sini **tidak**
+diimpor kode aplikasi (skrip gerbang hanya dipakai tesnya sendiri).
+
+⚠️ **`npm test` penuh itu keluar 2784 lulus / 1 GAGAL — dan gagalnya BUKAN dari perubahan ini.**
+Yang merah: `tests/cari-popup-dan-film-terang.test.ts` → "judul tidak kembar — barisnya dioper
+`tanpaJudul`", menuntut teks `tanpaJudul` di `app/beranda/page.tsx`. Dibuktikan milik siapa:
+- versi **TER-COMMIT** (`git show HEAD:app/beranda/page.tsx`) masih memuat `tanpaJudul` **2×**;
+- berkas itu statusnya `M` = sedang **diedit dan belum di-commit** oleh sesi lain yang menggarap
+  tema gelap+emas.
+
+Artinya **`main` sebagai commit tetap hijau**; merahnya murni kerja setengah jalan di folder kerja,
+dan pemiliknya yang harus memutuskan (pasang kembali `tanpaJudul`, atau sesuaikan tesnya). Saya
+sengaja TIDAK menyentuhnya — itu kode yang sedang aktif dikerjakan orang lain.
+
+🪤 **Catatan untuk sesi berikutnya: folder ini dipakai beberapa sesi SEKALIGUS.** Sepanjang satu
+pekerjaan tadi, sesi lain meng-commit **3×** (`25957c7`, `7cd2ec3`, `4c5149e`) dan
+berkas belum-commit bergerak 46 → 13 → 25. Akibatnya: hasil `npm test` penuh bisa mencampur dua
+keadaan, dan `git add -A` akan menyeret kerja orang lain yang belum siap. **Stage per-berkas.**
+
+---
+
 ## 2026-11-23 — 🎨 TEMA SOFT SAGE + LOGO LAYARINDO di-commit (`25957c7`) — SENGAJA BELUM TAYANG
 
 > ### 🛑 BACA INI DULU
@@ -218,6 +278,105 @@ Contoh: dulu `X Sub Indo | DramaKu` → jadi `Nonton X (2026) Sub Indo Gratis | 
 di `.gitignore` padahal kembarannya `data/twofa.json` ada (`.gitignore:19`) — hash password admin
 lokal bisa ikut ter-commit. Rekan menutupnya cuma lewat `.git/info/exclude` di komputernya sendiri,
 jadi di komputer owner celahnya masih terbuka.
+
+### Gerbang pra-rilis SUDAH dijalankan 2026-11-23 — hasilnya MERAH, tapi BUKAN karena SEO → lalu DIBETULKAN, lihat blok berikutnya
+
+`npm run gerbang` → **exit 1**. Rinciannya:
+- `npm run build` ✅ · `npx tsc --noEmit` ✅ (jadi kode SEO rakitannya sehat)
+- `npm test` ❌ **6 tes gagal / 2778 lulus** (5 berkas dari 197)
+
+**Klaim rekan "7 merah itu sudah ada sebelum SEO" = TERBUKTI BENAR**, lewat 4 bukti terpisah:
+1. Nol dari 6 kegagalan menyebut 1 pun dari 12 berkas SEO. Semuanya `AssertionError` atas **teks
+   berkas sumber** yang dibaca `readFileSync` — gaya tes proyek ini.
+2. `hero-gambar-besar` — SATU-SATUNYA tes yang membaca berkas yang diubah SEO
+   (`app/drama/[id]/page.tsx`) — justru **LULUS**. (Rekan memasukkannya ke daftar merah; di
+   komputer owner dia hijau.)
+3. `tests/seo-drama.test.ts` + `tests/admin-drama-route.test.ts` → **25 lulus, exit 0**.
+4. Ketiga berkas sumber penyebab merah (`app/admin/videos/playly/page.tsx`,
+   `app/components/admin/PlaylyVisibilityManager.tsx`, `app/components/beranda/BadanKatalog.tsx`)
+   statusnya **bersih/ter-commit** — jadi merahnya milik `main`, bukan bawaan merge.
+
+**Keenamnya TES BASI, nol fitur hilang** — dicek dengan mencari pola yang dituntut tes ke seluruh
+`app/` + `lib/`:
+
+| Tes merah | Yang dituntut | Kenyataan |
+|---|---|---|
+| `playly-genre` | `getPlaylyGenres()` di `page.tsx` | pindah ke `app/admin/videos/playly/IsiPanelPlayly.tsx` |
+| `bagian-playly` | `imdb={` di `page.tsx` | ada di `IsiPanelPlayly.tsx` + `PlaylyVisibilityManager.tsx` |
+| `panel-playly-tahan-gangguan` (2) | `mitra.error && mitra.videos.length === 0` | ada di `IsiPanelPlayly.tsx:93` |
+| `saring-video-admin` | `videoTampil.length === 0` | pindah ke `app/components/admin/PlaylyIsiCepat.tsx` |
+| `baris-atas-film` | `<FeaturedRow items={heroItems}` 1 baris | ada di `BadanKatalog.tsx:95-96`, ditulis **2 baris** |
+
+Penyebabnya: panel admin Playly dipecah ke `IsiPanelPlayly`/`Suspense` + `PlaylyIsiCepat`, dan JSX
+`BadanKatalog` ditulis ulang multi-baris. Tesnya masih membaca berkas/bentuk lama. **Jangan
+"dibikin hijau" dengan melemahkan assert-nya** (§5.3) — yang benar: arahkan tes ke berkas tujuan
+pindahnya, dan untuk `baris-atas-film` pakai pencocokan yang tahan ganti-baris. Penjaganya tetap
+sekuat semula.
+
+⛔ **Konsekuensi untuk rilis:** AGENTS.local.md §6 mensyaratkan gerbang hijau sebelum push ke
+`origin main`. Sekarang merah, jadi **rilis apa pun (SEO maupun tampilan) terblokir** sampai 6 tes
+basi itu dibetulkan. Merahnya TIDAK berbahaya (nol regresi), tapi membuat gerbang kehilangan
+gunanya: kalau dibiarkan, kerusakan sungguhan berikutnya tenggelam di antara 6 merah yang
+dimaklumi.
+
+🪤 **Catatan ketelitian:** gerbang ini jalan saat `BadanKatalog.tsx` dkk masih belum di-commit;
+di tengah pemeriksaan sesi lain meng-commit `25957c7` (tema soft sage + logo Layarindo + pop up
+Filter Film) di atas merge SEO, jadi berkas belum-commit turun 46 → 13. Isi berkasnya di-commit
+apa adanya, jadi hasil di atas tetap berlaku — tapi angkanya perlu dibaca ulang kalau gerbang
+dijalankan lagi. Merge SEO `d6dc594` dipastikan masih leluhur `HEAD`.
+
+🧹 Server `next dev -p 3100` (PID 526980 + 2 proses pendukung) DIMATIKAN lewat PID supaya langkah
+`hapus .next` tidak merusak pratinjau di tengah pakai. Menyalakan ulang:
+`npm run dev -- -p 3100`.
+
+### DIBETULKAN 2026-11-23 — 6 tes basi dibereskan, gerbang kini HIJAU (membatalkan ⛔ di atas)
+
+`npm run gerbang` → **exit 0, kelima pemeriksaan hijau**. `npm test`: **197 berkas / 2784 tes,
+nol gagal** (sebelumnya 6 gagal / 2778 lulus). Blokir rilis di blok sebelumnya **sudah lepas**.
+
+**Yang diubah: HANYA 5 berkas tes.** Nol berkas sumber disentuh — perilakunya memang tidak pernah
+rusak, cuma pindah alamat.
+
+| Berkas tes | Dulu membaca / menuntut | Sekarang |
+|---|---|---|
+| `tests/bagian-playly.test.ts` | `page.tsx` | `IsiPanelPlayly.tsx` + penjaga rantai BARU |
+| `tests/playly-genre.test.ts` | `page.tsx` | `IsiPanelPlayly.tsx` |
+| `tests/panel-playly-tahan-gangguan.test.ts` | `page.tsx` (2 tempat) | `IsiPanelPlayly.tsx` |
+| `tests/saring-video-admin.test.ts` | teks `videoTampil.length === 0` | DUA cabang kosong terpisah |
+| `tests/baris-atas-film.test.ts` | `<FeaturedRow items={heroItems}` 1 baris | regex tahan ganti-baris |
+
+**Penjaga TIDAK dilemahkan (§5.3) — dibuktikan uji-balik, bukan diklaim.** Tiap perilaku dirusak
+satu-satu di berkas sumbernya, tesnya WAJIB merah, lalu berkas dipulihkan dan hash-nya dicocokkan:
+
+| Yang dirusak | Hasil |
+|---|---|
+| `<IsiPanelPlayly />` dihapus dari `page.tsx` | 🔴 merah |
+| `getPlaylyGenres()` dihapus dari `IsiPanelPlayly` | 🔴 merah |
+| `mitra.error && mitra.videos.length === 0` → `mitra.error` | 🔴 merah |
+| cabang `videos.length > 0 && totalTabel === 0` dihapus | 🔴 merah |
+| cabang ternary `videos.length === 0 ? (` dihapus | 🔴 merah |
+| `items={heroItems}` → `items={[]}` di `BadanKatalog` | 🔴 merah |
+
+Keenam berkas sumber pulih persis (sha256 cocok) + `git status` bersih sesudahnya.
+
+**Penjaga BARU yang ikut dipasang** (`tests/bagian-playly.test.ts`): `page.tsx` WAJIB merender
+`<IsiPanelPlayly />`. Sebelumnya **tak ada** tes yang memeriksa ini — `IsiPanelPlayly` bisa memasang
+seluruh panel dengan benar sementara `page.tsx` tak pernah merendernya, dan build/tsc/test semuanya
+diam. Itu persis kegagalan senyap pelajaran 2026-09-23 yang sudah tercatat, cuma pindah lokasi
+sesudah panel dipecah.
+
+🪤 **Kebocoran di perbaikan saya sendiri, ditemukan & ditutup.** Assert pertama untuk
+`saring-video-admin` mula-mula ditulis `/videos\.length === 0/`. Itu BOCOR: teks sama juga ada di
+`PlaylyVisibilityManager.tsx:781` (`fetchError && videos.length === 0`) — cabang GANGGUAN AMBIL,
+bukan cabang "akun Playly masih kosong" di baris 1318. Dibuktikan: saat cabang 1318 dirusak, teks
+itu MASIH ada di berkas, jadi assert lama akan tetap hijau walau pesannya sudah hilang. Diperketat
+jadi `/videos\.length === 0\s*\?/` (menuntut ternary-nya), lalu diuji-balik lagi → merah.
+**Pelajaran untuk sesi berikutnya:** di proyek ini assert berbasis teks sumber wajib diuji-balik,
+karena potongan teks yang sama sering muncul di beberapa cabang dan penjaganya bocor tanpa gejala.
+
+**Yang MASIH belum dikerjakan:** belum di-commit, belum di-push ke mana pun. Push ke `origin main`
+= TOMBOL RILIS, izinnya milik owner (AGENTS.md §5.5). Jalur Supabase `app_data` key `seo` juga tetap
+❓ belum terbukti — gerbang hijau tidak membuktikannya, seluruh tes jalan di mode berkas.
 
 ---
 

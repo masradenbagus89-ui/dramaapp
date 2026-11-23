@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import type { Drama } from "@/lib/types";
 import {
@@ -62,6 +63,7 @@ export default function TabKatalogTampilan({
   hanyaMenu = false,
   seksiLengkap = false,
   tabDisembunyikan = [],
+  slotBarisTab,
   videos = [],
   videoSeries = [],
 }: {
@@ -128,6 +130,20 @@ export default function TabKatalogTampilan({
    */
   tabDisembunyikan?: TabKey[];
   /**
+   * Isi tambahan yang DITITIPKAN di depan tombol tab, DI DALAM kotak yang sama.
+   *
+   * Owner 2026-11-23 menyederetkan judul "Layarindo Menawarkan" + tiga chip
+   * pintasan dengan tombol tab, lewat sketsa di tangkapan layar. Sebelumnya
+   * keduanya dua baris bertumpuk.
+   *
+   * KENAPA SLOT, bukan `LayarindoMenawarkan` diimpor langsung di sini: /katalog
+   * memakai baris tab yang sama, dan di halaman itu judul "Layarindo
+   * Menawarkan" tidak pada tempatnya. Dengan slot, halaman yang tidak
+   * mengisinya tidak mendapatkannya — nol aturan "kecuali di halaman X" yang
+   * harus diingat.
+   */
+  slotBarisTab?: ReactNode;
+  /**
    * SERIAL dari penyedia video luar, untuk seksi "Series Terbaru" (owner
    * 2026-11-05: "rekan saya upload drama dari playly tapi masuknya ke film
    * terbaru, harusnya masuk ke series terbaru").
@@ -186,7 +202,16 @@ export default function TabKatalogTampilan({
           dramaku"*). Ia tergambar di SEMUA ukuran layar lagi. */}
       <div className={cn(SHELL)}>
         <div className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-950/80 p-2 shadow-[0_6px_20px_-6px_rgba(0,0,0,0.9)] terang:border-zinc-200 terang:bg-white terang:shadow-[0_6px_20px_-10px_rgba(0,0,0,0.25)]">
-        <div className="no-scrollbar flex flex-1 items-center gap-2 overflow-x-auto">
+        {/* `max-md:flex-wrap` = DI HP barisnya MEMBUNGKUS ke bawah, bukan
+            digeser menyamping. Ditambahkan 2026-11-23 bersama `slotBarisTab`:
+            begitu judul + tiga chip ikut masuk, barisnya jadi jauh lebih
+            panjang dari layar HP — dan versi tergeser hanya menampilkan judul
+            + satu chip, tanpa tanda bahwa masih ada isi di sebelah kanan.
+            Terbukti saat mock-nya dipotret sebelum dipasang.
+            `overflow-x-auto` dibiarkan: dengan isi yang membungkus, tak ada
+            yang meluap, jadi ia hanya berlaku lagi di layar komputer. */}
+        <div className="no-scrollbar flex flex-1 items-center gap-2 overflow-x-auto max-md:flex-wrap">
+          {slotBarisTab}
           {/* Disaring, BUKAN diambil dari daftar yang lebih pendek: `tabs`
               tetap utuh supaya `tabAktif`, judul seksi, dan /katalog?tab=…
               semuanya masih mengenali ketiga kunci yang tombolnya dilepas.

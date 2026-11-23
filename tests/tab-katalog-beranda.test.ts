@@ -207,7 +207,12 @@ describe("deret tab benar-benar DIPASANG di /beranda", () => {
     // Mata rantai kedua. Tanpa pemeriksaan ini, halaman boleh mengoper
     // basePath yang benar sementara badan bersama diam-diam tak memakainya —
     // dan tabnya kembali menunjuk "/" tanpa satu pun error.
-    const elemen = badan.match(/<TabKatalog\s[\s\S]*?\/>/);
+    // ⚠️ Pola berakhir di "/>" yang BERDIRI SENDIRI di barisnya, bukan di "/>"
+    // mana pun. Versi non-greedy sebelumnya berhenti di "/>" PERTAMA, dan
+    // begitu salah satu prop berisi elemen (slotBarisTab={<X />}) potongannya
+    // terputus sebelum prop yang sedang diperiksa — tes merah padahal kodenya
+    // benar. Kena persis begitu 2026-11-23.
+    const elemen = badan.match(/<TabKatalog\s[\s\S]*?[\r\n]\s*\/>/);
     expect(elemen, "<TabKatalog … /> tidak ditemukan").toBeTruthy();
     expect(elemen![0]).toContain("basePath={basePath}");
   });
@@ -216,7 +221,12 @@ describe("deret tab benar-benar DIPASANG di /beranda", () => {
     // Kalau fallback memakai alamat berbeda, tab sempat menunjuk `/` selama
     // sepersekian detik sebelum bagian browsernya menyusul — cukup untuk
     // diklik dan memantul.
-    const fb = badan.match(/<TabKatalogTampilan[\s\S]*?\/>/);
+    // ⚠️ Pola berakhir di "/>" yang BERDIRI SENDIRI di barisnya, bukan di "/>"
+    // mana pun. Versi non-greedy sebelumnya berhenti di "/>" PERTAMA, dan
+    // begitu salah satu prop berisi elemen (slotBarisTab={<X />}) potongannya
+    // terputus sebelum prop yang sedang diperiksa — tes merah padahal kodenya
+    // benar. Kena persis begitu 2026-11-23.
+    const fb = badan.match(/<TabKatalogTampilan[\s\S]*?[\r\n]\s*\/>/);
     expect(fb, "<TabKatalogTampilan … /> di fallback tidak ditemukan").toBeTruthy();
     expect(fb![0]).toContain("basePath={basePath}");
   });

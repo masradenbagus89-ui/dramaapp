@@ -10,7 +10,6 @@ import { buildNavMenus } from "@/lib/nav-katalog";
 import { rakitIndeksSaran } from "@/lib/saran-cari";
 import BadanKatalog from "../components/beranda/BadanKatalog";
 import KepalaBeranda from "../components/beranda/KepalaBeranda";
-import LayarindoMenawarkan from "../components/beranda/LayarindoMenawarkan";
 import { BADAN_SITUS } from "../components/beranda/shell";
 import { cn } from "@/lib/utils";
 
@@ -127,18 +126,19 @@ export default async function BerandaPage() {
            Kaki itu tetap ada di landing page `/`, tempat pengunjung baru
            mendarat — owner tidak meminta ia dilepas dari sana. */
         denganKaki={false}
-        /* ⚠️ DIGANTI 2026-11-23 — keputusan owner yang MENIMPA keputusannya
-           sendiri pada 2026-10-28/29, jadi jangan dikembalikan mengira sedang
-           memperbaiki regresi.
-           DULU: panel lipat "Lanjutkan Menonton" berisi baris riwayat
-           (`<PanelLipat judul="Lanjutkan Menonton"><PersonalRows … /></…>`).
-           SEKARANG: strip "Layarindo Menawarkan" + tiga pintasan katalog,
-           mengikuti gambar acuan yang dikirim owner.
+        /* ⚠️ `slotAtas` SENGAJA KOSONG sejak 2026-11-23, dan ini melewati DUA
+           keputusan owner dalam satu hari — jadi jangan diisi ulang mengira
+           sedang memperbaiki sesuatu yang hilang:
+             1. DULU panel lipat "Lanjutkan Menonton" berisi baris riwayat.
+                Diganti owner dengan strip "Layarindo Menawarkan".
+             2. Lalu owner menyederetkan strip itu dengan tombol tab (sketsa di
+                tangkapan layar), jadi isinya PINDAH ke dalam kotak baris tab
+                lewat prop `slotBarisTab` di BadanKatalog.tsx. Slot atas ini
+                tak punya penghuni lagi.
            Yang ikut lepas & jalan gantinya: lihat kepala
-           app/components/beranda/LayarindoMenawarkan.tsx — pintasan
-           "teruskan episode" hilang DARI HALAMAN INI, tapi /history tetap
-           terbuka lewat menu akun di bar atas. */
-        slotAtas={<LayarindoMenawarkan />}
+           app/components/beranda/LayarindoMenawarkan.tsx — pintasan "teruskan
+           episode" hilang DARI HALAMAN INI, tapi /history tetap terbuka lewat
+           menu akun di bar atas. */
       />
     </div>
   );

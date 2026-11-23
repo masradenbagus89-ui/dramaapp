@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
 import type { Drama } from "@/lib/types";
 import type { PlaylyVideoPublik } from "@/lib/playly-publik";
@@ -29,6 +30,7 @@ export default function TabKatalog({
   basePath,
   hanyaMenu,
   tabDisembunyikan,
+  slotBarisTab,
   paksaSemua,
   seksiLengkap,
   videos,
@@ -59,6 +61,11 @@ export default function TabKatalog({
    * disalin ke sini (satu penjelasan, satu tempat).
    */
   tabDisembunyikan?: TabKey[];
+  /**
+   * Isi tambahan di depan tombol tab, di dalam kotak yang sama. Diteruskan apa
+   * adanya; alasan & jebakannya ditulis di `TabKatalogTampilan`, bukan disalin.
+   */
+  slotBarisTab?: ReactNode;
   /** Film untuk seksi "Film Terbaru". Lihat tampilannya untuk aturannya. */
   videos?: PlaylyVideoPublik[];
   /** SERIAL untuk seksi "Series Terbaru". Lihat tampilannya untuk aturannya. */
@@ -74,6 +81,7 @@ export default function TabKatalog({
       hanyaMenu={hanyaMenu}
       seksiLengkap={seksiLengkap}
       tabDisembunyikan={tabDisembunyikan}
+      slotBarisTab={slotBarisTab}
       videos={videos}
       videoSeries={videoSeries}
     />

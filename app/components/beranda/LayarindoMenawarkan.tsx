@@ -1,7 +1,5 @@
 import Link from "next/link";
 import { Award, Flame, Sparkles } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { SHELL } from "./shell";
 
 /**
  * Strip "Layarindo Menawarkan" — tiga pintasan cepat ke katalog, menggantikan
@@ -72,26 +70,37 @@ const TAWARAN: Tawaran[] = [
 
 export default function LayarindoMenawarkan() {
   return (
-    /* Garis atas-bawah + latar bar yang SAMA dengan `PanelLipat`: strip ini
-       menempati posisi persis panel yang digantikannya, jadi irama halaman
-       (poster → pemisah → tab) tidak berubah. */
-    <section
-      aria-labelledby="judul-tawaran"
-      className="border-y border-emas-700/30 bg-gelap-900"
-    >
-      <div className={cn(SHELL, "flex flex-col items-center gap-2.5 py-3")}>
-        <h2
-          id="judul-tawaran"
-          className="text-sm font-bold text-emas-400"
-        >
-          {NAMA_TAMPIL} Menawarkan
-        </h2>
+    /* ⚠️ BUKAN <section> BERGARIS LAGI (owner 2026-11-23, dengan sketsa di
+       tangkapan layar: judul + chip DISEDERETKAN dengan tombol tab).
+       DULU: pita sendiri ber-`border-y` + `bg-gelap-900` + lebar `SHELL`,
+       duduk di atas baris tab sebagai baris terpisah.
+       KINI: kelompok sebaris yang DITITIPKAN ke dalam kotak baris tab lewat
+       prop `slotBarisTab` (lihat BadanKatalog.tsx). Latar, garis, dan batas
+       lebarnya kini milik kotak itu — kalau dipasang lagi di sini, hasilnya
+       kotak bergaris di dalam kotak bergaris.
 
-        <ul className="flex flex-wrap items-center justify-center gap-2">
-          {TAWARAN.map(({ label, href, Ikon }) => (
-            <li key={href}>
-              <Link
-                href={href}
+       `role="group"` + `aria-labelledby` dipertahankan supaya pembaca layar
+       tetap mengumumkan ketiga chip ini sebagai satu kelompok bernama, walau
+       pembungkus <section>-nya sudah hilang. */
+    <div
+      role="group"
+      aria-labelledby="judul-tawaran"
+      /* `min-w-0` + `flex-wrap`: di layar HP kelompok ini WAJIB boleh
+         menyusut & membungkus. Tanpa keduanya ia jadi satu benda panjang yang
+         tak bisa dipecah, dan chip ketiga terpotong di tepi layar — terbukti
+         saat mock-nya dipotret sebelum dipasang. Di layar komputer semuanya
+         memang muat satu baris, jadi pembungkusan tak pernah terpakai. */
+      className="flex min-w-0 flex-wrap items-center gap-2"
+    >
+      <h2 id="judul-tawaran" className="shrink-0 text-sm font-bold text-emas-400">
+        {NAMA_TAMPIL} Menawarkan
+      </h2>
+
+      <ul className="flex min-w-0 flex-wrap items-center gap-2">
+        {TAWARAN.map(({ label, href, Ikon }) => (
+          <li key={href}>
+            <Link
+              href={href}
                 /* min-h-11 (~44px) = ambang target sentuh yang dipakai seluruh
                    situs ini. Chip di gambar acuan lebih tipis, tapi chip tipis
                    di HP sering meleset saat diketuk jempol — dan chip yang
@@ -102,9 +111,8 @@ export default function LayarindoMenawarkan() {
                 {label}
               </Link>
             </li>
-          ))}
-        </ul>
-      </div>
-    </section>
+        ))}
+      </ul>
+    </div>
   );
 }

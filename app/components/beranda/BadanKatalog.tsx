@@ -6,6 +6,7 @@ import FeaturedRow from "./FeaturedRow";
 import FooterSitus from "./FooterSitus";
 import TabKatalog from "./TabKatalog";
 import TabKatalogTampilan from "./TabKatalogTampilan";
+import LayarindoMenawarkan from "./LayarindoMenawarkan";
 import { TAB_BAWAAN, type TabKey } from "@/lib/tab-katalog";
 import { BADAN_SITUS, HERO_CARD_CLASS } from "./shell";
 
@@ -21,7 +22,22 @@ import { BADAN_SITUS, HERO_CARD_CLASS } from "./shell";
  * tertinggal saat diubah — dan akibatnya barisnya BERGANTI TOMBOL tepat saat
  * halaman selesai dimuat, yang terbaca seperti layar berkedip rusak.
  */
-const TAB_TANPA_TOMBOL: TabKey[] = ["terbaru", "unggulan", "update"];
+export const TAB_TANPA_TOMBOL: TabKey[] = [
+  "terbaru",
+  "unggulan",
+  "update",
+  // "terpopuler" menyusul 2026-11-23 putaran kedua: owner menyederetkan judul
+  // + tiga chip dengan tombol tab, dan di kotak merah sketsanya ia SENGAJA
+  // hanya melingkari REKOMENDASI & 2026 — TERPOPULER ditinggalkan karena chip
+  // "Terpopuler" di sebelahnya sudah memakai nama yang sama. Dua tombol
+  // bersebelahan bertulisan sama persis terbaca seperti salah cetak.
+  //
+  // ⚠️ TUJUANNYA TIDAK SAMA, dan ini perlu diketahui: chip "Terpopuler" pergi
+  // ke /discover?sort=populer (halaman lain), sedangkan tab "TERPOPULER" dulu
+  // membuka seksi di halaman ini. Seksinya SENDIRI tetap tergambar di bawah —
+  // yang hilang cuma tombol pintasnya.
+  "terpopuler",
+];
 
 /**
  * BADAN BERSAMA halaman katalog utama — dipakai `/` (landing, untuk yang belum
@@ -154,6 +170,7 @@ export default function BadanKatalog({
               semua={false}
               seksiLengkap
               tabDisembunyikan={TAB_TANPA_TOMBOL}
+              slotBarisTab={<LayarindoMenawarkan />}
               videos={filmDiDepan}
               videoSeries={seriesTerbaru}
               basePath={basePath}
@@ -164,6 +181,7 @@ export default function BadanKatalog({
             dramas={dramas}
             seksiLengkap
             tabDisembunyikan={TAB_TANPA_TOMBOL}
+            slotBarisTab={<LayarindoMenawarkan />}
             videos={filmDiDepan}
             videoSeries={seriesTerbaru}
             basePath={basePath}

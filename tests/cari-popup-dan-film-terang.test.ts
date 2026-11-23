@@ -362,11 +362,17 @@ describe("baris Lanjut Menonton DISEMBUNYIKAN sampai diklik", () => {
     // Permintaan owner 2026-11-23, dengan gambar acuan: judul di tengah +
     // tiga chip pintasan. Dipaku supaya tidak "diperbaiki" balik jadi panel
     // lama oleh sesi berikutnya yang membaca komentar 2026-10-29.
-    expect(BERANDA).toContain("<LayarindoMenawarkan />");
+    // Tempat pemasangannya pindah ke BadanKatalog (lihat
+    // tests/layarindo-menawarkan.test.ts). Yang dijaga DI SINI tinggal satu:
+    // panel lama tidak boleh kembali ke /beranda.
     expect(
       BERANDA,
       "panel lama kembali — keputusan owner 2026-11-23 terbalik diam-diam",
     ).not.toContain('<PanelLipat judul="Lanjutkan Menonton">');
+    const badan = tanpaKomentar(
+      readFileSync("app/components/beranda/BadanKatalog.tsx", "utf-8"),
+    );
+    expect(badan).toContain("<LayarindoMenawarkan />");
   });
 
   it("TERTUTUP saat halaman dibuka", () => {

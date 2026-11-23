@@ -47,10 +47,22 @@ describe("bentuk yang diminta owner", () => {
     // ada & teruji TIDAK sama dengan komponen yang bisa dilihat orangnya.
     // Tombol FILTER pernah sempurna selama empat hari tanpa pernah terlihat
     // owner karena cuma terpasang di halaman yang dia tak pernah buka.
-    expect(BERANDA).toContain("<LayarindoMenawarkan />");
-    expect(BERANDA).toContain(
-      'import LayarindoMenawarkan from "../components/beranda/LayarindoMenawarkan"',
+    // ⚠️ TEMPATNYA PINDAH 2026-11-23 putaran kedua: dari `slotAtas` di
+    // app/beranda/page.tsx ke `slotBarisTab` di BadanKatalog.tsx, saat owner
+    // menyederetkannya dengan tombol tab. Diperiksa di BadanKatalog karena di
+    // sanalah ia kini dipasang — DUA kali (isi <Suspense fallback> + versi
+    // browsernya), dan keduanya wajib, kalau tidak barisnya berganti isi tepat
+    // saat halaman selesai dimuat.
+    const badan = tanpaKomentar(
+      readFileSync("app/components/beranda/BadanKatalog.tsx", "utf-8"),
     );
+    expect(badan).toContain(
+      'import LayarindoMenawarkan from "./LayarindoMenawarkan"',
+    );
+    expect(
+      (badan.match(/slotBarisTab=\{<LayarindoMenawarkan \/>\}/g) ?? []).length,
+      "harus dipasang DUA kali: fallback Suspense + versi browser",
+    ).toBe(2);
   });
 });
 

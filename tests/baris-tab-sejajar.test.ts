@@ -23,6 +23,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { readFileSync } from "node:fs";
 import TabKatalogTampilan from "../app/components/beranda/TabKatalogTampilan";
+import { TAB_TANPA_TOMBOL } from "../app/components/beranda/BadanKatalog";
 import { TAB_BAWAAN, daftarTab, parseTab } from "../lib/tab-katalog";
 import { tanpaKomentar } from "./bantu/tanpa-komentar";
 import type { Drama } from "../lib/types";
@@ -42,8 +43,16 @@ const KATALOG: Drama[] = Array.from({ length: 12 }, (_, i) =>
   drama({ id: `d${i}`, title: `Drama ${i}`, year: "2026", imdbRating: "8.0" }),
 );
 
-/** Tiga tab yang tombolnya dilepas — disalin dari keputusan di BadanKatalog. */
-const DISEMBUNYIKAN = ["terbaru", "unggulan", "update"] as const;
+/**
+ * Tab yang tombolnya dilepas — DIIMPOR dari keputusannya sendiri, bukan disalin.
+ *
+ * ⚠️ Daftar salinan sudah sempat basi dalam hitungan jam: putaran kedua owner
+ * (sketsa di tangkapan layar) menambahkan "terpopuler" ke daftar aslinya,
+ * sedangkan salinan di berkas ini tetap berisi tiga — tesnya tetap HIJAU
+ * sambil tak lagi memeriksa tab keempat. Tes yang basi memberi rasa aman palsu,
+ * dan itu lebih berbahaya daripada tes yang merah.
+ */
+const DISEMBUNYIKAN = TAB_TANPA_TOMBOL;
 
 const render = (sembunyikan: readonly string[] = []) =>
   renderToStaticMarkup(
@@ -96,7 +105,7 @@ describe("2. tiga tab terpanjang dilepas dari baris atas", () => {
     // semua tombol — baris tab yang kosong melompong juga kerusakan senyap.
     const html = render(DISEMBUNYIKAN);
     const tersisa = daftarTab(KATALOG).filter(
-      (t) => !(DISEMBUNYIKAN as readonly string[]).includes(t.key),
+      (t) => !DISEMBUNYIKAN.includes(t.key),
     );
     expect(tersisa.length, "tak ada tab tersisa untuk diperiksa").toBeGreaterThan(0);
     for (const t of tersisa) {
@@ -126,7 +135,46 @@ describe("2. tiga tab terpanjang dilepas dari baris atas", () => {
   });
 });
 
-describe("3. yang disembunyikan cuma TOMBOLNYA, bukan tabnya", () => {
+describe("3. judul + chip SEDERET dengan tombol tab", () => {
+  // Owner 2026-11-23 putaran kedua, lewat sketsa di tangkapan layar: judul
+  // "Layarindo Menawarkan" + tiga chip + REKOMENDASI + 2026 jadi SATU baris.
+  // Sebelumnya dua baris bertumpuk.
+  const tampilan = tanpaKomentar(
+    readFileSync("app/components/beranda/TabKatalogTampilan.tsx", "utf-8"),
+  );
+
+  it("isi titipan digambar DI DALAM kotak baris tab", () => {
+    // Harus berada di dalam wadah bergulir yang sama dengan tombol tab —
+    // kalau digambar di luar kotak, ia kembali jadi baris sendiri dan
+    // permintaan owner batal tanpa satu pun error.
+    expect(tampilan).toMatch(/overflow-x-auto[\s\S]{0,120}\{slotBarisTab\}/);
+  });
+
+  it("barisnya MEMBUNGKUS di HP, bukan digeser menyamping", () => {
+    // ⚠️ Ini bukan kerapian. Dengan judul + tiga chip ikut masuk, barisnya
+    // jauh lebih panjang dari layar HP. Versi tergeser hanya menampilkan judul
+    // + SATU chip, tanpa tanda apa pun bahwa masih ada isi di sebelah kanan —
+    // terbukti saat mock-nya dipotret sebelum dipasang.
+    expect(tampilan).toContain("max-md:flex-wrap");
+  });
+
+  it("kelompok chip boleh menyusut & membungkus juga", () => {
+    // Membungkus baris LUARNYA saja tidak cukup: kalau <ul> chip tetap
+    // `shrink-0`, ia jadi satu benda panjang yang tak bisa dipecah dan chip
+    // ketiga tetap terpotong di tepi layar. Kena persis begitu di mock pertama.
+    const strip = tanpaKomentar(
+      readFileSync("app/components/beranda/LayarindoMenawarkan.tsx", "utf-8"),
+    );
+    expect(strip).toContain("flex-wrap");
+    expect(strip).toContain("min-w-0");
+    expect(
+      strip,
+      "pembungkus bergaris dipasang lagi — hasilnya kotak di dalam kotak",
+    ).not.toContain("border-y");
+  });
+});
+
+describe("4. yang disembunyikan cuma TOMBOLNYA, bukan tabnya", () => {
   it("ketiga kunci masih dikenali parseTab", () => {
     // Kalau ini merah, empat tautan menu "Series" (/katalog?tab=…) mendarat di
     // daftar yang SALAH — `tabAktif` jatuh diam-diam ke tab pertama.

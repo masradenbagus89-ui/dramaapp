@@ -145,7 +145,7 @@ export default function BarisGeser({
            di layar komputer sehingga luput dari potret uji HP). Teks putih di
            sage-600 = 5,67:1. Panah KIRI sengaja tetap hitam-transparan: ia
            pembeda arah, bukan warna merek. */
-        className={cn(kelasPanah, "right-1 bg-sage-600 hover:bg-sage-500")}
+        className={cn(kelasPanah, "right-1 bg-emas-500 text-gelap-950 hover:bg-emas-400")}
       >
         <ChevronRight className="size-5" />
       </Button>

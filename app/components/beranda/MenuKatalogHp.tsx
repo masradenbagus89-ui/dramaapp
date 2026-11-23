@@ -216,7 +216,7 @@ export default function MenuKatalogHp({ menus }: { menus: NavMenu[] }) {
                      dari tema merah yang lama, dan begitu tema situs jadi
                      sage ia terbaca sebagai warna nyasar, bukan aksen.
                      `sage-300` di atas `sage-800` = 7,3:1. */
-                  className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-sage-800 text-sage-300"
+                  className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-emas-500/15 text-emas-400"
                   aria-hidden="true"
                 >
                   <Ikon className="size-[18px]" />

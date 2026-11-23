@@ -56,7 +56,7 @@ export default function FilterKatalog({ dramas }: { dramas: Drama[] }) {
              hijau, dan justru itu masalahnya: dua hijau yang BEDA NADA
              bersebelahan terbaca sebagai salah cetak, bukan sebagai dua
              peran. Kontras teks putih di sage-600 = 5,67:1. */
-          className="h-9 shrink-0 gap-1.5 rounded-sm bg-sage-600 px-3 text-[11px] font-extrabold uppercase tracking-wide text-white shadow-lg shadow-sage-700/30 transition-all duration-200 hover:-translate-y-0.5 hover:bg-sage-700 hover:shadow-xl md:text-xs"
+          className="h-9 shrink-0 gap-1.5 rounded-sm bg-emas-500 px-3 text-[11px] font-extrabold uppercase tracking-wide text-gelap-950 shadow-lg shadow-emas-600/30 transition-all duration-200 hover:-translate-y-0.5 hover:bg-emas-400 hover:shadow-xl md:text-xs"
         >
           <SlidersHorizontal className="size-3.5" />
           Filter
@@ -65,9 +65,9 @@ export default function FilterKatalog({ dramas }: { dramas: Drama[] }) {
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
-        className="max-h-[70vh] w-56 overflow-y-auto border-sage-200 bg-sage-50 text-sage-900"
+        className="max-h-[70vh] w-56 overflow-y-auto border-emas-700/40 bg-gelap-900 text-white"
       >
-        <DropdownMenuLabel className="text-sage-700">Urutkan</DropdownMenuLabel>
+        <DropdownMenuLabel className="text-emas-400">Urutkan</DropdownMenuLabel>
         <DropdownMenuItem asChild>
           <Link href="/discover?sort=populer">Paling banyak ditonton</Link>
         </DropdownMenuItem>
@@ -80,8 +80,8 @@ export default function FilterKatalog({ dramas }: { dramas: Drama[] }) {
 
         {genre.length > 0 && (
           <>
-            <DropdownMenuSeparator className="bg-sage-200" />
-            <DropdownMenuLabel className="text-sage-700">Genre</DropdownMenuLabel>
+            <DropdownMenuSeparator className="bg-emas-700/30" />
+            <DropdownMenuLabel className="text-emas-400">Genre</DropdownMenuLabel>
             {/* Label Indonesia, alamat tetap nilai asli katalog — kalau
                 tertukar, pilihannya memulangkan halaman hampa. */}
             {genre.map((g) => (
@@ -96,8 +96,8 @@ export default function FilterKatalog({ dramas }: { dramas: Drama[] }) {
 
         {tahun.length > 0 && (
           <>
-            <DropdownMenuSeparator className="bg-sage-200" />
-            <DropdownMenuLabel className="text-sage-700">Tahun</DropdownMenuLabel>
+            <DropdownMenuSeparator className="bg-emas-700/30" />
+            <DropdownMenuLabel className="text-emas-400">Tahun</DropdownMenuLabel>
             {tahun.map((t) => (
               <DropdownMenuItem key={t} asChild>
                 <Link href={`/discover?year=${encodeURIComponent(t)}`}>{t}</Link>
@@ -106,9 +106,9 @@ export default function FilterKatalog({ dramas }: { dramas: Drama[] }) {
           </>
         )}
 
-        <DropdownMenuSeparator className="bg-sage-200" />
+        <DropdownMenuSeparator className="bg-emas-700/30" />
         <DropdownMenuItem asChild>
-          <Link href="/discover" className="font-bold text-sage-700">
+          <Link href="/discover" className="font-bold text-emas-400">
             Buka katalog lengkap →
           </Link>
         </DropdownMenuItem>

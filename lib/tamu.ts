@@ -242,7 +242,7 @@ export function bersihkanEmailTamu(mentah: unknown): string | null {
  *    tidak terlihat sampai ada yang mengklik.
  * 2. **Diurai dengan `new URL()`**, bukan dicocokkan regex. Penyaring berbasis
  *    teks berulang kali kalah oleh variasi penulisan (`JaVaScRiPt:`, spasi/tab
- *    di tengah skema, `javascript:`); pengurai bawaan platform mengikuti
+ *    di tengah skema, `\x01javascript:`); pengurai bawaan platform mengikuti
  *    aturan yang sama dengan browser yang nanti membukanya.
  *
  * Penonton boleh mengetik "contoh.com" tanpa skema — itu kebiasaan wajar, jadi

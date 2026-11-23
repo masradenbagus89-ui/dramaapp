@@ -4,7 +4,7 @@ import { Film } from "lucide-react";
 import { getPlaylyVideosGabunganCached } from "@/lib/playly-gabungan";
 import DaftarFilmBerhalaman from "@/app/components/film/DaftarFilmBerhalaman";
 import { cn } from "@/lib/utils";
-import { BADAN_TERANG } from "@/app/components/beranda/shell";
+import { BADAN_SITUS } from "@/app/components/beranda/shell";
 import KepalaFilm from "@/app/components/beranda/KepalaFilm";
 
 // Halaman disimpan & dipakai ulang, disegarkan tiap 60 detik — SAMA dengan
@@ -53,7 +53,7 @@ export default async function PlaylyPage() {
   const { videos, error } = await getPlaylyVideosGabunganCached();
 
   return (
-    <main className={cn("min-h-screen pb-16", BADAN_TERANG)}>
+    <main className={cn("min-h-screen pb-16", BADAN_SITUS)}>
       {/* Kepala situs yang SAMA dengan Home (owner 2026-10-29) — bar cari
           merah-pink + strip kuning, bukan navbar hitam. Dipasang sebagai anak
           PERTAMA <main> dan DI LUAR pembatas isi di bawahnya, supaya barnya

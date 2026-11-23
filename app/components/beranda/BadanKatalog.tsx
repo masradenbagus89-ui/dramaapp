@@ -7,7 +7,7 @@ import FooterSitus from "./FooterSitus";
 import TabKatalog from "./TabKatalog";
 import TabKatalogTampilan from "./TabKatalogTampilan";
 import { TAB_BAWAAN } from "@/lib/tab-katalog";
-import { BADAN_TERANG, HERO_CARD_CLASS } from "./shell";
+import { BADAN_SITUS, HERO_CARD_CLASS } from "./shell";
 
 /**
  * BADAN BERSAMA halaman katalog utama — dipakai `/` (landing, untuk yang belum
@@ -115,10 +115,10 @@ export default function BadanKatalog({
           (lihat @custom-variant terang di app/globals.css).
 
           ⚠️ Sempat dibuat GELAP khusus HP pada 2026-11-21 lewat
-          `BADAN_TERANG_MD`; dikembalikan pada hari yang sama atas permintaan
+          `BADAN_SITUS_MD`; dikembalikan pada hari yang sama atas permintaan
           owner (*"cuma bagian atas yang diubah, sisanya kembalikan ke
           dramaku"*). Jangan digelapkan lagi tanpa permintaan baru. */}
-      <div className={BADAN_TERANG}>
+      <div className={BADAN_SITUS}>
         {/* DERET TAB KATALOG (owner 2026-09-22, meniru situs katalog pembanding):
             TERBARU · SERIES UNGGULAN · SERIES UPDATE · TERPOPULER · REKOMENDASI ·
             <tahun>, plus tombol FILTER di ujung kanan. `seksiLengkap` membuat isi

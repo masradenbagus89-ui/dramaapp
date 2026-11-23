@@ -24,7 +24,7 @@ type Tab = {
 
 /** Warna ikon seragam — aktif hijau pekat, sisanya sage sedang. */
 const kelasIkon = (active: boolean) =>
-  `h-6 w-6 ${active ? "fill-sage-100" : "fill-sage-400"}`;
+  `h-6 w-6 ${active ? "fill-emas-400" : "fill-redup"}`;
 
 /**
  * Tab bar bawah HP.
@@ -196,7 +196,7 @@ export default function BottomNav() {
          langsung di sini, bukan memakai konstanta itu: bar atas membawa
          `relative isolate overflow-hidden` yang di sini sudah dipegang
          `fixed`, dan menumpuknya menghasilkan posisi yang bertengkar. */
-      className="sapuan-gelombang fixed bottom-0 left-0 right-0 z-30 border-t border-white/10 md:hidden">
+      className="sapuan-gelombang fixed bottom-0 left-0 right-0 z-30 border-t border-emas-700/40 bg-gelap-900 md:hidden">
       <div className="relative mx-auto max-w-md">
         {/* Garis menyala yang meluncur mengikuti menu aktif */}
         {activeIndex >= 0 && (
@@ -204,7 +204,7 @@ export default function BottomNav() {
             className="pointer-events-none absolute top-0 transition-transform duration-300 ease-out"
             style={{ width: `${tabWidth}%`, transform: `translateX(${activeIndex * 100}%)` }}
           >
-            <div className="mx-auto h-1 w-10 rounded-full bg-sage-200" />
+            <div className="mx-auto h-1 w-10 rounded-full bg-emas-500" />
           </div>
         )}
 
@@ -229,7 +229,7 @@ export default function BottomNav() {
                 <span className="relative">{tab.icon(active)}</span>
                 <span
                   className={`text-[10px] leading-tight transition-colors duration-300 ${
-                    active ? "font-semibold text-sage-100" : "text-sage-400"
+                    active ? "font-semibold text-emas-400" : "text-redup"
                   }`}
                 >
                   {tab.label}
@@ -262,7 +262,7 @@ export default function BottomNav() {
         {pesan && (
           <div
             aria-live="polite"
-            className="pointer-events-none absolute inset-x-0 -top-10 mx-auto w-fit rounded-full bg-sage-800 px-3 py-1.5 text-[11px] font-semibold text-white shadow-lg"
+            className="pointer-events-none absolute inset-x-0 -top-10 mx-auto w-fit rounded-full bg-gelap-800 px-3 py-1.5 text-[11px] font-semibold text-white shadow-lg"
           >
             {pesan}
           </div>

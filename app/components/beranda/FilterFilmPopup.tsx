@@ -84,9 +84,9 @@ function Pilih({
            di satu layar sempit = enam lapisan mengambang yang saling tumpang
            tindih. `min-h-11` menjaga target sentuh di atas ambang 44px. */
         className={cn(
-          "min-h-11 w-full appearance-none rounded-lg border border-sage-300 bg-white",
-          "px-3 py-2 pr-9 text-sm text-sage-900 outline-none",
-          "focus-visible:border-sage-600 focus-visible:ring-2 focus-visible:ring-sage-300",
+          "min-h-11 w-full appearance-none rounded-lg border border-emas-700/40 bg-gelap-800",
+          "px-3 py-2 pr-9 text-sm text-white outline-none",
+          "focus-visible:border-emas-500 focus-visible:ring-2 focus-visible:ring-emas-500/40",
           // Panah sendiri, sebab `appearance-none` membuang panah bawaan.
           // ⚠️ Kelasnya didefinisikan di app/globals.css, BUKAN ditulis
           // sebagai `bg-[url('data:image/svg+xml…')]`: SVG-nya ber-spasi, dan
@@ -169,7 +169,7 @@ export default function FilterFilmPopup({
            situs yang TERANG (badan `<body>` gelap), jadi tanpa ini teks hitam
            di atas kartu putih ini jadi putih-di-atas-putih. Ketahuan saat
            tombol ✕ bawaan nyaris tak terlihat di potret uji. */
-        className="w-[calc(100%-2rem)] max-w-sm gap-0 rounded-2xl border-sage-200 bg-white p-0 text-sage-900 sm:max-w-sm"
+        className="w-[calc(100%-2rem)] max-w-sm gap-0 rounded-2xl border-emas-700/40 bg-gelap-900 p-0 text-white sm:max-w-sm"
         /* ✕ bawaan DIMATIKAN: ukurannya 16px tanpa area ketuk, di bawah ambang
            44px yang dipakai sisa situs ini (rak a11y). "Batal" di dasar pop up
            sudah 44px dan NAMANYA jelas; menutup juga bisa lewat ketuk di luar
@@ -178,15 +178,15 @@ export default function FilterFilmPopup({
         showCloseButton={false}
       >
         <div className="p-5">
-          <DialogTitle className="text-base font-bold text-sage-900">
+          <DialogTitle className="text-base font-bold text-white">
             Filter Film
           </DialogTitle>
-          <DialogDescription className="mt-1 text-[13px] leading-snug text-sage-700">
+          <DialogDescription className="mt-1 text-[13px] leading-snug text-redup">
             Tampilkan daftar film sesuai dengan kesukaan anda.
           </DialogDescription>
 
           {gagal && !siap && (
-            <p className="mt-4 rounded-lg bg-sage-100 px-3 py-2 text-[13px] text-sage-800">
+            <p className="mt-4 rounded-lg bg-gelap-800 px-3 py-2 text-[13px] text-redup">
               Daftar pilihan gagal diambil. Tutup lalu buka lagi, atau telusuri
               lewat menu katalog.
             </p>
@@ -276,14 +276,14 @@ export default function FilterFilmPopup({
             <button
               type="button"
               onClick={terapkan}
-              className="min-h-11 flex-1 rounded-lg bg-sage-600 px-4 text-sm font-bold text-white transition-colors outline-none hover:bg-sage-700 focus-visible:ring-2 focus-visible:ring-sage-800"
+              className="min-h-11 flex-1 rounded-lg bg-emas-500 px-4 text-sm font-bold text-gelap-950 transition-colors outline-none hover:bg-emas-400 focus-visible:ring-2 focus-visible:ring-emas-300"
             >
               Filter Movie
             </button>
             <button
               type="button"
               onClick={onTutup}
-              className="min-h-11 rounded-lg bg-sage-200 px-4 text-sm font-bold text-sage-900 transition-colors outline-none hover:bg-sage-300 focus-visible:ring-2 focus-visible:ring-sage-600"
+              className="min-h-11 rounded-lg bg-gelap-700 px-4 text-sm font-bold text-white transition-colors outline-none hover:bg-gelap-800 focus-visible:ring-2 focus-visible:ring-emas-500"
             >
               Batal
             </button>

@@ -15,26 +15,47 @@ import { cn } from "@/lib/utils";
 export const SHELL = "shell-wide mx-auto px-4 md:px-6";
 
 /**
- * BADAN TERANG — latar putih-abu yang menyalakan seluruh aturan tema terang di
- * dalamnya (owner 2026-11-05: "aku mau semua seragam backgroundnya jadi sama
- * dengan beranda (putih)").
+ * BADAN SITUS — latar halaman katalog penonton, SEKALIGUS saklar temanya.
  *
- * Dua kelas ini SELALU berpasangan dan itu bukan kebetulan:
- *   - `tema-terang` = saklarnya. Varian `terang:` di seluruh komponen hanya
- *     menyala di dalam pembungkus ber-class ini (lihat @custom-variant di
- *     app/globals.css). Tanpa kelas ini, `terang:text-zinc-900` DIAM saja.
- *   - `bg-zinc-100` = latarnya sendiri. Tanpa ini, `<body className="bg-black">`
- *     (app/layout.tsx:53) tetap terlihat menembus dari belakang.
- * Memasang salah satunya saja menghasilkan kerusakan SENYAP: saklar tanpa latar
- * = tulisan gelap di atas hitam (tak terbaca), latar tanpa saklar = tulisan
- * putih di atas putih (hilang sama sekali).
+ * ⚠️ NAMANYA BERUBAH 2026-11-23, dari `BADAN_TERANG`. Nama lama menyebut
+ * warnanya, dan warnanya sudah berganti dua kali: putih-abu (owner 2026-11-05
+ * *"aku mau semua seragam backgroundnya jadi sama dengan beranda (putih)"*) →
+ * GELAP + emas (owner 2026-11-23 *"warna ini lebih bagus terlihat elegan dan
+ * mewah"*). Konstanta bernama TERANG yang isinya gelap adalah nama yang
+ * berbohong (§3.7): pembaca berikutnya akan "memperbaiki"-nya kembali ke putih
+ * karena namanya bilang begitu. Nama netral bertahan melewati ganti tema.
  *
- * KENAPA ditulis di sini, bukan diketik ulang di tiap halaman: sejak 2026-11-05
- * ia dipakai LIMA halaman (`/`, `/beranda`, `/discover`, `/film`, `/katalog`).
- * Kalau owner minta ganti warnanya nanti, satu baris ini yang diubah — bukan
- * lima berkas yang salah satunya pasti tertinggal lalu jadi belang tanpa error.
+ * ISINYA MENENTUKAN TEMA, dan dua kemungkinannya HARUS dipasang utuh —
+ * mencampurnya adalah kerusakan paling senyap di seluruh berkas ini (nol error,
+ * build hijau, halaman 200, cuma teks yang hilang dari layar):
+ *   - TEMA GELAP (sekarang) = `"bg-gelap-950"` SAJA, tanpa `tema-terang`.
+ *     Seluruh komponen memang sudah berwarna dasar gelap; varian `terang:`
+ *     cuma penimpanya. Begitu saklarnya tidak ada, semuanya pulang sendiri ke
+ *     warna dasar itu — nol kelas yang perlu disentuh.
+ *   - TEMA TERANG = `"tema-terang bg-zinc-100"`. `tema-terang` saklarnya
+ *     (@custom-variant di app/globals.css); tanpa saklar itu `terang:text-...`
+ *     DIAM saja, dan `bg-zinc-100` tanpa saklar = tulisan putih di atas putih.
+ *
+ * ⚠️ VARIAN `terang:` DI 18 BERKAS SENGAJA TIDAK DIHAPUS walau hari ini tak
+ * satu pun menyala. Itu BUKAN kelalaian: mereka adalah jalan pulang ke tema
+ * terang lewat SATU baris di bawah ini. Owner mengganti tema situs tiga kali
+ * dalam satu hari (merah → hijau sage → gelap+emas), jadi membuang 40+ kelas
+ * itu berarti membangunnya ulang dari nol pada pergantian berikutnya. Kalau
+ * tema gelap sudah final berbulan-bulan, baru hapus — beserta
+ * `@custom-variant terang` di app/globals.css dan tes yang memakunya.
+ *
+ * KENAPA SATU KONSTANTA, bukan diketik ulang di tiap halaman: ia dipakai
+ * SEMBILAN halaman (`/`, `/beranda`, `/discover`, `/film`, `/katalog`,
+ * `/shorts`, `/history`, `/my-list`). Ganti tema = satu baris ini, bukan
+ * sembilan berkas yang salah satunya pasti tertinggal lalu jadi belang tanpa
+ * satu pun error yang memberi tahu.
+ *
+ * ❗ BUKAN saudara `BADAN_TERANG_PENUH` di bawah: halaman masuk/daftar/profil
+ * dan dashboard admin masih TERANG hari ini, dan itu keputusan yang belum
+ * disentuh owner (pergantian hari ini cuma soal halaman katalog yang dia
+ * lihat). Kalau nanti diminta seragam gelap, yang diubah blok itu.
  */
-export const BADAN_TERANG = "tema-terang bg-zinc-100";
+export const BADAN_SITUS = "bg-gelap-950";
 
 /**
  * LATAR BAR ATAS — warna identitas situs, dipakai `SearchBar`.
@@ -44,28 +65,23 @@ export const BADAN_TERANG = "tema-terang bg-zinc-100";
  * mencari arah `to-r` yang tidak ada — nama yang berbohong adalah kerusakan
  * senyap, bukan sekadar tidak rapi.
  *
- * RIWAYAT WARNA: `from-rose-700 via-rose-600 to-pink-600` (merah-pink DramaKu,
- * dikunci owner 2026-09-21) → `bg-sage-700` (owner 2026-11-23: *"tema warna
- * bisa kamu ubah jadi soft sage"*, menunjuk contoh gambar).
+ * RIWAYAT WARNA dalam SATU hari (2026-11-23): `from-rose-700 via-rose-600
+ * to-pink-600` (merah-pink DramaKu, dikunci owner 2026-09-21) → `bg-sage-700`
+ * (*"tema warna bisa kamu ubah jadi soft sage"*) → `sage-100` pucat
+ * (*"lebih soft"*) → latar bergelombang dari gambar logo → **gelap + emas**
+ * (*"warna ini lebih bagus, terlihat elegan dan mewah"*).
+ * Titik pulang kalau tema sage mau dikembalikan: commit `25957c7`.
  *
- * ⚠️ BERGRADASI + BERSAPUAN, dan itu permintaan eksplisit. Riwayatnya dalam
- * satu hari: warna RATA → ditolak (*"ada seperti gradasi jadi lebih hidup
- * warnanya tidak polos"*) → gradasi lurus `to-br` → DITOLAK LAGI (*"gradasi
- * warna saya kan minta seperti ini, kenapa masih polos"*) → bentuk sekarang.
- * Pelajarannya: gradasi lurus antar dua nada yang berdekatan memang nyaris
- * tak terbaca mata. Yang terbaca sebagai "hidup" adalah BENTUK, bukan
- * perbedaan nada — karena itu ditambahkan sapuan lengkung.
+ * ⚠️ GELOMBANGNYA TETAP ADA, cuma ganti warna. Gambar hijau `bar-latar.jpg`
+ * diganti `bar-latar-emas.jpg` — bentuk piksel yang SAMA, dipetakan ke palet
+ * emas (caranya ditulis di app/globals.css). Bentuk itu lahir dari EMPAT
+ * penolakan owner berturut-turut, jadi membuangnya saat ganti tema berarti
+ * mengulang empat putaran yang sama dari nol.
  *
- * Rentang nadanya sengaja SEMPIT — `sage-100 → sage-200` plus sapuan yang
- * justru MENERANGKAN. Bar ini memuat teks, dan teks hanya aman kalau SELURUH
- * rentang latarnya aman: `sage-900` di atas nada tergelap (`sage-200`) =
- * **10,34:1**, di atas yang terterang = **13,83:1**. Gradasi yang melebar ke
- * nada gelap akan membuat teks lulus di satu ujung dan gagal di ujung lain —
- * dan ujung yang gagal itu tidak memunculkan error apa pun.
+ * Kehangatan permukaannya (`gelap-900`, coklat-kemerahan) BUKAN selera: emas
+ * di atas abu netral terbaca sebagai kuning biasa; di atas coklat-kemerahan
+ * ia terbaca sebagai emas. Kontras teks putih di atasnya **18,62:1**.
  *
- * RIWAYAT kontras: saat bar masih `sage-700` (gelap), teksnya putih dengan
- * rasio 7,58:1. Begitu bar jadi pucat, putih jatuh ke 1,20:1 — lihat
- * `TEKS_BAR_MEREK` di bawah.
  * Paletnya beserta aturan pasangan teksnya ada di app/globals.css — JANGAN
  * tulis nilai warnanya lagi di berkas lain. Dua tes memaku warna ini lewat
  * HTML hasil render (tests/strip-katalog.test.ts), jadi salinan yang
@@ -73,18 +89,19 @@ export const BADAN_TERANG = "tema-terang bg-zinc-100";
  * antar-halaman.
  */
 export const LATAR_BAR_MEREK = cn(
-  // Dasar: gradasi mendatar sage-100 → sage-200.
-  // Warna dasar kalau gambar latarnya belum termuat — bukan gradasi lagi.
-  // GELOMBANG di atasnya — inilah yang membuatnya "tidak polos".
-  // Definisinya CSS sungguhan di app/globals.css (`.sapuan-gelombang`), bukan
-  // kelas arbitrer, sebab gambar SVG-nya ber-spasi dan spasi di dalam
-  // `className` memecah nama kelas. Dua percobaan sebelumnya gagal justru di
-  // situ — alasan lengkapnya ada di komentar globals.css.
-  // `relative` sebagai POSISI CADANGAN untuk pemanggil yang tidak membawa
-  // posisinya sendiri. Pemanggil yang membawa `sticky top-0` tetap menang,
-  // sebab `cn()` (twMerge) tahu keduanya satu kelompok dan yang BELAKANGAN
-  // dipakai — dan `className` pemanggil selalu digabung paling akhir.
+  // `relative` WAJIB di sini, BUKAN di dalam `.sapuan-gelombang`. Hiasannya
+  // dipasang sebagai `::before` ber-`position:absolute`, jadi ia butuh induk
+  // ber-posisi. Pernah ditaruh di kelas CSS-nya pada 2026-11-23 dan itu
+  // menimpa `fixed` milik BottomNav: barnya lepas dari dasar layar lalu
+  // mengalir ke ujung halaman — hilang dari pandangan, NOL error.
   "relative sapuan-gelombang",
+  // Warna dasar kalau gambarnya belum/gagal dimuat. Sama dengan warna dasar
+  // gambarnya, jadi bar tidak pernah berkedip jadi warna lain.
+  "bg-gelap-900",
+  // Garis emas tipis di dasar bar — pemisah ke isi halaman, sekaligus satu
+  // sentuhan merek. Setipis itu sengaja: garis tebal membuat bar terlihat
+  // seperti kotak yang ditempel, bukan bagian dari halaman.
+  "border-b border-emas-700/40",
 );
 
 /**
@@ -101,11 +118,11 @@ export const LATAR_BAR_MEREK = cn(
  *
  * `sage-900` di atas `sage-100` = **12,51:1**.
  */
-export const TEKS_BAR_MEREK = "text-sage-50";
+export const TEKS_BAR_MEREK = "text-white";
 
-/** Sorotan hover/fokus di atas bar merek yang pucat (hitam-transparan hilang di sini). */
+/** Sorotan hover/fokus di atas bar gelap — emas samar, bukan putih polos. */
 export const SOROT_BAR_MEREK =
-  "hover:bg-white/15 focus-visible:bg-white/15";
+  "hover:bg-emas-500/15 focus-visible:bg-emas-500/15";
 
 /**
  * TOMBOL UTAMA (ajakan bertindak) — "SEMUA", "TEMUKAN TONTONAN FAVORITMU".
@@ -115,13 +132,14 @@ export const SOROT_BAR_MEREK =
  * `TabKatalogTampilan`). Salinan begitu pasti menyimpang cepat atau lambat,
  * dan menyimpangnya nol error — cuma tombol yang warnanya beda antar halaman.
  *
- * `sage-600` + teks putih = kontras 5,67:1, di atas ambang 4,5:1 untuk teks
- * normal (dihitung, lihat komentar palet di app/globals.css). JANGAN
- * diturunkan ke `sage-500`: di sana rasionya 4,03:1 dan tombol ini memuat
- * teks kecil huruf besar.
+ * ⚠️ TEKSNYA GELAP, BUKAN PUTIH — dan ini titik yang paling gampang dilanggar
+ * tanpa sadar. Di dua tema sebelumnya (merah, lalu hijau) tombol berwarna
+ * selalu berteks putih, jadi refleksnya terbawa. Tapi emas itu warna TERANG:
+ * teks gelap di `emas-500` = **9,56:1**, sedangkan teks putih cuma **2,04:1**
+ * — tulisan tombolnya praktis lenyap. Dihitung, bukan dikira.
  */
 export const TOMBOL_UTAMA =
-  "bg-sage-600 text-white hover:bg-sage-700 focus-visible:ring-2 focus-visible:ring-sage-800";
+  "bg-emas-500 text-gelap-950 hover:bg-emas-400 focus-visible:ring-2 focus-visible:ring-emas-300";
 
 /**
  * LATAR PANEL MENU KATALOG DI HP — abu kehitaman RATA, tanpa gradasi.
@@ -156,15 +174,16 @@ export const TOMBOL_UTAMA =
  * chip `stone-800`, garis `stone-700` — ditulis langsung di tempatnya: satu
  * berkas, satu pemakai, jadi konstanta cuma menambah lompatan baca.
  */
-export const LATAR_PANEL_KATALOG_HP = "bg-stone-900";
+export const LATAR_PANEL_KATALOG_HP = "bg-gelap-900";
 
 /**
  * BADAN TERANG PENUH — paletnya DIBALIK seluruhnya (app/globals.css).
  *
- * BEDANYA dengan `BADAN_TERANG` di atas, dan kapan memakai yang mana:
- *   - `BADAN_TERANG` cuma MENYALAKAN varian `terang:` yang sudah ditulis satu
- *     per satu di komponen. Dipakai halaman KATALOG, yang komponennya
- *     (CatalogCard, FeaturedRow, …) memang sudah disiapkan untuk dua tema.
+ * BEDANYA dengan `BADAN_SITUS` di atas, dan kapan memakai yang mana:
+ *   - `BADAN_SITUS` cuma MENYALAKAN/MEMATIKAN varian `terang:` yang sudah
+ *     ditulis satu per satu di komponen. Dipakai halaman KATALOG, yang
+ *     komponennya (CatalogCard, FeaturedRow, …) sudah disiapkan untuk dua
+ *     tema — hari ini saklarnya MATI, jadi halaman katalog gelap.
  *   - `BADAN_TERANG_PENUH` membalik PALETNYA. Dipakai halaman yang komponennya
  *     TIDAK PERNAH disiapkan untuk terang — panel admin dan halaman akun
  *     (/profile, /login, /daftar, /lupa-password), yang penuh `Card`, `Input`,

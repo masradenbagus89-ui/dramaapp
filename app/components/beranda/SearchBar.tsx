@@ -301,7 +301,7 @@ export default function SearchBar({
              `sage-600` + putih = 5,67:1. ⚠️ Sampai 2026-11-23 ia `bg-rose-700`
              — sisa tema merah yang TERLEWAT saat tema diganti jadi sage, dan
              owner yang menangkapnya ("di search masih ada warna merah"). */
-          "flex shrink-0 items-center justify-center rounded-r-sm bg-sage-600 text-white transition-colors hover:bg-sage-700",
+          "flex shrink-0 items-center justify-center rounded-r-sm bg-emas-500 text-gelap-950 transition-colors hover:bg-emas-400",
           besar ? "h-12 w-14" : "h-9 w-11",
         )}
       >
@@ -619,7 +619,7 @@ export default function SearchBar({
                 TEKS_BAR_MEREK,
                 SOROT_BAR_MEREK,
                 "flex size-9 shrink-0 items-center justify-center rounded-sm transition-colors outline-none",
-                cariTerbuka && "bg-sage-200",
+                cariTerbuka && "bg-emas-500/25",
               )}
             >
               {cariTerbuka ? (

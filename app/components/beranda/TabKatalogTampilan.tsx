@@ -180,8 +180,8 @@ export default function TabKatalogTampilan({
                     // (owner 2026-09-26: "kasih shadow biar nampak pro").
                     ? // Tab aktif: sage-700 + teks putih = 7,58:1. Sampai
                       // 2026-11-23 ia `bg-amber-400` kuning terang.
-                      "border-sage-700 bg-sage-700 text-white shadow-md shadow-sage-700/30"
-                    : "border-zinc-700 text-zinc-300 hover:border-sage-400 hover:bg-zinc-900 hover:text-sage-300 terang:border-sage-200 terang:text-sage-900 terang:hover:bg-sage-100 terang:hover:text-sage-800",
+                      "border-emas-500 bg-emas-500 text-gelap-950 shadow-md shadow-emas-500/30"
+                    : "border-emas-700/40 text-redup hover:border-emas-500 hover:bg-emas-500/10 hover:text-emas-300",
                 )}
               >
                 {t.label}

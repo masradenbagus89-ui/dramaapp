@@ -5,7 +5,7 @@ import FeaturedRow from "@/app/components/beranda/FeaturedRow";
 import { SHELL } from "@/app/components/beranda/shell";
 import { Clapperboard } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { BADAN_TERANG } from "@/app/components/beranda/shell";
+import { BADAN_SITUS } from "@/app/components/beranda/shell";
 
 // Disimpan & dipakai ulang, disegarkan tiap 60 detik (menggantikan force-dynamic
 // yang membangun ulang halaman untuk tiap pengunjung).
@@ -35,7 +35,7 @@ export default async function ShortsPage() {
   const rows = homeCatalogRows(dramas);
 
   return (
-    <div className={cn(BADAN_TERANG, "min-h-screen pb-10")}>
+    <div className={cn(BADAN_SITUS, "min-h-screen pb-10")}>
       <div className={`${SHELL} pt-6 pb-3`}>
         <h1 className="text-xl font-bold text-white terang:text-zinc-900 md:text-2xl">
           Shorts Trending

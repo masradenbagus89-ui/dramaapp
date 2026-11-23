@@ -16,7 +16,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Clock } from "lucide-react";
 import TombolKembali from "@/app/components/TombolKembali";
 import { cn } from "@/lib/utils";
-import { BADAN_TERANG } from "@/app/components/beranda/shell";
+import { BADAN_SITUS } from "@/app/components/beranda/shell";
 
 export default function HistoryPage() {
   const [items, setItems] = useState<HistoryItem[] | null>(null);
@@ -77,7 +77,7 @@ export default function HistoryPage() {
   };
 
   return (
-    <div className={cn(BADAN_TERANG, "min-h-screen")}>
+    <div className={cn(BADAN_SITUS, "min-h-screen")}>
       <div className="mx-auto max-w-7xl px-4 pb-10 pt-6 md:px-6">
       <div className="flex items-end justify-between gap-3">
         <div>

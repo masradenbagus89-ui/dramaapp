@@ -58,7 +58,7 @@ export default function StripKatalog({ items, activeHref }: Props) {
        `sage-100` + teks `sage-900` = kontras 12,51:1 (dihitung, lihat palet di
        app/globals.css). Chip aktif dibalik jadi `sage-700` + teks putih =
        7,58:1. Keduanya jauh di atas ambang 4,5:1. */
-    <div className="border-b border-sage-200 bg-gradient-to-r from-sage-50 via-sage-50 to-sage-100">
+    <div className="border-b border-emas-700/30 bg-gelap-950">
       <div className={cn(SHELL, "flex items-center gap-2 px-2 md:px-4")}>
         {/* Digeser ke samping kalau tak muat (layar sempit), bukan membungkus:
             daftar ini sengaja dijaga pendek oleh owner supaya muat satu baris di
@@ -80,8 +80,8 @@ export default function StripKatalog({ items, activeHref }: Props) {
               className={cn(
                 ITEM_CLASS,
                 item.href === activeHref
-                  ? "rounded-full bg-sage-700 text-white"
-                  : "rounded-full text-sage-900 hover:bg-sage-200",
+                  ? "rounded-full bg-emas-500 text-gelap-950"
+                  : "rounded-full text-redup hover:bg-emas-500/15 hover:text-emas-300",
               )}
             >
               {item.label}
@@ -125,7 +125,7 @@ export default function StripKatalog({ items, activeHref }: Props) {
              Mengukur keterluapan sungguhan menuntut pengukuran di browser +
              pemantau perubahan ukuran — mekanisme baru untuk kasus yang
              jarang, jadi sengaja tidak dibangun. */
-          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-sage-200 text-sage-800 transition-colors outline-none hover:bg-sage-300 focus-visible:ring-2 focus-visible:ring-sage-600 md:hidden"
+          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-emas-500/20 text-emas-300 transition-colors outline-none hover:bg-emas-500/35 focus-visible:ring-2 focus-visible:ring-emas-400 md:hidden"
         >
           <ChevronRight className="size-4" aria-hidden="true" />
         </button>

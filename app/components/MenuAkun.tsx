@@ -120,7 +120,7 @@ export default function MenuAkun() {
           muncul lagi dan butuh ruang kanan. */}
       <DropdownMenuTrigger
         aria-label="Menu akun"
-        className="flex items-center gap-2 rounded-full border border-white/20 bg-white/10 p-1 text-sage-50 transition-colors outline-none hover:border-white/40 focus-visible:border-sage-300 data-[state=open]:border-sage-300 sm:pr-3"
+        className="flex items-center gap-2 rounded-full border border-emas-700/50 bg-emas-500/10 p-1 text-emas-200 transition-colors outline-none hover:border-emas-500 focus-visible:border-emas-400 data-[state=open]:border-emas-400 sm:pr-3"
       >
         <Avatar size="sm">
           <AvatarFallback

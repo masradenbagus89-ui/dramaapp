@@ -41,7 +41,7 @@ export default function PanelLipat({
     /* Ikut tema soft sage 2026-11-23. Sampai hari itu bar ini `bg-zinc-900`
        pekat — dan sejak badan halaman jadi terang, ia terbaca sebagai PITA
        HITAM melintang di tengah halaman, bukan sebagai pemisah. */
-    <section className="border-y border-sage-200 bg-sage-100">
+    <section className="border-y border-emas-700/30 bg-gelap-900">
       <div className="shell-wide mx-auto px-4 md:px-6">
         <button
           type="button"
@@ -53,7 +53,7 @@ export default function PanelLipat({
           /* `sage-800` di atas `sage-100` = 9,86:1. Kuning `amber-400` yang
              lama mustahil dipakai di sini sejak latarnya terang — rasionya
              jatuh jauh di bawah 4,5:1. */
-          className="flex min-h-11 w-full items-center justify-center gap-1.5 text-sm font-bold text-sage-800 transition-colors hover:text-sage-900"
+          className="flex min-h-11 w-full items-center justify-center gap-1.5 text-sm font-bold text-emas-400 transition-colors hover:text-emas-300"
         >
           {judul}
           <ChevronDown

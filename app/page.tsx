@@ -12,7 +12,7 @@ import { TAB_GRID_ITEMS } from "@/lib/tab-katalog";
 import { MAKS_SERIES_PLAYLY_DI_SEKSI, pisahFilmSeries } from "@/lib/jenis-video";
 import { availableGenres, FEATURED_ROW_COUNT } from "@/lib/beranda-catalog";
 import { buildNavMenus } from "@/lib/nav-katalog";
-import { BADAN_TERANG } from "@/app/components/beranda/shell";
+import { BADAN_SITUS } from "@/app/components/beranda/shell";
 import { cn } from "@/lib/utils";
 
 // Disimpan & dipakai ulang, disegarkan tiap 60 detik (menggantikan force-dynamic
@@ -84,7 +84,7 @@ export default async function LandingPage() {
        beranda sama dengan tampilan di landing page"*. Mengubah satu saja
        membuat pengunjung melihat dua situs berbeda tergantung sudah login
        atau belum. */
-    <div className={cn("min-h-screen", BADAN_TERANG)}>
+    <div className={cn("min-h-screen", BADAN_SITUS)}>
       <RedirectIfAuthed />
       {/* ===== Kepala situs — elemen PALING ATAS halaman ini.
              Baris header hitam terpisah (logo + Masuk/Daftar) DIHAPUS

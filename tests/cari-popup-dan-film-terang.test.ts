@@ -130,12 +130,24 @@ describe("kotak cari jadi TOMBOL yang membuka lapisan", () => {
     expect(kotak, "kotak cari tidak muncul").toBeTruthy();
 
     // Telusuri induk kotak sampai akar: tak boleh ada yang melayang.
+    //
+    // ⚠️ PENJAGA INI SEMPAT MATI DIAM-DIAM (ditemukan 2026-11-23). Dua pola di
+    // bawah pernah tertulis `/\bfixed\b/` dan `/\babsolute\b/`, TAPI `\b`-nya
+    // bukan penanda batas-kata regex melainkan karakter BACKSPACE sungguhan
+    // (0x08) — terselip saat berkas ini ditulis lewat string Python biasa.
+    // Akibatnya polanya menuntut karakter backspace di dalam `className`, yang
+    // mustahil ada, jadi `melayang` SELALU kosong dan tes ini HIJAU tanpa
+    // memeriksa apa pun. Tak terlihat di editor, tak ditemukan `grep`; hanya
+    // pemeriksaan byte yang bisa menemukannya. Pola sekarang ditulis tanpa
+    // `\b` sama sekali: yang dicari memang kemunculan kata itu DI MANA PUN di
+    // dalam daftar kelas (`md:fixed`, `sm:absolute` pun harus kena), jadi
+    // batas kata tidak dibutuhkan — dan yang tidak ada tidak bisa patah lagi.
     let n: HTMLElement | null = kotak!.parentElement;
     const melayang: string[] = [];
     while (n && n !== container) {
       const k = n.className || "";
-      if (/fixed/.test(k)) melayang.push("fixed: " + k);
-      if (/absolute/.test(k)) melayang.push("absolute: " + k);
+      if (/fixed/.test(k)) melayang.push("fixed: " + k);
+      if (/absolute/.test(k)) melayang.push("absolute: " + k);
       n = n.parentElement;
     }
     expect(

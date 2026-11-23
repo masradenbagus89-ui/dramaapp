@@ -24,7 +24,7 @@ import KartuVideo from "./beranda/KartuVideo";
 import { saringFilm } from "@/lib/film-jelajah";
 import SearchBar, { KELAS_MENEMPEL_KEPALA } from "./beranda/SearchBar";
 import FilterKatalog from "./beranda/FilterKatalog";
-import { BADAN_TERANG, GRID_CLASS, SHELL } from "./beranda/shell";
+import { BADAN_SITUS, GRID_CLASS, SHELL } from "./beranda/shell";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Search, X } from "lucide-react";
@@ -290,7 +290,7 @@ export default function DramaBrowser({
           beberapa judul meninggalkan pita HITAM di bawah halaman — latar
           <body> menembus dari belakang, dan hasilnya justru terbaca lebih
           belang daripada sebelum diseragamkan. */}
-      <div className={cn(BADAN_TERANG, "min-h-screen")}>
+      <div className={cn(BADAN_SITUS, "min-h-screen")}>
       <div ref={hasilRef} className={cn(SHELL, "scroll-mt-32 pb-10")}>
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800 terang:border-zinc-300 py-3">
           {/* Hitungannya menyebut DUA jenis sejak 2026-10-31 (owner: "tidak

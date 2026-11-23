@@ -10,7 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Bookmark } from "lucide-react";
 import TombolKembali from "@/app/components/TombolKembali";
 import { cn } from "@/lib/utils";
-import { BADAN_TERANG } from "@/app/components/beranda/shell";
+import { BADAN_SITUS } from "@/app/components/beranda/shell";
 
 export default function MyListPage() {
   const [ids, setIds] = useState<string[] | null>(null);
@@ -35,7 +35,7 @@ export default function MyListPage() {
     .filter((d): d is Drama => Boolean(d));
 
   return (
-    <div className={cn(BADAN_TERANG, "min-h-screen")}>
+    <div className={cn(BADAN_SITUS, "min-h-screen")}>
       <div className="mx-auto max-w-7xl px-4 pb-10 pt-6 md:px-6">
       {/* Judul SENGAJA "Favorit", bukan "Daftar Saya" (owner 2026-11-07).
           Nama itu dipakai di SELURUH situs untuk konsep yang sama: tombol di

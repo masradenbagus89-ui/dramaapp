@@ -12,7 +12,7 @@ import BadanKatalog from "../components/beranda/BadanKatalog";
 import KepalaBeranda from "../components/beranda/KepalaBeranda";
 import PersonalRows from "../components/beranda/PersonalRows";
 import PanelLipat from "../components/beranda/PanelLipat";
-import { BADAN_TERANG } from "../components/beranda/shell";
+import { BADAN_SITUS } from "../components/beranda/shell";
 import { cn } from "@/lib/utils";
 
 // Disimpan & dipakai ulang, disegarkan tiap 60 detik (menggantikan force-dynamic
@@ -75,7 +75,7 @@ export default async function BerandaPage() {
   return (
     /* BADAN SITUS TERANG (owner 2026-11-23: *"badan situs ubah jadi putih"*).
        Sampai hari itu pembungkus ini `bg-black` dan hanya BAGIAN BAWAH halaman
-       yang terang — lewat `BADAN_TERANG` di dalam `BadanKatalog`.
+       yang terang — lewat `BADAN_SITUS` di dalam `BadanKatalog`.
 
        Dinaikkan ke tingkat halaman, BUKAN ditambal per-seksi: `tema-terang`
        adalah saklar yang menyalakan varian `terang:` yang SUDAH ditulis di
@@ -91,10 +91,10 @@ export default async function BerandaPage() {
        semula. Begitu pula panel menu katalog HP — Radix mem-portal-nya ke
        `<body>`, di LUAR pembungkus ini.
 
-       `BADAN_TERANG` di dalam `BadanKatalog` sengaja DIBIARKAN: ia masih
+       `BADAN_SITUS` di dalam `BadanKatalog` sengaja DIBIARKAN: ia masih
        dipakai halaman lain yang pembungkusnya belum terang, dan `tema-terang`
        bersarang tidak menimbulkan efek apa pun. */
-    <div className={cn("min-h-screen", BADAN_TERANG)}>
+    <div className={cn("min-h-screen", BADAN_SITUS)}>
       {/* Kepala situs: bar cari + strip genre. Sampai 2026-10-28 ia lahir di
           dalam CatalogBrowser, jadi ikut hilang begitu grid itu dilepas —
           halaman tetap 200 dan build tetap hijau, tapi logo, kotak cari, dan

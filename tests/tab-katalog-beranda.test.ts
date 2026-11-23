@@ -59,11 +59,12 @@ describe("bentuk baris tab sesuai contoh owner", () => {
     }
   });
 
-  it("tombol FILTER hijau ada di baris yang sama", () => {
+  it("tombol FILTER berwarna merek ada di baris yang sama", () => {
     expect(html).toContain("Filter");
-    // `emerald-600` -> `sage-600` pada 2026-11-23 (tema situs jadi soft
-    // sage). Yang dijaga tetap sama: tombolnya hijau & sebaris dengan tab.
-    expect(html).toContain("bg-sage-600");
+    // `emerald-600` -> `sage-600` -> `emas-500`, semuanya 2026-11-23 (tema
+    // situs diganti tiga kali dalam satu hari). Yang dijaga tetap sama:
+    // tombolnya BERWARNA PENUH & sebaris dengan tab, bukan warnanya yang mana.
+    expect(html).toContain("bg-emas-500");
   });
 });
 
@@ -143,10 +144,10 @@ describe("3. baris tab jadi SATU kotak berpembatas", () => {
   });
 
   it("tab yang sedang dibuka tetap menonjol di dalam kotak", () => {
-    // `amber-400` (kuning) -> `sage-700` pada 2026-11-23. Yang dijaga tetap
-    // sama: tab yang sedang dibuka punya latar penuh + bayangan, sehingga
-    // menonjol di antara tab yang diam.
-    expect(html).toMatch(/bg-sage-700[^"]*shadow-md/);
+    // `amber-400` (kuning) -> `sage-700` -> `emas-500`, semuanya 2026-11-23.
+    // Yang dijaga tetap sama: tab yang sedang dibuka punya latar penuh +
+    // bayangan, sehingga menonjol di antara tab yang diam.
+    expect(html).toMatch(/bg-emas-500[^"]*shadow-md/);
   });
 
   it("tab yang diam TIDAK lagi punya bayangan sendiri", () => {

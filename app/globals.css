@@ -2,11 +2,20 @@
 @import "tw-animate-css";
 
 /* ============================================================
-   PALET MEREK "SOFT SAGE" — satu sumber warna untuk seluruh situs.
+   PALET MEREK "GELAP + EMAS" — satu sumber warna untuk seluruh situs.
 
-   Dipasang 2026-11-23 atas permintaan owner (*"tema warna bisa kamu ubah jadi
-   soft sage"*, menunjuk contoh gambar). Menggantikan merah-pink DramaKu di bar
-   atas, kuning di strip genre, dan pink-ungu di tombol utama.
+   RIWAYAT TEMA, supaya tak ada yang memutarnya balik mengira sedang
+   membereskan sesuatu: merah-pink DramaKu → **soft sage** (hijau terang,
+   2026-11-23 pagi, commit 25957c7) → **gelap + emas** (sore hari yang sama,
+   owner: *"warna ini lebih bagus, terlihat elegan dan mewah"* sambil
+   menunjukkan contoh gambar). Titik pulang kalau tema sage mau dikembalikan:
+   commit `25957c7`.
+
+   ⚠️ NAMA TOKENNYA SENGAJA TIDAK MENYEBUT WARNA UMUM seperti "sage": tema
+   situs ini sudah berganti DUA KALI dalam satu hari, dan nama yang terikat
+   hue akan berbohong pada pergantian berikutnya. `emas` & `gelap` menyebut
+   PERAN (warna merek & permukaan), jadi nilainya boleh berubah tanpa
+   membuat namanya keliru.
 
    KENAPA SEBAGAI TOKEN, bukan nilai mentah di tiap komponen: sebelum ini
    gradasi tombol `from-fuchsia-600 to-rose-600` ditulis ULANG di tiga berkas
@@ -16,25 +25,39 @@
    tema (atau MEMBATALKANNYA) cukup di berkas ini.
 
    ⚠️ ANGKA KONTRAS DI BAWAH DIHITUNG, BUKAN DITEBAK (rak design-direction
-   mewajibkan teks normal minimal 4,5:1). Dipakai sebagai aturan pasangan:
-     - teks PUTIH hanya boleh di atas sage-600 ke atas
-         sage-600 = 5,67:1 · sage-700 = 7,58:1 · sage-800 = 9,86:1
-     - teks GELAP (sage-900) hanya di atas sage-400 ke bawah
-         sage-400 = 5,42:1 · sage-200 = 10,34:1 · sage-50 = 13,83:1
-     - sage-500 GAGAL di kedua arah (4,03 & 3,71) → JANGAN dipakai untuk teks
-       normal; ia hanya untuk garis, ikon besar, dan bidang hiasan.
+   mewajibkan teks normal minimal 4,5:1). DUA aturan pasangan, dan yang kedua
+   paling gampang dilanggar tanpa sadar:
+
+   1. DI ATAS PERMUKAAN GELAP — semuanya aman, pilih sesuai peran:
+        putih     14,87–19,51:1   · emas-500  7,29–9,56:1
+        `redup`    7,42–9,74:1  (teks pendukung)
+
+   2. DI ATAS BIDANG EMAS — TEKSNYA WAJIB GELAP, BUKAN PUTIH.
+        teks gelap di emas-500 = 9,56:1  ✅
+        teks PUTIH di emas-500 = 2,04:1  ❌ (emas-200 bahkan cuma 1,26:1)
+      Emas itu warna TERANG. Refleks "tombol berwarna → tulisan putih" yang
+      benar di tema merah & hijau sebelumnya justru membuat tulisan tombol
+      nyaris lenyap di sini. Hanya `emas-700` yang sanggup menanggung teks
+      putih (4,73:1), dan itu nada paling tua.
    ============================================================ */
 @theme {
-  --color-sage-50: #f3f7f3;
-  --color-sage-100: #e4ede6;
-  --color-sage-200: #c9dbcf;
-  --color-sage-300: #a6c2af;
-  --color-sage-400: #80a48c;
-  --color-sage-500: #62876f;
-  --color-sage-600: #4e6e5a;
-  --color-sage-700: #3f5a49;
-  --color-sage-800: #33483b;
-  --color-sage-900: #283830;
+  /* PERMUKAAN GELAP — coklat-kemerahan, bukan abu netral. Kehangatan itulah
+     yang membuat emas di atasnya terbaca "mewah" dan bukan sekadar kuning. */
+  --color-gelap-950: #140a07; /* latar halaman */
+  --color-gelap-900: #1e0f0a; /* bar & kartu */
+  --color-gelap-800: #2a1711; /* permukaan terangkat */
+  --color-gelap-700: #3a211a; /* garis & pembatas */
+
+  /* EMAS — warna merek: tombol utama, tab aktif, penanda. */
+  --color-emas-200: #ffe2a8;
+  --color-emas-300: #ffd27a;
+  --color-emas-400: #ffc04d;
+  --color-emas-500: #f5a524; /* nada utama */
+  --color-emas-600: #d98513;
+  --color-emas-700: #a96209;
+
+  /* Teks redup di atas permukaan gelap (krem, bukan abu — supaya tetap hangat). */
+  --color-redup: #c9b49a;
 }
 
 /* ============================================================
@@ -88,17 +111,27 @@
      ditutup dengan warna pita di sekitarnya. Jadi "sama dengan contoh"
      bukan lagi penilaian, melainkan fakta — sumbernya memang berkas itu.
 
-     Warna terukur dari gambar: dasar #040905, gelombang #4d6647 dan #445f42.
-     Bagian gelapnya lalu DIANGKAT (owner: *"lebih soft/terang sedikit"*)
-     sehingga dasarnya jadi ~#253629 — kontras teks putih ±12,7:1.
-     10 KB (JPEG mutu 0,82; versi PNG-nya 366 KB dan latar ini dimuat di
-     SETIAP halaman).
+     ⚠️ DIWARNAI ULANG JADI EMAS 2026-11-23 (`bar-latar-emas.jpg`), saat tema
+     situs pindah dari hijau sage ke gelap+emas. BENTUK gelombangnya PERSIS
+     sama — berkas emas dibuat dari berkas hijau dengan memetakan KECERAHAN
+     tiap piksel ke tangga warna emas, bukan digambar ulang. Jadi yang empat
+     kali ditolak-lalu-disetujui owner itu tidak ikut hilang; yang berganti
+     cuma warnanya. Skripnya sekali pakai, hasilnya yang disimpan.
+
+     Kecerahan asli terukur 0,363-0,651 lalu direntangkan penuh ke tangga
+     #1e0f0a (dasar) → #a96209 (puncak). Puncaknya SENGAJA `emas-700` yang
+     redup, bukan `emas-500` penuh: hiasan latar seterang warna tombol akan
+     bersaing dengan tombolnya sendiri. Kontras teks putih di dasarnya
+     ±18,3:1. 7,5 KB (JPEG mutu 0,82) — latar ini dimuat di SETIAP halaman.
+
+     `bar-latar.jpg` yang HIJAU sengaja dibiarkan di `public/`: ia sumber
+     bentuknya, dan tema sage bisa dipulangkan tanpa membuatnya ulang.
 
      `100% 100%` = direnggangkan mengikuti bar. Gelombangnya memang ada di
      pojok kiri-atas & kanan-bawah gambar asli, jadi di bar yang lebar-pendek
      ia muncul sebagai sapuan di kedua ujung. */
-  background-image: url("/bar-latar.jpg");
-  background-color: #253629;
+  background-image: url("/bar-latar-emas.jpg");
+  background-color: #1e0f0a;
 }
 
 /* Panah dropdown untuk `<select>` yang dimatikan tampilannya (`appearance-none`).
@@ -107,7 +140,7 @@
   background-repeat: no-repeat;
   background-position: right 0.65rem center;
   background-size: 18px 18px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233F5A49' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23F5A524' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
 }
 
 @custom-variant dark (&:is(.dark *));

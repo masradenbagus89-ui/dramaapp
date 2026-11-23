@@ -37,19 +37,30 @@ const renderFilter = (dramas: Drama[] = KATALOG) =>
   renderToStaticMarkup(createElement(FilterKatalog, { dramas }));
 
 describe("tombol FILTER", () => {
-  it("tergambar sebagai tombol hijau bertuliskan Filter", () => {
+  it("tergambar sebagai tombol berwarna merek bertuliskan Filter", () => {
     const html = renderFilter();
     expect(html).toContain("Filter");
-    // Warna hijau tetap bagian dari permintaan owner ("persis seperti LK21"),
-    // bukan selera bebas — yang berubah cuma NADA hijaunya.
-    //
-    // `emerald-600` → `sage-600` pada 2026-11-23, saat seluruh tema situs jadi
-    // soft sage. Alasannya bukan kerapian: dua hijau yang BEDA NADA
-    // bersebelahan (tombol emerald di samping bar sage) terbaca sebagai salah
-    // cetak, bukan sebagai dua peran berbeda. Kontras teks putih di sage-600 =
-    // 5,67:1, di atas ambang 4,5:1.
-    expect(html).toContain("bg-sage-600");
+    // YANG DIJAGA: tombol ini BERWARNA PENUH — itu inti permintaan owner
+    // ("persis seperti LK21"), bukan warnanya yang mana. Warnanya sendiri
+    // sudah berganti tiga kali: `emerald-600` → `sage-600` (tema soft sage,
+    // 2026-11-23) → `emas-500` (tema gelap+emas, hari yang sama).
+    expect(html).toContain("bg-emas-500");
     expect(html, "nada hijau lama kembali").not.toContain("bg-emerald-600");
+    expect(html, "nada sage lama kembali").not.toContain("bg-sage-600");
+    // ⚠️ TEKSNYA WAJIB GELAP, dan ini bukan selera: emas itu warna TERANG.
+    // Teks putih di `emas-500` = 2,04:1 — tulisan tombolnya praktis lenyap,
+    // tanpa satu pun error. Refleks "tombol berwarna = teks putih" terbawa
+    // dari dua tema sebelumnya yang warnanya memang gelap.
+    //
+    // Polanya TANPA `\b` dengan sengaja. Versi pertama penjaga ini memakainya
+    // dan langsung MATI: `\b` tertulis sebagai karakter backspace sungguhan
+    // (0x08) karena berkasnya ditulis lewat string Python biasa, sehingga
+    // polanya mustahil cocok dan tes ini hijau walau tombolnya berteks putih.
+    // Ketahuan hanya karena diuji-balik — bukan karena ada yang error.
+    expect(
+      html,
+      "tulisan tombol jadi putih di atas emas — kontras 2,04:1, tak terbaca",
+    ).not.toMatch(/bg-emas-500[^"]*text-white/);
   });
 
   it("isi dropdown-nya TIDAK tergambar sampai menunya dibuka", () => {

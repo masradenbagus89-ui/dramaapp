@@ -90,7 +90,10 @@ describe("halaman depan mengisi baris atas dari film saja", () => {
 
   it("badan bersama meneruskan kartu itu ke baris atas", () => {
     const isi = tanpaKomentar("app/components/beranda/BadanKatalog.tsx");
-    expect(isi).toContain("<FeaturedRow items={heroItems}");
+    // JSX-nya kini ditulis multi-baris, jadi dicocokkan dengan toleransi
+    // spasi/ganti-baris. Yang dijaga tetap sama: prop items-nya memang
+    // heroItems — bukan bagaimana barisnya dirapikan.
+    expect(isi).toMatch(/<FeaturedRow\s+items=\{heroItems\}/);
     expect(isi).not.toContain("featuredHeroSlides");
     expect(isi).not.toContain("dramas={heroSlides}");
   });

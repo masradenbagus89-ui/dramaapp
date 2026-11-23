@@ -102,7 +102,22 @@ describe("saringan tersambung ke daftar yang digambar", () => {
   it("punya pesan khusus saat saringan menghasilkan daftar kosong", () => {
     // "Tidak ada video" dan "tidak ada yang cocok dengan saringan" adalah dua
     // keadaan berbeda; menyamakannya membuat panel terbaca seperti rusak.
-    expect(PANEL).toContain("videoTampil.length === 0");
+    // Ejaannya berubah (dulu satu baris `videoTampil.length === 0`); penjaganya
+    // kini WAJIB menemukan DUA cabang terpisah. Tanda "?" disertakan dengan
+    // sengaja: cabang "akun masih kosong" ditulis sebagai ternary
+    // `{videos.length === 0 ? (`, sedangkan cabang GANGGUAN AMBIL
+    // (`fetchError && videos.length === 0`) juga memuat teks yang sama. Tanpa
+    // "?" penjaga ini bisa tertolong cabang gangguan itu dan tetap hijau
+    // walaupun pesan "akun masih kosong" sudah dihapus.
+    expect(
+      PANEL,
+      "tak ada cabang khusus untuk 'belum ada video sama sekali'",
+    ).toMatch(/videos\.length === 0\s*\?/);
+    expect(
+      PANEL,
+      "tak ada cabang khusus untuk 'ada video tapi saringannya tak menyisakan " +
+        "apa pun' — panel akan terbaca seperti rusak, bukan seperti hasil saringan",
+    ).toMatch(/videos\.length > 0\s*&&\s*totalTabel === 0/);
   });
 
   it("tiap pilihan saringan punya labelnya", () => {

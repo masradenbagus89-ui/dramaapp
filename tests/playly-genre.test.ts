@@ -122,7 +122,13 @@ describe("panel admin benar-benar memasang dropdown kategorinya", () => {
   // Pelajaran 2026-09-23: komponen bisa lengkap dan teruji sementara NOL
   // halaman memasangnya, dan build/tsc/test semuanya diam.
   it("halaman admin mengoper kategori yang sudah tersimpan", () => {
-    const halaman = readFileSync("app/admin/videos/playly/page.tsx", "utf-8");
+    // page.tsx kini cuma kerangka + <Suspense>; yang mengoper kategori
+    // tersimpan ke panel adalah IsiPanelPlayly.tsx. Rantai page.tsx ->
+    // IsiPanelPlayly dijaga di tests/bagian-playly.test.ts.
+    const halaman = readFileSync(
+      "app/admin/videos/playly/IsiPanelPlayly.tsx",
+      "utf-8",
+    );
     expect(halaman).toContain("getPlaylyGenres()");
     expect(
       halaman,

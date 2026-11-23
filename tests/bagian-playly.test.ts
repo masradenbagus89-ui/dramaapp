@@ -31,7 +31,18 @@ const PENAMPIL = readFileSync(
   "app/components/admin/PlaylyBagianAktif.tsx",
   "utf8",
 );
-const HALAMAN = readFileSync("app/admin/videos/playly/page.tsx", "utf8");
+// Panel Playly dipecah: page.tsx kini cuma kerangka + <Suspense>, dan yang
+// BENAR-BENAR memasang panel-panelnya adalah IsiPanelPlayly.tsx. Pemeriksaan
+// pemasangan menuju ke sana; kerangkanya dipegang terpisah untuk menjaga
+// rantai render-nya (lihat tes "rantai render" di bawah).
+const HALAMAN = readFileSync(
+  "app/admin/videos/playly/IsiPanelPlayly.tsx",
+  "utf8",
+);
+const KERANGKA_HALAMAN = readFileSync(
+  "app/admin/videos/playly/page.tsx",
+  "utf8",
+);
 // Panel IMDb ikut dibaca sejak 2026-11-11: pintu masuk "Isi manual" pindah ke
 // baris saringan di dalamnya, jadi memeriksa sidebar saja tidak lagi cukup
 // untuk membuktikan setiap bagian punya pintu.
@@ -213,6 +224,16 @@ describe("menu sidebar dan isi halaman tidak boleh menyimpang", () => {
       );
     }
     expect(HALAMAN).toContain("<PlaylyBagianAktif");
+
+    // RANTAI RENDER — penjaga BARU 2026-11-23. Tanpa baris ini IsiPanelPlayly
+    // bisa memasang seluruh panel dengan benar sementara page.tsx tak pernah
+    // merendernya: tepat kegagalan senyap pelajaran 2026-09-23 (komponen
+    // lengkap + teruji, NOL halaman memasangnya, build/tsc/test semua diam).
+    expect(
+      KERANGKA_HALAMAN,
+      "page.tsx tidak merender <IsiPanelPlayly /> — semua panel yang diperiksa " +
+        "di atas terpasang di berkas yang tak pernah sampai ke layar",
+    ).toContain("<IsiPanelPlayly");
   });
 
   it("alamatBagianPlayly sepakat dengan ejaan menu di sidebar", () => {

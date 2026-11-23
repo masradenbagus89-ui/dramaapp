@@ -74,7 +74,12 @@ describe("panel admin tetap bisa dipakai saat Playly bermasalah", () => {
     expect(html).toContain("salinan terakhir");
     expect(html).toContain("coklat, ayy");
 
-    const halaman = readFileSync("app/admin/videos/playly/page.tsx", "utf8");
+    // Pengantar panel disusun di IsiPanelPlayly.tsx sejak page.tsx dipecah
+    // jadi kerangka + <Suspense>. Rantainya dijaga di bagian-playly.test.ts.
+    const halaman = readFileSync(
+      "app/admin/videos/playly/IsiPanelPlayly.tsx",
+      "utf8",
+    );
     const pengantar = halaman.slice(halaman.indexOf("pengantar={"));
     const buka = pengantar.indexOf("<BantuanSingkat");
     const isi = pengantar.indexOf("<KeteranganSumberPlayly");
@@ -101,7 +106,11 @@ describe("panel admin tetap bisa dipakai saat Playly bermasalah", () => {
 
 describe("halaman admin menyediakan daftar cadangan", () => {
   it("memakai salinan terakhir saat pengambilan gagal DAN daftarnya kosong", () => {
-    const isi = readFileSync("app/admin/videos/playly/page.tsx", "utf8");
+    // Pemilihan daftar cadangan ikut pindah ke IsiPanelPlayly.tsx.
+    const isi = readFileSync(
+      "app/admin/videos/playly/IsiPanelPlayly.tsx",
+      "utf8",
+    );
 
     // Syaratnya WAJIB "gagal DAN kosong", bukan "gagal" saja: kalau pengambilan
     // bermasalah tapi masih membawa video, data segar itu yang harus dipakai —

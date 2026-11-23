@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getDramaCached } from "@/lib/dramas";
 import { SITE_URL, absoluteUrl, toMetaDescription } from "@/lib/site";
+import { seoTerpakai } from "@/lib/seo-drama";
 import { dramaJsonLd, toJsonLdScript } from "@/lib/structured-data";
 import { isMovie, subtitleLabel, type Drama } from "@/lib/types";
 import { durasiTayangan } from "@/lib/format";
@@ -109,19 +110,17 @@ export async function generateMetadata(
   if (!drama) return { title: "Drama tidak ditemukan" };
 
   const film = isMovie(drama);
-  const title = `${drama.title} Sub Indo`;
-  const description = toMetaDescription(
-    drama.synopsis,
-    film
-      ? `Nonton film ${drama.title} sub Indo gratis di DramaKu — full movie.`
-      : `Nonton ${drama.title} sub Indo gratis di DramaKu — ${drama.episodes} episode.`,
-  );
+  // Isian SEO admin; kolom kosong dibuat otomatis dari data drama. Judulnya
+  // sudah LENGKAP dengan merek, jadi `absolute` — tanpa itu template layout
+  // menambah "| DramaKu" kedua.
+  const { title, description, keywords } = seoTerpakai(drama);
   const cover = drama.heroImage || drama.posterImage;
   const path = `/drama/${encodeURIComponent(drama.id)}`;
 
   return {
-    title,
+    title: { absolute: title },
     description,
+    keywords,
     alternates: { canonical: path },
     openGraph: {
       type: film ? "video.movie" : "video.tv_show",

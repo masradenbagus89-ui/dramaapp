@@ -174,7 +174,8 @@ sengaja TIDAK ikut dan tetap menggantung di folder kerja.
 - **`dramaku` (cermin):** ✅ di-push, sinkron dengan `main` lokal. Nol rilis — cermin tak men-deploy.
 - **`origin` (produksi):** ⏸️ **DITAHAN di `6de869d`.** Keputusan owner: *"sesi tema jangan di push
   karena belum selesai"*. Sebabnya `git push` tidak bisa memilih commit — mendorong `main` akan
-  merilis **10 commit** sekaligus, termasuk 2 commit tema yang masih dikerjakan dan fitur SEO rekan.
+  merilis SELURUH commit di branch sekaligus (**10** saat ini ditulis, bertambah tiap sesi lain
+  commit), termasuk 2 commit tema yang masih dikerjakan dan fitur SEO rekan.
 
 ⚠️ **Gerbang HIJAU yang tercatat di atas BUKAN atas keadaan sekarang** — ia dijalankan sesudah
 `a4fba18` tapi sebelum `76dc76b` dan sebelum 2 commit terakhir sesi lain masuk. Wajib dijalankan

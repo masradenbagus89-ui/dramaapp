@@ -35,11 +35,14 @@
 | `origin` (produksi) | ⏸️ **DITAHAN** di `6de869d` | tombol rilis, belum ditekan |
 
 **Kenapa ditahan — keputusan owner 2026-11-23:** *"sesi tema jangan di push karena belum selesai"*.
-`main` lokal **10 commit** di depan `origin/main`, dan `git push` **TIDAK bisa memilih commit** —
+`main` lokal **jauh** di depan `origin/main` (**10 commit** saat catatan ini ditulis, dan JUMLAHNYA
+BERTAMBAH tiap sesi lain commit — hitung sendiri: `git rev-list --count origin/main..main`),
+dan `git push` **TIDAK bisa memilih commit** —
 semua ikut. Di antaranya 2 commit tema milik sesi lain yang masih dikerjakan dan fitur SEO rekan
 yang belum pernah tayang.
 
-**Yang menunggu di antrean (10 commit, urut lama → baru):**
+**Yang menunggu di antrean (10 saat ditulis, urut lama → baru — daftar ini TITIK-MULAI, bukan
+lengkap; sesi lain masih menambah):**
 - `a5c053d`, `11c06ac` — docs audit keamanan
 - `d6dc594` + merge `4f233b0` — **SEO otomatis per drama** (rekan). ⚠️ Mengubah title/description
   ~42 halaman drama di Google; URL/slug TIDAK berubah. ❓ Jalur simpan ke `app_data` key `seo` di

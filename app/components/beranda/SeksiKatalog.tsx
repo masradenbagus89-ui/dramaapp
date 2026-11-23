@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { KartuKatalog } from "@/lib/beranda-video";
 import BarisGeser from "./BarisGeser";
-import { SHELL } from "./shell";
+import { SHELL, TOMBOL_UTAMA } from "./shell";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -63,8 +63,16 @@ export default function SeksiKatalog({
           asChild
           /* min-h-11 (~44px) hanya di HP: batas target sentuh yang masih
              nyaman ditekan jari (skills/a11y). Di layar lebar dirapatkan ke
-             36px supaya tingginya pas dengan baris judul di sebelahnya. */
-          className="min-h-11 shrink-0 rounded-sm bg-gradient-to-r from-fuchsia-600 to-rose-600 px-6 text-[11px] font-bold uppercase tracking-wide text-white shadow-md hover:from-fuchsia-500 hover:to-rose-500 md:min-h-9"
+             36px supaya tingginya pas dengan baris judul di sebelahnya.
+
+             ⚠️ Sempat ditelanjangi jadi tautan teks "Lihat Semua ›" khusus HP
+             pada 2026-11-21; dikembalikan pada hari yang sama atas permintaan
+             owner (*"cuma bagian atas yang diubah, sisanya kembalikan ke
+             dramaku"*). Bentuk tombol gradasi ini berlaku di semua layar. */
+          className={cn(
+            TOMBOL_UTAMA,
+            "min-h-11 shrink-0 rounded-sm px-6 text-[11px] font-bold uppercase tracking-wide shadow-md md:min-h-9",
+          )}
         >
           <Link href={hrefSemua}>Semua</Link>
         </Button>

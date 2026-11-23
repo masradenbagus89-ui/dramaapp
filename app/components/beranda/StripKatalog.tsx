@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useRef } from "react";
+import { ChevronRight } from "lucide-react";
 import type { NavItem } from "@/lib/nav-katalog";
 import { cn } from "@/lib/utils";
 import { SHELL } from "./shell";
@@ -36,10 +38,27 @@ const ITEM_CLASS =
  * dropdown "Semua genre" pada bar cari halaman itu.
  */
 export default function StripKatalog({ items, activeHref }: Props) {
+  /**
+   * Wadah yang digeser oleh panah di ujung kanan.
+   *
+   * ⚠️ Hook WAJIB dipanggil sebelum `return null` di bawah — aturan React:
+   * jumlah hook harus sama di tiap render. Menaruhnya sesudah penjaga
+   * "items kosong" membuat komponen ini melempar begitu katalog kosong.
+   */
+  const laci = useRef<HTMLDivElement>(null);
+
   if (items.length === 0) return null;
 
   return (
-    <div className="border-b-2 border-amber-600 bg-gradient-to-r from-amber-400 to-yellow-400">
+    /* Strip genre ikut palet "soft sage" (owner 2026-11-23). Sampai hari itu
+       ia gradasi kuning `from-amber-400 to-yellow-400` dengan garis
+       `amber-600`. Kuning terang tepat di bawah bar merah adalah dua warna
+       jenuh yang bertumpuk — itu bagian dari yang owner sebut "sakit mata".
+
+       `sage-100` + teks `sage-900` = kontras 12,51:1 (dihitung, lihat palet di
+       app/globals.css). Chip aktif dibalik jadi `sage-700` + teks putih =
+       7,58:1. Keduanya jauh di atas ambang 4,5:1. */
+    <div className="border-b border-sage-200 bg-gradient-to-r from-sage-50 via-sage-50 to-sage-100">
       <div className={cn(SHELL, "flex items-center gap-2 px-2 md:px-4")}>
         {/* Digeser ke samping kalau tak muat (layar sempit), bukan membungkus:
             daftar ini sengaja dijaga pendek oleh owner supaya muat satu baris di
@@ -49,7 +68,10 @@ export default function StripKatalog({ items, activeHref }: Props) {
             Pembungkus `flex-1` dipertahankan walau ujung kanannya kini kosong:
             ia yang menjaga chip tetap satu baris yang bisa digeser kalau suatu
             saat ada yang dipasang di sebelahnya lagi. */}
-        <div className="no-scrollbar flex flex-1 items-center overflow-x-auto">
+        <div
+          ref={laci}
+          className="no-scrollbar flex flex-1 items-center overflow-x-auto"
+        >
           {items.map((item) => (
             <Link
               key={item.href}
@@ -58,14 +80,55 @@ export default function StripKatalog({ items, activeHref }: Props) {
               className={cn(
                 ITEM_CLASS,
                 item.href === activeHref
-                  ? "bg-zinc-950 text-amber-400"
-                  : "text-zinc-900 hover:bg-amber-300",
+                  ? "rounded-full bg-sage-700 text-white"
+                  : "rounded-full text-sage-900 hover:bg-sage-200",
               )}
             >
               {item.label}
             </Link>
           ))}
         </div>
+
+        {/* PANAH GESER di ujung kanan — owner 2026-11-23: *"di ujung fiksi
+            ilmiah kamu kasih tanda panah jadi tanda masih bisa di geser"*.
+
+            Strip ini memang lebih panjang dari layar HP dan selama ini SATU
+            SATUNYA petunjuknya adalah chip terakhir yang terpotong di tepi —
+            petunjuk yang gampang terbaca sebagai "memang segitu isinya".
+
+            ⚠️ BENAR-BENAR MENGGESER, bukan hiasan. Panah yang tampak seperti
+            tombol tapi diam saat diketuk lebih buruk daripada tidak ada:
+            penonton menyimpulkan bagian itu rusak. Caranya menyalin pola
+            `BarisGeser.tsx:107` — satu layar dikurangi sedikit supaya chip di
+            tepi tetap terlihat sebagai jangkar, bukan melompat jauh. */}
+        <button
+          type="button"
+          aria-label="Geser pintasan ke kanan"
+          onClick={() => {
+            const el = laci.current;
+            if (!el) return;
+            el.scrollBy({ left: el.clientWidth * 0.8, behavior: "smooth" });
+          }}
+          /* Hijau LEMBUT, bukan pekat (owner 2026-11-23: *"tanda panah warna
+             hijau juga bikin soft aja"*). `sage-800` di atas `sage-200` =
+             10,34:1, jadi panahnya tetap terbaca jelas walau tidak lagi
+             menonjok. */
+          /* `md:hidden` — HP SAJA (owner 2026-11-23: *"untuk versi web yang
+             tanda panah itu tidak perlu, kamu hapus; untuk versi HP saja"*).
+             Di layar komputer seluruh pintasan memang muat satu baris, jadi
+             panahnya tidak menggeser apa pun — tombol yang diklik lalu tidak
+             terjadi apa-apa justru membuat penonton mengira bagian itu rusak.
+
+             ❓ BATAS JUJUR: ambangnya LEBAR LAYAR (768px), bukan "apakah
+             stripnya benar-benar bisa digeser". Di jendela komputer yang
+             disempitkan ke ±800px, strip bisa saja meluap tanpa panah.
+             Mengukur keterluapan sungguhan menuntut pengukuran di browser +
+             pemantau perubahan ukuran — mekanisme baru untuk kasus yang
+             jarang, jadi sengaja tidak dibangun. */
+          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-sage-200 text-sage-800 transition-colors outline-none hover:bg-sage-300 focus-visible:ring-2 focus-visible:ring-sage-600 md:hidden"
+        >
+          <ChevronRight className="size-4" aria-hidden="true" />
+        </button>
       </div>
     </div>
   );

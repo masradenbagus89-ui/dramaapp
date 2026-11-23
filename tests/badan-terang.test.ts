@@ -54,6 +54,15 @@ describe("badan terang: saklar dan latar tidak boleh terpisah", () => {
     expect(BADAN_TERANG).toMatch(/\bbg-\S+/);
   });
 
+  it("saklar `tema-terang` benar-benar dipasang di globals.css", () => {
+    // Komponen yang benar + konstanta yang benar TIDAK membuktikan saklarnya
+    // ada. Kalau `@custom-variant terang` hilang dari CSS, seluruh `terang:`
+    // DIAM — tulisan gelap di atas latar putih jadi putih semua, tanpa satu
+    // pun error. Pelajaran yang sama dengan kasus KepalaBeranda 2026-10-28.
+    const css = readFileSync("app/globals.css", "utf8");
+    expect(css).toMatch(/@custom-variant terang \(&:is\(\.tema-terang \*\)\);/);
+  });
+
   it.each(HALAMAN_TERANG)(
     "$berkas memakai BADAN_TERANG ($catatan)",
     ({ berkas }) => {

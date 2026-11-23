@@ -40,9 +40,16 @@ describe("tombol FILTER", () => {
   it("tergambar sebagai tombol hijau bertuliskan Filter", () => {
     const html = renderFilter();
     expect(html).toContain("Filter");
-    // Warna hijau adalah bagian dari permintaan owner ("persis seperti LK21"),
-    // bukan selera bebas — dipatok supaya tidak hilang saat kelasnya dirapikan.
-    expect(html).toContain("bg-emerald-600");
+    // Warna hijau tetap bagian dari permintaan owner ("persis seperti LK21"),
+    // bukan selera bebas — yang berubah cuma NADA hijaunya.
+    //
+    // `emerald-600` → `sage-600` pada 2026-11-23, saat seluruh tema situs jadi
+    // soft sage. Alasannya bukan kerapian: dua hijau yang BEDA NADA
+    // bersebelahan (tombol emerald di samping bar sage) terbaca sebagai salah
+    // cetak, bukan sebagai dua peran berbeda. Kontras teks putih di sage-600 =
+    // 5,67:1, di atas ambang 4,5:1.
+    expect(html).toContain("bg-sage-600");
+    expect(html, "nada hijau lama kembali").not.toContain("bg-emerald-600");
   });
 
   it("isi dropdown-nya TIDAK tergambar sampai menunya dibuka", () => {

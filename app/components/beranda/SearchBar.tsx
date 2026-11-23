@@ -9,8 +9,15 @@ import { alamatCari } from "@/lib/nav-katalog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { Search, SlidersHorizontal, X } from "lucide-react";
-import { SHELL } from "./shell";
+import { Search, X } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  LATAR_BAR_MEREK,
+  LATAR_PANEL_KATALOG_HP,
+  SHELL,
+  SOROT_BAR_MEREK,
+  TEKS_BAR_MEREK,
+} from "./shell";
 
 /**
  * Slot "kepala situs" — hanya diisi halaman yang memakai bar ini sebagai
@@ -22,6 +29,33 @@ import { SHELL } from "./shell";
 export type SearchBarChrome = {
   /** Logo/identitas di ujung kiri. Halaman yang sudah punya TopNav mengosongkannya. */
   brand?: ReactNode;
+  /**
+   * Logo yang sama TAPI tanpa `<Link>` di dalamnya — dipakai sebagai isi tombol
+   * pembuka menu katalog di HP (owner 2026-11-21).
+   *
+   * Diisi = perilaku HP berubah: deretan menu (`menus`) disembunyikan sampai
+   * logo diklik. Dikosongkan = perilaku lama, menu selalu kelihatan. Jadi
+   * pemakai yang belum mengisinya TIDAK ikut berubah.
+   *
+   * Dipisah dari `brand` karena `<a>` di dalam `<button>` adalah HTML tidak
+   * sah — lihat `tanpaTautan` di KepalaKatalog.tsx.
+   */
+  brandHp?: ReactNode;
+  /**
+   * ISI panel pop up menu katalog di HP (owner 2026-11-21: *"jangan di jadikan
+   * dropdown tapi seperti pop up aja biar terlihat keren"*). Lihat
+   * `MenuKatalogHp.tsx`.
+   *
+   * Diisi = deretan menu `menus` disembunyikan di HP dan digantikan panel yang
+   * naik dari bawah saat logo diketuk. Dikosongkan = perilaku lama, deretan
+   * menu tetap tergambar. Jadi pemakai yang belum mengisinya TIDAK ikut
+   * berubah — dan pemanggil boleh mengosongkannya saat katalog kosong supaya
+   * tombolnya tidak membuka panel hampa.
+   *
+   * Wajib berpasangan dengan `brandHp`: tanpa logo versi tanpa-tautan, tidak
+   * ada yang bisa jadi pemicunya.
+   */
+  menusHp?: ReactNode;
   /** Deretan menu dropdown katalog (lihat NavMenus.tsx). */
   menus?: ReactNode;
   /** Tombol di ujung kanan, mis. Masuk/Daftar. */
@@ -57,6 +91,7 @@ export const TEKS_KOTAK_CARI = "Cari film di DramaKu";
  * ikut melompat. Beda 56px (`top-14` vs `top-0`) sudah cukup terasa.
  */
 export const KELAS_MENEMPEL_KEPALA = "sticky top-0";
+
 
 type Props = {
   value: string;
@@ -147,7 +182,19 @@ export default function SearchBar({
   indeksSaran,
 }: Props) {
   const router = useRouter();
-  const [filterTerbuka, setFilterTerbuka] = useState(false);
+  /**
+   * Panel pop up menu katalog di HP menyala hanya kalau pemanggil mengirim
+   * KEDUA bahannya: logo versi tanpa-tautan (pemicunya) DAN isi panelnya.
+   *
+   * ⚠️ Ditulis SEKALI sebagai satu nilai karena aturannya dipakai DUA kali —
+   * memutuskan bentuk logo, dan memutuskan deretan menu disembunyikan atau
+   * tidak di HP. Saat kedua tempat itu menulis syaratnya sendiri-sendiri,
+   * keduanya sempat berbeda: pemicu digerbangi `brandHp && menusHp` sementara
+   * penyembunyi cuma `menusHp` — cukup untuk melahirkan keadaan "menu
+   * disembunyikan tapi tak ada tombol yang bisa membukanya lagi", tanpa satu
+   * pun error.
+   */
+  const panelHpAktif = Boolean(chrome?.brandHp && chrome?.menusHp);
   const [cariTerbuka, setCariTerbuka] = useState(bukaAwal);
   const kotakRef = useRef<HTMLInputElement>(null);
 
@@ -249,7 +296,12 @@ export default function SearchBar({
         type="submit"
         aria-label="Cari"
         className={cn(
-          "flex shrink-0 items-center justify-center rounded-r-sm bg-rose-700 text-white transition-colors hover:bg-rose-600",
+          /* Tombol kirim = satu-satunya bidang BERWARNA PENUH di bar yang kini
+             pucat, jadi ia yang menandai "di sinilah pencarian dikirim".
+             `sage-600` + putih = 5,67:1. ⚠️ Sampai 2026-11-23 ia `bg-rose-700`
+             — sisa tema merah yang TERLEWAT saat tema diganti jadi sage, dan
+             owner yang menangkapnya ("di search masih ada warna merah"). */
+          "flex shrink-0 items-center justify-center rounded-r-sm bg-sage-600 text-white transition-colors hover:bg-sage-700",
           besar ? "h-12 w-14" : "h-9 w-11",
         )}
       >
@@ -278,7 +330,8 @@ export default function SearchBar({
         // yang tadinya `fuchsia-700` (ungu) terlalu mencolok dan tidak sejajar
         // dengan situs katalog pembanding, yang memakai merah tua di kiri
         // melembut jadi merah-pink di kanan.
-        "z-30 bg-gradient-to-r from-rose-700 via-rose-600 to-pink-600 shadow-lg shadow-black/50",
+        "z-30 shadow-lg shadow-black/50",
+        LATAR_BAR_MEREK,
         className,
       )}
     >
@@ -286,7 +339,179 @@ export default function SearchBar({
         className={cn(SHELL, "flex flex-wrap items-center gap-x-3 gap-y-2 py-2.5")}
       >
         {chrome?.brand && (
-          <div className="order-1 shrink-0 md:order-none">{chrome.brand}</div>
+          <div
+            className={cn(
+              "order-1 shrink-0 md:order-none",
+              /* Nama situs "DramaKu" menyingkir SELAMA kotak cari dibuka di
+                 HP — lambang D-nya TETAP terlihat (owner 2026-11-21: *"ketika
+                 klik search jadi ketutup D-nya"*).
+
+                 Terukur di layar 360px: logo 36 + jarak 12 + tombol tutup 44
+                 menyisakan ±236px untuk kotak cari, sedangkan tulisan "Cari
+                 film di DramaKu" butuh ±150px. Nama situs memakan ±90px —
+                 tanpa aturan ini sisanya ±146px dan tulisannya terpotong
+                 lagi, keluhan yang sudah TIGA kali diperbaiki. */
+              cariTerbuka &&
+                "max-md:[&_[data-nama-situs]]:hidden max-md:[&_[data-lambang-saja]]:block",
+            )}
+          >
+            {panelHpAktif ? (
+              <>
+                {/* DI HP: logo = pemicu PANEL POP UP menu katalog (owner
+                    2026-11-21: *"ketika di klik D keluar genre, series,
+                    populer, negara"* lalu *"jangan di jadikan dropdown tapi
+                    seperti pop up aja biar terlihat keren"*).
+
+                    ⚠️ `md:hidden` DIPASANG DI PEMICUNYA, dan HANYA di situ —
+                    jangan dipindah ke `<SheetContent>`. `SheetContent`
+                    menggambar `<SheetOverlay>` sebagai elemen TERPISAH yang
+                    className-nya tidak diteruskan (components/ui/sheet.tsx:59),
+                    jadi menyembunyikan Content akan MENINGGALKAN tirai
+                    `fixed inset-0 bg-black/50`: layar komputer gelap total
+                    tanpa satu pun yang bisa diklik, tanpa satu pun error.
+                    Pemicu yang mati = panel yang tak pernah bisa DIBUKA pada
+                    lebar ≥48rem. ❓ Batas jujurnya: panel yang SUDAH terbuka
+                    di layar sempit tidak ikut tertutup sendiri kalau layarnya
+                    kemudian melebar (HP diputar mendatar) — ia tetap bisa
+                    ditutup, cuma deretan menu versi komputer ikut terlihat di
+                    belakangnya. Tidak ditambal karena tambalannya menuntut
+                    pengukuran lebar layar lewat JavaScript (lihat larangannya
+                    di bawah).
+
+                    ⚠️ TANPA PANAH ⌄ — DIHAPUS owner 2026-11-21 (*"berbentuk
+                    dropdown, kan saya bilang pop up"*), dan jangan
+                    dikembalikan tanpa permintaan baru. Panah ke bawah adalah
+                    penanda DROPDOWN yang universal, jadi memasangnya di
+                    pemicu pop up justru menyampaikan bentuk yang salah. Ini
+                    permintaan ketiga owner melepas penanda semacam itu
+                    (garis-tiga 2026-11-14, panah avatar & panah ini hari ini).
+
+                    ❓ Harga yang diterima sadar: tanpa penanda apa pun, tak
+                    ada isyarat visual bahwa logo bisa diketuk — penonton baru
+                    bisa saja tak pernah menemukan Genre/Series/Populer/Negara.
+                    Jalan lain ke penyaring TETAP ada dan bukan hiasan: tombol
+                    "Filter" di BottomNav menuju /discover, dan strip genre
+                    kuning di layar komputer.
+
+                    DUA elemen (pemicu untuk HP, tautan untuk komputer), bukan
+                    satu yang diubah lewat JavaScript: mengukur lebar layar
+                    sendiri di JS membuat ambangnya bisa menyimpang dari ambang
+                    Tailwind, dan menyimpangnya tak memunculkan error. */}
+                <Sheet>
+                  <SheetTrigger
+                    aria-label="Menu katalog"
+                    /* ⚠️ `focus-visible:ring-…`, JANGAN `focus-visible:bg-black/25`
+                       seperti tombol lain di bar ini. Sejak kepala situs di HP
+                       jadi gelap (`KELAS_KEPALA_GELAP_HP` = `bg-zinc-950`),
+                       sorotan hitam-transparan di atas latar hitam = TIDAK
+                       TERLIHAT, sementara `outline-none` sudah membuang cincin
+                       bawaan browser. Hasilnya pemakai papan ketik kehilangan
+                       jejak fokusnya tepat di satu-satunya ukuran layar tempat
+                       tombol ini hidup. */
+                    className="flex items-center rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-amber-400 md:hidden"
+                  >
+                    {chrome.brandHp}
+                  </SheetTrigger>
+                  <SheetContent
+                    side="bottom"
+                    /* Tombol X bawaan dimatikan: ukurannya ~16px di pojok
+                       kanan ATAS panel — titik paling sulit dijangkau jempol
+                       satu tangan. Gantinya bilah "Tutup" selebar panel di
+                       dasarnya (MenuKatalogHp.tsx). */
+                    showCloseButton={false}
+                    /* Radix mengisi `aria-describedby` TANPA SYARAT. Tanpa
+                       `SheetDescription`, id itu menggantung ke elemen yang
+                       tidak ada — pembaca layar menyebut keterangan kosong. */
+                    aria-describedby={undefined}
+                    /* Fokus pertama diarahkan ke PANELNYA, bukan ke elemen
+                       fokusable pertama di dalamnya. Tanpa ini Radix memanggil
+                       `focusFirst(removeLinks(...))` — seluruh `<a>` dibuang
+                       dari kandidat, sehingga chip genre tak pernah terpilih
+                       dan yang kebagian fokus justru pegangan yang tugasnya
+                       MENUTUP panel. Jadi hal pertama yang ditawarkan menu ini
+                       kepada pemakai pembaca layar adalah perintah
+                       membatalkannya. */
+                    onOpenAutoFocus={(e) => {
+                      e.preventDefault();
+                      (e.currentTarget as HTMLElement).focus();
+                    }}
+                    /* `data-[state=open]:duration-300`, BUKAN `duration-300`
+                       polos: bawaannya `data-[state=open]:duration-500`
+                       (sheet.tsx:63), dan twMerge menghitung varian berbeda
+                       sebagai grup berbeda — kelas polos tidak akan
+                       menimpanya, panel terasa lambat tanpa ada yang salah. */
+                    /* `motion-reduce:*` WAJIB di sini, bukan cuma di isi
+                       panelnya: yang berubah paling luas justru panel ini —
+                       seluruh layar. Animasi bawaan `sheet.tsx`
+                       (`animate-in`/`slide-in-from-bottom`) tidak menghormati
+                       setelan "Kurangi Gerak" sama sekali (tw-animate-css tak
+                       memuat satu pun aturan `prefers-reduced-motion`). Dengan
+                       `animation: none`, Radix tidak punya animasi yang perlu
+                       ditunggu sehingga panel tetap bisa ditutup. */
+                    /* KOTAK DI TENGAH YANG TINGGINYA MENGIKUTI ISI + MEMUDAR.
+                       Owner 2026-11-23, dua koreksi berturut-turut:
+                       *"dropdown jangan dari bawah, tidak maksimal"* lalu
+                       *"jangan bikin full layar"*. Riwayat bentuknya: 72dvh
+                       meluncur dari bawah → penuh satu layar → bentuk ini.
+
+                       KENAPA "mengikuti isi" menyelesaikan KEDUA keluhan
+                       sekaligus, bukan kompromi di tengah: panel 72dvh maupun
+                       penuh-layar sama-sama memaksakan tinggi TETAP, jadi saat
+                       semua grup tertutup sisanya jadi bidang warna kosong —
+                       itulah yang terbaca "tidak maksimal" (banyak ruang, tak
+                       ada isi) DAN "sakit mata" (bidang warna pekat seluas
+                       layar). Tinggi yang mengikuti isi membuat bidang
+                       warnanya sekecil isinya. Pagar untuk grup panjang
+                       (Negara 25 nama) TIDAK dipasang di sini melainkan di
+                       wadah bergulir dalam `MenuKatalogHp.tsx` — satu tempat
+                       saja yang mengatur batas tinggi. Dua tempat = dua angka
+                       yang bisa menyimpang tanpa memunculkan error.
+
+                       ⚠️ `side="bottom"` SENGAJA DIPERTAHANKAN walau panelnya
+                       tidak lagi berlabuh di bawah. Alasannya: prop itu cuma
+                       memilih satu set kelas di sheet.tsx:70, dan menggantinya
+                       ke "top"/"left" hanya menukar satu set kelas yang harus
+                       ditimpa dengan set lain yang juga harus ditimpa — nol
+                       untungnya. Yang ditimpa di sini: `inset-x-0 bottom-0`
+                       → `inset-0` + `m-auto` + `h-fit`, yaitu cara memusatkan
+                       elemen `fixed` tanpa transform (transform akan bentrok
+                       dengan animasi Radix yang juga memakainya).
+
+                       ⚠️ LUNCURAN DIMATIKAN LEWAT VARIABELNYA, bukan dengan
+                       membuang kelas `slide-in-from-bottom`. twMerge TIDAK
+                       mengenali kelas tw-animate-css sebagai grup yang saling
+                       meniadakan, jadi menambah kelas "lawan" tidak akan
+                       membatalkannya — kelas bawaan dari sheet.tsx tetap
+                       menang. Menyetel `--tw-enter-translate-y`/`exit` ke 0
+                       membuat keyframe yang sama berjalan tanpa perpindahan:
+                       yang tersisa `fade-in`/`fade-out` bawaannya. Itulah
+                       "memudar" yang diminta. */
+                    /* Latar panel = MERAH TUA RATA (`LATAR_PANEL_KATALOG_HP`),
+                       bukan gradasi. Alasan lengkapnya di shell.ts — ringkasnya
+                       gradasi yang sama terbaca sebagai dua warna berbeda
+                       karena porsi yang terlihat di bar dan di panel tidak
+                       sama. Kelas `bg-*` ini menimpa `bg-background` bawaan
+                       sheet.tsx (sama-sama background-color, twMerge
+                       menyelesaikannya). */
+                    className={cn(
+                      LATAR_PANEL_KATALOG_HP,
+                      "inset-0 m-auto h-fit w-[calc(100%-2rem)] max-w-sm",
+                      "gap-0 overflow-hidden rounded-2xl border-0 p-0 shadow-2xl",
+                      "data-[state=open]:[--tw-enter-translate-y:0] data-[state=closed]:[--tw-exit-translate-y:0]",
+                      "data-[state=closed]:duration-200 data-[state=open]:duration-300 motion-reduce:animate-none motion-reduce:transition-none",
+                    )}
+                  >
+                    {chrome.menusHp}
+                  </SheetContent>
+                </Sheet>
+                {/* Di layar komputer logo tetap TAUTAN ke beranda, persis
+                    seperti sebelumnya — nol perubahan di sana. */}
+                <div className="hidden md:block">{chrome.brand}</div>
+              </>
+            ) : (
+              chrome.brand
+            )}
+          </div>
         )}
 
         {/* KOTAK CARI mode BIASA (halaman hasil pencarian). Mode TOMBOL tidak
@@ -301,28 +526,47 @@ export default function SearchBar({
           )}
 
         {chrome?.menus && (
-          <div className="order-4 w-full min-w-0 md:order-none md:w-auto">
+          <div
+            className={cn(
+              "order-4 w-full min-w-0 md:order-none md:w-auto",
+              /* Deretan menu ini jadi bentuk khusus LAYAR KOMPUTER begitu
+                 pemakainya menyediakan panel pop up penggantinya — HANYA
+                 kalau `menusHp` diisi. Tanpa syarat itu, pemakai yang belum
+                 menyediakan panelnya akan kehilangan SELURUH menu katalog di
+                 HP, tanpa satu pun error.
+
+                 Disembunyikan lewat CSS, bukan dicabut: chip-chipnya tetap di
+                 HTML untuk mesin pencari, dan markup-nya tetap satu — tak ada
+                 versi kedua yang bisa menyimpang.
+
+                 Syaratnya WAJIB `panelHpAktif` yang sama persis dengan yang
+                 menggambar pemicunya di atas — bukan `chrome.menusHp` saja.
+                 Dua syarat yang berbeda sedikit cukup untuk melahirkan
+                 keadaan "menu hilang di HP tapi tak ada tombol pembukanya". */
+              panelHpAktif && "max-md:hidden",
+            )}
+          >
             {chrome.menus}
           </div>
         )}
 
         {filters && (
           <>
-            {/* Penyaring berjajar di kanan bar — layar lebar. */}
-            <div className="order-5 ml-auto hidden items-center gap-1.5 md:order-none md:flex">
+            {/* Penyaring tampil LANGSUNG di bar, di HP maupun layar komputer.
+
+                ⚠️ Sampai 2026-11-23 di HP ia disembunyikan di balik tombol
+                "FILTER" yang membuka baris kedua. Itu masuk akal ketika slot
+                ini diisi SEDERET kontrol — tapi satu-satunya pengisinya hari
+                ini `FilterKatalog`, yang bentuknya sendiri sudah satu tombol
+                bernama "Filter". Hasilnya DUA tombol bertumpuk yang sama-sama
+                bertuliskan FILTER: yang atas membuka yang bawah. Owner
+                menangkapnya saat mencoba menyaring.
+                Kalau kelak slot ini diisi beberapa kontrol sekaligus dan
+                barnya jadi sesak di HP, kembalikan pola toggle-nya — tapi
+                JANGAN sampai pemicunya bernama sama dengan isinya. */}
+            <div className="order-2 ml-auto flex shrink-0 items-center gap-1.5 md:order-none">
               {filters}
             </div>
-            {/* Di HP disembunyikan di balik tombol supaya bar tetap ringkas. */}
-            <Button
-              type="button"
-              size="sm"
-              onClick={() => setFilterTerbuka((v) => !v)}
-              aria-expanded={filterTerbuka}
-              className="order-2 ml-auto h-9 shrink-0 gap-1.5 rounded-sm bg-black/30 text-xs font-bold uppercase tracking-wide text-white hover:bg-black/50 md:hidden"
-            >
-              <SlidersHorizontal className="size-3.5" />
-              Filter
-            </Button>
           </>
         )}
 
@@ -346,7 +590,20 @@ export default function SearchBar({
                sempit `flex-wrap` milik bar yang menurunkan kotaknya ke baris
                berikutnya — masih DI DALAM bar, bukan menimpa poster. */}
         {modeTombol && (
-          <div className="order-2 ml-auto flex min-w-0 flex-1 items-center justify-end gap-2 md:order-none">
+          <div
+            className={cn(
+              "order-2 ml-auto flex min-w-0 flex-1 items-center justify-end gap-2 md:order-none",
+              /* Kotak cari TETAP di baris yang sama (owner 2026-11-21, putaran
+                 kedua): yang menyingkir justru logo & avatar di kiri-kanannya,
+                 lihat komentar di keduanya. Jadi kotaknya dapat selebar bar —
+                 tulisan "Cari film di DramaKu" muat utuh — TANPA menambah
+                 baris kosong.
+
+                 ⚠️ JANGAN kembalikan versi `max-md:w-full` yang menurunkan
+                 kelompok ini ke baris sendiri: itu sudah dicoba dan ditolak
+                 owner karena meninggalkan ruang kosong di baris atas. */
+            )}
+          >
             {cariTerbuka && (
               <div className="min-w-0 flex-1 md:max-w-md">
                 {formCari("flex w-full items-stretch")}
@@ -359,8 +616,10 @@ export default function SearchBar({
               aria-label={cariTerbuka ? "Tutup pencarian" : "Cari film"}
               aria-expanded={cariTerbuka}
               className={cn(
-                "flex size-9 shrink-0 items-center justify-center rounded-sm text-white transition-colors outline-none hover:bg-black/25 focus-visible:bg-black/25",
-                cariTerbuka && "bg-black/30",
+                TEKS_BAR_MEREK,
+                SOROT_BAR_MEREK,
+                "flex size-9 shrink-0 items-center justify-center rounded-sm transition-colors outline-none",
+                cariTerbuka && "bg-sage-200",
               )}
             >
               {cariTerbuka ? (
@@ -373,17 +632,33 @@ export default function SearchBar({
         )}
 
         {chrome?.trailing && (
-          <div className="order-2 flex shrink-0 items-center gap-2 md:order-none">
+          <div
+            className={cn(
+              "order-2 flex shrink-0 items-center gap-2 md:order-none",
+              /* HANYA koin & avatar yang menyingkir selagi kotak cari terbuka
+                 di HP — LOGO TETAP TERLIHAT (owner 2026-11-21: *"ketika klik
+                 search jadi ketutup D-nya"*).
+
+                 Tiga percobaan sebelumnya dan kenapa semuanya gagal, supaya
+                 tidak ada yang mengulanginya:
+                   1. kotak sebaris dengan SEMUA isi bar → tinggal ±80px,
+                      tulisan "Cari film di DramaKu" terpotong;
+                   2. kotak turun ke BARIS SENDIRI → tulisannya muat, tapi
+                      baris atas menyisakan ruang kosong selebar layar;
+                   3. logo + avatar sama-sama disembunyikan → ruang kosong
+                      hilang, tapi logo ikut lenyap.
+                 Yang sekarang: logo (36px) tetap, avatar yang pergi. Terukur
+                 di layar 360px — logo 36 + jarak 12 + tombol X 44 menyisakan
+                 ±236px untuk kotaknya, sedangkan tulisannya butuh ±150px.
+                 Muat, tanpa baris tambahan, tanpa logo hilang. */
+              cariTerbuka && "max-md:hidden",
+            )}
+          >
             {chrome.trailing}
           </div>
         )}
       </div>
 
-      {filters && filterTerbuka && (
-        <div className={cn(SHELL, "grid grid-cols-2 gap-1.5 pb-2.5 md:hidden")}>
-          {filters}
-        </div>
-      )}
     </div>
   );
 }

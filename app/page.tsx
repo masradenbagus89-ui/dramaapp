@@ -12,6 +12,8 @@ import { TAB_GRID_ITEMS } from "@/lib/tab-katalog";
 import { MAKS_SERIES_PLAYLY_DI_SEKSI, pisahFilmSeries } from "@/lib/jenis-video";
 import { availableGenres, FEATURED_ROW_COUNT } from "@/lib/beranda-catalog";
 import { buildNavMenus } from "@/lib/nav-katalog";
+import { BADAN_TERANG } from "@/app/components/beranda/shell";
+import { cn } from "@/lib/utils";
 
 // Disimpan & dipakai ulang, disegarkan tiap 60 detik (menggantikan force-dynamic
 // yang membangun ulang halaman untuk tiap pengunjung).
@@ -76,7 +78,13 @@ export default async function LandingPage() {
   const menus = buildNavMenus(dramas, videos);
 
   return (
-    <div className="min-h-screen bg-black">
+    /* BADAN SITUS TERANG — alasan & batasnya sama persis dengan
+       `app/beranda/page.tsx` (owner 2026-11-23). Diubah berbarengan karena
+       kedua halaman ini memang WAJIB kembar: owner 2026-10-28 *"tampilan
+       beranda sama dengan tampilan di landing page"*. Mengubah satu saja
+       membuat pengunjung melihat dua situs berbeda tergantung sudah login
+       atau belum. */
+    <div className={cn("min-h-screen", BADAN_TERANG)}>
       <RedirectIfAuthed />
       {/* ===== Kepala situs — elemen PALING ATAS halaman ini.
              Baris header hitam terpisah (logo + Masuk/Daftar) DIHAPUS

@@ -42,7 +42,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { ChevronDown, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 
 /** Satu tujuan di balik avatar. */
 type TujuanAkun = { href: string; label: string; adminOnly?: boolean };
@@ -105,9 +105,22 @@ export default function MenuAkun() {
 
   return (
     <DropdownMenu>
+      {/* PANAH DROPDOWN SENGAJA TIDAK ADA (owner 2026-11-21: "dropdown-nya kamu
+          sembunyikan saja, ketika saya klik M [muncul] profil, riwayat, favorit,
+          admin dan keluar"). Avatar ITU SENDIRI tombolnya — seluruh lingkaran
+          ini `DropdownMenuTrigger`, jadi menunya tetap terbuka dengan satu klik.
+          Jangan dikembalikan tanpa permintaan baru.
+
+          Pembaca layar TIDAK dirugikan: `aria-label` di bawah plus
+          `aria-haspopup`/`aria-expanded` yang dipasang Radix tetap mengumumkan
+          ini sebagai menu — panahnya hiasan, bukan penanda yang dibacakan.
+
+          `p-1` + `sm:pr-3`: di HP lingkaran rapat supaya ruang yang dibebaskan
+          jatuh ke kotak cari di sebelahnya; dari 640px ke atas nama penonton
+          muncul lagi dan butuh ruang kanan. */}
       <DropdownMenuTrigger
         aria-label="Menu akun"
-        className="flex items-center gap-2 rounded-full border border-zinc-700 bg-zinc-900/60 py-1 pl-1 pr-2 text-white transition-colors outline-none hover:border-zinc-500 focus-visible:border-amber-400 data-[state=open]:border-amber-400"
+        className="flex items-center gap-2 rounded-full border border-white/20 bg-white/10 p-1 text-sage-50 transition-colors outline-none hover:border-white/40 focus-visible:border-sage-300 data-[state=open]:border-sage-300 sm:pr-3"
       >
         <Avatar size="sm">
           <AvatarFallback
@@ -125,7 +138,6 @@ export default function MenuAkun() {
         <span className="hidden max-w-28 truncate text-xs text-zinc-300 sm:inline">
           {user.name}
         </span>
-        <ChevronDown className="size-3.5 shrink-0 text-zinc-400" />
       </DropdownMenuTrigger>
 
       <DropdownMenuContent

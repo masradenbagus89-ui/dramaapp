@@ -16,6 +16,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
+import type { NavMenu } from "../lib/nav-katalog";
 
 /**
  * Bentuk props yang diperiksa. Ditulis eksplisit — bukan disimpulkan otomatis
@@ -27,10 +28,39 @@ type PropsSearchBar = {
   onValueChange?: (nilai: string) => void;
   onSubmit?: () => void;
   className?: string;
-  chrome?: { brand?: unknown; menus?: unknown; trailing?: unknown };
+  chrome?: {
+    brand?: unknown;
+    menus?: unknown;
+    trailing?: unknown;
+    // Ditambahkan 2026-11-21 bersama panel pop up menu katalog di HP. Tiruan
+    // yang tertinggal dari tipe aslinya membuat tes ini "lulus" tanpa pernah
+    // melihat slot baru — dan slot yang tak pernah dilihat itulah yang paling
+    // mudah hilang diam-diam dari kerangka pemuatan.
+    brandHp?: unknown;
+    menusHp?: unknown;
+  };
   action?: string;
   namaKolom?: string;
 };
+
+/**
+ * Menu tiruan yang BERISI.
+ *
+ * ⚠️ Sampai 2026-11-21 tes ini mengoper `menus: []` lalu menuntut
+ * `chrome.menus` tetap ada. Itu asumsi yang kebetulan benar selama
+ * `chromeKatalog()` membungkus `<NavMenus>` apa pun isinya. Sejak katalog
+ * kosong sengaja TIDAK lagi memasang elemen menu (kalau tidak, bar di HP
+ * menumbuhkan satu baris hampa selebar layar), asumsi itu runtuh — dan yang
+ * keliru memang DATANYA, bukan kodenya: kerangka /discover yang sungguhan
+ * selalu menerima menu berisi.
+ */
+const MENU_CONTOH: NavMenu[] = [
+  {
+    key: "genre",
+    label: "Genre",
+    items: [{ label: "Aksi", href: "/discover?cat=Action" }],
+  },
+];
 
 const alamatDidorong = vi.hoisted(() => ({ daftar: [] as string[] }));
 const tertangkap = vi.hoisted(() => ({ props: null as unknown }));
@@ -66,10 +96,10 @@ const { KELAS_MENEMPEL_KEPALA } = await import(
 );
 
 /** Render kerangkanya lalu pulangkan props yang benar-benar diterima SearchBar. */
-function render(): PropsSearchBar {
+function render(menus: NavMenu[] = MENU_CONTOH): PropsSearchBar {
   tertangkap.props = null;
   alamatDidorong.daftar = [];
-  renderToStaticMarkup(createElement(KerangkaKepalaKatalog, { menus: [] }));
+  renderToStaticMarkup(createElement(KerangkaKepalaKatalog, { menus }));
   if (!tertangkap.props) throw new Error("SearchBar tidak dirender kerangka");
   return tertangkap.props as PropsSearchBar;
 }
@@ -107,6 +137,23 @@ describe("kotak cari kerangka /discover", () => {
     expect(chrome).toBeTruthy();
     expect(chrome?.brand).toBeTruthy();
     expect(chrome?.menus).toBeTruthy();
+    // Slot HP (owner 2026-11-21): logo versi tanpa-tautan sebagai pemicu, dan
+    // isi panel pop up-nya. Keduanya WAJIB ikut ke kerangka — kalau tidak,
+    // kepala situs MELOMPAT bentuknya tepat saat isi sungguhan masuk, persis
+    // jenis kerusakan yang berkas ini memang ada untuk mencegahnya.
+    expect(chrome?.brandHp).toBeTruthy();
+    expect(chrome?.menusHp).toBeTruthy();
+  });
+
+  it("katalog KOSONG tidak memasang elemen menu yang hampa", () => {
+    // Perilaku yang disengaja sejak 2026-11-21. Tanpa gerbang ini, wadah menu
+    // `w-full` tetap tergambar walau isinya null — di HP ia menumbuhkan satu
+    // baris mati selebar layar, tepat dalam keadaan panel pop up juga tidak
+    // dipasang sehingga tak ada apa pun yang mengisinya.
+    const chrome = render([]).chrome;
+    expect(chrome?.brand, "logo tetap wajib ada walau katalog kosong").toBeTruthy();
+    expect(chrome?.menus).toBeUndefined();
+    expect(chrome?.menusHp).toBeUndefined();
   });
 });
 

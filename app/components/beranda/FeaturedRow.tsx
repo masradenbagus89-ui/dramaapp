@@ -2,7 +2,8 @@ import Link from "next/link";
 import type { Drama } from "@/lib/types";
 import type { KartuKatalog } from "@/lib/beranda-video";
 import BarisGeser from "./BarisGeser";
-import { ROW_CARD_CLASS } from "./shell";
+import { ROW_CARD_CLASS, TOMBOL_UTAMA } from "./shell";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 /**
@@ -116,7 +117,10 @@ export default function FeaturedRow({
           <div className="mt-4 flex justify-center">
             <Button
               asChild
-              className="h-10 rounded-sm bg-gradient-to-r from-fuchsia-600 to-rose-600 px-6 text-xs font-bold uppercase tracking-wide text-white shadow-lg hover:from-fuchsia-500 hover:to-rose-500"
+              className={cn(
+                TOMBOL_UTAMA,
+                "h-10 rounded-sm px-6 text-xs font-bold uppercase tracking-wide shadow-lg",
+              )}
             >
               <Link href={href}>Temukan tontonan favoritmu</Link>
             </Button>

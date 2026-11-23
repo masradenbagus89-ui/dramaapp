@@ -69,6 +69,8 @@ export default function KepalaBeranda({
         namaKolom="q"
         indeksSaran={indeksSaran}
       />
+      {/* ⚠️ Sempat disembunyikan di HP pada 2026-11-21, lalu dikembalikan pada
+          hari yang sama — alasan lengkap ditulis sekali di PublicTopBars.tsx. */}
       <StripKatalog items={STRIP_KATALOG} />
     </>
   );

@@ -110,9 +110,14 @@ export default function BadanKatalog({
           sampai diklik. */}
       {slotAtas}
 
-      {/* BADAN TERANG — dari sini ke bawah berlatar putih-abu. Pembungkus inilah
-          SATU-SATUNYA saklar tema terang (lihat @custom-variant terang di
-          app/globals.css). */}
+      {/* BADAN TERANG — dari sini ke bawah berlatar putih-abu, di HP MAUPUN di
+          layar komputer. Pembungkus inilah SATU-SATUNYA saklar tema terang
+          (lihat @custom-variant terang di app/globals.css).
+
+          ⚠️ Sempat dibuat GELAP khusus HP pada 2026-11-21 lewat
+          `BADAN_TERANG_MD`; dikembalikan pada hari yang sama atas permintaan
+          owner (*"cuma bagian atas yang diubah, sisanya kembalikan ke
+          dramaku"*). Jangan digelapkan lagi tanpa permintaan baru. */}
       <div className={BADAN_TERANG}>
         {/* DERET TAB KATALOG (owner 2026-09-22, meniru situs katalog pembanding):
             TERBARU · SERIES UNGGULAN · SERIES UPDATE · TERPOPULER · REKOMENDASI ·

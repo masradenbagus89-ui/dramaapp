@@ -135,18 +135,40 @@ describe("chip strip & menu yang SUNGGUHAN digambar halaman", () => {
     });
   }
 
-  it("bar cari berwarna merah terang, bukan ungu", () => {
-    // Owner 2026-09-21: ujung kiri yang ungu (`fuchsia-700`) terlalu mencolok
-    // dan tidak sejajar dengan situs katalog pembanding.
+  it("bar cari memakai warna merek, tanpa gradasi ungu/merah lama", () => {
+    // RIWAYAT WARNA bar ini, supaya tak ada yang memutarnya balik:
+    //   `fuchsia-700` (ungu) → ditolak owner 2026-09-21, terlalu mencolok
+    //   → `from-rose-700 via-rose-600 to-pink-600` (merah-pink DramaKu)
+    //   → `bg-sage-700` (owner 2026-11-23: *"tema warna jadi soft sage"*)
+    //   → `bg-sage-100` di hari yang sama (*"warna hijau atas dan bawah ubah
+    //     jadi lebih soft"*). Teksnya ikut dibalik ke `sage-900`, sebab teks
+    //     putih di atas sage-100 = 1,20:1 — praktis tak terbaca.
     const html = renderToStaticMarkup(
       createElement(DramaBrowser, { dramas: KATALOG }),
     );
-    expect(html).toContain("from-rose-700");
-    // Diperiksa pada KELAS GRADASI-nya, bukan kata "fuchsia" begitu saja:
-    // warna itu masih dipakai sah di tempat lain (mis. lencana koin pada
-    // kartu poster), jadi pencarian yang terlalu lebar akan merah palsu.
+    // Dipaku pada GRADASI penuhnya, bukan satu nada saja: sejak owner minta
+    // *"ada seperti gradasi jadi lebih hidup"* (2026-11-23) bar ini bergradasi,
+    // dan patokan `bg-sage-100` jadi merah PALSU karena nada itu kini muncul
+    // sebagai `via-sage-100`.
+    expect(html).toContain("sapuan-gelombang");
+    // GELOMBANG — owner menolak TIGA versi sebelum ini: warna rata, gradasi
+    // lurus, lalu lingkaran berkabut (*"masih polos"* dua kali). Dijaga supaya
+    // tidak hilang saat kelasnya dirapikan: perbedaan NADA antar warna
+    // berdekatan nyaris tak terbaca mata, yang terbaca adalah GARIS.
+    // Definisinya CSS sungguhan di app/globals.css — lihat alasannya di sana
+    // (SVG ber-spasi tidak bisa ditulis sebagai kelas arbitrer).
+    expect(html, "hiasan gelombang hilang — bar jadi polos lagi").toContain(
+      "sapuan-gelombang",
+    );
+    // Diperiksa pada KELAS GRADASI-nya, bukan kata "fuchsia"/"rose" begitu
+    // saja: keduanya masih dipakai sah di tempat lain (mis. lencana koin pada
+    // kartu poster, kotak ikon panel menu), jadi pencarian yang terlalu lebar
+    // akan merah palsu.
     expect(html, "gradasi ungu seharusnya sudah dilepas").not.toContain(
       "from-fuchsia",
+    );
+    expect(html, "gradasi merah lama seharusnya sudah dilepas").not.toContain(
+      "from-rose-700",
     );
   });
 
@@ -172,8 +194,8 @@ describe("chip strip & menu yang SUNGGUHAN digambar halaman", () => {
     const html = renderToStaticMarkup(
       createElement(PublicTopBars, { menus: buildNavMenus(KATALOG) }),
     );
-    expect(html).toContain('alt="DramaKu"');
-    expect(html).toContain("/logo-mark.png");
+    expect(html).toContain('alt="Layarindo"');
+    expect(html).toContain("/logo-layarindo.png");
     // Kotak kuning berisi huruf "D" yang lama sudah tidak dipakai.
     expect(html).not.toContain("bg-amber-400 font-serif");
   });
@@ -184,10 +206,26 @@ describe("chip strip & menu yang SUNGGUHAN digambar halaman", () => {
     // memakai kotak kuning berisi huruf "D" sementara yang lain memakai
     // lambang. Yang dibandingkan potongan logonya, bukan seluruh halaman,
     // sebab alamat tautannya memang sengaja berbeda ("/" vs "/beranda").
+    //
+    // ⚠️ Batas akhirnya DIUBAH 2026-11-21 dari `</a>` ke penutup nama situs.
+    // Sejak logo di HP duduk di dalam `<button>` (pembuka menu katalog,
+    // SearchBar.tsx), logo PERTAMA tidak lagi punya `</a>` — potongannya jadi
+    // melar sampai menelan logo versi komputer di belakangnya, lalu
+    // membandingkan `href` yang memang sengaja berbeda. Itu kegagalan PALSU.
+    // Yang dijaga tidak berkurang: gambar, seluruh kelasnya, dan nama situs
+    // tetap dibandingkan utuh — cuma pembungkusnya yang tidak ikut.
     const ambilLogo = (html: string) => {
       const i = html.indexOf("<img");
       expect(i, "gambar logo tidak ditemukan").toBeGreaterThan(-1);
-      return html.slice(i, html.indexOf("</a>", i));
+      // Penutupnya BUKAN lagi teks nama situs: sejak logo Layarindo dipasang
+      // (2026-11-23) namanya menyatu di dalam GAMBAR, jadi `DramaKu</span>`
+      // tidak ada lagi untuk dijadikan batas. Dipakai gambar KEDUA (versi
+      // lambang saja) sebagai penutup — isinya tetap dibandingkan utuh.
+      const PENUTUP = "data-lambang-saja";
+      const akhir = html.indexOf(PENUTUP, i);
+      expect(akhir, "gambar lambang tidak ditemukan").toBeGreaterThan(-1);
+      const tutupTag = html.indexOf("/>", akhir);
+      return html.slice(i, tutupTag + 2);
     };
 
     const depan = renderToStaticMarkup(
@@ -205,9 +243,13 @@ describe("chip strip & menu yang SUNGGUHAN digambar halaman", () => {
     const html = renderToStaticMarkup(
       createElement(PublicTopBars, { menus: buildNavMenus(KATALOG) }),
     );
-    expect(html).toContain('width="36"');
-    expect(html).toContain("size-9");
-    expect(html).toContain("text-xl");
+    // TINGGINYA yang dikunci (36px = `h-9`), bukan lebarnya. Sejak logo
+    // Layarindo dipasang (2026-11-23), nama situs menyatu di dalam gambar
+    // sehingga lebarnya mengikuti panjang tulisan. `size-9` (persegi) dan
+    // `text-xl` (nama situs sebagai TEKS) sudah tidak berlaku — keduanya
+    // milik logo lama yang berupa lambang kotak + tulisan terpisah.
+    expect(html).toContain('height="36"');
+    expect(html).toContain("h-9");
     expect(html, "ukuran lama 28px seharusnya sudah naik").not.toContain("size-7");
   });
 
@@ -243,7 +285,7 @@ describe("chip strip & menu yang SUNGGUHAN digambar halaman", () => {
       createElement(DramaBrowser, { dramas: KATALOG }),
     );
     expect(html).not.toContain('aria-label="Menu halaman"');
-    expect(html).toContain('alt="DramaKu"');
+    expect(html).toContain('alt="Layarindo"');
   });
 
   it("pencarian /discover kini TOMBOL, seragam dengan seluruh situs", () => {
@@ -373,8 +415,13 @@ describe("kerangka kepala /discover", () => {
 
   /** Penanda yang membuat kepala situs dikenali sebagai DramaKu. */
   const TANDA_KEPALA: Array<[string, string]> = [
-    ["bar merah", "from-rose-700 via-rose-600 to-pink-600"],
-    ["logo situs", 'alt="DramaKu"'],
+    // Diganti 2026-11-23 dari "from-rose-700 via-rose-600 to-pink-600" saat
+    // tema situs jadi soft sage. Yang dijaga tetap SAMA: kerangka pemuatan
+    // dan kepala asli wajib sewarna, supaya bar tidak berkedip ganti warna
+    // tepat saat isinya datang.
+    ["bar warna merek", "sapuan-gelombang"],
+    ["hiasan gelombang bar", "sapuan-gelombang"],
+    ["logo situs", 'alt="Layarindo"'],
     // "tombol menu garis-tiga" dikeluarkan dari daftar ini 2026-11-14 — owner
     // melepas tombolnya, jadi penandanya tidak ada lagi di kepala MANA PUN.
     // Membiarkannya di sini membuat kerangka & kepala asli sama-sama merah

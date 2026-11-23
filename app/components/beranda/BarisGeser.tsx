@@ -140,7 +140,12 @@ export default function BarisGeser({
         size="icon"
         onClick={() => geser(1)}
         aria-label="Geser ke kanan"
-        className={cn(kelasPanah, "right-1 bg-rose-600 hover:bg-rose-500")}
+        /* `sage-600`, bukan `rose-600` (merah sisa tema lama, terlewat saat
+           situs berganti ke soft sage 2026-11-23 — panah ini cuma tergambar
+           di layar komputer sehingga luput dari potret uji HP). Teks putih di
+           sage-600 = 5,67:1. Panah KIRI sengaja tetap hitam-transparan: ia
+           pembeda arah, bukan warna merek. */
+        className={cn(kelasPanah, "right-1 bg-sage-600 hover:bg-sage-500")}
       >
         <ChevronRight className="size-5" />
       </Button>

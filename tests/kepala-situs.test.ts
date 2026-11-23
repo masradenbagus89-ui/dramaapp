@@ -146,7 +146,11 @@ describe("tombol garis-tiga sudah DILEPAS dari kepala katalog", () => {
     // Logo dulu menumpang di dalam `MenuAplikasi`. Kalau ia ikut terbuang,
     // kepala katalog kehilangan nama situs DAN satu-satunya jalan ke /beranda
     // dari halaman ini — rusak yang senyap.
-    expect(brand).toContain('alt="DramaKu"');
+    // Logo berganti 2026-11-23 dari DramaKu ke Layarindo, SEMENTARA hanya di
+    // bar situs (owner: *"ganti logo dan nama di situ dulu, jangan diganti
+    // semua"*). Nama DramaKu masih dipakai judul halaman & metadata, jadi
+    // patokan di sini sengaja memeriksa LOGO-nya, bukan nama situs.
+    expect(brand).toContain('alt="Layarindo"');
     expect(brand).toContain('href="/beranda"');
   });
 
@@ -446,14 +450,16 @@ describe("halaman 404 tetap punya jalan ke seluruh situs", () => {
   });
 
   it("membawa identitas situs", () => {
-    expect(html).toContain('alt="DramaKu"');
+    expect(html).toContain('alt="Layarindo"');
   });
 
   it("tetap menyediakan dua jalan pulang di badan halaman", () => {
     // Ini sudah ada sebelumnya — dijaga supaya tidak ikut hilang saat kepala
     // situs ditambahkan di atasnya.
     expect(html).toContain('href="/beranda"');
-    expect(html).toContain('href="/discover"');
+    // "Filter" TIDAK lagi punya href: sejak 2026-11-23 ia MEMBUKA POP UP
+    // (owner: *"ketika klik filter muncul pop up"*), jadi digambar sebagai
+    // <button>. Keberadaannya dijaga lewat label di tes berikutnya.
   });
 
   it("TIDAK bergantung pada pembacaan katalog", () => {
@@ -632,20 +638,47 @@ describe("menu dilepas dari tampilan, halamannya TETAP hidup", () => {
 describe("bar bawah HP ikut dirampingkan", () => {
   const html = render("/beranda", BottomNav);
 
-  it("tinggal 2 tab, tanpa Shorts & My List", () => {
+  it("4 tab penonton: Beranda · Filter · Film Terbaru · Bagikan", () => {
+    // ⚠️ RIWAYAT, supaya angkanya tidak dikira sisa sejarah: 2 → 5
+    // (2026-11-21) → 2 lagi di hari yang sama → 4 (2026-11-23, owner:
+    // *"profile tidak perlu, tambahkan filter share film terbaru"*).
     expect(html).not.toContain('href="/shorts"');
     expect(html).not.toContain('href="/my-list"');
     expect(html).toContain('href="/beranda"');
-    expect(html).toContain('href="/profile"');
+    // "Filter" TIDAK lagi punya href: sejak 2026-11-23 ia MEMBUKA POP UP
+    // (owner: *"ketika klik filter muncul pop up"*), jadi digambar sebagai
+    // <button>. Keberadaannya dijaga lewat label di tes berikutnya.
+    expect(html).toContain('href="/film"');
+  });
+
+  it("Profile DIHAPUS — situs ini untuk penonton, bukan pemilik akun", () => {
+    // Owner 2026-11-23: *"karena ini untuk viewer jadi profile tidak perlu"*.
+    expect(html, "tab Profile kembali ke bar bawah").not.toContain(
+      'href="/profile"',
+    );
+  });
+
+  it("Bagikan digambar sebagai <button>, BUKAN tautan", () => {
+    // Tab "Bagikan" MELAKUKAN sesuatu di tempat (lembar berbagi HP), tidak
+    // berpindah halaman. Kalau ia dipasang sebagai <a>, klik-kanan "buka di
+    // tab baru" menghasilkan halaman kosong dan pembaca layar menyebutnya
+    // "tautan" padahal bukan — dua kerusakan yang nol error.
+    expect(html).toContain("<button");
+    expect(html).toContain("Bagikan");
   });
 
   it("jumlah kolom MENGIKUTI jumlah tab, bukan angka tulis-tangan", () => {
-    // Bug senyap yang dicegah: penanda aktif memakai `100 / TABS.length`,
-    // sedangkan gridnya dulu dipatok `grid-cols-4`. Begitu jumlah tab turun
-    // jadi 2, tombol cuma mengisi separuh kiri layar dan penanda kuningnya
-    // melayang di atas ruang kosong — tanpa satu pun error.
-    const jumlahTab = (html.match(/<a\b/g) ?? []).length;
-    expect(jumlahTab).toBe(2);
+    // Bug senyap yang dicegah: penanda aktif memakai `100 / SEMUA_TAB.length`,
+    // sedangkan gridnya dulu dipatok `grid-cols-4`. Begitu jumlah tab berubah
+    // (4 → 2 → 5 → 2 → 4), tombol dan penandanya tidak lagi sebaris — tanpa
+    // satu pun error.
+    //
+    // Dihitung dari <a> DITAMBAH <button>: sejak tab "Bagikan" jadi tombol,
+    // menghitung <a> saja memberi 3 dan patokan ini akan lulus palsu terhadap
+    // grid 4 kolom.
+    const jumlahTab =
+      (html.match(/<a\b/g) ?? []).length + (html.match(/<button\b/g) ?? []).length;
+    expect(jumlahTab).toBe(4);
     expect(html).toContain(`repeat(${jumlahTab},`);
     expect(html).not.toContain("grid-cols-4");
   });

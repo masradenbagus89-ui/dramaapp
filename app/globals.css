@@ -1,11 +1,122 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+/* ============================================================
+   PALET MEREK "SOFT SAGE" — satu sumber warna untuk seluruh situs.
+
+   Dipasang 2026-11-23 atas permintaan owner (*"tema warna bisa kamu ubah jadi
+   soft sage"*, menunjuk contoh gambar). Menggantikan merah-pink DramaKu di bar
+   atas, kuning di strip genre, dan pink-ungu di tombol utama.
+
+   KENAPA SEBAGAI TOKEN, bukan nilai mentah di tiap komponen: sebelum ini
+   gradasi tombol `from-fuchsia-600 to-rose-600` ditulis ULANG di tiga berkas
+   (FeaturedRow, SeksiKatalog, TabKatalogTampilan). Salinan seperti itu pasti
+   menyimpang cepat atau lambat, dan menyimpangnya tidak memunculkan error —
+   cuma tombol yang warnanya beda-beda antar halaman. Dengan token, mengganti
+   tema (atau MEMBATALKANNYA) cukup di berkas ini.
+
+   ⚠️ ANGKA KONTRAS DI BAWAH DIHITUNG, BUKAN DITEBAK (rak design-direction
+   mewajibkan teks normal minimal 4,5:1). Dipakai sebagai aturan pasangan:
+     - teks PUTIH hanya boleh di atas sage-600 ke atas
+         sage-600 = 5,67:1 · sage-700 = 7,58:1 · sage-800 = 9,86:1
+     - teks GELAP (sage-900) hanya di atas sage-400 ke bawah
+         sage-400 = 5,42:1 · sage-200 = 10,34:1 · sage-50 = 13,83:1
+     - sage-500 GAGAL di kedua arah (4,03 & 3,71) → JANGAN dipakai untuk teks
+       normal; ia hanya untuk garis, ikon besar, dan bidang hiasan.
+   ============================================================ */
+@theme {
+  --color-sage-50: #f3f7f3;
+  --color-sage-100: #e4ede6;
+  --color-sage-200: #c9dbcf;
+  --color-sage-300: #a6c2af;
+  --color-sage-400: #80a48c;
+  --color-sage-500: #62876f;
+  --color-sage-600: #4e6e5a;
+  --color-sage-700: #3f5a49;
+  --color-sage-800: #33483b;
+  --color-sage-900: #283830;
+}
+
+/* ============================================================
+   SAPUAN GELOMBANG — hiasan latar bar atas & menu bawah.
+
+   Owner 2026-11-23, setelah DUA versi ditolak: warna rata → *"tidak polos"*;
+   gradasi lurus → *"kenapa masih polos"*; lingkaran berkabut → *"seperti ada
+   gelombang"*. Pelajarannya: perbedaan NADA antar warna berdekatan praktis
+   tak terbaca mata. Yang terbaca adalah GARIS yang jelas tepinya.
+
+   ⚠️ DITULIS SEBAGAI CSS SUNGGUHAN, bukan kelas arbitrer Tailwind — dan ini
+   bukan selera. Gambar SVG memuat SPASI (antar-atribut), sementara spasi di
+   dalam `className` MEMISAHKAN nama kelas. Versi pertama hiasan ini ditulis
+   sebagai `bg-[url('data:image/svg+xml,<svg xmlns=… viewBox=…>')]` dan
+   akibatnya pecah jadi potongan kelas tak bermakna: hiasannya tidak pernah
+   tergambar, TANPA satu pun error — persis cara panah dropdown di pop up
+   filter ikut hilang diam-diam.
+
+   `preserveAspectRatio="none"` + `background-size: 100% 100%` membuat
+   gelombangnya merenggang mengikuti lebar & tinggi bar berapa pun, jadi satu
+   gambar cukup untuk bar 56px maupun 72px.
+   ============================================================ */
+/* ⚠️ SENGAJA TIDAK menyetel `position`, walau `::before` di bawah butuh induk
+   yang berposisi. Versi pertama menyetel `position: relative` di sini dan itu
+   MENIMPA `fixed` milik bar bawah HP — barnya berhenti menempel di dasar
+   layar lalu ikut mengalir ke ujung halaman, hilang dari pandangan, TANPA
+   satu pun error. Ketahuan dari potret uji, bukan dari pesan apa pun.
+   Pemanggil yang menyediakan posisinya sendiri: bar atas `sticky`, bar bawah
+   `fixed`. Keduanya sama-sama membentuk konteks posisi untuk `::before`. */
+.sapuan-gelombang {
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.sapuan-gelombang::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  /* DI BELAKANG isi bar. Tanpa ini hiasan menutupi logo & tombol — dan karena
+     `pointer-events: none`, tombolnya masih bisa diklik sehingga kerusakannya
+     cuma terlihat, tidak terasa. */
+  z-index: -10;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  /* ⚠️ GAMBAR, BUKAN GRADIEN TIRUAN — dan ini keputusan yang lahir dari
+     EMPAT penolakan berturut-turut (warna rata → gradasi lurus → lingkaran
+     berkabut → pita bergelombang). Tiap kali jawabannya sama: *"bukan
+     seperti itu"*. Berkas ini diambil LANGSUNG dari gambar logo yang dikirim
+     owner (`bar-latar.jpg`): latar aslinya dipakai apa adanya, logonya
+     ditutup dengan warna pita di sekitarnya. Jadi "sama dengan contoh"
+     bukan lagi penilaian, melainkan fakta — sumbernya memang berkas itu.
+
+     Warna terukur dari gambar: dasar #040905, gelombang #4d6647 dan #445f42.
+     Bagian gelapnya lalu DIANGKAT (owner: *"lebih soft/terang sedikit"*)
+     sehingga dasarnya jadi ~#253629 — kontras teks putih ±12,7:1.
+     10 KB (JPEG mutu 0,82; versi PNG-nya 366 KB dan latar ini dimuat di
+     SETIAP halaman).
+
+     `100% 100%` = direnggangkan mengikuti bar. Gelombangnya memang ada di
+     pojok kiri-atas & kanan-bawah gambar asli, jadi di bar yang lebar-pendek
+     ia muncul sebagai sapuan di kedua ujung. */
+  background-image: url("/bar-latar.jpg");
+  background-color: #253629;
+}
+
+/* Panah dropdown untuk `<select>` yang dimatikan tampilannya (`appearance-none`).
+   Alasan ditulis di sini sama dengan di atas: SVG-nya ber-spasi. */
+.panah-pilih {
+  background-repeat: no-repeat;
+  background-position: right 0.65rem center;
+  background-size: 18px 18px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233F5A49' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+}
+
 @custom-variant dark (&:is(.dark *));
 
 /* ============================================================
-   Varian `terang:` — warna ALTERNATIF yang hanya menyala di dalam
-   pembungkus ber-class `tema-terang` (saat ini: badan halaman depan `/`).
+   Varian `terang:` — warna ALTERNATIF yang hanya menyala di dalam pembungkus
+   ber-class `tema-terang` (semua ukuran layar) ATAU `tema-terang-md` (hanya
+   dari 768px ke atas). Keduanya dirakit di app/components/beranda/shell.ts
+   sebagai `BADAN_TERANG` dan `BADAN_TERANG_MD`.
 
    KENAPA varian, bukan mengganti warnanya langsung: kartu poster, baris
    geser, dan deret tab dipakai BERSAMA oleh /beranda, /discover, /shorts.
@@ -14,10 +125,15 @@
    varian ini, di luar pembungkus `tema-terang` seluruh aturan terang MATI
    total: halaman lain mustahil ikut berubah.
 
-   Polanya sengaja SAMA dengan `dark` di atas supaya tak ada mekanisme
-   kedua yang harus dihafal. Mau batal? Hapus satu kata `tema-terang` di
-   pembungkus app/page.tsx — seluruh situs balik gelap.
+   Polanya sengaja SAMA dengan `dark` di atas supaya tak ada mekanisme kedua
+   yang harus dihafal. Mau batal? Ganti konstanta di shell.ts — seluruh halaman
+   yang memakainya balik gelap, tanpa menyentuh berkas ini.
    ============================================================ */
+/* ⚠️ Sempat bercabang dua pada 2026-11-21 (`tema-terang-md`, terang hanya dari
+   768px ke atas) untuk membuat badan halaman depan GELAP di HP. DIKEMBALIKAN
+   pada hari yang sama atas permintaan owner: *"cuma bagian atas yang diubah,
+   sisanya kembalikan ke dramaku"*. Jangan dibangun ulang tanpa permintaan baru
+   — badan halaman di HP memang disengaja TERANG, sama seperti layar komputer. */
 @custom-variant terang (&:is(.tema-terang *));
 
 /* ============================================================

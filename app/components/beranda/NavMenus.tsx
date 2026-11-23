@@ -19,9 +19,20 @@ import { cn } from "@/lib/utils";
  * `buildNavMenus` (lib/nav-katalog.ts). Pemisahan itu yang membuat aturan
  * "jangan gambar menu kosong" bisa diuji tanpa browser.
  *
- * Di layar sempit deretannya digeser ke samping (overflow-x-auto), BUKAN
- * dilipat ke tombol hamburger: menu yang butuh dua klik untuk terlihat sama
- * saja dengan menu yang disembunyikan, padahal justru ini yang diminta owner.
+ * Deretannya digeser ke samping kalau tak muat (overflow-x-auto).
+ *
+ * ⚠️ DIUBAH 2026-11-21 — komentar lama di sini berbunyi "BUKAN dilipat ke
+ * tombol hamburger: menu yang butuh dua klik untuk terlihat sama saja dengan
+ * menu yang disembunyikan". Owner MEMBALIK keputusan itu untuk HP saja:
+ * *"ketika di klik D keluar genre, series, populer, negara"* — barisnya
+ * memakan ruang tinggi yang ia inginkan untuk poster. Komponen INI tidak
+ * berubah sedikit pun; yang menyembunyikan & membukanya ada di
+ * `SearchBar.tsx` (`brandHp` + `menuHpTerbuka`). Di layar komputer deretan
+ * ini tetap tergambar penuh seperti semula.
+ *
+ * Keberatan lama tetap berlaku dan sudah dijawab, bukan diabaikan: logo
+ * pembukanya membawa panah kecil sebagai penanda, supaya menu ini tidak jadi
+ * menu yang tak pernah ditemukan siapa pun.
  */
 /**
  * Kelas grid per jumlah kolom. Ditulis UTUH sebagai teks, bukan dirangkai
@@ -63,7 +74,7 @@ export default function NavMenus({ menus }: { menus: NavMenu[] }) {
     >
       {menus.map((m) => (
         <DropdownMenu key={m.key}>
-          <DropdownMenuTrigger className="group flex h-9 shrink-0 items-center gap-1 rounded-sm px-2.5 text-[13px] font-semibold text-white transition-colors outline-none hover:bg-black/25 focus-visible:bg-black/25 data-[state=open]:bg-black/30">
+          <DropdownMenuTrigger className="group flex h-9 shrink-0 items-center gap-1 rounded-sm px-2.5 text-[13px] font-semibold text-sage-50 transition-colors outline-none hover:bg-white/15 focus-visible:bg-white/15 data-[state=open]:bg-white/20">
             {m.label}
             {/* Panah ikut berputar saat menu terbuka — penanda "ini bisa dibuka"
                 yang dipahami tanpa perlu dijelaskan. */}

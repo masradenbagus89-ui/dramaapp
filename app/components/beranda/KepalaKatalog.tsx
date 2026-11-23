@@ -3,6 +3,7 @@
 import Link from "next/link";
 import CoinChip from "../CoinChip";
 import MenuAkun from "../MenuAkun";
+import MenuKatalogHp from "./MenuKatalogHp";
 import { usePenonton } from "../usePenonton";
 import type { NavMenu } from "@/lib/nav-katalog";
 import NavMenus from "./NavMenus";
@@ -59,20 +60,73 @@ import type { SearchBarChrome } from "./SearchBar";
  * ruang yang dibutuhkan kotak cari, dan lambangnya sendiri sudah mengenalkan
  * situs.
  */
-export function LogoDramaKu({ href = "/beranda" }: { href?: string }) {
-  return (
-    <Link href={href} className="flex shrink-0 items-center gap-2">
+export function LogoDramaKu({
+  href = "/beranda",
+  tanpaTautan = false,
+}: {
+  href?: string;
+  /**
+   * Gambar lambangnya saja, TANPA `<Link>` di dalamnya.
+   *
+   * Dipakai `SearchBarChrome.brandHp`: di HP logo ini duduk DI DALAM sebuah
+   * `<button>` pembuka menu katalog (owner 2026-11-21). Menaruh `<a>` di dalam
+   * `<button>` adalah HTML tidak sah — browser boleh merombak susunannya
+   * sendiri, dan pembaca layar mengumumkan dua kontrol bertumpuk. Jadi versi
+   * tanpa tautan ini BUKAN kerapian, melainkan syarat.
+   */
+  tanpaTautan?: boolean;
+}) {
+  const KELAS = "flex shrink-0 items-center gap-2";
+  const isi = (
+    <>
+      {/* LOGO LAYARINDO — dipasang 2026-11-23 dari gambar yang dikirim owner.
+          ⚠️ LINGKUPNYA SENGAJA BAR SAJA (owner: *"ganti logo dan nama di situ
+          dulu, jangan diganti semua, saya mau lihat hasilnya dulu"*). Nama
+          "DramaKu" MASIH dipakai di 66 berkas lain — judul halaman, metadata
+          untuk Google, tulisan kotak cari, kaki situs. Jadi untuk sementara
+          situs ini memang memakai DUA nama; itu keadaan yang DISENGAJA dan
+          menunggu keputusan owner, bukan sesuatu yang terlewat.
+
+          Gambar aslinya banner 1672x941 berlatar HITAM pekat tanpa lapisan
+          tembus pandang (950 KB). Yang dipakai di sini hasil potongan: latar
+          dibuang jadi transparan, baris kecil "NONTON LEBIH SERU" dihapus
+          (di tinggi 36px ia cuma setinggi ~4px — jadi noda, bukan tulisan),
+          lalu dikecilkan ke 40 KB. Berkas asli tersimpan di luar repo.
+          🪤 Latar TIDAK bisa dibuang dengan memilah "yang gelap": terukur,
+          gelombang hiasan di pojok gambar aslinya (0,34–0,37) justru LEBIH
+          TERANG daripada sebagian badan logo. Yang memisahkan keduanya LETAK,
+          bukan warna. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/logo-mark.png"
-        alt="DramaKu"
-        width={36}
+        data-nama-situs
+        src="/logo-layarindo.png"
+        alt="Layarindo"
+        width={159}
         height={36}
-        className="size-9 shrink-0 object-contain"
+        className="h-9 w-auto shrink-0 object-contain"
       />
-      <span className="hidden text-xl font-bold tracking-tight text-white sm:inline">
-        DramaKu
-      </span>
+      {/* Versi LAMBANG SAJA, dipakai saat kotak cari dibuka di HP — aturan
+          penukarnya di SearchBar.tsx. `alt=""` + `aria-hidden`: ia kembaran
+          visual dari logo di atas, jadi pembaca layar tidak perlu menyebut
+          nama situs dua kali. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        data-lambang-saja
+        src="/logo-layarindo-lambang.png"
+        alt=""
+        aria-hidden="true"
+        width={50}
+        height={36}
+        className="hidden h-9 w-auto shrink-0 object-contain"
+      />
+
+    </>
+  );
+
+  if (tanpaTautan) return <span className={KELAS}>{isi}</span>;
+  return (
+    <Link href={href} className={KELAS}>
+      {isi}
     </Link>
   );
 }
@@ -107,7 +161,29 @@ export function TombolAkun() {
   return (
     <div className="flex items-center gap-2">
       <CoinChip />
-      <MenuAkun />
+      {/* AVATAR HANYA UNTUK ADMIN (owner 2026-11-21: *"icon M dihilangkan
+          karena viewer tidak perlu buat akun"*, lalu dipertegas: *"ini khusus
+          untuk viewer bukan akun admin"*).
+
+          ⚠️ Disaring per-PERAN, bukan disembunyikan per-ukuran-layar, dan itu
+          disengaja: di layar komputer avatar ini SATU-SATUNYA jalan ke **Admin**
+          dan tombol **Keluar** dari /beranda & /discover (tombol garis-tiga
+          dilepas 2026-11-14, dan BottomNav cuma muncul di HP). Menyembunyikannya
+          dari semua orang akan mengunci owner keluar dari panel admin di kedua
+          halaman itu — tanpa satu pun error. Dengan saringan peran, owner tetap
+          melihatnya di mana pun, dan penonton tidak.
+
+          ❓ Akibat yang diketahui & diterima: penonton biasa yang TERLANJUR
+          punya akun tidak lagi melihat tombol Keluar di /beranda & /discover.
+          Jalannya masih ada — /profile memasang `TopNav`
+          (lib/navigasi-halaman.ts: AKAR_BERNAVBAR_ATAS) yang membawa `MenuAkun`
+          yang sama, dicapai lewat tombol "Profile" di BottomNav pada HP. Di
+          layar komputer ia harus mengetik /profile sendiri.
+
+          Menyembunyikan tautan BUKAN kontrol izin: penjagaannya tetap di server
+          (password, rate-limit, cookie bertanda tangan), jadi keamanan tidak
+          naik maupun turun karena baris ini (skills/auth/SKILL.md). */}
+      {user.role === "admin" && <MenuAkun />}
     </div>
   );
 }
@@ -138,7 +214,24 @@ export function TombolAkun() {
 export function chromeKatalog(menus: NavMenu[]): SearchBarChrome {
   return {
     brand: <LogoDramaKu />,
-    menus: <NavMenus menus={menus} />,
+    /* Versi tanpa tautan untuk tombol pembuka menu di HP (owner 2026-11-21:
+       *"ketika di klik D keluar genre, series, populer, negara"*). Dipasang di
+       sini — bukan di tiap pemakai — supaya keempat pemakai `chromeKatalog`
+       (/beranda, /discover, kerangka pemuatannya, dan CatalogBrowser)
+       mustahil menyimpang. */
+    brandHp: <LogoDramaKu tanpaTautan />,
+    /* `undefined` saat katalog kosong, BUKAN elemen kosong. `NavMenus` memang
+       memulangkan null, tapi ELEMEN-nya tetap ada sehingga gerbang
+       `{chrome?.menus && …}` di SearchBar tetap terpenuhi — hasilnya wadah
+       `w-full` hampa yang menumbuhkan satu baris mati selebar layar di HP,
+       tepat dalam keadaan panel pop up juga tidak dipasang. */
+    menus: menus.length > 0 ? <NavMenus menus={menus} /> : undefined,
+    /* Isi panel pop up menu katalog di HP (owner 2026-11-21). Dikosongkan saat
+       katalog kosong supaya mengetuk logo tidak membuka panel HAMPA —
+       `NavMenus` memang memulangkan null kalau daftarnya kosong, tapi
+       ELEMEN-nya tetap ada sehingga syarat `chrome.menus` selalu terpenuhi.
+       Dalam keadaan itu logo kembali jadi tautan biasa ke beranda. */
+    menusHp: menus.length > 0 ? <MenuKatalogHp menus={menus} /> : undefined,
     trailing: <TombolAkun />,
   };
 }

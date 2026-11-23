@@ -1,5 +1,21 @@
 # Tampilan HP halaman depan ala "image 2" (owner 2026-11-21)
 
+> ## 🛑 STATUS AKHIR: SEBAGIAN BESAR RENCANA INI DIBATALKAN
+>
+> Owner melihat hasilnya lalu memutuskan: **"cuma bagian atas yang diubah, sisanya
+> kembalikan ke dramaku"**. Jadi §3.1–§3.5 di bawah **tidak lagi berlaku** — badan
+> halaman kembali putih, deret tab kembali tampil, strip kuning kembali, bar atas
+> kembali merah-pink, menu bawah kembali 2 tombol.
+>
+> **Yang tersisa hidup** hanya perubahan BAGIAN ATAS: klik logo D → panel pop up menu
+> katalog (§3.7–§3.8), avatar khusus admin, tanpa panah ⌄, dan tulisan kotak cari yang
+> muat penuh tanpa menutupi logo.
+>
+> Dokumen ini DIPERTAHANKAN apa adanya karena alasan tiap keputusan — termasuk jebakan
+> teknis yang ditemukan di jalan — tetap berguna. **Baca sebagai sejarah, bukan sebagai
+> keadaan sekarang.** Keadaan sekarang + langkah besok ada di blok status paling atas
+> seksi `## 2026-11-21` pada `HANDOFF.md`.
+
 > Bobot: **BERAT** — halaman paling ramai (`/` + `/beranda`), menyentuh komponen yang
 > dipakai bersama layar komputer, dan menambah tombol navigasi baru.
 > Permintaan owner: *"aku mau di dramaku tampilan HP seperti image 2 hanya untuk tampilan
@@ -82,6 +98,76 @@ dipakai juga oleh `/discover` & kerangka pemuatan — mengubahnya di dalam akan 
 halaman yang tidak diminta. Genre tetap terjangkau lewat menu "Genre" di bar dan tombol
 Filter di menu bawah.
 
+### 3.6 Putaran kedua — koreksi owner sesudah melihat layarnya
+
+Owner: *"tulisan search cari film di dramaku harus terlihat dan dropdown-nya kamu
+sembunyikan saja, ketika saya klik M [muncul] profil, riwayat, favorit, admin dan keluar"*.
+
+- `MenuAkun.tsx` — panah `ChevronDown` dilepas; avatar tetap pemicunya. Isi menu
+  (`TUJUAN_AKUN`) **tidak disentuh sama sekali** — Admin & Keluar tetap di tempatnya,
+  dan avatar ini satu-satunya jalan ke keduanya di `/beranda` & `/discover`
+  (`KepalaKatalog.tsx:99`). Padding jadi `p-1` + `sm:pr-3` supaya ruang yang dibebaskan
+  jatuh ke kotak cari.
+- `SearchBar.tsx` — di HP, saat kotak cari TERBUKA, kelompoknya turun ke baris sendiri
+  di dalam bar (`max-md:order-3 max-md:w-full max-md:flex-none`), dan trailing diberi
+  `max-md:ml-auto` supaya koin + avatar tidak merapat ke logo. Dari `md:` ke atas nol
+  perubahan.
+
+Kenapa bukan memendekkan tulisannya: `TEKS_KOTAK_CARI` satu sumber untuk SELURUH situs
+dan dipatok tes — memendekkannya mengubah empat bar sekaligus, padahal yang bermasalah
+cuma lebarnya di HP.
+
+### 3.7 Putaran ketiga — logo jadi pembuka menu, avatar khusus admin
+
+Owner: *"ketika di klik D keluar genre, series, populer, negara dan icon M
+dihilangkan karena viewer tidak perlu buat akun"* → *"ini khusus untuk viewer bukan
+akun admin"*.
+
+- `SearchBarChrome.brandHp` (prop BARU) + state `menuHpTerbuka` di `SearchBar.tsx`:
+  di HP logo jadi `<button>` pembuka deretan menu; deretannya `max-md:hidden` sampai
+  dibuka. Pemakai yang TIDAK mengirim `brandHp` berlaku apa adanya — syarat
+  `chrome.brandHp && !menuHpTerbuka` mencegah halaman lain kehilangan menunya.
+- `LogoDramaKu({ tanpaTautan })`: logo tanpa `<Link>`, sebab `<a>` di dalam `<button>`
+  HTML tidak sah.
+- `TombolAkun`: `user.role === "admin" && <MenuAkun />`.
+
+🪤 **Percobaan pertama `max-md:hidden` pada avatar itu SALAH ARAH** dan klarifikasi owner
+yang menyelamatkannya: menyembunyikan dari semua orang mencabut satu-satunya jalan ke
+Admin & Keluar dari `/beranda` + `/discover` di layar komputer. Saringan PERAN menjawab
+permintaan owner tanpa efek samping itu.
+
+### 3.8 Putaran keempat — menu katalog jadi PANEL POP UP
+
+Owner: *"jangan di jadikan dropdown tapi seperti pop up aja biar terlihat keren"*.
+
+Diputuskan lewat fan-out 10 agen (telusur → 3 rancangan bersaing → juri → 3 penantang).
+Pemenang: **bottom sheet + akordeon `<details>`**, memakai `components/ui/sheet.tsx`
+(Radix Dialog) yang sudah terpasang — nol paket baru.
+
+- `app/components/beranda/MenuKatalogHp.tsx` (BARU) — isi panel: 6 grup berikon,
+  akordeon satu-terbuka, chip 2–3 kolom dari `kolom`+`lebarNama`, bilah "Tutup" di dasar.
+- `SearchBar.tsx` — slot `menusHp` + `<Sheet>` membungkus pemicu logo yang sudah ada.
+  `panelHpAktif` dipakai DUA tempat supaya syarat "sembunyikan deretan menu" dan
+  "gambar pemicunya" mustahil menyimpang.
+- `KepalaKatalog.tsx` & `PublicTopBars.tsx` — isi `menusHp`; `menus` & `menusHp` jadi
+  `undefined` saat katalog kosong.
+- `tests/menu-katalog-hp.test.ts` (BARU, 8 patokan) + `tests/kerangka-discover.test.ts`
+  diperbaiki (dulu mengoper katalog kosong lalu menuntut elemen menu tetap ada).
+
+🪤 **Tiga penjaga jatuh kalau panel dibuat "selalu di HTML lalu disembunyikan CSS"** —
+baris ekor `{ label: "Lainnya", href: "/discover" }` yang polos (`lib/nav-katalog.ts:258`)
+dan sembilan teks terlarang (`>Amerika<` dkk). Radix melepas isi panel saat tertutup, dan
+itulah yang menyelamatkannya. **JANGAN pasang `forceMount`.**
+
+🪤 **`md:hidden` di PEMICU, bukan di `SheetContent`** — kalau salah, tirai
+`fixed inset-0 bg-black/50` tertinggal dan layar komputer gelap total tanpa error.
+Diuji-balik: penjaganya memang merah saat dirusak.
+
+⚠️ Lingkupnya melebar ke `/film`, `/katalog`, `/drama`, `/tonton` karena
+`KepalaFilm.tsx:61` merender `KepalaBeranda` yang sama. Dipertahankan demi keseragaman
+kepala situs (alasannya tertulis di berkas itu); bisa dibatasi lewat prop opt-in kalau
+owner minta.
+
 ## 4. Yang TIDAK dibangun (sengaja)
 
 - Banner besar bergambar + tombol "Tonton Sekarang" — ditolak owner.
@@ -106,14 +192,19 @@ Filter di menu bawah.
 
 | Pemeriksa | Hasil |
 |---|---|
-| `npx vitest run` atas 6 berkas tes terdampak | ✅ **exit 0 · 182 tes lulus** |
-| `npm test` penuh | ❌ belum — drive `C:` penuh saat dijalankan |
-| `npx tsc --noEmit` | ❌ belum — sebab yang sama |
-| `npm run build` | ❌ belum — sebab yang sama |
-| Dilihat mata di HP | ❌ belum |
+| `npx vitest run` atas 6 berkas tes terdampak | ✅ **exit 0 · 183 tes lulus** |
+| `npx tsc --noEmit` | ✅ **nol error dari berkas yang diubah** (3 error ada, semuanya milik 2 tes `??` sesi lain) |
+| Dilihat mata di HP | ✅ **owner mengirim tangkapan layarnya** — latar hitam, "Lihat Semua ›", 5 tombol bawah |
+| `npm test` penuh | ❌ belum — dibatalkan owner |
+| `npm run build` | ❌ belum |
 
 Enam berkas itu: `badan-terang`, `kepala-situs`, `filter-katalog`, `strip-katalog`,
-`tombol-cari`, `jenis-video`.
+`tombol-cari`, `menu-akun`.
+
+🪤 Menjalankan 4 berkas tes bersamaan sempat gagal SEMUA dengan `TypeError: Cannot read
+properties of undefined (reading 'config')` di baris `describe`. Satu per satu: keempatnya
+exit 0; diulang bersamaan: 183 lulus. Gangguan sesaat worker vitest (mesin dipakai beberapa
+sesi sekaligus), bukan kode — jangan dikejar.
 
 🪤 **`npm run gerbang` tidak boleh dijalankan selagi `next dev` hidup** — langkah
 pertamanya menghapus `.next` yang sedang dipakai server itu (saat sesi ini: `next dev

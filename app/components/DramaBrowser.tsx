@@ -23,6 +23,7 @@ import { cariVideoPlayly } from "./beranda/HasilPlayly";
 import KartuVideo from "./beranda/KartuVideo";
 import { saringFilm } from "@/lib/film-jelajah";
 import SearchBar, { KELAS_MENEMPEL_KEPALA } from "./beranda/SearchBar";
+import FilterKatalog from "./beranda/FilterKatalog";
 import { BADAN_TERANG, GRID_CLASS, SHELL } from "./beranda/shell";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -252,6 +253,12 @@ export default function DramaBrowser({
            tak bisa menyuntingnya. Jadi kotaknya terbuka sendiri HANYA saat
            memang ada kata kunci; tanpa itu tampilannya seragam dengan halaman
            lain. */
+        /* ⚠️ TANPA tombol filter di bar atas — JANGAN dipasang lagi.
+           Sempat ditambahkan 2026-11-23 (`filters={<FilterKatalog …/>}`) untuk
+           menambal tab "Filter" di bar bawah yang mengantar ke halaman tanpa
+           penyaring. Owner menolaknya di hari yang sama: *"saya tidak minta
+           filter di atas"*. Penggantinya pop up "Filter Film" yang dibuka
+           langsung dari bar bawah — lihat `FilterFilmPopup.tsx`. */
         modeTombol
         bukaAwal={Boolean(filter.q)}
         indeksSaran={indeksSaran}

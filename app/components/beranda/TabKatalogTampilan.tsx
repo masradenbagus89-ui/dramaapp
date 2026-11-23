@@ -19,7 +19,7 @@ import {
   KUNCI_BARIS_VIDEO,
 } from "@/lib/beranda-video";
 import type { PlaylyVideoPublik } from "@/lib/playly-publik";
-import { GRID_CLASS, ROW_KATEGORI_CARD_CLASS, SHELL } from "./shell";
+import { GRID_CLASS, ROW_KATEGORI_CARD_CLASS, SHELL, TOMBOL_UTAMA } from "./shell";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -158,6 +158,10 @@ export default function TabKatalogTampilan({
              sendiri dan barisnya terbaca sebagai tombol-tombol yang berserakan;
              sekarang satu panel bergaris + satu bayangan, jadi seluruh baris
              terbaca sebagai SATU alat kendali. */}
+      {/* ⚠️ Deret tab ini sempat disembunyikan di HP pada 2026-11-21 lewat prop
+          `tabHanyaDesktop`; dikembalikan pada hari yang sama atas permintaan
+          owner (*"cuma bagian atas yang diubah, sisanya kembalikan ke
+          dramaku"*). Ia tergambar di SEMUA ukuran layar lagi. */}
       <div className={cn(SHELL)}>
         <div className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-950/80 p-2 shadow-[0_6px_20px_-6px_rgba(0,0,0,0.9)] terang:border-zinc-200 terang:bg-white terang:shadow-[0_6px_20px_-10px_rgba(0,0,0,0.25)]">
         <div className="no-scrollbar flex flex-1 items-center gap-2 overflow-x-auto">
@@ -174,8 +178,10 @@ export default function TabKatalogTampilan({
                     // Bayangan kuning pada tab aktif: memberi kesan tombolnya
                     // TERANGKAT dari halaman, bukan sekadar berganti warna
                     // (owner 2026-09-26: "kasih shadow biar nampak pro").
-                    ? "border-amber-400 bg-amber-400 text-black shadow-md shadow-amber-400/40"
-                    : "border-zinc-700 text-zinc-300 hover:border-amber-400 hover:bg-zinc-900 hover:text-amber-400 terang:border-zinc-300 terang:text-zinc-700 terang:hover:bg-amber-50 terang:hover:text-amber-700",
+                    ? // Tab aktif: sage-700 + teks putih = 7,58:1. Sampai
+                      // 2026-11-23 ia `bg-amber-400` kuning terang.
+                      "border-sage-700 bg-sage-700 text-white shadow-md shadow-sage-700/30"
+                    : "border-zinc-700 text-zinc-300 hover:border-sage-400 hover:bg-zinc-900 hover:text-sage-300 terang:border-sage-200 terang:text-sage-900 terang:hover:bg-sage-100 terang:hover:text-sage-800",
                 )}
               >
                 {t.label}
@@ -281,7 +287,10 @@ export default function TabKatalogTampilan({
           <Button
             asChild
             size="sm"
-            className="h-8 shrink-0 rounded-sm bg-gradient-to-r from-fuchsia-600 to-rose-600 px-4 text-[11px] font-bold uppercase tracking-wide text-white hover:from-fuchsia-500 hover:to-rose-500"
+            className={cn(
+              TOMBOL_UTAMA,
+              "h-8 shrink-0 rounded-sm px-4 text-[11px] font-bold uppercase tracking-wide",
+            )}
           >
             <Link href={alamatTab(tabAktif.key, !semua)}>
               {semua ? "Ringkas" : "Semua"}

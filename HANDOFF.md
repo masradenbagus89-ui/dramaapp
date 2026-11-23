@@ -90,7 +90,7 @@
 > aftermarket** dari pemilik sekarang, harganya **jauh di atas** Rp200.000 dan belum pernah dicek.
 > Nama lain yang masih bebas jauh lebih murah.
 
-**Terakhir diisi:** 2026-11-23 — 🔐 **`13b8937` DI-COMMIT, MENUNGGU IZIN PUSH.** 5 perbaikan audit keamanan 14 Nov ternyata **HILANG dari kode** (kena `git reset --hard` ±15 Nov; catatan lama yang bilang "SEMUA diperbaiki" sudah DIRALAT) — dipulihkan + SEC-007 ditulis ulang dari nol. **Blokir rilis yang berlaku sejak 14 Nov HILANG:** `next build` sukses & `npx tsc --noEmit` **0 error**, pertama kali bersih sejak tanggal itu. Next lokal 16.4.3 → **16.4.6**. 54 tes penjaga exit 0 dengan uji-balik nyata. 🔴 Gerbang tetap berhenti di `npm test` karena **5 tes merah milik pekerjaan Playly/beranda sesi lain** — dibuktikan sudah merah sebelum commit ini, jadi **bukan** regresi. 🔴 Dua risiko menunggu keputusan: repo `origin` **PUBLIK** sementara laporan audit 85 KB duduk di akar repo, dan `data/viewers.json` tak diabaikan `.gitignore`. Rincian di seksi `## 2026-11-23`. Sebelumnya: 2026-11-17 — kotak tempel tautan IMDb ditambahkan di panel pencarian per video. Belum di-commit, belum tayang. Di layar yang sedang terbuka, "A Princesa da Yakuza" ketemu kalau nama di kotak diganti jadi "Yakuza Princess" (tt10715446). Rincian di seksi `## 2026-11-17 — tempel tautan IMDb`. Sebelumnya: ✅ `ed8be85` TAYANG. Next.js 16.4.3 → 16.4.6 (tambal advisory). Railway dan Vercel success. Beranda dan `/discover` **200**. Catatan ini masih lokal. Sebelumnya: ✅ `16bd03f` TAYANG. Railway dan Vercel status success. `f47ccbb` gagal karena Supabase error saat prerender `/discover`; perbaikannya katalog publik tidak menghubungi database selama `next build`. Beranda dan `/discover` produksi **200**. Rincian di seksi `## 2026-11-17 — tayang gagal f47ccbb`. Sebelumnya: pola "judul dulu, isi menyusul" dipasang di seluruh menu admin. Menu dan judul IMDb tampil dulu; daftar yang sudah diambil tidak diunduh ulang selama 1 menit. Belum di-commit, belum tayang. Rincian di seksi `## 2026-11-17 — IMDb tidak layar kosong`. Sebelumnya: grafik Distribusi Kategori sekarang menghitung kategori film di panel IMDb, bukan 41 drama lama. Lencana "kategori aktif" bisa diklik untuk memuat ulang. Belum di-commit. Rincian di seksi `## 2026-11-17 — distribusi ikut film IMDb`. Sebelumnya: ✅ grafik Distribusi Kategori (`2b0ea47`) diminta deploy. Satu batang persentase. Rincian di seksi `## 2026-11-17 — distribusi kategori lengkap`. Rincian di seksi `## 2026-11-17 — distribusi kategori lengkap` di bawah. Sebelumnya: ✅ **RILIS `532bc38` → `225d519` TAYANG.** Panel admin Playly yang dirapikan (judul IMDb di atas, keterangan di ikon tanya, Perlu dicek, Cocokkan semua sekotak dengan Tebak kategori) sudah di Railway. Beranda produksi **200**. Rincian di seksi `## 2026-11-17 — rapikan panel Playly tayang` di bawah. Perbaikan login lokal masih belum di-commit. Sebelumnya: 2026-11-16 — isi otomatis link unduhan Google Drive & Mega digabung dari `feat/link-unduhan-provider-kualitas` (`58b1cf8`). Pemutar yang sudah tayang tidak ditimpa. Rincian di seksi `## 2026-11-16 — isi otomatis link unduhan` di bawah. Sebelumnya: 2026-11-15 — menu Genre dan Negara disamakan dengan Tahun (4 kolom, semua pilihan terlihat tanpa digulir). Rincian di seksi `## 2026-11-15` di bawah. Sebelumnya: ✅ **RILIS `f6b1c03` → `a09bfc8` TAYANG.** (1) Cache halaman penonton dibuang otomatis saat admin menyimpan + tombol **Segarkan cache** (kerja rekan). (2) Payload data IMDb ke browser admin **525 KB → 57 KB** (−89%) + ingatan "berkas siap" kini **bertahan melewati restart**. (3) Urutan video SE-SITUS ikut **tahun rilis**, bukan waktu upload — terbukti di produksi: 20 kartu teratas semuanya **2026**. Gerbang 5/5 (**2516 tes**), smoke test 10/10 = 200. ⏳ Manfaat (2) bagian ingatan baru terasa mulai rilis BERIKUTNYA. 🪤 **TIGA sesi menulis di folder yang sama; 22 berkas sesi audit masih menggantung — JANGAN `git add -A`.** Rinciannya di seksi `## 2026-11-14 (siang)` di bawah.
+**Terakhir diisi:** 2026-11-23 — 🔐 ✅ **RILIS `13b8937` → `6de869d` TAYANG.** 5 perbaikan audit keamanan 14 Nov ternyata **HILANG dari kode** (kena `git reset --hard` ±15 Nov; catatan lama yang bilang "SEMUA diperbaiki" sudah DIRALAT) — dipulihkan + SEC-007 ditulis ulang dari nol. **Blokir rilis yang berlaku sejak 14 Nov HILANG:** `next build` sukses & `npx tsc --noEmit` **0 error**, pertama kali bersih sejak tanggal itu. Next lokal 16.4.3 → **16.4.6**. 54 tes penjaga exit 0 dengan uji-balik nyata. 🎯 **Terbukti tayang dengan cara terkuat: SEC-001 diukur HIDUP lalu MATI di produksi** — alamat `/api/comments` yang sama membalas **500** dengan cookie cacat sebelum deploy, **200** sesudahnya. SEC-006 diperiksa **nol video hilang**. Smoke test 9 alamat **200**. 🔴 **SISA SATU: owner buka panel admin → SIMPAN SATU DRAMA** (SEC-003 tak bisa diuji dari luar tanpa sesi admin). 🔴 Gerbang tetap berhenti di `npm test` karena **5 tes merah milik pekerjaan Playly/beranda sesi lain** — dibuktikan sudah merah sebelum commit ini, jadi **bukan** regresi. ⏸️ Dua risiko sengaja TIDAK disentuh atas keputusan owner (repo `origin` **PUBLIK** sementara laporan audit 85 KB duduk di akar repo; `data/viewers.json` tak diabaikan `.gitignore`) — keduanya belum berbahaya hari ini, rinciannya di seksi `## 2026-11-23`. Sebelumnya: 2026-11-17 — kotak tempel tautan IMDb ditambahkan di panel pencarian per video. Belum di-commit, belum tayang. Di layar yang sedang terbuka, "A Princesa da Yakuza" ketemu kalau nama di kotak diganti jadi "Yakuza Princess" (tt10715446). Rincian di seksi `## 2026-11-17 — tempel tautan IMDb`. Sebelumnya: ✅ `ed8be85` TAYANG. Next.js 16.4.3 → 16.4.6 (tambal advisory). Railway dan Vercel success. Beranda dan `/discover` **200**. Catatan ini masih lokal. Sebelumnya: ✅ `16bd03f` TAYANG. Railway dan Vercel status success. `f47ccbb` gagal karena Supabase error saat prerender `/discover`; perbaikannya katalog publik tidak menghubungi database selama `next build`. Beranda dan `/discover` produksi **200**. Rincian di seksi `## 2026-11-17 — tayang gagal f47ccbb`. Sebelumnya: pola "judul dulu, isi menyusul" dipasang di seluruh menu admin. Menu dan judul IMDb tampil dulu; daftar yang sudah diambil tidak diunduh ulang selama 1 menit. Belum di-commit, belum tayang. Rincian di seksi `## 2026-11-17 — IMDb tidak layar kosong`. Sebelumnya: grafik Distribusi Kategori sekarang menghitung kategori film di panel IMDb, bukan 41 drama lama. Lencana "kategori aktif" bisa diklik untuk memuat ulang. Belum di-commit. Rincian di seksi `## 2026-11-17 — distribusi ikut film IMDb`. Sebelumnya: ✅ grafik Distribusi Kategori (`2b0ea47`) diminta deploy. Satu batang persentase. Rincian di seksi `## 2026-11-17 — distribusi kategori lengkap`. Rincian di seksi `## 2026-11-17 — distribusi kategori lengkap` di bawah. Sebelumnya: ✅ **RILIS `532bc38` → `225d519` TAYANG.** Panel admin Playly yang dirapikan (judul IMDb di atas, keterangan di ikon tanya, Perlu dicek, Cocokkan semua sekotak dengan Tebak kategori) sudah di Railway. Beranda produksi **200**. Rincian di seksi `## 2026-11-17 — rapikan panel Playly tayang` di bawah. Perbaikan login lokal masih belum di-commit. Sebelumnya: 2026-11-16 — isi otomatis link unduhan Google Drive & Mega digabung dari `feat/link-unduhan-provider-kualitas` (`58b1cf8`). Pemutar yang sudah tayang tidak ditimpa. Rincian di seksi `## 2026-11-16 — isi otomatis link unduhan` di bawah. Sebelumnya: 2026-11-15 — menu Genre dan Negara disamakan dengan Tahun (4 kolom, semua pilihan terlihat tanpa digulir). Rincian di seksi `## 2026-11-15` di bawah. Sebelumnya: ✅ **RILIS `f6b1c03` → `a09bfc8` TAYANG.** (1) Cache halaman penonton dibuang otomatis saat admin menyimpan + tombol **Segarkan cache** (kerja rekan). (2) Payload data IMDb ke browser admin **525 KB → 57 KB** (−89%) + ingatan "berkas siap" kini **bertahan melewati restart**. (3) Urutan video SE-SITUS ikut **tahun rilis**, bukan waktu upload — terbukti di produksi: 20 kartu teratas semuanya **2026**. Gerbang 5/5 (**2516 tes**), smoke test 10/10 = 200. ⏳ Manfaat (2) bagian ingatan baru terasa mulai rilis BERIKUTNYA. 🪤 **TIGA sesi menulis di folder yang sama; 22 berkas sesi audit masih menggantung — JANGAN `git add -A`.** Rinciannya di seksi `## 2026-11-14 (siang)` di bawah.
 
 **Rincian kontrol volume (putaran KETIGA):** owner menolak bentuk tombol `+` / `−` dan mengirim contoh gambar, jadi pengatur volume kini **garis geser tegak berbentuk kapsul** (jalur kuning + bulatan penggeser). Diukur di Chrome headless layar 393px: kapsul `x=345..381` **utuh di dalam layar**, geser jari atas→100% / tengah→50% / bawah→bisu, nol elemen diputar. Gerbang lolos 5/5 (2383 tes hijau). ✅ **Sudah TAYANG** dalam rilis `53fbc5c → a9ae869` malam itu juga.
 
@@ -147,9 +147,34 @@ sesi yang memulihkan dari diff itu lagi, **SEC-007 tidak akan ikut**; periksa `a
 database 14 Nov. Berkas `supabase_migrations/2026-11-14_kunci_baris_dompet_koin.sql` ikut di-commit
 sebagai **catatan**, BUKAN untuk dijalankan ulang.
 
-### ✅ TAYANG? BELUM — `13b8937` sudah di-commit, MENUNGGU IZIN PUSH
+### ✅ TAYANG — `13b8937` → `6de869d` SUDAH DI PRODUKSI (izin owner: "push sekarang")
 
-**Bukti yang dipegang:**
+`dramaku` dulu (cermin, privat), lalu `origin main`. Keduanya `1a87d86..6de869d`.
+
+🎯 **BUKTI TAYANG YANG PALING KUAT DI SELURUH RIWAYAT PROJECT INI — SEC-001 diukur HIDUP lalu MATI
+di produksi, pada alamat yang sama, hari yang sama.** Caranya: kirim cookie cacat ke jalur publik.
+- **SEBELUM deploy:** `GET /api/comments?dramaId=…` **tanpa** cookie → **200**; alamat yang SAMA
+  dengan header `Cookie: dramaku_tamu=%` → **500**. `/api/ratings` juga **500**. Diukur 4 kali.
+- **SESUDAH deploy:** keduanya **200**.
+
+Itu sekaligus membuktikan dua hal dalam satu ukuran: bug-nya memang nyata di situs (bukan teori di
+tes), DAN Railway benar-benar memakai kode baru — karena perilaku itu cuma ada di commit ini.
+⭐ **Pakai cara ini lagi untuk perbaikan keamanan jalur publik:** satu `curl` bermuatan cacat jauh
+lebih membuktikan daripada "situs balas 200".
+
+✅ **SEC-006 TIDAK menghilangkan satu pun video — diperiksa, bukan diasumsikan.** Ini risiko yang
+disebut sendiri di pesan commit (daftar host bawaan yang salah = SELURUH video dashboard hilang).
+`/api/videos` produksi: `count: 0, skipped: 20` dengan `alasanDilewati:
+{"tidak ada alamat video": 20}`. Penolakan host punya alasan **sendiri** yang berbeda —
+`"domain video belum diizinkan"` (`lib/dashboard-videos.ts:232`) — dan jumlahnya **NOL**. Jadi ke-20
+video itu memang tak punya alamat sejak sebelum rilis ini. 🪤 **Kalau nanti angka
+`"domain video belum diizinkan"` muncul > 0, ITU baru SEC-006 kebablasan** — perbaikannya isi
+`DASHBOARD_VIDEO_HOSTS` di Railway dengan host yang sebenarnya, bukan membalik kodenya.
+
+**Smoke test 9 alamat sesudah rilis:** `/` `/beranda` `/film` `/discover` `/katalog` `/api/dramas`
+`/my-list` `/profile` `/drama/<id>` → semua **200**.
+
+**Bukti yang dipegang sebelum push:**
 - `next build` **sukses** + `npx tsc --noEmit` **0 error** — pertama kali bersih sejak 14 Nov.
 - 6 berkas tes penjaga, **54 tes, exit 0**.
 - **Uji-balik nyata, bukan klaim:** `cookie-cacat` **3 merah** dan `segel-gcm` **1 merah** SEBELUM
@@ -169,7 +194,13 @@ PlaylyBagianAktif"*, yaitu fitur yang **sesi lain sedang membangun** dan belum t
 keamanan ini sendiri bersih. Sebelumnya tercatat 12 tes merah di `ed8be85`; sekarang 5 berkas / 6
 tes. **Jangan tafsirkan gerbang merah sebagai "pemulihan keamanan gagal".**
 
-### 🔴 DUA RISIKO YANG MENUNGGU KEPUTUSAN OWNER (belum dikerjakan, sengaja)
+### ⏸️ DUA RISIKO — OWNER MEMUTUSKAN "JANGAN SENTUH DULU" (23 Nov, sadar & tercatat)
+
+> Keduanya **ditawarkan** ke owner lewat popup dan dia memilih *"Jangan sentuh keduanya"*. Itu sah:
+> **tidak ada** yang berbahaya hari ini (laporannya nol secret asli; `viewers.json` cuma 2 akun uji).
+> Dicatat di sini supaya keputusannya tidak terbaca sebagai kelalaian — dan supaya sesi berikutnya
+> **tidak menawarkannya lagi** kecuali keadaannya berubah. ⚠️ Keadaan yang MENGUBAHNYA: `viewers.json`
+> mulai berisi penonton sungguhan, atau ada rencana mengundang orang lain ke repo.
 
 1. **Repo `origin` (produksi) itu PUBLIK** — diperiksa `gh repo view`: `masradenbagus89-ui/dramaapp`
    **public**, `ojokesusu/dramaku` private. `LAPORAN-AKHIR-AUDIT-KEAMANAN.txt` (85 KB) duduk di
@@ -189,14 +220,21 @@ tes. **Jangan tafsirkan gerbang merah sebagai "pemulihan keamanan gagal".**
 
 ### Yang masih menggantung sesudah ini
 
-- [ ] **Izin push `13b8937`** = TOMBOL RILIS (AGENTS.md §5.5). `dramaku` dulu, lalu `origin main`.
-- [ ] Smoke test sesudah tayang (menyentuh kode yang diubah): buka halaman drama → tulis komentar →
-      beri rating → buka panel admin → **simpan satu drama** (SEC-003 menambah cek asal di 4 route
-      admin, jadi inilah yang paling perlu mata manusia).
+- [x] ~~Izin push~~ → **SUDAH TAYANG** `1a87d86..6de869d` di `dramaku` + `origin main`.
+- [x] ~~Smoke test jalur publik~~ → SEC-001 terbukti mati di produksi (cookie cacat 500 → 200),
+      SEC-006 terbukti nol video hilang, 9 alamat 200.
+- [ ] 🔴 **SATU-SATUNYA YANG MASIH BUTUH MATA OWNER: buka panel admin → SIMPAN SATU DRAMA.**
+      SEC-003 menambah cek asal permintaan di 4 route admin (`ads`/`drama`/`durasi`/`hardlink`), dan
+      itu **tidak bisa diuji dari luar** tanpa sesi admin. Kalau panel membalas *"Permintaan
+      ditolak: asal tidak dikenal"* (HTTP 403), ITU SEC-003 — laporkan, jangan diamkan. Sekalian
+      coba **Ukur durasi semua** (pengisian massal), karena justru di situ pembatas laju SENGAJA
+      tidak dipasang supaya puluhan permintaan berurutan tidak gagal separuh jalan.
+- [ ] Owner memastikan deployment `6de869d` berstatus **success** di panel Railway.
 - [ ] 5 tes merah milik pekerjaan Playly-admin/beranda sesi lain — gerbang tak bisa hijau tanpanya.
 - [ ] Pekerjaan **tampilan HP** (panel pop up menu katalog) masih belum di-commit; lihat seksi
       `## 2026-11-21` di bawah. Ia sudah **tidak terblokir** lagi sekarang.
-- [ ] Dua risiko di atas (laporan publik + `viewers.json`).
+- [x] ~~Dua risiko di atas~~ → owner memilih **jangan sentuh dulu** (lihat blok ⏸️ di atas). Jangan
+      ditawarkan lagi kecuali `viewers.json` mulai berisi penonton sungguhan.
 
 🪤 **Dev server port 3100 (PID 187948, sisa sesi 21 Nov) SUDAH DIMATIKAN** atas izin owner — gerbang
 butuh itu karena langkah pertamanya menghapus `.next`. Kalau perlu preview lagi, nyalakan ulang.

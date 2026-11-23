@@ -23,9 +23,32 @@
 > lengkap: `HANDOFF.md` seksi `## 2026-11-09`.
 
 
-**Terakhir dicek:** 2026-11-23 (`git fetch` kedua remote). ⏳ **`13b8937` DI-COMMIT, BELUM DI-PUSH** — pemulihan 5 perbaikan audit keamanan yang hilang kena `reset --hard`, menunggu izin owner. `origin/main` & `dramaku/main` sama-sama `1a87d86`, lokal unggul **1 commit**, fast-forward bersih. ✅ Blokir rilis sejak 14 Nov **HILANG** (`build` sukses, `tsc` 0 error). ⚠️ Gerbang masih merah di `npm test` karena 5 tes milik pekerjaan Playly/beranda sesi lain — **terbukti bukan regresi**. Produksi 5 alamat **200**. Sebelumnya: 2026-11-21 ✅ `9720b0c` **TAYANG** (filter "siapa upload hari ini" di panel IMDb). `dramaku` dulu, lalu `origin` — keduanya `ed8be85..9720b0c`. Railway build **sukses**.
+**Terakhir dicek:** 2026-11-23. ✅ **RILIS `13b8937` → `6de869d` TAYANG** (pemulihan 5 perbaikan audit keamanan yang hilang kena `reset --hard`). `dramaku` dulu, lalu `origin main` — keduanya `1a87d86..6de869d`. 🎯 Bukti tayang: SEC-001 diukur **500 → 200** di produksi pada alamat yang sama (cookie cacat). SEC-006 **nol video hilang**. Smoke test 9 alamat **200**. 🔴 **Sisa satu, milik owner: panel admin → simpan satu drama** (SEC-003 tak bisa diuji dari luar). ✅ Blokir rilis sejak 14 Nov **HILANG** (`build` sukses, `tsc` 0 error). ⚠️ Gerbang masih merah di `npm test` karena 5 tes milik pekerjaan Playly/beranda sesi lain — **terbukti bukan regresi**. Sebelumnya: 2026-11-21 ✅ `9720b0c` **TAYANG** (filter "siapa upload hari ini" di panel IMDb). `dramaku` dulu, lalu `origin` — keduanya `ed8be85..9720b0c`. Railway build **sukses**.
 
-### ⏳ 2026-11-23 — `13b8937` DI-COMMIT, BELUM DI-PUSH (menunggu izin owner)
+### ✅ 2026-11-23 — RILIS `13b8937` → `6de869d` TAYANG (pemulihan 5 perbaikan audit keamanan)
+
+**Bukti tayang — bukan sekadar "situs hidup", dan ini pola yang layak diulang.** SEC-001 diukur
+**hidup lalu mati di produksi**, pada alamat yang sama: `GET /api/comments?dramaId=…` dengan header
+`Cookie: dramaku_tamu=%` membalas **500 SEBELUM** deploy (4 pengukuran) dan **200 SESUDAH**;
+`/api/ratings` sama. Satu ukuran membuktikan dua hal: bug-nya nyata di situs, DAN Railway memakai
+kode baru — karena perilaku itu hanya ada di commit ini. ⭐ Untuk perbaikan keamanan di jalur
+publik, satu `curl` bermuatan cacat lebih membuktikan daripada sepuluh alamat yang balas 200.
+
+**SEC-006 diperiksa nol video hilang** (risiko yang disebut sendiri di pesan commit): `/api/videos`
+memulangkan `skipped: 20` dengan alasan `"tidak ada alamat video"` — kondisi lama. Penolakan host
+punya alasan terpisah `"domain video belum diizinkan"` (`lib/dashboard-videos.ts:232`) dan
+jumlahnya **NOL**. 🪤 Kalau angka itu nanti > 0, isi `DASHBOARD_VIDEO_HOSTS` di Railway dengan host
+yang sebenarnya — **jangan** membalik kodenya.
+
+**Smoke test 9 alamat:** `/` `/beranda` `/film` `/discover` `/katalog` `/api/dramas` `/my-list`
+`/profile` `/drama/<id>` → semua **200**.
+
+**🔴 SISA SATU PEMERIKSAAN, MILIK OWNER:** buka panel admin → **simpan satu drama**, dan coba
+**Ukur durasi semua**. SEC-003 menambah cek asal permintaan di 4 route admin dan itu **mustahil
+diuji dari luar** tanpa sesi admin. Gejala kalau ada yang salah: **HTTP 403 "Permintaan ditolak:
+asal tidak dikenal"**. Owner juga perlu memastikan deployment `6de869d` **success** di Railway.
+
+### Catatan posisi sebelum push (disimpan sebagai riwayat)
 
 **Isi:** pemulihan 5 perbaikan audit keamanan 14 Nov yang hilang dari kode kena `git reset --hard`
 ±15 Nov (SEC-001 cookie cacat → 500 di jalur publik · SEC-003 cek asal 4 route admin · SEC-004 header

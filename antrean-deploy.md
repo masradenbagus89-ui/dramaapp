@@ -23,7 +23,52 @@
 > lengkap: `HANDOFF.md` seksi `## 2026-11-09`.
 
 
-**Terakhir dicek:** 2026-11-23. ✅ **RILIS `13b8937` → `6de869d` TAYANG** (pemulihan 5 perbaikan audit keamanan yang hilang kena `reset --hard`). `dramaku` dulu, lalu `origin main` — keduanya `1a87d86..6de869d`. 🎯 Bukti tayang: SEC-001 diukur **500 → 200** di produksi pada alamat yang sama (cookie cacat). SEC-006 **nol video hilang**. Smoke test 9 alamat **200**. ✅ **SEC-003 ikut terbukti dari luar** (asal sah 401 · asal asing 403 di `drama`/`durasi`/`hardlink`, nol data berubah). 🔴 Sisa milik owner cuma: pastikan deployment `6de869d` **success** di Railway. ✅ Blokir rilis sejak 14 Nov **HILANG** (`build` sukses, `tsc` 0 error). ✅ Gerbang **HIJAU** sejak 2026-11-23 — 6 tes basi Playly/beranda itu dibetulkan di `a4fba18` (197 berkas / 2784 tes lulus, nol gagal). ⏸️ **10 commit menunggu di antrean dan `origin` DITAHAN** atas keputusan owner: tema sesi lain belum selesai. Rincian + urutan rilisnya di seksi `⏸️ 2026-11-23 (ke-2)` di bawah. Sebelumnya: 2026-11-21 ✅ `9720b0c` **TAYANG** (filter "siapa upload hari ini" di panel IMDb). `dramaku` dulu, lalu `origin` — keduanya `ed8be85..9720b0c`. Railway build **sukses**.
+**Terakhir dicek:** 2026-11-23. ✅ **RILIS `13b8937` → `6de869d` TAYANG** (pemulihan 5 perbaikan audit keamanan yang hilang kena `reset --hard`). `dramaku` dulu, lalu `origin main` — keduanya `1a87d86..6de869d`. 🎯 Bukti tayang: SEC-001 diukur **500 → 200** di produksi pada alamat yang sama (cookie cacat). SEC-006 **nol video hilang**. Smoke test 9 alamat **200**. ✅ **SEC-003 ikut terbukti dari luar** (asal sah 401 · asal asing 403 di `drama`/`durasi`/`hardlink`, nol data berubah). 🔴 Sisa milik owner cuma: pastikan deployment `6de869d` **success** di Railway. ✅ Blokir rilis sejak 14 Nov **HILANG** (`build` sukses, `tsc` 0 error). ✅ Gerbang **HIJAU** sejak 2026-11-23 — 6 tes basi Playly/beranda itu dibetulkan di `a4fba18` (197 berkas / 2784 tes lulus, nol gagal). ⏸️ **15 commit menunggu di antrean dan `origin` DITAHAN** atas keputusan owner (angkanya BERTAMBAH tiap sesi lain commit — hitung sendiri: `git rev-list --count origin/main..main`). `dramaku` ikut tertinggal **2 commit**. Gerbang diukur ulang 2026-11-23 malam atas keadaan TERBARU: 200 berkas / **2812 tes** hijau, `build` sukses, `tsc` 0 error. Rincian + urutan rilisnya di seksi `⏸️ 2026-11-23 (ke-3, malam)` di bawah. Sebelumnya: 2026-11-21 ✅ `9720b0c` **TAYANG** (filter "siapa upload hari ini" di panel IMDb). `dramaku` dulu, lalu `origin` — keduanya `ed8be85..9720b0c`. Railway build **sukses**.
+
+### ⏸️ 2026-11-23 (ke-3, malam) — antrean naik jadi **15 commit**, `origin` TETAP DITAHAN
+
+**Tidak ada yang tayang dari catatan ini.** `origin/main` masih di `6de869d`; produksi tidak berubah.
+
+| Remote | Posisi | Akibat |
+|---|---|---|
+| `dramaku` (cermin) | di `45f713c` — **tertinggal 2 commit** dari `main` lokal | nol rilis — cermin tidak men-deploy |
+| `origin` (produksi) | ⏸️ **DITAHAN** di `6de869d` — tertinggal **15 commit** | tombol rilis, belum ditekan |
+
+**Kenapa masih ditahan:** owner menutup sesi 2026-11-23 malam dengan *"ok kamu update handoff kita
+lanjut besok"*, dan perintah **"jangan tayang dulu karena masih banyak yang mau rubah"** belum
+dicabut. Empat keputusan tampilan masih menggantung (logo hijau di atas tema emas, nama situs masih
+dua, `PersonalRows` nol pemanggil, perilaku chip "Terpopuler") — rinciannya di `HANDOFF.md` seksi
+`## 2026-11-23 (malam)`.
+
+**Empat commit BARU di antrean (sesudah daftar di blok ke-2 di atas):**
+- `4c5149e` — tema **gelap + emas** (menggantikan soft sage `25957c7`)
+- `90c90f1` — strip **"Layarindo Menawarkan"** ganti panel "Lanjutkan Menonton" di `/beranda`
+- `332e784` — tombol FILTER baris tab khusus layar komputer + isinya disamakan dengan filter bar
+  bawah + 3 tab terpanjang dilepas tombolnya
+- `e2b4edb` — judul + chip **disederetkan** jadi satu baris dengan tombol tab
+
+⚠️ **Angka 10 di blok ke-2 di atas sudah BASI** — itu memang sudah diperingatkan di sana. Hitung
+sendiri sebelum rilis: `git rev-list --count origin/main..main`.
+
+**Gerbang pra-rilis: HIJAU atas keadaan TERBARU ini** — dan ini kemajuan dari blok ke-2, yang
+hijaunya diukur sebelum beberapa commit masuk. Diukur 2026-11-23 malam, sesudah `e2b4edb`:
+`npx vitest run` **200 berkas / 2812 tes** hijau · `rm -rf .next && npm run build` **sukses**
+(23 halaman) · `npx tsc --noEmit` **exit 0**.
+⚠️ Tetap **WAJIB dijalankan ulang** (`npm run gerbang`) tepat sebelum push — sesi lain masih
+menambah commit ke folder yang sama, dan tiga berkas mereka masih menggantung belum di-commit.
+🪤 Matikan dulu `next dev`/`next start` yang hidup (port 3177 & 3178 dipakai sesi ini malam itu) —
+langkah 1 gerbang menghapus `.next` yang sedang dipakai server itu.
+
+**Urutan besok, kalau owner memberi izin rilis:**
+1. Selesaikan dulu empat keputusan tampilan di `HANDOFF.md` seksi `## 2026-11-23 (malam)`.
+2. `git fetch origin` + `git fetch dramaku`, lalu hitung ulang jumlah commit.
+3. `npm run gerbang` sampai **exit 0**.
+4. `git push dramaku main` dulu (cermin, nol risiko) — saat ini tertinggal 2 commit.
+5. `git push origin main` — **izin owner**, sebut nama remote eksplisit (`git push` polos di
+   komputer owner menembak `dramaku`, bukan produksi).
+6. Smoke test di situs sungguhan + verifikasi deployment **success** di Railway.
+
+---
 
 ### ⏸️ 2026-11-23 (ke-2) — 3 commit baru DITAHAN di `origin` atas keputusan owner (tema belum selesai)
 

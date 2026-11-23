@@ -90,11 +90,137 @@
 > aftermarket** dari pemilik sekarang, harganya **jauh di atas** Rp200.000 dan belum pernah dicek.
 > Nama lain yang masih bebas jauh lebih murah.
 
-**Terakhir diisi:** 2026-11-23 — 🎨 **`25957c7` DI-COMMIT, SENGAJA BELUM TAYANG** (owner: *"commit dan jangan tayang dulu karena masih banyak yang mau rubah"*). Tema **soft sage** + **logo Layarindo** + pop up **Filter Film** + menu bawah 4 tab penonton + panel menu katalog HP — 33 berkas, 2.259 baris, **nol perubahan di produksi**. ⚠️ Situs sementara punya DUA nama: logo bertuliskan Layarindo, tapi "DramaKu" masih di 66 berkas (judul halaman, metadata Google, kotak cari) — itu DISENGAJA atas permintaan owner, bukan terlewat. ⚠️ **4 commit lokal belum terdorong**; jangan push "sekalian". Rincian + 6 jebakan yang memakan waktu hari ini di seksi `## 2026-11-23 — 🎨 TEMA SOFT SAGE`. Sebelumnya: 🔐 ✅ **RILIS `13b8937` → `6de869d` TAYANG.** 5 perbaikan audit keamanan 14 Nov ternyata **HILANG dari kode** (kena `git reset --hard` ±15 Nov; catatan lama yang bilang "SEMUA diperbaiki" sudah DIRALAT) — dipulihkan + SEC-007 ditulis ulang dari nol. **Blokir rilis yang berlaku sejak 14 Nov HILANG:** `next build` sukses & `npx tsc --noEmit` **0 error**, pertama kali bersih sejak tanggal itu. Next lokal 16.4.3 → **16.4.6**. 54 tes penjaga exit 0 dengan uji-balik nyata. 🎯 **Terbukti tayang dengan cara terkuat: SEC-001 diukur HIDUP lalu MATI di produksi** — alamat `/api/comments` yang sama membalas **500** dengan cookie cacat sebelum deploy, **200** sesudahnya. SEC-006 diperiksa **nol video hilang**. Smoke test 9 alamat **200**. ✅ **SEC-003 ikut terbukti dari luar** — `guardAsal` berjalan sebelum cek login, jadi 401 vs 403 memisahkan "lolos penjaga" dari "ditolak penjaga": `drama`/`durasi`/`hardlink` semua **asal sah 401 · asal asing 403**, nol data berubah. 🔴 Sisa milik owner cuma: pastikan deployment `6de869d` **success** di Railway. 🔴 Gerbang tetap berhenti di `npm test` karena **5 tes merah milik pekerjaan Playly/beranda sesi lain** — dibuktikan sudah merah sebelum commit ini, jadi **bukan** regresi. ⏸️ Dua risiko sengaja TIDAK disentuh atas keputusan owner (repo `origin` **PUBLIK** sementara laporan audit 85 KB duduk di akar repo; `data/viewers.json` tak diabaikan `.gitignore`) — keduanya belum berbahaya hari ini, rinciannya di seksi `## 2026-11-23`. Sebelumnya: 2026-11-17 — kotak tempel tautan IMDb ditambahkan di panel pencarian per video. Belum di-commit, belum tayang. Di layar yang sedang terbuka, "A Princesa da Yakuza" ketemu kalau nama di kotak diganti jadi "Yakuza Princess" (tt10715446). Rincian di seksi `## 2026-11-17 — tempel tautan IMDb`. Sebelumnya: ✅ `ed8be85` TAYANG. Next.js 16.4.3 → 16.4.6 (tambal advisory). Railway dan Vercel success. Beranda dan `/discover` **200**. Catatan ini masih lokal. Sebelumnya: ✅ `16bd03f` TAYANG. Railway dan Vercel status success. `f47ccbb` gagal karena Supabase error saat prerender `/discover`; perbaikannya katalog publik tidak menghubungi database selama `next build`. Beranda dan `/discover` produksi **200**. Rincian di seksi `## 2026-11-17 — tayang gagal f47ccbb`. Sebelumnya: pola "judul dulu, isi menyusul" dipasang di seluruh menu admin. Menu dan judul IMDb tampil dulu; daftar yang sudah diambil tidak diunduh ulang selama 1 menit. Belum di-commit, belum tayang. Rincian di seksi `## 2026-11-17 — IMDb tidak layar kosong`. Sebelumnya: grafik Distribusi Kategori sekarang menghitung kategori film di panel IMDb, bukan 41 drama lama. Lencana "kategori aktif" bisa diklik untuk memuat ulang. Belum di-commit. Rincian di seksi `## 2026-11-17 — distribusi ikut film IMDb`. Sebelumnya: ✅ grafik Distribusi Kategori (`2b0ea47`) diminta deploy. Satu batang persentase. Rincian di seksi `## 2026-11-17 — distribusi kategori lengkap`. Rincian di seksi `## 2026-11-17 — distribusi kategori lengkap` di bawah. Sebelumnya: ✅ **RILIS `532bc38` → `225d519` TAYANG.** Panel admin Playly yang dirapikan (judul IMDb di atas, keterangan di ikon tanya, Perlu dicek, Cocokkan semua sekotak dengan Tebak kategori) sudah di Railway. Beranda produksi **200**. Rincian di seksi `## 2026-11-17 — rapikan panel Playly tayang` di bawah. Perbaikan login lokal masih belum di-commit. Sebelumnya: 2026-11-16 — isi otomatis link unduhan Google Drive & Mega digabung dari `feat/link-unduhan-provider-kualitas` (`58b1cf8`). Pemutar yang sudah tayang tidak ditimpa. Rincian di seksi `## 2026-11-16 — isi otomatis link unduhan` di bawah. Sebelumnya: 2026-11-15 — menu Genre dan Negara disamakan dengan Tahun (4 kolom, semua pilihan terlihat tanpa digulir). Rincian di seksi `## 2026-11-15` di bawah. Sebelumnya: ✅ **RILIS `f6b1c03` → `a09bfc8` TAYANG.** (1) Cache halaman penonton dibuang otomatis saat admin menyimpan + tombol **Segarkan cache** (kerja rekan). (2) Payload data IMDb ke browser admin **525 KB → 57 KB** (−89%) + ingatan "berkas siap" kini **bertahan melewati restart**. (3) Urutan video SE-SITUS ikut **tahun rilis**, bukan waktu upload — terbukti di produksi: 20 kartu teratas semuanya **2026**. Gerbang 5/5 (**2516 tes**), smoke test 10/10 = 200. ⏳ Manfaat (2) bagian ingatan baru terasa mulai rilis BERIKUTNYA. 🪤 **TIGA sesi menulis di folder yang sama; 22 berkas sesi audit masih menggantung — JANGAN `git add -A`.** Rinciannya di seksi `## 2026-11-14 (siang)` di bawah.
+**Terakhir diisi:** 2026-11-23 (malam) — 🎨 **TEMA GELAP + EMAS tayang di LOKAL saja, 4 commit baru, SENGAJA BELUM TAYANG.** Owner menutup sesi: *"ok kamu update handoff kita lanjut besok"*; perintah **"jangan tayang dulu karena masih banyak yang mau rubah"** MASIH BERLAKU. Empat commit: `4c5149e` tema gelap+emas (menggantikan soft sage `25957c7`) · `90c90f1` strip **"Layarindo Menawarkan"** ganti panel "Lanjutkan Menonton" · `332e784` FILTER baris tab jadi khusus komputer + isinya disamakan dengan filter bar bawah + 3 tab terpanjang dilepas · `e2b4edb` judul + chip **disederetkan** jadi satu baris dengan tombol tab. **Gerbang HIJAU penuh:** 200 berkas / **2812 tes** · `npm run build` sukses (23 halaman) · `tsc` **0 error**; tombol FILTER **diklik sungguhan** di build produksi (1440px → pop up 6 dropdown terbuka; 390px → tidak ada di baris tab). ⚠️ **15 commit lokal belum terdorong ke `origin`, 2 belum ke `dramaku`** — jangan push "sekalian". 🔴 **Empat keputusan menunggu owner besok:** (1) logo masih HIJAU di atas tema emas, bertabrakan — ganti/warnai/biarkan? (2) nama situs masih DUA: logo "Layarindo" tapi `SITE_NAME` = "DramaKu" (disengaja sejak 2026-11-22, bukan terlewat); (3) `PersonalRows.tsx` kini **nol pemanggil** — hapus atau simpan? (4) chip "Terpopuler" pergi ke `/discover`, beda dari tab "TERPOPULER" yang tombolnya sudah dilepas. 🪤 **Enam jebakan baru dicatat** — yang terpenting: penjaga tes bisa **MATI diam-diam** karena `\b` tertulis sebagai karakter BACKSPACE sungguhan (satu penjaga empat putaran koreksi owner ternyata hijau tanpa memeriksa apa pun), dan uji interaktif di `next dev` menghasilkan "rusak" yang KELIRU. Rincian + cara memeriksa di seksi `## 2026-11-23 (malam)`. Sebelumnya: 🎨 **`25957c7` DI-COMMIT, SENGAJA BELUM TAYANG** — tema **soft sage** + **logo Layarindo** + pop up **Filter Film** + menu bawah 4 tab penonton + panel menu katalog HP (33 berkas, 2.259 baris, nol perubahan di produksi); temanya kini DITIMPA gelap+emas di atas, titik pulang tetap `25957c7`. Sebelumnya: 🔐 ✅ **RILIS `13b8937` → `6de869d` TAYANG.** 5 perbaikan audit keamanan 14 Nov ternyata **HILANG dari kode** (kena `git reset --hard` ±15 Nov; catatan lama yang bilang "SEMUA diperbaiki" sudah DIRALAT) — dipulihkan + SEC-007 ditulis ulang dari nol. **Blokir rilis yang berlaku sejak 14 Nov HILANG:** `next build` sukses & `npx tsc --noEmit` **0 error**. Next lokal 16.4.3 → **16.4.6**. 🎯 **Terbukti tayang dengan cara terkuat: SEC-001 diukur HIDUP lalu MATI di produksi** — alamat `/api/comments` yang sama membalas **500** dengan cookie cacat sebelum deploy, **200** sesudahnya. SEC-006 diperiksa **nol video hilang**. ✅ **SEC-003 ikut terbukti dari luar** — `guardAsal` berjalan sebelum cek login, jadi 401 vs 403 memisahkan "lolos penjaga" dari "ditolak penjaga": `drama`/`durasi`/`hardlink` semua **asal sah 401 · asal asing 403**, nol data berubah. ⏸️ Dua risiko sengaja TIDAK disentuh atas keputusan owner (repo `origin` **PUBLIK** sementara laporan audit 85 KB duduk di akar repo; `data/viewers.json` tak diabaikan `.gitignore`) — rinciannya di seksi `## 2026-11-23`. Riwayat lebih lama: lihat seksi-seksi bertanggal di bawah.
 
 **Rincian kontrol volume (putaran KETIGA):** owner menolak bentuk tombol `+` / `−` dan mengirim contoh gambar, jadi pengatur volume kini **garis geser tegak berbentuk kapsul** (jalur kuning + bulatan penggeser). Diukur di Chrome headless layar 393px: kapsul `x=345..381` **utuh di dalam layar**, geser jari atas→100% / tengah→50% / bawah→bisu, nol elemen diputar. Gerbang lolos 5/5 (2383 tes hijau). ✅ **Sudah TAYANG** dalam rilis `53fbc5c → a9ae869` malam itu juga.
 
 **Sebelumnya hari ini:** ✅ **`2ad015b` + `8d8c1ba` TAYANG.** Tata letak pemutar beres dalam tiga putaran permintaan owner: tombol **Eps turun ke baris paling bawah**, tombol **volume pindah ke sebelah angka durasi**, rail ikon kanan **diperkecil & dirapatkan** (36px/20px/jarak 8px), dan garis volume tegak **diganti tombol + / −** karena terukur berdiri di **x=391 pada layar 393px = di luar layar HP**. Rinciannya di seksi `## 2026-11-13` di bawah.
+
+---
+
+## 2026-11-23 (malam) — 🎨 TEMA GELAP+EMAS + strip "Layarindo Menawarkan" + satu alat filter — 4 commit, SENGAJA BELUM TAYANG
+
+**Owner menutup sesi dengan:** *"ok kamu update handoff kita lanjut besok"*. Perintah
+**"jangan tayang dulu karena masih banyak yang mau rubah"** MASIH BERLAKU — jangan push
+`origin` besok tanpa perintah baru.
+
+### Apa yang berubah (urut commit)
+
+| Commit | Isi |
+|---|---|
+| `4c5149e` | **Tema gelap + emas** menggantikan soft sage `25957c7`. Owner: *"warna ini lebih bagus terlihat elegan dan mewah"* |
+| `90c90f1` | Strip **"Layarindo Menawarkan"** (3 chip pintasan) menggantikan panel "Lanjutkan Menonton" di `/beranda` |
+| `332e784` | Tombol FILTER baris tab **jadi khusus layar komputer** + isinya disamakan dengan filter bar bawah + 3 tab terpanjang dilepas |
+| `e2b4edb` | Judul + chip **disederetkan** dengan tombol tab → satu baris |
+
+### Keputusan yang MENIMPA keputusan owner sebelumnya — jangan dikembalikan mengira regresi
+
+1. **Panel "Lanjutkan Menonton" DIBUANG dari `/beranda`** (keputusan owner 2026-10-28/29 ditimpa
+   2026-11-23). Pintasan "teruskan episode" hilang dari halaman itu; `/history` **tetap terbuka**
+   lewat menu akun di bar atas — diperiksa SEBELUM ditukar, dan dipaku di
+   `tests/layarindo-menawarkan.test.ts`.
+2. **`app/components/beranda/PersonalRows.tsx` kini NOL PEMANGGIL.** Sengaja tidak dihapus —
+   membuangnya ikut membuang 4 baris rekomendasi. Statusnya ditulis di kepala berkasnya.
+   🔴 **Keputusan menunggu owner: hapus, atau simpan?**
+3. **Tombol FILTER tidak lagi tergambar di HP** (owner: *"sudah ada di bawah"*). Di HP
+   penggantinya tombol Filter bar bawah — **pop up yang sama persis**.
+4. **Tab TERBARU · UNGGULAN · UPDATE · TERPOPULER tombolnya dilepas** dari baris atas
+   `/` & `/beranda`. ⚠️ **Yang dilepas CUMA TOMBOLNYA** — `daftarTab`/`parseTab` tetap utuh,
+   sebab 4 tautan menu "Series" di bar atas menunjuk `/katalog?tab=…`; kalau kuncinya dibuang,
+   `tabAktif` jatuh DIAM-DIAM ke tab pertama. `/katalog` sengaja TIDAK menyembunyikan apa pun.
+   Seksinya sendiri tetap tergambar di halaman depan.
+
+### Dua aturan terukur yang jangan dilanggar di tema ini
+
+- **Teks di atas bidang emas WAJIB GELAP.** Teks putih di `emas-500` = **2,04:1** (tulisannya
+  praktis lenyap); teks gelap = **9,56:1**. Refleks "tombol berwarna = teks putih" terbawa dari
+  dua tema sebelumnya yang warnanya memang gelap — ini titik paling mudah dilanggar. Dipaku di
+  `tests/filter-katalog.test.ts`.
+- **Permukaan gelapnya coklat-kemerahan, bukan abu netral.** Emas di atas abu terbaca sebagai
+  kuning biasa. Paletnya di `app/globals.css` `@theme` — jangan tulis ulang angkanya di berkas lain.
+
+Titik pulang kalau tema sage mau dikembalikan: commit **`25957c7`**. Gambar gelombang hijau
+`public/bar-latar.jpg` sengaja dibiarkan sebagai sumber bentuk; versi emasnya `bar-latar-emas.jpg`
+dibuat dengan memetakan kecerahan tiap piksel, bukan digambar ulang.
+
+### Bug lama yang ikut ketemu & diperbaiki
+
+**`/discover?sort=judul` tidak menyaring apa pun.** Tautan "Judul A-Z" di dropdown FILTER lama
+memakai `judul`, padahal nilai yang dikenal `title`. `parseSort` (`lib/discover.ts:18`)
+menjatuhkan nilai tak dikenal **diam-diam** ke `relevance`, jadi pilihannya diklik lalu
+menampilkan katalog apa adanya. Lolos berminggu-minggu karena (a) isi dropdown Radix tidak
+tergambar di HTML sampai dibuka, dan (b) tes penjaganya cuma memastikan teks `sort=judul` **ADA**,
+bukan nilainya **SAH** — tes itu justru MENGESAHKAN bug-nya. Kini dicocokkan ke `SORT_OPTIONS`,
+jadi seluruh kelas salah-ketik ini terjaga. Dropdown-nya sendiri sudah diganti pop up bersama.
+
+### 🪤 Enam jebakan yang memakan waktu malam ini — baca sebelum mengulang caranya
+
+1. **Penjaga tes bisa MATI diam-diam karena karakter tak terlihat.** `tests/cari-popup-dan-film-terang.test.ts`
+   memuat `/\bfixed\b/` yang `\b`-nya ternyata **karakter BACKSPACE sungguhan (0x08)** — terselip
+   saat berkas ditulis lewat string Python. Polanya mustahil cocok, jadi penjaga EMPAT putaran
+   koreksi owner itu **hijau tanpa memeriksa apa pun**. Tak terlihat di editor, lolos `grep`.
+   ⚠️ **Backslash GANDA pun tidak menyelamatkan** lewat heredoc. Obatnya: tulis lewat `Write`/`Edit`.
+   Pindai seluruh repo: `node -e "..."` (perintahnya di memori AI `python-string-biasa…`).
+2. **Penjaga yang membaca kode sebagai TEKS tertipu komentarnya sendiri.** Penjelasan yang baik
+   hampir selalu mengutip contoh yang dilarang. Penawarnya kini ada di
+   **`tests/bantu/tanpa-komentar.ts`** (baru). ⚠️ Fungsi yang sama masih DISALIN di 8 berkas tes
+   lain — migrasinya ditunda karena sebagian sedang dikerjakan sesi lain (bentrok git).
+3. **Regex non-greedy di tes berhenti di `/>` PERTAMA.** Begitu sebuah prop berisi elemen
+   (`slotBarisTab={<X />}`), potongannya terputus sebelum prop yang diperiksa → merah padahal
+   kodenya benar. Diperbaiki jadi `/>` yang berdiri sendiri di barisnya.
+4. **Uji interaktif di mode `next dev` menghasilkan "rusak" yang KELIRU.** Bundel browser 1,2 MB
+   baru dikompilasi saat halaman pertama dibuka, jadi klik terlalu dini terbaca seperti tombol
+   mati — **tombol cari yang sudah lama ada pun tampak mati**. Uji di `next start` (produksi), dan
+   buktikan kesiapan halaman dari **PERILAKU** (klik tombol cari sampai kotaknya muncul), bukan
+   dari menunggu sekian detik.
+5. **`next start` bisa menyajikan build LAMA.** Satu putaran terbuang menyimpulkan "fitur rusak"
+   dari build sebelum perubahan. Selalu `rm -rf .next && npm run build` dulu.
+6. **Probe `__reactProps$` TIDAK andal di React 19** — hanya menempel di sebagian node, jadi
+   hitungannya tetap 3 walau React jelas hidup. Jangan dipakai sebagai tanda "sudah terhidrasi".
+
+### Cara memeriksa besok (owner)
+
+Nyalakan: `npx next start -p 3178` (butuh `npm run build` dulu) atau `npx next dev -p 3177`.
+Buka `http://localhost:3178/beranda`.
+1. Satu baris: **Layarindo Menawarkan · KUALITAS TERBAIK · UPDATE TERBARU · TERPOPULER ·
+   REKOMENDASI · 2026** + **FILTER** di ujung kanan.
+2. Kecilkan jendela selebar HP → FILTER hilang dari baris itu (pindah ke bar bawah), dan barisnya
+   **membungkus ke bawah**, bukan digeser.
+3. Klik **Series → Unggulan** di menu atas → harus tetap membuka daftar serial unggulan.
+
+### 🔴 Yang menunggu keputusan owner besok
+
+1. **Logo masih hijau** (Layarindo) di atas tema emas — bertabrakan. Pilihan: kirim logo mahkota
+   emas dari gambar acuan · saya warnai ulang logo sekarang jadi emas · biarkan.
+2. **Nama situs masih DUA**: logo "Layarindo", tapi `SITE_NAME` di `lib/site.ts` = **"DramaKu"**
+   (muncul di judul halaman, metadata Google, subjudul seksi). Disengaja atas permintaan owner
+   2026-11-22 — bukan terlewat. Nama di strip ditulis sebagai konstanta `NAMA_TAMPIL` dengan
+   penunjuk cara menuntaskannya.
+3. **`PersonalRows.tsx` nol pemanggil** — hapus atau simpan?
+4. **Chip "Terpopuler" ≠ tab "TERPOPULER"**: chip pergi ke `/discover?sort=populer` (halaman
+   lain), tab dulu membuka seksi di halaman yang sama. Tombol tab sudah dilepas; kalau owner mau
+   chip-nya berperilaku seperti tab lama, itu perubahan tersendiri.
+
+### Bukti (bukan "harusnya jalan")
+
+`npx vitest run` → **200 berkas / 2812 tes HIJAU** · `rm -rf .next` → `npm run build` **sukses**
+(23 halaman) · `npx tsc --noEmit` **exit 0**. Tombol FILTER **diklik sungguhan** lewat Chrome
+DevTools Protocol di build produksi: 1440px → pop up terbuka dengan **6 dropdown** +
+"Filter Movie"/"Batal"; 390px → **tidak ada** di baris tab, hanya di bar bawah. Potret HP +
+komputer diperiksa mata. Penjaga baru diuji-balik (dirusak sengaja → merah).
+
+⚠️ **Tiga berkas masih menggantung milik sesi lain** (`app/login/`, `lib/tujuan-login.ts`,
+berkas Playly) — **JANGAN `git add -A`**, stage per-berkas.
+
+### Berkas contoh untuk owner (di luar repo, aman dihapus)
+
+- `Downloads/contoh-warna-dramaapp` — 6 variasi WARNA + lembar perbandingan
+- `Downloads/konsep-latar-dramaapp` — 6 konsep LATAR (kertas terang, gradasi, poster berkabut,
+  hitam monokrom, tekstur) + lembar perbandingan
+- `Downloads/sederet-dramaapp` — 3 varian tata letak + mock final yang dipilih owner
+
+Semua dibuat dengan **menyuntikkan CSS/DOM ke browser**, nol baris kode project tersentuh —
+cara ini terbukti murah untuk memastikan bentuk SEBELUM dibangun.
 
 ---
 

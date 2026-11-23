@@ -10,8 +10,7 @@ import { buildNavMenus } from "@/lib/nav-katalog";
 import { rakitIndeksSaran } from "@/lib/saran-cari";
 import BadanKatalog from "../components/beranda/BadanKatalog";
 import KepalaBeranda from "../components/beranda/KepalaBeranda";
-import PersonalRows from "../components/beranda/PersonalRows";
-import PanelLipat from "../components/beranda/PanelLipat";
+import LayarindoMenawarkan from "../components/beranda/LayarindoMenawarkan";
 import { BADAN_SITUS } from "../components/beranda/shell";
 import { cn } from "@/lib/utils";
 
@@ -128,22 +127,18 @@ export default async function BerandaPage() {
            Kaki itu tetap ada di landing page `/`, tempat pengunjung baru
            mendarat — owner tidak meminta ia dilepas dari sana. */
         denganKaki={false}
-        /* Hanya baris "Lanjut Menonton" (keputusan owner 2026-10-28). Dua baris
-           personal lain sengaja tidak ikut supaya halaman ini benar-benar sama
-           dengan landing page; yang ini tetap karena ia satu-satunya cara
-           penonton meneruskan episode yang tertinggal di tengah. */
-        /* TERSEMBUNYI sampai diklik (owner 2026-10-29: *"lanjut menonton buat
-           seperti itu, disembunyikan — kalau dipisah masih terlihat sama"*).
-           Bentuk accordion-nya komponen yang SAMA dengan pintu akun di landing
-           page, jadi keduanya tak bisa menyimpang.
-
-           `tanpaJudul`: tombol panelnya sudah bertuliskan "Lanjutkan
-           Menonton", jadi judul di dalam barisnya akan jadi kembar. */
-        slotAtas={
-          <PanelLipat judul="Lanjutkan Menonton">
-            <PersonalRows dramas={dramas} hanyaLanjut tanpaJudul />
-          </PanelLipat>
-        }
+        /* ⚠️ DIGANTI 2026-11-23 — keputusan owner yang MENIMPA keputusannya
+           sendiri pada 2026-10-28/29, jadi jangan dikembalikan mengira sedang
+           memperbaiki regresi.
+           DULU: panel lipat "Lanjutkan Menonton" berisi baris riwayat
+           (`<PanelLipat judul="Lanjutkan Menonton"><PersonalRows … /></…>`).
+           SEKARANG: strip "Layarindo Menawarkan" + tiga pintasan katalog,
+           mengikuti gambar acuan yang dikirim owner.
+           Yang ikut lepas & jalan gantinya: lihat kepala
+           app/components/beranda/LayarindoMenawarkan.tsx — pintasan
+           "teruskan episode" hilang DARI HALAMAN INI, tapi /history tetap
+           terbuka lewat menu akun di bar atas. */
+        slotAtas={<LayarindoMenawarkan />}
       />
     </div>
   );

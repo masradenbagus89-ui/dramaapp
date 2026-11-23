@@ -15,6 +15,31 @@ import {
 import ContentRow from "../ContentRow";
 
 /**
+ * 🚧 TIDAK PUNYA PEMANGGIL SEJAK 2026-11-23 — dan ini DICATAT, bukan dibiarkan
+ * diam, supaya sesi berikutnya tidak mengira berkas ini masih hidup.
+ *
+ * Pemanggil terakhirnya `app/beranda/page.tsx`, lewat panel lipat "Lanjutkan
+ * Menonton". Panel itu diganti strip "Layarindo Menawarkan" atas permintaan
+ * owner (lihat `LayarindoMenawarkan.tsx`), jadi komponen ini ikut menganggur.
+ *
+ * SENGAJA BELUM DIHAPUS, menunggu keputusan owner — penghapusan 200+ baris ini
+ * membuang empat baris rekomendasi sekaligus (lanjut menonton, drama serupa,
+ * rekomendasi, favorit) yang membutuhkan kerja nyata untuk dibangun ulang.
+ * Pilihannya milik owner, bukan AI diam-diam (AGENTS.md §5).
+ *
+ * Fitur yang HILANG dari layar penonton karena ini menganggur: pintasan
+ * "teruskan episode yang tertinggal" dari beranda. Halaman `/history` sendiri
+ * TETAP terbuka lewat menu akun di bar atas (`MenuAkun.tsx` → TUJUAN_AKUN),
+ * jadi tidak ada halaman yang terkubur — diperiksa, bukan diasumsikan, dan
+ * dipaku di `tests/layarindo-menawarkan.test.ts`.
+ *
+ * Kalau owner memutuskan DIPAKAI LAGI: panggil dari slot `slotAtas` halaman
+ * mana pun; prop `hanyaLanjut` & `tanpaJudul` masih seperti dulu.
+ * Kalau owner memutuskan DIBUANG: hapus berkas ini, lalu periksa
+ * `lib/recommend.ts` — ia kemungkinan besar ikut kehilangan seluruh pemakainya.
+ *
+ * ---
+ *
  * Baris carousel yang isinya BEDA per penonton: lanjut menonton, drama serupa,
  * rekomendasi, favorit.
  *

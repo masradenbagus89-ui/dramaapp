@@ -15,6 +15,14 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { readFileSync } from "node:fs";
 import FilterKatalog from "../app/components/beranda/FilterKatalog";
+// Sumber kebenaran nilai `sort` — diimpor, BUKAN disalin sebagai daftar teks.
+// Daftar salinan akan basi diam-diam begitu /discover menambah urutan baru,
+// dan tes yang basi memberi rasa aman palsu.
+import { SORT_OPTIONS } from "../lib/discover";
+// Komentar DIBUANG sebelum sumbernya diperiksa — penjelasan di berkas ini
+// mengutip nilai sort yang salah sebagai contoh, dan tanpa ini kutipan itu
+// sendiri yang membuat patokannya merah.
+import { tanpaKomentar } from "./bantu/tanpa-komentar";
 import type { Drama } from "../lib/types";
 
 function drama(partial: Partial<Drama> & Pick<Drama, "id" | "title">): Drama {
@@ -97,9 +105,34 @@ describe("isi filter hanya menawarkan yang BENAR-BENAR ada di katalog", () => {
     // Nama parameter yang salah ketik diabaikan diam-diam oleh /discover, dan
     // chip-nya lalu menampilkan SELURUH katalog seolah bekerja — lebih
     // menyesatkan daripada kosong (pelajaran 2026-09-21).
-    for (const param of ["sort=populer", "sort=rating", "sort=judul", "?cat=", "?year="]) {
+    for (const param of ["sort=", "?cat=", "?year="]) {
       expect(sumber, `parameter ${param} hilang dari filter`).toContain(param);
     }
+  });
+
+  it("tiap nilai `sort` benar-benar DIKENALI /discover", () => {
+    // ⚠️ TES INI MENGGANTI patokan lama yang berbunyi `toContain("sort=judul")`
+    // — dan patokan itu justru MENGESAHKAN BUG-nya: `judul` bukan nilai yang
+    // dikenal, jadi `parseSort` (lib/discover.ts:18) menjatuhkannya diam-diam
+    // ke "relevance" dan pilihan "Judul A-Z" menampilkan katalog apa adanya.
+    // Nilai yang benar `title`. Tes lama memeriksa teksnya ADA, bukan nilainya
+    // SAH — jadi ia hijau selama berminggu-minggu di atas tombol yang mati.
+    //
+    // Sekarang dicocokkan ke SORT_OPTIONS, sumber kebenaran yang sama yang
+    // dibaca /discover. Salah ketik BARU apa pun akan merah di sini, bukan
+    // cuma yang satu ini.
+    const sah = SORT_OPTIONS.map((o) => o.value) as readonly string[];
+    const dipakai = [...tanpaKomentar(sumber).matchAll(/sort=([a-z]+)/g)].map(
+      (m) => m[1],
+    );
+
+    expect(dipakai.length, "tak ada satu pun tautan sort di filter").toBeGreaterThan(0);
+    const nyasar = [...new Set(dipakai)].filter((v) => !sah.includes(v));
+    expect(
+      nyasar,
+      `nilai sort tak dikenal /discover — tombolnya akan diklik lalu ` +
+        `menampilkan seluruh katalog. Nilai yang sah: ${sah.join(", ")}`,
+    ).toEqual([]);
   });
 });
 

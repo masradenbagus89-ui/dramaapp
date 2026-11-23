@@ -19,6 +19,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { createElement as h, act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { readFileSync } from "node:fs";
+import { tanpaKomentar } from "./bantu/tanpa-komentar";
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/beranda",
@@ -321,7 +322,13 @@ describe("halaman film berlatar TERANG + sidebar", () => {
 // PEMISAH "Lanjut Menonton" + panah geser cerdas (owner 2026-10-29)
 // ===========================================================================
 describe("baris Lanjut Menonton DISEMBUNYIKAN sampai diklik", () => {
-  const BERANDA = readFileSync("app/beranda/page.tsx", "utf-8");
+  // KOMENTAR DIBUANG: catatan riwayat di app/beranda/page.tsx MENGUTIP kode
+  // panel lama sebagai contoh "dulu begini". Tanpa ini, patokan "panel lama
+  // sudah tidak dipakai" merah karena kutipan di komentar, bukan karena
+  // kodenya — kena persis begitu 2026-11-23.
+  const BERANDA = tanpaKomentar(
+    readFileSync("app/beranda/page.tsx", "utf-8"),
+  );
   const BADAN = readFileSync(
     "app/components/beranda/BadanKatalog.tsx",
     "utf-8",
@@ -332,11 +339,34 @@ describe("baris Lanjut Menonton DISEMBUNYIKAN sampai diklik", () => {
   );
   const ROW = readFileSync("app/components/ContentRow.tsx", "utf-8");
 
-  it("dibungkus panel lipat, bukan sekadar dipisah garis", () => {
-    // Owner 2026-10-29 menolak versi "dipisah tapi tetap terbuka":
-    // *"kalau dipisah masih terlihat sama"*. Yang diminta: tersembunyi sampai
-    // tombolnya diklik.
-    expect(BERANDA).toContain('<PanelLipat judul="Lanjutkan Menonton">');
+  it("panel lipat masih jadi bentuk pintu akun di landing page", () => {
+    // ⚠️ PATOKANNYA BERPINDAH 2026-11-23, dan ini bukan pelonggaran.
+    // DULU tes ini menuntut `/beranda` memuat
+    // `<PanelLipat judul="Lanjutkan Menonton">`. Owner lalu MENIMPA
+    // keputusannya sendiri: panel itu diganti strip "Layarindo Menawarkan"
+    // (lihat app/beranda/page.tsx + LayarindoMenawarkan.tsx). Menuntut panel
+    // lama tetap ada berarti tes ini melawan permintaan owner yang baru.
+    //
+    // Yang DIJAGA tetap sama isinya: bentuk accordion "tersembunyi sampai
+    // diklik" tidak boleh lenyap dari situs — ia masih dipakai pintu akun di
+    // landing page `/`, dan tiga patokan di bawah (tertutup saat dibuka, isi
+    // tak dirender selama tertutup, satu komponen untuk semua) memagarinya.
+    const landing = readFileSync(
+      "app/components/beranda/LanjutMenonton.tsx",
+      "utf-8",
+    );
+    expect(landing).toContain('<PanelLipat judul="Lanjutkan Menonton">');
+  });
+
+  it("strip 'Layarindo Menawarkan' menggantikan panel di /beranda", () => {
+    // Permintaan owner 2026-11-23, dengan gambar acuan: judul di tengah +
+    // tiga chip pintasan. Dipaku supaya tidak "diperbaiki" balik jadi panel
+    // lama oleh sesi berikutnya yang membaca komentar 2026-10-29.
+    expect(BERANDA).toContain("<LayarindoMenawarkan />");
+    expect(
+      BERANDA,
+      "panel lama kembali — keputusan owner 2026-11-23 terbalik diam-diam",
+    ).not.toContain('<PanelLipat judul="Lanjutkan Menonton">');
   });
 
   it("TERTUTUP saat halaman dibuka", () => {
@@ -345,10 +375,12 @@ describe("baris Lanjut Menonton DISEMBUNYIKAN sampai diklik", () => {
     expect(PANEL).toContain("bawaanTerbuka = false");
   });
 
-  it("judul tidak kembar — barisnya dioper `tanpaJudul`", () => {
-    // Tombol panel sudah bertuliskan "Lanjutkan Menonton"; judul di dalam
-    // barisnya akan jadi kembar berturut-turut.
-    expect(BERANDA).toContain("tanpaJudul");
+  it("baris konten masih bisa dipasang tanpa judul kembar", () => {
+    // ⚠️ Patokan `expect(BERANDA).toContain("tanpaJudul")` DILEPAS 2026-11-23:
+    // /beranda tak lagi memasang `PersonalRows`, jadi menuntut kata itu ada di
+    // sana = menuntut kode yang sudah tidak seharusnya ada. Kemampuannya
+    // sendiri tetap dijaga di `ContentRow` — ia yang menentukan judul boleh
+    // dilepas, dan ia masih dipakai banyak baris lain.
     expect(ROW).toContain("{(title || href) && (");
   });
 

@@ -75,7 +75,18 @@ export default function FilterKatalog({ dramas }: { dramas: Drama[] }) {
           <Link href="/discover?sort=rating">Rating tertinggi</Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/discover?sort=judul">Judul A-Z</Link>
+          {/* ⚠️ "title", BUKAN "judul" — diperbaiki 2026-11-23. Nilai `sort`
+              dibaca `parseSort` (lib/discover.ts:18) yang mencocokkannya ke
+              `SORT_OPTIONS`; nilai tak dikenal jatuh DIAM-DIAM ke "relevance".
+              Jadi selama ini pilihan ini diklik lalu menampilkan katalog apa
+              adanya — persis kerusakan yang dilarang aturan project
+              ("tombol yang seolah bekerja lebih menyesatkan daripada tombol
+              yang tidak ada"), dan nol error. Lolos sekian lama karena isi
+              dropdown Radix tidak tergambar di HTML sampai menunya dibuka,
+              dan tes penjaganya cuma memastikan teks "sort=judul" ADA —
+              bukan bahwa nilainya SAH. Tes itu kini mencocokkan ke
+              SORT_OPTIONS, jadi seluruh kelas salah-ketik ini ikut terjaga. */}
+          <Link href="/discover?sort=title">Judul A-Z</Link>
         </DropdownMenuItem>
 
         {genre.length > 0 && (

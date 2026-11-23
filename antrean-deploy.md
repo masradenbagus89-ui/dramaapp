@@ -23,7 +23,57 @@
 > lengkap: `HANDOFF.md` seksi `## 2026-11-09`.
 
 
-**Terakhir dicek:** 2026-11-21. ✅ `9720b0c` **TAYANG** (filter "siapa upload hari ini" di panel IMDb). `dramaku` dulu, lalu `origin` — keduanya `ed8be85..9720b0c`. Railway build **sukses**.
+**Terakhir dicek:** 2026-11-23 (`git fetch` kedua remote). ⏳ **`13b8937` DI-COMMIT, BELUM DI-PUSH** — pemulihan 5 perbaikan audit keamanan yang hilang kena `reset --hard`, menunggu izin owner. `origin/main` & `dramaku/main` sama-sama `1a87d86`, lokal unggul **1 commit**, fast-forward bersih. ✅ Blokir rilis sejak 14 Nov **HILANG** (`build` sukses, `tsc` 0 error). ⚠️ Gerbang masih merah di `npm test` karena 5 tes milik pekerjaan Playly/beranda sesi lain — **terbukti bukan regresi**. Produksi 5 alamat **200**. Sebelumnya: 2026-11-21 ✅ `9720b0c` **TAYANG** (filter "siapa upload hari ini" di panel IMDb). `dramaku` dulu, lalu `origin` — keduanya `ed8be85..9720b0c`. Railway build **sukses**.
+
+### ⏳ 2026-11-23 — `13b8937` DI-COMMIT, BELUM DI-PUSH (menunggu izin owner)
+
+**Isi:** pemulihan 5 perbaikan audit keamanan 14 Nov yang hilang dari kode kena `git reset --hard`
+±15 Nov (SEC-001 cookie cacat → 500 di jalur publik · SEC-003 cek asal 4 route admin · SEC-004 header
+`x-admin-email` mati · SEC-006 daftar host video yang pagarnya mati · SEC-007 segel GCM yang menerima
+segel dipotong). 17 berkas, distage **per-berkas**. Rincian + ralat atas catatan lama:
+`HANDOFF.md` seksi `## 2026-11-23`.
+
+**Posisi (diukur sesudah `git fetch` kedua remote):** `origin/main` dan `dramaku/main` sama-sama di
+`1a87d86`; lokal unggul **tepat 1 commit**. Fast-forward bersih di dua-duanya, nol divergensi.
+
+**✅ BLOKIR RILIS YANG BERLAKU SEJAK 14 NOV SUDAH HILANG.** Blok peringatan di seksi 2026-11-21 di
+bawah menulis *"gerbang pra-rilis TIDAK bisa lolos di komputer selama kedua berkas tes itu ada —
+memblokir rilis APA PUN"*. Sebabnya kini diketahui **dan** sudah ditutup: kedua tes itu bukan sampah,
+melainkan **penjaga yatim** — kodenya yang hilang, bukan tesnya yang salah. Sesudah kodenya
+dipulihkan: `next build` **sukses**, `npx tsc --noEmit` **0 error** (pertama kali bersih sejak 14 Nov).
+
+**⚠️ TAPI `npm run gerbang` MASIH MERAH — dan bukan karena commit ini.** Berhenti di langkah 4
+(`npm test`): **5 berkas tes merah / 6 tes**, semuanya soal panel Playly-admin & beranda
+(`bagian-playly` · `baris-atas-film` · `panel-playly-tahan-gangguan` · `playly-genre` ·
+`saring-video-admin`). Dibuktikan **dengan eksperimen, bukan penalaran**: 11 berkas pulihan
+dikembalikan ke HEAD, 5 tes yang sama dijalankan → kegagalannya **identik**; lalu dipulihkan dan md5
+ke-11 berkas dicocokkan. Jadi **nol regresi dari `13b8937`**. Contoh pesannya: *"halaman tidak
+mengirim panel untuk bagian `imdb` ke PlaylyBagianAktif"* — fitur yang sesi lain **sedang** bangun.
+Sebelumnya tercatat 12 tes merah di `ed8be85`, jadi arahnya membaik, bukan memburuk.
+
+**⚠️ Keputusan yang harus diambil owner sebelum push:** gerbang 5/5 hijau **tidak bisa dicapai**
+hari ini tanpa ikut membereskan pekerjaan sesi lain. Pilihannya: (a) push `13b8937` berdasarkan bukti
+bertarget di atas (build ✅ · tsc 0 error ✅ · 54 tes penjaga ✅ · nol regresi terbukti), atau
+(b) tahan sampai 5 tes itu hijau. Jangan push tanpa salah satu dipilih sadar.
+
+**✅ Next.js lokal sudah dibetulkan.** `npm install` dijalankan → `node_modules` **16.4.3 → 16.4.6**,
+`package-lock.json` nol perubahan. Peringatan *"semua build & tes lokal berjalan di atas versi
+berlubang"* di seksi 2026-11-21 **sudah tidak berlaku**.
+
+**Garis dasar produksi sebelum push (23 Nov):** `/` · `/beranda` · `/film` · `/api/dramas` ·
+`/discover` semua **200**. Pakai ini sebagai pembanding sesudah deploy.
+
+**Smoke test WAJIB sesudah tayang** (menyentuh kode yang diubah, bukan sekadar "situs hidup"):
+buka halaman drama → tulis komentar → beri rating (SEC-001, jalur publik) → buka panel admin →
+**simpan satu drama** (SEC-003 menambah cek asal di 4 route admin — inilah yang paling mungkin
+menolak permintaan sah kalau ada yang salah). Kalau panel admin membalas *"Permintaan ditolak: asal
+tidak dikenal"*, itu SEC-003 — laporkan, jangan diamkan.
+
+🔴 **DUA RISIKO TERBUKA (bukan pemblokir rilis, tapi jangan hilang):** repo `origin` itu **PUBLIK**
+(`gh repo view`) sementara `LAPORAN-AKHIR-AUDIT-KEAMANAN.txt` 85 KB duduk di akar repo tanpa dikenal
+git — satu `git add -A` menerbitkannya; dan `data/viewers.json` (hash + salt akun penonton) tidak
+diabaikan `.gitignore` padahal folder `data/` memang ikut ter-commit. Keduanya menunggu izin owner;
+rinciannya di `HANDOFF.md` seksi `## 2026-11-23`.
 
 ### ✅ 2026-11-21 — RILIS `9720b0c` TAYANG (filter upload harian di panel IMDb)
 

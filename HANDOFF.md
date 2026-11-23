@@ -90,7 +90,7 @@
 > aftermarket** dari pemilik sekarang, harganya **jauh di atas** Rp200.000 dan belum pernah dicek.
 > Nama lain yang masih bebas jauh lebih murah.
 
-**Terakhir diisi:** 2026-11-17 — kotak tempel tautan IMDb ditambahkan di panel pencarian per video. Belum di-commit, belum tayang. Di layar yang sedang terbuka, "A Princesa da Yakuza" ketemu kalau nama di kotak diganti jadi "Yakuza Princess" (tt10715446). Rincian di seksi `## 2026-11-17 — tempel tautan IMDb`. Sebelumnya: ✅ `ed8be85` TAYANG. Next.js 16.4.3 → 16.4.6 (tambal advisory). Railway dan Vercel success. Beranda dan `/discover` **200**. Catatan ini masih lokal. Sebelumnya: ✅ `16bd03f` TAYANG. Railway dan Vercel status success. `f47ccbb` gagal karena Supabase error saat prerender `/discover`; perbaikannya katalog publik tidak menghubungi database selama `next build`. Beranda dan `/discover` produksi **200**. Rincian di seksi `## 2026-11-17 — tayang gagal f47ccbb`. Sebelumnya: pola "judul dulu, isi menyusul" dipasang di seluruh menu admin. Menu dan judul IMDb tampil dulu; daftar yang sudah diambil tidak diunduh ulang selama 1 menit. Belum di-commit, belum tayang. Rincian di seksi `## 2026-11-17 — IMDb tidak layar kosong`. Sebelumnya: grafik Distribusi Kategori sekarang menghitung kategori film di panel IMDb, bukan 41 drama lama. Lencana "kategori aktif" bisa diklik untuk memuat ulang. Belum di-commit. Rincian di seksi `## 2026-11-17 — distribusi ikut film IMDb`. Sebelumnya: ✅ grafik Distribusi Kategori (`2b0ea47`) diminta deploy. Satu batang persentase. Rincian di seksi `## 2026-11-17 — distribusi kategori lengkap`. Rincian di seksi `## 2026-11-17 — distribusi kategori lengkap` di bawah. Sebelumnya: ✅ **RILIS `532bc38` → `225d519` TAYANG.** Panel admin Playly yang dirapikan (judul IMDb di atas, keterangan di ikon tanya, Perlu dicek, Cocokkan semua sekotak dengan Tebak kategori) sudah di Railway. Beranda produksi **200**. Rincian di seksi `## 2026-11-17 — rapikan panel Playly tayang` di bawah. Perbaikan login lokal masih belum di-commit. Sebelumnya: 2026-11-16 — isi otomatis link unduhan Google Drive & Mega digabung dari `feat/link-unduhan-provider-kualitas` (`58b1cf8`). Pemutar yang sudah tayang tidak ditimpa. Rincian di seksi `## 2026-11-16 — isi otomatis link unduhan` di bawah. Sebelumnya: 2026-11-15 — menu Genre dan Negara disamakan dengan Tahun (4 kolom, semua pilihan terlihat tanpa digulir). Rincian di seksi `## 2026-11-15` di bawah. Sebelumnya: ✅ **RILIS `f6b1c03` → `a09bfc8` TAYANG.** (1) Cache halaman penonton dibuang otomatis saat admin menyimpan + tombol **Segarkan cache** (kerja rekan). (2) Payload data IMDb ke browser admin **525 KB → 57 KB** (−89%) + ingatan "berkas siap" kini **bertahan melewati restart**. (3) Urutan video SE-SITUS ikut **tahun rilis**, bukan waktu upload — terbukti di produksi: 20 kartu teratas semuanya **2026**. Gerbang 5/5 (**2516 tes**), smoke test 10/10 = 200. ⏳ Manfaat (2) bagian ingatan baru terasa mulai rilis BERIKUTNYA. 🪤 **TIGA sesi menulis di folder yang sama; 22 berkas sesi audit masih menggantung — JANGAN `git add -A`.** Rinciannya di seksi `## 2026-11-14 (siang)` di bawah.
+**Terakhir diisi:** 2026-11-23 — 🔐 **`13b8937` DI-COMMIT, MENUNGGU IZIN PUSH.** 5 perbaikan audit keamanan 14 Nov ternyata **HILANG dari kode** (kena `git reset --hard` ±15 Nov; catatan lama yang bilang "SEMUA diperbaiki" sudah DIRALAT) — dipulihkan + SEC-007 ditulis ulang dari nol. **Blokir rilis yang berlaku sejak 14 Nov HILANG:** `next build` sukses & `npx tsc --noEmit` **0 error**, pertama kali bersih sejak tanggal itu. Next lokal 16.4.3 → **16.4.6**. 54 tes penjaga exit 0 dengan uji-balik nyata. 🔴 Gerbang tetap berhenti di `npm test` karena **5 tes merah milik pekerjaan Playly/beranda sesi lain** — dibuktikan sudah merah sebelum commit ini, jadi **bukan** regresi. 🔴 Dua risiko menunggu keputusan: repo `origin` **PUBLIK** sementara laporan audit 85 KB duduk di akar repo, dan `data/viewers.json` tak diabaikan `.gitignore`. Rincian di seksi `## 2026-11-23`. Sebelumnya: 2026-11-17 — kotak tempel tautan IMDb ditambahkan di panel pencarian per video. Belum di-commit, belum tayang. Di layar yang sedang terbuka, "A Princesa da Yakuza" ketemu kalau nama di kotak diganti jadi "Yakuza Princess" (tt10715446). Rincian di seksi `## 2026-11-17 — tempel tautan IMDb`. Sebelumnya: ✅ `ed8be85` TAYANG. Next.js 16.4.3 → 16.4.6 (tambal advisory). Railway dan Vercel success. Beranda dan `/discover` **200**. Catatan ini masih lokal. Sebelumnya: ✅ `16bd03f` TAYANG. Railway dan Vercel status success. `f47ccbb` gagal karena Supabase error saat prerender `/discover`; perbaikannya katalog publik tidak menghubungi database selama `next build`. Beranda dan `/discover` produksi **200**. Rincian di seksi `## 2026-11-17 — tayang gagal f47ccbb`. Sebelumnya: pola "judul dulu, isi menyusul" dipasang di seluruh menu admin. Menu dan judul IMDb tampil dulu; daftar yang sudah diambil tidak diunduh ulang selama 1 menit. Belum di-commit, belum tayang. Rincian di seksi `## 2026-11-17 — IMDb tidak layar kosong`. Sebelumnya: grafik Distribusi Kategori sekarang menghitung kategori film di panel IMDb, bukan 41 drama lama. Lencana "kategori aktif" bisa diklik untuk memuat ulang. Belum di-commit. Rincian di seksi `## 2026-11-17 — distribusi ikut film IMDb`. Sebelumnya: ✅ grafik Distribusi Kategori (`2b0ea47`) diminta deploy. Satu batang persentase. Rincian di seksi `## 2026-11-17 — distribusi kategori lengkap`. Rincian di seksi `## 2026-11-17 — distribusi kategori lengkap` di bawah. Sebelumnya: ✅ **RILIS `532bc38` → `225d519` TAYANG.** Panel admin Playly yang dirapikan (judul IMDb di atas, keterangan di ikon tanya, Perlu dicek, Cocokkan semua sekotak dengan Tebak kategori) sudah di Railway. Beranda produksi **200**. Rincian di seksi `## 2026-11-17 — rapikan panel Playly tayang` di bawah. Perbaikan login lokal masih belum di-commit. Sebelumnya: 2026-11-16 — isi otomatis link unduhan Google Drive & Mega digabung dari `feat/link-unduhan-provider-kualitas` (`58b1cf8`). Pemutar yang sudah tayang tidak ditimpa. Rincian di seksi `## 2026-11-16 — isi otomatis link unduhan` di bawah. Sebelumnya: 2026-11-15 — menu Genre dan Negara disamakan dengan Tahun (4 kolom, semua pilihan terlihat tanpa digulir). Rincian di seksi `## 2026-11-15` di bawah. Sebelumnya: ✅ **RILIS `f6b1c03` → `a09bfc8` TAYANG.** (1) Cache halaman penonton dibuang otomatis saat admin menyimpan + tombol **Segarkan cache** (kerja rekan). (2) Payload data IMDb ke browser admin **525 KB → 57 KB** (−89%) + ingatan "berkas siap" kini **bertahan melewati restart**. (3) Urutan video SE-SITUS ikut **tahun rilis**, bukan waktu upload — terbukti di produksi: 20 kartu teratas semuanya **2026**. Gerbang 5/5 (**2516 tes**), smoke test 10/10 = 200. ⏳ Manfaat (2) bagian ingatan baru terasa mulai rilis BERIKUTNYA. 🪤 **TIGA sesi menulis di folder yang sama; 22 berkas sesi audit masih menggantung — JANGAN `git add -A`.** Rinciannya di seksi `## 2026-11-14 (siang)` di bawah.
 
 **Rincian kontrol volume (putaran KETIGA):** owner menolak bentuk tombol `+` / `−` dan mengirim contoh gambar, jadi pengatur volume kini **garis geser tegak berbentuk kapsul** (jalur kuning + bulatan penggeser). Diukur di Chrome headless layar 393px: kapsul `x=345..381` **utuh di dalam layar**, geser jari atas→100% / tengah→50% / bawah→bisu, nol elemen diputar. Gerbang lolos 5/5 (2383 tes hijau). ✅ **Sudah TAYANG** dalam rilis `53fbc5c → a9ae869` malam itu juga.
 
@@ -98,9 +98,139 @@
 
 ---
 
+## 2026-11-23 — 🔐 5 perbaikan audit keamanan DIPULIHKAN (hilang kena `reset --hard`) + blokir rilis hilang
+
+> ### 🛑 RALAT ATAS CATATAN 14 NOV — baca ini sebelum percaya seksi `## 2026-11-14` di bawah
+>
+> Seksi itu menulis **"4 temuan, SEMUA diperbaiki"**. **Itu tidak benar lagi sejak ±15 Nov.** Yang
+> benar: hanya **SEC-002 yang selamat**, dan hanya karena ia tinggal di **database**, bukan di kode.
+> Keempat perbaikan lain **hilang dari kode** selama ±8 hari tanpa satu pun gejala.
+>
+> **Penyebabnya (terlihat di `git reflog`):** tiga `reset: moving to HEAD` di sekitar 15 Nov.
+> `git reset --hard` membuang perubahan berkas yang **sudah dikenal git**, tapi **menyisakan** berkas
+> **baru yang belum dikenal**. Audit punya 12 berkas diubah + 6 berkas baru — dan yang tersisa pada
+> 23 Nov persis **6 berkas barunya saja** (laporan, SQL, 4 tes penjaga). Cocok sempurna.
+>
+> 🪤 **PELAJARAN YANG MAHAL: catatan bisa berbohong, kode tidak.** Dua berkas catatan (`HANDOFF.md`
+> + `antrean-deploy.md`) membawa klaim "SEMUA diperbaiki" selama 8 hari, dan tiga sesi sesudahnya
+> membacanya sebagai fakta. Yang menangkapnya bukan catatan, melainkan **menjalankan tes penjaganya**
+> (§2.3). ⭐ **ATURAN: pekerjaan yang belum di-commit BUKAN pekerjaan yang selesai** — selama ia cuma
+> ada di working tree, satu `reset --hard` sesi lain menghapusnya tanpa pesan apa pun. Kalau satu sesi
+> berakhir dengan perbaikan keamanan yang belum di-commit, **commit dulu** (push boleh menunggu izin).
+
+**Owner: *"pulihkan keamanan dulu"*** (dipilih lewat popup, sesudah temuan ini dilaporkan).
+
+### Kenapa ini juga yang MEMBLOKIR semua rilis sejak 14 Nov
+
+Tes penjaga audit selamat, tapi kodenya hilang → tes itu jadi **yatim**: memanggil `guardAsal` dan
+`pilihDaftarHost` yang sudah tidak ada. `next build` gagal di langkah typecheck → `npm run gerbang`
+**selalu merah** → tak ada apa pun yang bisa dirilis, termasuk pekerjaan tampilan HP. Catatan
+`antrean-deploy.md` sudah menandainya *"memblokir rilis APA PUN"* tapi belum tahu sebabnya.
+
+### Yang dipulihkan — 5 temuan, diperiksa ulang ke kodenya satu per satu
+
+| ID | Apa yang bolong | Berkas | Penjaga |
+|---|---|---|---|
+| SEC-001 | Cookie cacat (`dramaku_tamu=%`) → `decodeURIComponent` melempar → halaman komentar/rating balas **500**, bukan "belum login". Jalur **PUBLIK**, cookie berumur 1 tahun | `lib/session.ts` | `tests/cookie-cacat.test.ts` |
+| SEC-003 | 4 route admin (`ads`/`drama`/`durasi`/`hardlink`) kehilangan cek asal permintaan yang dimiliki 15 saudaranya | `lib/request-guard.ts` + 4 route | `tests/admin-csrf-gate.test.ts` |
+| SEC-004 | Header `x-admin-email` dikirim tiap permintaan admin padahal **nol kode membacanya** | `lib/admin-api.ts`, `app/admin/page.tsx`, `DurasiUkurSemua.tsx` | `tsc` + tes penuh |
+| SEC-006 | Daftar host video kosong = **izinkan semua**, dan env pengisinya tidak terpasang → pagarnya benar-benar mati | `lib/dashboard-videos.ts` | `tests/dashboard-host-bawaan.test.ts` |
+| SEC-007 | Segel GCM **tanpa** `authTagLength` → segel yang DIPOTONG ikut diterima; ketahanan pemalsuan kunci API Playly jatuh **2^128 → 2^32** | `lib/playly.ts` | `tests/segel-gcm.test.ts` |
+
+⚠️ **SEC-007 BUKAN dari diff — ditulis ulang dari nol di sesi ini.** Temuan itu lahir 14 Nov 11:53
+(Semgrep), sementara `perubahan-audit.diff` dibuat 10:36 — jadi perbaikannya **tidak pernah masuk
+diff mana pun**, dan tes penjaganya sudah merah bahkan sebelum pemulihan dimulai. Kalau nanti ada
+sesi yang memulihkan dari diff itu lagi, **SEC-007 tidak akan ikut**; periksa `authTagLength` di
+`lib/playly.ts` dengan mata.
+
+✅ **SEC-002 (kunci baris dompet koin) tidak perlu dipulihkan** — SQL-nya sudah dijalankan ke
+database 14 Nov. Berkas `supabase_migrations/2026-11-14_kunci_baris_dompet_koin.sql` ikut di-commit
+sebagai **catatan**, BUKAN untuk dijalankan ulang.
+
+### ✅ TAYANG? BELUM — `13b8937` sudah di-commit, MENUNGGU IZIN PUSH
+
+**Bukti yang dipegang:**
+- `next build` **sukses** + `npx tsc --noEmit` **0 error** — pertama kali bersih sejak 14 Nov.
+- 6 berkas tes penjaga, **54 tes, exit 0**.
+- **Uji-balik nyata, bukan klaim:** `cookie-cacat` **3 merah** dan `segel-gcm` **1 merah** SEBELUM
+  perbaikan ini (terukur di mesin yang sama, hari yang sama), hijau sesudahnya.
+- `npm install` dijalankan → Next lokal **16.4.3 → 16.4.6**, lockfile nol perubahan. Sejak `ed8be85`
+  semua build & tes lokal berjalan di atas versi berlubang; sekarang tidak lagi.
+
+🔴 **GERBANG BERHENTI di langkah 4 (`npm test`): 5 berkas tes merah (6 tes) — dan itu BUKAN dari
+commit ini.** Dibuktikan dengan eksperimen, bukan penalaran: 11 berkas pulihan dikembalikan ke HEAD,
+5 tes yang sama dijalankan → **kegagalannya IDENTIK**, lalu dipulihkan dan **md5 ke-11 berkas
+dicocokkan satu per satu**. Yang merah: `bagian-playly` · `baris-atas-film` ·
+`panel-playly-tahan-gangguan` · `playly-genre` · `saring-video-admin` — semuanya soal panel
+Playly-admin/beranda. Contoh pesannya: *"halaman tidak mengirim panel untuk bagian `imdb` ke
+PlaylyBagianAktif"*, yaitu fitur yang **sesi lain sedang membangun** dan belum tuntas.
+
+⚠️ **Artinya `npm run gerbang` TIDAK AKAN hijau** sampai 5 tes itu dibereskan — padahal commit
+keamanan ini sendiri bersih. Sebelumnya tercatat 12 tes merah di `ed8be85`; sekarang 5 berkas / 6
+tes. **Jangan tafsirkan gerbang merah sebagai "pemulihan keamanan gagal".**
+
+### 🔴 DUA RISIKO YANG MENUNGGU KEPUTUSAN OWNER (belum dikerjakan, sengaja)
+
+1. **Repo `origin` (produksi) itu PUBLIK** — diperiksa `gh repo view`: `masradenbagus89-ui/dramaapp`
+   **public**, `ojokesusu/dramaku` private. `LAPORAN-AKHIR-AUDIT-KEAMANAN.txt` (85 KB) duduk di
+   **akar repo** tanpa dikenal git sejak 14 Nov. Ia tidak memuat secret asli (dinyatakan + diperiksa),
+   tapi ia memetakan postur keamanan + hal yang **sengaja dibiarkan terbuka** (SEC-005, dan batas
+   jujur SEC-006 soal `supabase.co` yang lebar). Satu `git add -A` = laporan itu **terbit ke publik**.
+   Salinan identiknya (md5 sama) sudah aman di luar repo:
+   `security-audit-results/dramaapp/2026-11-14T01-41-14/`. **Saran: hapus salinan di akar repo** —
+   tapi itu penghapusan, jadi izin owner.
+2. **`data/viewers.json` belum dikenal git dan TIDAK diabaikan `.gitignore`** — isinya `hash` +
+   `salt` + `recovery.hash` akun penonton. Hari ini isinya cuma **2 akun uji**
+   (`viewer-a@uji.local`, `viewer-b@uji.local`), jadi **belum** ada data pribadi nyata. Yang
+   berbahaya: `data/comments.json`, `data/wallets.json`, `data/interactions.json`, `data/dramas.json`
+   **sudah** dikenal git, jadi folder `data/` memang ikut ter-commit — begitu berkas itu terisi
+   penonton sungguhan, satu `git add -A` membawanya ke repo **publik**. **Saran: tambahkan
+   `data/viewers.json` ke `.gitignore`.**
+
+### Yang masih menggantung sesudah ini
+
+- [ ] **Izin push `13b8937`** = TOMBOL RILIS (AGENTS.md §5.5). `dramaku` dulu, lalu `origin main`.
+- [ ] Smoke test sesudah tayang (menyentuh kode yang diubah): buka halaman drama → tulis komentar →
+      beri rating → buka panel admin → **simpan satu drama** (SEC-003 menambah cek asal di 4 route
+      admin, jadi inilah yang paling perlu mata manusia).
+- [ ] 5 tes merah milik pekerjaan Playly-admin/beranda sesi lain — gerbang tak bisa hijau tanpanya.
+- [ ] Pekerjaan **tampilan HP** (panel pop up menu katalog) masih belum di-commit; lihat seksi
+      `## 2026-11-21` di bawah. Ia sudah **tidak terblokir** lagi sekarang.
+- [ ] Dua risiko di atas (laporan publik + `viewers.json`).
+
+🪤 **Dev server port 3100 (PID 187948, sisa sesi 21 Nov) SUDAH DIMATIKAN** atas izin owner — gerbang
+butuh itu karena langkah pertamanya menghapus `.next`. Kalau perlu preview lagi, nyalakan ulang.
+
+---
+
 ## 2026-11-21 — tampilan HP halaman depan ala contoh owner
 
+> ### 🛑 BACA INI DULU — STATUS AKHIR HARI (owner: *"kita lanjut besok"*)
+>
+> **Seksi ini panjang dan sebagian besar isinya SUDAH DIBATALKAN.** Jangan membaca dari atas lalu menganggap semuanya tayang. Enam putaran terjadi dalam satu hari; yang berlaku adalah hasil **Putaran keenam** di bawah.
+>
+> **YANG SEKARANG HIDUP DI KODE (belum di-commit, belum di-push):**
+> 1. Klik **logo D** di HP → panel **pop up** menu katalog naik dari bawah (`app/components/beranda/MenuKatalogHp.tsx` + `<Sheet>` di `SearchBar.tsx`). Deretan menu Genre/Series/Populer/Negara `max-md:hidden` — panel inilah penggantinya di HP.
+> 2. **Avatar M hanya untuk admin** (`user.role === "admin"` di `KepalaKatalog.tsx`); penonton biasa tidak melihatnya.
+> 3. **Tanpa panah ⌄** di avatar maupun di logo.
+> 4. Kotak cari: tulisan **"Cari film di DramaKu" muat penuh**, dan **logo TETAP terlihat** saat dibuka — hanya koin+avatar yang menyingkir.
+> 5. Konstanta baru `GRADASI_DRAMAKU` (`shell.ts`) dipakai bersama bar cari + panel pop up.
+>
+> **SISA HALAMAN KEMBALI SEPERTI SEMULA** — badan putih + deret tab, strip kuning, bar merah-pink, tombol "SEMUA", menu bawah 2 tombol. ⚠️ Daftar lengkap + berkasnya ada di **Putaran keenam**; semuanya bertanda *"jangan bangun ulang tanpa permintaan baru"*.
+>
+> **BELUM DIKERJAKAN — ini pekerjaan besok:**
+> - [ ] `npm test` penuh dan `npm run build` **belum pernah jalan** hari ini. Yang sudah: `npx tsc --noEmit` (nol error dari berkas yang diubah) + 13 berkas tes terkait satu per satu (**316 tes, exit 0**).
+> - [ ] `npm run gerbang` → **hentikan dulu `next dev`** yang hidup (saat sesi ini: port **3100**, PID **187948**, dari `D:\Users\user18\dramaapp`). Langkah pertama gerbang menghapus `.next` yang sedang dipakai server itu.
+> - [ ] Owner melihat hasil akhirnya di HP, lalu memutuskan rilis. **Panel pop up belum pernah dibuka di HP sungguhan** — kita pemakai PERTAMA `components/ui/sheet.tsx` di repo ini, jadi "nol pemakai" juga berarti "belum terbukti jalan di sini" (AGENTS.md §2.3).
+> - [ ] `git push` ke `origin main` = TOMBOL RILIS, izin owner (AGENTS.md §5.5). Belum ada satu pun commit hari ini.
+>
+> **Dua jebakan mesin yang memakan waktu hari ini — jangan diagnosa kode kalau kambuh:**
+> - Drive **C: penuh** (`ENOSPC`) mematikan Bash & PowerShell total, padahal Read/Write tetap jalan.
+> - **Vitest gagal massal** (`(0 test)` + `reading 'config'`) kalau cwd-nya `d:/` huruf kecil. Jalankan `cd "D:/Users/user18/dramaapp" && npx vitest run …` huruf BESAR.
+
 Owner: *"aku mau di dramaku tampilan HP seperti image 2 hanya untuk tampilan HP karena tampilan desktop sudah ok"* (kirim 2 tangkapan layar: yang sekarang vs yang diinginkan).
+
+⚠️ **Paragraf-paragraf di bawah ini SEJARAH, bukan keadaan sekarang** — mayoritas dibatalkan di Putaran keenam. Dipertahankan supaya alasan tiap keputusan tidak hilang.
 
 **Temuan yang mengecilkan pekerjaan:** bentuk "judul + Lihat Semua + poster digeser ke samping" di contoh itu **sudah ada** di kode (`SeksiKatalog` → `BarisGeser`). Yang membuatnya terlihat beda cuma TIGA hal: badan halaman dipaksa PUTIH di semua ukuran layar, ada deret tab + tombol FILTER di atasnya, dan menu bawah cuma 2 tombol.
 
@@ -117,7 +247,107 @@ Owner: *"aku mau di dramaku tampilan HP seperti image 2 hanya untuk tampilan HP 
 
 🪤 **JANGAN jalankan `npm run gerbang` begitu saja di sesi berikutnya:** langkah pertamanya menghapus `.next`, dan ada `next dev -p 3010` milik sesi lain (PID 43264 saat diperiksa) yang sedang memakainya. Hentikan dev server itu dulu, atau jalankan build di worktree terpisah seperti sesi 2026-11-21 sebelumnya.
 
-**Langkah berikutnya:** kosongkan ruang C: → `npm run gerbang` (sesudah dev server mati) → **lihat dengan mata di HP sungguhan**; gerbang tidak bisa menilai warna.
+**Langkah berikutnya:** ~~kosongkan ruang C: → `npm run gerbang` (sesudah dev server mati) → lihat dengan mata di HP sungguhan~~ — **KEDALUWARSA, pakai daftar di blok status paling atas.** Angka di paragraf ini (port 3010, PID 43264) sudah berubah: dev server yang hidup sekarang port **3100**, PID **187948**.
+
+### Putaran kedua hari yang sama — dua koreksi dari owner setelah melihat layarnya
+
+✅ **Owner sudah melihat tampilan HP barunya jalan** (tangkapan layar: latar hitam, "Lihat Semua ›", 5 tombol bawah). Itu bukti pertama dari mata manusia; sebelumnya saya hanya punya tes.
+
+Owner: *"tulisan search cari film di dramaku harus terlihat dan dropdown-nya kamu sembunyikan saja, ketika saya klik M [muncul] profil, riwayat, favorit, admin dan keluar"*.
+
+1. **Panah ⌄ di sebelah avatar DILEPAS** (`app/components/MenuAkun.tsx`). Avatar itu sendiri tetap `DropdownMenuTrigger`, jadi satu klik tetap membuka Profile · Riwayat · Favorit · Admin · Keluar — isi menunya **nol perubahan** (`TUJUAN_AKUN` tidak disentuh, penjaganya `tests/menu-akun.test.ts` tetap hijau). Pembaca layar tidak dirugikan: `aria-haspopup`/`aria-expanded` dari Radix tetap ada. Berlaku di SEMUA ukuran layar, termasuk komputer.
+2. **Kotak cari turun ke baris sendiri di HP saat dibuka** (`app/components/beranda/SearchBar.tsx`, `max-md:` + hanya saat `cariTerbuka`). Sebelumnya ia sebaris dengan logo + koin + avatar sehingga tinggal ±80px dan tulisannya terpotong jadi "Cari film di Dramak". Sekarang ±270px, muat utuh. Trailing (koin + avatar) diberi `max-md:ml-auto` supaya tidak merapat ke logo saat kotaknya turun.
+
+🪤 **Ini TIDAK membatalkan keputusan owner 2026-10-29** (*"bukan di bawahnya, tapi sejajar search"*): yang ditolak waktu itu lapisan/panel MENGGANTUNG yang menimpa poster. Ini tetap di dalam bar — perilaku `flex-wrap` yang komentarnya sendiri sudah menyebut sah. Dari 768px ke atas: nol perubahan.
+
+**Bukti putaran kedua:**
+- ✅ `npx vitest run` atas 6 berkas tes terkait (`menu-akun`, `tombol-cari`, `kepala-situs`, `strip-katalog`, `badan-terang`, `filter-katalog`) → **exit 0, 183 tes lulus**.
+- ✅ `npx tsc --noEmit` → **3 error, NOL di antaranya dari berkas yang saya ubah**. Ketiganya di `tests/admin-csrf-gate.test.ts` & `tests/dashboard-host-bawaan.test.ts` — keduanya berstatus `??` (belum pernah di-commit, pekerjaan sesi lain) dan memanggil `guardAsal` / `DEFAULT_DASHBOARD_VIDEO_HOSTS` yang **belum ada** di `lib/`. Jangan dikira dari perubahan tampilan ini.
+- ❌ `npm test` penuh & `npm run build` **belum** — dibatalkan owner (berat, mesin sedang sesak).
+
+🪤 **Catatan runner:** menjalankan 4 berkas tes itu bersamaan sempat gagal SEMUA dengan `TypeError: Cannot read properties of undefined (reading 'config')` di baris `describe`. Dijalankan satu per satu: keempatnya exit 0; diulang bersamaan: 183 lulus. Jadi itu gangguan sesaat worker vitest (mesin dipakai beberapa sesi sekaligus), **bukan kode**. Jangan buang waktu mengejarnya. Gejalanya khas: baris `RUN` menulis root huruf KECIL (`d:/Users/...`) saat gagal, huruf BESAR (`D:/Users/...`) saat lulus. Jalankan satu per satu.
+
+### Putaran ketiga — logo jadi pembuka menu di HP + avatar khusus admin
+
+Owner: *"ketika di klik D keluar genre, series, populer, negara dan icon M dihilangkan karena viewer tidak perlu buat akun"*, lalu dipertegas: *"ini khusus untuk viewer bukan akun admin"*.
+
+1. **Logo "D" = tombol pembuka menu katalog di HP.** Deretan Genre · Series · Populer · Negara tidak lagi memakan satu baris penuh; ia tertutup sampai logo diklik. Di layar komputer logo tetap TAUTAN ke beranda dan deretannya tetap tergambar penuh — nol perubahan. Mekanismenya: prop baru `SearchBarChrome.brandHp` (logo versi tanpa `<Link>`, sebab `<a>` di dalam `<button>` = HTML tidak sah) + state `menuHpTerbuka` di `SearchBar.tsx`. Dipasang lewat `chromeKatalog()` sehingga keempat pemakainya (/beranda, /discover, kerangka pemuatan, CatalogBrowser) mustahil menyimpang; `PublicTopBars` (`/`) ikut diisi tangan supaya `/` dan `/beranda` tetap sama.
+2. **Avatar M disaring per PERAN, bukan per ukuran layar.** `user.role === "admin"` → tampil; viewer → tidak. ⚠️ Percobaan pertama saya `max-md:hidden` dan itu SALAH ARAH: kalau disembunyikan dari semua orang, owner kehilangan satu-satunya jalan ke **Admin** & **Keluar** dari /beranda & /discover di layar komputer (garis-tiga sudah dilepas 2026-11-14, BottomNav cuma di HP). Klarifikasi owner menyelamatkannya.
+
+🪤 **Panah kecil ⌄ sengaja ditambahkan di samping logo** — tanpa penanda, menu Genre/Series/Populer/Negara jadi mustahil ditemukan penonton baru; itu persis keberatan yang dulu tertulis di `NavMenus.tsx` ("menu yang butuh dua klik sama saja dengan menu yang disembunyikan"). Komentar lama itu sudah diperbarui, bukan dibiarkan berbohong. Owner boleh minta panahnya dihapus.
+
+❓ **Akibat yang diketahui & diterima:** penonton biasa yang terlanjur punya akun tidak lagi melihat tombol Keluar di /beranda & /discover. Masih dicapai lewat /profile (yang memasang `TopNav` + `MenuAkun`), di HP lewat tombol Profile di BottomNav; di layar komputer ia harus mengetik /profile.
+
+**Bukti putaran ketiga:** 8 berkas tes dijalankan satu per satu — `strip-katalog` 22 · `menu-akun` 12 · `kepala-situs` 113 · `tombol-cari` 9 · `nav-katalog` 27 · `kerangka-discover` 8 · `badan-terang` 17 · `filter-katalog` 10 → **semua exit 0, 218 tes**. `npx tsc --noEmit` → **3 error, semuanya milik 2 tes `??` sesi lain** (sama persis seperti sebelum perubahan ini; nol dari berkas yang saya ubah).
+
+### Putaran keempat — menu katalog HP jadi PANEL POP UP
+
+Owner: *"jangan di jadikan dropdown tapi seperti pop up aja biar terlihat keren"*.
+
+Dikerjakan lewat fan-out 10 agen (telusur pola → 3 rancangan bersaing → juri → 3 penantang), karena ini menyentuh kepala situs yang dipakai 5+ halaman. Hasilnya **bukan** rancangan yang paling saya suka di awal.
+
+**Bentuknya:** bottom sheet yang naik dari bawah, memakai `components/ui/sheet.tsx` (Radix Dialog) yang SUDAH terpasang tapi belum pernah dipakai — nol paket baru. Isinya `app/components/beranda/MenuKatalogHp.tsx` (BARU): 6 grup (Genre · Series · Populer · Negara · Tahun · Lainnya) sebagai akordeon `<details name=…>` bawaan browser, satu terbuka pada satu waktu, tiap grup berikon + jumlah pilihan, chip 2–3 kolom, bilah "Tutup" selebar panel di dasar.
+
+🪤 **JEBAKAN TERBESAR yang hampir memakan saya, dan sudah saya verifikasi sendiri ke kodenya:** kalau panel dibuat "selalu ada di HTML lalu disembunyikan CSS", **tiga penjaga jatuh sekaligus** — (1) `tests/strip-katalog.test.ts:116` mewajibkan tiap `href="/discover…"` mengubah penyaring, padahal tiap grup punya baris ekor `{ label: "Lainnya", href: "/discover" }` yang POLOS (`lib/nav-katalog.ts:258`); (2) `tests/strip-katalog.test.ts:303` melarang `>Amerika<`/`>Kanada<`/`>Thriller<` muncul di HTML; (3) `tests/beranda-bentuk-halaman.test.ts`. Hari ini hijau HANYA karena isi dropdown Radix tak ikut dirender di server. **JANGAN pernah pasang `forceMount`** — penjaganya sekarang `tests/menu-katalog-hp.test.ts`.
+
+🪤 **`md:hidden` WAJIB di PEMICU, bukan di `SheetContent`.** `SheetContent` menggambar `<SheetOverlay>` sebagai elemen terpisah yang className-nya tak diteruskan (`components/ui/sheet.tsx:59`) dan tak diekspor: menyembunyikan Content meninggalkan tirai `fixed inset-0 bg-black/50` → **layar komputer gelap total tanpa satu pun yang bisa diklik, tanpa satu pun error.** Diuji-balik: penjaga itu memang MERAH saat sengaja dirusak, lalu dikembalikan.
+
+**Lima temuan penantang yang diterapkan** (bukan kosmetik — semuanya ditunjuk sampai ke baris Radix-nya): fokus pertama diarahkan ke panel, bukan ke pegangan yang tugasnya menutup (`onOpenAutoFocus`) · cincin fokus pemicu diganti `ring-amber-400` karena `focus-visible:bg-black/25` tak terlihat di atas kepala HP yang kini `bg-zinc-950` · `motion-reduce:` dipasang di panelnya, bukan cuma di isinya · grup yang baru dibuka ditarik ke puncak (`onToggle` + `scrollIntoView`) karena akordeon eksklusif menutup grup di atas titik gulir · `env(safe-area-inset-bottom)` dikoreksi komentarnya — ia memulangkan **0** di repo ini karena belum ada `viewport-fit=cover`, jadi yang bekerja adalah `max(0.75rem, …)`.
+
+**Satu bug nyata buatan saya yang ditemukan penantang:** saat katalog kosong, wadah menu `w-full` tetap tergambar (isinya null) → baris hampa selebar layar di HP. Ditutup di akarnya: `menus` & `menusHp` jadi `undefined` saat katalog kosong, di KEDUA perakit.
+
+⚠️ **LINGKUP LEBIH LUAS DARI HALAMAN DEPAN — disebut apa adanya.** `KepalaFilm.tsx:61` merender `KepalaBeranda` yang sama, jadi panel ini ikut ke `/film`, `/katalog`, `/drama`, `/tonton`. DIPERTAHANKAN, bukan terlewat: berkas itu sendiri mencatat kepala situs yang disalin sudah TIGA KALI menyimpang dan "membuat halaman film terasa seperti situs lain". Kalau owner mau dibatasi ke halaman depan saja, itu prop opt-in di `KepalaBeranda` — sebut saja.
+
+**Bukti putaran keempat:** `npx tsc --noEmit` → **nol error dari berkas yang diubah** (3 error lama milik 2 tes `??` sesi lain). 12 berkas tes dijalankan satu per satu → **semua exit 0, 308 tes**: `kerangka-discover` 9 · `menu-katalog-hp` 8 (BARU) · `strip-katalog` 22 · `kepala-situs` 113 · `tombol-cari` 9 · `nav-katalog` 27 · `nav-menu-lengkap` 52 · `beranda-bentuk-halaman` 3 · `menu-akun` 12 · `badan-terang` 17 · `filter-katalog` 10 · `cari-popup-dan-film-terang` 26. ❌ `npm test` penuh & `npm run build` belum. ❌ **Belum dibuka di HP sungguhan — dan itu syarat, bukan formalitas: kita pemakai PERTAMA `components/ui/sheet.tsx` di repo ini.**
+
+**Koreksi owner sesudah melihat layarnya:** *"hasilnya masih seperti ini berbentuk dropdown, kan saya bilang pop up"* — yang ia tunjuk ternyata **panah ⌄ di sebelah logo D**, bukan panelnya (ia belum sempat mengetuknya). Panah dihapus; logo tetap jadi pemicu pop up. Ini permintaan KETIGA owner melepas penanda semacam itu (garis-tiga 2026-11-14 · panah avatar · panah logo) — **jangan dikembalikan tanpa permintaan baru**, termasuk "demi discoverability".
+
+🪤 **PELAJARAN: jangan tambahkan penanda visual yang tidak diminta, walau alasannya masuk akal.** Panah itu saya pasang sendiri dengan alasan discoverability yang benar secara teori, dan justru panah itulah yang membuat owner menyimpulkan pekerjaannya belum jadi — padahal pop up-nya sudah hidup. Harga yang kini diterima sadar: tanpa penanda, penonton baru bisa tak menemukan menu katalog; jalan gantinya tombol **Filter** di BottomNav → `/discover`.
+
+✅ **Diukur dari halaman hidup, bukan dari kode** (`curl http://localhost:3100/beranda`, dan port itu terbukti melayani `D:\Users\user18\dramaapp` — PID 187948): pemicunya `<button aria-haspopup="dialog" data-slot="sheet-trigger" … class="… md:hidden">` berisi logo saja — **nol chevron**, dan **nol sisa** mekanisme lama (`aria-controls="menu-katalog-hp"` = 0 hasil).
+
+### Putaran kelima — kotak cari tidak lagi loncat + panel jadi merah-pink DramaKu
+
+✅ **Owner mengonfirmasi pop up-nya jalan**: *"pop up muncul dari bawah"*. Dua koreksi menyusul.
+
+1. **Kotak cari tidak lagi turun ke baris sendiri.** Owner: *"ketika klik search loncat kebawah … nampak space kosong"*. Versi putaran kedua (`max-md:w-full` → baris sendiri) memang membuat tulisannya muat, tapi meninggalkan baris atas berisi logo + avatar saja. Sekarang **logo & avatar yang menyingkir** (`cariTerbuka && "max-md:hidden"` di keduanya) sehingga kotak mengambil alih baris yang sudah ada — tulisan tetap muat penuh, nol baris kosong, dan keduanya kembali begitu X ditekan. ⚠️ **JANGAN kembalikan versi baris-sendiri** — sudah dicoba dan ditolak.
+2. **Latar panel pop up jadi gradasi merah-pink DramaKu**, bukan hitam (owner: *"background jangan gelap samakan dengan dramaku yang sebelumnya"* → dipilih lewat popup: "latar panelnya, pakai merah-pink DramaKu"). Warnanya diangkat jadi satu konstanta `GRADASI_DRAMAKU` di `app/components/beranda/shell.ts` dan dipakai bersama oleh bar cari + panel — bukan disalin.
+
+🪤 **ARAH GRADASINYA WAJIB MENDATAR (`to-r`), jangan diubah jadi `to-b`.** Kepala tiap grup di dalam panel itu `sticky`. Dengan gradasi mendatar, warnanya tidak berubah sepanjang sumbu gulir sehingga kepala yang menempel selalu PERSIS sewarna dengan panel di belakangnya. Gradasi tegak membuatnya belang saat digulir — tanpa satu pun error.
+
+Isi panel ikut disesuaikan supaya terbaca di atas merah: kotak ikon `bg-white/20` (gradasi amber→rose lama nyaris lenyap ke latar merah), chip `bg-black/20`, garis pemisah `border-white/15`, bilah Tutup `bg-black/25`.
+
+**Bukti putaran kelima:** `npx tsc --noEmit` nol error dari berkas yang diubah · 9 berkas tes satu per satu **semua exit 0, 259 tes** (`strip-katalog` 22 · `kepala-situs` 113 · `tombol-cari` 9 · `menu-katalog-hp` 8 · `kerangka-discover` 9 · `nav-menu-lengkap` 52 · `beranda-bentuk-halaman` 3 · `cari-popup-dan-film-terang` 26 · `badan-terang` 17). Diukur dari halaman hidup `localhost:3100/beranda` → **200**, gradasi DramaKu masih di bar, pemicu pop up ada, nol chevron.
+
+### Putaran keenam — SEBAGIAN BESAR KERJA HARI INI DIKEMBALIKAN (keputusan owner)
+
+Owner melihat hasilnya lalu menulis: *"kenapa jadi kacau gini, yang kita rubah bagian atas saja untuk background tetap yang lama"*, dan saat ditanya batasnya: **"cuma bagian atas yang diubah sisanya kembalikan ke dramaku"**.
+
+⚠️ **JANGAN BANGUN ULANG YANG DI BAWAH INI TANPA PERMINTAAN BARU.** Semuanya sempat dikerjakan hari ini, sebagian atas persetujuan owner lewat popup di awal sesi — lalu dibatalkan setelah ia melihatnya di layar. Itu haknya; yang penting jejaknya jelas supaya sesi berikutnya tidak "memperbaiki" dengan mengembalikannya.
+
+| Dikembalikan ke semula | Berkas |
+|---|---|
+| Badan halaman GELAP di HP → **putih lagi** di semua layar | `globals.css` (cabang `tema-terang-md` dibuang), `shell.ts` (`BADAN_TERANG_MD` dibuang), `BadanKatalog.tsx` |
+| Deret tab + FILTER disembunyikan di HP → **tampil lagi** | `TabKatalogTampilan.tsx`, `TabKatalog.tsx` (prop `tabHanyaDesktop` dibuang) |
+| "Lihat Semua ›" → **tombol "SEMUA"** seperti semula | `SeksiKatalog.tsx` |
+| Menu bawah 5 tombol → **2 tombol** (Beranda · Profile) | `BottomNav.tsx`, `tests/kepala-situs.test.ts` |
+| Bar atas gelap di HP → **merah-pink lagi** | `SearchBar.tsx` (`KELAS_KEPALA_GELAP_HP` dibuang), `PublicTopBars.tsx`, `KepalaBeranda.tsx` |
+| Strip kuning disembunyikan di HP → **tampil lagi** | `PublicTopBars.tsx`, `KepalaBeranda.tsx` |
+
+**YANG TETAP BARU — "bagian atas" yang memang diminta owner:**
+1. **Klik logo D → panel pop up menu katalog** naik dari bawah (`MenuKatalogHp.tsx` + Sheet di `SearchBar.tsx`). Deretan menu Genre/Series/Populer/Negara tetap `max-md:hidden` — panel inilah penggantinya di HP.
+2. **Avatar M hanya untuk admin**, penonton tidak melihatnya (`KepalaKatalog.tsx`).
+3. **Tanpa panah ⌄** di avatar maupun di logo.
+4. **Tulisan "Cari film di DramaKu" muat penuh** saat kotak cari dibuka: hanya koin+avatar yang menyingkir, **logo TETAP terlihat** (owner: *"ketika klik search jadi ketutup D-nya"*). Tiga percobaan sebelumnya dan kenapa gagal ditulis di komentar `SearchBar.tsx` — jangan diulang.
+5. Latar panel pop up = `GRADASI_DRAMAKU` (konstanta baru di `shell.ts`, dipakai bersama bar cari).
+
+🪤 **PELAJARAN MAHAL HARI INI: persetujuan lewat popup di AWAL ≠ persetujuan atas HASILNYA.** Owner menyetujui empat keputusan besar sebelum melihat apa pun (badan gelap, menu bawah 5, dll), lalu membatalkan semuanya begitu melihat layarnya. ⭐ **ATURAN: untuk perubahan TAMPILAN, tunjukkan dulu satu bagian kecil yang bisa dilihat sebelum mengerjakan sisanya** — popup pertanyaan tidak bisa menggantikan mata owner, dan enam putaran hari ini sebagian besar terbuang karena urutannya terbalik.
+
+**Bukti putaran keenam:** `npx tsc --noEmit` nol error dari berkas yang diubah (3 error lama milik 2 tes `??` sesi lain) · 13 berkas tes satu per satu **semua exit 0, 316 tes** · diukur dari halaman hidup `localhost:3100/beranda` → **200**, dan penandanya cocok semua: `tema-terang` ada (badan putih), `from-rose-700` ada (bar merah), strip kuning ada, `>Beranda<` ada & `>Movies<` **nol** (menu bawah balik 2), `SERIES TERBARU` ada (deret tab balik), `aria-haspopup="dialog"` ada (pop up tetap).
+
+🪤 **VITEST GAGAL MASSAL = PERIKSA HURUF DRIVE-NYA, BUKAN KODENYA.** Kalau tiap berkas jadi `(0 test)` + `Cannot read properties of undefined (reading 'config')` di baris `describe`: lihat baris `RUN` — `d:/Users/...` huruf kecil selalu gagal, `D:/Users/...` huruf besar selalu jalan. Terbukti 2026-11-21: 11 berkas gagal serentak, lalu 11-11-nya lulus hanya dengan `cd "D:/Users/user18/dramaapp" &&`. Jangan buang waktu membongkar kode.
+
+🪤 `tests/strip-katalog.test.ts` ikut diperbaiki, dan ini PERLU dicatat supaya tidak dikira melonggarkan penjaga: pembanding logonya memotong HTML dari `<img` sampai `</a>`. Sejak logo HP duduk di dalam `<button>` (tanpa `</a>`), potongan itu melar sampai menelan logo versi komputer lalu membandingkan `href` yang memang SENGAJA berbeda (`/` vs `/beranda`) — kegagalan PALSU. Batas akhirnya dipindah ke penutup nama situs; gambar, seluruh kelas, dan nama tetap dibandingkan utuh.
 
 ---
 

@@ -122,6 +122,9 @@ const POLA_RAHASIA = [
   // yang pola ".env*.local" di .gitignore TIDAK tangkap.
   /(^|\/)\.env(\.[A-Za-z0-9_.-]+)?$/,
   /(^|\/)data\/twofa\.json$/,
+  // Hash password admin lokal — sekerabat twofa.json, ketinggalan sampai
+  // 2026-11-23. Lihat .gitignore untuk ceritanya.
+  /(^|\/)data\/adminpass\.json$/,
   /(^|\/)data\/admins\.json$/,
   /(^|\/)data\/playly\.json$/,
   /(^|\/)cookies\.txt$/,

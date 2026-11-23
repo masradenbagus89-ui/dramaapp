@@ -90,6 +90,8 @@ describe("pemeriksa berkas rahasia", () => {
   it("menangkap berkas rahasia khas project ini", () => {
     const tersangka = cariBerkasRahasia([
       "data/twofa.json",
+      // Ketinggalan sampai 2026-11-23 — hash password admin lokal.
+      "data/adminpass.json",
       "data/admins.json",
       "data/playly.json",
       "cookies.txt",
@@ -99,7 +101,7 @@ describe("pemeriksa berkas rahasia", () => {
       "backup-recovery-codes.txt",
       "kode-pemulihan-admin.txt",
     ]);
-    expect(tersangka).toHaveLength(9);
+    expect(tersangka).toHaveLength(10);
   });
 
   it("MEMBIARKAN contoh/placeholder lewat — bukan sekadar menolak semuanya", () => {

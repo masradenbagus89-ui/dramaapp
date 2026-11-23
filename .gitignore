@@ -17,6 +17,12 @@ tsconfig.tsbuildinfo
 
 # Rahasia 2FA admin — JANGAN pernah commit (repo publik).
 data/twofa.json
+# Hash password admin khusus localhost — sekerabat data/twofa.json di atas,
+# dan sama-sama tak boleh ikut ke repo publik. Ketinggalan dari daftar ini
+# sampai 2026-11-23: rekan membuatnya untuk login lokal lalu menutupnya
+# lewat .git/info/exclude — pengecualian yang TIDAK ikut terbawa git, jadi
+# di komputer lain celahnya tetap terbuka.
+data/adminpass.json
 # Cookie jar hasil uji curl — berisi token sesi admin yang masih hidup.
 cookies.txt
 # Recovery code / kode cadangan 2FA akun luar (Vercel, GitHub) = kunci serep akun.

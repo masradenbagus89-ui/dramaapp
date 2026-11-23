@@ -23,7 +23,7 @@
 > lengkap: `HANDOFF.md` seksi `## 2026-11-09`.
 
 
-**Terakhir dicek:** 2026-11-23. ✅ **RILIS `13b8937` → `6de869d` TAYANG** (pemulihan 5 perbaikan audit keamanan yang hilang kena `reset --hard`). `dramaku` dulu, lalu `origin main` — keduanya `1a87d86..6de869d`. 🎯 Bukti tayang: SEC-001 diukur **500 → 200** di produksi pada alamat yang sama (cookie cacat). SEC-006 **nol video hilang**. Smoke test 9 alamat **200**. 🔴 **Sisa satu, milik owner: panel admin → simpan satu drama** (SEC-003 tak bisa diuji dari luar). ✅ Blokir rilis sejak 14 Nov **HILANG** (`build` sukses, `tsc` 0 error). ⚠️ Gerbang masih merah di `npm test` karena 5 tes milik pekerjaan Playly/beranda sesi lain — **terbukti bukan regresi**. Sebelumnya: 2026-11-21 ✅ `9720b0c` **TAYANG** (filter "siapa upload hari ini" di panel IMDb). `dramaku` dulu, lalu `origin` — keduanya `ed8be85..9720b0c`. Railway build **sukses**.
+**Terakhir dicek:** 2026-11-23. ✅ **RILIS `13b8937` → `6de869d` TAYANG** (pemulihan 5 perbaikan audit keamanan yang hilang kena `reset --hard`). `dramaku` dulu, lalu `origin main` — keduanya `1a87d86..6de869d`. 🎯 Bukti tayang: SEC-001 diukur **500 → 200** di produksi pada alamat yang sama (cookie cacat). SEC-006 **nol video hilang**. Smoke test 9 alamat **200**. ✅ **SEC-003 ikut terbukti dari luar** (asal sah 401 · asal asing 403 di `drama`/`durasi`/`hardlink`, nol data berubah). 🔴 Sisa milik owner cuma: pastikan deployment `6de869d` **success** di Railway. ✅ Blokir rilis sejak 14 Nov **HILANG** (`build` sukses, `tsc` 0 error). ⚠️ Gerbang masih merah di `npm test` karena 5 tes milik pekerjaan Playly/beranda sesi lain — **terbukti bukan regresi**. Sebelumnya: 2026-11-21 ✅ `9720b0c` **TAYANG** (filter "siapa upload hari ini" di panel IMDb). `dramaku` dulu, lalu `origin` — keduanya `ed8be85..9720b0c`. Railway build **sukses**.
 
 ### ✅ 2026-11-23 — RILIS `13b8937` → `6de869d` TAYANG (pemulihan 5 perbaikan audit keamanan)
 
@@ -43,10 +43,19 @@ yang sebenarnya — **jangan** membalik kodenya.
 **Smoke test 9 alamat:** `/` `/beranda` `/film` `/discover` `/katalog` `/api/dramas` `/my-list`
 `/profile` `/drama/<id>` → semua **200**.
 
-**🔴 SISA SATU PEMERIKSAAN, MILIK OWNER:** buka panel admin → **simpan satu drama**, dan coba
-**Ukur durasi semua**. SEC-003 menambah cek asal permintaan di 4 route admin dan itu **mustahil
-diuji dari luar** tanpa sesi admin. Gejala kalau ada yang salah: **HTTP 403 "Permintaan ditolak:
-asal tidak dikenal"**. Owner juga perlu memastikan deployment `6de869d` **success** di Railway.
+**✅ SEC-003 SUDAH DIVERIFIKASI DARI LUAR — dan catatan pertama di baris ini KELIRU** (sempat
+menulis *"mustahil diuji dari luar tanpa sesi admin"*). Bisa, karena `guardAsal` berjalan **sebelum**
+`isAdminRequest`, jadi kode balasannya memisahkan dua sebab: **403** = ditolak penjaga asal, **401**
+= **lolos** penjaga asal lalu berhenti di login. Permintaan berhenti sebelum menyentuh database →
+nol data berubah. Hasil di produksi, dua skenario per route: `drama` POST+DELETE · `durasi` POST ·
+`hardlink` POST → **asal sah 401 · asal asing 403**, keempat-empatnya benar. Tanpa `Origin` → 401.
+🎯 Nilai terbesarnya: menutup risiko *"host yang sampai ke aplikasi di belakang perantara Railway
+bukan domain publik"* — kalau benar, SETIAP permintaan admin sah jadi 403. Terbukti tidak terjadi.
+⏸️ `ads` membalas 404 karena `ADS_ENABLED = false` (iklan sengaja dijeda) menjawab lebih dulu —
+benar, bukan kerusakan; tetap dijaga `tests/admin-csrf-gate.test.ts` yang struktural.
+⚠️ Batas jujur: simpan-drama ujung-ke-ujung dengan sesi admin sungguhan belum diuji (login berhenti
+di 401; menerobosnya dilarang §5.3) — tapi penjaga asal itu satu-satunya yang diubah di sana.
+**Sisa milik owner:** pastikan deployment `6de869d` berstatus **success** di panel Railway.
 
 ### Catatan posisi sebelum push (disimpan sebagai riwayat)
 

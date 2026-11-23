@@ -104,8 +104,62 @@ export function parseAllowedHosts(raw: string | undefined | null): string[] {
     .filter(Boolean);
 }
 
+/**
+ * Host yang boleh menyajikan berkas video, dipakai saat
+ * `DASHBOARD_VIDEO_HOSTS` TIDAK di-set.
+ *
+ * KENAPA ADA (audit keamanan 2026-11-14, SEC-006): `hostAllowed` di bawah
+ * memperlakukan daftar KOSONG sebagai "izinkan semua", dan env pengisinya
+ * memang tidak terpasang di panel hosting (diperiksa owner 2026-11-14). Jadi
+ * pagar ini sebenarnya sedang tidak berlaku: alamat video apa pun yang
+ * dipulangkan dashboard hulu diteruskan ke penonton lewat /api/videos, yang
+ * GET-nya publik. Pagar yang mati TIDAK menimbulkan gejala apa pun di layar —
+ * itu sebabnya ia bertahan lama tanpa ada yang sadar.
+ *
+ * Dua saudara seberkasnya sudah menutup lubang yang sama dengan cara
+ * berlawanan: lib/external-video.ts:158 dan lib/playly.ts:596 keduanya
+ * `return false` saat daftarnya kosong. Yang ditiru di sini pola
+ * lib/playly.ts:771 — fungsi pencocoknya TIDAK disentuh, yang dijamin adalah
+ * daftarnya tak pernah kosong. Mengubah `hostAllowed` akan melawan kontrak
+ * yang sengaja dikunci tests/dashboard-videos.test.ts:105.
+ *
+ * ⚠️ `supabase.co` SENGAJA LEBAR, dan ini harus dibaca jujur: ia meloloskan
+ * project Supabase SIAPA PUN, bukan hanya milik kita. Ia ada karena tipe
+ * `DashboardVideo.videoUrl` di atas menyatakan alamatnya berkas Supabase
+ * Storage, sedangkan project ref milik Playly TIDAK bisa diketahui dari
+ * repository ini — menebaknya lalu salah berarti SELURUH video hilang.
+ * Jadi daftar ini LANTAI, bukan plafon: ia menutup "host mana pun" (domain
+ * penyerang, alamat IP, host internal) tapi belum menutup "Supabase mana pun".
+ *
+ * CARA MENGETATKAN, begitu host video yang sebenarnya diketahui: isi
+ * `DASHBOARD_VIDEO_HOSTS` di panel hosting dengan host persisnya (mis.
+ * `<ref>.supabase.co`). Env MENGGANTIKAN daftar ini (lihat readDashboardConfig),
+ * jadi setelan yang lebih ketat benar-benar berlaku.
+ *
+ * Ditulis sampai subdomain penuh untuk host Railway/Vercel — pencocokannya
+ * memakai AKHIRAN, jadi menulis induknya ("up.railway.app") akan meloloskan
+ * semua aplikasi Railway milik siapa pun. Alasan yang sama ada di
+ * lib/playly.ts:70-74.
+ */
+export const DEFAULT_DASHBOARD_VIDEO_HOSTS = [
+  // Berkas video dashboard (lihat DashboardVideo.videoUrl di atas).
+  "supabase.co",
+  // Playly sekarang + alamat lamanya yang masih hidup (lib/playly-alamat.ts:24,33).
+  "playly-hosting-video.up.railway.app",
+  "playly-dashboard.vercel.app",
+  // Sumber video situs ini sendiri, disalin dari daftar `sumberVideo` yang
+  // sudah dipakai CSP di next.config.ts:102-106 — satu-satunya daftar host
+  // video sah yang memang sudah tertulis di project ini.
+  "trycloudflare.com",
+  "amasyaforum.com",
+];
+
 function hostAllowed(host: string, allowedHosts: string[]): boolean {
-  if (allowedHosts.length === 0) return true; // tidak dibatasi
+  // Daftar kosong = tidak dibatasi. Kontrak ini SENGAJA dipertahankan untuk
+  // fungsi murni (dikunci tests/dashboard-videos.test.ts:105); yang menutup
+  // SEC-006 adalah readDashboardConfig, yang tak pernah lagi memulangkan
+  // daftar kosong.
+  if (allowedHosts.length === 0) return true;
   const h = host.toLowerCase();
   return allowedHosts.some((a) => h === a || h.endsWith(`.${a}`));
 }
@@ -310,8 +364,31 @@ export function readDashboardConfig(
       .replace(/\/+$/, ""),
     apiKey: (env.DASHBOARD_API_KEY ?? "").trim(),
     keyHeader: (env.DASHBOARD_API_KEY_HEADER ?? "").trim(),
-    allowedHosts: parseAllowedHosts(env.DASHBOARD_VIDEO_HOSTS),
+    // SEC-006: env MENGGANTIKAN daftar bawaan, bukan menambahinya — sengaja
+    // BEDA dari lib/playly.ts:771 yang menambahi. Alasannya tujuannya memang
+    // berbeda: di sana daftar bawaan adalah domain resmi Playly yang HARUS
+    // selalu boleh; di sini ia cuma LANTAI untuk keadaan belum-disetel. Kalau
+    // ditambahi, `supabase.co` yang lebar itu tak akan pernah bisa dicabut
+    // lewat panel hosting, sehingga pengetatan jadi mustahil tanpa ubah kode.
+    //
+    // Yang TIDAK boleh terjadi lagi: daftar ini kosong. Kosong berarti
+    // "izinkan semua" di hostAllowed, dan itulah lubang SEC-006.
+    allowedHosts: pilihDaftarHost(env.DASHBOARD_VIDEO_HOSTS),
   };
+}
+
+/**
+ * Daftar host yang berlaku: isi env kalau ada isinya, selain itu daftar bawaan.
+ *
+ * Dipisah jadi fungsi sendiri supaya bisa diuji langsung, dan supaya aturan
+ * "tak pernah kosong" punya SATU tempat — bukan tersebar di pemanggil.
+ * Env yang ada tapi isinya sampah (mis. `","` atau spasi) tetap jatuh ke
+ * bawaan: `parseAllowedHosts` memulangkan array kosong untuk itu, dan kosong
+ * adalah justru keadaan yang dilarang di sini.
+ */
+export function pilihDaftarHost(raw: string | undefined | null): string[] {
+  const dariEnv = parseAllowedHosts(raw);
+  return dariEnv.length > 0 ? dariEnv : [...DEFAULT_DASHBOARD_VIDEO_HOSTS];
 }
 
 /**

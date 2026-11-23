@@ -7,6 +7,7 @@ import {
   type Drama,
 } from "@/lib/types";
 import { isAdminRequest } from "@/lib/session";
+import { guardAsal } from "@/lib/request-guard";
 import {
   getDrama,
   upsertDrama,
@@ -138,6 +139,11 @@ function applyImdbMeta(drama: Drama, body: DramaBody, replaceEmpty: boolean) {
 
 export async function POST(req: NextRequest) {
   try {
+    // Anti-CSRF: tolak permintaan dari asal lain SEBELUM apa pun
+    // dikerjakan (audit 2026-11-14 / SEC-003 — 15 route admin lain
+    // sudah melakukannya lewat guardMutation).
+    const asing = guardAsal(req);
+    if (asing) return asing;
     if (!(await isAdminRequest(req))) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -293,6 +299,11 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
+    // Anti-CSRF: tolak permintaan dari asal lain SEBELUM apa pun
+    // dikerjakan (audit 2026-11-14 / SEC-003 — 15 route admin lain
+    // sudah melakukannya lewat guardMutation).
+    const asing = guardAsal(req);
+    if (asing) return asing;
     if (!(await isAdminRequest(req))) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

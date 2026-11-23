@@ -51,19 +51,52 @@ export function guardFitur(aktif: boolean, nama: string): NextResponse | null {
   );
 }
 
-export function guardMutation(
-  req: Request,
-  opts: GuardOptions,
-): NextResponse | null {
+/**
+ * Anti-CSRF SAJA, tanpa pembatas laju. Untuk endpoint yang mengubah data tapi
+ * memang dipanggil berulang-ulang secara sah oleh admin.
+ *
+ * KENAPA ADA (audit keamanan 2026-11-14, SEC-003): empat route admin yang
+ * mengubah data — `admin/ads`, `admin/drama`, `admin/durasi`, `admin/hardlink` —
+ * sama sekali tidak memakai `guardMutation`, sedangkan 15 route admin lainnya
+ * memakainya. Jadi keempatnya kehilangan cek asal permintaan.
+ *
+ * KENAPA BUKAN LANGSUNG `guardMutation`: `admin/durasi` dipakai PENGISIAN
+ * MASSAL durasi (lib/admin-api.ts:82) — satu klik bisa menembak endpoint itu
+ * puluhan kali berurutan untuk drama yang berbeda. Memasang pembatas laju di
+ * situ mengubah fitur admin yang sudah jalan menjadi gagal separuh jalan, dan
+ * itu perubahan cakupan, bukan perbaikan keamanan (AGENTS.md §4.4). Yang
+ * benar-benar hilang cuma cek asalnya, jadi cuma itu yang ditambahkan.
+ *
+ * BATAS JUJUR: cookie sesi project ini `sameSite: "lax"` (lib/session.ts:183),
+ * dan browser TIDAK mengirim cookie lax pada POST lintas-situs — jadi CSRF
+ * lintas-domain klasik sudah tertutup tanpa fungsi ini. Nilainya ada di kasus
+ * SAME-SITE: selama situs tinggal di `*.up.railway.app`, aplikasi penyewa
+ * Railway lain bisa terhitung "same-site" (tergantung apakah `up.railway.app`
+ * terdaftar di Public Suffix List — BELUM terverifikasi dari sini), dan di
+ * situ cookie lax IKUT terkirim. Penjaga ini membuat jawabannya tak lagi
+ * bergantung pada fakta luar itu.
+ */
+export function guardAsal(req: Request): NextResponse | null {
   const h = req.headers;
-
-  // 1. Anti-CSRF: harus dari domain kita sendiri.
   if (!isSameOrigin(h.get("origin"), h.get("host"))) {
     return NextResponse.json(
       { error: "Permintaan ditolak: asal tidak dikenal." },
       { status: 403 },
     );
   }
+  return null;
+}
+
+export function guardMutation(
+  req: Request,
+  opts: GuardOptions,
+): NextResponse | null {
+  const h = req.headers;
+
+  // 1. Anti-CSRF: harus dari domain kita sendiri. Satu implementasi dengan
+  // guardAsal di atas supaya tak ada dua versi yang bisa menyimpang.
+  const asing = guardAsal(req);
+  if (asing) return asing;
 
   // 2. Pembatas laju per-IP per-endpoint.
   const decision = rateLimit(

@@ -59,11 +59,9 @@ type Fase = "siap" | "mengukur" | "tinjau" | "menyimpan";
 
 export default function DurasiUkurSemua({
   dramas,
-  adminEmail,
   onSelesai,
 }: {
   dramas: Drama[];
-  adminEmail: string;
   /** Dipanggil sesudah penyimpanan supaya daftar di halaman ikut segar. */
   onSelesai: () => void;
 }) {
@@ -94,7 +92,7 @@ export default function DurasiUkurSemua({
       let baru: string | null = null;
       let galat: string | null = null;
       try {
-        const r = await ukurDurasiDrama(d.id, adminEmail);
+        const r = await ukurDurasiDrama(d.id);
         if (r.ok) baru = r.teks;
         else galat = r.error;
       } catch {
@@ -143,7 +141,7 @@ export default function DurasiUkurSemua({
       if (berhenti.current) break;
       const b = dipilih[i];
       try {
-        const r = await simpanDurasiDrama(b.id, b.baru!, adminEmail);
+        const r = await simpanDurasiDrama(b.id, b.baru!);
         if (!r.ok) gagal++;
       } catch {
         gagal++;

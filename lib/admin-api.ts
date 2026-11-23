@@ -4,6 +4,17 @@
 // memanggil API lalu mengembalikan hasilnya (tidak menyentuh state komponen);
 // pemanggil (onScan di page.tsx) yang mengatur tampilan/pesan. Perilaku sama
 // persis seperti versi sebelumnya yang menyatu di page.tsx.
+//
+// ⛔ JANGAN kirim identitas admin dari sini (dulu: header `x-admin-email`).
+// Dihapus audit keamanan 2026-11-14 (SEC-004) sesudah diverifikasi NOL kode
+// yang membacanya: otorisasi admin sepenuhnya dari cookie HttpOnly bertanda
+// tangan HMAC (lib/session.ts — `isAdminRequest`), dan cookie itu ikut
+// terkirim sendiri oleh browser. Header tadi tinggal dua akibat, keduanya
+// buruk: alamat email admin ikut melintas di tiap permintaan (bisa mendarat di
+// log proxy/hosting), dan pembaca kode berikutnya mengira jalur ini memakai
+// auth berbasis header — padahal header kiriman klien memang tak bisa
+// dipercaya. Migrasinya sendiri sudah dicatat tuntas di HANDOFF.md:7138;
+// yang tertinggal hanya pembersihan ini.
 
 export type ScanResult = {
   count: number;
@@ -22,11 +33,8 @@ export type HardlinkResponse = { ok: boolean; message?: string; error?: string }
 /** Scan folder drama di PC backup: hitung jumlah episode (file N.mp4). */
 export async function scanDrama(
   id: string,
-  adminEmail: string,
 ): Promise<ScanResponse> {
-  const res = await fetch(`/api/admin/scan?id=${encodeURIComponent(id)}`, {
-    headers: { "x-admin-email": adminEmail },
-  });
+  const res = await fetch(`/api/admin/scan?id=${encodeURIComponent(id)}`);
   const data = await res.json();
   if (!res.ok || !data.ok) {
     return {
@@ -60,12 +68,10 @@ export type DurasiResponse =
  */
 export async function ukurDurasiDrama(
   id: string,
-  adminEmail: string,
   ep = 1,
 ): Promise<DurasiResponse> {
   const res = await fetch(
     `/api/admin/durasi?id=${encodeURIComponent(id)}&ep=${ep}`,
-    { headers: { "x-admin-email": adminEmail } },
   );
   const data = await res.json();
   if (!res.ok || !data.ok) {
@@ -88,11 +94,10 @@ export type SimpanDurasiResponse =
 export async function simpanDurasiDrama(
   id: string,
   runtime: string,
-  adminEmail: string,
 ): Promise<SimpanDurasiResponse> {
   const res = await fetch("/api/admin/durasi", {
     method: "POST",
-    headers: { "Content-Type": "application/json", "x-admin-email": adminEmail },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ id, runtime }),
   });
   const data = await res.json();
@@ -105,14 +110,10 @@ export async function simpanDurasiDrama(
 /** Minta agent PC backup bikin hardlink (rename file mentah -> 1.mp4 2.mp4 ...). */
 export async function hardlinkDrama(
   id: string,
-  adminEmail: string,
 ): Promise<HardlinkResponse> {
   const res = await fetch(`/api/admin/hardlink`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-admin-email": adminEmail,
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ dramaId: id }),
   });
   const data = await res.json();

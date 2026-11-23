@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/session";
+import { guardAsal } from "@/lib/request-guard";
 import { getVideoBaseUrl } from "@/lib/video-base";
 
 export const runtime = "nodejs";
@@ -7,6 +8,11 @@ export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest) {
   try {
+    // Anti-CSRF: tolak permintaan dari asal lain SEBELUM apa pun
+    // dikerjakan (audit 2026-11-14 / SEC-003 — 15 route admin lain
+    // sudah melakukannya lewat guardMutation).
+    const asing = guardAsal(req);
+    if (asing) return asing;
     if (!(await isAdminRequest(req))) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

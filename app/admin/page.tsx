@@ -168,7 +168,7 @@ export default function AdminPage() {
     if (!authUser) return;
     setMengukurDurasi(true);
     try {
-      const hasil = await ukurDurasiDrama(effectiveId, authUser.email);
+      const hasil = await ukurDurasiDrama(effectiveId);
       if (!hasil.ok) {
         setMessage({ type: "error", text: `Gagal mengukur durasi: ${hasil.error}` });
         return;
@@ -197,7 +197,7 @@ export default function AdminPage() {
     setScanning(true);
     try {
       // Step 1: scan first
-      const scanRes = await scanDrama(effectiveId, authUser.email);
+      const scanRes = await scanDrama(effectiveId);
       if (scanRes.ok) {
         setScanResult(scanRes.result);
         applyScanCount(scanRes.result.max);
@@ -210,7 +210,7 @@ export default function AdminPage() {
           type: "ok",
           text: `Folder belum siap (file masih raw atau folder kosong). Mencoba auto-hardlink di PC backup...`,
         });
-        const hlRes = await hardlinkDrama(effectiveId, authUser.email);
+        const hlRes = await hardlinkDrama(effectiveId);
         if (!hlRes.ok) {
           setMessage({
             type: "error",
@@ -219,7 +219,7 @@ export default function AdminPage() {
           return;
         }
         // Re-scan after hardlink
-        const scan2 = await scanDrama(effectiveId, authUser.email);
+        const scan2 = await scanDrama(effectiveId);
         if (!scan2.ok) {
           setMessage({
             type: "error",
@@ -262,7 +262,6 @@ export default function AdminPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-admin-email": authUser.email,
         },
         body: JSON.stringify({
           id: effectiveId,
@@ -355,7 +354,6 @@ export default function AdminPage() {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
-        "x-admin-email": authUser.email,
       },
       body: JSON.stringify({ id: dramaId }),
     });
@@ -564,7 +562,6 @@ export default function AdminPage() {
                 terlihat di daftar tepat di bawahnya. */}
             <DurasiUkurSemua
               dramas={dramas}
-              adminEmail={authUser.email}
               onSelesai={refreshList}
             />
           <DramaList

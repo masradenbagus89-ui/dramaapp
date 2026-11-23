@@ -102,7 +102,25 @@ export function readCookie(header: string | null, name: string): string | null {
     const eq = part.indexOf("=");
     if (eq < 0) continue;
     if (part.slice(0, eq).trim() === name) {
-      return decodeURIComponent(part.slice(eq + 1).trim());
+      // decodeURIComponent MELEMPAR URIError pada %-encoding cacat (mis.
+      // "dramaku_tamu=%"). Isi cookie datang dari permintaan, jadi bentuknya
+      // tak pernah terjamin — tanpa try di sini error itu lolos ke route
+      // handler lalu keluar sebagai 500, BUKAN "tidak ada sesi". Terbukti
+      // audit 2026-11-14: keempat pemanggil ikut jatuh — sesi admin (:118),
+      // sesi penonton (:146), dan identitas tamu (lib/tamu.ts:124) yang
+      // dipakai komentar & rating di halaman PUBLIK.
+      //
+      // null = gagal-MENGUNCI (rak owasp §1 A10:2025): cookie yang tak
+      // terbaca dianggap tidak ada, jadi pemanggil menempuh jalur "belum
+      // login" yang sudah teruji. JANGAN diganti dengan memulangkan nilai
+      // mentahnya — yang masuk ke verifikasi tanda tangan harus teks yang
+      // sudah ter-decode, dan nilai mentah cuma gagal dengan cara yang lebih
+      // sulit dilacak.
+      try {
+        return decodeURIComponent(part.slice(eq + 1).trim());
+      } catch {
+        return null;
+      }
     }
   }
   return null;

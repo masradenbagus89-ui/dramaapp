@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { isAdminRequest } from "@/lib/session";
 import { addAd, removeAd } from "@/lib/store";
 import { ADS_ENABLED } from "@/lib/saklar-fitur";
-import { guardFitur } from "@/lib/request-guard";
+import { guardAsal, guardFitur } from "@/lib/request-guard";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -16,6 +16,11 @@ export async function POST(req: NextRequest) {
   // bisa dipanggil langsung oleh siapa pun yang tahu namanya.
   const mati = guardFitur(ADS_ENABLED, "iklan");
   if (mati) return mati;
+  // Anti-CSRF: tolak permintaan dari asal lain SEBELUM apa pun
+  // dikerjakan (audit 2026-11-14 / SEC-003 — 15 route admin lain
+  // sudah melakukannya lewat guardMutation).
+  const asing = guardAsal(req);
+  if (asing) return asing;
   if (!(await isAdminRequest(req))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -44,6 +49,11 @@ export async function DELETE(req: NextRequest) {
   // bisa dipanggil langsung oleh siapa pun yang tahu namanya.
   const mati = guardFitur(ADS_ENABLED, "iklan");
   if (mati) return mati;
+  // Anti-CSRF: tolak permintaan dari asal lain SEBELUM apa pun
+  // dikerjakan (audit 2026-11-14 / SEC-003 — 15 route admin lain
+  // sudah melakukannya lewat guardMutation).
+  const asing = guardAsal(req);
+  if (asing) return asing;
   if (!(await isAdminRequest(req))) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

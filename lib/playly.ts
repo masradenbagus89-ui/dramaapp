@@ -192,6 +192,24 @@ const ALGO = "aes-256-gcm";
 const IV_BYTES = 12; // ukuran baku untuk GCM
 const BLOB_VERSION = "v1"; // ditulis di depan supaya format bisa diganti nanti
 
+/**
+ * Panjang segel (authentication tag) GCM, dalam byte — WAJIB disebut eksplisit.
+ *
+ * KENAPA ADA (audit keamanan 2026-11-14, SEC-007): tanpa opsi `authTagLength`,
+ * `setAuthTag()` di Node MENERIMA segel yang dipotong — segel 4 byte lolos dan
+ * dekripsinya berhasil. Artinya ketahanan terhadap pemalsuan segel jatuh dari
+ * 2^128 ke 2^32, dan itu bukan teori: dibuktikan dengan dijalankan. Node
+ * sendiri menandai pemakaian tanpa opsi ini usang lewat peringatan DEP0182.
+ *
+ * Yang dilindungi: kunci API Playly yang disimpan terenkripsi di database.
+ * Segel itulah yang membuktikan isinya belum diubah sejak disimpan.
+ *
+ * Disebut di KEDUA sisi (cipher & decipher) walau sisi enkripsi memang sudah
+ * 16 byte secara bawaan — supaya panjangnya tak lagi bergantung pada default
+ * yang bisa berubah antar-versi Node. Penjaganya `tests/segel-gcm.test.ts`.
+ */
+const TAG_BYTES = 16;
+
 export class PlaylyError extends Error {
   status: number;
   constructor(message: string, status: number) {
@@ -243,7 +261,9 @@ export function encryptSecret(
   key: Buffer = requireEncryptionKey(),
 ): string {
   const iv = crypto.randomBytes(IV_BYTES);
-  const cipher = crypto.createCipheriv(ALGO, key, iv);
+  const cipher = crypto.createCipheriv(ALGO, key, iv, {
+    authTagLength: TAG_BYTES,
+  });
   const enc = Buffer.concat([cipher.update(plain, "utf-8"), cipher.final()]);
   return [
     BLOB_VERSION,
@@ -267,6 +287,8 @@ export function decryptSecret(
       ALGO,
       key,
       Buffer.from(bagian[1], "base64url"),
+      // Tanpa ini, segel yang DIPOTONG ikut diterima — lihat TAG_BYTES.
+      { authTagLength: TAG_BYTES },
     );
     decipher.setAuthTag(Buffer.from(bagian[3], "base64url"));
     return Buffer.concat([

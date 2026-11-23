@@ -156,6 +156,36 @@ pekerjaan tadi, sesi lain meng-commit **3×** (`25957c7`, `7cd2ec3`, `4c5149e`) 
 berkas belum-commit bergerak 46 → 13 → 25. Akibatnya: hasil `npm test` penuh bisa mencampur dua
 keadaan, dan `git add -A` akan menyeret kerja orang lain yang belum siap. **Stage per-berkas.**
 
+### Status penutup sesi 2026-11-23 — SUDAH di-commit, `origin` DITAHAN owner
+
+Dua blok di atas (dan seksi SEO di bawah) sempat menulis *"belum di-commit"*. **Sudah tidak
+berlaku** — ini keadaan sebenarnya saat sesi ditutup:
+
+| Commit | Isi |
+|---|---|
+| `a4fba18` | 6 tes basi Playly/beranda diarahkan ke alamat baru + penjaga rantai render BARU |
+| `76dc76b` | celah `data/adminpass.json` ditutup 2 lapis + penjaganya |
+| `1b8cfb0` | catatan HANDOFF (seksi SEO, gerbang, adminpass) |
+| + 1 commit docs | `antrean-deploy.md` + blok ini |
+
+Di-stage **per-berkas**, bukan `git add -A` — 21 berkas kerja sesi lain (login + tema gelap+emas)
+sengaja TIDAK ikut dan tetap menggantung di folder kerja.
+
+- **`dramaku` (cermin):** ✅ di-push, sinkron dengan `main` lokal. Nol rilis — cermin tak men-deploy.
+- **`origin` (produksi):** ⏸️ **DITAHAN di `6de869d`.** Keputusan owner: *"sesi tema jangan di push
+  karena belum selesai"*. Sebabnya `git push` tidak bisa memilih commit — mendorong `main` akan
+  merilis **10 commit** sekaligus, termasuk 2 commit tema yang masih dikerjakan dan fitur SEO rekan.
+
+⚠️ **Gerbang HIJAU yang tercatat di atas BUKAN atas keadaan sekarang** — ia dijalankan sesudah
+`a4fba18` tapi sebelum `76dc76b` dan sebelum 2 commit terakhir sesi lain masuk. Wajib dijalankan
+ulang sebelum push ke `origin main`. Urutan rilis lengkap + cara membuktikan SEO di Supabase ada di
+`antrean-deploy.md` seksi `⏸️ 2026-11-23 (ke-2)`.
+
+🪤 Push ke cermin dijalankan SEBELUM owner memutuskan menahan tema, jadi 2 commit tema itu kini ada
+di `dramaku`. Tidak merilis apa pun, tapi rekan bisa menariknya dari sana. **Tidak** ditarik kembali
+— itu butuh `push --force` yang dilarang aturan proyek butir 5 (non-fast-forward pernah menghapus
+pekerjaan yang sudah tayang).
+
 ---
 
 ## 2026-11-23 — 🎨 TEMA SOFT SAGE + LOGO LAYARINDO di-commit (`25957c7`) — SENGAJA BELUM TAYANG

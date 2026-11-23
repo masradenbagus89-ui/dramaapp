@@ -23,7 +23,49 @@
 > lengkap: `HANDOFF.md` seksi `## 2026-11-09`.
 
 
-**Terakhir dicek:** 2026-11-23. ✅ **RILIS `13b8937` → `6de869d` TAYANG** (pemulihan 5 perbaikan audit keamanan yang hilang kena `reset --hard`). `dramaku` dulu, lalu `origin main` — keduanya `1a87d86..6de869d`. 🎯 Bukti tayang: SEC-001 diukur **500 → 200** di produksi pada alamat yang sama (cookie cacat). SEC-006 **nol video hilang**. Smoke test 9 alamat **200**. ✅ **SEC-003 ikut terbukti dari luar** (asal sah 401 · asal asing 403 di `drama`/`durasi`/`hardlink`, nol data berubah). 🔴 Sisa milik owner cuma: pastikan deployment `6de869d` **success** di Railway. ✅ Blokir rilis sejak 14 Nov **HILANG** (`build` sukses, `tsc` 0 error). ⚠️ Gerbang masih merah di `npm test` karena 5 tes milik pekerjaan Playly/beranda sesi lain — **terbukti bukan regresi**. Sebelumnya: 2026-11-21 ✅ `9720b0c` **TAYANG** (filter "siapa upload hari ini" di panel IMDb). `dramaku` dulu, lalu `origin` — keduanya `ed8be85..9720b0c`. Railway build **sukses**.
+**Terakhir dicek:** 2026-11-23. ✅ **RILIS `13b8937` → `6de869d` TAYANG** (pemulihan 5 perbaikan audit keamanan yang hilang kena `reset --hard`). `dramaku` dulu, lalu `origin main` — keduanya `1a87d86..6de869d`. 🎯 Bukti tayang: SEC-001 diukur **500 → 200** di produksi pada alamat yang sama (cookie cacat). SEC-006 **nol video hilang**. Smoke test 9 alamat **200**. ✅ **SEC-003 ikut terbukti dari luar** (asal sah 401 · asal asing 403 di `drama`/`durasi`/`hardlink`, nol data berubah). 🔴 Sisa milik owner cuma: pastikan deployment `6de869d` **success** di Railway. ✅ Blokir rilis sejak 14 Nov **HILANG** (`build` sukses, `tsc` 0 error). ✅ Gerbang **HIJAU** sejak 2026-11-23 — 6 tes basi Playly/beranda itu dibetulkan di `a4fba18` (197 berkas / 2784 tes lulus, nol gagal). ⏸️ **10 commit menunggu di antrean dan `origin` DITAHAN** atas keputusan owner: tema sesi lain belum selesai. Rincian + urutan rilisnya di seksi `⏸️ 2026-11-23 (ke-2)` di bawah. Sebelumnya: 2026-11-21 ✅ `9720b0c` **TAYANG** (filter "siapa upload hari ini" di panel IMDb). `dramaku` dulu, lalu `origin` — keduanya `ed8be85..9720b0c`. Railway build **sukses**.
+
+### ⏸️ 2026-11-23 (ke-2) — 3 commit baru DITAHAN di `origin` atas keputusan owner (tema belum selesai)
+
+**Tidak ada yang tayang dari catatan ini.** `origin/main` masih di `6de869d`; produksi tidak berubah.
+
+| Remote | Posisi | Akibat |
+|---|---|---|
+| `dramaku` (cermin) | ✅ di-push, **sinkron** dengan `main` lokal (dari `6de869d`) | nol rilis — cermin tidak men-deploy |
+| `origin` (produksi) | ⏸️ **DITAHAN** di `6de869d` | tombol rilis, belum ditekan |
+
+**Kenapa ditahan — keputusan owner 2026-11-23:** *"sesi tema jangan di push karena belum selesai"*.
+`main` lokal **10 commit** di depan `origin/main`, dan `git push` **TIDAK bisa memilih commit** —
+semua ikut. Di antaranya 2 commit tema milik sesi lain yang masih dikerjakan dan fitur SEO rekan
+yang belum pernah tayang.
+
+**Yang menunggu di antrean (10 commit, urut lama → baru):**
+- `a5c053d`, `11c06ac` — docs audit keamanan
+- `d6dc594` + merge `4f233b0` — **SEO otomatis per drama** (rekan). ⚠️ Mengubah title/description
+  ~42 halaman drama di Google; URL/slug TIDAK berubah. ❓ Jalur simpan ke `app_data` key `seo` di
+  Supabase sungguhan **belum terbukti** — seluruh tes jalan di mode berkas (`data/dramas.json`).
+- `25957c7`, `7cd2ec3`, `4c5149e` — tema soft sage lalu gelap+emas (sesi lain, **BELUM SELESAI**)
+- `a4fba18` — 6 tes basi Playly/beranda dibetulkan + penjaga rantai render BARU
+- `76dc76b` — celah `data/adminpass.json` ditutup 2 lapis (`.gitignore` + pemindai gerbang)
+- `1b8cfb0` — catatan HANDOFF
+
+**Gerbang pra-rilis: HIJAU, tapi BUKAN atas keadaan ini.** `npm run gerbang` → exit 0, 197 berkas /
+2784 tes — dijalankan sesudah `a4fba18` tapi **sebelum** `76dc76b` dan sebelum 2 commit terakhir
+sesi lain masuk. **Wajib dijalankan ulang sebelum push ke `origin main`** (§6). 🪤 Syaratnya server
+`next dev` sesi lain mati dulu — langkah 1 gerbang menghapus `.next` yang sedang dipakainya.
+
+**Urutan yang harus dikerjakan sebelum rilis berikutnya:**
+1. **Tunggu sesi tema selesai.** Saat catatan ini ditulis `app/beranda/page.tsx` masih `M` dan 1 tes
+   merah (`tanpaJudul` dilepas di editan yang belum di-commit; versi ter-commit masih memuatnya 2×).
+2. `npm run gerbang` sampai **exit 0**.
+3. `git push origin main` — **izin owner**, sebut nama remote eksplisit (`git push` polos di
+   komputer owner menembak `dramaku`, bukan produksi).
+4. Smoke test di situs sungguhan, lalu verifikasi deployment **success** di Railway.
+5. Sesudah SEO tayang, buktikan jalur Supabase-nya: `/admin` → Edit satu drama → kotak hijau SEO →
+   **✨ Generate SEO Otomatis** → Simpan → buka halaman drama → *View page source* → `<title>`
+   harus sama dengan isian. Ini satu-satunya cara membuktikan ❓ di atas.
+
+---
 
 ### ✅ 2026-11-23 — RILIS `13b8937` → `6de869d` TAYANG (pemulihan 5 perbaikan audit keamanan)
 

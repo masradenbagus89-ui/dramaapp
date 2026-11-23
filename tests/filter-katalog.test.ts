@@ -15,10 +15,6 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { readFileSync } from "node:fs";
 import FilterKatalog from "../app/components/beranda/FilterKatalog";
-// Sumber kebenaran nilai `sort` — diimpor, BUKAN disalin sebagai daftar teks.
-// Daftar salinan akan basi diam-diam begitu /discover menambah urutan baru,
-// dan tes yang basi memberi rasa aman palsu.
-import { SORT_OPTIONS } from "../lib/discover";
 // Komentar DIBUANG sebelum sumbernya diperiksa — penjelasan di berkas ini
 // mengutip nilai sort yang salah sebagai contoh, dan tanpa ini kutipan itu
 // sendiri yang membuat patokannya merah.
@@ -41,8 +37,9 @@ const KATALOG: Drama[] = [
   drama({ id: "b", title: "B", category: "Romance", year: "2026" }),
 ];
 
-const renderFilter = (dramas: Drama[] = KATALOG) =>
-  renderToStaticMarkup(createElement(FilterKatalog, { dramas }));
+// Tanpa prop sama sekali sejak 2026-11-23 — `dramas` dilepas supaya katalog
+// tak ikut terkirim ke browser. Pop up isinya mengambil katalognya sendiri.
+const renderFilter = () => renderToStaticMarkup(createElement(FilterKatalog));
 
 describe("tombol FILTER", () => {
   it("tergambar sebagai tombol berwarna merek bertuliskan Filter", () => {
@@ -71,71 +68,78 @@ describe("tombol FILTER", () => {
     ).not.toMatch(/bg-emas-500[^"]*text-white/);
   });
 
-  it("isi dropdown-nya TIDAK tergambar sampai menunya dibuka", () => {
-    // Bukan bug, melainkan cara kerja Radix. Ditulis sebagai tes supaya sesi
-    // berikutnya tidak mengira tombolnya rusak saat memeriksa HTML mentah —
-    // dan supaya jelas kenapa alamat tujuannya diperiksa dari SUMBER di bawah.
-    expect(renderFilter()).not.toContain("/discover?sort=populer");
+  it("pop up-nya TIDAK ikut terpasang sebelum tombolnya diklik", () => {
+    // DUA hal sekaligus dijaga di sini, keduanya nyata:
+    //   1. Baris tab ini dirender di tiap halaman katalog. Kalau pop up-nya
+    //      selalu terpasang, enam dropdown + pengambil katalognya ikut hidup
+    //      untuk tombol yang mungkin tak pernah disentuh.
+    //   2. Pop up itu memanggil `useRouter()`. Tanpa penjaga ini, berkas tes
+    //      ini — dan lima berkas lain yang merender baris tab — harus mulai
+    //      mem-mock `next/navigation` hanya karena satu tombol.
+    // Dibuktikan dari HTML hasil render, bukan dari sumbernya: yang penting
+    // bukan "ada kondisi di kode", melainkan tidak ada yang tergambar.
+    const html = renderFilter();
+    expect(html).toContain("Filter");
+    expect(
+      html,
+      "isi pop up ikut tergambar padahal tombolnya belum diklik",
+    ).not.toContain("Filter Movie");
   });
 });
 
-describe("isi filter hanya menawarkan yang BENAR-BENAR ada di katalog", () => {
-  // Aturan project sejak 2026-09-21: tombol yang diklik lalu menampilkan
-  // seluruh katalog seolah bekerja LEBIH menyesatkan daripada tombol yang
-  // tidak ada. Diperiksa dari sumbernya karena isi dropdown Radix tidak
-  // tergambar (lihat tes di atas).
-  const sumber = readFileSync(
-    "app/components/beranda/FilterKatalog.tsx",
-    "utf-8",
+describe("tombol ini PEMICU pop up bersama, bukan dropdown sendiri", () => {
+  // ⚠️ SELURUH BLOK INI DITULIS ULANG 2026-11-23 (owner: *"isi filter samakan
+  // dengan filter di bawah"*). Patokan lamanya menjaga isi dropdown rakitan
+  // sendiri — `availableGenres(dramas)`, `getYearOptions(dramas)`,
+  // `genre.length > 0`, dan daftar tautan `?sort=`/`?cat=`/`?year=`. Dropdown
+  // itu TIDAK ADA LAGI, jadi patokan-patokan tersebut kini menuntut kode yang
+  // justru tidak boleh ada.
+  //
+  // Jaminannya TIDAK HILANG, cuma pindah rumah: isi penyaringnya sekarang milik
+  // `FilterFilmPopup`, dan dijaga di tests/filter-film-popup.test.ts — termasuk
+  // "tiap nilai sort dikenali /discover" yang dulu di sini.
+  const sumber = tanpaKomentar(
+    readFileSync("app/components/beranda/FilterKatalog.tsx", "utf-8"),
   );
 
-  it("genre & tahun DIHITUNG dari katalog, bukan daftar tulis-tangan", () => {
-    expect(sumber).toContain("availableGenres(dramas)");
-    expect(sumber).toContain("getYearOptions(dramas)");
+  it("membuka pop up yang SAMA dengan tombol Filter di bar bawah HP", () => {
+    // Inti permintaan owner. Dua alat penyaring berbeda untuk satu situs
+    // membuat penonton HP dan penonton komputer punya KEMAMPUAN yang berbeda —
+    // bukan sekadar tampilan yang berbeda.
+    expect(sumber).toContain("FilterFilmPopup");
+    const bottom = tanpaKomentar(
+      readFileSync("app/components/BottomNav.tsx", "utf-8"),
+    );
+    expect(
+      bottom,
+      "bar bawah tak lagi memakai pop up yang sama — keduanya menyimpang",
+    ).toContain("FilterFilmPopup");
   });
 
-  it("menyembunyikan seksinya kalau datanya nol", () => {
-    // Katalog tanpa tahun sama sekali tidak boleh memunculkan judul "Tahun"
-    // yang di bawahnya kosong.
-    expect(sumber).toContain("genre.length > 0");
-    expect(sumber).toContain("tahun.length > 0");
-  });
-
-  it("setiap tujuannya benar-benar MENYARING, bukan sekadar membuka katalog", () => {
-    // Nama parameter yang salah ketik diabaikan diam-diam oleh /discover, dan
-    // chip-nya lalu menampilkan SELURUH katalog seolah bekerja — lebih
-    // menyesatkan daripada kosong (pelajaran 2026-09-21).
-    for (const param of ["sort=", "?cat=", "?year="]) {
-      expect(sumber, `parameter ${param} hilang dari filter`).toContain(param);
+  it("TIDAK merakit daftar penyaringnya sendiri lagi", () => {
+    // Penjaga arah sebaliknya: kalau suatu saat dropdown lama dihidupkan lagi
+    // di sini, situs kembali punya dua penyaring yang isinya berbeda.
+    for (const sisa of [
+      "availableGenres",
+      "getYearOptions",
+      "DropdownMenuContent",
+      "/discover?sort=",
+    ]) {
+      expect(
+        sumber,
+        `${sisa} muncul lagi — penyaring kedua tumbuh kembali di sini`,
+      ).not.toContain(sisa);
     }
   });
 
-  it("tiap nilai `sort` benar-benar DIKENALI /discover", () => {
-    // ⚠️ TES INI MENGGANTI patokan lama yang berbunyi `toContain("sort=judul")`
-    // — dan patokan itu justru MENGESAHKAN BUG-nya: `judul` bukan nilai yang
-    // dikenal, jadi `parseSort` (lib/discover.ts:18) menjatuhkannya diam-diam
-    // ke "relevance" dan pilihan "Judul A-Z" menampilkan katalog apa adanya.
-    // Nilai yang benar `title`. Tes lama memeriksa teksnya ADA, bukan nilainya
-    // SAH — jadi ia hijau selama berminggu-minggu di atas tombol yang mati.
-    //
-    // Sekarang dicocokkan ke SORT_OPTIONS, sumber kebenaran yang sama yang
-    // dibaca /discover. Salah ketik BARU apa pun akan merah di sini, bukan
-    // cuma yang satu ini.
-    const sah = SORT_OPTIONS.map((o) => o.value) as readonly string[];
-    const dipakai = [...tanpaKomentar(sumber).matchAll(/sort=([a-z]+)/g)].map(
-      (m) => m[1],
-    );
-
-    expect(dipakai.length, "tak ada satu pun tautan sort di filter").toBeGreaterThan(0);
-    const nyasar = [...new Set(dipakai)].filter((v) => !sah.includes(v));
-    expect(
-      nyasar,
-      `nilai sort tak dikenal /discover — tombolnya akan diklik lalu ` +
-        `menampilkan seluruh katalog. Nilai yang sah: ${sah.join(", ")}`,
-    ).toEqual([]);
+  it("tidak menerima `dramas` — katalog tak ikut terkirim ke browser", () => {
+    // BUKAN kerapian. Komponen ini ber-"use client" sedangkan pemanggilnya
+    // komponen SERVER; prop apa pun yang menyeberang batas itu ikut tertanam
+    // di HTML tiap halaman. `dramas` berisi SELURUH katalog + sinopsisnya.
+    // Pop up-nya mengambil katalog sendiri lewat /api/dramas saat DIBUKA.
+    expect(sumber).not.toContain("dramas");
   });
 });
-
 // ===========================================================================
 // PEMASANGAN — inti berkas ini.
 // ===========================================================================
@@ -155,7 +159,9 @@ describe("FILTER menempel pada BARIS TAB, dan baris tab dipasang dua halaman", (
     );
     const impor = sumber.match(/^import[\s\S]*?;$/gm)?.join(" ") ?? "";
     expect(impor).toContain("FilterKatalog");
-    expect(sumber).toMatch(/<FilterKatalog\s+dramas=/);
+    // Prop `dramas` DILEPAS 2026-11-23 — lihat alasannya di blok di atas.
+    // Yang dijaga tinggal: baris tab benar-benar memasang tombolnya.
+    expect(sumber).toMatch(/<FilterKatalog\s*\/>/);
   });
 
   for (const { berkas, halaman } of [

@@ -3,7 +3,7 @@
 import { useSearchParams } from "next/navigation";
 import type { Drama } from "@/lib/types";
 import type { PlaylyVideoPublik } from "@/lib/playly-publik";
-import { parseTab } from "@/lib/tab-katalog";
+import { parseTab, type TabKey } from "@/lib/tab-katalog";
 import TabKatalogTampilan from "./TabKatalogTampilan";
 
 /**
@@ -28,6 +28,7 @@ export default function TabKatalog({
   dramas,
   basePath,
   hanyaMenu,
+  tabDisembunyikan,
   paksaSemua,
   seksiLengkap,
   videos,
@@ -52,6 +53,12 @@ export default function TabKatalog({
   paksaSemua?: boolean;
   /** Gambar semua tab sebagai seksi grid (halaman depan). Lihat tampilannya. */
   seksiLengkap?: boolean;
+  /**
+   * Tab yang tombolnya tidak digambar — isinya tetap ada. Diteruskan apa adanya
+   * ke `TabKatalogTampilan`; alasan & jebakannya ditulis di sana, bukan
+   * disalin ke sini (satu penjelasan, satu tempat).
+   */
+  tabDisembunyikan?: TabKey[];
   /** Film untuk seksi "Film Terbaru". Lihat tampilannya untuk aturannya. */
   videos?: PlaylyVideoPublik[];
   /** SERIAL untuk seksi "Series Terbaru". Lihat tampilannya untuk aturannya. */
@@ -66,6 +73,7 @@ export default function TabKatalog({
       basePath={basePath}
       hanyaMenu={hanyaMenu}
       seksiLengkap={seksiLengkap}
+      tabDisembunyikan={tabDisembunyikan}
       videos={videos}
       videoSeries={videoSeries}
     />

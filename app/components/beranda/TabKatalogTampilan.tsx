@@ -61,6 +61,7 @@ export default function TabKatalogTampilan({
   basePath = "/",
   hanyaMenu = false,
   seksiLengkap = false,
+  tabDisembunyikan = [],
   videos = [],
   videoSeries = [],
 }: {
@@ -105,6 +106,27 @@ export default function TabKatalogTampilan({
    * sumber video luar sedang mati, bukan error.
    */
   videos?: PlaylyVideoPublik[];
+  /**
+   * Tab yang TOMBOLNYA tidak digambar di baris atas — isinya TETAP ada.
+   *
+   * Owner 2026-11-23: *"series terbaru, unggulan, update kamu hapus saja
+   * karena sudah ada, biar bisa sejajar"*. Ketiganya memang sudah punya dua
+   * jalan lain: judul seksinya sendiri tepat di bawah baris ini, dan menu
+   * "Series" di bar atas (lib/nav-katalog.ts:502 → /katalog?tab=…). Dengan
+   * tiga tombol terpanjang dilepas, sisanya muat satu baris di layar HP —
+   * sebelumnya tombol kedua selalu terpotong di tepi layar.
+   *
+   * ⚠️ YANG DISEMBUNYIKAN CUMA TOMBOLNYA, bukan tabnya. `daftarTab` tetap utuh
+   * dan `parseTab` tetap mengenali ketiga kuncinya. Kalau tabnya sendiri yang
+   * dibuang, EMPAT tautan menu "Series" akan mendarat di daftar yang salah
+   * tanpa satu pun error — `tabAktif` jatuh diam-diam ke tab pertama. Itu
+   * persis kerusakan senyap yang dilarang aturan project.
+   *
+   * Dibiarkan KOSONG di /katalog dengan sengaja: halaman itu tujuan tautan
+   * menu "Series", jadi tombol tab yang sedang dipakai harus tetap terlihat
+   * menyala di sana.
+   */
+  tabDisembunyikan?: TabKey[];
   /**
    * SERIAL dari penyedia video luar, untuk seksi "Series Terbaru" (owner
    * 2026-11-05: "rekan saya upload drama dari playly tapi masuknya ke film
@@ -165,7 +187,13 @@ export default function TabKatalogTampilan({
       <div className={cn(SHELL)}>
         <div className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-950/80 p-2 shadow-[0_6px_20px_-6px_rgba(0,0,0,0.9)] terang:border-zinc-200 terang:bg-white terang:shadow-[0_6px_20px_-10px_rgba(0,0,0,0.25)]">
         <div className="no-scrollbar flex flex-1 items-center gap-2 overflow-x-auto">
-          {tabs.map((t) => {
+          {/* Disaring, BUKAN diambil dari daftar yang lebih pendek: `tabs`
+              tetap utuh supaya `tabAktif`, judul seksi, dan /katalog?tab=…
+              semuanya masih mengenali ketiga kunci yang tombolnya dilepas.
+              Lihat alasan lengkapnya di prop `tabDisembunyikan` di atas. */}
+          {tabs
+            .filter((t) => !tabDisembunyikan.includes(t.key))
+            .map((t) => {
             const sedangDipakai = t.key === tabAktif.key;
             return (
               <Link
@@ -190,7 +218,19 @@ export default function TabKatalogTampilan({
           })}
         </div>
 
-        <FilterKatalog dramas={dramas} />
+        {/* TOMBOL FILTER: LAYAR KOMPUTER SAJA (owner 2026-11-23: *"untuk
+            versi HP filter disitu kamu hapus saja karena sudah ada di
+            bawah"*). Di HP, bar bawah sudah punya tombol "Filter" yang
+            membuka pop up yang SAMA PERSIS — dua pemicu untuk satu alat, dan
+            yang di sini memakan ruang baris tab yang sudah sempit.
+
+            Disembunyikan DI SINI, bukan di dalam `FilterKatalog`: alasannya
+            soal TATA LETAK baris ini (ada pemicu kembar di bar bawah), bukan
+            sifat tombolnya. Komponennya tetap bisa dipakai di tempat lain
+            tanpa membawa aturan "jangan muncul di HP" diam-diam. */}
+        <div className="hidden md:flex">
+          <FilterKatalog />
+        </div>
         </div>
       </div>
 

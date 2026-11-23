@@ -1,129 +1,85 @@
-import Link from "next/link";
-import type { Drama } from "@/lib/types";
-import { availableGenres } from "@/lib/beranda-catalog";
-import { getYearOptions } from "@/lib/discover";
-import { labelGenre } from "@/lib/genre";
+"use client";
+
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { ChevronDown, SlidersHorizontal } from "lucide-react";
+import FilterFilmPopup from "./FilterFilmPopup";
 
 /**
- * Tombol FILTER hijau + isinya — bentuk yang diminta owner dari situs katalog
- * pembanding (tombol hijau di ujung kanan baris pintasan).
+ * Tombol FILTER di ujung kanan baris tab — PEMICU pop up "Filter Film".
  *
- * ⚠️ BERKAS SENDIRI SEJAK 2026-09-26, dan itu WAJIB. Sebelumnya komponen ini
- * tinggal di dalam `TabKatalogTampilan.tsx` dan hanya dipakai halaman depan.
- * Owner tidak pernah melihatnya: `RedirectIfAuthed` melempar siapa pun yang
- * SUDAH LOGIN dari `/` ke `/beranda`, dan `/beranda` tak punya tombol ini —
- * jadi owner menyimpulkan fiturnya belum dibuat. Sekarang dipakai DUA tempat
- * (baris tab halaman depan + strip kuning beranda); menyalin markup-nya ke
- * tempat kedua berarti dua tombol yang isinya pelan-pelan berbeda.
+ * ⚠️ ISINYA BERGANTI TOTAL 2026-11-23 (owner: *"isi filter samakan dengan
+ * filter di bawah"*). Jangan dikembalikan mengira sedang memperbaiki.
+ *   DULU: dropdown rakitan sendiri berisi 3 pengurutan + daftar genre + daftar
+ *         tahun yang DIHITUNG dari katalog, masing-masing tautan ke /discover.
+ *   KINI: tombol ini membuka `FilterFilmPopup` — pop up yang SAMA PERSIS dengan
+ *         yang dibuka tombol "Filter" di bar bawah HP.
  *
- * SENGAJA tanpa penanda "use client": isinya cuma tautan + dropdown Radix
- * (yang sudah membawa penanda itu sendiri), tanpa state maupun hook. Berkas
- * tanpa penanda mengikuti konteks pemanggilnya, jadi komponen ini sah dirender
- * dari komponen SERVER (baris tab halaman depan) MAUPUN dari komponen CLIENT
- * (`CatalogBrowser` di /beranda) — tanpa perlu dua versi.
+ * KENAPA DIGANTI, bukan sekadar permintaan selera: sampai hari ini situs punya
+ * DUA alat penyaring yang isinya berbeda — dropdown di sini (3 pengurutan,
+ * genre, tahun) dan pop up di bar bawah (6 dropdown: urutan, jenis, 2 genre,
+ * negara, tahun). Penonton yang memakai HP lalu membuka situs yang sama di
+ * komputer mendapat alat yang bukan cuma beda bentuk, tapi beda KEMAMPUAN.
+ * Satu komponen untuk keduanya = mustahil menyimpang lagi (§3.3).
  *
- * ATURAN ISI — hanya pilihan yang BENAR-BENAR ada di katalog: genre & tahun
- * dihitung dari data, bukan daftar tetap. Aturan project sejak 2026-09-21:
- * tombol yang diklik lalu menampilkan seluruh katalog seolah bekerja LEBIH
- * menyesatkan daripada tombol yang tidak ada.
+ * 🪤 BUG YANG IKUT TERBAWA PERGI: dropdown lama memuat tautan
+ * `/discover?sort=judul`, padahal nilai yang dikenal `title` — jadi "Judul A-Z"
+ * diklik lalu menampilkan katalog apa adanya. Sempat diperbaiki beberapa jam
+ * sebelum dropdown-nya dibuang. Pop up penggantinya membaca `SORT_OPTIONS`
+ * langsung dari lib/discover.ts, jadi seluruh kelas salah-ketik itu tak bisa
+ * kambuh di sini lagi.
  *
- * Semua tujuan bermuara ke /discover — satu-satunya halaman yang membaca
- * penyaring dari alamat URL.
+ * ⚠️ PROP `dramas` DILEPAS, dan itu WAJIB — bukan kerapian. Komponen ini kini
+ * ber-"use client", sedangkan pemanggilnya (`TabKatalogTampilan`) komponen
+ * SERVER. Prop apa pun yang menyeberang batas itu ikut dikirim ke browser
+ * sebagai data di dalam HTML; `dramas` berisi seluruh katalog beserta
+ * sinopsisnya. Pop up penggantinya mengambil katalog sendiri lewat
+ * `/api/dramas` SAAT DIBUKA, jadi pengunjung yang tak pernah menyentuh filter
+ * tidak membayar ongkos datanya sama sekali.
+ *
+ * Tombolnya sendiri HANYA tergambar di layar komputer — aturan itu dipasang
+ * pemanggilnya, bukan di sini; alasannya ada di `TabKatalogTampilan.tsx`.
  */
-export default function FilterKatalog({ dramas }: { dramas: Drama[] }) {
-  const genre = availableGenres(dramas);
-  const tahun = getYearOptions(dramas);
+export default function FilterKatalog() {
+  const [terbuka, setTerbuka] = useState(false);
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          size="sm"
-          // Bayangan hijau senada tombolnya — sepadan dengan tab aktif di
-          // sebelahnya, supaya keduanya terbaca sebagai satu baris kontrol
-          // yang terangkat (owner 2026-09-26: "kasih shadow biar nampak pro").
-          /* `sage-600`, bukan `emerald-600` (sampai 2026-11-23). Keduanya
-             hijau, dan justru itu masalahnya: dua hijau yang BEDA NADA
-             bersebelahan terbaca sebagai salah cetak, bukan sebagai dua
-             peran. Kontras teks putih di sage-600 = 5,67:1. */
-          className="h-9 shrink-0 gap-1.5 rounded-sm bg-emas-500 px-3 text-[11px] font-extrabold uppercase tracking-wide text-gelap-950 shadow-lg shadow-emas-600/30 transition-all duration-200 hover:-translate-y-0.5 hover:bg-emas-400 hover:shadow-xl md:text-xs"
-        >
-          <SlidersHorizontal className="size-3.5" />
-          Filter
-          <ChevronDown className="size-3.5" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        align="end"
-        className="max-h-[70vh] w-56 overflow-y-auto border-emas-700/40 bg-gelap-900 text-white"
+    <>
+      <Button
+        size="sm"
+        type="button"
+        onClick={() => setTerbuka(true)}
+        aria-haspopup="dialog"
+        aria-expanded={terbuka}
+        // Bayangan emas senada tombolnya — sepadan dengan tab aktif di
+        // sebelahnya, supaya keduanya terbaca sebagai satu baris kontrol
+        // yang terangkat (owner 2026-09-26: "kasih shadow biar nampak pro").
+        //
+        // ⚠️ Tulisannya GELAP di atas emas. Emas itu warna TERANG: teks putih
+        // di `emas-500` = 2,04:1 (praktis lenyap), teks gelap = 9,56:1.
+        className="h-9 shrink-0 gap-1.5 rounded-sm bg-emas-500 px-3 text-[11px] font-extrabold uppercase tracking-wide text-gelap-950 shadow-lg shadow-emas-600/30 transition-all duration-200 hover:-translate-y-0.5 hover:bg-emas-400 hover:shadow-xl md:text-xs"
       >
-        <DropdownMenuLabel className="text-emas-400">Urutkan</DropdownMenuLabel>
-        <DropdownMenuItem asChild>
-          <Link href="/discover?sort=populer">Paling banyak ditonton</Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link href="/discover?sort=rating">Rating tertinggi</Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          {/* ⚠️ "title", BUKAN "judul" — diperbaiki 2026-11-23. Nilai `sort`
-              dibaca `parseSort` (lib/discover.ts:18) yang mencocokkannya ke
-              `SORT_OPTIONS`; nilai tak dikenal jatuh DIAM-DIAM ke "relevance".
-              Jadi selama ini pilihan ini diklik lalu menampilkan katalog apa
-              adanya — persis kerusakan yang dilarang aturan project
-              ("tombol yang seolah bekerja lebih menyesatkan daripada tombol
-              yang tidak ada"), dan nol error. Lolos sekian lama karena isi
-              dropdown Radix tidak tergambar di HTML sampai menunya dibuka,
-              dan tes penjaganya cuma memastikan teks "sort=judul" ADA —
-              bukan bahwa nilainya SAH. Tes itu kini mencocokkan ke
-              SORT_OPTIONS, jadi seluruh kelas salah-ketik ini ikut terjaga. */}
-          <Link href="/discover?sort=title">Judul A-Z</Link>
-        </DropdownMenuItem>
+        <SlidersHorizontal className="size-3.5" />
+        Filter
+        <ChevronDown className="size-3.5" />
+      </Button>
 
-        {genre.length > 0 && (
-          <>
-            <DropdownMenuSeparator className="bg-emas-700/30" />
-            <DropdownMenuLabel className="text-emas-400">Genre</DropdownMenuLabel>
-            {/* Label Indonesia, alamat tetap nilai asli katalog — kalau
-                tertukar, pilihannya memulangkan halaman hampa. */}
-            {genre.map((g) => (
-              <DropdownMenuItem key={g} asChild>
-                <Link href={`/discover?cat=${encodeURIComponent(g)}`}>
-                  {labelGenre(g)}
-                </Link>
-              </DropdownMenuItem>
-            ))}
-          </>
-        )}
-
-        {tahun.length > 0 && (
-          <>
-            <DropdownMenuSeparator className="bg-emas-700/30" />
-            <DropdownMenuLabel className="text-emas-400">Tahun</DropdownMenuLabel>
-            {tahun.map((t) => (
-              <DropdownMenuItem key={t} asChild>
-                <Link href={`/discover?year=${encodeURIComponent(t)}`}>{t}</Link>
-              </DropdownMenuItem>
-            ))}
-          </>
-        )}
-
-        <DropdownMenuSeparator className="bg-emas-700/30" />
-        <DropdownMenuItem asChild>
-          <Link href="/discover" className="font-bold text-emas-400">
-            Buka katalog lengkap →
-          </Link>
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+      {/* ⚠️ DIPASANG HANYA SAAT TERBUKA, dan ini BEDA dari cara `BottomNav`
+          memakainya (di sana ia selalu terpasang). Bukan kelalaian — sebabnya
+          dua, keduanya nyata:
+            1. Pemanggil tombol ini komponen SERVER yang dirender di tiap
+               halaman katalog. `FilterFilmPopup` memanggil `useRouter()` di
+               badan fungsinya, jadi memasangnya terus-menerus menyalakan hook
+               itu untuk tombol yang mungkin tak pernah diklik.
+            2. Enam berkas tes merender baris tab ini tanpa membungkusnya
+               dengan konteks router Next. Dengan dipasang terus, keenamnya
+               harus mulai mem-mock `next/navigation` — enam berkas berubah
+               demi satu tombol.
+          Ongkosnya: animasi muncul Radix tidak sempat berjalan pada pembukaan
+          pertama. Dipilih sadar, bukan tak terlihat. */}
+      {terbuka && (
+        <FilterFilmPopup terbuka onTutup={() => setTerbuka(false)} />
+      )}
+    </>
   );
 }

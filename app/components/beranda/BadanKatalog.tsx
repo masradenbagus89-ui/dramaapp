@@ -6,8 +6,22 @@ import FeaturedRow from "./FeaturedRow";
 import FooterSitus from "./FooterSitus";
 import TabKatalog from "./TabKatalog";
 import TabKatalogTampilan from "./TabKatalogTampilan";
-import { TAB_BAWAAN } from "@/lib/tab-katalog";
+import { TAB_BAWAAN, type TabKey } from "@/lib/tab-katalog";
 import { BADAN_SITUS, HERO_CARD_CLASS } from "./shell";
+
+/**
+ * Tab yang TOMBOLNYA dilepas dari baris atas di halaman depan & /beranda
+ * (owner 2026-11-23: *"series terbaru, unggulan, update kamu hapus saja
+ * karena sudah ada, biar bisa sejajar"*). Isinya TETAP tergambar sebagai
+ * seksi di bawah, dan menu "Series" di bar atas tetap bisa membukanya lewat
+ * /katalog?tab=… — itulah "sudah ada" yang owner maksud.
+ *
+ * ⚠️ DITULIS SEKALI di sini karena dipakai DUA tempat di berkas ini: isi
+ * `<Suspense fallback>` dan versi browsernya. Kalau disalin, salah satu pasti
+ * tertinggal saat diubah — dan akibatnya barisnya BERGANTI TOMBOL tepat saat
+ * halaman selesai dimuat, yang terbaca seperti layar berkedip rusak.
+ */
+const TAB_TANPA_TOMBOL: TabKey[] = ["terbaru", "unggulan", "update"];
 
 /**
  * BADAN BERSAMA halaman katalog utama — dipakai `/` (landing, untuk yang belum
@@ -139,6 +153,7 @@ export default function BadanKatalog({
               tab={TAB_BAWAAN}
               semua={false}
               seksiLengkap
+              tabDisembunyikan={TAB_TANPA_TOMBOL}
               videos={filmDiDepan}
               videoSeries={seriesTerbaru}
               basePath={basePath}
@@ -148,6 +163,7 @@ export default function BadanKatalog({
           <TabKatalog
             dramas={dramas}
             seksiLengkap
+            tabDisembunyikan={TAB_TANPA_TOMBOL}
             videos={filmDiDepan}
             videoSeries={seriesTerbaru}
             basePath={basePath}

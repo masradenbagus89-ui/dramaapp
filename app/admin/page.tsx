@@ -10,6 +10,7 @@ import {
   type DramaKind,
   type DramaQuality,
   type DramaStatus,
+  type SeoDrama,
 } from "@/lib/types";
 import { readUser, type User } from "@/lib/auth";
 import { slugify } from "@/lib/format";
@@ -68,6 +69,8 @@ export default function AdminPage() {
   const [downloadProviders, setDownloadProviders] = useState<
     DownloadProvider[]
   >([]);
+  // Kolom kosong = SEO dibuat otomatis saat halaman drama tampil.
+  const [seo, setSeo] = useState<SeoDrama>({});
   const [posterImage, setPosterImage] = useState("");
   const [heroImage, setHeroImage] = useState("");
   const [subtitles, setSubtitles] = useState<string[]>([]);
@@ -274,6 +277,7 @@ export default function AdminPage() {
           status,
           quality,
           downloadProviders,
+          seo,
           posterImage: posterImage.trim(),
           heroImage: heroImage.trim(),
           subtitles,
@@ -314,6 +318,7 @@ export default function AdminPage() {
       setStatus("");
       setQuality("");
       setDownloadProviders([]);
+      setSeo({});
       setPosterImage("");
       setHeroImage("");
       setSubtitles([]);
@@ -407,6 +412,7 @@ export default function AdminPage() {
     setStatus(d.status ?? "");
     setQuality(d.quality ?? "");
     setDownloadProviders(d.downloadProviders ?? []);
+    setSeo(d.seo ?? {});
     setPosterImage(d.posterImage ?? "");
     setHeroImage(d.heroImage ?? "");
     setSubtitles(d.subtitles ?? []);
@@ -501,6 +507,8 @@ export default function AdminPage() {
           setQuality={setQuality}
           downloadProviders={downloadProviders}
           setDownloadProviders={setDownloadProviders}
+          seo={seo}
+          setSeo={setSeo}
           setKind={setKind}
           posterImage={posterImage}
           setPosterImage={setPosterImage}

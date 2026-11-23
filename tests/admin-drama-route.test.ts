@@ -105,3 +105,25 @@ describe("POST /api/admin/drama — serial tidak berubah perilakunya", () => {
     expect(tersimpan?.premium).toBe(true);
   });
 });
+
+describe("POST /api/admin/drama — SEO isian admin (2026-11-21)", () => {
+  it("SEO tersimpan tersaring, dan body tanpa `seo` tidak menghapusnya", async () => {
+    await kirim({ ...dasar, id: "uji", episodes: 3, seo: { title: " Judul\nSEO ", keywords: "A,a,B" } });
+    expect(tersimpan?.seo).toEqual({ title: "Judul SEO", keywords: "a, b" });
+
+    await kirim({ ...dasar, id: "uji", episodes: 3 });
+    expect(tersimpan?.seo).toEqual({ title: "Judul SEO", keywords: "a, b" });
+  });
+
+  it("edit drama yang sudah ber-SEO mengganti isinya", async () => {
+    await kirim({ ...dasar, id: "uji", episodes: 3, seo: { title: "Lama" } });
+    await kirim({ ...dasar, id: "uji", episodes: 3, seo: { title: "Baru" } });
+    expect(tersimpan?.seo).toEqual({ title: "Baru" });
+  });
+
+  it("SEO dikirim kosong semua = kembali otomatis (entri dilepas)", async () => {
+    await kirim({ ...dasar, id: "uji", episodes: 3, seo: { title: "X" } });
+    await kirim({ ...dasar, id: "uji", episodes: 3, seo: { title: "", description: "", keywords: "" } });
+    expect(tersimpan).not.toHaveProperty("seo");
+  });
+});

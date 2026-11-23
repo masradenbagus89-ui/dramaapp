@@ -19,10 +19,12 @@ import {
   type DramaKind,
   type DramaQuality,
   type DramaStatus,
+  type SeoDrama,
 } from "@/lib/types";
 import { CATEGORY_OPTIONS } from "@/app/admin/constants";
 import type { ScanResult } from "@/lib/admin-api";
 import DownloadProviderFields from "./DownloadProviderFields";
+import SeoFields from "./SeoFields";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -100,6 +102,8 @@ export default function DramaForm({
   setQuality,
   downloadProviders,
   setDownloadProviders,
+  seo,
+  setSeo,
   posterImage,
   setPosterImage,
   heroImage,
@@ -168,6 +172,9 @@ export default function DramaForm({
   /** Daftar kosong = tombol DOWNLOAD memakai perilaku unduh lama. */
   downloadProviders: DownloadProvider[];
   setDownloadProviders: Dispatch<SetStateAction<DownloadProvider[]>>;
+  /** Kolom kosong = SEO otomatis saat halaman tampil (lib/seo-drama.ts). */
+  seo: SeoDrama;
+  setSeo: Dispatch<SetStateAction<SeoDrama>>;
   posterImage: string;
   setPosterImage: Dispatch<SetStateAction<string>>;
   heroImage: string;
@@ -1092,6 +1099,12 @@ export default function DramaForm({
         <DownloadProviderFields
           providers={downloadProviders}
           setProviders={setDownloadProviders}
+        />
+
+        <SeoFields
+          seo={seo}
+          setSeo={setSeo}
+          sumber={{ title, synopsis, category, episodes, kind, premium, year, genre, country }}
         />
 
         <div className="mt-6 flex flex-wrap items-center gap-3">

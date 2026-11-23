@@ -10,6 +10,7 @@ import { join } from "node:path";
 import { parseDramaStatus, type Drama } from "./types";
 import { ambilPetaKualitas, gabungKualitas } from "./kualitas-drama";
 import { ambilPetaUnduhan, gabungUnduhan } from "./unduhan";
+import { ambilPetaSeo, gabungSeo } from "./seo-drama-data";
 import { useSupabase, sbSelect, sbUpsert, sbDelete, eq } from "./supabase";
 import { slugify } from "./format";
 
@@ -179,14 +180,15 @@ async function seedDramasIfEmpty(): Promise<void> {
 export async function getAllDramas(): Promise<Drama[]> {
   if (useSupabase) {
     await seedDramasIfEmpty();
-    const [rows, petaKualitas, petaUnduhan] = await Promise.all([
+    const [rows, petaKualitas, petaUnduhan, petaSeo] = await Promise.all([
       sbSelect<DramaRow>("dramas?select=*&order=sort_index.asc"),
       ambilPetaKualitas(),
       ambilPetaUnduhan(),
+      ambilPetaSeo(),
     ]);
-    return gabungUnduhan(
-      gabungKualitas(rows.map(rowToDrama), petaKualitas),
-      petaUnduhan,
+    return gabungSeo(
+      gabungUnduhan(gabungKualitas(rows.map(rowToDrama), petaKualitas), petaUnduhan),
+      petaSeo,
     );
   }
   return readLocalDramas();
@@ -194,15 +196,16 @@ export async function getAllDramas(): Promise<Drama[]> {
 
 export async function getDrama(id: string): Promise<Drama | undefined> {
   if (useSupabase) {
-    const [rows, petaKualitas, petaUnduhan] = await Promise.all([
+    const [rows, petaKualitas, petaUnduhan, petaSeo] = await Promise.all([
       sbSelect<DramaRow>(`dramas?id=${eq(id)}&select=*&limit=1`),
       ambilPetaKualitas(),
       ambilPetaUnduhan(),
+      ambilPetaSeo(),
     ]);
     if (!rows.length) return undefined;
-    return gabungUnduhan(
-      gabungKualitas([rowToDrama(rows[0])], petaKualitas),
-      petaUnduhan,
+    return gabungSeo(
+      gabungUnduhan(gabungKualitas([rowToDrama(rows[0])], petaKualitas), petaUnduhan),
+      petaSeo,
     )[0];
   }
   return readLocalDramas().find((d) => d.id === id);
@@ -239,18 +242,19 @@ export async function getAllDramasCached(): Promise<Drama[]> {
     return readLocalDramas();
   }
   if (useSupabase) {
-    // KETIGA pembacaan WAJIB ber-cache. Satu saja yang tidak, seluruh halaman
+    // KEEMPAT pembacaan WAJIB ber-cache. Satu saja yang tidak, seluruh halaman
     // pemanggil dibangun ulang untuk tiap pengunjung (lib/supabase.ts:204).
-    const [rows, petaKualitas, petaUnduhan] = await Promise.all([
+    const [rows, petaKualitas, petaUnduhan, petaSeo] = await Promise.all([
       sbSelect<DramaRow>("dramas?select=*&order=sort_index.asc", {
         revalidate: CATALOG_TTL_SECONDS,
       }),
       ambilPetaKualitas({ revalidate: CATALOG_TTL_SECONDS }),
       ambilPetaUnduhan({ revalidate: CATALOG_TTL_SECONDS }),
+      ambilPetaSeo({ revalidate: CATALOG_TTL_SECONDS }),
     ]);
-    return gabungUnduhan(
-      gabungKualitas(rows.map(rowToDrama), petaKualitas),
-      petaUnduhan,
+    return gabungSeo(
+      gabungUnduhan(gabungKualitas(rows.map(rowToDrama), petaKualitas), petaUnduhan),
+      petaSeo,
     );
   }
   return readLocalDramas();
@@ -357,18 +361,19 @@ export async function periksaSumberKatalog(): Promise<SumberKatalog> {
 /** Versi ber-cache dari `getDrama` untuk halaman publik. Lihat catatan di atas. */
 export async function getDramaCached(id: string): Promise<Drama | undefined> {
   if (useSupabase) {
-    // Ketiganya WAJIB ber-cache — lihat catatan di getAllDramasCached.
-    const [rows, petaKualitas, petaUnduhan] = await Promise.all([
+    // Keempatnya WAJIB ber-cache — lihat catatan di getAllDramasCached.
+    const [rows, petaKualitas, petaUnduhan, petaSeo] = await Promise.all([
       sbSelect<DramaRow>(`dramas?id=${eq(id)}&select=*&limit=1`, {
         revalidate: CATALOG_TTL_SECONDS,
       }),
       ambilPetaKualitas({ revalidate: CATALOG_TTL_SECONDS }),
       ambilPetaUnduhan({ revalidate: CATALOG_TTL_SECONDS }),
+      ambilPetaSeo({ revalidate: CATALOG_TTL_SECONDS }),
     ]);
     if (!rows.length) return undefined;
-    return gabungUnduhan(
-      gabungKualitas([rowToDrama(rows[0])], petaKualitas),
-      petaUnduhan,
+    return gabungSeo(
+      gabungUnduhan(gabungKualitas([rowToDrama(rows[0])], petaKualitas), petaUnduhan),
+      petaSeo,
     )[0];
   }
   return readLocalDramas().find((d) => d.id === id);

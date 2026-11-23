@@ -297,6 +297,15 @@ export function parseDownloadProviders(value: unknown): DownloadProvider[] {
   return out;
 }
 
+/** SEO satu drama. Tiap kolom opsional — kosong = dibuat otomatis. */
+export type SeoDrama = {
+  /** Judul di tab browser & hasil Google, LENGKAP dengan merek (tanpa template). */
+  title?: string;
+  description?: string;
+  /** Dipisah koma, mis. "judul sub indo, nonton judul". */
+  keywords?: string;
+};
+
 export type Drama = {
   id: string;
   title: string;
@@ -349,6 +358,12 @@ export type Drama = {
    * Disimpan TERPISAH dari tabel `dramas` — alasannya di lib/unduhan.ts.
    */
   downloadProviders?: DownloadProvider[];
+  /**
+   * SEO isian admin (judul Google, deskripsi, keyword). Boleh KOSONG per kolom:
+   * kolom kosong dibuat otomatis dari data drama saat halaman tampil
+   * (lib/seo-drama.ts). Disimpan TERPISAH dari tabel `dramas` — lib/seo-drama-data.ts.
+   */
+  seo?: SeoDrama;
   /** Metadata IMDb (opsional; dari OMDb). Drama lama tanpa field ini = valid. */
   imdbId?: string;
   year?: string;

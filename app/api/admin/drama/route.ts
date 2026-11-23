@@ -18,6 +18,8 @@ import {
 import { simpanKualitas } from "@/lib/kualitas-drama";
 import { simpanUnduhan } from "@/lib/unduhan";
 import { segarkanCachePublik } from "@/lib/cache-publik";
+import { parseSeoDrama } from "@/lib/seo-drama";
+import { simpanSeo } from "@/lib/seo-drama-data";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -33,6 +35,7 @@ type DramaBody = Partial<{
   status: string;
   quality: string;
   downloadProviders: unknown;
+  seo: unknown;
   posterImage: string;
   heroImage: string;
   gradient: string;
@@ -182,6 +185,12 @@ export async function POST(req: NextRequest) {
     const providersProvided = Array.isArray(body.downloadProviders);
     const providers = parseDownloadProviders(body.downloadProviders);
 
+    // SEO: "dikirim vs sah" sama dengan quality. Objek dengan semua kolom
+    // kosong = perintah KEMBALI OTOMATIS (entri dihapus), bukan ditolak.
+    const seoProvided =
+      typeof body.seo === "object" && body.seo !== null && !Array.isArray(body.seo);
+    const seo = parseSeoDrama(body.seo);
+
     const rules = resolveKindRules(body);
     const isFilm = rules.kind === "movie";
     if (rules.episodes === null) {
@@ -225,6 +234,7 @@ export async function POST(req: NextRequest) {
         ...(status ? { status } : {}),
         ...(quality ? { quality } : {}),
         ...(providers.length ? { downloadProviders: providers } : {}),
+        ...(seo ? { seo } : {}),
         views: body.views?.trim() || "1.0K",
         synopsis: body.synopsis?.trim() || "",
         gradient: body.gradient?.trim() || pickRandomGradient(),
@@ -271,6 +281,10 @@ export async function POST(req: NextRequest) {
         if (providers.length) drama.downloadProviders = providers;
         else delete drama.downloadProviders;
       }
+      if (seoProvided) {
+        if (seo) drama.seo = seo;
+        else delete drama.seo;
+      }
       if (typeof premium === "boolean") {
         if (premium) drama.premium = true;
         else delete drama.premium;
@@ -287,6 +301,8 @@ export async function POST(req: NextRequest) {
     // Provider unduhan juga disimpan TERPISAH di app_data, alasan & aturan
     // "hanya kalau dikirim" sama persis dengan kualitas di atas.
     if (providersProvided) await simpanUnduhan(drama.id, providers);
+    // SEO juga di app_data (lib/seo-drama-data.ts), aturan sama.
+    if (seoProvided) await simpanSeo(drama.id, seo);
 
     const action = isNew ? "added" : "updated";
     segarkanCachePublik();

@@ -90,11 +90,134 @@
 > aftermarket** dari pemilik sekarang, harganya **jauh di atas** Rp200.000 dan belum pernah dicek.
 > Nama lain yang masih bebas jauh lebih murah.
 
-**Terakhir diisi:** 2026-11-23 — 🔐 ✅ **RILIS `13b8937` → `6de869d` TAYANG.** 5 perbaikan audit keamanan 14 Nov ternyata **HILANG dari kode** (kena `git reset --hard` ±15 Nov; catatan lama yang bilang "SEMUA diperbaiki" sudah DIRALAT) — dipulihkan + SEC-007 ditulis ulang dari nol. **Blokir rilis yang berlaku sejak 14 Nov HILANG:** `next build` sukses & `npx tsc --noEmit` **0 error**, pertama kali bersih sejak tanggal itu. Next lokal 16.4.3 → **16.4.6**. 54 tes penjaga exit 0 dengan uji-balik nyata. 🎯 **Terbukti tayang dengan cara terkuat: SEC-001 diukur HIDUP lalu MATI di produksi** — alamat `/api/comments` yang sama membalas **500** dengan cookie cacat sebelum deploy, **200** sesudahnya. SEC-006 diperiksa **nol video hilang**. Smoke test 9 alamat **200**. ✅ **SEC-003 ikut terbukti dari luar** — `guardAsal` berjalan sebelum cek login, jadi 401 vs 403 memisahkan "lolos penjaga" dari "ditolak penjaga": `drama`/`durasi`/`hardlink` semua **asal sah 401 · asal asing 403**, nol data berubah. 🔴 Sisa milik owner cuma: pastikan deployment `6de869d` **success** di Railway. 🔴 Gerbang tetap berhenti di `npm test` karena **5 tes merah milik pekerjaan Playly/beranda sesi lain** — dibuktikan sudah merah sebelum commit ini, jadi **bukan** regresi. ⏸️ Dua risiko sengaja TIDAK disentuh atas keputusan owner (repo `origin` **PUBLIK** sementara laporan audit 85 KB duduk di akar repo; `data/viewers.json` tak diabaikan `.gitignore`) — keduanya belum berbahaya hari ini, rinciannya di seksi `## 2026-11-23`. Sebelumnya: 2026-11-17 — kotak tempel tautan IMDb ditambahkan di panel pencarian per video. Belum di-commit, belum tayang. Di layar yang sedang terbuka, "A Princesa da Yakuza" ketemu kalau nama di kotak diganti jadi "Yakuza Princess" (tt10715446). Rincian di seksi `## 2026-11-17 — tempel tautan IMDb`. Sebelumnya: ✅ `ed8be85` TAYANG. Next.js 16.4.3 → 16.4.6 (tambal advisory). Railway dan Vercel success. Beranda dan `/discover` **200**. Catatan ini masih lokal. Sebelumnya: ✅ `16bd03f` TAYANG. Railway dan Vercel status success. `f47ccbb` gagal karena Supabase error saat prerender `/discover`; perbaikannya katalog publik tidak menghubungi database selama `next build`. Beranda dan `/discover` produksi **200**. Rincian di seksi `## 2026-11-17 — tayang gagal f47ccbb`. Sebelumnya: pola "judul dulu, isi menyusul" dipasang di seluruh menu admin. Menu dan judul IMDb tampil dulu; daftar yang sudah diambil tidak diunduh ulang selama 1 menit. Belum di-commit, belum tayang. Rincian di seksi `## 2026-11-17 — IMDb tidak layar kosong`. Sebelumnya: grafik Distribusi Kategori sekarang menghitung kategori film di panel IMDb, bukan 41 drama lama. Lencana "kategori aktif" bisa diklik untuk memuat ulang. Belum di-commit. Rincian di seksi `## 2026-11-17 — distribusi ikut film IMDb`. Sebelumnya: ✅ grafik Distribusi Kategori (`2b0ea47`) diminta deploy. Satu batang persentase. Rincian di seksi `## 2026-11-17 — distribusi kategori lengkap`. Rincian di seksi `## 2026-11-17 — distribusi kategori lengkap` di bawah. Sebelumnya: ✅ **RILIS `532bc38` → `225d519` TAYANG.** Panel admin Playly yang dirapikan (judul IMDb di atas, keterangan di ikon tanya, Perlu dicek, Cocokkan semua sekotak dengan Tebak kategori) sudah di Railway. Beranda produksi **200**. Rincian di seksi `## 2026-11-17 — rapikan panel Playly tayang` di bawah. Perbaikan login lokal masih belum di-commit. Sebelumnya: 2026-11-16 — isi otomatis link unduhan Google Drive & Mega digabung dari `feat/link-unduhan-provider-kualitas` (`58b1cf8`). Pemutar yang sudah tayang tidak ditimpa. Rincian di seksi `## 2026-11-16 — isi otomatis link unduhan` di bawah. Sebelumnya: 2026-11-15 — menu Genre dan Negara disamakan dengan Tahun (4 kolom, semua pilihan terlihat tanpa digulir). Rincian di seksi `## 2026-11-15` di bawah. Sebelumnya: ✅ **RILIS `f6b1c03` → `a09bfc8` TAYANG.** (1) Cache halaman penonton dibuang otomatis saat admin menyimpan + tombol **Segarkan cache** (kerja rekan). (2) Payload data IMDb ke browser admin **525 KB → 57 KB** (−89%) + ingatan "berkas siap" kini **bertahan melewati restart**. (3) Urutan video SE-SITUS ikut **tahun rilis**, bukan waktu upload — terbukti di produksi: 20 kartu teratas semuanya **2026**. Gerbang 5/5 (**2516 tes**), smoke test 10/10 = 200. ⏳ Manfaat (2) bagian ingatan baru terasa mulai rilis BERIKUTNYA. 🪤 **TIGA sesi menulis di folder yang sama; 22 berkas sesi audit masih menggantung — JANGAN `git add -A`.** Rinciannya di seksi `## 2026-11-14 (siang)` di bawah.
+**Terakhir diisi:** 2026-11-23 — 🎨 **`25957c7` DI-COMMIT, SENGAJA BELUM TAYANG** (owner: *"commit dan jangan tayang dulu karena masih banyak yang mau rubah"*). Tema **soft sage** + **logo Layarindo** + pop up **Filter Film** + menu bawah 4 tab penonton + panel menu katalog HP — 33 berkas, 2.259 baris, **nol perubahan di produksi**. ⚠️ Situs sementara punya DUA nama: logo bertuliskan Layarindo, tapi "DramaKu" masih di 66 berkas (judul halaman, metadata Google, kotak cari) — itu DISENGAJA atas permintaan owner, bukan terlewat. ⚠️ **4 commit lokal belum terdorong**; jangan push "sekalian". Rincian + 6 jebakan yang memakan waktu hari ini di seksi `## 2026-11-23 — 🎨 TEMA SOFT SAGE`. Sebelumnya: 🔐 ✅ **RILIS `13b8937` → `6de869d` TAYANG.** 5 perbaikan audit keamanan 14 Nov ternyata **HILANG dari kode** (kena `git reset --hard` ±15 Nov; catatan lama yang bilang "SEMUA diperbaiki" sudah DIRALAT) — dipulihkan + SEC-007 ditulis ulang dari nol. **Blokir rilis yang berlaku sejak 14 Nov HILANG:** `next build` sukses & `npx tsc --noEmit` **0 error**, pertama kali bersih sejak tanggal itu. Next lokal 16.4.3 → **16.4.6**. 54 tes penjaga exit 0 dengan uji-balik nyata. 🎯 **Terbukti tayang dengan cara terkuat: SEC-001 diukur HIDUP lalu MATI di produksi** — alamat `/api/comments` yang sama membalas **500** dengan cookie cacat sebelum deploy, **200** sesudahnya. SEC-006 diperiksa **nol video hilang**. Smoke test 9 alamat **200**. ✅ **SEC-003 ikut terbukti dari luar** — `guardAsal` berjalan sebelum cek login, jadi 401 vs 403 memisahkan "lolos penjaga" dari "ditolak penjaga": `drama`/`durasi`/`hardlink` semua **asal sah 401 · asal asing 403**, nol data berubah. 🔴 Sisa milik owner cuma: pastikan deployment `6de869d` **success** di Railway. 🔴 Gerbang tetap berhenti di `npm test` karena **5 tes merah milik pekerjaan Playly/beranda sesi lain** — dibuktikan sudah merah sebelum commit ini, jadi **bukan** regresi. ⏸️ Dua risiko sengaja TIDAK disentuh atas keputusan owner (repo `origin` **PUBLIK** sementara laporan audit 85 KB duduk di akar repo; `data/viewers.json` tak diabaikan `.gitignore`) — keduanya belum berbahaya hari ini, rinciannya di seksi `## 2026-11-23`. Sebelumnya: 2026-11-17 — kotak tempel tautan IMDb ditambahkan di panel pencarian per video. Belum di-commit, belum tayang. Di layar yang sedang terbuka, "A Princesa da Yakuza" ketemu kalau nama di kotak diganti jadi "Yakuza Princess" (tt10715446). Rincian di seksi `## 2026-11-17 — tempel tautan IMDb`. Sebelumnya: ✅ `ed8be85` TAYANG. Next.js 16.4.3 → 16.4.6 (tambal advisory). Railway dan Vercel success. Beranda dan `/discover` **200**. Catatan ini masih lokal. Sebelumnya: ✅ `16bd03f` TAYANG. Railway dan Vercel status success. `f47ccbb` gagal karena Supabase error saat prerender `/discover`; perbaikannya katalog publik tidak menghubungi database selama `next build`. Beranda dan `/discover` produksi **200**. Rincian di seksi `## 2026-11-17 — tayang gagal f47ccbb`. Sebelumnya: pola "judul dulu, isi menyusul" dipasang di seluruh menu admin. Menu dan judul IMDb tampil dulu; daftar yang sudah diambil tidak diunduh ulang selama 1 menit. Belum di-commit, belum tayang. Rincian di seksi `## 2026-11-17 — IMDb tidak layar kosong`. Sebelumnya: grafik Distribusi Kategori sekarang menghitung kategori film di panel IMDb, bukan 41 drama lama. Lencana "kategori aktif" bisa diklik untuk memuat ulang. Belum di-commit. Rincian di seksi `## 2026-11-17 — distribusi ikut film IMDb`. Sebelumnya: ✅ grafik Distribusi Kategori (`2b0ea47`) diminta deploy. Satu batang persentase. Rincian di seksi `## 2026-11-17 — distribusi kategori lengkap`. Rincian di seksi `## 2026-11-17 — distribusi kategori lengkap` di bawah. Sebelumnya: ✅ **RILIS `532bc38` → `225d519` TAYANG.** Panel admin Playly yang dirapikan (judul IMDb di atas, keterangan di ikon tanya, Perlu dicek, Cocokkan semua sekotak dengan Tebak kategori) sudah di Railway. Beranda produksi **200**. Rincian di seksi `## 2026-11-17 — rapikan panel Playly tayang` di bawah. Perbaikan login lokal masih belum di-commit. Sebelumnya: 2026-11-16 — isi otomatis link unduhan Google Drive & Mega digabung dari `feat/link-unduhan-provider-kualitas` (`58b1cf8`). Pemutar yang sudah tayang tidak ditimpa. Rincian di seksi `## 2026-11-16 — isi otomatis link unduhan` di bawah. Sebelumnya: 2026-11-15 — menu Genre dan Negara disamakan dengan Tahun (4 kolom, semua pilihan terlihat tanpa digulir). Rincian di seksi `## 2026-11-15` di bawah. Sebelumnya: ✅ **RILIS `f6b1c03` → `a09bfc8` TAYANG.** (1) Cache halaman penonton dibuang otomatis saat admin menyimpan + tombol **Segarkan cache** (kerja rekan). (2) Payload data IMDb ke browser admin **525 KB → 57 KB** (−89%) + ingatan "berkas siap" kini **bertahan melewati restart**. (3) Urutan video SE-SITUS ikut **tahun rilis**, bukan waktu upload — terbukti di produksi: 20 kartu teratas semuanya **2026**. Gerbang 5/5 (**2516 tes**), smoke test 10/10 = 200. ⏳ Manfaat (2) bagian ingatan baru terasa mulai rilis BERIKUTNYA. 🪤 **TIGA sesi menulis di folder yang sama; 22 berkas sesi audit masih menggantung — JANGAN `git add -A`.** Rinciannya di seksi `## 2026-11-14 (siang)` di bawah.
 
 **Rincian kontrol volume (putaran KETIGA):** owner menolak bentuk tombol `+` / `−` dan mengirim contoh gambar, jadi pengatur volume kini **garis geser tegak berbentuk kapsul** (jalur kuning + bulatan penggeser). Diukur di Chrome headless layar 393px: kapsul `x=345..381` **utuh di dalam layar**, geser jari atas→100% / tengah→50% / bawah→bisu, nol elemen diputar. Gerbang lolos 5/5 (2383 tes hijau). ✅ **Sudah TAYANG** dalam rilis `53fbc5c → a9ae869` malam itu juga.
 
 **Sebelumnya hari ini:** ✅ **`2ad015b` + `8d8c1ba` TAYANG.** Tata letak pemutar beres dalam tiga putaran permintaan owner: tombol **Eps turun ke baris paling bawah**, tombol **volume pindah ke sebelah angka durasi**, rail ikon kanan **diperkecil & dirapatkan** (36px/20px/jarak 8px), dan garis volume tegak **diganti tombol + / −** karena terukur berdiri di **x=391 pada layar 393px = di luar layar HP**. Rinciannya di seksi `## 2026-11-13` di bawah.
+
+---
+
+## 2026-11-23 — 🎨 TEMA SOFT SAGE + LOGO LAYARINDO di-commit (`25957c7`) — SENGAJA BELUM TAYANG
+
+> ### 🛑 BACA INI DULU
+>
+> **Owner: *"commit dan jangan tayang dulu karena masih banyak yang mau rubah"*.** Jadi `25957c7`
+> ADA di `main` lokal dan **NOL perubahan di produksi** — situs masih tampilan lama sepenuhnya.
+> ⚠️ Jangan push "sekalian" bersama pekerjaan lain: owner belum selesai menilai tampilannya.
+>
+> **Pulang ke mana kalau mau dibatalkan:** `main` sebelum commit ini = `4f233b0`.
+
+**Yang berubah (33 berkas, 2.259 baris):** panel pop up menu katalog di HP · badan `/` & `/beranda`
+jadi terang · palet **soft sage** sebagai design token · menu bawah jadi 4 tab penonton
+(Beranda · Filter · Film Terbaru · Bagikan, Profile dihapus) · **pop up "Filter Film"** ·
+panah geser strip genre (HP saja) · **logo Layarindo** + latar bar bergelombang.
+
+### 🪤 Enam jebakan yang memakan waktu hari ini — JANGAN diulang
+
+1. **Gambar SVG TIDAK bisa ditulis di dalam `className`.** SVG memuat spasi, dan spasi di
+   `className` memecah nama kelas — hiasannya tidak pernah tergambar, **tanpa satu pun error**.
+   Memakan dua percobaan gradasi DAN membuat panah dropdown pop up filter hilang diam-diam.
+   Semua gambar latar kini CSS sungguhan di `app/globals.css`.
+2. **`position: relative` di kelas hiasan MENIMPA `fixed` milik bar bawah.** Barnya lepas dari
+   dasar layar lalu mengalir ke ujung halaman — hilang dari pandangan, nol error. Kelas
+   `.sapuan-gelombang` karena itu SENGAJA tidak menyetel `position`.
+3. **Memilah latar logo dari KETERANGAN mustahil.** Terukur: gelombang hiasan di pojok banner
+   (0,34–0,37) justru LEBIH TERANG daripada sebagian badan logo. Yang memisahkan keduanya LETAK.
+4. **Memotong baris kecil logo dari seluruh lebar memenggal ekor huruf "y".** Lambang itu bidang
+   pekat sehingga tak pernah ada baris benar-benar kosong; yang terpilih "paling sedikit tinta".
+   Pencariannya wajib dibatasi ke AREA TULISAN dan syaratnya NOL tinta + ada tinta di atas & bawah.
+5. **Bar berubah dari gelap ke pucat = SETIAP `text-white` di dalamnya jadi 1,20:1.** Enam titik
+   tersebar di lima berkas. Karena itu latar & teks bar sekarang SEPASANG token
+   (`LATAR_BAR_MEREK` + `TEKS_BAR_MEREK`) — mengganti nada bar memaksa warna teksnya ikut.
+6. **Klik lewat `element.click()` TIDAK membuka dropdown/pop up Radix** (ia mendengarkan
+   pointerdown). Dan pencarian tombol wajib menyaring yang TERLIHAT — elemen `display:none`
+   berukuran 0x0 di titik (0,0), jadi kliknya mendarat di pojok kiri atas halaman. Dua kali
+   melaporkan "fitur rusak" padahal kodenya benar.
+
+### ⚠️ SITUS SEMENTARA PUNYA DUA NAMA — ini disengaja
+
+Logo di bar bertuliskan **Layarindo**, tapi **"DramaKu" masih dipakai di 66 berkas**: judul
+halaman, metadata Google, tulisan kotak cari, kaki situs. Owner: *"ganti logo dan nama di situ
+dulu, jangan diganti semua, saya mau lihat hasilnya dulu"*. Namanya tersimpan di SATU tempat
+(`SITE_NAME` di `lib/site.ts`), jadi kalau diteruskan perubahannya terkendali — **tapi itu
+menyentuh SEO dan butuh keputusan owner yang sadar**, bukan efek samping ganti logo.
+
+### 📐 Aturan kontras yang kini mengikat (JANGAN dilanggar diam-diam)
+
+Palet + aturan pasangannya ada di `app/globals.css`, angkanya DIHITUNG bukan ditebak:
+teks putih hanya di `sage-600` ke atas · teks gelap hanya di `sage-400` ke bawah ·
+**`sage-500` GAGAL di kedua arah (4,03 & 3,71) — jangan dipakai untuk teks normal.**
+Latar bar sekarang `#536859`, kontras teks putih **6,01:1** (diukur dari halaman yang BERJALAN,
+bukan dari nilai di CSS). Masih tersisa ±satu langkah sebelum menyentuh ambang 4,5:1; lewat itu
+teks bar harus dibalik jadi gelap — dan di sana logo Layarindo yang bertulisan terang jadi
+masalah lagi.
+
+### Bukti
+
+`npx tsc --noEmit` **0 error** · `npm test` **2761 lulus / 2767**. Enam merah tersisa ada di 5
+berkas panel Playly-admin milik **sesi lain** — dibuktikan sudah merah SEBELUM pekerjaan ini
+dengan mengembalikan berkas ke HEAD lalu menjalankan tes yang sama (kegagalannya identik).
+Tiap perubahan tampilan juga diukur dari halaman yang berjalan lewat Chrome.
+
+⭐ **PELAJARAN YANG PALING MAHAL HARI INI:** untuk urusan TAMPILAN, menebak dari tulisan lalu
+membangun selalu kalah dari membangun kecil lalu menunjukkan. Empat putaran gradasi dan enam
+putaran warna panel habis karena urutannya terbalik. Aturan ini sudah tertulis sejak 2026-11-21
+dan tetap dilanggar hari ini — kirim potret tiap SATU perubahan, jangan menumpuk lalu melapor.
+
+### Yang menggantung
+
+- [ ] Owner masih mau mengubah banyak hal — jangan anggap tampilan ini final.
+- [ ] 4 commit lokal belum terdorong: 2 catatan keamanan (`6de869d`, `a5c053d` — owner
+      bilang *"nanti saja"*), merge SEO rekan (`4f233b0`), dan tampilan ini (`25957c7`).
+- [ ] Pekerjaan sesi lain masih menggantung di folder yang sama: halaman login
+      (`FormMasuk.tsx`, `lib/tujuan-login.ts`), panel Playly IMDb, `LAPORAN-AKHIR-AUDIT-KEAMANAN.txt`,
+      `data/viewers.json`. **JANGAN `git add -A`.**
+
+---
+
+## 2026-11-23 — 📥 branch rekan `feat/seo-otomatis` (d6dc594) DITARIK ke main lokal — BELUM dirilis
+
+**Status: ada di `main` lokal, NOL perubahan di produksi.** Merge commit `4f233b0`. Titik pulang
+kalau mau dibatalkan: `main` sebelum merge = **`11c06ac`**.
+
+**Apa yang ditarik.** SEO otomatis per drama: generator template (tanpa API berbayar, cuma
+merangkai data drama jadi title ≤60 char, description 150–160, 5–10 keyword) + kotak hijau
+**SEO** di form admin dengan tombol **✨ Generate SEO Otomatis**. Disimpan di dokumen `app_data`
+key `seo` (pola sama `kualitas`/`unduhan`), **bukan** kolom tabel baru. 12 berkas, +798/−26 baris.
+Serah-terima rekan: `docs/serah-terima/2026-11-21-seo-otomatis-drama.md`.
+
+**Yang diperiksa sendiri di sesi ini (bukan percaya klaim rekan):**
+- Branch **segar**, bukan tertinggal: cabang dari `main` `6de869d`, cuma 1 commit, `main` 2 commit
+  di depan (dua-duanya commit docs). Simulasi `git merge-tree` → **0 penanda konflik**.
+- **Nol tabrakan** dengan 46 berkas yang sedang digarap (tampilan HP beranda) — dicek dengan
+  `comm -12` antara daftar berkas rekan dan daftar berkas belum-commit. Sesudah merge jumlahnya
+  tetap 46, utuh.
+- Pindai diff untuk rahasia (`service_role`, token `eyJ…`, `ADMIN_PASSWORD=`, kunci Supabase) →
+  **bersih**. Nol berkas `data/` dan nol `.env` terbawa — rekan benar-benar stage berkas fitur saja.
+- `npx vitest run tests/seo-drama.test.ts tests/admin-drama-route.test.ts` → **25 lulus, exit 0**.
+
+**Yang BELUM dikerjakan (sengaja, butuh izin owner):**
+1. **Belum di-push ke mana pun.** Push ke `origin main` = TOMBOL RILIS (AGENTS.md §5.5).
+   Aturan dual-push juga belum dijalankan.
+2. **Gerbang pra-rilis belum dijalankan** (`npm run gerbang`). ⚠️ Rekan melaporkan `npm test`
+   penuh = **7 gagal / 2749 lulus**, dan ketujuhnya **sudah merah di `main` murni** (dia uji-balik
+   dengan men-stash perubahan SEO → 6 berkas yang sama tetap gagal): `bagian-playly`,
+   `baris-atas-film`, `hero-gambar-besar`, `panel-playly-tahan-gangguan`, `playly-genre`,
+   `saring-video-admin`. Tak satu pun menyentuh SEO. **Klaim ini belum diverifikasi sendiri di
+   sesi ini** — kalau benar, gerbang pra-rilis `main` sedang merah dan itu memblokir rilis apa pun,
+   bukan cuma SEO.
+3. ❓ **Belum terbukti**: simpan `seo` ke `app_data` di **Supabase sungguhan**. Localhost rekan dan
+   seluruh tes jalan di mode berkas (`data/dramas.json`), jadi jalur Supabase-nya belum tersentuh.
+
+**Dampak yang owner perlu tahu sebelum setuju rilis.** Fitur ini **mengubah title + description
+semua ~42 halaman drama lama di Google** (URL/slug TIDAK berubah, jadi link lama tetap hidup).
+Contoh: dulu `X Sub Indo | DramaKu` → jadi `Nonton X (2026) Sub Indo Gratis | DramaKu`.
+
+**Temuan rekan yang masih menganggur (bukan bagian commit ini):** `data/adminpass.json` tidak ada
+di `.gitignore` padahal kembarannya `data/twofa.json` ada (`.gitignore:19`) — hash password admin
+lokal bisa ikut ter-commit. Rekan menutupnya cuma lewat `.git/info/exclude` di komputernya sendiri,
+jadi di komputer owner celahnya masih terbuka.
 
 ---
 

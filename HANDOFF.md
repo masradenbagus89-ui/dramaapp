@@ -104,6 +104,36 @@
 
 ---
 
+## 2026-11-24 (malam) — ✅ LANGKAH 1 NONTON BARENG SELESAI: 4 tabel SQL sudah ada di produksi
+
+**Dikerjakan AI atas perintah owner** (*"langkah 1 kamu kerjakan"*). Perintahnya:
+`python scripts/jalankan_sql_dramaapp.py supabase_migrations/2026-11-23_nonton_bareng.sql --jalankan`
+
+**Simulasi dulu, baru sungguhan.** Skrip itu punya mode simulasi: SQL tetap dieksekusi ke database sungguhan lalu di-ROLLBACK. Dijalankan lebih dulu dan lolos — jadi saat mode `--jalankan` ditekan, sudah terbukti SQL-nya tidak akan gagal di tengah.
+
+**Diverifikasi TERPISAH, bukan dari kata "DISIMPAN".** ⚠️ Potret yang dicetak skrip migrasi itu tentang tabel `dramas`, BUKAN tabel yang baru dibuat — jadi keluaran suksesnya tidak membuktikan apa pun soal hasilnya. Pemeriksaan sendiri lewat `pg_class`/`pg_policy`:
+
+| Tabel | RLS | Policy | Index | Isi |
+|---|---|---|---|---|
+| `dramaapp.watch_rooms` | MENYALA | 0 | 3 | 0 baris |
+| `dramaapp.watch_participants` | MENYALA | 0 | 4 | 0 baris |
+| `dramaapp.watch_messages` | MENYALA | 0 | 3 | 0 baris |
+| `dramaapp.watch_room_states` | MENYALA | 0 | 1 | 0 baris |
+
+**Nol policy itu DISENGAJA, bukan kelalaian:** RLS menyala tanpa policy = hanya `service_role` yang bisa menyentuh isinya. Kalau RLS sampai dimatikan, kunci anon yang memang ada di browser bisa membaca seluruh chat & daftar penonton.
+
+**Situs tidak terganggu** (diukur sesudahnya): `/` `/beranda` `/film` `/api/dramas` `/discover?q=ho` semua **200** di bawah 0,4 detik. `/api/watch-room` masih 404 `{"error":"Fitur Nonton Bareng sedang tidak aktif."}` — BENAR, karena env `NOBAR_*` memang belum diisi.
+
+🔴 **Sisa 3 langkah, semuanya di panel Railway dan hanya bisa owner:**
+2. Service baru dari repo yang sama → **Root Directory `nobar-server`** · `RAILPACK_NODE_VERSION=22` · **Replicas 1** (servernya menyimpan keadaan Room di memori; 2 salinan = penonton bisa masuk ke salinan berbeda dan tak saling melihat).
+3. Isi 4 env di service itu (`NOBAR_SECRET` ≥32 huruf · `NOBAR_ALLOWED_ORIGINS` · `SUPABASE_URL` · `SUPABASE_SERVICE_ROLE_KEY`) → **Generate Domain** → catat alamatnya.
+4. Di service **situs**: `NOBAR_SECRET` (sama persis) + `NOBAR_PUBLIC_URL` → **Redeploy**. Redeploy WAJIB: `NOBAR_PUBLIC_URL` dibaca saat BUILD untuk daftar CSP; tanpa build ulang, browser memblokir sambungan walau env sudah terisi.
+
+**Rollback langkah 1** (menghapus semua data Nonton Bareng, situs utama tidak terpengaruh):
+`drop table if exists dramaapp.watch_room_states, dramaapp.watch_messages, dramaapp.watch_participants, dramaapp.watch_rooms;`
+
+---
+
 ## 2026-11-24 (malam) — 🎬 "Nonton Bareng" & "Rekomendasi" jadi seksi FILM — 1 commit MENUNGGU RILIS
 
 **Permintaan owner:** *"nonton bareng, rekomendasi kamu isi dengan film saja jangan drama lagi sedangkan drama kamu masukan ke drama asia"*.

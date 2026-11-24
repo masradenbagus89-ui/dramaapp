@@ -210,6 +210,44 @@ kemunculan hex-nya).
 
 ---
 
+### Putaran 5 — LATAR: cahaya pindah ke POJOK (`6e65661`), inilah yang owner maksud
+
+Owner menyandingkan sendiri mockup dan situs lalu berkata *"untuk backgroundnya
+belum sesuai warnanya, kamu perhatikan lagi detailnya"*. Dia benar, dan cara
+menemukannya layak diulang: **petakan LATAR mockup di beberapa pita yang pasti
+bukan kartu**, lalu lihat kecerahan merahnya sebagai angka.
+
+| pita | x34 | x76 | x118 | x160 | x202 | x244 | x286 | x328 |
+|---|---|---|---|---|---|---|---|---|
+| bawah tab (y~110) | **173** | **116** | 59 | 63 | 64 | 61 | 67 | 83 |
+| tengah (y~290..440) | 55 | 52 | 56 | 51 | 47 | 78 | 85 | 80 |
+| bawah kartu-2 (y~660) | **197** | **164** | 105 | 67 | 75 | 96 | **151** | **189** |
+
+**Cahayanya menumpuk di POJOK — kiri-atas dan DUA pojok bawah — sementara
+tengahnya justru gelap.** Versi sebelumnya menaruh sapuan ketiga di
+TENGAH-BAWAH (`at 50% 100%`), dan di sana ia **tertutup bar menu** yang
+menempel di dasar layar: terukur merah **48** di tempat yang mockup-nya **197**.
+Itu sebabnya halaman terbaca kusam padahal lima titik ukur lama bilang "cocok".
+
+**Disetel lewat 11 percobaan yang disuntikkan ke browser lalu DIUKUR.** Selisih
+profil tepi (kiri & kanan × atas/tengah/bawah) terhadap mockup, skala 0–255:
+`90 → 41 → 22 → 13 → 6 → 4`. Diverifikasi ulang pada build sungguhan: **4**.
+
+🪤 **Verifikasi pertama melaporkan 32 dan nyaris membuat saya menyetel ulang
+percuma.** Sebabnya potret diambil dengan `chrome --headless --window-size=390`
+— dan itu **tidak** menentukan lebar yang dipakai halaman (terukur
+`innerWidth` **500**), jadi "tepi kanan" yang saya ukur bukan tepi kanan
+halaman. Jebakan ini sudah dicatat pagi tadi dan **menggigit lagi sore ini**.
+Penawarnya sekarang jadi alat tetap: `scratchpad/potret-cdp.mjs` memakai
+`Emulation.setDeviceMetricsOverride` DAN **mencetak `innerWidth`** tiap kali,
+supaya kebohongannya kelihatan. **Jangan memotret untuk pengukuran dengan
+`--window-size`.**
+
+Penjaga `tests/latar-bercahaya.test.ts` diperbarui: 3 → 6 sapuan, DAN dua
+sapuan terkuat dipatok berada di pojok bawah (`at 0% 88%`, `at 100% 88%`) —
+bukan sekadar menaikkan angka, melainkan mengunci pelajaran kenapa versi
+tengah-bawah gagal.
+
 ### Putaran 3 & 4 — bentuk, lalu kembali ke warna
 
 **Owner minta bentuk ikut mockup**, lalu sesudah melihat daftar sisanya berkata

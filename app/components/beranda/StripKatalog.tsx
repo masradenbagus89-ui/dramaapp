@@ -58,7 +58,7 @@ export default function StripKatalog({ items, activeHref }: Props) {
        `sage-100` + teks `sage-900` = kontras 12,51:1 (dihitung, lihat palet di
        app/globals.css). Chip aktif dibalik jadi `sage-700` + teks putih =
        7,58:1. Keduanya jauh di atas ambang 4,5:1. */
-    <div className="border-b border-emas-700/30 bg-gelap-950">
+    <div className="border-b border-emas-700/30">
       <div className={cn(SHELL, "flex items-center gap-2 px-2 md:px-4")}>
         {/* Digeser ke samping kalau tak muat (layar sempit), bukan membungkus:
             daftar ini sengaja dijaga pendek oleh owner supaya muat satu baris di

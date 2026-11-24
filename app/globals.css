@@ -172,6 +172,43 @@
   background-color: #4b0110;
 }
 
+/* ============================================================
+   CAHAYA LATAR HALAMAN — tiga sapuan oranye di atas dasar anggur.
+
+   Owner 2026-11-24, sesudah melihat tiga kolom berdampingan (mockup tanpa
+   bingkai · situs rata · situs bercahaya) dan memilih yang bercahaya.
+
+   KENAPA PERLU, padahal warna di 5 titik ukur SUDAH cocok dengan mockup:
+   warna yang sama di titik-titik terpisah TIDAK menghasilkan kesan yang sama.
+   Mockup punya cahaya yang membuat halamannya terbaca "menyala"; versi rata
+   dengan angka identik terbaca kusam. Ini terbukti dua kali hari ini — owner
+   menolak versi rata walau angkanya cocok.
+
+   🪤 SEMPAT SAYA SIMPULKAN KELIRU bahwa cahaya oranye di mockup itu cuma
+   BINGKAI HP (terukur ±28px tiap sisi, memang bukan bagian halaman). Sesudah
+   bingkainya dipotong dan dibandingkan ulang, layarnya TETAP lebih hangat
+   daripada versi rata. Pelajarannya: membuang pengganggu dari pengukuran itu
+   benar, tapi jangan sekalian membuang gejalanya — bandingkan ULANG sesudah
+   dibersihkan, jangan berhenti di "berarti tidak ada apa-apa".
+
+   `background-attachment: fixed` dipilih BUKAN sekadar gaya: cahayanya jadi
+   terpaku ke layar, bukan ke tinggi halaman. Dua akibat yang dua-duanya
+   dibutuhkan — (a) halaman panjang tidak membuat cahayanya merenggang jadi
+   pita pudar, dan (b) elemen bersarang yang memakai kelas ini SEJAJAR
+   sendiri, jadi tidak ada sambungan yang terlihat.
+
+   Pasangannya: `bg-gelap-950` tetap dipasang berdampingan di `BADAN_SITUS`
+   sebagai warna dasar — kelas ini hanya mengatur `background-image`, jadi
+   keduanya tidak berebut properti yang sama.
+   ============================================================ */
+.latar-bercahaya {
+  background-image:
+    radial-gradient(70% 38% at 0% 22%, rgba(226, 96, 20, 0.42), rgba(226, 96, 20, 0) 70%),
+    radial-gradient(70% 38% at 100% 62%, rgba(226, 96, 20, 0.38), rgba(226, 96, 20, 0) 70%),
+    radial-gradient(90% 32% at 50% 100%, rgba(205, 90, 17, 0.3), rgba(205, 90, 17, 0) 72%);
+  background-attachment: fixed;
+}
+
 /* MENU BAWAH lebih GELAP daripada bar atas — di mockup owner keduanya memang
    berbeda: bar atas terukur #520112, menu bawah #2c0409 (nisbah 0,54).
    Dibuat dengan MEREDUPKAN gambar yang sama, bukan membuat gambar kedua:

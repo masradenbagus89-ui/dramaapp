@@ -28,10 +28,20 @@ export const SHELL = "shell-wide mx-auto px-4 md:px-6";
  * ISINYA MENENTUKAN TEMA, dan dua kemungkinannya HARUS dipasang utuh —
  * mencampurnya adalah kerusakan paling senyap di seluruh berkas ini (nol error,
  * build hijau, halaman 200, cuma teks yang hilang dari layar):
- *   - TEMA GELAP (sekarang) = `"bg-gelap-950"` SAJA, tanpa `tema-terang`.
- *     Seluruh komponen memang sudah berwarna dasar gelap; varian `terang:`
- *     cuma penimpanya. Begitu saklarnya tidak ada, semuanya pulang sendiri ke
- *     warna dasar itu — nol kelas yang perlu disentuh.
+ *   - TEMA GELAP (sekarang) = `"bg-gelap-950 latar-bercahaya"`, tanpa
+ *     `tema-terang`. Seluruh komponen memang sudah berwarna dasar gelap;
+ *     varian `terang:` cuma penimpanya. Begitu saklarnya tidak ada, semuanya
+ *     pulang sendiri ke warna dasar itu — nol kelas yang perlu disentuh.
+ *     ⚠️ `latar-bercahaya` (app/globals.css) DITAMBAHKAN 2026-11-24 dan
+ *     bukan hiasan yang bisa dilepas begitu saja: owner memilihnya setelah
+ *     MENOLAK versi rata yang angka warnanya sudah cocok dengan mockup. Ia
+ *     cuma mengatur `background-image`, jadi tidak berebut properti dengan
+ *     `bg-gelap-950` di sebelahnya — keduanya wajib berpasangan.
+ *     🪤 Cahayanya TERTUTUP kalau ada anak yang mengecat latar PEKAT di
+ *     atasnya. Tiga seksi sudah dibuat tembus karena itu (`FeaturedRow`,
+ *     `TabKatalogTampilan`, `StripKatalog`) — kalau nanti ada yang
+ *     "mengembalikan" `bg-gelap-950` ke sana, cahayanya hilang dari sebagian
+ *     halaman tanpa satu pun error.
  *   - TEMA TERANG = `"tema-terang bg-zinc-100"`. `tema-terang` saklarnya
  *     (@custom-variant di app/globals.css); tanpa saklar itu `terang:text-...`
  *     DIAM saja, dan `bg-zinc-100` tanpa saklar = tulisan putih di atas putih.
@@ -55,7 +65,7 @@ export const SHELL = "shell-wide mx-auto px-4 md:px-6";
  * disentuh owner (pergantian hari ini cuma soal halaman katalog yang dia
  * lihat). Kalau nanti diminta seragam gelap, yang diubah blok itu.
  */
-export const BADAN_SITUS = "bg-gelap-950";
+export const BADAN_SITUS = "bg-gelap-950 latar-bercahaya";
 
 /**
  * LATAR BAR ATAS — warna identitas situs, dipakai `SearchBar`.

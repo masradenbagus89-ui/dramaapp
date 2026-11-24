@@ -188,7 +188,7 @@ export default function TabKatalogTampilan({
   };
 
   return (
-    <section className="bg-gelap-950 py-3 terang:bg-zinc-100">
+    <section className="py-3 terang:bg-zinc-100">
       {/* ===== Deret tab + tombol FILTER ===== */}
       {/* ===== Deret tab + tombol FILTER, dalam SATU kotak berpembatas =====
              Owner 2026-09-26: "aku mau jadi satu shadow ... seperti LK21 (jadi

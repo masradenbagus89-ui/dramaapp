@@ -210,6 +210,62 @@ kemunculan hex-nya).
 
 ---
 
+### Putaran 3 & 4 — bentuk, lalu kembali ke warna
+
+**Owner minta bentuk ikut mockup**, lalu sesudah melihat daftar sisanya berkata
+**"kita fokus di warna"**. Jadi yang dikerjakan: bentuk yang nol mengubah
+fungsi (`4ac39b0`), lalu kembali menyisir warna (`0303916`).
+
+| Commit | Isi |
+|---|---|
+| `4ac39b0` | sudut kartu `rounded-sm`→`rounded-xl` · cincin kartu dihangatkan · tombol jadi KAPSUL + ikon ▶ · **45 kelas `amber-*` Tailwind → token `emas-*`** |
+| `0303916` | baris genre pakai nada bar (`bg-gelap-800`) — di mockup bar & baris di bawahnya SATU bidang |
+
+**45 kelas amber itu temuan warna, bukan bentuk.** Tailwind `amber-400` =
+`#fbbf24` (KUNING), token `emas-400` = `#fdb239` (oranye). Dipakai bintang
+rating, tautan "Lihat semua", cincin fokus — dan ia TIDAK ikut berubah saat
+tema diganti. Penyakitnya sama persis dengan `bg-black` kemarin: warna mentah
+di luar token. ⚠️ Varian `terang:` sengaja TIDAK disentuh — di tema terang
+`--color-amber-*` memang DIBALIK di globals.css.
+
+### 🪤 TIGA kali salah ukur hari ini — semuanya KOORDINAT, bukan warna
+
+1. **Satu titik per bagian.** Kebetulan kena bagian tergelap dari bidang
+   bergradasi, lalu disimpulkan "cocok". Baris genre terukur cocok padahal
+   seluruh bidangnya `#2a0208` vs mockup `#4f000f`.
+2. **Rentang baris tab tumpang-tindih dengan POSTER kartu.** Terukur coklat
+   `#463319`, dan saya nyaris mencoklatkan baris itu di kode.
+3. **Koordinat tetap meleset saat tinggi potret berubah** 760 → 800 px; menu
+   bawah terbaca "BEDA 35" padahal sedang mengukur area kartu.
+
+**Penawarnya, pakai ini lain kali:** cari dulu batas tiap baris lewat IRIS
+TEGAK di kolom KOSONG (mis. x=300), baru ukur bidangnya; hitung koordinat dari
+DASAR gambar kalau tingginya bisa berubah; dan **potong bagian atas kedua
+gambar lalu perbesar 2x berdampingan** — pada ukuran asli 390px pita gelap di
+bawah logo tidak kelihatan, pada 2x ia langsung jelas.
+
+### Yang sudah dipastikan TIDAK perlu diubah lagi
+
+- **Kekuatan cahaya latar.** Empat tingkat diuji lewat suntikan CSS, diukur
+  dengan jarak SEBARAN warna ke mockup: tanpa cahaya 0,4241 · seperempat
+  0,3604 · setengah **0,3365** · tigaperempat 0,3384 · sekarang 0,3423.
+  Setengah memang paling dekat, tapi selisihnya 1,7% — di bawah derau yang
+  ditimbulkan poster yang isinya memang beda. Dibiarkan seperti yang DIPILIH
+  owner dari pratinjau.
+- **Warna dominan `#500010` 35% (kita) vs 14% (mockup).** Sempat terbaca
+  seperti "halaman kita terlalu terang". Dipetakan: piksel itu ada di BAR ATAS
+  dan AREA CHIP — dua-duanya warnanya memang cocok. Porsinya beda karena chip
+  kita 5 buah membungkus 3 baris, mockup 3 buah satu baris. Itu LUAS BIDANG,
+  bukan warna.
+
+### Lima hal yang owner putuskan TIDAK dikerjakan
+
+Judul strip ke tengah (membatalkan permintaannya sendiri 23 Nov) · baris ke-2
+jadi tab Film/Serial/Anime (mengubah fungsi) · menu bawah jadi
+Cari/Kategori/Profil (mengubah fungsi) · lambang mahkota · chip 5 → 3.
+⚠️ Berkas `Downloads/Golden Crowned D Media Emblem.png` BUKAN jawaban untuk
+logo mahkota: hurufnya **DK = DramaKu**, nama lama yang baru saja diganti.
+
 ### Lanjutan sore — owner dua kali bilang "belum sama persis", dan dua kali dia benar
 
 **Putaran 1 — cahaya.** Lima titik ukur saya menyatakan cocok, owner bilang

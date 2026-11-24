@@ -104,6 +104,16 @@
 
 ---
 
+## 2026-11-24 (malam) — ✅ GERBANG LOLOS 5/5, 10 commit SIAP RILIS (tinggal push owner)
+
+**Gerbang dijalankan ulang dari awal atas `25f3c8e`:** build ✓ · `tsc` ✓ · **2.839 tes NOL merah** (202 berkas) · **52 berkas di antrean, nol berkas rahasia** ✓. Rincian + resep worktree-nya di `antrean-deploy.md` seksi `✅ 2026-11-24 (malam)`.
+
+**Dua commit baru sesi ini:** `cd83459` (bar berhenti memotong daftar saran pencarian) + `25f3c8e` (penjaga `hero-gambar-besar` dibuat tahan CRLF).
+
+🔴 **Sisa milik owner:** `git push dramaku main` → `git push origin main` → smoke test di situs sungguhan. AI diblokir pengaman Claude Code untuk push ke `main`.
+
+---
+
 ## 2026-11-24 (malam) — 📥 branch rekan `feat/nonton-bareng` (dcbede9) DITARIK ke main lokal — BELUM dirilis
 
 **Perintah owner:** *"tarik Branch yusup kerjakan feat/nonton-bareng (dcbede9)"*. Sudah digabung sebagai merge commit **`6fb7852`** di `main` lokal. **NOL push** — ini belum tayang.

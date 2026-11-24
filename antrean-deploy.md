@@ -25,6 +25,35 @@
 
 **Terakhir dicek:** 2026-11-24 (malam). ✅ **RILIS `6de869d` → `72fb308` TAYANG** — owner memberi izin *"push dan rilis"*, jadi perintah tahan sejak 2026-11-23 DICABUT. **35 commit · 115 berkas** (nama situs Layarindo · tema anggur+amber dari mockup owner · cahaya latar · bentuk kartu/tombol/chip). `dramaku` dulu, lalu `origin` — keduanya `→ 72fb308`, **antrean KOSONG**. Gerbang dijalankan ULANG tepat sebelum push: 5/5 hijau, 2828 tes, nol berkas rahasia. Nol prasyarat SQL/env. 🎯 Bukti tayang diukur di situs sungguhan: `DramaKu` **0×** & `Layarindo` **24×** di HTML produksi, warna emas lama `f5a524` **0×** di CSS, 8 alamat **200**, katalog **66 judul**, halaman nonton **200**. 🔴 Sisa milik owner: pastikan deployment `72fb308` **success** di Railway + lihat sendiri di HP. Riwayat sebelumnya di bawah.
 
+### ✅ 2026-11-24 (malam) — GERBANG LOLOS 5/5 atas `25f3c8e` — SIAP DIRILIS, tinggal push
+
+| Remote | Keadaan | Catatan |
+|---|---|---|
+| `origin` (produksi) | tertinggal **10 commit** dari `b7eb49f` | tombol rilis, **belum ditekan** |
+| `dramaku` (cermin) | tertinggal **10 commit** | didahulukan, tidak merilis apa pun |
+
+**Hasil gerbang — dijalankan ULANG dari awal atas `25f3c8e`, bukan hasil putaran sebelumnya:**
+
+| Langkah | Hasil |
+|---|---|
+| 1. hapus `.next` | ✓ |
+| 2. `npm run build` | ✓ |
+| 3. `npx tsc --noEmit` | ✓ |
+| 4. `npm test` | ✓ **202 berkas / 2.839 tes, NOL merah** |
+| 5. pindai berkas rahasia | ✓ **52 berkas di antrean, nol berkas rahasia** |
+
+**Isi antrean (10 commit):** perbaikan dropdown pencarian (`cd83459`) · penjaga tahan-CRLF (`25f3c8e`) · **Nonton Bareng** kerja rekan (`6fb7852` + `dcbede9`) · menu "Lainnya" + Dracin/K-Drama + lima seksi beranda (sesi lain).
+
+🪤 **Gerbang dijalankan di `git worktree` terpisah, BUKAN di folder kerja.** Tiga alasan, ketiganya terbukti perlu: (a) `localhost:3914` owner tetap hidup — langkah 1 menghapus `.next`; (b) kerja sesi lain yang belum di-commit tidak ikut terbangun; (c) jebakan `data/playly.json` otomatis terhindar karena berkas itu gitignored dan tidak ada di checkout baru. Resepnya: `git worktree add --detach <dir> <commit>` → robocopy `node_modules` (**junction TIDAK bisa** — Turbopack menolak menyeberanginya: "Could not find the Next.js package") → salin `.env.local` → `npm run gerbang` → hapus salinan + `.env.local`-nya.
+
+🪤 **Putaran pertama sempat 1 merah PALSU** (`hero-gambar-besar`): bukan kode, melainkan CRLF di checkout baru. Diperbaiki di `25f3c8e`. Jangan simpulkan kode rusak dari tes pembaca-teks yang merah hanya di checkout baru — ukur dulu akhir barisnya.
+
+🔴 **Dua langkah tersisa, keduanya milik owner:** `git push dramaku main` lalu `git push origin main`, kemudian smoke test di situs sungguhan. Push dari sesi AI **diblokir pengaman Claude Code**, dan bentuk `<branch>:main` juga dilarang aturan 5.
+
+ℹ️ **Nonton Bareng ikut terbawa tapi tetap MATI** sampai owner menjalankan SQL + mengisi env `NOBAR_*`. Diverifikasi di kode: tanpa env, tombolnya tidak digambar dan route-nya 404 + `no-store`. Aman tayang duluan.
+
+---
+
 ### ⏸️ 2026-11-24 (malam) — merge `feat/nonton-bareng` MASUK antrean, TERKUNCI di SQL + env owner
 
 | Remote | Keadaan | Catatan |

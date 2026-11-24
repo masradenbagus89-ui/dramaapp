@@ -104,6 +104,18 @@
 
 ---
 
+## 2026-11-24 (malam) — ✅ RILIS `c426154` TAYANG — pencarian beres, antrean kosong
+
+**11 commit tayang** (`b7eb49f` → `c426154`), cermin dulu lalu produksi, atas izin eksplisit owner. Gerbang 5/5 hijau sebelum push (2.839 tes, nol merah).
+
+**Bukti diukur di situs sungguhan:** CSS produksi kini `.sapuan-gelombang{isolation:isolate}` · ketik "sp" di `/beranda` → **6 dari 6** baris saran terlihat (sebelumnya 0 dari 6) · `/api/watch-room` → 404 `{"error":"Fitur Nonton Bareng sedang tidak aktif."}` · 9 alamat **200** · katalog **41 judul**.
+
+🪤 Dua jebakan pemantauan + satu 500 palsu (cold start Supabase) dicatat lengkap di `antrean-deploy.md` seksi `✅ 2026-11-24 (malam)`. Ringkasnya: CSS Next ada di `/_next/static/chunks/`, deploy Railway bisa ~10 menit, dan 500 di menit-menit pertama belum tentu rilisnya.
+
+🔴 **Sisa owner:** pastikan deployment success di Railway; **Nonton Bareng masih mati** sampai SQL + env `NOBAR_*` diisi.
+
+---
+
 ## 2026-11-24 (malam) — ✅ GERBANG LOLOS 5/5, 10 commit SIAP RILIS (tinggal push owner)
 
 **Gerbang dijalankan ulang dari awal atas `25f3c8e`:** build ✓ · `tsc` ✓ · **2.839 tes NOL merah** (202 berkas) · **52 berkas di antrean, nol berkas rahasia** ✓. Rincian + resep worktree-nya di `antrean-deploy.md` seksi `✅ 2026-11-24 (malam)`.

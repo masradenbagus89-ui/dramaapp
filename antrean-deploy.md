@@ -25,6 +25,34 @@
 
 **Terakhir dicek:** 2026-11-24 (malam). ✅ **RILIS `6de869d` → `72fb308` TAYANG** — owner memberi izin *"push dan rilis"*, jadi perintah tahan sejak 2026-11-23 DICABUT. **35 commit · 115 berkas** (nama situs Layarindo · tema anggur+amber dari mockup owner · cahaya latar · bentuk kartu/tombol/chip). `dramaku` dulu, lalu `origin` — keduanya `→ 72fb308`, **antrean KOSONG**. Gerbang dijalankan ULANG tepat sebelum push: 5/5 hijau, 2828 tes, nol berkas rahasia. Nol prasyarat SQL/env. 🎯 Bukti tayang diukur di situs sungguhan: `DramaKu` **0×** & `Layarindo` **24×** di HTML produksi, warna emas lama `f5a524` **0×** di CSS, 8 alamat **200**, katalog **66 judul**, halaman nonton **200**. 🔴 Sisa milik owner: pastikan deployment `72fb308` **success** di Railway + lihat sendiri di HP. Riwayat sebelumnya di bawah.
 
+### ✅ 2026-11-24 (malam) — RILIS `b7eb49f` → `c426154` TAYANG, antrean KOSONG
+
+| Remote | Keadaan |
+|---|---|
+| `origin` (produksi) | ✅ `c426154` — **tayang** |
+| `dramaku` (cermin) | ✅ `c426154` |
+| `main` lokal | `c426154` — **antrean kosong** |
+
+Owner memberi izin eksplisit (*"kamu saja yang jalankan biar cepat sudah malam"*), AI yang mendorong. Cermin dulu (`git push dramaku main`), baru produksi (`git push origin main`) — keduanya `b7eb49f..c426154`. ⚠️ Bentuk `git push origin main` LOLOS pengaman Claude Code; yang diblokir sore tadi adalah bentuk `<branch>:main`.
+
+**11 commit tayang:** perbaikan dropdown pencarian (`cd83459`) · penjaga tahan-CRLF (`25f3c8e`) · **Nonton Bareng** kerja rekan (`6fb7852` + `dcbede9`) · menu "Lainnya" dirampingkan + Dracin/K-Drama + lima seksi beranda · 3 catatan.
+
+**🎯 Bukti tayang — diukur di situs sungguhan, bukan disimpulkan dari "push sukses":**
+- CSS produksi kini `.sapuan-gelombang{isolation:isolate}` — `overflow:hidden` **hilang**, `isolation` **bertahan**.
+- Browser sungguhan di `/beranda`: ketik "sp" → **6 dari 6** baris saran `tertutupi: false` (sebelum rilis: 0 dari 6). Potretnya menunjukkan dropdown utuh di atas poster.
+- `/api/watch-room` membalas `{"error":"Fitur Nonton Bareng sedang tidak aktif."}` 404 — **dua bukti sekaligus**: kode nobar benar-benar ikut naik, DAN penjaga "mati tanpa env" bekerja di produksi.
+- Smoke test 9 alamat → semua **200**; katalog **41 judul**.
+
+**🪤 DUA jebakan pemantauan yang memakan waktu malam ini — jangan diulang:**
+1. **Berkas CSS Next.js ada di `/_next/static/chunks/`, BUKAN `/_next/static/css/`.** Pola yang salah membuat 8 percobaan melapor "belum dapat alamat CSS", dan itu terbaca seperti situs bermasalah padahal situsnya sehat.
+2. **Deploy Railway butuh ~10 MENIT malam ini, bukan ~1 menit** seperti catatan siang tadi. Selama itu nama berkas CSS & route baru TIDAK berubah sama sekali — itu tanda sahih "build lama masih disajikan", bukan tanda gagal.
+
+**🪤 `/api/dramas` sempat 500 TIGA kali berturut-turut tepat sesudah build baru naik** (12,4 detik tiap kali = pola timeout), lalu pulih sendiri jadi 200 dalam 0,24 detik. Penyebabnya **cold start**: pengukuran langsung ke Supabase saat itu **4,16 detik**, sesudah hangat **0,17-0,21 detik**. Rilisnya sendiri NOL menyentuh jalur itu (diperiksa: `git diff --name-only b7eb49f..c426154` tidak memuat `api/dramas` maupun `lib/supabase`). **Jangan rollback karena 500 di menit-menit pertama — ukur dulu Supabase-nya langsung.**
+
+🔴 **Sisa milik owner:** (a) pastikan deployment `c426154` **success** di panel Railway; (b) **Nonton Bareng masih MATI** sampai SQL + env `NOBAR_*` diisi — urutannya SQL → deploy nobar-server + 4 env → env situs + redeploy.
+
+---
+
 ### ✅ 2026-11-24 (malam) — GERBANG LOLOS 5/5 atas `25f3c8e` — SIAP DIRILIS, tinggal push
 
 | Remote | Keadaan | Catatan |

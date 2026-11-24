@@ -63,7 +63,12 @@ describe("badan situs: saklar tema dan latarnya tidak boleh berbeda arah", () =>
    * arah teks.
    */
   const LATAR_TERANG = /\bbg-(white|zinc-(50|100|200)|stone-(50|100)|neutral-(50|100))\b/;
-  const LATAR_GELAP = /\bbg-(black|gelap-\d{3}|zinc-(900|950)|stone-(900|950)|neutral-(900|950))\b/;
+  // `latar` = token LATAR HALAMAN (app/globals.css), ditambahkan 2026-11-24.
+  // Ia memang lebih TERANG daripada `gelap-950` — owner memilihnya supaya
+  // halaman terasa hidup seperti mockup — tapi ARAHNYA tetap gelap: teks putih
+  // di atasnya 15,82:1. Yang dijaga tes ini arahnya, bukan nadanya.
+  const LATAR_GELAP =
+    /\bbg-(black|latar|gelap-\d{3}|zinc-(900|950)|stone-(900|950)|neutral-(900|950))\b/;
 
   it("BADAN_SITUS membawa latarnya sendiri", () => {
     // Tanpa `bg-*`, `<body className="bg-black">` (app/layout.tsx) menembus

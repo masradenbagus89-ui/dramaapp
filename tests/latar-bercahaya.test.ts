@@ -35,7 +35,11 @@ describe("cahaya latar halaman penonton", () => {
     // Keduanya WAJIB ada: `latar-bercahaya` cuma mengatur background-image,
     // jadi tanpa warna dasar halaman jadi tembus ke latar <body>.
     expect(BADAN_SITUS).toContain("latar-bercahaya");
-    expect(BADAN_SITUS).toMatch(/\bbg-gelap-\d+\b/);
+    // `bg-latar`, BUKAN `bg-gelap-950`: latar HALAMAN sengaja lebih terang
+    // daripada bar & kaki situs. Owner memilihnya dari 4 tingkat terang yang
+    // dipotret berdampingan dengan mockup (2026-11-24 sore), sesudah lima
+    // putaran menyamakan ANGKA warna gagal memuaskan.
+    expect(BADAN_SITUS).toContain("bg-latar");
   });
 
   it("kelasnya benar-benar didefinisikan, dan isinya memang gradasi", () => {

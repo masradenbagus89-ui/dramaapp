@@ -84,7 +84,34 @@
 
   /* Teks keterangan — abu HANGAT kemerahan, diukur dari subjudul di mockup
      (inti huruf #c0b4b2). Bukan krem kekuningan seperti tema emas. */
-  --color-redup: #c0aeac;
+  /* ⚠️ DITERANGKAN 2026-11-24 sore dari #c0aeac (nada yang diukur dari
+     mockup) karena latar halaman ikut diterangkan atas pilihan owner. Di atas
+     latar baru, #c0aeac turun ke 4,32:1 — di bawah ambang baca 4,5:1. Nilai
+     ini 4,92:1. Jadi menyimpang dari mockup DI SINI disengaja: terbaca menang
+     atas sama-persis. */
+  --color-redup: #cbbab8;
+
+  /*
+   * LATAR HALAMAN — SENGAJA LEBIH TERANG daripada `gelap-950`, dan ini bukan
+   * ketidakkonsistenan.
+   *
+   * Owner memilihnya dari empat tingkat terang yang dipotret berdampingan
+   * dengan mockup (2026-11-24 sore), setelah LIMA putaran menyamakan angka
+   * warna gagal memuaskan: *"yang saya minta terlihat lebih hidup dan terang
+   * sedangkan yang kamu buat cenderung gelap"*.
+   *
+   * ⚠️ KENAPA ANGKA WARNA YANG SAMA TIDAK MENGHASILKAN KESAN YANG SAMA —
+   * ini inti pelajarannya: kartu di mockup LEBIH KECIL dan BERJARAK, jadi
+   * latarnya banyak terlihat di sela-sela. Kartu kita lebih besar dan rapat,
+   * jadi latar dengan angka identik pun tampak lebih gelap karena yang
+   * terlihat lebih sedikit. Supaya TERASA sama, latarnya memang harus lebih
+   * terang dari aslinya. Jangan "dibetulkan" kembali ke angka mockup.
+   *
+   * Dipakai `BADAN_SITUS` (9 halaman penonton) berpasangan dengan
+   * `.latar-bercahaya`. `gelap-950` TETAP dipakai bar & kaki situs yang
+   * memang gelap — dua peran berbeda, jadi dua token berbeda.
+   */
+  --color-latar: #480a12;
 }
 
 /* ============================================================
@@ -230,17 +257,17 @@
 .latar-bercahaya {
   background-image:
     /* pojok kiri-atas */
-    radial-gradient(60% 28% at 0% 14%, rgba(226, 96, 20, 0.78), rgba(226, 96, 20, 0) 72%),
+    radial-gradient(102% 48% at 0% 14%, rgba(226, 96, 20, 0.78), rgba(226, 96, 20, 0) 72%),
     /* pojok kiri-bawah — paling kuat, sama seperti mockup */
-    radial-gradient(60% 26% at 0% 88%, rgba(226, 96, 20, 0.88), rgba(226, 96, 20, 0) 72%),
+    radial-gradient(102% 44% at 0% 88%, rgba(226, 96, 20, 0.88), rgba(226, 96, 20, 0) 72%),
     /* pojok kanan-bawah */
-    radial-gradient(60% 26% at 100% 88%, rgba(226, 96, 20, 0.84), rgba(226, 96, 20, 0) 72%),
-    /* kanan-tengah, hangat tipis */
-    radial-gradient(48% 32% at 100% 52%, rgba(226, 96, 20, 0.26), rgba(226, 96, 20, 0) 72%),
-    /* kanan-atas, hangat tipis */
-    radial-gradient(46% 24% at 100% 13%, rgba(226, 96, 20, 0.28), rgba(226, 96, 20, 0) 72%),
-    /* kiri-tengah, nyaris tak terlihat — mengangkat tepi kiri dari 42 ke 54 */
-    radial-gradient(30% 42% at 0% 50%, rgba(226, 96, 20, 0.08), rgba(226, 96, 20, 0) 72%);
+    radial-gradient(102% 44% at 100% 88%, rgba(226, 96, 20, 0.84), rgba(226, 96, 20, 0) 72%),
+    /* kanan-tengah */
+    radial-gradient(82% 54% at 100% 52%, rgba(226, 96, 20, 0.26), rgba(226, 96, 20, 0) 72%),
+    /* kanan-atas */
+    radial-gradient(78% 41% at 100% 13%, rgba(226, 96, 20, 0.28), rgba(226, 96, 20, 0) 72%),
+    /* kiri-tengah, tipis */
+    radial-gradient(51% 71% at 0% 50%, rgba(226, 96, 20, 0.08), rgba(226, 96, 20, 0) 72%);
   background-attachment: fixed;
 }
 

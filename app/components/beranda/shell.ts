@@ -28,7 +28,7 @@ export const SHELL = "shell-wide mx-auto px-4 md:px-6";
  * ISINYA MENENTUKAN TEMA, dan dua kemungkinannya HARUS dipasang utuh —
  * mencampurnya adalah kerusakan paling senyap di seluruh berkas ini (nol error,
  * build hijau, halaman 200, cuma teks yang hilang dari layar):
- *   - TEMA GELAP (sekarang) = `"bg-gelap-950 latar-bercahaya"`, tanpa
+ *   - TEMA GELAP (sekarang) = `"bg-latar latar-bercahaya"`, tanpa
  *     `tema-terang`. Seluruh komponen memang sudah berwarna dasar gelap;
  *     varian `terang:` cuma penimpanya. Begitu saklarnya tidak ada, semuanya
  *     pulang sendiri ke warna dasar itu — nol kelas yang perlu disentuh.
@@ -65,7 +65,7 @@ export const SHELL = "shell-wide mx-auto px-4 md:px-6";
  * disentuh owner (pergantian hari ini cuma soal halaman katalog yang dia
  * lihat). Kalau nanti diminta seragam gelap, yang diubah blok itu.
  */
-export const BADAN_SITUS = "bg-gelap-950 latar-bercahaya";
+export const BADAN_SITUS = "bg-latar latar-bercahaya";
 
 /**
  * LATAR BAR ATAS — warna identitas situs, dipakai `SearchBar`.

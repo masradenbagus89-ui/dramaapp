@@ -23,6 +23,7 @@ import {
   KOLOM_TAHUN,
   STRIP_KATALOG,
 } from "../lib/nav-katalog";
+import { isiTabLengkap } from "../lib/tab-katalog";
 import type { Drama } from "../lib/types";
 import type { PlaylyVideoPublik } from "../lib/playly-publik";
 
@@ -457,31 +458,46 @@ describe("6. Baris drama Asia menyala dari data, bukan daftar tetap", () => {
     );
     const lainnya = menus.find((m) => m.key === "lainnya");
     const href = lainnya?.items.map((i) => i.href) ?? [];
-    expect(href).toContain("/discover?negara=China&kind=series");
+    // ⚠️ "Dracin" SENGAJA tidak lagi memakai penyaring negara (owner
+    // 2026-11-24: *"untuk dracin kamu masukan ke drama asia saja"*) — ia
+    // diarahkan ke seksi Drama Asia karena penyaring negaranya memulangkan
+    // 0 judul. Patokannya ada di tes berikutnya.
+    // Keempat baris LAIN tetap memakai penyaring negara, dan K-Drama di sini
+    // yang membuktikan mekanisme itu masih hidup.
     expect(href).toContain("/discover?negara=South+Korea&kind=series");
+    expect(href).toContain("/katalog?tab=update");
   });
 
   it("FILM dari negara itu tidak ikut terbawa saat barisnya DIKLIK", () => {
-    // ⚠️ PATOKANNYA BERGESER 2026-11-24, tapi YANG DIJAGA SAMA PERSIS:
-    // "Dracin" berarti DRAMA China, jadi film Hollywood ko-produksi China
-    // tidak boleh muncul di hasilnya. Dulu dijaga dengan menyembunyikan
-    // barisnya; kini barisnya selalu ada, jadi yang dijaga pindah ke ALAMAT:
-    // ia wajib tetap membawa `kind=series`.
+    // ⚠️ PATOKANNYA SUDAH BERGESER DUA KALI, tapi YANG DIJAGA SAMA PERSIS
+    // sejak awal: "Dracin" berarti DRAMA China, jadi film Hollywood
+    // ko-produksi China tidak boleh muncul di hasilnya.
+    //   1. dulu  — barisnya disembunyikan saat datanya kosong
+    //   2. siang — barisnya selalu ada, alamatnya wajib membawa `kind=series`
+    //   3. kini  — alamatnya menunjuk seksi "Drama Asia" (owner 2026-11-24),
+    //              jadi yang dijaga: seksi itu sendiri menolak film
     //
     // Ini bukan kasus karangan — judul itu nyata di katalog produksi:
     // "Meg 2 The Trench", country "United States, China, Thailand, …".
-    const menus = buildNavMenus(
-      [drama({ kind: "movie", country: "China" })] as never,
-      [],
-    );
+    const film = drama({ id: "film-hollywood", kind: "movie", country: "China" });
+    const menus = buildNavMenus([film] as never, []);
     const item = menus
       .find((m) => m.key === "lainnya")
       ?.items.find((i) => i.label === "Dracin");
     expect(item, "baris Dracin hilang").toBeTruthy();
     expect(
       item!.href,
-      "tanpa kind=series, Dracin akan memulangkan film Hollywood ber-negara-produksi China",
-    ).toContain("kind=series");
+      "Dracin tidak lagi menunjuk seksi Drama Asia — owner memindahkannya ke sana",
+    ).toBe("/katalog?tab=update");
+
+    // Patokan sebenarnya: isi seksi tujuannya MEMANG tanpa film. Memeriksa
+    // alamatnya saja tidak cukup — alamat yang benar menuju daftar yang salah
+    // tetap menampilkan film Hollywood itu ke penonton.
+    const isi = isiTabLengkap([film] as never, "update");
+    expect(
+      isi.map((d) => d.id),
+      "film ikut terbawa ke seksi Drama Asia",
+    ).not.toContain("film-hollywood");
   });
 
   it("kolom negara berisi DAFTAR tetap cocok", () => {

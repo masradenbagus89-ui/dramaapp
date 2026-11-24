@@ -167,8 +167,33 @@ export const KOLOM_NEGARA = 4 as const;
  * serial di panel admin — dan kolom itu TERISI OTOMATIS saat menarik data
  * IMDb (`setCountry(imdbDraft.country)`, DramaForm.tsx:307).
  */
-const DRAMA_ASIA: readonly { label: string; negara: string }[] = [
-  { label: "Dracin", negara: "China" },
+const DRAMA_ASIA: readonly {
+  label: string;
+  negara: string;
+  /**
+   * Tujuan PENGGANTI, dipakai kalau penyaring negara belum ada datanya.
+   * Kosong = pakai penyaring negara seperti biasa.
+   */
+  gantiHref?: string;
+}[] = [
+  {
+    label: "Dracin",
+    negara: "China",
+    // ⚠️ DIARAHKAN KE SEKSI "DRAMA ASIA" (owner 2026-11-24: *"untuk dracin
+    // kamu masukan ke drama asia saja"*), BUKAN ke penyaring negara.
+    //
+    // Sebabnya terukur, bukan selera: `?negara=China&kind=series` memulangkan
+    // **0 judul** ("Tidak ada drama yang cocok"), sementara tab Drama Asia
+    // berisi **40**. Kolom `country` memang masih kosong di seluruh serial —
+    // satu-satunya judul bernegara di katalog adalah sebuah FILM Hollywood.
+    //
+    // ❓ BATAS JUJUR: tab itu berisi "serial yang episodenya masih bertambah",
+    // bukan benar-benar "serial dari China". Hari ini keduanya praktis sama
+    // karena katalognya memang drama pendek China. Begitu katalog berisi
+    // serial dari negara lain, penyaring negara yang SEBENARNYA lebih tepat —
+    // hapus `gantiHref` ini dan ia kembali menyaring per negara sendiri.
+    gantiHref: "/katalog?tab=update",
+  },
   { label: "K-Drama", negara: "South Korea" },
   { label: "J-Drama", negara: "Japan" },
   { label: "Drama Thailand", negara: "Thailand" },
@@ -663,9 +688,9 @@ export function buildNavMenus(
       // halaman "Tidak ada drama yang cocok" + tombol Hapus filter, sampai
       // kolom Negara tiap serial diisi di panel admin (terisi otomatis saat
       // menarik data IMDb). Itu BUKAN kerusakan kode.
-      ...DRAMA_ASIA.map(({ label, negara }) => ({
+      ...DRAMA_ASIA.map(({ label, negara, gantiHref }) => ({
         label,
-        href: tautan({ negara, kind: "series" }),
+        href: gantiHref ?? tautan({ negara, kind: "series" }),
       })),
       ...kategoriDramaMenu,
       // Menu ini TIDAK ikut dapat baris penutup "Lainnya": namanya sudah

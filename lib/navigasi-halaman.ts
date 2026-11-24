@@ -103,6 +103,8 @@ export const TANPA_NAVIGASI_SENGAJA: Record<string, string> = {
   "/daftar": "header & logo milik halamannya sendiri (app/daftar/page.tsx:89)",
   "/watch/[id]/[ep]": "layar pemutar — navigasi menutupi video",
   "/feed/[id]": "layar pemutar geser — navigasi menutupi video",
+  "/watch-room/[token]":
+    "layar Nonton Bareng — video + chat memakai seluruh layar; tombol Keluar milik halamannya sendiri (app/components/nobar/RuangNobar.tsx)",
 };
 
 /**

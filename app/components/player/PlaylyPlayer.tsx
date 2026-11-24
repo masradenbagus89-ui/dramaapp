@@ -102,15 +102,33 @@ export function posisiSesudahLoncat(
   return Math.min(Math.max(maju, 0), durasi);
 }
 
+/**
+ * Mode Nonton Bareng (app/watch-room). Tanpa prop ini pemutar berperilaku
+ * PERSIS seperti di /tonton & /film — kedua halaman itu tidak mengirimnya.
+ */
+export type ModeNobar = {
+  /** true = penonton: putar/jeda/geser dikunci, video mengikuti Host. */
+  terkunci: boolean;
+  /** Elemen <video> diserahkan ke pengendali sinkron; null saat dilepas. Wajib stabil (mis. setter useState). */
+  onVideo: (el: HTMLVideoElement | null) => void;
+};
+
+/** Di Room, kecepatan dikunci Normal: rumus sinkron menganggap video berjalan 1 detik per detik. */
+const KECEPATAN_NOBAR: OpsiMenu[] = [{ nilai: "1", label: "Normal" }];
+
 export default function PlaylyPlayer({
   videoId,
   title,
   poster,
+  nobar,
 }: {
   videoId: string;
   title: string;
   poster?: string | null;
+  nobar?: ModeNobar;
 }) {
+  const terkunci = nobar?.terkunci ?? false;
+  const onVideoNobar = nobar?.onVideo;
   const wadahRef = useRef<HTMLDivElement | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const seekRef = useRef<HTMLDivElement | null>(null);
@@ -227,12 +245,20 @@ export default function PlaylyPlayer({
 
   const bangunkanKontrol = useCallback(() => setKontrolTampil(true), []);
 
+  // Serahkan elemen video ke pengendali Nonton Bareng tiap kali elemennya
+  // lahir ulang (alamat berganti / "Coba lagi"), dan tarik kembali saat lepas.
+  useEffect(() => {
+    if (!onVideoNobar) return;
+    onVideoNobar(videoRef.current);
+    return () => onVideoNobar(null);
+  }, [videoUrl, onVideoNobar]);
+
   const togglePlay = useCallback(() => {
     const v = videoRef.current;
-    if (!v) return;
+    if (!v || terkunci) return;
     if (v.paused) void v.play().catch(() => undefined);
     else v.pause();
-  }, []);
+  }, [terkunci]);
 
   const togglePip = useCallback(async () => {
     const v = videoRef.current;
@@ -259,7 +285,7 @@ export default function PlaylyPlayer({
 
   const loncat = (delta: number) => {
     const v = videoRef.current;
-    if (!v) return;
+    if (!v || terkunci) return;
     const baru = posisiSesudahLoncat(v.currentTime, delta, v.duration);
     v.currentTime = baru;
     setCurTime(baru);
@@ -268,7 +294,7 @@ export default function PlaylyPlayer({
   const geserKe = (e: React.PointerEvent<HTMLDivElement>) => {
     const bar = seekRef.current;
     const v = videoRef.current;
-    if (!bar || !v || !dur) return;
+    if (!bar || !v || !dur || terkunci) return;
     const kotak = bar.getBoundingClientRect();
     const rasio = Math.min(Math.max((e.clientX - kotak.left) / kotak.width, 0), 1);
     v.currentTime = rasio * dur;
@@ -368,7 +394,9 @@ export default function PlaylyPlayer({
           }
           poster={poster ?? undefined}
           title={title}
-          autoPlay
+          /* Di Room yang memutuskan kapan mulai adalah pengendali sinkron,
+             bukan atribut ini — kalau tidak, penonton mulai sendiri dari 0. */
+          autoPlay={!nobar}
           playsInline
           // controls bawaan SENGAJA dimatikan: justru dari situ menu titik tiga
           // Chrome ("Playback speed" + "Picture in picture") muncul, dan itu
@@ -403,7 +431,7 @@ export default function PlaylyPlayer({
         />
       )}
 
-      {videoUrl && paused && (
+      {videoUrl && paused && !terkunci && (
         <button
           type="button"
           onClick={togglePlay}
@@ -432,6 +460,7 @@ export default function PlaylyPlayer({
             aria-valuemin={0}
             aria-valuemax={Math.round(dur)}
             aria-valuenow={Math.round(curTime)}
+            aria-disabled={terkunci || undefined}
             tabIndex={0}
             onPointerDown={(e) => {
               e.currentTarget.setPointerCapture(e.pointerId);
@@ -440,7 +469,10 @@ export default function PlaylyPlayer({
             onPointerMove={(e) => {
               if (e.currentTarget.hasPointerCapture(e.pointerId)) geserKe(e);
             }}
-            className="mb-1.5 flex h-5 cursor-pointer touch-none select-none items-center"
+            className={cn(
+              "mb-1.5 flex h-5 touch-none select-none items-center",
+              terkunci ? "cursor-default" : "cursor-pointer",
+            )}
           >
             <div className="relative h-1 w-full rounded-full bg-white/25">
               <div
@@ -455,6 +487,9 @@ export default function PlaylyPlayer({
           </div>
 
           <div className="flex items-center gap-1">
+            {/* Penonton di Room tak melihat tombol yang tak boleh ia pakai —
+                tombol yang ada tapi tak bereaksi terbaca sebagai "rusak". */}
+            {!terkunci && (<>
             <button
               type="button"
               onClick={togglePlay}
@@ -491,6 +526,7 @@ export default function PlaylyPlayer({
                 {LONCAT_DETIK}
               </span>
             </button>
+            </>)}
 
             {/* Volume: tombolnya di kiri bersama kontrol putar, garis
                 pengaturnya MUNCUL KE ATAS saat disentuh (owner 2026-09-28).
@@ -561,7 +597,11 @@ export default function PlaylyPlayer({
                   latar: { nilai: "tipis", opsi: LATAR_SUBTITLE, onPilih: () => undefined },
                   alasanMati: ALASAN_SUBTITLE_MATI,
                 }}
-                kecepatan={{ nilai: speed, opsi: KECEPATAN, onPilih: ubahSpeed }}
+                kecepatan={
+                  nobar
+                    ? { nilai: "1", opsi: KECEPATAN_NOBAR, onPilih: () => undefined }
+                    : { nilai: speed, opsi: KECEPATAN, onPilih: ubahSpeed }
+                }
                 penguatSuara={{
                   aktif: penguatSuara,
                   onUbah: setPenguatSuara,

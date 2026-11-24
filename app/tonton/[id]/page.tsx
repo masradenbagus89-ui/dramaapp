@@ -16,6 +16,8 @@ import PanelFilm from "@/app/components/film/PanelFilm";
 import PanelPopuler from "@/app/components/film/PanelPopuler";
 import KakiFilm from "@/app/components/film/KakiFilm";
 import Comments from "@/app/components/Comments";
+import TombolNobar from "@/app/components/nobar/TombolNobar";
+import { nobarAktif } from "@/lib/nobar";
 import { pilihTerkait } from "@/lib/film-terkait";
 
 // HALAMAN TONTON SATU VIDEO (owner 2026-09-26).
@@ -299,6 +301,14 @@ export default async function TontonPage(props: PageProps<"/tonton/[id]">) {
             // linknya sudah diisi — dijaga tests/tonton-halaman.test.ts.
             linkUnduhan={video.linkUnduhan}
           />
+          {/* NONTON BARENG (2026-11-23). Hanya muncul kalau server real-time-nya
+              sudah dipasang (env NOBAR_*) — tanpa itu tombol tak berguna, jadi
+              tak digambar sama sekali, bukan ditampilkan lalu gagal. */}
+          {nobarAktif() && (
+            <div className="mt-3">
+              <TombolNobar videoId={video.id} />
+            </div>
+          )}
           {video.dramaHref && video.dramaTitle && (
             <p className="mt-3 text-xs text-zinc-500">
               <Link href={video.dramaHref} className="text-rose-700 underline">

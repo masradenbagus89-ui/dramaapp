@@ -117,6 +117,11 @@ const nextConfig: NextConfig = {
       "https://www.youtube-nocookie.com",
       "https://player.vimeo.com",
     ];
+    // Server Nonton Bareng (nobar-server, service Railway terpisah). Socket.IO
+    // memakai DUA jalur ke alamat yang sama: polling HTTPS lalu naik ke WSS.
+    // Dibaca saat BUILD (header ini dibakar ke hasil build) — env kosong =
+    // tak ada yang ditambahkan, dan fiturnya memang mati (lib/nobar.ts).
+    const nobar = asalNobar(process.env.NOBAR_PUBLIC_URL);
 
     const csp = [
       "default-src 'self'",
@@ -144,7 +149,7 @@ const nextConfig: NextConfig = {
       "img-src 'self' data: blob: https:",
       `media-src 'self' blob: ${sumberVideo.join(" ")}`,
       "font-src 'self' data:",
-      `connect-src 'self' ${[...sumberVideo, ...iklan].join(" ")}`,
+      `connect-src 'self' ${[...sumberVideo, ...iklan, ...nobar].join(" ")}`,
       `frame-src 'self' ${[...midtrans, ...embedVideo, ...iklan, "https://playly-hosting-video.up.railway.app"].join(" ")}`,
       "worker-src 'self' blob:",
       "upgrade-insecure-requests",
@@ -196,3 +201,14 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+
+/** Origin https + wss dari alamat nobar-server; alamat tak sah = daftar kosong (gagal-aman). */
+function asalNobar(url: string | undefined): string[] {
+  try {
+    const u = new URL(url ?? "");
+    if (u.protocol !== "https:") return [];
+    return [u.origin, `wss://${u.host}`];
+  } catch {
+    return [];
+  }
+}

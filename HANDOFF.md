@@ -210,6 +210,43 @@ kemunculan hex-nya).
 
 ---
 
+### Putaran 7 — judul diapit garis + chip SATU baris digeser (`92ce7a5`)
+
+Owner, menunjuk gambar acuan: *"jadikan layarindo di antara garis lalu yang
+dibawahnya kamu kasih tanda panah aja (khusus HP) jadi tidak bertumpuk"*.
+
+⚠️ **TATA LETAK CHIP BERGANTI TIGA KALI DALAM SATU HARI.** Kalau menemukan
+catatan yang bertentangan, inilah urutannya — yang berlaku nomor 3:
+
+| | Cara | Nasib |
+|---|---|---|
+| 1 | baris `flex-wrap` + `min-w-0` di dalam strip | diganti siang |
+| 2 | **kisi DUA KOLOM** (lebar chip sama persis) | **DITOLAK owner** — menumpuk 3 baris, kotaknya tinggi |
+| 3 | **satu baris digeser + panah (HP)** | ✅ berlaku |
+
+Keseragaman yang diminta owner siang tadi TIDAK hilang — ia **pindah dari
+LEBAR ke BENTUK** (tinggi 44px, sudut, garis, huruf; semuanya tetap dari
+`KELAS_CHIP_BARIS`). Gambar acuan owner pun lebar chipnya mengikuti panjang
+tulisan. Penjaganya kini memuat larangan tegas `not.toContain("grid-cols-2")`
+supaya kisi yang ditolak tidak kembali diam-diam.
+
+**Judul diapit garis** `<span aria-hidden>` ber-`flex-1`, bukan `<hr>`: `<hr>`
+berarti "pergantian topik" bagi pembaca layar, dan di sini garisnya hiasan.
+
+**Panah jadi komponen bersama `PanahGeserBaris`.** Tombol yang sama sudah
+ditulis utuh di `StripKatalog` sejak 2026-11-23; salinan kedua pasti menyimpang
+(jarak geser, warna, label) tanpa satu pun error. Ia menerima **`targetId`,
+bukan `ref`** — dan itu bukan selera: `TabKatalogTampilan` SENGAJA tanpa
+`"use client"` (dirender di server sebagai isi `<Suspense fallback>`), jadi
+`useRef` di sana akan memaksanya jadi komponen browser. Dengan id, hanya tombol
+kecil itu yang jadi komponen browser.
+
+**Bukti — panahnya DIKLIK sungguhan lewat CDP, bukan dibaca dari kode:**
+HP 390px → isi baris 624px dalam kotak 300px (memang meluap), panah TERLIHAT,
+diklik → `scrollLeft` **0 → 240px**. Komputer 1440px → isi 1264 = kotak 1264
+(tidak meluap), panah **tidak tergambar**. Tinggi baris **44px** di keduanya =
+satu baris, nol tumpukan.
+
 ### Putaran 6 — latar DITERANGKAN (`4078a72`) + chip SERAGAM (`ae23c8e`)
 
 **Latar.** Owner: *"latar belakang yang saya minta terlihat lebih hidup dan

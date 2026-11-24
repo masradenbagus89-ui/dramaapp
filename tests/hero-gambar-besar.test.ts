@@ -16,14 +16,34 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-const sumberHalaman = readFileSync(
-  join(process.cwd(), "app/drama/[id]/page.tsx"),
-  "utf8",
-);
-const sumberMedia = readFileSync(
-  join(process.cwd(), "app/components/HeroDramaMedia.tsx"),
-  "utf8",
-);
+/**
+ * SAMAKAN AKHIR BARIS DULU, baru teksnya dicocokkan dengan pola.
+ *
+ * KENAPA (terbukti 2026-11-24, memerahkan gerbang pra-rilis): berkas di repo
+ * disimpan ber-akhir-baris LF, tapi git di Windows menulisnya ulang jadi CRLF
+ * saat CHECKOUT BARU (clone / git worktree). Pola seperti
+ * `/\n\s+loop\n/` lalu gagal — bukan karena kodenya berubah,
+ * melainkan karena ada `\r` tak terlihat sebelum tiap `\n`.
+ *
+ * Gejalanya MENIPU DUA ARAH: di folder kerja lama (berkasnya masih LF) tes
+ * ini HIJAU, di salinan yang baru di-checkout MERAH — atas kode yang sama
+ * persis. Jadi "lolos di komputerku" tidak membuktikan apa pun untuk tes
+ * jenis ini, dan sebaliknya merahnya belum tentu berarti kode rusak.
+ */
+const normalkanBaris = (teks: string) => teks.split("\r\n").join("\n");
+
+/**
+ * SATU pintu baca berkas sumber untuk SELURUH berkas tes ini.
+ *
+ * Jangan panggil readFileSync langsung di sini: dulu ada LIMA pemanggilan
+ * terpisah, dan menormalkan sebagian saja sama saja dengan tidak
+ * menormalkan — yang terlewat tetap merah di checkout baru.
+ */
+const bacaSumber = (relatif: string) =>
+  normalkanBaris(readFileSync(join(process.cwd(), relatif), "utf8"));
+
+const sumberHalaman = bacaSumber("app/drama/[id]/page.tsx");
+const sumberMedia = bacaSumber("app/components/HeroDramaMedia.tsx");
 
 /**
  * Potongan sumber satu elemen, dari penanda sampai penutup `/>`, dengan
@@ -82,10 +102,7 @@ describe("gambar besar hero: tidak boleh ada yang terpotong", () => {
 // error, tidak ada tes merah, cuma gambar yang diam lebih lama dari yang
 // seharusnya.
 describe("cuplikan hero harus mulai secepat mungkin", () => {
-  const sumber = readFileSync(
-    join(process.cwd(), "app/components/HeroDramaMedia.tsx"),
-    "utf8",
-  );
+  const sumber = bacaSumber("app/components/HeroDramaMedia.tsx");
 
   it("memanggil play() begitu video siap, tidak hanya mengandalkan autoPlay", () => {
     expect(sumber).toContain("onCanPlay");
@@ -129,10 +146,7 @@ describe("cuplikan hero harus mulai secepat mungkin", () => {
 // Owner 2026-11-09: "langsung episode 1 saja dan video usahakan jangan
 // berhenti". Dua keputusan yang mudah hilang diam-diam saat kode dirapikan.
 describe("cuplikan hero: langsung Ep 1 dan tidak berhenti", () => {
-  const sumber = readFileSync(
-    join(process.cwd(), "app/components/HeroDramaMedia.tsx"),
-    "utf8",
-  );
+  const sumber = bacaSumber("app/components/HeroDramaMedia.tsx");
 
   it("memutar Episode 1 langsung, tidak mencoba trailer dulu", () => {
     // Mencoba trailer lebih dulu memakan 1,17 detik (terukur) pada SETIAP
@@ -303,10 +317,7 @@ describe("hero HP: nol pengulangan, tepi sejajar (owner 2026-11-10, putaran 3)",
     // sama. Sebelum ini hero memakai px-4 (16px) sementara panel episode px-3
     // (12px) — meleset 4px, cukup untuk terbaca "berantakan" tanpa ada yang
     // bisa menunjuk sebabnya.
-    const sumberPanel = readFileSync(
-      join(process.cwd(), "app/components/film/PanelEpisode.tsx"),
-      "utf8",
-    );
+    const sumberPanel = bacaSumber("app/components/film/PanelEpisode.tsx");
     const padHero = bersihSumber.match(
       /<div className="[^"]*\b(px-\d+)[^"]*sm:absolute/,
     );

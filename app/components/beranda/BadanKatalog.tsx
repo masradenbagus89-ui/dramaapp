@@ -6,7 +6,7 @@ import FeaturedRow from "./FeaturedRow";
 import FooterSitus from "./FooterSitus";
 import TabKatalog from "./TabKatalog";
 import TabKatalogTampilan from "./TabKatalogTampilan";
-import LayarindoMenawarkan from "./LayarindoMenawarkan";
+import LayarindoMenawarkan, { JudulMenawarkan } from "./LayarindoMenawarkan";
 import { TAB_BAWAAN, type TabKey } from "@/lib/tab-katalog";
 import { BADAN_SITUS, HERO_CARD_CLASS } from "./shell";
 
@@ -171,6 +171,7 @@ export default function BadanKatalog({
               seksiLengkap
               tabDisembunyikan={TAB_TANPA_TOMBOL}
               slotBarisTab={<LayarindoMenawarkan />}
+              slotJudulBaris={<JudulMenawarkan />}
               videos={filmDiDepan}
               videoSeries={seriesTerbaru}
               basePath={basePath}
@@ -182,6 +183,7 @@ export default function BadanKatalog({
             seksiLengkap
             tabDisembunyikan={TAB_TANPA_TOMBOL}
             slotBarisTab={<LayarindoMenawarkan />}
+              slotJudulBaris={<JudulMenawarkan />}
             videos={filmDiDepan}
             videoSeries={seriesTerbaru}
             basePath={basePath}

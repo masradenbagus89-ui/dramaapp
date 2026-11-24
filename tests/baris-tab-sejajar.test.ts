@@ -144,10 +144,32 @@ describe("3. judul + chip SEDERET dengan tombol tab", () => {
   );
 
   it("isi titipan digambar DI DALAM kotak baris tab", () => {
-    // Harus berada di dalam wadah bergulir yang sama dengan tombol tab —
-    // kalau digambar di luar kotak, ia kembali jadi baris sendiri dan
-    // permintaan owner batal tanpa satu pun error.
-    expect(tampilan).toMatch(/overflow-x-auto[\s\S]{0,120}\{slotBarisTab\}/);
+    // Harus berada di wadah yang SAMA dengan tombol tab — kalau digambar di
+    // luar kotak, ia kembali jadi baris sendiri dan permintaan owner batal
+    // tanpa satu pun error.
+    //
+    // ⚠️ YANG DIPERIKSA KINI "bersebelahan dengan {tabs", bukan "sesudah
+    // overflow-x-auto" (2026-11-24). Wadahnya berganti dari baris yang
+    // membungkus jadi KISI dua kolom supaya kelima chip bisa seragam, jadi
+    // patokan lama menguji kelas yang sudah tidak menentukan apa-apa.
+    // Bersebelahan dengan `{tabs` adalah syarat yang SEBENARNYA: hanya
+    // sebagai saudara sekandung mereka bisa berbagi kolom yang sama.
+    expect(tampilan).toMatch(/\{slotBarisTab\}[\s\S]{0,400}\{tabs/);
+  });
+
+  it("judulnya punya baris sendiri, di ATAS deret chip", () => {
+    // Owner 2026-11-24: *"ubah layarindo menawarkan, letakan ditengah"*.
+    // Ini MEMBATALKAN permintaannya sendiri 2026-11-23 (sederet satu baris) —
+    // disengaja, jangan dikembalikan karena menemukan catatan yang lebih tua.
+    // Diperiksa lewat URUTAN, bukan regex berjarak: jarak antar keduanya ikut
+    // berubah tiap kali kelas tata letak disunting, jadi angka jarak berapa
+    // pun akan merah suatu hari karena alasan yang salah. Yang benar-benar
+    // dijaga cuma satu hal — judulnya digambar LEBIH DULU.
+    const posJudul = tampilan.indexOf("{slotJudulBaris}");
+    const posChip = tampilan.indexOf("{slotBarisTab}");
+    expect(posJudul, "`{slotJudulBaris}` tidak digambar sama sekali").toBeGreaterThan(-1);
+    expect(posChip, "`{slotBarisTab}` tidak digambar sama sekali").toBeGreaterThan(-1);
+    expect(posJudul, "judul harus SEBELUM deret chip").toBeLessThan(posChip);
   });
 
   it("barisnya MEMBUNGKUS di HP, bukan digeser menyamping", () => {
@@ -158,19 +180,34 @@ describe("3. judul + chip SEDERET dengan tombol tab", () => {
     expect(tampilan).toContain("max-md:flex-wrap");
   });
 
-  it("kelompok chip boleh menyusut & membungkus juga", () => {
-    // Membungkus baris LUARNYA saja tidak cukup: kalau <ul> chip tetap
-    // `shrink-0`, ia jadi satu benda panjang yang tak bisa dipecah dan chip
-    // ketiga tetap terpotong di tepi layar. Kena persis begitu di mock pertama.
+  it("chip tidak terpotong di HP — kini lewat KISI, bukan baris membungkus", () => {
+    // Masalah yang dijaga TETAP SAMA sejak 2026-11-23: di layar HP deret chip
+    // lebih panjang dari layar, dan versi yang digeser menyamping hanya
+    // menampilkan chip pertama tanpa tanda bahwa masih ada isi di kanan.
+    //
+    // ⚠️ CARANYA BERGANTI 2026-11-24. Dulu: baris `flex-wrap` + `min-w-0` di
+    // dalam LayarindoMenawarkan. Kini: kisi DUA KOLOM di TabKatalogTampilan,
+    // dan chipnya dilepas dari pembungkusnya supaya jadi anak LANGSUNG kisi
+    // itu — syarat agar kelimanya selebar kolom yang sama (owner: *"buat
+    // seragam"*). Patokan lama menguji kelas yang sudah tidak ada.
+    expect(tampilan).toContain("grid-cols-2");
+    expect(tampilan).toContain("max-md:[&>*]:w-full");
+  });
+
+  it("chip pintasan TANPA pembungkus — syarat lebarnya bisa seragam", () => {
     const strip = tanpaKomentar(
       readFileSync("app/components/beranda/LayarindoMenawarkan.tsx", "utf-8"),
     );
-    expect(strip).toContain("flex-wrap");
-    expect(strip).toContain("min-w-0");
+    // Begitu chip dibungkus lagi (<ul>/<div>), ketiganya kembali membungkus
+    // baris terpisah dari REKOMENDASI & <tahun> — persis ketidakseragaman
+    // yang dikeluhkan owner, dan nol error yang memberi tahu.
+    expect(strip, "pembungkus <ul> dipasang lagi").not.toContain("<ul");
     expect(
       strip,
       "pembungkus bergaris dipasang lagi — hasilnya kotak di dalam kotak",
     ).not.toContain("border-y");
+    // Bentuknya WAJIB datang dari konstanta bersama, bukan ditulis ulang.
+    expect(strip).toContain("KELAS_CHIP_BARIS");
   });
 });
 

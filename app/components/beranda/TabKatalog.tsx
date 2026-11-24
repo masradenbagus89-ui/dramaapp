@@ -31,6 +31,7 @@ export default function TabKatalog({
   hanyaMenu,
   tabDisembunyikan,
   slotBarisTab,
+  slotJudulBaris,
   paksaSemua,
   seksiLengkap,
   videos,
@@ -66,6 +67,7 @@ export default function TabKatalog({
    * adanya; alasan & jebakannya ditulis di `TabKatalogTampilan`, bukan disalin.
    */
   slotBarisTab?: ReactNode;
+  slotJudulBaris?: ReactNode;
   /** Film untuk seksi "Film Terbaru". Lihat tampilannya untuk aturannya. */
   videos?: PlaylyVideoPublik[];
   /** SERIAL untuk seksi "Series Terbaru". Lihat tampilannya untuk aturannya. */
@@ -82,6 +84,7 @@ export default function TabKatalog({
       seksiLengkap={seksiLengkap}
       tabDisembunyikan={tabDisembunyikan}
       slotBarisTab={slotBarisTab}
+      slotJudulBaris={slotJudulBaris}
       videos={videos}
       videoSeries={videoSeries}
     />

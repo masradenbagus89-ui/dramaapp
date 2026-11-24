@@ -2,6 +2,8 @@ import Link from "next/link";
 import { Award, Flame, Sparkles } from "lucide-react";
 
 import { SITE_NAME } from "@/lib/site";
+import { cn } from "@/lib/utils";
+import { CHIP_BARIS_DIAM, KELAS_CHIP_BARIS } from "./shell";
 
 /**
  * Strip "Layarindo Menawarkan" — tiga pintasan cepat ke katalog, menggantikan
@@ -53,51 +55,55 @@ const TAWARAN: Tawaran[] = [
   { label: "Terpopuler", href: "/discover?sort=populer", Ikon: Flame },
 ];
 
+/** Id judul — dipakai `aria-labelledby` pada kisi chip di TabKatalogTampilan. */
+export const ID_JUDUL_TAWARAN = "judul-tawaran";
+
+/**
+ * JUDUL strip, DI TENGAH dan di BARIS SENDIRI (owner 2026-11-24:
+ * *"ubah layarindo menawarkan, letakan ditengah"*).
+ *
+ * ⚠️ INI MEMBATALKAN permintaan owner 2026-11-23 (*"judul + chip disederetkan
+ * jadi satu baris"*, commit `e2b4edb`) — dan itu DISENGAJA, bukan kemunduran
+ * yang terlewat. Jangan "kembalikan" ke sebaris karena menemukan catatan lama
+ * itu; yang berlaku permintaan yang lebih baru.
+ *
+ * Dipisah dari chipnya supaya kelima chip (tiga dari sini + REKOMENDASI &
+ * <tahun> dari deret tab) bisa jadi anak LANGSUNG satu kisi — itulah yang
+ * membuat lebarnya bisa benar-benar seragam. Lihat `slotJudulBaris` dan
+ * `slotBarisTab` di TabKatalogTampilan.tsx.
+ */
+export function JudulMenawarkan() {
+  return (
+    <h2
+      id={ID_JUDUL_TAWARAN}
+      className="mb-2 text-center text-sm font-bold text-white"
+    >
+      {SITE_NAME} Menawarkan
+    </h2>
+  );
+}
+
+/**
+ * TIGA CHIP PINTASAN — sengaja TANPA pembungkus apa pun (Fragment).
+ *
+ * Pembungkus `<div>`/`<ul>` yang dulu ada DIHAPUS 2026-11-24: selama chip-chip
+ * ini bersarang di dalam pembungkusnya sendiri, mereka membungkus baris
+ * terpisah dari REKOMENDASI & <tahun> — dan itu yang terlihat owner sebagai
+ * "tidak seragam". Sebagai anak langsung kisi, kelimanya mendapat kolom yang
+ * sama persis.
+ *
+ * Nama kelompoknya untuk pembaca layar tidak hilang: `role="group"` +
+ * `aria-labelledby` pindah ke kisinya di TabKatalogTampilan.tsx.
+ */
 export default function LayarindoMenawarkan() {
   return (
-    /* ⚠️ BUKAN <section> BERGARIS LAGI (owner 2026-11-23, dengan sketsa di
-       tangkapan layar: judul + chip DISEDERETKAN dengan tombol tab).
-       DULU: pita sendiri ber-`border-y` + `bg-gelap-900` + lebar `SHELL`,
-       duduk di atas baris tab sebagai baris terpisah.
-       KINI: kelompok sebaris yang DITITIPKAN ke dalam kotak baris tab lewat
-       prop `slotBarisTab` (lihat BadanKatalog.tsx). Latar, garis, dan batas
-       lebarnya kini milik kotak itu — kalau dipasang lagi di sini, hasilnya
-       kotak bergaris di dalam kotak bergaris.
-
-       `role="group"` + `aria-labelledby` dipertahankan supaya pembaca layar
-       tetap mengumumkan ketiga chip ini sebagai satu kelompok bernama, walau
-       pembungkus <section>-nya sudah hilang. */
-    <div
-      role="group"
-      aria-labelledby="judul-tawaran"
-      /* `min-w-0` + `flex-wrap`: di layar HP kelompok ini WAJIB boleh
-         menyusut & membungkus. Tanpa keduanya ia jadi satu benda panjang yang
-         tak bisa dipecah, dan chip ketiga terpotong di tepi layar — terbukti
-         saat mock-nya dipotret sebelum dipasang. Di layar komputer semuanya
-         memang muat satu baris, jadi pembungkusan tak pernah terpakai. */
-      className="flex min-w-0 flex-wrap items-center gap-2"
-    >
-      <h2 id="judul-tawaran" className="shrink-0 text-sm font-bold text-white">
-        {SITE_NAME} Menawarkan
-      </h2>
-
-      <ul className="flex min-w-0 flex-wrap items-center gap-2">
-        {TAWARAN.map(({ label, href, Ikon }) => (
-          <li key={href}>
-            <Link
-              href={href}
-                /* min-h-11 (~44px) = ambang target sentuh yang dipakai seluruh
-                   situs ini. Chip di gambar acuan lebih tipis, tapi chip tipis
-                   di HP sering meleset saat diketuk jempol — dan chip yang
-                   meleset terbaca sebagai tombol mati. */
-                className="flex min-h-11 items-center gap-1.5 rounded-full border border-emas-700/55 bg-gelap-800 px-3.5 text-[11px] font-extrabold uppercase tracking-wide text-white transition-colors outline-none hover:bg-gelap-700 hover:text-emas-300 focus-visible:ring-2 focus-visible:ring-emas-400 md:text-xs"
-              >
-                <Ikon className="size-3.5 shrink-0" aria-hidden="true" />
-                {label}
-              </Link>
-            </li>
-        ))}
-      </ul>
-    </div>
+    <>
+      {TAWARAN.map(({ label, href, Ikon }) => (
+        <Link key={href} href={href} className={cn(KELAS_CHIP_BARIS, CHIP_BARIS_DIAM)}>
+          <Ikon className="size-3.5 shrink-0" aria-hidden="true" />
+          {label}
+        </Link>
+      ))}
+    </>
   );
 }

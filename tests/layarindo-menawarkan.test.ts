@@ -17,11 +17,19 @@ import { describe, it, expect } from "vitest";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { readFileSync } from "node:fs";
-import LayarindoMenawarkan from "../app/components/beranda/LayarindoMenawarkan";
+import LayarindoMenawarkan, {
+  JudulMenawarkan,
+} from "../app/components/beranda/LayarindoMenawarkan";
 import { SORT_OPTIONS, parseSort } from "../lib/discover";
 import { tanpaKomentar } from "./bantu/tanpa-komentar";
 
-const html = renderToStaticMarkup(createElement(LayarindoMenawarkan));
+// ⚠️ DIRENDER DUA BAGIAN sejak 2026-11-24: owner meminta judulnya pindah ke
+// TENGAH di baris sendiri, jadi `JudulMenawarkan` dipisah dari chipnya.
+// Pemisahan itu syarat teknis: hanya sebagai anak LANGSUNG kisi, kelima chip
+// (tiga dari sini + REKOMENDASI & <tahun>) bisa selebar kolom yang sama.
+const htmlJudul = renderToStaticMarkup(createElement(JudulMenawarkan));
+const htmlChip = renderToStaticMarkup(createElement(LayarindoMenawarkan));
+const html = htmlJudul + htmlChip;
 // KOMENTAR DIBUANG dari keduanya: kedua berkas memuat catatan riwayat yang
 // MENGUTIP kode lama & nilai yang salah sebagai contoh. Tanpa ini, kutipan di
 // komentar itulah yang dinilai penjaga — bukan kode yang benar-benar jalan.
@@ -57,11 +65,15 @@ describe("bentuk yang diminta owner", () => {
       readFileSync("app/components/beranda/BadanKatalog.tsx", "utf-8"),
     );
     expect(badan).toContain(
-      'import LayarindoMenawarkan from "./LayarindoMenawarkan"',
+      'import LayarindoMenawarkan, { JudulMenawarkan } from "./LayarindoMenawarkan"',
     );
     expect(
       (badan.match(/slotBarisTab=\{<LayarindoMenawarkan \/>\}/g) ?? []).length,
       "harus dipasang DUA kali: fallback Suspense + versi browser",
+    ).toBe(2);
+    expect(
+      (badan.match(/slotJudulBaris=\{<JudulMenawarkan \/>\}/g) ?? []).length,
+      "judulnya juga wajib DUA kali — kalau tidak, barisnya berganti isi tepat saat halaman selesai dimuat",
     ).toBe(2);
   });
 });

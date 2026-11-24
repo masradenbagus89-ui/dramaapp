@@ -157,6 +157,42 @@ export const SOROT_BAR_MEREK =
  * `bg-gradient-to-b` (bukan `bg-linear-to-b`) dipilih supaya seragam dengan
  * 22 gradasi lain yang sudah ada di project ini.
  */
+/**
+ * CHIP BARIS PINTASAN — bentuk SATU-SATUNYA untuk kelima chip di baris
+ * "Layarindo Menawarkan" (owner 2026-11-24: *"kualitas terbaik update terbaru
+ * dan lainnya kamu buat seragam"*).
+ *
+ * KENAPA SATU KONSTANTA: kelima chip itu datang dari DUA komponen berbeda —
+ * tiga dari `LayarindoMenawarkan`, dua lagi (REKOMENDASI, <tahun>) adalah sisa
+ * tombol tab di `TabKatalogTampilan`. Sebelum ini keduanya punya kelasnya
+ * sendiri (`rounded-full min-h-11` vs `rounded-sm px-3 py-2`), dan itulah yang
+ * terlihat owner sebagai "tidak seragam". Dua salinan bentuk pasti menyimpang
+ * lagi cepat atau lambat, dan menyimpangnya nol error.
+ *
+ * `min-h-11` (~44px) = ambang target sentuh yang dipakai seluruh situs ini.
+ * Chip di gambar acuan lebih tipis, tapi chip tipis di HP sering meleset saat
+ * diketuk jempol — dan chip yang meleset terbaca sebagai tombol mati.
+ *
+ * `justify-center` + `text-center` WAJIB: di HP kelima chip dipaksa selebar
+ * kolom grid, jadi tanpa ini tulisannya menggantung di kiri sementara kotaknya
+ * lebar — terbaca seperti perataan yang lupa diatur.
+ */
+export const KELAS_CHIP_BARIS =
+  "flex min-h-11 items-center justify-center gap-1.5 rounded-full border px-3 text-center " +
+  "text-[11px] font-extrabold uppercase tracking-wide transition-colors outline-none " +
+  "focus-visible:ring-2 focus-visible:ring-emas-400 md:px-3.5 md:text-xs";
+
+/** Chip yang TIDAK sedang dipakai — bentuk dasar. */
+export const CHIP_BARIS_DIAM =
+  "border-emas-700/55 bg-gelap-800 text-white hover:bg-gelap-700 hover:text-emas-300";
+
+/**
+ * Chip yang SEDANG dipakai (tab aktif) — terisi amber, teksnya GELAP.
+ * Teks putih di atas amber cuma 2,69:1; teks gelap 6,98:1 (lihat globals.css).
+ */
+export const CHIP_BARIS_AKTIF =
+  "border-emas-500 bg-emas-500 text-gelap-950 shadow-md shadow-emas-500/30";
+
 export const TOMBOL_UTAMA =
   "bg-gradient-to-b from-emas-400 to-emas-700 text-gelap-950 hover:from-emas-300 hover:to-emas-600 focus-visible:ring-2 focus-visible:ring-emas-300";
 

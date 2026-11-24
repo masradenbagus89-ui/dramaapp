@@ -20,7 +20,16 @@ import {
   KUNCI_BARIS_VIDEO,
 } from "@/lib/beranda-video";
 import type { PlaylyVideoPublik } from "@/lib/playly-publik";
-import { GRID_CLASS, ROW_KATEGORI_CARD_CLASS, SHELL, TOMBOL_UTAMA } from "./shell";
+import {
+  CHIP_BARIS_AKTIF,
+  CHIP_BARIS_DIAM,
+  GRID_CLASS,
+  KELAS_CHIP_BARIS,
+  ROW_KATEGORI_CARD_CLASS,
+  SHELL,
+  TOMBOL_UTAMA,
+} from "./shell";
+import { ID_JUDUL_TAWARAN } from "./LayarindoMenawarkan";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -64,6 +73,7 @@ export default function TabKatalogTampilan({
   seksiLengkap = false,
   tabDisembunyikan = [],
   slotBarisTab,
+  slotJudulBaris,
   videos = [],
   videoSeries = [],
 }: {
@@ -144,6 +154,13 @@ export default function TabKatalogTampilan({
    */
   slotBarisTab?: ReactNode;
   /**
+   * Judul baris, digambar DI ATAS deret chip dan di tengah (owner
+   * 2026-11-24). Terpisah dari `slotBarisTab` supaya kelima chip bisa jadi
+   * anak LANGSUNG satu kisi — itu syarat lebarnya bisa seragam.
+   * Kosong di /katalog: di sana barisnya memang tanpa judul.
+   */
+  slotJudulBaris?: ReactNode;
+  /**
    * SERIAL dari penyedia video luar, untuk seksi "Series Terbaru" (owner
    * 2026-11-05: "rekan saya upload drama dari playly tapi masuknya ke film
    * terbaru, harusnya masuk ke series terbaru").
@@ -201,16 +218,46 @@ export default function TabKatalogTampilan({
           owner (*"cuma bagian atas yang diubah, sisanya kembalikan ke
           dramaku"*). Ia tergambar di SEMUA ukuran layar lagi. */}
       <div className={cn(SHELL)}>
-        <div className="flex items-center gap-2 rounded-lg border border-gelap-700 bg-gelap-900/80 p-2 shadow-[0_6px_20px_-6px_rgba(0,0,0,0.9)] terang:border-zinc-200 terang:bg-white terang:shadow-[0_6px_20px_-10px_rgba(0,0,0,0.25)]">
-        {/* `max-md:flex-wrap` = DI HP barisnya MEMBUNGKUS ke bawah, bukan
-            digeser menyamping. Ditambahkan 2026-11-23 bersama `slotBarisTab`:
-            begitu judul + tiga chip ikut masuk, barisnya jadi jauh lebih
-            panjang dari layar HP — dan versi tergeser hanya menampilkan judul
-            + satu chip, tanpa tanda bahwa masih ada isi di sebelah kanan.
-            Terbukti saat mock-nya dipotret sebelum dipasang.
-            `overflow-x-auto` dibiarkan: dengan isi yang membungkus, tak ada
-            yang meluap, jadi ia hanya berlaku lagi di layar komputer. */}
-        <div className="no-scrollbar flex flex-1 items-center gap-2 overflow-x-auto max-md:flex-wrap">
+        <div className="rounded-lg border border-gelap-700 bg-gelap-900/80 p-2 shadow-[0_6px_20px_-6px_rgba(0,0,0,0.9)] terang:border-zinc-200 terang:bg-white terang:shadow-[0_6px_20px_-10px_rgba(0,0,0,0.25)]">
+        {/* JUDUL di baris SENDIRI, di tengah (owner 2026-11-24). Hanya terisi
+            di `/` & `/beranda`; di /katalog slot ini kosong dan barisnya
+            langsung mulai dari tab, persis seperti sebelumnya. */}
+        {slotJudulBaris}
+        <div className="flex items-center gap-2">
+        {/* DI HP: KISI DUA KOLOM, bukan baris yang membungkus (owner
+            2026-11-24: *"kualitas terbaik update terbaru dan lainnya kamu buat
+            seragam"*). Baris yang membungkus memberi tiap chip lebar sesuai
+            panjang tulisannya, jadi hasilnya bertangga-tangga; kisi memberi
+            kolom yang SAMA PERSIS.
+            ⚠️ Kisinya hanya dipakai saat `slotBarisTab` terisi (`/` &
+            `/beranda`, 5 chip). Di /katalog isinya 6+ tab dan kisi 2 kolom
+            akan menjadikannya tembok tinggi — di sana tetap baris yang
+            membungkus seperti semula.
+            Di layar komputer keduanya kembali jadi satu baris (`md:flex`):
+            kelimanya memang muat, dan memaksakan kisi di sana justru
+            melebarkan chip pendek seperti "2026" tanpa guna. */}
+        <div
+          role={slotJudulBaris ? "group" : undefined}
+          aria-labelledby={slotJudulBaris ? ID_JUDUL_TAWARAN : undefined}
+          className={cn(
+            "no-scrollbar flex-1 gap-2 overflow-x-auto md:flex md:flex-wrap md:items-center",
+            slotBarisTab
+              ? cn(
+                  "grid grid-cols-2 max-md:[&>*]:w-full",
+                  /* Chip terakhir yang kebagian baris SENDIRI ditengahkan,
+                     bukan dibiarkan menggantung di kolom kiri — menggantung
+                     terbaca seperti kelupaan, bukan disengaja.
+                     `:last-child:nth-child(odd)` dipilih supaya aturannya
+                     IKUT JUMLAHNYA: hari ini 5 chip (ganjil, jadi menyala),
+                     besok kalau jadi 4 atau 6 ia padam sendiri. Dipaku ke
+                     angka 5 akan salah diam-diam begitu satu chip ditambah. */
+                  "max-md:[&>*:last-child:nth-child(odd)]:col-span-2",
+                  "max-md:[&>*:last-child:nth-child(odd)]:mx-auto",
+                  "max-md:[&>*:last-child:nth-child(odd)]:w-[calc(50%-0.25rem)]",
+                )
+              : "flex items-center max-md:flex-wrap",
+          )}
+        >
           {slotBarisTab}
           {/* Disaring, BUKAN diambil dari daftar yang lebih pendek: `tabs`
               tetap utuh supaya `tabAktif`, judul seksi, dan /katalog?tab=…
@@ -225,16 +272,19 @@ export default function TabKatalogTampilan({
                 key={t.key}
                 href={alamatTab(t.key)}
                 aria-current={sedangDipakai ? "page" : undefined}
+                /* ⚠️ BENTUKNYA DARI `KELAS_CHIP_BARIS`, bukan ditulis di sini
+                   (owner 2026-11-24: semua chip di baris ini WAJIB seragam).
+                   Sampai hari itu tab memakai `rounded-sm px-3 py-2` sementara
+                   tiga chip tetangganya `rounded-full min-h-11` — dua bentuk
+                   berbeda bersebelahan dalam satu kotak. Kalau kelasnya
+                   ditulis ulang di sini lagi, ketidakseragaman itu kembali
+                   tanpa satu pun error.
+                   Bayangan pada chip aktif memberi kesan TERANGKAT dari
+                   halaman, bukan sekadar berganti warna (owner 2026-09-26:
+                   "kasih shadow biar nampak pro"). */
                 className={cn(
-                  "shrink-0 rounded-sm border px-3 py-2 text-[11px] font-extrabold uppercase tracking-wide transition-all duration-200 md:text-xs",
-                  sedangDipakai
-                    // Bayangan kuning pada tab aktif: memberi kesan tombolnya
-                    // TERANGKAT dari halaman, bukan sekadar berganti warna
-                    // (owner 2026-09-26: "kasih shadow biar nampak pro").
-                    ? // Tab aktif: sage-700 + teks putih = 7,58:1. Sampai
-                      // 2026-11-23 ia `bg-amber-400` kuning terang.
-                      "border-emas-500 bg-emas-500 text-gelap-950 shadow-md shadow-emas-500/30"
-                    : "border-emas-700/40 text-redup hover:border-emas-500 hover:bg-emas-500/10 hover:text-emas-300",
+                  KELAS_CHIP_BARIS,
+                  sedangDipakai ? CHIP_BARIS_AKTIF : CHIP_BARIS_DIAM,
                 )}
               >
                 {t.label}
@@ -255,6 +305,7 @@ export default function TabKatalogTampilan({
             tanpa membawa aturan "jangan muncul di HP" diam-diam. */}
         <div className="hidden md:flex">
           <FilterKatalog />
+        </div>
         </div>
         </div>
       </div>

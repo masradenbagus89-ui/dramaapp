@@ -23,7 +23,37 @@
 > lengkap: `HANDOFF.md` seksi `## 2026-11-09`.
 
 
-**Terakhir dicek:** 2026-11-24. ⏸️ **NOL rilis, NOL push** — kedua remote sengaja tidak disentuh hari ini. `origin` tertinggal **18 commit** (DITAHAN owner), `dramaku` **5 commit**. Dua commit baru: `b321537` logo Layarindo diwarnai emas + `0691e03` satu nama situs "DramaKu" → "Layarindo" (68 teks di 41 berkas). Gerbang **LOLOS kelima langkah** (build sukses 23 halaman · `tsc` 0 error · 200 berkas / 2813 tes hijau · nol berkas rahasia). Rincian + urutan rilisnya di seksi `⏸️ 2026-11-24` di bawah. Sebelumnya: 2026-11-23. ✅ **RILIS `13b8937` → `6de869d` TAYANG** (pemulihan 5 perbaikan audit keamanan yang hilang kena `reset --hard`). `dramaku` dulu, lalu `origin main` — keduanya `1a87d86..6de869d`. 🎯 Bukti tayang: SEC-001 diukur **500 → 200** di produksi pada alamat yang sama (cookie cacat). SEC-006 **nol video hilang**. Smoke test 9 alamat **200**. ✅ **SEC-003 ikut terbukti dari luar** (asal sah 401 · asal asing 403 di `drama`/`durasi`/`hardlink`, nol data berubah). 🔴 Sisa milik owner cuma: pastikan deployment `6de869d` **success** di Railway. ✅ Blokir rilis sejak 14 Nov **HILANG** (`build` sukses, `tsc` 0 error). ✅ Gerbang **HIJAU** sejak 2026-11-23 — 6 tes basi Playly/beranda itu dibetulkan di `a4fba18` (197 berkas / 2784 tes lulus, nol gagal). ⏸️ **15 commit menunggu di antrean dan `origin` DITAHAN** atas keputusan owner (angkanya BERTAMBAH tiap sesi lain commit — hitung sendiri: `git rev-list --count origin/main..main`). `dramaku` ikut tertinggal **2 commit**. Gerbang diukur ulang 2026-11-23 malam atas keadaan TERBARU: 200 berkas / **2812 tes** hijau, `build` sukses, `tsc` 0 error. Rincian + urutan rilisnya di seksi `⏸️ 2026-11-23 (ke-3, malam)` di bawah. Sebelumnya: 2026-11-21 ✅ `9720b0c` **TAYANG** (filter "siapa upload hari ini" di panel IMDb). `dramaku` dulu, lalu `origin` — keduanya `ed8be85..9720b0c`. Railway build **sukses**.
+**Terakhir dicek:** 2026-11-24 (sore). ⏸️ **NOL rilis, NOL push** — kedua remote sengaja tidak disentuh hari ini. `origin` tertinggal **20 commit** (DITAHAN owner), `dramaku` **7 commit**. Commit terbaru `c9b7a5a` = tema **ANGGUR + AMBER** yang warnanya diukur dari mockup owner. Sebelumnya hari ini: `b321537` logo Layarindo diwarnai emas + `0691e03` satu nama situs "DramaKu" → "Layarindo" (68 teks di 41 berkas). Gerbang **LOLOS kelima langkah** (build sukses 23 halaman · `tsc` 0 error · 200 berkas / 2813 tes hijau · nol berkas rahasia). Rincian + urutan rilisnya di seksi `⏸️ 2026-11-24` di bawah. Sebelumnya: 2026-11-23. ✅ **RILIS `13b8937` → `6de869d` TAYANG** (pemulihan 5 perbaikan audit keamanan yang hilang kena `reset --hard`). `dramaku` dulu, lalu `origin main` — keduanya `1a87d86..6de869d`. 🎯 Bukti tayang: SEC-001 diukur **500 → 200** di produksi pada alamat yang sama (cookie cacat). SEC-006 **nol video hilang**. Smoke test 9 alamat **200**. ✅ **SEC-003 ikut terbukti dari luar** (asal sah 401 · asal asing 403 di `drama`/`durasi`/`hardlink`, nol data berubah). 🔴 Sisa milik owner cuma: pastikan deployment `6de869d` **success** di Railway. ✅ Blokir rilis sejak 14 Nov **HILANG** (`build` sukses, `tsc` 0 error). ✅ Gerbang **HIJAU** sejak 2026-11-23 — 6 tes basi Playly/beranda itu dibetulkan di `a4fba18` (197 berkas / 2784 tes lulus, nol gagal). ⏸️ **15 commit menunggu di antrean dan `origin` DITAHAN** atas keputusan owner (angkanya BERTAMBAH tiap sesi lain commit — hitung sendiri: `git rev-list --count origin/main..main`). `dramaku` ikut tertinggal **2 commit**. Gerbang diukur ulang 2026-11-23 malam atas keadaan TERBARU: 200 berkas / **2812 tes** hijau, `build` sukses, `tsc` 0 error. Rincian + urutan rilisnya di seksi `⏸️ 2026-11-23 (ke-3, malam)` di bawah. Sebelumnya: 2026-11-21 ✅ `9720b0c` **TAYANG** (filter "siapa upload hari ini" di panel IMDb). `dramaku` dulu, lalu `origin` — keduanya `ed8be85..9720b0c`. Railway build **sukses**.
+
+### ⏸️ 2026-11-24 (ke-2, sore) — antrean naik jadi **20 commit**, masih NOL push
+
+**Tidak ada yang tayang.** `origin/main` masih `6de869d`; produksi tidak berubah.
+
+| Remote | Posisi | Akibat |
+|---|---|---|
+| `dramaku` (cermin) | `45f713c` — tertinggal **7 commit** | nol rilis |
+| `origin` (produksi) | ⏸️ **DITAHAN** di `6de869d` — tertinggal **20 commit** | tombol rilis, belum ditekan |
+
+**Satu commit baru sesudah blok sebelumnya:**
+- `c9b7a5a` — tema **ANGGUR + AMBER**, warnanya diukur dari mockup owner
+
+**Gerbang: HIJAU atas keadaan terbaru ini.** `npm run gerbang` LOLOS kelima
+langkah sesudah `c9b7a5a`: build sukses · `tsc` exit 0 · **200 berkas /
+2814 tes** hijau · nol berkas rahasia.
+
+⚠️ **Yang WAJIB diperiksa dengan mata sesudah tayang nanti** — build hijau
+tidak membuktikan tampilan: warna bar atas, tombol oranye bergradasi, dan menu
+bawah yang SENGAJA lebih gelap dari bar atas. Ketiganya hanya tergambar di
+browser.
+
+🪤 **Sebelum memotret/menguji tampilan: pastikan `next start` memakai build
+BARU.** Server yang sudah hidup TIDAK membaca ulang `.next` yang baru di-build
+— ia terus menyajikan build lama, dan gejalanya halus (potretnya jadi, isinya
+salah). Matikan servernya lewat PID dulu, lalu sesudah menyala periksa dua
+hal: log-nya nol `EADDRINUSE`, dan berkas `.css` yang disajikan memuat warna
+baru.
+
+---
 
 ### ⏸️ 2026-11-24 — antrean naik jadi **18 commit**, `origin` TETAP DITAHAN, cermin juga TIDAK di-push
 

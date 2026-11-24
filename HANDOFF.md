@@ -90,13 +90,91 @@
 > aftermarket** dari pemilik sekarang, harganya **jauh di atas** Rp200.000 dan belum pernah dicek.
 > Nama lain yang masih bebas jauh lebih murah.
 
-**Terakhir diisi:** 2026-11-24 — 🏷️ **SATU NAMA + LOGO EMAS, 2 commit baru, MASIH BELUM TAYANG.** Dua dari empat keputusan yang menggantung semalam sudah dijawab owner setelah melihat potret layarnya: (1) logo dipilih varian **"lambang emas, tulisan krem"** → `b321537`; (2) nama situs **disamakan jadi "Layarindo"** → `0691e03` (`SITE_NAME` + 68 teks di 41 berkas; `NAMA_TAMPIL` dihapus, `LogoDramaKu` → `LogoSitus`). **Gerbang LOLOS kelima langkah:** build sukses (23 halaman) · `tsc` exit 0 · **200 berkas / 2813 tes** hijau · nol berkas rahasia. HTML build produksi: **"DramaKu" 0×, "Layarindo" 24×**. ⚠️ **18 commit belum ke `origin`** (DITAHAN, perintah *"jangan tayang dulu"* belum dicabut), **5 belum ke `dramaku`** — saya TIDAK push ke mana pun hari ini, menunggu izin. 🔴 **Dua keputusan masih menggantung:** `PersonalRows.tsx` nol pemanggil (hapus/simpan?) dan perilaku chip "Terpopuler". 🪤 **Tiga jebakan baru** — yang terpenting: `--window-size` Chrome headless **TIDAK** menentukan `innerWidth` (minta 390, dapat 500), jadi pengukuran "muat di HP" bisa bohong tanpa `Emulation.setDeviceMetricsOverride`. Rincian di seksi `## 2026-11-24`.
+**Terakhir diisi:** 2026-11-24 (sore) — 🍷 **TEMA ANGGUR + AMBER tayang di LOKAL saja (`c9b7a5a`).** Owner mengirim mockup jadi dan meminta *"sama persis dengan image yang saya kirim"*. Warnanya **DIUKUR dari berkas gambarnya** (modus/median per bagian), lalu diperiksa balik dengan membandingkan potret situs vs mockup di 5 titik — jarak warna **4 · 9 · 7 · 4 · 7** dari skala 441 (di bawah 12 = tak terbedakan mata). ⚠️ **Temuan terpenting: mengganti 11 token tema TIDAK CUKUP** — badan halaman tetap HITAM karena 8 tempat memakai warna netral MENTAH (`bg-black`, `bg-zinc-950/80`) yang tak ikut token; ketemu dengan **bertanya ke browser** (`elementFromPoint` + computed style), bukan membaca kode. Penjaganya dipasang. ⚠️ **Aturan BERUBAH:** `emas-700` kini TIDAK lagi sanggup menanggung teks putih (3,79:1, dulu 4,73:1) — nol nada aksen boleh berteks putih. 🔴 **Satu beda masih ada:** latar mockup punya cahaya oranye menyala, punya kita anggur rata — menunggu keputusan owner. Gerbang **LOLOS kelima langkah** (200 berkas / **2814 tes**). ⏸️ **20 commit belum ke `origin`, 7 belum ke `dramaku`** — nol push hari ini. Rincian di seksi `## 2026-11-24 (sore)`.
+
+**Sebelumnya hari ini:** 2026-11-24 (pagi) — 🏷️ **SATU NAMA + LOGO EMAS, 2 commit baru, MASIH BELUM TAYANG.** Dua dari empat keputusan yang menggantung semalam sudah dijawab owner setelah melihat potret layarnya: (1) logo dipilih varian **"lambang emas, tulisan krem"** → `b321537`; (2) nama situs **disamakan jadi "Layarindo"** → `0691e03` (`SITE_NAME` + 68 teks di 41 berkas; `NAMA_TAMPIL` dihapus, `LogoDramaKu` → `LogoSitus`). **Gerbang LOLOS kelima langkah:** build sukses (23 halaman) · `tsc` exit 0 · **200 berkas / 2813 tes** hijau · nol berkas rahasia. HTML build produksi: **"DramaKu" 0×, "Layarindo" 24×**. ⚠️ **18 commit belum ke `origin`** (DITAHAN, perintah *"jangan tayang dulu"* belum dicabut), **5 belum ke `dramaku`** — saya TIDAK push ke mana pun hari ini, menunggu izin. 🔴 **Dua keputusan masih menggantung:** `PersonalRows.tsx` nol pemanggil (hapus/simpan?) dan perilaku chip "Terpopuler". 🪤 **Tiga jebakan baru** — yang terpenting: `--window-size` Chrome headless **TIDAK** menentukan `innerWidth` (minta 390, dapat 500), jadi pengukuran "muat di HP" bisa bohong tanpa `Emulation.setDeviceMetricsOverride`. Rincian di seksi `## 2026-11-24`.
 
 **Sebelumnya:** 2026-11-23 (malam) — 🎨 **TEMA GELAP + EMAS tayang di LOKAL saja, 4 commit baru, SENGAJA BELUM TAYANG.** Owner menutup sesi: *"ok kamu update handoff kita lanjut besok"*; perintah **"jangan tayang dulu karena masih banyak yang mau rubah"** MASIH BERLAKU. Empat commit: `4c5149e` tema gelap+emas (menggantikan soft sage `25957c7`) · `90c90f1` strip **"Layarindo Menawarkan"** ganti panel "Lanjutkan Menonton" · `332e784` FILTER baris tab jadi khusus komputer + isinya disamakan dengan filter bar bawah + 3 tab terpanjang dilepas · `e2b4edb` judul + chip **disederetkan** jadi satu baris dengan tombol tab. **Gerbang HIJAU penuh:** 200 berkas / **2812 tes** · `npm run build` sukses (23 halaman) · `tsc` **0 error**; tombol FILTER **diklik sungguhan** di build produksi (1440px → pop up 6 dropdown terbuka; 390px → tidak ada di baris tab). ⚠️ **15 commit lokal belum terdorong ke `origin`, 2 belum ke `dramaku`** — jangan push "sekalian". 🔴 **Empat keputusan menunggu owner besok:** (1) logo masih HIJAU di atas tema emas, bertabrakan — ganti/warnai/biarkan? (2) nama situs masih DUA: logo "Layarindo" tapi `SITE_NAME` = "DramaKu" (disengaja sejak 2026-11-22, bukan terlewat); (3) `PersonalRows.tsx` kini **nol pemanggil** — hapus atau simpan? (4) chip "Terpopuler" pergi ke `/discover`, beda dari tab "TERPOPULER" yang tombolnya sudah dilepas. 🪤 **Enam jebakan baru dicatat** — yang terpenting: penjaga tes bisa **MATI diam-diam** karena `\b` tertulis sebagai karakter BACKSPACE sungguhan (satu penjaga empat putaran koreksi owner ternyata hijau tanpa memeriksa apa pun), dan uji interaktif di `next dev` menghasilkan "rusak" yang KELIRU. Rincian + cara memeriksa di seksi `## 2026-11-23 (malam)`. Sebelumnya: 🎨 **`25957c7` DI-COMMIT, SENGAJA BELUM TAYANG** — tema **soft sage** + **logo Layarindo** + pop up **Filter Film** + menu bawah 4 tab penonton + panel menu katalog HP (33 berkas, 2.259 baris, nol perubahan di produksi); temanya kini DITIMPA gelap+emas di atas, titik pulang tetap `25957c7`. Sebelumnya: 🔐 ✅ **RILIS `13b8937` → `6de869d` TAYANG.** 5 perbaikan audit keamanan 14 Nov ternyata **HILANG dari kode** (kena `git reset --hard` ±15 Nov; catatan lama yang bilang "SEMUA diperbaiki" sudah DIRALAT) — dipulihkan + SEC-007 ditulis ulang dari nol. **Blokir rilis yang berlaku sejak 14 Nov HILANG:** `next build` sukses & `npx tsc --noEmit` **0 error**. Next lokal 16.4.3 → **16.4.6**. 🎯 **Terbukti tayang dengan cara terkuat: SEC-001 diukur HIDUP lalu MATI di produksi** — alamat `/api/comments` yang sama membalas **500** dengan cookie cacat sebelum deploy, **200** sesudahnya. SEC-006 diperiksa **nol video hilang**. ✅ **SEC-003 ikut terbukti dari luar** — `guardAsal` berjalan sebelum cek login, jadi 401 vs 403 memisahkan "lolos penjaga" dari "ditolak penjaga": `drama`/`durasi`/`hardlink` semua **asal sah 401 · asal asing 403**, nol data berubah. ⏸️ Dua risiko sengaja TIDAK disentuh atas keputusan owner (repo `origin` **PUBLIK** sementara laporan audit 85 KB duduk di akar repo; `data/viewers.json` tak diabaikan `.gitignore`) — rinciannya di seksi `## 2026-11-23`. Riwayat lebih lama: lihat seksi-seksi bertanggal di bawah.
 
 **Rincian kontrol volume (putaran KETIGA):** owner menolak bentuk tombol `+` / `−` dan mengirim contoh gambar, jadi pengatur volume kini **garis geser tegak berbentuk kapsul** (jalur kuning + bulatan penggeser). Diukur di Chrome headless layar 393px: kapsul `x=345..381` **utuh di dalam layar**, geser jari atas→100% / tengah→50% / bawah→bisu, nol elemen diputar. Gerbang lolos 5/5 (2383 tes hijau). ✅ **Sudah TAYANG** dalam rilis `53fbc5c → a9ae869` malam itu juga.
 
 **Sebelumnya hari ini:** ✅ **`2ad015b` + `8d8c1ba` TAYANG.** Tata letak pemutar beres dalam tiga putaran permintaan owner: tombol **Eps turun ke baris paling bawah**, tombol **volume pindah ke sebelah angka durasi**, rail ikon kanan **diperkecil & dirapatkan** (36px/20px/jarak 8px), dan garis volume tegak **diganti tombol + / −** karena terukur berdiri di **x=391 pada layar 393px = di luar layar HP**. Rinciannya di seksi `## 2026-11-13` di bawah.
+
+---
+
+## 2026-11-24 (sore) — 🍷 TEMA ANGGUR + AMBER dari mockup owner (`c9b7a5a`), BELUM TAYANG
+
+Owner mengirim **mockup jadi** (`Downloads/image.webp`, 379x732) dan meminta
+*"ubah tema sekarang sama persis dengan image yang saya kirim detail warnanya,
+kecuali fiturnya jangan diubah, utamakan warnanya yang sama persis"*.
+
+### Cara kerjanya — jangan ulangi dengan menebak dari pandangan mata
+
+Warna diambil dengan **mengukur berkas gambarnya** (`sharp`, modus/median di
+dalam kotak tiap bagian), bukan dinilai mata. Untuk tombol, piksel huruf gelap
+dibuang dulu supaya yang terukur badan tombolnya. Hasilnya diperiksa balik
+dengan membandingkan potret situs vs mockup di 5 titik yang sama — jarak warna
+(skala 0–441): bar atas **4** · tombol **9** · chip **7** · menu bawah **4** ·
+latar halaman **7**. Di bawah 12 praktis tak terbedakan mata.
+
+🪤 **Minta berkasnya, jangan ukur dari gambar di jendela chat.** Gambar yang
+ditempel di chat tidak tersimpan sebagai berkas di mana pun (sudah dicari di
+Downloads, folder Temp, dan folder editor — nihil). Owner cukup klik kanan →
+Save image as. Tanpa berkasnya, "sama persis" mustahil dibuktikan.
+
+### ⚠️ TEMUAN PALING PENTING: mengganti token tema TIDAK CUKUP
+
+Sesudah 11 token di `app/globals.css` diganti anggur, **badan halaman masih
+HITAM**. Sebabnya beberapa bagian memakai warna netral MENTAH yang tidak ikut
+token: `bg-black` (FeaturedRow, TabKatalogTampilan), `bg-zinc-950/80` (kotak
+baris tab), `bg-black/95` (TopNav), `bg-zinc-950` (kaki situs).
+
+Ditemukan dengan **bertanya ke browser** — `document.elementFromPoint(x,y)`
+lalu menelusuri induknya sampai ketemu yang `backgroundColor`-nya bukan
+transparan. Membaca kode dan menebak TIDAK akan menemukannya secepat itu:
+kelasnya tersebar di 8 berkas dan tidak satu pun menyebut kata "latar".
+Penjaganya sekarang ada di `tests/tab-katalog-beranda.test.ts` — menuntut
+`border-gelap-*`, jadi kelas netral mentah tidak bisa kembali diam-diam.
+
+### Aturan yang BERUBAH — jangan pakai ingatan dari tema emas
+
+**Dulu `emas-700` masih sanggup menanggung teks putih (4,73:1). Sekarang
+TIDAK (3,79:1).** Jadi kini **tidak ada satu pun** nada aksen yang boleh
+berteks putih — seluruh tangga 200→700 wajib teks gelap. Dicatat mencolok di
+`app/globals.css`.
+
+### Yang sengaja TIDAK ditiru dari mockup
+
+- **Susunan fiturnya.** Mockup memakai tab "Film · Serial · Anime ·
+  Dokumenter" dan menu bawah "Cari · Kategori · Profil" yang berbeda dari
+  situs. Owner minta nol fitur diubah — hanya warnanya.
+- **Lapisan hitam transparan di atas poster** (`bg-black/75`, `/80`, `/50`)
+  dibiarkan hitam. Itu peredup gambar, bukan warna tema; menganggurkannya akan
+  menodai warna posternya.
+- **Logo tetap lambang putar**, bukan mahkota seperti di mockup. Warnanya
+  kebetulan sudah cocok (lambang emas hari ini #fcb037 vs mahkota mockup
+  #fbb234).
+
+### 🔴 Satu beda yang MASIH ADA dan menunggu keputusan owner
+
+Latar mockup punya **cahaya oranye menyala** (gradasi) — punya kita anggur
+RATA. Kelima titik ukur cocok, tapi kesan "menyala" itu belum ditiru. Belum
+dikerjakan karena ia mengubah kesan SELURUH halaman, bukan satu bidang.
+
+### Bukti
+
+`npm run gerbang` **LOLOS kelima langkah**: build sukses · `tsc` exit 0 ·
+**200 berkas / 2814 tes** hijau · nol berkas rahasia. Potret HP, komputer, dan
+`/film` diperiksa mata. Lembar perbandingan berdampingan +
+tabel angka ada di `Downloads/tampilan-emas-2026-11-24/10-BANDING-mockup-vs-situs.png`.
+
+🪤 **Jebakan yang memakan satu putaran:** `next start` menyajikan build LAMA
+karena server sebelumnya masih hidup memegang port — `npm run build` menimpa
+`.next` tapi server yang sudah jalan tidak membacanya ulang. Gejalanya HALUS:
+potretnya jadi, isinya salah. Pengaman yang sekarang dipakai: sesudah
+menyalakan server, periksa log-nya memuat `EADDRINUSE` atau tidak, DAN periksa
+CSS yang disajikan memuat warna baru (`curl` berkas `.css`-nya, hitung
+kemunculan hex-nya).
 
 ---
 

@@ -147,7 +147,7 @@ describe("seksi beranda memisahkan film dari serial", () => {
     expect(blokFilm).not.toContain("Drama Berseri");
   });
 
-  it("serial tergambar di seksi Series Terbaru, DI DEPAN drama katalog", () => {
+  it("serial tergambar di seksi Nonton Bareng, DI DEPAN drama katalog", () => {
     const html = render([], [video("Drama Berseri")]);
 
     const blokSeries = html.slice(html.indexOf(`id="seksi-${TAB_BAWAAN}"`));

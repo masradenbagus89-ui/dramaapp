@@ -112,14 +112,25 @@ export function daftarTab(dramas: Drama[]): TabKatalog[] {
     // judulDariLabel di atas), jadi keduanya tetap mustahil menyimpang.
     buat(
       "terbaru",
-      "SERIES TERBARU",
+      // ⚠️ DIGANTI dari "SERIES TERBARU" (owner 2026-11-24). Yang berganti
+      // CUMA NAMANYA — isinya tetap "judul terbaru masuk katalog", dan
+      // keterangannya sengaja tetap menyebut itu apa adanya. Nama pilihan
+      // owner boleh bergaya; keterangan di bawahnya yang menjaga penonton
+      // tidak salah sangka soal isinya.
+      // `key` TIDAK ikut berganti: ia kunci alamat `/katalog?tab=terbaru`
+      // yang sudah dipakai tautan menu "Series" di bar atas.
+      "NONTON BARENG",
       // Keterangan sengaja TETAP "judul", bukan "serial": isi tab ini belum
       // disaring serial-saja, jadi 1 drama ber-kind "movie" di katalog masih
       // ikut. Menulis "serial" di sini = janji yang tidak ditepati datanya.
       "Judul yang paling baru masuk katalog Layarindo.",
     ),
     buat("unggulan", "SERIES UNGGULAN", "Serial pilihan — ditandai sendiri oleh admin."),
-    buat("update", "SERIES UPDATE", "Serial yang episodenya masih bertambah."),
+    // ⚠️ DIGANTI dari "SERIES UPDATE" (owner 2026-11-24), nama saja. Isinya
+    // tetap serial yang episodenya masih bertambah — bukan disaring per
+    // negara Asia. Kalau suatu hari diminta benar-benar menyaring Asia,
+    // syaratnya kolom `country` terisi, dan per 2026-11-24 itu NOL serial.
+    buat("update", "DRAMA ASIA", "Serial yang episodenya masih bertambah."),
     buat("terpopuler", "TERPOPULER", "Diurutkan dari jumlah penonton terbanyak."),
     buat("rekomendasi", "REKOMENDASI", "Diurutkan dari rating tertinggi."),
   ];
@@ -133,6 +144,41 @@ export function daftarTab(dramas: Drama[]): TabKatalog[] {
 
 /** Tab yang dipakai kalau alamat belum menyebut apa-apa. */
 export const TAB_BAWAAN: TabKey = "terbaru";
+
+/**
+ * Penanda baris FILM di urutan seksi halaman depan. Bukan sebuah tab — isinya
+ * datang dari penyedia video luar, bukan dari katalog drama — tapi ia ikut
+ * diurutkan bersama, jadi ia butuh tempat di daftar yang sama.
+ */
+export const SEKSI_FILM = "__film__" as const;
+
+/**
+ * URUTAN SEKSI HALAMAN DEPAN — ditentukan langsung oleh owner 2026-11-24:
+ *   1. Nonton Bareng  2. Rekomendasi  3. Film Terbaru  4. Drama Asia
+ *   5. Terpopuler
+ *
+ * ⚠️ DAFTAR INI JUGA MENENTUKAN APA YANG TIDAK DIGAMBAR. "Series Unggulan"
+ * dan tab tahun ("2026") sengaja TIDAK ada di sini — owner meminta beranda
+ * tepat lima seksi.
+ *
+ * ⚠️ YANG DISEMBUNYIKAN HANYA SEKSINYA, bukan tabnya. `daftarTab` tetap utuh
+ * dan `parseTab` tetap mengenali "unggulan" & "tahun", sebab tautan menu
+ * "Series" di bar atas menunjuk `/katalog?tab=unggulan`. Kalau tabnya ikut
+ * dibuang, tautan itu mendarat di daftar yang SALAH tanpa satu pun error —
+ * `tabAktif` jatuh diam-diam ke tab pertama.
+ *
+ * KENAPA DI SINI, bukan di komponennya: judul, keterangan, dan urutan seksi
+ * jadi satu berkas. Urutan yang ditulis di komponen akan menyimpang dari
+ * daftar tab cepat atau lambat, dan menyimpangnya nol error — cuma beranda
+ * yang isinya tak sesuai permintaan owner.
+ */
+export const URUTAN_SEKSI_BERANDA: readonly (TabKey | typeof SEKSI_FILM)[] = [
+  "terbaru",
+  "rekomendasi",
+  SEKSI_FILM,
+  "update",
+  "terpopuler",
+];
 
 export function parseTab(value: string | null | undefined): TabKey {
   const sah: TabKey[] = [

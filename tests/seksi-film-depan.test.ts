@@ -78,12 +78,18 @@ describe('seksi "Film Terbaru" di halaman depan', () => {
     const html = render([film(1)]);
     const mulai = html.indexOf(`id="seksi-${KUNCI_BARIS_VIDEO}"`);
     const series = html.indexOf('id="seksi-terbaru"');
-    const berikut = html.indexOf('id="seksi-unggulan"');
+    // ⚠️ BATAS AKHIRNYA dicari sebagai "seksi BERIKUTNYA apa pun", bukan
+    // dipaku ke `seksi-unggulan` (2026-11-24). Seksi itu memang tidak lagi
+    // digambar di beranda sejak owner menentukan lima seksi saja, dan
+    // patokan yang dipaku ke satu nama akan patah lagi tiap kali urutannya
+    // disusun ulang — merah karena alasan yang salah.
+    const berikut = html.indexOf('id="seksi-', mulai + 1);
 
-    // Series Terbaru di ATAS Film Terbaru (owner 2026-11-17).
+    // Seksi pertama ("Nonton Bareng", kunci `terbaru`) tetap di ATAS Film
+    // Terbaru — urutan owner 2026-11-17, dipertahankan 2026-11-24.
     expect(series).toBeGreaterThanOrEqual(0);
     expect(mulai).toBeGreaterThan(series);
-    expect(berikut).toBeGreaterThan(mulai);
+    expect(berikut, "tak ada seksi apa pun sesudah Film Terbaru").toBeGreaterThan(mulai);
     const isiSeksiFilm = html.slice(mulai, berikut);
     expect(isiSeksiFilm).toContain("Film Layar Lebar 1");
     expect(isiSeksiFilm).not.toContain("Drama Serial");

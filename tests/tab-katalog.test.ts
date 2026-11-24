@@ -91,7 +91,7 @@ describe("tiap tab BENAR-BENAR menyaring — bukan daftar yang sama", () => {
     expect(new Set(hasil).size).toBe(kunci.length);
   });
 
-  it("SERIES UNGGULAN & SERIES UPDATE hanya berisi serial, tanpa film", () => {
+  it("SERIES UNGGULAN & DRAMA ASIA hanya berisi serial, tanpa film", () => {
     for (const t of ["unggulan", "update"] as const) {
       expect(isiTab(katalog(), t).some((d) => d.kind === "movie")).toBe(false);
     }
@@ -115,7 +115,7 @@ describe("SERIES UNGGULAN — penanda owner MENANG atas hitungan otomatis", () =
   });
 });
 
-describe("SERIES UPDATE — status owner MENANG atas hitungan otomatis", () => {
+describe("DRAMA ASIA — status owner MENANG atas hitungan otomatis", () => {
   it("memakai serial berstatus masih tayang kalau ada", () => {
     expect(isiTab(katalog(), "update").map((d) => d.id)).toEqual(["s3"]);
   });

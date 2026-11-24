@@ -7,6 +7,9 @@ import {
   TAB_BAWAAN,
   TAB_GRID_ITEMS,
   TAB_ROW_ITEMS,
+  SEKSI_FILM,
+  URUTAN_SEKSI_BERANDA,
+  type TabKatalog,
   type TabKey,
 } from "@/lib/tab-katalog";
 import CatalogCard from "./CatalogCard";
@@ -342,8 +345,42 @@ export default function TabKatalogTampilan({
               Tab yang diklik tetap naik ke urutan pertama supaya kliknya
               terasa; film tetap menempel tepat di bawah seksi pertama itu. */}
           {(() => {
-            const urutan = [tabAktif, ...tabs.filter((t) => t.key !== tabAktif.key)];
-            const gambarSeksi = (t: (typeof urutan)[number]) => (
+            // ⚠️ URUTANNYA DARI `URUTAN_SEKSI_BERANDA` (lib/tab-katalog.ts),
+            // bukan dari urutan `tabs` (owner 2026-11-24 menentukan lima
+            // seksi beserta urutannya). Daftar itu sekaligus menentukan apa
+            // yang TIDAK digambar — "Series Unggulan" & tab tahun tidak ada
+            // di sana, jadi seksinya hilang dari beranda. Tabnya TETAP hidup;
+            // lihat alasannya di daftar itu.
+            const diizinkan = new Set(URUTAN_SEKSI_BERANDA);
+            const terpakai = URUTAN_SEKSI_BERANDA.map((k) =>
+              k === SEKSI_FILM ? SEKSI_FILM : tabs.find((t) => t.key === k),
+            ).filter((t): t is TabKatalog | typeof SEKSI_FILM => Boolean(t));
+
+            // Tab yang sedang dibuka tetap naik ke urutan pertama supaya
+            // kliknya terasa (perilaku yang diminta owner 2026-10-09) — tapi
+            // HANYA kalau ia memang salah satu dari lima seksi di atas.
+            // Tanpa syarat itu, mengklik tab yang seksinya sengaja
+            // disembunyikan akan memunculkannya kembali di beranda.
+            const urutan =
+              diizinkan.has(tabAktif.key)
+                ? [
+                    tabs.find((t) => t.key === tabAktif.key) ?? tabAktif,
+                    ...terpakai.filter(
+                      (t) => t === SEKSI_FILM || t.key !== tabAktif.key,
+                    ),
+                  ]
+                : terpakai;
+            const gambarFilm = () => (
+              <SeksiKatalog
+                key={KUNCI_BARIS_VIDEO}
+                idSeksi={`seksi-${KUNCI_BARIS_VIDEO}`}
+                judul={JUDUL_BARIS_VIDEO}
+                keterangan="Film layar lebar — tahun rilis terbaru lebih dulu."
+                kartu={videos.map(bungkusVideo)}
+                hrefSemua="/film"
+              />
+            );
+            const gambarSeksi = (t: TabKatalog) => (
               <SeksiKatalog
                 key={t.key}
                 idSeksi={`seksi-${t.key}`}
@@ -371,18 +408,11 @@ export default function TabKatalogTampilan({
                 hrefSemua={t.key === TAB_BAWAAN ? "/katalog" : `/katalog?tab=${t.key}`}
               />
             );
-            const [pertama, ...lanjutan] = urutan;
             return (
               <>
-                {pertama ? gambarSeksi(pertama) : null}
-                <SeksiKatalog
-                  idSeksi={`seksi-${KUNCI_BARIS_VIDEO}`}
-                  judul={JUDUL_BARIS_VIDEO}
-                  keterangan="Film layar lebar — tahun rilis terbaru lebih dulu."
-                  kartu={videos.map(bungkusVideo)}
-                  hrefSemua="/film"
-                />
-                {lanjutan.map(gambarSeksi)}
+                {urutan.map((t) =>
+                  t === SEKSI_FILM ? gambarFilm() : gambarSeksi(t),
+                )}
               </>
             );
           })()}

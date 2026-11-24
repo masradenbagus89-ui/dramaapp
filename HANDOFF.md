@@ -212,7 +212,25 @@ kemunculan hex-nya).
 
 ---
 
-### Putaran 8 — Dracin/K-Drama & seluruh genre resmi SELALU digambar (`4995fd6`)
+### Putaran 8 — Dracin/K-Drama & seluruh genre resmi SELALU digambar
+
+> ⚠️ **RALAT pada hari yang sama.** Angka "47 pilihan, 4 kolom" di seksi ini
+> **sudah tidak berlaku**. Owner melihat hasilnya lalu menilai menu "Lainnya"
+> *"terlalu penuh"* dan meminta *"inti-intinya saja seperti dracin, k-drama
+> dan sejenisnya"* → dikembalikan ke **10 pilihan, satu kolom, 330px**
+> (commit `cc11879`): lima baris drama Asia + kategori yang BENAR-BENAR ada
+> isinya + "Semua Judul".
+>
+> Yang TETAP: kelima baris drama Asia selalu digambar walau kosong, dan
+> seluruh GENRE FILM resmi di menu **Genre** (owner tidak mengeluhkan menu
+> itu). Jadi dua keputusan "tampilkan selalu" tidak dibatalkan — yang
+> dibatalkan hanya pemaksaan ±37 kategori kurasi ke menu "Lainnya".
+>
+> 🪤 **Pelajarannya:** "tambahkan yang belum ada" terdengar seperti satu
+> permintaan, tapi di sini ia menyentuh DUA daftar dengan ukuran sangat
+> berbeda — 27 genre film (wajar) dan ±50 kategori kurasi (kebanyakan).
+> Lain kali: potret dulu hasilnya pada daftar TERBESAR sebelum dipasang,
+> bukan sesudah. (`4995fd6`)
 
 Owner: *"tambahkan di lainnya dracin, k-drama dan yang belum ada di genre"*.
 

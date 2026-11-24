@@ -59,7 +59,7 @@ const TAUTAN_JELAJAHI: { label: string; href: string }[] = [
  * kaki situs saja sudah setinggi satu layar penuh.
  */
 const KELAS_TAUTAN =
-  "flex min-h-11 items-center text-zinc-400 transition-colors hover:text-amber-400 md:min-h-0 md:py-1";
+  "flex min-h-11 items-center text-zinc-400 transition-colors hover:text-emas-400 md:min-h-0 md:py-1";
 
 export default function FooterSitus({
   genres,
@@ -181,7 +181,7 @@ export default function FooterSitus({
           <p>
             <Link
               href="/login"
-              className="text-zinc-500 underline-offset-2 transition-colors hover:text-amber-400 hover:underline"
+              className="text-zinc-500 underline-offset-2 transition-colors hover:text-emas-400 hover:underline"
             >
               Masuk sebagai pengelola
             </Link>
@@ -199,7 +199,7 @@ function JudulKolom({ children }: { children: React.ReactNode }) {
       {children}
       <span
         aria-hidden="true"
-        className="absolute bottom-0 left-0 h-0.5 w-10 bg-amber-400"
+        className="absolute bottom-0 left-0 h-0.5 w-10 bg-emas-400"
       />
     </h2>
   );

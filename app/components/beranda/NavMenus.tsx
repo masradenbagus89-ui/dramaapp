@@ -95,7 +95,7 @@ export default function NavMenus({ menus }: { menus: NavMenu[] }) {
               <DropdownMenuItem
                 key={item.href}
                 asChild
-                className="cursor-pointer text-sm focus:bg-zinc-800 focus:text-amber-400"
+                className="cursor-pointer text-sm focus:bg-zinc-800 focus:text-emas-400"
               >
                 <Link href={item.href}>{item.label}</Link>
               </DropdownMenuItem>

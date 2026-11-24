@@ -97,7 +97,7 @@ export default function HasilPlayly({ videos, ketikan }: Props) {
         {!mencari && videos.length > BATAS_JELAJAH && (
           <Link
             href="/film"
-            className="shrink-0 text-sm font-semibold text-amber-400 terang:text-amber-700 underline"
+            className="shrink-0 text-sm font-semibold text-emas-400 terang:text-emas-700 underline"
           >
             Lihat semua
           </Link>

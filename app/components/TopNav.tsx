@@ -212,7 +212,7 @@ export default function TopNav() {
           {/* Kotak kuning yang meluncur ke menu aktif */}
           {pill && (
             <span
-              className="absolute top-0 bottom-0 z-0 rounded-md bg-amber-400 shadow-[0_0_16px_rgba(251,191,36,0.45)] transition-all duration-300 ease-out"
+              className="absolute top-0 bottom-0 z-0 rounded-md bg-emas-400 shadow-[0_0_16px_rgba(251,191,36,0.45)] transition-all duration-300 ease-out"
               style={{ left: pill.left, width: pill.width }}
             />
           )}
@@ -269,7 +269,7 @@ export default function TopNav() {
             <button
               type="submit"
               aria-label="Cari"
-              className="absolute left-0 top-0 flex h-full w-9 items-center justify-center rounded-l-full text-zinc-500 outline-none transition-colors hover:text-amber-400 focus-visible:text-amber-400"
+              className="absolute left-0 top-0 flex h-full w-9 items-center justify-center rounded-l-full text-zinc-500 outline-none transition-colors hover:text-emas-400 focus-visible:text-emas-400"
             >
               <Search className="size-4" />
             </button>
@@ -286,7 +286,7 @@ export default function TopNav() {
               role="combobox"
               aria-expanded={saranTampil}
               aria-autocomplete="list"
-              className="rounded-full border-zinc-800 bg-zinc-900 pl-9 text-sm text-white placeholder:text-zinc-500 focus-visible:border-amber-400 focus-visible:ring-0"
+              className="rounded-full border-zinc-800 bg-zinc-900 pl-9 text-sm text-white placeholder:text-zinc-500 focus-visible:border-emas-400 focus-visible:ring-0"
             />
           </div>
 
@@ -326,7 +326,7 @@ export default function TopNav() {
                 asChild
                 variant="outline"
                 size="sm"
-                className="rounded-full border-zinc-700 bg-transparent text-xs font-semibold text-white hover:border-amber-400 hover:text-amber-400"
+                className="rounded-full border-zinc-700 bg-transparent text-xs font-semibold text-white hover:border-emas-400 hover:text-emas-400"
               >
                 <Link href="/login">Masuk</Link>
               </Button>
@@ -343,9 +343,9 @@ export default function TopNav() {
       </div>
     </header>
     {perluMasukUlang && (
-      <div className="border-b border-amber-900/50 bg-amber-950/40 px-4 py-2 text-center text-xs text-amber-200">
+      <div className="border-b border-amber-900/50 bg-amber-950/40 px-4 py-2 text-center text-xs text-emas-200">
         Akun ini sudah diangkat jadi admin, tapi sesinya masih penonton.{" "}
-        <Link href="/login" className="font-semibold text-amber-400 underline">
+        <Link href="/login" className="font-semibold text-emas-400 underline">
           Masuk ulang dengan password admin
         </Link>
       </div>

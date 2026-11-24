@@ -284,7 +284,7 @@ export default function SearchBar({
         aria-expanded={saranTampil}
         aria-autocomplete="list"
         className={cn(
-          "rounded-l-sm rounded-r-none border-transparent bg-white text-zinc-900 placeholder:text-zinc-500 focus-visible:border-amber-400 focus-visible:ring-0",
+          "rounded-l-sm rounded-r-none border-transparent bg-white text-zinc-900 placeholder:text-zinc-500 focus-visible:border-emas-400 focus-visible:ring-0",
           // `besar` HANYA untuk lapisan popup (owner 2026-10-29: "kecil kali,
           // bisa besar sedikit"). Bar tetap `h-9` — menaikkannya di sana akan
           // meninggikan SELURUH kepala situs, termasuk /discover yang masih
@@ -408,7 +408,7 @@ export default function SearchBar({
                        bawaan browser. Hasilnya pemakai papan ketik kehilangan
                        jejak fokusnya tepat di satu-satunya ukuran layar tempat
                        tombol ini hidup. */
-                    className="flex items-center rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-amber-400 md:hidden"
+                    className="flex items-center rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-emas-400 md:hidden"
                   >
                     {chrome.brandHp}
                   </SheetTrigger>

@@ -71,7 +71,7 @@ export default function SeksiKatalog({
              dramaku"*). Bentuk tombol gradasi ini berlaku di semua layar. */
           className={cn(
             TOMBOL_UTAMA,
-            "min-h-11 shrink-0 rounded-sm px-6 text-[11px] font-bold uppercase tracking-wide shadow-md md:min-h-9",
+            "min-h-11 shrink-0 rounded-full px-6 text-[11px] font-bold uppercase tracking-wide shadow-md md:min-h-9",
           )}
         >
           <Link href={hrefSemua}>Semua</Link>

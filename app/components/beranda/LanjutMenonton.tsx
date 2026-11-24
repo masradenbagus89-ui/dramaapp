@@ -45,14 +45,14 @@ export default function LanjutMenonton() {
         <div className="flex flex-wrap justify-center gap-2">
           <Button
             asChild
-            className="rounded-full bg-amber-400 px-5 text-sm font-bold text-black hover:bg-amber-300"
+            className="rounded-full bg-emas-400 px-5 text-sm font-bold text-black hover:bg-emas-300"
           >
             <Link href="/login">Masuk</Link>
           </Button>
           <Button
             asChild
             variant="outline"
-            className="rounded-full border-zinc-600 bg-transparent px-5 text-sm font-semibold text-white hover:border-amber-400 hover:text-amber-400"
+            className="rounded-full border-zinc-600 bg-transparent px-5 text-sm font-semibold text-white hover:border-emas-400 hover:text-emas-400"
           >
             <Link href="/daftar">Daftar Gratis</Link>
           </Button>

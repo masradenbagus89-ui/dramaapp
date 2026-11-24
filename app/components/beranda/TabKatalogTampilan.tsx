@@ -354,7 +354,7 @@ export default function TabKatalogTampilan({
             size="sm"
             className={cn(
               TOMBOL_UTAMA,
-              "h-8 shrink-0 rounded-sm px-4 text-[11px] font-bold uppercase tracking-wide",
+              "h-8 shrink-0 rounded-full px-4 text-[11px] font-bold uppercase tracking-wide",
             )}
           >
             <Link href={alamatTab(tabAktif.key, !semua)}>

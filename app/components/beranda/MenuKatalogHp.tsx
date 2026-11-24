@@ -117,7 +117,7 @@ export default function MenuKatalogHp({ menus }: { menus: NavMenu[] }) {
           berbohong soal bentuknya sendiri (gestur seretnya memang tidak pernah
           dibangun). Gantinya tombol ✕ nyata di pojok kanan atas. */}
       <div className="flex shrink-0 items-center gap-2 px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
-        <span className="h-4 w-1 rounded-full bg-amber-400" aria-hidden="true" />
+        <span className="h-4 w-1 rounded-full bg-emas-400" aria-hidden="true" />
         {/* SheetTitle WAJIB ada: Radix memakainya sebagai nama panel untuk
             pembaca layar. Dipasang demi aksesibilitas, bukan demi meredam
             peringatan — versi Radix yang terpasang di sini tidak memperingati. */}
@@ -137,7 +137,7 @@ export default function MenuKatalogHp({ menus }: { menus: NavMenu[] }) {
             yang lazim. */}
         <SheetClose
           aria-label="Tutup menu katalog"
-          className="-mr-2 flex size-11 shrink-0 items-center justify-center rounded-lg text-stone-400 transition-colors outline-none hover:bg-stone-800 hover:text-stone-50 focus-visible:bg-stone-800 focus-visible:ring-2 focus-visible:ring-amber-400"
+          className="-mr-2 flex size-11 shrink-0 items-center justify-center rounded-lg text-stone-400 transition-colors outline-none hover:bg-stone-800 hover:text-stone-50 focus-visible:bg-stone-800 focus-visible:ring-2 focus-visible:ring-emas-400"
         >
           <X className="size-5" aria-hidden="true" />
         </SheetClose>
@@ -259,7 +259,7 @@ export default function MenuKatalogHp({ menus }: { menus: NavMenu[] }) {
                          pekat: yang pekat memutus gradasi panel jadi
                          kotak-kotak gelap. Transparan membuat chip terbaca
                          sebagai lapisan DI ATAS panel yang sama. */
-                      className="flex min-h-11 items-center rounded-lg bg-stone-800 px-3 text-[13px] font-medium text-stone-50 transition-colors hover:bg-stone-700 hover:text-amber-200 active:bg-stone-700"
+                      className="flex min-h-11 items-center rounded-lg bg-stone-800 px-3 text-[13px] font-medium text-stone-50 transition-colors hover:bg-stone-700 hover:text-emas-200 active:bg-stone-700"
                     >
                       <span className="truncate">{item.label}</span>
                     </Link>

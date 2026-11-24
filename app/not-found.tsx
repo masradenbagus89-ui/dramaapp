@@ -70,7 +70,7 @@ export default function NotFound() {
         <Button
           asChild
           size="lg"
-          className="rounded-full bg-amber-400 px-6 py-3 text-sm font-bold text-black hover:bg-amber-300"
+          className="rounded-full bg-emas-400 px-6 py-3 text-sm font-bold text-black hover:bg-emas-300"
         >
           <Link href="/beranda">Kembali ke Beranda</Link>
         </Button>
@@ -78,7 +78,7 @@ export default function NotFound() {
           asChild
           variant="outline"
           size="lg"
-          className="rounded-full border-zinc-600 bg-black/40 px-6 py-3 text-sm font-semibold text-white hover:border-amber-400 hover:text-amber-400"
+          className="rounded-full border-zinc-600 bg-black/40 px-6 py-3 text-sm font-semibold text-white hover:border-emas-400 hover:text-emas-400"
         >
           <Link href="/discover">Jelajahi Drama</Link>
         </Button>

@@ -38,11 +38,11 @@ export default function CatalogCard({
       href={href ?? `/drama/${drama.id}`}
       className="group/kartu block focus-visible:outline-none"
     >
-      <div className="relative overflow-hidden rounded-sm ring-1 ring-white/10 terang:ring-black/10 transition duration-200 group-hover/kartu:ring-2 group-hover/kartu:ring-amber-400 group-focus-visible/kartu:ring-2 group-focus-visible/kartu:ring-amber-400">
+      <div className="relative overflow-hidden rounded-xl ring-1 ring-emas-700/30 terang:ring-black/10 transition duration-200 group-hover/kartu:ring-2 group-hover/kartu:ring-emas-400 group-focus-visible/kartu:ring-2 group-focus-visible/kartu:ring-emas-400">
         <Poster
           drama={drama}
           previewSrc={teaserSrc(drama.id)}
-          className="aspect-[2/3] rounded-sm"
+          className="aspect-[2/3] rounded-xl"
         />
 
         {/* Tombol putar muncul saat mouse di atas kartu (desktop). z-20 = di
@@ -54,7 +54,7 @@ export default function CatalogCard({
 
       <h3
         title={drama.title}
-        className="mt-1 line-clamp-1 text-xs font-bold leading-snug text-white terang:text-zinc-900 transition-colors group-hover/kartu:text-amber-400 terang:group-hover/kartu:text-amber-700 md:text-[13px]"
+        className="mt-1 line-clamp-1 text-xs font-bold leading-snug text-white terang:text-zinc-900 transition-colors group-hover/kartu:text-emas-400 terang:group-hover/kartu:text-emas-700 md:text-[13px]"
       >
         {drama.title}
       </h3>

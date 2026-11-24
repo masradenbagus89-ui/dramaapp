@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Play } from "lucide-react";
 import type { Drama } from "@/lib/types";
 import type { KartuKatalog } from "@/lib/beranda-video";
 import BarisGeser from "./BarisGeser";
@@ -94,7 +95,7 @@ export default function FeaturedRow({
             </h2>
             <Link
               href={href}
-              className="shrink-0 text-[11px] font-bold uppercase tracking-wide text-amber-400 terang:text-amber-700 hover:underline"
+              className="shrink-0 text-[11px] font-bold uppercase tracking-wide text-emas-400 terang:text-emas-700 hover:underline"
             >
               Lihat semua
             </Link>
@@ -119,10 +120,16 @@ export default function FeaturedRow({
               asChild
               className={cn(
                 TOMBOL_UTAMA,
-                "h-10 rounded-sm px-6 text-xs font-bold uppercase tracking-wide shadow-lg",
+                "h-11 rounded-full px-7 text-xs font-bold uppercase tracking-wide shadow-lg",
               )}
             >
-              <Link href={href}>Temukan tontonan favoritmu</Link>
+              {/* Ikon ▶ mengikuti mockup owner (2026-11-24). `aria-hidden`:
+                  ia hiasan murni — tulisan tombolnya sudah menjelaskan
+                  tujuannya, jadi pembaca layar tidak perlu menyebut "ikon". */}
+              <Link href={href} className="inline-flex items-center gap-2">
+                <Play className="size-4 shrink-0 fill-current" aria-hidden="true" />
+                Temukan tontonan favoritmu
+              </Link>
             </Button>
           </div>
         )}

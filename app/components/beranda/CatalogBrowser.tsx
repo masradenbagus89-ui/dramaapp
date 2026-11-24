@@ -251,7 +251,7 @@ export default function CatalogBrowser({
           className="flex items-center gap-1.5 pt-5 text-[11px] text-zinc-500"
         >
           <Home className="size-3" />
-          <Link href="/beranda" className="hover:text-amber-400">
+          <Link href="/beranda" className="hover:text-emas-400">
             Beranda
           </Link>
           <span>/</span>
@@ -319,7 +319,7 @@ export default function CatalogBrowser({
                 Tidak ada judul yang cocok dengan pencarian ini.
               </p>
               {videoPlayly.length > 0 && (
-                <p className="text-sm font-medium text-amber-400">
+                <p className="text-sm font-medium text-emas-400">
                   Tapi ada {videoPlayly.length} film yang cocok &mdash; ada di
                   bawah halaman ini.
                 </p>
@@ -330,7 +330,7 @@ export default function CatalogBrowser({
                   variant="outline"
                   size="sm"
                   onClick={resetFilter}
-                  className="rounded-sm border-zinc-700 bg-transparent text-xs text-zinc-300 hover:border-amber-400 hover:text-amber-400"
+                  className="rounded-sm border-zinc-700 bg-transparent text-xs text-zinc-300 hover:border-emas-400 hover:text-emas-400"
                 >
                   Hapus semua filter
                 </Button>

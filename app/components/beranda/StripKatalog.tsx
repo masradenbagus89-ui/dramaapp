@@ -51,7 +51,7 @@ export default function StripKatalog({ items, activeHref }: Props) {
 
   return (
     /* Strip genre ikut palet "soft sage" (owner 2026-11-23). Sampai hari itu
-       ia gradasi kuning `from-amber-400 to-yellow-400` dengan garis
+       ia gradasi kuning `from-emas-400 to-yellow-400` dengan garis
        `amber-600`. Kuning terang tepat di bawah bar merah adalah dua warna
        jenuh yang bertumpuk — itu bagian dari yang owner sebut "sakit mata".
 

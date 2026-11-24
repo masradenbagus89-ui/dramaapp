@@ -50,7 +50,7 @@ export default function PanelLipat({
           aria-controls={idIsi}
           /* min-h-11 = ~44px: batas target sentuh yang masih nyaman ditekan
              jari di HP (standar aksesibilitas, skills/a11y). */
-          /* `sage-800` di atas `sage-100` = 9,86:1. Kuning `amber-400` yang
+          /* `sage-800` di atas `sage-100` = 9,86:1. Kuning `emas-400` yang
              lama mustahil dipakai di sini sejak latarnya terang — rasionya
              jatuh jauh di bawah 4,5:1. */
           className="flex min-h-11 w-full items-center justify-center gap-1.5 text-sm font-bold text-emas-400 transition-colors hover:text-emas-300"

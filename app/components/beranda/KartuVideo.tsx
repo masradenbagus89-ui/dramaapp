@@ -45,7 +45,7 @@ export default function KartuVideo({ video }: { video: PlaylyVideoPublik }) {
       href={alamatTonton(video)}
       className="group/kartu block focus-visible:outline-none"
     >
-      <div className="relative overflow-hidden rounded-sm ring-1 ring-white/10 transition duration-200 group-hover/kartu:ring-2 group-hover/kartu:ring-amber-400 group-focus-visible/kartu:ring-2 group-focus-visible/kartu:ring-amber-400">
+      <div className="relative overflow-hidden rounded-xl ring-1 ring-emas-700/30 transition duration-200 group-hover/kartu:ring-2 group-hover/kartu:ring-emas-400 group-focus-visible/kartu:ring-2 group-focus-visible/kartu:ring-emas-400">
         <div className="relative flex aspect-[2/3] w-full items-center justify-center overflow-hidden bg-zinc-900 terang:bg-zinc-200">
           {video.thumbnail ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -81,7 +81,7 @@ export default function KartuVideo({ video }: { video: PlaylyVideoPublik }) {
           <div className="pointer-events-none absolute inset-x-0 top-0 z-10 flex items-start gap-1 p-1 md:p-1.5">
             {video.rating && (
               <span className={cn(CHIP, CHIP_GELAP)}>
-                <Star className="size-2.5 fill-amber-400 text-amber-400 md:size-3" />
+                <Star className="size-2.5 fill-emas-400 text-emas-400 md:size-3" />
                 {video.rating}
               </span>
             )}
@@ -137,7 +137,7 @@ export default function KartuVideo({ video }: { video: PlaylyVideoPublik }) {
 
       <h3
         title={video.title}
-        className="mt-1 line-clamp-1 text-xs font-bold leading-snug text-white terang:text-zinc-900 transition-colors group-hover/kartu:text-amber-400 terang:group-hover/kartu:text-amber-700 md:text-[13px]"
+        className="mt-1 line-clamp-1 text-xs font-bold leading-snug text-white terang:text-zinc-900 transition-colors group-hover/kartu:text-emas-400 terang:group-hover/kartu:text-emas-700 md:text-[13px]"
       >
         {video.title}
       </h3>

@@ -23,7 +23,13 @@
 > lengkap: `HANDOFF.md` seksi `## 2026-11-09`.
 
 
-**Terakhir dicek:** 2026-11-24 (malam). ⏸️ **ANTREAN BERISI PERUBAHAN BERANDA `9729f01` + commit catatannya, belum didorong ke mana pun.** (Jumlah persisnya JANGAN dipaku di sini — sesi lain masih bisa menambah; hitung sendiri dengan `git fetch origin main` lalu `git rev-list --count FETCH_HEAD..HEAD`.) Isinya: seksi "Nonton Bareng" & "Rekomendasi" di beranda jadi berisi FILM, serial Playly pindah ke "Drama Asia" (permintaan owner). Gerbang `npm run gerbang` **LOLOS 5/5** (build ✓ · `tsc` 0 error · **2864 tes hijau** di 204 berkas · nol berkas rahasia). **Nol prasyarat SQL/env** — tidak ada kolom atau kunci baru, jadi push bisa langsung. 🔴 Tombol rilis (`git push origin main`) tetap milik owner. Riwayat sebelumnya di bawah.
+**Terakhir dicek:** 2026-11-24 (malam). ✅ **RILIS `1f98f3d` → `2cc35a6` TAYANG — antrean KOSONG.** Owner memberi izin *"rilis"*. **4 commit · 13 berkas**: seksi "Nonton Bareng" & "Rekomendasi" di beranda jadi berisi FILM, serial Playly pindah ke "Drama Asia" (`9729f01`), sisanya catatan. Urutan ditaati: gerbang ulang → `dramaku` → `origin`. Gerbang LOLOS 5/5 (2.864 tes, nol berkas rahasia). Nol prasyarat SQL/env. 🎯 Bukti tayang diukur di produksi: ketiga baris film masing-masing **20 kartu · 0 tanpa gambar · 0 drama nyasar · 0 judul mengulang baris atas · 0 judul kembar antar baris**; Rekomendasi urut rating **9.5 → 8.2**; 8 alamat **200**, katalog **41 judul**. 🐞 Temuan DATA (bukan kode, sudah ada sebelum rilis ini): penyedia punya dua entri untuk film yang sama — "Citizen Vigilante (2026)" & "Crime 101 (2026)" masing-masing 2 kartu; perbaikannya menyentuh kolam bersama, jadi **ditawarkan dulu**, belum dikerjakan. 🔴 Sisa milik owner: pastikan deployment `2cc35a6` **success** di Railway + lihat sendiri di HP. Riwayat sebelumnya di bawah.
+
+
+
+> Catatan **Terakhir dicek** sebelumnya, disimpan utuh sebagai riwayat:
+>
+> **Terakhir dicek:** 2026-11-24 (malam). ⏸️ **ANTREAN BERISI PERUBAHAN BERANDA `9729f01` + commit catatannya, belum didorong ke mana pun.** (Jumlah persisnya JANGAN dipaku di sini — sesi lain masih bisa menambah; hitung sendiri dengan `git fetch origin main` lalu `git rev-list --count FETCH_HEAD..HEAD`.) Isinya: seksi "Nonton Bareng" & "Rekomendasi" di beranda jadi berisi FILM, serial Playly pindah ke "Drama Asia" (permintaan owner). Gerbang `npm run gerbang` **LOLOS 5/5** (build ✓ · `tsc` 0 error · **2864 tes hijau** di 204 berkas · nol berkas rahasia). **Nol prasyarat SQL/env** — tidak ada kolom atau kunci baru, jadi push bisa langsung. 🔴 Tombol rilis (`git push origin main`) tetap milik owner. Riwayat sebelumnya di bawah.
 
 ### ⏸️ 2026-11-24 (malam) — `9729f01` SIAP RILIS: beranda, seksi film — tinggal push owner
 

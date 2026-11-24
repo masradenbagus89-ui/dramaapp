@@ -104,6 +104,44 @@
 
 ---
 
+## 2026-11-24 (malam) — ✅ RILIS `1f98f3d` → `2cc35a6` TAYANG — seksi film beranda
+
+Owner memberi izin **"rilis"**. Urutan dijalankan sesuai aturan: gerbang ulang → `dramaku` (cermin) → `origin` (tombol rilis) → smoke test di situs sungguhan.
+
+**Isi rilis:** 4 commit · 13 berkas. Intinya `9729f01` — seksi **Nonton Bareng** & **Rekomendasi** di beranda berisi FILM, serial Playly pindah ke **Drama Asia**. Tiga commit lain catatan (salah satunya `2cc35a6` dari sesi lain, HANDOFF.md saja, nol kode).
+
+**Gerbang sebelum push:** LOLOS 5/5 — build ✓ · `tsc` 0 error · **2.864 tes hijau** (204 berkas) · **13 berkas di antrean push, nol berkas rahasia**.
+
+**🎯 Bukti TAYANG — diukur di produksi, bukan localhost:**
+
+| Seksi | film | drama | tanpa gambar | mengulang baris atas |
+|---|---|---|---|---|
+| Nonton Bareng (`terbaru`) | 20 | 0 | 0 | 0 |
+| Rekomendasi | 20 | 0 | 0 | 0 |
+| Film Terbaru (`video-terbaru`) | 20 | 0 | 0 | 0 |
+| Drama Asia (`update`) | 0 | 20 | 0 | — |
+| Terpopuler | 0 | 20 | 0 | — |
+
+- Tumpang tindih antar ketiga baris film: **0 judul** di ketiga pasangan.
+- Rekomendasi terbukti urut rating: **9.5 · 8.8 · 8.6 · 8.6 · 8.6 · 8.4 · 8.3 · 8.3 · 8.2 · 8.2**.
+- Delapan alamat **200**: `/` `/beranda` `/film` `/katalog` `/discover` `/api/dramas` (41 judul) `/my-list` `/profile`.
+- Versi baru terdeteksi pada percobaan ke-3 pemantauan (±2 menit sesudah push).
+
+**Rencana mundur 1 baris** (kalau nanti ada masalah): `git revert 9729f01` lalu push ke `origin main`, atau redeploy `1f98f3d` dari panel Railway.
+
+**🐞 TEMUAN DATA — PENYEDIA MENGUNGGAH FILM YANG SAMA DUA KALI.** Di produksi: "Citizen Vigilante (2026)" tampil **2 kartu bersebelahan** di Nonton Bareng, dan "Crime 101 (2026)" **2 kartu** di Film Terbaru. Keduanya **id video BERBEDA** (`citizen-vigilante-2026-1795324816673` vs `…-1795319961811`), jadi ini **bukan** kode yang menggambar satu kartu dua kali — penyedia memang punya dua entri.
+
+⚠️ **Dan ini SUDAH ADA sebelum rilis ini.** Buktinya seksi "Film Terbaru" — yang NOL disentuh pekerjaan ini — juga kembar. Rilis ini cuma membuatnya terlihat di satu baris lagi.
+
+Belum diperbaiki, **sengaja**: membuang judul kembar berarti menyaring di kolam bersama (`lib/baris-atas.ts`), dan kolam itu juga memberi makan baris poster atas + Film Terbaru yang sudah tayang & disetujui owner — itu perubahan cakupan, bukan perbaikan, jadi harus ditawarkan dulu (AGENTS.md §4.4). **Tawaran menunggu jawaban owner.**
+
+**🐞 DUA TEMUAN DATA LAIN (panel admin, bukan kode):** satu poster dipakai dua judul di Rekomendasi ("마녀 2" & "流浪地球2" sama-sama poster *Terminator 2* — kaitan IMDb yang dipilih admin salah), dan episode serial "Outlander S07E15" nyangkut di seksi film karena video yang belum ditandai jenisnya otomatis dihitung FILM (`JENIS_BAWAAN` di `lib/jenis-video.ts`, bawaan yang memang disengaja). Keduanya dibetulkan owner di panel admin.
+
+**🔴 Sisa milik owner:** pastikan deployment `2cc35a6` berstatus **success** di panel Railway, lalu buka sendiri di HP.
+
+---
+
+
 ## 2026-11-24 (malam) — ✅ LANGKAH 1 NONTON BARENG SELESAI: 4 tabel SQL sudah ada di produksi
 
 **Dikerjakan AI atas perintah owner** (*"langkah 1 kamu kerjakan"*). Perintahnya:

@@ -23,7 +23,35 @@
 > lengkap: `HANDOFF.md` seksi `## 2026-11-09`.
 
 
-**Terakhir dicek:** 2026-11-24 (malam). ✅ **RILIS `6de869d` → `72fb308` TAYANG** — owner memberi izin *"push dan rilis"*, jadi perintah tahan sejak 2026-11-23 DICABUT. **35 commit · 115 berkas** (nama situs Layarindo · tema anggur+amber dari mockup owner · cahaya latar · bentuk kartu/tombol/chip). `dramaku` dulu, lalu `origin` — keduanya `→ 72fb308`, **antrean KOSONG**. Gerbang dijalankan ULANG tepat sebelum push: 5/5 hijau, 2828 tes, nol berkas rahasia. Nol prasyarat SQL/env. 🎯 Bukti tayang diukur di situs sungguhan: `DramaKu` **0×** & `Layarindo` **24×** di HTML produksi, warna emas lama `f5a524` **0×** di CSS, 8 alamat **200**, katalog **66 judul**, halaman nonton **200**. 🔴 Sisa milik owner: pastikan deployment `72fb308` **success** di Railway + lihat sendiri di HP. Riwayat sebelumnya di bawah.
+**Terakhir dicek:** 2026-11-24 (malam). ⏸️ **ANTREAN BERISI 1 COMMIT — `9729f01`, belum didorong ke mana pun.** Isinya: seksi "Nonton Bareng" & "Rekomendasi" di beranda jadi berisi FILM, serial Playly pindah ke "Drama Asia" (permintaan owner). Gerbang `npm run gerbang` **LOLOS 5/5** (build ✓ · `tsc` 0 error · **2864 tes hijau** di 204 berkas · nol berkas rahasia). **Nol prasyarat SQL/env** — tidak ada kolom atau kunci baru, jadi push bisa langsung. 🔴 Tombol rilis (`git push origin main`) tetap milik owner. Riwayat sebelumnya di bawah.
+
+### ⏸️ 2026-11-24 (malam) — `9729f01` SIAP RILIS: beranda, seksi film — tinggal push owner
+
+| Remote | Keadaan | Catatan |
+|---|---|---|
+| `origin` (produksi) | `1f98f3d` — tertinggal **1 commit** | tombol rilis, **belum ditekan** |
+| `dramaku` (cermin) | `1f98f3d` — tertinggal **1 commit** | didahulukan, tidak merilis apa pun |
+| `main` lokal | `9729f01` | sudah lewat gerbang |
+
+| Langkah gerbang | Hasil |
+|---|---|
+| 1. hapus `.next` | ✓ |
+| 2. `npm run build` | ✓ |
+| 3. `npx tsc --noEmit` | ✓ 0 error |
+| 4. `npm test` | ✓ **204 berkas / 2.864 tes, NOL merah** |
+| 5. pindai berkas rahasia | ✓ **0 berkas di antrean push, nol berkas rahasia** |
+
+**Prasyarat owner sebelum push: TIDAK ADA.** Nol migration SQL, nol env baru — perubahannya murni cara beranda memilih isi seksi dari data yang sudah ada.
+
+**Urutan push kalau owner mengizinkan:** `git push dramaku main` dulu (cermin, tidak merilis apa pun), lalu `git push origin main` (= TOMBOL RILIS), lalu smoke test di situs sungguhan — bukan localhost.
+
+**Yang dilihat saat smoke test** (ketiganya mustahil diperiksa dari localhost karena film butuh kunci API produksi): beranda harus menampilkan **Nonton Bareng** dan **Rekomendasi** berisi poster film (bukan drama berseri), **Rekomendasi** urut dari rating tertinggi, dan **Drama Asia** berisi drama. Tidak boleh ada kotak hitam tanpa gambar di dua seksi teratas.
+
+
+
+> Catatan **Terakhir dicek** sebelumnya, disimpan utuh sebagai riwayat:
+>
+> **Terakhir dicek:** 2026-11-24 (malam). ✅ **RILIS `6de869d` → `72fb308` TAYANG** — owner memberi izin *"push dan rilis"*, jadi perintah tahan sejak 2026-11-23 DICABUT. **35 commit · 115 berkas** (nama situs Layarindo · tema anggur+amber dari mockup owner · cahaya latar · bentuk kartu/tombol/chip). `dramaku` dulu, lalu `origin` — keduanya `→ 72fb308`, **antrean KOSONG**. Gerbang dijalankan ULANG tepat sebelum push: 5/5 hijau, 2828 tes, nol berkas rahasia. Nol prasyarat SQL/env. 🎯 Bukti tayang diukur di situs sungguhan: `DramaKu` **0×** & `Layarindo` **24×** di HTML produksi, warna emas lama `f5a524` **0×** di CSS, 8 alamat **200**, katalog **66 judul**, halaman nonton **200**. 🔴 Sisa milik owner: pastikan deployment `72fb308` **success** di Railway + lihat sendiri di HP. Riwayat sebelumnya di bawah.
 
 ### ✅ 2026-11-24 (malam) — RILIS `b7eb49f` → `c426154` TAYANG, antrean KOSONG
 

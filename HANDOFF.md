@@ -104,6 +104,36 @@
 
 ---
 
+## 2026-11-24 (malam) — 🎬 "Nonton Bareng" & "Rekomendasi" jadi seksi FILM — 1 commit MENUNGGU RILIS
+
+**Permintaan owner:** *"nonton bareng, rekomendasi kamu isi dengan film saja jangan drama lagi sedangkan drama kamu masukan ke drama asia"*.
+
+**Commit `9729f01`** — sudah lewat gerbang, **belum** didorong ke mana pun. Antrean ke `origin main` = **1 commit** (diukur `git rev-list --count FETCH_HEAD..HEAD` sesudah `git fetch origin main`).
+
+**Yang berubah:**
+- Seksi **Nonton Bareng** + **Rekomendasi** kini berisi **film** dari penyedia luar, bukan drama katalog.
+- Serial Playly **pindah** dari seksi bawaan ke seksi **Drama Asia** (`KUNCI_SEKSI_DRAMA`).
+- Berkas baru `lib/film-seksi.ts` memegang aturan "baris mana dapat film mana"; `lib/baris-atas.ts` menambah `filmLuarBarisAtasLengkap` + mengembalikan `filmSeksi`.
+- Prop `filmSemua` **diganti nama** jadi `filmSeksi` di 5 berkas (nama lama berbohong: isinya bukan semua film, melainkan kolam yang sudah disaring).
+
+**⚠️ JEBAKAN YANG SUDAH TERJADI — jangan diulang.** Versi pertama perubahan ini mengalirkan daftar film **MENTAH** ke kedua seksi. Hasilnya lolos typecheck, lolos seluruh tes, dan tetap menggambar 20 kartu — tapi diukur dari HTML yang sudah tergambar:
+- **11 dari 20** kartu "Nonton Bareng" **tanpa sampul** (kotak hitam berjejer) — daftar mentah ikut memuat film tanpa `thumbnail`.
+- **9 dari 20** judulnya **sama dengan baris poster paling atas** — persis keluhan owner 2026-11-17 yang dulu melahirkan `filmDiLuarBarisAtas`.
+
+Pelajarannya: **"tergambar 20 kartu" bukan bukti isinya benar.** Kolam film WAJIB datang dari `siapkanTampilanDepan` (`filmSeksi`), bukan dari `film` hasil `pisahFilmSeries`. Keduanya bertipe sama, jadi salah pilih tidak memunculkan satu pun error. Sekarang dikunci `tests/film-seksi.test.ts` (16 tes).
+
+**Bukti (diukur, bukan ditebak):**
+- `npm run gerbang` **LOLOS 5/5** — build sukses, `tsc` 0 error, **2864 tes hijau** (204 berkas), nol berkas rahasia.
+- Diukur dari HTML server lokal sesudah build: Nonton Bareng / Rekomendasi / Film Terbaru masing-masing **20 kartu, 0 tanpa gambar, 0 drama, 0 judul yang mengulang baris atas**, dan **0 judul kembar antar ketiganya**. Drama Asia & Terpopuler tetap 20 drama.
+- Rekomendasi terbukti urut rating: 8.8 → 8.6 → 8.6 → 8.6 → 8.4 → 8.3 → 8.3 → 8.2.
+
+**📋 DUA TEMUAN DATA (bukan bug kode — owner yang bisa membetulkannya di panel admin):**
+1. **Satu sampul dipakai dua judul** di Rekomendasi: "마녀 2 (2022)" dan "流浪地球2 (2023)" sama-sama memakai poster *Terminator 2*. Sebabnya kaitan IMDb yang dipilih admin salah, bukan kode — poster datang dari kaitan itu. Perbaikannya lewat pemilih IMDb di panel admin.
+2. **Episode serial nyangkut di seksi film**: "Outlander S07E15" muncul di Rekomendasi. Sebabnya video yang **belum ditandai** jenisnya dihitung FILM (`JENIS_BAWAAN = "film"` di `lib/jenis-video.ts`) — bawaan yang memang disengaja supaya katalog lama tidak pindah baris sendiri. Perbaikannya: tandai video itu `series` di panel admin, lalu ia otomatis pindah ke Drama Asia.
+
+---
+
+
 ## 2026-11-24 (malam) — ✅ RILIS `c426154` TAYANG — pencarian beres, antrean kosong
 
 **11 commit tayang** (`b7eb49f` → `c426154`), cermin dulu lalu produksi, atas izin eksplisit owner. Gerbang 5/5 hijau sebelum push (2.839 tes, nol merah).

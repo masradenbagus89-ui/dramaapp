@@ -17,14 +17,18 @@
 // atas. Jangan "dirapikan" kembali jadi bersyarat:
 //   1. strip kuning (`chipStripKatalog`) — daftar tetap, owner 2026-09-21;
 //   2. lima baris DRAMA ASIA di menu "Lainnya" — owner 2026-11-24;
-//   3. seluruh genre & kategori resmi di menu Genre/"Lainnya" — owner
-//      2026-11-24 ("tambahkan ... yang belum ada di genre").
+//   3. seluruh GENRE FILM resmi di menu Genre — owner 2026-11-24
+//      ("tambahkan ... yang belum ada di genre").
+// ⚠️ Kategori KURASI (Silat, Wuxia, Isekai, …) sempat ikut dipaksa tampil
+//    pada hari yang sama, lalu DIBATALKAN: owner melihat hasilnya dan
+//    menilai menu "Lainnya" "terlalu penuh" (47 pilihan). Menu itu kembali
+//    ke kategori yang BENAR-BENAR ada isinya + lima baris drama Asia.
 // Konsekuensinya sama dan sudah diterima owner: pilihan yang belum ada
 // isinya diklik = "Tidak ada drama yang cocok" + tombol Hapus filter, sampai
 // katalognya bertambah. Itu bukan kerusakan kode.
 // -------------------------------------------------------------------------
 import type { Drama } from "./types";
-import { CATEGORIES, isMovie } from "./types";
+import { isMovie } from "./types";
 import { countWithRating, countWithYear } from "./beranda-catalog";
 import { getGenreOptions, parseImdb } from "./discover";
 import { labelGenre } from "./genre";
@@ -120,19 +124,6 @@ export const GENRE_FILM: readonly string[] = [
 ];
 
 const SET_GENRE_FILM = new Set(GENRE_FILM.map((g) => g.toLowerCase()));
-
-/**
- * KATEGORI KURASI — nama di `CATEGORIES` yang BUKAN genre film baku, dan
- * bukan "Semua". Hari ini: Romance, Tycoon, Harem, Time Travel, Anime.
- *
- * DIHITUNG dari `CATEGORIES`, bukan ditulis tangan: daftar kategori itu
- * bertambah dari waktu ke waktu, dan salinan tangan di sini akan tertinggal
- * diam-diam — menu "Lainnya" lalu kehilangan kategori baru tanpa satu pun
- * error yang memberi tahu.
- */
-const KATEGORI_KURASI: readonly string[] = CATEGORIES.filter(
-  (c) => c !== "Semua" && !SET_GENRE_FILM.has(c.toLowerCase()),
-);
 
 /**
  * Jumlah kolom tiap dropdown panjang.
@@ -472,7 +463,7 @@ export function buildNavMenus(
   const sudahAda = new Set(semuaGenre.map((i) => i.nilai.toLowerCase()));
 
   /**
-   * SISA genre/kategori yang BELUM ada isinya — ditambahkan di BELAKANG
+   * SISA GENRE FILM yang belum ada isinya — ditambahkan di BELAKANG
    * (owner 2026-11-24: *"tambahkan ... yang belum ada di genre"*).
    *
    * ⚠️ MEMBALIK aturan lama "hanya gambar yang ada isinya". Keputusan owner
@@ -481,23 +472,27 @@ export function buildNavMenus(
    * filter. Itu BUKAN kerusakan; ia menyala sendiri begitu ada judul
    * bergenre itu, tanpa menyentuh berkas ini.
    *
+   * ⚠️ HANYA GENRE FILM, bukan kategori kurasi — dan ini KOREKSI atas
+   * putaran sebelumnya hari yang sama. Sempat SELURUH kategori kurasi
+   * (Silat, Wuxia, Xianxia, Isekai, … ±37 nama) ikut ditambahkan; owner
+   * melihat hasilnya lalu menilai menu "Lainnya" **"terlalu penuh"** dan
+   * meminta *"inti-intinya saja seperti dracin, k-drama dan sejenisnya"*.
+   * Jadi menu "Lainnya" kembali berisi: lima baris drama Asia + kategori
+   * yang BENAR-BENAR ada isinya. Jangan tambahkan `KATEGORI_KURASI` lagi
+   * ke sini.
+   *
    * DITARUH DI BELAKANG, bukan diurutkan A-Z bersama: yang berisi tetap di
    * depan supaya penonton menemukan yang berguna lebih dulu. Mengurutkan
    * semuanya A-Z akan menenggelamkan genre yang punya 22 judul di antara
    * belasan yang kosong.
    */
-  const tambahan: (NavItem & { nilai: string })[] = [
-    ...GENRE_FILM.filter((g) => !sudahAda.has(g.toLowerCase())).map((g) => ({
-      nilai: g,
-      label: labelGenre(g),
-      href: tautan({ genre: g }),
-    })),
-    ...KATEGORI_KURASI.filter((g) => !sudahAda.has(g.toLowerCase())).map((g) => ({
-      nilai: g,
-      label: labelGenre(g),
-      href: tautan({ cat: g }),
-    })),
-  ];
+  const tambahan: (NavItem & { nilai: string })[] = GENRE_FILM.filter(
+    (g) => !sudahAda.has(g.toLowerCase()),
+  ).map((g) => ({
+    nilai: g,
+    label: labelGenre(g),
+    href: tautan({ genre: g }),
+  }));
 
   const lengkap = [...semuaGenre, ...tambahan];
   const genreFilmMenu = lengkap.filter((i) => genreFilmResmi(i.nilai));
@@ -679,16 +674,13 @@ export function buildNavMenus(
       { label: "Semua Judul", href: TUJUAN },
     ], {
       tanpaLainnya: true,
-      // EMPAT KOLOM sejak 2026-11-24. Sampai hari itu menu ini satu kolom
-      // dan memang pantas: isinya 5 baris. Sesudah seluruh kategori resmi
-      // ikut masuk, isinya jadi 47 — satu kolom berarti daftar setinggi
-      // ±1.500px yang harus digulir di dalam kotak kecil, persis keluhan
-      // owner 2026-11-15 soal menu Genre (*"begitu diklik langsung muncul
-      // semua tanpa scroll"*). Dengan 4 kolom ia jadi ±12 baris.
-      kolom: KOLOM_GENRE,
-      // Nama terpanjangnya "Thriller Psikologis" & "Beranjak Dewasa" — tanpa
-      // sel lebar keduanya terbungkus dua baris dan scrollbar kembali.
-      lebarNama: true,
+      // ⚠️ TETAP SATU KOLOM — dan ini KOREKSI atas putaran siang hari yang
+      // sama. Menu ini sempat diberi 4 kolom karena isinya membengkak jadi
+      // 47 pilihan; owner lalu menilai hasilnya "terlalu penuh" dan isinya
+      // dikembalikan ke ±10. Untuk daftar sependek itu, kolom banyak justru
+      // lebih sulit dibaca — mata harus melompat antar kolom untuk sepuluh
+      // baris. Kalau suatu hari isinya membengkak lagi, yang disetel
+      // KOLOMNYA; jangan memanjangkan daftarnya diam-diam.
     }),
   ];
 

@@ -361,16 +361,15 @@ describe("5. Genre khusus film, sisanya di Lainnya", () => {
     // Kolom banyak untuk daftar pendek justru lebih sulit dibaca — mata harus
     // melompat antar kolom untuk lima baris.
     expect(genre?.kolom).toBe(KOLOM_GENRE);
-    // ⚠️ "Lainnya" IKUT dapat kolom sejak 2026-11-24 — dulu `undefined` dan
-    // itu memang benar saat isinya 5 baris. Sesudah seluruh kategori resmi
-    // masuk, isinya 47: satu kolom berarti daftar ±1.500px yang harus
-    // digulir, persis keluhan owner soal menu Genre 2026-11-15.
-    expect(lainnya?.kolom).toBe(KOLOM_GENRE);
-    // Menu PENDEK tetap tanpa kolom — aturan aslinya masih berlaku, dan
-    // inilah pembandingnya supaya patokan di atas tidak jadi "semua dapat
-    // kolom" tanpa ada yang menyadari.
-    const pendek = menus.find((m) => m.key === "jenis");
-    expect(pendek?.kolom, "menu pendek ikut dapat kolom — mata jadi melompat antar kolom untuk 5 baris").toBeUndefined();
+    // ⚠️ "Lainnya" TETAP tanpa kolom. Siang 2026-11-24 ia sempat diberi 4
+    // kolom karena isinya membengkak jadi 47 pilihan; owner lalu menilai
+    // hasilnya "terlalu penuh" dan isinya dikembalikan ke ±10. Untuk daftar
+    // sependek itu kolom banyak justru lebih sulit dibaca — mata harus
+    // melompat antar kolom untuk sepuluh baris.
+    expect(lainnya?.kolom).toBeUndefined();
+    // Pembanding: menu PANJANG memang dapat kolom, supaya patokan di atas
+    // tidak diam-diam berubah jadi "tak ada yang dapat kolom".
+    expect(genre?.items.length, "menu Genre tak lagi panjang").toBeGreaterThan(20);
   });
 
   it("Tahun & Negara ikut dapat kolom, jumlahnya sesuai panjang label", () => {

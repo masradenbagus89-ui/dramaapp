@@ -30,6 +30,7 @@ import {
   TOMBOL_UTAMA,
 } from "./shell";
 import { ID_JUDUL_TAWARAN } from "./LayarindoMenawarkan";
+import PanahGeserBaris from "./PanahGeserBaris";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -63,6 +64,13 @@ import { cn } from "@/lib/utils";
  * mana-mana, tanpa error apa pun).
  */
 export const ID_DAFTAR = "daftar-katalog";
+
+/**
+ * Id baris chip — dipakai panah geser untuk menemukan elemen yang digeser.
+ * Ditulis sekali supaya tombol & barisnya mustahil menyimpang: salah ketik di
+ * salah satunya = panah yang diklik lalu tidak terjadi apa-apa, tanpa error.
+ */
+export const ID_BARIS_CHIP = "baris-chip-pintasan";
 
 export default function TabKatalogTampilan({
   dramas,
@@ -224,38 +232,30 @@ export default function TabKatalogTampilan({
             langsung mulai dari tab, persis seperti sebelumnya. */}
         {slotJudulBaris}
         <div className="flex items-center gap-2">
-        {/* DI HP: KISI DUA KOLOM, bukan baris yang membungkus (owner
-            2026-11-24: *"kualitas terbaik update terbaru dan lainnya kamu buat
-            seragam"*). Baris yang membungkus memberi tiap chip lebar sesuai
-            panjang tulisannya, jadi hasilnya bertangga-tangga; kisi memberi
-            kolom yang SAMA PERSIS.
-            ⚠️ Kisinya hanya dipakai saat `slotBarisTab` terisi (`/` &
-            `/beranda`, 5 chip). Di /katalog isinya 6+ tab dan kisi 2 kolom
-            akan menjadikannya tembok tinggi — di sana tetap baris yang
-            membungkus seperti semula.
-            Di layar komputer keduanya kembali jadi satu baris (`md:flex`):
-            kelimanya memang muat, dan memaksakan kisi di sana justru
-            melebarkan chip pendek seperti "2026" tanpa guna. */}
+        {/* DI HP: SATU BARIS yang DIGESER menyamping, bukan bertumpuk ke bawah
+            (owner 2026-11-24, menunjuk gambar acuan: *"yang dibawahnya kamu
+            kasih tanda panah aja (khusus HP) jadi tidak bertumpuk"*).
+
+            ⚠️ INI MENGGANTI kisi dua kolom yang dipasang beberapa jam
+            sebelumnya pada hari yang sama. Kisi itu memang membuat lebar
+            kelima chip sama persis, TAPI ia menumpuk jadi TIGA baris dan
+            kotaknya tumbuh tinggi — owner menunjuknya sebagai "bertumpuk".
+            Jangan dikembalikan ke kisi: yang dijaga sekarang tingginya tetap
+            SATU baris, dan keseragamannya pindah ke BENTUK (tinggi 44px,
+            sudut, garis, huruf — semuanya dari `KELAS_CHIP_BARIS`), bukan ke
+            lebar. Gambar acuan owner pun lebarnya mengikuti panjang tulisan.
+
+            `[&>*]:shrink-0` wajib: tanpa itu chip dipepetkan agar muat dan
+            tulisannya terpotong, bukan digeser. */}
         <div
+          id={ID_BARIS_CHIP}
           role={slotJudulBaris ? "group" : undefined}
           aria-labelledby={slotJudulBaris ? ID_JUDUL_TAWARAN : undefined}
           className={cn(
-            "no-scrollbar flex-1 gap-2 overflow-x-auto md:flex md:flex-wrap md:items-center",
+            "no-scrollbar flex flex-1 items-center gap-2 overflow-x-auto",
             slotBarisTab
-              ? cn(
-                  "grid grid-cols-2 max-md:[&>*]:w-full",
-                  /* Chip terakhir yang kebagian baris SENDIRI ditengahkan,
-                     bukan dibiarkan menggantung di kolom kiri — menggantung
-                     terbaca seperti kelupaan, bukan disengaja.
-                     `:last-child:nth-child(odd)` dipilih supaya aturannya
-                     IKUT JUMLAHNYA: hari ini 5 chip (ganjil, jadi menyala),
-                     besok kalau jadi 4 atau 6 ia padam sendiri. Dipaku ke
-                     angka 5 akan salah diam-diam begitu satu chip ditambah. */
-                  "max-md:[&>*:last-child:nth-child(odd)]:col-span-2",
-                  "max-md:[&>*:last-child:nth-child(odd)]:mx-auto",
-                  "max-md:[&>*:last-child:nth-child(odd)]:w-[calc(50%-0.25rem)]",
-                )
-              : "flex items-center max-md:flex-wrap",
+              ? "[&>*]:shrink-0 md:flex-wrap"
+              : "max-md:flex-wrap",
           )}
         >
           {slotBarisTab}
@@ -303,6 +303,17 @@ export default function TabKatalogTampilan({
             soal TATA LETAK baris ini (ada pemicu kembar di bar bawah), bukan
             sifat tombolnya. Komponennya tetap bisa dipakai di tempat lain
             tanpa membawa aturan "jangan muncul di HP" diam-diam. */}
+        {/* PANAH GESER — HP saja, dan HANYA di baris yang berisi chip
+            pintasan. Di /katalog (`slotBarisTab` kosong) barisnya memang
+            membungkus ke bawah, jadi tak ada yang perlu digeser; panah yang
+            diklik lalu diam membuat penonton mengira bagian itu rusak. */}
+        {slotBarisTab ? (
+          <PanahGeserBaris
+            targetId={ID_BARIS_CHIP}
+            label="Geser pintasan ke kanan"
+          />
+        ) : null}
+
         <div className="hidden md:flex">
           <FilterKatalog />
         </div>

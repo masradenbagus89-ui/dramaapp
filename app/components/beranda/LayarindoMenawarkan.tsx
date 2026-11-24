@@ -74,12 +74,24 @@ export const ID_JUDUL_TAWARAN = "judul-tawaran";
  */
 export function JudulMenawarkan() {
   return (
-    <h2
-      id={ID_JUDUL_TAWARAN}
-      className="mb-2 text-center text-sm font-bold text-white"
-    >
-      {SITE_NAME} Menawarkan
-    </h2>
+    /* DIAPIT GARIS kiri-kanan (owner 2026-11-24, menunjuk gambar acuan:
+       *"jadikan layarindo di antara garis"*). Garisnya `flex-1` supaya
+       panjangnya mengikuti sisa ruang — judul tetap di tengah di lebar layar
+       berapa pun, tanpa satu pun angka lebar yang harus disetel per layar.
+
+       Garisnya `<span>` kosong ber-`aria-hidden`, BUKAN `<hr>`: ini hiasan,
+       dan `<hr>` berarti "pergantian topik" bagi pembaca layar — ia akan
+       mengumumkan dua pemisah yang tidak ada artinya di sini. */
+    <div className="mb-2 flex items-center gap-3">
+      <span className="h-px flex-1 bg-emas-700/45" aria-hidden="true" />
+      <h2
+        id={ID_JUDUL_TAWARAN}
+        className="shrink-0 text-center text-sm font-bold text-white"
+      >
+        {SITE_NAME} Menawarkan
+      </h2>
+      <span className="h-px flex-1 bg-emas-700/45" aria-hidden="true" />
+    </div>
   );
 }
 

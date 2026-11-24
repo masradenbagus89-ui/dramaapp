@@ -180,18 +180,44 @@ describe("3. judul + chip SEDERET dengan tombol tab", () => {
     expect(tampilan).toContain("max-md:flex-wrap");
   });
 
-  it("chip tidak terpotong di HP — kini lewat KISI, bukan baris membungkus", () => {
-    // Masalah yang dijaga TETAP SAMA sejak 2026-11-23: di layar HP deret chip
-    // lebih panjang dari layar, dan versi yang digeser menyamping hanya
-    // menampilkan chip pertama tanpa tanda bahwa masih ada isi di kanan.
+  it("di HP chip jadi SATU baris yang digeser + panah, bukan bertumpuk", () => {
+    // Masalah yang dijaga TETAP SAMA sejak 2026-11-23: deret chip lebih
+    // panjang dari layar HP, dan penonton butuh tahu masih ada isi di kanan.
     //
-    // ⚠️ CARANYA BERGANTI 2026-11-24. Dulu: baris `flex-wrap` + `min-w-0` di
-    // dalam LayarindoMenawarkan. Kini: kisi DUA KOLOM di TabKatalogTampilan,
-    // dan chipnya dilepas dari pembungkusnya supaya jadi anak LANGSUNG kisi
-    // itu — syarat agar kelimanya selebar kolom yang sama (owner: *"buat
-    // seragam"*). Patokan lama menguji kelas yang sudah tidak ada.
-    expect(tampilan).toContain("grid-cols-2");
-    expect(tampilan).toContain("max-md:[&>*]:w-full");
+    // ⚠️ CARANYA SUDAH BERGANTI DUA KALI DALAM SATU HARI (2026-11-24), jadi
+    // jangan heran menemukan catatan yang bertentangan:
+    //   1. pagi  — baris `flex-wrap` + `min-w-0` di dalam LayarindoMenawarkan
+    //   2. siang — kisi DUA KOLOM (lebar chip jadi sama persis)
+    //   3. sore  — SATU baris digeser + panah  ← yang berlaku sekarang
+    // Owner menolak (2) karena menumpuk jadi tiga baris dan kotaknya tumbuh
+    // tinggi: *"kasih tanda panah aja (khusus HP) jadi tidak bertumpuk"*.
+    // Keseragamannya pindah ke BENTUK (tinggi/sudut/garis/huruf, semuanya
+    // dari `KELAS_CHIP_BARIS`), bukan ke lebar — persis gambar acuan owner.
+    expect(tampilan).toContain("overflow-x-auto");
+    expect(
+      tampilan,
+      "tanpa `shrink-0` chip dipepetkan agar muat dan tulisannya terpotong, bukan digeser",
+    ).toContain("[&>*]:shrink-0");
+    expect(
+      tampilan,
+      "kisi dua kolom dipasang lagi — itu yang owner tolak karena bertumpuk",
+    ).not.toContain("grid-cols-2");
+  });
+
+  it("panah gesernya nyata: punya tujuan, dan HP saja", () => {
+    const panah = tanpaKomentar(
+      readFileSync("app/components/beranda/PanahGeserBaris.tsx", "utf-8"),
+    );
+    // Panah yang tampak tombol tapi diam saat diketuk lebih buruk daripada
+    // tidak ada — penonton menyimpulkan bagian itu rusak.
+    expect(panah, "panahnya tidak menggeser apa pun").toContain("scrollBy");
+    expect(panah, "tujuan gesernya tidak disebut").toContain("getElementById");
+    // `md:hidden` — di layar komputer barisnya memang muat, jadi panahnya
+    // tidak akan menggeser apa pun kalau tetap tergambar.
+    expect(panah).toContain("md:hidden");
+    // Dipasang DI baris chip, dan hanya di sana.
+    expect(tampilan).toContain("PanahGeserBaris");
+    expect(tampilan).toContain("ID_BARIS_CHIP");
   });
 
   it("chip pintasan TANPA pembungkus — syarat lebarnya bisa seragam", () => {

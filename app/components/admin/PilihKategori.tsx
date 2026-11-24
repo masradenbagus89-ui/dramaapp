@@ -25,7 +25,7 @@
 // hambatan yang tidak perlu ada.
 // -------------------------------------------------------------------------
 import { useEffect, useId, useMemo, useRef, useState } from "react";
-import { ChevronDown, Search, X } from "lucide-react";
+import { Check, ChevronDown, Search, X } from "lucide-react";
 import { KATEGORI_ISI } from "@/lib/types";
 import { labelGenre } from "@/lib/genre";
 import { diawaliKetikan } from "@/lib/pencarian";
@@ -252,18 +252,58 @@ export default function PilihKategori({
                     onMouseEnter={() => setSorot(i)}
                     onClick={() => pilih(o.nilai)}
                     className={cn(
-                      "flex w-full items-baseline gap-1.5 px-3 py-1.5 text-left text-xs transition",
+                      "flex w-full items-center gap-1.5 px-2 py-1.5 text-left text-xs transition",
                       i === sorot ? "bg-zinc-800" : "bg-transparent",
                       terpilih ? "text-amber-300" : "text-zinc-200",
                       !o.nilai && "italic text-zinc-500",
                     )}
                   >
-                    <span className="truncate">{o.utama}</span>
-                    {o.dampingan && (
-                      <span className="truncate text-[10px] text-zinc-500">
-                        {o.dampingan}
-                      </span>
-                    )}
+                    {/*
+                      KOTAK ceklis digambar di SETIAP baris (owner 2026-11-24:
+                      "kolom buatkan juga"), bukan hanya di baris terpilih.
+                      Kotak kosong memberi tahu "baris ini BISA dipilih";
+                      ruang kosong tidak memberi tahu apa-apa. Efek sampingnya
+                      ikut beres: lebar tiap baris sama, jadi nama genre tidak
+                      bergeser saat pilihannya pindah.
+
+                      Warna kotak sengaja TIDAK ikut warna teks barisnya.
+                      Baris "Tanpa kategori" dipaksa `text-zinc-500` (abu
+                      miring) dan kalau kotaknya ikut, keadaan terpilih di
+                      baris itu nyaris tak terlihat. Dengan amber + ceklis
+                      hitam, "ini yang sedang terpakai" terbaca sama jelasnya
+                      di semua baris.
+
+                      `aria-hidden` di kotaknya: statusnya sudah disuarakan
+                      `aria-selected` milik tombol — tanpa ini pembaca layar
+                      menyebut hal yang sama dua kali.
+                    */}
+                    <span
+                      aria-hidden="true"
+                      data-kotak-ceklis=""
+                      className={cn(
+                        "flex size-3.5 shrink-0 items-center justify-center rounded-[3px] border transition",
+                        terpilih
+                          ? "border-amber-400 bg-amber-400 text-black"
+                          : "border-zinc-600 bg-transparent",
+                      )}
+                    >
+                      {terpilih && <Check className="size-2.5" strokeWidth={3} />}
+                    </span>
+                    {/*
+                      Nama + label Indonesia dibungkus sendiri supaya tetap
+                      rata GARIS DASAR satu sama lain, sementara baris luarnya
+                      rata tengah terhadap ceklis. Tanpa pembungkus ini label
+                      10px ikut dirata-tengahkan ke nama 12px dan terlihat
+                      melayang di atas garisnya.
+                    */}
+                    <span className="flex min-w-0 items-baseline gap-1.5">
+                      <span className="truncate">{o.utama}</span>
+                      {o.dampingan && (
+                        <span className="truncate text-[10px] text-zinc-500">
+                          {o.dampingan}
+                        </span>
+                      )}
+                    </span>
                   </button>
                 </li>
               );

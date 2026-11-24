@@ -108,7 +108,7 @@
 
 **Permintaan owner:** *"nonton bareng, rekomendasi kamu isi dengan film saja jangan drama lagi sedangkan drama kamu masukan ke drama asia"*.
 
-**Commit `9729f01`** — sudah lewat gerbang, **belum** didorong ke mana pun. Antrean ke `origin main` = **1 commit** (diukur `git rev-list --count FETCH_HEAD..HEAD` sesudah `git fetch origin main`).
+**Commit `9729f01`** — sudah lewat gerbang, **belum** didorong ke mana pun. Antrean ke `origin main` = **`9729f01` + commit catatannya** (jangan dipaku angkanya — sesi lain masih menambah) (diukur `git rev-list --count FETCH_HEAD..HEAD` sesudah `git fetch origin main`).
 
 **Yang berubah:**
 - Seksi **Nonton Bareng** + **Rekomendasi** kini berisi **film** dari penyedia luar, bukan drama katalog.

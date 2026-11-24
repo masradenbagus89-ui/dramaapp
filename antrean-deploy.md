@@ -23,14 +23,14 @@
 > lengkap: `HANDOFF.md` seksi `## 2026-11-09`.
 
 
-**Terakhir dicek:** 2026-11-24 (malam). ⏸️ **ANTREAN BERISI 1 COMMIT — `9729f01`, belum didorong ke mana pun.** Isinya: seksi "Nonton Bareng" & "Rekomendasi" di beranda jadi berisi FILM, serial Playly pindah ke "Drama Asia" (permintaan owner). Gerbang `npm run gerbang` **LOLOS 5/5** (build ✓ · `tsc` 0 error · **2864 tes hijau** di 204 berkas · nol berkas rahasia). **Nol prasyarat SQL/env** — tidak ada kolom atau kunci baru, jadi push bisa langsung. 🔴 Tombol rilis (`git push origin main`) tetap milik owner. Riwayat sebelumnya di bawah.
+**Terakhir dicek:** 2026-11-24 (malam). ⏸️ **ANTREAN BERISI PERUBAHAN BERANDA `9729f01` + commit catatannya, belum didorong ke mana pun.** (Jumlah persisnya JANGAN dipaku di sini — sesi lain masih bisa menambah; hitung sendiri dengan `git fetch origin main` lalu `git rev-list --count FETCH_HEAD..HEAD`.) Isinya: seksi "Nonton Bareng" & "Rekomendasi" di beranda jadi berisi FILM, serial Playly pindah ke "Drama Asia" (permintaan owner). Gerbang `npm run gerbang` **LOLOS 5/5** (build ✓ · `tsc` 0 error · **2864 tes hijau** di 204 berkas · nol berkas rahasia). **Nol prasyarat SQL/env** — tidak ada kolom atau kunci baru, jadi push bisa langsung. 🔴 Tombol rilis (`git push origin main`) tetap milik owner. Riwayat sebelumnya di bawah.
 
 ### ⏸️ 2026-11-24 (malam) — `9729f01` SIAP RILIS: beranda, seksi film — tinggal push owner
 
 | Remote | Keadaan | Catatan |
 |---|---|---|
-| `origin` (produksi) | `1f98f3d` — tertinggal **1 commit** | tombol rilis, **belum ditekan** |
-| `dramaku` (cermin) | `1f98f3d` — tertinggal **1 commit** | didahulukan, tidak merilis apa pun |
+| `origin` (produksi) | `1f98f3d` — tertinggal, hitung sendiri | tombol rilis, **belum ditekan** |
+| `dramaku` (cermin) | `1f98f3d` — tertinggal, hitung sendiri | didahulukan, tidak merilis apa pun |
 | `main` lokal | `9729f01` | sudah lewat gerbang |
 
 | Langkah gerbang | Hasil |

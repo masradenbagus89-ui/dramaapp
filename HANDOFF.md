@@ -104,6 +104,46 @@
 
 ---
 
+## 2026-11-24 (malam) — ⏸️ TITIK LANJUT BESOK: Nonton Bareng tinggal 2 langkah panel Railway
+
+> **Owner menutup sesi di sini** (*"kita lanjut besok"*). Baca seksi ini DULU kalau topiknya Nonton Bareng — isinya posisi persis berhenti, bukan sejarah.
+
+### Sudah SELESAI (jangan diulang)
+
+| # | Langkah | Keadaan |
+|---|---|---|
+| 1 | SQL 4 tabel `dramaapp.watch_*` | ✅ **jalan di produksi**, RLS menyala, nol policy, nol baris. Diverifikasi lewat `pg_class`/`pg_policy`, bukan dari keluaran skrip. |
+| 2 | Service Railway baru | ✅ **dibuat + deploy SUCCESS** |
+
+**Rincian service yang sudah berdiri** (project Railway `ravishing-adaptation`, environment `production`):
+- **Nama service: `athletic-unity`** ← nama acak bawaan Railway. Owner diminta menggantinya jadi `nobar-server`; **belum tentu sudah dilakukan — cek dulu**, jangan berasumsi dari nama.
+- **Root Directory: `nobar-server`** ✅ (ini yang membedakannya dari service situs; tanpa itu ia merakit situs, bukan server)
+- **5 variable terpasang:** `NOBAR_SECRET` · `NOBAR_ALLOWED_ORIGINS` · `SUPABASE_URL` · `SUPABASE_SERVICE_ROLE_KEY` · `RAILPACK_NODE_VERSION=22`
+- Dua Supabase memakai **rujukan antar-service** `${{dramaapp.SUPABASE_URL}}` dan `${{dramaapp.SUPABASE_SERVICE_ROLE_KEY}}`, BUKAN nilai disalin. Kanvas Railway menggambar garis panah `athletic-unity → dramaapp` sebagai buktinya. Keuntungannya: kunci tidak tersalin ke mana-mana, dan kalau diputar ulang kedua service ikut berubah sendiri.
+- Status terakhir: **Deployment successful**, tapi masih berlabel **"Unexposed service"** = belum punya alamat publik.
+
+### 🔴 SISA 2 LANGKAH — keduanya di panel Railway, hanya owner
+
+**Langkah 3 — Generate Domain.** Settings service itu → **Networking → Public Networking → Generate Domain**. Kalau ditanya port: terima angka yang Railway isikan sendiri (server membaca `process.env.PORT`, lihat `nobar-server/src/index.ts:49`). Kalau Railway gagal menebak: tambah variable `PORT=8080` lalu isi `8080`. Hasilnya alamat `https://<nama>-production-xxxx.up.railway.app` — **bukan rahasia**, boleh ditulis di chat.
+
+**Langkah 4 — 2 env di service SITUS (`dramaapp`), lalu Redeploy situs.**
+- `NOBAR_SECRET` = **SAMA PERSIS** dengan yang ada di service nobar. Nilainya tersimpan di berkas lokal **`C:\Users\user18\Downloads\env-nobar-server.txt`** (dibuat 2026-11-24, 43 huruf). ⚠️ Berkas itu berisi rahasia produksi — hapus sesudah dipakai, dan JANGAN pernah dicetak ke chat/log.
+- `NOBAR_PUBLIC_URL` = alamat dari langkah 3.
+- **Redeploy situs WAJIB, bukan opsional:** `NOBAR_PUBLIC_URL` dibaca saat BUILD untuk menyusun daftar CSP (`next.config.ts`). Tanpa build ulang, browser memblokir sambungan ke server walau env-nya sudah terisi — dan gejalanya mirip "fitur tidak muncul", bukan pesan error yang jelas.
+
+### Cara MEMBUKTIKAN di sesi berikutnya (jangan percaya "deployment hijau")
+
+1. `curl https://<alamat-nobar>/health` → harus `{"ok":true,"room":0}`. Deployment bisa sukses merakit tapi servernya langsung mati karena env kurang — hanya `/health` yang memisahkan keduanya.
+2. `curl -X POST https://dramaapp-production-9e88.up.railway.app/api/watch-room -H "Content-Type: application/json" -d '{}'` → selama env situs belum diisi, jawabannya **404** `{"error":"Fitur Nonton Bareng sedang tidak aktif."}`. Begitu langkah 4 selesai, jawabannya HARUS berubah (bukan 404 itu lagi). Inilah penanda paling cepat apakah env terbaca.
+3. Tombol **Nonton Bareng** harus tergambar di `/tonton/<id film>`.
+4. ❓ **Butuh mata manusia, tak bisa dibuktikan dari luar:** buat Room → buka link undangan di HP → putar/geser di satu layar → layar lain harus ikut dalam ±2 detik, dan chat sampai tanpa muat ulang.
+
+### Catatan jujur tentang keadaan sekarang
+
+Selama env situs belum diisi, **fitur ini TIDAK terlihat sama sekali oleh pengunjung** — tombolnya tidak digambar dan route-nya 404. Jadi berhenti semalam di titik ini **aman**: tidak ada yang setengah jadi di mata penonton, dan tidak ada data menggantung. Tabel-tabelnya kosong dan tidak dipakai siapa pun.
+
+---
+
 ## 2026-11-24 (malam) — ✅ RILIS `1f98f3d` → `2cc35a6` TAYANG — seksi film beranda
 
 Owner memberi izin **"rilis"**. Urutan dijalankan sesuai aturan: gerbang ulang → `dramaku` (cermin) → `origin` (tombol rilis) → smoke test di situs sungguhan.

@@ -84,7 +84,7 @@ export default function FeaturedRow({
   return (
     <section
       aria-label={title ?? "Tontonan unggulan"}
-      className="relative border-b border-zinc-900 bg-black py-4 terang:border-zinc-200 terang:bg-zinc-100"
+      className="relative border-b border-gelap-800 bg-gelap-950 py-4 terang:border-zinc-200 terang:bg-zinc-100"
     >
       <div className="shell-wide relative mx-auto px-4 md:px-6">
         {title && (

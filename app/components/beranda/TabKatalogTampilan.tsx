@@ -188,7 +188,7 @@ export default function TabKatalogTampilan({
   };
 
   return (
-    <section className="bg-black py-3 terang:bg-zinc-100">
+    <section className="bg-gelap-950 py-3 terang:bg-zinc-100">
       {/* ===== Deret tab + tombol FILTER ===== */}
       {/* ===== Deret tab + tombol FILTER, dalam SATU kotak berpembatas =====
              Owner 2026-09-26: "aku mau jadi satu shadow ... seperti LK21 (jadi
@@ -201,7 +201,7 @@ export default function TabKatalogTampilan({
           owner (*"cuma bagian atas yang diubah, sisanya kembalikan ke
           dramaku"*). Ia tergambar di SEMUA ukuran layar lagi. */}
       <div className={cn(SHELL)}>
-        <div className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-950/80 p-2 shadow-[0_6px_20px_-6px_rgba(0,0,0,0.9)] terang:border-zinc-200 terang:bg-white terang:shadow-[0_6px_20px_-10px_rgba(0,0,0,0.25)]">
+        <div className="flex items-center gap-2 rounded-lg border border-gelap-700 bg-gelap-900/80 p-2 shadow-[0_6px_20px_-6px_rgba(0,0,0,0.9)] terang:border-zinc-200 terang:bg-white terang:shadow-[0_6px_20px_-10px_rgba(0,0,0,0.25)]">
         {/* `max-md:flex-wrap` = DI HP barisnya MEMBUNGKUS ke bawah, bukan
             digeser menyamping. Ditambahkan 2026-11-23 bersama `slotBarisTab`:
             begitu judul + tiga chip ikut masuk, barisnya jadi jauh lebih

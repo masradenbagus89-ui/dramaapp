@@ -197,7 +197,7 @@ export default function BottomNav() {
          langsung di sini, bukan memakai konstanta itu: bar atas membawa
          `relative isolate overflow-hidden` yang di sini sudah dipegang
          `fixed`, dan menumpuknya menghasilkan posisi yang bertengkar. */
-      className="sapuan-gelombang fixed bottom-0 left-0 right-0 z-30 border-t border-emas-700/40 bg-gelap-900 md:hidden">
+      className="sapuan-gelombang sapuan-gelombang--bawah fixed bottom-0 left-0 right-0 z-30 border-t border-emas-700/40 bg-gelap-900 md:hidden">
       <div className="relative mx-auto max-w-md">
         {/* Garis menyala yang meluncur mengikuti menu aktif */}
         {activeIndex >= 0 && (

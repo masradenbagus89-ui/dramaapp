@@ -140,7 +140,19 @@ describe("3. baris tab jadi SATU kotak berpembatas", () => {
   const html = render({ basePath: "/katalog" });
 
   it("seluruh baris dibungkus kotak bergaris + satu bayangan", () => {
-    expect(html).toMatch(/rounded-lg border border-zinc-800[^"]*shadow-/);
+    // Warna garisnya SENGAJA tidak dipatok: ia ikut tema dan sudah berganti
+    // (`zinc-800` → `gelap-700` saat tema anggur+amber, 2026-11-24). Yang
+    // dijaga di sini BENTUKNYA — satu kotak membungkus seluruh baris, dengan
+    // SATU bayangan. Itu yang diminta owner ("aku mau jadi satu shadow");
+    // warna garis yang ikut tema bukan bagian dari permintaan itu.
+    expect(html).toMatch(/rounded-lg border border-\S+[^"]*shadow-/);
+  });
+
+  it("pembanding: kotaknya bergaris TOKEN tema, bukan warna netral mentah", () => {
+    // Tanpa baris ini, regex di atas ikut meloloskan `border-zinc-800` yang
+    // justru membuat kotaknya abu di tengah tema anggur — persis cara badan
+    // halaman sempat tetap HITAM walau seluruh token sudah diganti.
+    expect(html).toMatch(/rounded-lg border border-gelap-\d+/);
   });
 
   it("tab yang sedang dibuka tetap menonjol di dalam kotak", () => {

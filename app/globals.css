@@ -2,14 +2,15 @@
 @import "tw-animate-css";
 
 /* ============================================================
-   PALET MEREK "GELAP + EMAS" — satu sumber warna untuk seluruh situs.
+   PALET MEREK "ANGGUR + AMBER" — satu sumber warna untuk seluruh situs.
 
    RIWAYAT TEMA, supaya tak ada yang memutarnya balik mengira sedang
    membereskan sesuatu: merah-pink DramaKu → **soft sage** (hijau terang,
    2026-11-23 pagi, commit 25957c7) → **gelap + emas** (sore hari yang sama,
-   owner: *"warna ini lebih bagus, terlihat elegan dan mewah"* sambil
-   menunjukkan contoh gambar). Titik pulang kalau tema sage mau dikembalikan:
-   commit `25957c7`.
+   owner: *"warna ini lebih bagus, terlihat elegan dan mewah"*) → **anggur +
+   amber** (2026-11-24, owner mengirim mockup jadi dan meminta *"sama persis
+   dengan image yang saya kirim"*). Titik pulang: sage `25957c7`, emas
+   `4c5149e`.
 
    ⚠️ NAMA TOKENNYA SENGAJA TIDAK MENYEBUT WARNA UMUM seperti "sage": tema
    situs ini sudah berganti DUA KALI dalam satu hari, dan nama yang terikat
@@ -28,36 +29,62 @@
    mewajibkan teks normal minimal 4,5:1). DUA aturan pasangan, dan yang kedua
    paling gampang dilanggar tanpa sadar:
 
-   1. DI ATAS PERMUKAAN GELAP — semuanya aman, pilih sesuai peran:
-        putih     14,87–19,51:1   · emas-500  7,29–9,56:1
-        `redup`    7,42–9,74:1  (teks pendukung)
+   1. DI ATAS PERMUKAAN ANGGUR (950→700) — semuanya aman, pilih sesuai peran:
+        putih     18,76 → 13,72:1   · emas-500  6,98 → 5,10:1
+        emas-400  10,36 → 7,58:1    · `redup`   8,83 → 6,46:1  (teks pendukung)
 
-   2. DI ATAS BIDANG EMAS — TEKSNYA WAJIB GELAP, BUKAN PUTIH.
-        teks gelap di emas-500 = 9,56:1  ✅
-        teks PUTIH di emas-500 = 2,04:1  ❌ (emas-200 bahkan cuma 1,26:1)
-      Emas itu warna TERANG. Refleks "tombol berwarna → tulisan putih" yang
+   2. DI ATAS BIDANG AMBER — TEKSNYA WAJIB GELAP, BUKAN PUTIH.
+        teks gelap di emas-500 = 6,98:1  ✅
+        teks PUTIH di emas-500 = 2,69:1  ❌ (emas-200 bahkan cuma 1,34:1)
+      Amber itu warna TERANG. Refleks "tombol berwarna → tulisan putih" yang
       benar di tema merah & hijau sebelumnya justru membuat tulisan tombol
-      nyaris lenyap di sini. Hanya `emas-700` yang sanggup menanggung teks
-      putih (4,73:1), dan itu nada paling tua.
+      nyaris lenyap di sini.
+
+      ⚠️ BERUBAH 2026-11-24 — JANGAN pakai ingatan dari tema emas: dulu
+      `emas-700` masih sanggup menanggung teks putih (4,73:1). Dengan amber
+      sekarang ia TIDAK lagi (3,79:1, di bawah ambang 4,5:1). Jadi kini TIDAK
+      ADA satu pun nada aksen yang boleh memakai teks putih — seluruh tangga
+      200→700 wajib teks gelap.
    ============================================================ */
 @theme {
-  /* PERMUKAAN GELAP — coklat-kemerahan, bukan abu netral. Kehangatan itulah
-     yang membuat emas di atasnya terbaca "mewah" dan bukan sekadar kuning. */
-  --color-gelap-950: #140a07; /* latar halaman */
-  --color-gelap-900: #1e0f0a; /* bar & kartu */
-  --color-gelap-800: #2a1711; /* permukaan terangkat */
-  --color-gelap-700: #3a211a; /* garis & pembatas */
+  /* ⚠️ SELURUH ANGKA DI BLOK INI DIUKUR DARI MOCKUP yang dikirim owner
+     2026-11-24 (`image.webp`, 379x732), bukan dipilih dari selera. Owner:
+     *"ubah tema sekarang sama persis dengan image yang saya kirim detail
+     warnanya"*. Cara mengukurnya: MODUS/MEDIAN warna di dalam kotak tiap
+     bagian, bukan satu piksel — satu piksel bisa kena tepi huruf atau noda
+     kompresi. Yang ditandai (diturunkan) tidak ada di mockup dan dihitung
+     dari nada terukur di sebelahnya; alasannya ditulis di barisnya.
 
-  /* EMAS — warna merek: tombol utama, tab aktif, penanda. */
-  --color-emas-200: #ffe2a8;
-  --color-emas-300: #ffd27a;
-  --color-emas-400: #ffc04d;
-  --color-emas-500: #f5a524; /* nada utama */
-  --color-emas-600: #d98513;
-  --color-emas-700: #a96209;
+     🪤 JANGAN mengambil warna dari TEPI gambar mockup: di sana ada bingkai HP
+     yang menyala oranye terang (#e27d61 dst). Itu hiasan perangkat, bukan
+     tampilan situs. Pengukuran pertama saya sendiri sempat tertipu ini.
 
-  /* Teks redup di atas permukaan gelap (krem, bukan abu — supaya tetap hangat). */
-  --color-redup: #c9b49a;
+     Tema sebelumnya (gelap+emas, commit 4c5149e) kalau mau dipulangkan:
+     gelap #140a07/#1e0f0a/#2a1711/#3a211a · emas #ffe2a8/#ffd27a/#ffc04d/
+     #f5a524/#d98513/#a96209 · redup #c9b49a. */
+
+  /* PERMUKAAN — ANGGUR GELAP (merah tua), bukan coklat lagi. Inilah yang
+     paling membedakan tema ini dari dua tema sebelumnya: dasarnya merah,
+     jadi oranye di atasnya terbaca menyala, bukan sekadar kuning hangat. */
+  --color-gelap-950: #2b0309; /* latar halaman — diukur di menu bawah & sela kartu */
+  --color-gelap-900: #3c030e; /* bar & kartu */
+  --color-gelap-800: #4d0210; /* permukaan terangkat & chip gelap */
+  --color-gelap-700: #5e0a16; /* permukaan paling terang & pembatas */
+
+  /* AKSEN — ORANYE AMBER. Di mockup tiap bidang oranye sebenarnya GRADASI
+     (atas #fdb239 → bawah #ec5706). Token di bawah adalah tangga nada tunggal
+     dari gradasi itu, supaya satu warna bisa dipakai di tempat yang tidak
+     bergradasi. */
+  --color-emas-200: #ffd9a2; /* (diturunkan) mockup tak punya nada sepucat ini — dibutuhkan untuk teks kecil di atas anggur */
+  --color-emas-300: #fec261; /* (diturunkan) pengisi jarak 200→400 supaya tangganya tidak melompat */
+  --color-emas-400: #fdb239; /* diukur — pita atas tombol besar & mahkota logo */
+  --color-emas-500: #f37e1a; /* nada utama — diukur dari BADAN tombol besar; tombol kecil, pil tab, dan chip aktif sepakat di angka yang sama (#f27d1e/#ec6e0d/#f3821a) */
+  --color-emas-600: #ec6e0d; /* diukur — pil tab aktif */
+  --color-emas-700: #e55204; /* diukur — pita bawah tombol & pil, nada paling pekat */
+
+  /* Teks keterangan — abu HANGAT kemerahan, diukur dari subjudul di mockup
+     (inti huruf #c0b4b2). Bukan krem kekuningan seperti tema emas. */
+  --color-redup: #c0aeac;
 }
 
 /* ============================================================
@@ -111,27 +138,47 @@
      ditutup dengan warna pita di sekitarnya. Jadi "sama dengan contoh"
      bukan lagi penilaian, melainkan fakta — sumbernya memang berkas itu.
 
-     ⚠️ DIWARNAI ULANG JADI EMAS 2026-11-23 (`bar-latar-emas.jpg`), saat tema
-     situs pindah dari hijau sage ke gelap+emas. BENTUK gelombangnya PERSIS
-     sama — berkas emas dibuat dari berkas hijau dengan memetakan KECERAHAN
-     tiap piksel ke tangga warna emas, bukan digambar ulang. Jadi yang empat
-     kali ditolak-lalu-disetujui owner itu tidak ikut hilang; yang berganti
+     ⚠️ SUDAH DIWARNAI ULANG DUA KALI. BENTUK gelombangnya TIDAK PERNAH
+     berubah — tiap versi dibuat dari berkas HIJAU asli dengan memetakan
+     KECERAHAN tiap piksel ke tangga warna, bukan digambar ulang. Jadi yang
+     empat kali ditolak-lalu-disetujui owner itu tetap utuh; yang berganti
      cuma warnanya. Skripnya sekali pakai, hasilnya yang disimpan.
 
-     Kecerahan asli terukur 0,363-0,651 lalu direntangkan penuh ke tangga
-     #1e0f0a (dasar) → #a96209 (puncak). Puncaknya SENGAJA `emas-700` yang
-     redup, bukan `emas-500` penuh: hiasan latar seterang warna tombol akan
-     bersaing dengan tombolnya sendiri. Kontras teks putih di dasarnya
-     ±18,3:1. 7,5 KB (JPEG mutu 0,82) — latar ini dimuat di SETIAP halaman.
+       1. `bar-latar-emas.jpg` (2026-11-23) — tangga #1e0f0a → #a96209
+       2. `bar-latar-anggur.jpg` (2026-11-24, DIPAKAI SEKARANG) — tangga
+          #4b0110 (dasar, = warna bar di mockup) → #6e1222 (puncak)
 
-     `bar-latar.jpg` yang HIJAU sengaja dibiarkan di `public/`: ia sumber
-     bentuknya, dan tema sage bisa dipulangkan tanpa membuatnya ulang.
+     Kecerahan asli terukur 0,363-0,651 lalu direntangkan penuh.
+
+     ⚠️ PUNCAKNYA SENGAJA ANGGUR, BUKAN AMBER — dan ini berbeda dari versi
+     emas yang puncaknya masih warna merek. DUA alasan: (a) di mockup owner
+     bar atasnya nyaris rata anggur (terukur #4b0110..#580114), jadi sapuan
+     amber di sana justru MENJAUH dari contoh; (b) hiasan latar seterang
+     warna tombol akan bersaing dengan tombolnya sendiri. Kontras teks putih
+     di dasarnya ±18,6:1. 5,2 KB (JPEG mutu 0,82) — dimuat di SETIAP halaman.
+
+     Dua berkas lama sengaja dibiarkan di `public/`: `bar-latar.jpg` (HIJAU)
+     adalah SUMBER bentuknya — jangan dihapus, tiap pewarnaan ulang berikutnya
+     berangkat dari sana. `bar-latar-emas.jpg` dibiarkan supaya tema emas bisa
+     dipulangkan tanpa membuatnya ulang.
 
      `100% 100%` = direnggangkan mengikuti bar. Gelombangnya memang ada di
      pojok kiri-atas & kanan-bawah gambar asli, jadi di bar yang lebar-pendek
      ia muncul sebagai sapuan di kedua ujung. */
-  background-image: url("/bar-latar-emas.jpg");
-  background-color: #1e0f0a;
+  background-image: url("/bar-latar-anggur.jpg");
+  /* Hanya terlihat kalau gambarnya gagal dimuat — gambarnya menutup penuh
+     (`background-size: 100% 100%`). Disamakan dengan dasar gambar supaya
+     kegagalan muat tidak terlihat seperti lubang hitam. */
+  background-color: #4b0110;
+}
+
+/* MENU BAWAH lebih GELAP daripada bar atas — di mockup owner keduanya memang
+   berbeda: bar atas terukur #520112, menu bawah #2c0409 (nisbah 0,54).
+   Dibuat dengan MEREDUPKAN gambar yang sama, bukan membuat gambar kedua:
+   bentuk gelombangnya wajib identik di atas & di bawah, dan dua berkas yang
+   harus dijaga tetap sama pasti menyimpang cepat atau lambat. */
+.sapuan-gelombang--bawah::before {
+  filter: brightness(0.54);
 }
 
 /* Panah dropdown untuk `<select>` yang dimatikan tampilannya (`appearance-none`).
@@ -140,7 +187,7 @@
   background-repeat: no-repeat;
   background-position: right 0.65rem center;
   background-size: 18px 18px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23F5A524' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23F37E1A' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
 }
 
 @custom-variant dark (&:is(.dark *));
@@ -347,7 +394,7 @@
 :root {
   --radius: 0.7rem;
 
-  --background: oklch(0.145 0 0); /* ~#0a0a0a */
+  --background: #2b0309; /* anggur gelap — diukur dari mockup owner 2026-11-24 */
   --foreground: oklch(0.95 0 0); /* ~#ededed */
 
   --card: oklch(0.19 0 0);
@@ -357,7 +404,7 @@
   --popover-foreground: oklch(0.95 0 0);
 
   /* Emas / amber sebagai warna utama brand */
-  --primary: oklch(0.83 0.16 83);
+  --primary: #f37e1a;
   --primary-foreground: oklch(0.18 0.02 75);
 
   --secondary: oklch(0.27 0 0);
@@ -374,9 +421,9 @@
 
   --border: oklch(1 0 0 / 12%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.83 0.16 83);
+  --ring: #f37e1a;
 
-  --chart-1: oklch(0.83 0.16 83);
+  --chart-1: #f37e1a;
   --chart-2: oklch(0.7 0.15 50);
   --chart-3: oklch(0.6 0.12 40);
   --chart-4: oklch(0.75 0.13 95);
@@ -384,22 +431,22 @@
 
   --sidebar: oklch(0.17 0 0);
   --sidebar-foreground: oklch(0.95 0 0);
-  --sidebar-primary: oklch(0.83 0.16 83);
+  --sidebar-primary: #f37e1a;
   --sidebar-primary-foreground: oklch(0.18 0.02 75);
   --sidebar-accent: oklch(0.27 0 0);
   --sidebar-accent-foreground: oklch(0.95 0 0);
   --sidebar-border: oklch(1 0 0 / 12%);
-  --sidebar-ring: oklch(0.83 0.16 83);
+  --sidebar-ring: #f37e1a;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
+  --background: #2b0309;
   --foreground: oklch(0.95 0 0);
   --card: oklch(0.19 0 0);
   --card-foreground: oklch(0.95 0 0);
   --popover: oklch(0.19 0 0);
   --popover-foreground: oklch(0.95 0 0);
-  --primary: oklch(0.83 0.16 83);
+  --primary: #f37e1a;
   --primary-foreground: oklch(0.18 0.02 75);
   --secondary: oklch(0.27 0 0);
   --secondary-foreground: oklch(0.95 0 0);
@@ -411,20 +458,20 @@
   --destructive-foreground: oklch(0.98 0 0);
   --border: oklch(1 0 0 / 12%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.83 0.16 83);
-  --chart-1: oklch(0.83 0.16 83);
+  --ring: #f37e1a;
+  --chart-1: #f37e1a;
   --chart-2: oklch(0.7 0.15 50);
   --chart-3: oklch(0.6 0.12 40);
   --chart-4: oklch(0.75 0.13 95);
   --chart-5: oklch(0.65 0.14 70);
   --sidebar: oklch(0.17 0 0);
   --sidebar-foreground: oklch(0.95 0 0);
-  --sidebar-primary: oklch(0.83 0.16 83);
+  --sidebar-primary: #f37e1a;
   --sidebar-primary-foreground: oklch(0.18 0.02 75);
   --sidebar-accent: oklch(0.27 0 0);
   --sidebar-accent-foreground: oklch(0.95 0 0);
   --sidebar-border: oklch(1 0 0 / 12%);
-  --sidebar-ring: oklch(0.83 0.16 83);
+  --sidebar-ring: #f37e1a;
 }
 
 @theme inline {
@@ -492,7 +539,7 @@
   font-family: var(--font-playfair), Georgia, serif;
   font-style: italic;
   font-weight: 700;
-  background: linear-gradient(180deg, #fde68a 0%, #f59e0b 55%, #b45309 100%);
+  background: linear-gradient(180deg, #ffd9a2 0%, #f37e1a 55%, #e55204 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;

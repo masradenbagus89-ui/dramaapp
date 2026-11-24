@@ -186,7 +186,7 @@ export default function TopNav() {
 
   return (
     <>
-    <header className="sticky top-0 z-30 border-b border-zinc-800 bg-black/95 backdrop-blur">
+    <header className="sticky top-0 z-30 border-b border-gelap-700 bg-gelap-950/95 backdrop-blur">
       {/* shell-wide (1440) — WAJIB sama dengan pembatas isi beranda di
           app/beranda/page.tsx, kalau tidak logo meleset dari tepi konten.
           Definisi + alasannya ada di app/globals.css. */}

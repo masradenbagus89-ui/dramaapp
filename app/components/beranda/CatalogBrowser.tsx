@@ -286,7 +286,7 @@ export default function CatalogBrowser({
         </div>
       ) : (
       <div className={SHELL}>
-        <div className="mt-2 flex flex-wrap items-center justify-between gap-3 border-b border-zinc-800 pb-3">
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-3 border-b border-gelap-700 pb-3">
           <h2 className="text-sm text-zinc-400">
             <span className="font-bold text-white">
               Halaman {halaman.page} dari {halaman.totalPages}

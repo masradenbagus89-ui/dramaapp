@@ -134,12 +134,21 @@ export const SOROT_BAR_MEREK =
  *
  * ⚠️ TEKSNYA GELAP, BUKAN PUTIH — dan ini titik yang paling gampang dilanggar
  * tanpa sadar. Di dua tema sebelumnya (merah, lalu hijau) tombol berwarna
- * selalu berteks putih, jadi refleksnya terbawa. Tapi emas itu warna TERANG:
- * teks gelap di `emas-500` = **9,56:1**, sedangkan teks putih cuma **2,04:1**
- * — tulisan tombolnya praktis lenyap. Dihitung, bukan dikira.
+ * selalu berteks putih, jadi refleksnya terbawa. Tapi amber itu warna TERANG.
+ * Diukur pada tema anggur+amber 2026-11-24, teks gelap di sepanjang gradasi:
+ * **10,36:1** di ujung terang, **4,95:1** di ujung tergelap — keduanya lolos
+ * ambang 4,5:1. Teks putih cuma **1,81–3,79:1**, tulisan tombolnya praktis
+ * lenyap. Dihitung, bukan dikira.
+ *
+ * ⚠️ BERGRADASI SEJAK 2026-11-24, dan itu bukan hiasan: di mockup yang
+ * dikirim owner tiap bidang oranye memang gradasi tegak (terukur #fdb239 di
+ * pita atas → #ec5706 di pita bawah), dan permintaannya *"sama persis"*.
+ * Warna RATA terlihat jelas lebih datar disandingkan dengan contohnya.
+ * `bg-gradient-to-b` (bukan `bg-linear-to-b`) dipilih supaya seragam dengan
+ * 22 gradasi lain yang sudah ada di project ini.
  */
 export const TOMBOL_UTAMA =
-  "bg-emas-500 text-gelap-950 hover:bg-emas-400 focus-visible:ring-2 focus-visible:ring-emas-300";
+  "bg-gradient-to-b from-emas-400 to-emas-700 text-gelap-950 hover:from-emas-300 hover:to-emas-600 focus-visible:ring-2 focus-visible:ring-emas-300";
 
 /**
  * LATAR PANEL MENU KATALOG DI HP — abu kehitaman RATA, tanpa gradasi.

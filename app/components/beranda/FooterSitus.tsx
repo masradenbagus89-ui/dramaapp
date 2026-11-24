@@ -82,7 +82,7 @@ export default function FooterSitus({
   const genrePopuler = genres.slice(0, MAKS_GENRE);
 
   return (
-    <footer className="border-t border-zinc-800 bg-zinc-950">
+    <footer className="border-t border-gelap-700 bg-gelap-950">
       <div className="shell-wide mx-auto px-4 py-10 md:px-6">
         <div className="grid gap-8 text-sm sm:grid-cols-2 lg:grid-cols-4">
           {/* ---- 1. Tentang ---- */}
@@ -151,7 +151,7 @@ export default function FooterSitus({
           </section>
         </div>
 
-        <div className="mt-8 flex flex-col items-center gap-2 border-t border-zinc-800 pt-5 text-center text-xs text-zinc-500">
+        <div className="mt-8 flex flex-col items-center gap-2 border-t border-gelap-700 pt-5 text-center text-xs text-zinc-500">
           <p>
             © {TAHUN_RILIS} {SITE_NAME}. Seluruh hak cipta judul ada pada
             pemiliknya.

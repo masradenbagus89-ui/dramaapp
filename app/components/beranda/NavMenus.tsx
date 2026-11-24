@@ -87,7 +87,7 @@ export default function NavMenus({ menus }: { menus: NavMenu[] }) {
               // lebih panjang dari layar membuat pilihan terakhir mustahil
               // dicapai di HP — ia tergambar di bawah tepi layar dan daftarnya
               // tidak ikut bergulir bersama halaman.
-              "max-h-[min(70vh,34rem)] min-w-44 overflow-y-auto border-zinc-700 bg-zinc-900 text-zinc-200",
+              "max-h-[min(70vh,34rem)] min-w-44 overflow-y-auto border-gelap-700 bg-gelap-900 text-zinc-200",
               kelasKolom(m),
             )}
           >

@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { STRIP_KATALOG, alamatCari, buildNavMenus } from "../lib/nav-katalog";
+import {
+  GENRE_FILM,
+  STRIP_KATALOG,
+  alamatCari,
+  buildNavMenus,
+} from "../lib/nav-katalog";
 import { FILTER_KOSONG, bacaFilter, filterDariUrl } from "../lib/discover";
 import type { CatalogFilter } from "../lib/discover";
 import type { Drama } from "../lib/types";
@@ -70,16 +75,19 @@ describe("buildNavMenus", () => {
   it("membuat lima menu inti saat datanya memang terisi", () => {
     // Urutannya sejajar dengan situs katalog pembanding.
     //
-    // ⚠️ Menu keenam ("lainnya") TIDAK di daftar ini sejak 2026-11-14: isinya
-    // kini kategori khas drama + negara drama Asia, dan katalog uji ini tidak
-    // punya keduanya — jadi menunya hilang sendiri, persis seperti yang
-    // seharusnya. Kemunculannya diuji terpisah di tests/nav-menu-lengkap.
+    // ⚠️ JADI ENAM sejak 2026-11-24. Sampai hari itu "lainnya" hilang sendiri
+    // kalau katalognya tak punya kategori khas drama maupun negara Asia —
+    // dan katalog uji ini memang tidak punya keduanya. Owner lalu meminta
+    // seluruh kategori resmi + lima baris drama Asia SELALU digambar, jadi
+    // menu itu kini tak pernah kosong. Perubahan ini DISENGAJA; jangan
+    // dikembalikan ke lima.
     expect(kunciMenu(KAYA)).toEqual([
       "genre",
       "jenis",
       "populer",
       "negara",
       "tahun",
+      "lainnya",
     ]);
   });
 
@@ -91,12 +99,14 @@ describe("buildNavMenus", () => {
     // lalu owner MENGOREKSI: "cukup tulisan lainnya (jangan genre lainnya)".
     // Labelnya diuji di tests/nav-menu-lengkap (menunya butuh data khusus);
     // kelima ini dikunci di sini karena sudah TIGA kali jadi soal.
+    // "Lainnya" ikut sejak 2026-11-24 — lihat alasannya di patokan di atas.
     expect(buildNavMenus(KAYA).map((m) => m.label)).toEqual([
       "Genre",
       "Series",
       "Populer",
       "Negara",
       "Tahun",
+      "Lainnya",
     ]);
   });
 
@@ -171,15 +181,35 @@ describe("buildNavMenus", () => {
     expect(cari("Fiksi Ilmiah")).toBe("/discover?genre=Sci-Fi");
   });
 
-  it("tiap pilihan menu Genre memulangkan judul — label tak merusak alamat", () => {
-    // Pagar nyata atas label-vs-alamat: alamatnya dijalankan sungguhan lewat
-    // `bacaFilter` + `filterDariUrl`, sama seperti halaman /discover.
+  it("tiap pilihan menu Genre memakai nilai BAKU — label tak merusak alamat", () => {
+    // ⚠️ PATOKANNYA BERGANTI 2026-11-24. Dulu: "tiap pilihan memulangkan
+    // judul". Itu tak berlaku lagi sejak owner meminta SELURUH genre resmi
+    // digambar, berisi atau tidak.
+    //
+    // Yang menggantikannya justru menangkap kerusakan yang LEBIH berbahaya:
+    // nilai yang salah ketik. Genre kosong yang sah ("belum ada judulnya")
+    // dan genre salah ketik ("?genre=Sci Fi" alih-alih "Sci-Fi") sama-sama
+    // memulangkan nol judul — mustahil dibedakan dari jumlah hasil. Dengan
+    // mencocokkan ke `GENRE_FILM` (sumber kebenaran yang sama dengan yang
+    // dipakai pencocokan otomatis), salah ketik langsung merah.
+    //
+    // Pelajaran aslinya: tombol "Judul A-Z" menunjuk `?sort=judul`
+    // berminggu-minggu padahal nilai yang sah `title`, dan tesnya saat itu
+    // cuma memastikan teksnya ADA — hijau di atas tombol yang mati.
+    const baku = new Set(GENRE_FILM.map((g) => g.toLowerCase()));
     const genre = buildNavMenus(KAYA).find((m) => m.key === "genre");
     for (const item of genre?.items ?? []) {
+      if (item.label === "Lainnya") continue; // baris penutup, bukan genre
+      const nilai = decodeURIComponent(
+        new URL(item.href, "https://x").searchParams.get("genre") ??
+          new URL(item.href, "https://x").searchParams.get("cat") ??
+          "",
+      );
       expect(
-        hasilDariTautan(KAYA, item.href).length,
-        `pilihan ${item.label} (${item.href}) memulangkan nol judul`,
-      ).toBeGreaterThan(0);
+        baku.has(nilai.toLowerCase()),
+        `pilihan ${item.label} memakai nilai "${nilai}" yang BUKAN genre baku — ` +
+          `ia akan memulangkan nol judul selamanya, bukan menunggu katalog bertambah`,
+      ).toBe(true);
     }
   });
 
@@ -233,9 +263,27 @@ describe("buildNavMenus", () => {
     }
   });
 
+  /**
+   * ⚠️ DUA MENU DIKECUALIKAN sejak 2026-11-24, dan ini keputusan owner yang
+   * MENANG atas aturan lama "semuanya berfungsi kalau diklik":
+   *   - "genre"   → kini memuat SELURUH genre resmi, berisi atau tidak
+   *   - "lainnya" → kini memuat seluruh kategori kurasi + 5 baris drama Asia
+   * Owner memintanya 2026-11-24 setelah dua kali mengira fiturnya belum
+   * dibuat. Konsekuensinya diterima: pilihan kosong diklik = "Tidak ada
+   * drama yang cocok" + tombol Hapus filter.
+   *
+   * Pengecualiannya SEMPIT — empat menu lain tetap wajib berisi, dan itulah
+   * kenapa patokan ini TIDAK dihapus. Penggantinya untuk dua menu yang
+   * dikecualikan ada di patokan berikutnya: nilainya wajib dari daftar baku,
+   * supaya "kosong karena belum ada judul" tidak bisa tertukar dengan
+   * "kosong karena nilainya salah ketik".
+   */
+  const MENU_BOLEH_KOSONG = new Set(["genre", "lainnya"]);
+
   it("tiap pilihan menu memulangkan minimal satu judul", () => {
     // Ini syarat owner: "semuanya berfungsi kalau diklik".
     for (const menu of buildNavMenus(KAYA)) {
+      if (MENU_BOLEH_KOSONG.has(menu.key)) continue;
       for (const item of menu.items) {
         expect(
           hasilDariTautan(KAYA, item.href).length,
@@ -243,6 +291,20 @@ describe("buildNavMenus", () => {
         ).toBeGreaterThan(0);
       }
     }
+  });
+
+  it("pembanding: menu yang DIKECUALIKAN memang punya pilihan kosong", () => {
+    // Tanpa ini, pengecualian di atas bisa jadi penutup bagi kerusakan: kalau
+    // suatu hari menu Genre kembali bersyarat, patokan utama tetap hijau dan
+    // tak ada yang memberi tahu bahwa pengecualiannya sudah tak dipakai.
+    const genre = buildNavMenus(KAYA).find((m) => m.key === "genre");
+    const kosong = (genre?.items ?? []).filter(
+      (i) => hasilDariTautan(KAYA, i.href).length === 0,
+    );
+    expect(
+      kosong.length,
+      "menu Genre tak lagi memuat genre kosong — pengecualian di atas jadi mubazir",
+    ).toBeGreaterThan(0);
   });
 
   it("tidak menggambar menu apa pun untuk katalog kosong", () => {

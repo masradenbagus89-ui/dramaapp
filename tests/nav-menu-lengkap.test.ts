@@ -275,9 +275,18 @@ describe("5. Genre khusus film, sisanya di Lainnya", () => {
   const lainnya = menus.find((m) => m.key === "lainnya");
 
   it("menu Genre HANYA berisi genre film", () => {
-    const liar = tanpaPenutup(genre?.items ?? []).filter(
-      (i) => !/cat=(Action|Horror)\b/.test(i.href),
-    );
+    // ⚠️ CARA MEMERIKSANYA BERGANTI 2026-11-24, maksudnya tidak: kategori
+    // khas drama (Tycoon, Harem, Wuxia, …) tak boleh bocor ke menu Genre.
+    // Dulu cukup mencocokkan dua nilai yang kebetulan ada di katalog uji
+    // (`cat=Action|Horror`); sesudah SELURUH genre resmi ikut digambar,
+    // patokan itu menandai 25 genre sah sebagai "liar".
+    // Kini dicocokkan ke `GENRE_FILM` — sumber kebenarannya sendiri.
+    const baku = new Set(GENRE_FILM.map((g) => g.toLowerCase()));
+    const liar = tanpaPenutup(genre?.items ?? []).filter((i) => {
+      const u = new URL(i.href, "https://x").searchParams;
+      const nilai = decodeURIComponent(u.get("genre") ?? u.get("cat") ?? "");
+      return !baku.has(nilai.toLowerCase());
+    });
     expect(
       liar.map((i) => i.label),
       "kategori khas drama bocor ke menu Genre",
@@ -352,7 +361,16 @@ describe("5. Genre khusus film, sisanya di Lainnya", () => {
     // Kolom banyak untuk daftar pendek justru lebih sulit dibaca — mata harus
     // melompat antar kolom untuk lima baris.
     expect(genre?.kolom).toBe(KOLOM_GENRE);
-    expect(lainnya?.kolom).toBeUndefined();
+    // ⚠️ "Lainnya" IKUT dapat kolom sejak 2026-11-24 — dulu `undefined` dan
+    // itu memang benar saat isinya 5 baris. Sesudah seluruh kategori resmi
+    // masuk, isinya 47: satu kolom berarti daftar ±1.500px yang harus
+    // digulir, persis keluhan owner soal menu Genre 2026-11-15.
+    expect(lainnya?.kolom).toBe(KOLOM_GENRE);
+    // Menu PENDEK tetap tanpa kolom — aturan aslinya masih berlaku, dan
+    // inilah pembandingnya supaya patokan di atas tidak jadi "semua dapat
+    // kolom" tanpa ada yang menyadari.
+    const pendek = menus.find((m) => m.key === "jenis");
+    expect(pendek?.kolom, "menu pendek ikut dapat kolom — mata jadi melompat antar kolom untuk 5 baris").toBeUndefined();
   });
 
   it("Tahun & Negara ikut dapat kolom, jumlahnya sesuai panjang label", () => {
@@ -414,15 +432,20 @@ describe("5. Genre khusus film, sisanya di Lainnya", () => {
 // isi kolom Negara, lalu barisnya muncul.
 // ===========================================================================
 describe("6. Baris drama Asia menyala dari data, bukan daftar tetap", () => {
-  it("TIDAK digambar saat kolom negara masih kosong", () => {
-    // Keadaan produksi hari ini: 40 dari 41 drama `country`-nya null.
-    // Menggambar "Dracin" sekarang = menu yang diklik lalu memulangkan film
-    // Hollywood ber-negara-produksi China. Lebih baik tidak ada.
-    // `undefined`, bukan `null`: itu bentuk "kolom kosong" menurut tipe Drama.
+  it("TETAP digambar walau kolom negara masih kosong", () => {
+    // ⚠️ DIBALIK 2026-11-24 — patokan ini DULU menuntut sebaliknya.
+    //
+    // Syarat lamanya tak pernah terpenuhi: diukur di katalog PRODUKSI, dari
+    // 41 judul hanya SATU yang `country`-nya terisi, dan judul itu "Meg 2
+    // The Trench" — film Hollywood. Pagar `kind=series` menolaknya (memang
+    // itu gunanya), jadi kelima baris tak pernah muncul dan owner dua kali
+    // (14 & 24 Nov) mengira fiturnya belum dibuat. Owner lalu memutuskan
+    // barisnya selalu digambar, menerima bahwa ia kosong untuk sementara.
     const menus = buildNavMenus([drama({ country: undefined })] as never, []);
     const label = menus.find((m) => m.key === "lainnya")?.items.map((i) => i.label) ?? [];
-    expect(label).not.toContain("Dracin");
-    expect(label).not.toContain("K-Drama");
+    for (const l of ["Dracin", "K-Drama", "J-Drama", "Drama Thailand", "Drama Taiwan"]) {
+      expect(label, `baris "${l}" hilang`).toContain(l);
+    }
   });
 
   it("MUNCUL sendiri begitu ada serial dari negara itu", () => {
@@ -439,15 +462,27 @@ describe("6. Baris drama Asia menyala dari data, bukan daftar tetap", () => {
     expect(href).toContain("/discover?negara=South+Korea&kind=series");
   });
 
-  it("FILM dari negara itu TIDAK menghidupkan barisnya", () => {
-    // "Dracin" berarti DRAMA China. Satu film ko-produksi China tidak boleh
-    // memunculkan baris yang isinya bukan drama.
+  it("FILM dari negara itu tidak ikut terbawa saat barisnya DIKLIK", () => {
+    // ⚠️ PATOKANNYA BERGESER 2026-11-24, tapi YANG DIJAGA SAMA PERSIS:
+    // "Dracin" berarti DRAMA China, jadi film Hollywood ko-produksi China
+    // tidak boleh muncul di hasilnya. Dulu dijaga dengan menyembunyikan
+    // barisnya; kini barisnya selalu ada, jadi yang dijaga pindah ke ALAMAT:
+    // ia wajib tetap membawa `kind=series`.
+    //
+    // Ini bukan kasus karangan — judul itu nyata di katalog produksi:
+    // "Meg 2 The Trench", country "United States, China, Thailand, …".
     const menus = buildNavMenus(
       [drama({ kind: "movie", country: "China" })] as never,
       [],
     );
-    const label = menus.find((m) => m.key === "lainnya")?.items.map((i) => i.label) ?? [];
-    expect(label).not.toContain("Dracin");
+    const item = menus
+      .find((m) => m.key === "lainnya")
+      ?.items.find((i) => i.label === "Dracin");
+    expect(item, "baris Dracin hilang").toBeTruthy();
+    expect(
+      item!.href,
+      "tanpa kind=series, Dracin akan memulangkan film Hollywood ber-negara-produksi China",
+    ).toContain("kind=series");
   });
 
   it("kolom negara berisi DAFTAR tetap cocok", () => {
@@ -631,9 +666,13 @@ describe("9. Tiap dropdown punya jalan keluar 'Lainnya'", () => {
     // Ia ditambahkan SESUDAH ambang MIN_ITEM_MENU dinilai. Kalau dihitung
     // sebagai isi, menu berisi satu pilihan akan lolos — dan itu cuma
     // menambah satu klik untuk sampai ke tempat yang sama.
-    // Katalog dengan SATU genre saja -> menu Genre cuma punya 1 pilihan.
-    const sedikit = buildNavMenus([drama({ category: "Action" })], []);
-    expect(sedikit.find((m) => m.key === "genre")).toBeUndefined();
+    // ⚠️ CONTOHNYA BERGANTI 2026-11-24 dari menu Genre ke menu NEGARA.
+    // Menu Genre tak bisa lagi jadi contoh "menu yang isinya kurang": sejak
+    // seluruh genre resmi ikut digambar, ia selalu punya 27 pilihan. Menu
+    // Negara masih dihitung dari katalog, jadi aturan ambang itu masih
+    // berlaku di sana — dan itulah yang sedang diuji.
+    const sedikit = buildNavMenus([drama({ country: "China" })], []);
+    expect(sedikit.find((m) => m.key === "negara")).toBeUndefined();
   });
 });
 

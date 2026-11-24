@@ -8,14 +8,23 @@
 // layak muncul, bukan bagaimana bentuknya.
 //
 // ATURAN JUJUR (lanjutan pelajaran docs/lintasai/rencana/2026-09-07-beranda-lk21.md):
-// tiap pilihan HARUS memulangkan minimal satu judul di katalog yang sedang
-// dipakai. Menu yang diklik lalu memulangkan halaman hampa terbaca seperti
-// situs rusak. Karena itu tidak ada satu pun daftar tetap di sini — semua
-// dihitung dari katalog, sehingga menu ikut tumbuh sendiri saat owner
-// melengkapi data dan ikut menghilang saat datanya belum ada.
+// tiap pilihan sedapat mungkin memulangkan minimal satu judul, karena menu
+// yang diklik lalu memulangkan halaman hampa terbaca seperti situs rusak.
+// Karena itu sebagian besar daftar di sini DIHITUNG dari katalog — menu ikut
+// tumbuh sendiri saat owner melengkapi data.
+//
+// ⚠️ TIGA PENGECUALIAN, semuanya KEPUTUSAN OWNER yang menang atas aturan di
+// atas. Jangan "dirapikan" kembali jadi bersyarat:
+//   1. strip kuning (`chipStripKatalog`) — daftar tetap, owner 2026-09-21;
+//   2. lima baris DRAMA ASIA di menu "Lainnya" — owner 2026-11-24;
+//   3. seluruh genre & kategori resmi di menu Genre/"Lainnya" — owner
+//      2026-11-24 ("tambahkan ... yang belum ada di genre").
+// Konsekuensinya sama dan sudah diterima owner: pilihan yang belum ada
+// isinya diklik = "Tidak ada drama yang cocok" + tombol Hapus filter, sampai
+// katalognya bertambah. Itu bukan kerusakan kode.
 // -------------------------------------------------------------------------
 import type { Drama } from "./types";
-import { isMovie } from "./types";
+import { CATEGORIES, isMovie } from "./types";
 import { countWithRating, countWithYear } from "./beranda-catalog";
 import { getGenreOptions, parseImdb } from "./discover";
 import { labelGenre } from "./genre";
@@ -113,6 +122,19 @@ export const GENRE_FILM: readonly string[] = [
 const SET_GENRE_FILM = new Set(GENRE_FILM.map((g) => g.toLowerCase()));
 
 /**
+ * KATEGORI KURASI — nama di `CATEGORIES` yang BUKAN genre film baku, dan
+ * bukan "Semua". Hari ini: Romance, Tycoon, Harem, Time Travel, Anime.
+ *
+ * DIHITUNG dari `CATEGORIES`, bukan ditulis tangan: daftar kategori itu
+ * bertambah dari waktu ke waktu, dan salinan tangan di sini akan tertinggal
+ * diam-diam — menu "Lainnya" lalu kehilangan kategori baru tanpa satu pun
+ * error yang memberi tahu.
+ */
+const KATEGORI_KURASI: readonly string[] = CATEGORIES.filter(
+  (c) => c !== "Semua" && !SET_GENRE_FILM.has(c.toLowerCase()),
+);
+
+/**
  * Jumlah kolom tiap dropdown panjang.
  *
  * Genre, Negara, dan Tahun sama-sama 4 (owner 2026-11-15: "samakan dengan
@@ -137,12 +159,22 @@ export const KOLOM_NEGARA = 4 as const;
  * dipasang supaya nama "Dracin" (drama China) tidak memulangkan film Hollywood
  * yang kebetulan ber-negara-produksi China.
  *
- * ⚠️ BARISNYA BELUM TENTU MUNCUL, dan itu disengaja. Syaratnya ada serial yang
- * kolom `country`-nya memang terisi. Diukur 2026-11-14: kolom itu terisi pada
- * 1 dari 41 drama, karena isiannya di panel admin MUSTAHIL dicapai (lihat
- * catatan di DramaForm.tsx). Sesudah kuncinya dibuka hari ini, owner tinggal
- * mengisi negara tiap drama dan baris-baris ini menyala sendiri — tanpa
- * menyentuh berkas ini lagi.
+ * ⚠️ SEJAK 2026-11-24 KELIMANYA SELALU DIGAMBAR, berisi atau tidak — atas
+ * permintaan owner, dan ini MEMBALIK aturan lama "hanya gambar yang ada
+ * isinya". Jangan dikembalikan jadi bersyarat.
+ *
+ * KENAPA: syarat lamanya ("ada serial dari negara ini") tak pernah terpenuhi.
+ * Diukur di katalog PRODUKSI 2026-11-24 — 41 judul, hanya SATU yang kolom
+ * `country`-nya terisi, dan judul itu **"Meg 2 The Trench"**: film Hollywood
+ * ko-produksi 6 negara termasuk China. Pagar `kind=series` di atas sengaja
+ * menolaknya (justru itu gunanya), jadi kelima baris tak pernah muncul dan
+ * owner menyimpulkan fiturnya belum dibuat — dua kali, 14 & 24 November.
+ *
+ * AKIBAT YANG HARUS DIKETAHUI: selama kolom Negara masih kosong, baris ini
+ * diklik = halaman "Tidak ada drama yang cocok" + tombol Hapus filter. Itu
+ * BUKAN kerusakan kode. Ia berisi sendiri begitu owner mengisi Negara tiap
+ * serial di panel admin — dan kolom itu TERISI OTOMATIS saat menarik data
+ * IMDb (`setCountry(imdbDraft.country)`, DramaForm.tsx:307).
  */
 const DRAMA_ASIA: readonly { label: string; negara: string }[] = [
   { label: "Dracin", negara: "China" },
@@ -151,17 +183,6 @@ const DRAMA_ASIA: readonly { label: string; negara: string }[] = [
   { label: "Drama Thailand", negara: "Thailand" },
   { label: "Drama Taiwan", negara: "Taiwan" },
 ];
-
-/**
- * Apakah drama ini diproduksi di negara tersebut? Kolomnya berisi DAFTAR
- * ("United States, China, Thailand"), jadi dicocokkan per potongan — bukan
- * disamakan utuh, yang akan melewatkan hampir semua judul ko-produksi.
- */
-function dramaDariNegara(d: Drama, negara: string): boolean {
-  return String(d.country ?? "")
-    .split(",")
-    .some((n) => n.trim().toLowerCase() === negara.toLowerCase());
-}
 
 /** Apakah nama ini genre film (bukan kategori khas drama)? */
 function genreFilmResmi(nama: string): boolean {
@@ -443,8 +464,44 @@ export function buildNavMenus(
    * "Genre Lainnya" — owner menilai pembagian itu tak bermakna bagi penonton:
    * yang dicari orang di menu Genre adalah genre FILM.
    */
-  const genreFilmMenu = semuaGenre.filter((i) => genreFilmResmi(i.nilai));
-  const kategoriDramaMenu = semuaGenre.filter((i) => !genreFilmResmi(i.nilai));
+  /**
+   * Nama yang SUDAH masuk daftar di atas — dipakai agar penambahan di bawah
+   * tidak menggandakan pilihan. Dicocokkan huruf-kecil karena sumbernya dua
+   * (kategori kurasi & genre OMDb) dan ejaannya bisa berbeda besar-kecilnya.
+   */
+  const sudahAda = new Set(semuaGenre.map((i) => i.nilai.toLowerCase()));
+
+  /**
+   * SISA genre/kategori yang BELUM ada isinya — ditambahkan di BELAKANG
+   * (owner 2026-11-24: *"tambahkan ... yang belum ada di genre"*).
+   *
+   * ⚠️ MEMBALIK aturan lama "hanya gambar yang ada isinya". Keputusan owner
+   * menang, sama seperti strip kuning — dan akibatnya sama: pilihan yang
+   * kosong diklik = halaman "Tidak ada drama yang cocok" + tombol Hapus
+   * filter. Itu BUKAN kerusakan; ia menyala sendiri begitu ada judul
+   * bergenre itu, tanpa menyentuh berkas ini.
+   *
+   * DITARUH DI BELAKANG, bukan diurutkan A-Z bersama: yang berisi tetap di
+   * depan supaya penonton menemukan yang berguna lebih dulu. Mengurutkan
+   * semuanya A-Z akan menenggelamkan genre yang punya 22 judul di antara
+   * belasan yang kosong.
+   */
+  const tambahan: (NavItem & { nilai: string })[] = [
+    ...GENRE_FILM.filter((g) => !sudahAda.has(g.toLowerCase())).map((g) => ({
+      nilai: g,
+      label: labelGenre(g),
+      href: tautan({ genre: g }),
+    })),
+    ...KATEGORI_KURASI.filter((g) => !sudahAda.has(g.toLowerCase())).map((g) => ({
+      nilai: g,
+      label: labelGenre(g),
+      href: tautan({ cat: g }),
+    })),
+  ];
+
+  const lengkap = [...semuaGenre, ...tambahan];
+  const genreFilmMenu = lengkap.filter((i) => genreFilmResmi(i.nilai));
+  const kategoriDramaMenu = lengkap.filter((i) => !genreFilmResmi(i.nilai));
 
   const kandidat: (NavMenu | null)[] = [
     menu(
@@ -598,17 +655,41 @@ export function buildNavMenus(
     // /discover masih menyediakannya. Yang dilepas cuma tombolnya di navbar.
     menu("lainnya", "Lainnya", [
       // Drama Asia menurut negara — paling atas karena inilah yang owner cari.
-      ...DRAMA_ASIA.map(({ label, negara }) =>
-        hitung(dramas, (d) => !isMovie(d) && dramaDariNegara(d, negara)) > 0
-          ? { label, href: tautan({ negara, kind: "series" }) }
-          : null,
-      ),
+      // ⚠️ SELALU DIGAMBAR, berisi atau tidak (owner 2026-11-24). Sampai hari
+      // itu barisnya bersyarat "ada serial dari negara ini", dan syarat itu
+      // TAK PERNAH terpenuhi: dari 41 judul di katalog produksi hanya SATU
+      // yang kolom negaranya terisi, dan judul itu "Meg 2 The Trench" — film
+      // Hollywood ko-produksi 6 negara. Pagar `!isMovie` sengaja menolaknya
+      // (lihat DRAMA_ASIA di atas), jadi kelima baris tak pernah muncul dan
+      // owner mengira fiturnya belum dibuat.
+      //
+      // Keputusan owner MENANG atas aturan "hanya gambar yang ada isinya" —
+      // sama seperti strip kuning. AKIBAT YANG HARUS DIKETAHUI: diklik =
+      // halaman "Tidak ada drama yang cocok" + tombol Hapus filter, sampai
+      // kolom Negara tiap serial diisi di panel admin (terisi otomatis saat
+      // menarik data IMDb). Itu BUKAN kerusakan kode.
+      ...DRAMA_ASIA.map(({ label, negara }) => ({
+        label,
+        href: tautan({ negara, kind: "series" }),
+      })),
       ...kategoriDramaMenu,
       // Menu ini TIDAK ikut dapat baris penutup "Lainnya": namanya sudah
       // "Lainnya", dan "Semua Judul" di bawah ini alamatnya sama persis —
       // dua baris kembar di satu dropdown.
       { label: "Semua Judul", href: TUJUAN },
-    ], { tanpaLainnya: true }),
+    ], {
+      tanpaLainnya: true,
+      // EMPAT KOLOM sejak 2026-11-24. Sampai hari itu menu ini satu kolom
+      // dan memang pantas: isinya 5 baris. Sesudah seluruh kategori resmi
+      // ikut masuk, isinya jadi 47 — satu kolom berarti daftar setinggi
+      // ±1.500px yang harus digulir di dalam kotak kecil, persis keluhan
+      // owner 2026-11-15 soal menu Genre (*"begitu diklik langsung muncul
+      // semua tanpa scroll"*). Dengan 4 kolom ia jadi ±12 baris.
+      kolom: KOLOM_GENRE,
+      // Nama terpanjangnya "Thriller Psikologis" & "Beranjak Dewasa" — tanpa
+      // sel lebar keduanya terbungkus dua baris dan scrollbar kembali.
+      lebarNama: true,
+    }),
   ];
 
   return kandidat.filter((m): m is NavMenu => m !== null);

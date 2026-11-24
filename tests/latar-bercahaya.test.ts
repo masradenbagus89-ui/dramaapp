@@ -41,8 +41,19 @@ describe("cahaya latar halaman penonton", () => {
   it("kelasnya benar-benar didefinisikan, dan isinya memang gradasi", () => {
     const blok = css.match(/\.latar-bercahaya\s*\{[^}]*\}/);
     expect(blok, "`.latar-bercahaya` tidak ada di app/globals.css").not.toBeNull();
-    // Tiga sapuan, sesuai yang dipilih owner dari pratinjau berdampingan.
-    expect(blok![0].match(/radial-gradient/g) ?? []).toHaveLength(3);
+    // ENAM sapuan (2026-11-24 sore, naik dari 3). Jumlahnya dipatok karena
+    // tiap sapuan punya tugas sendiri yang diukur dari mockup: pojok
+    // kiri-atas, kiri-bawah, kanan-bawah, kanan-tengah, kanan-atas, dan satu
+    // yang nyaris tak terlihat di kiri-tengah. Membuang salah satunya
+    // "supaya rapi" akan menggelapkan satu sudut tanpa satu pun error.
+    expect(blok![0].match(/radial-gradient/g) ?? []).toHaveLength(6);
+
+    // Dua sapuan terkuat WAJIB di pojok BAWAH, bukan tengah-bawah. Versi
+    // pertama menaruhnya `at 50% 100%` dan di sana ia tertutup bar menu yang
+    // menempel di dasar layar — terukur merah 48 di tempat yang mockup-nya
+    // 197. Owner menolak versi itu.
+    expect(blok![0]).toMatch(/at 0% 88%/);
+    expect(blok![0]).toMatch(/at 100% 88%/);
     // `fixed` bukan selera: tanpa ini cahayanya merenggang mengikuti tinggi
     // halaman jadi pita pudar, dan elemen bersarang tidak lagi sejajar.
     expect(blok![0]).toContain("background-attachment: fixed");

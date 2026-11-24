@@ -201,11 +201,46 @@
    sebagai warna dasar — kelas ini hanya mengatur `background-image`, jadi
    keduanya tidak berebut properti yang sama.
    ============================================================ */
+/*
+ * ⚠️ ENAM SAPUAN INI DISETEL DARI PENGUKURAN, BUKAN DIKARANG — jangan
+ * "dirapikan" jadi satu-dua gradasi simetris.
+ *
+ * Owner menolak versi sebelumnya (*"backgroundnya belum sesuai warnanya"*).
+ * Sebabnya ketahuan setelah latar mockup dipetakan di LIMA PITA yang pasti
+ * bukan kartu. Kecerahan merahnya:
+ *
+ *     pita                  x34  x76 x118 x160 x202 x244 x286 x328
+ *     bawah tab (y~110)     173  116   59   63   64   61   67   83
+ *     tengah (y~290..440)    55   52   56   51   47   78   85   80
+ *     bawah kartu-2 (y~660) 197  164  105   67   75   96  151  189
+ *
+ * Jadi cahayanya menumpuk di POJOK — kiri-atas, dan DUA pojok bawah —
+ * sementara TENGAHNYA justru gelap. Versi sebelumnya menaruh sapuan ketiga di
+ * tengah-bawah (`at 50% 100%`), dan di sana ia tertutup bar menu yang
+ * menempel di dasar layar: terukur merah 48 di tempat yang seharusnya 197.
+ *
+ * Disetel lewat 11 percobaan yang disuntikkan ke browser lalu diukur. Selisih
+ * profil tepi (kiri & kanan × atas/tengah/bawah) terhadap mockup:
+ *   versi lama 90 → sudut sedang 41 → sudut kuat 22 → + kanan-atas 13
+ *   → setelan ini **4** (skala 0-255).
+ *
+ * Kalau nanti tata letak berubah banyak (mis. bar menu bawah dihapus), ukur
+ * ULANG — angka-angka ini terikat pada posisi bar itu.
+ */
 .latar-bercahaya {
   background-image:
-    radial-gradient(70% 38% at 0% 22%, rgba(226, 96, 20, 0.42), rgba(226, 96, 20, 0) 70%),
-    radial-gradient(70% 38% at 100% 62%, rgba(226, 96, 20, 0.38), rgba(226, 96, 20, 0) 70%),
-    radial-gradient(90% 32% at 50% 100%, rgba(205, 90, 17, 0.3), rgba(205, 90, 17, 0) 72%);
+    /* pojok kiri-atas */
+    radial-gradient(60% 28% at 0% 14%, rgba(226, 96, 20, 0.78), rgba(226, 96, 20, 0) 72%),
+    /* pojok kiri-bawah — paling kuat, sama seperti mockup */
+    radial-gradient(60% 26% at 0% 88%, rgba(226, 96, 20, 0.88), rgba(226, 96, 20, 0) 72%),
+    /* pojok kanan-bawah */
+    radial-gradient(60% 26% at 100% 88%, rgba(226, 96, 20, 0.84), rgba(226, 96, 20, 0) 72%),
+    /* kanan-tengah, hangat tipis */
+    radial-gradient(48% 32% at 100% 52%, rgba(226, 96, 20, 0.26), rgba(226, 96, 20, 0) 72%),
+    /* kanan-atas, hangat tipis */
+    radial-gradient(46% 24% at 100% 13%, rgba(226, 96, 20, 0.28), rgba(226, 96, 20, 0) 72%),
+    /* kiri-tengah, nyaris tak terlihat — mengangkat tepi kiri dari 42 ke 54 */
+    radial-gradient(30% 42% at 0% 50%, rgba(226, 96, 20, 0.08), rgba(226, 96, 20, 0) 72%);
   background-attachment: fixed;
 }
 

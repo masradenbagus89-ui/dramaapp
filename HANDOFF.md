@@ -178,6 +178,58 @@ kemunculan hex-nya).
 
 ---
 
+### Lanjutan sore — owner dua kali bilang "belum sama persis", dan dua kali dia benar
+
+**Putaran 1 — cahaya.** Lima titik ukur saya menyatakan cocok, owner bilang
+kusam. Saya sempat menyimpulkan cahaya oranye di mockup itu cuma BINGKAI HP
+(terukur ±28px tiap sisi, memang bukan bagian halaman). Sesudah bingkainya
+DIPOTONG dan dibandingkan ulang, layarnya TETAP lebih hangat. Owner memilih
+versi bercahaya dari tiga kolom berdampingan → `2f0f7af`.
+
+**Putaran 2 — warna TULISAN.** Owner bilang masih belum sama. Benar lagi: lima
+titik ukur saya semuanya **BIDANG** (bar, tombol, chip, menu bawah, latar) —
+nol yang memeriksa **tulisan**. Diukur dari mockup, kejenuhan warnanya:
+
+| Tulisan | Mockup | Dulu punya kita |
+|---|---|---|
+| judul "Layarindo Menawarkan" | `#c6b9b7` · 7% → putih | amber |
+| teks di dalam chip | `#ded1cd` · 8% → putih | amber |
+| judul seksi | `#cdc3bd` · 7% → putih | putih ✅ |
+| label menu bawah aktif | oranye | oranye ✅ |
+
+Di mockup, oranye HANYA dipakai chip yang sedang aktif (berlatar amber penuh)
+dan menu bawah aktif. Sisanya putih. Diperbaiki di `a96a42b`.
+
+### 🪤 DUA cara mengukur yang MENIPU — jangan diulang
+
+1. **Perbandingan sel-per-sel antara dua gambar yang TATA LETAKNYA berbeda
+   mengukur TATA LETAK, bukan warna.** Sel paling "beda" (selisih 206 dari
+   441) ternyata tombol-lawan-latar, karena tombol kita tidak sebaris dengan
+   tombol mockup. Yang sah: statistik seluruh bidang + elemen lawan elemen.
+2. **Tulisan di mockup terukur "putih hangat" (kejenuhan 7%) dan saya nyaris
+   menghangatkan SELURUH teks situs.** Itu keliru — kehangatan itu datang dari
+   tepi huruf yang berbaur dengan latar merah. Piksel INTI-nya `#deded7`,
+   praktis netral. Patokan yang menyelamatkan: ikon baterai di mockup terukur
+   kejenuhan 0,4%, jadi putih murni memang bisa terwakili di gambar itu — kalau
+   teksnya memang hangat, ikon itu juga akan hangat.
+
+### Keadaan akhir warna: SUDAH COCOK, dan sisanya bukan warna
+
+Statistik warna seluruh bidang (mockup tanpa bingkai vs situs) berjarak **7,2**
+dari skala 441. Tiga calon palet diuji lewat suntikan CSS di browser; yang
+terbaik hanya memperbaikinya jadi **6,7** — artinya mengutak-atik warna lagi
+sudah tidak berguna.
+
+**Yang MASIH beda dari mockup semuanya BENTUK/FITUR, bukan warna** — dan owner
+memang minta fiturnya jangan diubah: lambang logo (mahkota vs tombol putar) ·
+baris ke-2 (tab Film/Serial/Anime vs strip genre) · sudut kartu (membulat
+berjarak vs rapat) · tombol besar (kapsul + ikon ▶ vs kotak membulat) · judul
+strip (di tengah vs di kiri) · jumlah chip (3 vs 5) · menu bawah
+(Cari/Kategori/Profil vs Filter/Film Terbaru/Bagikan). Lembar perbandingannya:
+`Downloads/tampilan-emas-2026-11-24/14-SUDAH-SAMA-dan-yang-masih-beda.png`.
+
+---
+
 ## 2026-11-24 — 🏷️ Satu nama "Layarindo" + logo emas — 2 commit, MASIH BELUM TAYANG
 
 **Owner memilih setelah melihat potret layarnya dulu**, bukan dari daftar pilihan

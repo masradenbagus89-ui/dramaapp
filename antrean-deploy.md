@@ -23,7 +23,64 @@
 > lengkap: `HANDOFF.md` seksi `## 2026-11-09`.
 
 
-**Terakhir dicek:** 2026-11-24 (sore). ⏸️ **NOL rilis, NOL push** — kedua remote sengaja tidak disentuh hari ini. `origin` tertinggal **20 commit** (DITAHAN owner), `dramaku` **7 commit**. Commit terbaru `c9b7a5a` = tema **ANGGUR + AMBER** yang warnanya diukur dari mockup owner. Sebelumnya hari ini: `b321537` logo Layarindo diwarnai emas + `0691e03` satu nama situs "DramaKu" → "Layarindo" (68 teks di 41 berkas). Gerbang **LOLOS kelima langkah** (build sukses 23 halaman · `tsc` 0 error · 200 berkas / 2813 tes hijau · nol berkas rahasia). Rincian + urutan rilisnya di seksi `⏸️ 2026-11-24` di bawah. Sebelumnya: 2026-11-23. ✅ **RILIS `13b8937` → `6de869d` TAYANG** (pemulihan 5 perbaikan audit keamanan yang hilang kena `reset --hard`). `dramaku` dulu, lalu `origin main` — keduanya `1a87d86..6de869d`. 🎯 Bukti tayang: SEC-001 diukur **500 → 200** di produksi pada alamat yang sama (cookie cacat). SEC-006 **nol video hilang**. Smoke test 9 alamat **200**. ✅ **SEC-003 ikut terbukti dari luar** (asal sah 401 · asal asing 403 di `drama`/`durasi`/`hardlink`, nol data berubah). 🔴 Sisa milik owner cuma: pastikan deployment `6de869d` **success** di Railway. ✅ Blokir rilis sejak 14 Nov **HILANG** (`build` sukses, `tsc` 0 error). ✅ Gerbang **HIJAU** sejak 2026-11-23 — 6 tes basi Playly/beranda itu dibetulkan di `a4fba18` (197 berkas / 2784 tes lulus, nol gagal). ⏸️ **15 commit menunggu di antrean dan `origin` DITAHAN** atas keputusan owner (angkanya BERTAMBAH tiap sesi lain commit — hitung sendiri: `git rev-list --count origin/main..main`). `dramaku` ikut tertinggal **2 commit**. Gerbang diukur ulang 2026-11-23 malam atas keadaan TERBARU: 200 berkas / **2812 tes** hijau, `build` sukses, `tsc` 0 error. Rincian + urutan rilisnya di seksi `⏸️ 2026-11-23 (ke-3, malam)` di bawah. Sebelumnya: 2026-11-21 ✅ `9720b0c` **TAYANG** (filter "siapa upload hari ini" di panel IMDb). `dramaku` dulu, lalu `origin` — keduanya `ed8be85..9720b0c`. Railway build **sukses**.
+**Terakhir dicek:** 2026-11-24 (malam). ✅ **RILIS `6de869d` → `72fb308` TAYANG** — owner memberi izin *"push dan rilis"*, jadi perintah tahan sejak 2026-11-23 DICABUT. **35 commit · 115 berkas** (nama situs Layarindo · tema anggur+amber dari mockup owner · cahaya latar · bentuk kartu/tombol/chip). `dramaku` dulu, lalu `origin` — keduanya `→ 72fb308`, **antrean KOSONG**. Gerbang dijalankan ULANG tepat sebelum push: 5/5 hijau, 2828 tes, nol berkas rahasia. Nol prasyarat SQL/env. 🎯 Bukti tayang diukur di situs sungguhan: `DramaKu` **0×** & `Layarindo` **24×** di HTML produksi, warna emas lama `f5a524` **0×** di CSS, 8 alamat **200**, katalog **66 judul**, halaman nonton **200**. 🔴 Sisa milik owner: pastikan deployment `72fb308` **success** di Railway + lihat sendiri di HP. Riwayat sebelumnya di bawah.
+
+### ✅ 2026-11-24 — RILIS `6de869d` → `72fb308` TAYANG. Antrean KOSONG.
+
+**Owner memberi izin: *"push dan rilis"*.** Perintah tahan *"jangan tayang
+dulu"* yang berlaku sejak 2026-11-23 dengan ini DICABUT.
+
+| Remote | Sebelum | Sesudah | Status |
+|---|---|---|---|
+| `dramaku` (cermin) | `45f713c` | `72fb308` | ✅ sinkron — nol rilis, cermin tidak men-deploy |
+| `origin` (produksi) | `6de869d` | `72fb308` | ✅ **TAYANG** |
+
+**35 commit · 115 berkas · +6.425/−670 baris.** Isinya seharian 2026-11-24:
+nama situs jadi **Layarindo** · logo diwarnai emas · tema **anggur + amber**
+(dari mockup owner) · cahaya latar di pojok · bentuk kartu & tombol · chip
+pintasan seragam + satu baris digeser.
+
+**Nol prasyarat database/env** — diperiksa sebelum push: `git diff --name-only
+origin/main..main` nol berkas `supabase_migrations/`, `.sql`, maupun `.env`.
+Jadi urutan wajib "SQL dulu → env dulu → baru push" (AGENTS.local §3) tidak
+terpicu kali ini.
+
+**Gerbang dijalankan ULANG tepat sebelum push**, bukan memakai hasil lama:
+kelima langkah hijau, 201 berkas / **2828 tes**, 115 berkas di antrean dengan
+**nol berkas rahasia**.
+
+### Bukti TAYANG — diukur di situs sungguhan, bukan di komputer
+
+- **Railway membangun ±1 menit.** Dua kali diperiksa masih build lama, pada
+  percobaan ketiga sudah baru. Itu normal — jangan simpulkan gagal sebelum
+  ±3 menit.
+- Penanda tema baru di HTML produksi: `Layarindo` **24×**, `DramaKu` **0×**,
+  `latar-bercahaya` **4×**, `baris-chip-pintasan` **4×**.
+- CSS produksi: warna baru `f37e1a` **22×**, `480a12` **1×**, warna emas lama
+  `f5a524` **0×**.
+- Berkas gambar baru benar-benar terkirim (gambar 404 akan membuat bar polos
+  TANPA error): `bar-latar-anggur.jpg` 200/5.380 B · `logo-layarindo.png`
+  200/32.016 B · `logo-layarindo-lambang.png` 200/14.640 B.
+- Delapan alamat **200**: `/` `/beranda` `/film` `/discover` `/katalog`
+  `/shorts` `/my-list` `/api/dramas`. Katalog berisi **66 judul**.
+- Halaman nonton `/drama/master-pedang-yang-diremehkan` **200**, `Layarindo`
+  21× / `DramaKu` 0× — jadi temanya ikut sampai ke halaman dalam.
+- Poster diuji satu: **200, 90 KB**. 🪤 Di potret uji poster baris kedua
+  sempat tergambar kotak warna polos — itu gambar yang belum selesai dimuat
+  saat dipotret, BUKAN rusak. Jangan simpulkan dari potret saja.
+
+### Yang TIDAK ikut tayang
+
+Lima berkas kerja sesi lain (login/`FormMasuk.tsx`, `tujuan-login.ts`, panel
+IMDb) masih menggantung belum di-commit, jadi nol di antaranya ikut. Begitu
+pula `LAPORAN-AKHIR-AUDIT-KEAMANAN.txt` dan `data/viewers.json` yang memang
+tak terlacak git.
+
+🔴 **Sisa milik owner:** pastikan deployment `72fb308` berstatus **success**
+di panel Railway, dan lihat sendiri di HP — tema, judul berpagar garis, dan
+panah geser chip hanya bisa dinilai mata.
+
+---
 
 ### ⏸️ 2026-11-24 (ke-2, sore) — antrean naik jadi **20 commit**, masih NOL push
 

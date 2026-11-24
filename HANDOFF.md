@@ -210,6 +210,69 @@ kemunculan hex-nya).
 
 ---
 
+### Putaran 6 — latar DITERANGKAN (`4078a72`) + chip SERAGAM (`ae23c8e`)
+
+**Latar.** Owner: *"latar belakang yang saya minta terlihat lebih hidup dan
+terang ... masak dari pagi kita ga kelar kelar sama tema"*. Dia benar.
+
+🪤 **AKAR KEBUNTUANNYA — ini pelajaran terpenting hari ini.** Bukan warnanya
+yang sulit; **cara memeriksanya** yang salah. Saya mengukur TITIK-TITIK warna,
+dan titik-titik itu kebetulan semuanya di bagian yang **memang sudah gelap di
+kedua gambar**. Alat ukur bilang "cocok", mata owner bilang "gelap" — dan mata
+owner yang benar, lima putaran berturut-turut.
+
+Lebih dalam lagi, dan ini berlaku untuk tiap "samakan dengan mockup"
+berikutnya: **angka warna yang sama TIDAK menghasilkan kesan yang sama.**
+Kartu di mockup lebih KECIL dan BERJARAK, jadi latarnya banyak terlihat di
+sela-sela; kartu kita lebih besar dan rapat. Supaya TERASA sama, latarnya
+justru harus **lebih terang** dari aslinya. Obatnya bukan ukuran yang lebih
+teliti — melainkan **menunjukkan 3-4 pilihan dan minta owner menunjuk satu**.
+Itu seharusnya dilakukan di putaran PERTAMA.
+
+Hasil: token baru `--color-latar: #480a12` (terpisah dari `gelap-950` yang
+tetap dipakai bar & kaki situs). Tepi halaman kini 187/81/202/113/106/196 —
+sengaja sedikit DI ATAS mockup (173/55/197/83/80/189).
+⚠️ Akibatnya teks `redup` turun ke 4,32:1; diterangkan #c0aeac → **#cbbab8**
+(4,92:1). Di titik itu kita sengaja menyimpang dari mockup: terbaca menang
+atas sama-persis.
+
+**Chip seragam.** Owner: *"letakan ditengah ... kualitas terbaik update
+terbaru dan lainnya kamu buat seragam"*.
+
+Sebabnya dulu tidak seragam: kelima chip datang dari **DUA komponen** — tiga
+dari `LayarindoMenawarkan` (`rounded-full min-h-11`), dua lagi (REKOMENDASI &
+`<tahun>`) sebenarnya **sisa tombol tab** di `TabKatalogTampilan`
+(`rounded-sm px-3 py-2`). Chip strip juga bersarang di pembungkusnya sendiri,
+jadi membungkus baris TERPISAH dari dua tab itu.
+
+Diperbaiki di akarnya: `KELAS_CHIP_BARIS` + `CHIP_BARIS_DIAM` +
+`CHIP_BARIS_AKTIF` di `shell.ts` = SATU sumber bentuk; pembungkus `<ul>` di
+`LayarindoMenawarkan` dihapus (memulangkan Fragment) supaya kelimanya jadi
+anak LANGSUNG satu kisi; judul dipisah jadi `JudulMenawarkan` + slot baru
+`slotJudulBaris`.
+
+⚠️ **Menengahkan judul MEMBATALKAN permintaan owner sendiri 2026-11-23**
+(*"disederetkan jadi satu baris"*, `e2b4edb`). Disengaja — jangan dikembalikan
+karena menemukan catatan yang lebih tua.
+
+**Terukur seragam, bukan dinilai mata:** di 390px kelima chip **166×44 px**
+(satu nilai lebar, satu nilai tinggi); di 360px **151×44**. Judul `text-align:
+center`, titik tengahnya 195 dari lebar 390. Chip terakhir yang kebagian baris
+sendiri ditengahkan lewat `:last-child:nth-child(odd)` — aturannya ikut
+JUMLAHnya, jadi kalau chip jadi 4 atau 6 ia padam sendiri.
+
+🪤 **Empat penjaga merah, dan semuanya memaku cara LAMA** (`flex-wrap` +
+`min-w-0` di dalam strip, `{slotBarisTab}` sesudah `overflow-x-auto`).
+Ditulis ULANG ke mekanisme baru, bukan dihapus — maksud yang dijaga tetap
+sama. Satu patokan jarak-regex diganti perbandingan URUTAN: jarak antar dua
+penanda ikut berubah tiap kali kelas disunting, jadi angka jarak berapa pun
+akan merah suatu hari karena alasan yang salah.
+
+🪤 **`.git/index` berubah jadi ReparsePoint** di tengah sesi → commit gagal
+dengan *"unable to write new index file"*. BUKAN disk penuh. Sudah tercatat di
+memori AI; perbaikannya menghapus `.git/index` lalu `git reset` — nol
+perubahan hilang (diperiksa dulu sebelum menghapus).
+
 ### Putaran 5 — LATAR: cahaya pindah ke POJOK (`6e65661`), inilah yang owner maksud
 
 Owner menyandingkan sendiri mockup dan situs lalu berkata *"untuk backgroundnya

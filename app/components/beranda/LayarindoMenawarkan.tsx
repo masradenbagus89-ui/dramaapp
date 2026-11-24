@@ -77,7 +77,7 @@ export default function LayarindoMenawarkan() {
          memang muat satu baris, jadi pembungkusan tak pernah terpakai. */
       className="flex min-w-0 flex-wrap items-center gap-2"
     >
-      <h2 id="judul-tawaran" className="shrink-0 text-sm font-bold text-emas-400">
+      <h2 id="judul-tawaran" className="shrink-0 text-sm font-bold text-white">
         {SITE_NAME} Menawarkan
       </h2>
 
@@ -90,7 +90,7 @@ export default function LayarindoMenawarkan() {
                    situs ini. Chip di gambar acuan lebih tipis, tapi chip tipis
                    di HP sering meleset saat diketuk jempol — dan chip yang
                    meleset terbaca sebagai tombol mati. */
-                className="flex min-h-11 items-center gap-1.5 rounded-full border border-emas-700/55 bg-gelap-800 px-3.5 text-[11px] font-extrabold uppercase tracking-wide text-emas-300 transition-colors outline-none hover:bg-gelap-700 hover:text-emas-200 focus-visible:ring-2 focus-visible:ring-emas-400 md:text-xs"
+                className="flex min-h-11 items-center gap-1.5 rounded-full border border-emas-700/55 bg-gelap-800 px-3.5 text-[11px] font-extrabold uppercase tracking-wide text-white transition-colors outline-none hover:bg-gelap-700 hover:text-emas-300 focus-visible:ring-2 focus-visible:ring-emas-400 md:text-xs"
               >
                 <Ikon className="size-3.5 shrink-0" aria-hidden="true" />
                 {label}

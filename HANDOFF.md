@@ -212,6 +212,66 @@ kemunculan hex-nya).
 
 ---
 
+### Putaran 8 — Dracin/K-Drama & seluruh genre resmi SELALU digambar (`4995fd6`)
+
+Owner: *"tambahkan di lainnya dracin, k-drama dan yang belum ada di genre"*.
+
+🪤 **PELAJARAN TERPENTING: fiturnya SUDAH ADA sejak 2026-11-14**, ditambahkan
+untuk permintaan owner yang **sama persis**. Owner mengira belum dibuat karena
+barisnya tak pernah muncul. Jadi sebelum menambah apa pun, **cek dulu apakah
+yang diminta sudah ada tapi tersembunyi oleh syarat** — kalau tidak, hasilnya
+dua implementasi kembar.
+
+**Kenapa tak pernah muncul** (diukur di katalog PRODUKSI, bukan
+`data/dramas.json` yang cuma cadangan):
+
+| | |
+|---|---|
+| judul di katalog | 41 |
+| kolom `country` terisi | **1** |
+| judul itu | **"Meg 2 The Trench"** — film Hollywood, ko-produksi 6 negara |
+| serial bernegara | **0** → kelima baris tersembunyi |
+
+Pagar `kind=series` sengaja menolak judul itu, dan komentarnya menyebut
+kasusnya persis. **Penjaganya bekerja benar; datanya yang kosong.** Kolom
+Negara di panel admin sudah bisa diisi sejak 14 Nov, dan **terisi otomatis**
+saat menarik data IMDb (`DramaForm.tsx:307`).
+
+**Keputusan owner: tampilkan selalu walau kosong** — untuk kelima baris drama
+Asia DAN seluruh genre/kategori resmi. Ini **membalik aturan lama** "tiap
+pilihan menu wajib berisi", sama seperti keputusannya dulu soal strip kuning.
+Konsekuensinya diterima: pilihan kosong diklik = "Tidak ada drama yang cocok"
++ tombol Hapus filter. Ketiga pengecualian kini **didaftar di kepala
+`lib/nav-katalog.ts`** supaya tak ada yang "merapikannya" kembali.
+
+**UI/UX:** menu "Lainnya" jadi **47 pilihan**. Satu kolom = daftar ±1.500px
+yang harus digulir (persis keluhan owner soal menu Genre 15 Nov), jadi ia
+diberi **4 kolom + sel lebar** → terukur **394px**, muat tanpa digulir.
+
+### ⚠️ SEMBILAN penjaga diperbarui — bagian paling rawan hari ini
+
+Aturan lama memang sedang dilanggar atas keputusan owner, jadi godaannya besar
+untuk sekadar menghapus patokan. **Tak satu pun dihapus begitu saja:**
+
+- Patokan *"tiap pilihan memulangkan judul"* **dipersempit** ke 4 menu yang
+  aturannya masih berlaku — plus **pembanding baru** yang MERAH kalau
+  pengecualian itu suatu hari jadi mubazir.
+- **Pengganti untuk menu Genre:** nilainya wajib dari `GENRE_FILM`. Ini
+  menangkap kerusakan yang LEBIH berbahaya — genre kosong yang sah dan genre
+  salah ketik sama-sama memulangkan nol judul, **mustahil dibedakan dari
+  jumlah hasil** (pelajaran `?sort=judul`).
+- Patokan *"Dracin tidak muncul saat negara kosong"* **dibalik**, tapi yang
+  dijaganya **dipindahkan, bukan dibuang**: alamatnya wajib tetap membawa
+  `kind=series`, supaya film Hollywood tak ikut terbawa saat diklik.
+
+### Bukti
+
+`npm run gerbang` LOLOS kelima langkah, 202 berkas / **2829 tes**. Dropdown
+**dibuka sungguhan** di browser lewat event tetikus CDP — 🪤 Radix
+**mengabaikan `.click()`**, harus `Input.dispatchMouseEvent`. Hasil: 47
+pilihan, 4 kolom, tinggi 394px, lima nama pertama Dracin · K-Drama · J-Drama ·
+Drama Thailand · Drama Taiwan.
+
 ### Putaran 7 — judul diapit garis + chip SATU baris digeser (`92ce7a5`)
 
 Owner, menunjuk gambar acuan: *"jadikan layarindo di antara garis lalu yang

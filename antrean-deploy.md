@@ -23,7 +23,55 @@
 > lengkap: `HANDOFF.md` seksi `## 2026-11-09`.
 
 
-**Terakhir dicek:** 2026-11-23. ✅ **RILIS `13b8937` → `6de869d` TAYANG** (pemulihan 5 perbaikan audit keamanan yang hilang kena `reset --hard`). `dramaku` dulu, lalu `origin main` — keduanya `1a87d86..6de869d`. 🎯 Bukti tayang: SEC-001 diukur **500 → 200** di produksi pada alamat yang sama (cookie cacat). SEC-006 **nol video hilang**. Smoke test 9 alamat **200**. ✅ **SEC-003 ikut terbukti dari luar** (asal sah 401 · asal asing 403 di `drama`/`durasi`/`hardlink`, nol data berubah). 🔴 Sisa milik owner cuma: pastikan deployment `6de869d` **success** di Railway. ✅ Blokir rilis sejak 14 Nov **HILANG** (`build` sukses, `tsc` 0 error). ✅ Gerbang **HIJAU** sejak 2026-11-23 — 6 tes basi Playly/beranda itu dibetulkan di `a4fba18` (197 berkas / 2784 tes lulus, nol gagal). ⏸️ **15 commit menunggu di antrean dan `origin` DITAHAN** atas keputusan owner (angkanya BERTAMBAH tiap sesi lain commit — hitung sendiri: `git rev-list --count origin/main..main`). `dramaku` ikut tertinggal **2 commit**. Gerbang diukur ulang 2026-11-23 malam atas keadaan TERBARU: 200 berkas / **2812 tes** hijau, `build` sukses, `tsc` 0 error. Rincian + urutan rilisnya di seksi `⏸️ 2026-11-23 (ke-3, malam)` di bawah. Sebelumnya: 2026-11-21 ✅ `9720b0c` **TAYANG** (filter "siapa upload hari ini" di panel IMDb). `dramaku` dulu, lalu `origin` — keduanya `ed8be85..9720b0c`. Railway build **sukses**.
+**Terakhir dicek:** 2026-11-24. ⏸️ **NOL rilis, NOL push** — kedua remote sengaja tidak disentuh hari ini. `origin` tertinggal **18 commit** (DITAHAN owner), `dramaku` **5 commit**. Dua commit baru: `b321537` logo Layarindo diwarnai emas + `0691e03` satu nama situs "DramaKu" → "Layarindo" (68 teks di 41 berkas). Gerbang **LOLOS kelima langkah** (build sukses 23 halaman · `tsc` 0 error · 200 berkas / 2813 tes hijau · nol berkas rahasia). Rincian + urutan rilisnya di seksi `⏸️ 2026-11-24` di bawah. Sebelumnya: 2026-11-23. ✅ **RILIS `13b8937` → `6de869d` TAYANG** (pemulihan 5 perbaikan audit keamanan yang hilang kena `reset --hard`). `dramaku` dulu, lalu `origin main` — keduanya `1a87d86..6de869d`. 🎯 Bukti tayang: SEC-001 diukur **500 → 200** di produksi pada alamat yang sama (cookie cacat). SEC-006 **nol video hilang**. Smoke test 9 alamat **200**. ✅ **SEC-003 ikut terbukti dari luar** (asal sah 401 · asal asing 403 di `drama`/`durasi`/`hardlink`, nol data berubah). 🔴 Sisa milik owner cuma: pastikan deployment `6de869d` **success** di Railway. ✅ Blokir rilis sejak 14 Nov **HILANG** (`build` sukses, `tsc` 0 error). ✅ Gerbang **HIJAU** sejak 2026-11-23 — 6 tes basi Playly/beranda itu dibetulkan di `a4fba18` (197 berkas / 2784 tes lulus, nol gagal). ⏸️ **15 commit menunggu di antrean dan `origin` DITAHAN** atas keputusan owner (angkanya BERTAMBAH tiap sesi lain commit — hitung sendiri: `git rev-list --count origin/main..main`). `dramaku` ikut tertinggal **2 commit**. Gerbang diukur ulang 2026-11-23 malam atas keadaan TERBARU: 200 berkas / **2812 tes** hijau, `build` sukses, `tsc` 0 error. Rincian + urutan rilisnya di seksi `⏸️ 2026-11-23 (ke-3, malam)` di bawah. Sebelumnya: 2026-11-21 ✅ `9720b0c` **TAYANG** (filter "siapa upload hari ini" di panel IMDb). `dramaku` dulu, lalu `origin` — keduanya `ed8be85..9720b0c`. Railway build **sukses**.
+
+### ⏸️ 2026-11-24 — antrean naik jadi **18 commit**, `origin` TETAP DITAHAN, cermin juga TIDAK di-push
+
+**Tidak ada yang tayang dari catatan ini.** `origin/main` masih di `6de869d`;
+produksi tidak berubah. Kedua remote sudah di-`git fetch` saat angka ini dihitung.
+
+| Remote | Posisi | Akibat |
+|---|---|---|
+| `dramaku` (cermin) | di `45f713c` — **tertinggal 5 commit** | nol rilis — cermin tidak men-deploy |
+| `origin` (produksi) | ⏸️ **DITAHAN** di `6de869d` — tertinggal **18 commit** | tombol rilis, belum ditekan |
+
+**Kenapa cermin pun tidak di-push kali ini** (beda dari 2026-11-23): push ke
+remote mana pun = aksi keluar yang tak bisa ditarik kembali, dan owner belum
+memberi izin hari ini. Catatan 23 Nov sendiri mencatat akibatnya — 2 commit tema
+yang sedang ditahan terlanjur ada di cermin dan **tidak bisa ditarik** tanpa
+`push --force` yang dilarang aturan proyek butir 5.
+
+**Dua commit BARU di antrean (sesudah daftar blok ke-3 di atas):**
+- `b321537` — logo Layarindo diwarnai **emas** (hijau sage tidak cocok dengan tema)
+- `0691e03` — **satu nama situs**: "DramaKu" → "Layarindo" di seluruh situs
+  (`SITE_NAME` + 68 teks di 41 berkas)
+
+**Gerbang pra-rilis: HIJAU atas keadaan TERBARU ini.** Dijalankan 2026-11-24
+sesudah `0691e03` lewat `npm run gerbang` — **LOLOS kelima langkah**: `rm -rf
+.next` → `npm run build` sukses (23 halaman) → `npx tsc --noEmit` **exit 0** →
+**200 berkas / 2813 tes** hijau → nol berkas rahasia (71 berkas di antrean push
+diperiksa).
+⚠️ Tetap **WAJIB dijalankan ulang** tepat sebelum push — sesi lain masih bisa
+menambah commit, dan 5 berkas mereka masih menggantung belum di-commit.
+
+**Yang WAJIB diperiksa dengan mata sesudah tayang nanti** (build hijau tidak
+membuktikannya): nama situs di judul tab Google, logo emas di bar atas, dan
+tulisan kotak cari "Cari film di Layarindo". Penggantian nama menyentuh metadata
+— Google butuh beberapa minggu mengenali nama baru, jadi hasil pencarian
+sementara bisa campur dua nama. Itu normal, bukan tanda rilisnya gagal.
+
+**Urutan kalau owner memberi izin rilis:**
+1. Selesaikan dulu 2 keputusan tampilan yang tersisa (`PersonalRows` nol
+   pemanggil · perilaku chip "Terpopuler") — `HANDOFF.md` seksi `## 2026-11-24`.
+2. `git fetch origin` + `git fetch dramaku`, lalu hitung ulang jumlah commit
+   (`git rev-list --count origin/main..main`) — jangan pakai angka di atas.
+3. `npm run gerbang` sampai **exit 0**.
+4. `git push dramaku main` dulu (cermin, nol rilis).
+5. `git push origin main` — **izin owner**, sebut nama remote eksplisit
+   (`git push` polos di komputer owner menembak `dramaku`, bukan produksi).
+6. Smoke test di situs sungguhan + verifikasi deployment **success** di Railway.
+
+---
 
 ### ⏸️ 2026-11-23 (ke-3, malam) — antrean naik jadi **15 commit**, `origin` TETAP DITAHAN
 

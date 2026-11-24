@@ -90,11 +90,135 @@
 > aftermarket** dari pemilik sekarang, harganya **jauh di atas** Rp200.000 dan belum pernah dicek.
 > Nama lain yang masih bebas jauh lebih murah.
 
-**Terakhir diisi:** 2026-11-23 (malam) — 🎨 **TEMA GELAP + EMAS tayang di LOKAL saja, 4 commit baru, SENGAJA BELUM TAYANG.** Owner menutup sesi: *"ok kamu update handoff kita lanjut besok"*; perintah **"jangan tayang dulu karena masih banyak yang mau rubah"** MASIH BERLAKU. Empat commit: `4c5149e` tema gelap+emas (menggantikan soft sage `25957c7`) · `90c90f1` strip **"Layarindo Menawarkan"** ganti panel "Lanjutkan Menonton" · `332e784` FILTER baris tab jadi khusus komputer + isinya disamakan dengan filter bar bawah + 3 tab terpanjang dilepas · `e2b4edb` judul + chip **disederetkan** jadi satu baris dengan tombol tab. **Gerbang HIJAU penuh:** 200 berkas / **2812 tes** · `npm run build` sukses (23 halaman) · `tsc` **0 error**; tombol FILTER **diklik sungguhan** di build produksi (1440px → pop up 6 dropdown terbuka; 390px → tidak ada di baris tab). ⚠️ **15 commit lokal belum terdorong ke `origin`, 2 belum ke `dramaku`** — jangan push "sekalian". 🔴 **Empat keputusan menunggu owner besok:** (1) logo masih HIJAU di atas tema emas, bertabrakan — ganti/warnai/biarkan? (2) nama situs masih DUA: logo "Layarindo" tapi `SITE_NAME` = "DramaKu" (disengaja sejak 2026-11-22, bukan terlewat); (3) `PersonalRows.tsx` kini **nol pemanggil** — hapus atau simpan? (4) chip "Terpopuler" pergi ke `/discover`, beda dari tab "TERPOPULER" yang tombolnya sudah dilepas. 🪤 **Enam jebakan baru dicatat** — yang terpenting: penjaga tes bisa **MATI diam-diam** karena `\b` tertulis sebagai karakter BACKSPACE sungguhan (satu penjaga empat putaran koreksi owner ternyata hijau tanpa memeriksa apa pun), dan uji interaktif di `next dev` menghasilkan "rusak" yang KELIRU. Rincian + cara memeriksa di seksi `## 2026-11-23 (malam)`. Sebelumnya: 🎨 **`25957c7` DI-COMMIT, SENGAJA BELUM TAYANG** — tema **soft sage** + **logo Layarindo** + pop up **Filter Film** + menu bawah 4 tab penonton + panel menu katalog HP (33 berkas, 2.259 baris, nol perubahan di produksi); temanya kini DITIMPA gelap+emas di atas, titik pulang tetap `25957c7`. Sebelumnya: 🔐 ✅ **RILIS `13b8937` → `6de869d` TAYANG.** 5 perbaikan audit keamanan 14 Nov ternyata **HILANG dari kode** (kena `git reset --hard` ±15 Nov; catatan lama yang bilang "SEMUA diperbaiki" sudah DIRALAT) — dipulihkan + SEC-007 ditulis ulang dari nol. **Blokir rilis yang berlaku sejak 14 Nov HILANG:** `next build` sukses & `npx tsc --noEmit` **0 error**. Next lokal 16.4.3 → **16.4.6**. 🎯 **Terbukti tayang dengan cara terkuat: SEC-001 diukur HIDUP lalu MATI di produksi** — alamat `/api/comments` yang sama membalas **500** dengan cookie cacat sebelum deploy, **200** sesudahnya. SEC-006 diperiksa **nol video hilang**. ✅ **SEC-003 ikut terbukti dari luar** — `guardAsal` berjalan sebelum cek login, jadi 401 vs 403 memisahkan "lolos penjaga" dari "ditolak penjaga": `drama`/`durasi`/`hardlink` semua **asal sah 401 · asal asing 403**, nol data berubah. ⏸️ Dua risiko sengaja TIDAK disentuh atas keputusan owner (repo `origin` **PUBLIK** sementara laporan audit 85 KB duduk di akar repo; `data/viewers.json` tak diabaikan `.gitignore`) — rinciannya di seksi `## 2026-11-23`. Riwayat lebih lama: lihat seksi-seksi bertanggal di bawah.
+**Terakhir diisi:** 2026-11-24 — 🏷️ **SATU NAMA + LOGO EMAS, 2 commit baru, MASIH BELUM TAYANG.** Dua dari empat keputusan yang menggantung semalam sudah dijawab owner setelah melihat potret layarnya: (1) logo dipilih varian **"lambang emas, tulisan krem"** → `b321537`; (2) nama situs **disamakan jadi "Layarindo"** → `0691e03` (`SITE_NAME` + 68 teks di 41 berkas; `NAMA_TAMPIL` dihapus, `LogoDramaKu` → `LogoSitus`). **Gerbang LOLOS kelima langkah:** build sukses (23 halaman) · `tsc` exit 0 · **200 berkas / 2813 tes** hijau · nol berkas rahasia. HTML build produksi: **"DramaKu" 0×, "Layarindo" 24×**. ⚠️ **18 commit belum ke `origin`** (DITAHAN, perintah *"jangan tayang dulu"* belum dicabut), **5 belum ke `dramaku`** — saya TIDAK push ke mana pun hari ini, menunggu izin. 🔴 **Dua keputusan masih menggantung:** `PersonalRows.tsx` nol pemanggil (hapus/simpan?) dan perilaku chip "Terpopuler". 🪤 **Tiga jebakan baru** — yang terpenting: `--window-size` Chrome headless **TIDAK** menentukan `innerWidth` (minta 390, dapat 500), jadi pengukuran "muat di HP" bisa bohong tanpa `Emulation.setDeviceMetricsOverride`. Rincian di seksi `## 2026-11-24`.
+
+**Sebelumnya:** 2026-11-23 (malam) — 🎨 **TEMA GELAP + EMAS tayang di LOKAL saja, 4 commit baru, SENGAJA BELUM TAYANG.** Owner menutup sesi: *"ok kamu update handoff kita lanjut besok"*; perintah **"jangan tayang dulu karena masih banyak yang mau rubah"** MASIH BERLAKU. Empat commit: `4c5149e` tema gelap+emas (menggantikan soft sage `25957c7`) · `90c90f1` strip **"Layarindo Menawarkan"** ganti panel "Lanjutkan Menonton" · `332e784` FILTER baris tab jadi khusus komputer + isinya disamakan dengan filter bar bawah + 3 tab terpanjang dilepas · `e2b4edb` judul + chip **disederetkan** jadi satu baris dengan tombol tab. **Gerbang HIJAU penuh:** 200 berkas / **2812 tes** · `npm run build` sukses (23 halaman) · `tsc` **0 error**; tombol FILTER **diklik sungguhan** di build produksi (1440px → pop up 6 dropdown terbuka; 390px → tidak ada di baris tab). ⚠️ **15 commit lokal belum terdorong ke `origin`, 2 belum ke `dramaku`** — jangan push "sekalian". 🔴 **Empat keputusan menunggu owner besok:** (1) logo masih HIJAU di atas tema emas, bertabrakan — ganti/warnai/biarkan? (2) nama situs masih DUA: logo "Layarindo" tapi `SITE_NAME` = "DramaKu" (disengaja sejak 2026-11-22, bukan terlewat); (3) `PersonalRows.tsx` kini **nol pemanggil** — hapus atau simpan? (4) chip "Terpopuler" pergi ke `/discover`, beda dari tab "TERPOPULER" yang tombolnya sudah dilepas. 🪤 **Enam jebakan baru dicatat** — yang terpenting: penjaga tes bisa **MATI diam-diam** karena `\b` tertulis sebagai karakter BACKSPACE sungguhan (satu penjaga empat putaran koreksi owner ternyata hijau tanpa memeriksa apa pun), dan uji interaktif di `next dev` menghasilkan "rusak" yang KELIRU. Rincian + cara memeriksa di seksi `## 2026-11-23 (malam)`. Sebelumnya: 🎨 **`25957c7` DI-COMMIT, SENGAJA BELUM TAYANG** — tema **soft sage** + **logo Layarindo** + pop up **Filter Film** + menu bawah 4 tab penonton + panel menu katalog HP (33 berkas, 2.259 baris, nol perubahan di produksi); temanya kini DITIMPA gelap+emas di atas, titik pulang tetap `25957c7`. Sebelumnya: 🔐 ✅ **RILIS `13b8937` → `6de869d` TAYANG.** 5 perbaikan audit keamanan 14 Nov ternyata **HILANG dari kode** (kena `git reset --hard` ±15 Nov; catatan lama yang bilang "SEMUA diperbaiki" sudah DIRALAT) — dipulihkan + SEC-007 ditulis ulang dari nol. **Blokir rilis yang berlaku sejak 14 Nov HILANG:** `next build` sukses & `npx tsc --noEmit` **0 error**. Next lokal 16.4.3 → **16.4.6**. 🎯 **Terbukti tayang dengan cara terkuat: SEC-001 diukur HIDUP lalu MATI di produksi** — alamat `/api/comments` yang sama membalas **500** dengan cookie cacat sebelum deploy, **200** sesudahnya. SEC-006 diperiksa **nol video hilang**. ✅ **SEC-003 ikut terbukti dari luar** — `guardAsal` berjalan sebelum cek login, jadi 401 vs 403 memisahkan "lolos penjaga" dari "ditolak penjaga": `drama`/`durasi`/`hardlink` semua **asal sah 401 · asal asing 403**, nol data berubah. ⏸️ Dua risiko sengaja TIDAK disentuh atas keputusan owner (repo `origin` **PUBLIK** sementara laporan audit 85 KB duduk di akar repo; `data/viewers.json` tak diabaikan `.gitignore`) — rinciannya di seksi `## 2026-11-23`. Riwayat lebih lama: lihat seksi-seksi bertanggal di bawah.
 
 **Rincian kontrol volume (putaran KETIGA):** owner menolak bentuk tombol `+` / `−` dan mengirim contoh gambar, jadi pengatur volume kini **garis geser tegak berbentuk kapsul** (jalur kuning + bulatan penggeser). Diukur di Chrome headless layar 393px: kapsul `x=345..381` **utuh di dalam layar**, geser jari atas→100% / tengah→50% / bawah→bisu, nol elemen diputar. Gerbang lolos 5/5 (2383 tes hijau). ✅ **Sudah TAYANG** dalam rilis `53fbc5c → a9ae869` malam itu juga.
 
 **Sebelumnya hari ini:** ✅ **`2ad015b` + `8d8c1ba` TAYANG.** Tata letak pemutar beres dalam tiga putaran permintaan owner: tombol **Eps turun ke baris paling bawah**, tombol **volume pindah ke sebelah angka durasi**, rail ikon kanan **diperkecil & dirapatkan** (36px/20px/jarak 8px), dan garis volume tegak **diganti tombol + / −** karena terukur berdiri di **x=391 pada layar 393px = di luar layar HP**. Rinciannya di seksi `## 2026-11-13` di bawah.
+
+---
+
+## 2026-11-24 — 🏷️ Satu nama "Layarindo" + logo emas — 2 commit, MASIH BELUM TAYANG
+
+**Owner memilih setelah melihat potret layarnya dulu**, bukan dari daftar pilihan
+kosong. Tiga potret dibuat lebih dulu (komputer, HP, dan lembar perbandingan 4
+varian logo di atas bar yang asli) — ada di `Downloads/tampilan-emas-2026-11-24`.
+Cara ini sengaja dipakai karena putaran sebelumnya membuktikan sebaliknya: 4
+keputusan tampilan yang disetujui tanpa melihat layar hampir semuanya dibatalkan.
+
+| Commit | Isi |
+|---|---|
+| `b321537` | Logo Layarindo diwarnai **emas** (varian "lambang emas, tulisan krem") |
+| `0691e03` | **Satu nama**: `SITE_NAME` "DramaKu" → "Layarindo" + 68 teks di 41 berkas |
+
+### Keputusan yang MENUTUP keadaan lama — jangan dikembalikan mengira regresi
+
+1. **Keadaan DUA NAMA sudah selesai.** Sejak 2026-11-22 situs ini sengaja
+   bernama Layarindo di logo dan DramaKu di metadata. Itu **tidak berlaku lagi**.
+   Kalau menemukan "DramaKu" sekarang, itu **komentar** yang memang menyimpan
+   sejarah — sengaja tidak ditulis ulang.
+2. **`NAMA_TAMPIL` di `LayarindoMenawarkan.tsx` DIHAPUS**, diarahkan ke
+   `SITE_NAME`. Ini persis instruksi yang ditinggalkan sesi sebelumnya di
+   komentar berkas itu, bukan keputusan baru.
+3. **`LogoDramaKu` → `LogoSitus`** (11 tempat, termasuk 2 berkas tes). Nama merek
+   tidak lagi tertanam di nama fungsi, jadi penggantian nama berikutnya tak perlu
+   menyentuh identifier.
+4. **`[DramaKu] Americana....mkv` di `tests/playly-unduhan-*` TIDAK disentuh** —
+   itu nama berkas nyata dari pihak penyedia, bukan merek kita. Kalau ada yang
+   "merapikan" ini nanti, tes pencocokan unduhan akan merah.
+
+### Aturan baru yang dipakai saat mengganti nama — pakai lagi kalau berganti lagi
+
+Pembagiannya disengaja, bukan setengah jalan:
+
+- **Permukaan SENYAP** (meta description, judul tab, teks share WhatsApp, `alt`
+  gambar) → pakai `${SITE_NAME}`. Nama basi di sana **tidak menimbulkan gejala
+  apa pun**; itu persis yang membuat keadaan dua-nama bertahan dua hari.
+- **Teks yang KELIHATAN di layar** → tetap teks biasa. Nama basi di situ langsung
+  terlihat siapa pun yang membuka halamannya, jadi tak perlu dibayar dengan
+  kalimat yang lebih sulit dibaca.
+- **Tes tetap memakai teks tulisan tangan**, BUKAN `SITE_NAME`. Kalau tes dan
+  kode memakai konstanta yang sama, penjaganya jadi tautologi yang selalu hijau.
+  Terbukti berguna hari ini: pin di `kepala-situs.test.ts` menangkap bahwa tiruan
+  di `kerangka-discover.test.ts:87` sudah menyimpang dari aslinya.
+
+### ⚠️ TEMUAN: nama situs memakan jatah deskripsi Google — sisa SATU huruf
+
+"Layarindo" 2 huruf lebih panjang dari "DramaKu", dan tiap huruf nama situs
+memakan jatah meta description yang **sama untuk semua halaman drama**.
+
+- Judul terpanjang di katalog nyata (**89 huruf**, "Diculik Tulang Naga — …")
+  kini menghasilkan deskripsi **159 dari maksimum 160**.
+- Dipasang **penjaga permanen** untuk kasus ini di `tests/seo-drama.test.ts`,
+  lengkap dengan pembanding `toContain("Layarindo")` supaya deskripsi yang
+  terpotong sebelum nama situs tidak ikut lulus. **Diuji-balik**: nama
+  dipanjangkan jadi "LayarindoNusantara" → **3 tes MERAH**; dipulihkan → hijau.
+  Jadi kalau nama diganti lagi dan tes ini merah, itu bukan tesnya yang rewel —
+  nama barunya memang tak muat.
+- **Lantai 150 huruf DILEPAS untuk satu fixture buatan** berjudul 111 huruf. Di
+  judul sepanjang itu kalimat pembukanya sendiri sudah melewati 160, jadi
+  deskripsinya terpotong **sebelum** nama situs & genre, berhenti di batas kata
+  mana pun yang kebetulan terdekat (terukur 149). Ini **kelemahan LAMA**; nama
+  baru cuma menggesernya melewati ambang sehingga akhirnya kelihatan. Nol judul
+  nyata sepanjang itu. **Perbaikan sebenarnya** = memotong JUDUL di dalam kalimat
+  pembuka supaya nama situs & genre selamat — itu mengubah teks yang sudah
+  terbit di Google, jadi **menunggu keputusan owner**, bukan diubah diam-diam.
+
+### 🪤 Tiga jebakan baru
+
+1. **`--window-size` Chrome headless TIDAK menentukan `innerWidth`.** Minta 390,
+   `window.innerWidth` terbaca **500**. Pengukuran pertama saya sendiri sempat
+   menyimpulkan "kotak cari muat di HP" dari layar yang lebih lebar dari HP mana
+   pun. Obatnya **`Emulation.setDeviceMetricsOverride` lewat CDP**, dan selalu
+   cetak `window.innerWidth` di hasil ukur supaya kebohongannya kelihatan.
+2. **Filter komentar yang cuma mengenali awalan `*` melewatkan baris lanjutan.**
+   Skrip ganti-massal saya menulis ulang 4 baris komentar yang tidak diawali `*`.
+   Tiga di antaranya kebetulan benar (mengutip teks yang memang ikut berubah),
+   satu jadi **omong kosong** ("Layarindo MASIH dipakai di 66 berkas lain") dan
+   harus ditulis ulang. **Selalu baca diff baris-komentar sesudah ganti massal.**
+3. **Menambal teks multi-baris lewat skrip merusak berkas.** Satu percobaan
+   `python ... .replace()` atas berkas tes gagal cocok lalu menyisipkan baris
+   baru sungguhan ke tengah string — berkasnya rusak. Sudah tercatat sebagai
+   pelajaran lama; terjadi lagi hari ini. **Tulis ulang utuh lewat `Write`.**
+
+### Cara memeriksa sendiri (owner)
+
+`npm run build` lalu `npx next start -p 3252`, buka `http://localhost:3252/beranda`.
+1. Logo kiri atas: lambangnya **emas**, tulisan "Layarindo" krem — tidak ada hijau.
+2. Di bawah "SERIES TERBARU" tertulis *"Judul yang paling baru masuk katalog
+   **Layarindo**."* (dulu "DramaKu").
+3. Klik ikon **kaca pembesar** → kotak cari terbuka bertuliskan
+   *"Cari film di Layarindo"*, tidak terpotong.
+4. Judul tab browser berakhiran **"| Layarindo"**.
+
+### Bukti
+
+`npm run gerbang` **LOLOS kelima langkah**: `rm -rf .next` → `npm run build`
+sukses (23 halaman) → `npx tsc --noEmit` **exit 0** → **200 berkas / 2813 tes**
+hijau → nol berkas rahasia di antrean (71 berkas diperiksa). HTML yang disajikan
+build produksi: **"DramaKu" 0×, "Layarindo" 24×**. Kotak cari **diklik sungguhan**
+lewat CDP: layar 390px → teks 135px dalam ruang 182px; layar 360px → 135px dalam
+152px. Logo diperiksa per piksel: **nol piksel hijau tersisa**, ukuran tetap
+423×96 & 134×96.
+
+### ⚠️ Yang TIDAK saya kerjakan, dan kenapa
+
+- **Nol push.** `origin` tertinggal **18 commit**, `dramaku` **5 commit**.
+  Perintah *"jangan tayang dulu"* belum dicabut, dan push ke cermin pun belum
+  diizinkan hari ini.
+- **Dua keputusan masih menggantung:** `PersonalRows.tsx` nol pemanggil (hapus
+  atau simpan?) dan perilaku chip "Terpopuler".
+- **Dua berkas milik sesi lain** (`app/login/page.tsx`,
+  `AdminAccessDenied.tsx`) punya kerja belum-commit yang bercampur dengan rename
+  saya. Yang masuk commit **hanya versi HEAD + rename**-nya, di-stage lewat
+  `git hash-object` + `git update-index` supaya kerja mereka tidak ikut terseret
+  dan tetap utuh di folder kerja.
+- **Berkas menggantung ternyata BASI, bukan kerja aktif.** Catatan semalam
+  menyebutnya "sedang dikerjakan sesi lain"; tanggalnya **14 dan 17 Nov** —
+  7 sampai 10 hari lalu. Termasuk `LAPORAN-AKHIR-AUDIT-KEAMANAN.txt` (85 KB) yang
+  masih duduk di akar repo **publik**. Belum disentuh, menunggu keputusan owner.
 
 ---
 

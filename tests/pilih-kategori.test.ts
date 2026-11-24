@@ -273,6 +273,106 @@ describe("PilihKategori — memilih", () => {
   });
 });
 
+describe("PilihKategori — tanda ceklis", () => {
+  // KENAPA ADA (owner 2026-11-24): "tambahkan tanda ceklis di sebelah pilihan
+  // kategori genre". Sebelumnya baris yang sedang terpakai hanya dibedakan
+  // oleh WARNA teks (amber). Pembeda warna saja gagal senyap: di daftar 30
+  // baris yang tergulung, owner tidak melihat mana yang sedang terpasang
+  // tanpa menutup panelnya dulu — dan pembeda warna tidak terbaca sama
+  // sekali oleh mata yang sulit membedakan warna.
+  //
+  // Ceklisnya digambar sebagai <svg> lucide, jadi tes ini mencarinya lewat
+  // elemen — BUKAN lewat teks. Teks baris sengaja tidak berubah supaya tes
+  // lain yang membaca textContent tetap berlaku.
+  function barisBerceklis(): Element[] {
+    return [...container!.querySelectorAll('[role="option"]')].filter((o) =>
+      o.querySelector("svg"),
+    );
+  }
+
+  /**
+   * Kotaknya dicari lewat `data-kotak-ceklis`, BUKAN lewat kelas Tailwind.
+   * Kelas warna/ukuran memang berubah tiap kali tampilannya disetel ulang;
+   * kalau tes ini mengunci kelas, ia pecah tiap penyetelan kecil dan orang
+   * berhenti mempercayainya.
+   */
+  function kotak(): Element[] {
+    return [...container!.querySelectorAll("[data-kotak-ceklis]")];
+  }
+
+  it("hanya SATU baris berceklis, dan itu kategori yang sedang terpakai", async () => {
+    await render({ nilai: "Horror", onPilih: vi.fn(), label: "Kategori" });
+    await klik(tombol());
+
+    const berceklis = barisBerceklis();
+    expect(berceklis).toHaveLength(1);
+    expect(berceklis[0].textContent).toContain("Horror");
+  });
+
+  it("ceklis menempel di baris yang sama dengan aria-selected", async () => {
+    // Dua penanda untuk hal yang sama: ceklis untuk mata, aria-selected
+    // untuk pembaca layar. Kalau keduanya menunjuk baris berbeda, salah satu
+    // pemakainya dibohongi — dan tak ada error yang memberi tahu.
+    await render({ nilai: "Action", onPilih: vi.fn(), label: "Kategori" });
+    await klik(tombol());
+
+    const dipilihAria = [
+      ...container!.querySelectorAll('[role="option"][aria-selected="true"]'),
+    ];
+    expect(dipilihAria).toHaveLength(1);
+    expect(barisBerceklis()).toEqual(dipilihAria);
+  });
+
+  it("belum berkategori → ceklis ada di baris pengosong", async () => {
+    // String kosong juga sebuah pilihan yang sah, bukan "tidak ada pilihan".
+    await render({ nilai: "", onPilih: vi.fn(), label: "Kategori" });
+    await klik(tombol());
+
+    const berceklis = barisBerceklis();
+    expect(berceklis).toHaveLength(1);
+    expect(berceklis[0].textContent).toContain("Tanpa kategori");
+  });
+
+  it("SETIAP baris punya kotaknya, bukan hanya yang terpilih", async () => {
+    // Owner 2026-11-24: "kolom buatkan juga bro". Kotak kosong di baris lain
+    // itu yang memberi tahu "baris ini bisa dipilih" — kalau kotaknya cuma
+    // muncul di baris terpilih, sisanya terbaca seperti teks biasa.
+    await render({ nilai: "Horror", onPilih: vi.fn(), label: "Kategori" });
+    await klik(tombol());
+
+    const barisnya = container!.querySelectorAll('[role="option"]');
+    expect(barisnya.length).toBeGreaterThan(1);
+    expect(kotak()).toHaveLength(barisnya.length);
+  });
+
+  it("kotak terpilih BERBEDA tampilannya dari kotak kosong", async () => {
+    // Kalau 30 kotak tergambar sama persis, owner tidak jadi tahu apa-apa —
+    // kotaknya cuma hiasan. Pembedanya: isi (ceklis) DAN latar amber.
+    await render({ nilai: "Horror", onPilih: vi.fn(), label: "Kategori" });
+    await klik(tombol());
+
+    const terisi = kotak().filter((k) => k.querySelector("svg"));
+    const kosong = kotak().filter((k) => !k.querySelector("svg"));
+
+    expect(terisi).toHaveLength(1);
+    expect(kosong.length).toBeGreaterThan(1);
+    expect(terisi[0].className).toContain("bg-amber-400");
+    expect(kosong[0].className).not.toContain("bg-amber-400");
+  });
+
+  it("baris yang tersaring keluar tidak menyeret ceklisnya ke baris lain", async () => {
+    // Saat diketik, baris terpilih bisa hilang dari daftar. Yang tersisa
+    // harus NOL ceklis — bukan ceklis yang pindah ke baris teratas, karena
+    // itu memberi tahu owner kategori yang salah.
+    await render({ nilai: "Horror", onPilih: vi.fn(), label: "Kategori" });
+    await klik(tombol());
+    await ketik("act");
+
+    expect(opsi().join(" ")).not.toContain("Horror");
+    expect(barisBerceklis()).toHaveLength(0);
+  });
+});
+
 describe("PilihKategori — dimatikan", () => {
   it("tidak bisa dibuka saat disabled", async () => {
     // Dipakai saat barisnya sedang menyimpan ke server. Membiarkannya terbuka

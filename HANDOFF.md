@@ -102,6 +102,38 @@
 
 ---
 
+## 2026-11-24 (malam) — ✅ KOTAK CEKLIS di daftar genre panel admin (belum di-commit)
+
+**Permintaan owner — DUA putaran, gambar + kalimat:**
+1. *"kamu tambahkan tanda ceklis disebelah pilihan kategori genre"* — kotak merah digambar di SISI KIRI baris-baris genre pada dropdown kolom KATEGORI di `/admin/videos/playly`.
+2. Sesudah melihat hasilnya: *"sudah oke tetapi kolom buatkan juga bro"* — gambarnya menunjukkan **kotak kosong di SETIAP baris**, bukan cuma tanda ✓ di baris terpilih. Jadi bentuk akhirnya **checkbox**: kotak di semua baris, yang terpakai terisi.
+
+**Yang diubah — 1 berkas kode + 1 berkas tes:**
+- `app/components/admin/PilihKategori.tsx` — tiap baris pilihan kini punya **kotak ceklis di kiri nama**. Kotaknya digambar di SEMUA baris (`border-zinc-600`, kosong); baris yang **sedang terpakai** kotaknya **terisi amber + ceklis hitam** (ikon `Check` dari lucide-react, `strokeWidth={3}` supaya tetap tegas di ukuran 10px). Padding kiri baris diturunkan `px-3` → `px-2` supaya lebar totalnya tidak bertambah (panelnya tetap 224px).
+- **Warna kotak sengaja TIDAK mengikuti warna teks barisnya.** Baris *Tanpa kategori* dipaksa `text-zinc-500` (abu, miring) — kalau kotaknya ikut mewarisi itu, keadaan "sedang terpakai" di baris tersebut nyaris tak terlihat. Dengan amber tetap, status terpilih terbaca sama jelasnya di seluruh baris.
+- ℹ️ Di panel admin skala `zinc` DIBALIK oleh `.tema-terang-penuh` (`app/globals.css:293`), jadi `border-zinc-600` tergambar abu `#a1a1aa` di atas kertas putih — bukan abu gelap. Warna amber sengaja tidak ikut dibalik, jadi kotak terisi tetap kuning di kedua tema.
+- Kotaknya diberi atribut `data-kotak-ceklis` **khusus sebagai pegangan tes** — supaya tesnya tidak mengunci kelas Tailwind yang memang berubah tiap tampilan disetel ulang.
+- Nama + label Indonesia dibungkus satu `<span>` ber-`items-baseline` di dalam baris ber-`items-center`. Tanpa pembungkus itu label 10px ikut dirata-tengahkan ke nama 12px dan terlihat melayang.
+- `aria-hidden` dipasang di ikonnya — status terpilih SUDAH disuarakan `aria-selected`; tanpa ini pembaca layar menyebutkan hal yang sama dua kali.
+
+**Kenapa pantas ada (bukan hiasan):** sebelumnya baris terpilih hanya dibedakan WARNA teks (amber). Di daftar 30 kategori yang tergulung, warna saja gagal senyap — owner tak bisa melihat mana yang terpasang tanpa menutup panelnya dulu, dan pembeda warna tidak terbaca sama sekali oleh mata yang sulit membedakan warna.
+
+**Bukti yang dijalankan, bukan dibaca:**
+- `npx vitest run tests/pilih-kategori.test.ts` → **25 tes hijau** (19 lama + **6 penjaga baru**).
+- **Uji-balik — tiga mutasi, masing-masing dibuktikan MERAH dulu, lalu berkas dipulihkan:** (a) `terpilih &&` → `true &&` (semua baris berceklis) = 4 tes merah; (b) kedua cabang warna disamakan jadi amber (kotak tak lagi membedakan apa pun) = 1 tes merah; (c) kotak dibuat hanya muncul di baris terpilih = 2 tes merah. Jadi tesnya benar-benar menjaga, bukan sekadar ikut hijau.
+- `npx vitest run` atas 4 berkas yang menyentuh komponen ini (`pilih-kategori`, `playly-genre`, `search-seragam`, `genre-label`) → **56 tes hijau**.
+- `npx tsc --noEmit` → **exit 0**.
+
+⚠️ **`npm run build` BELUM dijalankan** — di mesin ini ada `next start -p 3252` yang sedang hidup memakai `.next`, dan build akan menimpanya di tengah jalan. Perubahannya murni JSX di satu komponen client (tanpa tipe baru), tapi gerbang pra-rilis tetap WAJIB dijalankan utuh sebelum push ke `origin main`.
+
+🪤 **Jebakan yang muncul lagi:** `npx tsc --noEmit` sempat melapor `TS6053 .next/types/cache-life.d.ts not found` padahal berkasnya ADA — sekali jalan ulang langsung exit 0. Jangan buru-buru menyimpulkan kode rusak dari error yang menunjuk isi `.next`.
+
+**Cara owner mencobanya:** buka panel admin → kolom **KATEGORI** di salah satu baris → klik kotaknya. Tiap baris genre sekarang punya **kotak kecil di sebelah kirinya**; yang **sedang terpasang** kotaknya terisi kuning dengan ✓ di dalamnya. Belum berkategori → yang terisi baris *Tanpa kategori*.
+
+**Server lokal untuk mencoba (dinyalakan sesi ini):** `http://localhost:3914` — halamannya `http://localhost:3914/admin/videos/playly`, login dulu di `http://localhost:3914/login` (sesi login localhost TERPISAH dari situs asli). ⚠️ Port **3252** yang tercatat di sesi-sesi lama sudah **MATI** — jangan dipakai lagi. ⚠️ Port 3000/3011/3030/3456/3500/4000 yang terlihat hidup di mesin ini **milik penyewa lain**, bukan kita.
+
+---
+
 ## 2026-11-24 (sore) — 🍷 TEMA ANGGUR + AMBER dari mockup owner (`c9b7a5a`), BELUM TAYANG
 
 Owner mengirim **mockup jadi** (`Downloads/image.webp`, 379x732) dan meminta

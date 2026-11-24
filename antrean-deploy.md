@@ -25,6 +25,28 @@
 
 **Terakhir dicek:** 2026-11-24 (malam). ✅ **RILIS `6de869d` → `72fb308` TAYANG** — owner memberi izin *"push dan rilis"*, jadi perintah tahan sejak 2026-11-23 DICABUT. **35 commit · 115 berkas** (nama situs Layarindo · tema anggur+amber dari mockup owner · cahaya latar · bentuk kartu/tombol/chip). `dramaku` dulu, lalu `origin` — keduanya `→ 72fb308`, **antrean KOSONG**. Gerbang dijalankan ULANG tepat sebelum push: 5/5 hijau, 2828 tes, nol berkas rahasia. Nol prasyarat SQL/env. 🎯 Bukti tayang diukur di situs sungguhan: `DramaKu` **0×** & `Layarindo` **24×** di HTML produksi, warna emas lama `f5a524` **0×** di CSS, 8 alamat **200**, katalog **66 judul**, halaman nonton **200**. 🔴 Sisa milik owner: pastikan deployment `72fb308` **success** di Railway + lihat sendiri di HP. Riwayat sebelumnya di bawah.
 
+### ⏸️ 2026-11-24 (malam) — merge `feat/nonton-bareng` MASUK antrean, TERKUNCI di SQL + env owner
+
+| Remote | Keadaan | Catatan |
+|---|---|---|
+| `origin` (produksi) | tertinggal **6 commit** | tombol rilis, belum ditekan |
+| `dramaku` (cermin) | branch `feat/nonton-bareng` + `rilis-ceklis` sudah ada | cermin, tidak merilis apa pun |
+
+**Yang baru masuk antrean:** merge commit **`6fb7852`** — fitur **Nonton Bareng** (watch party) film Playly, kerja rekan (`dcbede9`).
+
+🔴 **JANGAN dirilis sebelum 3 langkah owner ini selesai BERURUTAN** (aturan 3 — database & env selalu didahulukan):
+1. jalankan `supabase_migrations/2026-11-23_nonton_bareng.sql` di Supabase;
+2. deploy service **nobar-server** di Railway (Root Directory `nobar-server`, replicas 1) + 4 env: `NOBAR_SECRET`, `NOBAR_ALLOWED_ORIGINS`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`;
+3. isi `NOBAR_SECRET` + `NOBAR_PUBLIC_URL` di service situs → redeploy.
+
+✅ **Tapi kodenya TIDAK berbahaya kalau terlanjur tayang duluan** — diverifikasi di kode, bukan dari catatan rekan: tanpa env, `nobarAktif()` bernilai `false`, tombolnya tidak digambar dan route-nya membalas **404 + `no-store`**. Fiturnya cuma tidak ada, bukan rusak.
+
+🪤 **Sebelum menjalankan gerbang di folder ini: hapus `data/playly.json` dulu.** `tests/playly-video-route.test.ts` menulis 2 id video uji tanpa judul ke berkas itu tiap `npm test`, lalu `npm run build` gagal di `/beranda` (`toLowerCase` atas judul kosong). Temuan rekan, bukan dugaan.
+
+⚠️ Gerbang pra-rilis **BELUM dijalankan** atas keadaan sesudah merge ini.
+
+---
+
 ### ✅ 2026-11-24 — RILIS `6de869d` → `72fb308` TAYANG. Antrean KOSONG.
 
 **Owner memberi izin: *"push dan rilis"*.** Perintah tahan *"jangan tayang

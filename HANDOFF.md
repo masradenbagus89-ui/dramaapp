@@ -104,6 +104,49 @@
 
 ---
 
+## 2026-11-24 (malam) — 📥 branch rekan `feat/nonton-bareng` (dcbede9) DITARIK ke main lokal — BELUM dirilis
+
+**Perintah owner:** *"tarik Branch yusup kerjakan feat/nonton-bareng (dcbede9)"*. Sudah digabung sebagai merge commit **`6fb7852`** di `main` lokal. **NOL push** — ini belum tayang.
+
+**Isinya:** fitur **Nonton Bareng** (watch party) untuk film Playly — 36 berkas, termasuk **server Socket.IO terpisah** (`nobar-server/`, untuk dideploy sebagai service Railway kedua), **migrasi SQL** 4 tabel `dramaapp.watch_*`, 7 komponen di `app/components/nobar/`, 3 route `app/api/watch-room/`, dan halaman `/watch-room/[token]`. Serah-terima lengkap rekan: `docs/serah-terima/2026-11-23-nonton-bareng.md`; rancangannya `docs/lintasai/rencana/2026-11-23-nonton-bareng.md`.
+
+**🔴 MILIK OWNER, dan urutannya tidak boleh dibalik (aturan 3 AGENTS.local.md):**
+1. jalankan `supabase_migrations/2026-11-23_nonton_bareng.sql` (idempoten, RLS menyala tanpa policy — hanya `service_role` yang bisa menyentuh);
+2. deploy service **nobar-server** di Railway (Root Directory `nobar-server`, replicas **1**) + isi 4 env: `NOBAR_SECRET`, `NOBAR_ALLOWED_ORIGINS`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`;
+3. isi `NOBAR_SECRET` + `NOBAR_PUBLIC_URL` di service **situs**, lalu redeploy. Langkah rinci: `nobar-server/README.md`.
+
+**✅ Aman dirilis lebih dulu tanpa env — DIVERIFIKASI SENDIRI, bukan percaya catatan rekan:** route pembuat Room memanggil `guardFitur(nobarAktif())` yang membalas **404 + `Cache-Control: no-store`** (`lib/request-guard.ts:46`), dan tombolnya dibungkus `{nobarAktif() && ...}` (`app/tonton/[id]/page.tsx:307`). `nobarAktif()` baru `true` kalau `NOBAR_SECRET` ≥32 huruf **dan** `NOBAR_PUBLIC_URL` diawali `http` (`lib/nobar.ts:35`). Jadi sebelum env diisi, fiturnya tidak terlihat dan tidak bisa dipanggil.
+
+**Bukti yang dijalankan di mesin owner (bukan menyalin klaim rekan):** merge bersih tanpa konflik · `npm install` memasang paket baru `socket.io-client@4.8.4` (sebelumnya belum ada di `node_modules` — tes akan merah tanpa ini) · `npx vitest run tests/nobar-kontrak.test.ts` **15/15 hijau** · `npx tsc --noEmit` **exit 0**.
+
+**🪤 Jebakan yang dicatat rekan, berlaku untuk siapa pun yang menjalankan gerbang di folder ini:** `tests/playly-video-route.test.ts` menulis 2 id video uji **tanpa judul** ke `data/playly.json` sungguhan tiap `npm test`, dan sesudah itu `npm run build` lokal **gagal di `/beranda`** (`toLowerCase` atas judul kosong). Hapus `data/playly.json` sebelum build.
+
+**Dua pengukuran berdiri sendiri yang cocok:** rekan dan sesi ini sama-sama menemukan **7 tes merah yang sama** (`bagian-playly`, `baris-atas-film`, `hero-gambar-besar`, `panel-playly-tahan-gangguan`, `playly-genre`, `saring-video-admin`) sudah merah di `origin/main` bersih, tanpa perubahan siapa pun.
+
+❓ **Belum terbukti di browser sungguhan** (kata rekan sendiri): perilaku `<video>` mengikuti Host + banner "nyalakan suara" saat autoplay diblokir. Uji ujung-ke-ujungnya memakai klien Socket.IO, bukan browser.
+
+---
+
+## 2026-11-24 (malam) — 🐞 "tombol search tidak berfungsi" = BAR MEMOTONG DROPDOWN — DIPERBAIKI, menunggu rilis
+
+**Laporan owner:** *"tombol search tidak berfungsi apakah bug"* + 2 gambar. Jawabannya: **tombolnya TIDAK rusak.** Yang rusak **daftar saran** di bawah kotak cari — dan gejalanya menyesatkan sampai membuat owner menyalahkan tombol.
+
+**Penyebab, satu baris CSS:** `.sapuan-gelombang` (hiasan bergelombang di bar atas & bar bawah, `app/globals.css`) membawa `overflow: hidden`. Bar-nya tinggi **57px**, daftar sarannya **355px** → **348px terpotong habis**. Yang tersisa strip putih ~7px — strip itulah yang terlihat di screenshot pertama owner dan di potret uji kita, identik.
+
+**Dibuktikan SEBAB-AKIBAT di situs produksi, bukan ditebak dari membaca kode:** Chrome asli + CDP, klik mouse sungguhan di koordinat. Dengan `overflow: hidden` → **0 dari 6** baris saran terlihat (`elementFromPoint` memulangkan `IMG` poster di keenam titik). Properti itu SAJA dimatikan, tak ada yang lain disentuh → **6 dari 6** terlihat. Potretnya menunjukkan dropdown utuh: Speed Faster, Spider-Noir, Speak No Evil, Spirited, Spider-Man No Way Home + "Lihat semua hasil".
+
+**Perbaikan:** `overflow: hidden` dicabut dari `.sapuan-gelombang`; `isolation: isolate` **TETAP** (hiasan `::before` ber-`z-index: -10` butuh kotak tumpukan sendiri — tanpa itu hiasannya hilang total). Aman dibuang karena hiasannya `position: absolute; inset: 0` + `background-size: 100% 100%` → memang tak bisa meluber keluar kotaknya.
+
+**Penjaga baru:** `tests/bar-tidak-memotong-dropdown.test.ts` — 3 tes, melarang `overflow: hidden|clip|auto|scroll` kembali ke bar, menuntut `isolation: isolate` tetap ada, DAN memeriksa hiasannya masih menempel pas (kalau suatu hari hiasannya dibuat lebih besar dari kotaknya, tes ketiga merah DULU — dan jawabannya tetap bukan memotong seluruh bar). **Uji-balik:** `overflow: hidden` dikembalikan → tes **MERAH**, lalu dipulihkan.
+
+**🪤 PELAJARAN — ini yang paling mahal hari ini.** Tiga uji pertama saya semuanya **HIJAU dan menyesatkan**: tombol submit jalan, perpindahan ke `/discover?q=sp` jalan, halaman hasil menggambar 10 kartu benar. Saya sempat melapor "tidak bisa menirukan, mungkin ekstensi browser". Yang keliru bukan pengukurannya, tapi **apa yang diukur**: `getBoundingClientRect` memulangkan ukuran 355px untuk elemen yang **tidak terlihat sama sekali** — ukuran bukan bukti terlihat. Yang menjawabnya `elementFromPoint`: siapa yang BENAR-BENAR tergambar di titik itu. Gambar kedua dari owner (panah merah dari kotak cari ke deretan poster) yang mengarahkan ke sana.
+
+**Nol kaitan dengan kerja nobar** yang ditarik sesi ini — berkas yang disentuh beda.
+
+🔴 **Sudah di-commit di `main` lokal, BELUM tayang.** Sampai dirilis, bug ini masih dialami SEMUA pengunjung produksi.
+
+---
+
 ## 2026-11-24 (malam) — ✅ KOTAK CEKLIS di daftar genre panel admin (belum di-commit)
 
 **Permintaan owner — DUA putaran, gambar + kalimat:**

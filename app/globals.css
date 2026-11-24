@@ -142,8 +142,26 @@
    Pemanggil yang menyediakan posisinya sendiri: bar atas `sticky`, bar bawah
    `fixed`. Keduanya sama-sama membentuk konteks posisi untuk `::before`. */
 .sapuan-gelombang {
+  /* `isolation: isolate` WAJIB TETAP ADA: hiasan di `::before` memakai
+     `z-index: -10`, dan tanpa kotak tumpukan sendiri ia tenggelam ke belakang
+     LATAR HALAMAN, bukan ke belakang isi bar. */
   isolation: isolate;
-  overflow: hidden;
+
+  /* 🪤 JANGAN KEMBALIKAN `overflow: hidden` DI SINI. Terbukti 2026-11-24 di
+     situs produksi lewat browser sungguhan: aturan satu baris itu MEMOTONG
+     daftar saran pencarian. Bar ini tingginya 57px, daftar sarannya 355px —
+     jadi 348px-nya terpotong habis dan yang tersisa cuma strip putih ~7px.
+     Dari sisi owner gejalanya menyesatkan total: "tombol search tidak
+     berfungsi", padahal tombolnya jalan sempurna dan halaman hasilnya benar.
+
+     Nol error di konsol, nol tes merah — kerusakan ini SENYAP, dan hanya
+     kelihatan kalau dipandang atau diukur lewat `elementFromPoint`.
+
+     Kenapa aman dibuang: hiasannya `position: absolute; inset: 0` dengan
+     `background-size: 100% 100%`, jadi ia memang tidak bisa meluber keluar
+     kotaknya — tidak ada yang perlu dipotong. Begitu ada isi yang HARUS
+     menggantung keluar bar (dropdown, tooltip, menu), potong hiasannya saja
+     lewat elemen sendiri, JANGAN potong seluruh bar. */
 }
 
 .sapuan-gelombang::before {

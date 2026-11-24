@@ -7,6 +7,8 @@ import {
   TAB_BAWAAN,
   TAB_GRID_ITEMS,
   TAB_ROW_ITEMS,
+  KUNCI_SEKSI_DRAMA,
+  SEKSI_BERISI_FILM,
   SEKSI_FILM,
   URUTAN_SEKSI_BERANDA,
   type TabKatalog,
@@ -35,6 +37,7 @@ import {
 import { ID_JUDUL_TAWARAN } from "./LayarindoMenawarkan";
 import PanahGeserBaris from "./PanahGeserBaris";
 import { Button } from "@/components/ui/button";
+import { filmSeksiNontonBareng, filmSeksiRekomendasi } from "@/lib/film-seksi";
 import { cn } from "@/lib/utils";
 
 /**
@@ -87,6 +90,7 @@ export default function TabKatalogTampilan({
   slotJudulBaris,
   videos = [],
   videoSeries = [],
+  filmSeksi = [],
 }: {
   dramas: Drama[];
   /** Tab yang sedang dibuka. Pemanggil yang menentukan dari mana asalnya. */
@@ -186,6 +190,24 @@ export default function TabKatalogTampilan({
    * ditandai admin.
    */
   videoSeries?: PlaylyVideoPublik[];
+  /**
+   * KOLAM film untuk seksi "Nonton Bareng" & "Rekomendasi" (owner 2026-11-24).
+   *
+   * WAJIB sudah disiapkan `siapkanTampilanDepan` (lib/baris-atas.ts →
+   * `filmSeksi`): film BERSAMPUL saja, judul yang duduk di baris poster atas
+   * sudah dibuang, urutan tahun rilis terbaru di depan, belum dipotong.
+   * Mengoper daftar film MENTAH ke sini tetap lolos typecheck dan tetap
+   * menggambar 20 kartu — cuma 11 di antaranya kotak hitam tanpa sampul dan 9
+   * mengulang baris atas (terukur 2026-11-24, sebelum lib/film-seksi.ts ada).
+   *
+   * ⚠️ BEDA dari `videos` di atas: `videos` adalah kolam yang sama tapi SUDAH
+   * dipotong 20 untuk seksi "Film Terbaru". Potongan untuk dua seksi lain
+   * dihitung lib/film-seksi.ts, yang butuh melihat kolam utuhnya.
+   *
+   * Kosong = kedua seksi itu tidak digambar. Itu keadaan NORMAL saat penyedia
+   * luar sedang mati, bukan error.
+   */
+  filmSeksi?: PlaylyVideoPublik[];
 }) {
   const tabs = daftarTab(dramas);
   const aktif = tab;
@@ -380,32 +402,73 @@ export default function TabKatalogTampilan({
                 hrefSemua="/film"
               />
             );
+            /**
+             * Kartu satu seksi.
+             *
+             * ⚠️ DUA SEKSI BERISI FILM, SISANYA DRAMA (owner 2026-11-24:
+             * *"nonton bareng, rekomendasi kamu isi dengan film saja jangan
+             * drama lagi, sedangkan drama kamu masukan ke drama asia"*).
+             *
+             * Filmnya WAJIB dari penyedia luar (`filmSeksi`), bukan dari
+             * katalog: terukur di katalog produksi, dari 41 judul hanya SATU
+             * ber-`kind: "movie"` ("Meg 2 The Trench"). Menyaring katalog
+             * akan menghasilkan dua seksi berisi satu kartu — tampak seperti
+             * halaman rusak, bukan seperti yang diminta.
+             *
+             * SIAPA DAPAT POTONGAN MANA diputuskan lib/film-seksi.ts, bukan di
+             * sini — supaya aturannya bisa diuji tanpa browser dan satu tempat
+             * saja yang menjawabnya. Ringkasnya: ketiga seksi film menarik dari
+             * SATU kolam, jadi masing-masing wajib mengambil jendela/urutan
+             * yang berbeda; kalau tidak, satu layar beranda menampilkan dua
+             * puluh judul yang sama tiga kali.
+             */
+            const kartuSeksi = (t: TabKatalog) => {
+              if (SEKSI_BERISI_FILM.has(t.key)) {
+                const pilihan =
+                  t.key === "rekomendasi"
+                    ? filmSeksiRekomendasi(filmSeksi, TAB_GRID_ITEMS)
+                    : filmSeksiNontonBareng(filmSeksi, TAB_GRID_ITEMS);
+                return pilihan.map(bungkusVideo);
+              }
+              /* SERIAL dari penyedia luar ikut ke seksi "Drama Asia", dan
+                 sengaja tidak ke tab lain: "Series Unggulan" butuh penanda
+                 `exclusive`, "Terpopuler" butuh jumlah penonton — video
+                 Playly tidak punya satu pun dari data itu. Menaruhnya di sana
+                 berarti mengaku judul ini unggulan/populer tanpa seorang pun
+                 pernah menilainya.
+                 ⚠️ PINDAH dari tab bawaan ke sini 2026-11-24: tab bawaan kini
+                 berisi FILM, jadi serial yang dititipkan ke sana akan jadi
+                 satu-satunya drama di seksi film.
+
+                 Ditaruh di DEPAN drama katalog, bukan di ekor: seksi memuat 20
+                 kartu dan yang di ekor praktis tak pernah terlihat tanpa
+                 menggeser jauh — owner yang baru saja menandai sebuah video akan
+                 menyimpulkan fiturnya tidak jalan. Aturan yang sama sudah
+                 dipakai baris genre di lib/beranda-video.ts. */
+              return [
+                ...(t.key === KUNCI_SEKSI_DRAMA ? videoSeries.map(bungkusVideo) : []),
+                ...isiTabLengkap(dramas, t.key)
+                  .slice(0, TAB_GRID_ITEMS)
+                  .map(bungkusDrama),
+              ].slice(0, TAB_GRID_ITEMS);
+            };
             const gambarSeksi = (t: TabKatalog) => (
               <SeksiKatalog
                 key={t.key}
                 idSeksi={`seksi-${t.key}`}
                 judul={t.judul}
                 keterangan={t.keterangan}
-                /* SERIAL dari penyedia luar ikut HANYA ke seksi "Series Terbaru"
-                   (tab bawaan), dan sengaja tidak ke tab lain: "Series Unggulan"
-                   butuh penanda `exclusive`, "Series Update" butuh status Ongoing,
-                   "Terpopuler" butuh jumlah penonton, "Rekomendasi" butuh rating —
-                   video Playly tidak punya satu pun dari data itu. Menaruhnya di
-                   sana berarti mengaku judul ini unggulan/populer tanpa seorang
-                   pun pernah menilainya.
-
-                   Ditaruh di DEPAN drama katalog, bukan di ekor: seksi memuat 20
-                   kartu dan yang di ekor praktis tak pernah terlihat tanpa
-                   menggeser jauh — owner yang baru saja menandai sebuah video akan
-                   menyimpulkan fiturnya tidak jalan. Aturan yang sama sudah
-                   dipakai baris genre di lib/beranda-video.ts. */
-                kartu={[
-                  ...(t.key === TAB_BAWAAN ? videoSeries.map(bungkusVideo) : []),
-                  ...isiTabLengkap(dramas, t.key)
-                    .slice(0, TAB_GRID_ITEMS)
-                    .map(bungkusDrama),
-                ].slice(0, TAB_GRID_ITEMS)}
-                hrefSemua={t.key === TAB_BAWAAN ? "/katalog" : `/katalog?tab=${t.key}`}
+                kartu={kartuSeksi(t)}
+                /* Seksi berisi film menunjuk /film, bukan /katalog?tab=… —
+                   halaman katalog menampilkan DRAMA, jadi "Semua" dari seksi
+                   film akan mendarat di daftar yang isinya lain sama sekali. */
+                hrefSemua={
+                  SEKSI_BERISI_FILM.has(t.key)
+                    ? "/film"
+                    : t.key === TAB_BAWAAN
+                      ? "/katalog"
+                      : `/katalog?tab=${t.key}`
+                }
               />
             );
             return (

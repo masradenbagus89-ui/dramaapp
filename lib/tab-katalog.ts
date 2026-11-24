@@ -180,6 +180,30 @@ export const URUTAN_SEKSI_BERANDA: readonly (TabKey | typeof SEKSI_FILM)[] = [
   "terpopuler",
 ];
 
+/**
+ * Seksi beranda yang isinya FILM, bukan drama (owner 2026-11-24: *"nonton
+ * bareng, rekomendasi kamu isi dengan film saja jangan drama lagi"*).
+ *
+ * ⚠️ Filmnya WAJIB dari penyedia luar, BUKAN hasil menyaring katalog.
+ * Terukur di katalog produksi 2026-11-24: dari 41 judul hanya SATU yang
+ * ber-`kind: "movie"` ("Meg 2 The Trench"). Menyaring katalog akan
+ * menghasilkan dua seksi berisi satu kartu — tampak seperti halaman rusak.
+ *
+ * Urutannya tetap mengikuti ARTI tiap seksi: "terbaru" memakai urutan bawaan
+ * (tahun rilis terbaru lebih dulu), "rekomendasi" diurutkan dari rating.
+ */
+export const SEKSI_BERISI_FILM: ReadonlySet<TabKey> = new Set<TabKey>([
+  "terbaru",
+  "rekomendasi",
+]);
+
+/**
+ * Seksi tempat SELURUH drama bermuara (owner 2026-11-24: *"sedangkan drama
+ * kamu masukan ke drama asia"*) — termasuk serial dari penyedia luar, yang
+ * sampai hari itu dititipkan ke tab bawaan.
+ */
+export const KUNCI_SEKSI_DRAMA: TabKey = "update";
+
 export function parseTab(value: string | null | undefined): TabKey {
   const sah: TabKey[] = [
     "terbaru",

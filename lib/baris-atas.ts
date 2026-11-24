@@ -25,10 +25,31 @@ export function filmDiLuarBarisAtas<F extends { id: string }>(
 ): F[] {
   const batas = Number.isFinite(jumlah) ? Math.max(0, Math.floor(jumlah)) : 0;
   if (batas === 0) return [];
+  return filmLuarBarisAtasLengkap(film, barisAtas).slice(0, batas);
+}
+
+/**
+ * Sama dengan di atas, TANPA dipotong — kolam bersama untuk seluruh seksi film
+ * beranda (lib/film-seksi.ts).
+ *
+ * Perlu versi tak-terpotong sejak owner 2026-11-24 meminta "Nonton Bareng" dan
+ * "Rekomendasi" diisi film juga: tiga seksi butuh potongan yang BERBEDA dari
+ * satu daftar, jadi yang membagi potongannya harus melihat daftar utuhnya.
+ * Memakai `filmDiLuarBarisAtas` dengan jumlah besar bukan pengganti — ia
+ * mengembalikan [] untuk `Infinity` (`Number.isFinite`), kesalahan yang tak
+ * memunculkan error, cuma seksi yang hilang.
+ *
+ * Saringan "sudah di baris atas" tetap SATU-SATUNYA di sini supaya seksi baru
+ * tak bisa lupa memakainya.
+ */
+export function filmLuarBarisAtasLengkap<F extends { id: string }>(
+  film: F[],
+  barisAtas: ButirBarisAtas<F, { id: string }, { id: string }>[],
+): F[] {
   const sudahDiAtas = new Set(
     barisAtas.filter((b) => b.jenis === "film").map((b) => b.item.id),
   );
-  return film.filter((v) => !sudahDiAtas.has(v.id)).slice(0, batas);
+  return film.filter((v) => !sudahDiAtas.has(v.id));
 }
 
 const adaTeks = (nilai: string | null | undefined) => Boolean(nilai?.trim());
@@ -54,6 +75,12 @@ export function siapkanTampilanDepan<
 }): {
   barisAtas: { jenis: "film"; item: F }[];
   filmDiDepan: F[];
+  /**
+   * Kolam film untuk SEMUA seksi film beranda: bersampul, bukan judul baris
+   * atas, urutan tahun terbaru di depan, TIDAK dipotong. Pembagi potongannya
+   * di lib/film-seksi.ts.
+   */
+  filmSeksi: F[];
   seriesSisa: S[];
   dramaSisa: D[];
 } {
@@ -67,6 +94,7 @@ export function siapkanTampilanDepan<
   return {
     barisAtas,
     filmDiDepan: filmDiLuarBarisAtas(filmBergambar, barisAtas, sumber.jumlahFilm),
+    filmSeksi: filmLuarBarisAtasLengkap(filmBergambar, barisAtas),
     seriesSisa: sumber.series.filter((v) => adaTeks(v.thumbnail)),
     dramaSisa: sumber.drama,
   };

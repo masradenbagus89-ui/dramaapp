@@ -16,7 +16,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { readFileSync } from "node:fs";
 import TabKatalogTampilan from "../app/components/beranda/TabKatalogTampilan";
 import { KUNCI_BARIS_VIDEO, JUDUL_BARIS_VIDEO } from "../lib/beranda-video";
-import { TAB_BAWAAN, TAB_GRID_ITEMS } from "../lib/tab-katalog";
+import { KUNCI_SEKSI_DRAMA, TAB_BAWAAN, TAB_GRID_ITEMS } from "../lib/tab-katalog";
 import {
   JENIS_BAWAAN,
   MAKS_SERIES_PLAYLY_DI_SEKSI,
@@ -137,20 +137,30 @@ describe("seksi beranda memisahkan film dari serial", () => {
     const html = render([video("Film Layar Lebar")], [video("Drama Berseri")]);
 
     const mulaiFilm = html.indexOf(`id="seksi-${KUNCI_BARIS_VIDEO}"`);
-    const mulaiSeries = html.indexOf(`id="seksi-${TAB_BAWAAN}"`);
-    const mulaiBerikut = html.indexOf('id="seksi-unggulan"');
+    // ⚠️ SEKSI SERIALNYA `KUNCI_SEKSI_DRAMA` ("Drama Asia"), bukan lagi
+    // `TAB_BAWAAN` (2026-11-24): owner meminta seksi bawaan ("Nonton Bareng")
+    // dan "Rekomendasi" diisi FILM, *"sedangkan drama kamu masukan ke drama
+    // asia"*. Serial Playly ikut pindah ke sana — kalau tidak, ia jadi
+    // satu-satunya drama yang nyangkut di tengah seksi film.
+    const mulaiSeries = html.indexOf(`id="seksi-${KUNCI_SEKSI_DRAMA}"`);
+    // Batas akhir = seksi BERIKUTNYA apa pun, bukan nama yang dipaku:
+    // "seksi-unggulan" sudah tidak digambar di beranda sejak owner menentukan
+    // lima seksi saja, dan patokan bernama akan patah tiap kali urutan disusun
+    // ulang — merah karena alasan yang salah.
+    const mulaiBerikut = html.indexOf('id="seksi-', mulaiFilm + 1);
     expect(mulaiSeries).toBeGreaterThanOrEqual(0);
-    expect(mulaiFilm).toBeGreaterThan(mulaiSeries);
+    // Film Terbaru kini di ATAS Drama Asia (urutan owner 2026-11-24).
+    expect(mulaiFilm).toBeLessThan(mulaiSeries);
 
     const blokFilm = html.slice(mulaiFilm, mulaiBerikut);
     expect(blokFilm).toContain("Film Layar Lebar");
     expect(blokFilm).not.toContain("Drama Berseri");
   });
 
-  it("serial tergambar di seksi Nonton Bareng, DI DEPAN drama katalog", () => {
+  it("serial tergambar di seksi Drama Asia, DI DEPAN drama katalog", () => {
     const html = render([], [video("Drama Berseri")]);
 
-    const blokSeries = html.slice(html.indexOf(`id="seksi-${TAB_BAWAAN}"`));
+    const blokSeries = html.slice(html.indexOf(`id="seksi-${KUNCI_SEKSI_DRAMA}"`));
     expect(blokSeries).toContain("Drama Berseri");
     // Di DEPAN, bukan di ekor: seksi memuat 20 kartu dan yang di ekor praktis
     // tak pernah terlihat tanpa menggeser jauh — owner yang baru menandai video
@@ -167,7 +177,7 @@ describe("seksi beranda memisahkan film dari serial", () => {
     const banyak = Array.from({ length: 30 }, (_, i) => video(`Episode ${i}`));
     const html = render([], banyak.slice(0, MAKS_SERIES_PLAYLY_DI_SEKSI));
 
-    const blokSeries = html.slice(html.indexOf(`id="seksi-${TAB_BAWAAN}"`));
+    const blokSeries = html.slice(html.indexOf(`id="seksi-${KUNCI_SEKSI_DRAMA}"`));
     expect(blokSeries).toContain("Drama Katalog 0");
     expect(MAKS_SERIES_PLAYLY_DI_SEKSI).toBeLessThan(TAB_GRID_ITEMS);
   });

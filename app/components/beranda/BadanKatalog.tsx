@@ -60,6 +60,7 @@ export default function BadanKatalog({
   heroItems,
   filmDiDepan,
   seriesTerbaru = [],
+  filmSeksi = [],
   genres,
   basePath,
   heroHref,
@@ -91,6 +92,13 @@ export default function BadanKatalog({
    * apa adanya — seksi Series cuma berisi drama katalog, persis seperti dulu.
    */
   seriesTerbaru?: PlaylyVideoPublik[];
+  /**
+   * SELURUH film dari penyedia luar — sumber seksi "Nonton Bareng" &
+   * "Rekomendasi" (owner 2026-11-24). BEDA dari `filmDiDepan` yang sudah
+   * dipotong 20 untuk seksi "Film Terbaru": memakai yang sama untuk
+   * ketiganya membuat ketiga seksi menampilkan judul yang sama persis.
+   */
+  filmSeksi?: PlaylyVideoPublik[];
   /** Daftar genre untuk kaki situs. */
   genres: string[];
   /**
@@ -174,6 +182,7 @@ export default function BadanKatalog({
               slotJudulBaris={<JudulMenawarkan />}
               videos={filmDiDepan}
               videoSeries={seriesTerbaru}
+              filmSeksi={filmSeksi}
               basePath={basePath}
             />
           }
@@ -186,6 +195,7 @@ export default function BadanKatalog({
               slotJudulBaris={<JudulMenawarkan />}
             videos={filmDiDepan}
             videoSeries={seriesTerbaru}
+              filmSeksi={filmSeksi}
             basePath={basePath}
           />
         </Suspense>

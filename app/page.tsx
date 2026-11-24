@@ -57,7 +57,7 @@ export default async function LandingPage() {
    */
   // Baris hitam hanya kartu yang punya gambar, dan judulnya tidak diulang
   // di seksi bawah. Aturannya satu, di lib/baris-atas.ts.
-  const { barisAtas, filmDiDepan, seriesSisa, dramaSisa } = siapkanTampilanDepan({
+  const { barisAtas, filmDiDepan, filmSeksi, seriesSisa, dramaSisa } = siapkanTampilanDepan({
     film,
     series,
     drama: dramas,
@@ -117,6 +117,7 @@ export default async function LandingPage() {
         heroItems={heroItems}
         filmDiDepan={filmDiDepan}
         seriesTerbaru={seriesTerbaru}
+        filmSeksi={filmSeksi}
         genres={genres}
         heroHref="/discover"
         /* Bar "Lanjutkan Menonton" = pintu akun TUNGGAL halaman ini (owner

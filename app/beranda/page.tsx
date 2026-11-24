@@ -50,7 +50,7 @@ export default async function BerandaPage() {
   // Sudah terurut TAHUN RILIS sejak dirakit di lib/playly-gabungan.ts; halaman
   // ini sengaja tidak mengurut lagi — alasannya di app/page.tsx.
   // Sama dengan halaman depan. Jangan diurut ulang di halaman ini.
-  const { barisAtas, filmDiDepan, seriesSisa, dramaSisa } = siapkanTampilanDepan({
+  const { barisAtas, filmDiDepan, filmSeksi, seriesSisa, dramaSisa } = siapkanTampilanDepan({
     film,
     series,
     drama: dramas,
@@ -119,6 +119,7 @@ export default async function BerandaPage() {
         heroItems={heroItems}
         filmDiDepan={filmDiDepan}
         seriesTerbaru={seriesTerbaru}
+        filmSeksi={filmSeksi}
         genres={genres}
         /* WAJIB "/beranda", jangan "/": RedirectIfAuthed memantulkan penonton
            yang sudah login dari "/", sehingga tabnya akan terlihat MATI. */

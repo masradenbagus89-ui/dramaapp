@@ -16,7 +16,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import TabKatalogTampilan from "../app/components/beranda/TabKatalogTampilan";
 import { KUNCI_BARIS_VIDEO, JUDUL_BARIS_VIDEO } from "../lib/beranda-video";
-import { TAB_BAWAAN } from "../lib/tab-katalog";
+import { KUNCI_SEKSI_DRAMA, TAB_BAWAAN } from "../lib/tab-katalog";
 import type { Drama } from "../lib/types";
 import type { PlaylyVideoPublik } from "../lib/playly-publik";
 
@@ -77,7 +77,11 @@ describe('seksi "Film Terbaru" di halaman depan', () => {
   it("berisi FILM saja — tak ada drama yang menyelinap ke dalamnya", () => {
     const html = render([film(1)]);
     const mulai = html.indexOf(`id="seksi-${KUNCI_BARIS_VIDEO}"`);
-    const series = html.indexOf('id="seksi-terbaru"');
+    // ⚠️ PATOKAN DRAMANYA `KUNCI_SEKSI_DRAMA`, bukan lagi `seksi-terbaru`
+    // (2026-11-24). Seksi `terbaru` kini bernama "Nonton Bareng" dan BERISI
+    // FILM atas permintaan owner, jadi memakainya sebagai patokan drama
+    // membuat tes ini menguji kebalikan dari maksudnya.
+    const drama = html.indexOf(`id="seksi-${KUNCI_SEKSI_DRAMA}"`);
     // ⚠️ BATAS AKHIRNYA dicari sebagai "seksi BERIKUTNYA apa pun", bukan
     // dipaku ke `seksi-unggulan` (2026-11-24). Seksi itu memang tidak lagi
     // digambar di beranda sejak owner menentukan lima seksi saja, dan
@@ -85,10 +89,12 @@ describe('seksi "Film Terbaru" di halaman depan', () => {
     // disusun ulang — merah karena alasan yang salah.
     const berikut = html.indexOf('id="seksi-', mulai + 1);
 
-    // Seksi pertama ("Nonton Bareng", kunci `terbaru`) tetap di ATAS Film
-    // Terbaru — urutan owner 2026-11-17, dipertahankan 2026-11-24.
-    expect(series).toBeGreaterThanOrEqual(0);
-    expect(mulai).toBeGreaterThan(series);
+    // Film Terbaru di ATAS Drama Asia — urutan owner 2026-11-24 (1. Nonton
+    // Bareng 2. Rekomendasi 3. Film Terbaru 4. Drama Asia 5. Terpopuler).
+    // Dua seksi pertama tidak ikut tergambar di sini karena `filmSeksi`
+    // sengaja tidak dioper: keduanya memang menghilang saat kolam film kosong.
+    expect(drama).toBeGreaterThanOrEqual(0);
+    expect(mulai).toBeLessThan(drama);
     expect(berikut, "tak ada seksi apa pun sesudah Film Terbaru").toBeGreaterThan(mulai);
     const isiSeksiFilm = html.slice(mulai, berikut);
     expect(isiSeksiFilm).toContain("Film Layar Lebar 1");
@@ -102,16 +108,20 @@ describe('seksi "Film Terbaru" di halaman depan', () => {
 
     expect(html).not.toContain(`id="seksi-${KUNCI_BARIS_VIDEO}"`);
     expect(html).not.toContain('href="/film"');
-    expect(html).toContain('id="seksi-terbaru"');
+    expect(html).toContain(`id="seksi-${KUNCI_SEKSI_DRAMA}"`);
     expect(html).toContain("Drama Serial 0");
   });
 
   it("seksi drama TIDAK ikut kemasukan film", () => {
     const html = render([film(1)]);
-    const mulaiDrama = html.indexOf('id="seksi-terbaru"');
-    const mulaiFilm = html.indexOf(`id="seksi-${KUNCI_BARIS_VIDEO}"`);
-    const isiSeksiDrama = html.slice(mulaiDrama, mulaiFilm);
+    const mulaiDrama = html.indexOf(`id="seksi-${KUNCI_SEKSI_DRAMA}"`);
+    const berikut = html.indexOf('id="seksi-', mulaiDrama + 1);
+    const isiSeksiDrama = html.slice(mulaiDrama, berikut);
 
+    expect(mulaiDrama).toBeGreaterThanOrEqual(0);
+    expect(berikut, "Drama Asia harus punya seksi sesudahnya (Terpopuler)").toBeGreaterThan(
+      mulaiDrama,
+    );
     expect(isiSeksiDrama).toContain("Drama Serial 0");
     expect(isiSeksiDrama).not.toContain("Film Layar Lebar");
   });

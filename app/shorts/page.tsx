@@ -6,6 +6,7 @@ import { SHELL } from "@/app/components/beranda/shell";
 import { Clapperboard } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BADAN_SITUS } from "@/app/components/beranda/shell";
+import { SITE_NAME } from "@/lib/site";
 
 // Disimpan & dipakai ulang, disegarkan tiap 60 detik (menggantikan force-dynamic
 // yang membangun ulang halaman untuk tiap pengunjung).
@@ -14,7 +15,7 @@ export const revalidate = 60;
 export const metadata: Metadata = {
   title: "Shorts — Cuplikan Drama China Pendek",
   description:
-    "Kumpulan cuplikan drama China pendek di DramaKu. Tonton sekilas sebelum lanjut ke episode penuh — gratis dan tanpa perlu daftar.",
+    `Kumpulan cuplikan drama China pendek di ${SITE_NAME}. Tonton sekilas sebelum lanjut ke episode penuh — gratis dan tanpa perlu daftar.`,
   alternates: { canonical: "/shorts" },
 };
 

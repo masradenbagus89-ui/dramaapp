@@ -221,7 +221,7 @@ export default function AdminSidebar() {
         <p className="text-xs uppercase tracking-wider text-zinc-500">
           Admin Panel
         </p>
-        <p className="mt-1 text-base font-bold text-white">DramaKu</p>
+        <p className="mt-1 text-base font-bold text-white">Layarindo</p>
       </div>
       <nav className="flex flex-col gap-1 text-sm">
         {NAV_ITEMS.map((entri) => {

@@ -233,7 +233,7 @@ export default function AdBanner({
         Iklan
       </Badge>
       <div>
-        <p className="text-lg font-black text-white sm:text-xl">DramaKu+</p>
+        <p className="text-lg font-black text-white sm:text-xl">Layarindo+</p>
         <p className="text-xs text-white/70">Nonton ratusan drama China, gratis.</p>
       </div>
       <Badge className="shrink-0 rounded-full bg-amber-400 px-4 py-2 text-xs font-bold text-black">

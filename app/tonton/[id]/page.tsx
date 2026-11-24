@@ -5,7 +5,7 @@ import { ChevronLeft } from "lucide-react";
 import { getPlaylyVideosGabunganCached } from "@/lib/playly-gabungan";
 import { alamatGambarVideo, cariVideoDariSegmen } from "@/lib/tonton";
 import { labelGenreGabungan } from "@/lib/genre";
-import { SITE_URL, absoluteUrl } from "@/lib/site";
+import { SITE_NAME, SITE_URL, absoluteUrl } from "@/lib/site";
 import { toJsonLdScript, videoJsonLd } from "@/lib/structured-data";
 import PlaylyPlayer from "@/app/components/player/PlaylyPlayer";
 import InfoVideoPlayly from "@/app/components/player/InfoVideoPlayly";
@@ -87,7 +87,7 @@ async function cariVideo(segmen: string) {
  * sekali supaya keduanya tidak pernah berbeda; Google membandingkan keduanya.
  */
 const keteranganVideo = (judul: string) =>
-  `Nonton ${judul} gratis di DramaKu — langsung diputar tanpa unduh.`;
+  `Nonton ${judul} gratis di ${SITE_NAME} — langsung diputar tanpa unduh.`;
 
 export async function generateMetadata(
   props: PageProps<"/tonton/[id]">,
@@ -342,7 +342,7 @@ export default async function TontonPage(props: PageProps<"/tonton/[id]">) {
           judul: `Nonton ${video.title}`,
           teks:
             meta?.synopsis ||
-            `Nonton ${video.title} gratis di DramaKu — langsung diputar tanpa unduh, di HP maupun komputer.`,
+            `Nonton ${video.title} gratis di ${SITE_NAME} — langsung diputar tanpa unduh, di HP maupun komputer.`,
         }}
       />
 

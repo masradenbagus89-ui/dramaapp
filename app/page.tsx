@@ -105,7 +105,7 @@ export default async function LandingPage() {
           — judul jujur dari halaman yang sama, bukan teks untuk mengelabui.
           Sampai 2026-10-09 peran ini dipegang strip ajakan daftar yang kini
           dibuang bersama tombol Masuk/Daftar-nya. */}
-      <h1 className="sr-only">Nonton Drama China Sub Indo Gratis — DramaKu</h1>
+      <h1 className="sr-only">Nonton Drama China Sub Indo Gratis — Layarindo</h1>
 
       {/* Badan halaman — hero, bar lanjut-menonton, seksi tab, kaki situs.
           DIPAKAI BERSAMA dengan /beranda sejak 2026-10-28 (owner: "tampilan

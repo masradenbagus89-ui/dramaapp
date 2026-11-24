@@ -45,7 +45,7 @@ export function dramaJsonLd(drama: Drama, url: string): Record<string, unknown> 
       "@type": "AggregateRating",
       ratingValue: rating,
       ratingCount: votes,
-      bestRating: 10, // skala IMDb, bukan skala 5 bintang milik DramaKu
+      bestRating: 10, // skala IMDb, bukan skala 5 bintang milik Layarindo
       worstRating: 1,
     };
   }

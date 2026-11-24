@@ -282,7 +282,7 @@ export default function ModalProviderPlayly({
 
               <p className="mt-3 text-[11px] leading-4 text-zinc-500">
                 Link di atas menuju situs provider masing-masing, bukan server
-                DramaKu. Kecepatan &amp; ketersediaannya di luar kendali kami.
+                Layarindo. Kecepatan &amp; ketersediaannya di luar kendali kami.
               </p>
             </>
           )}

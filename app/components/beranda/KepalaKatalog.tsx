@@ -28,7 +28,7 @@ import type { SearchBarChrome } from "./SearchBar";
  * dihapus, bukan diasumsikan:
  *   • Admin & Keluar  → pindah ke `MenuAkun` (avatar) sejak 2026-09-26, dan
  *     `TombolAkun` di bawah memasangnya di kedua halaman ini.
- *   • Beranda         → logo di `LogoDramaKu` menuju ke sana.
+ *   • Beranda         → logo di `LogoSitus` menuju ke sana.
  *   • Playly          → sudah dilepas dari daftarnya sejak 2026-09-26.
  *   • Masuk/Daftar    → dijeda `AKUN_PENONTON_ENABLED` sejak 2026-10-29.
  *
@@ -60,7 +60,7 @@ import type { SearchBarChrome } from "./SearchBar";
  * ruang yang dibutuhkan kotak cari, dan lambangnya sendiri sudah mengenalkan
  * situs.
  */
-export function LogoDramaKu({
+export function LogoSitus({
   href = "/beranda",
   tanpaTautan = false,
 }: {
@@ -80,12 +80,25 @@ export function LogoDramaKu({
   const isi = (
     <>
       {/* LOGO LAYARINDO — dipasang 2026-11-23 dari gambar yang dikirim owner.
-          ⚠️ LINGKUPNYA SENGAJA BAR SAJA (owner: *"ganti logo dan nama di situ
-          dulu, jangan diganti semua, saya mau lihat hasilnya dulu"*). Nama
-          "DramaKu" MASIH dipakai di 66 berkas lain — judul halaman, metadata
-          untuk Google, tulisan kotak cari, kaki situs. Jadi untuk sementara
-          situs ini memang memakai DUA nama; itu keadaan yang DISENGAJA dan
-          menunggu keputusan owner, bukan sesuatu yang terlewat.
+          ✅ Keadaan DUA NAMA sudah DITUTUP 2026-11-24: owner memutuskan seluruh
+          situs memakai "Layarindo", jadi `SITE_NAME` di lib/site.ts ikut diganti
+          dari "DramaKu" dan 68 teks di 41 berkas disamakan. Kalau kamu menemukan
+          "DramaKu" sekarang, itu KOMENTAR yang memang menyimpan sejarah —
+          sengaja TIDAK ditulis ulang, sebab catatan yang menghapus masa lalunya
+          sendiri berhenti bisa menjelaskan kenapa sesuatu begini bentuknya.
+
+          ⚠️ WARNA LOGO DIPETAKAN ULANG 2026-11-24 (hijau sage → emas), saat tema
+          situs sudah pindah ke gelap+emas dan lambang hijaunya bertabrakan.
+          Owner memilih varian "lambang emas, tulisan tetap krem" dari 4 contoh.
+          Caranya PERSIS sama dengan `bar-latar-emas.jpg`: tiap piksel yang
+          HIJAU (g lebih besar dari r dan b, selisih >10) dipetakan menurut
+          KECERAHANNYA ke tangga #3a1d04 → emas-700 → emas-500 → emas-300, jadi
+          bentuk & bayangannya utuh. Piksel krem/putih tidak disentuh — itulah
+          yang membuat tulisannya tetap menonjol. Terukur sesudahnya: nol piksel
+          hijau tersisa, ukuran tetap 423x96 (jadi `width`/`height` di bawah
+          tidak perlu diubah). 🪤 JANGAN pakai `hue-rotate`: ia ikut menggeser
+          bagian krem jadi merah muda. Skripnya sekali pakai dan sengaja tidak
+          disimpan di repo — caranya di sini, bukan di berkas sisa.
 
           Gambar aslinya banner 1672x941 berlatar HITAM pekat tanpa lapisan
           tembus pandang (950 KB). Yang dipakai di sini hasil potongan: latar
@@ -213,13 +226,13 @@ export function TombolAkun() {
  */
 export function chromeKatalog(menus: NavMenu[]): SearchBarChrome {
   return {
-    brand: <LogoDramaKu />,
+    brand: <LogoSitus />,
     /* Versi tanpa tautan untuk tombol pembuka menu di HP (owner 2026-11-21:
        *"ketika di klik D keluar genre, series, populer, negara"*). Dipasang di
        sini — bukan di tiap pemakai — supaya keempat pemakai `chromeKatalog`
        (/beranda, /discover, kerangka pemuatannya, dan CatalogBrowser)
        mustahil menyimpang. */
-    brandHp: <LogoDramaKu tanpaTautan />,
+    brandHp: <LogoSitus tanpaTautan />,
     /* `undefined` saat katalog kosong, BUKAN elemen kosong. `NavMenus` memang
        memulangkan null, tapi ELEMEN-nya tetap ada sehingga gerbang
        `{chrome?.menus && …}` di SearchBar tetap terpenuhi — hasilnya wadah

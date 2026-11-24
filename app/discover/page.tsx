@@ -5,6 +5,7 @@ import { getPlaylyVideosGabunganCached } from "@/lib/playly-gabungan";
 import DramaBrowser from "../components/DramaBrowser";
 import KerangkaKepalaKatalog from "../components/beranda/KerangkaKepalaKatalog";
 import { buildNavMenus } from "@/lib/nav-katalog";
+import { SITE_NAME } from "@/lib/site";
 
 // Disimpan & dipakai ulang, disegarkan tiap 60 detik (menggantikan force-dynamic
 // yang membangun ulang halaman untuk tiap pengunjung).
@@ -13,7 +14,7 @@ export const revalidate = 60;
 export const metadata: Metadata = {
   title: "Jelajahi Drama China — Genre, Tahun & Rating",
   description:
-    "Jelajahi katalog drama China DramaKu. Saring berdasarkan genre, tahun rilis, dan rating IMDb, lalu urutkan sesuai yang kamu cari — gratis.",
+    `Jelajahi katalog drama China ${SITE_NAME}. Saring berdasarkan genre, tahun rilis, dan rating IMDb, lalu urutkan sesuai yang kamu cari — gratis.`,
   alternates: { canonical: "/discover" },
 };
 

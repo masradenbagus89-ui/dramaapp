@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import ExternalVideoBrowser from "@/app/components/ExternalVideoBrowser";
 import { BADAN_TERANG_PENUH } from "@/app/components/beranda/shell";
 import { cn } from "@/lib/utils";
+import { SITE_NAME } from "@/lib/site";
 
 // Halaman uji jalur video eksternal. Sengaja TIDAK diindeks mesin pencari
 // (noindex): ini halaman pembuktian internal, bukan halaman tonton publik.
 export const metadata: Metadata = {
-  title: "Video dari API luar — DramaKu",
+  title: `Video dari API luar — ${SITE_NAME}`,
   description: "Halaman uji jalur penerima data video dari API pihak lain.",
   robots: { index: false, follow: false },
 };

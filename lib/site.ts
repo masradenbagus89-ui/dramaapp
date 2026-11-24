@@ -86,7 +86,18 @@ export const SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL?.trim() || DEFAULT_SITE_URL
 ).replace(/\/+$/, "");
 
-export const SITE_NAME = "DramaKu";
+/**
+ * Nama situs yang dilihat penonton DAN dibaca mesin pencari.
+ *
+ * Diganti "DramaKu" → "Layarindo" atas keputusan owner 2026-11-24, menutup
+ * keadaan dua-nama yang sengaja dibiarkan sejak 2026-11-22 (logo sudah
+ * "Layarindo" sementara metadata masih "DramaKu").
+ *
+ * ⚠️ Ini SATU-SATUNYA tempat nama situs ditulis. Kalau nanti berganti lagi,
+ * ubah di sini saja — jangan menyalin teksnya ke halaman lain, sebab salinan
+ * pasti tertinggal saat yang satu ini berubah.
+ */
+export const SITE_NAME = "Layarindo";
 
 /** Batas meta description yang dipakai mesin pencari; lebih dari ini dipotong "...". */
 const MAX_DESCRIPTION = 160;

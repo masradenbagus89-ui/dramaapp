@@ -84,7 +84,7 @@ vi.mock("../app/components/beranda/SearchBar", () => ({
     tertangkap.props = props;
     return null;
   },
-  TEKS_KOTAK_CARI: "Cari film di DramaKu",
+  TEKS_KOTAK_CARI: "Cari film di Layarindo",
   KELAS_MENEMPEL_KEPALA: "sticky top-0",
 }));
 

@@ -106,7 +106,7 @@ export const KETERANGAN_BAGIAN_PLAYLY: Record<BagianPlayly, string> = {
   "isi-cepat":
     "Lengkapi kualitas, rating, tahun & durasi BANYAK film sekaligus — untuk film yang tidak ada di IMDb.",
   unduhan: "Isi link download tiap video — 5 provider × 2 kualitas.",
-  daftar: "Kaitkan video Playly ke drama di katalog DramaKu (opsional).",
+  daftar: "Kaitkan video Playly ke drama di katalog Layarindo (opsional).",
 };
 
 /** Alamat menu untuk sebuah bagian. Satu tempat, supaya sidebar dan isi

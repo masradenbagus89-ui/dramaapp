@@ -509,7 +509,7 @@ describe("tulisan kotak cari tidak bisa basi di tiruan tes", () => {
     // tests/kerangka-discover.test.ts me-mock SearchBar sehingga HARUS menulis
     // teks ini dengan tangan. Patokan di sini membuat tiruan itu tak bisa
     // diam-diam berbeda dari aslinya.
-    expect(TEKS_KOTAK_CARI).toBe("Cari film di DramaKu");
+    expect(TEKS_KOTAK_CARI).toBe("Cari film di Layarindo");
   });
 });
 
@@ -536,7 +536,7 @@ describe("susunan kepala katalog punya SATU sumber", () => {
         // Penandanya diperbarui 2026-11-14: dulu `<MenuAplikasi`, komponen
         // yang kini sudah tidak ada — pola yang mustahil cocok membuat
         // penjaga ini "hijau" tanpa menguji apa pun.
-      ).not.toMatch(/brand:\s*<LogoDramaKu/);
+      ).not.toMatch(/brand:\s*<LogoSitus/);
     });
   }
 });

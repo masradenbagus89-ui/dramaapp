@@ -20,7 +20,7 @@ export default function AdminAccessDenied({
       <h1 className="text-xl font-bold text-white">Akses ditolak</h1>
       <p className="text-sm text-zinc-400">
         {alasan ??
-          "Halaman ini hanya untuk admin. Login dengan email yang sudah terdaftar di daftar admin DramaKu untuk mengakses."}
+          "Halaman ini hanya untuk admin. Login dengan email yang sudah terdaftar di daftar admin Layarindo untuk mengakses."}
       </p>
       <div className="mt-2 flex flex-wrap justify-center gap-2">
         <Button

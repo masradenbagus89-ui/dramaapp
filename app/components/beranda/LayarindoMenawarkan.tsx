@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Award, Flame, Sparkles } from "lucide-react";
 
+import { SITE_NAME } from "@/lib/site";
+
 /**
  * Strip "Layarindo Menawarkan" — tiga pintasan cepat ke katalog, menggantikan
  * panel "Lanjutkan Menonton" di `/beranda` (owner 2026-11-23, dengan gambar
@@ -28,23 +30,6 @@ import { Award, Flame, Sparkles } from "lucide-react";
  * SENGAJA tanpa "use client": isinya cuma tautan — nol state, nol hook. Jadi
  * ia nol JavaScript di browser dan tetap berfungsi penuh tanpa JS.
  */
-
-/**
- * ⚠️ NAMA DITULIS DI SINI, dan ini memang BELUM seragam dengan
- * `SITE_NAME` di lib/site.ts yang masih berbunyi "DramaKu".
- *
- * Bukan kelalaian, melainkan keputusan yang MASIH MENGGANTUNG: owner mengganti
- * logo + nama di kepala situs jadi "Layarindo" pada 2026-11-22 dengan catatan
- * *"ganti logo dan nama disitu dulu, jangan diganti semua — saya mau lihat
- * hasilnya dulu"*. Jadi hari ini situs ini bernama Layarindo DI LAYAR dan
- * DramaKu di metadata/SEO. Memakai `SITE_NAME` di sini akan menggambar
- * "DramaKu Menawarkan" tepat di bawah logo bertuliskan Layarindo — lebih
- * membingungkan daripada dua nama yang terpisah rapi.
- *
- * Begitu owner memutuskan penggantian menyeluruh, HAPUS konstanta ini dan
- * pakai `SITE_NAME`. Satu tempat, bukan berburu.
- */
-const NAMA_TAMPIL = "Layarindo";
 
 type Tawaran = {
   label: string;
@@ -93,7 +78,7 @@ export default function LayarindoMenawarkan() {
       className="flex min-w-0 flex-wrap items-center gap-2"
     >
       <h2 id="judul-tawaran" className="shrink-0 text-sm font-bold text-emas-400">
-        {NAMA_TAMPIL} Menawarkan
+        {SITE_NAME} Menawarkan
       </h2>
 
       <ul className="flex min-w-0 flex-wrap items-center gap-2">

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Check, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SITE_NAME } from "@/lib/site";
 
 /** Berapa lama tulisan "Link disalin" bertahan sebelum kembali normal. */
 const FEEDBACK_MS = 2000;
@@ -38,7 +39,7 @@ export default function ShareButton({
 
   const onClick = async () => {
     const url = window.location.href;
-    const text = `Nonton ${title} di DramaKu`;
+    const text = `Nonton ${title} di ${SITE_NAME}`;
 
     if (navigator.share) {
       try {

@@ -79,7 +79,7 @@ export type SearchBarChrome = {
  * terbaca seperti dua situs berbeda. JANGAN tulis ulang teksnya di tempat
  * lain — impor konstanta ini. Penjaganya: tests/strip-katalog.test.ts.
  */
-export const TEKS_KOTAK_CARI = "Cari film di DramaKu";
+export const TEKS_KOTAK_CARI = "Cari film di Layarindo";
 
 /**
  * Posisi menempel bar cari — SATU nilai untuk keempat pemakainya
@@ -348,7 +348,7 @@ export default function SearchBar({
 
                  Terukur di layar 360px: logo 36 + jarak 12 + tombol tutup 44
                  menyisakan ±236px untuk kotak cari, sedangkan tulisan "Cari
-                 film di DramaKu" butuh ±150px. Nama situs memakan ±90px —
+                 film di Layarindo" butuh ±150px. Nama situs memakan ±90px —
                  tanpa aturan ini sisanya ±146px dan tulisannya terpotong
                  lagi, keluhan yang sudah TIGA kali diperbaiki. */
               cariTerbuka &&
@@ -596,7 +596,7 @@ export default function SearchBar({
               /* Kotak cari TETAP di baris yang sama (owner 2026-11-21, putaran
                  kedua): yang menyingkir justru logo & avatar di kiri-kanannya,
                  lihat komentar di keduanya. Jadi kotaknya dapat selebar bar —
-                 tulisan "Cari film di DramaKu" muat utuh — TANPA menambah
+                 tulisan "Cari film di Layarindo" muat utuh — TANPA menambah
                  baris kosong.
 
                  ⚠️ JANGAN kembalikan versi `max-md:w-full` yang menurunkan
@@ -642,7 +642,7 @@ export default function SearchBar({
                  Tiga percobaan sebelumnya dan kenapa semuanya gagal, supaya
                  tidak ada yang mengulanginya:
                    1. kotak sebaris dengan SEMUA isi bar → tinggal ±80px,
-                      tulisan "Cari film di DramaKu" terpotong;
+                      tulisan "Cari film di Layarindo" terpotong;
                    2. kotak turun ke BARIS SENDIRI → tulisannya muat, tapi
                       baris atas menyisakan ruang kosong selebar layar;
                    3. logo + avatar sama-sama disembunyikan → ruang kosong

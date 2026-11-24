@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { LogoDramaKu } from "@/app/components/beranda/KepalaKatalog";
+import { LogoSitus } from "@/app/components/beranda/KepalaKatalog";
 
 // Halaman 404 milik DramaKu, menggantikan bawaan Next.js yang memaksa latar
 // PUTIH + teks Inggris — asing di situs bertema gelap berbahasa Indonesia, dan
@@ -50,7 +50,7 @@ export default function NotFound() {
           pembacaan database. */}
       <div className="border-b border-zinc-800 bg-black/95">
         <div className="shell-wide mx-auto flex h-14 items-center gap-3 px-4 md:px-6">
-          <LogoDramaKu />
+          <LogoSitus />
         </div>
       </div>
 
@@ -62,7 +62,7 @@ export default function NotFound() {
       </h1>
 
       <p className="max-w-md text-sm text-zinc-400 sm:text-base">
-        Alamat yang kamu buka tidak ada di DramaKu. Mungkin salah ketik, atau
+        Alamat yang kamu buka tidak ada di Layarindo. Mungkin salah ketik, atau
         tautannya sudah lama dan halamannya sudah pindah.
       </p>
 

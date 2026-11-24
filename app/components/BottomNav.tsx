@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { punyaNavigasiBawah } from "@/lib/navigasi-halaman";
 import FilterFilmPopup from "./beranda/FilterFilmPopup";
+import { SITE_NAME } from "@/lib/site";
 
 type Tab = {
   /** Diisi untuk tab yang berpindah halaman. Kosong = tab AKSI (lihat `aksi`). */
@@ -134,7 +135,7 @@ export default function BottomNav() {
     // ingin dibagikan penonton adalah halaman yang SEDANG ia lihat, termasuk
     // kata kunci pencarian atau genre yang sedang aktif.
     const url = typeof window === "undefined" ? "" : window.location.href;
-    const data = { title: "DramaKu", text: "Nonton drama & film di DramaKu", url };
+    const data = { title: SITE_NAME, text: `Nonton drama & film di ${SITE_NAME}`, url };
 
     try {
       // Lembar berbagi bawaan HP. Hanya ada di konteks aman (https/localhost)

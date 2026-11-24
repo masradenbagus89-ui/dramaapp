@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   // diabaikan WhatsApp/Facebook, jadi preview-nya kosong.
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "DramaKu — Nonton Drama China Sub Indo Gratis",
+    default: `${SITE_NAME} — Nonton Drama China Sub Indo Gratis`,
     template: `%s | ${SITE_NAME}`,
   },
   description:
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     locale: "id_ID",
     url: SITE_URL,
-    title: "DramaKu — Nonton Drama China Sub Indo Gratis",
+    title: `${SITE_NAME} — Nonton Drama China Sub Indo Gratis`,
     description:
       "Nonton drama China pendek sub Indo gratis di HP maupun web. Ratusan episode, update tiap hari, bisa lanjut dari episode terakhir yang kamu tonton.",
   },

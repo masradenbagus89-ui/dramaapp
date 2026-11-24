@@ -18,8 +18,8 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Video Playly — Admin DramaKu",
-  description: "Pilih video dari Playly dan kaitkan ke drama di katalog DramaKu.",
+  title: "Video Playly — Admin Layarindo",
+  description: "Pilih video dari Playly dan kaitkan ke drama di katalog Layarindo.",
   robots: { index: false, follow: false },
 };
 

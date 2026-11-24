@@ -88,7 +88,7 @@ export default function PlaylyKeyForm({
         text: "Kunci tersimpan dalam keadaan terenkripsi. Lanjut klik Uji sambungan untuk memastikan Playly menerimanya.",
       });
     } catch {
-      setPesan({ type: "error", text: "Koneksi ke server DramaKu gagal. Coba lagi." });
+      setPesan({ type: "error", text: "Koneksi ke server Layarindo gagal. Coba lagi." });
     } finally {
       setSubmitting(false);
     }
@@ -119,7 +119,7 @@ export default function PlaylyKeyForm({
       setStatus(data.status);
       setPesan({ type: "ok", text: "Kunci sudah dicabut dari database." });
     } catch {
-      setPesan({ type: "error", text: "Koneksi ke server DramaKu gagal. Coba lagi." });
+      setPesan({ type: "error", text: "Koneksi ke server Layarindo gagal. Coba lagi." });
     } finally {
       setMencabut(false);
     }
@@ -162,7 +162,7 @@ export default function PlaylyKeyForm({
             : "Sambungan berhasil, tapi Playly belum punya video yang bisa ditampilkan.",
       });
     } catch {
-      setPesan({ type: "error", text: "Koneksi ke server DramaKu gagal. Coba lagi." });
+      setPesan({ type: "error", text: "Koneksi ke server Layarindo gagal. Coba lagi." });
     } finally {
       setMenguji(false);
     }

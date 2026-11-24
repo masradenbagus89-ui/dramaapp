@@ -1007,7 +1007,7 @@ async function ambilJsonPlayly(
       "Playly menolak karena urusan pembayaran/kuota akun (HTTP 402). " +
         "Balasan ini datang dari Vercel (DEPLOYMENT_DISABLED), artinya " +
         "SELURUH project Playly sedang dinonaktifkan — bukan aplikasinya " +
-        "yang rusak. Tidak ada yang bisa diperbaiki dari sisi DramaKu: " +
+        "yang rusak. Tidak ada yang bisa diperbaiki dari sisi Layarindo: " +
         "pemilik Playly yang harus membereskan batas pemakaian/tagihan " +
         "Vercel-nya. Daftar video akan kembali sendiri begitu project itu " +
         "hidup lagi.",

@@ -145,7 +145,7 @@ async function muatIsiPanelPlayly() {
               untuk memberi label &quot;bagian dari drama X&quot;. Yang
               menentukan video masuk baris genre beranda adalah{" "}
               <strong className="text-zinc-200">Kategori</strong> di menu{" "}
-              <strong className="text-zinc-200">IMDb</strong>. Video DramaKu
+              <strong className="text-zinc-200">IMDb</strong>. Video Layarindo
               sendiri tetap berjalan seperti biasa.
             </p>
           </BantuanSingkat>

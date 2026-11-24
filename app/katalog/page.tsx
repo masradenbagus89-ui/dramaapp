@@ -7,6 +7,7 @@ import { BADAN_SITUS } from "@/app/components/beranda/shell";
 import TabKatalog from "@/app/components/beranda/TabKatalog";
 import TabKatalogTampilan from "@/app/components/beranda/TabKatalogTampilan";
 import KepalaFilm from "@/app/components/beranda/KepalaFilm";
+import { SITE_NAME } from "@/lib/site";
 
 // HALAMAN KATALOG PER-TAB (owner 2026-09-26).
 //
@@ -29,7 +30,7 @@ export const revalidate = 60;
 export const metadata: Metadata = {
   title: "Katalog — Semua Judul per Kategori",
   description:
-    "Daftar lengkap judul DramaKu per kategori: terbaru, series unggulan, series update, terpopuler, dan rekomendasi.",
+    `Daftar lengkap judul ${SITE_NAME} per kategori: terbaru, series unggulan, series update, terpopuler, dan rekomendasi.`,
   alternates: { canonical: "/katalog" },
 };
 

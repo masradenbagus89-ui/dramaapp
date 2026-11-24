@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
         orderId,
         grossAmount: pack.priceIDR,
         email: id.email,
-        itemName: `${pack.coins} koin DramaKu`,
+        itemName: `${pack.coins} koin Layarindo`,
       });
       const { clientKey, isProduction } = midtransConfig();
       return NextResponse.json({

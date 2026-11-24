@@ -17,6 +17,7 @@ import { useDaftarSaran } from "./beranda/useDaftarSaran";
 import { MIN_HURUF_SARAN, type SaranCari } from "@/lib/saran-cari";
 import { AKUN_PENONTON_ENABLED } from "@/lib/saklar-fitur";
 import { TEKS_KOTAK_CARI } from "./beranda/SearchBar";
+import { SITE_NAME } from "@/lib/site";
 
 /**
  * Satu menu di navigasi atas. `warnaAktif`/`warnaDiam` OPSIONAL — kosong berarti
@@ -197,13 +198,13 @@ export default function TopNav() {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/logo-mark.png"
-            alt="DramaKu"
+            alt={SITE_NAME}
             width={36}
             height={36}
             className="h-9 w-9 object-contain"
           />
           <span className="hidden text-lg font-bold text-white sm:inline">
-            DramaKu
+            Layarindo
           </span>
         </Link>
 

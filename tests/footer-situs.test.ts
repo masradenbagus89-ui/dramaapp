@@ -19,7 +19,7 @@ describe("kaki situs halaman depan", () => {
   it("memuat keempat kolom yang diminta owner", () => {
     const html = render(["Action", "Romance"]);
 
-    expect(html).toContain("Tentang DramaKu");
+    expect(html).toContain("Tentang Layarindo");
     expect(html).toContain("Jelajahi");
     expect(html).toContain("Genre Populer");
     expect(html).toContain("Disclaimer");
@@ -61,7 +61,7 @@ describe("kaki situs halaman depan", () => {
     const html = render([]);
 
     expect(html).not.toContain("Genre Populer");
-    expect(html).toContain("Tentang DramaKu");
+    expect(html).toContain("Tentang Layarindo");
     expect(html).toContain("Disclaimer");
   });
 

@@ -357,7 +357,7 @@ export default function ProfilePage() {
           </Button>
         )}
 
-        <p className="mt-6 text-center text-[11px] text-zinc-600">DramaKu v0.1 · Prototype</p>
+        <p className="mt-6 text-center text-[11px] text-zinc-600">Layarindo v0.1 · Prototype</p>
       </div>
     </div>
   );

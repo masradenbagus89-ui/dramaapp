@@ -201,7 +201,7 @@ describe("chip strip & menu yang SUNGGUHAN digambar halaman", () => {
   });
 
   it("logo halaman depan & halaman berkatalog PERSIS sama bentuknya", () => {
-    // Keduanya memakai komponen `LogoDramaKu` yang sama. Sebelum 2026-09-21
+    // Keduanya memakai komponen `LogoSitus` yang sama. Sebelum 2026-09-21
     // markup-nya disalin di dua tempat dan sempat menyimpang — halaman depan
     // memakai kotak kuning berisi huruf "D" sementara yang lain memakai
     // lambang. Yang dibandingkan potongan logonya, bukan seluruh halaman,

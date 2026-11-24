@@ -28,8 +28,8 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Kunci API Playly — Admin DramaKu",
-  description: "Pasang dan ganti kunci API Playly untuk menampilkan video mereka di DramaKu.",
+  title: "Kunci API Playly — Admin Layarindo",
+  description: "Pasang dan ganti kunci API Playly untuk menampilkan video mereka di Layarindo.",
   robots: { index: false, follow: false }, // halaman admin: jangan masuk Google
 };
 
@@ -49,7 +49,7 @@ export default async function PlaylySettingsPage() {
           <p className="mt-2 max-w-2xl text-sm text-zinc-400">
             Playly adalah partner yang menyediakan video. Mereka memberi kita{" "}
             <strong className="text-zinc-200">API key</strong> — kunci akses berupa
-            teks rahasia yang membuktikan bahwa yang meminta datanya memang DramaKu.
+            teks rahasia yang membuktikan bahwa yang meminta datanya memang Layarindo.
             Kunci disimpan dalam keadaan terenkripsi (diacak) di database dan hanya
             dipakai dari server, tidak pernah dikirim ke browser pengunjung.
           </p>

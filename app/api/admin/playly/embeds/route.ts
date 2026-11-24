@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
     }
     if (!dramaId) {
       return NextResponse.json(
-        { error: "Pilih dulu drama DramaKu yang mau dikaitkan." },
+        { error: "Pilih dulu drama Layarindo yang mau dikaitkan." },
         { status: 400 },
       );
     }
@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
     const drama = await getDrama(dramaId);
     if (!drama) {
       return NextResponse.json(
-        { error: `Drama "${dramaId}" tidak ada di katalog DramaKu.` },
+        { error: `Drama "${dramaId}" tidak ada di katalog Layarindo.` },
         { status: 404 },
       );
     }

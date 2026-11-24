@@ -172,7 +172,7 @@ export default function PlaylyVideoPicker({
     } catch {
       if (giliran.current !== saya) return;
       if (!sudahAdaIsi) {
-        setErrorMsg("Tidak bisa menghubungi server DramaKu. Cek koneksi lalu coba lagi.");
+        setErrorMsg("Tidak bisa menghubungi server Layarindo. Cek koneksi lalu coba lagi.");
         setStatus("error");
       } else {
         setPeringatanSisa(
@@ -208,7 +208,7 @@ export default function PlaylyVideoPicker({
     setPesan(null);
 
     if (!dramaId) {
-      setPesan({ type: "error", text: "Pilih dulu drama DramaKu yang mau dikaitkan." });
+      setPesan({ type: "error", text: "Pilih dulu drama Layarindo yang mau dikaitkan." });
       return;
     }
 
@@ -247,7 +247,7 @@ export default function PlaylyVideoPicker({
         }. Sekarang tampil di halaman Discover.`,
       });
     } catch {
-      setPesan({ type: "error", text: "Koneksi ke server DramaKu gagal. Coba lagi." });
+      setPesan({ type: "error", text: "Koneksi ke server Layarindo gagal. Coba lagi." });
     } finally {
       setMenyimpan(false);
     }
@@ -278,7 +278,7 @@ export default function PlaylyVideoPicker({
       setEmbeds((sebelum) => sebelum.filter((x) => x.videoId !== embed.videoId));
       setPesan({ type: "ok", text: `Kaitan video "${embed.title}" sudah dilepas.` });
     } catch {
-      setPesan({ type: "error", text: "Koneksi ke server DramaKu gagal. Coba lagi." });
+      setPesan({ type: "error", text: "Koneksi ke server Layarindo gagal. Coba lagi." });
     } finally {
       setMelepas(null);
     }
@@ -344,7 +344,7 @@ export default function PlaylyVideoPicker({
                     {tersalin ? "Tersalin" : "Salin kode"}
                   </Button>
                   <p className="mt-2 text-[11px] text-zinc-500">
-                    Untuk menampilkannya di DramaKu, kode ini tidak perlu ditempel
+                    Untuk menampilkannya di Layarindo, kode ini tidak perlu ditempel
                     manual — cukup pilih dramanya di sebelah lalu simpan.
                   </p>
                 </div>
@@ -390,7 +390,7 @@ export default function PlaylyVideoPicker({
 
                 {dramas.length === 0 && (
                   <p className="mt-3 text-xs text-amber-200">
-                    Katalog DramaKu masih kosong. Tambahkan minimal satu drama dulu di
+                    Katalog Layarindo masih kosong. Tambahkan minimal satu drama dulu di
                     halaman admin utama.
                   </p>
                 )}
@@ -670,7 +670,7 @@ export default function PlaylyVideoPicker({
       {/* ============ Kaitan yang sudah tersimpan ============ */}
       <section aria-labelledby="judul-kaitan-tersimpan">
         <h2 id="judul-kaitan-tersimpan" className="text-lg font-bold text-white">
-          Video yang sudah terpasang di DramaKu
+          Video yang sudah terpasang di Layarindo
         </h2>
 
         {embeds.length === 0 ? (

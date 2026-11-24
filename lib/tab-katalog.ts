@@ -116,7 +116,7 @@ export function daftarTab(dramas: Drama[]): TabKatalog[] {
       // Keterangan sengaja TETAP "judul", bukan "serial": isi tab ini belum
       // disaring serial-saja, jadi 1 drama ber-kind "movie" di katalog masih
       // ikut. Menulis "serial" di sini = janji yang tidak ditepati datanya.
-      "Judul yang paling baru masuk katalog DramaKu.",
+      "Judul yang paling baru masuk katalog Layarindo.",
     ),
     buat("unggulan", "SERIES UNGGULAN", "Serial pilihan — ditandai sendiri oleh admin."),
     buat("update", "SERIES UPDATE", "Serial yang episodenya masih bertambah."),

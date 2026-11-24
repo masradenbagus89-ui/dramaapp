@@ -156,7 +156,7 @@ export default function RewardedAdModal({
               Iklan
             </Badge>
             <div className="text-center">
-              <p className="text-2xl font-black text-white">DramaKu+</p>
+              <p className="text-2xl font-black text-white">Layarindo+</p>
               <p className="mt-1 flex items-center justify-center gap-1 text-xs text-white/70">
                 <Coins className="size-3.5 text-amber-400" />
                 Tonton iklan, dapat koin gratis

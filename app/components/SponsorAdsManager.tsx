@@ -181,7 +181,7 @@ export default function SponsorAdsManager() {
           <div className="mt-5 space-y-2">
             {ads.length === 0 ? (
               <p className="text-sm text-zinc-500">
-                Belum ada iklan. Modal akan menampilkan promo DramaKu default.
+                Belum ada iklan. Modal akan menampilkan promo Layarindo default.
               </p>
             ) : (
               ads.map((a) => (

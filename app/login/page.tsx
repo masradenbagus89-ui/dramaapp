@@ -72,8 +72,8 @@ export default function LoginPage() {
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-6">
           <Link href="/" className="flex items-center gap-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-mark.png" alt="DramaKu" width={36} height={36} className="h-9 w-9 object-contain" />
-            <span className="text-lg font-bold text-white">DramaKu</span>
+            <img src="/logo-mark.png" alt="Layarindo" width={36} height={36} className="h-9 w-9 object-contain" />
+            <span className="text-lg font-bold text-white">Layarindo</span>
           </Link>
           <Link href="/" className="text-sm text-zinc-400 hover:text-white">
             ← Kembali
@@ -85,12 +85,12 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
           <div className="mb-6 text-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.png" alt="DramaKu" className="mx-auto mb-4 h-28 w-auto" />
+            <img src="/logo.png" alt="Layarindo" className="mx-auto mb-4 h-28 w-auto" />
             <h1 className="title-gold text-3xl leading-tight md:text-4xl">
               Selamat datang
             </h1>
             <p className="mt-2 text-sm text-zinc-400">
-              Masuk ke akun DramaKu kamu untuk lanjut menonton.
+              Masuk ke akun Layarindo kamu untuk lanjut menonton.
             </p>
           </div>
 

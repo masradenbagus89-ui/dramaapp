@@ -461,7 +461,7 @@ export default function AdminPage() {
             </div>
             <h2 className="text-xl font-bold text-white">Akses ditolak</h2>
             <p className="text-sm text-zinc-400">
-              Halaman ini hanya untuk admin. Login dengan email yang sudah terdaftar di daftar admin DramaKu untuk mengakses.
+              Halaman ini hanya untuk admin. Login dengan email yang sudah terdaftar di daftar admin Layarindo untuk mengakses.
             </p>
             <Button
               asChild

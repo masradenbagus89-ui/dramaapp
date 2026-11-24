@@ -162,7 +162,7 @@ export default function KategoriIsiOtomatis({
           <p>
             <strong>{lewat["genre-tak-cocok"]} genre tak cocok</strong> dibiarkan
             kosong, bukan dipaksakan: kebanyakan Horror dan Documentary, dan
-            DramaKu belum punya kategori untuk itu. Memaksakan Horror jadi
+            Layarindo belum punya kategori untuk itu. Memaksakan Horror jadi
             “Fantasy” membuat penonton yang membuka Fantasy menemukan film yang
             salah.
           </p>

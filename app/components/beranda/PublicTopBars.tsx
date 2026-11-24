@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { STRIP_KATALOG, alamatCari, type NavMenu, TUJUAN_CARI } from "@/lib/nav-katalog";
 import StripKatalog from "./StripKatalog";
-import { LogoDramaKu } from "./KepalaKatalog";
+import { LogoSitus } from "./KepalaKatalog";
 import MenuKatalogHp from "./MenuKatalogHp";
 import NavMenus from "./NavMenus";
 import type { SaranCari } from "@/lib/saran-cari";
@@ -71,12 +71,12 @@ export default function PublicTopBars({ menus, indeksSaran }: Props) {
              lambang situs yang sesungguhnya. Komponennya SAMA dengan kepala
              /beranda (KepalaKatalog.tsx) — bukan salinan — supaya ukuran &
              bentuknya tak pernah lagi menyimpang antar halaman. */
-          brand: <LogoDramaKu href="/" />,
+          brand: <LogoSitus href="/" />,
           /* Logo jadi tombol pembuka menu katalog di HP (owner 2026-11-21).
              Halaman depan WAJIB ikut: `/` dan `/beranda` sudah sengaja
              disamakan sejak 2026-10-28, dan kepala yang berbeda di antara
              keduanya persis keluhan "beda dengan Home" yang pernah ada. */
-          brandHp: <LogoDramaKu href="/" tanpaTautan />,
+          brandHp: <LogoSitus href="/" tanpaTautan />,
           /* Panel pop up menu katalog di HP (owner 2026-11-21). Dikosongkan
              saat katalog kosong — alasannya ditulis sekali di
              `chromeKatalog()` (KepalaKatalog.tsx). */

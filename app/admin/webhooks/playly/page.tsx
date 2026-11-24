@@ -27,8 +27,8 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Webhook Playly — Admin DramaKu",
-  description: "Pantau notifikasi video baru yang dikirim Playly ke DramaKu.",
+  title: "Webhook Playly — Admin Layarindo",
+  description: "Pantau notifikasi video baru yang dikirim Playly ke Layarindo.",
   robots: { index: false, follow: false }, // halaman admin: jangan masuk Google
 };
 
@@ -78,7 +78,7 @@ export default async function PlaylyWebhookPage() {
               <strong className="text-zinc-200">Webhook</strong> artinya Playly
               yang{" "}
               <strong className="text-zinc-200">mengirim kabar ke kita</strong>{" "}
-              begitu ada video baru — kebalikan dari cara biasa, di mana DramaKu
+              begitu ada video baru — kebalikan dari cara biasa, di mana Layarindo
               yang menanyakan daftar video ke Playly tiap 5 menit. Bedanya terasa
               di kecepatan: lewat webhook video muncul seketika, tanpa menunggu
               giliran tanya berikutnya. Halaman ini memperlihatkan apakah jalur

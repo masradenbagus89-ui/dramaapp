@@ -92,8 +92,8 @@ export default function DaftarPage() {
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-6">
           <Link href="/" className="flex items-center gap-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-mark.png" alt="DramaKu" width={36} height={36} className="h-9 w-9 object-contain" />
-            <span className="text-lg font-bold text-white">DramaKu</span>
+            <img src="/logo-mark.png" alt="Layarindo" width={36} height={36} className="h-9 w-9 object-contain" />
+            <span className="text-lg font-bold text-white">Layarindo</span>
           </Link>
           <Link href="/" className="text-sm text-zinc-400 hover:text-white">
             ← Kembali
@@ -105,7 +105,7 @@ export default function DaftarPage() {
         <div className="w-full max-w-md">
           <div className="mb-6 text-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.png" alt="DramaKu" className="mx-auto mb-4 h-28 w-auto" />
+            <img src="/logo.png" alt="Layarindo" className="mx-auto mb-4 h-28 w-auto" />
             <h1 className="title-gold text-3xl leading-tight md:text-4xl">
               Buat akun baru
             </h1>
@@ -218,7 +218,7 @@ export default function DaftarPage() {
                     className="mt-0.5 h-4 w-4 rounded border-zinc-600 bg-zinc-900 accent-amber-400"
                   />
                   <span className="text-xs font-normal text-zinc-400">
-                    Saya setuju untuk membuat akun DramaKu dan menerima update
+                    Saya setuju untuk membuat akun Layarindo dan menerima update
                     drama baru.
                   </span>
                 </Label>

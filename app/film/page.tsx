@@ -6,6 +6,7 @@ import DaftarFilmBerhalaman from "@/app/components/film/DaftarFilmBerhalaman";
 import { cn } from "@/lib/utils";
 import { BADAN_SITUS } from "@/app/components/beranda/shell";
 import KepalaFilm from "@/app/components/beranda/KepalaFilm";
+import { SITE_NAME } from "@/lib/site";
 
 // Halaman disimpan & dipakai ulang, disegarkan tiap 60 detik — SAMA dengan
 // /beranda, /discover, dan "/" yang membaca sumber yang sama persis
@@ -41,7 +42,7 @@ export const revalidate = 60;
 export const metadata: Metadata = {
   title: "Film & Video — Bisa Langsung Diputar",
   description:
-    "Kumpulan film dan video di DramaKu yang bisa langsung diputar tanpa unduh.",
+    `Kumpulan film dan video di ${SITE_NAME} yang bisa langsung diputar tanpa unduh.`,
   alternates: { canonical: "/film" },
 };
 

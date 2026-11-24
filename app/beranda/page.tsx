@@ -12,6 +12,7 @@ import BadanKatalog from "../components/beranda/BadanKatalog";
 import KepalaBeranda from "../components/beranda/KepalaBeranda";
 import { BADAN_SITUS } from "../components/beranda/shell";
 import { cn } from "@/lib/utils";
+import { SITE_NAME } from "@/lib/site";
 
 // Disimpan & dipakai ulang, disegarkan tiap 60 detik (menggantikan force-dynamic
 // yang membangun ulang halaman untuk tiap pengunjung).
@@ -20,7 +21,7 @@ export const revalidate = 60;
 export const metadata: Metadata = {
   title: "Beranda — Nonton Drama China Terbaru",
   description:
-    "Katalog lengkap drama China DramaKu: cari judul, saring per genre, dan telusuri halaman demi halaman. Lanjutkan tontonan terakhir kamu — semuanya gratis.",
+    `Katalog lengkap drama China ${SITE_NAME}: cari judul, saring per genre, dan telusuri halaman demi halaman. Lanjutkan tontonan terakhir kamu — semuanya gratis.`,
   alternates: { canonical: "/beranda" },
 };
 

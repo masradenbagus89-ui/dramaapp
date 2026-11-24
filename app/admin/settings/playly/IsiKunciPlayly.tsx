@@ -31,7 +31,7 @@ export default async function IsiKunciPlayly({ email }: { email: string }) {
         <h2 className="text-sm font-bold text-white">Langkah berikutnya</h2>
         <p className="mt-1 text-sm text-zinc-400">
           Setelah kunci tersimpan dan uji sambungan berhasil, pilih video mana
-          yang mau ditampilkan di DramaKu.
+          yang mau ditampilkan di Layarindo.
         </p>
         <Button
           asChild

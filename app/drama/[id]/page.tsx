@@ -4,7 +4,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getDramaCached } from "@/lib/dramas";
-import { SITE_URL, absoluteUrl, toMetaDescription } from "@/lib/site";
+import { SITE_NAME, SITE_URL, absoluteUrl, toMetaDescription } from "@/lib/site";
 import { seoTerpakai } from "@/lib/seo-drama";
 import { dramaJsonLd, toJsonLdScript } from "@/lib/structured-data";
 import { isMovie, subtitleLabel, type Drama } from "@/lib/types";
@@ -543,7 +543,7 @@ export default async function DramaDetailPage(props: PageProps<"/drama/[id]">) {
           // dengan teks yang berbeda — bukan paragraf sama yang diulang.
           teks: toMetaDescription(
             drama.synopsis,
-            `Nonton ${drama.title} sub Indo gratis di DramaKu.`,
+            `Nonton ${drama.title} sub Indo gratis di ${SITE_NAME}.`,
           ),
         }}
       />

@@ -174,7 +174,19 @@ export function TombolAkun() {
   return (
     <div className="flex items-center gap-2">
       <CoinChip />
-      {/* AVATAR HANYA UNTUK ADMIN (owner 2026-11-21: *"icon M dihilangkan
+      {/* ⚠️ BENTUKNYA BUKAN AVATAR LAGI sejak owner 2026-11-25: *"saya ingin
+          sembunyikan tampilan profil yang berada di pojok kanan"*. Lingkaran
+          berinisial "M" + nama "Mas radenbagus89" DILEPAS; yang tersisa
+          ikon kotak-kotak pejal (`pemicu="ringkas"`, MenuAkun.tsx) yang membuka menu
+          yang SAMA PERSIS.
+
+          Kenapa tidak dihapus saja padahal owner bilang "hilang total": owner
+          memilih opsi *"hilang total, TAPI pasang penggantinya dulu"* justru
+          karena tombol ini satu-satunya jalan ke Admin & Keluar di halaman ini
+          — alasan lengkapnya di `PemicuMenuAkun` (MenuAkun.tsx). Titik-tiga =
+          penggantinya: identitas tidak terlihat lagi, jalannya tidak hilang.
+
+          TETAP HANYA UNTUK ADMIN (owner 2026-11-21: *"icon M dihilangkan
           karena viewer tidak perlu buat akun"*, lalu dipertegas: *"ini khusus
           untuk viewer bukan akun admin"*).
 
@@ -196,7 +208,7 @@ export function TombolAkun() {
           Menyembunyikan tautan BUKAN kontrol izin: penjagaannya tetap di server
           (password, rate-limit, cookie bertanda tangan), jadi keamanan tidak
           naik maupun turun karena baris ini (skills/auth/SKILL.md). */}
-      {user.role === "admin" && <MenuAkun />}
+      {user.role === "admin" && <MenuAkun pemicu="ringkas" />}
     </div>
   );
 }

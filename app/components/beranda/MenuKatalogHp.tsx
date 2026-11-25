@@ -230,8 +230,12 @@ export default function MenuKatalogHp({ menus }: { menus: NavMenu[] }) {
                       lib/nav-katalog.ts:275, jadi pilihan kategorinya satu
                       lebih sedikit. Disebut apa adanya daripada mengarang
                       pengurangan yang bisa salah kalau aturannya berubah. */}
+                  {/* Judul kelompok (benua) TIDAK ikut dihitung — ia bukan
+                      pilihan yang bisa diketuk. Tanpa penyaring ini menu
+                      Negara mengaku punya 6 pilihan lebih banyak daripada
+                      kenyataannya. */}
                   <span className="block text-[11px] text-stone-400">
-                    {m.items.length} pilihan
+                    {m.items.filter((i) => !i.kepalaGrup).length} pilihan
                   </span>
                 </span>
 
@@ -248,11 +252,22 @@ export default function MenuKatalogHp({ menus }: { menus: NavMenu[] }) {
                   "animate-in fade-in-0 slide-in-from-top-1 duration-200 motion-reduce:animate-none",
                 )}
               >
-                {m.items.map((item) => (
+                {m.items.map((item) =>
+                  /* JUDUL KELOMPOK (benua) di menu Negara — bukan tautan, dan
+                     memotong seluruh lebar kisi supaya negara di bawahnya
+                     jelas miliknya. Lihat `kepalaGrup` di lib/nav-katalog.ts. */
+                  item.kepalaGrup ? (
+                    <span
+                      key={`grup-${item.label}`}
+                      className="col-span-full pt-2 text-[10px] font-bold uppercase tracking-wider text-emas-300 first:pt-0"
+                    >
+                      {item.label}
+                    </span>
+                  ) : (
                   /* `SheetClose asChild` = panel menutup sendiri begitu satu
                      pilihan diketuk. Tanpa ini penonton pindah halaman
                      sementara panelnya masih menggantung di layar. */
-                  <SheetClose asChild key={item.href}>
+                  <SheetClose asChild key={`${item.label}-${item.href}`}>
                     <Link
                       href={item.href}
                       /* Hitam transparan di atas merah, bukan `bg-zinc-900`
@@ -264,7 +279,8 @@ export default function MenuKatalogHp({ menus }: { menus: NavMenu[] }) {
                       <span className="truncate">{item.label}</span>
                     </Link>
                   </SheetClose>
-                ))}
+                  ),
+                )}
               </div>
             </details>
           );

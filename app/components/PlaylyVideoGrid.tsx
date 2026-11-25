@@ -10,6 +10,10 @@
 // Playly, jadi hitungan tayang di dashboard mereka bisa berhenti bertambah.
 import { cn } from "@/lib/utils";
 import { warnaKualitas } from "@/app/components/lencana-gaya";
+import {
+  IKON_KOSONG,
+  TEKS_SEKUNDER,
+} from "@/app/components/beranda/shell";
 import { useRef, useState } from "react";
 import Link from "next/link";
 import { Film, Play, Star } from "lucide-react";
@@ -76,7 +80,7 @@ export default function PlaylyVideoGrid({
                 detailHref={alamatTonton(aktif)}
               />
               {aktif.dramaHref && aktif.dramaTitle && (
-                <p className="mt-2 text-xs text-zinc-400 terang:text-zinc-600">
+                <p className={`mt-2 text-xs ${TEKS_SEKUNDER}`}>
                   <Link href={aktif.dramaHref} className="text-amber-400 underline">
                     {aktif.dramaTitle}
                     {aktif.episode ? ` · Episode ${aktif.episode}` : ""}
@@ -128,7 +132,7 @@ export default function PlaylyVideoGrid({
                       className="h-full w-full object-cover transition group-hover:scale-105"
                     />
                   ) : (
-                    <Film className="h-7 w-7 text-zinc-600 terang:text-zinc-400" aria-hidden="true" />
+                    <Film className={`h-7 w-7 ${IKON_KOSONG}`} aria-hidden="true" />
                   )}
                   {/* Gelap dari bawah saat hover — biar ikon play & badge tetap
                       terbaca di atas sampul yang terang. */}
@@ -183,7 +187,7 @@ export default function PlaylyVideoGrid({
                     {v.title}
                   </p>
                   {metaFilm && (
-                    <p className="mt-1 line-clamp-1 text-[11px] text-zinc-500 terang:text-zinc-600">
+                    <p className={cn("mt-1 line-clamp-1 text-[11px]", TEKS_SEKUNDER)}>
                       {metaFilm}
                     </p>
                   )}

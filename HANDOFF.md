@@ -90,7 +90,9 @@
 > aftermarket** dari pemilik sekarang, harganya **jauh di atas** Rp200.000 dan belum pernah dicek.
 > Nama lain yang masih bebas jauh lebih murah.
 
-**Terakhir diisi:** 2026-11-24 (malam) — ✅ **RILIS `6de869d` → `72fb308` TAYANG.** Owner memberi izin *"push dan rilis"*; perintah tahan *"jangan tayang dulu"* sejak 2026-11-23 **DICABUT**, antrean kini **KOSONG** (`main` = `origin` = `dramaku` = `72fb308`). **35 commit · 115 berkas** seharian ini: nama situs jadi **Layarindo** · logo diwarnai emas · tema **anggur + amber** diukur dari mockup owner · cahaya latar di pojok · kartu membulat + tombol kapsul · chip pintasan seragam & satu baris digeser + panah (HP). Gerbang dijalankan **ULANG tepat sebelum push**: 5/5 hijau, 201 berkas / **2828 tes**, nol berkas rahasia. **Nol prasyarat SQL/env** (diperiksa, bukan diasumsikan). 🎯 **Bukti tayang diukur di situs sungguhan:** `DramaKu` **0×** & `Layarindo` **24×** di HTML produksi · warna emas lama `f5a524` **0×** di CSS · `latar-bercahaya` 4× · ketiga berkas gambar baru **200** · delapan alamat **200** · katalog **66 judul** · halaman nonton **200**. 🪤 Railway butuh ±1 menit: dua pemeriksaan pertama masih build lama — **jangan simpulkan gagal sebelum ±3 menit**. 🪤 Poster baris kedua sempat tergambar kotak warna polos di potret uji — itu gambar yang belum selesai dimuat, BUKAN rusak (diuji: 200, 90 KB). 🔴 **Sisa milik owner:** pastikan deployment `72fb308` **success** di panel Railway, lalu lihat sendiri di HP — tema, judul berpagar garis, dan panah geser chip hanya bisa dinilai mata. ⚠️ Lima berkas kerja sesi lain (login + panel IMDb) masih menggantung belum di-commit, jadi **nol** di antaranya ikut tayang.
+**Terakhir diisi:** 2026-11-25 — 🎬 **NONTON BARENG AKTIF DI PRODUKSI.** Owner menyelesaikan langkah 3 & 4 di panel Railway (Generate Domain + 2 env di service situs + Redeploy); AI memandu & memverifikasi. **Nol kode diubah, nol commit, nol push** — antrean ke `origin` tetap 1 commit catatan (`8263355`). Alamat server nobar (bukan rahasia): `https://athletic-unity-production-4fea9c30.up.railway.app`. 🎯 **Enam bukti diukur dari luar:** `/health` **200 `ok:true`** · `POST /api/watch-room` **404 → 400** (env terbaca) · tombol **Nonton Bareng tergambar** di HTML `/tonton/<id>` · CSP halaman itu memuat **`https://` + `wss://`** ke host nobar (= situs benar-benar di-build ulang) · token undangan acak dibalas **404**, bukan **401** (= `NOBAR_SECRET` di dua service **COCOK**, nol data ditulis) · handshake `/socket.io/` **200 untuk Origin situs, 403 untuk Origin asing** (= `NOBAR_ALLOWED_ORIGINS` memang menyaring). ✏️ **RALAT: alasan "tanpa Redeploy browser MEMBLOKIR" itu KELIRU** — CSP produksi berjalan `Report-Only` (tidak memblokir apa pun); alasan Redeploy yang benar adalah simpanan halaman ISR 300 detik. 🔴 **Sisa: hanya mata manusia** — buat Room, buka undangan di HP kedua, cek sinkron ±2 detik + chat tanpa muat ulang. 🧹 Hapus `Downloads/env-nobar-server.txt` (rahasianya sudah di Railway) dan betulkan `nobar-server/README.md:72` yang masih memuat alasan keliru itu.
+
+**Sebelumnya:** 2026-11-24 (malam) — ✅ **RILIS `6de869d` → `72fb308` TAYANG.** Owner memberi izin *"push dan rilis"*; perintah tahan *"jangan tayang dulu"* sejak 2026-11-23 **DICABUT**, antrean kini **KOSONG** (`main` = `origin` = `dramaku` = `72fb308`). **35 commit · 115 berkas** seharian ini: nama situs jadi **Layarindo** · logo diwarnai emas · tema **anggur + amber** diukur dari mockup owner · cahaya latar di pojok · kartu membulat + tombol kapsul · chip pintasan seragam & satu baris digeser + panah (HP). Gerbang dijalankan **ULANG tepat sebelum push**: 5/5 hijau, 201 berkas / **2828 tes**, nol berkas rahasia. **Nol prasyarat SQL/env** (diperiksa, bukan diasumsikan). 🎯 **Bukti tayang diukur di situs sungguhan:** `DramaKu` **0×** & `Layarindo` **24×** di HTML produksi · warna emas lama `f5a524` **0×** di CSS · `latar-bercahaya` 4× · ketiga berkas gambar baru **200** · delapan alamat **200** · katalog **66 judul** · halaman nonton **200**. 🪤 Railway butuh ±1 menit: dua pemeriksaan pertama masih build lama — **jangan simpulkan gagal sebelum ±3 menit**. 🪤 Poster baris kedua sempat tergambar kotak warna polos di potret uji — itu gambar yang belum selesai dimuat, BUKAN rusak (diuji: 200, 90 KB). 🔴 **Sisa milik owner:** pastikan deployment `72fb308` **success** di panel Railway, lalu lihat sendiri di HP — tema, judul berpagar garis, dan panah geser chip hanya bisa dinilai mata. ⚠️ Lima berkas kerja sesi lain (login + panel IMDb) masih menggantung belum di-commit, jadi **nol** di antaranya ikut tayang.
 
 **Sebelumnya hari ini:** 2026-11-24 (sore) — 🍷 **TEMA ANGGUR + AMBER tayang di LOKAL saja (`c9b7a5a`).** Owner mengirim mockup jadi dan meminta *"sama persis dengan image yang saya kirim"*. Warnanya **DIUKUR dari berkas gambarnya** (modus/median per bagian), lalu diperiksa balik dengan membandingkan potret situs vs mockup di 5 titik — jarak warna **4 · 9 · 7 · 4 · 7** dari skala 441 (di bawah 12 = tak terbedakan mata). ⚠️ **Temuan terpenting: mengganti 11 token tema TIDAK CUKUP** — badan halaman tetap HITAM karena 8 tempat memakai warna netral MENTAH (`bg-black`, `bg-zinc-950/80`) yang tak ikut token; ketemu dengan **bertanya ke browser** (`elementFromPoint` + computed style), bukan membaca kode. Penjaganya dipasang. ⚠️ **Aturan BERUBAH:** `emas-700` kini TIDAK lagi sanggup menanggung teks putih (3,79:1, dulu 4,73:1) — nol nada aksen boleh berteks putih. 🔴 **Satu beda masih ada:** latar mockup punya cahaya oranye menyala, punya kita anggur rata — menunggu keputusan owner. Gerbang **LOLOS kelima langkah** (200 berkas / **2814 tes**). ⏸️ **20 commit belum ke `origin`, 7 belum ke `dramaku`** — nol push hari ini. Rincian di seksi `## 2026-11-24 (sore)`.
 
@@ -101,6 +103,182 @@
 **Rincian kontrol volume (putaran KETIGA):** owner menolak bentuk tombol `+` / `−` dan mengirim contoh gambar, jadi pengatur volume kini **garis geser tegak berbentuk kapsul** (jalur kuning + bulatan penggeser). Diukur di Chrome headless layar 393px: kapsul `x=345..381` **utuh di dalam layar**, geser jari atas→100% / tengah→50% / bawah→bisu, nol elemen diputar. Gerbang lolos 5/5 (2383 tes hijau). ✅ **Sudah TAYANG** dalam rilis `53fbc5c → a9ae869` malam itu juga.
 
 **Sebelumnya hari ini:** ✅ **`2ad015b` + `8d8c1ba` TAYANG.** Tata letak pemutar beres dalam tiga putaran permintaan owner: tombol **Eps turun ke baris paling bawah**, tombol **volume pindah ke sebelah angka durasi**, rail ikon kanan **diperkecil & dirapatkan** (36px/20px/jarak 8px), dan garis volume tegak **diganti tombol + / −** karena terukur berdiri di **x=391 pada layar 393px = di luar layar HP**. Rinciannya di seksi `## 2026-11-13` di bawah.
+
+---
+
+## 2026-11-25 — 🔍 SAPUAN MENYELURUH teks pudar: 31 titik di 9 berkas diseragamkan (⏳ BELUM di-commit, BELUM rilis)
+
+**Permintaan owner:** *"kamu cek menyeluruh karena masih ada tulisan yang tidak jelas kamu seragamkan"* — tangkapan layar /discover: baris "128 judul — genre Komedi" dan tombol "× Hapus filter".
+
+**ATURAN yang dipakai menyapu (terukur, bukan selera).** Kontras tiap nada diukur terhadap tiga latar yang benar-benar dipakai situs:
+
+| nada | latar halaman polos | POJOK tersorot oranye | di dalam PANEL gelap-900 |
+|---|---|---|---|
+| `zinc-400` | 6,17:1 | **1,63:1** | 6,76:1 ✅ |
+| `zinc-500` | 3,27:1 | **1,16:1** | 3,59:1 |
+| `zinc-700` (ikon) | **1,51:1** | 2,50:1 | 1,66:1 |
+| **putih** | 15,82:1 | 4,18:1 | 17,33:1 |
+
+→ **Masalahnya BUKAN nadanya, melainkan LATARNYA.** Di dalam panel/modal/footer yang punya latar gelap sendiri, `zinc-400` masih 6,76:1 dan **sengaja tidak disentuh** (footer, pemutar, komentar, chat nobar, kartu /profile). Yang disapu: teks di atas **latar halaman**.
+
+**31 titik di 9 berkas** → `TEKS_SEKUNDER` (teks) / `IKON_KOSONG` (ikon hiasan):
+`DramaBrowser` · `CatalogBrowser` · `DaftarFilmBerhalaman` · `film/page` · `shorts/page` · `my-list/page` · `history/page` · `KartuVideo` · `PlaylyVideoGrid`.
+
+**Token baru `IKON_KOSONG`** (`text-white/45 terang:text-zinc-400`): ikon besar di keadaan kosong dulu `zinc-700` = **1,51:1**, jadi kotak poster yang sampulnya gagal terbaca seperti kotak hitam kosong melompong — persis kartu-kartu hitam di tangkapan layar owner sebelumnya. Sengaja 45%, bukan putih penuh: ia hiasan ber-`aria-hidden`, yang membawa pesan adalah kalimat di bawahnya.
+
+**Bukti:** `npx tsc --noEmit` **exit 0** · `npx vitest run` **204 berkas / 2.898 tes hijau, exit 0** · HTML server dev `/beranda`, `/discover`, `/film`: **0** kelas pudar tersisa · baris yang dikotaki owner kini `<h1 class="text-sm text-white terang:text-zinc-600">`.
+
+🪤 **PELAJARAN TERPENTING HARI INI — PENJAGA PALSU.** Versi pertama tes penjaga memotong isi `className` dengan `split(/\s+/)` lalu mencocokkan utuh. Token TERAKHIR masih membawa tanda kutip penutup (`text-zinc-500"`), jadi ia **tak pernah cocok**: uji-balik mengembalikan nada pudar dan tesnya tetap **HIJAU**. Penjaga palsu lebih berbahaya daripada tidak ada penjaga — ia memberi rasa aman yang salah. Diperbaiki memakai lookbehind `(?<![\w:-])text-zinc-(400|500|700)(?![\w-])`, lalu uji-balik diulang sampai benar-benar MERAH. **Tiap penjaga baru WAJIB diuji-balik; jangan percaya hijau pertama.**
+
+🪤 Jebakan kedua: skrip python yang gagal di tengah (`assert`) **tidak menulis berkasnya sama sekali**, jadi daftar berkas yang dijaga diam-diam tidak pernah bertambah — dan itu sebab uji-balik kedua juga hijau palsu. Kalau satu skrip multi-langkah gagal, periksa apa yang SUDAH tersimpan, jangan anggap semuanya batal.
+
+---
+
+## 2026-11-25 — 🌏 Negara & tahun KELUAR dari strip kuning; menu Negara memuat SEMUA negara per benua (⏳ BELUM di-commit, BELUM rilis)
+
+**Permintaan owner:** *"untuk negara dan tahun masukan ke kategori saja tidak perlu ditampilkan disitu dan untuk negara kamu buat lebih banyak lagi atau kamu ada solusi lain agar semua negara bisa muncul"*.
+
+**Yang diukur lebih dulu (bukan dikira):** katalog produksi memuat **57 negara** (dihitung dari data /film), sedangkan menu Negara memotongnya di **24** (`BATAS_MENU_NEGARA`). Dari 3 pilihan yang diajukan, owner memilih **dikelompokkan per benua** (bukan daftar datar 57 baris, bukan halaman baru).
+
+**Yang berubah:**
+1. **Strip kuning** (`STRIP_KATALOG`) kehilangan 5 chip negara + 2 chip tahun → kini murni GENRE + Terpopuler. Terverifikasi di HTML produksi lokal: **0 tautan `<a>` ke `?negara=` / `?year=`** tersisa di halaman.
+2. **Menu Negara** tidak lagi dipotong — memuat **seluruh** negara berisi (60 terbaca di menu saat diperiksa), dikelompokkan **Asia → Timur Tengah → Eropa → Amerika → Afrika → Oseania → Lainnya**. Asia di depan dengan sengaja (penonton Indonesia).
+3. **Nama kembar disatukan** (keputusan owner): `USA` ≡ `United States`. Sebelumnya tampil dua baris berisi separuh-separuh, dan mengklik salah satunya menyembunyikan separuhnya lagi — **rusak senyap**. Disatukan di 3 titik sekaligus supaya tidak ada yang tertinggal: label, penghitung daftar, dan **pencocokan** (drama di `lib/discover.ts` + film di `lib/film-jelajah.ts`).
+4. Label `United States` jadi **"Amerika Serikat"**, bukan "Amerika" — sebab kelompok benua juga bernama "Amerika", dan dua baris senama di satu menu membuat salah tunjuk (tes membuktikannya: `find(label === "Amerika")` menangkap judul benua).
+5. 6 label baru: Kamboja · Republik Dominika · Yordania · Paraguay · Eswatini · Georgia Selatan. Yang terakhir **dipendekkan dari 43 huruf** — menu 4 kolom memakai sel yang menolak membungkus baris, jadi nama sepanjang itu melebarkan dropdown sampai keluar layar HP.
+
+**Kerusakan nyata yang tertangkap tes saat dikerjakan (bukan tes yang perlu disesuaikan):** judul kelompok ikut terhitung sebagai "pilihan", sehingga menu berisi **1 negara** lolos ambang `MIN_ITEM_MENU` dan penonton dapat dropdown yang cuma menambah satu klik. Diperbaiki di akar (`menu()` kini menilai ambang atas baris yang bisa diklik saja).
+
+**Berkas:** `lib/negara.ts` (alias + peta benua + 6 label) · `lib/film-jelajah.ts` (`opsiNegaraPerBenua`, hitungan dikanonikkan) · `lib/discover.ts` (`cocokNegara`) · `lib/nav-katalog.ts` (`NavItem.kepalaGrup`, menu Negara, STRIP_KATALOG, ambang `menu()`) · `NavMenus.tsx` + `MenuKatalogHp.tsx` (menggambar judul kelompok; kunci React tidak lagi memakai href saja — beberapa baris kini berbagi alamat).
+
+**Tes:** 5 tes lama diperbarui karena mengunci keputusan owner yang LAMA (strip berisi negara/tahun, menu dipotong 24) — **arahnya dibalik, bukan dilemahkan**; 5 tes baru menjaga keputusan hari ini. **Uji-balik 2 mutasi**: memotong lagi daftar di 24 → merah; melepas alias USA → 2 tes merah. Keduanya dipulihkan.
+
+**Bukti:** `npx tsc --noEmit` **exit 0** · `npx vitest run` **204 berkas / 2.884 tes hijau, exit 0** · HTML server dev: 0 tautan negara/tahun di strip, 7 judul kelompok, 60 negara di menu.
+
+🪤 **Dua jebakan yang kena hari ini, jangan diulang:**
+- `tests/jeda-koin-iklan.test.ts` sempat MERAH di run penuh lalu HIJAU saat dijalankan sendiri → **flaky**, bukan akibat perubahan. Jangan buru-buru "memperbaiki" tes yang hijau sendirian.
+- Menulis komentar ber-backtick lewat `python -c` berkutip ganda di bash: isi backtick **dieksekusi** (`whitespace-nowrap: command not found`) dan teksnya hilang dari berkas tanpa error. Pakai tool Write/Edit untuk teks begitu.
+
+---
+
+## 2026-11-25 — 👁️ Teks abu-abu yang tak terbaca dinaikkan jadi PUTIH (⏳ BELUM di-commit, BELUM rilis)
+
+**Laporan owner:** *"tulisan tidak terlihat warna abu2, kamu rubah warnanya putih atau warna yang pas agar UI/UX bagus"* — dengan 4 kotak merah di tangkapan layar: baris genre di bawah judul kartu (2 baris kartu) + keterangan di bawah judul seksi NONTON BARENG & REKOMENDASI.
+
+**Sebabnya terukur, bukan selera.** Kelas lamanya `text-zinc-500`, diuji terhadap latar halaman yang sebenarnya (`--color-latar` #480a12 + sapuan oranye `.latar-bercahaya`):
+
+| warna | latar polos | POJOK yang tersorot oranye |
+|---|---|---|
+| `zinc-500` (lama) | 3,27:1 | **1,16:1** ← praktis tak terlihat |
+| `zinc-200` | 12,47:1 | 3,29:1 |
+| **putih** (dipakai) | 15,82:1 | **4,18:1** |
+
+Sapuan oranye terkuat memang menumpuk di **dua pojok bawah** (lihat komentar pengukuran di `app/globals.css` `.latar-bercahaya`) — persis tempat baris genre kartu berada. Jadi keluhan owner tepat sasaran.
+
+**⚠️ Batas yang jujur:** 4,18:1 masih SEDIKIT di bawah ambang baca 4,5:1 untuk teks kecil, dan itu **batas atas yang bisa dicapai warna saja** — tidak ada yang lebih terang dari putih. Menaikkannya lagi perlu bayangan teks tipis (`text-shadow`) di belakang hurufnya. **Belum dipasang — menunggu owner.** Bayangan bawaan Tailwind 4.2.4 (alpha 0,075–0,2) terlalu tipis untuk latar seterang ini, jadi perlu nilai sendiri.
+
+**Berkas:**
+- `app/components/beranda/shell.ts` — token baru **`TEKS_SEKUNDER`** (`text-white terang:text-zinc-600`) + tabel pengukuran di komentarnya. Pola sama dengan `TEKS_BAR_MEREK` yang sudah ada.
+- Lima pemakai yang tadinya menyalin kelas itu sendiri-sendiri: `KartuVideo.tsx` · `CatalogCard.tsx` · `PlaylyVideoGrid.tsx` · `SeksiKatalog.tsx` · `TabKatalogTampilan.tsx` (2 titik — baris keterangan + pesan "Belum ada judul di bagian ini").
+- `tests/badan-situs.test.ts` — **11 tes baru**: token wajib punya pasangan `terang:`, kelima berkas wajib memakai token, dan tidak boleh ada `text-zinc-500` di `className` manapun di kelimanya (komentar sejarah sengaja TIDAK ikut diperiksa, supaya orang tak menghapus catatan demi meloloskan tes).
+
+**Bukti:** `npx tsc --noEmit` **exit 0** · `npm test` **204 berkas / 2.878 tes hijau** · **uji-balik**: satu berkas dikembalikan ke `text-zinc-500` → tes langsung MERAH, lalu dipulihkan · HTML dari server dev: subjudul kini `text-white`, **nol** `text-zinc-500` tersisa di /beranda.
+
+🪤 **Jebakan yang sempat kena:** komentar `{/* ... */}` DI DALAM cabang ternary JSX bukan komentar — ia terbaca sebagai objek, dan `tsc` memuntahkan 9 error sintaks beruntun. Di posisi itu pakai `//`.
+
+**Yang BELUM diubah (sengaja, di luar kotak merah owner):** 4 teks `text-zinc-500` lain di `DramaBrowser.tsx:337` · `film/DaftarFilmBerhalaman.tsx:64` · `app/film/page.tsx:65,95`. Perannya beda (pesan kosong & penghitung), tunggu owner melihat hasil yang ini dulu.
+
+### Lanjutannya hari yang sama: kelima baris itu akhirnya DIBUANG
+
+Begitu warnanya terbaca jelas, owner justru menilainya memenuhi halaman: *"yang saya beri kotak merah kamu hilangkan saja"* (5 kotak = 5 baris keterangan seksi di /beranda).
+
+- `SeksiKatalog.tsx` — baris `<p>{keterangan}</p>` dibuang **beserta prop `keterangan`**-nya, jadi tidak meninggalkan prop mati. Impor `TEKS_SEKUNDER` di berkas itu ikut dilepas (tak ada lagi yang memakainya di sana).
+- `TabKatalogTampilan.tsx` — 2 pemanggil berhenti mengirim `keterangan=`.
+- **Teksnya TIDAK dibuang dari project**: `keterangan` tetap hidup di `lib/tab-katalog.ts` dan masih dipakai kepala tab di `TabKatalogTampilan` (halaman /katalog). Mengembalikannya = satu baris.
+- `tests/seksi-baris-geser.test.ts` — **2 tes baru**: tidak boleh ada `<p>` antara judul & tombol "Semua", DAN judul seksinya sendiri wajib tetap tergambar (pasangan pembanding, supaya kepala seksi yang terhapus seluruhnya tidak lulus hijau).
+- `tests/badan-situs.test.ts` — `SeksiKatalog` dipindah dari daftar "wajib memakai token" ke daftar "bebas zinc-500": ia memang tak punya teks baris kedua lagi.
+
+**Bukti:** `npx tsc --noEmit` **exit 0** · `npx vitest run` **204 berkas / 2.879 tes hijau** (exit 0 — dijalankan langsung, sebab `npm test` di mesin ini memulangkan **exit 127 PALSU** walau isinya hijau) · **uji-balik**: satu `<p>` disisipkan kembali → tes langsung MERAH, lalu dipulihkan · HTML server dev: **5 judul seksi utuh, 0 baris keterangan**.
+
+🪤 **Jangan ulangi kesalahan periksa ini:** judul seksi di HTML tertulis "Nonton Bareng", bukan "NONTON BARENG" — huruf besarnya dibuat CSS (`uppercase`). Mencarinya dengan huruf kapital di HTML akan menyimpulkan judulnya hilang padahal utuh.
+
+---
+
+## 2026-11-25 — 🙈 Tampilan profil di pojok kanan /beranda DISEMBUNYIKAN (⏳ BELUM di-commit, BELUM rilis)
+
+**Permintaan owner:** *"Saya ingin sembunyikan tampilan profil yang berada di pojok kanan. Pastikan tampilan tetap rapi di komputer maupun HP."*
+
+**Yang berubah:** chip **`M` + "Mas radenbagus89"** di pojok kanan bar merah (/beranda & /discover) diganti **ikon kotak-kotak PEJAL 32px** (`LayoutGrid` + `fill="currentColor"`, putih 90%) tanpa inisial & tanpa nama. Menunya SAMA PERSIS (Profile · Riwayat · Favorit · Admin · Keluar).
+
+**🔁 Bentuk ikon diputar 3× dalam satu hari — jangan diputar balik:** titik-tiga (ditolak owner) → kotak-kotak BERGARIS (ditolak: terlalu tipis/pucat) → **kotak PEJAL**, dipilih owner dari 4 contoh karena paling mirip situs acuan yang ia kirim. Dikunci tes `fill === "currentColor"`; bawaan lucide `fill="none"` menggambar kotak berongga yang sudah ditolak itu.
+
+**Kenapa tidak dihapus total** (owner memilih opsi *"hilang total, TAPI pasang penggantinya dulu"* sesudah diberi tahu akibatnya): tombol itu **satu-satunya jalan ke panel Admin & tombol Keluar** dari /beranda — tombol garis-tiga dilepas 2026-11-14, tab Profile di bar bawah HP dihapus 2026-11-23, dan /beranda tidak menggambar kaki situs (`app/beranda/page.tsx` `denganKaki={false}`). Menghapusnya = owner terkunci dari panel admin **tanpa satu pun pesan error**.
+
+**Cakupan:** HANYA bar merah. Navbar hitam (`TopNav` di /profile · /history · /my-list · /shorts · /admin) **tetap** memakai avatar — itu halaman kerja owner, bukan halaman penonton. Pilihan owner sendiri.
+
+**Berkas:**
+- `app/components/MenuAkun.tsx` — prop baru `pemicu: "avatar" | "ringkas"` (bawaan tetap `avatar`, jadi pemanggil lama tidak berubah perilakunya).
+- `app/components/beranda/KepalaKatalog.tsx` — `<MenuAkun pemicu="ringkas" />`.
+- `tests/menu-akun.test.ts` — regex penjaga dilonggarkan supaya menerima props, tetap menolak `<MenuAkunXX />`.
+- `tests/menu-akun-render.test.ts` — **3 tes baru**: nama/inisial tidak boleh tergambar · tombolnya wajib tetap ada, punya ikon, dan ikonnya PEJAL (`fill="currentColor"`) · bawaan tetap avatar.
+
+**Bukti:** `npx tsc --noEmit` **exit 0** · `npm test` **204 berkas / 2867 tes hijau** · **uji-balik**: `ringkas` dipaksa `false` → 2 tes baru langsung MERAH, lalu dipulihkan. Dev server lokal (port 3914) sudah mengompilasinya — teks `Menu pengelola` terbaca di chunk klien, `/beranda` HTTP 200 tanpa error overlay.
+
+**Ukuran di layar (dibaca dari kelas Tailwind, bukan dikira):** komputer ±150px → 32px (bar lebih lega); HP tetap **32px**, sama persis dengan lingkaran lama — nama memang sudah tersembunyi di bawah 640px sejak dulu. Penonton biasa tidak terpengaruh sama sekali: tombolnya memang hanya digambar untuk `role === "admin"`.
+
+**⏳ Sisa langkah:** belum `git commit`, belum push. Rilis = tombol owner.
+
+---
+
+## 2026-11-25 — ✅ NONTON BARENG AKTIF DI PRODUKSI (langkah 3 & 4 panel Railway SELESAI)
+
+> Seksi `## 2026-11-24 (malam) — ⏸️ TITIK LANJUT BESOK: Nonton Bareng tinggal 2 langkah panel Railway` di bawah **SUDAH SELESAI SELURUHNYA** — jangan dikerjakan lagi. Keempat langkahnya (SQL · service · domain · env situs) kini lengkap.
+
+Owner yang menekan tombol panelnya, AI memandu + memverifikasi. **Nol baris kode diubah, nol commit, nol push** — antrean ke `origin` tetap **1 commit catatan** (`8263355`, HANDOFF.md saja).
+
+**Alamat server nobar (BUKAN rahasia, boleh ditulis):**
+`https://athletic-unity-production-4fea9c30.up.railway.app`
+Service **`athletic-unity`** — nama acak bawaan Railway, **TIDAK jadi diganti** jadi `nobar-server`; itu kosmetik dan tak berpengaruh ke apa pun. Root Directory `nobar-server` ✅ · Port **8080** · jalur privat `athletic-unity.railway.internal`.
+
+### Enam bukti, semuanya diukur dari luar (bukan dari "deployment hijau")
+
+| # | Yang diukur | Hasil |
+|---|---|---|
+| 1 | `GET <nobar>/health` | **200** `{"ok":true,"room":0}` (0,17 dtk) |
+| 2 | `POST /api/watch-room` badan kosong | **400** `Video tidak valid.` — sebelumnya **404** `Fitur Nonton Bareng sedang tidak aktif.` |
+| 3 | HTML `/tonton/<id>` | `<button>…Nonton Bareng</button>` **tergambar** |
+| 4 | Header CSP halaman tonton | memuat **`https://`** DAN **`wss://`** ke host nobar |
+| 5 | `POST /api/watch-room/<token-acak-43>/gabung` | **404** `Undangan tidak ditemukan.` |
+| 6 | Handshake `/socket.io/` dengan header `Origin` | situs kita **200** + `access-control-allow-origin` · situs asing **403** |
+
+**Kenapa tiap bukti dipilih — supaya tidak diulang dengan cara yang lemah:**
+
+- **(1) vs "Online" di kanvas.** Railway bisa melapor sukses merakit padahal server mati sedetik kemudian: `nobar-server/src/index.ts:25` & `:32` memaksa `process.exit` kalau `NOBAR_SECRET` <32 huruf atau `NOBAR_ALLOWED_ORIGINS` kosong. Hanya `/health` (`nobar-server/src/server.ts:295`) memisahkan "terakit" dari "hidup".
+- **(2) 404 → 400 = env situs terbaca.** 404 lahir dari `guardFitur(nobarAktif())` (`app/api/watch-room/route.ts:24`); 400 `Video tidak valid.` lahir di baris 32 yang **hanya tercapai sesudah gerbang fitur dilewati**. Jadi 400 itu bukan "error lain", melainkan penanda positif.
+- **(4) membuktikan situs benar-benar DI-BUILD ULANG,** bukan sekadar restart — header CSP dibakar saat build (`next.config.ts:124`), jadi munculnya host nobar di sana mustahil tanpa build baru.
+- **(5) membuktikan `NOBAR_SECRET` di DUA service COCOK, tanpa menulis satu baris pun ke database.** Token acak 43 huruf (bentuk sah per `bentukRahasiaSah`, isi dijamin tak ada) → server mencari Room, tak ketemu, balas 404. Kalau rahasianya beda, `nobar-server/src/server.ts:298` membalas **401 `Tidak berwenang.`**; kalau servernya tak terhubung, `lib/nobar.ts:65` membalas **503**. Tiga kemungkinan itu terpisah rapi oleh satu permintaan.
+- **(6) pembandingnya WAJIB.** 200 sendirian cuma membuktikan server menjawab. Baru dengan Origin asing dibalas **403** terbukti `NOBAR_ALLOWED_ORIGINS` memang **menyaring**, bukan membuka pintu ke semua orang.
+
+### ✏️ RALAT — "tanpa Redeploy, browser MEMBLOKIR sambungan" itu KELIRU
+
+Kalimat itu ada di seksi TITIK LANJUT di bawah **dan** di `nobar-server/README.md:72`. **Salah**, dan diukur: situs produksi mengirim header bernama **`Content-Security-Policy-Report-Only`**, bukan `Content-Security-Policy`. Mode `Report-Only` **hanya mencatat** apa yang akan diblokir — ia tidak memblokir apa pun. Itu disengaja, alasannya di `next.config.ts:77`.
+
+**Alasan Redeploy yang SEBENARNYA (dua, keduanya terverifikasi):**
+1. Halaman tombolnya ber-ISR 300 detik (`app/tonton/[id]/page.tsx:38`), jadi halaman yang sudah pernah dibuka orang tetap memakai simpanan lama yang tanpa tombol.
+2. Header CSP dibakar saat build — belum menggigit hari ini, tapi **akan** menggigit begitu CSP ditegakkan (nama header diganti tanpa `-Report-Only`).
+
+Bedanya penting untuk sesi berikutnya: kalau tombolnya belum muncul, tersangkanya **simpanan halaman**, BUKAN CSP. Mengutak-atik CSP untuk gejala itu = memperbaiki yang tidak rusak.
+
+### 🔴 Sisa — hanya yang butuh mata manusia
+
+Mesin tidak bisa membuktikan sinkronisasi dua layar. Owner: buka `/tonton/<id film>` → **Nonton Bareng** → buat Room → buka link undangan di HP kedua → putar/geser di satu layar, layar lain harus ikut **±2 detik**, dan chat sampai **tanpa muat ulang halaman**.
+
+⚠️ **Kalau Room gagal menyambung**, tersangka BUKAN lagi `NOBAR_ALLOWED_ORIGINS` (sudah terbukti di bukti 6) melainkan jalur WebSocket itu sendiri — periksa Console browser, bukan panel.
+
+### 🧹 Dua kerapian yang tertinggal
+
+1. **Berkas rahasia lokal masih ada:** `C:\Users\user18\Downloads\env-nobar-server.txt` (258 byte, 5 baris; baris 1 = `NOBAR_SECRET`). Rahasianya kini sudah tersimpan di Railway, jadi salinan lokal ini **tinggal risiko tanpa guna** — hapus.
+2. **`nobar-server/README.md:72` masih memuat alasan yang diralat di atas** — belum diperbaiki (butuh commit, menunggu izin owner).
 
 ---
 

@@ -94,3 +94,74 @@ describe("MenuAkun", () => {
     expect(container.textContent).not.toContain("yuli22");
   });
 });
+
+// ===========================================================================
+// Bentuk RINGKAS — owner 2026-11-25: *"saya ingin sembunyikan tampilan profil
+// yang berada di pojok kanan"*.
+//
+// Yang dijaga di sini BUKAN selera tampilan, melainkan dua hal yang bisa rusak
+// diam-diam: (1) identitas owner bocor lagi ke bar merah /beranda tanpa ada
+// yang sadar, dan (2) tombolnya ikut hilang sama sekali — padahal ia
+// satu-satunya jalan ke Admin & Keluar dari halaman itu, jadi hilangnya tidak
+// memunculkan error apa pun, cuma panel admin yang tak bisa dibuka.
+// ===========================================================================
+describe("MenuAkun bentuk ringkas (bar merah /beranda & /discover)", () => {
+  it("tidak menampilkan inisial maupun nama akun", () => {
+    masuk("Mas radenbagus89", "admin");
+    act(() => root.render(h(MenuAkun, { pemicu: "ringkas" })));
+
+    expect(
+      container.textContent,
+      "nama akun tergambar lagi di pojok kanan — justru itu yang diminta " +
+        "owner disembunyikan",
+    ).not.toContain("Mas radenbagus89");
+    // Inisial "M" di lingkaran avatar. Diperiksa sebagai SELURUH isi teks yang
+    // kosong, bukan sekadar "tidak mengandung M": huruf M bisa saja muncul dari
+    // kata lain, sedangkan tombol ringkas memang tidak boleh punya teks apa pun.
+    expect(
+      container.textContent?.trim(),
+      "tombol ringkas masih memuat teks — seharusnya ikon saja",
+    ).toBe("");
+  });
+
+  it("tombolnya TETAP ada dan tetap bisa dibuka", () => {
+    // Pasangan pembanding untuk tes di atas: tanpa ini, MenuAkun yang mati
+    // total (tidak merender apa-apa) akan lulus hijau — dan panel admin jadi
+    // tak terjangkau dari /beranda.
+    masuk("Mas radenbagus89", "admin");
+    act(() => root.render(h(MenuAkun, { pemicu: "ringkas" })));
+
+    const tombol = container.querySelector('[aria-label="Menu pengelola"]');
+    expect(
+      tombol,
+      "tombol kotak-kotak hilang — di /beranda & /discover inilah satu-satunya " +
+        "jalan ke panel Admin dan tombol Keluar",
+    ).not.toBeNull();
+    // Pembaca layar hanya punya `aria-label` ini sebagai penanda; ikonnya
+    // sendiri gambar tanpa teks.
+    const ikon = tombol?.querySelector("svg");
+    expect(
+      ikon,
+      "ikon kotak-kotak tidak tergambar — tombolnya jadi kotak kosong",
+    ).not.toBeNull();
+
+    // PEJAL, bukan bergaris. Bawaan lucide `fill="none"` menggambar kotak
+    // berongga — owner menolaknya 2026-11-25 (*"terlalu tipis"*) dan memilih
+    // kotak pejal dari 4 contoh. Tanpa pagar ini, siapa pun yang menyalin ikon
+    // lucide lain ke sini mengembalikan bentuk yang sudah ditolak, dan tak ada
+    // error yang memberi tahu.
+    expect(
+      ikon?.getAttribute("fill"),
+      "kotak-kotaknya kembali berongga — owner memilih yang PEJAL",
+    ).toBe("currentColor");
+  });
+
+  it("bentuk bawaan TETAP avatar, bukan ikut jadi ringkas", () => {
+    // Kalau nilai bawaannya tergeser, navbar hitam di /profile · /admin ikut
+    // kehilangan avatarnya padahal owner memilih cakupan "cuma bar merah".
+    masuk("yuli22");
+    act(() => root.render(h(MenuAkun)));
+    expect(container.querySelector('[aria-label="Menu akun"]')).not.toBeNull();
+    expect(container.textContent).toContain("yuli22");
+  });
+});

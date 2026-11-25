@@ -7,6 +7,7 @@ import { alamatTonton } from "@/lib/tonton";
 import { labelGenreGabungan } from "@/lib/genre";
 import { cn } from "@/lib/utils";
 import { CHIP, CHIP_GELAP, warnaKualitas } from "@/app/components/lencana-gaya";
+import { IKON_KOSONG, TEKS_SEKUNDER } from "./shell";
 
 /**
  * Kartu poster untuk satu VIDEO, sebaris dengan kartu drama di beranda.
@@ -59,7 +60,7 @@ export default function KartuVideo({ video }: { video: PlaylyVideoPublik }) {
             // Sampul gagal/tidak ada: kotak berikon, BUKAN gambar rusak.
             // Judulnya tetap terbaca di bawah kartu, jadi videonya tidak
             // berubah jadi kartu tanpa identitas.
-            <Film className="size-8 text-zinc-700 terang:text-zinc-400" aria-hidden="true" />
+            <Film className={`size-8 ${IKON_KOSONG}`} aria-hidden="true" />
           )}
 
           {/* Lencana atas: RATING di kiri, KUALITAS di kanan — posisi dan rupa
@@ -142,7 +143,7 @@ export default function KartuVideo({ video }: { video: PlaylyVideoPublik }) {
         {video.title}
       </h3>
       {label && (
-        <p className="mt-0.5 line-clamp-1 text-[11px] text-zinc-500 terang:text-zinc-600 md:text-xs">
+        <p className={cn("mt-0.5 line-clamp-1 text-[11px] md:text-xs", TEKS_SEKUNDER)}>
           {label}
         </p>
       )}

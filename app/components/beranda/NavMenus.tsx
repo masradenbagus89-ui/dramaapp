@@ -91,15 +91,33 @@ export default function NavMenus({ menus }: { menus: NavMenu[] }) {
               kelasKolom(m),
             )}
           >
-            {m.items.map((item) => (
-              <DropdownMenuItem
-                key={item.href}
-                asChild
-                className="cursor-pointer text-sm focus:bg-zinc-800 focus:text-emas-400"
-              >
-                <Link href={item.href}>{item.label}</Link>
-              </DropdownMenuItem>
-            ))}
+            {m.items.map((item) =>
+              /* JUDUL KELOMPOK (benua) — bukan tautan. `col-span-full` supaya
+                 ia memotong SELURUH lebar kisi, bukan menempati satu sel dan
+                 membuat negara di sebelahnya terbaca seolah milik kelompok
+                 lain. Dipasang 2026-11-25 saat menu Negara berhenti dipotong
+                 di 24 nama dan memuat seluruh 57 negara. */
+              item.kepalaGrup ? (
+                <div
+                  key={`grup-${item.label}`}
+                  className="col-span-full px-2 pt-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-emas-400 first:pt-0"
+                >
+                  {item.label}
+                </div>
+              ) : (
+                <DropdownMenuItem
+                  /* Kunci memakai label + href, bukan href saja: beberapa baris
+                     kini berbagi alamat yang sama (judul kelompok memakai
+                     TUJUAN), dan kunci kembar membuat React menggambar daftar
+                     yang salah tanpa satu pun error. */
+                  key={`${item.label}-${item.href}`}
+                  asChild
+                  className="cursor-pointer text-sm focus:bg-zinc-800 focus:text-emas-400"
+                >
+                  <Link href={item.href}>{item.label}</Link>
+                </DropdownMenuItem>
+              ),
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       ))}

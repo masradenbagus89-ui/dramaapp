@@ -24,7 +24,13 @@ import KartuVideo from "./beranda/KartuVideo";
 import { saringFilm } from "@/lib/film-jelajah";
 import SearchBar, { KELAS_MENEMPEL_KEPALA } from "./beranda/SearchBar";
 import FilterKatalog from "./beranda/FilterKatalog";
-import { BADAN_SITUS, GRID_CLASS, SHELL } from "./beranda/shell";
+import {
+  BADAN_SITUS,
+  GRID_CLASS,
+  IKON_KOSONG,
+  SHELL,
+  TEKS_SEKUNDER,
+} from "./beranda/shell";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Search, X } from "lucide-react";
@@ -299,7 +305,7 @@ export default function DramaBrowser({
               padahal ada belasan film cocok tepat di bawahnya — terbaca
               seperti pencarian yang gagal. Bagian film hilang sendiri saat
               nol, supaya tidak ada "0 film" yang cuma menambah bacaan. */}
-          <h1 className="text-sm text-zinc-400 terang:text-zinc-600">
+          <h1 className={`text-sm ${TEKS_SEKUNDER}`}>
             {/* "Jelajah Drama & Film", bukan "Jelajah" polos: teks `>Jelajah<`
                 dipakai penjaga tests/strip-katalog.test.ts untuk memastikan
                 chip pintasan lama yang dibuang owner tidak kembali. Judul ini
@@ -323,7 +329,7 @@ export default function DramaBrowser({
               variant="ghost"
               size="sm"
               onClick={resetFilters}
-              className="h-8 gap-1 rounded-sm text-xs text-zinc-400 terang:text-zinc-600 hover:text-white terang:hover:text-zinc-900"
+              className={`h-8 gap-1 rounded-sm text-xs ${TEKS_SEKUNDER} hover:text-emas-300 terang:hover:text-zinc-900`}
             >
               <X className="size-3.5" />
               Hapus filter
@@ -333,8 +339,8 @@ export default function DramaBrowser({
 
         {hasil.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-16 text-center">
-            <Search className="size-8 text-zinc-700 terang:text-zinc-400" />
-            <p className="text-sm text-zinc-500 terang:text-zinc-600">
+            <Search className={`size-8 ${IKON_KOSONG}`} />
+            <p className={`text-sm ${TEKS_SEKUNDER}`}>
               Tidak ada judul yang cocok.
             </p>
             {adaFilterAktif && (
@@ -343,7 +349,7 @@ export default function DramaBrowser({
                 variant="outline"
                 size="sm"
                 onClick={resetFilters}
-                className="rounded-sm border-zinc-700 terang:border-zinc-300 bg-transparent text-xs text-zinc-300 terang:text-zinc-700 hover:border-amber-400 hover:text-amber-400 terang:hover:text-amber-700"
+                className="rounded-sm border-zinc-700 terang:border-zinc-300 bg-transparent text-xs text-white terang:text-zinc-700 hover:border-amber-400 hover:text-amber-400 terang:hover:text-amber-700"
               >
                 Hapus filter
               </Button>

@@ -42,10 +42,37 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { LogOut } from "lucide-react";
+import { LayoutGrid, LogOut } from "lucide-react";
 
 /** Satu tujuan di balik avatar. */
 type TujuanAkun = { href: string; label: string; adminOnly?: boolean };
+
+/**
+ * Wajah tombol pembukanya. ISI MENUNYA SAMA PERSIS di kedua bentuk — yang
+ * berbeda cuma apa yang terlihat sebelum diklik.
+ *
+ * `avatar`  — lingkaran berinisial + nama penonton. Dipakai navbar hitam
+ *             (TopNav) di halaman kerja: /profile · /history · /my-list ·
+ *             /shorts · /admin.
+ * `ringkas` — ikon kotak-kotak PEJAL (`LayoutGrid` + `fill`), TANPA inisial &
+ *             TANPA nama. Dipakai bar merah /beranda & /discover sejak owner
+ *             2026-11-25 meminta *"sembunyikan tampilan profil yang berada di
+ *             pojok kanan"*.
+ *
+ *             Bentuknya sudah 3 kali diputar dalam satu hari — ditulis supaya
+ *             tidak diputar balik mengira sedang membereskan sesuatu:
+ *             titik-tiga (ditolak) → kotak-kotak bergaris (ditolak: *"terlalu
+ *             tipis/pucat"*) → **kotak pejal**, dipilih owner dari 4 contoh
+ *             karena paling mirip situs yang ia jadikan acuan.
+ *
+ * Kenapa bentuknya prop dan bukan sekadar menghapus `<MenuAkun />` dari bar
+ * merah: avatar itu SATU-SATUNYA jalan menuju **Admin** dan tombol **Keluar**
+ * dari /beranda & /discover (tombol garis-tiga dilepas 2026-11-14, tab Profile
+ * di bar bawah HP dihapus 2026-11-23, dan /beranda tidak menggambar kaki situs
+ * — `app/beranda/page.tsx` `denganKaki={false}`). Menghapusnya akan mengunci
+ * owner keluar dari panel admin tanpa satu pun pesan error.
+ */
+export type PemicuMenuAkun = "avatar" | "ringkas";
 
 /**
  * Isi menu akun.
@@ -85,7 +112,11 @@ export function tujuanAkunUntuk(role: User["role"] | undefined): TujuanAkun[] {
 const ITEM_CLASS =
   "cursor-pointer text-sm focus:bg-zinc-800 focus:text-amber-400";
 
-export default function MenuAkun() {
+export default function MenuAkun({
+  pemicu = "avatar",
+}: {
+  pemicu?: PemicuMenuAkun;
+}) {
   const pathname = usePathname() ?? "";
   const router = useRouter();
   const { user, mounted } = usePenonton();
@@ -102,6 +133,7 @@ export default function MenuAkun() {
   if (!mounted || !user) return null;
 
   const tujuan = tujuanAkunUntuk(user.role);
+  const ringkas = pemicu === "ringkas";
 
   return (
     <DropdownMenu>
@@ -117,27 +149,47 @@ export default function MenuAkun() {
 
           `p-1` + `sm:pr-3`: di HP lingkaran rapat supaya ruang yang dibebaskan
           jatuh ke kotak cari di sebelahnya; dari 640px ke atas nama penonton
-          muncul lagi dan butuh ruang kanan. */}
+          muncul lagi dan butuh ruang kanan. Keduanya hanya berlaku di bentuk
+          `avatar` — bentuk `ringkas` persegi tetap 32px di semua lebar layar,
+          jadi tak ada yang perlu dilipat saat layar menyempit. */}
       <DropdownMenuTrigger
-        aria-label="Menu akun"
-        className="flex items-center gap-2 rounded-full border border-emas-700/50 bg-emas-500/10 p-1 text-emas-200 transition-colors outline-none hover:border-emas-500 focus-visible:border-emas-400 data-[state=open]:border-emas-400 sm:pr-3"
+        aria-label={ringkas ? "Menu pengelola" : "Menu akun"}
+        className={cn(
+          "flex shrink-0 items-center rounded-full transition-colors outline-none",
+          ringkas
+            ? // Ukuran dikunci `size-8` (32px) supaya sasaran ketuk di HP TIDAK
+              // menyusut dibanding chip lama — ikonnya mengecil, daerah yang
+              // bisa disentuh tidak. Tanpa garis tepi & tanpa latar: bentuknya
+              // mengikuti contoh yang dikirim owner 2026-11-25 (ikon kotak-kotak
+              // putih polos di pojok kanan), bukan chip emas bergaris seperti
+              // avatar. `text-white/90`, bukan `/60`: di contoh itu ikonnya
+              // terbaca jelas — versi pertama terlalu pudar dan owner menolaknya.
+              "size-8 justify-center text-white/90 hover:bg-white/10 hover:text-white focus-visible:bg-white/10 data-[state=open]:bg-white/15 data-[state=open]:text-white"
+            : "gap-2 border border-emas-700/50 bg-emas-500/10 p-1 text-emas-200 hover:border-emas-500 focus-visible:border-emas-400 data-[state=open]:border-emas-400 sm:pr-3",
+        )}
       >
-        <Avatar size="sm">
-          <AvatarFallback
-            className={cn(
-              "bg-gradient-to-br text-xs font-bold text-black",
-              getAvatarClass(user),
-            )}
-          >
-            {user.name.charAt(0).toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
-        {/* Nama disembunyikan di layar sempit: di bawah ±640px ia memakan ruang
-            yang dibutuhkan kotak cari, sedangkan avatarnya sendiri sudah cukup
-            menandai "ini akun kamu". */}
-        <span className="hidden max-w-28 truncate text-xs text-zinc-300 sm:inline">
-          {user.name}
-        </span>
+        {ringkas ? (
+          <LayoutGrid className="size-5" fill="currentColor" />
+        ) : (
+          <>
+            <Avatar size="sm">
+              <AvatarFallback
+                className={cn(
+                  "bg-gradient-to-br text-xs font-bold text-black",
+                  getAvatarClass(user),
+                )}
+              >
+                {user.name.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            {/* Nama disembunyikan di layar sempit: di bawah ±640px ia memakan
+                ruang yang dibutuhkan kotak cari, sedangkan avatarnya sendiri
+                sudah cukup menandai "ini akun kamu". */}
+            <span className="hidden max-w-28 truncate text-xs text-zinc-300 sm:inline">
+              {user.name}
+            </span>
+          </>
+        )}
       </DropdownMenuTrigger>
 
       <DropdownMenuContent

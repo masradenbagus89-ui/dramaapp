@@ -244,14 +244,17 @@ describe("4. Tahun terbaru paling depan", () => {
     ).toEqual(["2026", "2024"]);
   });
 
-  it("strip kuning juga menaruh tahun terbaru lebih dulu", () => {
-    // Inilah yang benar-benar terlihat owner di layar — dropdown sudah benar
-    // sejak dulu, stripnya yang menaik.
+  it("strip kuning TIDAK lagi memuat tahun sama sekali", () => {
+    // ⚠️ ARAH TES INI DIBALIK 2026-11-25. Dulu ia menjaga URUTAN tahun di
+    // strip (terbaru dulu); kini owner meminta tahun DILEPAS dari strip
+    // seluruhnya (*"untuk negara dan tahun masukan ke kategori saja"*), jadi
+    // yang dijaga sekarang: tak ada satu pun chip tahun yang nyangkut di sana.
+    // Urutan tahun TETAP dijaga — di menu dropdown "Tahun", oleh tes tepat di
+    // atas ini. Nol pengawasan hilang.
     const tahun = STRIP_KATALOG.map((i) => i.label).filter((l) =>
       /^(19|20)\d{2}$/.test(l),
     );
-    expect(tahun).toEqual([...tahun].sort((a, b) => Number(b) - Number(a)));
-    expect(tahun.length, "strip kehilangan chip tahunnya").toBeGreaterThan(1);
+    expect(tahun, "tahun masih nyangkut di strip kuning").toEqual([]);
   });
 });
 
@@ -589,9 +592,22 @@ describe("7. Nol baris menu yang 'diklik tapi halamannya sama'", () => {
     );
     const menus = buildNavMenus(banyakNegara as never, []);
     const negara = menus.find((m) => m.key === "negara");
-    expect(BATAS_MENU_NEGARA).toBeGreaterThanOrEqual(24);
-    expect(tanpaPenutup(negara?.items ?? []).length).toBe(BATAS_MENU_NEGARA);
-    expect(tanpaPenutup(negara?.items ?? []).length).toBeGreaterThan(12);
+    // ⚠️ PAGARNYA DIPERKUAT 2026-11-25, bukan dilonggarkan: menu Negara kini
+    // memuat SELURUH negara yang ada isinya (owner: *"agar semua negara bisa
+    // muncul"*), dikelompokkan per benua. Dulu tes ini mematok tepat
+    // BATAS_MENU_NEGARA; sekarang ia menuntut NOL negara terpotong.
+    const pilihan = tanpaPenutup(negara?.items ?? []).filter((i) => !i.kepalaGrup);
+    expect(
+      pilihan.length,
+      "ada negara yang terpotong dari menu — owner meminta semuanya muncul",
+    ).toBe(banyakNegara.length);
+    expect(pilihan.length).toBeGreaterThan(BATAS_MENU_NEGARA);
+    // Judul kelompok benua wajib ADA (pembanding: tanpa ini, daftar datar
+    // sepanjang 57 baris juga akan lulus tes di atas).
+    expect(
+      (negara?.items ?? []).filter((i) => i.kepalaGrup).length,
+      "negara tidak dikelompokkan per benua",
+    ).toBeGreaterThan(0);
   });
 
   it("penyaring Serial benar-benar mengosongkan daftar film", () => {

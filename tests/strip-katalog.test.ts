@@ -352,9 +352,20 @@ describe("chip strip & menu yang SUNGGUHAN digambar halaman", () => {
         hilang,
       );
     }
-    // Pagar supaya tes di atas tidak lulus hanya karena stripnya kosong.
-    expect(html).toContain(">Cina<");
+    // ⚠️ ">Cina<" IKUT DILEPAS 2026-11-25 (owner: *"untuk negara dan tahun
+    // masukan ke kategori saja tidak perlu ditampilkan disitu"*), jadi
+    // pagarnya pindah ke chip GENRE yang memang masih di strip. Pagar ini
+    // tetap wajib ada: tanpanya, strip yang kosong melompong pun lulus.
+    expect(html).toContain(">Aksi<");
     expect(html).toContain(">Terpopuler<");
+    // Negara & tahun memang TIDAK boleh ada lagi di strip.
+    expect(html, "negara masih tergambar di strip").not.toContain(">Cina<");
+    // Tahun diuji lewat ALAMAT-nya, bukan teks ">2026<": angka tahun juga
+    // tercetak di tiap kartu film, jadi mencari teksnya akan selalu merah
+    // walau stripnya sudah bersih — tes yang mustahil hijau, bukan penjaga.
+    expect(html, "chip tahun masih tergambar di strip").not.toContain(
+      "/discover?year=",
+    );
   });
 
   it("chip yang katalognya berisi memulangkan judul, yang kosong memulangkan NOL", () => {
@@ -368,17 +379,21 @@ describe("chip strip & menu yang SUNGGUHAN digambar halaman", () => {
   });
 
   it("strip memajang label Indonesia tapi alamatnya ejaan OMDb", () => {
+    // ⚠️ CONTOHNYA PINDAH dari negara ke GENRE pada 2026-11-25: chip negara
+    // sudah dilepas dari strip. Aturan yang diuji TIDAK berubah — label
+    // Indonesia tidak boleh ikut masuk ke alamat — dan untuk negara aturan itu
+    // kini dijaga di tests/nav-katalog.test.ts (menu Negara).
     const html = renderToStaticMarkup(
       createElement(DramaBrowser, { dramas: KATALOG }),
     );
-    expect(html).toContain(">Cina<");
-    expect(html).toContain(">Jepang<");
+    expect(html).toContain(">Horor<");
     expect(html).toContain(">Komedi<");
-    expect(html).toContain("/discover?negara=China");
-    expect(html).toContain("/discover?negara=Japan");
+    expect(html).toContain(">Fiksi Ilmiah<");
+    expect(html).toContain("/discover?genre=Horror");
+    expect(html).toContain("/discover?genre=Sci-Fi");
     // Label TIDAK boleh ikut masuk ke alamat.
-    expect(html).not.toContain("negara=Cina");
-    expect(html).not.toContain("negara=Jepang");
+    expect(html).not.toContain("genre=Horor");
+    expect(html).not.toContain("genre=Fiksi");
     expect(html).not.toContain("cat=Komedi");
   });
 });

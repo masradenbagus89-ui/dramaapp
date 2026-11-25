@@ -20,7 +20,7 @@
 //      lewat satu baris, tanpa membangun 40+ kelas dari nol.
 import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
-import { BADAN_SITUS } from "../app/components/beranda/shell";
+import { BADAN_SITUS, TEKS_SEKUNDER } from "../app/components/beranda/shell";
 
 /**
  * Halaman katalog penonton yang WAJIB mengambil latarnya dari `BADAN_SITUS`,
@@ -182,5 +182,104 @@ describe("jalan pulang ke tema terang tetap utuh", () => {
 
     expect(baris).toBeDefined();
     expect(baris).toContain("terang:text-zinc-900");
+  });
+});
+
+// ===========================================================================
+// TEKS BARIS KEDUA (genre di bawah judul kartu · keterangan di bawah judul
+// seksi) — owner 2026-11-25: *"tulisan tidak terlihat warna abu2"*.
+//
+// Sebelumnya `text-zinc-500` disalin di LIMA berkas. Terukur terhadap latar
+// halaman yang sebenarnya (#480a12 + sapuan oranye `latar-bercahaya`), di
+// pojok yang tersorot nilainya cuma **1,16:1** — ambang baca 4,5:1. Putih
+// mencapai 4,18:1, batas atas yang bisa dicapai warna saja.
+//
+// Yang dijaga di sini BUKAN "harus putih" (owner boleh menggantinya kapan
+// saja), melainkan: tak ada lagi salinan liar, dan tokennya tetap membawa
+// pasangan tema terang. Keduanya rusak TANPA error — cuma tulisan yang
+// menghilang dari layar.
+// ===========================================================================
+describe("teks baris kedua: satu token, bukan lima salinan", () => {
+  const PEMAKAI_TEKS_SEKUNDER = [
+    "app/components/beranda/KartuVideo.tsx",
+    "app/components/beranda/CatalogCard.tsx",
+    "app/components/PlaylyVideoGrid.tsx",
+    "app/components/beranda/TabKatalogTampilan.tsx",
+    // Sapuan MENYELURUH 2026-11-25, putaran kedua (owner: *"kamu cek
+    // menyeluruh karena masih ada tulisan yang tidak jelas kamu seragamkan"*).
+    // Ketujuhnya menggambar teks LANGSUNG di atas latar halaman — di situlah
+    // nada pudar gagal terbaca; di dalam panel/footer yang punya latar gelap
+    // sendiri, zinc-400 justru masih 6,76:1 dan sengaja tidak disentuh.
+    "app/components/DramaBrowser.tsx",
+    "app/components/beranda/CatalogBrowser.tsx",
+    "app/components/film/DaftarFilmBerhalaman.tsx",
+    "app/film/page.tsx",
+    "app/shorts/page.tsx",
+    "app/my-list/page.tsx",
+    "app/history/page.tsx",
+  ];
+
+  /**
+   * Berkas yang tidak boleh memakai nada pudar `zinc-500` lagi, walau sebagian
+   * sudah tidak punya teks baris kedua sama sekali.
+   *
+   * `SeksiKatalog` ada di sini TAPI tidak di daftar atas: baris keterangannya
+   * DIBUANG owner 2026-11-25 (lihat tests/seksi-baris-geser.test.ts), jadi ia
+   * tak lagi memakai token — tapi larangan nada pudarnya tetap berlaku kalau
+   * suatu saat ada teks baru ditambahkan di sana.
+   */
+  const BEBAS_ZINC_500 = [
+    ...PEMAKAI_TEKS_SEKUNDER,
+    "app/components/beranda/SeksiKatalog.tsx",
+  ];
+
+  it("TEKS_SEKUNDER membawa pasangan tema terangnya", () => {
+    // Tanpa `terang:`, baris ini jadi PUTIH DI ATAS PUTIH begitu tema terang
+    // dinyalakan — hilang total, nol error.
+    expect(TEKS_SEKUNDER).toMatch(/\bterang:text-\S+/);
+    // Pasangan pembanding: token yang dikosongkan juga harus merah.
+    expect(TEKS_SEKUNDER).toMatch(/(^|\s)text-\S+/);
+  });
+
+  it.each(PEMAKAI_TEKS_SEKUNDER)("%s memakai token, bukan kelas sendiri", (berkas) => {
+    const isi = readFileSync(berkas, "utf8");
+    expect(
+      isi,
+      `${berkas} tidak memakai TEKS_SEKUNDER — warna baris keduanya bisa ` +
+        `menyimpang dari halaman lain tanpa ada yang sadar`,
+    ).toContain("TEKS_SEKUNDER");
+  });
+
+  it.each(BEBAS_ZINC_500)("%s tidak memakai lagi nada pudar", (berkas) => {
+    const isi = readFileSync(berkas, "utf8");
+    // Dicari di dalam className saja: kata "zinc-500" di KOMENTAR (menjelaskan
+    // sejarahnya) tidak boleh ikut merah — kalau ikut, orang akan menghapus
+    // catatan sejarahnya demi meloloskan tes.
+    const kelas = isi.match(/className=(?:"[^"]*"|\{[^}]*\})/g) ?? [];
+    // Diperluas 2026-11-25: bukan cuma zinc-500. Terukur di atas latar
+    // halaman (#480a12 + sapuan oranye `.latar-bercahaya`):
+    //   zinc-400 = 6,17:1 di latar polos TAPI 1,63:1 di pojok yang tersorot
+    //   zinc-500 = 3,27:1 / 1,16:1
+    //   zinc-700 = 1,51:1 / 2,50:1   (dipakai ikon keadaan kosong)
+    // Ambang baca 4,5:1 — ketiganya gagal persis di tempat teks ini hidup.
+    //
+    // Varian `terang:` SENGAJA dikecualikan: di tema terang latarnya putih,
+    // dan di sana nada gelap justru yang benar.
+    // 🪤 JANGAN kembalikan ke `split(/\s+/)` lalu cocokkan utuh: token TERAKHIR
+    // di dalam className masih membawa tanda kutip penutup (`text-zinc-500"`),
+    // jadi ia tak pernah cocok. Versi pertama penjaga ini begitu, dan uji-balik
+    // 2026-11-25 membuktikannya HIJAU walau nada pudar sengaja dikembalikan —
+    // penjaga palsu, lebih berbahaya daripada tidak ada penjaga.
+    //
+    // Lookbehind `(?<![\w:-])` yang menjaga `terang:text-zinc-400` TIDAK ikut
+    // kena: varian tema terang memang harus bernada gelap.
+    const pudar = (k: string) =>
+      /(?<![\w:-])text-zinc-(400|500|700)(?![\w-])/.test(k);
+    expect(
+      kelas.filter(pudar),
+      `${berkas} memakai nada pudar (zinc-400/500/700) di atas latar ` +
+        `halaman — praktis tak terbaca di pojok yang tersorot oranye. ` +
+        `Pakai TEKS_SEKUNDER (teks) atau IKON_KOSONG (ikon hiasan).`,
+    ).toEqual([]);
   });
 });

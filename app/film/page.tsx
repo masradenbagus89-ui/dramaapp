@@ -4,7 +4,11 @@ import { Film } from "lucide-react";
 import { getPlaylyVideosGabunganCached } from "@/lib/playly-gabungan";
 import DaftarFilmBerhalaman from "@/app/components/film/DaftarFilmBerhalaman";
 import { cn } from "@/lib/utils";
-import { BADAN_SITUS } from "@/app/components/beranda/shell";
+import {
+  BADAN_SITUS,
+  IKON_KOSONG,
+  TEKS_SEKUNDER,
+} from "@/app/components/beranda/shell";
 import KepalaFilm from "@/app/components/beranda/KepalaFilm";
 import { SITE_NAME } from "@/lib/site";
 
@@ -62,13 +66,13 @@ export default async function PlaylyPage() {
       <KepalaFilm />
       <div className="mx-auto max-w-7xl px-4 pt-8 md:px-6">
         <header>
-          <p className="text-xs uppercase tracking-wider text-zinc-500 terang:text-zinc-600">
+          <p className={`text-xs uppercase tracking-wider ${TEKS_SEKUNDER}`}>
             Katalog
           </p>
           <h1 className="mt-1 text-2xl font-bold text-white terang:text-zinc-900 md:text-3xl">
             Film &amp; Video
           </h1>
-          <p className="mt-2 max-w-2xl text-sm text-zinc-400 terang:text-zinc-600">
+          <p className={`mt-2 max-w-2xl text-sm ${TEKS_SEKUNDER}`}>
             Semua judul di halaman ini bisa langsung diputar. Klik salah satu
             untuk mulai menonton.
           </p>
@@ -86,13 +90,13 @@ export default async function PlaylyPage() {
             // belum dipasang" adalah keterangan kondisi dalam server, dan itu
             // urusan admin — halaman admin yang menampilkan detailnya.
             <div className="rounded-2xl border border-zinc-800 terang:border-zinc-300 bg-zinc-900/50 terang:bg-white px-6 py-12 text-center">
-              <Film className="mx-auto h-10 w-10 text-zinc-700 terang:text-zinc-400" aria-hidden="true" />
+              <Film className={`mx-auto h-10 w-10 ${IKON_KOSONG}`} aria-hidden="true" />
               <p className="mt-4 text-sm font-medium text-zinc-300 terang:text-zinc-800">
                 {error
                   ? "Daftar video sedang tidak bisa dimuat."
                   : "Belum ada video di sini."}
               </p>
-              <p className="mt-1 text-sm text-zinc-500 terang:text-zinc-600">
+              <p className={`mt-1 text-sm ${TEKS_SEKUNDER}`}>
                 {error
                   ? "Ini gangguan sementara di sisi penyedia video. Coba buka lagi beberapa saat lagi."
                   : "Video akan muncul di sini begitu tersedia."}

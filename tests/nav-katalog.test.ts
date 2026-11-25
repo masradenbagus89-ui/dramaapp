@@ -142,7 +142,7 @@ describe("buildNavMenus", () => {
     // menunya memajang satu baris panjang yang cuma cocok untuk satu judul.
     const negara = buildNavMenus(KAYA).find((m) => m.key === "negara");
     const label = negara?.items.map((i) => i.label) ?? [];
-    expect(label).toContain("Amerika");
+    expect(label).toContain("Amerika Serikat");
     expect(label).toContain("Kanada");
     expect(label).not.toContain("United States, Canada");
   });
@@ -152,7 +152,7 @@ describe("buildNavMenus", () => {
     // ke alamat, padahal penyaring mencocokkan nilai asli OMDb "China" —
     // chip-nya tergambar rapi lalu memulangkan halaman hampa.
     const negara = buildNavMenus(KAYA).find((m) => m.key === "negara");
-    const amerika = negara?.items.find((i) => i.label === "Amerika");
+    const amerika = negara?.items.find((i) => i.label === "Amerika Serikat");
     expect(amerika?.href).toBe("/discover?negara=United+States");
     expect(hasilDariTautan(KAYA, amerika!.href).map((d) => d.id)).toEqual(["a"]);
   });
@@ -330,17 +330,11 @@ describe("STRIP_KATALOG (daftar tetap milik owner)", () => {
       "Komedi",
       "Fiksi Ilmiah",
       "Romantis",
-      "Cina",
-      "India",
-      "Jepang",
-      "Korea",
-      "Thailand",
-      // ⚠️ DIBALIK 2026-11-14 (owner: "tahun mulai dari tahun terbaru").
-      // Strip ini satu-satunya tempat di situs yang tahunnya MENAIK; menu
-      // dropdown "Tahun" sudah menurun sejak dulu. Merahnya tes lama bukan
-      // bug — urutannya memang sengaja diubah.
-      "2026",
-      "2025",
+      // ⚠️ LIMA NEGARA + DUA TAHUN DILEPAS 2026-11-25 (owner: "untuk negara
+      // dan tahun masukan ke kategori saja tidak perlu ditampilkan disitu").
+      // Merahnya tes lama BUKAN bug — isinya memang sengaja dipendekkan.
+      // Keduanya pindah ke menu dropdown bar atas, yang justru lebih lengkap:
+      // menu Negara kini memuat SELURUH negara berisi, dikelompokkan per benua.
       "Terpopuler",
     ]);
   });
@@ -372,9 +366,12 @@ describe("STRIP_KATALOG (daftar tetap milik owner)", () => {
     expect(cari("Horor")).toBe("/discover?genre=Horror");
     expect(cari("Fiksi Ilmiah")).toBe("/discover?genre=Sci-Fi");
     expect(cari("Romantis")).toBe("/discover?cat=Romance");
-    expect(cari("Cina")).toBe("/discover?negara=China");
-    expect(cari("Jepang")).toBe("/discover?negara=Japan");
-    expect(cari("Korea")).toBe("/discover?negara=South+Korea");
+    // Chip NEGARA tidak lagi di strip (owner 2026-11-25). Aturan yang sama
+    // tetap diuji untuk menu Negara di test "menerjemahkan LABEL negara tapi
+    // TIDAK alamatnya" di atas — jadi nol pengawasan hilang, cuma pindah
+    // tempat mengikuti chip-nya.
+    expect(cari("Cina"), "negara masih nyangkut di strip").toBeUndefined();
+    expect(cari("2026"), "tahun masih nyangkut di strip").toBeUndefined();
   });
 
   it("chip yang katalognya memang berisi memulangkan judul", () => {
@@ -430,5 +427,102 @@ describe("alamatCari", () => {
     // yang pernah dibagikan penonton tetap berarti sama.
     expect(alamatCari("dua kata")).toContain("%20");
     expect(alamatCari("dua kata")).not.toContain("+");
+  });
+});
+
+// ===========================================================================
+// NEGARA — owner 2026-11-25: *"untuk negara dan tahun masukan ke kategori saja
+// tidak perlu ditampilkan disitu dan untuk negara kamu buat lebih banyak lagi
+// atau kamu ada solusi lain agar semua negara bisa muncul"*.
+//
+// Terukur hari itu: katalog memuat 57 negara, menu cuma memuat 24 teratas.
+// Owner memilih (dari 3 pilihan) agar SEMUA muncul, dikelompokkan per benua.
+//
+// ⚠️ Yang dijaga di sini tiga hal yang kalau putus merusak DIAM-DIAM:
+//   1. negara terpotong lagi -> judul hilang dari menu tanpa satu pun error;
+//   2. nama kembar (USA / United States) terpecah dua -> satu negara tampil
+//      dua kali, masing-masing berisi separuh filmnya;
+//   3. judul kelompok ikut terhitung sebagai pilihan -> menu berisi 1 negara
+//      lolos ambang, dan penonton dapat dropdown yang tak menambah apa pun.
+// ===========================================================================
+describe("menu Negara: semua negara, dikelompokkan per benua", () => {
+  const dramaNegara = (id: string, country: string) =>
+    ({
+      id,
+      title: `Judul ${id}`,
+      category: "Action",
+      episodes: 1,
+      views: "1",
+      synopsis: "",
+      gradient: "",
+      year: "2026",
+      country,
+    }) as never;
+
+  const menuNegara = (dramas: unknown[]) =>
+    buildNavMenus(dramas as never, []).find((m) => m.key === "negara");
+
+  it("NOL negara terpotong, walau jumlahnya jauh di atas batas lama", () => {
+    const banyak = Array.from({ length: 40 }, (_, i) =>
+      dramaNegara(`d${i}`, `Negeri${String(i).padStart(2, "0")}`),
+    );
+    const pilihan = (menuNegara(banyak)?.items ?? []).filter(
+      (i) => !i.kepalaGrup && i.href !== "/discover",
+    );
+    expect(
+      pilihan.length,
+      "ada negara yang terpotong — owner meminta SEMUA negara muncul",
+    ).toBe(40);
+  });
+
+  it("negara Asia dikelompokkan dan muncul SEBELUM Eropa", () => {
+    const menu = menuNegara([
+      dramaNegara("a", "Japan"),
+      dramaNegara("b", "South Korea"),
+      dramaNegara("c", "France"),
+      dramaNegara("d", "Germany"),
+    ]);
+    const label = (menu?.items ?? []).map((i) => i.label);
+    expect(label).toContain("Asia");
+    expect(label).toContain("Eropa");
+    // Asia lebih dulu: situs ini katalog Asia untuk penonton Indonesia, jadi
+    // menaruh Eropa di depan membuat yang paling dicari paling jauh dari mata.
+    expect(label.indexOf("Asia")).toBeLessThan(label.indexOf("Eropa"));
+    // Judul kelompok BUKAN tautan penyaring.
+    const asia = (menu?.items ?? []).find((i) => i.label === "Asia");
+    expect(asia?.kepalaGrup).toBe(true);
+  });
+
+  it('"USA" dan "United States" jadi SATU baris, bukan dua', () => {
+    // Jepang ikut disertakan BUKAN sebagai hiasan: sesudah USA & United States
+    // disatukan tinggal SATU negara, dan menu berisi satu pilihan memang
+    // sengaja dibuang (MIN_ITEM_MENU). Tanpa negara kedua, tes ini merah
+    // karena aturan lain yang justru bekerja benar.
+    const menu = menuNegara([
+      dramaNegara("a", "USA"),
+      dramaNegara("b", "United States"),
+      dramaNegara("c", "Japan"),
+    ]);
+    const label = (menu?.items ?? []).map((i) => i.label);
+    expect(label.filter((l) => l === "Amerika Serikat")).toHaveLength(1);
+    expect(label, "ejaan mentah USA bocor ke layar").not.toContain("USA");
+  });
+
+  it("klik Amerika Serikat ikut membawa judul yang bertanda USA", () => {
+    // Inilah akibat nyata yang dirasakan penonton: tanpa penyatuan, separuh
+    // filmnya hilang dari hasil tanpa satu pun pesan.
+    const katalog = [dramaNegara("a", "USA"), dramaNegara("b", "United States")];
+    const hasil = hasilDariTautan(
+      katalog as never,
+      "/discover?negara=United+States",
+    );
+    expect(hasil.map((d) => d.id).sort()).toEqual(["a", "b"]);
+  });
+
+  it("judul kelompok TIDAK dihitung sebagai pilihan menu", () => {
+    // Satu negara saja = menu dibuang (MIN_ITEM_MENU). Kalau judul benuanya
+    // ikut terhitung, menu berisi satu pilihan lolos — cuma menambah satu klik
+    // ke tempat yang sama.
+    expect(menuNegara([dramaNegara("a", "China")])).toBeUndefined();
   });
 });

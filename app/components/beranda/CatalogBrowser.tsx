@@ -24,7 +24,13 @@ import StripKatalog from "./StripKatalog";
 import { chromeKatalog } from "./KepalaKatalog";
 import HasilPlayly, { cariVideoPlayly } from "./HasilPlayly";
 import SearchBar, { KELAS_MENEMPEL_KEPALA } from "./SearchBar";
-import { GRID_CLASS, ROW_KATEGORI_CARD_CLASS, SHELL } from "./shell";
+import {
+  GRID_CLASS,
+  IKON_KOSONG,
+  ROW_KATEGORI_CARD_CLASS,
+  SHELL,
+  TEKS_SEKUNDER,
+} from "./shell";
 import { Button } from "@/components/ui/button";
 import { Home, Search, X } from "lucide-react";
 
@@ -248,7 +254,7 @@ export default function CatalogBrowser({
         {/* Remah jejak: penonton tahu sedang berada di mana. */}
         <nav
           aria-label="Remah jejak"
-          className="flex items-center gap-1.5 pt-5 text-[11px] text-zinc-500"
+          className={`flex items-center gap-1.5 pt-5 text-[11px] ${TEKS_SEKUNDER}`}
         >
           <Home className="size-3" />
           <Link href="/beranda" className="hover:text-emas-400">
@@ -287,7 +293,7 @@ export default function CatalogBrowser({
       ) : (
       <div className={SHELL}>
         <div className="mt-2 flex flex-wrap items-center justify-between gap-3 border-b border-gelap-700 pb-3">
-          <h2 className="text-sm text-zinc-400">
+          <h2 className={`text-sm ${TEKS_SEKUNDER}`}>
             <span className="font-bold text-white">
               Halaman {halaman.page} dari {halaman.totalPages}
             </span>{" "}
@@ -301,7 +307,7 @@ export default function CatalogBrowser({
               variant="ghost"
               size="sm"
               onClick={resetFilter}
-              className="h-8 gap-1 rounded-sm text-xs text-zinc-400 hover:text-white"
+              className={`h-8 gap-1 rounded-sm text-xs ${TEKS_SEKUNDER} hover:text-emas-300`}
             >
               <X className="size-3.5" />
               Hapus filter
@@ -314,8 +320,8 @@ export default function CatalogBrowser({
         <div ref={gridRef} className="scroll-mt-32">
           {halaman.items.length === 0 ? (
             <div className="flex flex-col items-center gap-3 py-16 text-center">
-              <Search className="size-8 text-zinc-700" />
-              <p className="text-sm text-zinc-500">
+              <Search className={`size-8 ${IKON_KOSONG}`} />
+              <p className={`text-sm ${TEKS_SEKUNDER}`}>
                 Tidak ada judul yang cocok dengan pencarian ini.
               </p>
               {videoPlayly.length > 0 && (

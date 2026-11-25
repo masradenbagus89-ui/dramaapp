@@ -2,6 +2,7 @@ import type { Category, Drama } from "./types";
 import { CATEGORIES, isMovie } from "./types";
 import { parseViews } from "./format";
 import { diawaliKetikan } from "./pencarian";
+import { namaKanonik } from "./negara";
 
 export const SORT_OPTIONS = [
   { value: "relevance", label: "Paling sesuai" },
@@ -206,7 +207,12 @@ function cocokSub(d: Drama, sub: SubKey): boolean {
 
 function cocokNegara(d: Drama, negara: string): boolean {
   if (negara === "all") return true;
-  return negaraDari(d).includes(negara);
+  // Dibandingkan lewat `namaKanonik`, BUKAN apa adanya: katalog memuat "USA"
+  // dan "United States" untuk negara yang sama (owner 2026-11-25). Tanpa ini,
+  // mengklik "Amerika" menyembunyikan separuh judulnya — tanpa satu pun error,
+  // cuma daftar yang diam-diam tidak lengkap.
+  const dicari = namaKanonik(negara);
+  return negaraDari(d).some((n) => namaKanonik(n) === dicari);
 }
 
 function cocokGenre(d: Drama, genre: string): boolean {

@@ -103,11 +103,18 @@ describe("menu akun benar-benar DIPASANG, bukan cuma dibuat", () => {
 
     it(`${berkas} benar-benar merendernya`, () => {
       const sumber = readFileSync(berkas, "utf-8");
-      // Dicari sebagai elemen UTUH (`<MenuAkun />`), bukan sekadar kata
-      // "MenuAkun": mutasi 2026-09-23 membuktikan `toContain("<Nama")` masih
-      // cocok walau namanya diubah jadi `<NamaXX`, sehingga penjaganya palsu.
+      // Dicari sebagai elemen UTUH, bukan sekadar kata "MenuAkun": mutasi
+      // 2026-09-23 membuktikan `toContain("<Nama")` masih cocok walau namanya
+      // diubah jadi `<NamaXX`, sehingga penjaganya palsu. Karena itu nama
+      // komponennya wajib diikuti spasi atau `/` — `<MenuAkunXX />` tetap
+      // ditolak.
+      //
+      // Props DIIZINKAN sejak 2026-11-25: bar merah memanggilnya
+      // `<MenuAkun pemicu="ringkas" />` (owner meminta tampilan profil di pojok
+      // kanan disembunyikan). Yang dijaga tes ini memang "benar-benar
+      // dipasang", bukan "dipasang tanpa pengaturan".
       expect(sumber, `${berkas} mengimpor tapi tidak merender — ${kenapa}`).toMatch(
-        /<MenuAkun\s*\/>/,
+        /<MenuAkun(\s[^>]*)?\s*\/>/,
       );
     });
   }

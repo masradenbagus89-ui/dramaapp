@@ -33,7 +33,7 @@ import { countWithRating, countWithYear } from "./beranda-catalog";
 import { getGenreOptions, parseImdb } from "./discover";
 import { labelGenre } from "./genre";
 import { labelNegara } from "./negara";
-import { opsiNegaraGabungan } from "./film-jelajah";
+import { opsiNegaraPerBenua } from "./film-jelajah";
 import type { PlaylyVideoPublik } from "./playly-publik";
 import { tahunRilis } from "./tahun-film";
 import { PAYWALL_ENABLED } from "./saklar-fitur";
@@ -46,7 +46,24 @@ import { PAYWALL_ENABLED } from "./saklar-fitur";
  * label ikut masuk ke alamat, chip-nya tergambar rapi lalu memulangkan halaman
  * hampa — rusak tanpa satu pun pesan error.
  */
-export type NavItem = { label: string; href: string };
+export type NavItem = {
+  label: string;
+  href: string;
+  /**
+   * true = baris ini JUDUL KELOMPOK ("ASIA", "EROPA"), bukan tautan.
+   *
+   * Dipakai menu Negara sejak 2026-11-25: katalog memuat 57 negara, dan owner
+   * memilih menampilkan semuanya dikelompokkan per benua daripada memotongnya
+   * di 24 nama. Penanda ini yang membuat `NavMenus` & `MenuKatalogHp`
+   * menggambarnya sebagai judul, bukan tautan mati.
+   *
+   * ⚠️ `href` TETAP diisi (dengan alamat kelompoknya kalau ada, atau TUJUAN)
+   * dan bukan string kosong: beberapa tes menjalankan SETIAP href lewat
+   * penyaring halaman, dan href kosong akan memulangkan hasil yang
+   * membingungkan alih-alih gagal dengan jelas.
+   */
+  kepalaGrup?: boolean;
+};
 
 /** Satu tombol dropdown beserta isinya. */
 export type NavMenu = {
@@ -301,7 +318,15 @@ function menu(
   hiasan: { kolom?: 2 | 3 | 4; lebarNama?: boolean; tanpaLainnya?: boolean } = {},
 ): NavMenu | null {
   const isi = items.filter((i): i is NavItem => i !== null);
-  if (isi.length < MIN_ITEM_MENU) return null;
+  // Ambang dinilai atas PILIHAN YANG BISA DIKLIK saja — judul kelompok
+  // (`kepalaGrup`, mis. "ASIA") tidak ikut dihitung. Tanpa penyaring ini menu
+  // Negara berisi SATU negara lolos ambang hanya karena judul benuanya ikut
+  // terhitung, dan penonton mendapat dropdown yang cuma menambah satu klik ke
+  // tempat yang sama — persis yang dicegah aturan ini. Ketahuan dari tes
+  // "baris penutup TIDAK menolong menu yang isinya kurang" saat pengelompokan
+  // per benua dipasang 2026-11-25.
+  const bisaDiklik = isi.filter((i) => !i.kepalaGrup);
+  if (bisaDiklik.length < MIN_ITEM_MENU) return null;
   // Ditambahkan SESUDAH ambang MIN_ITEM_MENU dinilai: baris penutup bukan
   // "isi" menu, dan menu berisi satu pilihan + "Lainnya" tetap cuma menambah
   // satu klik untuk sampai ke tempat yang sama.
@@ -609,14 +634,28 @@ export function buildNavMenus(
       { label: "Episode Terbanyak", href: tautan({ sort: "episodes" }) },
       { label: "Judul A-Z", href: tautan({ sort: "title" }) },
     ]),
+    // ⚠️ DIKELOMPOKKAN PER BENUA sejak 2026-11-25, dan tidak lagi dipotong di
+    // 24 nama. Owner: *"untuk negara kamu buat lebih banyak lagi atau kamu ada
+    // solusi lain agar semua negara bisa muncul"* — terukur, katalog memuat 57
+    // negara sedangkan menu cuma memuat 24. Dari 3 pilihan yang diajukan owner
+    // memilih pengelompokan per benua, bukan daftar datar sepanjang 57 baris.
+    //
+    // `opsiNegaraGabungan` (versi datar, berbatas) TIDAK dihapus — ia masih
+    // dipakai tempat lain & tesnya; yang berubah cuma sumber menu ini.
     menu(
       "negara",
       "Negara",
-      opsiNegaraGabungan(dramas, videos).map((n) => ({
-        // Label diterjemahkan, alamatnya TIDAK — lihat catatan di `NavItem`.
-        label: labelNegara(n),
-        href: tautan({ negara: n }),
-      })),
+      opsiNegaraPerBenua(dramas, videos).flatMap(({ benua, negara }) => [
+        // Judul kelompok. `href` diisi TUJUAN (katalog tanpa penyaring) supaya
+        // tes yang menjalankan tiap alamat tidak menemukan href kosong —
+        // barisnya sendiri tidak digambar sebagai tautan.
+        { label: benua, href: TUJUAN, kepalaGrup: true },
+        ...negara.map((n) => ({
+          // Label diterjemahkan, alamatnya TIDAK — lihat catatan di `NavItem`.
+          label: labelNegara(n),
+          href: tautan({ negara: n }),
+        })),
+      ]),
       { kolom: KOLOM_NEGARA, lebarNama: true },
     ),
     // Owner 2026-11-14: "tahun mulai dari tahun terbaru". Urutannya SUDAH
@@ -752,18 +791,17 @@ export const STRIP_KATALOG: NavItem[] = [
   { label: labelGenre("Comedy"), href: tautan({ cat: "Comedy" }) },
   { label: labelGenre("Sci-Fi"), href: tautan({ genre: "Sci-Fi" }) },
   { label: labelGenre("Romance"), href: tautan({ cat: "Romance" }) },
-  // Nama negara di alamat WAJIB memakai ejaan OMDb (bahasa Inggris) — itu yang
-  // dicocokkan `cocokNegara`. Labelnya diterjemahkan lewat lib/negara.ts.
-  { label: labelNegara("China"), href: tautan({ negara: "China" }) },
-  { label: labelNegara("India"), href: tautan({ negara: "India" }) },
-  { label: labelNegara("Japan"), href: tautan({ negara: "Japan" }) },
-  { label: labelNegara("South Korea"), href: tautan({ negara: "South Korea" }) },
-  { label: labelNegara("Thailand"), href: tautan({ negara: "Thailand" }) },
-  // ⚠️ TERBARU DULU (owner 2026-11-14: "tahun mulai dari tahun terbaru").
-  // Sebelumnya 2025 berdiri di depan 2026 — satu-satunya tempat di situs
-  // yang tahunnya menaik, dan itulah yang terlihat owner di strip kuning.
-  // Menu dropdown "Tahun" sudah menurun sejak dulu.
-  { label: "2026", href: tautan({ year: "2026" }) },
-  { label: "2025", href: tautan({ year: "2025" }) },
+  // ⚠️ LIMA NEGARA (Cina · India · Jepang · Korea · Thailand) dan DUA TAHUN
+  // (2026 · 2025) DILEPAS dari strip pada 2026-11-25 atas permintaan owner:
+  // *"untuk negara dan tahun masukan ke kategori saja tidak perlu ditampilkan
+  // disitu"*. Strip ini kini MURNI GENRE + satu pintasan pengurutan.
+  //
+  // Keduanya TIDAK hilang dari situs — justru jadi lebih lengkap: menu
+  // dropdown "Negara" di bar atas kini memuat SELURUH negara yang ada isinya
+  // (57 per 2026-11-25), dikelompokkan per benua, dan menu "Tahun" memang
+  // sudah memuat semua tahun dari katalog sejak dulu. Strip hanya kehilangan
+  // 7 pintasan; nol tujuan hilang.
+  //
+  // Jangan dikembalikan tanpa permintaan baru.
   { label: "Terpopuler", href: tautan({ sort: "populer" }) },
 ];

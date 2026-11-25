@@ -10,7 +10,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Bookmark } from "lucide-react";
 import TombolKembali from "@/app/components/TombolKembali";
 import { cn } from "@/lib/utils";
-import { BADAN_SITUS } from "@/app/components/beranda/shell";
+import {
+  BADAN_SITUS,
+  IKON_KOSONG,
+  TEKS_SEKUNDER,
+} from "@/app/components/beranda/shell";
 
 export default function MyListPage() {
   const [ids, setIds] = useState<string[] | null>(null);
@@ -49,7 +53,7 @@ export default function MyListPage() {
       <div className="flex items-start justify-between gap-3">
         <div>
           <h1 className="text-xl font-bold text-white terang:text-zinc-900 md:text-2xl">Favorit</h1>
-          <p className="mt-1 text-sm text-zinc-400 terang:text-zinc-600">
+          <p className={`mt-1 text-sm ${TEKS_SEKUNDER}`}>
             Drama yang Anda simpan untuk ditonton nanti.
           </p>
         </div>
@@ -57,12 +61,12 @@ export default function MyListPage() {
       </div>
 
       {ids === null ? (
-        <div className="mt-12 text-center text-sm text-zinc-500 terang:text-zinc-600">Memuat...</div>
+        <div className={`mt-12 text-center text-sm ${TEKS_SEKUNDER}`}>Memuat...</div>
       ) : dramas.length === 0 ? (
         <Card className="mt-16 border-zinc-800 bg-zinc-900/40 terang:border-zinc-200 terang:bg-white">
           <CardContent className="flex flex-col items-center text-center">
-            <Bookmark className="h-16 w-16 fill-zinc-700 text-zinc-700 terang:fill-zinc-300 terang:text-zinc-300" />
-            <p className="mt-3 text-sm text-zinc-500 terang:text-zinc-600">
+            <Bookmark className={`h-16 w-16 fill-current ${IKON_KOSONG}`} />
+            <p className={`mt-3 text-sm ${TEKS_SEKUNDER}`}>
               Belum ada drama favorit.
             </p>
             <Button

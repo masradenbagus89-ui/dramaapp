@@ -135,6 +135,55 @@ export const SOROT_BAR_MEREK =
   "hover:bg-emas-500/15 focus-visible:bg-emas-500/15";
 
 /**
+ * TEKS BARIS KEDUA di atas latar halaman — genre di bawah judul kartu, dan
+ * keterangan di bawah judul seksi ("Judul yang paling baru masuk katalog").
+ *
+ * ⚠️ DULU `text-zinc-500`, DIGANTI 2026-11-25 atas laporan owner (*"tulisan
+ * tidak terlihat warna abu2"*). Sebabnya BUKAN selera — terukur terhadap latar
+ * halaman yang sebenarnya (`--color-latar` #480a12 + sapuan oranye
+ * `latar-bercahaya` di app/globals.css):
+ *
+ *     warna      latar polos   POJOK yang tersorot oranye
+ *     zinc-500      3,27:1              1,16:1   <- praktis tak terlihat
+ *     zinc-200     12,47:1              3,29:1
+ *     putih        15,82:1              4,18:1   <- dipakai
+ *
+ * Sapuan oranye paling kuat justru menumpuk di DUA POJOK BAWAH, dan di situlah
+ * baris genre kartu berada — jadi masalahnya paling parah tepat di tempat teks
+ * ini hidup. Putih adalah batas atas yang bisa dicapai warna saja; 4,18:1 masih
+ * sedikit di bawah ambang 4,5:1 untuk teks kecil. Menaikkannya lagi TIDAK bisa
+ * lewat warna (tak ada yang lebih terang dari putih) — perlu bayangan teks tipis
+ * di belakangnya; belum dipasang karena owner belum memintanya.
+ *
+ * ⚠️ `terang:text-zinc-600` WAJIB ikut: di tema terang latarnya putih, dan teks
+ * putih di sana HILANG sama sekali — nol error, cuma baris yang lenyap.
+ * Dijaga tests/badan-situs.test.ts untuk komponen yang terdaftar di sana.
+ *
+ * KENAPA TOKEN, bukan ditulis ulang di tiap kartu: kelas ini sebelumnya disalin
+ * di LIMA berkas (KartuVideo · CatalogCard · PlaylyVideoGrid · SeksiKatalog ·
+ * TabKatalogTampilan). Lima salinan pasti menyimpang, dan menyimpangnya tanpa
+ * error — cuma satu baris di satu halaman yang warnanya beda sendiri. Pola yang
+ * sama dengan `TEKS_BAR_MEREK` di atas, yang lahir dari masalah persis begitu.
+ */
+export const TEKS_SEKUNDER = "text-white terang:text-zinc-600";
+
+/**
+ * IKON BESAR di keadaan kosong ("Belum ada shorts trending", "Tidak ada drama
+ * yang cocok") — gambar hiasan di atas teksnya.
+ *
+ * ⚠️ DULU `text-zinc-700`, dan itu terukur **1,51:1** terhadap latar halaman:
+ * praktis tidak terlihat, jadi keadaan kosong terbaca seperti halaman yang
+ * gagal dimuat separuh. Diganti 2026-11-25 bersama sapuan teks pudar.
+ *
+ * Sengaja TIDAK seputih teksnya (`text-white/45`): ikon ini hiasan ber-
+ * `aria-hidden`, bukan informasi. Yang membawa pesannya adalah kalimat di
+ * bawahnya — kalau ikonnya sama mencoloknya, mata justru tertarik ke gambar
+ * yang tidak mengatakan apa-apa. 45% putih = sekitar 4:1 di latar polos:
+ * jelas terlihat sebagai bentuk, tanpa bersaing dengan kalimatnya.
+ */
+export const IKON_KOSONG = "text-white/45 terang:text-zinc-400";
+
+/**
  * TOMBOL UTAMA (ajakan bertindak) — "SEMUA", "TEMUKAN TONTONAN FAVORITMU".
  *
  * KENAPA ADA: sebelum 2026-11-23 gradasi `from-fuchsia-600 to-rose-600`

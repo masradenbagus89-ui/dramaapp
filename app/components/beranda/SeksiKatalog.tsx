@@ -20,14 +20,12 @@ import { cn } from "@/lib/utils";
  */
 export default function SeksiKatalog({
   judul,
-  keterangan,
   kartu,
   hrefSemua,
   /** Sasaran lompatan sekaligus penanda yang dipatok tes. */
   idSeksi,
 }: {
   judul: string;
-  keterangan: string;
   kartu: KartuKatalog[];
   hrefSemua: string;
   idSeksi: string;
@@ -51,13 +49,18 @@ export default function SeksiKatalog({
              ke sini. Sejajar judul juga berarti tombolnya tidak lagi terseret
              jauh ke bawah saat barisan posternya panjang. ===== */}
       <div className={cn(SHELL, "flex items-end justify-between gap-3 pt-4")}>
+        {/* HANYA JUDUL. Baris keterangan di bawahnya ("Judul yang paling baru
+            masuk katalog Layarindo.", "Diurutkan dari rating tertinggi.", dst)
+            DIBUANG 2026-11-25 atas permintaan owner, sehari setelah warnanya
+            dinaikkan jadi putih: begitu terbaca jelas, kelimanya justru terlihat
+            memenuhi halaman. Teksnya TIDAK hilang dari project — `keterangan`
+            tetap hidup di lib/tab-katalog.ts dan masih dipakai kepala tab di
+            TabKatalogTampilan, jadi mengembalikannya cukup satu baris di sini.
+            Jangan dikembalikan tanpa permintaan baru. */}
         <div className="min-w-0">
           <h2 className="truncate text-sm font-extrabold uppercase tracking-wide text-white terang:text-zinc-900 md:text-base">
             {judul}
           </h2>
-          <p className="mt-0.5 truncate text-[11px] text-zinc-500 terang:text-zinc-600">
-            {keterangan}
-          </p>
         </div>
         <Button
           asChild

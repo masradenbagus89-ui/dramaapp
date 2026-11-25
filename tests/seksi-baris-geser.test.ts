@@ -32,7 +32,6 @@ const render = (jumlah: number) =>
     createElement(SeksiKatalog, {
       idSeksi: "seksi-uji",
       judul: "Series Terbaru",
-      keterangan: "Judul yang paling baru masuk katalog.",
       kartu: kartu(jumlah),
       hrefSemua: "/katalog",
     }),
@@ -78,5 +77,37 @@ describe("seksi halaman depan — satu baris + panah kanan", () => {
     const html = render(0);
 
     expect(html).toBe("");
+  });
+});
+
+// ===========================================================================
+// KEPALA SEKSI = JUDUL SAJA (owner 2026-11-25: *"yang saya beri kotak merah
+// kamu hilangkan saja"* — lima baris keterangan di bawah judul seksi).
+//
+// ⚠️ Kenapa dijaga tes, bukan cukup dihapus: baris itu datang dari sebuah PROP.
+// Siapa pun yang kelak menambahkan kembali `keterangan` ke SeksiKatalog akan
+// mengembalikan kelima baris SEKALIGUS di halaman depan — tanpa satu pun error,
+// cuma halaman yang kembali ke bentuk yang sudah ditolak owner.
+//
+// Teksnya sendiri TIDAK dibuang dari project: `keterangan` tetap hidup di
+// lib/tab-katalog.ts dan masih dipakai kepala tab di TabKatalogTampilan.
+// ===========================================================================
+describe("kepala seksi: judul saja, tanpa baris keterangan", () => {
+  it("tidak ada paragraf di antara judul dan tombol Semua", () => {
+    const html = render(6);
+    const kepala = html.slice(html.indexOf("Series Terbaru"), html.indexOf(">Semua<"));
+
+    expect(
+      kepala,
+      "muncul lagi baris teks di bawah judul seksi — owner memintanya dibuang " +
+        "2026-11-25 (lima baris sekaligus di halaman depan)",
+    ).not.toContain("<p");
+  });
+
+  it("judul seksinya sendiri TETAP tergambar", () => {
+    // Pasangan pembanding: tanpa ini, SeksiKatalog yang kepalanya dihapus
+    // seluruhnya akan lulus hijau — dan penonton kehilangan nama tiap baris.
+    const html = render(6);
+    expect(html).toContain("Series Terbaru");
   });
 });

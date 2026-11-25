@@ -32,6 +32,7 @@ import {
   KELAS_CHIP_BARIS,
   ROW_KATEGORI_CARD_CLASS,
   SHELL,
+  TEKS_SEKUNDER,
   TOMBOL_UTAMA,
 } from "./shell";
 import { ID_JUDUL_TAWARAN } from "./LayarindoMenawarkan";
@@ -397,7 +398,6 @@ export default function TabKatalogTampilan({
                 key={KUNCI_BARIS_VIDEO}
                 idSeksi={`seksi-${KUNCI_BARIS_VIDEO}`}
                 judul={JUDUL_BARIS_VIDEO}
-                keterangan="Film layar lebar — tahun rilis terbaru lebih dulu."
                 kartu={videos.map(bungkusVideo)}
                 hrefSemua="/film"
               />
@@ -457,7 +457,6 @@ export default function TabKatalogTampilan({
                 key={t.key}
                 idSeksi={`seksi-${t.key}`}
                 judul={t.judul}
-                keterangan={t.keterangan}
                 kartu={kartuSeksi(t)}
                 /* Seksi berisi film menunjuk /film, bukan /katalog?tab=… —
                    halaman katalog menampilkan DRAMA, jadi "Semua" dari seksi
@@ -499,7 +498,7 @@ export default function TabKatalogTampilan({
           <h2 className="truncate text-base font-bold text-white terang:text-zinc-900 md:text-lg">
             {tabAktif.judul}
           </h2>
-          <p className="mt-0.5 truncate text-[11px] text-zinc-500 terang:text-zinc-600">
+          <p className={cn("mt-0.5 truncate text-[11px]", TEKS_SEKUNDER)}>
             {tabAktif.keterangan} · {isi.length} judul
           </p>
         </div>
@@ -521,7 +520,10 @@ export default function TabKatalogTampilan({
 
       {/* ===== Isi: baris geser, atau grid penuh kalau "Semua" ditekan ===== */}
       {tampil.length === 0 ? (
-        <div className={cn(SHELL, "py-10 text-center text-sm text-zinc-500 terang:text-zinc-600")}>
+        // Pesan "kosong" ikut dinaikkan warnanya 2026-11-25: saat ia tampil,
+        // ia SATU-SATUNYA tulisan di area itu — justru yang paling tidak boleh
+        // pudar. Dulu `text-zinc-500` yang sama dengan baris genre.
+        <div className={cn(SHELL, "py-10 text-center text-sm", TEKS_SEKUNDER)}>
           Belum ada judul di bagian ini.
         </div>
       ) : semua ? (

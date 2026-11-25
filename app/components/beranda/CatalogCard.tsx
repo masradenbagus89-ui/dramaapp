@@ -6,6 +6,8 @@ import { teaserSrc } from "@/lib/hero-teaser";
 import { labelGenre } from "@/lib/genre";
 import Poster from "../Poster";
 import { Play } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { TEKS_SEKUNDER } from "./shell";
 
 /**
  * Kartu poster PADAT untuk grid katalog — poster 2:3 rapat berlencana, pola
@@ -58,7 +60,7 @@ export default function CatalogCard({
       >
         {drama.title}
       </h3>
-      <p className="mt-0.5 line-clamp-1 text-[11px] text-zinc-500 terang:text-zinc-600">
+      <p className={cn("mt-0.5 line-clamp-1 text-[11px]", TEKS_SEKUNDER)}>
         {labelGenre(drama.category)}
       </p>
     </Link>

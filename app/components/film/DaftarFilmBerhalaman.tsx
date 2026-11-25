@@ -4,6 +4,7 @@ import { useMemo, useRef, useState } from "react";
 import type { PlaylyVideoPublik } from "@/lib/playly-publik";
 import { pageOfCatalog } from "@/lib/beranda-catalog";
 import PlaylyVideoGrid from "@/app/components/PlaylyVideoGrid";
+import { TEKS_SEKUNDER } from "@/app/components/beranda/shell";
 import NomorHalaman from "@/app/components/NomorHalaman";
 
 /**
@@ -61,7 +62,7 @@ export default function DaftarFilmBerhalaman({
       {/* scroll-mt menahan baris pertama dari balik navbar yang menempel. */}
       <div ref={atasRef} className="scroll-mt-20" />
 
-      <p className="mb-4 text-xs text-zinc-500 terang:text-zinc-600">
+      <p className={`mb-4 text-xs ${TEKS_SEKUNDER}`}>
         Menampilkan {potongan.from}&ndash;{potongan.to} dari {potongan.total}{" "}
         judul
       </p>

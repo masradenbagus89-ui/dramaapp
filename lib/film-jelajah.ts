@@ -23,6 +23,7 @@
 import type { Drama } from "./types";
 import type { PlaylyVideoPublik } from "./playly-publik";
 import { negaraDari, pecahDaftar, type FilterDramaOptions } from "./discover";
+import { benuaDari, labelNegara, namaKanonik, URUTAN_BENUA } from "./negara";
 
 /**
  * Berapa negara yang boleh masuk menu.
@@ -80,8 +81,12 @@ function cocokSatuGenre(v: PlaylyVideoPublik, nilai: string): boolean {
 
 function cocokNegaraFilm(v: PlaylyVideoPublik, nilai: string): boolean {
   if (!nilai || nilai === "all") return true;
-  const dicari = samakan(nilai);
-  return negaraFilm(v).some((n) => samakan(n) === dicari);
+  // `namaKanonik` DULU, baru `samakan`: katalog memuat "USA" dan
+  // "United States" untuk negara yang sama. Aturannya dibuat kembar dengan
+  // `cocokNegara` (lib/discover.ts) — dua aturan berbeda untuk satu pertanyaan
+  // berarti drama dan film bisa menjawab beda, dan itu tak memunculkan error.
+  const dicari = samakan(namaKanonik(nilai));
+  return negaraFilm(v).some((n) => samakan(namaKanonik(n)) === dicari);
 }
 
 function cocokTahunFilm(v: PlaylyVideoPublik, nilai: string): boolean {
@@ -154,20 +159,77 @@ export function opsiNegaraGabungan(
   videos: PlaylyVideoPublik[] = [],
   batas = BATAS_MENU_NEGARA,
 ): string[] {
+  return [...hitungNegara(dramas, videos).entries()]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "id"))
+    .slice(0, batas)
+    .map(([negara]) => negara);
+}
+
+/**
+ * Berapa JUDUL yang dimiliki tiap negara. Satu sumber hitungan untuk daftar
+ * datar maupun daftar per-benua, jadi keduanya mustahil berbeda isi.
+ */
+function hitungNegara(
+  dramas: Drama[],
+  videos: PlaylyVideoPublik[],
+): Map<string, number> {
   const jumlah = new Map<string, number>();
   const hitung = (daftar: string[]) => {
     // Dihitung per JUDUL, bukan per kemunculan: satu film ko-produksi enam
     // negara tidak boleh menenggelamkan negara yang benar-benar punya banyak
     // judul. Set menjaga satu judul = satu suara per negara.
-    for (const n of new Set(daftar.map((x) => x.trim()).filter(Boolean))) {
+    //
+    // `namaKanonik` dipakai SEBELUM masuk Set: tanpa itu "USA" dan
+    // "United States" terhitung dua negara berbeda, dan satu film yang
+    // menyebut keduanya bahkan memberi dua suara untuk negara yang sama.
+    for (const n of new Set(
+      daftar.map((x) => namaKanonik(x)).filter(Boolean),
+    )) {
       jumlah.set(n, (jumlah.get(n) ?? 0) + 1);
     }
   };
   for (const d of dramas) hitung(negaraDari(d));
   for (const v of videos) hitung(negaraFilm(v));
+  return jumlah;
+}
 
-  return [...jumlah.entries()]
-    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "id"))
-    .slice(0, batas)
-    .map(([negara]) => negara);
+/** Satu kelompok benua beserta negara-negaranya (ejaan data, bukan label). */
+export type KelompokNegara = { benua: string; negara: string[] };
+
+/**
+ * SELURUH negara yang punya isi, dikelompokkan per benua.
+ *
+ * ⚠️ TANPA BATAS JUMLAH — dan itu intinya. `opsiNegaraGabungan` di atas
+ * memotong di 24 nama supaya daftar datarnya tetap terbaca; owner 2026-11-25
+ * meminta SEMUA negara bisa muncul (*"atau kamu ada solusi lain agar semua
+ * negara bisa muncul"*) dan memilih pengelompokan per benua dari 3 pilihan.
+ * Pengelompokan itulah yang menggantikan peran pemotongan: 57 nama tetap
+ * terbaca karena mata mencari lewat benuanya dulu.
+ *
+ * Urutan kelompok mengikuti `URUTAN_BENUA` (Asia lebih dulu), dan di dalam tiap
+ * kelompok negara diurutkan dari yang paling banyak judulnya. Kelompok kosong
+ * tidak ikut dipulangkan — judul benua tanpa satu pun negara di bawahnya
+ * terbaca seperti daftar yang gagal dimuat.
+ */
+export function opsiNegaraPerBenua(
+  dramas: Drama[],
+  videos: PlaylyVideoPublik[] = [],
+): KelompokNegara[] {
+  const jumlah = hitungNegara(dramas, videos);
+  const perBenua = new Map<string, string[]>();
+  for (const negara of jumlah.keys()) {
+    const benua = benuaDari(negara);
+    const isi = perBenua.get(benua);
+    if (isi) isi.push(negara);
+    else perBenua.set(benua, [negara]);
+  }
+
+  return URUTAN_BENUA.map((benua) => ({
+    benua,
+    negara: (perBenua.get(benua) ?? []).sort(
+      (a, b) =>
+        (jumlah.get(b) ?? 0) - (jumlah.get(a) ?? 0) ||
+        labelNegara(a).localeCompare(labelNegara(b), "id"),
+    ),
+  })).filter((k) => k.negara.length > 0);
 }

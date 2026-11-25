@@ -108,6 +108,26 @@
 
 ---
 
+## 2026-11-25 (sore) — 📱 Bar bawah HP dipasang di HALAMAN DEPAN `/` (⏳ belum rilis)
+
+**Laporan owner:** *"waktu itu sudah kita buat di bagian bawah untuk versi HP ada beranda, filter, film terbaru, bagikan kenapa sekarang tidak ada lagi"*.
+
+**BUKAN kerusakan dari rilis `358d099`** — diperiksa, bukan dibantah: bar bawah UTUH di `/beranda`, `/discover`, `/film` (diukur dari HTML produksi, keempat tab ada). Yang kosong hanya **`/`**, dan itu sudah begitu sejak **2026-09-22** (`4c62839`), jauh sebelum pekerjaan hari ini. Owner melihatnya karena mengetik alamat polos.
+
+**Tapi tetap celah nyata, jadi ditutup:** pengunjung yang mengetik domain polos mendarat di `/` dan BELUM login, sehingga `RedirectIfAuthed` tidak melemparnya ke `/beranda` — di HP mereka berada di halaman katalog tanpa satu pun navigasi.
+
+**Yang dipastikan DULU, bukan ditebak:**
+- Ruangnya sudah ada sejak lama: `app/layout.tsx:55` memasang `pb-16 md:pb-0` di SELURUH halaman. Jadi `/` selama ini menyisakan 64px kosong tanpa barnya — ruang terbuang, bukan terlindungi. Nol risiko bar menutupi kaki situs.
+- **Bug 2026-09-22 TIDAK kembali.** Yang diperbaiki waktu itu bukan bar bawahnya, melainkan penyaring berbentuk **denylist**: nilai `usePathname()` yang aneh saat pra-render membuat navigasi MUNCUL liar (halaman depan sempat menggambar navbar hitam di atas bar merah). Perbaikannya jadi **allowlist** — tak dikenal = DIAM. `/` ditambahkan sebagai nilai PERSIS (`=== "/"`), jadi nilai aneh (kosong, `/index`, `//`) tetap tidak cocok; 8 tes regresi yang menjaganya tetap hijau.
+
+**Berkas:** `lib/navigasi-halaman.ts` (`punyaNavigasiBawah` + `/` dilepas dari `TANPA_NAVIGASI_SENGAJA`) · `app/components/BottomNav.tsx` (tab Beranda ikut menyala di `/`; tanpa itu bar tergambar dengan NOL tab aktif = terbaca seperti bar mati) · `tests/kepala-situs.test.ts`.
+
+**Tes:** 3 tes baru + 1 tes lama DIBALIK arahnya (dulu mengunci `punyaNavigasiBawah("/") === false`) — alasannya ditulis utuh di dalam tesnya supaya sesi berikutnya tidak mengembalikannya karena mengira itu perbaikan.
+
+**Bukti:** `npx tsc --noEmit` exit 0 · `npx vitest run` **204 berkas / 2.901 tes hijau** · **uji-balik**: aturan `/` dicabut → 3 tes MERAH, lalu dipulihkan · server dev lokal `/`: bar tergambar lengkap (Beranda · Filter · Film Terbaru · Bagikan).
+
+---
+
 ## 2026-11-25 — 🔍 SAPUAN MENYELURUH teks pudar: 31 titik di 9 berkas diseragamkan (✅ TAYANG lewat `358d099`)
 
 **Permintaan owner:** *"kamu cek menyeluruh karena masih ada tulisan yang tidak jelas kamu seragamkan"* — tangkapan layar /discover: baris "128 judul — genre Komedi" dan tombol "× Hapus filter".

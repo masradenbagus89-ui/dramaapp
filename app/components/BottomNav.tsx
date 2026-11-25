@@ -63,8 +63,15 @@ const TABS: Tab[] = [
     // satu judul. /discover TIDAK lagi ikut di sini — ia punya tab "Filter"
     // sendiri sekarang, dan dua tab yang menyala bersamaan membuat penanda
     // aktif (yang memakai indeks PERTAMA yang cocok) menunjuk tab yang salah.
+    // `"/"` ikut sejak 2026-11-25, bersama dipasangnya bar ini di halaman
+    // depan: tanpa itu barnya tergambar dengan NOL tab menyala (penanda
+    // geser disembunyikan saat `activeIndex < 0`), dan bar yang tak satu pun
+    // tabnya aktif terbaca seperti bar yang mati.
     match: (p) =>
-      p === "/beranda" || p.startsWith("/drama") || p.startsWith("/watch"),
+      p === "/" ||
+      p === "/beranda" ||
+      p.startsWith("/drama") ||
+      p.startsWith("/watch"),
     icon: (active) => (
       <svg viewBox="0 0 24 24" className={kelasIkon(active)}>
         <path d="M12 2l9 4.5v11L12 22l-9-4.5v-11L12 2zm0 2.236L5 7.618v8.764l7 3.382 7-3.382V7.618L12 4.236zM12 8l3 5h-2v3h-2v-3H9l3-5z" />

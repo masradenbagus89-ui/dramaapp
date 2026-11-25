@@ -382,8 +382,26 @@ describe("perilaku 19 halaman tidak berubah dari yang diukur di produksi", () =>
 
   it("HANYA `/` yang sengaja berubah — navbar liarnya hilang", () => {
     expect(punyaNavbarAtas("/")).toBe(false);
-    // Di HP, bar bawah halaman depan juga berhenti berkedip.
-    expect(punyaNavigasiBawah("/")).toBe(false);
+    // ⚠️ BARIS KEDUA DIBALIK 2026-11-25, dan ini perlu dibaca utuh sebelum
+    // seseorang "mengembalikannya".
+    //
+    // Versi lama menuntut `punyaNavigasiBawah("/")` = false dengan alasan
+    // *"di HP, bar bawah halaman depan juga berhenti berkedip"*. Yang
+    // SEBENARNYA diperbaiki 2026-09-22 (4c62839) bukan bar bawahnya,
+    // melainkan penyaring berbentuk DENYLIST: nilai `usePathname()` yang aneh
+    // saat pra-render membuat navigasi MUNCUL. Perbaikannya mengubahnya jadi
+    // ALLOWLIST — nilai tak dikenal = DIAM.
+    //
+    // Pengaman itu TIDAK berkurang karena baris ini: `/` ditambahkan sebagai
+    // nilai PERSIS, sedangkan nilai aneh yang dulu jadi biang masalah
+    // (kosong, "/index", "//") tetap tidak cocok dan tetap diam — dijaga
+    // delapan tes regresi di berkas ini.
+    //
+    // Kenapa dibalik: halaman depan kini menggambar katalog yang SAMA dengan
+    // /beranda, dan pengunjung yang mengetik alamat polos (belum login, jadi
+    // tidak dilempar RedirectIfAuthed) mendarat di sana tanpa satu pun
+    // navigasi di HP. Dilaporkan owner 2026-11-25.
+    expect(punyaNavigasiBawah("/")).toBe(true);
   });
 });
 
@@ -810,5 +828,41 @@ describe("halaman film memakai kepala situs yang SAMA dengan Home", () => {
   it("panel ADMIN sengaja TIDAK ikut — ia halaman kerja, bukan halaman tonton", () => {
     expect(punyaKepalaFilm("/admin")).toBe(false);
     expect(punyaNavbarAtas("/admin")).toBe(true);
+  });
+});
+
+// ===========================================================================
+// HALAMAN DEPAN "/" PUNYA BAR BAWAH — owner 2026-11-25: *"waktu itu sudah kita
+// buat di bagian bawah untuk versi HP ada beranda, filter, film terbaru,
+// bagikan kenapa sekarang tidak ada lagi"*.
+//
+// ⚠️ Yang dijaga BUKAN selera tata letak, melainkan jalan keluar penonton di
+// HP. `/` adalah alamat yang didarati pengunjung yang mengetik domain polos,
+// dan mereka BELUM login sehingga `RedirectIfAuthed` tidak melemparnya ke
+// /beranda. Tanpa bar ini mereka berada di halaman katalog tanpa satu pun
+// navigasi — tidak ada error, cuma jalan buntu yang tak pernah dilaporkan
+// siapa pun karena di layar komputer semuanya terlihat normal.
+// ===========================================================================
+describe("halaman depan: navigasi bawah HP", () => {
+  it('"/" punya navigasi bawah', () => {
+    expect(
+      punyaNavigasiBawah("/"),
+      "halaman depan kehilangan bar bawah — pengunjung HP yang mengetik " +
+        "alamat polos jadi tanpa navigasi sama sekali",
+    ).toBe(true);
+  });
+
+  it('"/" TIDAK punya navbar atas (itu memang disengaja)', () => {
+    // Pasangan pembanding: kalau suatu saat seseorang "membereskan" ini dengan
+    // memasukkan "/" ke AKAR_BERNAVBAR_ATAS, navbar hitam akan muncul di atas
+    // bar cari merah — dua baris kepala yang sudah sengaja dibuang 2026-09-21.
+    expect(punyaNavbarAtas("/")).toBe(false);
+  });
+
+  it("alamat karangan tetap TIDAK dapat navigasi bawah", () => {
+    // Pagar anti "lolos karena aturannya jadi longgar": penambahan "/" tidak
+    // boleh berubah jadi "semua alamat dapat bar".
+    expect(punyaNavigasiBawah("/halaman-karangan")).toBe(false);
+    expect(punyaNavigasiBawah("/login")).toBe(false);
   });
 });

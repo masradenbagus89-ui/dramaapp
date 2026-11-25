@@ -98,7 +98,12 @@ export const AKAR_BERBAR_CARI = ["/beranda", "/discover"] as const;
  * Kuncinya ditulis sebagai pola route Next (`[id]`), sama dengan nama foldernya.
  */
 export const TANPA_NAVIGASI_SENGAJA: Record<string, string> = {
-  "/": "kepalanya bar cari merah + strip katalog (PublicTopBars)",
+  // ⚠️ "/" DILEPAS dari daftar ini 2026-11-25: ia kini punya navigasi BAWAH
+  // (lihat `punyaNavigasiBawah` di atas), jadi tidak lagi "tanpa navigasi".
+  // Entrinya dulu berbunyi "kepalanya bar cari merah + strip katalog
+  // (PublicTopBars)" — itu menjelaskan kenapa tak ada navbar ATAS, dan memang
+  // masih benar; yang keliru adalah ikut menghapus bar BAWAH-nya juga.
+  // Dibiarkan tertulis di sini sebagai catatan, bukan dihapus diam-diam.
   "/login": "header & logo milik halamannya sendiri (app/login/page.tsx:85)",
   "/daftar": "header & logo milik halamannya sendiri (app/daftar/page.tsx:89)",
   "/watch/[id]/[ep]": "layar pemutar — navigasi menutupi video",
@@ -129,6 +134,26 @@ export function punyaNavbarAtas(pathname: string): boolean {
  */
 export function punyaNavigasiBawah(pathname: string): boolean {
   return (
+    // HALAMAN DEPAN — ditambahkan 2026-11-25 atas laporan owner (*"waktu itu
+    // sudah kita buat di bagian bawah untuk versi HP ada beranda, filter, film
+    // terbaru, bagikan kenapa sekarang tidak ada lagi"*).
+    //
+    // Ditulis `=== "/"`, BUKAN lewat `cocok()`: dengan akar "/" fungsi itu
+    // memang hanya cocok pada "/" persis (syarat keduanya menuntut awalan
+    // "//"), tapi pembaca berikutnya wajar mengira ia mencocoki SELURUH
+    // alamat — dan kesalahpahaman itu mahal di berkas yang mengatur navigasi.
+    //
+    // KENAPA tadinya tidak ada: `/` masuk TANPA_NAVIGASI_SENGAJA sejak
+    // 2026-09-22 (4c62839), waktu itu benar karena halaman depan belum
+    // memuat katalog. Sekarang ia menggambar katalog yang SAMA dengan
+    // /beranda, jadi pengunjung yang mengetik alamat polos — mayoritas, dan
+    // belum login sehingga tidak dilempar `RedirectIfAuthed` ke /beranda —
+    // mendarat di halaman katalog TANPA satu pun navigasi di HP.
+    //
+    // Ruangnya sudah tersedia sejak dulu: `app/layout.tsx:55` memasang
+    // `pb-16 md:pb-0` di SELURUH halaman. Jadi sebelum ini `/` menyisakan
+    // 64px kosong di bawah tanpa barnya — ruang terbuang, bukan terlindungi.
+    pathname === "/" ||
     cocok(pathname, AKAR_BERNAVBAR_ATAS) ||
     cocok(pathname, AKAR_BERBAR_CARI) ||
     // WAJIB ikut: keempat halaman film pindah keluar dari AKAR_BERNAVBAR_ATAS

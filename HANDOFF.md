@@ -90,7 +90,9 @@
 > aftermarket** dari pemilik sekarang, harganya **jauh di atas** Rp200.000 dan belum pernah dicek.
 > Nama lain yang masih bebas jauh lebih murah.
 
-**Terakhir diisi:** 2026-11-25 — 🎬 **NONTON BARENG AKTIF DI PRODUKSI.** Owner menyelesaikan langkah 3 & 4 di panel Railway (Generate Domain + 2 env di service situs + Redeploy); AI memandu & memverifikasi. **Nol kode diubah, nol commit, nol push** — antrean ke `origin` tetap 1 commit catatan (`8263355`). Alamat server nobar (bukan rahasia): `https://athletic-unity-production-4fea9c30.up.railway.app`. 🎯 **Enam bukti diukur dari luar:** `/health` **200 `ok:true`** · `POST /api/watch-room` **404 → 400** (env terbaca) · tombol **Nonton Bareng tergambar** di HTML `/tonton/<id>` · CSP halaman itu memuat **`https://` + `wss://`** ke host nobar (= situs benar-benar di-build ulang) · token undangan acak dibalas **404**, bukan **401** (= `NOBAR_SECRET` di dua service **COCOK**, nol data ditulis) · handshake `/socket.io/` **200 untuk Origin situs, 403 untuk Origin asing** (= `NOBAR_ALLOWED_ORIGINS` memang menyaring). ✏️ **RALAT: alasan "tanpa Redeploy browser MEMBLOKIR" itu KELIRU** — CSP produksi berjalan `Report-Only` (tidak memblokir apa pun); alasan Redeploy yang benar adalah simpanan halaman ISR 300 detik. 🔴 **Sisa: hanya mata manusia** — buat Room, buka undangan di HP kedua, cek sinkron ±2 detik + chat tanpa muat ulang. 🧹 Hapus `Downloads/env-nobar-server.txt` (rahasianya sudah di Railway) dan betulkan `nobar-server/README.md:72` yang masih memuat alasan keliru itu.
+**Terakhir diisi:** 2026-11-25 (sore) — ✅ **RILIS `358d099` TAYANG.** Owner memberi izin *"commit lalu push"*; antrean kini **KOSONG** (`main` = `origin` = `dramaku` = `358d099`). **29 berkas** berisi lima permintaan owner hari ini: profil pojok kanan diganti **ikon kotak-kotak pejal** · **5 baris keterangan seksi** dibuang · **31 titik teks pudar** diseragamkan jadi putih lewat token `TEKS_SEKUNDER`/`IKON_KOSONG` · **negara & tahun keluar dari strip kuning** · menu **Negara memuat SEMUA negara (57) dikelompokkan per benua** + nama kembar `USA`/`United States` disatukan. 🎯 **Bukti tayang diukur di situs sungguhan** (bukan localhost): tujuh alamat `/` `/beranda` `/discover` `/film` `/katalog` `/my-list` `/shorts` semua **200** · tautan negara/tahun di strip **0** · judul kelompok benua **7** · kelas pudar di /beranda, /film, /katalog **0** · label "Amerika Serikat" **ada** · baris keterangan seksi **0**. ⚠️ **Gerbang:** `npm run gerbang` MATI di langkah 4 dengan **exit 127 PALSU** (jebakan npm bersarang yang sudah tercatat) — langkah 1-3 lolos di dalamnya, langkah **4 & 5 dijalankan manual** dengan pemeriksaan yang sama: **204 berkas / 2898 tes hijau**, **nol** berkas rahasia di antrean. 🔴 **Sisa milik owner:** ikon kotak-kotak di pojok kanan hanya tergambar untuk akun **admin** dan dirender di browser, jadi **tidak bisa dibuktikan dari HTML server** — wajib dilihat sendiri sambil login. ⚠️ **12 berkas sesi lain** (login + panel IMDb + `data/viewers.json`) sengaja TIDAK ikut; nol di antaranya tayang. 💡 Sisa teks pudar yang memang DIKECUALIKAN (bukan terlewat): kaki situs & panel pemutar punya latar gelap sendiri — `zinc-400` di sana **7,37:1**, lolos ambang. Yang masih di bawah ambang cuma baris hak cipta kaki situs (`zinc-500` = **3,91:1**), belum diminta owner.
+
+**Sebelumnya hari ini:** 2026-11-25 — 🎬 **NONTON BARENG AKTIF DI PRODUKSI.** Owner menyelesaikan langkah 3 & 4 di panel Railway (Generate Domain + 2 env di service situs + Redeploy); AI memandu & memverifikasi. **Nol kode diubah, nol commit, nol push** — antrean ke `origin` tetap 1 commit catatan (`8263355`). Alamat server nobar (bukan rahasia): `https://athletic-unity-production-4fea9c30.up.railway.app`. 🎯 **Enam bukti diukur dari luar:** `/health` **200 `ok:true`** · `POST /api/watch-room` **404 → 400** (env terbaca) · tombol **Nonton Bareng tergambar** di HTML `/tonton/<id>` · CSP halaman itu memuat **`https://` + `wss://`** ke host nobar (= situs benar-benar di-build ulang) · token undangan acak dibalas **404**, bukan **401** (= `NOBAR_SECRET` di dua service **COCOK**, nol data ditulis) · handshake `/socket.io/` **200 untuk Origin situs, 403 untuk Origin asing** (= `NOBAR_ALLOWED_ORIGINS` memang menyaring). ✏️ **RALAT: alasan "tanpa Redeploy browser MEMBLOKIR" itu KELIRU** — CSP produksi berjalan `Report-Only` (tidak memblokir apa pun); alasan Redeploy yang benar adalah simpanan halaman ISR 300 detik. 🔴 **Sisa: hanya mata manusia** — buat Room, buka undangan di HP kedua, cek sinkron ±2 detik + chat tanpa muat ulang. 🧹 Hapus `Downloads/env-nobar-server.txt` (rahasianya sudah di Railway) dan betulkan `nobar-server/README.md:72` yang masih memuat alasan keliru itu.
 
 **Sebelumnya:** 2026-11-24 (malam) — ✅ **RILIS `6de869d` → `72fb308` TAYANG.** Owner memberi izin *"push dan rilis"*; perintah tahan *"jangan tayang dulu"* sejak 2026-11-23 **DICABUT**, antrean kini **KOSONG** (`main` = `origin` = `dramaku` = `72fb308`). **35 commit · 115 berkas** seharian ini: nama situs jadi **Layarindo** · logo diwarnai emas · tema **anggur + amber** diukur dari mockup owner · cahaya latar di pojok · kartu membulat + tombol kapsul · chip pintasan seragam & satu baris digeser + panah (HP). Gerbang dijalankan **ULANG tepat sebelum push**: 5/5 hijau, 201 berkas / **2828 tes**, nol berkas rahasia. **Nol prasyarat SQL/env** (diperiksa, bukan diasumsikan). 🎯 **Bukti tayang diukur di situs sungguhan:** `DramaKu` **0×** & `Layarindo` **24×** di HTML produksi · warna emas lama `f5a524` **0×** di CSS · `latar-bercahaya` 4× · ketiga berkas gambar baru **200** · delapan alamat **200** · katalog **66 judul** · halaman nonton **200**. 🪤 Railway butuh ±1 menit: dua pemeriksaan pertama masih build lama — **jangan simpulkan gagal sebelum ±3 menit**. 🪤 Poster baris kedua sempat tergambar kotak warna polos di potret uji — itu gambar yang belum selesai dimuat, BUKAN rusak (diuji: 200, 90 KB). 🔴 **Sisa milik owner:** pastikan deployment `72fb308` **success** di panel Railway, lalu lihat sendiri di HP — tema, judul berpagar garis, dan panah geser chip hanya bisa dinilai mata. ⚠️ Lima berkas kerja sesi lain (login + panel IMDb) masih menggantung belum di-commit, jadi **nol** di antaranya ikut tayang.
 
@@ -106,7 +108,7 @@
 
 ---
 
-## 2026-11-25 — 🔍 SAPUAN MENYELURUH teks pudar: 31 titik di 9 berkas diseragamkan (⏳ BELUM di-commit, BELUM rilis)
+## 2026-11-25 — 🔍 SAPUAN MENYELURUH teks pudar: 31 titik di 9 berkas diseragamkan (✅ TAYANG lewat `358d099`)
 
 **Permintaan owner:** *"kamu cek menyeluruh karena masih ada tulisan yang tidak jelas kamu seragamkan"* — tangkapan layar /discover: baris "128 judul — genre Komedi" dan tombol "× Hapus filter".
 
@@ -134,7 +136,7 @@
 
 ---
 
-## 2026-11-25 — 🌏 Negara & tahun KELUAR dari strip kuning; menu Negara memuat SEMUA negara per benua (⏳ BELUM di-commit, BELUM rilis)
+## 2026-11-25 — 🌏 Negara & tahun KELUAR dari strip kuning; menu Negara memuat SEMUA negara per benua (✅ TAYANG lewat `358d099`)
 
 **Permintaan owner:** *"untuk negara dan tahun masukan ke kategori saja tidak perlu ditampilkan disitu dan untuk negara kamu buat lebih banyak lagi atau kamu ada solusi lain agar semua negara bisa muncul"*.
 
@@ -161,7 +163,7 @@
 
 ---
 
-## 2026-11-25 — 👁️ Teks abu-abu yang tak terbaca dinaikkan jadi PUTIH (⏳ BELUM di-commit, BELUM rilis)
+## 2026-11-25 — 👁️ Teks abu-abu yang tak terbaca dinaikkan jadi PUTIH (✅ TAYANG lewat `358d099`)
 
 **Laporan owner:** *"tulisan tidak terlihat warna abu2, kamu rubah warnanya putih atau warna yang pas agar UI/UX bagus"* — dengan 4 kotak merah di tangkapan layar: baris genre di bawah judul kartu (2 baris kartu) + keterangan di bawah judul seksi NONTON BARENG & REKOMENDASI.
 
@@ -204,7 +206,7 @@ Begitu warnanya terbaca jelas, owner justru menilainya memenuhi halaman: *"yang 
 
 ---
 
-## 2026-11-25 — 🙈 Tampilan profil di pojok kanan /beranda DISEMBUNYIKAN (⏳ BELUM di-commit, BELUM rilis)
+## 2026-11-25 — 🙈 Tampilan profil di pojok kanan /beranda DISEMBUNYIKAN (✅ TAYANG lewat `358d099`)
 
 **Permintaan owner:** *"Saya ingin sembunyikan tampilan profil yang berada di pojok kanan. Pastikan tampilan tetap rapi di komputer maupun HP."*
 

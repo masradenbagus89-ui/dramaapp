@@ -108,7 +108,7 @@
 
 ---
 
-## 2026-11-25 (sore) — 📱 Bar bawah HP dipasang di HALAMAN DEPAN `/` (⏳ belum rilis)
+## 2026-11-25 (sore) — 📱 Bar bawah HP dipasang di HALAMAN DEPAN `/` (✅ TAYANG lewat `7728ffc`)
 
 **Laporan owner:** *"waktu itu sudah kita buat di bagian bawah untuk versi HP ada beranda, filter, film terbaru, bagikan kenapa sekarang tidak ada lagi"*.
 
@@ -123,6 +123,8 @@
 **Berkas:** `lib/navigasi-halaman.ts` (`punyaNavigasiBawah` + `/` dilepas dari `TANPA_NAVIGASI_SENGAJA`) · `app/components/BottomNav.tsx` (tab Beranda ikut menyala di `/`; tanpa itu bar tergambar dengan NOL tab aktif = terbaca seperti bar mati) · `tests/kepala-situs.test.ts`.
 
 **Tes:** 3 tes baru + 1 tes lama DIBALIK arahnya (dulu mengunci `punyaNavigasiBawah("/") === false`) — alasannya ditulis utuh di dalam tesnya supaya sesi berikutnya tidak mengembalikannya karena mengira itu perbaikan.
+
+**Bukti TAYANG (diukur di situs sungguhan sesudah rilis):** `/` `/beranda` `/film` semua **200**, dan ketiganya menggambar bar bawah lengkap **Beranda | Filter | Film Terbaru | Bagikan** — termasuk `/` yang sebelumnya kosong. Gerbang kali ini jalan **penuh 5/5, exit 0** (jebakan exit-127 pada rilis sebelumnya ternyata SPORADIS, bukan menetap — tetap wajib dicek tiap rilis).
 
 **Bukti:** `npx tsc --noEmit` exit 0 · `npx vitest run` **204 berkas / 2.901 tes hijau** · **uji-balik**: aturan `/` dicabut → 3 tes MERAH, lalu dipulihkan · server dev lokal `/`: bar tergambar lengkap (Beranda · Filter · Film Terbaru · Bagikan).
 

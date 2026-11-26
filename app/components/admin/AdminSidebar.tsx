@@ -16,6 +16,7 @@ import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import LencanaBantuan from "./LencanaBantuan";
 import { ADS_ENABLED } from "@/lib/saklar-fitur";
 import { parseBagianAdmin } from "@/lib/bagian-admin";
 import {
@@ -35,12 +36,19 @@ import {
   Download,
   KeyRound,
   Webhook,
+  LifeBuoy,
   ArrowLeft,
   type LucideIcon,
 } from "lucide-react";
 
 /** Satu baris menu yang bisa diklik. */
-type MenuAdmin = { href: string; label: string; icon: LucideIcon };
+type MenuAdmin = {
+  href: string;
+  label: string;
+  icon: LucideIcon;
+  /** Tampilkan angka "perlu ditangani" (LencanaBantuan) di ujung baris. */
+  lencana?: true;
+};
 
 /**
  * Sekelompok menu di bawah satu judul (divider).
@@ -92,6 +100,9 @@ const NAV_ITEMS: EntriAdmin[] = [
   // salah saat sebuah video tidak muncul.
   { href: "/admin/webhooks/playly", label: "Webhook Playly", icon: Webhook },
   { href: "/admin/settings/playly", label: "Kunci Playly", icon: KeyRound },
+  // Satu-satunya baris yang berubah sendiri: angka laporan Pending + chat
+  // belum dibaca, supaya terlihat dari halaman admin mana pun.
+  { href: "/admin/bantuan", label: "Laporan & Chat", icon: LifeBuoy, lencana: true },
   { href: "/admin#kelola-admin", label: "Kelola Admin", icon: Users },
   // "Keamanan (2FA)" DIBUANG dari sini 2026-11-07 atas permintaan owner: panel
   // 2FA-nya kini ada di /profile (seksi Keamanan), jadi menu ini jadi jalan
@@ -210,6 +221,7 @@ export default function AdminSidebar() {
         <a href={item.href} aria-current={aktif ? "page" : undefined}>
           <Icon className="size-4" />
           {item.label}
+          {item.lencana && <LencanaBantuan />}
         </a>
       </Button>
     );

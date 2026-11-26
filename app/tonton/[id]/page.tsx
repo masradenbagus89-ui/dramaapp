@@ -9,6 +9,7 @@ import { SITE_NAME, SITE_URL, absoluteUrl } from "@/lib/site";
 import { toJsonLdScript, videoJsonLd } from "@/lib/structured-data";
 import PlaylyPlayer from "@/app/components/player/PlaylyPlayer";
 import InfoVideoPlayly from "@/app/components/player/InfoVideoPlayly";
+import BarisBantuanVideo from "@/app/components/bantuan/BarisBantuanVideo";
 import DetailFilmPlayly from "@/app/components/player/DetailFilmPlayly";
 import { getPlaylyImdbCached } from "@/lib/store";
 import KepalaFilm from "@/app/components/beranda/KepalaFilm";
@@ -301,6 +302,8 @@ export default async function TontonPage(props: PageProps<"/tonton/[id]">) {
             // linknya sudah diisi — dijaga tests/tonton-halaman.test.ts.
             linkUnduhan={video.linkUnduhan}
           />
+          {/* Report Video + Live Chat — selalu ada (bukan bergantung env). */}
+          <BarisBantuanVideo videoId={video.id} judul={video.title} />
           {/* NONTON BARENG (2026-11-23). Hanya muncul kalau server real-time-nya
               sudah dipasang (env NOBAR_*) — tanpa itu tombol tak berguna, jadi
               tak digambar sama sekali, bukan ditampilkan lalu gagal. */}

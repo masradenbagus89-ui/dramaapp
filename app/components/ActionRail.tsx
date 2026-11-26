@@ -2,13 +2,15 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Heart, MessageCircle, Bookmark, Share2, Clapperboard, Download } from "lucide-react";
+import { Heart, MessageCircle, Bookmark, Share2, Clapperboard, Download, Flag, MessagesSquare } from "lucide-react";
 import { isLiked, setLiked } from "@/lib/myLikes";
 import { isSaved, toggleSaved } from "@/lib/myList";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { DownloadProvider } from "@/lib/types";
 import DownloadModal from "./DownloadModal";
+import type { VideoDilaporkan } from "@/lib/laporan-video";
+import { useBantuanVideo } from "./bantuan/useBantuanVideo";
 
 // Rail ikon vertikal ala Melolo/TikTok yang menempel di sisi kanan feed.
 // Pakai ulang store like (/api/likes) + myList (simpan) yang sudah ada.
@@ -19,6 +21,7 @@ export default function ActionRail({
   onComment,
   providers = [],
   visible = true,
+  video,
 }: {
   dramaId: string;
   title: string;
@@ -36,12 +39,20 @@ export default function ActionRail({
    * ketuk layar memunculkannya lagi. Default true supaya pemanggil lama aman.
    */
   visible?: boolean;
+  /**
+   * Episode yang sedang diputar, untuk tombol Report Video (judul, episode,
+   * server). Tanpa ini = episode tak diketahui; pemanggil lama tetap aman.
+   */
+  video?: VideoDilaporkan;
 }) {
   const [liked, setLikedState] = useState(false);
   const [saved, setSavedState] = useState(false);
   const [count, setCount] = useState<number | null>(null);
   const [pending, setPending] = useState(false);
   const [downloadOpen, setDownloadOpen] = useState(false);
+  const bantuan = useBantuanVideo(
+    video ?? { jenisKonten: "drama", kontenId: dramaId, judul: title, episode: null, server: "" },
+  );
 
   useEffect(() => {
     setLikedState(isLiked(dramaId));
@@ -171,6 +182,14 @@ export default function ActionRail({
             <Download />
           </RailButton>
         )}
+
+        <RailButton label="Lapor" onClick={bantuan.bukaLaporan}>
+          <Flag />
+        </RailButton>
+
+        <RailButton label="Chat" onClick={bantuan.bukaChat} titik={bantuan.adaBalasanBaru}>
+          <MessagesSquare />
+        </RailButton>
       </div>
 
       {/* Modal SENGAJA di luar div rail di atas, bukan di dalamnya: div itu
@@ -184,6 +203,8 @@ export default function ActionRail({
         providers={providers}
         title={title}
       />
+      {/* Di luar div rail dengan alasan yang sama seperti DownloadModal di atas. */}
+      {bantuan.jendela}
     </>
   );
 }
@@ -194,22 +215,31 @@ function RailButton({
   onClick,
   active = false,
   activeColor = "text-rose-500",
+  titik = false,
 }: {
   children: React.ReactNode;
   label: string;
   onClick: () => void;
   active?: boolean;
   activeColor?: string;
+  /** Titik merah notifikasi di pojok ikon (mis. ada balasan admin baru). */
+  titik?: boolean;
 }) {
   return (
-    <div className="flex flex-col items-center gap-0.5">
+    <div className="relative flex flex-col items-center gap-0.5">
+      {titik && (
+        <span
+          className="pointer-events-none absolute right-1.5 top-1.5 z-10 size-2.5 rounded-full bg-rose-500 ring-2 ring-black/40"
+          aria-hidden="true"
+        />
+      )}
       <Button
         type="button"
         variant="ghost"
         size="icon"
         onClick={onClick}
         aria-pressed={active}
-        aria-label={label}
+        aria-label={titik ? `${label} (ada pesan baru)` : label}
         className={cn(
           // Tanpa lingkaran gelap: ikon telanjang + bayangan, mengikuti acuan
           // pemutar Playly.

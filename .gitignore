@@ -115,3 +115,6 @@ migrasi-full.sql
 docs/laporan/*.pdf
 docs/laporan/*.pptx
 docs/laporan/pratinjau-*.html
+
+# Live Chat & Laporan Video mode lokal (lib/kumpulan-dokumen.ts) — berisi email & isi chat member
+data/kumpulan-dokumen.json

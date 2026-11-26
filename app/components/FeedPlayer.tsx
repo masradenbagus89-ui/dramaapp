@@ -24,6 +24,7 @@ import CommentsDrawer from "./player/CommentsDrawer";
 import PlayerControls from "./player/PlayerControls";
 import PlayerSettings from "./player/PlayerSettings";
 import { posisiSesudahLoncat } from "./player/PlaylyPlayer";
+import { labelServer } from "@/lib/laporan-video";
 
 const DOUBLE_TAP_MS = 280; // ambang ketuk-ganda (double tap) untuk maju cepat
 const CONTROLS_AUTO_HIDE_MS = 3500; // sembunyikan kontrol setelah diam beberapa detik
@@ -804,6 +805,16 @@ export default function FeedPlayer({
           onComment={() => setCommentsOpen(true)}
           providers={providers}
           visible={controlsVisible}
+          // Untuk Report Video: episode & server yang SEDANG diputar ikut
+          // tercatat, supaya admin tak perlu menebak episode mana yang rusak.
+          // labelServer hanya menyimpan HOST — tanda tangan di alamat tak ikut.
+          video={{
+            jenisKonten: "drama",
+            kontenId: dramaId,
+            judul: title,
+            episode: isMovie ? null : active + 1,
+            server: labelServer(srcFor(active + 1) ?? null, resolution),
+          }}
         />
 
         {/* Gerigi pengaturan di kanan atas — panel bawah sengaja hanya judul +

@@ -62,6 +62,12 @@ Commit 1, dari `rm -rf .next` (build lokal pakai `ALLOW_FILE_MODE=1` — kompute
   `/api/dramas` → 200 (tak dialihkan) · healthcheck → 200 · canonical `https://layarindo.com` ·
   robots `Sitemap: https://layarindo.com/sitemap.xml`
 
+Commit 2 (SEO):
+- Versi lama vs baru dibandingkan pada 42 drama `data/dramas.json` (cadangan — bisa sedikit basi
+  dari produksi): **0 deskripsi berubah**, judul terpanjang 89 huruf.
+- Penjaga terbukti menangkap bug: dengan kode LAMA 3 tes merah ("… di…"), dengan kode baru 20/20 hijau.
+- `npm run build` exit 0 · `npx tsc --noEmit` exit 0 · `npm test` 2894 lulus / 203 berkas
+
 ## 6. Cara owner mencoba sendiri (sesudah langkah 3)
 1. Buka `https://dramaapp-production-9e88.up.railway.app/film` → harus pindah sendiri ke `https://layarindo.com/film` bergembok.
 2. Buka `https://layarindo.com/robots.txt` → baris `Sitemap:` harus `https://layarindo.com/sitemap.xml`.

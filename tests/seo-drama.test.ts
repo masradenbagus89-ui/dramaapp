@@ -42,36 +42,23 @@ const film: SumberSeo = {
 
 describe("buatSeoOtomatis — batas panjang", () => {
   /**
-   * Kolom ketiga = apakah LANTAI 150 huruf berlaku untuk kasus itu.
-   *
-   * Untuk judul di atas ~110 huruf, kalimat pembukanya SENDIRI
-   * ("Nonton <judul> (2024) sub Indo 60 episode di Layarindo. Genre …")
-   * sudah melewati 160, jadi `buatDeskripsiSeo` memotongnya utuh — nama situs
-   * dan genre ikut hilang, dan hasilnya berhenti di batas kata mana pun yang
-   * kebetulan terdekat (terukur: 149). Menuntut ≥150 di sana berarti menuntut
-   * potongan jatuh tepat di huruf tertentu — itu kebetulan, bukan jaminan.
-   *
-   * ⚠️ Ini kelemahan LAMA, bukan akibat penggantian nama 2026-11-24. Nama yang
-   * 2 huruf lebih panjang ("DramaKu" → "Layarindo") cuma MENGGESER potongan itu
-   * melewati ambang sehingga akhirnya kelihatan. Judul terpanjang di katalog
-   * nyata 89 huruf — belum menyentuh jalur ini, tapi sudah menghasilkan
-   * deskripsi 159 huruf, jadi jaraknya tipis. Perbaikan sebenarnya = memotong
-   * JUDUL di dalam kalimat pembuka (supaya nama situs & genre selamat), dan itu
-   * mengubah teks yang sudah terbit di Google — perubahan perilaku, menunggu
-   * keputusan owner.
+   * Dulu (sampai 2026-11-26) judul di atas ~110 huruf dikecualikan dari lantai
+   * 150: kalimat pembuka + genre melewati 160, lalu SELURUH kalimat dipotong dari
+   * belakang — nama situs ikut hilang dan panjangnya kebetulan (terukur 149).
+   * Sekarang judul yang dipendekkan di dalam pembuka (`pembukaMuat`), genre
+   * dibuang per item (`tambahGenre`), jadi lantainya berlaku lagi untuk semua.
+   * Terukur saat diubah: 42 judul katalog cadangan, NOL deskripsi berubah.
    */
   it.each([
-    ["serial", serial, true],
-    ["film", film, true],
-    ["judul sangat panjang", { ...serial, title: "Kisah Panjang ".repeat(8).trim() }, false],
-  ])("%s: title ≤60, deskripsi ≤160, keyword 5–10", (_, sumber, lantaiBerlaku) => {
+    ["serial", serial],
+    ["film", film],
+    ["judul sangat panjang", { ...serial, title: "Kisah Panjang ".repeat(8).trim() }],
+  ])("%s: title ≤60, deskripsi 150–160, keyword 5–10", (_, sumber) => {
     const seo = buatSeoOtomatis(sumber);
     expect(seo.title.length).toBeLessThanOrEqual(SEO_TITLE_MAX);
     expect(seo.title.endsWith("| Layarindo")).toBe(true);
     expect(seo.description.length).toBeLessThanOrEqual(SEO_DESCRIPTION_MAX);
-    if (lantaiBerlaku) {
-      expect(seo.description.length).toBeGreaterThanOrEqual(SEO_DESCRIPTION_MIN);
-    }
+    expect(seo.description.length).toBeGreaterThanOrEqual(SEO_DESCRIPTION_MIN);
     const n = hitungKeyword(seo.keywords);
     expect(n).toBeGreaterThanOrEqual(SEO_KEYWORDS_MIN);
     expect(n).toBeLessThanOrEqual(SEO_KEYWORDS_MAX);
@@ -102,6 +89,17 @@ describe("buatSeoOtomatis — batas panjang", () => {
     // tetap lulus dua baris di atas.
     expect(seo.description).toContain("Layarindo");
     expect(seo.title.length).toBeLessThanOrEqual(SEO_TITLE_MAX);
+  });
+
+  // Penjaga 2026-11-26: judul ekstrem pun tak boleh memotong nama situs — dulu
+  // hasilnya berakhir "… 60 episode di…".
+  it.each([
+    ["genre tak muat", "Kisah Panjang ".repeat(8).trim()],
+    ["pembuka sendiri kepanjangan", "Judul Yang Luar Biasa Panjang ".repeat(8).trim()],
+  ])("nama situs tak pernah terpotong: %s", (_, title) => {
+    const { description } = buatSeoOtomatis({ ...serial, title });
+    expect(description).toContain("di Layarindo.");
+    expect(description.length).toBeLessThanOrEqual(SEO_DESCRIPTION_MAX);
   });
 
   it("data minimal (tanpa tahun/genre/sinopsis) tetap ≥5 keyword & tak melewati batas", () => {

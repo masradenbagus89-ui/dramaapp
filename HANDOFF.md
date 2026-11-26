@@ -108,6 +108,54 @@
 
 ---
 
+## 2026-11-26 — ✅ `db8180b` TAYANG: pengalihan 308 AKTIF & terbukti aman · rail landscape DITUNDA owner
+
+### Pengalihan 308 sudah hidup — diukur di produksi, bukan dibaca dari kode
+
+🔴 **Titik paling berbahaya diuji lebih dulu: `/api` TIDAK ikut dialihkan.** Kalau sampai ikut,
+video baru dari Playly berhenti masuk dan robot penjaga database gagal — **dua-duanya tanpa satu
+pun gejala di layar**.
+
+| Dipanggil di alamat Railway lama | Hasil |
+|---|---|
+| `/api/dramas` (robot keep-db-awake) | **200**, bukan 308 ✅ |
+| `/api/webhooks/playly` (webhook mitra) | **405** — route hidup, hanya menolak GET ✅ |
+| `/api/health` | **200** ✅ |
+| `/api/teaser?id=…&ep=1` (agent PC backup) | **307 ke tunnel Cloudflare** — itu pengalihan ASLI milik endpoint-nya, bukan pengalihan domain ✅ |
+
+| Halaman penonton | Hasil |
+|---|---|
+| `/` · `/beranda` · `/film` · `/drama/<id>` · `/sitemap.xml` | **308 → `layarindo.com<path>`**, path utuh ✅ |
+| `www.layarindo.com/film?ref=uji` | **308 → `layarindo.com/film?ref=uji`** — query ikut terbawa ✅ |
+| Rantai dari alamat Railway lama | **1 lompatan**, berakhir **200** ✅ |
+| Rantai dari `dramaapp.vercel.app` | **2 lompatan**, berakhir **200** — masih lewat Railway dulu ✅ |
+| 7 alamat di `layarindo.com` (termasuk `/tonton/<id>` & `/admin/bantuan`) | semua **200** ✅ |
+
+📌 **Sisa kerapian, bukan kerusakan:** Vercel masih menunjuk alamat Railway, jadi pengunjung lama
+dari sana lewat 2 lompatan. Rapikan jadi langsung ke `https://layarindo.com` saat menyentuh
+Vercel lagi.
+
+### 🔴 Rail `/feed` saat HP dimiringkan — DITUNDA atas keputusan owner
+
+Owner 2026-11-26: *"catat aja dulu"*. **Tidak dikerjakan, tidak ada kode yang disentuh.**
+
+Temuan lengkapnya — angka hasil ukur, arah perbaikan yang mungkin, dan **cara mengulang
+pengukuran tanpa mulai dari nol** — disimpan di
+`docs/lintasai/rencana/2026-11-26-rail-feed-terpotong-landscape.md`, dengan penunjuk di
+`docs/lintasai/INDEX.md`.
+
+Ringkasnya: rail keluar layar **82–134px saat HP dimiringkan** (avatar + Suka hilang, Komen
+separuh, dan tombol yang tak terlihat **tak bisa diketuk**); di HP **tegak aman** (jarak 102px di
+360×640). Lapor & Chat memperparah dari ~24px jadi 134px — **bukan** menciptakan masalahnya.
+
+🪤 Tiga jebakan yang akan memakan waktu sesi berikutnya kalau tak dibaca dulu: **(1)** ukur pakai
+CDP `Emulation.setDeviceMetricsOverride`, BUKAN `--window-size` (lolos palsu); **(2)** localhost
+tak bisa dipakai — rail tak dirender sama sekali saat video gagal, layar bersih tanpa rail
+gampang disalahartikan "sudah beres"; **(3)** Chrome headless bilang "sumber video mati" bahkan
+di produksi — artefak headless, dibantah oleh `/api/teaser` yang berakhir **200**.
+
+---
+
 ## 2026-11-26 — 🔀 Merge `feat/domain-layarindo` + 📏 TEMUAN BARU: rail `/feed` terpotong saat HP DIMIRINGKAN
 
 ### ✅ `0f0102f` TAYANG — perbaikan layar penuh HP terbukti hidup

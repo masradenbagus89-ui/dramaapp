@@ -85,6 +85,11 @@ if (-not $SITUS_URL) { $SITUS_URL = $env:DRAMAAPP_SITUS_URL }
 # dan semua indikator tetap terlihat hijau. Pola kerusakan senyap yang sama
 # dengan $NAMED_URL di bawah. Daftar semua tempat penyimpan alamat cadangan:
 # docs/migrasi-railway-tahap6-pindah-domain.md ("Daftar nilai cadangan").
+# 2026-11-26: SENGAJA tetap alamat Railway walau domain resmi kini layarindo.com.
+# Agent hanya memanggil /api/teaser + /api/agent/video-base, dan /api tak dialihkan
+# (next.config.ts pengalihanDomainLama) - Railway menjawab langsung, tanpa lapisan
+# Cloudflare. Ganti ke layarindo.com HANYA sebelum alamat Railway dimatikan, lalu
+# uji ulang rantai situs -> tunnel -> berkas (env DRAMAAPP_SITUS_URL juga).
 if (-not $SITUS_URL) { $SITUS_URL = "https://dramaapp-production-9e88.up.railway.app" }
 $SITUS_URL = $SITUS_URL.Trim().TrimEnd('/')
 # Drama yang dipakai untuk membuktikan rantai situs -> tunnel -> Caddy -> berkas.

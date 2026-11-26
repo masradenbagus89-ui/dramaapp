@@ -448,7 +448,9 @@ Semuanya sudah diubah dari alamat Vercel ke
 `https://layarindo.com`. #2 dan #3 **sengaja tetap** alamat Railway: keduanya
 hanya memanggil `/api/*`, dan `/api/*` tak ikut dialihkan (`next.config.ts`
 `pengalihanDomainLama`), jadi alamat Railway tetap menjawab 200 sebelum maupun
-sesudah domain hidup — sedangkan `layarindo.com` mati sampai DNS-nya siap.
+sesudah domain hidup, tanpa lewat lapisan Cloudflare. Variabel panelnya
+(`KEEPALIVE_SITES`, `DRAMAAPP_SITUS_URL` di PC backup) juga TETAP Railway. Ganti
+keduanya ke layarindo.com HANYA sebelum alamat Railway dimatikan, lalu uji.
 Rollback sesudah ini = isi ulang `NEXT_PUBLIC_SITE_URL` dengan alamat Railway,
 **bukan** menghapusnya. Detail: `docs/serah-terima/2026-11-26-domain-layarindo.md`.
 

@@ -100,6 +100,10 @@ jobs:
           # yang dipantau? GANTI ISI variabelnya, jangan dikosongkan.
           # Daftar semua tempat yang menyimpan alamat situs sebagai cadangan:
           # docs/migrasi-railway-tahap6-pindah-domain.md ("Daftar nilai cadangan").
+          # 2026-11-26: SENGAJA tetap alamat Railway walau domain resmi kini layarindo.com.
+          # Robot hanya memanggil /api/dramas, dan /api tak dialihkan (next.config.ts
+          # pengalihanDomainLama) — jadi Railway menjawab langsung tanpa lewat Cloudflare.
+          # Ganti ke layarindo.com HANYA sebelum alamat Railway dimatikan, dan uji dulu.
           SITES: ${{ vars.KEEPALIVE_SITES || 'https://dramaapp-production-9e88.up.railway.app' }}
         run: |
           set -euo pipefail

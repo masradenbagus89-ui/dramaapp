@@ -195,13 +195,22 @@ export default function TopNav() {
           href="/beranda"
           className="flex items-center gap-2 transition-transform duration-200 hover:scale-105"
         >
+          {/* Lambang LAYARINDO — diganti 2026-11-26 dari `/logo-mark.png`, yang
+              isinya masih huruf "D" bermahkota milik nama lama DramaKu. Nama
+              teksnya sudah diganti 2026-11-24, gambarnya tertinggal.
+              ⚠️ `w-auto`, BUKAN `w-9`: lambang baru berbentuk mendatar (134×96),
+              bukan persegi seperti yang lama (256×256). Dipaksa ke kotak 36×36
+              dengan `object-contain`, tingginya menyusut jadi ~26px dan terlihat
+              kekecilan di samping tulisan. `width`/`height` ikut disesuaikan ke
+              rasio aslinya supaya tak ada pergeseran tata letak saat gambar
+              selesai dimuat. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/logo-mark.png"
+            src="/logo-layarindo-lambang.png"
             alt={SITE_NAME}
-            width={36}
+            width={50}
             height={36}
-            className="h-9 w-9 object-contain"
+            className="h-9 w-auto object-contain"
           />
           <span className="hidden text-lg font-bold text-white sm:inline">
             Layarindo

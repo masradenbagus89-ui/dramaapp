@@ -75,4 +75,27 @@ describe("POST /api/auth/login saat database mati", () => {
     const setCookie = res.headers.get("set-cookie") ?? "";
     expect(setCookie).toBe("");
   });
+
+  it("form biasa diarahkan balik dengan kode, tanpa membocorkan error atau cookie", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const res = await POST(
+      new Request("http://127.0.0.1:3010/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          email: "orang@contoh.com",
+          password: "apa saja",
+          next: "/admin/videos/playly",
+        }),
+      }) as never,
+    );
+    expect(res.status).toBe(303);
+    const loc = res.headers.get("location") ?? "";
+    expect(loc).toContain("/login?");
+    expect(loc).toContain("galat=database");
+    expect(loc).toContain("next=");
+    expect(loc).not.toContain("Supabase");
+    expect(loc).not.toContain("522");
+    expect(res.headers.get("set-cookie") ?? "").toBe("");
+  });
 });

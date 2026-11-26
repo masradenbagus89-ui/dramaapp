@@ -9,6 +9,7 @@ import {
   panggilNobar,
 } from "@/lib/nobar";
 import { rapikanNama } from "@/nobar-server/src/kontrak";
+import { SITE_NAME } from "@/lib/site";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -44,7 +45,9 @@ export async function POST(req: NextRequest) {
   const { kode, isi } = await panggilNobar("/internal/ruang", {
     videoId: video.id,
     // Judul kosong pernah terjadi di salinan cadangan daftar (hanya id) — Room tetap boleh jalan.
-    judul: video.title?.trim() || "Film DramaKu",
+    // Nama situs dari SITE_NAME, bukan ditulis tangan: sampai 2026-11-26 isinya
+    // "Film DramaKu", nama lama yang tertinggal saat penggantian nama 2026-11-24.
+    judul: video.title?.trim() || `Film ${SITE_NAME}`,
     nama,
     email: akun?.email ?? null,
     // Poster sengaja TIDAK dikirim: alamat sampul dari penyedia basi dalam 6 jam;

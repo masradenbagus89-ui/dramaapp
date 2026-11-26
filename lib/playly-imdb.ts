@@ -1,7 +1,7 @@
 // -------------------------------------------------------------------------
 // Metadata IMDb untuk video PLAYLY.
 //
-// KENAPA ADA (owner 2026-10-08): film yang dipasang lewat pintu DramaKu bisa
+// KENAPA ADA (owner 2026-10-08): film yang dipasang lewat pintu Layarindo bisa
 // menarik poster/sinopsis/rating dari IMDb lewat tombol di form admin, tapi
 // video yang datang dari Playly tidak — dan datanya memang tidak pernah ada.
 // Playly hanya mengirim judul, kreator, dan alamat embed; diukur hari itu, 186
@@ -42,7 +42,7 @@ export type PlaylyImdbMeta = {
   synopsis: string;
   /**
    * Kredit & asal film — ditambahkan 2026-10-08 sesudah owner membandingkan
-   * halaman video Playly dengan halaman film DramaKu dan menemukan yang pertama
+   * halaman video Playly dengan halaman film Layarindo dan menemukan yang pertama
    * jauh lebih miskin.
    *
    * SEMUANYA OPSIONAL, dan itu disengaja: baris yang sudah tersimpan sebelum
@@ -289,4 +289,34 @@ function rapikan(teks: string): string {
     .replace(/^[\s\-:|[\]({]+/, "")
     .replace(/[\s\-:|[\]()}]+$/, "")
     .trim();
+}
+
+/**
+ * Ambil kode `tt…` dari ketikan admin.
+ *
+ * Pencarian OMDb memakai judul RESMI (sering bahasa Inggris). Berkas Playly
+ * sering memakai judul lokal, jadi pencarian kosong padahal admin sudah
+ * membuka halaman IMDb-nya. Yang ditempel boleh kode polos atau tautan.
+ * Server tetap hanya menerima kode `tt…` — tautan yang ditempel tidak
+ * diunduh (alamat sembarang tidak boleh diikuti).
+ *
+ * Dua kode dalam satu tempelan ditolak: memilih diam-diam bisa menempel
+ * film yang salah.
+ */
+export function ambilKodeImdb(tempelan: string): string | null {
+  const teks = tempelan.trim();
+  if (!teks) return null;
+  if (/^tt\d+$/i.test(teks)) return teks.toLowerCase();
+
+  // Batas di depan `imdb` menolak `notimdb.com/title/tt…` — akhiran
+  // "imdb.com" milik domain lain. Ekor tautan (query, /reviews) tidak
+  // diikutkan ke pola: `.*` sampai akhir baris akan menelan tautan kedua
+  // dan diam-diam memilih film yang pertama.
+  const semua = [
+    ...teks.matchAll(
+      /(?:^|[^\w.])(?:https?:\/\/)?(?:www\.|m\.)?imdb\.com\/title\/(tt\d+)/gi,
+    ),
+  ];
+  if (semua.length !== 1) return null;
+  return semua[0][1].toLowerCase();
 }

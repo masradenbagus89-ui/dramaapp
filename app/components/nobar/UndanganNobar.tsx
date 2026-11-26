@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Check, Copy, Send } from "lucide-react";
+import { SITE_NAME } from "@/lib/site";
 
 /** Kotak link undangan: salin + bagikan ke WhatsApp / Telegram. */
 export default function UndanganNobar({ token, judul }: { token: string; judul: string }) {
@@ -10,7 +11,11 @@ export default function UndanganNobar({ token, judul }: { token: string; judul: 
   const [tersalin, setTersalin] = useState(false);
   useEffect(() => setLink(`${window.location.origin}/watch-room/${token}`), [token]);
 
-  const ajakan = `Yuk nonton "${judul}" bareng aku di DramaKu:`;
+  // Nama situs dari SITE_NAME, BUKAN ditulis tangan. Sampai 2026-11-26 baris ini
+  // berbunyi "DramaKu" — nama lama yang tertinggal saat penggantian nama
+  // 2026-11-24. Ini teks yang DISALIN penonton lalu dikirim ke temannya, jadi
+  // nama lama ikut tersebar ke luar situs setiap kali ada yang mengajak nobar.
+  const ajakan = `Yuk nonton "${judul}" bareng aku di ${SITE_NAME}:`;
 
   const salin = async () => {
     try {

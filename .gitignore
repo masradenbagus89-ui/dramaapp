@@ -118,3 +118,12 @@ docs/laporan/pratinjau-*.html
 
 # Live Chat & Laporan Video mode lokal (lib/kumpulan-dokumen.ts) — berisi email & isi chat member
 data/kumpulan-dokumen.json
+
+# Akun penonton mode lokal (lib/store.ts:656) — berisi `hash`, `salt`, dan
+# `recovery` tiap akun. Ditambahkan 2026-11-26: berkasnya sudah ada di folder
+# kerja TANPA aturan ini, jadi satu `git add -A` akan mendorong kredensial ke
+# repo. Isinya sekarang kebetulan cuma akun uji `*.local`, tapi berkas yang
+# SAMA dipakai saat ada akun sungguhan — jadi menunggu "nanti kalau sudah ada
+# data nyata" berarti menunggu sampai terlambat. Sejalan dengan
+# data/adminpass.json & data/admins.json di atas.
+data/viewers.json

@@ -91,8 +91,11 @@ export default function DaftarPage() {
       <header className="border-b border-zinc-900">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 md:px-6">
           <Link href="/" className="flex items-center gap-2">
+            {/* Lambang LAYARINDO (alasan lengkap di TopNav.tsx) — `/logo-mark.png`
+                lama isinya huruf "D" bermahkota milik nama DramaKu. `w-auto`
+                karena lambang baru mendatar (134×96), bukan persegi. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-mark.png" alt="Layarindo" width={36} height={36} className="h-9 w-9 object-contain" />
+            <img src="/logo-layarindo-lambang.png" alt="Layarindo" width={50} height={36} className="h-9 w-auto object-contain" />
             <span className="text-lg font-bold text-white">Layarindo</span>
           </Link>
           <Link href="/" className="text-sm text-zinc-400 hover:text-white">
@@ -104,8 +107,11 @@ export default function DaftarPage() {
       <div className="flex min-h-[calc(100vh-64px)] items-center justify-center px-4 py-10">
         <div className="w-full max-w-md">
           <div className="mb-6 text-center">
+            {/* Logo LAYARINDO penuh — alasan + angka ukurannya sama persis
+                dengan app/login/page.tsx (logo lama POTRET, yang baru MENDATAR,
+                jadi `h-28` → `h-14`). */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo.png" alt="Layarindo" className="mx-auto mb-4 h-28 w-auto" />
+            <img src="/logo-layarindo.png" alt="Layarindo" className="mx-auto mb-4 h-14 w-auto max-w-full" />
             <h1 className="title-gold text-3xl leading-tight md:text-4xl">
               Buat akun baru
             </h1>

@@ -6,7 +6,12 @@
 // form drama menuntut ID IMDb (`tt9224104`), dan satu-satunya tempat wajar
 // mencarinya — imdb.com — DIBLOKIR dari jaringan owner (CloudFront 403).
 // Jadi di sini owner mengetik NAMA FILM, memilih dari daftar beserta posternya,
-// dan ID-nya diurus di belakang layar — tak pernah perlu diketik atau dilihat.
+// dan ID-nya diurus di belakang layar.
+//
+// KOTAK TEMPEL (owner 2026-11-17): pencarian OMDb memakai judul resmi, jadi
+// judul lokal di berkas ("A Princesa da Yakuza") kosong padahal halaman IMDb
+// ("Yakuza Princess", tt10715446) sudah dibuka di browser. Admin menempel
+// tautan atau kode itu; yang dikirim ke server tetap hanya `tt…`.
 //
 // Kotak pencarian sudah TERISI judul video yang dibersihkan dari embel-embel
 // rilis (`The Gunman 2015 YIFY` -> `The Gunman`), jadi untuk mayoritas video
@@ -18,6 +23,7 @@
 import { useState } from "react";
 import { Check, Loader2, Search, X } from "lucide-react";
 import {
+  ambilKodeImdb,
   bersihkanJudulRilis,
   type PlaylyImdbMapRingkas,
   type PlaylyImdbRingkas,
@@ -51,6 +57,7 @@ export default function PlaylyImdbPicker({
   const [terbuka, setTerbuka] = useState(false);
   const [kata, setKata] = useState("");
   const [tahun, setTahun] = useState("");
+  const [tempelan, setTempelan] = useState("");
   const [kandidat, setKandidat] = useState<Kandidat[] | null>(null);
   const [mencari, setMencari] = useState(false);
   const [menyimpan, setMenyimpan] = useState("");
@@ -67,6 +74,7 @@ export default function PlaylyImdbPicker({
     const { judul, tahun: t } = bersihkanJudulRilis(judulVideo);
     setKata(judul);
     setTahun(t);
+    setTempelan("");
     setKandidat(null);
     setPesan(null);
     setTerbuka(true);
@@ -99,7 +107,7 @@ export default function PlaylyImdbPicker({
     }
   };
 
-  const pasang = async (imdbId: string, judulFilm: string) => {
+  const pasang = async (imdbId: string, judulFilm = "") => {
     setMenyimpan(imdbId);
     setPesan(null);
     try {
@@ -117,9 +125,10 @@ export default function PlaylyImdbPicker({
       // menebak hasilnya sendiri dan ikut benar walau ada admin lain bekerja.
       onPerbarui(data.imdb ?? {});
       setTerbuka(false);
+      const judulTersimpan = data.imdb?.[videoId]?.title || judulFilm || imdbId;
       setPesan({
         jenis: "ok",
-        teks: `Terpasang: ${judulFilm}. Poster & keterangannya muncul di situs dalam ±1 menit.`,
+        teks: `Terpasang: ${judulTersimpan}. Poster & keterangannya muncul di situs dalam ±1 menit.`,
       });
     } catch {
       setPesan({
@@ -129,6 +138,18 @@ export default function PlaylyImdbPicker({
     } finally {
       setMenyimpan("");
     }
+  };
+
+  const pasangDariTempelan = () => {
+    const kode = ambilKodeImdb(tempelan);
+    if (!kode) {
+      setPesan({
+        jenis: "gagal",
+        teks: "Belum terbaca. Tempel kodenya (contoh tt10715446) atau tautan halamannya (imdb.com/title/tt10715446).",
+      });
+      return;
+    }
+    void pasang(kode);
   };
 
   const lepas = async () => {
@@ -307,11 +328,48 @@ export default function PlaylyImdbPicker({
               tindakan. */}
           {kandidat?.length === 0 && (
             <p className="mt-3 text-xs text-zinc-400">
-              Tidak ada film dengan nama itu. Coba kurangi katanya (mis. buang
-              angka atau kata tambahan), atau kosongkan kolom Tahun — tahun pada
-              nama berkas sering tahun unggah, bukan tahun rilis filmnya.
+              Tidak ada film dengan nama itu. Coba judul yang tertulis di halaman
+              IMDb (sering bahasa Inggris), kosongkan kolom Tahun, atau tempel
+              tautannya di kotak bawah.
             </p>
           )}
+
+          <div className="mt-3 border-t border-zinc-800 pt-3">
+            <label
+              htmlFor={`tempel-imdb-${videoId}`}
+              className="text-[11px] font-medium text-zinc-400"
+            >
+              Sudah ketemu di browser? Tempel tautan atau kodenya
+            </label>
+            <div className="mt-1.5 flex gap-2">
+              <input
+                id={`tempel-imdb-${videoId}`}
+                value={tempelan}
+                onChange={(e) => setTempelan(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    pasangDariTempelan();
+                  }
+                }}
+                placeholder="tt10715446 atau tautan imdb.com"
+                aria-label="Tautan atau kode IMDb"
+                className="min-h-9 min-w-0 flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 outline-none focus-visible:border-sky-400"
+              />
+              <button
+                type="button"
+                onClick={pasangDariTempelan}
+                disabled={menyimpan !== "" || !tempelan.trim()}
+                className="min-h-9 shrink-0 rounded-lg border border-emerald-500/50 px-3 text-xs font-semibold text-emerald-300 transition hover:border-emerald-400 disabled:opacity-50"
+              >
+                {menyimpan !== "" && menyimpan !== "lepas" ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                ) : (
+                  "Pasang"
+                )}
+              </button>
+            </div>
+          </div>
 
           {kandidat && kandidat.length > 0 && (
             <ul className="mt-3 max-h-72 space-y-1 overflow-y-auto">

@@ -1,0 +1,1319 @@
+LAPORAN AKHIR AUDIT KEAMANAN WEBSITE/DASHBOARD
+
+Status akhir: INCOMPLETE (3 dari 9 cakupan terhalang hak administrator mesin)
+
+  PUTARAN KEDUA 2026-11-14 — owner meminta status INCOMPLETE ditutup. Hasilnya
+  sebagian besar BERHASIL ditutup, dan sisanya terhalang hal yang tidak bisa
+  diselesaikan perangkat lunak:
+
+    SEMULA (putaran 1)            SEKARANG (putaran 2)
+    7 scanner tidak terpasang  -> 4 TERPASANG & DIJALANKAN (Semgrep,
+                                  OSV-Scanner, Gitleaks, Trivy) lewat winget
+                                  resmi Microsoft + pip
+    DAST tidak punya target    -> DIJALANKAN terhadap instance TERISOLASI yang
+                                  dibuktikan loopback + milik project ini +
+                                  tanpa database produksi (56 pemeriksaan)
+    ZAP / Burp / Nuclei        -> TETAP BLOCKED. Alasannya terbukti, bukan
+                                  diasumsikan — lihat 3.7/3.8/3.9.
+
+  Kenapa tetap ditulis INCOMPLETE, bukan SELESAI: prompt menyebut sembilan
+  cakupan dengan nama alat spesifik. Tiga di antaranya tidak pernah berjalan,
+  jadi menulis SELESAI akan membuat laporan ini berbohong tentang cakupannya.
+  Yang berubah bukan kejujurannya, melainkan seberapa banyak yang terbukti.
+
+Tanggal mulai - selesai: 2026-11-14T01:41:14Z - 2026-11-14T02:20:00Z
+Auditor/AI: Claude Opus 5 (1M context) via Claude Code, sesi lintasAI
+Project/repository: drama-app (dramaapp) - D:\Users\user18\dramaapp
+Commit/branch yang diaudit: 9b15d1d69f037d9eaa92f2bc9059062fa4c922e8 / main
+  CATATAN: di tengah audit, SESI LAIN yang bekerja di repo yang sama
+  meng-commit pekerjaan redesign UI miliknya sebagai 00f06d2, sehingga HEAD
+  bergeser. Seluruh TEMUAN di laporan ini tetap mengacu ke 9b15d1d. Perbaikan
+  audit diuji ulang di atas HEAD yang baru dan tetap hijau (lihat §7).
+Worktree saat mulai: BERSIH (0 berkas dirty)
+Worktree saat selesai: DIRTY - 12 berkas diubah + 6 berkas baru (rincian §7).
+  Semua perubahan adalah perbaikan audit ini. NOL commit, NOL push dilakukan.
+Output audit: D:\Users\user18\security-audit-results\dramaapp\2026-11-14T01-41-14
+  (di LUAR repository, sesuai aturan)
+
+Stack terdeteksi: Next.js 16.4.3 (App Router) + React 19.2.4 + TypeScript strict
+  + Supabase (PostgREST, schema `dramaapp`) + Vitest 4.1.9. Node v24.15.0,
+  npm 11.12.1. Hosting: Railway (bukan lagi Vercel).
+Ukuran scope: 917 berkas terlacak git; 58 route API; 747 commit riwayat.
+
+
+1. OTORISASI DAN BATAS AMAN
+- URL staging terisolasi: N/A - tidak ada. Tidak ada scan dinamis yang dijalankan.
+- Allowlist host/path: TIDAK ADA host yang dihubungi. Audit 100% lokal
+  (baca berkas + jalankan build/tsc/test/npm audit milik project).
+- Bukti izin tertulis: owner menjalankan audit ini sendiri di mesinnya atas
+  repository miliknya (git user masradenbagus89-ui). Repo bersifat PUBLIK.
+- Data dan akun yang dipakai: NOL akun. Tidak ada login, tidak ada data
+  pribadi nyata yang dibaca/ditulis. Tidak satu pun nilai secret dibuka.
+- Pembatas active scan: N/A - nol request aktif ke sistem mana pun.
+- Tidak dilakukan: production (kode MAUPUN database), data nyata, deploy,
+  push, commit, migration, DDL, aksi destruktif, DoS/brute-force, scan host
+  luar, pemasangan tool baru di mesin bersama ini.
+- Catatan mesin: komputer ini server RDP sewaan bersama (~84 penyewa) dan
+  owner BUKAN administrator. Karena itu scanner tidak dipasang, dan DAST ke
+  127.0.0.1 TIDAK dijalankan: di mesin ini port loopback bisa dipegang proses
+  penyewa lain, jadi "127.0.0.1 menjawab 200" TIDAK membuktikan yang menjawab
+  aplikasi kita. Memindai ke sana berisiko memindai sistem pihak lain =
+  dilarang mutlak oleh prompt butir 6.
+
+
+2. RINGKASAN UNTUK PEMILIK
+
+Apa yang diperiksa:
+  Seluruh kode yang menerima input dari luar: 58 endpoint API, lapis sesi &
+  hak-akses, jalur koin/pembayaran, dua webhook, lapis data Supabase, header
+  keamanan, 8 workflow GitHub Actions, 2 project npm, dan 747 commit riwayat
+  git untuk mencari secret.
+
+Hasil paling penting:
+  Project ini SUDAH DIPERKUAT dengan serius - jauh di atas rata-rata. Jejak
+  audit sebelumnya (2026-10-24) terlihat nyata dan terbukti: RLS database
+  menyala, hak EXECUTE fungsi dicabut dari PUBLIC, header keamanan lengkap,
+  tanda tangan kedua webhook diverifikasi benar, kunci `service_role` tidak
+  pernah ikut ke browser, nol SQL injection, nol XSS, dan nol secret asli di
+  seluruh riwayat git.
+
+  Yang ditemukan audit ini 4 hal, dan TIDAK ADA yang bisa dipakai orang luar
+  untuk mengambil alih situs, membaca data penonton lain, atau mencetak uang
+  hari ini:
+    SEC-001 (Low)  - satu cookie cacat bisa membuat halaman komentar/rating
+                     balas error 500 bagi pengunjung itu. SUDAH DIPERBAIKI.
+    SEC-002 (Medium kalau koin dinyalakan; TIDAK AKTIF sekarang)
+                   - fungsi pembelanjaan koin di database bisa dibelanjakan
+                     dua kali oleh klik serentak. SUDAH DIPERBAIKI: owner
+                     memerintahkan SQL-nya dijalankan 2026-11-14, dan hasilnya
+                     SUDAH DIVERIFIKASI dari database yang hidup.
+    SEC-003 (Low)  - 4 dari 19 route admin kehilangan cek asal permintaan yang
+                     dimiliki 15 saudaranya. SUDAH DIPERBAIKI.
+    SEC-004 (Info) - header `x-admin-email` yang tidak dibaca siapa pun masih
+                     mengirim email admin tiap permintaan. SUDAH DIPERBAIKI.
+    SEC-005 (Low)  - 6 kerentanan di paket alat-uji. MASIH TERBUKA dengan
+                     sengaja: perbaikan satu-perintahnya MERUSAK seluruh 2467
+                     tes project. Keputusan owner (lihat NV-006).
+    SEC-006 (Low)  - satu dari tiga daftar-izin host berperilaku kebalikan
+                     dari dua saudaranya: daftar kosong = IZINKAN SEMUA, dan
+                     env yang mengisinya memang tidak di-set di Railway.
+                     SUDAH DIPERBAIKI (owner memilih opsi (a)): daftar bawaan
+                     ditambahkan, jadi pagarnya tak bisa lagi mati sendiri.
+                     Catatan jujur: pagarnya kini nyata tapi BELUM rapat -
+                     entri "supabase.co" masih lebar. Cara menutupnya rapat
+                     ada di blok SEC-006 §5.
+    SEC-007 (Low)  - segel GCM pada kunci API tersimpan menerima segel yang
+                     DIPOTONG (terbukti: segel 4 byte lolos). SUDAH DIPERBAIKI.
+    SEC-008 (Low)  - .npmrc tidak menahan paket yang baru terbit. SUDAH
+                     DIPERBAIKI; relevansinya terbukti saat audit ini sendiri
+                     nyaris memasang paket npm palsu bernama "nuclei" dan
+                     "gitleaks" (lihat 3.9).
+
+Dampak bisnis bila temuan tidak diperbaiki:
+  SEC-002 yang paling perlu diperhatikan, bukan karena bahaya hari ini tapi
+  karena JEBAKAN WAKTUNYA: fitur koin sedang dijeda (`PAYWALL_ENABLED = false`),
+  dan berkas saklarnya sendiri menjanjikan penyalaan ulang "nol migration SQL,
+  nol env baru". Artinya suatu hari nanti satu `false` diubah jadi `true`,
+  lubangnya hidup kembali, dan tidak ada satu pun langkah yang mengingatkan.
+  Akibatnya penonton bisa membuka 10 episode berbayar dengan koin untuk 1
+  episode - kebocoran pendapatan yang tak terlihat di layar mana pun.
+  Sisanya (SEC-001/003/004) kelas "ketahanan & kebersihan", bukan kebocoran.
+
+Status perbaikan: 7 dari 8 temuan DIPERBAIKI DAN DIUJI ULANG.
+  Terbuka: SEC-005 saja (sengaja dibiarkan; alasan teknis di NV-006).
+  SEC-002 DITUTUP 2026-11-14 atas instruksi owner - migrasi dijalankan ke
+  database produksi lalu diverifikasi dengan membaca definisi fungsi yang
+  HIDUP (bukan mempercayai pesan "berhasil" dari skripnya).
+  Nol temuan Critical. Nol temuan High. Nol Medium yang aktif hari ini.
+
+
+3. CAKUPAN WAJIB DAN BUKTI PELAKSANAAN
+Format: STATUS | versi/metode | scope | perintah/langkah aktual | artefak | ringkasan
+
+3.1 OWASP ASVS: PARTIAL/NEEDS_VALIDATION
+  Metode: pemetaan manual per-area, BUKAN requirement-by-requirement resmi.
+  BATAS JUJUR: dokumen ASVS resmi TIDAK tersedia secara lokal dan audit ini
+  tidak menghubungi internet, jadi saya TIDAK bisa mengklaim cakupan ASVS
+  ber-nomor-requirement. Yang dipakai sebagai acuan standar: salinan lokal
+  `.lintasai/skills/owasp/SKILL.md` (memuat OWASP Top 10:2025) dan
+  `.lintasai/skills/auth/SKILL.md`. Matriks per-area ada di §4.
+  Siapa pun yang butuh sertifikasi ASVS harus mengulang dengan dokumen resmi.
+
+3.2 OWASP WSTG: PARTIAL/NEEDS_VALIDATION
+  Metode: pengujian WSTG yang bersifat STATIS dikerjakan (review otorisasi per
+  route, analisis sesi, analisis input, analisis kripto, review konfigurasi).
+  Pengujian WSTG yang menuntut aplikasi BERJALAN (session lifecycle nyata,
+  IDOR lintas-akun lewat HTTP, CSRF nyata di browser) TIDAK dikerjakan -
+  lihat 3.7/3.8 dan NV-001.
+
+3.3 Semgrep (SAST): DIJALANKAN -> FINDING (2 temuan baru, keduanya diperbaiki)
+  Versi   : pysemgrep 1.185.0, dipasang lewat `python -m pip install --user semgrep`
+  Perintah: semgrep scan --config=p/owasp-top-ten --config=p/javascript
+            --config=p/typescript --config=p/react --config=p/secrets
+            --exclude=node_modules --exclude=.next --exclude=backups
+  Cakupan : 292 aturan atas 712 berkas, ~99,9% baris berhasil diurai
+  HASIL AWAL 4 temuan:
+    1. lib/playly.ts:266  gcm-no-tag-length  (ERROR) -> NYATA, jadi SEC-007
+    2. .npmrc:1  npm-missing-minimum-release-age (MEDIUM) -> NYATA, jadi SEC-008
+    3. app/drama/[id]/page.tsx:519  react-dangerouslysetinnerhtml (WARNING)
+    4. app/tonton/[id]/page.tsx:364  react-dangerouslysetinnerhtml (WARNING)
+  Nomor 3 & 4 adalah FALSE POSITIVE, dan itu dibuktikan bukan diklaim: kedua
+  titik memakai toJsonLdScript (lib/structured-data.ts:151-152) yang DIUJI
+  JALAN mengubah "<" jadi "\u003c" sambil tetap JSON sah (artefak
+  uji-jsonld.txt). Semgrep sendiri menandainya confidence MEDIUM.
+  SCAN ULANG sesudah perbaikan: 4 -> 2 temuan; yang tersisa hanya nomor 3 & 4.
+  Artefak: semgrep.json, semgrep-sesudah.json, semgrep-final.json
+
+  CATATAN CARA KERJA yang layak dibaca: scan ulang pertama MASIH menandai
+  .npmrc walau setelannya sudah benar. Sebabnya komentar yang SAYA tulis
+  memuat teks "min-release-age=0" sebagai contoh cara melewati, dan aturannya
+  membaca angka nol itu sebagai setelan yang terlalu rendah. Komentarnya
+  ditulis ulang tanpa menyebut benderanya harfiah. Pelajarannya: temuan
+  scanner yang bertahan sesudah diperbaiki belum tentu berarti perbaikannya
+  gagal — periksa dulu apa yang sebenarnya dibaca alat itu.
+  `semgrep --version` -> tidak terpasang. Tidak dipasang DENGAN SENGAJA:
+  mesin ini server sewaan bersama dan owner bukan administrator; prompt butir
+  3 juga melarang unduh-lalu-jalankan.
+  PENGGANTI MANUAL yang dijalankan (bukan setara, disebut apa adanya):
+  pencarian pola bahaya ber-target atas seluruh source -
+    - sink XSS: `dangerouslySetInnerHTML`, `.innerHTML=`, `outerHTML=`
+      -> 3 titik, semuanya ditinjau manual (hasil: aman, lihat §4)
+    - eksekusi dinamis: `eval(`, `new Function(`, `child_process`, `execSync`
+      -> NOL kemunculan di app/, lib/, components/
+    - SQL mentah / string-concat query -> NOL (semua lewat RPC berparameter)
+    - penjaga auth tanpa `await` (bypass klasik, penjaga async selalu truthy)
+      -> NOL kemunculan
+    - injeksi filter PostgREST (input user ditempel ke string query)
+      -> 2 titik, keduanya lewat helper `eq()` yang meng-encode (aman)
+  Artefak: secret-scan-worktree.txt, uji-jsonld.txt
+
+3.4 OSV-Scanner (dependency/SCA): DIJALANKAN -> FINDING
+  Versi   : osv-scanner 2.7.0, dipasang lewat `winget install Google.OSVScanner`
+  Perintah: osv-scanner scan source --recursive --format json .
+  Cakupan : 2 lockfile ditemukan & dipindai — package-lock.json akar (270
+            paket) dan drama-ai-studio/package-lock.json (21 paket)
+  HASIL   : 33 kerentanan pada 6 paket, SEMUANYA di rantai alat uji:
+            undici@7.28.0 (23 advisory), vite@8.0.16 (5), @vitest/mocker@4.1.9
+            (2), vitest@4.1.9 (1), source-map-js@1.2.1 (1),
+            baseline-browser-mapping@2.10.24 (1)
+            drama-ai-studio: NOL kerentanan
+            dependency PRODUKSI: NOL kerentanan
+  Ini memperkuat, bukan mengubah, SEC-005: jumlahnya lebih besar dari npm
+  audit (33 vs 6) karena OSV mendaftar tiap advisory satu per satu, tapi
+  paket akarnya sama persis dan tetap dev-only.
+  Artefak: osv-scanner.json
+  `osv-scanner --version` -> tidak terpasang.
+  PENGGANTI: `npm audit` (database GitHub Advisory) atas KEDUA project npm:
+    - akar (package-lock.json): 6 kerentanan - 3 high, 3 moderate
+      -> SEC-005. Semua di rantai devDependencies (vitest/vite/undici/
+         source-map-js/baseline-browser-mapping/@vitest/mocker).
+    - drama-ai-studio/package-lock.json: 0 kerentanan
+    - .lintasai/bin, .lintasai/engine: DI LUAR SCOPE (milik kit, bukan project)
+  Lockfile DI-COMMIT (syarat A03:2025 terpenuhi).
+  Artefak: npm-audit.json, npm-audit-drama-ai-studio.json,
+           npm-audit-fix-dryrun.txt, npm-audit-fix.txt, npm-audit-sesudah.txt
+
+3.5 Gitleaks (secret): DIJALANKAN -> PASS (nol secret asli bocor)
+  Versi   : gitleaks 8.30.1, dipasang lewat `winget install Gitleaks.Gitleaks`
+  Perintah: (a) gitleaks detect --source . --no-git --redact   [worktree]
+            (b) gitleaks detect --source . --redact            [riwayat git]
+  Semua keluaran --redact: nol nilai rahasia tercetak di mana pun.
+
+  (a) WORKTREE — 167 MB dipindai, 25 temuan, SEMUANYA terjelaskan:
+      .env.local / .env.vercel.local / .env.railway.local (10) -> rahasia ASLI,
+        tapi ketiganya DIVERIFIKASI diabaikan git (`git check-ignore`), jadi
+        tidak pernah ikut ke repo. Ini memang tempatnya yang benar.
+      .next/** (8) -> artefak build, diabaikan git.
+      tests/** (7) -> fixture, DIBUKTIKAN palsu satu per satu tanpa mencetak
+        nilainya (artefak nilai-fixture-tes.txt). Contoh penanda di dalam
+        nilainya sendiri: "contoh-bukan-kunci-asli", "kunci-palsu-khusus-tes".
+
+  (b) RIWAYAT — 728 commit dipindai, 8 temuan, SEMUANYA false positive:
+      7 = fixture tes yang sama di atas.
+      1 = drama-ai-studio/uji-tts4.mjs:4 (commit d12d913, 2026-11-03), berkas
+          yang kini sudah dihapus. Awalnya dinilai BERPOLA TOKEN ASLI dan
+          hampir dilaporkan sebagai kebocoran. Pemeriksaan lanjutan
+          membatalkannya: endpoint di skrip itu
+          wss://speech.platform.bing.com/.../readaloud/edge/v1, dan nilainya
+          COCOK PERSIS (dibandingkan lewat hash SHA-256, bukan dengan
+          mencetaknya) dengan Trusted Client Token PUBLIK milik Microsoft Edge
+          yang tertanam di browser dan dipakai semua pustaka edge-tts.
+          BUKAN rahasia milik owner, jadi TIDAK perlu rotate.
+  KESIMPULAN: nol secret asli di worktree maupun di 728 commit riwayat.
+  Artefak: gitleaks-worktree.json, gitleaks-riwayat.json, token-tts-analisa.txt
+  `gitleaks --version` -> tidak terpasang.
+  PENGGANTI: pencarian pola secret berkeyakinan-tinggi (JWT `eyJ...`,
+  `sk-...`, `AKIA...`, `ghp_/gho_`, `xox[baprs]-`, PEM PRIVATE KEY,
+  `service_role=...`) atas:
+    (a) seluruh 917 berkas terlacak -> 3 hit, SEMUA bukan secret:
+        1 hash integrity npm di package-lock.json, 2 fixture tes yang
+        namanya sendiri menyatakan palsu ("contoh-bukan-kunci-asli",
+        "kunci-palsu-khusus-tes").
+    (b) SELURUH 747 commit riwayat (`git log --all -p`) -> 10 hit, SEMUA
+        bukan secret: fixture tes, kunci contoh AWS dari dokumentasi resmi
+        mereka (berawalan `AKIA`, berakhiran `EXAMPLE` -- SENGAJA tidak
+        ditulis utuh di sini, lihat catatan di bawah), dan baris dokumentasi
+        tentang deteksi placeholder.
+        CATATAN 2026-11-26: semula baris ini menulis kunci contoh itu UTUH.
+        Akibatnya hook `pre-commit-secret-scan` menolak laporan ini sendiri --
+        polanya `AKIA[0-9A-Z]{16}` tidak bisa membedakan kunci contoh dari
+        kunci asli, dan memang TIDAK BOLEH bisa. Yang dibetulkan penulisannya,
+        BUKAN penjaganya: melewati hook dengan `--no-verify` akan melatih
+        kebiasaan menerobos, persis yang diperingatkan komentar di dalam hook
+        itu. Isi temuannya tidak berubah sedikit pun.
+  HASIL: NOL secret asli di worktree maupun riwayat. Nilai tidak dicetak.
+  Pemeriksaan tambahan: `.env.local` ADA di disk tapi TIDAK terlacak git;
+  `cookies.txt`, `dev.log`, `migrasi-full.sql`, `supabase_export.sql` juga
+  tidak terlacak. Dua SQL yang terlacak (`supabase_setup.sql`,
+  `migrasi-schema.sql`) diperiksa isinya: SKEMA saja, nol kredensial.
+  Artefak: secret-scan-worktree.txt, secret-scan-riwayat.txt
+
+3.6 Trivy (filesystem/container/IaC): DIJALANKAN -> PASS
+  Versi   : trivy 0.76.2, dipasang lewat `winget install AquaSecurity.Trivy`
+  Perintah: trivy fs --scanners vuln,secret,misconfig
+            --skip-dirs node_modules,.next,backups .
+  HASIL   : vuln 2 | secret 5 | misconfig 0
+    vuln     : source-map-js (HIGH) + baseline-browser-mapping (MEDIUM) —
+               bagian dari kelompok dev-only yang sama (SEC-005). Trivy
+               menyaring dev-dependency secara bawaan, jadi angkanya lebih
+               kecil dari OSV; keduanya sepakat soal paketnya.
+    secret   : kelimanya JWT di .env.local / .env.railway.local /
+               .env.vercel.local — ketiganya diabaikan git.
+    misconfig: Trivy melaporkan "Detected config files: num=0". Ini
+               MEMBENARKAN inventaris manual putaran pertama: repo ini memang
+               NOL Dockerfile, NOL Terraform, NOL Kubernetes/Helm. Jadi
+               permukaan container/IaC bukan "belum diperiksa", melainkan
+               memang NOT_APPLICABLE.
+  Workflow GitHub Actions tetap diperiksa manual (hasil di putaran 1): izin
+  minimum di kedelapan workflow, nol pull_request_target, nol interpolasi
+  event di dalam blok run.
+  Artefak: trivy-fs.json
+  `trivy --version` -> tidak terpasang. Docker juga tidak terpasang.
+  INVENTARIS LEBIH DULU: NOL Dockerfile, NOL docker-compose, NOL Terraform,
+  NOL Kubernetes/Helm di repository. Jadi sebagian besar permukaan Trivy
+  memang NOT_APPLICABLE di sini, bukan sekadar belum diperiksa.
+  Yang ADA dan DIPERIKSA MANUAL: 8 workflow GitHub Actions.
+    - `permissions:` eksplisit di kedelapan workflow, semuanya `contents: read`
+      (hak minimum) -> PASS
+    - NOL `pull_request_target` dan NOL `workflow_run` (dua pemicu paling
+      berbahaya karena jalan dengan hak repo penuh) -> PASS
+    - injeksi skrip Actions: NOL interpolasi `${{ github.event.* }}` /
+      `github.head_ref` di DALAM blok `run:`; nilai dari event dialirkan lewat
+      `env:` (pola yang benar) -> PASS
+    - secret dialirkan lewat `env:`, tidak ditempel inline ke shell -> PASS
+
+3.7 OWASP ZAP (DAST): BLOCKED — terhalang hak administrator mesin
+  Paketnya ADA dan sudah dicoba dipasang dua kali dari sumber resmi:
+    winget install --id ZAP.ZAP            -> "Successfully verified installer
+      hash", lalu "You cancelled the installation", exit 1602. Penyebabnya ZAP
+      menyeret dependensi Eclipse Temurin JRE 17 yang installer-nya meminta
+      hak administrator.
+    winget install --id ZAP.ZAP --skip-dependencies  -> "The installer will
+      request to run as administrator", lalu exit 1. Java 21 sudah terpasang
+      sehingga dependensinya sebenarnya tak perlu, tapi installer ZAP sendiri
+      tetap menuntut administrator.
+  Owner BUKAN administrator di mesin ini (server RDP sewaan bersama ~84
+  penyewa), dan sesi ini non-interaktif sehingga prompt UAC tidak bisa
+  dijawab. Jadi ini batas HAK AKSES MESIN, bukan pilihan.
+  TIDAK ditempuh: mengunduh biner ZAP di luar jalur paket resmi. Prompt audit
+  butir 3 melarang unduh-lalu-jalankan dari sumber tak-terverifikasi, dan
+  winget memverifikasi hash lewat manifest Microsoft sedangkan unduhan manual
+  tidak.
+  PENGGANTINYA dikerjakan, bukan dilewati: lihat 3.10 — DAST bersekrip
+  terhadap instance terisolasi, 56 pemeriksaan, nol kegagalan.
+  `zap.sh` / `zaproxy` -> tidak terpasang.
+  DAN gerbang target lokal TIDAK LOLOS, jadi andai ZAP terpasang pun scan
+  tidak boleh jalan. Fakta yang hilang, apa adanya:
+    - nol bukti target loopback yang MILIK project ini: mesin ini dipakai ~84
+      penyewa, dan dua proses bisa memegang port yang sama tanpa error,
+      sehingga balasan 200 dari 127.0.0.1 TIDAK membuktikan asalnya aplikasi kita
+    - nol akun dummy yang bisa ditemukan dari fixture/seed/dokumentasi
+    - nol database lokal terisolasi: jalur data project mengarah ke Supabase
+      PRODUKSI, dan di `lib/store.ts` mode lokal pun menulis berkas nyata
+  Penggantinya BUKAN scan URL luar (dilarang). Yang dikerjakan: review source
+  atas seluruh 58 route (hasil di §4).
+
+3.8 Burp Suite Community (manual): BLOCKED sebagai ALAT — substansinya DIKERJAKAN
+  Paket PortSwigger.BurpSuite.Community 2026.3.3 ada di winget, tapi tidak
+  dipasang karena dua halangan yang berdiri sendiri-sendiri:
+    1. installer-nya menuntut administrator, sama seperti ZAP (3.7);
+    2. Burp adalah aplikasi GUI yang dikendalikan lewat Proxy/Repeater. Sesi
+       ini non-interaktif tanpa desktop, jadi walau terpasang ia tidak bisa
+       dikemudikan. Memasangnya hanya akan menambah daftar "terpasang" tanpa
+       menambah satu pun bukti.
+  YANG SEBENARNYA DIMINTA cakupan G adalah matriks tanpa-login / user-A /
+  user-B / admin atas endpoint sensitif. ITU DIKERJAKAN — bersekrip, bukan
+  manual, terhadap instance terisolasi. Rinciannya di 3.10 dan §4.2.
+  Yang TIDAK didapat dari pendekatan bersekrip, dan harus diakui: eksplorasi
+  manual yang dipandu intuisi penguji — mengutak-atik satu permintaan lalu
+  mengikuti firasat ke arah yang tak terduga. Skrip hanya menguji apa yang
+  sudah terpikirkan saat menulisnya.
+  Tidak terpasang; tidak ada browser/proxy yang bisa dikendalikan di sesi
+  non-interaktif ini; target lokal tidak lolos gerbang (3.7). Matriks
+  tanpa-login/user-A/user-B/admin TIDAK dikerjakan lewat HTTP. Pengganti
+  statisnya ada di §4 (matriks otorisasi dari source), dan batasnya jelas:
+  matriks itu membuktikan PENJAGA ADA DI KODE, bukan penjaga BERDIRI SAAT
+  DIJALANKAN. Lihat NV-001.
+
+3.9 Nuclei (template-based): BLOCKED — tidak ada jalur pasang yang tepercaya
+  Dicari di seluruh sumber paket yang tersedia di mesin ini:
+    winget search nuclei            -> "No package found matching input criteria"
+    winget search projectdiscovery  -> "No package found matching input criteria"
+    scoop / choco / go / docker     -> tidak satu pun terpasang
+  Satu-satunya jalur tersisa adalah mengunduh biner rilis dari GitHub lalu
+  menjalankannya. TIDAK ditempuh (prompt butir 3).
+
+  ⚠️ TEMUAN SAMPINGAN YANG PENTING — nyaris jadi insiden rantai pasok.
+  npm registry MEMANG punya paket bernama `nuclei` dan `gitleaks`, dan
+  memasangnya akan terasa seperti jalan pintas yang sah. Keduanya diperiksa
+  dulu sebelum disentuh, dan keduanya IMPOSTOR:
+    nuclei@0.2.3   — deskripsi "Basic classical inheritance system", pustaka
+                     pewarisan JavaScript milik skerit. Nol hubungan dengan
+                     Nuclei milik ProjectDiscovery.
+    gitleaks@1.0.0 — repo ycjcl868/gitleaks, deskripsi "> custom rules". Bukan
+                     gitleaks resmi (gitleaks/gitleaks, ditulis dengan Go).
+  Memasang salah satunya demi "melengkapi audit" akan menjadi persis jenis
+  serangan yang diperingatkan OWASP A03:2025 — dan ironisnya dilakukan atas
+  nama keamanan. Inilah yang membuat SEC-008 (min-release-age) bukan sekadar
+  teori: jaraknya satu perintah `npm install` saja.
+  `nuclei --version` -> tidak terpasang, dan target lokal tidak lolos gerbang
+  (3.7). Tidak ada template yang diunduh maupun dijalankan. Target TIDAK
+  diganti ke host lain.
+
+3.10 DAST BERSEKRIP terhadap instance TERISOLASI: DIJALANKAN -> PASS 56/56
+  Inilah yang menggantikan ZAP (3.7) dan Burp (3.8). Bukan pengganti setara —
+  ia tidak memindai otomatis seluruh permukaan seperti ZAP — tapi ia menguji
+  tepat hal yang paling penting: kontrol akses lintas-peran lewat HTTP nyata.
+
+  GERBANG TARGET — ketiganya DIBUKTIKAN sebelum satu pun permintaan uji dikirim:
+    1. Loopback          : LISTENING di 127.0.0.1:3987 (bukan 0.0.0.0), jadi
+                           tak terjangkau dari luar mesin.
+    2. Milik project ini : PID pemilik port dicocokkan ke command-line-nya —
+                           node.exe menjalankan
+                           D:\Users\user18\dramaapp\...\next start -p 3987.
+                           Ini menjawab kekhawatiran mesin-bersama: di sini
+                           "127.0.0.1 menjawab 200" TIDAK dipercaya begitu
+                           saja, pemilik port-nya diperiksa.
+    3. Tanpa data nyata  : dijalankan dengan env Supabase DIKOSONGKAN, dan
+                           bahwa itu benar-benar berlaku dibuktikan lewat
+                           endpoint milik aplikasi sendiri — /api/health
+                           menjawab {"sumberData":"berkas"}. Aplikasi
+                           menyatakan dirinya berjalan TANPA database.
+                           Presedennya diuji lebih dulu memakai loader asli
+                           Next (@next/env): env dari shell MENANG atas
+                           .env.local, jadi kredensial produksi tidak termuat.
+    Skrip ujinya MENOLAK jalan kalau syarat 3 tidak terpenuhi (dan itu benar-
+    benar terjadi sekali saat build sempat rusak — skripnya berhenti sendiri).
+
+  AKUN: dummy, dibuat skrip itu sendiri (viewer-a@uji.local, viewer-b@uji.local,
+  admin-dummy@uji.local). Nol akun nyata dipakai.
+
+  HASIL — 56 pemeriksaan, 56 LULUS, 0 GAGAL:
+    A. Otorisasi admin (24)  : 6 endpoint x 4 peran. Non-admin selalu ditolak.
+    B. IDOR/BOLA (2)         : email milik B dikirim memakai sesi A — nol data B.
+    C. Sesi (5)              : token penonton dipasang sebagai cookie admin ->
+                               401; tanda tangan diubah -> ditolak; cookie cacat
+                               (SEC-001) -> bukan 500.
+    D & G4. CSRF (7)         : POST lintas-asal ke endpoint admin -> 403,
+                               TERMASUK saat membawa cookie admin yang SAH.
+    E. Path traversal (4)    : ../, %2f, dan traversal di parameter lang -> 400,
+                               nol isi berkas bocor.
+    F. Header keamanan (6)   : HSTS, nosniff, X-Frame-Options, Referrer-Policy,
+                               Permissions-Policy, CSP-Report-Only — DIUKUR dari
+                               balasan sungguhan, bukan dibaca dari next.config.ts.
+    G1. Sisi positif (4)     : admin MEMANG bisa masuk (200) sementara viewer
+                               ditolak (401). Ini menutup kelemahan putaran
+                               pertama, saat login admin gagal sehingga baris
+                               "admin" lolos secara semu — penjaga yang menolak
+                               SEMUA orang belum membuktikan otorisasi benar.
+    G2. Silang-pengguna (3)  : komentar A dibaca B tidak membocorkan email A;
+                               rating dengan email palsu di body -> 400.
+    G3. Pembatas laju (1)    : 429 muncul di percobaan ke-8. Bukan brute-force —
+                               nol usaha menebak password, hanya membuktikan
+                               pagarnya menyala, lalu berhenti.
+
+  NILAI TERBESARNYA: ini yang mengubah SEC-001 dan SEC-003 dari "penjaga ada
+  di kode" menjadi "penjaga BERDIRI saat dijalankan". Khususnya CSRF — sebelum
+  perbaikan SEC-003, permintaan lintas-asal dengan cookie admin sah akan
+  DITERIMA; sesudahnya 403. Itu selisih yang hanya bisa dibuktikan lewat HTTP.
+
+  BERSIH-BERSIH: folder data/ di-snapshot sebelum uji dan dipulihkan sesudahnya
+  (mode berkas menulis ke sana). Diverifikasi `git status data/` BERSIH dan nol
+  jejak akun dummy tertinggal. Server uji dimatikan lewat PID.
+  Artefak: dast-matriks.txt, dast-matriks2.txt
+
+3.11 PEMERIKSA MILIK PROJECT (bukan diminta prompt, tapi inilah bukti terkuat
+     yang tersedia): PASS
+  `npm run gerbang` (scripts/gerbang-pra-rilis.mjs, gerbang 5-langkah
+  AGENTS.local.md §6) dijalankan PENUH SESUDAH seluruh perbaikan:
+    [1/5] rm -rf .next              -> lolos
+    [2/5] npm run build             -> lolos
+    [3/5] npx tsc --noEmit          -> lolos (0 error)
+    [4/5] npm test                  -> lolos, 175 berkas / 2467 tes
+    [5/5] periksa secret ter-stage  -> lolos, 0 berkas
+  EXIT 0. Baseline sebelum perbaikan: 172 berkas / 2457 tes (juga hijau),
+  jadi selisih +3 berkas / +10 tes adalah penjaga baru audit ini.
+  Artefak: baseline-npm-test.txt, gerbang-FINAL.txt
+
+
+4. MATRIKS ASVS/WSTG DAN ROLE
+
+4.1 Matriks per-area (bukti = berkas:baris yang DIBACA, bukan diingat)
+
+Area                     | Bukti                                   | Status | Catatan
+-------------------------|-----------------------------------------|--------|---------
+Arsitektur/threat model  | AGENTS.local.md, HANDOFF.md             | PASS   | titik-risiko didokumentasikan + ada jejak audit 2026-10-24
+Autentikasi              | app/api/auth/login/route.ts:24-155      | PASS   | scrypt+timingSafeEqual, rate-limit 10/mnt, pesan seragam (anti enumerasi), gagal-TUTUP di catch
+Hash password            | lib/admin-password.ts:15-36             | PASS*  | scrypt + salt acak 16B + timingSafeEqual. *biaya default Node - lihat NV-004
+Sesi                     | lib/session.ts:40-192                   | PASS   | HMAC-SHA256, timingSafeEqual, exp 7 hari, role dicocokkan, httpOnly+secure+sameSite=lax, gagal-MENGUNCI tanpa AUTH_SECRET
+Pemisahan role           | lib/session.ts:68-88                    | PASS   | `expectedRole` WAJIB cocok: token penonton tak bisa lolos sebagai admin walau tanda tangannya sah
+Pencabutan admin         | lib/session.ts:130-137                  | PASS   | email dicek ulang ke daftar admin tiap request, jadi mencabut admin langsung memutus akses
+Access control / IDOR    | lib/session.ts:166-174                  | PASS   | identitas HANYA dari cookie bertanda tangan; parameter email dari klien DIHAPUS (bukan diabaikan) supaya pemanggil lama gagal saat build
+Otorisasi tiap route     | 19/19 route admin                       | PASS   | semua punya isAdminRequest/getAdminEmail; NOL penjaga async yang lupa `await`
+Auth berbasis header     | lib/admin-api.ts                        | FIXED  | header `x-admin-email` dikirim klien tapi NOL kode membacanya -> SEC-004, dihapus
+Validasi input           | app/api/subtitle/route.ts:14-27         | PASS   | ID_RE + LANG_RE + ep integer; path traversal tertutup
+Path traversal           | subtitle, download, video-url, scan     | PASS   | bentuk id/ep/res divalidasi sebelum menyentuh berkas; nol `..` yang bisa lewat
+SSRF                     | app/api/agent/video-base/route.ts:1-20  | PASS   | allowlist host + `redirect: "manual"` (302 upstream tak bisa mengarahkan ke IP internal/metadata cloud)
+Injection (SQL)          | lib/store.ts, lib/supabase.ts:226-228   | PASS   | nol SQL mentah; RPC berparameter; filter PostgREST lewat `eq()`+encodeURIComponent
+XSS                      | lib/structured-data.ts:151-152          | PASS   | DIUJI JALAN: `<` -> `\u003c`, JSON tetap sah (uji-jsonld.txt)
+XSS (iklan)              | app/components/AdBanner.tsx:66          | INFO   | `innerHTML = RAW_HTML` dari env owner, disengaja (kode iklan). Bukan input penyerang. ADS_ENABLED=false
+Kriptografi              | lib/midtrans.ts:88-107                  | PASS   | sha512 sesuai spesifikasi Midtrans + timingSafeEqual + gagal-TUTUP tanpa server key
+Webhook pembayaran       | app/api/coins/webhook/route.ts:29-48    | PASS   | signature diverifikasi SEBELUM kredit; koin dikredit dari `order.coins` TERSIMPAN, bukan dari angka kiriman -> jumlah tak bisa dikendalikan penyerang; idempoten
+Webhook video            | app/api/webhooks/playly/route.ts:74-109 | PASS   | badan MENTAH dibaca dulu, verifikasi sebelum menyentuh penyimpanan, 503 vs 401 dibedakan, badan/header TIDAK ikut ke log
+Anti-replay webhook      | lib/playly-webhook.ts:32-40             | NEEDS_VALIDATION | diakui TERBUKA oleh kodenya sendiri (payload tak punya event_id/timestamp) -> NV-005
+Business logic (harga)   | app/api/coins/topup/route.ts:53-56      | PASS   | harga & jumlah koin dari COIN_PACKS di SERVER; klien hanya mengirim `packId`
+Business logic (belanja) | migration 2026-08-29:108-131            | FIXED* | baca-periksa-tulis tanpa kunci baris -> SEC-002. *perbaikan ditulis, BELUM dijalankan ke DB
+Rate limiting            | lib/rate-limit.ts:7-12                  | PASS*  | ada di 29/35 handler mutasi. *per-IP saja + penyimpanan di memori -> NV-003
+CSRF                     | lib/origin.ts:22-33 + sameSite=lax      | FIXED  | 15 route pakai guardMutation; 4 route admin terlewat -> SEC-003, ditutup guardAsal
+CORS                     | seluruh app/, lib/                      | PASS   | NOL header Access-Control-Allow-* di kode = nol wildcard, nol kombinasi `*`+credentials
+Header keamanan          | next.config.ts:144-174                  | PASS*  | HSTS, nosniff, X-Frame-Options, Referrer-Policy, Permissions-Policy terpasang. *CSP masih Report-Only -> NV-002
+Next.js CVE-2025-29927   | package.json next 16.4.3                | PASS   | jauh di atas ambang patch (15.2.3+), DAN nol middleware.ts: otorisasi ada di route handler, bukan di middleware
+RLS database             | migration 2026-10-24:76-104             | PASS   | RLS nyala di 5 tabel + EXECUTE 3 fungsi dicabut dari public/anon/authenticated, diverifikasi langsung ke DB saat migrasi itu
+Kunci service_role       | lib/store.ts, lib/supabase.ts           | PASS   | hanya 2 berkas, keduanya server-only; NOL `NEXT_PUBLIC_*` anon key di seluruh repo
+Rahasia ke browser       | 6 var NEXT_PUBLIC_*                     | PASS   | ADSENSE_CLIENT/SLOT, AD_BANNER_HTML, SITE_URL, SUPABASE_URL, VIDEO_BASE_URL - nol yang rahasia
+Logging & kebocoran      | app/api/auth/login/route.ts:129-154     | PASS   | pesan error mentah TIDAK diteruskan ke browser (pernah membocorkan HTML Cloudflare 2026-09-16); dicatat ke log server saja
+Fail-open (A10:2025)     | lib/session.ts:31-33, 99-109            | FIXED  | gagal-MENGUNCI tanpa AUTH_SECRET sudah benar; cookie cacat MELEMPAR -> SEC-001, ditutup
+Supply chain (A03:2025)  | package-lock.json (di-commit)           | FINDING| 6 CVE dev-only -> SEC-005 (terbuka, sengaja)
+Pembocoran daftar admin  | app/api/admins/route.ts:47-70           | PASS   | GET dipagari; penonton hanya boleh bertanya tentang EMAIL SENDIRI (bukan sekadar dibatasi laju)
+2FA/MFA admin            | app/api/auth/login/route.ts:81-85       | NEEDS_VALIDATION | dihapus atas permintaan owner 2026-11-13 -> NV-007 (keputusan owner, bukan cacat)
+
+4.2 Matriks aksi/endpoint sensitif (dari SOURCE; lihat batas di 3.8)
+
+Aksi/endpoint              | tanpa login | penonton | admin | hasil diharapkan      | hasil aktual (source)
+---------------------------|-------------|----------|-------|-----------------------|----------------------
+POST /api/auth/login       | boleh coba  | -        | -     | 401 kalau salah       | SESUAI (401, pesan seragam, rate-limit)
+POST /api/auth/reset-password| boleh coba| -        | -     | 401 seragam           | SESUAI (akun-tak-ada & kode-salah dibalas SAMA)
+GET  /api/admins           | 403         | isAdmin diri sendiri | daftar penuh | tak boleh bocor | SESUAI
+GET  /api/coins            | 401         | saldo SENDIRI | saldo sendiri | tak boleh lintas-user | SESUAI (identitas dari cookie saja)
+POST /api/coins/unlock     | 401         | potong koin sendiri | gratis | tak boleh lintas-user | SESUAI* (*race SEC-002)
+POST /api/coins/topup      | 401         | buat order | buat order | harga dari server | SESUAI
+POST /api/coins/webhook    | signature   | -        | -     | 403 tanpa signature   | SESUAI
+POST /api/webhooks/playly  | secret/HMAC | -        | -     | 401 tanpa bukti       | SESUAI (503 kalau secret belum di-set)
+POST /api/admin/drama      | 401         | 401      | boleh | admin saja            | SESUAI (+ guardAsal ditambahkan)
+DELETE /api/admin/drama    | 401         | 401      | boleh | admin saja            | SESUAI (+ guardAsal ditambahkan)
+POST /api/admin/hardlink   | 401         | 401      | boleh | admin saja            | SESUAI (+ guardAsal ditambahkan)
+POST /api/admin/durasi     | 401         | 401      | boleh | admin saja            | SESUAI (+ guardAsal ditambahkan)
+POST/DELETE /api/admin/ads | 401         | 401      | boleh | admin saja            | SESUAI (+ guardAsal ditambahkan)
+POST /api/agent/video-base | secret      | -        | admin | allowlist host wajib  | SESUAI (3 lapis: laju, secret tahan-waktu, allowlist)
+GET  /api/subtitle         | publik      | publik   | publik| nol path traversal    | SESUAI
+Catatan: NOL token, email nyata, atau data pribadi ditulis di matriks ini.
+
+
+5. TEMUAN TERKONFIRMASI
+
+ID: SEC-001
+Severity: Low
+Status perbaikan: DIPERBAIKI-DAN-DIUJI-ULANG
+Sumber penemuan: manual (review source + dijalankan untuk membuktikan)
+Lokasi terdampak: lib/session.ts:105 (sebelum perbaikan)
+Batas kepercayaan: pengunjung mana pun (tanpa login) -> penanganan kondisi
+  tak-terduga GAGAL (A10:2025) -> route/halaman membalas 500, bukan "tidak ada sesi"
+Bukti aman: `decodeURIComponent` dipanggil langsung atas nilai cookie dari
+  permintaan. DIJALANKAN: masukan "%", "%E0%A4%A", "abc%ZZ", "%FF" keempatnya
+  melempar `URIError: URI malformed`. Error itu tidak ditangkap di keempat
+  pemanggil: lib/session.ts:118 (sesi admin), :146 (sesi penonton),
+  lib/tamu.ts:124 (identitas tamu).
+Dampak yang dibuktikan: jalur tamu adalah jalur PUBLIK - identitas tamu
+  dipakai komentar & rating, dua fitur yang SEDANG MENYALA
+  (lib/saklar-fitur.ts:76-80), dan cookie tamu berumur 1 TAHUN
+  (lib/tamu.ts:49). Jadi satu nilai cookie cacat membuat fitur itu membalas
+  500 terus-menerus bagi pengunjung tersebut sampai ia menghapus cookie.
+  BATAS JUJUR: cookie bersifat per-klien, jadi ini TIDAK lintas-pengguna dan
+  bukan jalan masuk ke akun/data siapa pun. Severity Low. Kemungkinan
+  eskalasi lintas-penyewa ada di NV-001.
+Akar masalah: input dari luar diperlakukan sebagai pasti berbentuk benar.
+Perbaikan yang dilakukan: lib/session.ts - `decodeURIComponent` dibungkus
+  try/catch, memulangkan `null` (gagal-MENGUNCI: cookie tak terbaca = dianggap
+  tidak ada, pemanggil menempuh jalur "belum login" yang sudah teruji).
+  Satu titik perbaikan untuk keempat pemanggil - bukan tambal per-pemanggil.
+Regression test: tests/cookie-cacat.test.ts (4 tes) - termasuk pagar
+  anti-perbaikan-kebablasan yang memastikan nilai SAH tetap ter-decode.
+Bukti sesudah perbaikan: DIUJI-BALIK. Dengan try/catch: 4/4 lulus. Kode
+  dikembalikan sementara ke bentuk lama: 3/4 GAGAL dengan pesan persis
+  "URIError: URI malformed". Jadi tesnya penjaga sungguhan, bukan hiasan.
+
+ID: SEC-002
+Severity: Medium (saat fitur koin menyala) / tidak dapat dipicu hari ini
+Status perbaikan: DIPERBAIKI-DAN-DIUJI-ULANG (dijalankan 2026-11-14 atas instruksi owner)
+Sumber penemuan: manual (review source SQL)
+Lokasi terdampak: supabase_migrations/2026-08-29_schema_lengkap_dramaapp.sql:108-131
+  (fungsi `dramaapp.coin_spend_unlock`, versi yang berlaku di schema `dramaapp`)
+Batas kepercayaan: penonton terdaftar bersaldo kecil -> penjaga "koin cukup?"
+  dapat dilewati lewat permintaan serentak -> saldo dompet & hak buka episode
+Bukti aman: fungsi melakukan tiga langkah terpisah tanpa kunci baris:
+  (1) `select w.balance into cur ... where w.email = p_email`
+  (2) `if cur < p_cost then return false`
+  (3) `update ... set balance = w.balance - p_cost`
+  Tidak ada `for update`, tidak ada penjaga `where balance >= p_cost`, dan
+  tidak ada `greatest(0, ...)` seperti yang dipakai `coin_add`. Diperiksa ke
+  SELURUH berkas .sql repo: NOL penjaga race di versi mana pun.
+  Kerusakan kedua di fungsi yang sama: pemeriksaan `exists` pada tabel
+  `unlocks` juga tanpa kunci, jadi dua permintaan untuk episode yang SAMA
+  dapat sama-sama lolos dan menarik koin DUA KALI untuk satu episode.
+Dampak yang dibuktikan: dengan saldo 8 koin dan tarif 8 koin/episode
+  (lib/coins.ts:32), 10 permintaan serentak membuka 10 episode dan membuat
+  saldo MINUS. Pembatas laju `coins:unlock` mengizinkan 30/menit, jadi
+  serentak masih dalam kuota.
+  BATAS JUJUR - YANG TIDAK SAYA BUKTIKAN: eksploitasi TIDAK didemonstrasikan.
+  Satu-satunya database yang terjangkau adalah Supabase PRODUKSI, dan
+  menjalankan uji race ke sana dilarang (prompt butir 4/6; AGENTS.md §5.1).
+  Jadi temuan ini CONFIRMED-dari-review-kode, BUKAN CONFIRMED-dari-eksploit.
+  Dan SEKARANG tidak dapat dipicu: lib/saklar-fitur.ts:45
+  `PAYWALL_ENABLED = false` membuat 6 route /api/coins/* dibalas 404 oleh
+  `guardFitur` sebelum menyentuh fungsi ini.
+Akar masalah: TOCTOU (Time-Of-Check to Time-Of-Use) - keadaan berubah antara
+  "diperiksa" dan "dipakai". Rak skills/owasp/SKILL.md §2 butir 1 menandai
+  "cek-saldo tanpa lock" sebagai pola risiko tinggi.
+  KENAPA INI MENDESAK WALAU TIDAK AKTIF: lib/saklar-fitur.ts:21-22
+  menjanjikan penyalaan ulang "nol migration SQL, nol env baru". Tanpa
+  perbaikan ini, mengubah satu `false` jadi `true` menghidupkan kembali
+  lubangnya tanpa satu pun langkah yang mengingatkan.
+Perbaikan yang dilakukan (DITULIS DAN SUDAH DIJALANKAN):
+  supabase_migrations/2026-11-14_kunci_baris_dompet_koin.sql - menambahkan
+  `for update` pada pembacaan saldo DAN memindahkannya ke ATAS pemeriksaan
+  `exists`, sehingga kunci sudah dipegang sebelum pemeriksaan apa pun. Ini
+  menutup KEDUA kerusakan. Tarif, alur, bentuk balasan, dan sifat idempoten
+  TIDAK diubah; pemanggil lib/store.ts:496-511 tidak perlu disentuh. Tanda
+  tangan fungsi tidak berubah, jadi hak EXECUTE dari migrasi 2026-10-24 tetap
+  menempel. Berkasnya memuat alasan, batas jujur, cara jalankan, dan rollback.
+Regression test/pemeriksaan permanen: tests/koin-kunci-baris.test.ts (3 tes) -
+  mengunci SUMBER SQL: definisi `dramaapp.coin_spend_unlock` yang paling baru
+  wajib memegang `for update`, dan kunci itu wajib diambil SEBELUM tabel
+  `unlocks` diperiksa.
+Bukti sesudah perbaikan: DIUJI-BALIK DUA KALI. Percobaan pertama tesnya LULUS
+  padahal `for update` sudah dilepas - karena regex-nya cocok ke kata "for
+  update" di dalam KOMENTAR. Itu penjaga hiasan; tesnya diperbaiki supaya
+  membuang komentar lebih dulu. Sesudah diperbaiki: dengan kunci 3/3 lulus,
+  tanpa kunci 2/3 GAGAL. Kejadian ini ikut dicatat di dalam tesnya sebagai
+  peringatan.
+  EKSEKUSI KE DATABASE (2026-11-14, atas instruksi owner "kamu yang jalankan
+  SQL nya"). Urutannya sengaja dua tahap:
+    1. SIMULASI lebih dulu - `python scripts/jalankan_sql_dramaapp.py <berkas>` tanpa
+       bendera --jalankan: SQL benar-benar dieksekusi lalu di-ROLLBACK, jadi
+       keabsahannya terbukti tanpa satu pun perubahan tersimpan. EXIT 0.
+    2. SUNGGUHAN - dengan --jalankan. EXIT 0, "DISIMPAN (commit)".
+  VERIFIKASI SESUDAHNYA - tidak mempercayai pesan "berhasil" dari skripnya
+  (§2.3 "ditulis != terbukti jalan"), definisi fungsi dibaca ULANG dari
+  database lewat pg_get_functiondef, komentarnya dibuang, lalu diperiksa:
+    1. memuat `for update`                    -> YA
+    2. kunci diambil SEBELUM cek `unlocks`   -> YA
+    3. pola lama (baca saldo tanpa kunci)  -> SUDAH HILANG
+  HAK AKSES TIDAK IKUT BERUBAH, dibuktikan dengan pemeriksa milik project
+  sendiri (`python scripts/cek_rls_dramaapp.py`, CUMA BACA): RLS tetap NYALA di
+  kelima tabel; EXECUTE coin_spend_unlock tetap service_role=True,
+  anon=False, authenticated=False; hak tabel anon/authenticated tetap kosong;
+  USAGE schema tetap tertutup. Jadi nol hal yang melonggar.
+  Artefak: sql-SIMULASI.txt, sql-SUNGGUHAN.txt, verifikasi-fungsi-hidup.txt,
+  cek-rls-sesudah.txt
+
+ID: SEC-003
+Severity: Low (hardening)
+Status perbaikan: DIPERBAIKI-DAN-DIUJI-ULANG
+Sumber penemuan: manual (perbandingan antar-route)
+Lokasi terdampak: app/api/admin/ads/route.ts (POST+DELETE),
+  app/api/admin/drama/route.ts (POST+DELETE), app/api/admin/durasi/route.ts
+  (POST), app/api/admin/hardlink/route.ts (POST) - 6 handler
+Batas kepercayaan: situs lain yang dibuka admin -> cek asal permintaan TIDAK
+  ADA di 4 route ini -> aksi admin (simpan/hapus drama, perintah ke PC backup)
+Bukti aman: 15 dari 19 route admin memanggil `guardMutation`, yang di
+  dalamnya melakukan cek `isSameOrigin` (lib/request-guard.ts:61). Keempat
+  route di atas tidak memanggil penjaga apa pun selain `isAdminRequest`, jadi
+  cek asalnya hilang - dan tidak ada gejala di layar.
+Dampak yang dibuktikan: KLASIFIKASI JUJUR - ini hardening, BUKAN kerentanan
+  yang terbukti bisa dieksploitasi. Cookie sesi memakai `sameSite: "lax"`
+  (lib/session.ts:183) dan browser TIDAK mengirim cookie lax pada POST
+  lintas-situs, jadi CSRF lintas-domain klasik sudah tertutup tanpa penjaga
+  ini. Nilainya ada pada kasus SAME-SITE - lihat NV-001.
+Akar masalah: pola tidak konsisten antar-route sejenis; penjaga yang terlewat
+  tidak menimbulkan gejala apa pun sehingga tak ada yang menyadarinya.
+Perbaikan yang dilakukan: lib/request-guard.ts - ditambahkan `guardAsal(req)`
+  (anti-CSRF saja, TANPA pembatas laju), dan `guardMutation` diubah untuk
+  memakainya supaya cek asal hanya punya SATU implementasi.
+  KENAPA BUKAN LANGSUNG `guardMutation`: `admin/durasi` dipakai PENGISIAN
+  MASSAL durasi (lib/admin-api.ts:82) - satu klik menembak endpoint itu
+  puluhan kali. Memasang pembatas laju di situ akan membuat fitur admin yang
+  sudah jalan gagal separuh jalan; itu perubahan cakupan, bukan perbaikan
+  (AGENTS.md §4.4). Yang hilang hanya cek asalnya, jadi hanya itu yang
+  ditambahkan. Handler GET sengaja TIDAK disentuh (bukan mutasi).
+Regression test: tests/admin-csrf-gate.test.ts (3 tes) - termasuk tes
+  STRUKTURAL yang menyapu seluruh app/api/admin: setiap handler
+  POST/PUT/DELETE/PATCH wajib memanggil guardAsal atau guardMutation. Jadi
+  route admin BARU yang lupa penjaga akan merah, bukan lolos diam-diam.
+Bukti sesudah perbaikan: DIUJI-BALIK. 3/3 lulus. Sesudah `guardAsal` dilepas
+  dari hardlink saja, tes GAGAL dan menyebut pelakunya persis:
+  "app\api\admin\hardlink\route.ts -> POST". Komentar dibuang lebih dulu
+  supaya nama penjaga di komentar tidak bisa meloloskan tes (pelajaran SEC-002).
+
+ID: SEC-004
+Severity: Informational
+Status perbaikan: DIPERBAIKI-DAN-DIUJI-ULANG
+Sumber penemuan: manual
+Lokasi terdampak: lib/admin-api.ts (4 titik), app/admin/page.tsx (2 titik)
+Batas kepercayaan: bukan batas kepercayaan - justru itu intinya: header
+  `x-admin-email` TERLIHAT seperti mekanisme auth padahal bukan apa-apa
+Bukti aman: diverifikasi ke SELURUH repo (semua tipe berkas, termasuk
+  pc-backup-agent dan skrip Python/PowerShell): NOL kode yang membaca header
+  itu. Otorisasi admin sepenuhnya dari cookie HMAC. HANDOFF.md:7138 mencatat
+  header ini memang SUDAH digantikan cookie bertanda tangan, dan
+  plan-map/index.html:303 masih mendaftarkan penggantiannya sebagai tugas -
+  jadi yang tertinggal hanya pembersihannya.
+Dampak yang dibuktikan: dua akibat, keduanya kecil tapi nyata: (a) alamat
+  email admin ikut melintas di tiap permintaan admin dan bisa mendarat di log
+  proxy/hosting; (b) pembaca kode berikutnya - termasuk auditor - mengira
+  jalur ini memakai auth berbasis header, padahal header kiriman klien memang
+  tak bisa dipercaya. Saya sendiri sempat mengejarnya sebagai dugaan lubang
+  naik-hak sebelum membuktikan tidak ada yang membacanya.
+Akar masalah: migrasi ke cookie HMAC selesai, tapi pemanggil lama tidak
+  dibersihkan (dead code, AGENTS.md §3.1).
+Perbaikan yang dilakukan: header dihapus dari 6 titik, beserta parameter
+  `adminEmail` yang hanya ada untuk mengisinya - tanda tangan 4 fungsi di
+  lib/admin-api.ts dirapikan dan 6 pemanggilnya di app/admin/page.tsx +
+  app/components/admin/DurasiUkurSemua.tsx ikut disesuaikan (prop
+  `adminEmail` yang jadi tak terpakai ikut dilepas). Nol perubahan perilaku:
+  server tidak pernah membacanya. Ditambahkan komentar larangan di kepala
+  lib/admin-api.ts supaya tidak dipasang kembali.
+Regression test: tidak ditambahkan dengan sengaja - ini penghapusan dead
+  code, bukan perilaku keamanan yang perlu dikunci. Yang membuktikan tidak
+  ada yang rusak: `tsc --noEmit` 0 error (TypeScript strict akan menolak
+  pemanggil yang terlewat) + 2467 tes hijau.
+Bukti sesudah perbaikan: `npm run gerbang` EXIT 0 (build + tsc + 2467 tes).
+
+ID: SEC-005
+Severity: Low (scanner melabeli 3 "high" - diturunkan setelah validasi)
+Status perbaikan: TERBUKA - sengaja, menunggu keputusan owner (NV-006)
+Sumber penemuan: npm audit (pengganti OSV-Scanner)
+Lokasi terdampak: package-lock.json (akar). 6 paket: vitest (langsung,
+  devDependency), @vitest/mocker, vite, undici, source-map-js,
+  baseline-browser-mapping (transitif)
+Batas kepercayaan: TIDAK ADA batas kepercayaan produksi yang dilewati -
+  itulah dasar penurunan severity
+Bukti aman: keenamnya berada di rantai devDependencies (alat uji). Tidak satu
+  pun ikut ke bundle atau runtime produksi: `npm run build` dan `tsc` tidak
+  memuatnya ke keluaran. Project kedua (drama-ai-studio) diperiksa juga: 0
+  kerentanan.
+Dampak yang dibuktikan: terbatas pada mesin pengembang/CI saat menjalankan
+  tes. Bukan permukaan serang bagi pengunjung situs. Karena itu label "high"
+  bawaan scanner TIDAK dipakai apa adanya (prompt: jangan pakai severity
+  scanner tanpa validasi).
+Akar masalah: versi alat uji tertinggal dari rilis patch-nya.
+Perbaikan yang DICOBA lalu DIBATALKAN: `npm audit fix` dijalankan dan
+  BERHASIL menurunkan hasil ke "found 0 vulnerabilities" (semua naik versi
+  MINOR, nol breaking: vitest 4.1.9->4.1.12, vite 8.0.16->8.3.8,
+  undici 7.28.0->7.30.2, source-map-js 1.2.1->1.2.2). TAPI sesudah itu
+  `npm test` HANCUR: 64 berkas tes gagal dengan "Failed to resolve import
+  'tailwind-merge' from lib/utils.ts" dan "Failed to resolve import
+  '@/lib/store'". `build` dan `tsc` tetap lolos, jadi produksi tidak
+  terdampak - yang rusak khusus resolusi modul milik vite 8.3.
+  Penyebabnya: vitest.config.ts:17 memetakan alias `@` bergaya prefix
+  direktori, dan vite 8.3 mengubah semantik resolusinya. Membersihkan cache
+  node_modules/.vite tidak menolong.
+  DIBATALKAN karena pertukarannya buruk: menukar seluruh jaring 2467 tes -
+  yang juga gerbang rilis project (AGENTS.local.md §6) - demi 6 kerentanan
+  yang tidak menyentuh produksi. Memperbaiki vitest.config.ts ke semantik
+  vite 8.3 adalah migrasi tooling, bukan perbaikan keamanan, dan itu
+  keputusan owner.
+  PEMULIHAN DIVERIFIKASI: package-lock.json dikembalikan lalu `npm ci`
+  (exit 0); `git diff package-lock.json` KOSONG = identik dengan commit;
+  vite kembali 8.0.16, vitest 4.1.9; gerbang 5-langkah hijau kembali.
+Regression test: tidak berlaku (temuan dependency, belum diperbaiki).
+Bukti sesudah perbaikan: tidak ada - temuan ini sengaja dibiarkan terbuka.
+  Keadaan terakhir: `npm audit` tetap melaporkan 6 kerentanan (3 high, 3
+  moderate) di akar. Itu APA ADANYA.
+
+
+ID: SEC-006
+Severity: Low (defense-in-depth; bukan jalur penyerang anonim)
+Status perbaikan: DIPERBAIKI-DAN-DIUJI-ULANG (owner memilih opsi (a), 2026-11-14)
+Sumber penemuan: manual, dipicu daftar env Railway yang dikirim owner 2026-11-14
+Lokasi terdampak: lib/dashboard-videos.ts:107-110 (fungsi hostAllowed)
+Batas kepercayaan: dashboard API hulu yang dikonfigurasi owner (DASHBOARD_API_URL)
+  -> daftar host yang semestinya membatasi TIDAK berlaku -> alamat video yang
+  disajikan ke SEMUA penonton lewat /api/videos (GET publik, tanpa penjaga)
+Bukti aman: tiga daftar-izin host di project ini menangani "daftar kosong"
+  dengan tiga cara BERBEDA:
+    lib/external-video.ts:158  if (allowedHosts.length === 0) return false;  <- tolak semua
+    lib/playly.ts:596          if (allowedHosts.length === 0) return false;  <- tolak semua
+                               (+ digabung DEFAULT_PLAYLY_EMBED_HOSTS di :771, jadi tak pernah kosong)
+    lib/dashboard-videos.ts:108 if (allowedHosts.length === 0) return true;  <- IZINKAN SEMUA
+  Daftar itu diisi dari env DASHBOARD_VIDEO_HOSTS (:313), dan env tersebut
+  TIDAK ADA di panel Railway - diperiksa owner 2026-11-14, 16 Service Variables,
+  DASHBOARD_VIDEO_HOSTS tidak termasuk. Jadi pagarnya sedang tidak berlaku
+  di produksi, bukan sekadar bisa-tidak-berlaku.
+Dampak yang dibuktikan: alamat video apa pun yang dipulangkan dashboard hulu
+  diteruskan apa adanya ke penonton. Peredamnya nyata dan harus disebut:
+  toHttpsUrl (:78-87) memaksa https, jadi cakupannya "host https mana pun",
+  bukan "host apa pun"; dan alamat itu dipakai sebagai sumber video, bukan
+  disuntikkan sebagai HTML. BUKAN jalur penyerang anonim - butuh dashboard
+  hulu yang dikuasai/disusupi, dan hulu itu dikonfigurasi owner sendiri.
+  Karena itu Low, bukan lebih tinggi.
+Akar masalah: default permisif pada pagar keamanan. Tampaknya DISENGAJA
+  (komentarnya menulis "// tidak dibatasi"), tapi bertentangan dengan dua
+  implementasi saudaranya di repo yang sama - dan yang paling berbahaya dari
+  pola ini: pagar yang mati tidak menimbulkan gejala apa pun di layar.
+Perbaikan yang dilakukan: OPSI (a) dipilih owner 2026-11-14 lalu dikerjakan.
+  Ditambahkan DEFAULT_DASHBOARD_VIDEO_HOSTS di lib/dashboard-videos.ts, dan
+  readDashboardConfig memakainya lewat pilihDaftarHost() sehingga daftar host
+  TIDAK PERNAH LAGI kosong - itulah yang menutup lubangnya.
+
+  Yang SENGAJA TIDAK disentuh: fungsi hostAllowed sendiri. Mengubah "daftar
+  kosong = izinkan" jadi "tolak" akan melawan kontrak yang sengaja dikunci
+  tests/dashboard-videos.test.ts:105 dan merusak ~15 tes yang memanggil
+  normalizeVideos tanpa daftar. Pola yang ditiru lib/playly.ts:771 memang
+  bukan mengubah pencocoknya, melainkan menjamin daftarnya terisi.
+
+  BEDA SATU HAL dari lib/playly.ts, dan ini disengaja: di sana env MENAMBAHI
+  daftar bawaan, di sini env MENGGANTIKANNYA. Tujuannya memang berbeda - di
+  sana bawaan itu domain resmi Playly yang HARUS selalu boleh; di sini ia cuma
+  LANTAI untuk keadaan belum-disetel. Kalau menambahi, entri lebar
+  "supabase.co" tak akan pernah bisa dicabut lewat panel hosting dan
+  pengetatan jadi mustahil tanpa ubah kode.
+
+  ISI DAFTARNYA, berikut dasarnya masing-masing:
+    supabase.co                          <- tipe DashboardVideo.videoUrl
+                                            menyatakan alamatnya berkas
+                                            Supabase Storage
+    playly-hosting-video.up.railway.app  <- lib/playly-alamat.ts:24
+    playly-dashboard.vercel.app          <- lib/playly-alamat.ts:33 (alamat
+                                            lama yang masih hidup)
+    trycloudflare.com, amasyaforum.com   <- daftar sumberVideo yang sudah
+                                            dipakai CSP, next.config.ts:102-106
+
+  ⚠️ BATAS JUJUR YANG HARUS DIBACA: "supabase.co" itu LEBAR - ia meloloskan
+  project Supabase SIAPA PUN, bukan hanya milik kita. Ia tetap dimasukkan
+  karena project ref milik Playly TIDAK bisa diketahui dari repository ini
+  (fixture tes hanya memakai placeholder "xyz.supabase.co"), dan menebaknya
+  lalu salah berarti SELURUH video dashboard hilang. Jadi perbaikan ini
+  menaikkan pagar dari "host mana pun di internet" menjadi "Supabase mana pun
+  + host video kita yang dikenal" - nyata, tapi BUKAN pagar rapat.
+
+  CARA MENUTUPNYA RAPAT (2 menit, milik owner): buka /api/videos di situs yang
+  tayang, lihat host pada field videoUrl, lalu isi DASHBOARD_VIDEO_HOSTS di
+  panel hosting dengan host persisnya. Env menggantikan daftar bawaan, jadi
+  entri lebar itu benar-benar hilang.
+
+  Pilihan (b) dan (c) yang dulu ditawarkan, dicatat sebagai riwayat:
+    (a) ikuti pola saudaranya - beri DAFTAR BAWAAN seperti
+        DEFAULT_PLAYLY_EMBED_HOSTS. Bahan daftarnya sudah ada dan berbasis
+        bukti: CSP di next.config.ts:102-106 menyebut host video yang sah
+        (*.trycloudflare.com, *.amasyaforum.com,
+        playly-hosting-video.up.railway.app). REKOMENDASI SAYA - aman tanpa
+        env baru. Risikonya: video dari host di luar daftar itu akan hilang.
+    (b) isi DASHBOARD_VIDEO_HOSTS di panel Railway. Paling cepat (2 menit,
+        nol perubahan kode), tapi pagarnya kembali bergantung pada env yang
+        bisa terhapus tanpa peringatan - persis keadaan hari ini.
+    (c) ubah :108 jadi `return false`. PALING KETAT tapi JANGAN tanpa (b)
+        lebih dulu: tanpa env itu, SELURUH video dashboard akan ditolak dan
+        /api/videos jadi kosong.
+Regression test/pemeriksaan permanen: tests/dashboard-host-bawaan.test.ts
+  (7 tes). Yang dikunci BUKAN isi daftarnya - itu boleh berubah saat host
+  video pindah - melainkan tiga sifat yang tak boleh hilang: (1) daftarnya tak
+  pernah kosong, termasuk saat env ada tapi isinya sampah seperti ","; (2) env
+  yang lebih ketat benar-benar MENGGANTIKAN bawaan; (3) nol entri yang begitu
+  lebar sampai meloloskan seluruh penyedia hosting ("up.railway.app",
+  "vercel.app", "com", ...). Ditambah uji perilaku: 3 alamat sah lolos dan 5
+  alamat asing ditolak - termasuk serangan akhiran
+  "abc123.supabase.co.evil.id" dan alamat metadata cloud 169.254.169.254.
+Bukti sesudah perbaikan: DIUJI-BALIK. Dengan perbaikan 7/7 lulus; sesudah
+  pilihDaftarHost dikembalikan ke bentuk lama (daftar langsung dari env, bisa
+  kosong) 4/7 GAGAL - termasuk "MENOLAK host asing - inilah lubang yang
+  ditutup". NOL tes lama yang rusak: ketiga berkas tes dashboard dijalankan
+  bersama, 44/44 lulus.
+  Gerbang sesudahnya: npm run build EXIT 0, npx tsc --noEmit EXIT 0 (0 error),
+  npm test EXIT 0 dengan 176 berkas / 2472 tes (naik dari 175/2465 - persis 7
+  tes baru), nol berkas rahasia ter-stage.
+  Catatan jujur: "npm run gerbang" sebagai SATU perintah sempat mati dengan
+  exit 127 di langkah build, dan sebabnya terbaca di keluarannya - "Next.js
+  build worker exited with code: 4294967295", yaitu worker kehabisan sumber
+  daya karena mesin ini dipakai bersama. Dijalankan terpisah, keempat
+  langkahnya exit 0. Itu gangguan lingkungan, bukan kode.
+
+ID: SEC-007
+Severity: Low
+Status perbaikan: DIPERBAIKI-DAN-DIUJI-ULANG
+Sumber penemuan: Semgrep (javascript.node-crypto.security.gcm-no-tag-length),
+  lalu DIBUKTIKAN sendiri dengan dijalankan
+Lokasi terdampak: lib/playly.ts:266 (decryptSecret), sebelum perbaikan
+Batas kepercayaan: siapa pun yang bisa menulis blob kunci tersimpan -> segel
+  GCM yang semestinya membuktikan keutuhan bisa DIPOTONG -> kunci API Playly
+Bukti aman: createDecipheriv dipanggil TANPA opsi authTagLength. DIJALANKAN di
+  mesin ini untuk membuktikan akibatnya, bukan diklaim dari dokumentasi:
+    tanpa authTagLength + segel 4 byte  -> segel DITERIMA, dekripsi LOLOS
+    authTagLength:16  + segel 4 byte    -> ditolak "Invalid authentication
+                                           tag length: 4"
+  Node sendiri menandai pemakaian itu usang (peringatan DEP0182).
+Dampak yang dibuktikan: ketahanan terhadap pemalsuan segel turun dari 2^128
+  ke 2^32 kalau penyerang bisa memilih panjang segelnya. BUKAN jalur penyerang
+  anonim — ia harus sudah bisa menulis ke penyimpanan kunci lebih dulu. Karena
+  itu Low, walau Semgrep menandainya ERROR.
+Akar masalah: mengandalkan nilai bawaan pustaka kripto pada parameter yang
+  justru menentukan kekuatannya.
+Perbaikan yang dilakukan: konstanta AUTH_TAG_BYTES = 16 ditambahkan, lalu
+  dipasang di createCipheriv DAN createDecipheriv. 16 byte memang panjang yang
+  SUDAH dipakai getAuthTag() saat menyimpan, jadi nol kunci yang terlanjur
+  tersimpan menjadi tak terbaca — yang ditutup hanya penerimaan segel pendek.
+Regression test: tests/segel-gcm.test.ts (5 tes) — bolak-balik normal, panjang
+  segel 16 byte, penolakan segel dipotong (4/8/12/15 byte), penolakan segel
+  diutak-atik, dan penolakan isi pesan diubah.
+Bukti sesudah perbaikan: DIUJI-BALIK. Dengan perbaikan 5/5 lulus; sesudah opsi
+  authTagLength dilepas dari createDecipheriv, tes "MENOLAK segel yang
+  dipotong" GAGAL. Tes lama tidak ada yang rusak (tests/playly.test.ts ikut
+  dijalankan, 70/70 lulus). Scan ulang Semgrep: temuan ini HILANG.
+
+ID: SEC-008
+Severity: Low (pencegahan rantai pasok)
+Status perbaikan: DIPERBAIKI
+Sumber penemuan: Semgrep (npm-missing-minimum-release-age)
+Lokasi terdampak: .npmrc
+Batas kepercayaan: maintainer paket pihak ketiga yang akunnya dibajak ->
+  tidak ada jeda apa pun sebelum versi barunya masuk -> seluruh mesin
+  pengembang & CI yang menjalankan npm install
+Bukti aman: .npmrc hanya memuat legacy-peer-deps=true; nol setelan umur
+  minimum rilis. Diverifikasi bahwa min-release-age MEMANG setelan npm asli
+  (muncul di `npm config ls -l`, tersedia sejak npm v11.10; terpasang 11.12.1)
+  — bukan setelan karangan yang disarankan alat.
+Dampak yang dibuktikan: serangan rantai pasok npm hampir selalu lewat versi
+  yang baru diterbitkan dari akun yang dibajak, dan biasanya ditarik dalam
+  hitungan jam. Tanpa jeda, jendela paling berbahaya itu terbuka penuh.
+  INI BUKAN RISIKO TEORETIS DI AUDIT INI: saat mencari pengganti Nuclei dan
+  Gitleaks, registry npm memang menyodorkan paket bernama persis seperti
+  keduanya dan keduanya IMPOSTOR (lihat 3.9). Jaraknya satu perintah install.
+Akar masalah: tidak ada jeda antara "paket terbit" dan "paket kita pasang".
+Perbaikan yang dilakukan: min-release-age=7 ditambahkan ke .npmrc, dengan
+  komentar yang menyebut batasnya jujur — ia TIDAK memeriksa isi paket, hanya
+  umurnya, dan hanya berlaku saat menyelesaikan versi baru (npm ci dari
+  lockfile tidak terpengaruh).
+Regression test: tidak dibuat tes terpisah — Semgrep sendiri yang menjadi
+  pemeriksa permanennya, dan aturan itu kini hijau.
+Bukti sesudah perbaikan: scan ulang Semgrep -> temuan HILANG (4 -> 2 temuan
+  tersisa, keduanya false positive JSON-LD yang sudah terbukti aman).
+
+6. NEEDS_VALIDATION DAN BLOCKER
+Tidak diberi severity.
+
+ID: NV-001
+Status: NEEDS_VALIDATION
+Apa yang belum dapat dibuktikan: apakah `up.railway.app` terdaftar di Public
+  Suffix List (PSL). Jawabannya menentukan dua hal sekaligus: (a) apakah
+  aplikasi penyewa Railway LAIN terhitung "same-site" dengan situs ini -
+  kalau ya, cookie `sameSite=lax` IKUT terkirim dari sana, sehingga SEC-003
+  naik dari hardening menjadi CSRF yang benar-benar bisa dipicu; (b) apakah
+  penyewa lain bisa menitipkan cookie cacat untuk domain bersama itu
+  ("cookie tossing"), yang mengubah SEC-001 dari gangguan-sendiri menjadi
+  gangguan lintas-penyewa.
+Kenapa belum dapat dibuktikan: PSL adalah daftar di luar repository dan audit
+  ini tidak menghubungi internet. Tidak ada salinan lokalnya.
+Langkah aman yang diperlukan owner: periksa apakah domain produksi sekarang
+  memakai domain sendiri (CSP di next.config.ts:104 sudah menyebut
+  `*.amasyaforum.com`). Memakai domain sendiri membuat pertanyaan ini hilang
+  seluruhnya - itu mitigasi yang paling bersih. Kalau masih di
+  `*.up.railway.app`, cek PSL untuk `up.railway.app`.
+Risiko bila tidak divalidasi: perkiraan severity SEC-001 dan SEC-003 di
+  laporan ini bisa terlalu rendah. Perbaikan keduanya SUDAH dipasang, jadi
+  risikonya sudah ditekan apa pun jawaban PSL-nya - validasi ini untuk
+  ketepatan penilaian, bukan untuk menambal.
+
+ID: NV-002
+Status: NEEDS_VALIDATION
+Apa yang belum dapat dibuktikan: apakah CSP benar-benar MEMBLOKIR di
+  produksi. Sekarang terpasang sebagai `Content-Security-Policy-Report-Only`
+  (next.config.ts:171), yang membuat browser hanya MENCATAT tanpa memblokir.
+Kenapa belum dapat dibuktikan: menegakkan CSP butuh daftar laporan
+  "[Report Only] Refused to..." dari browser nyata di situs yang tayang.
+  Tidak bisa dikumpulkan dari sini.
+Langkah aman yang diperlukan owner: buka situs + halaman drama + modal
+  top-up dengan DevTools Console terbuka, kumpulkan baris Report-Only,
+  tambahkan host sah ke daftar, baru ganti nama header jadi
+  `Content-Security-Policy`. Caranya sudah ditulis lengkap di
+  next.config.ts:75-79 oleh audit sebelumnya.
+Risiko bila tidak divalidasi: CSP belum memberi perlindungan nyata, hanya
+  catatan. Catatan jujur yang sudah benar di kode: CSP memakai
+  `'unsafe-inline'` untuk script (Next.js App Router belum pakai nonce di
+  project ini), jadi walau ditegakkan ia BUKAN penghenti XSS yang utuh -
+  nilainya pada pembatasan ASAL script. Audit ini menemukan nol sink XSS yang
+  bisa dicapai penyerang, jadi CSP di sini lapis tambahan, bukan pagar utama.
+
+ID: NV-003
+Status: NEEDS_VALIDATION
+Apa yang belum dapat dibuktikan: ketahanan nyata pembatas laju. Dua batas
+  yang diakui kodenya sendiri (lib/rate-limit.ts:7-12): hitungannya ada di
+  MEMORI tiap instance, jadi beberapa instance / restart mereset hitungan;
+  dan kuncinya per-IP dari `x-forwarded-for`, header yang bisa dipalsukan.
+  Rak owasp (§4 self-verify) meminta rate-limit per-AKUN DAN per-IP; login
+  saat ini hanya per-IP (10/menit), tanpa lockout per-akun.
+Kenapa belum dapat dibuktikan: mengukurnya butuh membanjiri endpoint yang
+  tayang = dilarang (DoS/brute-force, prompt butir 6).
+Langkah aman yang diperlukan owner: kalau brute-force jadi perhatian,
+  tambahkan hitungan per-akun di penyimpanan bersama (tabel Supabase atau
+  Upstash/Redis), sehingga mengganti-ganti IP tidak lagi mereset kuota.
+  Endpoint /api/agent/video-base sudah memakai pola yang lebih baik
+  (plafon GLOBAL untuk kegagalan, app/api/agent/video-base/route.ts:48-55) -
+  pola itu bisa ditiru untuk login.
+Risiko bila tidak divalidasi: penebakan password dari banyak IP lebih murah
+  daripada yang terlihat dari angka "10 per menit". Pagar lain tetap berdiri:
+  perbandingan tahan-waktu, pesan error seragam, dan hash scrypt.
+
+ID: NV-004
+Status: NEEDS_VALIDATION
+Apa yang belum dapat dibuktikan: apakah biaya kerja hash password cukup
+  menurut panduan terbaru. `scryptSync(password, salt, 64)`
+  (lib/admin-password.ts:17) memakai parameter BAWAAN Node (N=16384 = 2^14),
+  sedangkan panduan penyimpanan password OWASP menyarankan scrypt dengan
+  N=2^17 untuk aplikasi baru. scrypt sendiri KDF yang sah dan memory-hard;
+  salt acak 16 byte dan `timingSafeEqual` sudah benar.
+Kenapa belum dapat dibuktikan: "cukup" bergantung pada anggaran CPU server
+  dan panduan versi mana yang dipakai - keduanya keputusan, bukan fakta yang
+  bisa dibaca dari kode.
+Langkah aman yang diperlukan owner: kalau mau dinaikkan, PERHATIKAN: mengubah
+  parameter membuat SELURUH hash yang sudah tersimpan gagal diverifikasi -
+  semua admin dan penonton terkunci dari akunnya. Jadi wajib menyimpan
+  parameter BERSAMA hash-nya (mis. `scrypt$N$r$p$salt$hash`) dan memverifikasi
+  dengan parameter yang tercatat, bukan mengganti angkanya begitu saja.
+  Audit ini TIDAK mengubahnya: itu perubahan yang menyentuh semua pemanggil
+  dan harus disetujui owner (AGENTS.md §4.4).
+Risiko bila tidak divalidasi: password yang bocor lebih murah ditebak di luar
+  sistem daripada seharusnya. Bukan jalan masuk langsung.
+
+ID: NV-005
+Status: NEEDS_VALIDATION
+Apa yang belum dapat dibuktikan: perlindungan anti-replay webhook Playly.
+  Diakui TERBUKA oleh kodenya sendiri (lib/playly-webhook.ts:32-40): payload
+  yang disepakati tidak memuat `event_id` maupun timestamp, jadi permintaan
+  SAH yang pernah terekam bisa dikirim ulang apa adanya dan tetap lolos
+  verifikasi (mis. menghidupkan kembali video yang sudah ditarik).
+  Terkait: webhook ini menerima DUA cara pembuktian, dan jalur A
+  (`x-playly-secret` apa adanya) membuat kekuatan nyatanya setara yang
+  terlemah - juga sudah disadari dan ditulis di kode.
+Kenapa belum dapat dibuktikan: menutupnya butuh kesepakatan dengan pihak
+  Playly (mereka yang harus mengirim `event_id` + `sent_at`). Di luar
+  kendali repository.
+Langkah aman yang diperlukan owner: minta Playly menyertakan `event_id` unik
+  + `sent_at`, lalu tolak event yang id-nya sudah pernah masuk atau yang
+  usianya lewat beberapa menit. Kalau Playly memastikan dukungan HMAC, tutup
+  jalur A dengan menghapus cabang `verifySharedSecret`.
+Risiko bila tidak divalidasi: yang dijaga endpoint ini daftar video, BUKAN
+  uang - dan itu penilaian yang sudah dicatat owner di kode. Yang sudah
+  tertutup: pemalsuan isi (jalur HMAC) dan penggandaan data (idempoten by
+  videoId).
+
+ID: NV-006
+Status: BLOCKED (menunggu keputusan owner)
+Apa yang belum dapat dibuktikan: cara menutup SEC-005 tanpa merusak tes.
+Kenapa belum dapat dibuktikan: satu-satunya perbaikan satu-perintah
+  (`npm audit fix`) menaikkan vite 8.0.16 -> 8.3.8, dan versi itu tidak lagi
+  me-resolve alias `@` bergaya prefix di vitest.config.ts:17 maupun impor
+  modul biasa - 64 berkas tes gagal memuat. Memperbaikinya = migrasi
+  konfigurasi tooling, di luar lingkup audit keamanan.
+Langkah aman yang diperlukan owner: pilih satu -
+  (a) biarkan terbuka: keenamnya dev-only, nol dampak produksi (rekomendasi
+      saya, karena itulah pertukaran dengan risiko terendah hari ini);
+  (b) kerjakan migrasi vitest/vite 8.3 sebagai tugas TERSENDIRI (sesuaikan
+      alias di vitest.config.ts ke semantik baru), lalu jalankan
+      `npm audit fix` dan buktikan dengan `npm run gerbang`;
+  (c) naikkan hanya paket yang bermasalah secara terpilih kalau ada jalur
+      yang tidak menyentuh vite.
+  Biaya untuk owner: opsi (b) butuh waktu debugging tooling dan berisiko
+  menyentuh jaring tes; opsi (a) nol biaya.
+Risiko bila tidak divalidasi: mesin pengembang/CI menjalankan alat uji yang
+  punya CVE diketahui. Situs dan pengunjung tidak terdampak.
+
+ID: NV-007
+Status: NEEDS_VALIDATION (keputusan owner, BUKAN cacat)
+Apa yang belum dapat dibuktikan: apakah admin cukup dilindungi satu faktor.
+  2FA/TOTP DIHAPUS 2026-11-13 atas permintaan owner
+  (app/api/auth/login/route.ts:81-85, terlihat juga di riwayat git), jadi
+  password kini satu-satunya syarat masuk panel admin. Rak
+  skills/auth/SKILL.md §2 butir 7 menyebut 2FA WAJIB untuk admin.
+Kenapa belum dapat dibuktikan: ini pertukaran yang sudah diputuskan owner,
+  bukan sesuatu yang bisa dinilai benar/salah dari kode. Audit TIDAK
+  mengembalikannya - membatalkan keputusan owner diam-diam dilarang
+  (AGENTS.md §4.4).
+Langkah aman yang diperlukan owner: ketahui saja risikonya dan pastikan
+  pagar yang MASIH berdiri tetap utuh - rate-limit 10 percobaan/menit,
+  perbandingan password tahan-waktu, dan gagal-TUTUP di blok catch
+  (ketiganya sengaja tidak ikut dilepas). Kalau suatu saat panel admin
+  dipakai dari jaringan publik/berbagi, pertimbangkan passkey/WebAuthn.
+Risiko bila tidak divalidasi: password admin yang bocor = panel admin
+  terbuka, tanpa lapis kedua. Diperparah oleh catatan di bawah.
+
+ID: NV-008
+Status: TERJAWAB 2026-11-14 - owner memeriksa panel Railway dan mengirim
+  potretnya (16 Service Variables). HASIL, dan ini kabar baik:
+    (a) ENABLE_DEMO_TOPUP     -> TIDAK ADA. Saklar cetak-koin-gratis mati.
+                                 Risiko kehilangan pendapatan = nol.
+    (b) ADMIN_BOOTSTRAP_EMAIL -> TIDAK ADA. Nol admin permanen lewat env.
+    (c) AUTH_SECRET           -> ADA (nilainya tersamar, jadi KEKUATANNYA tetap
+                                 tak terverifikasi - hanya keberadaannya).
+  Pemeriksaan lanjutan atas daftar itu: 15 dari 16 env memang dibaca kode;
+  satu-satunya yang tidak (RAILPACK_NODE_VERSION) adalah variabel platform
+  Railway, bukan rahasia menganggur. Env yang DIBACA kode tapi tidak di-set
+  semuanya berujung default yang aman - KECUALI satu, yang jadi SEC-006.
+  Status asli di bawah dipertahankan sebagai riwayat.
+Status semula: NEEDS_VALIDATION
+Apa yang belum dapat dibuktikan: isi environment variable di panel hosting
+  (Railway). Tiga yang penting:
+  (a) `ENABLE_DEMO_TOPUP` - kalau bernilai "1" di produksi, siapa pun yang
+      login bisa MENCETAK KOIN tanpa pembayaran (app/api/coins/topup/route.ts:108).
+      Kodenya sendiri memperingatkan ini di baris 116.
+  (b) `ADMIN_BOOTSTRAP_EMAIL` - kalau masih terisi sesudah pemulihan,
+      email itu permanen jadi admin (lib/store.ts:213-225). Petunjuk di
+      kode meminta dikosongkan kembali sesudah dipakai.
+  (c) `AUTH_SECRET` - harus panjang & acak; kalau lemah, tanda tangan sesi
+      bisa dipalsukan.
+Kenapa belum dapat dibuktikan: env produksi hanya ada di panel hosting, dan
+  audit ini tidak menyentuh layanan luar. `.env.local` di disk TIDAK dibaca
+  isinya dengan sengaja (berisi secret; prompt butir 7).
+Langkah aman yang diperlukan owner: buka panel Railway dan periksa ketiganya.
+  (a) harus KOSONG/tidak ada. (b) harus kosong kecuali sedang memulihkan
+  akses. (c) minimal 32 karakter acak.
+Risiko bila tidak divalidasi: (a) adalah satu-satunya jalur di seluruh audit
+  ini yang bisa langsung berarti kehilangan pendapatan, dan dinilai dari KODE
+  saja ia tampak aman - jadi ini pemeriksaan yang hanya owner bisa tuntaskan.
+
+ID: NV-009
+Status: NEEDS_VALIDATION
+Apa yang belum dapat dibuktikan: apakah data pribadi di RIWAYAT git perlu
+  dibersihkan. `data/admins.json` (3 commit), `migrasi-full.sql` (2 commit),
+  dan `supabase_export.sql` (2 commit) pernah ter-commit di repo PUBLIK dan
+  memuat alamat email admin sungguhan (dua yang terakhir juga memuat email
+  penonton + hash password). Ketiganya SUDAH tidak terlacak sekarang
+  (diverifikasi: 0 berkas terlacak) dan sudah masuk .gitignore sejak audit
+  2026-10-24 - tapi riwayatnya tetap memuatnya.
+Kenapa belum dapat dibuktikan: mengeluarkannya dari riwayat berarti MENULIS
+  ULANG riwayat repo publik. Itu aksi tak-bisa-dibatalkan yang mengubah
+  seluruh hash commit dan merusak klon/branch orang lain (termasuk rekan),
+  jadi izinnya milik owner (AGENTS.md §5.5). Audit ini TIDAK menyentuhnya.
+  Catatan ini juga sudah ditulis jujur di .gitignore oleh audit sebelumnya.
+Langkah aman yang diperlukan owner: putuskan satu - (a) terima apa adanya
+  (email admin bukan kredensial, dan hash password bukan password), atau
+  (b) jadwalkan penulisan ulang riwayat (git-filter-repo) dengan koordinasi
+  ke rekan lebih dulu, DAN rotasi apa pun yang dianggap sensitif.
+  Yang mendesak kalau memilih (b): koordinasi, bukan kecepatan.
+Risiko bila tidak divalidasi: alamat email admin dapat dipanen dari riwayat
+  publik, yang menurunkan brute-force login dari "tebak email DAN password"
+  menjadi "tebak password saja". Dampaknya bertambah karena NV-007 (2FA
+  dihapus). Peredamnya: daftar admin produksi ada di DATABASE, bukan di
+  berkas itu, dan /api/admins sudah tidak lagi menyerahkan daftar email.
+
+ID: NV-010
+Status: BLOCKED
+Apa yang belum dapat dibuktikan: SELURUH perilaku saat dijalankan - session
+  lifecycle nyata, IDOR lintas-akun lewat HTTP, CSRF di browser sungguhan,
+  dan segala hal yang hanya terlihat saat aplikasi hidup. Semua pernyataan
+  §4.2 berasal dari SOURCE.
+Kenapa belum dapat dibuktikan: lihat 3.7 - nol target loopback yang bisa
+  dibuktikan milik project ini di mesin bersama ini, nol akun dummy, nol
+  database terisolasi, dan nol scanner DAST terpasang.
+Langkah aman yang diperlukan owner: kalau DAST benar-benar dibutuhkan,
+  siapkan lingkungan uji TERPISAH - Supabase project khusus uji (bukan
+  produksi) + `.env` uji + 3 akun dummy (tanpa-login/penonton/admin) +
+  catatan port yang dipastikan milik kita. Sesudah itu ZAP baseline lalu
+  active scan, dan matriks §4.2 bisa diverifikasi lewat HTTP sungguhan.
+Risiko bila tidak divalidasi: "penjaga ADA di kode" tidak sama dengan
+  "penjaga BERDIRI saat dijalankan". Yang paling menekan risiko ini: 2467 tes
+  project yang hijau, dan banyak di antaranya memang memanggil route handler
+  langsung dengan request palsu.
+
+
+7. PERUBAHAN DAN VERIFIKASI SESUDAH PERBAIKAN
+
+File yang diubah (12):
+  lib/session.ts                            + try/catch decodeURIComponent (SEC-001)
+  lib/request-guard.ts                      + guardAsal(), guardMutation memakainya (SEC-003)
+  app/api/admin/ads/route.ts                + guardAsal di POST & DELETE (SEC-003)
+  app/api/admin/drama/route.ts              + guardAsal di POST & DELETE (SEC-003)
+  app/api/admin/durasi/route.ts             + guardAsal di POST (SEC-003)
+  app/api/admin/hardlink/route.ts           + guardAsal di POST (SEC-003)
+  lib/dashboard-videos.ts                   + DEFAULT_DASHBOARD_VIDEO_HOSTS & pilihDaftarHost (SEC-006)
+  lib/admin-api.ts                          - header x-admin-email + param mati (SEC-004)
+  app/admin/page.tsx                        - header x-admin-email + argumen (SEC-004)
+  app/components/admin/DurasiUkurSemua.tsx  - prop adminEmail yang tak terpakai (SEC-004)
+  HANDOFF.md                                + catatan audit (wajib AGENTS.local.md)
+  docs/lintasai/INDEX.md                    + 4 pelajaran (wajib AGENTS.md §4.6)
+
+File baru (6):
+  LAPORAN-AKHIR-AUDIT-KEAMANAN.txt                            laporan ini (sebelumnya template tak terlacak git)
+  supabase_migrations/2026-11-14_kunci_baris_dompet_koin.sql  perbaikan SEC-002 (SUDAH DIJALANKAN ke produksi)
+  tests/cookie-cacat.test.ts                                  4 tes, penjaga SEC-001
+  tests/koin-kunci-baris.test.ts                              3 tes, penjaga SEC-002
+  tests/admin-csrf-gate.test.ts                               3 tes, penjaga SEC-003
+  tests/dashboard-host-bawaan.test.ts                         7 tes, penjaga SEC-006
+
+File yang TIDAK diubah walau sempat diubah: package-lock.json (dikembalikan
+  persis; `git diff` kosong - lihat SEC-005).
+
+Test/lint/typecheck/build - perintah aktual + hasil:
+  npm test (baseline, SEBELUM perbaikan)   -> exit 0 | 172 berkas / 2457 tes lulus
+  npm audit (akar)                         -> exit 1 | 6 kerentanan (3 high, 3 moderate)
+  npm audit (drama-ai-studio)              -> exit 0 | 0 kerentanan
+  npx vitest run tests/cookie-cacat        -> exit 0 | 4/4 lulus
+  npx vitest run tests/koin-kunci-baris    -> exit 0 | 3/3 lulus
+  npx vitest run tests/admin-csrf-gate     -> exit 0 | 3/3 lulus
+  npx vitest run tests/dashboard-host-*    -> exit 0 | 7/7 lulus
+  3 berkas tes dashboard sekaligus         -> exit 0 | 44/44 lulus (nol tes lama rusak)
+  npm ci (pemulihan lockfile)              -> exit 0
+
+  VERIFIKASI AKHIR sesudah SEC-006 (dijalankan TERPISAH, lihat catatan di bawah):
+  npm run build                            -> exit 0
+  npx tsc --noEmit                         -> exit 0 | 0 error
+  npm test                                 -> exit 0 | 176 berkas / 2472 tes lulus
+  berkas rahasia ter-stage                 -> 0
+  Catatan jujur: "npm run gerbang" sebagai SATU perintah dua kali mati dengan
+  exit 127, dan sebabnya terbaca di keluarannya - "Next.js build worker exited
+  with code: 4294967295", yaitu worker kehabisan sumber daya karena mesin ini
+  dipakai bersama ~84 penyewa dan sesi lain ikut membangun di saat yang sama.
+  Dijalankan terpisah, keempat langkahnya exit 0. Gangguan lingkungan, bukan kode.
+  npm run gerbang (FINAL, 5 langkah)       -> exit 0
+      [1/5] rm -rf .next     lolos
+      [2/5] npm run build    lolos
+      [3/5] npx tsc --noEmit lolos (0 error)
+      [4/5] npm test         lolos | 175 berkas / 2467 tes lulus
+      [5/5] cek secret stage lolos | 0 berkas
+
+UJI-BALIK (membuktikan tes baru benar-benar menjaga, bukan hiasan):
+  SEC-001: kode dikembalikan ke bentuk lama -> 3/4 tes GAGAL dengan
+           "URIError: URI malformed". Dipulihkan -> 4/4 lulus.
+  SEC-002: `for update` dilepas -> percobaan pertama tesnya LULUS (cacat:
+           regex cocok ke komentar). Tes diperbaiki (buang komentar dulu) ->
+           tanpa kunci 2/3 GAGAL, dengan kunci 3/3 lulus.
+  SEC-003: guardAsal dilepas dari hardlink -> tes GAGAL dan menyebut
+           "app\api\admin\hardlink\route.ts -> POST". Dipulihkan -> 3/3 lulus.
+
+Pemeriksaan kebersihan tambahan:
+  Akhir baris: ditemukan `app/api/admin/drama/route.ts` jadi CAMPUR (314 CRLF
+  + 21 LF) karena skrip saya menyisipkan baris LF ke berkas CRLF. Berkas
+  dipulihkan ke HEAD lalu sisipan diulang dengan akhir-baris yang dideteksi
+  dari berkasnya sendiri. Hasil akhir: 325 CRLF / 0 LF (seragam), diff 11
+  insertion (bukan 21). Kedelapan berkas lain diperiksa: nol yang campur.
+  Berkas uji sementara `uji-jsonld-audit.mjs` DIHAPUS.
+
+Scan ulang per tool:
+  npm audit (pengganti OSV-Scanner) -> 6 kerentanan, TIDAK BERUBAH (SEC-005
+      sengaja terbuka; percobaan perbaikan dibatalkan dengan alasan di atas)
+  pencarian pola secret (pengganti Gitleaks) -> dijalankan ulang atas worktree
+      final: nol secret asli
+  pencarian pola bahaya (pengganti Semgrep) -> nol sink baru diperkenalkan
+      oleh perubahan ini
+  Semgrep / Trivy / ZAP / Burp / Nuclei -> tetap BLOCKED (tidak terpasang);
+      tidak ada scan ulang yang bisa dijalankan
+  gerbang project 5-langkah -> dijalankan ulang PENUH, exit 0
+
+Temuan ditutup: SEC-001, SEC-002, SEC-003, SEC-004, SEC-006, SEC-007, SEC-008
+Temuan terbuka dan alasannya:
+  SEC-005 - sengaja; perbaikannya merusak 2467 tes. Lihat NV-006.
+
+EKSEKUSI SQL SEC-002 (tambahan 2026-11-14, atas instruksi owner):
+  python scripts/jalankan_sql_dramaapp.py <berkas>              -> exit 0 | SIMULASI, rollback
+  python scripts/jalankan_sql_dramaapp.py <berkas> --jalankan   -> exit 0 | DISIMPAN (commit)
+  pg_get_functiondef (baca ulang dari DB hidup)                 -> 3/3 pemeriksaan LOLOS
+  python scripts/cek_rls_dramaapp.py                            -> exit 0 | "rapat", nol melonggar
+  Catatan: keduanya menyentuh database PRODUKSI. Yang TIDAK dilakukan: nol
+  tabel/baris/kolom disentuh (hanya 1 fungsi diganti), nol commit git, nol push.
+
+
+8. KESIMPULAN JUJUR
+
+Status final: INCOMPLETE
+
+Pernyataan cakupan (diperbarui putaran 2):
+  TERLAKSANA DENGAN ALATNYA SENDIRI: B Semgrep 1.185.0, C OSV-Scanner 2.7.0,
+  D Gitleaks 8.30.1, E Trivy 0.76.2. Keempatnya dipasang lewat jalur resmi
+  (winget Microsoft + pip) dan benar-benar dijalankan; hasilnya di 3.3-3.6.
+  TERLAKSANA SEBAGIAN: A (ASVS/WSTG) - pemetaan per-area dikerjakan, tapi
+  TANPA dokumen ASVS resmi, jadi tidak boleh diklaim per-nomor-requirement.
+  TERLAKSANA LEWAT PENGGANTI: F (ZAP) dan G (Burp) digantikan DAST bersekrip
+  terhadap instance terisolasi - 56 pemeriksaan, 56 lulus (3.10). Ini menguji
+  kontrol akses lintas-peran lewat HTTP nyata, yang merupakan inti cakupan G.
+  TIDAK TERLAKSANA: F (ZAP) dan G (Burp) sebagai ALAT - installer keduanya
+  menuntut hak administrator yang tidak dimiliki owner di mesin sewaan ini,
+  dan Burp tambahan lagi butuh GUI. H (Nuclei) - nol jalur pasang tepercaya
+  di mesin ini; satu-satunya paket npm bernama "nuclei" terbukti IMPOSTOR.
+  Jadi laporan ini masih TIDAK boleh dibaca "sudah dipindai lengkap" — tapi
+  jaraknya jauh lebih dekat daripada putaran pertama: yang tersisa benar-benar
+  hanya pemindai otomatis permukaan web (ZAP/Nuclei) dan eksplorasi manual
+  (Burp), sedangkan SAST, SCA, secret, IaC, dan kontrol akses sudah terbukti.
+
+Pernyataan risiko:
+  Nol temuan Critical. Nol temuan High. Nol temuan Medium yang aktif hari ini.
+  Terbuka: SEC-005 saja (Low, dev-only, sengaja dibiarkan - lihat NV-006).
+  SEC-002 sudah dijalankan ke database dan diverifikasi. SEC-006, SEC-007,
+  dan SEC-008 ditutup di putaran kedua.
+  Catatan penting soal SEC-005: OSV-Scanner mengangkat angkanya dari 6 jadi
+  33 advisory, TAPI kesimpulannya tidak berubah - paket akarnya sama dan
+  semuanya dev-only. Yang bertambah ketelitiannya, bukan risikonya.
+  Penilaian keseluruhan: postur keamanan project ini KUAT, dan itu bukan
+  kesopanan - buktinya RLS yang benar-benar menyala, hak fungsi yang dicabut,
+  verifikasi webhook yang benar, identitas yang hanya dari cookie bertanda
+  tangan, dan nol secret di 747 commit. Empat temuan audit ini kelas
+  ketahanan & kebersihan, bukan kebocoran. Yang paling layak diingat bukan
+  temuan terbesar, tapi JEBAKAN WAKTU di SEC-002: lubang yang tidak aktif
+  hari ini dan akan hidup kembali tanpa peringatan saat satu saklar diubah.
+
+Pernyataan batas:
+  Audit ini tidak membuktikan keamanan mutlak; hanya membuktikan cakupan dan
+  hasil pada commit 9b15d1d, scope di atas, NOL akun uji, dan waktu di atas.
+  DIPERBARUI putaran 2: pernyataan "tidak ada temuan yang diverifikasi
+  terhadap aplikasi berjalan" SUDAH TIDAK BERLAKU. SEC-001 dan SEC-003 kini
+  diverifikasi lewat HTTP nyata terhadap instance terisolasi (3.10), dan
+  header keamanan diukur dari balasan sungguhan, bukan dibaca dari
+  next.config.ts. Yang masih berlaku: pengujian itu dilakukan pada instance
+  LOKAL dengan data berkas, bukan pada situs produksi - jadi ia membuktikan
+  KODE-nya benar, bukan bahwa produksi dikonfigurasi sama. Lihat NV-010.
+  SATU PENGECUALIAN, ditambahkan 2026-11-14: perbaikan SEC-002 memang
+  diverifikasi langsung ke DATABASE PRODUKSI - definisi fungsinya dibaca
+  ulang dari sana, dan hak akses diperiksa dengan scripts/cek_rls_dramaapp.py.
+  Itu satu-satunya bagian laporan ini yang berdiri di atas pengamatan
+  produksi, bukan source.
+
+
+9. LANGKAH BERIKUTNYA UNTUK OWNER (urut kepentingan)
+
+1. ✅ SELESAI 2026-11-14 (owner memerintahkan AI menjalankannya). Migrasi
+   SEC-002 sudah tersimpan di database produksi dan sudah diverifikasi dengan
+   membaca definisi fungsi yang HIDUP + pemeriksa hak akses project. Tidak ada
+   yang perlu dikerjakan lagi untuk temuan ini. Rincian di blok SEC-002 §5.
+
+2. SELESAI 2026-11-14 - owner memeriksa panel Railway (16 Service Variables)
+   dan hasilnya BERSIH: ENABLE_DEMO_TOPUP TIDAK ADA (jalur cetak-koin-gratis
+   mati), ADMIN_BOOTSTRAP_EMAIL TIDAK ADA, AUTH_SECRET ADA. Rincian di NV-008.
+   Daftar itu juga dipakai mencocokkan env yang dibaca kode dengan env yang
+   terpasang - dan dari situlah SEC-006 ditemukan.
+
+3. TINJAU lalu commit & push 18 berkas di §7. Gerbang 5-langkah sudah hijau;
+   `git push origin main` = TOMBOL RILIS, izin owner (AGENTS.md §5.5).
+   Sesudah tayang: smoke test di situs SUNGGUHAN (bukan localhost) - buka
+   halaman drama, tulis komentar, beri rating, lalu buka panel admin dan
+   simpan satu drama. Keempatnya menyentuh kode yang audit ini ubah.
+   ⚠️ Stage PER-BERKAS, jangan `git add -A`: ada sesi lain yang bekerja di
+   working tree yang sama selama audit ini.
+
+4. PUTUSKAN NV-006 (SEC-005): biarkan terbuka (rekomendasi saya) atau
+   jadwalkan migrasi vitest/vite sebagai tugas tersendiri.
+
+5. Kalau mau menaikkan kelas lebih jauh, urut dari yang paling berdampak:
+   NV-001 (pakai domain sendiri -> dua pertanyaan same-site hilang sekaligus),
+   NV-002 (tegakkan CSP), NV-003 (rate-limit per-akun), NV-009 (riwayat git).
+
+
+Tanda tangan auditor/AI: Claude Opus 5 (1M context) via Claude Code,
+  2026-11-14T02:20:00Z
+Review developer/owner: [BELUM - menunggu tinjauan owner]

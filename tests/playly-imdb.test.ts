@@ -14,7 +14,9 @@
 // bukan contoh karangan. Itu disengaja: aturan ini dibuat dari data nyata, jadi
 // yang menjaganya harus data yang sama.
 import { describe, it, expect } from "vitest";
+import { readFileSync } from "node:fs";
 import {
+  ambilKodeImdb,
   bersihkanJudulRilis,
   posterAman,
   videoBelumDicocokkan,
@@ -190,5 +192,58 @@ describe("videoBelumDicocokkan — pagar pencocokan massal", () => {
 
   it("daftar video kosong aman", () => {
     expect(videoBelumDicocokkan([], { a: meta("X", "manual") })).toEqual([]);
+  });
+});
+
+describe("ambilKodeImdb — tempelan dari browser", () => {
+  it("menerima kode polos dan merapikan huruf besar", () => {
+    expect(ambilKodeImdb("tt10715446")).toBe("tt10715446");
+    expect(ambilKodeImdb("  TT10715446  ")).toBe("tt10715446");
+  });
+
+  it("menerima tautan halaman, termasuk ekor ?ref dan subdomain m", () => {
+    expect(ambilKodeImdb("https://www.imdb.com/title/tt10715446/")).toBe(
+      "tt10715446",
+    );
+    expect(
+      ambilKodeImdb("https://www.imdb.com/title/tt10715446/?ref_=nv_sr_srsg_0"),
+    ).toBe("tt10715446");
+    expect(ambilKodeImdb("https://m.imdb.com/title/tt10715446")).toBe(
+      "tt10715446",
+    );
+    expect(ambilKodeImdb("imdb.com/title/tt10715446")).toBe("tt10715446");
+    expect(ambilKodeImdb("https://www.imdb.com/title/tt10715446/reviews")).toBe(
+      "tt10715446",
+    );
+  });
+
+  it("mengambil satu tautan yang nempel di kalimat", () => {
+    expect(
+      ambilKodeImdb("Yakuza Princess https://www.imdb.com/title/tt10715446/"),
+    ).toBe("tt10715446");
+  });
+
+  it("menolak judul, domain palsu, dan dua kode sekaligus", () => {
+    expect(ambilKodeImdb("A Princesa da Yakuza")).toBeNull();
+    expect(ambilKodeImdb("")).toBeNull();
+    expect(ambilKodeImdb("https://evil.com/title/tt10715446")).toBeNull();
+    expect(ambilKodeImdb("https://notimdb.com/title/tt10715446")).toBeNull();
+    expect(
+      ambilKodeImdb(
+        "https://www.imdb.com/title/tt1/ dan https://www.imdb.com/title/tt2/",
+      ),
+    ).toBeNull();
+  });
+
+  it("kotak tempel ada di panel pencarian", () => {
+    // Tanpa kotak ini admin yang sudah menemukan halaman di browser tidak
+    // punya jalan memasangnya — pencarian judul lokal tetap kosong.
+    const sumber = readFileSync(
+      "app/components/admin/PlaylyImdbPicker.tsx",
+      "utf8",
+    );
+    expect(sumber).toContain('aria-label="Tautan atau kode IMDb"');
+    expect(sumber).toContain("ambilKodeImdb");
+    expect(sumber).not.toContain('from "@/lib/imdb-tool"');
   });
 });

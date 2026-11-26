@@ -1,0 +1,47 @@
+<!--
+  SUMBER VEKTOR ikon aplikasi Layarindo — dibuat 2026-11-26.
+
+  KENAPA BERKAS INI ADA, dan jangan dihapus: sampai hari ini repo HANYA punya
+  logo Layarindo dalam bentuk gambar raster kecil (public/logo-layarindo.png
+  423x96 dan public/logo-layarindo-lambang.png 134x96). Saat ikon aplikasi
+  512x512 dibutuhkan, keduanya terlalu kecil — diperbesar jadi pecah — dan
+  tidak ada berkas sumber mana pun untuk membuat ulang. Berkas INI yang
+  menutup lubang itu: vektor, jadi bisa dirender ke ukuran berapa pun tanpa
+  kehilangan ketajaman.
+
+  DIPAKAI MEMBUAT (semuanya di app/, dibaca otomatis oleh Next.js App Router):
+    app/icon.png        512x512  — ikon aplikasi & layar utama Android
+    app/apple-icon.png  180x180  — ikon layar utama iPhone
+    app/favicon.ico     16/32/48 — ikon tab browser
+
+  CARA MEMBUAT ULANG (tanpa perkakas desain, cukup Chrome yang sudah terpasang):
+    1. Bungkus <svg> di bawah dalam HTML dengan `html,body{margin:0}` dan
+       `svg{width:100vw;height:100vh}`.
+    2. chrome --headless=new --default-background-color=00000000
+         --window-size=<N>,<N> --screenshot=out.png <berkas.html>
+       ⚠️ `--default-background-color=00000000` WAJIB: tanpa itu sudut di luar
+       lengkungan `rx` jadi PUTIH, bukan transparan, dan ikon terlihat kotak
+       putih di latar gelap.
+    3. Untuk .ico: render 16, 32, 48 lalu susun jadi satu berkas ICO
+       (header 6 byte + entri 16 byte per gambar + PNG apa adanya).
+
+  WARNA diambil dari palet resmi di app/globals.css (bukan dikira-kira):
+    --color-emas-400 #fdb239 · --color-emas-500 #f37e1a · --color-emas-700 #e55204
+
+  Bentuknya SENGAJA disederhanakan dari lambang di header (yang melengkung):
+  ikon tab dibaca pada 16px, dan detail melengkung + kilau hilang jadi bubur
+  di ukuran itu. Dipilih owner 2026-11-26 dari tiga usulan, sesudah melihat
+  simulasi 32px dan 16px-nya.
+-->
+<svg viewBox="0 0 512 512" width="512" height="512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="emas" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fdb239"/>
+      <stop offset=".55" stop-color="#f37e1a"/>
+      <stop offset="1" stop-color="#e55204"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#emas)"/>
+  <path d="M142 104 h74 v234 h150 v70 H142 Z" fill="#fff"/>
+  <path d="M268 128 l104 62 -104 62 Z" fill="#fff" opacity=".92"/>
+</svg>

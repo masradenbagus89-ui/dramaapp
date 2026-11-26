@@ -225,12 +225,37 @@ boleh bisa**. Yang dibetulkan **penulisan di laporan**, BUKAN penjaganya; `--no-
 TIDAK dipakai, sebab komentar di dalam hook itu sendiri memperingatkan bahwa penjaga yang rutin
 ditembus melatih kebiasaan menerobos.
 
-### 🔴 SISA — butuh berkas dari owner
+### ✅ IKON SELESAI — digambar ulang sebagai VEKTOR, sumbernya kini ada di repo
 
-`app/icon.png` (512), `app/apple-icon.png` (180), dan `app/favicon.ico` **masih huruf "D"
-bermahkota** — dilihat langsung satu per satu, bukan ditebak dari namanya. Ketiganya bertanggal
-**1 Juni 2026**. Logo Layarindo yang ada cuma **423×96** dan **134×96**; diperbesar ke 512×512
-hasilnya pecah. **Perlu logo Layarindo PERSEGI minimal 512×512.**
+Semula ditulis sebagai "butuh berkas dari owner". Owner justru meminta AI yang membuatkannya
+(2026-11-26), jadi ketiga ikon digambar ulang dan **lubang sumbernya ikut ditutup**.
+
+| Berkas | Ukuran | Dipakai |
+|---|---|---|
+| `app/icon.png` | 512×512 | ikon aplikasi & layar utama Android |
+| `app/apple-icon.png` | 180×180 | ikon layar utama iPhone |
+| `app/favicon.ico` | 16 + 32 + 48 dalam satu berkas | ikon tab browser |
+| **`public/logo-layarindo-ikon.svg`** | vektor | **SUMBERNYA — jangan dihapus** |
+
+⭐ **Yang paling penting di sini bukan ikonnya, melainkan SUMBERNYA.** Masalah hari ini muncul
+justru karena repo cuma punya logo raster kecil (`logo-layarindo.png` 423×96 dan
+`logo-layarindo-lambang.png` 134×96) dan **nol berkas sumber** — diperbesar ke 512 hasilnya
+pecah, digambar ulang pun tak ada acuan. Berkas SVG itu menutup lubang tersebut: di dalamnya
+ada cara membuat ulang ketiga ikon memakai Chrome yang sudah terpasang, tanpa perkakas desain.
+
+**Bentuk:** kotak membulat gradasi emas + huruf "L" putih + segitiga play. Warna diambil dari
+palet resmi `app/globals.css` (`--color-emas-400 #fdb239` · `-500 #f37e1a` · `-700 #e55204`),
+bukan dikira-kira dari gambar. Dipilih owner dari **tiga usulan**, sesudah melihat simulasi
+32px & 16px-nya — bentuknya SENGAJA lebih sederhana daripada lambang di header (yang melengkung
++ berkilau), sebab detail itu jadi bubur di ukuran tab browser.
+
+🪤 **`--default-background-color=00000000` WAJIB saat merender.** Tanpa itu, sudut di luar
+lengkungan `rx` keluar PUTIH, bukan transparan — ikon lalu tampak sebagai kotak putih di latar
+gelap. Ketiga PNG sudah diverifikasi bertipe warna 6 (RGBA).
+
+🪤 **Chrome headless lima render berturut-turut kena batas waktu** di mesin ini (sama seperti
+gerbang yang crash dua kali hari ini). Pecah jadi beberapa perintah; dua berkas pertama sudah
+jadi sebelum timeout, jadi periksa dulu apa yang sudah ada sebelum mengulang dari nol.
 
 ---
 

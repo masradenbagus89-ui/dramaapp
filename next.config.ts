@@ -3,6 +3,33 @@ import type { NextConfig } from "next";
 /** 1 hari segar + 7 hari boleh dipakai sambil diperbarui di belakang. Gambar `public/` jarang diganti. */
 const SIMPAN_GAMBAR_PUBLIK = "public, max-age=86400, stale-while-revalidate=604800";
 
+/**
+ * Alamat lama situs yang dialihkan permanen ke domain utama (NEXT_PUBLIC_SITE_URL).
+ *
+ * Menyala HANYA untuk host yang BUKAN alamat resmi: selama variabel itu masih
+ * berisi alamat Railway, alamat Railway tak dialihkan ke mana pun. Jadi kode ini
+ * aman tayang sebelum DNS layarindo.com & izin Playly siap — sakelarnya tetap
+ * variabel di panel Railway (docs/migrasi-railway-tahap6-pindah-domain.md).
+ *
+ * `/api/*` SENGAJA tak dialihkan: webhook Playly, robot keep-db-awake, dan agent
+ * PC memanggil alamat Railway langsung, dan klien mesin belum tentu mengikuti
+ * pengalihan. Healthcheck Railway memakai host lain, jadi tak ikut kena.
+ * 308 (bukan 301) — alasannya di dokumen yang sama, seksi "Langkah 5".
+ */
+const ALAMAT_LAMA = ["dramaapp-production-9e88.up.railway.app", "www.layarindo.com"];
+
+function pengalihanDomainLama() {
+  const situs = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/+$/, "");
+  if (!situs) return [];
+  const hostResmi = new URL(situs).host;
+  return ALAMAT_LAMA.filter((host) => host !== hostResmi).map((host) => ({
+    source: "/:path((?!api/).*)",
+    has: [{ type: "host" as const, value: host }],
+    destination: `${situs}/:path`,
+    permanent: true,
+  }));
+}
+
 const nextConfig: NextConfig = {
   // Kebijakan upgrade Next: hanya tambal keamanan, bukan loncat ke fitur baru.
   // Dipasang saat naik 16.4.3 → 16.4.6 karena versi lama kena advisory.
@@ -60,6 +87,7 @@ const nextConfig: NextConfig = {
    */
   async redirects() {
     return [
+      ...pengalihanDomainLama(),
       {
         source: "/playly",
         destination: "/film",

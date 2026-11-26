@@ -444,6 +444,14 @@ Semuanya sudah diubah dari alamat Vercel ke
 | 4 | `scripts/e2e-tahap7.mjs` → `BASE` | uji E2E diam-diam menguji situs yang salah → "lulus" yang tak berarti apa-apa |
 | 5 | Variable `KEEPALIVE_SITES` di **kedua** repo GitHub | sama seperti #2. ⚠️ Ini **setelan di panel**, bukan di repo — jadi `git grep` tak akan menemukannya |
 
+**Pembaruan 2026-11-26 (domain `layarindo.com` dibeli):** #1 dan #4 diubah ke
+`https://layarindo.com`. #2 dan #3 **sengaja tetap** alamat Railway: keduanya
+hanya memanggil `/api/*`, dan `/api/*` tak ikut dialihkan (`next.config.ts`
+`pengalihanDomainLama`), jadi alamat Railway tetap menjawab 200 sebelum maupun
+sesudah domain hidup — sedangkan `layarindo.com` mati sampai DNS-nya siap.
+Rollback sesudah ini = isi ulang `NEXT_PUBLIC_SITE_URL` dengan alamat Railway,
+**bukan** menghapusnya. Detail: `docs/serah-terima/2026-11-26-domain-layarindo.md`.
+
 Plus 2 yang kosmetik tapi menyesatkan orang (bukan pemblokir, tapi sudah ikut
 dibereskan 2026-10-15): `pc-backup-agent/optimalkan-film.ps1` (pesan ke operator
 menyuruh cek di alamat lama) dan `scripts/gen-supabase-sql.mjs` (komentar di

@@ -225,10 +225,20 @@ boleh bisa**. Yang dibetulkan **penulisan di laporan**, BUKAN penjaganya; `--no-
 TIDAK dipakai, sebab komentar di dalam hook itu sendiri memperingatkan bahwa penjaga yang rutin
 ditembus melatih kebiasaan menerobos.
 
-### ✅ IKON SELESAI — digambar ulang sebagai VEKTOR, sumbernya kini ada di repo
+### ✅ IKON SELESAI & TAYANG lewat `96cb465` — digambar ulang sebagai VEKTOR, sumbernya kini ada di repo
 
 Semula ditulis sebagai "butuh berkas dari owner". Owner justru meminta AI yang membuatkannya
 (2026-11-26), jadi ketiga ikon digambar ulang dan **lubang sumbernya ikut ditutup**.
+
+🎯 **Bukti TAYANG — berkasnya diunduh dari produksi dan DILIHAT, bukan cuma dicek status 200:**
+`/favicon.ico` **3.015 byte** (ukuran berkas BARU — dipakai sebagai penanda tayang, sebab 200
+saja tetap keluar untuk berkas lama) · `/icon.png` **512×512 RGBA** · `/apple-icon.png`
+**2.529 byte** · `/logo-layarindo-ikon.svg` ikut tersaji. Gerbang sebelum push: **LOLOS 5/5**
+(208 berkas / 2934 tes).
+
+🪤 **Ikon tab paling keras di-cache browser.** Kalau masih terlihat huruf "D" sesudah rilis,
+buka `layarindo.com/favicon.ico` langsung atau pakai jendela penyamaran — itu cache browser,
+bukan bukti gagal tayang.
 
 | Berkas | Ukuran | Dipakai |
 |---|---|---|

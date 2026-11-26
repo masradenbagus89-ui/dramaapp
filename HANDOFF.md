@@ -156,6 +156,84 @@ di produksi — artefak headless, dibantah oleh `/api/teaser` yang berakhir **20
 
 ---
 
+## 2026-11-26 — ✅ `698d32a` TAYANG (logo Layarindo) · 🔴 INSIDEN: Supabase DOWN menggagalkan deploy
+
+### Yang tayang
+
+Logo **Layarindo** kini dipakai di `/login`, `/daftar`, `/profile`, dan TopNav — menggantikan
+`/logo.png` (bertuliskan "DRAMA KU") & `/logo-mark.png` (huruf "D" bermahkota) yang tertinggal
+sejak penggantian nama 2026-11-24. Dua teks "DramaKu" di Nonton Bareng kini dibaca dari
+`SITE_NAME`. Ikut tersimpan: perombakan halaman login (sesi lain), perbaikan IMDb, laporan audit
+14 Nov, dan `data/viewers.json` ditutup dari git.
+
+**Diukur di produksi sesudah tayang:** 10 alamat **200** (termasuk `/login` `/daftar` `/profile`
+`/my-list` `/admin/bantuan`) · `/api/dramas` **200** · video Playly **200** · video drama **307**
+· **nol** kemunculan "DramaKu" di 5 halaman (Layarindo 19–30× per halaman) · ketiga halaman
+hanya memuat `logo-layarindo*.png`.
+
+### 🔴 INSIDEN — Supabase DOWN, dan itulah yang menggagalkan deploy
+
+Deploy `698d32a` pertama **FAILED**. Log Railway:
+
+```
+Failed to build /beranda (attempt 2 of 3) because it took more than 60 seconds
+[playly] daftar video webhook tidak terbaca: Supabase select 504: upstream request timeout
+Failed to build /beranda after 3 attempts. Export encountered an error, exiting the build.
+```
+
+🪤 **Jangan salah menuduh kode.** Dibuktikan dengan menghubungi Supabase LANGSUNG dari komputer
+ini, bukan lewat Railway: **HTTP 503 `upstream connect error ... connection timeout`** tiga kali
+berturut-turut, lalu satu percobaan timeout penuh 40 detik. Gerbang lokal atas kode yang SAMA
+persis build-nya sukses, dan deploy sebelumnya (`db8180b`) sukses 2 jam sebelumnya.
+
+**Dampak nyata ke penonton selama Supabase mati — sebagian, bukan total:**
+
+| Masih jalan | Rusak |
+|---|---|
+| `/` `/beranda` `/film` `/katalog` `/drama/<id>` → **200** (disajikan dari versi statis) | `/api/dramas` → **500** |
+| Video **drama** (`/api/teaser`) → **307** | Video **film Playly** → **404** |
+
+⚠️ **Kenapa film Playly ikut mati padahal videonya di R2, bukan di Supabase:** sebelum melayani,
+`app/api/playly/video/route.ts` memeriksa dulu apakah id-nya ada di daftar video yang diizinkan
+(gerbang anti-IDOR), dan daftar itu dibaca dari database. Database mati → daftar kosong → SEMUA
+film ditolak 404. Drama tidak lewat pemeriksaan itu, jadi tetap jalan. **Ini perilaku yang benar
+(gagal-mengunci, bukan gagal-membuka)** — dicatat supaya 404 massal pada film tidak dikira
+kerusakan Playly atau izin domain.
+
+**Pulih sendiri.** Diukur ulang: 5/5 **HTTP 200** dalam 0,03–0,10 detik, `/api/dramas` **200**
+dengan **41 judul**, video Playly **200**. Sesudah itu deploy diulang dan berhasil.
+Nol perubahan kode di antara deploy yang gagal dan yang berhasil.
+
+### 🪤 Gerbang: exit 127 TERJADI JUGA DI DEPAN, bukan cuma di latar
+
+Hari ini gerbang gagal dua kali berturut-turut karena **mesin berat**, bukan kode:
+1. `npm test` — satu tes (`tests/jeda-koin-iklan.test.ts`) kehabisan waktu 5 detik saat 208
+   berkas berebut CPU. Dijalankan SENDIRIAN: **7/7 lulus**.
+2. `npm run build` — `Next.js build worker exited with code: 4294967295` sesudah kompilasi
+   sukses. Disk DICEK dan sehat (C 56 GB, D 47 GB kosong).
+
+Percobaan ketiga **LOLOS 5/5** tanpa satu pun perubahan. ⭐ **Aturan: exit 127 / worker crash di
+mesin ini berarti "mati di tengah", BUKAN "kode rusak" — ULANGI dulu sebelum menyimpulkan.**
+Bahayanya: output yang putus masih menyisakan beberapa baris `✓ lolos` dari langkah awal, jadi
+sekilas terbaca seperti gerbang hijau padahal tesnya belum pernah selesai.
+
+### 🪤 Penjaga rahasia menolak commit — dan itu BENAR
+
+`LAPORAN-AKHIR-AUDIT-KEAMANAN.txt` memuat kunci contoh AWS (`AKIA…EXAMPLE`) secara utuh. Pola
+hook `AKIA[0-9A-Z]{16}` tidak bisa membedakan kunci contoh dari kunci asli — dan memang **tidak
+boleh bisa**. Yang dibetulkan **penulisan di laporan**, BUKAN penjaganya; `--no-verify` sengaja
+TIDAK dipakai, sebab komentar di dalam hook itu sendiri memperingatkan bahwa penjaga yang rutin
+ditembus melatih kebiasaan menerobos.
+
+### 🔴 SISA — butuh berkas dari owner
+
+`app/icon.png` (512), `app/apple-icon.png` (180), dan `app/favicon.ico` **masih huruf "D"
+bermahkota** — dilihat langsung satu per satu, bukan ditebak dari namanya. Ketiganya bertanggal
+**1 Juni 2026**. Logo Layarindo yang ada cuma **423×96** dan **134×96**; diperbesar ke 512×512
+hasilnya pecah. **Perlu logo Layarindo PERSEGI minimal 512×512.**
+
+---
+
 ## 2026-11-26 — 🔀 Merge `feat/domain-layarindo` + 📏 TEMUAN BARU: rail `/feed` terpotong saat HP DIMIRINGKAN
 
 ### ✅ `0f0102f` TAYANG — perbaikan layar penuh HP terbukti hidup

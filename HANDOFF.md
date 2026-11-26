@@ -108,6 +108,218 @@
 
 ---
 
+## 2026-11-26 — 📱 Tombol LAYAR PENUH hilang di HP pada pemutar film `/tonton` — DIPERBAIKI
+
+🐞 **Bug LOLOS KE PRODUKSI, dilaporkan owner** dengan dua tangkapan layar: baris kontrol pemutar
+film UTUH di laptop (`⧉ ⋮ ⤢` lengkap di kanan) tapi **TERPOTONG di HP** — hanya `⧉` (Pop-up) yang
+menggantung di tepi, sedangkan **⋮ dan ⤢ (layar penuh) hilang sama sekali**.
+
+**Sebabnya, bukan tebakan:** baris kontrol di `app/components/player/PlaylyPlayer.tsx:489` adalah
+satu jalur `flex` yang **tidak boleh patah** (`flex-wrap` tak ada) berisi tombol yang **tidak bisa
+menyusut** (`size-9` = 36px tetap). Isinya 7 tombol + angka durasi. Di layar HP total lebarnya
+melewati lebar layar, jadi yang paling kanan terdorong KELUAR. Nol error, nol gejala di tes —
+tombolnya ada di kode, cuma tidak kebagian tempat.
+
+**Keputusan owner (popup, 2026-11-26): korbankan PiP, bukan layar penuh.** Pop-up (video
+mengambang sambil membuka aplikasi lain) paling jarang dipakai di HP dan banyak browser HP tak
+mendukungnya; layar penuh dipakai hampir tiap kali menonton. Dua pilihan lain yang ditawarkan —
+mengecilkan semua tombol jadi 32px (di bawah ambang sentuh 44px, gampang salah tekan) dan
+menurunkan 3 tombol kanan ke baris kedua (kontrol jadi lebih tinggi, menutupi lebih banyak
+gambar) — ditolak owner.
+
+**Perubahannya satu kelas:** tombol PiP `flex` → **`hidden … sm:flex`**. Di laptop/tablet tetap
+lengkap seperti sebelumnya; ukuran tombol lain TIDAK diubah.
+
+⚠️ **`flex` DIGANTI, bukan ditambahi `hidden`.** Dua kelas display di satu elemen saling menimpa
+tergantung urutan di CSS hasil build — hal yang tidak terlihat dari berkas sumbernya, jadi
+"kelihatan benar" tapi bisa berperilaku lain.
+
+### 🛡️ Penjaga permanen: `tests/pemutar-playly-kontrol-hp.test.ts` (4 tes)
+
+Dijaga DUA arah, karena memperbaiki satu sisi gampang merusak sisi lain diam-diam:
+(a) PiP wajib `hidden` + `sm:flex`; (b) **layar penuh wajib TETAP tampil di HP** — kalau suatu
+saat ikut diberi `hidden`, bug aslinya kembali persis.
+
+✅ **Diuji-balik, bukan cuma dijalankan:** perbaikan sengaja dibatalkan sementara → **2 dari 4 tes
+langsung MERAH**; berkas lalu dipulihkan dan dicek identik byte-per-byte. Penjaga yang tak pernah
+bisa merah sama saja dengan tak ada.
+
+🪤 **Tes ini membuang komentar `/* … */` sebelum memeriksa kode** — meniru
+`tests/action-rail-tampil.test.ts:66`. Tanpa itu, komentar di `PlaylyPlayer.tsx` yang MENYEBUT
+nama kelas akan membuat tesnya hijau walau kelasnya sudah lenyap dari kode sungguhan.
+
+🔎 **Belum diperiksa, jujur dicatat:** pemutar drama `/feed` memakai komponen LAIN
+(`PlayerControls.tsx`, tata letaknya beda — volume & layar penuh menempel di samping angka
+durasi). Owner tidak melaporkan masalah di sana dan belum diukur, jadi JANGAN diasumsikan ikut
+terpotong maupun ikut aman.
+
+---
+
+## 2026-11-26 — 💬 RILIS `bf681c7` TAYANG: Live Chat member + Report Video + dashboard admin
+
+✅ **Kerja rekan (Yusup) dari branch `feat/live-chat-laporan-video`, ditarik & dirilis owner hari
+ini.** 1 commit · 32 berkas · +2.671 baris. `4395e0e` → `bf681c7` di **kedua** remote.
+
+**Apa isinya:** member bisa melaporkan video bermasalah (7 jenis masalah + keterangan) dan
+mengobrol dengan admin; admin melayaninya dari halaman baru `/admin/bantuan` (tab Laporan + tab
+Live Chat, menu samping "Laporan & Chat" dengan angka merah). "Real-time"-nya = **polling**
+(5 dtk saat chat terbuka, 60 dtk saat tertutup), bukan WebSocket.
+
+**Nol prasyarat SQL/env** — penyimpanan menumpang tabel **`app_data`** yang sudah ada, satu
+dokumen per laporan/pesan (`laporan-video:<uuid>`, `chat-pesan:<utas>:<uuid>`). Dipilih karena
+DDL masih tertutup; utang tekniknya ditulis rekan di `lib/kumpulan-dokumen.ts` (urut & batas di
+sisi aplikasi tanpa index — daftar admin dibatasi 500 laporan & 300 utas terbaru).
+
+**Yang diperiksa SEBELUM ditarik** (bukan percaya begitu saja):
+- Branch **0 commit tertinggal** dari `main`, dan **nol tabrakan** dengan 13 berkas sesi lain
+  yang belum di-commit di folder ini — keduanya diukur, bukan diasumsikan.
+- Tidak menyentuh `HANDOFF.md` / `antrean-deploy.md` / `docs/lintasai/INDEX.md`.
+- `.gitignore` menutup `data/kumpulan-dokumen.json` (berisi email + isi chat member).
+
+**Gerbang `npm run gerbang`: LOLOS 5/5** — build ✓ · `tsc` 0 error · **206 berkas / 2.924 tes**
+· nol berkas rahasia di 32 berkas antrean push.
+
+🎯 **Bukti TAYANG diukur di situs sungguhan:** `/` `/beranda` `/film` `/katalog` `/api/dramas`
+`/admin/bantuan` `/api/health` → ketujuhnya **200** · `/api/health`
+`{"ok":true,"sumberData":"database"}` · katalog **41 judul**.
+
+🔒 **Pengaman DIUJI, bukan dibaca** — keempat endpoint baru menolak tanpa sesi:
+`/api/chat` **401** (*"Masuk dulu untuk memakai Live Chat."*) · `/api/admin/chat`,
+`/api/admin/laporan-video`, `/api/admin/bantuan` ketiganya **401 Unauthorized**.
+
+### 🔴 Dua hal yang BELUM terbukti — hanya mata owner yang bisa
+
+1. **Rail pemutar `/feed` kini 7 ikon** dan digantung dari bawah. Rekan sendiri yang meminta ini
+   dicek di HP berlayar pendek: pucuk rail bisa mendekati tombol Kembali/gerigi di atas.
+   Tes hijau TIDAK membuktikan tata letak.
+2. **Alur ujung-ke-ujung**: kirim 1 laporan + 1 chat sebagai member biasa, pastikan muncul di
+   `/admin/bantuan`. Yang sudah dibuktikan baru "pintunya terkunci untuk orang luar", belum
+   "isinya sampai ke admin".
+
+🪤 **Catatan usang di dokumen rekan** (`docs/serah-terima/2026-11-25-live-chat-laporan-video.md`):
+alasan memilih polling ditulis *"Vercel tak bisa menahan koneksi WebSocket"* — situs ini sudah
+di **Railway** sejak 2026-10-15. Pilihan polling-nya tetap sah, alasannya yang kedaluwarsa.
+
+### ⏸️ Branch kedua rekan BELUM ditarik: `feat/domain-layarindo` (`5bec168`)
+
+Sudah diperiksa dari sisi owner dan **bersih**, tinggal keputusan menarik:
+- Isinya: pengalihan permanen **308** dari alamat Railway lama + `www.layarindo.com` →
+  `https://layarindo.com`, plus 2 nilai cadangan (`lib/site.ts`, `scripts/e2e-tahap7.mjs`).
+- **Pengecualian `/api/*` TERBUKTI bekerja** — diuji dengan mesin rute Next.js yang dipakai
+  project ini (`next/dist/compiled/path-to-regexp`): `/` `/beranda` `/robots.txt` `/sitemap.xml`
+  dialihkan; `/api/dramas` & `/api/webhooks/playly` **tidak**. Jadi webhook Playly, robot
+  keep-db-awake, dan agent PC backup aman.
+- **Keputusan rekan (commit `5bec168`): `KEEPALIVE_SITES` & `DRAMAAPP_SITUS_URL` SENGAJA tetap
+  alamat Railway** — keduanya hanya memanggil `/api`, jadi dijawab Railway langsung tanpa lewat
+  Cloudflare. **Owner tidak perlu menyetel apa pun.** Ganti hanya sebelum alamat Railway dimatikan.
+- ⚠️ **308 disimpan browser.** Rollback lewat variabel menghentikan pengalihan di server, tapi
+  pengunjung yang sudah terlanjur dialihkan tetap dialihkan sampai cache browsernya habis.
+
+---
+
+## 2026-11-26 — 🌐 DOMAIN `layarindo.com` HIDUP di Railway (Tahap 6 — langkah 1-3 SELESAI)
+
+✅ **`https://layarindo.com` dan `https://www.layarindo.com` dua-duanya melayani, HTTP 200.**
+Ini menuntaskan langkah 2 & 3 dari `docs/migrasi-railway-tahap6-pindah-domain.md`. Domain
+dibeli **rekan** (bukan owner) di **Dynadot** 2026-11-24, lalu **DNS-nya dipindah ke Cloudflare**
+(`jarred.ns.cloudflare.com` / `keira.ns.cloudflare.com`). Owner hanya menambahkan domain di
+panel Railway; pengisian DNS dikerjakan rekan.
+
+**Diukur sendiri dari luar, bukan ditebak** (2026-11-26 02:0x UTC):
+
+| Yang diperiksa | Hasil |
+|---|---|
+| `https://layarindo.com` | **200**, `x-powered-by: Next.js`, `x-railway-edge: sin1` |
+| `https://www.layarindo.com` | **200** |
+| `title` beranda | `Layarindo — Nonton Drama China Sub Indo Gratis` |
+| `/api/health` | `{"ok":true,"sumberData":"database"}` |
+| `/` `/beranda` `/katalog` `/login` `/api/dramas` `/robots.txt` `/sitemap.xml` | semua **200** |
+| Situs lama `dramaapp-production-9e88.up.railway.app` | **200** — tetap jalan |
+| TXT `_railway-verify` + `_railway-verify.www` | cocok persis dengan nilai Railway |
+
+**Bentuk DNS yang dipakai** (bukan ANAME — catatan ini penting kalau nanti pindah lagi):
+Dynadot memang punya ANAME, tapi DNS sudah telanjur dipindah ke **Cloudflare**, dan Cloudflare
+**tidak menyediakan ANAME** karena punya **CNAME flattening** — CNAME di `@` boleh dan
+diterjemahkan otomatis. Railway menyatakan CNAME flattening didukung.
+
+| Type | Name | Value | Proxy |
+|---|---|---|---|
+| CNAME | `@` | `an90twgu.up.railway.app` | ON |
+| CNAME | `www` | `u49yddbc.up.railway.app` | ON |
+| TXT | `_railway-verify` | `railway-verify=a9b6…` | DNS only |
+| TXT | `_railway-verify.www` | `railway-verify=9752…` | DNS only |
+
+⚠️ **Dua tujuan CNAME-nya BERBEDA** (`an90twgu` untuk apex, `u49yddbc` untuk www). Railway
+menerbitkan alamat unik per domain — tertukar = 404.
+
+🪤 **Jebakan yang memakan satu putaran penuh: `XXXX`.** Daftar record dikirim ke rekan lewat chat
+dengan dua nilai TXT yang ujungnya ditandai `XXXX` (penanda "belum lengkap", karena nilainya
+terpotong di screenshot panel Railway). Rekan menyalinnya **apa adanya**, jadi DNS terpasang
+berisi `…c8e77XXXX`. Akibatnya Railway menjawab `404 {"message":"Application not found"}` dengan
+header `x-railway-fallback: true` — terbaca seperti domain salah arah, padahal jalurnya sudah
+benar sampai Railway dan yang gagal cuma verifikasi kepemilikan. **Pelajaran: jangan pakai
+penanda yang menyerupai isi aslinya** (hex/acak); pakai kalimat Indonesia yang jelas-jelas bukan
+nilai, atau tahan pesannya sampai nilainya lengkap.
+
+🔎 **Cara memeriksa ulang kapan pun** (nol akses panel, cukup dari komputer mana pun):
+
+```bash
+nslookup -type=TXT _railway-verify.layarindo.com 8.8.8.8
+curl -s -o /dev/null -w "%{http_code}\n" https://layarindo.com
+curl -s -I https://layarindo.com | grep -i x-railway
+```
+
+`x-railway-fallback: true` = Railway belum mengakui domainnya (verifikasi gagal).
+Tanpa header itu + 200 = sudah diakui.
+
+### ✅ LANGKAH 4 JUGA SELESAI — `NEXT_PUBLIC_SITE_URL` sudah diisi (hari yang sama)
+
+Owner mengisi `NEXT_PUBLIC_SITE_URL=https://layarindo.com` di panel Railway lalu redeploy
+(**success**). 🪤 Panel memunculkan dialog **"Variable overwrite detected"** — itu NORMAL:
+variabelnya memang sudah ada sejak sebelumnya, jadi menimpanya justru yang dimaksud. Jangan
+diurungkan kalau muncul lagi di kemudian hari.
+
+**Diukur SESUDAH deploy, bukan ditebak:**
+
+| Yang diukur | Sebelum | Sesudah |
+|---|---|---|
+| canonical beranda | alamat Railway lama | **`https://layarindo.com`** |
+| `robots.txt` → Sitemap | alamat Railway lama | **`https://layarindo.com/sitemap.xml`** |
+| `sitemap.xml` | 697 URL beralamat Railway | **698 URL, SEMUANYA `layarindo.com`** (railway lama **0**, vercel **0**) |
+| `og:url` di `/drama/master-pedang-yang-diremehkan` | — | `https://layarindo.com/drama/…` |
+| `/` `/beranda` `/film` `/discover` `/katalog` `/my-list` `/profile` `/api/dramas` | — | semua **200** |
+
+✅ **Sinyal ke Google konsisten:** situs lama `dramaapp-production-9e88.up.railway.app` kini
+**juga** menyebut canonical `https://layarindo.com`. Jadi kedua alamat sepakat soal mana yang
+asli — bahaya "dua sinyal bertabrakan" yang diperingatkan
+`docs/migrasi-railway-tahap6-pindah-domain.md` TIDAK terjadi, karena urutannya tidak dibalik.
+
+**Pagar format yang perlu diketahui sebelum mengubah variabel ini lagi** (`lib/site.ts`):
+garis miring di ujung AMAN (dibuang sendiri di `lib/site.ts:88`), tapi `http://` membuat
+**build GAGAL** — ada `throw` yang sengaja dipasang di `lib/site.ts:69`. Nilai kosong juga sah
+(jatuh ke `DEFAULT_SITE_URL`).
+
+### 🔴 SISA PEKERJAAN
+
+1. ~~Menunggu Playly~~ → ✅ **SELESAI 2026-11-26.** Playly sudah mendaftarkan `layarindo.com`.
+   Dibuktikan owner sendiri: membuka `layarindo.com` **di HP** lalu memutar satu drama — video
+   JALAN. Itu bukti yang menentukan untuk gerbang domain Playly; status 200 dari terminal tidak
+   bisa membuktikannya, karena blokirnya terjadi di dalam pemutar, bukan di jaringan.
+
+2. **Lima nilai cadangan masih menunjuk alamat Railway lama** — diverifikasi 2026-11-26,
+   kelimanya memang masih berisi alamat lama. Daftar + akibatnya:
+   `docs/migrasi-railway-tahap6-pindah-domain.md:429`. **Belum berbahaya** karena alamat lama
+   masih **200**; baru jadi masalah kalau alamat itu dimatikan. Yang paling berbahaya
+   `pc-backup-agent/start-video-services.ps1` (seluruh video mati, semua indikator tetap hijau)
+   — dan edit di repo BELUM berarti hidup di PC backup, berkas itu disalin manual.
+3. **Vercel masih mengalihkan ke alamat Railway, bukan ke domain baru.** Diukur 2026-11-26:
+   `https://dramaapp.vercel.app` → **308** → `https://dramaapp-production-9e88.up.railway.app/`.
+   Tidak rusak (rantainya tetap sampai ke situs yang benar, dan canonical di ujung sudah
+   `layarindo.com`), tapi jadi dua lompatan. Rapikan jadi langsung ke `https://layarindo.com`
+   saat menyentuh Vercel lagi.
+
+---
+
 ## 2026-11-25 (sore) — 📱 Bar bawah HP dipasang di HALAMAN DEPAN `/` (✅ TAYANG lewat `7728ffc`)
 
 **Laporan owner:** *"waktu itu sudah kita buat di bagian bawah untuk versi HP ada beranda, filter, film terbaru, bagikan kenapa sekarang tidak ada lagi"*.

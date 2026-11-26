@@ -578,8 +578,21 @@ export default function PlaylyPlayer({
                   type="button"
                   onClick={togglePip}
                   aria-label={pipAktif ? "Keluar dari Pop-up" : "Putar di Pop-up"}
+                  /* `hidden sm:flex` — PiP TIDAK digambar di layar HP (owner
+                     2026-11-26). Baris ini satu jalur lurus yang tak boleh
+                     patah dan tombolnya tak bisa menyusut: 7 tombol 36px +
+                     angka durasi melebihi lebar layar HP, jadi yang paling
+                     kanan terdorong keluar — layar penuh & menu titik tiga
+                     HILANG, menyisakan PiP di tepi (dilaporkan owner dengan
+                     dua tangkapan layar: utuh di laptop, terpotong di HP).
+                     Yang dikorbankan PiP karena ia paling jarang dipakai di
+                     HP; layar penuh dipakai hampir tiap kali menonton.
+                     ⚠️ `flex` diganti, BUKAN ditambahi `hidden`: dua kelas
+                     display di satu elemen saling menimpa tergantung urutan
+                     CSS, dan itu bergantung pada hal yang tak terlihat di
+                     berkas ini. */
                   className={cn(
-                    "flex size-9 items-center justify-center rounded-full transition hover:bg-white/15",
+                    "hidden size-9 items-center justify-center rounded-full transition hover:bg-white/15 sm:flex",
                     pipAktif ? "text-amber-400" : "text-white",
                   )}
                 >

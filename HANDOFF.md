@@ -108,6 +108,88 @@
 
 ---
 
+## 2026-11-26 — 🔀 Merge `feat/domain-layarindo` + 📏 TEMUAN BARU: rail `/feed` terpotong saat HP DIMIRINGKAN
+
+### ✅ `0f0102f` TAYANG — perbaikan layar penuh HP terbukti hidup
+
+Diukur dari berkas JS yang BENAR-BENAR dikirim ke browser penonton
+(`/_next/static/chunks/…`), bukan dari kode lokal:
+`Putar di Pop-up` → `className:"hidden size-9 … sm:flex"` · `Layar penuh` →
+`className:"flex size-9 …"` **tanpa** `hidden`. Persis dua arah yang dijaga tes.
+Smoke test `/` `/film` `/tonton/<id>` `/api/health` → **200**.
+
+### 🔀 Branch rekan `feat/domain-layarindo` ditarik (merge, bukan fast-forward)
+
+Gerbang **LOLOS 5/5** — build ✓ · tsc 0 error · **207 berkas / 2930 tes** · nol berkas rahasia.
+
+🪤 **Gerbang pertama untuk merge ini MEMBERI exit 127 PALSU.** Outputnya berhenti di tengah
+`npm test` lalu melapor "perintah tak ditemukan". Disk DICEK dan sehat (C 58 GB, D 49 GB kosong),
+jadi bukan kehabisan ruang — ini jebakan `npm` yang dijalankan di LATAR di mesin ini. Dijalankan
+ulang di DEPAN: exit 0, lolos 5/5. **Pelajaran: untuk gerbang, jangan pakai latar — exit 127 di
+sini berarti "mati di tengah", BUKAN "perintah tidak ada", dan membacanya sebagai lolos berarti
+merilis tanpa pernah menjalankan tes.**
+
+---
+
+### 🔴 TEMUAN BARU — rail `/feed` KELUAR LAYAR saat HP dimiringkan
+
+Owner meminta pemutar drama `/feed` diperiksa (komponennya lain dari `/tonton`:
+`ActionRail` + `PlayerControls`). Hasilnya **bukan** yang diduga siapa pun.
+
+⚠️ **Dugaan awal AI SALAH dan dikoreksi di sini supaya tidak diwarisi sesi berikutnya:**
+dihitung seolah rail digantung dari dasar LAYAR, padahal digantung dari dasar **kotak video** —
+panggung ber-`maxWidth: calc(100dvh * rasio)` / `maxHeight: calc(100vw / rasio)`
+(`FeedPlayer.tsx:785`). Titik gantungnya ikut rasio video, jadi angka dari hitungan kasar tidak
+berlaku. **Yang di bawah ini DIUKUR**, bukan dihitung: lebar/tinggi halaman dipaksa lewat CDP
+(`Emulation.setDeviceMetricsOverride`) — BUKAN `--window-size`, yang hanya mengatur jendela dan
+membuat uji "muat di layar HP" lolos palsu.
+
+**HP TEGAK — aman, kekhawatiran rekan tidak terbukti:**
+
+| Layar | Pucuk rail | Dasar tombol gerigi | Jarak |
+|---|---|---|---|
+| 360×640 | 146 | 44 | **+102px** ✅ |
+| 360×560 | 66 | 44 | **+22px** ✅ mepet |
+| 375×500 | 6 | 44 | **−38px** ❌ |
+| 320×480 | −14 | 44 | **−58px** ❌ |
+
+**HP DIMIRINGKAN (landscape) — rail keluar layar:**
+
+| Layar | Pucuk rail |
+|---|---|
+| 640×360 | **−134px** |
+| 844×390 | **−104px** |
+| 915×412 | **−82px** |
+
+Minus = pucuk rail di LUAR layar. Pada 640×360 sekitar **134px teratas terpotong**: avatar dan
+tombol **Suka** hilang seluruhnya, **Komen** separuh. **Tombol yang tak terlihat juga tak bisa
+diketuk** — dan memiringkan HP justru cara orang menonton video.
+
+Rail terukur **366px** dengan **7 item** (avatar · Suka · Komen · Simpan · Bagikan · Lapor ·
+Chat). Pada drama yang punya sumber unduhan, tombol **Unduh** menambah satu item lagi (+55px) —
+belum diukur, jadi jangan dianggap sama.
+
+**Bukan sepenuhnya bug baru, dan ini penting supaya tidak salah menyalahkan rilis kemarin:**
+hitungan (BUKAN ukuran) menunjukkan sebelum Lapor & Chat ditambahkan rail 110px lebih pendek,
+jadi terpotongnya hanya ~24px — nyaris tak terasa. Fitur kemarin **memperparah** masalah lama.
+
+🔎 **Belum diputuskan owner** apakah diperbaiki. Kalau nanti dikerjakan, jangan ulangi pengukuran
+dari nol — skrip CDP-nya sudah terbukti jalan, polanya: tab baru lewat `/json/new`,
+`Emulation.setDeviceMetricsOverride`, lalu `Runtime.evaluate` membaca `getBoundingClientRect`.
+Timeout per-perintah WAJIB, kalau tidak kegagalan tampil sebagai gantung tanpa pesan.
+
+🪤 **Localhost TIDAK bisa dipakai menguji ini.** Video drama tidak bisa diputar dari localhost
+(tercatat di `docs/panduan-lokal-rekan.md`), dan saat video gagal **rail tidak dirender sama
+sekali** — layarnya terlihat "normal tanpa rail", gampang disalahartikan sebagai "rail sudah
+hilang/diperbaiki". Ukur di produksi.
+
+🪤 **Chrome headless juga menampilkan "Sumber videonya sedang mati" di PRODUKSI.** Itu
+**artefak browser headless, BUKAN kerusakan produksi** — dibuktikan terpisah: `/api/teaser`
+mengalihkan ke tunnel Cloudflare dan berakhir **HTTP 200**. Jangan jadikan tangkapan layar
+headless sebagai bukti video mati.
+
+---
+
 ## 2026-11-26 — 📱 Tombol LAYAR PENUH hilang di HP pada pemutar film `/tonton` — DIPERBAIKI
 
 🐞 **Bug LOLOS KE PRODUKSI, dilaporkan owner** dengan dua tangkapan layar: baris kontrol pemutar

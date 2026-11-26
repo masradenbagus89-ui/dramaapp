@@ -35,7 +35,7 @@ if (existsSync(envPath)) {
 // situs yang salah lalu melaporkan "lulus" yang tak berarti apa-apa.
 // Daftar semua tempat penyimpan alamat cadangan:
 // docs/migrasi-railway-tahap6-pindah-domain.md ("Daftar nilai cadangan").
-const BASE = (process.env.E2E_BASE ?? "https://dramaapp-production-9e88.up.railway.app").replace(/\/+$/, "");
+const BASE = (process.env.E2E_BASE ?? "https://layarindo.com").replace(/\/+$/, "");
 const SB_URL = (process.env.SUPABASE_URL ?? "").replace(/\/+$/, "");
 const SB_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_KEY ?? "";
 

@@ -14,12 +14,16 @@
  * DITUTUP. Alamat cadangan yang menunjuk situs mati = canonical, sitemap, dan
  * robots.txt mengarahkan Google ke ketiadaan — tanpa satu pun gejala di layar.
  *
+ * Diubah 2026-11-26 ke domain sendiri `https://layarindo.com`. Selama
+ * NEXT_PUBLIC_SITE_URL di Railway masih berisi alamat Railway, nilai ini TIDAK
+ * terpakai — jadi rollback = isi ulang variabel itu, BUKAN menghapusnya.
+ *
  * ⚠️ Ini SATU dari beberapa tempat yang menyimpan alamat situs sebagai nilai
  * cadangan. Saat domain berganti lagi, ubah SEMUANYA sekaligus — daftar
  * lengkapnya ada di docs/migrasi-railway-tahap6-pindah-domain.md
  * ("Daftar nilai cadangan").
  */
-const DEFAULT_SITE_URL = "https://dramaapp-production-9e88.up.railway.app";
+const DEFAULT_SITE_URL = "https://layarindo.com";
 
 /**
  * Pagar untuk nilai NEXT_PUBLIC_SITE_URL. Mengembalikan pesan masalah, atau null

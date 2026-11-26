@@ -83,21 +83,43 @@ export function buatJudulSeo(d: SumberSeo): string {
   return muat ?? `${potongKata(jt, SEO_TITLE_MAX - MEREK.length)}${MEREK}`;
 }
 
-export function buatDeskripsiSeo(d: SumberSeo): string {
-  const judul = rapikan(d.title);
+/** "Nonton <judul> … di <SITE_NAME>." dengan judul yang sudah ditentukan. */
+function rangkaiPembuka(d: SumberSeo, judul: string): string {
   const tahun = rapikan(d.year);
   const jenis = isMovie(d)
     ? `film ${judul}${tahun ? ` (${tahun})` : ""} sub Indo`
     : `${judul}${tahun ? ` (${tahun})` : ""} sub Indo${d.episodes > 1 ? ` ${d.episodes} episode` : ""}`;
-  const pembuka = `Nonton ${jenis}${gratis(d) ? " gratis" : ""} di ${SITE_NAME}.`;
-  const genre = daftarGenre(d);
-  const dasar = genre.length ? `${pembuka} Genre ${genre.join(", ")}.` : pembuka;
+  return `Nonton ${jenis}${gratis(d) ? " gratis" : ""} di ${SITE_NAME}.`;
+}
+
+/**
+ * Pembuka yang SELALU utuh sampai nama situs: kalau kepanjangan, judulnya yang
+ * dipendekkan. Dulu seluruh kalimat dipotong dari belakang, jadi nama situs
+ * yang pertama terbuang ("… 60 episode di…").
+ */
+function pembukaMuat(d: SumberSeo): string {
+  const judul = rapikan(d.title);
+  const utuh = rangkaiPembuka(d, judul);
+  if (utuh.length <= SEO_DESCRIPTION_MAX) return utuh;
+  const ruangJudul = SEO_DESCRIPTION_MAX - (utuh.length - judul.length);
+  return rangkaiPembuka(d, potongKata(judul, ruangJudul));
+}
+
+/** Tambah "Genre A, B." sebanyak genre yang muat — dibuang per genre, bukan dipotong di tengah. */
+function tambahGenre(pembuka: string, genre: string[]): string {
+  for (let n = genre.length; n > 0; n--) {
+    const kalimat = `${pembuka} Genre ${genre.slice(0, n).join(", ")}.`;
+    if (kalimat.length <= SEO_DESCRIPTION_MAX) return kalimat;
+  }
+  return pembuka;
+}
+
+export function buatDeskripsiSeo(d: SumberSeo): string {
+  const dasar = tambahGenre(pembukaMuat(d), daftarGenre(d));
 
   const sinopsis = rapikan(d.synopsis);
   const sisa = SEO_DESCRIPTION_MAX - dasar.length - 1;
-  if (!sinopsis || sisa < POTONGAN_SINOPSIS_MIN) {
-    return potongKata(dasar, SEO_DESCRIPTION_MAX);
-  }
+  if (!sinopsis || sisa < POTONGAN_SINOPSIS_MIN) return dasar;
   return `${dasar} ${potongKata(sinopsis, sisa)}`;
 }
 

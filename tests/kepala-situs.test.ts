@@ -866,3 +866,77 @@ describe("halaman depan: navigasi bawah HP", () => {
     expect(punyaNavigasiBawah("/login")).toBe(false);
   });
 });
+
+describe("logo = pulang ke home, menu katalog punya tombol sendiri (owner 2026-11-27)", () => {
+  // Owner 2026-11-27: *"ketika diklik logo layarindo bukan menu genre yang
+  // muncul, tapi menu awal/home"*. Ini MEMBALIK keputusannya sendiri
+  // 2026-11-21 (logo = pemicu panel menu di HP), jadi penjaga ini ada untuk
+  // satu alasan: sesi berikutnya membaca komentar lama 11-21, mengira ini
+  // kemunduran, lalu "membetulkan"-nya balik.
+  const SEARCHBAR = "app/components/beranda/SearchBar.tsx";
+  const PEMANGGIL = [
+    "app/components/beranda/KepalaKatalog.tsx",
+    "app/components/beranda/PublicTopBars.tsx",
+  ];
+
+  it("tak ada lagi pemanggil yang mengirim `brandHp`", () => {
+    // `brandHp` = logo versi tanpa <Link>; keberadaannya berarti logo kembali
+    // jadi isi tombol, bukan tautan.
+    for (const berkas of PEMANGGIL) {
+      const sumber = readFileSync(berkas, "utf-8");
+      expect(sumber, `${berkas} mengirim brandHp lagi -- logo kembali jadi tombol`).not.toMatch(
+        /^\s*brandHp:/m,
+      );
+    }
+  });
+
+  it("logo tidak lagi dibungkus pemicu panel", () => {
+    const sumber = readFileSync(SEARCHBAR, "utf-8");
+    // `SheetTrigger` adalah satu-satunya cara logo bisa jadi pembuka panel di
+    // berkas ini; ketiadaannya mengunci perilaku barunya.
+    expect(sumber, "SearchBar memakai SheetTrigger lagi").not.toMatch(
+      /<SheetTrigger/,
+    );
+  });
+
+  it("panel menu katalog TETAP punya pembuka di HP", () => {
+    // Pagar terpenting di blok ini: menghapus pemicu dari logo TANPA
+    // menyediakan gantinya = menu Genre/Series/Populer hilang di HP, tanpa
+    // satu pun error. Tombol penggantinya wajib ada.
+    const sumber = readFileSync(SEARCHBAR, "utf-8");
+    expect(sumber, "tombol pembuka menu katalog hilang").toMatch(
+      /aria-label="Menu kategori"/,
+    );
+    expect(sumber, "tombolnya tidak menyalakan panel").toMatch(
+      /setMenuHpTerbuka\(true\)/,
+    );
+  });
+});
+
+describe("tombol besar baris unggulan (owner 2026-11-27)", () => {
+  // Owner: *"menu temukan tontonan favoritmu jadikan menu nonton bareng"*.
+  const BERKAS = "app/components/beranda/FeaturedRow.tsx";
+
+  it("bertuliskan Nonton Bareng, bukan tulisan lama", () => {
+    const sumber = readFileSync(BERKAS, "utf-8");
+    expect(sumber).toMatch(/>\s*Nonton Bareng\s*</);
+    // Tulisan lama hanya boleh tersisa di dalam KOMENTAR sejarah, tidak
+    // sebagai isi tombol yang tergambar.
+    expect(
+      sumber,
+      "tulisan lama kembali jadi isi tombol",
+    ).not.toMatch(/>\s*Temukan tontonan favoritmu\s*</);
+  });
+
+  it("menuju /film, dan tujuannya ditulis SEKALI", () => {
+    const sumber = readFileSync(BERKAS, "utf-8");
+    expect(sumber).toMatch(/export const HREF_TOMBOL_UTAMA = "\/film";/);
+    // Halaman depan tidak boleh menulis tujuannya sendiri lagi: dua tulisan
+    // untuk satu tombol = dua tujuan yang bisa menyimpang diam-diam.
+    const halamanDepan = readFileSync("app/page.tsx", "utf-8");
+    expect(
+      halamanDepan,
+      "app/page.tsx menulis heroHref sendiri lagi",
+    ).not.toMatch(/^\s*heroHref=/m);
+  });
+});

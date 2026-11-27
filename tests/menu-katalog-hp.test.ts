@@ -99,7 +99,14 @@ function potong(sumber: string, awal: string, akhir: string, dari = 0): string {
 
 describe("layar komputer dijaga oleh PEMICU, bukan oleh panelnya", () => {
   it("pemicu memakai md:hidden", () => {
-    const pemicu = potong(SEARCHBAR, "<SheetTrigger", "</SheetTrigger>");
+    // ⚠️ PEMICUNYA BUKAN LAGI `<SheetTrigger>` yang membungkus logo
+    // (owner 2026-11-27: *"ketika diklik logo layarindo bukan menu genre yang
+    // muncul, tapi menu awal/home"*). Kini ia tombol ikon tersendiri yang
+    // membuka panel lewat `setMenuHpTerbuka`. Yang DIJAGA tidak berubah
+    // sedikit pun: pemicu itu wajib `md:hidden`, sebab di layar komputer
+    // deretan menu aslinya sudah tergambar dan tombol kedua cuma
+    // membingungkan.
+    const pemicu = potong(SEARCHBAR, 'aria-label="Menu kategori"', "</button>");
     expect(
       pemicu,
       "pemicu panel tanpa md:hidden — tombolnya ikut tergambar di layar " +

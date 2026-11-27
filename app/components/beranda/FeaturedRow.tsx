@@ -28,10 +28,25 @@ import { Button } from "@/components/ui/button";
  * berkas ini tidak punya satu pun hook maupun penangan klik, jadi memaksanya
  * dirakit di browser cuma menambah JavaScript yang tidak dipakai.
  */
+/**
+ * Tujuan tombol besar di bawah baris unggulan ("NONTON BARENG").
+ *
+ * SATU nilai, bukan ditulis di tiap halaman: `/` dan `/beranda` sama-sama
+ * menggambar tombol ini, dan sampai 2026-11-27 keduanya memakai `/discover`
+ * dari dua tempat berbeda. Dua tulisan terpisah = dua tujuan yang bisa
+ * menyimpang tanpa ada yang tahu, persis jenis kerusakan yang sudah terjadi
+ * pada nama tab (lihat `judulDariLabel` di lib/tab-katalog.ts).
+ *
+ * `/film`, BUKAN `/discover`: baris poster DI ATAS tombol ini berisi film, dan
+ * seksi "Nonton Bareng" di bawahnya juga menuju `/film`. Mengirim penonton ke
+ * daftar drama sesudah ia melihat deretan film = janji yang tidak ditepati.
+ */
+export const HREF_TOMBOL_UTAMA = "/film";
+
 export default function FeaturedRow({
   dramas = [],
   items,
-  href = "/discover",
+  href = HREF_TOMBOL_UTAMA,
   title,
   cardHrefPrefix,
   cardClass = ROW_CARD_CLASS,
@@ -109,11 +124,26 @@ export default function FeaturedRow({
           panahSelalu={panahSelalu}
         />
 
-        {/* Tulisannya tetap "tontonan", bukan "film" (keputusan owner
-            2026-10-31, dipertahankan 2026-11-17). Tombol ini menuju katalog
-            lengkap (`href`, bawaan `/discover`), bukan halaman /film saja.
-            Menyebut "film" di tombol akan menjanjikan daftar yang lebih
-            sempit daripada tujuan kliknya. */}
+        {/* ⚠️ TULISANNYA "NONTON BARENG" sejak 2026-11-27 (owner: *"menu
+            temukan tontonan favoritmu jadikan menu nonton bareng"*), dan
+            tujuannya ikut berpindah ke `/film`.
+
+            Keduanya berubah BERSAMAAN dengan sengaja. "Nonton Bareng" adalah
+            nama seksi tepat di bawah tombol ini (label tab `terbaru`, diganti
+            owner 2026-11-24), dan tombol SEMUA seksi itu menuju `/film` —
+            sebab isinya film, bukan drama (lihat `SEKSI_BERISI_FILM` di
+            lib/tab-katalog.ts). Kalau tombol ini tetap menuju `/discover`
+            yang berisi DRAMA, dua tombol bernama sama di satu layar akan
+            mendarat di daftar yang isinya lain sama sekali.
+
+            🪤 JANGAN membacanya sebagai pintu fitur Nonton Bareng (room
+            tonton bersama). Fitur itu dimulai dari dalam pemutar film, dan
+            owner sudah diberi tahu bedanya sebelum memilih nama ini.
+
+            Riwayat yang digantikan: tulisan lama "Temukan tontonan favoritmu"
+            (owner 2026-10-31, dipertahankan 2026-11-17) sengaja memakai kata
+            "tontonan" karena tujuannya saat itu katalog campuran. Alasan itu
+            gugur begitu tujuannya jadi `/film`. */}
         {!title && tombolBawah && (
           <div className="mt-4 flex justify-center">
             <Button
@@ -128,7 +158,7 @@ export default function FeaturedRow({
                   tujuannya, jadi pembaca layar tidak perlu menyebut "ikon". */}
               <Link href={href} className="inline-flex items-center gap-2">
                 <Play className="size-4 shrink-0 fill-current" aria-hidden="true" />
-                Temukan tontonan favoritmu
+                Nonton Bareng
               </Link>
             </Button>
           </div>

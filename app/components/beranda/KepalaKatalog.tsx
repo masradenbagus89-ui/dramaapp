@@ -60,22 +60,15 @@ import type { SearchBarChrome } from "./SearchBar";
  * ruang yang dibutuhkan kotak cari, dan lambangnya sendiri sudah mengenalkan
  * situs.
  */
-export function LogoSitus({
-  href = "/beranda",
-  tanpaTautan = false,
-}: {
-  href?: string;
-  /**
-   * Gambar lambangnya saja, TANPA `<Link>` di dalamnya.
-   *
-   * Dipakai `SearchBarChrome.brandHp`: di HP logo ini duduk DI DALAM sebuah
-   * `<button>` pembuka menu katalog (owner 2026-11-21). Menaruh `<a>` di dalam
-   * `<button>` adalah HTML tidak sah — browser boleh merombak susunannya
-   * sendiri, dan pembaca layar mengumumkan dua kontrol bertumpuk. Jadi versi
-   * tanpa tautan ini BUKAN kerapian, melainkan syarat.
-   */
-  tanpaTautan?: boolean;
-}) {
+/* 🪦 Prop `tanpaTautan` DIBUANG 2026-11-27 bersama `SearchBarChrome.brandHp`.
+   Ia menggambar logo TANPA `<Link>` karena dulu logo duduk di dalam `<button>`
+   pembuka menu katalog di HP (owner 2026-11-21), dan `<a>` di dalam `<button>`
+   adalah HTML tidak sah. Sejak owner meminta logo kembali menuju home
+   (2026-11-27), tak ada lagi yang membungkusnya dengan tombol — jadi syarat
+   itu hilang bersama pemakainya. Kalau suatu hari logo jadi tombol lagi,
+   HIDUPKAN KEMBALI versi tanpa-tautan ini; jangan menaruh `<Link>` di dalam
+   `<button>`. */
+export function LogoSitus({ href = "/beranda" }: { href?: string }) {
   const KELAS = "flex shrink-0 items-center gap-2";
   const isi = (
     <>
@@ -136,7 +129,6 @@ export function LogoSitus({
     </>
   );
 
-  if (tanpaTautan) return <span className={KELAS}>{isi}</span>;
   return (
     <Link href={href} className={KELAS}>
       {isi}
@@ -244,7 +236,6 @@ export function chromeKatalog(menus: NavMenu[]): SearchBarChrome {
        sini — bukan di tiap pemakai — supaya keempat pemakai `chromeKatalog`
        (/beranda, /discover, kerangka pemuatannya, dan CatalogBrowser)
        mustahil menyimpang. */
-    brandHp: <LogoSitus tanpaTautan />,
     /* `undefined` saat katalog kosong, BUKAN elemen kosong. `NavMenus` memang
        memulangkan null, tapi ELEMEN-nya tetap ada sehingga gerbang
        `{chrome?.menus && …}` di SearchBar tetap terpenuhi — hasilnya wadah

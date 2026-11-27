@@ -119,7 +119,10 @@ export default async function LandingPage() {
         seriesTerbaru={seriesTerbaru}
         filmSeksi={filmSeksi}
         genres={genres}
-        heroHref="/discover"
+        /* `heroHref` SENGAJA tidak diisi lagi sejak 2026-11-27. Dulu halaman
+           ini menulis "/discover" sendiri sementara /beranda memakai bawaan —
+           dua tulisan untuk satu tombol yang sama. Tujuannya kini satu:
+           `HREF_TOMBOL_UTAMA` di FeaturedRow.tsx (= /film). */
         /* Bar "Lanjutkan Menonton" = pintu akun TUNGGAL halaman ini (owner
            2026-10-09): tertutup dulu, terbuka saat diklik. Di /beranda slot yang
            sama diisi baris riwayat, karena di sana penontonnya sudah login. */

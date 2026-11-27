@@ -9,8 +9,8 @@ import { alamatCari } from "@/lib/nav-katalog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { Search, X } from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Compass, Search, X } from "lucide-react";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import {
   LATAR_BAR_MEREK,
   LATAR_PANEL_KATALOG_HP,
@@ -29,31 +29,30 @@ import {
 export type SearchBarChrome = {
   /** Logo/identitas di ujung kiri. Halaman yang sudah punya TopNav mengosongkannya. */
   brand?: ReactNode;
-  /**
-   * Logo yang sama TAPI tanpa `<Link>` di dalamnya — dipakai sebagai isi tombol
-   * pembuka menu katalog di HP (owner 2026-11-21).
-   *
-   * Diisi = perilaku HP berubah: deretan menu (`menus`) disembunyikan sampai
-   * logo diklik. Dikosongkan = perilaku lama, menu selalu kelihatan. Jadi
-   * pemakai yang belum mengisinya TIDAK ikut berubah.
-   *
-   * Dipisah dari `brand` karena `<a>` di dalam `<button>` adalah HTML tidak
-   * sah — lihat `tanpaTautan` di KepalaKatalog.tsx.
-   */
-  brandHp?: ReactNode;
+  /* 🪦 `brandHp` DIBUANG 2026-11-27 — jangan dihidupkan lagi tanpa permintaan
+     baru. Ia logo versi tanpa-`<Link>` yang dulu jadi ISI tombol pembuka menu
+     katalog di HP (owner 2026-11-21). Owner membalik keputusan itu
+     2026-11-27 (*"ketika diklik logo layarindo bukan menu genre yang muncul,
+     tapi menu awal/home"*), jadi logo kembali jadi tautan di semua ukuran
+     layar dan pemicunya pindah ke tombol ikon tersendiri. Tanpa pemakai,
+     prop ini cuma jebakan: ia membuat pembaca mengira logo masih bisa jadi
+     tombol. */
   /**
    * ISI panel pop up menu katalog di HP (owner 2026-11-21: *"jangan di jadikan
    * dropdown tapi seperti pop up aja biar terlihat keren"*). Lihat
    * `MenuKatalogHp.tsx`.
    *
    * Diisi = deretan menu `menus` disembunyikan di HP dan digantikan panel yang
-   * naik dari bawah saat logo diketuk. Dikosongkan = perilaku lama, deretan
-   * menu tetap tergambar. Jadi pemakai yang belum mengisinya TIDAK ikut
-   * berubah — dan pemanggil boleh mengosongkannya saat katalog kosong supaya
-   * tombolnya tidak membuka panel hampa.
+   * dibuka lewat tombol ikon kompas di kelompok kanan bar. Dikosongkan =
+   * perilaku lama, deretan menu tetap tergambar. Jadi pemakai yang belum
+   * mengisinya TIDAK ikut berubah — dan pemanggil boleh mengosongkannya saat
+   * katalog kosong supaya tombolnya tidak membuka panel hampa.
    *
-   * Wajib berpasangan dengan `brandHp`: tanpa logo versi tanpa-tautan, tidak
-   * ada yang bisa jadi pemicunya.
+   * ⚠️ NILAI INI SENDIRIAN yang menentukan dua hal sekaligus (`panelHpAktif`):
+   * deretan menu disembunyikan di HP, DAN tombol pembukanya digambar. Satu
+   * nilai untuk dua keputusan itu disengaja — saat keduanya punya syarat
+   * sendiri-sendiri (sampai 2026-11-27 syaratnya `brandHp && menusHp`),
+   * lahir keadaan "menu disembunyikan tapi tak ada tombol pembukanya".
    */
   menusHp?: ReactNode;
   /** Deretan menu dropdown katalog (lihat NavMenus.tsx). */
@@ -194,7 +193,17 @@ export default function SearchBar({
    * disembunyikan tapi tak ada tombol yang bisa membukanya lagi", tanpa satu
    * pun error.
    */
-  const panelHpAktif = Boolean(chrome?.brandHp && chrome?.menusHp);
+  const panelHpAktif = Boolean(chrome?.menusHp);
+  /**
+   * Panel menu katalog di HP terbuka atau tidak.
+   *
+   * Dikendalikan dari sini (bukan `SheetTrigger`) sejak 2026-11-27: pemicunya
+   * pindah ke tombol ikon di kelompok KANAN bar, sedangkan `SheetContent`
+   * tetap duduk di kelompok KIRI. Dua tempat berbeda tidak bisa dihubungkan
+   * oleh `SheetTrigger` tanpa memindahkan panelnya — dan panel itu memuat
+   * ~100 baris aturan ukuran & animasi yang sudah tiga kali dikoreksi owner.
+   */
+  const [menuHpTerbuka, setMenuHpTerbuka] = useState(false);
   const [cariTerbuka, setCariTerbuka] = useState(bukaAwal);
   const kotakRef = useRef<HTMLInputElement>(null);
 
@@ -357,10 +366,25 @@ export default function SearchBar({
           >
             {panelHpAktif ? (
               <>
-                {/* DI HP: logo = pemicu PANEL POP UP menu katalog (owner
-                    2026-11-21: *"ketika di klik D keluar genre, series,
-                    populer, negara"* lalu *"jangan di jadikan dropdown tapi
-                    seperti pop up aja biar terlihat keren"*).
+                {/* ⚠️ LOGO BUKAN LAGI PEMICU PANEL (owner 2026-11-27: *"ketika
+                    diklik logo layarindo bukan menu genre yang muncul, tapi
+                    menu awal/home"*). Ini MEMBALIK keputusan owner 2026-11-21
+                    (*"ketika di klik D keluar genre, series, populer,
+                    negara"*), dan pembalikannya disengaja — bukan kelalaian
+                    yang perlu "dibetulkan" balik oleh sesi berikutnya.
+
+                    Panelnya TIDAK dihapus, cuma pindah pemicu: owner memilih
+                    *"beri tombol ikon sendiri"* supaya nol menu hilang di HP.
+                    Tombolnya ada di kelompok kanan bar (dekat kaca pembesar),
+                    dan panel ini kini dikendalikan `menuHpTerbuka` — bukan
+                    `SheetTrigger` — justru supaya `SheetContent` di bawah
+                    TIDAK perlu dipindah: memindahkannya berarti menggunting
+                    ~100 baris aturan animasi & ukuran panel yang sudah tiga
+                    kali dikoreksi owner.
+
+                    Riwayat alasan panel ini (jangan dibuang):
+                    owner 2026-11-21 *"jangan di jadikan dropdown tapi seperti
+                    pop up aja biar terlihat keren"*.
 
                     ⚠️ `md:hidden` DIPASANG DI PEMICUNYA, dan HANYA di situ —
                     jangan dipindah ke `<SheetContent>`. `SheetContent`
@@ -397,21 +421,7 @@ export default function SearchBar({
                     satu yang diubah lewat JavaScript: mengukur lebar layar
                     sendiri di JS membuat ambangnya bisa menyimpang dari ambang
                     Tailwind, dan menyimpangnya tak memunculkan error. */}
-                <Sheet>
-                  <SheetTrigger
-                    aria-label="Menu katalog"
-                    /* ⚠️ `focus-visible:ring-…`, JANGAN `focus-visible:bg-black/25`
-                       seperti tombol lain di bar ini. Sejak kepala situs di HP
-                       jadi gelap (`KELAS_KEPALA_GELAP_HP` = `bg-zinc-950`),
-                       sorotan hitam-transparan di atas latar hitam = TIDAK
-                       TERLIHAT, sementara `outline-none` sudah membuang cincin
-                       bawaan browser. Hasilnya pemakai papan ketik kehilangan
-                       jejak fokusnya tepat di satu-satunya ukuran layar tempat
-                       tombol ini hidup. */
-                    className="flex items-center rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-emas-400 md:hidden"
-                  >
-                    {chrome.brandHp}
-                  </SheetTrigger>
+                <Sheet open={menuHpTerbuka} onOpenChange={setMenuHpTerbuka}>
                   <SheetContent
                     side="bottom"
                     /* Tombol X bawaan dimatikan: ukurannya ~16px di pojok
@@ -504,9 +514,10 @@ export default function SearchBar({
                     {chrome.menusHp}
                   </SheetContent>
                 </Sheet>
-                {/* Di layar komputer logo tetap TAUTAN ke beranda, persis
-                    seperti sebelumnya — nol perubahan di sana. */}
-                <div className="hidden md:block">{chrome.brand}</div>
+                {/* Logo = TAUTAN ke beranda di SEMUA ukuran layar sejak
+                    2026-11-27. Dulu baris ini `hidden md:block` karena di HP
+                    tempatnya dipakai pemicu panel. */}
+                {chrome.brand}
               </>
             ) : (
               chrome.brand
@@ -608,6 +619,40 @@ export default function SearchBar({
               <div className="min-w-0 flex-1 md:max-w-md">
                 {formCari("flex w-full items-stretch")}
               </div>
+            )}
+
+            {/* TOMBOL MENU KATALOG — khusus HP, dan hanya kalau panelnya
+                memang ada isinya (`panelHpAktif`). Lahir 2026-11-27 saat owner
+                meminta logo kembali jadi tautan ke home; ia PENGGANTI pemicu
+                yang dulu menempel di logo, bukan tombol tambahan yang
+                menumpuk.
+
+                Ikonnya `Compass`, SENGAJA bukan garis-tiga: owner melepas
+                tombol garis-tiga 2026-11-14 dan memilih *"tombol ikon
+                sendiri"*. Sengaja juga bukan kotak-kotak — bentuk itu sudah
+                dipakai menu AKUN di ujung kanan (MenuAkun `ringkas`), dan dua
+                ikon kembar bersebelahan membuat penonton menebak mana yang
+                mana. */}
+            {panelHpAktif && (
+              <button
+                type="button"
+                onClick={() => setMenuHpTerbuka(true)}
+                /* Namanya SENGAJA beda dari <nav aria-label="Menu katalog">
+                   di NavMenus.tsx: dua kontrol bernama sama di satu halaman
+                   membuat pembaca layar menyebut keduanya persis sama, dan
+                   pemakainya tak bisa membedakan mana yang membuka panel. */
+                aria-label="Menu kategori"
+                aria-haspopup="dialog"
+                aria-expanded={menuHpTerbuka}
+                className={cn(
+                  TEKS_BAR_MEREK,
+                  SOROT_BAR_MEREK,
+                  "flex size-9 shrink-0 items-center justify-center rounded-sm transition-colors outline-none md:hidden",
+                  menuHpTerbuka && "bg-emas-500/25",
+                )}
+              >
+                <Compass className="size-5" />
+              </button>
             )}
 
             <button

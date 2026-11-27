@@ -76,7 +76,6 @@ export default function PublicTopBars({ menus, indeksSaran }: Props) {
              Halaman depan WAJIB ikut: `/` dan `/beranda` sudah sengaja
              disamakan sejak 2026-10-28, dan kepala yang berbeda di antara
              keduanya persis keluhan "beda dengan Home" yang pernah ada. */
-          brandHp: <LogoSitus href="/" tanpaTautan />,
           /* Panel pop up menu katalog di HP (owner 2026-11-21). Dikosongkan
              saat katalog kosong — alasannya ditulis sekali di
              `chromeKatalog()` (KepalaKatalog.tsx). */

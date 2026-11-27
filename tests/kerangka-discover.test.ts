@@ -137,11 +137,15 @@ describe("kotak cari kerangka /discover", () => {
     expect(chrome).toBeTruthy();
     expect(chrome?.brand).toBeTruthy();
     expect(chrome?.menus).toBeTruthy();
-    // Slot HP (owner 2026-11-21): logo versi tanpa-tautan sebagai pemicu, dan
-    // isi panel pop up-nya. Keduanya WAJIB ikut ke kerangka — kalau tidak,
-    // kepala situs MELOMPAT bentuknya tepat saat isi sungguhan masuk, persis
-    // jenis kerusakan yang berkas ini memang ada untuk mencegahnya.
-    expect(chrome?.brandHp).toBeTruthy();
+    // Isi panel pop up HP WAJIB ikut ke kerangka — kalau tidak, kepala situs
+    // MELOMPAT bentuknya tepat saat isi sungguhan masuk, persis jenis
+    // kerusakan yang berkas ini memang ada untuk mencegahnya.
+    //
+    // ⚠️ `brandHp` DIBUANG dari pemeriksaan ini 2026-11-27, bukan karena
+    // longgar: prop-nya sendiri sudah tidak ada lagi. Owner meminta logo
+    // kembali jadi tautan ke home, jadi pemicu panel pindah ke tombol ikon
+    // tersendiri di dalam SearchBar — tidak lagi dikirim pemanggil. Yang
+    // dijaga tetap sama kerasnya: `menusHp` ada = panel + tombolnya hidup.
     expect(chrome?.menusHp).toBeTruthy();
   });
 

@@ -90,7 +90,9 @@
 > aftermarket** dari pemilik sekarang, harganya **jauh di atas** Rp200.000 dan belum pernah dicek.
 > Nama lain yang masih bebas jauh lebih murah.
 
-**Terakhir diisi:** 2026-11-27 (sore) — ✅ **RILIS `b082924` TAYANG, antrean KOSONG** (`main` = `origin` = `dramaku`). Owner mengirim tangkapan layar tujuh poster film dan meminta dihapus; yang ditemukan jauh lebih besar dari poster: **8 judul itu tidak ada di database, kartunya bisa diklik, dan SEMUANYA 404** (diuji 8 dari 8 di produksi). ⭐ **Kenapa bisa tampil:** `next build` SENGAJA membaca `data/dramas.json` (jaring pengaman supaya build tak mati saat Supabase bermasalah — TIDAK disentuh), dan berkas itu sudah melenceng (**42 lokal vs 40 database**). Halaman prerender membawa judul hantu **sampai menyegarkan diri 1 menit kemudian** — itulah kenapa owner melihatnya persis beberapa menit sesudah rilis sebelumnya. 🛡️ **Dua keputusan yang menahan kerusakan:** daftar id **tidak ditulis tangan** (dihitung dari selisih lokal vs produksi, batal kalau katalog <30 judul atau buangan >12), dan **TIDAK menimpa berkas dengan isi `/api/dramas`** sebab keluaran API tak memuat 10 field (`kind`, `imdbId`, `genre`, `director`, …) — "menyegarkan" lewat API justru menghapus data. Hasil: **201 baris dihapus, nol baris lain berubah**. ✅ **Yang hampir terlewat & sudah diperiksa:** apakah ada baris jadi kosong? Tidak — `dramas?kind=eq.movie` di Supabase memulangkan **`[]`**, produksi memang nol film, jadi berkas cadangan kini SAMA dengan kenyataan. ⚠️ `avengers-doomsday` yang masih muncul itu **film Playly ASLI** (`/tonton/avengers-doomsday-1795277615240`), bukan hantu — jangan ikut dihapus. 🎯 **Bukti:** `origin/main:data/dramas.json` **34 judul · 0 hantu · 0 movie**; produksi **0 tautan hantu di 4 halaman** (`/katalog` `/shorts` `/beranda` `/discover`); enam alamat **200**; gerbang build exit 0 · tsc 0 · **2942 tes hijau**. ⚠️ **Batas kejujuran:** perubahan ini **data saja, nol kode**, jadi nama berkas JS produksi tak berubah dan **tidak ada penanda dari luar** untuk memastikan build mana yang tayang — konfirmasi `success` di panel Railway tetap perlu mata owner. 🔴 **Masih melenceng:** **6 drama HIDUP belum ada di berkas cadangan** (kalau Supabase mati, keenamnya hilang dari jaring pengaman) — perbaikannya harus baca tabel Supabase langsung, bukan `/api/dramas`. 💡 Penjaga drift (robot terjadwal pembanding berkas vs `/api/dramas`) belum dipasang.
+**Terakhir diisi:** 2026-11-27 (malam) — ✅ **RILIS `0cc6b9e` TAYANG, antrean KOSONG** (`main` = `origin` = `dramaku`). Owner: *"hilangkan saja radenbagus89, buat seragamkan saja Ikon Dashboard"*. ⭐ **Bentuk ringkasnya BUKAN dibuat baru** — sudah ada sejak 2026-11-25 dan dipakai /beranda & /discover; yang tertinggal justru **navbar hitam** (`TopNav`) yang masih memakai lingkaran berinisial + nama. Jadi "seragamkan" = satu wajah di seluruh situs, satu prop, nol komponen baru. **Terdampak semua halaman bernavbar hitam:** `/admin` `/profile` `/history` `/my-list` `/shorts` — perubahan yang DILIHAT penonton, bukan cuma admin. Isi menunya **nol berkurang** (Profile · Riwayat · Favorit · Admin · Keluar), penting sebab di layar komputer itulah satu-satunya jalan ke Admin & Keluar sejak tombol garis-tiga dilepas 14 Nov. 🛡️ **Penjaga baru (3 tes) + DIUJI-BALIK:** `TopNav` & `KepalaKatalog` wajib `pemicu="ringkas"`, `<MenuAkun />` polos ditolak; dikembalikan ke bentuk lama → **2 tes merah**, dipasang lagi → hijau. Kemundurannya senyap, jadi mesin yang mengingat. 🎯 **Bukti tayang:** penanda `pemicu:"ringkas"` di bundel JS produksi **naik 1 → 2** sesudah deploy; sembilan alamat **200**; gerbang build exit 0 · tsc 0 · **2945 tes hijau**. ⚠️ **Batas kejujuran:** chip itu hanya tergambar **sesudah login** dan dirender di browser, jadi tak bisa dibuktikan dari HTML server — bukti matanya tetap milik owner (buka `/admin` sambil login). 🪤 Jangan ulangi: login otomatis dari komputer ini GAGAL (200 tapi tetap di `/login`, dokumen `admins` terbaca kosong), dan jangan memanggil endpoint yang tidak ada lalu mencetak balasannya (`/api/auth/me` tidak ada → tercetak halaman 404 utuh, ribuan karakter sia-sia). 🔴 **Dua tawaran belum dijawab owner:** (1) mau dipersempit ke panel admin saja? (2) nama masih muncul di DALAM menu sebagai *"Masuk sebagai …"* — dihapus juga atau tidak?
+
+**Sebelumnya hari ini:** 2026-11-27 (sore) — ✅ **RILIS `b082924` TAYANG, antrean KOSONG** (`main` = `origin` = `dramaku`). Owner mengirim tangkapan layar tujuh poster film dan meminta dihapus; yang ditemukan jauh lebih besar dari poster: **8 judul itu tidak ada di database, kartunya bisa diklik, dan SEMUANYA 404** (diuji 8 dari 8 di produksi). ⭐ **Kenapa bisa tampil:** `next build` SENGAJA membaca `data/dramas.json` (jaring pengaman supaya build tak mati saat Supabase bermasalah — TIDAK disentuh), dan berkas itu sudah melenceng (**42 lokal vs 40 database**). Halaman prerender membawa judul hantu **sampai menyegarkan diri 1 menit kemudian** — itulah kenapa owner melihatnya persis beberapa menit sesudah rilis sebelumnya. 🛡️ **Dua keputusan yang menahan kerusakan:** daftar id **tidak ditulis tangan** (dihitung dari selisih lokal vs produksi, batal kalau katalog <30 judul atau buangan >12), dan **TIDAK menimpa berkas dengan isi `/api/dramas`** sebab keluaran API tak memuat 10 field (`kind`, `imdbId`, `genre`, `director`, …) — "menyegarkan" lewat API justru menghapus data. Hasil: **201 baris dihapus, nol baris lain berubah**. ✅ **Yang hampir terlewat & sudah diperiksa:** apakah ada baris jadi kosong? Tidak — `dramas?kind=eq.movie` di Supabase memulangkan **`[]`**, produksi memang nol film, jadi berkas cadangan kini SAMA dengan kenyataan. ⚠️ `avengers-doomsday` yang masih muncul itu **film Playly ASLI** (`/tonton/avengers-doomsday-1795277615240`), bukan hantu — jangan ikut dihapus. 🎯 **Bukti:** `origin/main:data/dramas.json` **34 judul · 0 hantu · 0 movie**; produksi **0 tautan hantu di 4 halaman** (`/katalog` `/shorts` `/beranda` `/discover`); enam alamat **200**; gerbang build exit 0 · tsc 0 · **2942 tes hijau**. ⚠️ **Batas kejujuran:** perubahan ini **data saja, nol kode**, jadi nama berkas JS produksi tak berubah dan **tidak ada penanda dari luar** untuk memastikan build mana yang tayang — konfirmasi `success` di panel Railway tetap perlu mata owner. 🔴 **Masih melenceng:** **6 drama HIDUP belum ada di berkas cadangan** (kalau Supabase mati, keenamnya hilang dari jaring pengaman) — perbaikannya harus baca tabel Supabase langsung, bukan `/api/dramas`. 💡 Penjaga drift (robot terjadwal pembanding berkas vs `/api/dramas`) belum dipasang.
 
 **Sebelumnya hari ini:** 2026-11-27 — ✅ **RILIS `7a916c4` → `c900feb` TAYANG.** Owner memberi izin *"rilis sekarang"*; antrean kini **KOSONG** (`main` = `origin` = `dramaku` = `c900feb`). **4 commit · 9 berkas.** 🎬 **Yang paling penting: pemutar drama tak lagi DIAM.** Owner melapor dua kali hari ini — layar hitam, `0:00 / 0:00`, tanpa satu pun pesan. Sebabnya ketemu: panel *"Video sedang tidak bisa diputar + Coba lagi"* **hanya** digambar kalau `<video>` melempar event `error`; saat sumbernya cuma LAMBAT atau alamat tunnelnya basi, error itu **tidak pernah** dilempar sehingga pemutar menunggu selamanya. Kini: lewat **12 detik** tanpa metadata → **minta alamat BARU sendiri** (alamat quick tunnel berganti acak tiap PC backup restart); masih nihil → panel + tombol. Kalimat panel diralat dari *"sumber videonya sedang mati"* jadi *"bermasalah atau sangat lambat"* — hari ini sumbernya memang **pulih sendiri**, dan kata "mati" membuat penonton pergi. 🎯 **Dibuktikan di Chrome SUNGGUHAN atas PRODUKSI, dua keadaan:** normal → `readyState 4`, durasi 139 dtk, **nol panel**, alamat diminta 1×; menggantung (gejala owner) → alamat ep aktif diminta **2×** lalu panel + tombol muncul. Plus 10 alamat **200**, halaman nonton drama & film **200**. 🪤 **Gerbang: `npm run gerbang` MATI lagi dengan exit 127 PALSU di langkah 4** (jebakan npm bersarang, sudah tercatat) — langkah 1-3 lolos di dalamnya, langkah 4 dijalankan langsung tanpa npm bersarang: **208 berkas / 2942 tes hijau**, nol berkas rahasia. 🪤 **Dua jebakan uji yang menipu saya hari ini:** (a) **memblokir** host video TIDAK menguji perbaikan ini — blokir memicu `error` sehingga yang teruji jalur LAMA; tiruan yang benar = CDP `Fetch` menahan permintaan tanpa pernah menjawab; (b) **server lokal tak bisa memutar video drama sama sekali** (kunci penanda tangan hanya di Railway → tunnel balas **403**), jadi uji "jalur sehat" wajib membelokkan permintaan ke alamat PRODUKSI. 📋 Ikut tayang: **pindai TUNTAS 651 film Playly → 70 (10,8%) berkasnya hilang** di mitra (daftar judul di `docs/film-playly-tanpa-berkas-2026-11-27.txt`), alat diagnosa `pc-backup-agent/cek-jalur-kirim.ps1`, dan ralat `nobar-server/README.md`. 🔴 **TIGA hal terbuka:** (1) **akar masalah video drama TIDAK tersentuh** — selama disiarkan dari PC backup lewat quick tunnel gratis, kejadian ini AKAN terulang; jalan keluar permanen = named tunnel (`pc-backup-agent/README.md` Bagian B) atau pindahkan video drama ke R2 seperti film (terukur 1.517 KB/dtk vs 21-85 KB/dtk hari ini); (2) **Tahap B menyembunyikan 70 film mati** menunggu keputusan owner; (3) **BUG BARU belum diperbaiki** — Cloudflare mengganti badan balasan 5xx, sehingga penonton film yang videonya hilang melihat *"Gagal menghubungi server. Cek koneksi lalu coba lagi."* padahal koneksinya sehat.
 
@@ -109,6 +111,60 @@
 **Rincian kontrol volume (putaran KETIGA):** owner menolak bentuk tombol `+` / `−` dan mengirim contoh gambar, jadi pengatur volume kini **garis geser tegak berbentuk kapsul** (jalur kuning + bulatan penggeser). Diukur di Chrome headless layar 393px: kapsul `x=345..381` **utuh di dalam layar**, geser jari atas→100% / tengah→50% / bawah→bisu, nol elemen diputar. Gerbang lolos 5/5 (2383 tes hijau). ✅ **Sudah TAYANG** dalam rilis `53fbc5c → a9ae869` malam itu juga.
 
 **Sebelumnya hari ini:** ✅ **`2ad015b` + `8d8c1ba` TAYANG.** Tata letak pemutar beres dalam tiga putaran permintaan owner: tombol **Eps turun ke baris paling bawah**, tombol **volume pindah ke sebelah angka durasi**, rail ikon kanan **diperkecil & dirapatkan** (36px/20px/jarak 8px), dan garis volume tegak **diganti tombol + / −** karena terukur berdiri di **x=391 pada layar 393px = di luar layar HP**. Rinciannya di seksi `## 2026-11-13` di bawah.
+
+---
+
+## 2026-11-27 (malam) — ✅ `0cc6b9e` TAYANG: pojok kanan jadi ikon saja, nama penonton dilepas
+
+Owner melihat panel admin dan meminta: *"ada di sebelah kanan M radenbagus89 — kamu hilangkan
+saja radenbagus89, buat seragamkan saja Ikon Dashboard"*.
+
+⭐ **Bentuk ringkasnya BUKAN dibuat baru.** Ia sudah ada sejak 2026-11-25 dan sudah dipakai
+`/beranda` & `/discover`; yang tertinggal justru **navbar hitam** (`TopNav`), yang masih memakai
+bentuk `avatar` — lingkaran berinisial + nama. Jadi permintaan "seragamkan" dikerjakan sebagai
+**satu wajah di seluruh situs**, bukan dengan menggambar ikon baru. Satu prop, nol komponen baru.
+
+**Terdampak semua halaman bernavbar hitam:** `/admin` `/profile` `/history` `/my-list` `/shorts`.
+Disebut terang-terangan karena ini perubahan yang DILIHAT penonton, bukan cuma admin.
+
+**Yang hilang cuma yang terlihat sebelum diklik.** Isi menunya nol berkurang: Profile · Riwayat ·
+Favorit · Admin · Keluar tetap di balik ikon yang sama — penting, sebab di layar komputer menu
+itulah satu-satunya jalan ke **Admin** dan **Keluar** sejak tombol garis-tiga dilepas 2026-11-14.
+
+### Penjaga baru (3 tes) + diuji-balik
+
+`tests/menu-akun.test.ts` kini mengunci: `TopNav` **dan** `KepalaKatalog` wajib memakai
+`pemicu="ringkas"`, dan `<MenuAkun />` polos **ditolak** (bawaannya `avatar`). Kemundurannya
+SENYAP — melepas satu prop tidak membuat apa pun error, tesnya tetap hijau, dan namanya diam-diam
+muncul lagi di pojok kanan. **Diuji-balik:** dikembalikan ke `<MenuAkun />` → **2 tes merah**;
+dipasang lagi → hijau.
+
+### Bukti tayang
+
+| Yang diukur | Hasil |
+|---|---|
+| Penanda `pemicu:"ringkas"` di bundel JS produksi | **1 → 2** sesudah deploy ✅ |
+| Sembilan alamat (`/` `/beranda` `/katalog` `/shorts` `/film` `/profile` `/my-list` `/admin` `/api/health`) | **200** |
+| Gerbang | build exit 0 · tsc 0 error · 208 berkas / **2945 tes hijau** |
+
+⚠️ **BATAS KEJUJURAN — bagian ini TIDAK terbukti dari terminal.** Chip itu hanya tergambar
+**sesudah login** dan dirender di browser, jadi mustahil dibaca dari HTML server (batas yang sama
+sudah tercatat 2026-11-25). Yang terbukti: kode pemanggilnya sudah berubah di bundel produksi.
+Yang masih perlu mata owner: buka `/admin` sambil login, pastikan pojok kanan tinggal ikon dan
+menunya tetap lengkap saat diklik.
+
+🪤 **Jangan ulangi:** percobaan login otomatis dari komputer ini **gagal** — `/api/auth/login`
+membalas 200 tapi halaman tetap di `/login`, dan dokumen `admins` di `app_data` terbaca kosong
+dari sini, jadi sesi yang terbentuk bukan admin. Jangan habiskan waktu mengulanginya; dan
+JANGAN memanggil endpoint yang tidak ada lalu mencetak balasannya (`/api/auth/me` tidak ada —
+yang tercetak halaman 404 utuh, ribuan karakter sia-sia).
+
+### 🔴 Dua hal yang ditawarkan ke owner & BELUM dijawab
+
+1. Perubahan ini berlaku **di semua halaman bernavbar hitam**, bukan hanya `/admin`. Kalau owner
+   mau khusus panel admin, tinggal dipersempit (prop-nya per-pemanggil).
+2. Nama masih muncul **di dalam** menunya sebagai baris *"Masuk sebagai Mas radenbagus89"* (baru
+   terlihat sesudah diklik). Sengaja dipertahankan supaya jelas sedang masuk sebagai siapa.
 
 ---
 

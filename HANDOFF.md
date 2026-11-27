@@ -90,7 +90,9 @@
 > aftermarket** dari pemilik sekarang, harganya **jauh di atas** Rp200.000 dan belum pernah dicek.
 > Nama lain yang masih bebas jauh lebih murah.
 
-**Terakhir diisi:** 2026-11-27 — ✅ **RILIS `7a916c4` → `c900feb` TAYANG.** Owner memberi izin *"rilis sekarang"*; antrean kini **KOSONG** (`main` = `origin` = `dramaku` = `c900feb`). **4 commit · 9 berkas.** 🎬 **Yang paling penting: pemutar drama tak lagi DIAM.** Owner melapor dua kali hari ini — layar hitam, `0:00 / 0:00`, tanpa satu pun pesan. Sebabnya ketemu: panel *"Video sedang tidak bisa diputar + Coba lagi"* **hanya** digambar kalau `<video>` melempar event `error`; saat sumbernya cuma LAMBAT atau alamat tunnelnya basi, error itu **tidak pernah** dilempar sehingga pemutar menunggu selamanya. Kini: lewat **12 detik** tanpa metadata → **minta alamat BARU sendiri** (alamat quick tunnel berganti acak tiap PC backup restart); masih nihil → panel + tombol. Kalimat panel diralat dari *"sumber videonya sedang mati"* jadi *"bermasalah atau sangat lambat"* — hari ini sumbernya memang **pulih sendiri**, dan kata "mati" membuat penonton pergi. 🎯 **Dibuktikan di Chrome SUNGGUHAN atas PRODUKSI, dua keadaan:** normal → `readyState 4`, durasi 139 dtk, **nol panel**, alamat diminta 1×; menggantung (gejala owner) → alamat ep aktif diminta **2×** lalu panel + tombol muncul. Plus 10 alamat **200**, halaman nonton drama & film **200**. 🪤 **Gerbang: `npm run gerbang` MATI lagi dengan exit 127 PALSU di langkah 4** (jebakan npm bersarang, sudah tercatat) — langkah 1-3 lolos di dalamnya, langkah 4 dijalankan langsung tanpa npm bersarang: **208 berkas / 2942 tes hijau**, nol berkas rahasia. 🪤 **Dua jebakan uji yang menipu saya hari ini:** (a) **memblokir** host video TIDAK menguji perbaikan ini — blokir memicu `error` sehingga yang teruji jalur LAMA; tiruan yang benar = CDP `Fetch` menahan permintaan tanpa pernah menjawab; (b) **server lokal tak bisa memutar video drama sama sekali** (kunci penanda tangan hanya di Railway → tunnel balas **403**), jadi uji "jalur sehat" wajib membelokkan permintaan ke alamat PRODUKSI. 📋 Ikut tayang: **pindai TUNTAS 651 film Playly → 70 (10,8%) berkasnya hilang** di mitra (daftar judul di `docs/film-playly-tanpa-berkas-2026-11-27.txt`), alat diagnosa `pc-backup-agent/cek-jalur-kirim.ps1`, dan ralat `nobar-server/README.md`. 🔴 **TIGA hal terbuka:** (1) **akar masalah video drama TIDAK tersentuh** — selama disiarkan dari PC backup lewat quick tunnel gratis, kejadian ini AKAN terulang; jalan keluar permanen = named tunnel (`pc-backup-agent/README.md` Bagian B) atau pindahkan video drama ke R2 seperti film (terukur 1.517 KB/dtk vs 21-85 KB/dtk hari ini); (2) **Tahap B menyembunyikan 70 film mati** menunggu keputusan owner; (3) **BUG BARU belum diperbaiki** — Cloudflare mengganti badan balasan 5xx, sehingga penonton film yang videonya hilang melihat *"Gagal menghubungi server. Cek koneksi lalu coba lagi."* padahal koneksinya sehat.
+**Terakhir diisi:** 2026-11-27 (sore) — ✅ **RILIS `b082924` TAYANG, antrean KOSONG** (`main` = `origin` = `dramaku`). Owner mengirim tangkapan layar tujuh poster film dan meminta dihapus; yang ditemukan jauh lebih besar dari poster: **8 judul itu tidak ada di database, kartunya bisa diklik, dan SEMUANYA 404** (diuji 8 dari 8 di produksi). ⭐ **Kenapa bisa tampil:** `next build` SENGAJA membaca `data/dramas.json` (jaring pengaman supaya build tak mati saat Supabase bermasalah — TIDAK disentuh), dan berkas itu sudah melenceng (**42 lokal vs 40 database**). Halaman prerender membawa judul hantu **sampai menyegarkan diri 1 menit kemudian** — itulah kenapa owner melihatnya persis beberapa menit sesudah rilis sebelumnya. 🛡️ **Dua keputusan yang menahan kerusakan:** daftar id **tidak ditulis tangan** (dihitung dari selisih lokal vs produksi, batal kalau katalog <30 judul atau buangan >12), dan **TIDAK menimpa berkas dengan isi `/api/dramas`** sebab keluaran API tak memuat 10 field (`kind`, `imdbId`, `genre`, `director`, …) — "menyegarkan" lewat API justru menghapus data. Hasil: **201 baris dihapus, nol baris lain berubah**. ✅ **Yang hampir terlewat & sudah diperiksa:** apakah ada baris jadi kosong? Tidak — `dramas?kind=eq.movie` di Supabase memulangkan **`[]`**, produksi memang nol film, jadi berkas cadangan kini SAMA dengan kenyataan. ⚠️ `avengers-doomsday` yang masih muncul itu **film Playly ASLI** (`/tonton/avengers-doomsday-1795277615240`), bukan hantu — jangan ikut dihapus. 🎯 **Bukti:** `origin/main:data/dramas.json` **34 judul · 0 hantu · 0 movie**; produksi **0 tautan hantu di 4 halaman** (`/katalog` `/shorts` `/beranda` `/discover`); enam alamat **200**; gerbang build exit 0 · tsc 0 · **2942 tes hijau**. ⚠️ **Batas kejujuran:** perubahan ini **data saja, nol kode**, jadi nama berkas JS produksi tak berubah dan **tidak ada penanda dari luar** untuk memastikan build mana yang tayang — konfirmasi `success` di panel Railway tetap perlu mata owner. 🔴 **Masih melenceng:** **6 drama HIDUP belum ada di berkas cadangan** (kalau Supabase mati, keenamnya hilang dari jaring pengaman) — perbaikannya harus baca tabel Supabase langsung, bukan `/api/dramas`. 💡 Penjaga drift (robot terjadwal pembanding berkas vs `/api/dramas`) belum dipasang.
+
+**Sebelumnya hari ini:** 2026-11-27 — ✅ **RILIS `7a916c4` → `c900feb` TAYANG.** Owner memberi izin *"rilis sekarang"*; antrean kini **KOSONG** (`main` = `origin` = `dramaku` = `c900feb`). **4 commit · 9 berkas.** 🎬 **Yang paling penting: pemutar drama tak lagi DIAM.** Owner melapor dua kali hari ini — layar hitam, `0:00 / 0:00`, tanpa satu pun pesan. Sebabnya ketemu: panel *"Video sedang tidak bisa diputar + Coba lagi"* **hanya** digambar kalau `<video>` melempar event `error`; saat sumbernya cuma LAMBAT atau alamat tunnelnya basi, error itu **tidak pernah** dilempar sehingga pemutar menunggu selamanya. Kini: lewat **12 detik** tanpa metadata → **minta alamat BARU sendiri** (alamat quick tunnel berganti acak tiap PC backup restart); masih nihil → panel + tombol. Kalimat panel diralat dari *"sumber videonya sedang mati"* jadi *"bermasalah atau sangat lambat"* — hari ini sumbernya memang **pulih sendiri**, dan kata "mati" membuat penonton pergi. 🎯 **Dibuktikan di Chrome SUNGGUHAN atas PRODUKSI, dua keadaan:** normal → `readyState 4`, durasi 139 dtk, **nol panel**, alamat diminta 1×; menggantung (gejala owner) → alamat ep aktif diminta **2×** lalu panel + tombol muncul. Plus 10 alamat **200**, halaman nonton drama & film **200**. 🪤 **Gerbang: `npm run gerbang` MATI lagi dengan exit 127 PALSU di langkah 4** (jebakan npm bersarang, sudah tercatat) — langkah 1-3 lolos di dalamnya, langkah 4 dijalankan langsung tanpa npm bersarang: **208 berkas / 2942 tes hijau**, nol berkas rahasia. 🪤 **Dua jebakan uji yang menipu saya hari ini:** (a) **memblokir** host video TIDAK menguji perbaikan ini — blokir memicu `error` sehingga yang teruji jalur LAMA; tiruan yang benar = CDP `Fetch` menahan permintaan tanpa pernah menjawab; (b) **server lokal tak bisa memutar video drama sama sekali** (kunci penanda tangan hanya di Railway → tunnel balas **403**), jadi uji "jalur sehat" wajib membelokkan permintaan ke alamat PRODUKSI. 📋 Ikut tayang: **pindai TUNTAS 651 film Playly → 70 (10,8%) berkasnya hilang** di mitra (daftar judul di `docs/film-playly-tanpa-berkas-2026-11-27.txt`), alat diagnosa `pc-backup-agent/cek-jalur-kirim.ps1`, dan ralat `nobar-server/README.md`. 🔴 **TIGA hal terbuka:** (1) **akar masalah video drama TIDAK tersentuh** — selama disiarkan dari PC backup lewat quick tunnel gratis, kejadian ini AKAN terulang; jalan keluar permanen = named tunnel (`pc-backup-agent/README.md` Bagian B) atau pindahkan video drama ke R2 seperti film (terukur 1.517 KB/dtk vs 21-85 KB/dtk hari ini); (2) **Tahap B menyembunyikan 70 film mati** menunggu keputusan owner; (3) **BUG BARU belum diperbaiki** — Cloudflare mengganti badan balasan 5xx, sehingga penonton film yang videonya hilang melihat *"Gagal menghubungi server. Cek koneksi lalu coba lagi."* padahal koneksinya sehat.
 
 **Sebelumnya:** 2026-11-25 (sore) — ✅ **RILIS `358d099` TAYANG.** Owner memberi izin *"commit lalu push"*; antrean kini **KOSONG** (`main` = `origin` = `dramaku` = `358d099`). **29 berkas** berisi lima permintaan owner hari ini: profil pojok kanan diganti **ikon kotak-kotak pejal** · **5 baris keterangan seksi** dibuang · **31 titik teks pudar** diseragamkan jadi putih lewat token `TEKS_SEKUNDER`/`IKON_KOSONG` · **negara & tahun keluar dari strip kuning** · menu **Negara memuat SEMUA negara (57) dikelompokkan per benua** + nama kembar `USA`/`United States` disatukan. 🎯 **Bukti tayang diukur di situs sungguhan** (bukan localhost): tujuh alamat `/` `/beranda` `/discover` `/film` `/katalog` `/my-list` `/shorts` semua **200** · tautan negara/tahun di strip **0** · judul kelompok benua **7** · kelas pudar di /beranda, /film, /katalog **0** · label "Amerika Serikat" **ada** · baris keterangan seksi **0**. ⚠️ **Gerbang:** `npm run gerbang` MATI di langkah 4 dengan **exit 127 PALSU** (jebakan npm bersarang yang sudah tercatat) — langkah 1-3 lolos di dalamnya, langkah **4 & 5 dijalankan manual** dengan pemeriksaan yang sama: **204 berkas / 2898 tes hijau**, **nol** berkas rahasia di antrean. 🔴 **Sisa milik owner:** ikon kotak-kotak di pojok kanan hanya tergambar untuk akun **admin** dan dirender di browser, jadi **tidak bisa dibuktikan dari HTML server** — wajib dilihat sendiri sambil login. ⚠️ **12 berkas sesi lain** (login + panel IMDb + `data/viewers.json`) sengaja TIDAK ikut; nol di antaranya tayang. 💡 Sisa teks pudar yang memang DIKECUALIKAN (bukan terlewat): kaki situs & panel pemutar punya latar gelap sendiri — `zinc-400` di sana **7,37:1**, lolos ambang. Yang masih di bawah ambang cuma baris hak cipta kaki situs (`zinc-500` = **3,91:1**), belum diminta owner.
 
@@ -107,6 +109,85 @@
 **Rincian kontrol volume (putaran KETIGA):** owner menolak bentuk tombol `+` / `−` dan mengirim contoh gambar, jadi pengatur volume kini **garis geser tegak berbentuk kapsul** (jalur kuning + bulatan penggeser). Diukur di Chrome headless layar 393px: kapsul `x=345..381` **utuh di dalam layar**, geser jari atas→100% / tengah→50% / bawah→bisu, nol elemen diputar. Gerbang lolos 5/5 (2383 tes hijau). ✅ **Sudah TAYANG** dalam rilis `53fbc5c → a9ae869` malam itu juga.
 
 **Sebelumnya hari ini:** ✅ **`2ad015b` + `8d8c1ba` TAYANG.** Tata letak pemutar beres dalam tiga putaran permintaan owner: tombol **Eps turun ke baris paling bawah**, tombol **volume pindah ke sebelah angka durasi**, rail ikon kanan **diperkecil & dirapatkan** (36px/20px/jarak 8px), dan garis volume tegak **diganti tombol + / −** karena terukur berdiri di **x=391 pada layar 393px = di luar layar HP**. Rinciannya di seksi `## 2026-11-13` di bawah.
+
+---
+
+## 2026-11-27 (sore) — ✅ `b082924` TAYANG: 8 film HANTU dibuang dari katalog
+
+Owner mengirim tangkapan layar berisi tujuh poster film dan meminta *"hapus poster film ini"*.
+Penelusurannya menemukan masalah yang lebih besar daripada poster: **kedelapan judul itu tidak
+ada di database, kartunya bisa diklik, dan SEMUANYA membalas 404** (diukur 8 dari 8 di produksi).
+
+### Kenapa kartunya bisa muncul padahal tidak ada di database
+
+`getAllDramasCached()` SENGAJA membaca `data/dramas.json` saat `next build`
+(`lib/dramas.ts`, `NEXT_PHASE === "phase-production-build"`) supaya build tidak ikut mati kalau
+Supabase bermasalah — pengaman yang benar, lahir dari insiden 2026-11-17, dan **tidak disentuh**.
+Masalahnya berkas cadangan itu sudah melenceng: **42 judul lokal vs 40 di Supabase**.
+
+Akibatnya `/katalog` & `/shorts` yang di-prerender ikut membawa 8 judul hantu **sampai halaman
+itu menyegarkan diri (revalidate 1 menit)**. ⭐ **Itu sebabnya tangkapan layar owner memuatnya
+justru beberapa menit sesudah rilis** — ada jendela pendek tiap habis deploy di mana katalog
+menampilkan isi berkas cadangan, bukan isi database. Siapa pun yang mengukur di luar jendela itu
+akan melihat katalog bersih dan menyimpulkan tidak ada masalah.
+
+Yang dibuang: `over-your-dead-body` · `transformers-the-last-knight` · `spider-man-brand-new-day` ·
+`avengers-doomsday` · `predator-badlands` · `28-years-later-the-bone-temple` ·
+`fireworks-wednesday` · `the-dark-knight`.
+
+### Dua keputusan yang menahan kerusakan
+
+1. **Daftar id TIDAK ditulis tangan** — skrip pembuangnya menghitung selisih berkas lokal vs
+   katalog produksi, dengan dua pagar: batal kalau katalog produksi terbaca <30 judul (tanda
+   database sedang bermasalah), batal kalau yang akan dibuang >12 judul.
+2. **TIDAK menimpa berkas dengan isi `/api/dramas`.** Keluaran API itu tidak memuat **10 field**
+   yang ada di berkas lokal (`kind`, `imdbId`, `genre`, `director`, `writer`, `stars`, `country`,
+   `language`, `contentRating`, `imdbVotes`), jadi "menyegarkan" dengan cara itu justru menghapus
+   data. Hasil akhirnya: **201 baris dihapus, NOL baris lain berubah.**
+
+### Yang diperiksa sebelum dihapus — dan hampir terlewat
+
+❓ "Kalau ketujuh kartu itu satu-satunya isi barisnya, apakah barisnya jadi kosong?"
+✅ **Tidak.** Diperiksa langsung ke Supabase: `dramas?kind=eq.movie` memulangkan **`[]`** — produksi
+memang punya **nol** drama bertipe film. Jadi membuang kedelapannya membuat berkas cadangan
+**sama dengan kenyataan**, bukan mengosongkan sesuatu yang hidup.
+⚠️ `avengers-doomsday` masih muncul di halaman, dan itu **BENAR**: yang tersisa adalah film Playly
+asli di `/tonton/avengers-doomsday-1795277615240` — judul hidup dengan id angka, beda dari slug
+hantu. Jangan ikut dihapus.
+
+### Bukti
+
+| Yang diukur | Hasil |
+|---|---|
+| Build ulang lokal → tautan `/drama/<hantu>` di semua halaman prerender | **0** |
+| `origin/main:data/dramas.json` (yang dipakai Railway saat build) | **34 judul · 0 hantu · 0 movie** |
+| Produksi sesudah rilis: `/katalog` `/shorts` `/beranda` `/discover` | **0 tautan hantu** (4 dari 4 halaman) |
+| Enam alamat utama | **200** |
+| Gerbang | build exit 0 · tsc 0 error · 208 berkas / **2942 tes hijau** · nol berkas rahasia |
+
+⚠️ **BATAS KEJUJURAN pengukuran ini:** perubahannya **data saja, nol kode**, sehingga nama berkas
+JS produksi TIDAK berubah — artinya **tidak ada penanda dari luar** yang bisa membuktikan build
+mana yang sedang tayang. Yang terbukti: berkas penyebabnya sudah bersih di `origin/main` (jadi
+build mana pun sesudah ini mustahil memuatnya) dan produksi saat ini nol tautan hantu. Memastikan
+deployment-nya `success` tetap perlu mata owner di panel Railway.
+
+🪤 `tests/jeda-koin-iklan.test.ts` merah LAGI karena batas waktu 5 detik (2 dari 3 jalan penuh
+hari ini), lalu hijau saat diulang dan lulus 7/7 saat dijalankan sendirian. Frekuensinya naik —
+kalau mengganggu lagi, naikkan `testTimeout` khusus berkas itu; ia mengimpor 9 modul route
+sekaligus, jadi lambat karena pemuatan, bukan karena logika.
+
+### 🔴 Masih melenceng, belum disentuh
+
+Kebalikannya juga ada: **6 drama yang HIDUP di produksi belum ada di berkas cadangan**
+(`master-pedang-yang-diremehkan`, `diremehkan-istana-bangkit-sebagai-dewa-abadi`,
+`putrinya-disakiti-dewa-perang-akhirnya-bangkit`, `dikira-sopir-lemah-ternyata-raja-perang`,
+`satu-pukulan-menantu-lemah-jadi-legenda`, `suami-mengkhianatinya-setelah-7-tahun`). Artinya kalau
+Supabase mati, keenamnya tidak ikut tampil di jaring pengaman. Membetulkannya harus membaca
+langsung tabel Supabase (`dramas?select=*`), BUKAN `/api/dramas`, supaya 10 field itu tidak hilang.
+
+💡 **Penjaga yang belum dipasang:** drift ini tak bisa ditangkap tes offline. Yang cocok adalah
+robot terjadwal seperti `.github/workflows/keep-db-awake.yml` yang membandingkan
+`data/dramas.json` dengan `/api/dramas` lalu gagal kalau berbeda — belum diusulkan ke owner.
 
 ---
 

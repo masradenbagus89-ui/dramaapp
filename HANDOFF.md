@@ -90,7 +90,9 @@
 > aftermarket** dari pemilik sekarang, harganya **jauh di atas** Rp200.000 dan belum pernah dicek.
 > Nama lain yang masih bebas jauh lebih murah.
 
-**Terakhir diisi:** 2026-11-25 (sore) — ✅ **RILIS `358d099` TAYANG.** Owner memberi izin *"commit lalu push"*; antrean kini **KOSONG** (`main` = `origin` = `dramaku` = `358d099`). **29 berkas** berisi lima permintaan owner hari ini: profil pojok kanan diganti **ikon kotak-kotak pejal** · **5 baris keterangan seksi** dibuang · **31 titik teks pudar** diseragamkan jadi putih lewat token `TEKS_SEKUNDER`/`IKON_KOSONG` · **negara & tahun keluar dari strip kuning** · menu **Negara memuat SEMUA negara (57) dikelompokkan per benua** + nama kembar `USA`/`United States` disatukan. 🎯 **Bukti tayang diukur di situs sungguhan** (bukan localhost): tujuh alamat `/` `/beranda` `/discover` `/film` `/katalog` `/my-list` `/shorts` semua **200** · tautan negara/tahun di strip **0** · judul kelompok benua **7** · kelas pudar di /beranda, /film, /katalog **0** · label "Amerika Serikat" **ada** · baris keterangan seksi **0**. ⚠️ **Gerbang:** `npm run gerbang` MATI di langkah 4 dengan **exit 127 PALSU** (jebakan npm bersarang yang sudah tercatat) — langkah 1-3 lolos di dalamnya, langkah **4 & 5 dijalankan manual** dengan pemeriksaan yang sama: **204 berkas / 2898 tes hijau**, **nol** berkas rahasia di antrean. 🔴 **Sisa milik owner:** ikon kotak-kotak di pojok kanan hanya tergambar untuk akun **admin** dan dirender di browser, jadi **tidak bisa dibuktikan dari HTML server** — wajib dilihat sendiri sambil login. ⚠️ **12 berkas sesi lain** (login + panel IMDb + `data/viewers.json`) sengaja TIDAK ikut; nol di antaranya tayang. 💡 Sisa teks pudar yang memang DIKECUALIKAN (bukan terlewat): kaki situs & panel pemutar punya latar gelap sendiri — `zinc-400` di sana **7,37:1**, lolos ambang. Yang masih di bawah ambang cuma baris hak cipta kaki situs (`zinc-500` = **3,91:1**), belum diminta owner.
+**Terakhir diisi:** 2026-11-27 — ✅ **RILIS `7a916c4` → `c900feb` TAYANG.** Owner memberi izin *"rilis sekarang"*; antrean kini **KOSONG** (`main` = `origin` = `dramaku` = `c900feb`). **4 commit · 9 berkas.** 🎬 **Yang paling penting: pemutar drama tak lagi DIAM.** Owner melapor dua kali hari ini — layar hitam, `0:00 / 0:00`, tanpa satu pun pesan. Sebabnya ketemu: panel *"Video sedang tidak bisa diputar + Coba lagi"* **hanya** digambar kalau `<video>` melempar event `error`; saat sumbernya cuma LAMBAT atau alamat tunnelnya basi, error itu **tidak pernah** dilempar sehingga pemutar menunggu selamanya. Kini: lewat **12 detik** tanpa metadata → **minta alamat BARU sendiri** (alamat quick tunnel berganti acak tiap PC backup restart); masih nihil → panel + tombol. Kalimat panel diralat dari *"sumber videonya sedang mati"* jadi *"bermasalah atau sangat lambat"* — hari ini sumbernya memang **pulih sendiri**, dan kata "mati" membuat penonton pergi. 🎯 **Dibuktikan di Chrome SUNGGUHAN atas PRODUKSI, dua keadaan:** normal → `readyState 4`, durasi 139 dtk, **nol panel**, alamat diminta 1×; menggantung (gejala owner) → alamat ep aktif diminta **2×** lalu panel + tombol muncul. Plus 10 alamat **200**, halaman nonton drama & film **200**. 🪤 **Gerbang: `npm run gerbang` MATI lagi dengan exit 127 PALSU di langkah 4** (jebakan npm bersarang, sudah tercatat) — langkah 1-3 lolos di dalamnya, langkah 4 dijalankan langsung tanpa npm bersarang: **208 berkas / 2942 tes hijau**, nol berkas rahasia. 🪤 **Dua jebakan uji yang menipu saya hari ini:** (a) **memblokir** host video TIDAK menguji perbaikan ini — blokir memicu `error` sehingga yang teruji jalur LAMA; tiruan yang benar = CDP `Fetch` menahan permintaan tanpa pernah menjawab; (b) **server lokal tak bisa memutar video drama sama sekali** (kunci penanda tangan hanya di Railway → tunnel balas **403**), jadi uji "jalur sehat" wajib membelokkan permintaan ke alamat PRODUKSI. 📋 Ikut tayang: **pindai TUNTAS 651 film Playly → 70 (10,8%) berkasnya hilang** di mitra (daftar judul di `docs/film-playly-tanpa-berkas-2026-11-27.txt`), alat diagnosa `pc-backup-agent/cek-jalur-kirim.ps1`, dan ralat `nobar-server/README.md`. 🔴 **TIGA hal terbuka:** (1) **akar masalah video drama TIDAK tersentuh** — selama disiarkan dari PC backup lewat quick tunnel gratis, kejadian ini AKAN terulang; jalan keluar permanen = named tunnel (`pc-backup-agent/README.md` Bagian B) atau pindahkan video drama ke R2 seperti film (terukur 1.517 KB/dtk vs 21-85 KB/dtk hari ini); (2) **Tahap B menyembunyikan 70 film mati** menunggu keputusan owner; (3) **BUG BARU belum diperbaiki** — Cloudflare mengganti badan balasan 5xx, sehingga penonton film yang videonya hilang melihat *"Gagal menghubungi server. Cek koneksi lalu coba lagi."* padahal koneksinya sehat.
+
+**Sebelumnya:** 2026-11-25 (sore) — ✅ **RILIS `358d099` TAYANG.** Owner memberi izin *"commit lalu push"*; antrean kini **KOSONG** (`main` = `origin` = `dramaku` = `358d099`). **29 berkas** berisi lima permintaan owner hari ini: profil pojok kanan diganti **ikon kotak-kotak pejal** · **5 baris keterangan seksi** dibuang · **31 titik teks pudar** diseragamkan jadi putih lewat token `TEKS_SEKUNDER`/`IKON_KOSONG` · **negara & tahun keluar dari strip kuning** · menu **Negara memuat SEMUA negara (57) dikelompokkan per benua** + nama kembar `USA`/`United States` disatukan. 🎯 **Bukti tayang diukur di situs sungguhan** (bukan localhost): tujuh alamat `/` `/beranda` `/discover` `/film` `/katalog` `/my-list` `/shorts` semua **200** · tautan negara/tahun di strip **0** · judul kelompok benua **7** · kelas pudar di /beranda, /film, /katalog **0** · label "Amerika Serikat" **ada** · baris keterangan seksi **0**. ⚠️ **Gerbang:** `npm run gerbang` MATI di langkah 4 dengan **exit 127 PALSU** (jebakan npm bersarang yang sudah tercatat) — langkah 1-3 lolos di dalamnya, langkah **4 & 5 dijalankan manual** dengan pemeriksaan yang sama: **204 berkas / 2898 tes hijau**, **nol** berkas rahasia di antrean. 🔴 **Sisa milik owner:** ikon kotak-kotak di pojok kanan hanya tergambar untuk akun **admin** dan dirender di browser, jadi **tidak bisa dibuktikan dari HTML server** — wajib dilihat sendiri sambil login. ⚠️ **12 berkas sesi lain** (login + panel IMDb + `data/viewers.json`) sengaja TIDAK ikut; nol di antaranya tayang. 💡 Sisa teks pudar yang memang DIKECUALIKAN (bukan terlewat): kaki situs & panel pemutar punya latar gelap sendiri — `zinc-400` di sana **7,37:1**, lolos ambang. Yang masih di bawah ambang cuma baris hak cipta kaki situs (`zinc-500` = **3,91:1**), belum diminta owner.
 
 **Sebelumnya hari ini:** 2026-11-25 — 🎬 **NONTON BARENG AKTIF DI PRODUKSI.** Owner menyelesaikan langkah 3 & 4 di panel Railway (Generate Domain + 2 env di service situs + Redeploy); AI memandu & memverifikasi. **Nol kode diubah, nol commit, nol push** — antrean ke `origin` tetap 1 commit catatan (`8263355`). Alamat server nobar (bukan rahasia): `https://athletic-unity-production-4fea9c30.up.railway.app`. 🎯 **Enam bukti diukur dari luar:** `/health` **200 `ok:true`** · `POST /api/watch-room` **404 → 400** (env terbaca) · tombol **Nonton Bareng tergambar** di HTML `/tonton/<id>` · CSP halaman itu memuat **`https://` + `wss://`** ke host nobar (= situs benar-benar di-build ulang) · token undangan acak dibalas **404**, bukan **401** (= `NOBAR_SECRET` di dua service **COCOK**, nol data ditulis) · handshake `/socket.io/` **200 untuk Origin situs, 403 untuk Origin asing** (= `NOBAR_ALLOWED_ORIGINS` memang menyaring). ✏️ **RALAT: alasan "tanpa Redeploy browser MEMBLOKIR" itu KELIRU** — CSP produksi berjalan `Report-Only` (tidak memblokir apa pun); alasan Redeploy yang benar adalah simpanan halaman ISR 300 detik. 🔴 **Sisa: hanya mata manusia** — buat Room, buka undangan di HP kedua, cek sinkron ±2 detik + chat tanpa muat ulang. 🧹 Hapus `Downloads/env-nobar-server.txt` (rahasianya sudah di Railway) dan betulkan `nobar-server/README.md:72` yang masih memuat alasan keliru itu.
 
@@ -105,6 +107,100 @@
 **Rincian kontrol volume (putaran KETIGA):** owner menolak bentuk tombol `+` / `−` dan mengirim contoh gambar, jadi pengatur volume kini **garis geser tegak berbentuk kapsul** (jalur kuning + bulatan penggeser). Diukur di Chrome headless layar 393px: kapsul `x=345..381` **utuh di dalam layar**, geser jari atas→100% / tengah→50% / bawah→bisu, nol elemen diputar. Gerbang lolos 5/5 (2383 tes hijau). ✅ **Sudah TAYANG** dalam rilis `53fbc5c → a9ae869` malam itu juga.
 
 **Sebelumnya hari ini:** ✅ **`2ad015b` + `8d8c1ba` TAYANG.** Tata letak pemutar beres dalam tiga putaran permintaan owner: tombol **Eps turun ke baris paling bawah**, tombol **volume pindah ke sebelah angka durasi**, rail ikon kanan **diperkecil & dirapatkan** (36px/20px/jarak 8px), dan garis volume tegak **diganti tombol + / −** karena terukur berdiri di **x=391 pada layar 393px = di luar layar HP**. Rinciannya di seksi `## 2026-11-13` di bawah.
+
+---
+
+## 2026-11-27 — 🎬 Pemutar drama tak lagi DIAM saat sumber videonya bermasalah + 📋 70 film Playly tanpa berkas
+
+### Yang dilaporkan owner & apa yang sebenarnya terjadi
+
+Owner mengirim dua tangkapan layar (judul berbeda, dua-duanya Eps 2): layar hitam,
+`0:00 / 0:00`, tombol play, **tanpa satu pun pesan**. Penelusurannya menemukan DUA hal
+yang berbeda — satu gangguan sementara, satu cacat kode yang nyata.
+
+**(1) Gangguan sementara — bukan kode kita.** Terowongan video `morgan-gorgeous-bent-ashley`
+turun ke **21–85 KB/detik** (diukur 5 sampel + satu sapuan 2 MB) padahal satu episode 2 menit
+berukuran 27,2 MB **butuh 231 KB/detik** — angka itu dihitung dari `moov` berkasnya sendiri,
+bukan dikira-kira. Lalu terowongannya **mati total**; agent PC backup baru melaporkan alamat
+pengganti (`tries-priced-aurora-sacred`) pada **06:50 UTC**, 13 menit kemudian. Sesudah itu
+kecepatannya **393–564 KB/detik** dan video jalan normal — dibuktikan di Chrome sungguhan
+(`readyState 4`, durasi 139 detik, maju sampai detik ke-20).
+
+🪤 **RALAT atas kesimpulan saya sendiri pagi ini.** Saya sempat menyimpulkan "jalur kirim PC
+backup mentok" dari uji 8 aliran paralel yang justru lebih lambat (26 KB/dtk) daripada 1 aliran
+(52 KB/dtk). Itu **keliru**: begitu terowongan berganti, mesin yang sama menarik 564 KB/detik.
+Yang mentok adalah **sesi terowongan yang sedang sekarat**, bukan jatah internet PC-nya.
+⭐ Pelajarannya: sebelum menyimpulkan "jalur mentok", **ukur ulang sesudah sesi terowongan
+berganti** — satu sesi yang sakit menyamar sempurna sebagai jaringan yang sempit.
+
+**(2) Cacat kode yang nyata — sudah diperbaiki.** Panel *"Video sedang tidak bisa diputar +
+Coba lagi"* **hanya** digambar kalau elemen `<video>` melempar event `error`. Saat sumbernya
+cuma LAMBAT atau alamatnya basi, error itu **tidak pernah** dilempar — pemutar menunggu
+selamanya, diam. Penonton melihat situs rusak tanpa satu tombol pun.
+
+Perbaikannya 2 langkah, **hanya di episode aktif**:
+1. lewat **12 detik** tanpa metadata → buang alamat yang dipegang halaman, **minta alamat BARU**.
+   Alamat quick tunnel berganti acak tiap PC backup restart, jadi "alamat di tangan sudah basi"
+   adalah tebakan pertama yang paling mungkin benar — dan sembuh tanpa penonton menyentuh apa pun.
+2. alamat baru pun nihil → panel + tombol Coba lagi.
+
+Kalimat panelnya ikut dibetulkan: dulu *"sumber videonya sedang mati"* (membuat penonton pergi),
+kini *"sedang bermasalah atau sangat lambat — tekan Coba lagi"*.
+
+Keputusannya di fungsi MURNI `decideVideoStuck` (`lib/video.ts`), bersebelahan dengan
+`decideVideoError` yang polanya sama. Ambang 12 detik berbasis ukuran: `moov` ±137 KB tiba
+<1 detik pada sumber sehat, ±7 detik pada sumber sekarat 21 KB/dtk.
+
+🎯 **Dibuktikan di Chrome SUNGGUHAN atas build produksi lokal, 3 skenario:**
+
+| Keadaan | Panel | Permintaan alamat ep aktif |
+|---|---|---|
+| Sehat (kontrol) | tidak muncul ✅ | 1× — penjaga diam ✅ |
+| **Menggantung** (gejala owner, tanpa error) | muncul ✅ | **2×** — sembuh sendiri dulu ✅ |
+| Terputus (memicu error) | muncul ✅ | 1× — jalur lama utuh ✅ |
+
+🪤 **Memblokir host TIDAK cukup untuk menguji ini** — blokir memicu `error`, jadi yang teruji
+malah jalur LAMA (percobaan pertama saya tertipu begini). Tiruan yang benar: CDP `Fetch` menahan
+permintaan dan **tak pernah menjawabnya**.
+
+🪤 **Server lokal TIDAK bisa memutar video drama** — kunci penanda tangan hanya ada di Railway,
+jadi alamat buatan lokal ditolak tunnel **403**. Uji jalur sehat harus membelokkan permintaan ke
+alamat PRODUKSI yang tanda tangannya sah; tanpa itu "kontrol"-nya gagal palsu.
+
+🔴 **Yang TIDAK diperbaiki (di luar kode):** ini tidak membuat sumbernya lebih cepat. Selama
+video drama disiarkan dari PC backup lewat **quick tunnel gratis** (alamat acak, berganti tiap
+restart), kejadian ini **akan terulang** — bedanya penonton kini diberi tahu dan sebagian kasus
+sembuh sendiri. Dua jalan keluar permanen: **named tunnel** (`pc-backup-agent/README.md` Bagian B)
+atau **pindahkan video drama ke tempat yang sama dengan film** (R2, terukur 1.517 KB/detik).
+
+### 📋 Pindai TUNTAS film Playly: 70 dari 651 (10,8%) berkasnya hilang
+
+Catatan 26 Nov memperkirakan "~8% dari 2 dari 25 sampel". Hasil pindai menyeluruh: **70 mati,
+581 sehat, nol "tidak tahu"**. Daftar id + judul: `docs/film-playly-tanpa-berkas-2026-11-27.txt`.
+Rencana + cara mengulang: `docs/lintasai/rencana/2026-11-27-film-playly-tanpa-berkas.md`.
+
+🪤 **Jebakan paling mahal: "tidak tahu" yang BERKELOMPOK BERURUTAN = alat ukurnya terlalu cepat,
+bukan datanya aneh.** Putaran 1 (2 pekerja, jeda 0,4 dtk) menyisakan 139 "tidak tahu" dalam 4 blok
+berurutan; putaran 2 (1 pekerja, jeda 0,7 dtk, ulang 3×) membereskannya jadi 118 sehat +
+**21 mati tambahan**. Berhenti di putaran 1 = melewatkan 21 film.
+
+🔴 **BUG BARU yang ikut ketemu, BELUM diperbaiki:** Cloudflare **mengganti** badan balasan 5xx
+dengan halaman errornya sendiri (`error code: 502` teks polos) sedangkan **4xx diteruskan utuh**.
+Akibatnya `res.json()` di `app/components/player/PlaylyPlayer.tsx:173` melempar dan penonton film
+mati melihat **"Gagal menghubungi server. Cek koneksi lalu coba lagi."** — menyalahkan koneksinya
+sendiri. Regresi dari pindah domain 26 Nov, bukan dari kode. Usul perbaikan ada di berkas rencana
+(410 Gone + parse defensif).
+
+⏸️ **Tahap B (menyembunyikan 70 film itu) MENUNGGU keputusan owner** — belum dikerjakan.
+
+### Sisa kerapian
+
+- `nobar-server/README.md:72` diralat: alasan Redeploy yang benar adalah simpanan ISR 300 detik,
+  bukan "browser memblokir" — CSP produksi terukur `Report-Only` (`next.config.ts:213`).
+- `pc-backup-agent/cek-jalur-kirim.ps1` BARU: alat diagnosa "kenapa video tersendat", hanya
+  membaca. Lolos parse PowerShell 5.1, nol byte non-ASCII, dijalankan penuh exit 0.
+- 🧹 `Downloads/env-nobar-server.txt` (berisi `NOBAR_SECRET`) **masih ada** — owner belum memutuskan
+  hapus/simpan.
 
 ---
 

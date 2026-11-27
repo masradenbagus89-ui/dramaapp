@@ -59,6 +59,7 @@ alamat publiknya.
 | `penjaga-berkas.ps1` | **[PENJAGA]** tiap 10 menit: pulihkan berkas penting yang hilang dari `cadangan\` |
 | `pasang-penjaga.ps1` | **[PENJAGA]** pemasang sekali-jalan untuk penjaga di atas (Bagian F) |
 | `optimalkan-film.ps1` | perkecil berkas film besar supaya bisa diputar lewat tunnel |
+| `cek-jalur-kirim.ps1` | **[DIAGNOSA]** kenapa video tersendat: layanan hidup? mode tunnel? berapa KB/dtk keluar? siapa pemakainya? — hanya MEMBACA, nol perubahan |
 | `start-dramaapp.ps1` | **[CARA LAMA]** launcher manual — disimpan sebagai jalan mundur |
 | `README.md` | berkas ini |
 

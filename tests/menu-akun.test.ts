@@ -143,3 +143,55 @@ describe("hook penonton punya SATU sumber", () => {
     });
   }
 });
+
+describe("wajah pemicu SERAGAM di seluruh situs (owner 2026-11-27)", () => {
+  // Owner melihat panel admin masih memakai bentuk lama: lingkaran "M" + nama
+  // "Mas radenbagus89" di pojok kanan, sementara /beranda sudah memakai ikon
+  // kotak-kotak sejak 2026-11-25. Permintaannya: *"hilangkan saja radenbagus89,
+  // buat seragamkan saja Ikon Dashboard"* -- satu wajah, bukan dua.
+  //
+  // Dijaga di sini karena kemundurannya SENYAP: menghapus satu prop tidak
+  // membuat apa pun error, tidak membuat tes lain merah, dan namanya diam-diam
+  // muncul lagi di pojok kanan tanpa ada yang melapor.
+  const WAJIB_RINGKAS = [
+    {
+      berkas: "app/components/TopNav.tsx",
+      dipakai: "navbar hitam: /admin /profile /history /my-list /shorts",
+    },
+    {
+      berkas: "app/components/beranda/KepalaKatalog.tsx",
+      dipakai: "bar merah: /beranda & /discover",
+    },
+  ];
+
+  for (const { berkas, dipakai } of WAJIB_RINGKAS) {
+    it(`${berkas} memakai pemicu="ringkas"`, () => {
+      const sumber = readFileSync(berkas, "utf-8");
+      // Dicocokkan pada elemennya, bukan sekadar kata "ringkas" -- kata itu
+      // juga muncul di komentar, jadi mencarinya saja akan menghasilkan
+      // penjaga palsu yang hijau walau prop-nya sudah dilepas.
+      expect(
+        sumber,
+        `${berkas} tidak lagi memakai pemicu="ringkas" -- nama penonton kembali ` +
+          `terlihat di pojok kanan (${dipakai})`,
+      ).toMatch(/<MenuAkun\s+pemicu="ringkas"\s*\/>/);
+    });
+  }
+
+  it("bentuk `avatar` TIDAK dipakai pemanggil mana pun", () => {
+    // Bentuk itu sengaja DIBIARKAN ada di MenuAkun.tsx sebagai pilihan, tapi
+    // tak boleh lagi dipasang di halaman -- kalau dipasang lagi, situsnya
+    // kembali punya dua wajah.
+    for (const { berkas } of WAJIB_RINGKAS) {
+      const sumber = readFileSync(berkas, "utf-8");
+      expect(sumber, `${berkas} memasang bentuk avatar lagi`).not.toMatch(
+        /<MenuAkun\s+pemicu="avatar"\s*\/>/,
+      );
+      // `<MenuAkun />` polos = bawaannya "avatar" (MenuAkun.tsx), jadi ikut
+      // ditolak: itulah bentuk yang owner minta dihilangkan.
+      expect(sumber, `${berkas} memasang <MenuAkun /> polos (bawaannya avatar)`).not.toMatch(
+        /<MenuAkun\s*\/>/,
+      );
+    }
+  });
+});

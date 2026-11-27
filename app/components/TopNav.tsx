@@ -319,7 +319,21 @@ export default function TopNav() {
             // ke dalam `MenuAkun` atas permintaan owner 2026-09-26.
             <div className="flex items-center gap-2">
               <CoinChip />
-              <MenuAkun />
+              {/* BENTUK `ringkas`, BUKAN `avatar` (owner 2026-11-27, melihat
+                  panel admin): *"ada di sebelah kanan M radenbagus89 — kamu
+                  hilangkan saja radenbagus89, buat seragamkan saja Ikon
+                  Dashboard"*. Jadi yang tersisa ikon kotak-kotak pejal yang
+                  SAMA PERSIS dengan yang sudah dipakai /beranda & /discover
+                  sejak 2026-11-25 — itulah arti "seragamkan": satu wajah di
+                  seluruh situs, bukan dua.
+
+                  Yang HILANG cuma yang terlihat sebelum diklik (lingkaran
+                  berinisial + nama). Isi menunya tidak berkurang satu baris
+                  pun: Profile · Riwayat · Favorit · Admin · Keluar tetap di
+                  balik ikon yang sama — penting, sebab di navbar hitam inilah
+                  satu-satunya jalan ke Profil & Keluar di layar komputer
+                  (tombol garis-tiga dilepas 2026-11-14). */}
+              <MenuAkun pemicu="ringkas" />
             </div>
           ) : mounted && AKUN_PENONTON_ENABLED ? (
             /* Tombol Masuk & Daftar — DIJEDA sejak 2026-10-29 (arahan Kang Dedi

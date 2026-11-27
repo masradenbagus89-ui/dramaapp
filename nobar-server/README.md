@@ -69,7 +69,7 @@ Logika murni (rumus sinkron, validasi, tiket) juga diuji dari akar repo: `npx vi
    - `NOBAR_SECRET` (sama persis)
    - `NOBAR_PUBLIC_URL` = alamat langkah 3
    - opsional `NOBAR_INTERNAL_URL` = `http://<nama-service>.railway.internal:<PORT>` (jaringan privat, lebih cepat)
-5. **Redeploy situs.** `NOBAR_PUBLIC_URL` juga dibaca saat build untuk daftar CSP.
+5. **Redeploy situs.** Dua alasan: halaman `/tonton/<id>` disimpan 300 detik (`revalidate = 300` di `app/tonton/[id]/page.tsx:39`), jadi tanpa deploy ulang tombolnya baru muncul sesudah simpanan itu habis; dan `NOBAR_PUBLIC_URL` dibaca saat build untuk daftar CSP (`next.config.ts:152`). ⚠️ RALAT 2026-11-26: CSP produksi masih `Content-Security-Policy-Report-Only` (`next.config.ts:213`, diukur dari header situs) — ia **tidak memblokir** apa pun, jadi alasan "tanpa Redeploy browser memblokir koneksi" KELIRU.
 
 Sebelum langkah 4 selesai, tombol Nonton Bareng **tidak muncul** dan route-nya membalas 404.
 Fitur mati dengan rapi, situs lain tidak terpengaruh.

@@ -90,7 +90,9 @@
 > aftermarket** dari pemilik sekarang, harganya **jauh di atas** Rp200.000 dan belum pernah dicek.
 > Nama lain yang masih bebas jauh lebih murah.
 
-**Terakhir diisi:** 2026-11-27 (malam) — ✅ **RILIS `0cc6b9e` TAYANG, antrean KOSONG** (`main` = `origin` = `dramaku`). Owner: *"hilangkan saja radenbagus89, buat seragamkan saja Ikon Dashboard"*. ⭐ **Bentuk ringkasnya BUKAN dibuat baru** — sudah ada sejak 2026-11-25 dan dipakai /beranda & /discover; yang tertinggal justru **navbar hitam** (`TopNav`) yang masih memakai lingkaran berinisial + nama. Jadi "seragamkan" = satu wajah di seluruh situs, satu prop, nol komponen baru. **Terdampak semua halaman bernavbar hitam:** `/admin` `/profile` `/history` `/my-list` `/shorts` — perubahan yang DILIHAT penonton, bukan cuma admin. Isi menunya **nol berkurang** (Profile · Riwayat · Favorit · Admin · Keluar), penting sebab di layar komputer itulah satu-satunya jalan ke Admin & Keluar sejak tombol garis-tiga dilepas 14 Nov. 🛡️ **Penjaga baru (3 tes) + DIUJI-BALIK:** `TopNav` & `KepalaKatalog` wajib `pemicu="ringkas"`, `<MenuAkun />` polos ditolak; dikembalikan ke bentuk lama → **2 tes merah**, dipasang lagi → hijau. Kemundurannya senyap, jadi mesin yang mengingat. 🎯 **Bukti tayang:** penanda `pemicu:"ringkas"` di bundel JS produksi **naik 1 → 2** sesudah deploy; sembilan alamat **200**; gerbang build exit 0 · tsc 0 · **2945 tes hijau**. ⚠️ **Batas kejujuran:** chip itu hanya tergambar **sesudah login** dan dirender di browser, jadi tak bisa dibuktikan dari HTML server — bukti matanya tetap milik owner (buka `/admin` sambil login). 🪤 Jangan ulangi: login otomatis dari komputer ini GAGAL (200 tapi tetap di `/login`, dokumen `admins` terbaca kosong), dan jangan memanggil endpoint yang tidak ada lalu mencetak balasannya (`/api/auth/me` tidak ada → tercetak halaman 404 utuh, ribuan karakter sia-sia). 🔴 **Dua tawaran belum dijawab owner:** (1) mau dipersempit ke panel admin saja? (2) nama masih muncul di DALAM menu sebagai *"Masuk sebagai …"* — dihapus juga atau tidak?
+**Terakhir diisi:** 2026-11-27 (tutup sesi) — ⏸️ **`de906cc` SIAP RILIS tapi SENGAJA BELUM DI-PUSH.** Owner menutup sesi (*"besok aja kita lanjutkan sudah lelah bro"*) sebelum memberi izin; pekerjaannya sendiri SUDAH selesai & terbukti. 🔴 **JANGAN push apa pun sebelum owner bilang "rilis"** — commit catatan mana pun duduk DI ATAS `de906cc`, jadi mendorong "cuma catatan" akan ikut merilis perubahan tampilannya. Isinya DUA permintaan owner hari itu: **(1) logo kembali jadi tautan ke home** (*"ketika diklik logo layarindo bukan menu genre yang muncul, tapi menu awal/home"*) — ini **MEMBALIK keputusan owner sendiri 2026-11-21**, pembalikan yang DISENGAJA, jangan "dibetulkan" balik; panelnya tidak dihapus melainkan pindah ke **tombol ikon kompas** khusus HP (owner memilih *"beri tombol ikon sendiri"*), dikendalikan state supaya `SheetContent` yang sudah tiga kali dikoreksi tidak perlu dipindah. **(2) tombol besar jadi "NONTON BARENG"** dengan tujuan pindah `/discover` → `/film` — bukan selera: seksi bernama sama tepat di bawahnya juga menuju `/film` sebab isinya FILM, dan dua tombol senama yang mendarat di daftar berbeda menipu penonton. 🎯 **Bukti di Chrome sungguhan layar HP 390px:** tombol menu kategori terlihat (36px, x=294) · diklik → panel muncul dengan Genre 28 · Series 6 · Populer 4 · Negara 61 · Tahun 20 · Lainnya 10 (**nol menu hilang**) · logo `<a href="/">` tidak dibungkus `<button>` · tombol besar → `/film`. Gerbang: build exit 0 · tsc 0 · **208 berkas / 2950 tes hijau**. 🛡️ **4 penjaga baru (2 diuji-balik)** + **2 penjaga LAMA diperbarui bukan dihapus**; yang terpenting berbunyi kalau pemicu panel hilang TANPA pengganti — kerusakan senyap yang melenyapkan seluruh menu kategori di HP. 🪤 Dua jebakan baru: ukur layar HP WAJIB lewat CDP `Emulation.setDeviceMetricsOverride` (bukan `--window-size`), dan jangan beri nama `aria-label` yang sudah dipakai elemen lain — `querySelector` saya sempat menemukan `<nav>` deretan menu komputer lalu melaporkan tombol barunya "berukuran 0". 🔴 **Besok:** izin rilis · owner lihat sendiri di HP · dua tawaran lama belum dijawab (ikon ringkas dipersempit ke `/admin` saja? nama *"Masuk sebagai …"* di dalam menu dihapus?).
+
+**Sebelumnya hari ini:** 2026-11-27 (malam) — ✅ **RILIS `0cc6b9e` TAYANG, antrean KOSONG** (`main` = `origin` = `dramaku`). Owner: *"hilangkan saja radenbagus89, buat seragamkan saja Ikon Dashboard"*. ⭐ **Bentuk ringkasnya BUKAN dibuat baru** — sudah ada sejak 2026-11-25 dan dipakai /beranda & /discover; yang tertinggal justru **navbar hitam** (`TopNav`) yang masih memakai lingkaran berinisial + nama. Jadi "seragamkan" = satu wajah di seluruh situs, satu prop, nol komponen baru. **Terdampak semua halaman bernavbar hitam:** `/admin` `/profile` `/history` `/my-list` `/shorts` — perubahan yang DILIHAT penonton, bukan cuma admin. Isi menunya **nol berkurang** (Profile · Riwayat · Favorit · Admin · Keluar), penting sebab di layar komputer itulah satu-satunya jalan ke Admin & Keluar sejak tombol garis-tiga dilepas 14 Nov. 🛡️ **Penjaga baru (3 tes) + DIUJI-BALIK:** `TopNav` & `KepalaKatalog` wajib `pemicu="ringkas"`, `<MenuAkun />` polos ditolak; dikembalikan ke bentuk lama → **2 tes merah**, dipasang lagi → hijau. Kemundurannya senyap, jadi mesin yang mengingat. 🎯 **Bukti tayang:** penanda `pemicu:"ringkas"` di bundel JS produksi **naik 1 → 2** sesudah deploy; sembilan alamat **200**; gerbang build exit 0 · tsc 0 · **2945 tes hijau**. ⚠️ **Batas kejujuran:** chip itu hanya tergambar **sesudah login** dan dirender di browser, jadi tak bisa dibuktikan dari HTML server — bukti matanya tetap milik owner (buka `/admin` sambil login). 🪤 Jangan ulangi: login otomatis dari komputer ini GAGAL (200 tapi tetap di `/login`, dokumen `admins` terbaca kosong), dan jangan memanggil endpoint yang tidak ada lalu mencetak balasannya (`/api/auth/me` tidak ada → tercetak halaman 404 utuh, ribuan karakter sia-sia). 🔴 **Dua tawaran belum dijawab owner:** (1) mau dipersempit ke panel admin saja? (2) nama masih muncul di DALAM menu sebagai *"Masuk sebagai …"* — dihapus juga atau tidak?
 
 **Sebelumnya hari ini:** 2026-11-27 (sore) — ✅ **RILIS `b082924` TAYANG, antrean KOSONG** (`main` = `origin` = `dramaku`). Owner mengirim tangkapan layar tujuh poster film dan meminta dihapus; yang ditemukan jauh lebih besar dari poster: **8 judul itu tidak ada di database, kartunya bisa diklik, dan SEMUANYA 404** (diuji 8 dari 8 di produksi). ⭐ **Kenapa bisa tampil:** `next build` SENGAJA membaca `data/dramas.json` (jaring pengaman supaya build tak mati saat Supabase bermasalah — TIDAK disentuh), dan berkas itu sudah melenceng (**42 lokal vs 40 database**). Halaman prerender membawa judul hantu **sampai menyegarkan diri 1 menit kemudian** — itulah kenapa owner melihatnya persis beberapa menit sesudah rilis sebelumnya. 🛡️ **Dua keputusan yang menahan kerusakan:** daftar id **tidak ditulis tangan** (dihitung dari selisih lokal vs produksi, batal kalau katalog <30 judul atau buangan >12), dan **TIDAK menimpa berkas dengan isi `/api/dramas`** sebab keluaran API tak memuat 10 field (`kind`, `imdbId`, `genre`, `director`, …) — "menyegarkan" lewat API justru menghapus data. Hasil: **201 baris dihapus, nol baris lain berubah**. ✅ **Yang hampir terlewat & sudah diperiksa:** apakah ada baris jadi kosong? Tidak — `dramas?kind=eq.movie` di Supabase memulangkan **`[]`**, produksi memang nol film, jadi berkas cadangan kini SAMA dengan kenyataan. ⚠️ `avengers-doomsday` yang masih muncul itu **film Playly ASLI** (`/tonton/avengers-doomsday-1795277615240`), bukan hantu — jangan ikut dihapus. 🎯 **Bukti:** `origin/main:data/dramas.json` **34 judul · 0 hantu · 0 movie**; produksi **0 tautan hantu di 4 halaman** (`/katalog` `/shorts` `/beranda` `/discover`); enam alamat **200**; gerbang build exit 0 · tsc 0 · **2942 tes hijau**. ⚠️ **Batas kejujuran:** perubahan ini **data saja, nol kode**, jadi nama berkas JS produksi tak berubah dan **tidak ada penanda dari luar** untuk memastikan build mana yang tayang — konfirmasi `success` di panel Railway tetap perlu mata owner. 🔴 **Masih melenceng:** **6 drama HIDUP belum ada di berkas cadangan** (kalau Supabase mati, keenamnya hilang dari jaring pengaman) — perbaikannya harus baca tabel Supabase langsung, bukan `/api/dramas`. 💡 Penjaga drift (robot terjadwal pembanding berkas vs `/api/dramas`) belum dipasang.
 
@@ -111,6 +113,83 @@
 **Rincian kontrol volume (putaran KETIGA):** owner menolak bentuk tombol `+` / `−` dan mengirim contoh gambar, jadi pengatur volume kini **garis geser tegak berbentuk kapsul** (jalur kuning + bulatan penggeser). Diukur di Chrome headless layar 393px: kapsul `x=345..381` **utuh di dalam layar**, geser jari atas→100% / tengah→50% / bawah→bisu, nol elemen diputar. Gerbang lolos 5/5 (2383 tes hijau). ✅ **Sudah TAYANG** dalam rilis `53fbc5c → a9ae869` malam itu juga.
 
 **Sebelumnya hari ini:** ✅ **`2ad015b` + `8d8c1ba` TAYANG.** Tata letak pemutar beres dalam tiga putaran permintaan owner: tombol **Eps turun ke baris paling bawah**, tombol **volume pindah ke sebelah angka durasi**, rail ikon kanan **diperkecil & dirapatkan** (36px/20px/jarak 8px), dan garis volume tegak **diganti tombol + / −** karena terukur berdiri di **x=391 pada layar 393px = di luar layar HP**. Rinciannya di seksi `## 2026-11-13` di bawah.
+
+---
+
+## 2026-11-27 (tutup sesi) — ⏸️ `de906cc` SIAP RILIS, SENGAJA BELUM DI-PUSH
+
+> **TITIK LANJUT BESOK.** Owner menutup sesi: *"besok aja kita lanjutkan sudah lelah bro"*.
+> Pekerjaannya SUDAH SELESAI & TERBUKTI, yang kurang cuma izin rilis.
+>
+> ⚠️ **JANGAN push apa pun sebelum owner bilang "rilis"** — dan perhatikan ini: commit catatan
+> mana pun yang dibuat sesudahnya duduk DI ATAS `de906cc`, jadi mendorong "cuma catatan" akan
+> ikut merilis perubahan tampilan ini. Satu-satunya cara aman: tahan dua-duanya.
+
+### Isi `de906cc` — dua permintaan owner hari itu
+
+**1. Logo kembali jadi tautan ke home.** Owner: *"ketika diklik logo layarindo bukan menu genre
+yang muncul, tapi menu awal/home"*. Ini **MEMBALIK keputusan owner sendiri 2026-11-21** (logo =
+pemicu panel menu di HP) — pembalikan yang **disengaja**. Sesi berikutnya yang menemukan komentar
+11-21 jangan "membetulkannya" balik.
+
+Panelnya TIDAK dihapus. Owner memilih opsi *"beri tombol ikon sendiri"*, jadi pemicunya pindah ke
+**tombol ikon kompas** di kelompok kanan bar (khusus HP). Panel kini dikendalikan state
+(`menuHpTerbuka`), BUKAN `SheetTrigger` — supaya `SheetContent` yang memuat ~100 baris aturan
+ukuran & animasi (sudah tiga kali dikoreksi owner) tidak perlu dipindah sama sekali.
+
+Ikut dibuang karena jadi kode mati: prop `brandHp` (`SearchBarChrome`) dan `tanpaTautan`
+(`LogoSitus`). Keduanya ditinggali nisan + cara menghidupkannya kembali — keduanya syarat HTML
+sah (`<a>` tak boleh di dalam `<button>`) kalau logo kelak jadi tombol lagi.
+
+🪤 Nama tombol barunya **"Menu kategori"**, bukan "Menu katalog": nama kedua itu sudah dipakai
+`<nav>` deretan menu komputer (`NavMenus.tsx:72`), dan dua kontrol bernama sama membuat pembaca
+layar menyebut keduanya persis sama. Ketahuan justru karena uji otomatis saya sendiri salah
+sasaran — `querySelector` menemukan `<nav>`-nya lebih dulu dan melaporkan tombolnya "berukuran 0".
+
+**2. Tombol besar jadi "NONTON BARENG", tujuannya pindah `/discover` → `/film`.** Owner: *"menu
+temukan tontonan favoritmu jadikan menu nonton bareng"*. Tujuannya ikut berpindah bukan karena
+selera: seksi "Nonton Bareng" tepat di bawah tombol itu tombol **SEMUA**-nya juga menuju `/film`,
+sebab isinya FILM bukan drama (`SEKSI_BERISI_FILM`, lib/tab-katalog.ts). Dua tombol bernama sama
+yang mendarat di daftar berbeda = penonton tertipu. Tujuannya kini ditulis **sekali**
+(`HREF_TOMBOL_UTAMA`); sebelumnya `app/page.tsx` menulis sendiri sementara `/beranda` memakai
+bawaan.
+
+⚠️ **Owner SUDAH diberi tahu sebelum memilih:** seksi bernama "Nonton Bareng" itu **bukan** fitur
+nonton bareng (room tonton bersama) — ia label tab `terbaru`, hasil penggantian nama 2026-11-24.
+Fitur room tetap dimulai dari dalam pemutar film.
+
+### Bukti (Chrome sungguhan, layar HP 390px)
+
+| Yang diuji | Hasil |
+|---|---|
+| Tombol menu kategori di HP | **terlihat**, 36px, x=294 (kiri kaca pembesar) ✅ |
+| Diklik → panel | **muncul**: Genre 28 · Series 6 · Populer 4 · Negara 61 · Tahun 20 · Lainnya 10 — **nol menu hilang** ✅ |
+| Logo | `<a href="/">`, **tidak** dibungkus `<button>` ✅ |
+| Tombol besar | **"NONTON BARENG" → /film** ✅ |
+| Gerbang | build exit 0 · tsc 0 error · 208 berkas / **2950 tes hijau** ✅ |
+
+🪤 Ukuran layar dipaksa lewat CDP `Emulation.setDeviceMetricsOverride`, **bukan** `--window-size`
+(pelajaran 2026-11-24: window-size tidak menentukan `innerWidth`, jadi uji "muat di HP" bisa
+lolos palsu).
+
+### Penjaga
+
+**4 tes baru**, 2 di antaranya **diuji-balik** (dirusak → merah, dikembalikan → hijau). Yang
+terpenting berbunyi kalau pemicu panel hilang **TANPA pengganti** — itu kerusakan senyap yang
+melenyapkan seluruh menu kategori di HP tanpa satu pun error.
+
+**Dua penjaga LAMA diperbarui, bukan dihapus** (keduanya mengunci rancangan yang owner balik):
+`tests/menu-katalog-hp` (syarat "pemicu wajib `md:hidden`" tetap, cuma kini memeriksa tombol
+baru) dan `tests/kerangka-discover` (`brandHp` dilepas dari pemeriksaan karena prop-nya memang
+sudah tiada; `menusHp` tetap dijaga).
+
+### 🔴 Yang menunggu owner besok
+
+1. **Izin rilis `de906cc`** — satu kata "rilis".
+2. Lihat sendiri di HP: ketuk logo (harus pulang ke home), ketuk ikon kompas (panel menu harus
+   muncul), tombol NONTON BARENG (harus membuka halaman film).
+3. Dua tawaran dari rilis sebelumnya yang belum dijawab: ikon ringkas dipersempit ke `/admin`
+   saja atau tidak, dan nama di DALAM menu (*"Masuk sebagai …"*) dihapus atau tidak.
 
 ---
 

@@ -1,7 +1,12 @@
-// Tes pengunci perilaku untuk videoSrc + decideVideoError
+// Tes pengunci perilaku untuk videoSrc + decideVideoError + decideVideoStuck
 // (lib/video.ts).
 import { describe, it, expect } from "vitest";
-import { videoSrc, decideVideoError } from "../lib/video";
+import {
+  videoSrc,
+  decideVideoError,
+  decideVideoStuck,
+  BATAS_MACET_MS,
+} from "../lib/video";
 
 describe("videoSrc — bikin alamat file video", () => {
   it("resolusi asli (kode kosong) -> <ep>.mp4", () => {
@@ -90,5 +95,89 @@ describe("decideVideoError — keputusan saat <video> gagal", () => {
     for (const hasil of semuaHasil) {
       expect(["turun-ke-asli", "menyerah", "abaikan"]).toContain(hasil);
     }
+  });
+});
+
+describe("decideVideoStuck - macet TANPA error (laporan owner 2026-11-27)", () => {
+  // Keadaan dasar: episode aktif, tidak terkunci, belum ada metadata sama
+  // sekali (persis layar `0:00 / 0:00` yang difoto owner).
+  const macet = {
+    locked: false,
+    readyState: 0,
+    alreadyRefreshed: false,
+    alreadyFailed: false,
+  };
+
+  it("belum ada metadata & belum pernah disegarkan -> minta alamat BARU", () => {
+    // Inilah inti perbaikannya: alamat quick tunnel berganti acak tiap PC
+    // backup restart, jadi tebakan pertama yang benar adalah "alamat di tangan
+    // halaman ini sudah basi" - bukan "sumbernya mati".
+    expect(decideVideoStuck(macet)).toBe("ambil-alamat-baru");
+  });
+
+  it("sudah disegarkan tapi tetap kosong -> menyerah (panel + Coba lagi)", () => {
+    expect(decideVideoStuck({ ...macet, alreadyRefreshed: true })).toBe("menyerah");
+  });
+
+  it("metadata sudah datang -> tunggu, JANGAN diganggu", () => {
+    // readyState 1 = HAVE_METADATA: durasi sudah terbaca, artinya sumbernya
+    // menjawab. Mengganggu di sini akan memutus tontonan yang sedang jalan.
+    for (const readyState of [1, 2, 3, 4]) {
+      expect(decideVideoStuck({ ...macet, readyState })).toBe("tunggu");
+      expect(
+        decideVideoStuck({ ...macet, readyState, alreadyRefreshed: true }),
+      ).toBe("tunggu");
+    }
+  });
+
+  it("episode terkunci paywall -> tunggu, panel koin yang bicara", () => {
+    // Dua panel sekaligus (koin + gagal) membuat penonton tak tahu harus
+    // menekan yang mana.
+    expect(decideVideoStuck({ ...macet, locked: true })).toBe("tunggu");
+    expect(
+      decideVideoStuck({ ...macet, locked: true, alreadyRefreshed: true }),
+    ).toBe("tunggu");
+  });
+
+  it("sudah dinyatakan gagal -> tunggu, jangan menumpuk panel/loop", () => {
+    expect(decideVideoStuck({ ...macet, alreadyFailed: true })).toBe("tunggu");
+    expect(
+      decideVideoStuck({ ...macet, alreadyFailed: true, alreadyRefreshed: true }),
+    ).toBe("tunggu");
+  });
+
+  it("terkunci MENANG atas segalanya, walau sudah disegarkan & gagal", () => {
+    expect(
+      decideVideoStuck({
+        locked: true,
+        readyState: 0,
+        alreadyRefreshed: true,
+        alreadyFailed: true,
+      }),
+    ).toBe("tunggu");
+  });
+
+  it("hasilnya selalu salah satu dari tiga aksi yang dikenal", () => {
+    const semua = [0, 1, 4].flatMap((readyState) =>
+      [false, true].flatMap((alreadyRefreshed) =>
+        [false, true].flatMap((locked) =>
+          [false, true].map((alreadyFailed) =>
+            decideVideoStuck({ locked, readyState, alreadyRefreshed, alreadyFailed }),
+          ),
+        ),
+      ),
+    );
+    for (const hasil of semua) {
+      expect(["tunggu", "ambil-alamat-baru", "menyerah"]).toContain(hasil);
+    }
+  });
+
+  it("batas tunggu masuk akal: lebih lama dari sumber sekarat, bukan selamanya", () => {
+    // Diukur 2026-11-27: metadata (~137 KB) tiba <1 detik pada sumber sehat
+    // (400-560 KB/dtk) dan ~7 detik pada sumber sekarat 21 KB/dtk. Ambangnya
+    // harus di atas 7 detik supaya tidak menuduh penonton berinternet pelan,
+    // dan di bawah 30 detik supaya tidak terasa seperti situs menggantung.
+    expect(BATAS_MACET_MS).toBeGreaterThan(7_000);
+    expect(BATAS_MACET_MS).toBeLessThanOrEqual(30_000);
   });
 });

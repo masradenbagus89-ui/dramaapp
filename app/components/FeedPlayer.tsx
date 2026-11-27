@@ -14,7 +14,7 @@ import {
   writeSubtitlePref,
 } from "@/lib/subtitles";
 import { readUser } from "@/lib/auth";
-import { decideVideoError } from "@/lib/video";
+import { BATAS_MACET_MS, decideVideoError, decideVideoStuck } from "@/lib/video";
 import { seekTime } from "@/lib/seek";
 import { fetchWallet, unlockEpisode, unlockAllEpisodes } from "@/lib/wallet";
 import { PAYWALL_ENABLED, isEpisodeLocked } from "@/lib/coins";
@@ -129,6 +129,15 @@ export default function FeedPlayer({
   // karena menjawab pertanyaan lain: yang itu "alamatnya sudah diminta?", yang
   // ini "videonya sudah disuruh jalan?". Ref, bukan state — alat pembukuan.
   const sudahDimulai = useRef<Set<string>>(new Set());
+  // Kunci yang alamatnya sudah pernah DISEGARKAN oleh penjaga macet di bawah.
+  // Pertanyaannya lagi-lagi berbeda: "sudah kita coba sembuhkan diam-diam?".
+  // Satu kali saja per episode — kalau alamat baru pun tak membuahkan apa-apa,
+  // penonton berhak diberi tahu, bukan dibiarkan menunggu putaran berikutnya.
+  const sudahSegarkan = useRef<Set<string>>(new Set());
+  // Pemicu efek pengambil alamat. Penjaga macet membuang alamat basi lewat ref
+  // (`sudahDiminta`), dan ref TIDAK memicu efek — tanpa penghitung ini alamat
+  // barunya tak pernah diminta dan perbaikannya diam-diam tidak bekerja.
+  const [putaranAlamat, setPutaranAlamat] = useState(0);
   const srcKeyFor = (ep: number) => `${ep}|${resolution}`;
   /** Alamat siap pakai, atau `undefined` selagi diambil / kalau tak berhak. */
   const srcFor = (ep: number) => srcMap[srcKeyFor(ep)];
@@ -176,7 +185,10 @@ export default function FeedPlayer({
     return () => {
       batal = true;
     };
-  }, [active, resolution, dramaId, episodes, unlocked]);
+    // `putaranAlamat` ikut jadi pemicu: penjaga macet (di bawah) membuang alamat
+    // basi lalu menaikkannya, dan itulah yang menyuruh efek ini meminta alamat
+    // baru. Tanpa dependensi ini alamat basi tetap terpakai selamanya.
+  }, [active, resolution, dramaId, episodes, unlocked, putaranAlamat]);
 
   // Tombol "Coba lagi" pada panel gagal: hapus penanda gagal lalu paksa elemen
   // <video> memuat ulang. dataset.resfb ikut dibersihkan supaya percobaan
@@ -220,6 +232,49 @@ export default function FeedPlayer({
     [premium, isAdmin, unlocked],
   );
   const lockedActive = isLocked(active + 1);
+
+  // PENJAGA MACET — penonton tidak boleh ditinggal menatap layar hitam.
+  //
+  // Panel "Video sedang tidak bisa diputar" hanya digambar kalau <video>
+  // melempar event `error`. Saat sumbernya LAMBAT atau alamat tunnelnya sudah
+  // berganti, error itu TIDAK PERNAH dilempar: pemutar menunggu selamanya,
+  // layar hitam, `0:00 / 0:00`, tanpa satu pun keterangan. Itu yang dilaporkan
+  // owner 2026-11-27 (dua kali, dua judul berbeda). Alasan lengkap + angka
+  // ukurnya ada di `decideVideoStuck` (lib/video.ts).
+  //
+  // Hanya episode AKTIF yang dijaga: slide tetangga memang belum tentu dimuat,
+  // dan menuduhnya gagal akan menggambar panel di video yang belum gilirannya.
+  useEffect(() => {
+    const ep = active + 1;
+    const kunci = `${ep}|${resolution}`;
+    const pengatur = window.setTimeout(() => {
+      const aksi = decideVideoStuck({
+        locked: isLocked(ep),
+        readyState: videoRefs.current[active]?.readyState ?? 0,
+        alreadyRefreshed: sudahSegarkan.current.has(kunci),
+        alreadyFailed: failedEps.has(ep),
+      });
+      if (aksi === "ambil-alamat-baru") {
+        sudahSegarkan.current.add(kunci);
+        sudahDiminta.current.delete(kunci);
+        setSrcMap((m) => {
+          if (!(kunci in m)) return m;
+          const next = { ...m };
+          delete next[kunci];
+          return next;
+        });
+        setPutaranAlamat((n) => n + 1);
+        return;
+      }
+      if (aksi === "menyerah") {
+        setFailedEps((prev) => (prev.has(ep) ? prev : new Set(prev).add(ep)));
+      }
+    }, BATAS_MACET_MS);
+    return () => window.clearTimeout(pengatur);
+    // `srcMap` ikut: tiap alamat baru datang, hitungan 12 detiknya dimulai ulang
+    // — kalau tidak, alamat yang baru saja diminta dinilai dengan sisa waktu
+    // milik alamat sebelumnya lalu langsung dinyatakan gagal.
+  }, [active, resolution, srcMap, failedEps, isLocked, putaranAlamat]);
 
   // Muat status wallet (saldo + episode yang sudah dibuka) saat mount.
   //
@@ -751,8 +806,15 @@ export default function FeedPlayer({
                   <p className="text-base font-semibold text-white">
                     Video sedang tidak bisa diputar
                   </p>
+                  {/* Kalimatnya SENGAJA memuat dua kemungkinan. Sampai
+                      2026-11-27 di sini tertulis "sumber videonya sedang mati",
+                      padahal penyebab yang terukur hari itu adalah sumber yang
+                      LAMBAT lalu berganti alamat — pulih sendiri 13 menit
+                      kemudian. Menyebut "mati" membuat penonton pergi, padahal
+                      satu ketukan "Coba lagi" sudah cukup. */}
                   <p className="max-w-xs text-sm text-zinc-400">
-                    Sumber videonya sedang mati. Coba lagi beberapa menit lagi.
+                    Sumber videonya sedang bermasalah atau sangat lambat.
+                    Tekan Coba lagi, atau tunggu beberapa menit.
                   </p>
                   <button
                     type="button"

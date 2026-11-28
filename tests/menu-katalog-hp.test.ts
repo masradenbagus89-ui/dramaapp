@@ -142,6 +142,54 @@ describe("layar komputer dijaga oleh PEMICU, bukan oleh panelnya", () => {
   });
 });
 
+describe("bentuk & posisi pemicu (owner 2026-11-28)", () => {
+  // Owner melihat hasil 2026-11-27 di HP lalu membalik dua hal sekaligus:
+  // *"ikon kompas hilangkan saja ganti dengan 3 garis atau berger letakan nya
+  // ada di sebelah kiri"*, sambil menandai pojok KIRI bar di tangkapan layar.
+  // Keduanya dikunci di sini sebab keduanya rusak SENYAP — mengembalikan ikon
+  // lama atau menggeser tombolnya kembali ke kanan tidak memerahkan satu pun
+  // penjaga lain, tidak menggagalkan build, dan tidak memunculkan error.
+
+  it("ikonnya garis-tiga, bukan kompas", () => {
+    expect(
+      SEARCHBAR_KODE,
+      "ikon pemicu bukan garis-tiga lagi — owner 2026-11-28 memintanya",
+    ).toContain("<Menu className=");
+    expect(
+      SEARCHBAR_KODE,
+      "ikon Compass kembali dipasang sebagai pemicu — itu bentuk yang DITOLAK owner",
+    ).not.toContain("<Compass");
+  });
+
+  it("menyingkir selagi kotak cari dibuka di HP", () => {
+    // Diukur 2026-11-28 di Chrome (layar dipaksa lewat CDP): tulisan "Cari
+    // film di Layarindo" butuh 135px. Tanpa tombol ini layar 360px menyisakan
+    // 154px; DENGAN tombolnya tinggal 106px — terpotong 29px. Itu persis
+    // keluhan yang sudah TIGA kali diperbaiki owner, jadi ia dijaga mesin.
+    const pemicu = potong(SEARCHBAR, 'aria-label="Menu kategori"', "</button>");
+    expect(
+      pemicu,
+      "tombol menu tidak menyingkir saat kotak cari dibuka — tulisan " +
+        '"Cari film di Layarindo" terpotong lagi di layar 360px',
+    ).toContain("cariTerbuka");
+  });
+
+  it("tombolnya berdiri di KIRI logo, bukan di kelompok kanan", () => {
+    // Posisinya ditentukan urutan DOM (keduanya berbagi `order-1` di layar
+    // sempit), jadi urutan itulah yang diperiksa — bukan nama kelas, yang
+    // bisa benar sementara elemennya tetap tergambar di ujung kanan.
+    const iTombol = SEARCHBAR_KODE.indexOf('aria-label="Menu kategori"');
+    const iLogo = SEARCHBAR_KODE.indexOf("{chrome?.brand &&");
+    expect(iTombol, "tombol pemicu hilang dari SearchBar").toBeGreaterThan(-1);
+    expect(iLogo, "slot logo hilang dari SearchBar").toBeGreaterThan(-1);
+    expect(
+      iTombol,
+      "tombol menu digambar SESUDAH logo — di layar ia mendarat di kanan, " +
+        "padahal owner 2026-11-28 memintanya di sebelah kiri",
+    ).toBeLessThan(iLogo);
+  });
+});
+
 describe("tombol tutup yang bisa dijangkau jempol", () => {
   it("X bawaan sheet dimatikan, diganti bilah Tutup di dasar panel", () => {
     // X bawaan `sheet.tsx:78` berukuran ~16px di `top-4 right-4`. Pada panel

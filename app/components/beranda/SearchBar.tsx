@@ -9,7 +9,7 @@ import { alamatCari } from "@/lib/nav-katalog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { Compass, Search, X } from "lucide-react";
+import { Menu, Search, X } from "lucide-react";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import {
   LATAR_BAR_MEREK,
@@ -43,7 +43,7 @@ export type SearchBarChrome = {
    * `MenuKatalogHp.tsx`.
    *
    * Diisi = deretan menu `menus` disembunyikan di HP dan digantikan panel yang
-   * dibuka lewat tombol ikon kompas di kelompok kanan bar. Dikosongkan =
+   * dibuka lewat tombol garis-tiga di ujung KIRI bar. Dikosongkan =
    * perilaku lama, deretan menu tetap tergambar. Jadi pemakai yang belum
    * mengisinya TIDAK ikut berubah — dan pemanggil boleh mengosongkannya saat
    * katalog kosong supaya tombolnya tidak membuka panel hampa.
@@ -347,6 +347,70 @@ export default function SearchBar({
       <div
         className={cn(SHELL, "flex flex-wrap items-center gap-x-3 gap-y-2 py-2.5")}
       >
+        {/* TOMBOL MENU KATALOG — khusus HP, digambar hanya kalau panelnya
+            memang ada isinya (`panelHpAktif`). Ia PENGGANTI pemicu yang dulu
+            menempel di logo (owner 2026-11-27), bukan tombol tambahan.
+
+            ⚠️ BENTUK & POSISI DIBALIK owner 2026-11-28 — jangan "dibetulkan"
+            balik oleh sesi berikutnya. Sehari sebelumnya ikonnya `Compass` dan
+            tempatnya di kelompok KANAN (dekat kaca pembesar); owner melihatnya
+            di HP lalu meminta *"ikon kompas hilangkan saja ganti dengan 3 garis
+            atau berger letakan nya ada di sebelah kiri"* sambil menandai pojok
+            kiri bar. Jadi garis-tiga kini DIMINTA — catatan lama yang bilang
+            "SENGAJA bukan garis-tiga" (alasannya: owner melepas garis-tiga
+            2026-11-14) sudah TIDAK berlaku untuk tombol ini.
+
+            Letaknya elemen PERTAMA di dalam bar supaya jatuh di kiri logo
+            tanpa mengatur `order` macam-macam: urutan DOM yang menentukan,
+            sebab ia berbagi `order-1` dengan logo di layar sempit.
+
+            Syaratnya `panelHpAktif` SAJA — sengaja tidak lagi ikut menumpang
+            `modeTombol` (syarat kelompok kanan tempatnya dulu bersarang).
+            Menggandeng dua syarat untuk satu keputusan persis yang melahirkan
+            keadaan "deretan menu disembunyikan di HP tapi tak ada tombol
+            pembukanya"; lihat peringatan di prop `menusHp`. */}
+        {panelHpAktif && (
+          <button
+            type="button"
+            onClick={() => setMenuHpTerbuka(true)}
+            /* Namanya SENGAJA beda dari <nav aria-label="Menu katalog"> di
+               NavMenus.tsx: dua kontrol bernama sama di satu halaman membuat
+               pembaca layar menyebut keduanya persis sama, dan pemakainya tak
+               bisa membedakan mana yang membuka panel. */
+            aria-label="Menu kategori"
+            aria-haspopup="dialog"
+            aria-expanded={menuHpTerbuka}
+            className={cn(
+              TEKS_BAR_MEREK,
+              SOROT_BAR_MEREK,
+              /* `md:hidden` WAJIB di sini dan hanya di sini — di layar
+                 komputer deretan menu aslinya sudah tergambar, dan memasangnya
+                 di `SheetContent` malah meninggalkan tirai hitam menutupi
+                 layar (lihat peringatan panjang di bawah). */
+              "order-1 flex size-9 shrink-0 items-center justify-center rounded-sm transition-colors outline-none md:hidden",
+              /* MENYINGKIR selagi kotak cari dibuka di HP — pola yang sama
+                 dipakai koin & avatar di kelompok kanan, dan alasannya sama.
+
+                 Diukur, bukan dikira (Chrome, layar dipaksa lewat CDP):
+                 tulisan "Cari film di Layarindo" butuh 135px. Produksi yang
+                 belum punya tombol ini menyisakan 154px di layar 360px
+                 (lega +19). Dengan tombolnya ikut berdiri, sisanya tinggal
+                 106px — tulisannya TERPOTONG 29px. Tombol 36px + jarak 12px
+                 persis memakan selisihnya.
+
+                 Keluhan "tulisan kotak cari terpotong" sudah TIGA kali
+                 diperbaiki owner (lihat riwayatnya di komentar kelompok
+                 kanan), jadi tombol baru tidak boleh menghidupkannya lagi.
+                 Harganya kecil & bisa dibatalkan penonton: tombol X di
+                 sebelahnya menutup pencarian dan garis-tiganya muncul lagi. */
+              cariTerbuka && "max-md:hidden",
+              menuHpTerbuka && "bg-emas-500/25",
+            )}
+          >
+            <Menu className="size-5" />
+          </button>
+        )}
+
         {chrome?.brand && (
           <div
             className={cn(
@@ -375,7 +439,9 @@ export default function SearchBar({
 
                     Panelnya TIDAK dihapus, cuma pindah pemicu: owner memilih
                     *"beri tombol ikon sendiri"* supaya nol menu hilang di HP.
-                    Tombolnya ada di kelompok kanan bar (dekat kaca pembesar),
+                    Tombolnya kini garis-tiga di ujung KIRI bar, tepat sebelum
+                    logo (owner 2026-11-28; sehari sebelumnya ikon kompas di
+                    kelompok kanan),
                     dan panel ini kini dikendalikan `menuHpTerbuka` — bukan
                     `SheetTrigger` — justru supaya `SheetContent` di bawah
                     TIDAK perlu dipindah: memindahkannya berarti menggunting
@@ -621,40 +687,12 @@ export default function SearchBar({
               </div>
             )}
 
-            {/* TOMBOL MENU KATALOG — khusus HP, dan hanya kalau panelnya
-                memang ada isinya (`panelHpAktif`). Lahir 2026-11-27 saat owner
-                meminta logo kembali jadi tautan ke home; ia PENGGANTI pemicu
-                yang dulu menempel di logo, bukan tombol tambahan yang
-                menumpuk.
-
-                Ikonnya `Compass`, SENGAJA bukan garis-tiga: owner melepas
-                tombol garis-tiga 2026-11-14 dan memilih *"tombol ikon
-                sendiri"*. Sengaja juga bukan kotak-kotak — bentuk itu sudah
-                dipakai menu AKUN di ujung kanan (MenuAkun `ringkas`), dan dua
-                ikon kembar bersebelahan membuat penonton menebak mana yang
-                mana. */}
-            {panelHpAktif && (
-              <button
-                type="button"
-                onClick={() => setMenuHpTerbuka(true)}
-                /* Namanya SENGAJA beda dari <nav aria-label="Menu katalog">
-                   di NavMenus.tsx: dua kontrol bernama sama di satu halaman
-                   membuat pembaca layar menyebut keduanya persis sama, dan
-                   pemakainya tak bisa membedakan mana yang membuka panel. */
-                aria-label="Menu kategori"
-                aria-haspopup="dialog"
-                aria-expanded={menuHpTerbuka}
-                className={cn(
-                  TEKS_BAR_MEREK,
-                  SOROT_BAR_MEREK,
-                  "flex size-9 shrink-0 items-center justify-center rounded-sm transition-colors outline-none md:hidden",
-                  menuHpTerbuka && "bg-emas-500/25",
-                )}
-              >
-                <Compass className="size-5" />
-              </button>
-            )}
-
+            {/* 🪦 TOMBOL MENU KATALOG DULU DI SINI (2026-11-27, ikon
+                `Compass`). Dipindah ke ujung KIRI bar + diganti garis-tiga
+                atas permintaan owner 2026-11-28 — lihat komentarnya di sana.
+                Nisan ini ditinggal supaya sesi berikutnya yang membaca catatan
+                lama ("tombolnya ada di kelompok kanan bar") tidak mencarinya
+                di tempat yang sudah kosong. */}
             <button
               type="button"
               onClick={() => setCariTerbuka((t) => !t)}

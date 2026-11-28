@@ -20,7 +20,12 @@ import { renderToStaticMarkup } from "react-dom/server";
 import TabKatalogTampilan from "../app/components/beranda/TabKatalogTampilan";
 import { siapkanTampilanDepan } from "../lib/baris-atas";
 import { KUNCI_BARIS_VIDEO } from "../lib/beranda-video";
-import { SEKSI_BERISI_FILM, TAB_BAWAAN, TAB_GRID_ITEMS } from "../lib/tab-katalog";
+import {
+  SEKSI_BERISI_FILM,
+  TAB_BAWAAN,
+  TAB_GRID_ITEMS,
+  URUTAN_SEKSI_BERANDA,
+} from "../lib/tab-katalog";
 import type { Drama } from "../lib/types";
 import type { PlaylyVideoPublik } from "../lib/playly-publik";
 
@@ -205,7 +210,20 @@ describe("beranda menggambar Nonton Bareng & Rekomendasi sebagai seksi FILM", ()
     return html.slice(mulai, berikut < 0 ? undefined : berikut);
   };
 
-  for (const kunci of [...SEKSI_BERISI_FILM]) {
+  // ⚠️ Disaring ke seksi yang BENAR-BENAR digambar di beranda, bukan seluruh
+  // isi SEKSI_BERISI_FILM. Owner mencabut seksi "terbaru" dari beranda
+  // 2026-11-28 sementara kunci itu tetap terdaftar sebagai "berisi film"
+  // (sengaja — lihat nisannya di URUTAN_SEKSI_BERANDA). Tanpa saringan ini
+  // tesnya mencari seksi yang memang tidak ada lalu merah tanpa ada yang rusak.
+  const SEKSI_FILM_TERGAMBAR = [...SEKSI_BERISI_FILM].filter((k) =>
+    (URUTAN_SEKSI_BERANDA as readonly string[]).includes(k),
+  );
+
+  it("minimal satu seksi film tergambar — kalau nol, tes di bawah lulus hampa", () => {
+    expect(SEKSI_FILM_TERGAMBAR.length).toBeGreaterThan(0);
+  });
+
+  for (const kunci of SEKSI_FILM_TERGAMBAR) {
     it(`seksi "${kunci}" berisi film, NOL drama katalog`, () => {
       const isi = blok(kunci);
       expect(isi).toContain("Film Layar Lebar");
@@ -215,18 +233,35 @@ describe("beranda menggambar Nonton Bareng & Rekomendasi sebagai seksi FILM", ()
     });
   }
 
-  it("Nonton Bareng & Film Terbaru tidak menampilkan judul yang sama", () => {
-    // Kolamnya satu; tanpa pembagi jendela, kedua seksi ini kembar di satu
+  it("tiap seksi film TIDAK mengulang judul dari Film Terbaru", () => {
+    // Kolamnya satu; tanpa pembagi jendela, dua seksi film kembar di satu
     // layar. Judul dibandingkan dari HTML yang sudah tergambar, bukan dari
     // hasil fungsi — supaya yang diuji adalah apa yang dilihat penonton.
+    //
+    // Ditulis sebagai LOOP, bukan satu pasangan nama tetap: susunan seksi
+    // beranda sudah berubah tiga kali dalam lima hari, dan tes yang memaku
+    // nama pasangannya ikut merah tiap kali tanpa ada yang benar-benar rusak.
     const judul = (isi: string) =>
       new Set([...isi.matchAll(/Film Layar Lebar (\d+)/g)].map((m) => m[1]));
-    const bareng = judul(blok(TAB_BAWAAN));
-    const terbaru = judul(blok(KUNCI_BARIS_VIDEO));
+    const barisAtas = judul(blok(KUNCI_BARIS_VIDEO));
+    expect(barisAtas.size).toBeGreaterThan(0);
 
-    expect(bareng.size).toBeGreaterThan(0);
-    expect(terbaru.size).toBeGreaterThan(0);
-    expect([...bareng].filter((id) => terbaru.has(id))).toEqual([]);
+    for (const kunci of SEKSI_FILM_TERGAMBAR) {
+      const seksi = judul(blok(kunci));
+      expect(seksi.size, kunci + ' kosong').toBeGreaterThan(0);
+
+      // "rekomendasi" DIKECUALIKAN, dan itu bukan kelonggaran: ia mengurut
+      // dari RATING, bukan menggeser jendela kolam. Film bagus yang
+      // kebetulan juga baru memang pantas muncul di dua seksi — alasannya
+      // sudah ditulis di filmSeksiRekomendasi, dan memaksanya berbeda
+      // berarti menyembunyikan film terbaik hanya karena ia juga baru.
+      if (kunci === 'rekomendasi') continue;
+
+      expect(
+        [...seksi].filter((id) => barisAtas.has(id)),
+        kunci + ' mengulang judul yang sudah tampil di Film Terbaru',
+      ).toEqual([]);
+    }
   });
 
   it("Rekomendasi diurutkan dari rating tertinggi", () => {

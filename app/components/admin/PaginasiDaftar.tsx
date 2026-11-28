@@ -31,6 +31,7 @@ export default function PaginasiDaftar({
   onHalaman,
   onUkuran,
   className,
+  varian = "terang",
 }: {
   /** Jumlah baris SESUDAH disaring — bukan jumlah seluruh data. */
   total: number;
@@ -39,10 +40,38 @@ export default function PaginasiDaftar({
   onHalaman: (halaman: number) => void;
   onUkuran: (ukuran: UkuranHalaman) => void;
   className?: string;
+  /**
+   * Warna teks & aksen, disesuaikan latar tempat ia dipasang.
+   *
+   * "terang" (bawaan) = panel admin yang berlatar putih — kelasnya PERSIS
+   * seperti sebelum varian ini ada, jadi admin tidak berubah sedikit pun.
+   * "gelap" = halaman penonton (/discover) yang berlatar anggur tua.
+   *
+   * ⚠️ Kenapa perlu, DIUKUR 2026-11-28 bukan dikira: memasang versi admin
+   * apa adanya di /discover menghasilkan kontras 3.28:1 pada tulisan
+   * "Baris:" dan 2.37:1 pada nomor halaman yang aktif — keduanya di bawah
+   * ambang WCAG AA 4.5:1. Sebabnya warna aksennya (amber-700, zinc-500)
+   * memang dipilih untuk latar PUTIH.
+   *
+   * Yang berbeda hanya WARNA. Bentuk, urutan kelompok, dan aturan hitungnya
+   * tetap satu — itulah "biar seragam" yang diminta owner.
+   */
+  varian?: "terang" | "gelap";
 }) {
   // Dijepit di sini juga, bukan hanya di pemanggil: kalau nomor halaman yang
   // dioper sudah kedaluwarsa, "Hal 3 / 2" akan tercetak apa adanya — angka
   // yang berbohong lebih menyesatkan daripada daftar yang kosong.
+  const gelap = varian === "gelap";
+  const warna = {
+    label: gelap ? "text-zinc-300" : "text-zinc-500",
+    nomorAktif: gelap
+      ? "border-emas-400 bg-emas-500/25 text-emas-200"
+      : "border-amber-500 bg-amber-500/15 text-amber-700",
+    nomorBiasa: gelap
+      ? "border-zinc-600 text-zinc-300 hover:border-emas-400 hover:text-emas-200"
+      : "border-zinc-700 text-zinc-400 hover:border-amber-400 hover:text-amber-700",
+  };
+
   const aman = jepitHalaman(halaman, total, ukuran);
   const jumlahHalaman = hitungJumlahHalaman(total, ukuran);
 
@@ -64,7 +93,7 @@ export default function PaginasiDaftar({
         className,
       )}
     >
-      <label className="flex items-center gap-1.5 text-xs text-zinc-500">
+      <label className={cn("flex items-center gap-1.5 text-xs", warna.label)}>
         Baris:
         <select
           value={ukuran}
@@ -111,9 +140,7 @@ export default function PaginasiDaftar({
               aria-label={`Halaman ${petak}`}
               className={cn(
                 "min-h-8 min-w-8 rounded-lg border px-2 text-xs font-semibold transition",
-                petak === aman
-                  ? "border-amber-500 bg-amber-500/15 text-amber-700"
-                  : "border-zinc-700 text-zinc-400 hover:border-amber-400 hover:text-amber-700",
+                petak === aman ? warna.nomorAktif : warna.nomorBiasa,
               )}
             >
               {petak}

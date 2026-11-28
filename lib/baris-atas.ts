@@ -5,6 +5,32 @@
 // dan series tinggal di seksi di bawah. Daftar film SUDAH terurut tahun
 // di lib/playly-gabungan.ts — berkas ini tidak mengurut ulang.
 
+import { parseRating } from "./format";
+
+/**
+ * Ambang rating IMDb untuk masuk BARIS POSTER PALING ATAS.
+ *
+ * Owner 2026-11-28, sesudah melihat barisnya di produksi: *"film yang muncul
+ * paling atas film-film terbaru/box office"*. Dua kata itu menunjuk hal
+ * berbeda, dan owner sudah diberi tahu bedanya sebelum memilih: kita TIDAK
+ * punya data pendapatan box office, yang ada cuma rating IMDb. Yang dipilih
+ * owner: tetap film terbaru, tapi yang ratingnya rendah disingkirkan.
+ *
+ * Kenapa 6.0 dan bukan angka lain — DIUKUR di beranda produksi 2026-11-28,
+ * bukan ditebak: dari 60 kartu film yang ratingnya terbaca, mediannya 6.4 dan
+ * **41** lolos ambang 6.0, sementara baris atas cuma butuh 14. Jadi ambang ini
+ * menyaring tanpa membuat barisnya bolong. (Ambang 7.0 menyisakan 25 — masih
+ * cukup, tapi mulai membuang film baru yang wajar.) Sebelum ambang ini
+ * dipasang, baris atas memuat rating 3.7 · 4.5 · 4.7 · 4.8 · 4.9 — itulah yang
+ * dikeluhkan owner.
+ *
+ * ⚠️ Film TANPA rating ikut tersaring keluar (`parseRating` memulangkan 0).
+ * Itu disengaja: tanpa rating kita tidak punya dasar apa pun untuk menyebutnya
+ * layak tampil paling atas. Mereka tidak hilang dari situs — tetap muncul di
+ * seksi "Film Terbaru" di bawahnya.
+ */
+export const AMBANG_RATING_BARIS_ATAS = 6.0;
+
 export type ButirBarisAtas<F, S, D> =
   | { jenis: "film"; item: F }
   | { jenis: "series"; item: S }
@@ -63,7 +89,7 @@ const adaTeks = (nilai: string | null | undefined) => Boolean(nilai?.trim());
  * Drama tidak dipotong: semuanya tetap untuk seksi Series.
  */
 export function siapkanTampilanDepan<
-  F extends { id: string; thumbnail?: string | null },
+  F extends { id: string; thumbnail?: string | null; rating?: string | null },
   S extends { id: string; thumbnail?: string | null },
   D extends { id: string },
 >(sumber: {
@@ -88,7 +114,25 @@ export function siapkanTampilanDepan<
     ? Math.max(0, Math.floor(sumber.jumlahBaris))
     : 0;
   const filmBergambar = sumber.film.filter((v) => adaTeks(v.thumbnail));
-  const barisAtas = filmBergambar
+
+  // Hanya film ber-rating layak yang boleh berdiri paling atas (owner
+  // 2026-11-28) — lihat AMBANG_RATING_BARIS_ATAS. Urutan TIDAK diubah: daftar
+  // sudah terurut tahun terbaru dari lib/playly-gabungan.ts, jadi yang terjadi
+  // cuma membuang yang tak layak, bukan mengurut ulang jadi "rating tertinggi".
+  const filmLayakAtas = filmBergambar.filter(
+    (v) => parseRating(v.rating ?? undefined) >= AMBANG_RATING_BARIS_ATAS,
+  );
+
+  // JARING PENGAMAN: kalau ambangnya menyapu habis (penyedia sedang sepi, atau
+  // kolom rating belum terisi sama sekali), baris atas jatuh ke perilaku lama
+  // alih-alih menghilang. Baris paling atas yang kosong membuat halaman depan
+  // terbaca RUSAK, dan itu jauh lebih buruk daripada satu-dua judul ber-rating
+  // rendah. Sengaja dipicu hanya saat hasilnya NOL, bukan saat kurang dari 14:
+  // barisnya memang boleh lebih pendek, owner sudah diberi tahu.
+  const sumberBarisAtas =
+    filmLayakAtas.length > 0 ? filmLayakAtas : filmBergambar;
+
+  const barisAtas = sumberBarisAtas
     .slice(0, jumlahBaris)
     .map((item) => ({ jenis: "film" as const, item }));
   return {

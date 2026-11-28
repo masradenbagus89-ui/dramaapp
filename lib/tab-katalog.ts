@@ -161,20 +161,22 @@ export const TAB_BAWAAN: TabKey = "terbaru";
 export const SEKSI_FILM = "__film__" as const;
 
 /**
- * URUTAN SEKSI HALAMAN DEPAN — ditentukan langsung oleh owner 2026-11-28,
- * disebut sebagai satu daftar utuh sambil menandai kelima judulnya di layar:
- *   1. Film Terbaru  2. Top Bulan Ini  3. Drama Asia  4. Terpopuler
- *   5. Rekomendasi
+ * URUTAN SEKSI HALAMAN DEPAN — owner 2026-11-28, dalam DUA langkah di hari
+ * yang sama:
+ *   1. susunan lima seksi: Film Terbaru · Top Bulan Ini · Drama Asia ·
+ *      Terpopuler · Rekomendasi;
+ *   2. beberapa jam kemudian, sesudah melihatnya di layar:
+ *      *"TOP BULAN INI kamu hilangkan saja"*.
  *
- * (Susunan 2026-11-24 yang digantikan: Nonton Bareng · Rekomendasi · Film
- * Terbaru · Drama Asia · Terpopuler. Jumlah seksinya tetap lima dan nol
- * seksi dibuang — yang berubah urutannya, plus satu nama.)
+ * Hasil akhir = EMPAT seksi. (Susunan 2026-11-24 yang digantikan: Nonton
+ * Bareng · Rekomendasi · Film Terbaru · Drama Asia · Terpopuler.)
  *
- * ⚠️ "Film Terbaru" NAIK KE PUNCAK, dan itu menguatkan pembagian kolam film
- * yang sudah ada: `filmSeksiTopBulanIni` sengaja mengambil jendela KEDUA
- * supaya tidak mengulang judul yang sama dengan baris di atasnya. Sejak
- * urutan ini keduanya bersebelahan, jadi aturan itu makin wajib — bukan
- * makin bisa dilepas.
+ * ⚠️ Sejak "Top Bulan Ini" keluar, `filmSeksiTopBulanIni` TIDAK lagi punya
+ * seksi yang memanggilnya di beranda. Fungsinya sengaja TIDAK dihapus: nama
+ * seksi ini sudah tiga kali berganti dalam lima hari, dan aturan "jendela
+ * KEDUA kolam" di dalamnya adalah yang mencegah dua baris film menampilkan
+ * judul yang sama. Menghapusnya berarti menulis ulang aturan itu dari nol
+ * kalau seksinya diminta kembali.
  *
  * ⚠️ DAFTAR INI JUGA MENENTUKAN APA YANG TIDAK DIGAMBAR. "Series Unggulan"
  * dan tab tahun ("2026") sengaja TIDAK ada di sini — owner meminta beranda
@@ -193,7 +195,12 @@ export const SEKSI_FILM = "__film__" as const;
  */
 export const URUTAN_SEKSI_BERANDA: readonly (TabKey | typeof SEKSI_FILM)[] = [
   SEKSI_FILM,
-  "terbaru",
+  // 🪦 "terbaru" (judul "Top Bulan Ini") DIKELUARKAN owner 2026-11-28, beberapa
+  // jam sesudah ia sendiri menamainya. Yang dibuang cuma SEKSINYA dari
+  // beranda — tabnya tetap hidup di `daftarTab`, `/katalog?tab=terbaru` tetap
+  // mendarat benar, dan `TAB_BAWAAN` tetap menunjuk ke sana. Pola yang sama
+  // dipakai "unggulan" & tab tahun; lihat peringatan di atas kenapa tabnya
+  // TIDAK boleh ikut dibuang.
   "update",
   "terpopuler",
   "rekomendasi",

@@ -34,6 +34,14 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Search, X } from "lucide-react";
+import PaginasiDaftar from "./admin/PaginasiDaftar";
+import {
+  HALAMAN_PERTAMA,
+  UKURAN_BAWAAN,
+  jepitHalaman,
+  potongHalaman,
+  type UkuranHalaman,
+} from "@/lib/paginasi";
 
 /**
  * Bentuk penyaring, pembacaan & penulisan alamat semuanya ada di
@@ -222,6 +230,44 @@ export default function DramaBrowser({
     [filtered, videoPlayly],
   );
 
+  /**
+   * PAGINATION (owner 2026-11-28: *"di menu terpopuler kamu buatkan
+   * pagination agar lebih mudah ... seperti yang diadmin/imdb biar
+   * seragam"*).
+   *
+   * Halaman ini menggambar SELURUH hasil sekaligus — terukur di produksi,
+   * satu daftar bisa ratusan kartu dalam satu gulungan tanpa ujung.
+   *
+   * Komponennya SENGAJA `PaginasiDaftar` milik panel admin, bukan yang
+   * dibuat baru: owner meminta "biar seragam", dan menyalin bentuknya ke
+   * komponen kedua berarti dua tampilan yang pasti menyimpang cepat atau
+   * lambat. Aturan hitungnya (jumlah halaman, penjepit, deret nomor) sudah
+   * di lib/paginasi.ts dan dipakai bersama.
+   */
+  const [halaman, setHalaman] = useState(HALAMAN_PERTAMA);
+  const [ukuran, setUkuran] = useState<UkuranHalaman>(UKURAN_BAWAAN);
+
+  // Dijepit tiap render: jumlah hasil berubah terus (penyaring, pencarian),
+  // dan nomor halaman yang tertinggal di luar jangkauan akan menggambar
+  // grid KOSONG — penonton mengira katalognya habis, padahal cuma
+  // halamannya yang salah. Menjepit lebih baik daripada mengosongkan.
+  const halamanAman = jepitHalaman(halaman, hasil.length, ukuran);
+  const hasilHalaman = potongHalaman(hasil, halamanAman, ukuran);
+
+  // Penyaring / kata kunci berubah -> BALIK ke halaman 1.
+  //
+  // Tanpa ini penonton yang sedang di halaman 3 lalu memilih genre lain akan
+  // mendarat di halaman 3 genre BARU — melewati dua halaman pertama tanpa
+  // pernah melihatnya. Penjepit di atas tidak menolong: ia hanya bekerja
+  // kalau halamannya di LUAR jangkauan, sedangkan 3 dari 9 halaman itu sah.
+  //
+  // `filter` aman jadi dependency: ia state, jadi identitasnya hanya berubah
+  // saat `setFilter` benar-benar dipanggil (dari penyaring, atau dari
+  // penyelaras alamat di atas) — bukan tiap render.
+  useEffect(() => {
+    setHalaman(HALAMAN_PERTAMA);
+  }, [filter]);
+
   // Ketikan pencarian DIPERTAHANKAN — alasannya sama dengan `adaFilterAktif`.
   const resetFilters = () => terapkan({ ...FILTER_KOSONG, q: filter.q });
 
@@ -357,7 +403,7 @@ export default function DramaBrowser({
           </div>
         ) : (
           <div className={GRID_CLASS}>
-            {hasil.map((item) =>
+            {hasilHalaman.map((item) =>
               item.jenis === "drama" ? (
                 <CatalogCard key={`d-${item.id}`} drama={item.drama} />
               ) : (
@@ -365,6 +411,30 @@ export default function DramaBrowser({
               ),
             )}
           </div>
+        )}
+
+        {/* Kontrol halaman HANYA saat hasilnya memang lebih dari satu
+            halaman. Menggambarnya untuk 12 judul cuma menambah barang di
+            layar tanpa satu pun gunanya — tombolnya mati semua. */}
+        {hasil.length > ukuran && (
+          <PaginasiDaftar
+            total={hasil.length}
+            halaman={halamanAman}
+            ukuran={ukuran}
+            onHalaman={(n) => {
+              setHalaman(n);
+              // Balik ke atas daftar: tanpa ini penonton menekan
+              // "Berikutnya" di kaki halaman lalu tetap berdiri di kaki,
+              // melihat poster terakhir halaman BARU dan mengira tombolnya
+              // tidak bekerja.
+              if (typeof window !== "undefined") {
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }
+            }}
+            onUkuran={setUkuran}
+            varian="gelap"
+            className="mt-8"
+          />
         )}
       </div>
       </div>

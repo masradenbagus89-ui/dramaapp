@@ -21,10 +21,14 @@ import {
 import type { Drama } from "../lib/types";
 import type { PlaylyVideoPublik } from "../lib/playly-publik";
 
-/** Urutan yang diminta owner 2026-11-28, ditulis sebagai yang DILIHAT penonton. */
+/**
+ * Urutan yang diminta owner 2026-11-28, ditulis sebagai yang DILIHAT penonton.
+ *
+ * EMPAT seksi sejak owner mencabut "Top Bulan Ini" sore itu juga
+ * (*"TOP BULAN INI kamu hilangkan saja"*) — seksi itu sempat ada beberapa jam.
+ */
 const URUTAN_DIMINTA = [
   "Film Terbaru",
-  "Top Bulan Ini",
   "Drama Asia",
   "Terpopuler",
   "Rekomendasi",
@@ -105,20 +109,19 @@ describe("urutan seksi halaman depan (owner 2026-11-28)", () => {
     ).toEqual([...URUTAN_DIMINTA]);
   });
 
-  it("daftar sumbernya juga terkunci, dan tetap lima seksi", () => {
+  it("daftar sumbernya juga terkunci, dan tetap empat seksi", () => {
     // Pagar kedua: kalau daftar ini berubah, yang di atas ikut berubah arti.
     // Keduanya sengaja diperiksa — satu menjaga niat, satu menjaga hasil.
     expect(URUTAN_SEKSI_BERANDA).toEqual([
       SEKSI_FILM,
-      "terbaru",
       "update",
       "terpopuler",
       "rekomendasi",
     ]);
     expect(
       URUTAN_SEKSI_BERANDA,
-      "owner meminta beranda tepat lima seksi",
-    ).toHaveLength(5);
+      "owner meminta beranda tepat empat seksi sejak Top Bulan Ini dicabut",
+    ).toHaveLength(4);
   });
 
   it("tab yang DIPILIH penonton tetap naik ke atas", () => {
@@ -143,6 +146,16 @@ describe("urutan seksi halaman depan (owner 2026-11-28)", () => {
       iTerpopuler,
       "tab yang diklik tidak lagi naik ke atas — kliknya jadi tak terasa",
     ).toBeLessThan(iFilmTerbaru);
+  });
+
+  it('seksi "Top Bulan Ini" tidak digambar lagi di beranda', () => {
+    // Owner mencabutnya 2026-11-28 sesudah melihatnya di layar. Tabnya TETAP
+    // hidup (`/katalog?tab=terbaru` masih mendarat benar) — yang dicabut cuma
+    // seksinya dari halaman depan, jadi yang diperiksa di sini HTML beranda.
+    expect(
+      html,
+      'seksi "Top Bulan Ini" muncul lagi di beranda',
+    ).not.toContain(">Top Bulan Ini<");
   });
 
   it('nama seksi "Nonton Bareng" tidak dipakai lagi sebagai judul seksi', () => {

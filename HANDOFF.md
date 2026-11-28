@@ -90,7 +90,9 @@
 > aftermarket** dari pemilik sekarang, harganya **jauh di atas** Rp200.000 dan belum pernah dicek.
 > Nama lain yang masih bebas jauh lebih murah.
 
-**Terakhir diisi:** 2026-11-27 (tutup sesi) — ⏸️ **`de906cc` SIAP RILIS tapi SENGAJA BELUM DI-PUSH.** Owner menutup sesi (*"besok aja kita lanjutkan sudah lelah bro"*) sebelum memberi izin; pekerjaannya sendiri SUDAH selesai & terbukti. 🔴 **JANGAN push apa pun sebelum owner bilang "rilis"** — commit catatan mana pun duduk DI ATAS `de906cc`, jadi mendorong "cuma catatan" akan ikut merilis perubahan tampilannya. Isinya DUA permintaan owner hari itu: **(1) logo kembali jadi tautan ke home** (*"ketika diklik logo layarindo bukan menu genre yang muncul, tapi menu awal/home"*) — ini **MEMBALIK keputusan owner sendiri 2026-11-21**, pembalikan yang DISENGAJA, jangan "dibetulkan" balik; panelnya tidak dihapus melainkan pindah ke **tombol ikon kompas** khusus HP (owner memilih *"beri tombol ikon sendiri"*), dikendalikan state supaya `SheetContent` yang sudah tiga kali dikoreksi tidak perlu dipindah. **(2) tombol besar jadi "NONTON BARENG"** dengan tujuan pindah `/discover` → `/film` — bukan selera: seksi bernama sama tepat di bawahnya juga menuju `/film` sebab isinya FILM, dan dua tombol senama yang mendarat di daftar berbeda menipu penonton. 🎯 **Bukti di Chrome sungguhan layar HP 390px:** tombol menu kategori terlihat (36px, x=294) · diklik → panel muncul dengan Genre 28 · Series 6 · Populer 4 · Negara 61 · Tahun 20 · Lainnya 10 (**nol menu hilang**) · logo `<a href="/">` tidak dibungkus `<button>` · tombol besar → `/film`. Gerbang: build exit 0 · tsc 0 · **208 berkas / 2950 tes hijau**. 🛡️ **4 penjaga baru (2 diuji-balik)** + **2 penjaga LAMA diperbarui bukan dihapus**; yang terpenting berbunyi kalau pemicu panel hilang TANPA pengganti — kerusakan senyap yang melenyapkan seluruh menu kategori di HP. 🪤 Dua jebakan baru: ukur layar HP WAJIB lewat CDP `Emulation.setDeviceMetricsOverride` (bukan `--window-size`), dan jangan beri nama `aria-label` yang sudah dipakai elemen lain — `querySelector` saya sempat menemukan `<nav>` deretan menu komputer lalu melaporkan tombol barunya "berukuran 0". 🔴 **Besok:** izin rilis · owner lihat sendiri di HP · dua tawaran lama belum dijawab (ikon ringkas dipersempit ke `/admin` saja? nama *"Masuk sebagai …"* di dalam menu dihapus?).
+**Terakhir diisi:** 2026-11-28 — ✅ **RILIS `45ef121` TAYANG, antrean KOSONG** (`main` = `origin` = `dramaku`). Owner: *"commit dan push"*. **5 commit**, dua di antaranya tertahan semalaman (`de906cc` logo pulang ke home + tombol "NONTON BARENG"). Empat permintaan owner hari ini: **(1)** ikon kompas → **garis-tiga di ujung KIRI** bar (membalik pilihan owner sehari sebelumnya); **(2)** susunan seksi beranda, lalu dicabut separuh di hari yang sama (*"TOP BULAN INI kamu hilangkan saja"*) → **EMPAT seksi**: Film Terbaru · Drama Asia · Terpopuler · Rekomendasi; **(3)** baris poster paling atas disaring **rating ≥ 6.0** (owner memilih "terbaru + rating bagus" sesudah diberi tahu kita TIDAK punya data box office; ambangnya DIUKUR: 41 dari 60 lolos, barisnya butuh 14); **(4)** **pagination di `/discover?sort=populer`** memakai komponen panel admin, bukan komponen baru. ⚠️ **Dua kerusakan ikut ketemu saat mengukur, bukan dilaporkan owner:** tombol garis-tiga memotong tulisan kotak cari **29px di layar 360px** (keluhan yang sudah TIGA kali diperbaiki — kini tombolnya menyingkir saat cari dibuka), dan komponen pagination admin dirancang untuk latar PUTIH sehingga kontrasnya **3,28:1 & 2,37:1** di `/discover` yang gelap (ditambah prop `varian`, admin nol berubah → **10,7:1 & 7,68:1**). 🪤 **Temuan terpenting:** aturan lama *"tab aktif naik ke urutan pertama"* membuat urutan seksi yang diminta owner **MUSTAHIL** terwujud — tab bawaan selalu menyerobot posisi satu. Dikecualikan untuk tab BAWAAN saja; tab yang diklik tetap naik. 🎯 **Bukti tayang di situs sungguhan:** 9 alamat **200** · seksi beranda persis 4 · rating baris atas **nol di bawah 6.0** · tombol garis-tiga x=16 ikon `lucide-menu` 3 garis, diketuk → panel **133 tautan** · `/discover` **683 judul** 50/halaman nomor 1-6…14, klik Berikutnya → halaman 2 · kontras 5 elemen **7,68–13,96**. Railway menayangkan dalam **43 detik**. Gerbang `npm run gerbang` **LOLOS 5/5** exit 0 · 211 berkas / **2978 tes** · nol berkas rahasia. 🛡️ **22 penjaga baru** (2 berkas baru), **dua diuji-balik**; `tests/urutan-seksi-beranda.test.ts` yang menangkap serobotan tab di atas — sebelum ia ada, urutan seksi beranda **NOL dijaga**. 🪤 Empat jebakan baru, dua terpenting: **port 3000 di mesin ini dipegang penyewa LAIN** (itu sebab "localhost tidak bisa dibuka" — preview sesi ini di **port 3177**), dan **pengukur kontras berbasis regex `rgb()` gagal total** di Tailwind v4 (warnanya `oklch`) lalu melaporkan "nol masalah" padahal nol yang terukur. 🔴 **Belum dijawab owner:** tombol besar beranda masih bertuliskan "NONTON BARENG" padahal tak ada lagi seksi bernama itu.
+
+**Sebelumnya:** 2026-11-27 (tutup sesi) — ⏸️ **`de906cc` SIAP RILIS tapi SENGAJA BELUM DI-PUSH.** Owner menutup sesi (*"besok aja kita lanjutkan sudah lelah bro"*) sebelum memberi izin; pekerjaannya sendiri SUDAH selesai & terbukti. 🔴 **JANGAN push apa pun sebelum owner bilang "rilis"** — commit catatan mana pun duduk DI ATAS `de906cc`, jadi mendorong "cuma catatan" akan ikut merilis perubahan tampilannya. Isinya DUA permintaan owner hari itu: **(1) logo kembali jadi tautan ke home** (*"ketika diklik logo layarindo bukan menu genre yang muncul, tapi menu awal/home"*) — ini **MEMBALIK keputusan owner sendiri 2026-11-21**, pembalikan yang DISENGAJA, jangan "dibetulkan" balik; panelnya tidak dihapus melainkan pindah ke **tombol ikon kompas** khusus HP (owner memilih *"beri tombol ikon sendiri"*), dikendalikan state supaya `SheetContent` yang sudah tiga kali dikoreksi tidak perlu dipindah. **(2) tombol besar jadi "NONTON BARENG"** dengan tujuan pindah `/discover` → `/film` — bukan selera: seksi bernama sama tepat di bawahnya juga menuju `/film` sebab isinya FILM, dan dua tombol senama yang mendarat di daftar berbeda menipu penonton. 🎯 **Bukti di Chrome sungguhan layar HP 390px:** tombol menu kategori terlihat (36px, x=294) · diklik → panel muncul dengan Genre 28 · Series 6 · Populer 4 · Negara 61 · Tahun 20 · Lainnya 10 (**nol menu hilang**) · logo `<a href="/">` tidak dibungkus `<button>` · tombol besar → `/film`. Gerbang: build exit 0 · tsc 0 · **208 berkas / 2950 tes hijau**. 🛡️ **4 penjaga baru (2 diuji-balik)** + **2 penjaga LAMA diperbarui bukan dihapus**; yang terpenting berbunyi kalau pemicu panel hilang TANPA pengganti — kerusakan senyap yang melenyapkan seluruh menu kategori di HP. 🪤 Dua jebakan baru: ukur layar HP WAJIB lewat CDP `Emulation.setDeviceMetricsOverride` (bukan `--window-size`), dan jangan beri nama `aria-label` yang sudah dipakai elemen lain — `querySelector` saya sempat menemukan `<nav>` deretan menu komputer lalu melaporkan tombol barunya "berukuran 0". 🔴 **Besok:** izin rilis · owner lihat sendiri di HP · dua tawaran lama belum dijawab (ikon ringkas dipersempit ke `/admin` saja? nama *"Masuk sebagai …"* di dalam menu dihapus?).
 
 **Sebelumnya hari ini:** 2026-11-27 (malam) — ✅ **RILIS `0cc6b9e` TAYANG, antrean KOSONG** (`main` = `origin` = `dramaku`). Owner: *"hilangkan saja radenbagus89, buat seragamkan saja Ikon Dashboard"*. ⭐ **Bentuk ringkasnya BUKAN dibuat baru** — sudah ada sejak 2026-11-25 dan dipakai /beranda & /discover; yang tertinggal justru **navbar hitam** (`TopNav`) yang masih memakai lingkaran berinisial + nama. Jadi "seragamkan" = satu wajah di seluruh situs, satu prop, nol komponen baru. **Terdampak semua halaman bernavbar hitam:** `/admin` `/profile` `/history` `/my-list` `/shorts` — perubahan yang DILIHAT penonton, bukan cuma admin. Isi menunya **nol berkurang** (Profile · Riwayat · Favorit · Admin · Keluar), penting sebab di layar komputer itulah satu-satunya jalan ke Admin & Keluar sejak tombol garis-tiga dilepas 14 Nov. 🛡️ **Penjaga baru (3 tes) + DIUJI-BALIK:** `TopNav` & `KepalaKatalog` wajib `pemicu="ringkas"`, `<MenuAkun />` polos ditolak; dikembalikan ke bentuk lama → **2 tes merah**, dipasang lagi → hijau. Kemundurannya senyap, jadi mesin yang mengingat. 🎯 **Bukti tayang:** penanda `pemicu:"ringkas"` di bundel JS produksi **naik 1 → 2** sesudah deploy; sembilan alamat **200**; gerbang build exit 0 · tsc 0 · **2945 tes hijau**. ⚠️ **Batas kejujuran:** chip itu hanya tergambar **sesudah login** dan dirender di browser, jadi tak bisa dibuktikan dari HTML server — bukti matanya tetap milik owner (buka `/admin` sambil login). 🪤 Jangan ulangi: login otomatis dari komputer ini GAGAL (200 tapi tetap di `/login`, dokumen `admins` terbaca kosong), dan jangan memanggil endpoint yang tidak ada lalu mencetak balasannya (`/api/auth/me` tidak ada → tercetak halaman 404 utuh, ribuan karakter sia-sia). 🔴 **Dua tawaran belum dijawab owner:** (1) mau dipersempit ke panel admin saja? (2) nama masih muncul di DALAM menu sebagai *"Masuk sebagai …"* — dihapus juga atau tidak?
 
@@ -113,6 +115,131 @@
 **Rincian kontrol volume (putaran KETIGA):** owner menolak bentuk tombol `+` / `−` dan mengirim contoh gambar, jadi pengatur volume kini **garis geser tegak berbentuk kapsul** (jalur kuning + bulatan penggeser). Diukur di Chrome headless layar 393px: kapsul `x=345..381` **utuh di dalam layar**, geser jari atas→100% / tengah→50% / bawah→bisu, nol elemen diputar. Gerbang lolos 5/5 (2383 tes hijau). ✅ **Sudah TAYANG** dalam rilis `53fbc5c → a9ae869` malam itu juga.
 
 **Sebelumnya hari ini:** ✅ **`2ad015b` + `8d8c1ba` TAYANG.** Tata letak pemutar beres dalam tiga putaran permintaan owner: tombol **Eps turun ke baris paling bawah**, tombol **volume pindah ke sebelah angka durasi**, rail ikon kanan **diperkecil & dirapatkan** (36px/20px/jarak 8px), dan garis volume tegak **diganti tombol + / −** karena terukur berdiri di **x=391 pada layar 393px = di luar layar HP**. Rinciannya di seksi `## 2026-11-13` di bawah.
+
+---
+
+## 2026-11-28 — ✅ RILIS `45ef121` TAYANG: lima commit tertahan akhirnya keluar
+
+> Owner: *"commit dan push"*. Antrean yang tertahan sejak 27 Nov malam **KOSONG** sekarang
+> (`main` = `origin` = `dramaku` = `45ef121`). **5 commit**, dua di antaranya sudah menunggu
+> semalaman.
+
+### Yang tayang
+
+| Commit | Isi |
+|---|---|
+| `de906cc` | logo pulang ke home · tombol besar jadi "NONTON BARENG" → `/film` (dibuat 27 Nov, DITAHAN) |
+| `51560da` | catatan penutup 27 Nov |
+| `5b090d3` | pemicu menu HP: ikon kompas → **garis-tiga di ujung KIRI** |
+| `da0b4a1` | susunan seksi beranda (lima seksi, "Top Bulan Ini") |
+| `45ef121` | **Top Bulan Ini dibuang** · ambang rating baris atas · **pagination `/discover`** |
+
+### Permintaan owner hari ini, berurutan
+
+**1. Ikon kompas → garis-tiga di kiri** (*"ikon kompas hilangkan saja ganti dengan 3 garis atau
+berger letakan nya ada di sebelah kiri"*). Ini MEMBALIK pilihan owner sendiri sehari sebelumnya
+(kompas di kelompok kanan). Nama `aria-label="Menu kategori"` + `md:hidden` + `setMenuHpTerbuka`
+sengaja DIPERTAHANKAN supaya tiga penjaga lama tetap berlaku.
+
+⚠️ **Kerusakan yang ikut ketemu saat mengukur, bukan dilaporkan owner:** tombol 36px + jarak 12px
+memakan ruang kotak cari sehingga tulisan *"Cari film di Layarindo"* **TERPOTONG 29px di layar
+360px** (produksi tanpa tombol itu menyisakan +19px). Itu keluhan yang sudah TIGA KALI diperbaiki
+owner. Tombolnya kini menyingkir selagi kotak cari dibuka di HP — pola yang sama dipakai koin &
+avatar. ❓ Belum diukur: apakah `de906cc` (kompas di kanan) juga sudah memotongnya. Dari membaca
+kode ia memakan 44px, jadi kemungkinan besar IYA — cuma 4px lebih ringan. Yang pasti: sekarang
+tidak lagi.
+
+**2. Susunan seksi beranda**, lalu **dicabut separuh di hari yang sama.** Owner pertama meminta
+lima seksi (Film Terbaru · Top Bulan Ini · Drama Asia · Terpopuler · Rekomendasi), beberapa jam
+kemudian: *"TOP BULAN INI kamu hilangkan saja"*. Hasil akhir **EMPAT seksi**.
+
+🪤 **Temuan yang menahan kerusakan senyap:** ada aturan lama *"tab yang sedang aktif naik ke
+urutan pertama"* (owner 2026-10-09), dan tab bawaan beranda adalah seksi yang sempat bernama
+"Top Bulan Ini" — jadi ia SELALU menyerobot posisi satu dan "Film Terbaru" **mustahil** di puncak,
+berapa kali pun urutannya ditulis ulang. Aturan itu kini dikecualikan untuk tab BAWAAN saja (itu
+keadaan awal halaman, bukan sebuah klik); tab yang benar-benar diklik TETAP naik, dijaga tes
+tersendiri.
+
+**3. Baris poster paling atas** (*"film yang muncul paling atas film-film terbaru/box office"*).
+Owner diberi tahu lebih dulu bahwa kita **TIDAK punya data pendapatan box office** — yang ada cuma
+rating IMDb — lalu memilih opsi *"terbaru + rating bagus"* dari tiga opsi. Ambang **6.0**,
+**DIUKUR bukan dikarang**: dari 60 kartu film beranda produksi yang ratingnya terbaca, median 6.4
+dan **41 lolos 6.0** sementara barisnya cuma butuh 14. Film tanpa rating ikut tersaring dari baris
+atas tapi TIDAK hilang dari situs. Jaring pengaman: kalau NOL film lolos, baris atas jatuh ke
+perilaku lama alih-alih kosong.
+
+**4. Pagination `/discover?sort=populer`** (*"seperti yang diadmin/imdb biar seragam"*). Halaman
+itu dulu menggambar SELURUH hasil dalam satu gulungan — terukur **683 judul** di produksi. Kini
+memakai `PaginasiDaftar` milik panel admin, **bukan komponen baru**, supaya tampilannya mustahil
+menyimpang. Ganti penyaring memulangkan ke halaman 1; kontrolnya disembunyikan kalau hasilnya
+cuma satu halaman.
+
+⚠️ **Masalah kontras yang ikut ketemu:** komponen itu dirancang untuk panel admin berlatar
+**PUTIH**. Dipasang apa adanya di `/discover` yang berlatar anggur tua, kontrasnya **3,28:1**
+(tulisan "Baris:") dan **2,37:1** (nomor halaman aktif) — di bawah ambang WCAG AA 4,5:1. Ditambah
+prop `varian`; bawaannya `"terang"` sehingga **panel admin tidak berubah sedikit pun** (dikunci
+tes atas kelima pemakainya). Sesudahnya **10,7:1** dan **7,68:1**.
+
+### Bukti tayang — diukur di situs sungguhan, bukan localhost
+
+| Yang diukur | Hasil |
+|---|---|
+| Sembilan alamat | semua **200** |
+| Seksi beranda | **Film Terbaru · Drama Asia · Terpopuler · Rekomendasi** (4, "Top Bulan Ini" nol) |
+| Rating baris atas | 6.3 · 6.2 · 6.0 · 6.3 · 7.4 · 7.2 · 6.4 · 6.0 · 6.4 · 6.8 · 7.6 · 6.7 · 6.2 · 6.2 — **nol di bawah 6.0** |
+| Tombol garis-tiga (HP 390px) | x=16, 36×36, ikon `lucide-menu` **3 garis**, logo baru mulai x=64 |
+| Diketuk → panel | muncul, **133 tautan**, nol menu hilang |
+| `/discover?sort=populer` | **683 judul**, 50/halaman, nomor 1-6 … **14** |
+| Klik Berikutnya | halaman 1 → **2**, kartu pertama berganti |
+| Dari halaman 3, ganti penyaring | balik ke **halaman 1** |
+| Kontras 5 elemen kontrol | 7,68 – 13,96 — **nol di bawah AA** |
+| Gerbang | `npm run gerbang` **LOLOS 5/5**, exit 0 · 211 berkas / **2978 tes** · nol berkas rahasia |
+
+Railway menayangkannya dalam **43 detik** (dua pemeriksaan pertama masih membalas build lama —
+itu wajar, jangan simpulkan gagal sebelum ±3 menit).
+
+### Penjaga baru — 22 tes, 2 berkas baru
+
+- `tests/baris-atas-rating.test.ts` (7) — **diuji-balik**: `>=` diubah jadi `>` → 2 merah.
+- `tests/paginasi-discover.test.ts` (12) — termasuk pagar "panel admin tidak boleh ikut berubah".
+- `tests/urutan-seksi-beranda.test.ts` (6, dibuat hari ini) — **diuji-balik** lewat versi lama
+  berkas → 2 merah. ⭐ **Penjaga inilah yang menangkap serobotan tab bawaan di atas.** Sebelum ia
+  ada, urutan seksi beranda **NOL dijaga**: diubah total pun 2.953 tes tetap hijau.
+- `tests/menu-katalog-hp.test.ts` +3 (ikon garis-tiga · posisi kiri logo · menyingkir saat cari).
+- `tests/film-seksi.test.ts` disesuaikan supaya **mengikuti daftar seksi yang benar-benar
+  digambar**, bukan nama yang dipaku — susunan beranda sudah berubah tiga kali dalam lima hari.
+
+### 🪤 Jebakan baru hari ini
+
+1. **Port 3000 di mesin ini dipegang penyewa LAIN** (aplikasi berjudul *"AksesRoket"*, sesi RDP
+   lain, 1,6 GB RAM). Itu sebabnya owner melapor *"localhost tidak bisa dibuka"* — bukan situs kita
+   yang rusak. Preview lokal sesi ini dijalankan di **port 3177**. Port debug Chrome **9333 juga
+   sudah dipakai sesi lain**; Chrome yang gagal bind TIDAK melapor error, ia cuma tidak punya
+   endpoint debug lalu skrip gagal dengan *"Chrome tidak pernah siap"* yang menyesatkan.
+2. **Pengukur kontras berbasis regex `rgb()` GAGAL TOTAL** di situs ini — Tailwind v4 memulangkan
+   warna sebagai `oklch()`/`lab()`. Hasilnya `null` untuk semua elemen, dan laporannya berbunyi
+   *"nol di bawah ambang"* — terbaca seperti LULUS padahal nol yang terukur. Pakai canvas 1×1
+   (`ctx.fillStyle` → `getImageData`) yang mengubah format apa pun jadi RGBA, dan **komposit
+   alpha berlapis** untuk latar semi-transparan (`bg-emas-500/25`). Pengukurnya sekarang
+   berteriak kalau nol elemen terbaca.
+3. **Jebakan backtick terulang** — `node -e "…"` berisi template string membuat bash menjalankan
+   isi backtick-nya (`seksi: command not found`). Sudah tercatat di memori, tetap kena. Teks
+   panjang/ber-backtick: tulis skrip ke BERKAS lalu jalankan.
+4. **`grep -c` + pencocokan multi-baris meleset di berkas CRLF.** Penggantian teks multi-baris
+   lewat `includes()` gagal diam-diam; pecah per baris dan deteksi `\r\n` dulu.
+
+### 🔴 Yang masih terbuka
+
+1. **Tombol besar beranda masih bertuliskan "NONTON BARENG"** — sudah ditanyakan dua kali, owner
+   belum menjawab. Kini agak ganjil: tidak ada lagi seksi bernama itu (nama itu kini HANYA milik
+   fitur room tonton-bersama).
+2. Dua tawaran lama belum dijawab: ikon ringkas dipersempit ke `/admin` saja? Nama *"Masuk sebagai
+   …"* di dalam menu dihapus?
+3. ❓ **"TOP BULAN INI" sempat tayang beberapa jam** di build lokal saja — tidak pernah sampai
+   produksi, jadi penonton tak pernah melihatnya.
+4. Empat hal lama tak berubah: akar masalah video drama (quick tunnel gratis PC backup) · Tahap B
+   menyembunyikan 70 film Playly tanpa berkas · Cloudflare mengganti badan balasan 5xx · 6 drama
+   HIDUP belum ada di `data/dramas.json`.
 
 ---
 

@@ -14,7 +14,7 @@
 // Keduanya nol error, nol tes merah — cuma beranda yang terbaca rusak. Itulah
 // sebabnya dikunci sebagai tes, bukan sebagai catatan.
 import { describe, it, expect } from "vitest";
-import { filmSeksiNontonBareng, filmSeksiRekomendasi } from "../lib/film-seksi";
+import { filmSeksiTopBulanIni, filmSeksiRekomendasi } from "../lib/film-seksi";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import TabKatalogTampilan from "../app/components/beranda/TabKatalogTampilan";
@@ -35,9 +35,9 @@ const kolam = (jumlah: number): FilmUji[] =>
     thumbnail: `https://contoh/${i}.jpg`,
   }));
 
-describe("filmSeksiNontonBareng — jendela KEDUA, bukan yang pertama", () => {
+describe("filmSeksiTopBulanIni — jendela KEDUA, bukan yang pertama", () => {
   it("mengambil 20 film SESUDAH 20 pertama", () => {
-    const hasil = filmSeksiNontonBareng(kolam(60), 20);
+    const hasil = filmSeksiTopBulanIni(kolam(60), 20);
     expect(hasil).toHaveLength(20);
     expect(hasil[0]!.id).toBe("f20");
     expect(hasil[19]!.id).toBe("f39");
@@ -46,26 +46,26 @@ describe("filmSeksiNontonBareng — jendela KEDUA, bukan yang pertama", () => {
   it("NOL judul yang sama dengan seksi Film Terbaru (jendela pertama)", () => {
     const semua = kolam(60);
     const filmTerbaru = new Set(semua.slice(0, 20).map((v) => v.id));
-    const bareng = filmSeksiNontonBareng(semua, 20);
+    const bareng = filmSeksiTopBulanIni(semua, 20);
     expect(bareng.filter((v) => filmTerbaru.has(v.id))).toEqual([]);
   });
 
   it("kolam PENDEK (penyedia sepi) → jatuh ke jendela pertama, bukan kosong", () => {
     // Lubang kosong di seksi paling atas beranda lebih buruk daripada judul
     // yang terulang satu baris.
-    const hasil = filmSeksiNontonBareng(kolam(8), 20);
+    const hasil = filmSeksiTopBulanIni(kolam(8), 20);
     expect(hasil.map((v) => v.id)).toEqual(kolam(8).map((v) => v.id));
   });
 
   it("jendela kedua yang ADA tapi pendek dibiarkan pendek apa adanya", () => {
-    const hasil = filmSeksiNontonBareng(kolam(25), 20);
+    const hasil = filmSeksiTopBulanIni(kolam(25), 20);
     expect(hasil.map((v) => v.id)).toEqual(["f20", "f21", "f22", "f23", "f24"]);
   });
 
   it("jumlah tak wajar (0, negatif, NaN) → daftar kosong, bukan error", () => {
-    expect(filmSeksiNontonBareng(kolam(60), 0)).toEqual([]);
-    expect(filmSeksiNontonBareng(kolam(60), -5)).toEqual([]);
-    expect(filmSeksiNontonBareng(kolam(60), Number.NaN)).toEqual([]);
+    expect(filmSeksiTopBulanIni(kolam(60), 0)).toEqual([]);
+    expect(filmSeksiTopBulanIni(kolam(60), -5)).toEqual([]);
+    expect(filmSeksiTopBulanIni(kolam(60), Number.NaN)).toEqual([]);
   });
 });
 

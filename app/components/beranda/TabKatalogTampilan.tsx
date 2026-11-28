@@ -38,7 +38,7 @@ import {
 import { ID_JUDUL_TAWARAN } from "./LayarindoMenawarkan";
 import PanahGeserBaris from "./PanahGeserBaris";
 import { Button } from "@/components/ui/button";
-import { filmSeksiNontonBareng, filmSeksiRekomendasi } from "@/lib/film-seksi";
+import { filmSeksiTopBulanIni, filmSeksiRekomendasi } from "@/lib/film-seksi";
 import { cn } from "@/lib/utils";
 
 /**
@@ -192,7 +192,7 @@ export default function TabKatalogTampilan({
    */
   videoSeries?: PlaylyVideoPublik[];
   /**
-   * KOLAM film untuk seksi "Nonton Bareng" & "Rekomendasi" (owner 2026-11-24).
+   * KOLAM film untuk seksi "Top Bulan Ini" & "Rekomendasi" (owner 2026-11-24).
    *
    * WAJIB sudah disiapkan `siapkanTampilanDepan` (lib/baris-atas.ts →
    * `filmSeksi`): film BERSAMPUL saja, judul yang duduk di baris poster atas
@@ -379,20 +379,33 @@ export default function TabKatalogTampilan({
               k === SEKSI_FILM ? SEKSI_FILM : tabs.find((t) => t.key === k),
             ).filter((t): t is TabKatalog | typeof SEKSI_FILM => Boolean(t));
 
-            // Tab yang sedang dibuka tetap naik ke urutan pertama supaya
-            // kliknya terasa (perilaku yang diminta owner 2026-10-09) — tapi
-            // HANYA kalau ia memang salah satu dari lima seksi di atas.
-            // Tanpa syarat itu, mengklik tab yang seksinya sengaja
-            // disembunyikan akan memunculkannya kembali di beranda.
-            const urutan =
-              diizinkan.has(tabAktif.key)
-                ? [
-                    tabs.find((t) => t.key === tabAktif.key) ?? tabAktif,
-                    ...terpakai.filter(
-                      (t) => t === SEKSI_FILM || t.key !== tabAktif.key,
-                    ),
-                  ]
-                : terpakai;
+            // Tab yang DIPILIH penonton naik ke urutan pertama supaya kliknya
+            // terasa (perilaku yang diminta owner 2026-10-09). Dua syarat
+            // membatasinya:
+            //
+            //   1. ia memang salah satu dari lima seksi di atas — tanpa ini,
+            //      mengklik tab yang seksinya sengaja disembunyikan akan
+            //      memunculkannya kembali di beranda;
+            //   2. ⚠️ ia BUKAN tab bawaan (ditambah 2026-11-28). Tab bawaan
+            //      adalah keadaan AWAL halaman, bukan pilihan — tidak ada klik
+            //      yang perlu "terasa" di sana. Tanpa syarat ini seksi tab
+            //      bawaan selalu menyerobot posisi satu, sehingga urutan yang
+            //      ditentukan owner di `URUTAN_SEKSI_BERANDA` MUSTAHIL
+            //      terwujud di halaman depan: owner meminta "Film Terbaru"
+            //      paling atas, yang tergambar justru "Top Bulan Ini".
+            //      Ketahuan oleh tests/urutan-seksi-beranda.test.ts — sebelum
+            //      penjaga itu ada, penyimpangan ini nol error dan nol tes
+            //      merah.
+            const naikkanTabAktif =
+              diizinkan.has(tabAktif.key) && tabAktif.key !== TAB_BAWAAN;
+            const urutan = naikkanTabAktif
+              ? [
+                  tabs.find((t) => t.key === tabAktif.key) ?? tabAktif,
+                  ...terpakai.filter(
+                    (t) => t === SEKSI_FILM || t.key !== tabAktif.key,
+                  ),
+                ]
+              : terpakai;
             const gambarFilm = () => (
               <SeksiKatalog
                 key={KUNCI_BARIS_VIDEO}
@@ -427,7 +440,7 @@ export default function TabKatalogTampilan({
                 const pilihan =
                   t.key === "rekomendasi"
                     ? filmSeksiRekomendasi(filmSeksi, TAB_GRID_ITEMS)
-                    : filmSeksiNontonBareng(filmSeksi, TAB_GRID_ITEMS);
+                    : filmSeksiTopBulanIni(filmSeksi, TAB_GRID_ITEMS);
                 return pilihan.map(bungkusVideo);
               }
               /* SERIAL dari penyedia luar ikut ke seksi "Drama Asia", dan

@@ -93,7 +93,7 @@ export default function BadanKatalog({
    */
   seriesTerbaru?: PlaylyVideoPublik[];
   /**
-   * SELURUH film dari penyedia luar — sumber seksi "Nonton Bareng" &
+   * SELURUH film dari penyedia luar — sumber seksi "Top Bulan Ini" &
    * "Rekomendasi" (owner 2026-11-24). BEDA dari `filmDiDepan` yang sudah
    * dipotong 20 untuk seksi "Film Terbaru": memakai yang sama untuk
    * ketiganya membuat ketiga seksi menampilkan judul yang sama persis.

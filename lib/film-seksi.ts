@@ -2,14 +2,14 @@
 //
 // Owner 2026-11-24: *"nonton bareng, rekomendasi kamu isi dengan film saja
 // jangan drama lagi"*. Sejak itu beranda punya TIGA seksi film berturut-turut
-// (Nonton Bareng, Rekomendasi, Film Terbaru) — dan tiga seksi yang menarik dari
+// (Film Terbaru, Top Bulan Ini, Rekomendasi) — dan tiga seksi yang menarik dari
 // satu daftar yang sama adalah cara paling mudah membuat beranda terbaca rusak
 // tanpa satu pun error muncul.
 //
 // Dua kerusakan senyap yang sudah TERUKUR terjadi saat ketiga seksi menarik
 // langsung dari daftar film mentah (diukur di server lokal 2026-11-24, build
 // sebelum berkas ini ada):
-//   • 11 dari 20 kartu "Nonton Bareng" TANPA sampul — kotak hitam berjejer,
+//   • 11 dari 20 kartu seksi itu TANPA sampul — kotak hitam berjejer,
 //     karena daftar mentah ikut memuat film yang belum punya thumbnail.
 //   • 9 dari 20 judulnya SAMA dengan baris poster paling atas — persis keluhan
 //     owner 2026-11-17 yang dulu melahirkan `filmDiLuarBarisAtas`.
@@ -31,16 +31,16 @@ function batasWajar(jumlah: number): number {
 }
 
 /**
- * Film untuk seksi "Nonton Bareng" — JENDELA KEDUA kolam, bukan yang pertama.
+ * Film untuk seksi "Top Bulan Ini" — JENDELA KEDUA kolam, bukan yang pertama.
  *
  * Kenapa bukan dari depan: seksi "Film Terbaru" di bawahnya mengambil jendela
  * PERTAMA. Kalau keduanya mengambil dari depan, satu layar beranda menampilkan
  * dua puluh judul yang sama dua kali.
  *
- * Kenapa yang mengalah "Nonton Bareng", bukan "Film Terbaru": nama + keterangan
+ * Kenapa yang mengalah "Top Bulan Ini", bukan "Film Terbaru": nama + keterangan
  * di layar seksi Film Terbaru BERJANJI tahun rilis terbaru lebih dulu. Menggeser
  * seksi itu ke jendela kedua membuat janji di layarnya jadi bohong. "Nonton
- * Bareng" tidak menjanjikan apa pun soal tahun, jadi ia yang pindah.
+ * Bulan Ini" tidak menjanjikan apa pun soal tahun, jadi ia yang pindah.
  *
  * Kolam lebih pendek dari satu jendela (penyedia luar sepi atau sedang mati) →
  * jatuh ke jendela pertama. Judul terulang satu baris masih jauh lebih baik
@@ -49,7 +49,7 @@ function batasWajar(jumlah: number): number {
  * selain yang terbaru", dan memaksanya penuh hanya bisa dengan mengambil ulang
  * judul yang sudah tampil di bawahnya.
  */
-export function filmSeksiNontonBareng<F>(kolam: F[], jumlah: number): F[] {
+export function filmSeksiTopBulanIni<F>(kolam: F[], jumlah: number): F[] {
   const batas = batasWajar(jumlah);
   if (batas === 0) return [];
   const jendelaKedua = kolam.slice(batas, batas * 2);

@@ -64,7 +64,7 @@ const judulTergambar = (html: string) =>
 
 describe("?tab= di alamat benar-benar mengganti isi di layar", () => {
   it("tanpa parameter: tab bawaan", () => {
-    expect(judulTergambar(bacaAlamat(""))).toBe("Nonton Bareng");
+    expect(judulTergambar(bacaAlamat(""))).toBe("Top Bulan Ini");
   });
 
   it("?tab=terpopuler: judulnya ikut berganti", () => {
@@ -94,7 +94,7 @@ describe("?tab= di alamat benar-benar mengganti isi di layar", () => {
   it("tab asing jatuh ke bawaan, bukan halaman kosong", () => {
     // Alamat bisa diketik siapa saja; nilai tak dikenal tidak boleh
     // mengosongkan bagian ini.
-    expect(judulTergambar(bacaAlamat("tab=ngawur"))).toBe("Nonton Bareng");
+    expect(judulTergambar(bacaAlamat("tab=ngawur"))).toBe("Top Bulan Ini");
   });
 
   it("?semua=1 membuka bentuk grid penuh", () => {

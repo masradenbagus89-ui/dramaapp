@@ -38,7 +38,7 @@ import { Button } from "@/components/ui/button";
  * pada nama tab (lihat `judulDariLabel` di lib/tab-katalog.ts).
  *
  * `/film`, BUKAN `/discover`: baris poster DI ATAS tombol ini berisi film, dan
- * seksi "Nonton Bareng" di bawahnya juga menuju `/film`. Mengirim penonton ke
+ * seksi-seksi film tepat di bawahnya juga menuju `/film`. Mengirim penonton ke
  * daftar drama sesudah ia melihat deretan film = janji yang tidak ditepati.
  */
 export const HREF_TOMBOL_UTAMA = "/film";
@@ -128,13 +128,17 @@ export default function FeaturedRow({
             temukan tontonan favoritmu jadikan menu nonton bareng"*), dan
             tujuannya ikut berpindah ke `/film`.
 
-            Keduanya berubah BERSAMAAN dengan sengaja. "Nonton Bareng" adalah
-            nama seksi tepat di bawah tombol ini (label tab `terbaru`, diganti
-            owner 2026-11-24), dan tombol SEMUA seksi itu menuju `/film` —
-            sebab isinya film, bukan drama (lihat `SEKSI_BERISI_FILM` di
-            lib/tab-katalog.ts). Kalau tombol ini tetap menuju `/discover`
-            yang berisi DRAMA, dua tombol bernama sama di satu layar akan
-            mendarat di daftar yang isinya lain sama sekali.
+            Alasan tujuannya ikut pindah: saat itu "Nonton Bareng" JUGA nama
+            seksi tepat di bawah tombol ini, dan tombol SEMUA seksi itu menuju
+            `/film`; dua tombol bernama sama yang mendarat di daftar berbeda
+            menipu penonton.
+
+            ⚠️ Seksi senama itu SUDAH TIDAK ADA — owner mengganti namanya jadi
+            "Top Bulan Ini" 2026-11-28. Tujuan `/film` TETAP benar dengan
+            alasan yang lebih sederhana: seksi-seksi di bawah tombol ini
+            isinya film (lihat `SEKSI_BERISI_FILM` di lib/tab-katalog.ts),
+            sementara `/discover` berisi DRAMA. Tulisan tombolnya sendiri
+            tidak ikut diubah — owner tidak memintanya.
 
             🪤 JANGAN membacanya sebagai pintu fitur Nonton Bareng (room
             tonton bersama). Fitur itu dimulai dari dalam pemutar film, dan

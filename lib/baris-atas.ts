@@ -32,7 +32,7 @@ export function filmDiLuarBarisAtas<F extends { id: string }>(
  * Sama dengan di atas, TANPA dipotong — kolam bersama untuk seluruh seksi film
  * beranda (lib/film-seksi.ts).
  *
- * Perlu versi tak-terpotong sejak owner 2026-11-24 meminta "Nonton Bareng" dan
+ * Perlu versi tak-terpotong sejak owner 2026-11-24 meminta seksi tab-bawaan dan
  * "Rekomendasi" diisi film juga: tiga seksi butuh potongan yang BERBEDA dari
  * satu daftar, jadi yang membagi potongannya harus melihat daftar utuhnya.
  * Memakai `filmDiLuarBarisAtas` dengan jumlah besar bukan pengganti — ia

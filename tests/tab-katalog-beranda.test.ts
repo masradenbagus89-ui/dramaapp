@@ -129,7 +129,7 @@ describe("mode MENU: baris tab saja, isinya tinggal di halaman katalog", () => {
     // Tanpa baris ini, "tidak muncul" tak bisa dibedakan dari "tak pernah ada".
     const penuh = render({ basePath: "/katalog" });
     expect(penuh).toContain("<h2");
-    expect(penuh).toContain(">Nonton Bareng<");
+    expect(penuh).toContain(">Top Bulan Ini<");
   });
 });
 
@@ -326,7 +326,7 @@ describe("2. nama tab SAMA dengan judul bagiannya", () => {
 
   it("judul yang tergambar memang nama tab yang sedang dibuka", () => {
     // Pembanding lewat render sungguhan, bukan cuma daftarnya.
-    expect(render({ basePath: "/beranda" })).toContain(">Nonton Bareng<");
+    expect(render({ basePath: "/beranda" })).toContain(">Top Bulan Ini<");
   });
 });
 

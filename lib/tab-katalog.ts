@@ -112,14 +112,22 @@ export function daftarTab(dramas: Drama[]): TabKatalog[] {
     // judulDariLabel di atas), jadi keduanya tetap mustahil menyimpang.
     buat(
       "terbaru",
-      // ⚠️ DIGANTI dari "SERIES TERBARU" (owner 2026-11-24). Yang berganti
-      // CUMA NAMANYA — isinya tetap "judul terbaru masuk katalog", dan
-      // keterangannya sengaja tetap menyebut itu apa adanya. Nama pilihan
-      // owner boleh bergaya; keterangan di bawahnya yang menjaga penonton
-      // tidak salah sangka soal isinya.
+      // ⚠️ NAMA INI SUDAH TIGA KALI BERGANTI, SELALU ATAS PERMINTAAN OWNER:
+      // "SERIES TERBARU" → "NONTON BARENG" (2026-11-24) → "TOP BULAN INI"
+      // (2026-11-28, owner menyebut susunan lengkap kelima seksi beranda).
+      // Yang berganti SELALU cuma namanya — isinya tetap "judul terbaru masuk
+      // katalog", disaring jadi film di beranda (lihat SEKSI_BERISI_FILM).
+      //
+      // ❓ BATAS JUJUR yang sudah disampaikan ke owner: "TOP BULAN INI"
+      // menyiratkan PERINGKAT bulan berjalan, sementara isinya sebenarnya
+      // jendela kedua kolam film terbaru — tidak ada data "ditonton bulan
+      // ini" di penyedia luar maupun katalog. Nama pilihan owner tetap
+      // dipakai; kalau kelak diminta isinya benar-benar peringkat, yang perlu
+      // ditambah lebih dulu adalah sumber datanya, bukan urutannya.
+      //
       // `key` TIDAK ikut berganti: ia kunci alamat `/katalog?tab=terbaru`
       // yang sudah dipakai tautan menu "Series" di bar atas.
-      "NONTON BARENG",
+      "TOP BULAN INI",
       // Keterangan sengaja TETAP "judul", bukan "serial": isi tab ini belum
       // disaring serial-saja, jadi 1 drama ber-kind "movie" di katalog masih
       // ikut. Menulis "serial" di sini = janji yang tidak ditepati datanya.
@@ -153,9 +161,20 @@ export const TAB_BAWAAN: TabKey = "terbaru";
 export const SEKSI_FILM = "__film__" as const;
 
 /**
- * URUTAN SEKSI HALAMAN DEPAN — ditentukan langsung oleh owner 2026-11-24:
- *   1. Nonton Bareng  2. Rekomendasi  3. Film Terbaru  4. Drama Asia
- *   5. Terpopuler
+ * URUTAN SEKSI HALAMAN DEPAN — ditentukan langsung oleh owner 2026-11-28,
+ * disebut sebagai satu daftar utuh sambil menandai kelima judulnya di layar:
+ *   1. Film Terbaru  2. Top Bulan Ini  3. Drama Asia  4. Terpopuler
+ *   5. Rekomendasi
+ *
+ * (Susunan 2026-11-24 yang digantikan: Nonton Bareng · Rekomendasi · Film
+ * Terbaru · Drama Asia · Terpopuler. Jumlah seksinya tetap lima dan nol
+ * seksi dibuang — yang berubah urutannya, plus satu nama.)
+ *
+ * ⚠️ "Film Terbaru" NAIK KE PUNCAK, dan itu menguatkan pembagian kolam film
+ * yang sudah ada: `filmSeksiTopBulanIni` sengaja mengambil jendela KEDUA
+ * supaya tidak mengulang judul yang sama dengan baris di atasnya. Sejak
+ * urutan ini keduanya bersebelahan, jadi aturan itu makin wajib — bukan
+ * makin bisa dilepas.
  *
  * ⚠️ DAFTAR INI JUGA MENENTUKAN APA YANG TIDAK DIGAMBAR. "Series Unggulan"
  * dan tab tahun ("2026") sengaja TIDAK ada di sini — owner meminta beranda
@@ -173,11 +192,11 @@ export const SEKSI_FILM = "__film__" as const;
  * yang isinya tak sesuai permintaan owner.
  */
 export const URUTAN_SEKSI_BERANDA: readonly (TabKey | typeof SEKSI_FILM)[] = [
-  "terbaru",
-  "rekomendasi",
   SEKSI_FILM,
+  "terbaru",
   "update",
   "terpopuler",
+  "rekomendasi",
 ];
 
 /**
